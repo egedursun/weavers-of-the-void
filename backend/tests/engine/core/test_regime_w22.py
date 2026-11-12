@@ -7,13 +7,16 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.cycles import AsabiyyaRow, GiftRow, LongPlanRow, PolityStressRow
+from aerona.db.tables.dominion import MiracleRecordRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.genetics import GenomeRow
+from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.military import FeudRow
 from aerona.db.tables.mind import CultureValueRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import ClaimRow, HouseMemberRow, HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.regime import (
     AcademicFreedomRow,
     BreedingPlanRow,
@@ -29,6 +32,7 @@ from aerona.db.tables.regime import (
     SchoolMemberRow,
     VenalOfficeRow,
 )
+from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -36,8 +40,9 @@ from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import CyclePhase, GiftOccasion, GiftState, LongPlanKind, LongPlanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.gathering import GatheringKind
-from aerona.domain.enums.intrigue import FavourOrigin
+from aerona.domain.enums.intrigue import FavourOrigin, IntrigueSecret
 from aerona.domain.enums.military import FeudParty, FeudStatus
 from aerona.domain.enums.mind import SkillKind, SkillSource, TraitKind, TraitSource, ValueAxis
 from aerona.domain.enums.mortal import CareerPath
@@ -46,7 +51,7 @@ from aerona.domain.enums.regime import CredentialKind, LeadershipMode, PowerStan
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import StructureKind
-from aerona.domain.models.entity_stats import HouseStats, PeopleStats, PolityStats, StructureStats
+from aerona.domain.models.entity_stats import FactionStats, HouseStats, PeopleStats, PolityStats, StructureStats
 from aerona.engine.collective.roles import career_open
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.asabiyya import AsabiyyaTally, keep_asabiyya
@@ -61,9 +66,11 @@ from aerona.engine.regime.book import (
     appointment_weights,
     corruption_pull,
     coup_factor,
+    credential_rank,
     extraction_of,
     feud_swell,
     freedom_factor,
+    inquiry_factor,
     legitimacy_kinds,
     morale_factor,
     patron_pull,
@@ -72,7 +79,7 @@ from aerona.engine.regime.book import (
 from aerona.engine.regime.control import edit_record, found_school, set_freedom
 from aerona.engine.regime.learning import LearningTally, keep_learning
 from aerona.engine.regime.lineages import LineageTally, keep_lineages
-from aerona.engine.regime.patronage import PatronageTally, keep_patronage
+from aerona.engine.regime.patronage import PatronageTally, keep_patronage, purge_subject
 from aerona.engine.regime.rule import RegimeTally, keep_regimes
 from aerona.services.integrity.regime_links import mend_regime_links
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
@@ -500,8 +507,13 @@ async def test_mortals_and_sons_hear_of_rule_patrons_and_learning(session: Async
     scope = await load_scope(session, ctx.rules)
     text = " ".join(await mortal_regime_lines(scope, me))
     assert "your patron is Ruler" in text and "credential of master" in text and "chosen by its nobles" in text
+    session.add(PowerBaseRow(mortal_entity_id=me.id, polity_entity_id=realm.id, threat=90, stance=PowerStance.PLOTTING, locked=[]))
+    await session.flush()
     lines = await son_regime_lines(scope, world.son)
     assert any(f"(polity {realm.id}) is torn" in line for line in lines)
+    assert any(f"(mortal {me.id}) plots for the throne" in line for line in lines)
+    throne = " ".join(await mortal_regime_lines(scope, ruler))
+    assert f"(mortal {me.id}) stands plotting toward your throne" in throne
 
 
 async def test_integrity_lets_the_dead_leave_circles_and_ties(session: AsyncSession, world: CoreWorld) -> None:
@@ -620,3 +632,135 @@ async def test_setting_learning_below_the_mark_suppresses_it_at_once(session: As
     assert row.suppressed
     await edit_record(ctx, "academic_freedom", hall.id, {"level": 90}, [])
     assert not row.suppressed
+
+
+async def test_power_balance_public_contentment_and_regard_shape_the_circle(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    ruler = await mortal(session, "Ruler", world, town.id)
+    friend = await mortal(session, "Friend", world, town.id)
+    rival = await mortal(session, "Rival", world, town.id)
+    for lord in (friend, rival):
+        lord.social_class = SocialClass.NOBLE
+        lord.importance = 70
+    realm = await realm_of(session, world, [town], ruler, rule=DecisionRule.ASSEMBLY, treasury=20000)
+    ctx = await context(session)
+    await keep_regimes(ctx, RegimeTally())
+    row = await session.get(RegimeRow, realm.id)
+    assert row is not None
+    wide = row.coalition_size
+    society = await session.get(CommunitySocietyRow, town.id)
+    assert society is not None and society.satisfaction_farmer > 60
+    guild = await entity(session, "Grain Guild", EntityType.FACTION, FactionStats(), world_id=world.world.id, location_id=town.id)
+    session.add(FactionProfileRow(faction_entity_id=guild.id, kind=FactionKind.MERCHANT_GUILD, home_entity_id=town.id, influence_over={str(realm.id): 90}))
+    session.add(RelationshipRow(holder_node_id=friend.id, subject_node_id=ruler.id, friendship=90, since_epoch=0, last_epoch=0))
+    session.add(RelationshipRow(holder_node_id=rival.id, subject_node_id=ruler.id, rivalry=90, since_epoch=0, last_epoch=0))
+    await session.flush()
+    await keep_regimes(ctx, RegimeTally())
+    assert row.coalition_size < wide
+    liked, disliked = await session.get(CoalitionMemberRow, (realm.id, friend.id)), await session.get(CoalitionMemberRow, (realm.id, rival.id))
+    assert liked is not None and disliked is not None and liked.loyalty > disliked.loyalty
+
+
+async def test_miracles_feed_charisma_and_a_schism_raises_a_rival_claim(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    founder = await mortal(session, "Founder", world, town.id, charisma=90)
+    child = await mortal(session, "Child", world, town.id)
+    heir = await mortal(session, "Heir", world, town.id)
+    await BondRepository(session).connect(BondDraft(founder.id, child.id, BondKind.PARENT_OF, 0))
+    realm = await realm_of(session, world, [town], founder)
+    ctx = await context(session, legitimacy_types={"drift_pct": 100}, charisma_routinisation={"schism_pct": 100})
+    await keep_regimes(ctx, RegimeTally())
+    row = await session.get(RegimeRow, realm.id)
+    assert row is not None
+    plain = row.charismatic
+    session.add(MiracleRecordRow(god_node_id=world.son.id, kind="healing", epoch=1, credited_node_id=founder.id, locked=[]))
+    await session.flush()
+    await keep_regimes(ctx, RegimeTally())
+    assert row.charismatic > plain
+    row.founder_entity_id = founder.id
+    row.charismatic, row.traditional, row.rational = 90, 10, 0
+    row.locked = ["charismatic", "traditional", "rational"]
+    founder.status = EntityStatus.DEAD
+    founder.end_epoch = 1
+    seat = await session.scalar(select(OfficeRow).where(OfficeRow.polity_entity_id == realm.id, OfficeRow.kind == OfficeKind.RULER))
+    assert seat is not None
+    seat.holder_entity_id = heir.id
+    await session.flush()
+    await keep_regimes(ctx, RegimeTally())
+    row.locked = []
+    ctx = await at_epoch(session, 4, charisma_routinisation={"schism_pct": 100})
+    tally = RegimeTally()
+    await keep_regimes(ctx, tally)
+    claim = await session.scalar(select(ClaimRow).where(ClaimRow.claimant_entity_id == child.id, ClaimRow.polity_entity_id == realm.id))
+    assert tally.schisms == 1 and row.routinisation is Routinisation.SCHISM and claim is not None
+
+
+async def test_a_ruler_answers_a_plotter_by_marriage_then_split_command_then_purge(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    far = await town_of(session, world, "Farside", region=1)
+    ruler = await mortal(session, "Ruler", world, town.id)
+    daughter = await mortal(session, "Ruler's Child", world, town.id, age=20)
+    await BondRepository(session).connect(BondDraft(ruler.id, daughter.id, BondKind.PARENT_OF, 0))
+    plotter = await mortal(session, "Plotter", world, far.id, age=30)
+    plotter.importance = 90
+    session.add(MortalProfileRow(entity_id=plotter.id, wealth=100, locked=[]))
+    await add_trait(session, plotter.id, TraitKind.AMBITIOUS, TraitSource.BIRTH, 0)
+    realm = await realm_of(session, world, [town, far], ruler, treasury=0)
+    session.add(
+        OfficeRow(polity_entity_id=realm.id, kind=OfficeKind.GOVERNOR, holder_entity_id=plotter.id, region_entity_id=world.regions[1].id, powers=[], locked=[])
+    )
+    await session.flush()
+    ctx = await context(session, power_bases={"plot_at": 30, "counter_pct": 100})
+    await keep_regimes(ctx, RegimeTally())
+    tally = PatronageTally()
+    await keep_patronage(ctx, tally)
+    assert tally.married == 1
+    base = await session.get(PowerBaseRow, plotter.id)
+    assert base is not None and base.stance is PowerStance.LOYAL
+    book = await RealmBook.load(session)
+    assert await purge_subject(ctx, book.realms[realm.id], plotter)
+    assert await session.scalar(select(OfficeRow).where(OfficeRow.holder_entity_id == plotter.id)) is None
+
+
+async def test_concealed_parentage_becomes_a_secret_and_credentials_put_their_holder_first(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    house = await entity(session, "House Line", EntityType.HOUSE, HouseStats(), world_id=world.world.id)
+    heir = await mortal(session, "Heir", world, town.id, age=20)
+    carrier = await mortal(session, "Carrier", world, town.id, age=20)
+    session.add(HouseProfileRow(house_entity_id=house.id, founder_entity_id=heir.id, head_entity_id=heir.id, emblem={}, traits=[], seats=[], locked=[]))
+    session.add(HouseMemberRow(house_entity_id=house.id, mortal_entity_id=heir.id))
+    session.add(GenomeRow(holder_node_id=carrier.id, genes={"height": ["tall", "tall"]}))
+    design = LongPlanRow(
+        holder_node_id=house.id,
+        target_node_id=house.id,
+        kind=LongPlanKind.BLOODLINE,
+        name="The Tall Line",
+        steps=4,
+        progress=0,
+        step_cost=0,
+        secrecy=50,
+        locked=[],
+    )
+    session.add(design)
+    await session.flush()
+    session.add(BreedingPlanRow(plan_id=design.id, house_entity_id=house.id, locus="height", allele="tall", target_share=50, locked=[]))
+    session.add(CredentialRow(mortal_entity_id=carrier.id, kind=CredentialKind.DOCTOR, epoch=0, locked=[]))
+    await session.flush()
+    ctx = await context(session, breeding_plans={"love_pct": 0, "conceal_pct": 100})
+    await keep_lineages(ctx, LineageTally())
+    secret = await session.scalar(select(SecretRow).where(SecretRow.holder_node_id == heir.id, SecretRow.kind == IntrigueSecret.TRUE_PARENTAGE))
+    assert secret is not None and secret.about_node_id == house.id
+    assert await credential_rank(session, carrier.id, 2, 0) == 0
+    assert await credential_rank(session, heir.id, 2, 0) == 2
+
+
+async def test_free_inquiry_weighs_evidence_more_than_stifled_inquiry(session: AsyncSession, world: CoreWorld) -> None:
+    free = await town_of(session, world, "Openhall")
+    stifled = await town_of(session, world, "Closedhall", region=1)
+    for host, level in ((free, 90), (stifled, 10)):
+        hall = await entity(session, f"Hall of {host.name}", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=host.id)
+        session.add(StructureProfileRow(structure_entity_id=hall.id, kind=StructureKind.ACADEMY, host_entity_id=host.id, effect_pct=100, locked=[]))
+        session.add(AcademicFreedomRow(structure_entity_id=hall.id, level=level, suppressed=level < 30, locked=[]))
+    await session.flush()
+    rules = (await context(session)).rules
+    assert await inquiry_factor(session, rules, free.id) > 1 > await inquiry_factor(session, rules, stifled.id)

@@ -15,6 +15,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.cycles import LongPlanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.military import FeudParty, FeudStatus
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import MarriageKind
@@ -25,6 +26,7 @@ from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.plans import PlanTally, complete
 from aerona.engine.demography.kinship import may_wed
+from aerona.engine.intrigue.secrets import keep_secret
 from aerona.engine.mortal.kin import children_of, spouses_of
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
@@ -224,6 +226,7 @@ async def steer(ctx: TickContext, plan: BreedingPlanRow, design: LongPlanRow, ta
         if ctx.rng(f"breeding.conceal.{plan.plan_id}.{member.id}.{ctx.epoch}").chance(table.conceal_pct):
             shift(plan, "concealed", 1, high=10**6)
             shift(design, "secrecy", table.conceal_secrecy)
+            await keep_secret(ctx, member.id, IntrigueSecret.TRUE_PARENTAGE, about_id=plan.house_entity_id, severity=table.secret_severity, source=design.name)
             tally.concealed += 1
 
 

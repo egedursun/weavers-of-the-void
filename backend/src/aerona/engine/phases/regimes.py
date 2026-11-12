@@ -9,6 +9,7 @@ from aerona.engine.regime.rule import RegimeTally, keep_regimes
 
 
 @reads(
+    "faction.sway",
     "mortal.age",
     "mortal.charisma",
     "mortal.hp",
@@ -19,6 +20,9 @@ from aerona.engine.regime.rule import RegimeTally, keep_regimes
     "table.designated_heirs",
     "table.gifts",
     "table.holder_techniques",
+    "table.house_members",
+    "table.legend_profiles",
+    "table.miracle_records",
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
@@ -26,6 +30,7 @@ from aerona.engine.regime.rule import RegimeTally, keep_regimes
     "table.polity_territories",
     "table.power_bases",
     "table.regimes",
+    "table.relationships",
     "table.vassalages",
     "table.wars",
 )
@@ -50,10 +55,14 @@ async def regimes(ctx: TickContext) -> None:
 
 @reads(
     "army.size",
+    "law.justice",
     "mortal.age",
     "table.armies",
+    "table.bonds",
     "table.coalition_members",
     "table.house_profiles",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.mortal_profiles",
     "table.oaths",
     "table.offices",

@@ -171,7 +171,7 @@ function BreedingCard({
       caption={`${row.progress} of ${row.steps} steps · ${row.status}`}
       removeLabel='End the design'
       editTitle='Set the breeding plan'
-      note='The design steers the house’s marriages toward carriers of a trait of the blood or toward claimants of a realm. Love matches set it back, childless couples stall it, and concealed parentage keeps it secret.'
+      note='The design steers the house’s marriages toward carriers of a trait of the blood or toward claimants of a realm. Love matches set it back, childless couples stall it, and each concealed parentage keeps it secret but becomes a secret of its own that can be exposed.'
       fields={[
         { key: 'locus', label: 'Trait of the blood', kind: 'text' },
         { key: 'allele', label: 'Form of the trait', kind: 'text' },

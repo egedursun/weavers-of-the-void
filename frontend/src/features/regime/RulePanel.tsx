@@ -123,7 +123,7 @@ function RegimeCard({
       caption={`${leadership.label} · read in epoch ${regime.updated_epoch}`}
       removeLabel='Let it be read anew'
       editTitle='Set how the realm is ruled'
-      note='The wider the circle that chooses the ruler, the more is spent on public goods; small circles are kept loyal with private gifts, which breed corruption. The ruler’s time horizon sets how hard the realm is taxed. Custom, charisma and law each hold the ruler up and each fails in its own way; at a charismatic founder’s death the realm must turn charisma into a dynasty or rules, or split. Coup-proofing lowers the chance of a coup and the army’s quality at once.'
+      note='The wider the circle that chooses the ruler, the more is spent on public goods, which raise the towns and content their farmers and craftsfolk; small circles are kept loyal with private gifts, which breed corruption, and a faction holding the balance of power narrows the circle. The ruler’s time horizon sets how hard the realm is taxed. Custom, charisma and law each hold the ruler up and each fails in its own way; victories, miracles and prophecies feed charisma. At a charismatic founder’s death the realm must turn charisma into a dynasty or rules, or split, and a split gives the founder’s kin a claim against the heir. Coup-proofing lowers the chance of a coup and the army’s quality at once.'
       fields={[
         {
           key: 'selectorate',
@@ -327,7 +327,7 @@ function MemberCard({ row, blocked }: { row: Member; blocked: string | null }) {
       caption={`Since epoch ${row.since_epoch}`}
       removeLabel='Strike from the circle'
       editTitle='Set the member'
-      note='Members are rewarded with private goods; their loyalty follows their reward and the offers of the strongest subjects. A purge casts them out of every seat they hold.'
+      note='Members are rewarded with private goods; their loyalty follows their reward, their regard for the ruler and the offers of the strongest subjects. A purge casts them out of every seat they hold.'
       fields={[
         { key: 'reward', label: 'Reward', kind: 'number', min: 0, max: SPAN },
         { key: 'loyalty', label: 'Loyalty', kind: 'number', min: 0, max: SPAN },

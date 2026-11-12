@@ -33,6 +33,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats
+from aerona.engine.regime.book import inquiry_factor
 from aerona.engine.renown.book import acclaim
 from aerona.rules.registry import Rules
 
@@ -225,7 +226,9 @@ async def contest_score(ctx: TickContext, community: EntityRow, profile: TheoryP
     table = ctx.rules.theories
     knowledge = await ctx.session.get(CultureValueRow, (community.id, ValueAxis.KNOWLEDGE))
     tradition = await ctx.session.get(CultureValueRow, (community.id, ValueAxis.TRADITION))
-    evidence = profile.correctness * (1 + (knowledge.value if knowledge is not None else 0) / PERCENT)
+    evidence = (
+        profile.correctness * (1 + (knowledge.value if knowledge is not None else 0) / PERCENT) * await inquiry_factor(ctx.session, ctx.rules, community.id)
+    )
     embraced = await ctx.session.scalar(
         select(InstitutionRow.technique).where(InstitutionRow.community_entity_id == community.id, InstitutionRow.embraced.is_(True)).limit(1)
     )

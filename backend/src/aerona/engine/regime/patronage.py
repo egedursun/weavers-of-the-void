@@ -13,20 +13,26 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ActKind, TraitKind
+from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import OfficeKind, OfficePower
 from aerona.domain.enums.regime import ClientRole, PowerStance
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
+from aerona.engine.demography.kinship import may_wed
 from aerona.engine.economy.purse import coin_of, points_of, receive_coin, take_coin, wealth_points
 from aerona.engine.lore.civics import realm_allows
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.hooks import judged
+from aerona.engine.mortal.kin import children_of, siblings_of, spouses_of
+from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.offices import adult, appoint, powers_of, subjects
+from aerona.engine.polity.revenue import mean_justice
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
@@ -47,6 +53,9 @@ class PatronageTally:
     extorted: int = 0
     plotting: int = 0
     rotated: int = 0
+    married: int = 0
+    split: int = 0
+    purged: int = 0
 
 
 async def tie(ctx: TickContext, patron_id: int, client_id: int, *, role: ClientRole, strength: int, tally: PatronageTally) -> PatronageTieRow | None:
@@ -94,15 +103,15 @@ async def loosen_ties(ctx: TickContext, tally: PatronageTally) -> None:
             tally.lapsed += 1
 
 
-async def institutional_strength(ctx: TickContext, realm: Realm) -> int:
+async def institutional_strength(ctx: TickContext, laws: LawBook, realm: Realm) -> int:
     table = ctx.rules.clientelism
     capital = await ctx.session.get(EntityRow, realm.profile.capital_entity_id) if realm.profile.capital_entity_id is not None else None
     people = await people_of(ctx.session, capital) if capital is not None else None
     culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
     literacy = culture.literacy if culture is not None else 0
     clerks = table.bureaucracy_strength * await realm_allows(ctx.session, realm, Technique.BUREAUCRACY)
-    order = (realm.profile.stability - realm.profile.corruption + PERCENT) / 2
-    return clamp_int(clerks + order * table.justice_weight / PERCENT + literacy * table.literacy_weight / PERCENT, 0, PERCENT)
+    justice = await mean_justice(ctx, laws, realm)
+    return clamp_int(clerks + justice * table.justice_weight / PERCENT + literacy * table.literacy_weight / PERCENT, 0, PERCENT)
 
 
 def open_seat(office: OfficeRow) -> bool:
@@ -322,6 +331,91 @@ async def rotate(ctx: TickContext, realm: Realm, row: RegimeRow, bases: list[Pow
             tally.rotated += 1
 
 
+async def unwed_kin(ctx: TickContext, mortal_id: int | None) -> list[EntityRow]:
+    if mortal_id is None:
+        return []
+    found: list[EntityRow] = []
+    for kin_id in [mortal_id, *await children_of(ctx.session, mortal_id), *await siblings_of(ctx.session, mortal_id)]:
+        kin = await living_entity(ctx.session, kin_id)
+        if kin is not None and not held(kin.id) and adult(ctx, kin) and not await spouses_of(ctx.session, kin.id):
+            found.append(kin)
+    return found
+
+
+async def bind_by_marriage(ctx: TickContext, realm: Realm, base: PowerBaseRow, subject: EntityRow) -> bool:
+    for ours in await unwed_kin(ctx, realm.ruler_id):
+        for theirs in await unwed_kin(ctx, subject.id):
+            if ours.id != theirs.id and await may_wed(ctx.session, ctx.rules, ours, theirs):
+                await marry(ctx.session, ours, theirs, ctx.epoch, kind=MarriageKind.POLITICAL, description="a match to bind an overmighty subject")
+                shift(base, "threat", -ctx.rules.power_bases.marriage_cut)
+                if "stance" not in base.locked:
+                    base.stance = PowerStance.LOYAL
+                await note(
+                    ctx,
+                    f"{realm.entity.name} bound {subject.name} to the throne by the marriage of {ours.name} and {theirs.name}.",
+                    key="power_bases.married",
+                    ids=[realm.entity.id, subject.id],
+                )
+                return True
+    return False
+
+
+async def split_command(ctx: TickContext, realm: Realm, subject: EntityRow) -> bool:
+    armies = list(
+        await ctx.session.scalars(
+            select(ArmyRow).where(ArmyRow.commander_entity_id == subject.id, ArmyRow.disbanded_epoch.is_(None)).order_by(ArmyRow.entity_id)
+        )
+    )
+    loose = [army for army in armies if not held(army.entity_id)]
+    for army in loose:
+        army.commander_entity_id = None
+    if loose:
+        await note(
+            ctx, f"{realm.entity.name} took {len(loose)} hosts out of the hands of {subject.name}.", key="power_bases.split", ids=[realm.entity.id, subject.id]
+        )
+    return bool(loose)
+
+
+async def purge_subject(ctx: TickContext, realm: Realm, subject: EntityRow) -> bool:
+    purged = False
+    for office in realm.offices:
+        if office.holder_entity_id == subject.id and office.kind is not OfficeKind.RULER and "holder" not in office.locked:
+            await appoint(ctx, realm, office, None, by_id=realm.ruler_id, reason="purged as an overmighty subject")
+            purged = True
+    member = await ctx.session.get(CoalitionMemberRow, (realm.entity.id, subject.id))
+    if member is not None and not member.locked:
+        await ctx.session.delete(member)
+        purged = True
+    if purged:
+        await note(
+            ctx,
+            f"{realm.entity.name} stripped {subject.name} of every seat before the plot could ripen.",
+            key="power_bases.purged",
+            ids=[realm.entity.id, subject.id],
+        )
+    return purged
+
+
+async def answer_plotters(ctx: TickContext, realm: Realm, bases: list[PowerBaseRow], tally: PatronageTally) -> None:
+    if realm.ruler_id is None or held(realm.ruler_id):
+        return
+    for base in sorted(bases, key=lambda base: (-base.threat, base.mortal_entity_id)):
+        if base.stance is not PowerStance.PLOTTING or not ctx.rng(f"regime.counter.{realm.entity.id}.{base.mortal_entity_id}.{ctx.epoch}").chance(
+            ctx.rules.power_bases.counter_pct
+        ):
+            continue
+        subject = await living_entity(ctx.session, base.mortal_entity_id)
+        if subject is None:
+            continue
+        if await bind_by_marriage(ctx, realm, base, subject):
+            tally.married += 1
+        elif await split_command(ctx, realm, subject):
+            tally.split += 1
+        elif await purge_subject(ctx, realm, subject):
+            tally.purged += 1
+        return
+
+
 async def crown_strength(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
     table = ctx.rules.power_bases
     ruler = await living_entity(ctx.session, realm.ruler_id) if realm.ruler_id is not None else None
@@ -374,10 +468,12 @@ async def measure_bases(ctx: TickContext, book: RealmBook, realm: Realm, row: Re
         if base.mortal_entity_id not in seen and not base.locked and not held(base.mortal_entity_id):
             await ctx.session.delete(base)
     await rotate(ctx, realm, row, bases, tally)
+    await answer_plotters(ctx, realm, bases, tally)
 
 
 async def keep_patronage(ctx: TickContext, tally: PatronageTally) -> None:
     book = await RealmBook.load(ctx.session)
+    laws = await LawBook.load(ctx.session)
     await bind_clients(ctx, book, tally)
     await loosen_ties(ctx, tally)
     for realm in sorted(book.realms.values(), key=lambda item: item.entity.id):
@@ -385,7 +481,7 @@ async def keep_patronage(ctx: TickContext, tally: PatronageTally) -> None:
         if row is None or held(realm.entity.id):
             continue
         if "institutions" not in row.locked:
-            row.institutions = await institutional_strength(ctx, realm)
+            row.institutions = await institutional_strength(ctx, laws, realm)
         await sell_office(ctx, realm, row, tally)
         await recoup(ctx, realm, tally)
         await grant_sinecure(ctx, realm, row, tally)

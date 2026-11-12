@@ -30,6 +30,9 @@ class SelectorateRules:
     purge_at: int = rule(30, 0, 100, P, "Coalition loyalty under which a ruler purges its least loyal member")
     purge_pct: int = rule(40, 0, 100, P, "Chance each epoch a ruler with a disloyal coalition purges (%)")
     coup_weight: int = rule(100, 0, 400, P, "How much a disloyal winning coalition raises the chance of a coup (%)")
+    balance_weight: int = rule(40, 0, 100, P, "How much one faction holding the balance of power narrows the winning coalition (%)")
+    satisfaction_cap: int = rule(3, 0, 100, P, "Most satisfaction public goods add to the farmers and craftsfolk of one town in an epoch")
+    opinion_weight: int = rule(30, 0, 200, P, "How much a member's regard for the ruler moves the member's loyalty (%)")
 
 
 @dataclass(frozen=True)
@@ -44,6 +47,9 @@ class LegitimacyTypeRules:
     bureaucracy_rational: int = rule(40, 0, 100, P, "Legal-rational legitimacy a realm with clerks and offices holds")
     law_rational: int = rule(10, 0, 100, P, "Legal-rational legitimacy each written or codified body of law adds")
     corruption_rational: int = rule(50, 0, 200, P, "How much corruption wears legal-rational legitimacy away (%)")
+    miracle_charisma: int = rule(10, 0, 100, P, "Charismatic legitimacy each recent miracle credited to the ruler adds")
+    miracle_epochs: int = rule(3, 1, 100, P, "Epochs a miracle credited to the ruler lends charisma")
+    prophecy_charisma: int = rule(15, 0, 100, P, "Charismatic legitimacy a ruler who fits a believed prophecy of return gains")
     legitimacy_weight: int = rule(10, 0, 100, P, "How much each kind of legitimacy above or below the middle moves a ruler's legitimacy (%)")
 
 
@@ -55,6 +61,7 @@ class RoutinisationRules:
     schism_pct: int = rule(30, 0, 100, P, "Chance a charismatic founder's death breaks the realm into schism (%)")
     schism_stability: int = rule(25, 0, 100, P, "Stability a realm loses in a schism")
     fragment_pct: int = rule(50, 0, 100, P, "Share of its member towns a big-man's following loses at the big-man's death (%)")
+    schism_claim: int = rule(40, 0, 100, P, "Strength of the claim a schism gives the founder's kin against the heir")
 
 
 @dataclass(frozen=True)
@@ -106,6 +113,8 @@ class PowerBaseRules:
     plot_at: int = rule(80, 0, 100, P, "Threat at which a character plots to take the throne")
     extortion: int = rule(100, 0, 1000000, P, "Coin an extorting character wrings from the treasury each epoch")
     defiance_stability: int = rule(3, 0, 100, P, "Stability a realm loses for each defiant character")
+    counter_pct: int = rule(50, 0, 100, P, "Chance each epoch a ruler answers a plotting subject by marriage, split command or purge (%)")
+    marriage_cut: int = rule(30, 0, 100, P, "Threat a marriage between the ruler's kin and a plotting subject's kin takes away")
 
 
 @dataclass(frozen=True)
@@ -139,6 +148,7 @@ class BreedingPlanRules:
     barren_epochs: int = rule(3, 1, 100, H, "Epochs a planned couple may stay childless before the match counts as barren")
     conceal_pct: int = rule(15, 0, 100, H, "Chance a planned match is hidden behind a concealed parentage (%)")
     conceal_secrecy: int = rule(5, 0, 100, H, "Secrecy a concealed parentage adds to the plan")
+    secret_severity: int = rule(40, 0, 100, H, "Severity of the secret of a concealed parentage")
 
 
 @dataclass(frozen=True)
@@ -172,6 +182,7 @@ class AcademicFreedomRules:
     research_weight: int = rule(40, 0, 200, K, "How much freedom above or below the middle moves research (%)")
     migrate_pct: int = rule(20, 0, 100, K, "Chance each epoch a scholar under suppressed learning leaves for a freer house (%)")
     carried_progress: int = rule(20, 0, 100, K, "Progress a migrating scholar carries toward each technique the new home lacks")
+    theory_weight: int = rule(40, 0, 200, K, "How much freedom above or below the middle moves the weight evidence carries in contests of theories (%)")
 
 
 @dataclass(frozen=True)

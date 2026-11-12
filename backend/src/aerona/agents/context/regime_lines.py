@@ -17,7 +17,8 @@ from aerona.db.tables.regime import (
     SchoolMemberRow,
 )
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.regime import Routinisation
+from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.regime import PowerStance, Routinisation
 from aerona.engine.primitives.records import definite
 from aerona.engine.regime.book import dominant, realm_seat
 from aerona.engine.regime.patronage import SEATS_KEPT
@@ -83,8 +84,28 @@ async def realm_lines(scope: Scope, me: EntityRow) -> list[str]:
     return found
 
 
+async def throne_lines(scope: Scope, me: EntityRow) -> list[str]:
+    realm_id = await scope.session.scalar(
+        select(OfficeRow.polity_entity_id).where(OfficeRow.holder_entity_id == me.id, OfficeRow.kind == OfficeKind.RULER).limit(1)
+    )
+    if realm_id is None:
+        return []
+    found: list[str] = []
+    for base in await scope.session.scalars(
+        select(PowerBaseRow)
+        .where(PowerBaseRow.polity_entity_id == realm_id, PowerBaseRow.stance != PowerStance.LOYAL)
+        .order_by(PowerBaseRow.threat.desc(), PowerBaseRow.mortal_entity_id)
+        .limit(TIE_LINES)
+    ):
+        found.append(
+            f"{await named(scope, base.mortal_entity_id)} (mortal {base.mortal_entity_id}) stands {words(base.stance.value)} "
+            f"toward your throne, threat {base.threat}"
+        )
+    return found
+
+
 async def mortal_regime_lines(scope: Scope, me: EntityRow) -> list[str]:
-    return [*await tie_lines(scope, me), *await standing_lines(scope, me), *await realm_lines(scope, me)]
+    return [*await tie_lines(scope, me), *await standing_lines(scope, me), *await realm_lines(scope, me), *await throne_lines(scope, me)]
 
 
 async def son_regime_lines(scope: Scope, son: SonRow) -> list[str]:
@@ -108,4 +129,12 @@ async def son_regime_lines(scope: Scope, son: SonRow) -> list[str]:
         .limit(REALM_LINES)
     ):
         found.append(f"learning is suppressed at {house.name} (structure {house.id}), freedom {freedom.level}")
+    for base, subject in await session.execute(
+        select(PowerBaseRow, EntityRow)
+        .join(EntityRow, EntityRow.id == PowerBaseRow.mortal_entity_id)
+        .where(EntityRow.world_id == son.current_world_id, PowerBaseRow.stance == PowerStance.PLOTTING)
+        .order_by(PowerBaseRow.threat.desc(), PowerBaseRow.mortal_entity_id)
+        .limit(REALM_LINES)
+    ):
+        found.append(f"{subject.name} (mortal {subject.id}) plots for the throne of {await named(scope, base.polity_entity_id)}, threat {base.threat}")
     return found

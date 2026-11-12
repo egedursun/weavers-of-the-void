@@ -163,6 +163,12 @@ async def appointment_weights(session: AsyncSession, rules: Rules, polity_id: in
     return found
 
 
+async def credential_rank(session: AsyncSession, mortal_id: int, rank: int | None, preferred: int) -> int | None:
+    if rank is None or rank <= preferred:
+        return rank
+    return preferred if await credentialed(session, mortal_id) else rank
+
+
 async def graduates(session: AsyncSession, rules: Rules, polity_id: int, epoch: int) -> int:
     since = epoch - rules.examinations.credential_epochs
     found = await session.scalar(
@@ -185,6 +191,13 @@ async def freedom_factor(session: AsyncSession, rules: Rules, community_id: int)
     if level is None:
         return 1.0
     return max(0.1, 1 + (level - HALF) * rules.academic_freedom.research_weight / PERCENT / HALF)
+
+
+async def inquiry_factor(session: AsyncSession, rules: Rules, community_id: int) -> float:
+    level = await freedom_of(session, community_id)
+    if level is None:
+        return 1.0
+    return max(0.1, 1 + (level - HALF) * rules.academic_freedom.theory_weight / PERCENT / HALF)
 
 
 async def schooled(session: AsyncSession, community_id: int) -> bool:

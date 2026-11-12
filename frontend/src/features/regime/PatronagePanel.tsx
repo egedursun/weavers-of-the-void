@@ -54,7 +54,7 @@ function TieCard({ row, blocked }: { row: Tie; blocked: string | null }) {
       caption={`${role.label} · since epoch ${row.since_epoch}`}
       removeLabel='Cut the tie'
       editTitle='Set the tie'
-      note='Favours owed and appointments bind clients to patrons; where institutions are weak, patrons place their clients in office and towns whose lords are clients vote for their patron.'
+      note='Favours owed and appointments bind clients to patrons; where institutions are weak (few clerks, unjust laws, little literacy), patrons place their clients in office and towns whose lords are clients vote for their patron.'
       fields={[
         {
           key: 'role',
@@ -350,7 +350,7 @@ function BaseCard({ row, blocked }: { row: Base; blocked: string | null }) {
       caption={`A power base of ${row.total} · weighed in epoch ${row.updated_epoch}`}
       removeLabel='Let it be weighed anew'
       editTitle='Set the power base'
-      note='Holdings, troops led by the character and their clients, offices, wealth and renown make a power base. Against the ruler’s own it becomes a threat: defiance shakes the realm, extortion drains the treasury, a plot leads the next coup.'
+      note='Holdings, troops led by the character and their clients, offices, wealth and renown make a power base. Against the ruler’s own it becomes a threat: defiance shakes the realm, extortion drains the treasury, a plot leads the next coup. Rulers answer a plotter by a marriage between the two families, by taking away their commands or by stripping them of every seat.'
       fields={[
         { key: 'holdings', label: 'Towns held', kind: 'number', min: 0 },
         {

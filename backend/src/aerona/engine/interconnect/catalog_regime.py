@@ -38,6 +38,9 @@ REGIME_MECHANICS = (
             Coupling(S.POLITY, "private goods buy the coalition's loyalty and breed corruption", E.MODIFIER, "selectorate.private_corruption"),
             Coupling(S.POLITY, "a disloyal coalition makes coups likelier", E.MODIFIER, "selectorate.coup_weight"),
             Coupling(S.POLITY, "rulers purge disloyal members of their circle", E.TRIGGER, "selectorate.purge_pct"),
+            Coupling(S.POLITY, "a faction holding the balance of power narrows the winning coalition", E.MODIFIER, "selectorate.balance_weight"),
+            Coupling(S.SOCIAL, "public goods content the farmers and craftsfolk", E.FLOW, "selectorate.satisfaction_cap"),
+            Coupling(S.MIND, "a member's regard for the ruler moves the member's loyalty", E.MODIFIER, "selectorate.opinion_weight"),
         ),
     ),
     Mechanic(
@@ -48,7 +51,7 @@ REGIME_MECHANICS = (
         phases=("regimes",),
         surface=Surface(drawer=DRAWER, chart="regime-legitimacy-chart"),
         backfill="regimes: every realm's kinds of legitimacy start from custom and are read from its ruler and laws after the upgrade",
-        templates=("regime.crisis", "regime.schism", "regime.institution", "regime.dynasty"),
+        templates=("regime.crisis", "regime.schism", "regime.institution", "regime.dynasty", "regime.rival_claim"),
         tables=(RegimeRow.__tablename__,),
         exposure=Exposure.TOOL,
         tools=("anoint_founder",),
@@ -59,6 +62,9 @@ REGIME_MECHANICS = (
             ),
             Coupling(S.POLITY, "a defeat costs charisma", E.MODIFIER, "legitimacy_types.defeat_charisma"),
             Coupling(S.POLITY, "a founder's death turns charisma into tradition or rules, or splits the realm", E.TRIGGER, "charisma_routinisation.schism_pct"),
+            Coupling(S.GODS, "miracles credited to the ruler lend charisma", E.MODIFIER, "legitimacy_types.miracle_charisma"),
+            Coupling(S.FAITH, "a ruler who fits a believed prophecy of return gains charisma", E.MODIFIER, "legitimacy_types.prophecy_charisma"),
+            Coupling(S.POLITY, "a schism gives the founder's kin a claim against the heir", E.TRIGGER, "charisma_routinisation.schism_claim"),
         ),
     ),
     Mechanic(
@@ -93,6 +99,7 @@ REGIME_MECHANICS = (
             Coupling(S.POLITY, "clients of the appointer are favoured where institutions are weak", E.MODIFIER, "clientelism.client_bonus"),
             Coupling(S.POLITY, "towns whose lords are clients vote for their patron's party", E.MODIFIER, "clientelism.client_votes_pct"),
             Coupling(S.SOCIAL, "favours owed make clients", E.TRIGGER, "clientelism.favour_at"),
+            Coupling(S.LAW, "just laws strengthen institutions against patronage", E.MODIFIER, "clientelism.justice_weight"),
         ),
     ),
     Mechanic(
@@ -122,7 +129,7 @@ REGIME_MECHANICS = (
         phases=("patronage",),
         surface=Surface(drawer=DRAWER),
         backfill="patronage: the bases of every office holder, house head and commander are weighed on the first epoch after the upgrade",
-        templates=("power_bases.extorted",),
+        templates=("power_bases.extorted", "power_bases.married", "power_bases.split", "power_bases.purged"),
         tables=(PowerBaseRow.__tablename__,),
         exposure=Exposure.CONTEXT,
         targets=("mortal", "polity"),
@@ -130,6 +137,7 @@ REGIME_MECHANICS = (
             Coupling(S.ECONOMY, "an extorting subject wrings coin from the treasury", E.FLOW, "power_bases.extortion"),
             Coupling(S.POLITY, "defiant subjects shake the realm's stability", E.MODIFIER, "power_bases.defiance_stability"),
             Coupling(S.POLITY, "a plotting subject leads the next coup", E.TRIGGER, "power_bases.plot_at"),
+            Coupling(S.HOUSEHOLD, "rulers bind plotters by marriage, split their commands or purge them", E.TRIGGER, "power_bases.counter_pct"),
         ),
     ),
     Mechanic(
@@ -200,6 +208,7 @@ REGIME_MECHANICS = (
         couplings=(
             Coupling(S.HOUSEHOLD, "love matches set the design back", E.MODIFIER, "breeding_plans.love_pct"),
             Coupling(S.INTRIGUE, "concealed parentage keeps the design secret", E.MODIFIER, "breeding_plans.conceal_secrecy"),
+            Coupling(S.INTRIGUE, "a concealed parentage becomes a secret that can be exposed", E.TRIGGER, "breeding_plans.secret_severity"),
         ),
     ),
     Mechanic(
@@ -239,6 +248,7 @@ REGIME_MECHANICS = (
             Coupling(S.KNOWLEDGE, "freedom quickens research and suppression slows it", E.MODIFIER, "academic_freedom.research_weight"),
             Coupling(S.DEMOGRAPHY, "scholars leave suppressed learning for freer houses", E.FLOW, "academic_freedom.migrate_pct"),
             Coupling(S.KNOWLEDGE, "migrating scholars carry techniques to their new home", E.FLOW, "academic_freedom.carried_progress"),
+            Coupling(S.KNOWLEDGE, "free inquiry lets evidence weigh more in contests of theories", E.MODIFIER, "academic_freedom.theory_weight"),
         ),
     ),
     Mechanic(

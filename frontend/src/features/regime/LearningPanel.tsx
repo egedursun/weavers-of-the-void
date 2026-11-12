@@ -277,7 +277,7 @@ function CredentialCard({
       caption={`In ${skillLabel(row.skill).toLowerCase()} · epoch ${row.epoch}`}
       removeLabel='Revoke it'
       editTitle='Set the credential'
-      note='Credentials raise their holder’s renown, weigh in appointments and, where the realm examines, open the career of office.'
+      note='Credentials raise their holder’s renown, weigh in appointments, put their holder first in line for office and, where the realm examines, open the career of office.'
       fields={[
         {
           key: 'kind',
@@ -425,7 +425,7 @@ function FreedomCard({
       caption={`Read in epoch ${row.updated_epoch}`}
       removeLabel='Let it be read anew'
       editTitle='Set the freedom of learning'
-      note='Laws of censorship, a faith that guards its orthodoxy and the ruler’s regard for knowledge set the freedom of learning. Freedom quickens research; suppression slows it and drives scholars to freer houses, carrying their techniques with them.'
+      note='Laws of censorship, a faith that guards its orthodoxy and the ruler’s regard for knowledge set the freedom of learning. Freedom quickens research and lets evidence weigh more when theories contend; suppression slows both and drives scholars to freer houses, carrying their techniques with them.'
       fields={[
         { key: 'level', label: 'Freedom', kind: 'number', min: 0, max: SPAN },
         {

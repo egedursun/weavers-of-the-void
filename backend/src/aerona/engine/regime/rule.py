@@ -3,32 +3,40 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.total import total
 from aerona.db.tables.cycles import GiftRow
+from aerona.db.tables.dominion import MiracleRecordRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.regime import CoalitionMemberRow, RegimeRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
+from aerona.domain.enums.entity import EntityFlag, EntityStatus
+from aerona.domain.enums.polity import ClaimBasis, DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.regime import LeadershipMode, LegitimacyType, Routinisation, SelectorateKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import psi_of
+from aerona.engine.factions.balance import power_balance
 from aerona.engine.lore.civics import realm_allows
+from aerona.engine.lore.legends import foretold_return
+from aerona.engine.mortal.kin import children_of, siblings_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
+from aerona.engine.polity.control import grant_claim
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.offices import appoint, subjects
 from aerona.engine.polity.standing import secede, war_record
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import has_flag, living_entity
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.regime.book import HALF, PROOFING, dominant, strongest_threat
+from aerona.engine.relations.book import relation
 
 SELECTORATES = total(
     GovernmentKind,
@@ -66,6 +74,7 @@ COALITION_RULES = total(
     },
 )
 TRIBAL = frozenset({GovernmentKind.CHIEFDOM, GovernmentKind.TRIBAL_CONFEDERATION})
+LOWER_CLASSES = (SocialClass.FARMER, SocialClass.ARTISAN)
 ELITES = (SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.WARRIOR, SocialClass.SCRIBE, SocialClass.MERCHANT)
 LAW_TECHNIQUES = (Technique.WRITTEN_LAW, Technique.CODIFIED_LAW)
 
@@ -132,6 +141,12 @@ async def choosers(ctx: TickContext, book: RealmBook, realm: Realm, kind: Select
     return found
 
 
+async def concentration(ctx: TickContext, realm: Realm) -> float:
+    shares = await power_balance(ctx, realm)
+    whole = sum(shares.values())
+    return max(shares.values()) / whole if whole else 0.0
+
+
 async def size_coalition(ctx: TickContext, book: RealmBook, realm: Realm, row: RegimeRow) -> None:
     table = ctx.rules.selectorate
     if "selectorate" not in row.locked:
@@ -139,7 +154,8 @@ async def size_coalition(ctx: TickContext, book: RealmBook, realm: Realm, row: R
     if "selectorate_size" not in row.locked:
         row.selectorate_size = await selectorate_size(ctx, book, realm, row.selectorate)
     if "coalition_size" not in row.locked:
-        row.coalition_size = round_half_up(row.selectorate_size * getattr(table, COALITION_RULES[realm.profile.decision_rule]) / PERCENT)
+        narrowed = 1 - await concentration(ctx, realm) * table.balance_weight / PERCENT
+        row.coalition_size = round_half_up(row.selectorate_size * getattr(table, COALITION_RULES[realm.profile.decision_rule]) / PERCENT * narrowed)
     if "public_share" in row.locked:
         return
     reach = row.coalition_size / max(1, row.selectorate_size)
@@ -197,8 +213,14 @@ async def spend_goods(ctx: TickContext, book: RealmBook, realm: Realm, row: Regi
     towns = [member for member in book.members(realm) if not held(member.id)]
     if public > 0 and towns:
         rise = min(table.prosperity_cap, public / len(towns) / table.coin_per_prosperity)
+        content = min(table.satisfaction_cap, public / len(towns) / table.coin_per_prosperity)
         for town in towns:
             shift_stat(town, "prosperity", rise)
+            society = await ctx.session.get(CommunitySocietyRow, town.id)
+            if society is not None:
+                for social_class in LOWER_CLASSES:
+                    field = f"satisfaction_{social_class.value}"
+                    setattr(society, field, clamp_int(getattr(society, field) + content, 0, PERCENT))
         spend(ctx, realm, -public, TreasuryEntry.INVESTMENT, "public goods")
         tally.public_goods += public
     if private > 0 and members:
@@ -216,7 +238,9 @@ async def sway_members(ctx: TickContext, realm: Realm, row: RegimeRow, members: 
     for member in members:
         if held(member.mortal_entity_id):
             continue
-        target = HALF + member.reward - offer
+        regard = await relation(ctx.session, member.mortal_entity_id, realm.ruler_id) if realm.ruler_id is not None else None
+        opinion = (regard.friendship - regard.rivalry) * table.opinion_weight / PERCENT if regard is not None else 0
+        target = HALF + member.reward - offer + opinion
         shift(member, "loyalty", (target - member.loyalty) * table.loyalty_drift_pct / PERCENT)
     if members and "coalition_loyalty" not in row.locked:
         row.coalition_loyalty = clamp_int(sum(member.loyalty for member in members) / len(members), 0, PERCENT)
@@ -258,6 +282,21 @@ async def has_heir(ctx: TickContext, realm: Realm) -> bool:
     return await ctx.session.get(DesignatedHeirRow, realm.ruler_id) is not None
 
 
+async def wonders_of(ctx: TickContext, ruler: EntityRow | None) -> float:
+    table = ctx.rules.legitimacy_types
+    if ruler is None:
+        return 0.0
+    since = ctx.epoch - table.miracle_epochs
+    miracles = int(
+        await ctx.session.scalar(
+            select(func.count()).select_from(MiracleRecordRow).where(MiracleRecordRow.credited_node_id == ruler.id, MiracleRecordRow.epoch > since)
+        )
+        or 0
+    )
+    foretold = table.prophecy_charisma if await foretold_return(ctx, ruler) else 0
+    return miracles * table.miracle_charisma + foretold
+
+
 async def legitimacy_targets(ctx: TickContext, realm: Realm, ruler: EntityRow | None) -> dict[LegitimacyType, float]:
     table = ctx.rules.legitimacy_types
     seat = realm.office(OfficeKind.RULER)
@@ -266,8 +305,10 @@ async def legitimacy_targets(ctx: TickContext, realm: Realm, ruler: EntityRow | 
     traditional = min(PERCENT, tenure * PERCENT / table.tenure_epochs) + table.heir_tradition * await has_heir(ctx, realm) - table.usurper_tradition * usurped
     won, lost, _ = await war_record(ctx, realm)
     charisma = (stat_or(ruler, "charisma", 0) + (ruler.importance or 0)) / 2 if ruler is not None else 0
-    chosen = table.chosen_charisma if ruler is not None and ruler.creator_son_id is not None else 0
-    charismatic = charisma + chosen + won * table.victory_charisma - lost * table.defeat_charisma
+    chosen = (
+        table.chosen_charisma if ruler is not None and (ruler.creator_son_id is not None or await has_flag(ctx.session, ruler.id, EntityFlag.CHOSEN)) else 0
+    )
+    charismatic = charisma + chosen + won * table.victory_charisma - lost * table.defeat_charisma + await wonders_of(ctx, ruler)
     rational = (
         table.bureaucracy_rational * await realm_allows(ctx.session, realm, Technique.BUREAUCRACY)
         + sum([table.law_rational for technique in LAW_TECHNIQUES if await realm_allows(ctx.session, realm, technique)])
@@ -308,13 +349,44 @@ async def routinise(ctx: TickContext, book: RealmBook, realm: Realm, row: Regime
         await fragment(ctx, book, realm, tally)
 
 
+async def rival_claim(ctx: TickContext, realm: Realm, founder_id: int | None) -> int | None:
+    kin = await living_kin(ctx, founder_id)
+    claimant = next((mortal for mortal in kin if mortal.id != realm.ruler_id and not held(mortal.id)), None)
+    if claimant is None:
+        return None
+    try:
+        await grant_claim(ctx, claimant.id, realm.entity.id, strength=ctx.rules.charisma_routinisation.schism_claim, basis=ClaimBasis.INHERITANCE)
+    except (NotFoundError, ValidationFailedError):
+        return None
+    await note(
+        ctx,
+        f"{claimant.name} claimed {realm.entity.name} for the founder's line against the heir.",
+        key="regime.rival_claim",
+        ids=[realm.entity.id, claimant.id],
+    )
+    return claimant.id
+
+
+async def living_kin(ctx: TickContext, founder_id: int | None) -> list[EntityRow]:
+    if founder_id is None:
+        return []
+    found: list[EntityRow] = []
+    for kin_id in [*await children_of(ctx.session, founder_id), *await siblings_of(ctx.session, founder_id)]:
+        mortal = await living_entity(ctx.session, kin_id)
+        if mortal is not None:
+            found.append(mortal)
+    return sorted(found, key=lambda mortal: (-(mortal.importance or 0), mortal.id))
+
+
 async def turn_charisma(ctx: TickContext, realm: Realm, row: RegimeRow, tally: RegimeTally) -> None:
     table = ctx.rules.charisma_routinisation
+    founder_id = row.founder_entity_id
     converted = row.charismatic * table.convert_pct / PERCENT
     if ctx.rng(f"regime.schism.{realm.entity.id}.{ctx.epoch}").chance(table.schism_pct):
         row.routinisation = Routinisation.SCHISM
         shift(realm.profile, "stability", -table.schism_stability)
         tally.schisms += 1
+        await rival_claim(ctx, realm, founder_id)
         await note(
             ctx,
             f"The death of its founder split {realm.entity.name}: the faithful of the founder would not follow the heir.",
