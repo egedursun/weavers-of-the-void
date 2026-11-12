@@ -62,6 +62,7 @@ from aerona.engine.polity.revenue import RevenueTally, tend_revenue
     "table.polity_territories",
     "table.preparedness",
     "table.pressures",
+    "table.regimes",
     "table.relationships",
     "table.reputations",
     "table.resolution_votes",

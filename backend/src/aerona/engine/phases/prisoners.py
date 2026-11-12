@@ -192,6 +192,7 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     "table.captives",
     "table.claims",
     "table.community_cohorts",
+    "table.community_relations",
     "table.community_stocks",
     "table.cult_tenets",
     "table.culture_values",

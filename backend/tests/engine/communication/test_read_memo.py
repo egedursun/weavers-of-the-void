@@ -1,10 +1,15 @@
-from sqlalchemy import select, update
+import warnings
 
-from aerona.db.read_memo import memo_of
+from sqlalchemy import event, select, update
+
+from aerona.db.read_memo import DirtyStates, memo_of, pending_tables, table_names
 from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.economy import GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.services.community_relations import relation
 from tests.engine.society.factories import Realm, context, settlement
@@ -70,3 +75,61 @@ async def test_a_read_flushes_only_when_it_reads_a_table_with_pending_changes(re
     assert town in realm.session.dirty
     named = await realm.session.scalar(select(NodeRow.name).where(NodeRow.id == town.id))
     assert named == "Fernhollow Vale" and town not in realm.session.dirty
+
+
+async def test_dirty_tables_are_counted_as_rows_change_and_cleared_by_a_flush(realm: Realm) -> None:
+    sync = realm.session.sync_session
+    assert isinstance(sync.identity_map._modified, DirtyStates)
+    first, second = await settlement(realm, "Ashford"), await settlement(realm, "Brackwater")
+    await realm.session.flush()
+    assert pending_tables(sync) == set()
+    first.name = "Ashford Vale"
+    second.name = "Brackwater Vale"
+    assert "nodes" in pending_tables(sync)
+    assert memo_of(realm.session, "probe", table_names([NodeRow])) is None
+    assert memo_of(realm.session, "probe", table_names([CosmosRow])) is not None
+    await realm.session.flush()
+    assert pending_tables(sync) == set() and not sync.identity_map._modified.mappers
+    sync.expunge_all()
+    assert isinstance(sync.identity_map._modified, DirtyStates)
+
+
+async def test_a_get_with_no_key_finds_nothing_without_asking_the_database(realm: Realm) -> None:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        assert await realm.session.get(EntityRow, None) is None
+        assert await realm.session.get(GoodsFlowRow, (None, None, None, None)) is None
+
+
+async def test_a_live_memo_lasts_through_changed_values_until_rows_come_or_go(realm: Realm) -> None:
+    town = await settlement(realm, "Ashford")
+    await realm.session.flush()
+    names = table_names([NodeRow])
+    memo = memo_of(realm.session, "live", names, live=True)
+    assert memo is not None
+    memo["kept"] = 1
+    town.name = "Ashford Vale"
+    assert memo_of(realm.session, "live", names) is None
+    assert memo_of(realm.session, "live", names, live=True) == {"kept": 1}
+    await realm.session.flush()
+    assert memo_of(realm.session, "live", names, live=True) == {"kept": 1}
+    await settlement(realm, "Brackwater")
+    assert memo_of(realm.session, "live", names, live=True) == {}
+
+
+async def test_the_goods_ledger_moves_stock_and_logs_flows_without_a_flush_per_call(realm: Realm) -> None:
+    town = await settlement(realm, "Ashford")
+    ledger = goods_of(realm.session, 3)
+    await ledger.add(town.id, CommodityKind.GRAIN, 50, GoodsFlow.HARVEST)
+    await ledger.take(town.id, CommodityKind.GRAIN, 5, GoodsFlow.CONSUMPTION)
+    await realm.session.flush()
+    flushes: list[object] = []
+    event.listen(realm.session.sync_session, "before_flush", lambda *_: flushes.append(1))
+    for _ in range(10):
+        await ledger.add(town.id, CommodityKind.GRAIN, 7, GoodsFlow.HARVEST)
+        await ledger.take(town.id, CommodityKind.GRAIN, 3, GoodsFlow.CONSUMPTION)
+    assert flushes == []
+    assert await holding(realm.session, town.id, CommodityKind.GRAIN) == 85
+    flows = {row.flow: row.quantity for row in await realm.session.scalars(select(GoodsFlowRow).where(GoodsFlowRow.community_entity_id == town.id))}
+    assert flushes == [1]
+    assert flows == {GoodsFlow.HARVEST: 120, GoodsFlow.CONSUMPTION: -35}

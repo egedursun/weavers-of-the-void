@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session
 
 from aerona.constants.units import PERCENT
-from aerona.db.read_memo import register_index
+from aerona.db.read_memo import register_index, touched_rows
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import BeliefRow
@@ -70,19 +70,17 @@ def follow_beliefs(sync: Session, *_: object) -> None:
     if index is None:
         return
     whole = bool(sync.info.get(BELIEF_INDEX_WHOLE))
-    for item in sync.new:
-        if isinstance(item, BeliefRow) and (whole or item.holder_node_id in index):
+    new, dirty, deleted = touched_rows(sync, BeliefRow)
+    for item in new:
+        if whole or item.holder_node_id in index:
             index.setdefault(item.holder_node_id, {}).setdefault((item.subject_node_id, item.attribute), item)
-    for item in sync.deleted:
-        if isinstance(item, BeliefRow):
-            known = index.get(item.holder_node_id, {})
-            if known.get((item.subject_node_id, item.attribute)) is item:
-                del known[(item.subject_node_id, item.attribute)]
-    for item in sync.dirty:
-        if isinstance(item, BeliefRow) and rekeyed(item):
-            sync.info.pop(BELIEF_INDEX, None)
-            sync.info.pop(BELIEF_INDEX_WHOLE, None)
-            return
+    for item in deleted:
+        known = index.get(item.holder_node_id, {})
+        if known.get((item.subject_node_id, item.attribute)) is item:
+            del known[(item.subject_node_id, item.attribute)]
+    if any(rekeyed(item) for item in dirty):
+        sync.info.pop(BELIEF_INDEX, None)
+        sync.info.pop(BELIEF_INDEX_WHOLE, None)
 
 
 def drop_beliefs(sync: Session, *_: object) -> None:

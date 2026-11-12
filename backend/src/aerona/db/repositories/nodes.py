@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm.util import identity_key
 
 from aerona.core.errors import NotFoundError
+from aerona.db.read_memo import memo_of, table_names
 from aerona.db.repositories.base import Repository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalaxyRow
@@ -26,12 +27,23 @@ NODE_TABLES: dict[NodeKind, type[NodeRow]] = {
 }
 
 
+NODE_KINDS = "aerona.nodes.kind_of"
+KIND_TABLES = table_names([NodeRow])
+
+
 class NodeRepository(Repository):
     async def kind_of(self, node_id: int) -> NodeKind | None:
         known = self.session.sync_session.identity_map.get(identity_key(NodeRow, node_id))
         if isinstance(known, NodeRow):
             return known.kind
+        memo = memo_of(self.session, NODE_KINDS, KIND_TABLES)
+        if memo is not None and node_id in memo:
+            remembered: NodeKind | None = memo[node_id]
+            return remembered
         kind: NodeKind | None = await self.session.scalar(select(NodeRow.kind).where(NodeRow.id == node_id))
+        after = memo_of(self.session, NODE_KINDS, KIND_TABLES)
+        if after is not None:
+            after[node_id] = kind
         return kind
 
     async def require_kind(self, node_id: int) -> NodeKind:

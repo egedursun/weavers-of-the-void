@@ -9,6 +9,7 @@ from aerona.engine.polity.trials import TrialTally, tend_cases
     "law.rigidity",
     "table.council_seats",
     "table.culture_values",
+    "table.epoch_year_cursors",
     "table.estate_privileges",
     "table.estate_profiles",
     "table.faction_goals",

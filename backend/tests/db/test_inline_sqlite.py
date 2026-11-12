@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from aerona.db.inline_sqlite import InlineConnection
+from aerona.db.read_memo import KEEP_KEY
 from aerona.db.session import Database
 
 
@@ -80,4 +81,20 @@ async def test_steps_keep_one_session_and_reload_after_a_foreign_write(tmp_path:
         async with steps.step() as session:
             fresh = await session.get(Probe, 1)
             assert fresh is kept and fresh is not None and fresh.value == 2
+    await database.dispose()
+
+
+async def test_each_step_starts_a_fresh_keep_list_so_old_rows_can_be_freed(tmp_path: Path) -> None:
+    database = Database(f"sqlite+aiosqlite:///{tmp_path / 'keep.db'}")
+    async with database.engine.begin() as connection:
+        await connection.run_sync(ProbeBase.metadata.create_all)
+    async with database.steps() as steps:
+        async with steps.step() as session:
+            session.add(Probe(id=1, value=1))
+        async with steps.step() as session:
+            await session.get(Probe, 1)
+            first: list[object] = session.sync_session.info[KEEP_KEY]
+        async with steps.step() as session:
+            second: list[object] = session.sync_session.info[KEEP_KEY]
+            assert second is not first and second == []
     await database.dispose()

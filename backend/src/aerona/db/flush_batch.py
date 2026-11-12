@@ -3,10 +3,9 @@ from typing import Any
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy.orm.base import instance_state
 
 from aerona.db.profile_guard import hold_profile_columns
-from aerona.db.read_memo import KEEP_KEY
+from aerona.db.read_memo import KEEP_KEY, DirtyStates
 
 
 def changed_columns(state: Any) -> frozenset[str]:
@@ -19,9 +18,14 @@ def changed_columns(state: Any) -> frozenset[str]:
 def align_updates(sync: Session, *_: object) -> None:
     if KEEP_KEY not in sync.info:
         return
+    modified = sync.identity_map._modified
+    shared = {mapper for mapper, count in modified.mappers.items() if count > 1} if isinstance(modified, DirtyStates) else None
+    if shared is not None and not shared:
+        return
     groups: dict[Any, list[tuple[Any, frozenset[str]]]] = {}
-    for row in sync.dirty:
-        state = instance_state(row)
+    for state in list(modified):
+        if state in sync._deleted or (shared is not None and state.mapper not in shared):
+            continue
         changed = changed_columns(state)
         if changed:
             groups.setdefault(state.mapper, []).append((state, changed))

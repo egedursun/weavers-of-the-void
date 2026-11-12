@@ -44,6 +44,7 @@ class ArmedTally:
 
 @reads(
     "settlement.population",
+    "table.community_societies",
     "table.crowd_moods",
     "table.districts",
     "table.faction_profiles",
@@ -53,6 +54,7 @@ class ArmedTally:
     "table.outbreaks",
     "table.polity_members",
     "table.polity_profiles",
+    "table.polity_stress",
     "table.settlement_profiles",
     "table.sky_events",
 )
@@ -120,6 +122,7 @@ async def social_norms(ctx: TickContext) -> None:
     "table.collection_members",
     "table.collection_places",
     "table.culture_values",
+    "table.epoch_year_cursors",
     "table.house_members",
     "table.incident_collections",
     "table.memory_strikes",
@@ -196,10 +199,14 @@ async def lost_lands(ctx: TickContext) -> None:
     "table.bonds",
     "table.collection_members",
     "table.collection_places",
+    "table.community_societies",
+    "table.epoch_year_cursors",
     "table.incident_collections",
+    "table.mortal_profiles",
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
+    "table.settlement_profiles",
     "table.storylet_runs",
     "table.storytellers",
 )
@@ -232,7 +239,7 @@ async def social_learning(ctx: TickContext) -> None:
     count(ctx, "social_learning", tally)
 
 
-@reads("table.community_cohorts", "table.generations", "table.incident_collections")
+@reads("table.community_cohorts", "table.community_societies", "table.generations", "table.incident_collections")
 @writes("table.culture_values", "table.generations", "table.settlement_profiles")
 async def generations(ctx: TickContext) -> None:
     tally = GenerationTally()
@@ -264,7 +271,7 @@ async def role_norms(ctx: TickContext) -> None:
     count(ctx, "role_norm", tally)
 
 
-@reads("table.calendars", "table.dating_systems", "table.holder_techniques", "table.offices")
+@reads("table.calendars", "table.cosmos", "table.dating_systems", "table.holder_techniques", "table.offices")
 @writes("table.dating_systems")
 async def dating_systems(ctx: TickContext) -> None:
     tally = DatingTally()
@@ -275,6 +282,7 @@ async def dating_systems(ctx: TickContext) -> None:
 @reads(
     "table.armies",
     "table.arms",
+    "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.house_members",
     "table.house_profiles",

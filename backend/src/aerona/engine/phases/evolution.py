@@ -35,7 +35,7 @@ async def trait_evolution(ctx: TickContext) -> None:
     count(ctx, "trait", tally)
 
 
-@reads("table.entity_flags", "table.species_profiles", "table.species_ranges", "table.species_traits")
+@reads("table.entity_flags", "table.epoch_year_cursors", "table.species_profiles", "table.species_ranges", "table.species_traits")
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.species_ranges")
 async def niches(ctx: TickContext) -> None:
     tally = NicheTally()
@@ -65,7 +65,7 @@ async def feral_reversion(ctx: TickContext) -> None:
     count(ctx, "feral", tally)
 
 
-@reads("table.region_environment", "table.species_ranges")
+@reads("table.region_environment", "table.species_profiles", "table.species_ranges")
 async def lineages(ctx: TickContext) -> None:
     tally = LineageTally()
     await mark_lineages(ctx, tally)
@@ -187,7 +187,7 @@ async def biome_succession(ctx: TickContext) -> None:
     count(ctx, "succession", tally)
 
 
-@reads("table.region_environment", "table.world_cycles")
+@reads("table.region_environment", "table.world_cycles", "table.world_physics")
 @writes("table.world_cycles", "table.world_physics")
 async def world_cycles(ctx: TickContext) -> None:
     tally = CycleTally()

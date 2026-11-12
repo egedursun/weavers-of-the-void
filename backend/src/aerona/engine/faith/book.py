@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultTenetRow
@@ -87,6 +88,7 @@ class FaithBook:
         return church is not None and church.holds(tenet)
 
 
+@memoized(BondRow)
 async def patron_node(session: AsyncSession, entity_id: int) -> int | None:
     statement = select(BondRow.target_node_id).where(BondRow.source_node_id == entity_id, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE)
     return await session.scalar(statement.order_by(BondRow.id).limit(1))

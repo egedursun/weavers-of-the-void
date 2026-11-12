@@ -11,7 +11,7 @@ from sqlalchemy.orm.session import _EntityBindKey, _PKIdentityArgument
 from sqlalchemy.sql.selectable import ForUpdateParameter
 from sqlalchemy.util import EMPTY_DICT
 
-from aerona.db.read_memo import memo_of, table_names
+from aerona.db.read_memo import memo_of, table_names, track_dirty
 
 PREFIX_KEYS = 2
 COLUMN_KEYS: dict[Mapper[Any], tuple[str, ...]] = {}
@@ -24,7 +24,19 @@ def column_keys(mapper: Mapper[Any]) -> tuple[str, ...]:
     return found
 
 
+class TrackedSession(Session):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        track_dirty(self)
+
+    def expunge_all(self) -> None:
+        super().expunge_all()
+        track_dirty(self)
+
+
 class FastSession(AsyncSession):
+    sync_session_class = TrackedSession
+
     async def delete(self, instance: object) -> None:
         if instance_state(instance).pending:
             self.sync_session.expunge(instance)
@@ -42,6 +54,8 @@ class FastSession(AsyncSession):
         identity_token: Any | None = None,
         execution_options: OrmExecuteOptionsParameter = EMPTY_DICT,
     ) -> O | None:
+        if not isinstance(ident, dict) and all(part is None for part in (ident if isinstance(ident, tuple | list) else (ident,))):
+            return None
         plain = not options and not populate_existing and not with_for_update and identity_token is None and not execution_options
         mapper = entity if isinstance(entity, Mapper) else class_mapper(entity)
         if not plain or isinstance(ident, dict):
@@ -62,6 +76,9 @@ class FastSession(AsyncSession):
                 if all(key in state.dict for key in column_keys(mapper)):
                     return known
                 return await super().get(entity, ident, populate_existing=True)
+        return await self.load_unknown(entity, mapper, ident, key)
+
+    async def load_unknown[O](self, entity: _EntityBindKey[O], mapper: Mapper[O], ident: _PKIdentityArgument, key: Any) -> O | None:
         tables = table_names(mapper.tables)
         if len(mapper.primary_key) == PREFIX_KEYS and isinstance(ident, tuple | list):
             siblings = await self.prefix_rows(mapper, ident[0], tables)

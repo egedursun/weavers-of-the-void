@@ -6,7 +6,7 @@ from sqlalchemy import event, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session
 
-from aerona.db.read_memo import KEEP_KEY, pending_tables, register_index
+from aerona.db.read_memo import KEEP_KEY, pending_tables, register_index, touched_rows
 
 INDEX_PREFIX = "aerona.key_index."
 
@@ -88,18 +88,17 @@ def follow_flush(sync: Session, *_: object) -> None:
         found: KeyIndex | None = sync.info.get(key)
         if found is None:
             continue
-        for row in sync.new:
+        new, dirty, deleted = touched_rows(sync, spec.row_type)
+        for row in new:
             if spec.covers(row, found):
                 found.add(row)
-        for row in sync.dirty:
-            if isinstance(row, spec.row_type):
-                if spec.covers(row, found):
-                    found.moved(row)
-                elif id(row) in found.keys:
-                    found.remove(row)
-        for row in sync.deleted:
-            if isinstance(row, spec.row_type):
+        for row in dirty:
+            if spec.covers(row, found):
+                found.moved(row)
+            elif id(row) in found.keys:
                 found.remove(row)
+        for row in deleted:
+            found.remove(row)
 
 
 def drop_all(sync: Session, *_: object) -> None:

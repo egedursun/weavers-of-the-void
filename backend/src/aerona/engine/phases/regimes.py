@@ -25,13 +25,16 @@ from aerona.engine.regime.rule import RegimeTally, keep_regimes
     "table.culture_ethics",
     "table.designated_heirs",
     "table.entity_flags",
+    "table.epoch_year_cursors",
     "table.geasa",
     "table.gifts",
     "table.holder_techniques",
     "table.house_members",
     "table.legend_profiles",
     "table.memories",
+    "table.minds",
     "table.miracle_records",
+    "table.mortal_profiles",
     "table.natural_law_profiles",
     "table.nodes",
     "table.oaths",
@@ -92,6 +95,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.oaths",
     "table.offices",
     "table.patronage_ties",
+    "table.people_culture",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
@@ -125,7 +129,7 @@ async def patronage(ctx: TickContext) -> None:
     count(ctx, "patronage", tally)
 
 
-@reads("table.feuds", "table.house_profiles", "table.lineage_segments")
+@reads("table.feuds", "table.house_profiles", "table.lineage_segments", "table.polity_profiles")
 @writes("table.lineage_segments")
 async def kin_politics(ctx: TickContext) -> None:
     tally = LineageTally()

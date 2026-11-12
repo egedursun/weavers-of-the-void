@@ -6,7 +6,7 @@ from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session
 
-from aerona.db.read_memo import KEEP_KEY, pending_tables, register_index
+from aerona.db.read_memo import KEEP_KEY, pending_tables, register_index, touched_rows
 from aerona.db.tables.bonds import BondRow
 from aerona.domain.enums.bond import BondKind, BondState
 
@@ -87,15 +87,13 @@ def follow_flush(sync: Session, *_: object) -> None:
     lookup: BondLookup | None = sync.info.get(INDEX_KEY)
     if lookup is None:
         return
-    for row in sync.new:
-        if isinstance(row, BondRow):
-            lookup.add(row)
-    for row in sync.dirty:
-        if isinstance(row, BondRow):
-            lookup.moved(row)
-    for row in sync.deleted:
-        if isinstance(row, BondRow):
-            lookup.remove(row)
+    new, dirty, deleted = touched_rows(sync, BondRow)
+    for row in new:
+        lookup.add(row)
+    for row in dirty:
+        lookup.moved(row)
+    for row in deleted:
+        lookup.remove(row)
 
 
 def drop_lookup(sync: Session, *_: object) -> None:

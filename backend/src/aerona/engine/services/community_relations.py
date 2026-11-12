@@ -7,7 +7,7 @@ from aerona.catalog.mind import MEMORIES
 from aerona.catalog.society import community_relation_label
 from aerona.constants.schema import SINGLETON_ID
 from aerona.constants.units import PERCENT
-from aerona.db.read_memo import memo_of
+from aerona.db.read_memo import memo_of, memoized
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import FeudRow
@@ -55,6 +55,7 @@ def pair_key(first: int, second: int) -> tuple[int, int]:
     return (first, second) if first < second else (second, first)
 
 
+@memoized(CosmosRow)
 async def cosmos_epoch(session: AsyncSession) -> int:
     cosmos = await session.get(CosmosRow, SINGLETON_ID)
     return cosmos.epoch if cosmos is not None else 0
@@ -104,7 +105,6 @@ async def refresh_relation(session: AsyncSession, rules: Rules, epoch: int, firs
         return RELATION_MAX
     row = await _ensure_row(session, rules, first, second)
     row.value = await pair_relation(session, rules, epoch, first, second)
-    await session.flush()
     return row.value
 
 

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -203,6 +204,10 @@ async def spy_reports(ctx: TickContext, tally: SourceTally) -> None:
             tally.learned += 1
 
 
+def shown_facts(community: EntityRow) -> list[tuple[str, int]]:
+    return [(attribute, truth) for attribute in BELIEF_ATTRIBUTES if (truth := stat(community, attribute)) is not None]
+
+
 async def neighbours_seen(ctx: TickContext, atlas: RegionAtlas, tally: SourceTally) -> None:
     confidence = ctx.rules.belief_state.observe_confidence
     communities = list(
@@ -210,19 +215,23 @@ async def neighbours_seen(ctx: TickContext, atlas: RegionAtlas, tally: SourceTal
             select(EntityRow).where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_(list(COMMUNITY_TYPES))).order_by(EntityRow.id)
         )
     )
+    homes = {community.id: atlas.top_region(community.id) for community in communities}
+    shown = {community.id: shown_facts(community) for community in communities}
+    by_world: dict[int | None, list[EntityRow]] = defaultdict(list)
+    for community in communities:
+        by_world[community.world_id].append(community)
     for watcher in communities:
         if held(watcher.id):
             continue
-        home = atlas.top_region(watcher.id)
-        for other in communities:
-            if other.id == watcher.id or other.world_id != watcher.world_id:
+        home = homes[watcher.id]
+        for other in by_world[watcher.world_id]:
+            if other.id == watcher.id:
                 continue
-            hops = atlas.region_hops(home, atlas.top_region(other.id))
+            hops = atlas.region_hops(home, homes[other.id])
             if hops is None or hops > NEIGHBOUR_HOPS:
                 continue
-            for attribute in BELIEF_ATTRIBUTES:
-                truth = stat(other, attribute)
-                if truth is not None and await believe(ctx, watcher.id, other.id, attribute, truth, source=BeliefSource.OBSERVATION, confidence=confidence):
+            for attribute, truth in shown[other.id]:
+                if await believe(ctx, watcher.id, other.id, attribute, truth, source=BeliefSource.OBSERVATION, confidence=confidence):
                     tally.beliefs += 1
 
 

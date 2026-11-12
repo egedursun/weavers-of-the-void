@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from sqlalchemy import select
 
 from aerona.core.errors import AeronaError
+from aerona.db.session import Steps
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.enums.epoch import EngineStage, EpochPhase
@@ -40,26 +41,27 @@ async def run_engine_stage(
     async with ec.database.read() as session:
         done = await engine_phases_done(session, ec.epoch, stage)
     disabled = disabled_by_rules(environment.rules)
-    for phase in phases:
-        if phase.name in done:
-            continue
-        if phase.name in disabled:
-            environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
-            continue
-        try:
-            await run_engine_phase(ec, stage, phase, environment)
-        except AeronaError as error:
-            if phase.name not in tolerant:
-                raise
-            LOGGER.exception("Engine step %s failed and was skipped", phase.name)
-            environment.stats.count(f"{phase.name}.{FAILED_COUNTER}")
-            ec.runtime.error(f"Engine step {phase.name}: {error.message}")
+    async with ec.database.steps() as steps:
+        for phase in phases:
+            if phase.name in done:
+                continue
+            if phase.name in disabled:
+                environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
+                continue
+            try:
+                await run_engine_phase(ec, stage, phase, environment, steps)
+            except AeronaError as error:
+                if phase.name not in tolerant:
+                    raise
+                LOGGER.exception("Engine step %s failed and was skipped", phase.name)
+                environment.stats.count(f"{phase.name}.{FAILED_COUNTER}")
+                ec.runtime.error(f"Engine step {phase.name}: {error.message}")
 
 
-async def run_engine_phase(ec: EpochContext, stage: EngineStage, phase: Phase, environment: TickEnvironment) -> None:
+async def run_engine_phase(ec: EpochContext, stage: EngineStage, phase: Phase, environment: TickEnvironment, steps: Steps) -> None:
     started = time.perf_counter()
     try:
-        async with ec.database.write() as session:
+        async with steps.step() as session:
             await run_guarded(phase, TickContext(environment, session, phase.name))
             await mark_engine_phase(session, ec.epoch, stage, phase.name, time.perf_counter() - started)
     except AeronaError:

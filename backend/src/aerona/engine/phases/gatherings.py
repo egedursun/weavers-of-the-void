@@ -35,6 +35,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.community_stocks",
     "table.crime_cases",
     "table.culture_ethics",
+    "table.epoch_year_cursors",
     "table.gathering_guests",
     "table.gatherings",
     "table.hooks",
@@ -130,7 +131,17 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
     return True
 
 
-@reads("table.cosmos", "table.dominions", "table.god_designs", "table.god_scales", "table.incidents", "table.region_dominion", "table.storytellers")
+@reads(
+    "table.cosmos",
+    "table.dominions",
+    "table.epoch_year_cursors",
+    "table.god_designs",
+    "table.god_scales",
+    "table.incidents",
+    "table.region_dominion",
+    "table.region_environment",
+    "table.storytellers",
+)
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
@@ -160,7 +171,14 @@ async def site_rooms(ctx: TickContext) -> None:
 
 
 @reads(
-    "table.collection_members", "table.collection_places", "table.excavation_stages", "table.excavations", "table.nodes", "table.polity_members", "table.skills"
+    "table.collection_members",
+    "table.collection_places",
+    "table.epoch_year_cursors",
+    "table.excavation_stages",
+    "table.excavations",
+    "table.nodes",
+    "table.polity_members",
+    "table.skills",
 )
 @writes(
     "table.chronicle",

@@ -65,6 +65,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.identities",
     "table.offices",
     "table.outbreaks",
+    "table.people_culture",
     "table.polity_members",
     "table.relationships",
     "table.schemes",

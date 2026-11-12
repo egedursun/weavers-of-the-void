@@ -612,6 +612,7 @@ async def body_society(ctx: TickContext) -> None:
     "table.culture_values",
     "table.entities",
     "table.entity_flags",
+    "table.genomes",
     "table.hero_quests",
     "table.holder_levels",
     "table.holder_techniques",

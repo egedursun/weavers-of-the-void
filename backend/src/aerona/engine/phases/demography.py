@@ -89,6 +89,7 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.outbreaks",
     "table.people_biology",
     "table.people_culture",
+    "table.people_reproduction",
     "table.prostheses",
     "table.region_environment",
     "table.role_norms",
@@ -290,6 +291,7 @@ async def refresh_people(ctx: TickContext, atlas: RegionAtlas, tally: BattleTall
     "table.species_profiles",
     "table.world_biochemistries",
     "table.world_maps",
+    "table.world_physics",
 )
 @writes(
     "people.population",

@@ -255,6 +255,7 @@ async def item_cycles(ctx: TickContext) -> None:
     "table.community_societies",
     "table.culture_values",
     "table.entities",
+    "table.epoch_year_cursors",
     "table.holder_techniques",
     "table.language_intelligibility",
     "table.memories",

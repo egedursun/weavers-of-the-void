@@ -184,6 +184,7 @@ async def grow_community(
     "table.world_biochemistries",
     "table.world_domain_hooks",
     "table.world_maps",
+    "table.world_physics",
 )
 @writes("cult.followers", "people.population", "settlement.population", "table.community_cohorts", "table.entities")
 async def population_growth(ctx: TickContext) -> None:

@@ -3,10 +3,12 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.polity import TreatyPartyRow, TreatyProfileRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.statecraft import DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.polity import OfficeKind, TreatyKind, TreatyStatus
 from aerona.domain.enums.settlement import DistrictKind
@@ -81,8 +83,8 @@ async def shift_regard(ctx: TickContext, holder_id: int, subject_id: int, *, thr
     row.epoch = ctx.epoch
 
 
-async def alarm(ctx: TickContext, aggressor_id: int, amount: int) -> int:
-    book = await RealmBook.load(ctx.session)
+async def alarm(ctx: TickContext, aggressor_id: int, amount: int, book: RealmBook | None = None) -> int:
+    book = book or await RealmBook.load(ctx.session)
     aggressor = book.realm_for(aggressor_id)
     if aggressor is None or amount <= 0:
         return 0
@@ -110,12 +112,21 @@ async def on_war(ctx: TickContext, aggressor_id: int, cause: WarCause | None) ->
     return await alarm(ctx, aggressor_id, ctx.rules.statecraft.war_threat)
 
 
+async def living_realm(ctx: TickContext, polity_id: int) -> bool:
+    entity = await ctx.session.get(EntityRow, polity_id)
+    found = entity is not None and entity.entity_type is EntityType.POLITY and entity.status is EntityStatus.CANON
+    return found and await ctx.session.get(PolityProfileRow, polity_id) is not None
+
+
 async def realm_ids(ctx: TickContext, node_id: int | None) -> int | None:
     if node_id is None:
         return None
-    book = await RealmBook.load(ctx.session)
-    realm = book.realm_for(node_id)
-    return realm.entity.id if realm is not None else None
+    if await living_realm(ctx, node_id):
+        return node_id
+    for polity_id in await ctx.session.scalars(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == node_id)):
+        if await living_realm(ctx, polity_id):
+            return polity_id
+    return None
 
 
 async def on_breach(ctx: TickContext, breaker_id: int, wronged: list[int]) -> None:
@@ -123,8 +134,8 @@ async def on_breach(ctx: TickContext, breaker_id: int, wronged: list[int]) -> No
     breaker = await realm_ids(ctx, breaker_id)
     if breaker is None:
         return
-    await alarm(ctx, breaker, table.breach_threat)
     book = await RealmBook.load(ctx.session)
+    await alarm(ctx, breaker, table.breach_threat, book)
     for realm in book.realms.values():
         if realm.entity.id != breaker and realm.entity.world_id == book.realms[breaker].entity.world_id:
             await shift_regard(ctx, realm.entity.id, breaker, trust=-table.witness_trust)

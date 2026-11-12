@@ -13,7 +13,7 @@ from aerona.engine.urban.housing import HousingTally, house_towns
 from aerona.engine.urban.turf import TurfTally, hold_turf
 
 
-@reads("settlement.population", "table.district_services", "table.districts", "table.settlement_profiles")
+@reads("settlement.population", "table.district_services", "table.districts", "table.settlement_infrastructure", "table.settlement_profiles")
 @writes("table.district_services", "table.districts", "table.settlement_profiles")
 async def district_coverage(ctx: TickContext) -> None:
     tally = CoverageTally()
@@ -21,7 +21,7 @@ async def district_coverage(ctx: TickContext) -> None:
     count(ctx, "coverage", tally)
 
 
-@reads("settlement.population", "table.districts")
+@reads("settlement.population", "table.districts", "table.region_pollution", "table.settlement_infrastructure", "table.settlement_profiles")
 @writes("table.districts")
 async def desirability(ctx: TickContext) -> None:
     tally = DesirabilityTally()
@@ -32,6 +32,7 @@ async def desirability(ctx: TickContext) -> None:
 @reads(
     "settlement.defense",
     "settlement.population",
+    "table.community_societies",
     "table.district_services",
     "table.districts",
     "table.holder_levels",

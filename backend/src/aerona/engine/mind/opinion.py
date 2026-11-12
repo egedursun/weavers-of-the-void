@@ -30,6 +30,7 @@ from aerona.rules.registry import Rules
 
 PAIR_BONDS = (BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE)
 KIN_BONDS = KIN_BOND_KINDS
+PAIR_KINDS = frozenset({*KIN_BOND_KINDS, BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE})
 NEGATIVE_COMPONENTS = frozenset({OpinionComponent.GRIEVANCE, OpinionComponent.FEAR})
 
 
@@ -153,6 +154,7 @@ def compose(
     )
 
 
+@memoized(BondRow)
 async def _patron(session: AsyncSession, node_id: int) -> int | None:
     return await BondRepository(session).patron(node_id)
 
@@ -162,9 +164,10 @@ async def _language(session: AsyncSession, node_id: int) -> int | None:
     return found.id if found is not None else None
 
 
-async def _enemies(session: AsyncSession, node_id: int) -> set[int]:
+@memoized(BondRow)
+async def _enemies(session: AsyncSession, node_id: int) -> frozenset[int]:
     bonds = [*await active_bonds(session, [BondKind.ENEMY], sources=[node_id]), *await active_bonds(session, [BondKind.ENEMY], targets=[node_id])]
-    return {bond.other_end(node_id) for bond in bonds}
+    return frozenset(bond.other_end(node_id) for bond in bonds)
 
 
 @memoized(RelationshipRow)
@@ -184,7 +187,7 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
     first_god, second_god = await _patron(session, first), await _patron(session, second)
     first_language, second_language = await _language(session, first), await _language(session, second)
     relation = await session.get(CommunityRelationRow, (min(first, second), max(first, second)))
-    kin = any([await bonds.exists_between(first, second, kind) for kind in KIN_BONDS])
+    kinds = {bond.kind for bond in await bonds.active_between(first, second, PAIR_KINDS)}
     common = (await _enemies(session, first) & await _enemies(session, second)) - {first, second}
     bond = await personal_bond(session, first, second)
     glory, infamy = await standing_with(session, second, first)
@@ -193,12 +196,12 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
         same_god=first_god is not None and first_god == second_god,
         other_god=first_god is not None and second_god is not None and first_god != second_god,
         same_language=first_language is not None and first_language == second_language,
-        enemy=await bonds.exists_between(first, second, BondKind.ENEMY),
-        ally=await bonds.exists_between(first, second, BondKind.ALLY),
-        trade=await bonds.exists_between(first, second, BondKind.TRADES_WITH),
-        tribute=await bonds.exists_between(first, second, BondKind.PAYS_TRIBUTE),
+        enemy=BondKind.ENEMY in kinds,
+        ally=BondKind.ALLY in kinds,
+        trade=BondKind.TRADES_WITH in kinds,
+        tribute=BondKind.PAYS_TRIBUTE in kinds,
         feud=relation is not None and relation.blood_feud_since_epoch is not None,
-        kin=kin,
+        kin=not kinds.isdisjoint(KIN_BONDS),
         common_enemies=len(common),
         friendship=bond.friendship if bond is not None else 0,
         rivalry=bond.rivalry if bond is not None else 0,

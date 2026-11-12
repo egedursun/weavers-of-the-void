@@ -21,7 +21,7 @@ async def sound_changes(ctx: TickContext) -> None:
     count(ctx, "sound", tally)
 
 
-@reads("language.complexity", "table.bonds", "table.language_grammar", "table.language_profiles", "table.speaker_cohorts")
+@reads("language.complexity", "table.bonds", "table.language_grammar", "table.language_profiles", "table.people_biology", "table.speaker_cohorts")
 @writes("table.language_grammar")
 async def grammar(ctx: TickContext) -> None:
     tally = GrammarTally()
@@ -30,7 +30,7 @@ async def grammar(ctx: TickContext) -> None:
     ctx.count("modalities_settled", await settle_modalities(ctx))
 
 
-@reads("table.lexemes", "table.name_exonyms", "table.tradition_profiles")
+@reads("table.epoch_year_cursors", "table.language_grammar", "table.lexemes", "table.name_exonyms", "table.tradition_profiles")
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
@@ -47,7 +47,7 @@ async def semantic_drift(ctx: TickContext) -> None:
     count(ctx, "drift", tally)
 
 
-@reads("table.bonds", "table.community_societies", "table.entity_flags", "table.language_profiles", "table.scripts")
+@reads("table.bonds", "table.community_societies", "table.entity_flags", "table.language_profiles", "table.language_standing", "table.scripts")
 async def script_evolution(ctx: TickContext) -> None:
     tally = ScriptTally()
     await evolve_scripts(ctx, tally)
@@ -77,7 +77,7 @@ async def pidgins(ctx: TickContext) -> None:
     count(ctx, "pidgin", tally)
 
 
-@reads("table.language_policies", "table.polity_members")
+@reads("table.epoch_year_cursors", "table.language_policies", "table.polity_members")
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.language_policies")
 async def language_policy(ctx: TickContext) -> None:
     tally = PolicyTally()

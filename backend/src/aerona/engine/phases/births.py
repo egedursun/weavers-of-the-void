@@ -725,6 +725,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.nodes",
     "table.people_biology",
     "table.people_culture",
+    "table.storytellers",
     "table.world_maps",
 )
 @writes(

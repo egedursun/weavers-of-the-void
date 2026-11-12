@@ -1,8 +1,10 @@
 from collections import defaultdict
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.domain.enums.entity import EntityStatus
@@ -15,13 +17,18 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
 
 
-async def power_balance(ctx: TickContext, realm: Realm) -> dict[int, int]:
-    members = list(realm.members) or [-1]
-    shares: dict[int, int] = defaultdict(int)
+@memoized(FactionProfileRow, EntityRow)
+async def canon_factions(session: AsyncSession) -> tuple[tuple[FactionProfileRow, EntityRow], ...]:
     statement = (
         select(FactionProfileRow, EntityRow).join(EntityRow, EntityRow.id == FactionProfileRow.faction_entity_id).where(EntityRow.status == EntityStatus.CANON)
     )
-    for profile, faction in await ctx.session.execute(statement):
+    return tuple((profile, faction) for profile, faction in await session.execute(statement))
+
+
+async def power_balance(ctx: TickContext, realm: Realm) -> dict[int, int]:
+    members = set(realm.members)
+    shares: dict[int, int] = defaultdict(int)
+    for profile, faction in await canon_factions(ctx.session):
         weight = profile.influence_over.get(str(realm.entity.id), 0)
         if profile.home_entity_id in members:
             weight += stat(faction, "sway") or 0

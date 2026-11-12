@@ -253,6 +253,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
+    "table.polity_stress",
     "table.polity_territories",
     "table.pressures",
     "table.routes",

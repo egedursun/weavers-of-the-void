@@ -40,6 +40,30 @@ async def default_decay(session: AsyncSession, rules: Rules, holder_id: int, kin
     return clamp_int(base * scaled_by(await effect_of(session, holder_id, TraitEffect.MEMORY_DECAY, rules.traits.effect_scale_pct)), 0, PERCENT)
 
 
+MEMORY_PAIRS = index_spec(MemoryRow, "holder_node_id", "subject_node_id")
+
+
+async def same_memory(session: AsyncSession, holder_id: int, subject_id: int, kind: MemoryKind, *, epoch: int, inherited_from: int | None) -> MemoryRow | None:
+    pairs = await keyed_rows(session, MEMORY_PAIRS)
+    if pairs is not None:
+        return next(
+            (
+                row
+                for row in sorted(pairs.rows.get((holder_id, subject_id), []), key=lambda row: row.id)
+                if row.kind == kind and row.epoch == epoch and row.inherited_from_node_id == inherited_from
+            ),
+            None,
+        )
+    statement = select(MemoryRow).where(
+        MemoryRow.holder_node_id == holder_id,
+        MemoryRow.subject_node_id == subject_id,
+        MemoryRow.kind == kind,
+        MemoryRow.epoch == epoch,
+        MemoryRow.inherited_from_node_id.is_(None) if inherited_from is None else MemoryRow.inherited_from_node_id == inherited_from,
+    )
+    return await session.scalar(statement.limit(1))
+
+
 async def remember(
     session: AsyncSession,
     rules: Rules,
@@ -61,26 +85,11 @@ async def remember(
         return None
     if not forced and await locked_for(session, holder_id, MEMORY_LOCK):
         return None
-    existing = (
-        None
-        if not merge
-        else await session.scalar(
-            select(MemoryRow)
-            .where(
-                MemoryRow.holder_node_id == holder_id,
-                MemoryRow.subject_node_id == subject_id,
-                MemoryRow.kind == kind,
-                MemoryRow.epoch == epoch,
-                MemoryRow.inherited_from_node_id.is_(None) if inherited_from is None else MemoryRow.inherited_from_node_id == inherited_from,
-            )
-            .limit(1)
-        )
-    )
+    existing = await same_memory(session, holder_id, subject_id, kind, epoch=epoch, inherited_from=inherited_from) if merge else None
     if existing is not None:
         existing.magnitude = clamp_int(existing.magnitude + size, RELATION_MIN, RELATION_MAX)
         if note:
             existing.note = note
-        await session.flush()
         return existing
     decay = decay_pct if decay_pct is not None else await default_decay(session, rules, holder_id, kind)
     row = MemoryRow(
@@ -98,9 +107,6 @@ async def remember(
     session.add(row)
     await session.flush()
     return row
-
-
-MEMORY_PAIRS = index_spec(MemoryRow, "holder_node_id", "subject_node_id")
 
 
 async def memories_about(session: AsyncSession, holder_id: int, subject_id: int) -> list[MemoryRow]:

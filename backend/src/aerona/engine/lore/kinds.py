@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an
+from aerona.db.read_memo import memoized
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import CustomKindRow, HolderCustomTechniqueRow
 from aerona.domain.enums.body import DamageType
@@ -126,15 +127,16 @@ async def kinds_in(session: AsyncSession, catalog: CustomCatalog, world_id: int 
     return list(await session.scalars(statement.order_by(CustomKindRow.id)))
 
 
-async def custom_bases(session: AsyncSession, holder_id: int | None) -> set[Technique]:
+@memoized(CustomKindRow, HolderCustomTechniqueRow)
+async def custom_bases(session: AsyncSession, holder_id: int | None) -> frozenset[Technique]:
     if holder_id is None:
-        return set()
+        return frozenset()
     rows = await session.scalars(
         select(CustomKindRow.base)
         .join(HolderCustomTechniqueRow, HolderCustomTechniqueRow.kind_id == CustomKindRow.id)
         .where(HolderCustomTechniqueRow.holder_entity_id == holder_id, CustomKindRow.catalog == CustomCatalog.TECHNIQUE)
     )
-    return {Technique(base) for base in rows}
+    return frozenset(Technique(base) for base in rows)
 
 
 async def world_of(ctx: TickContext, world_id: int | None) -> int | None:

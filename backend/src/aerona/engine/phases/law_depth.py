@@ -54,7 +54,7 @@ async def registries(ctx: TickContext) -> None:
     count(ctx, "registry", tally)
 
 
-@reads("table.jurisdictions", "table.polity_members", "table.trading_posts")
+@reads("table.jurisdictions", "table.polity_members", "table.polity_profiles", "table.trading_posts")
 @writes("table.jurisdictions")
 async def jurisdictions(ctx: TickContext) -> None:
     tally = JurisdictionTally()
@@ -62,7 +62,7 @@ async def jurisdictions(ctx: TickContext) -> None:
     count(ctx, "jurisdiction", tally)
 
 
-@reads("table.offices", "table.outlaws", "table.pardons", "table.prisoners")
+@reads("table.epoch_year_cursors", "table.offices", "table.outlaws", "table.pardons", "table.prisoners")
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.pardons")
 async def pardons(ctx: TickContext) -> None:
     tally = PardonTally()

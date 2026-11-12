@@ -146,6 +146,7 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.bonds",
     "table.calendars",
     "table.conditions",
+    "table.cosmos",
     "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_values",

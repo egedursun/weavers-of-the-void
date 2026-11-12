@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
+from functools import cached_property
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +41,10 @@ class GuardIndex:
             (pins if source is ModifierSource.PIN else suppressions).add((node_id, key))
         return cls(frozenset(pins), frozenset(suppressions))
 
+    @cached_property
+    def guarded_nodes(self) -> frozenset[int]:
+        return frozenset(node_id for node_id, _ in self.pins | self.suppressions)
+
 
 CONSERVED_KEYS = frozenset({"population", "followers", "size"})
 
@@ -56,6 +61,8 @@ class GuardState:
     def blocks(self, node_id: int, key: str) -> bool:
         if self.only is not None and node_id != self.only:
             return True
+        if node_id not in self.index.guarded_nodes:
+            return False
         if (node_id, key) in self.index.pins:
             return True
         return any((node_id, suppression_key(writer)) in self.index.suppressions for writer in self.writers)

@@ -186,5 +186,6 @@ def restore_held(row: object) -> list[str]:
 def hold_profile_columns(session: Session, flush_context: UOWTransaction, instances: object) -> None:
     if WRITE_GUARD.get() is None:
         return
-    for row in list(session.dirty):
-        restore_held(row)
+    for state in list(session.identity_map._modified):
+        if state not in session._deleted:
+            restore_held(state.obj())
