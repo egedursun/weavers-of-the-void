@@ -226,7 +226,14 @@ async def set_freedom(ctx: TickContext, structure_id: int, values: Values) -> Ac
     row = await ctx.session.get(AcademicFreedomRow, structure_id)
     if row is None:
         row = await saved(ctx, AcademicFreedomRow(structure_entity_id=structure_id, updated_epoch=ctx.epoch, locked=[]))
-    return await put_values(ctx, row, values, FREEDOM_FIELDS, "freedom of learning")
+    row = await put_values(ctx, row, values, FREEDOM_FIELDS, "freedom of learning")
+    return settle_freedom(ctx, row, values)
+
+
+def settle_freedom(ctx: TickContext, row: AcademicFreedomRow, values: Values) -> AcademicFreedomRow:
+    if "level" in values and "suppressed" not in values:
+        row.suppressed = row.level < ctx.rules.academic_freedom.suppress_at
+    return row
 
 
 async def found_school(ctx: TickContext, founder_id: int, name: str, doctrine_id: int | None) -> SchoolLineageRow:
@@ -275,6 +282,8 @@ EDITABLE: dict[str, tuple[type[Base], tuple[str, ...], str]] = {
 async def edit_record(ctx: TickContext, kind: str, key: object, values: Values, release: list[str]) -> Base:
     table, fields, label = EDITABLE[kind]
     row = apply(await found(ctx, table, key, label), allowed(values, fields, label), release)
+    if isinstance(row, AcademicFreedomRow):
+        settle_freedom(ctx, row, values)
     await ctx.session.flush()
     return row
 

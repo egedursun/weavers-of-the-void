@@ -69,7 +69,7 @@ from aerona.engine.regime.book import (
     patron_pull,
     schooled,
 )
-from aerona.engine.regime.control import found_school
+from aerona.engine.regime.control import edit_record, found_school, set_freedom
 from aerona.engine.regime.learning import LearningTally, keep_learning
 from aerona.engine.regime.lineages import LineageTally, keep_lineages
 from aerona.engine.regime.patronage import PatronageTally, keep_patronage
@@ -608,3 +608,15 @@ async def test_a_realm_without_its_choosing_class_is_chosen_by_its_other_elites(
     row = await session.get(RegimeRow, realm.id)
     assert row is not None and row.selectorate is SelectorateKind.NOBLES and row.selectorate_size > 0 and row.coalition_size > 0
     assert await session.get(CoalitionMemberRow, (realm.id, priest.id)) is not None
+
+
+async def test_setting_learning_below_the_mark_suppresses_it_at_once(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    hall = await entity(session, "Hall", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+    session.add(StructureProfileRow(structure_entity_id=hall.id, kind=StructureKind.ACADEMY, host_entity_id=town.id, effect_pct=100, locked=[]))
+    await session.flush()
+    ctx = await context(session)
+    row = await set_freedom(ctx, hall.id, {"level": 10})
+    assert row.suppressed
+    await edit_record(ctx, "academic_freedom", hall.id, {"level": 90}, [])
+    assert not row.suppressed
