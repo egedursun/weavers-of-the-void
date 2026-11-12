@@ -76,6 +76,8 @@ ACT_LABELS: MappingProxyType[ActKind, str] = MappingProxyType(
         A.ABANDONING_ELDERS: "Leaving the old to fend alone",
         A.FORCED_LABOUR: "Forcing folk to labour unpaid",
         A.SELLING_OFFICES: "Selling the offices of the realm",
+        A.POACHING: "Poaching game reserved for another",
+        A.ENCLOSING: "Enclosing the common land of the folk",
     }
 )
 

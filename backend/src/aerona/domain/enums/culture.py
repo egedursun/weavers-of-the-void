@@ -108,6 +108,7 @@ class Technique(StrEnum):
     EMPIRICISM = "empiricism"
     HUMANIST_IDEALS = "humanist_ideals"
     EXAMINATIONS = "examinations"
+    DRAINAGE = "drainage"
 
 
 class ResearchChooser(StrEnum):

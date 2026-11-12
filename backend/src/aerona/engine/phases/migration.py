@@ -10,6 +10,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SettlementStats
+from aerona.engine.agrarian.book import gap_of
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import climate_fit, profiles_of
@@ -120,6 +121,7 @@ async def greener_region(
         )
         env = ground.regions.get(neighbour.id) if ground is not None else None
         appeal *= climate_fit(ctx.rules, biology, env.temperature_band if env is not None else None)
+        appeal *= 1 + await gap_of(ctx.session, neighbour.id) / PERCENT * ctx.rules.central_places.gap_pull_pct / PERCENT
         if value > floor and (best is None or appeal > best[0]):
             best = (appeal, neighbour)
     return best[1] if best is not None else None

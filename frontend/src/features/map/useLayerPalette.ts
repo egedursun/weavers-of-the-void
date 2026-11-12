@@ -87,6 +87,9 @@ const ALPHA: Record<LayerMode, number> = {
   coverage: 0.45,
   niches: 0.45,
   solidarity: 0.45,
+  rings: 0.45,
+  centrality: 0.45,
+  nutrients: 0.45,
 }
 
 export const STOCK_BANDS = [
@@ -114,6 +117,18 @@ const BAND_LABEL: Record<string, string> = {
   frontier_soft: 'A frontier gone soft',
   frontier_steady: 'A frontier holding together',
   frontier_forged: 'A frontier forged as one',
+  gardens: 'Gardens and dairy',
+  forestry: 'Fuel wood',
+  grain: 'Grain',
+  ranching: 'Herds',
+  wilds: 'Beyond the markets',
+  daily: 'Daily needs',
+  weekly: 'Weekly market',
+  rare: 'Rare goods',
+  poor: 'Poor soil',
+  fair: 'Fair soil',
+  rich: 'Rich soil',
+  salted: 'Salted fields',
 }
 
 export const RAIN_BANDS = [
@@ -194,6 +209,35 @@ export function solidarityBand(value: number, frontier: number): string | null {
   if (value <= 0) return null
   const band = SOLIDARITY_BANDS.find((item) => value < item.below)?.key ?? null
   return band && frontier > 0 ? `frontier_${band}` : band
+}
+
+export const RING_BANDS = [
+  'gardens',
+  'forestry',
+  'grain',
+  'ranching',
+  'wilds',
+] as const
+export const RANK_BANDS = ['daily', 'weekly', 'rare'] as const
+const SALTED_FROM = 40
+export const SOIL_BANDS = [
+  { key: 'poor', below: 34 },
+  { key: 'fair', below: 67 },
+  { key: 'rich', below: Number.POSITIVE_INFINITY },
+] as const
+
+export function ringBand(value: number): string | null {
+  return value > 0 ? (RING_BANDS[value - 1] ?? null) : null
+}
+
+export function rankBand(value: number): string | null {
+  return value > 0 ? (RANK_BANDS[value - 1] ?? null) : null
+}
+
+export function soilBand(soil: number, salt: number): string | null {
+  if (salt >= SALTED_FROM) return 'salted'
+  if (soil <= 0) return null
+  return SOIL_BANDS.find((band) => soil < band.below)?.key ?? null
 }
 
 export function stockBand(value: number): string | null {
@@ -327,6 +371,21 @@ function regionKey(
         : null
       return band ? { key: `solidarity:${band}`, alpha } : null
     }
+    case 'rings': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks ? ringBand(stocks.ring ?? 0) : null
+      return band ? { key: `rings:${band}`, alpha } : null
+    }
+    case 'centrality': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks ? rankBand(stocks.market ?? 0) : null
+      return band ? { key: `centrality:${band}`, alpha } : null
+    }
+    case 'nutrients': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks ? soilBand(stocks.soil ?? 0, stocks.salt ?? 0) : null
+      return band ? { key: `nutrients:${band}`, alpha } : null
+    }
     case 'realms': {
       const held =
         view.realms?.[String(regionId)] ?? view.realms?.[String(topId)]
@@ -393,7 +452,10 @@ function labelFor(
     kind === 'desirability' ||
     kind === 'coverage' ||
     kind === 'niches' ||
-    kind === 'solidarity'
+    kind === 'solidarity' ||
+    kind === 'rings' ||
+    kind === 'centrality' ||
+    kind === 'nutrients'
   )
     return BAND_LABEL[raw] ?? words(raw)
   if (

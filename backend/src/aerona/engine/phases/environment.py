@@ -13,6 +13,7 @@ from aerona.constants.cartography import BIOME_COUNT
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.agrarian import IntensificationRow, LandRingRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
@@ -34,6 +35,7 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
+from aerona.engine.agrarian.book import Cushion, cushioned, famine_cushions, harvest_lift, intensities, nutrient_shift, nutrient_stocks, ring_shares, rings_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import current_heat, world_heat
 from aerona.engine.cosmos.cycles import cycles_by_world, soil_swing
@@ -646,6 +648,7 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.sky_events",
+    "table.soil_nutrients",
     "table.world_cycles",
     "table.world_maps",
     "table.world_physics",
@@ -664,7 +667,7 @@ async def environment_derive(ctx: TickContext) -> None:
     shapes = await shapes_by_region(ctx.session)
     fouled = {row.region_node_id: row for row in await ctx.session.scalars(select(RegionPollutionRow))}
     services = await services_by_region(ctx.session)
-    cycles = await cycles_by_world(ctx.session)
+    cycles, stocks = await cycles_by_world(ctx.session), await nutrient_stocks(ctx.session)
     derived = 0
     for region in regions:
         env = book.regions.get(region.id)
@@ -696,7 +699,7 @@ async def environment_derive(ctx: TickContext) -> None:
         current = base_stat(region, "fertility")
         if "soil_fertility" not in env.locked:
             env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
-        recover_soil(rules, env, soil_swing(rules, cycles.get(env.world_id)))
+        recover_soil(rules, env, soil_swing(rules, cycles.get(env.world_id)) + nutrient_shift(rules, stocks.get(env.entity_id), env.soil_base))
         if current is not None or not region.is_water:
             set_base_stats(
                 region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works) * fertility_factor(rules, fouled.get(region.id)))
@@ -725,8 +728,11 @@ def drift(current: int, target: int, divisor: int) -> int:
     return clamp_int(current + (target - current) / max(1, divisor), 0, PERCENT)
 
 
-def work_land(rules: Rules, env: RegionEnvironmentRow, capacity: CapacityModel, load: RegionLoad, divisor: int, *, herds: int = 0) -> None:
+def work_land(
+    rules: Rules, env: RegionEnvironmentRow, capacity: CapacityModel, load: RegionLoad, divisor: int, *, herds: int = 0, ring: LandRingRow | None = None
+) -> None:
     settings = rules.land_use
+    farm_pct, graze_pct = ring_shares(rules, ring.ring) if ring is not None else (PERCENT, PERCENT)
     community = load.communities[0]
     ceiling = max(1.0, capacity.capacity(load, community, capacity.effective_fertility(community)))
     occupancy = load.population / ceiling * PERCENT
@@ -734,10 +740,10 @@ def work_land(rules: Rules, env: RegionEnvironmentRow, capacity: CapacityModel, 
     settled = sum(stat_or(item, "population", 0) for item in load.communities if item.entity_type is EntityType.SETTLEMENT)
     locked = set(env.locked)
     if "farmed" not in locked:
-        env.farmed = drift(env.farmed, land_target(occupancy * farming * settings.farm_target_pct / PERCENT), divisor)
+        env.farmed = drift(env.farmed, land_target(occupancy * farming * settings.farm_target_pct / PERCENT * farm_pct / PERCENT), divisor)
     if "grazed" not in locked:
         pasture = occupancy * (1 - farming) * settings.graze_target_pct / PERCENT + herds / rules.husbandry.graze_head_per_pct
-        env.grazed = drift(env.grazed, land_target(pasture), divisor)
+        env.grazed = drift(env.grazed, land_target(pasture * graze_pct / PERCENT), divisor)
     if "built" not in locked:
         env.built = drift(env.built, land_target(settled / settings.built_population_per_pct), divisor)
     cleared = env.farmed + env.built * settings.cleared_built_pct / PERCENT + env.grazed * settings.cleared_grazed_pct / PERCENT
@@ -809,6 +815,7 @@ async def note_land(ctx: TickContext, env: RegionEnvironmentRow, before: LandMar
     "table.forced_weather",
     "table.herds",
     "table.holder_levels",
+    "table.land_rings",
     "table.place_environment",
     "table.region_environment",
     "table.sky_events",
@@ -823,6 +830,7 @@ async def land_use(ctx: TickContext) -> None:
     capacity = await CapacityModel.load(ctx.session, rules)
     loads = capacity.build_loads(await canon(ctx.session, LAND_COMMUNITY_TYPES))
     grazing = await grazing_heads(ctx.session)
+    rings = await rings_of(ctx.session)
     worked = rewilded = 0
     for region_id, env in book.regions.items():
         before = LandMark(env.erosion, env.farmed, env.soil_fertility, env.cleared)
@@ -833,7 +841,7 @@ async def land_use(ctx: TickContext) -> None:
                     setattr(env, key.value, max(0, getattr(env, key.value) - settings.rewild_rate))
             rewilded += 1
         else:
-            work_land(rules, env, capacity, load, settings.drift_divisor, herds=grazing.get(region_id, 0))
+            work_land(rules, env, capacity, load, settings.drift_divisor, herds=grazing.get(region_id, 0), ring=rings.get(region_id))
             worked += 1
         if "erosion" not in env.locked:
             env.erosion = (
@@ -958,6 +966,8 @@ class HarvestSeason:
     crops: CropBook
     productivity: dict[int, int] = field(default_factory=dict)
     services: dict[int, dict[KeystoneRole, int]] = field(default_factory=dict)
+    lifts: dict[int, IntensificationRow] = field(default_factory=dict)
+    cushions: dict[int, Cushion] = field(default_factory=dict)
     worst_weather: tuple[int, YearHarvest, RegionEnvironmentRow] | None = None
     best_plenty: tuple[YearHarvest, RegionEnvironmentRow] | None = None
 
@@ -1000,8 +1010,20 @@ async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeaso
         worked = PERCENT + season.productivity.get(env.entity_id, 0) * ctx.rules.dominion.harvest_per_step_pct
         pollinated = pollination(ctx.rules, season.services.get(env.entity_id))
         env.harvest_pct = round_half_up(
-            sum(item.harvest for item in results) / len(results) * dark / PERCENT * upturned / PERCENT * worked / PERCENT * pollinated
+            sum(item.harvest for item in results)
+            / len(results)
+            * dark
+            / PERCENT
+            * upturned
+            / PERCENT
+            * worked
+            / PERCENT
+            * pollinated
+            * harvest_lift(ctx.rules, season.lifts.get(env.entity_id))
         )
+        env.harvest_pct, foraged = cushioned(ctx.rules, env.harvest_pct, season.cushions.get(env.entity_id))
+        if foraged and "disease_load" not in env.locked:
+            env.disease_load = clamp_int(env.disease_load + ctx.rules.famine_foods.health_cost, 0, PERCENT)
     region = await ctx.session.get(EntityRow, env.entity_id)
     if region is None:
         return 0
@@ -1065,14 +1087,17 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.dominions",
     "table.ecosystem_services",
     "table.epoch_year_cursors",
+    "table.famine_lore",
     "table.forced_weather",
     "table.galactic_structures",
     "table.god_designs",
     "table.god_scales",
     "table.holder_levels",
+    "table.intensification",
     "table.natural_law_profiles",
     "table.place_environment",
     "table.plant_profiles",
+    "table.preparedness",
     "table.region_crops",
     "table.region_dominion",
     "table.region_environment",
@@ -1102,6 +1127,8 @@ async def harvest(ctx: TickContext) -> None:
     crops = await CropBook.load(ctx.session, rules, book.regions)
     dominion = await DominionBook.load(ctx.session)
     services = await services_by_region(ctx.session)
+    lifts = await intensities(ctx.session)
+    cushions = await famine_cushions(ctx.session, book.atlas)
     notable = 0
     for world in book.worlds.values():
         if frozen(world.id):
@@ -1111,7 +1138,7 @@ async def harvest(ctx: TickContext) -> None:
             continue
         years = world_years(ctx.environment, world.id, "harvest")
         productivity = {env.entity_id: dominion.scale_at(rules, env.entity_id, DivineScale.PRODUCTIVITY) for env in regions}
-        season = HarvestSeason(book, loads, knowledge, planned, book.growing_season(world.id), years, crops, productivity, services)
+        season = HarvestSeason(book, loads, knowledge, planned, book.growing_season(world.id), years, crops, productivity, services, lifts, cushions)
         for env in regions:
             notable += await region_harvest(ctx, world, season, env)
         notable += await weather_year(ctx, world, season)

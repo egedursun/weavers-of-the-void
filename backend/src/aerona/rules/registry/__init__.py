@@ -2,6 +2,21 @@ from dataclasses import dataclass, field
 
 from aerona.rules.registry.affairs import AffairsRules
 from aerona.rules.registry.agents import AgentsRules
+from aerona.rules.registry.agrarian import (
+    BoserupRules,
+    BrandRules,
+    CentralPlaceRules,
+    CommonsRules,
+    FamineFoodRules,
+    GameLawRules,
+    KeystoneResourceRules,
+    NutrientRules,
+    PerennialRules,
+    ReconstructionRules,
+    ReliefRules,
+    ResilienceRules,
+    ThunenRules,
+)
 from aerona.rules.registry.apocalypse import ApocalypseRules
 from aerona.rules.registry.arcana import (
     EnchantedItemRules,
@@ -688,6 +703,19 @@ class Rules:
     credentials: CredentialRules = field(default_factory=CredentialRules)
     academic_freedom: AcademicFreedomRules = field(default_factory=AcademicFreedomRules)
     school_lineages: SchoolLineageRules = field(default_factory=SchoolLineageRules)
+    thunen: ThunenRules = field(default_factory=ThunenRules)
+    central_places: CentralPlaceRules = field(default_factory=CentralPlaceRules)
+    boserup: BoserupRules = field(default_factory=BoserupRules)
+    nutrients: NutrientRules = field(default_factory=NutrientRules)
+    perennials: PerennialRules = field(default_factory=PerennialRules)
+    commons: CommonsRules = field(default_factory=CommonsRules)
+    game_laws: GameLawRules = field(default_factory=GameLawRules)
+    famine_foods: FamineFoodRules = field(default_factory=FamineFoodRules)
+    resilience: ResilienceRules = field(default_factory=ResilienceRules)
+    relief: ReliefRules = field(default_factory=ReliefRules)
+    reconstruction: ReconstructionRules = field(default_factory=ReconstructionRules)
+    keystone_resource: KeystoneResourceRules = field(default_factory=KeystoneResourceRules)
+    brands: BrandRules = field(default_factory=BrandRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     theories: TheoriesRules = field(default_factory=TheoriesRules)

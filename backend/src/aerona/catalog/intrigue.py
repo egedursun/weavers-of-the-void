@@ -104,6 +104,7 @@ FAVOUR_LABELS: dict[FavourOrigin, str] = {
     FavourOrigin.SUCCESSION_SUPPORT: "Support in a succession",
     FavourOrigin.SCHEME_AID: "Aid in a scheme",
     FavourOrigin.VOTE: "A vote that carried a law",
+    FavourOrigin.RELIEF: "Aid in a stricken hour",
 }
 IDENTITY_LABELS: dict[IdentityReason, str] = {
     IdentityReason.SPY: "A spy's cover",

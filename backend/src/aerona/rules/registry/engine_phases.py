@@ -462,3 +462,13 @@ class EnginePhasesRules:
     learning_institutions: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: examinations, credentials, the freedom of learning and schools of thought"
     )
+    spatial_economy: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rings of land use around markets, and the ranks of central places")
+    agrarian_cycles: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: harder farming under pressure, soil nutrients, long-lived plantings, commons, game reserves and famine foods",
+    )
+    resilience: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: works against disasters, aid to stricken towns, and rebuilding")
+    staples: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: a world's keystone resource, and the brands of famous workshops")

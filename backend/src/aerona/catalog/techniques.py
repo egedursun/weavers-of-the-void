@@ -69,6 +69,7 @@ TECHNIQUES = MappingProxyType(
             TechniqueSpec(T.INOCULATION, B.MEDICINE, 4, "Inoculation", "A small sickness wards off the great one."),
             TechniqueSpec(T.IRRIGATION, B.AGRICULTURE, 1, "Irrigation", "Water is led to dry fields."),
             TechniqueSpec(T.CROP_ROTATION, B.AGRICULTURE, 2, "Crop rotation", "Fields rest and yield more."),
+            TechniqueSpec(T.DRAINAGE, B.AGRICULTURE, 2, "Drainage", "Watered fields are drained so salt does not gather."),
             TechniqueSpec(T.TERRACING, B.AGRICULTURE, 2, "Terracing", "Hills are cut into fields.", Gate(all_of=((B.ARCHITECTURE, 1),))),
             TechniqueSpec(T.PLOUGH, B.AGRICULTURE, 1, "The plough", "Beasts turn the soil.", Gate(any_of=((B.METALLURGY, 1),))),
             TechniqueSpec(T.SELECTIVE_BREEDING, B.AGRICULTURE, 3, "Selective breeding", "Herds and crops are bred for strength."),

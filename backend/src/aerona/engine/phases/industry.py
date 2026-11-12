@@ -42,6 +42,7 @@ NOTE_CAP = 6
     "table.holder_techniques",
     "table.ideology_adherents",
     "table.ideology_tenets",
+    "table.intensification",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.ley_lines",

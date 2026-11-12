@@ -1,5 +1,7 @@
 import {
   Ban,
+  Fence,
+  Rabbit,
   BookX,
   Church,
   CircleSlash,
@@ -167,6 +169,16 @@ export const ACTS: Record<ActKind, LoreNamed> = {
     label: 'Selling the offices of the realm',
     icon: Landmark,
     tone: 'warning',
+  },
+  poaching: {
+    label: 'Poaching game reserved for another',
+    icon: Rabbit,
+    tone: 'warning',
+  },
+  enclosing: {
+    label: 'Enclosing the common land of the folk',
+    icon: Fence,
+    tone: 'danger',
   },
 }
 

@@ -10,6 +10,7 @@ from aerona.rules.registry import Rules
 from aerona.services.player import (
     affairs,
     afflictions,
+    agrarian,
     arcana,
     aspirations,
     assignments,
@@ -3687,6 +3688,82 @@ CYCLE_ACTIONS = (
     _sync(Meta("manumission:delete", "Strike a freeing from the record", G.SOCIETY), cycles.manumission_delete, cycles.ManumissionTarget, free, ("S4.9/RP4",)),
 )
 
+AGRARIAN_ACTIONS = (
+    _sync(Meta("land_ring:set", "Set the ring of land use a land falls in", G.SOCIETY), agrarian.land_ring_set, agrarian.RingDraft, free, ("S4.2/RP4",)),
+    _sync(Meta("land_ring:edit", "Edit a land's ring of use", G.SOCIETY), agrarian.land_ring_edit, agrarian.RegionEdit, free, ("S4.2/RP4",)),
+    _sync(Meta("land_ring:delete", "Let a land's ring of use be read anew", G.SOCIETY), agrarian.land_ring_delete, agrarian.RegionTarget, free, ("S4.2/RP4",)),
+    _sync(
+        Meta("central_place:set", "Set a settlement's rank among central places", G.SOCIETY),
+        agrarian.central_place_set,
+        agrarian.CentralDraft,
+        free,
+        ("S4.2/RP4",),
+    ),
+    _sync(Meta("central_place:edit", "Edit a central place", G.SOCIETY), agrarian.central_place_edit, agrarian.SettlementEdit, free, ("S4.2/RP4",)),
+    _sync(
+        Meta("central_place:delete", "Let a settlement's rank be read anew", G.SOCIETY),
+        agrarian.central_place_delete,
+        agrarian.SettlementTarget,
+        free,
+        ("S4.2/RP4",),
+    ),
+    _sync(Meta("soil_nutrient:set", "Set a stock of a land's soil", G.WORLDS), agrarian.soil_nutrient_set, agrarian.NutrientDraft, free, ("S6.1/RP4",)),
+    _sync(Meta("soil_nutrient:edit", "Edit a stock of a land's soil", G.WORLDS), agrarian.soil_nutrient_edit, agrarian.NutrientEdit, free, ("S6.1/RP4",)),
+    _sync(Meta("soil_nutrient:delete", "Let a soil stock be read anew", G.WORLDS), agrarian.soil_nutrient_delete, agrarian.NutrientTarget, free, ("S6.1/RP4",)),
+    _sync(Meta("intensification:set", "Set how hard a land is worked", G.WORLDS), agrarian.intensification_set, agrarian.IntensityDraft, free, ("S6.1/RP4",)),
+    _sync(
+        Meta("intensification:edit", "Edit the farming pressure on a land", G.WORLDS), agrarian.intensification_edit, agrarian.RegionEdit, free, ("S6.1/RP4",)
+    ),
+    _sync(
+        Meta("intensification:delete", "Let the pressure on a land be read anew", G.WORLDS),
+        agrarian.intensification_delete,
+        agrarian.RegionTarget,
+        free,
+        ("S6.1/RP4",),
+    ),
+    _sync(
+        Meta("perennial:plant", "Plant an orchard, vineyard, grove or timber", G.WORLDS), agrarian.perennial_plant, agrarian.PlantingDraft, free, ("S6.1/RP4",)
+    ),
+    _sync(Meta("perennial:edit", "Edit a planting", G.WORLDS), agrarian.perennial_edit, agrarian.PlantingEdit, free, ("S6.1/RP4",)),
+    _sync(Meta("perennial:fell", "Cut down the plantings of a land", G.WORLDS), agrarian.perennial_fell, agrarian.PlantingTarget, free, ("S6.1/RP4",)),
+    _sync(Meta("perennial:delete", "Remove a planting", G.WORLDS), agrarian.perennial_delete, agrarian.PlantingTarget, free, ("S6.1/RP4",)),
+    _sync(Meta("commons:create", "Give a land a common", G.WORLDS), agrarian.commons_create, agrarian.CommonsDraft, free, ("S6.1/RP4",)),
+    _sync(Meta("commons:edit", "Edit a common", G.WORLDS), agrarian.commons_edit, agrarian.CommonsEdit, free, ("S6.1/RP4",)),
+    _sync(Meta("commons:enclose", "Enclose a common", G.WORLDS), agrarian.commons_enclose, agrarian.EnclosureDraft, free, ("S6.1/RP4",)),
+    _sync(Meta("commons:delete", "Remove a common", G.WORLDS), agrarian.commons_delete, agrarian.CommonsTarget, free, ("S6.1/RP4",)),
+    _sync(Meta("game_reserve:declare", "Reserve the game of a land", G.WORLDS), agrarian.game_reserve_declare, agrarian.ReserveDraft, free, ("S6.1/RP4",)),
+    _sync(Meta("game_reserve:edit", "Edit a game reserve", G.WORLDS), agrarian.game_reserve_edit, agrarian.ReserveEdit, free, ("S6.1/RP4",)),
+    _sync(Meta("game_reserve:delete", "Lift a game reserve", G.WORLDS), agrarian.game_reserve_delete, agrarian.ReserveTarget, free, ("S6.1/RP4",)),
+    _sync(Meta("famine_lore:set", "Set what a people remembers of hunger", G.WORLDS), agrarian.famine_lore_set, agrarian.FamineDraft, free, ("S6.1/RP4",)),
+    _sync(Meta("famine_lore:edit", "Edit a people's famine lore", G.WORLDS), agrarian.famine_lore_edit, agrarian.PeopleEdit, free, ("S6.1/RP4",)),
+    _sync(
+        Meta("famine_lore:delete", "Let a people's famine lore be read anew", G.WORLDS), agrarian.famine_lore_delete, agrarian.PeopleTarget, free, ("S6.1/RP4",)
+    ),
+    _sync(Meta("preparedness:build", "Raise a town's works against disaster", G.SOCIETY), agrarian.preparedness_build, agrarian.WorkDraft, free, ("S4.2/RP4",)),
+    _sync(Meta("preparedness:edit", "Edit a work against disaster", G.SOCIETY), agrarian.preparedness_edit, agrarian.WorkEdit, free, ("S4.2/RP4",)),
+    _sync(Meta("preparedness:delete", "Tear down a work against disaster", G.SOCIETY), agrarian.preparedness_delete, agrarian.WorkTarget, free, ("S4.2/RP4",)),
+    _sync(Meta("relief:send", "Send aid to a stricken town", G.SOCIETY), agrarian.relief_send, agrarian.AidDraft, free, ("S4.2/RP4",)),
+    _sync(Meta("relief:edit", "Edit a record of aid", G.SOCIETY), agrarian.relief_edit, agrarian.AidEdit, free, ("S4.2/RP4",)),
+    _sync(Meta("relief:delete", "Strike out a record of aid", G.SOCIETY), agrarian.relief_delete, agrarian.AidTarget, free, ("S4.2/RP4",)),
+    _sync(Meta("reconstruction:begin", "Begin rebuilding a town", G.SOCIETY), agrarian.reconstruction_begin, agrarian.RebuildDraft, free, ("S4.2/RP4",)),
+    _sync(Meta("reconstruction:edit", "Edit a rebuilding", G.SOCIETY), agrarian.reconstruction_edit, agrarian.RebuildEdit, free, ("S4.2/RP4",)),
+    _sync(Meta("reconstruction:finish", "Finish a rebuilding", G.SOCIETY), agrarian.reconstruction_finish, agrarian.RebuildTarget, free, ("S4.2/RP4",)),
+    _sync(Meta("reconstruction:delete", "Abandon a rebuilding", G.SOCIETY), agrarian.reconstruction_delete, agrarian.RebuildTarget, free, ("S4.2/RP4",)),
+    _sync(
+        Meta("keystone:designate", "Make a resource the keystone of a world", G.SOCIETY),
+        agrarian.keystone_designate,
+        agrarian.KeystoneDraft,
+        free,
+        ("S6.4/RP4",),
+    ),
+    _sync(Meta("keystone:edit", "Edit a keystone resource", G.SOCIETY), agrarian.keystone_edit, agrarian.KeystoneEdit, free, ("S6.4/RP4",)),
+    _sync(Meta("keystone:delete", "Free a world from its keystone", G.SOCIETY), agrarian.keystone_delete, agrarian.KeystoneTarget, free, ("S6.4/RP4",)),
+    _sync(Meta("brand:found", "Give a workshop a brand", G.SOCIETY), agrarian.brand_found, agrarian.BrandDraft, free, ("S6.4/RP4",)),
+    _sync(Meta("brand:edit", "Edit a brand", G.SOCIETY), agrarian.brand_edit, agrarian.BrandEdit, free, ("S6.4/RP4",)),
+    _sync(Meta("brand:delete", "Forget a brand", G.SOCIETY), agrarian.brand_delete, agrarian.BrandTarget, free, ("S6.4/RP4",)),
+)
+
+
 REGIME_ACTIONS = (
     _sync(Meta("regime:set", "Set how a realm is ruled", G.SOCIETY), regime.regime_set, regime.RegimeDraft, free, ("S4.6/RP4",)),
     _sync(Meta("regime:edit", "Edit how a realm is ruled", G.SOCIETY), regime.regime_edit, regime.RegimeEdit, free, ("S4.6/RP4",)),
@@ -3765,6 +3842,7 @@ REGIME_ACTIONS = (
 ACTIONS: tuple[ActionSpec, ...] = (
     *CYCLE_ACTIONS,
     *REGIME_ACTIONS,
+    *AGRARIAN_ACTIONS,
     *ROUTE_ACTIONS,
     *STRUCTURE_ACTIONS,
     *FOUNDATION_ACTIONS,

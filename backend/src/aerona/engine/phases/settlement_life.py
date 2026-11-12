@@ -95,9 +95,11 @@ JUSTICE_FULL = 100
     "table.people_culture",
     "table.place_environment",
     "table.polity_members",
+    "table.preparedness",
     "table.pressures",
     "table.public_opinion",
     "table.quarantines",
+    "table.reconstructions",
     "table.region_environment",
     "table.secrets",
     "table.settlement_infrastructure",
@@ -143,6 +145,7 @@ JUSTICE_FULL = 100
     "table.injuries",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.reconstructions",
     "table.region_environment",
     "table.sentences",
     "table.settlement_history",
@@ -188,7 +191,7 @@ async def settlement_life(ctx: TickContext) -> None:
         await endure_siege(ctx, town, values)
         await prestige(ctx, town)
         ctx.count("structures_serving", await serve_town(ctx, settlement, town.profile, town.infrastructure, fires=burned))
-        tier = retier(ctx, town)
+        tier = await retier(ctx, town)
         if tier is not None:
             await note(
                 ctx,

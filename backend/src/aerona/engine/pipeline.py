@@ -19,6 +19,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases import (
     affairs,
     afterlife,
+    agrarian,
     arcana,
     belief_memory,
     births,
@@ -205,6 +206,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + collective.PHASES
     + cycles.PHASES
     + regimes.PHASES
+    + agrarian.PHASES
     + exploration.PHASES
     + factions.PHASES
     + goals.PHASES
@@ -450,6 +452,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "speculation",
     "industry_aftermath",
     "site_profits",
+    "staples",
     "economic_indicators",
     "credit_ratings",
     "banking",
@@ -463,7 +466,9 @@ SOCIETY_ENGINE_STAGE = stage(
     "crime_orgs",
     "trading_posts",
     "magical_orders",
+    "spatial_economy",
     "settlement_life",
+    "resilience",
     "structural_demography",
     "asabiyya",
     "crowds",
@@ -530,6 +535,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "settlement_cycles",
     "nomadism",
     "land_use",
+    "agrarian_cycles",
     "geomorphology",
     "material_decay",
     "institution_cycles",

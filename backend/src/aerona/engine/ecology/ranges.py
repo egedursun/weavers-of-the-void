@@ -20,6 +20,7 @@ from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.society import CreatureTrait
+from aerona.engine.agrarian.book import reserve_factor, reserve_marks
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import bearable, tolerated
@@ -56,6 +57,7 @@ class Wilds:
     hunt_bonus: dict[int, float] = field(default_factory=dict)
     lift: dict[int, float] = field(default_factory=dict)
     evolved: dict[tuple[int, int], dict[EvolvedTrait, int]] = field(default_factory=dict)
+    reserves: dict[tuple[int, int | None], tuple[int, int]] = field(default_factory=dict)
 
     def allowed(self, land: RegionEnvironmentRow | None) -> tuple[Biochemistry, ...] | None:
         return self.life.get(land.world_id) if land is not None and land.world_id is not None else None
@@ -68,6 +70,7 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
     atlas = await RegionAtlas.load(ctx.session)
     lands = {row.entity_id: row for row in await ctx.session.scalars(select(RegionEnvironmentRow))}
     wilds = Wilds(atlas, lands, {region.id: region for region in await canon(ctx.session, [EntityType.REGION])})
+    wilds.reserves = await reserve_marks(ctx.session)
     for community in await canon(ctx.session, SOCIETY_TYPES):
         region = atlas.top_region(community.id)
         if region is not None:
@@ -254,6 +257,7 @@ def human_hunting(rules: Rules, wilds: Wilds, species: EntityRow, region: int, *
     if protected or megafauna or traits & UNHUNTED or region in wilds.sacred.get(species.id, set()) or (stat(species, "danger") or 0) >= ecology.hunting_danger:
         return 0.0
     pressure: float = min(ecology.hunting_cap, wilds.population[region] // max(1, ecology.hunting_population))
+    pressure *= reserve_factor(rules, wilds.reserves, species.id, region)
     if T.REGENERATING in traits:
         pressure *= 1 - rules.habitat.regeneration_pct / PERCENT
     profile = wilds.profiles.get(species.id)

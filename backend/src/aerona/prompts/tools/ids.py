@@ -195,6 +195,8 @@ class SonToolId(StrEnum):
     ANOINT_FOUNDER = "anoint_founder"
     FREE_LEARNING = "free_learning"
     INSPIRE_SCHOOL = "inspire_school"
+    DESIGNATE_KEYSTONE = "designate_keystone"
+    INSPIRE_RELIEF = "inspire_relief"
 
 
 class MortalToolId(StrEnum):
@@ -321,6 +323,14 @@ class MortalToolId(StrEnum):
     PURGE_CIRCLE = "purge_circle"
     GUARD_THRONE = "guard_throne"
     STEER_MARRIAGES = "steer_marriages"
+    ENCLOSE_COMMONS = "enclose_commons"
+    RULE_COMMONS = "rule_commons"
+    RESERVE_GAME = "reserve_game"
+    POACH_GAME = "poach_game"
+    PLANT_PERENNIAL = "plant_perennial"
+    SEND_AID = "send_aid"
+    PLAN_REBUILDING = "plan_rebuilding"
+    PREPARE_TOWN = "prepare_town"
 
 
 ToolId = SonToolId | MortalToolId

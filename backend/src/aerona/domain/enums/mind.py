@@ -365,6 +365,8 @@ class ActKind(StrEnum):
     ABANDONING_ELDERS = "abandoning_elders"
     FORCED_LABOUR = "forced_labour"
     SELLING_OFFICES = "selling_offices"
+    POACHING = "poaching"
+    ENCLOSING = "enclosing"
 
 
 class NeedKind(StrEnum):

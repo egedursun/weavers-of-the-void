@@ -41,6 +41,7 @@ from aerona.cartography.generator import generate_map
 from aerona.cartography.model import MARKER_TYPES, WorldMap
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.agrarian import CentralPlaceRow, LandRingRow, SoilNutrientRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.culture import ArtworkProfileRow, CastingRow, HolderLevelRow, IdeologyAdherentRow, LanguageStandingRow, LegendProfileRow
@@ -60,6 +61,7 @@ from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.urban import ConvoyRow, DistrictServiceRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.agrarian import CentralityRank, LandUseRing, NutrientKind
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import LegendArchetype
 from aerona.domain.enums.disease import OutbreakStatus
@@ -102,6 +104,8 @@ ALIASES = (
     Alias("POST", "/map-notes", "map_note:add"),
     Alias("DELETE", "/map-notes/{note_id}", "map_note:remove", path_fields={"note_id": "note_id"}),
 )
+RING_ORDER = tuple(LandUseRing)
+RANK_ORDER = tuple(CentralityRank)
 
 
 def stored_map(row: WorldMapRow | None) -> WorldMap | None:
@@ -584,6 +588,8 @@ async def region_stocks(session: AsyncSession, world_id: int) -> dict[int, Regio
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["niches"] = count
     for region, values in (await solidarity_by_region(session, world_id, atlas)).items():
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0}).update(values)
+    for region, values in (await agrarian_by_region(session, world_id, atlas)).items():
+        totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0}).update(values)
     return {region: RegionStocks(**values) for region, values in totals.items()}
 
 
@@ -609,6 +615,41 @@ async def urban_by_region(session: AsyncSession, world_id: int, atlas: RegionAtl
         region: {"desirability": round(sum(values) / len(values)), "coverage": round(sum(covered[region]) / len(covered[region]))}
         for region, values in wanted.items()
     }
+
+
+async def agrarian_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, dict[str, int]]:
+    found: dict[int, dict[str, int]] = {}
+    rings = await session.execute(
+        select(LandRingRow.region_entity_id, LandRingRow.ring)
+        .join(EntityRow, EntityRow.id == LandRingRow.region_entity_id)
+        .where(EntityRow.world_id == world_id)
+    )
+    for region, ring in rings.all():
+        found.setdefault(region, {})["ring"] = RING_ORDER.index(ring) + 1
+    places = await session.execute(
+        select(CentralPlaceRow.settlement_entity_id, CentralPlaceRow.rank)
+        .join(EntityRow, EntityRow.id == CentralPlaceRow.settlement_entity_id)
+        .where(EntityRow.world_id == world_id)
+    )
+    for settlement, rank in places.all():
+        home = atlas.top_region(settlement)
+        if home is not None:
+            bucket = found.setdefault(home, {})
+            bucket["market"] = max(bucket.get("market", 0), RANK_ORDER.index(rank) + 1)
+    soils = await session.execute(
+        select(SoilNutrientRow.region_entity_id, SoilNutrientRow.nutrient, SoilNutrientRow.stock)
+        .join(EntityRow, EntityRow.id == SoilNutrientRow.region_entity_id)
+        .where(EntityRow.world_id == world_id)
+    )
+    body: dict[int, list[int]] = {}
+    for region, nutrient, stock in soils.all():
+        if nutrient is NutrientKind.SALINITY:
+            found.setdefault(region, {})["salt"] = stock
+        else:
+            body.setdefault(region, []).append(stock)
+    for region, stocks in body.items():
+        found.setdefault(region, {})["soil"] = max(1, round(sum(stocks) / len(stocks)))
+    return found
 
 
 async def solidarity_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, dict[str, int]]:

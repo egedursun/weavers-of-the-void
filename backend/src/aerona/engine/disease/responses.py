@@ -29,6 +29,7 @@ from aerona.engine.primitives.stats import shift_bounded
 R = PlagueResponse
 STABILITY = "stability"
 UNBURNED = frozenset({FuneralRite.BURIAL, FuneralRite.EXPOSURE, FuneralRite.NAMELESS})
+LEANING_FLOOR = 0.05
 LEANINGS: dict[PlagueResponse, tuple[ValueAxis, ...]] = {
     R.CLOSE_BORDERS: (ValueAxis.TRADITION, ValueAxis.LOYALTY),
     R.QUARANTINE: (ValueAxis.LAW, ValueAxis.KNOWLEDGE),
@@ -56,7 +57,7 @@ class ResponseTally:
 
 def leaning(values: dict[ValueAxis, int], response: PlagueResponse) -> float:
     held_values = LEANINGS.get(response, ())
-    return 1 + sum(values.get(axis, 0) for axis in held_values) / PERCENT
+    return max(LEANING_FLOOR, 1 + sum(values.get(axis, 0) for axis in held_values) / PERCENT)
 
 
 def resentment(values: dict[ValueAxis, int]) -> float:

@@ -22,6 +22,7 @@ from aerona.domain.enums.military import ArmyRole, CommanderTrait, MutinyOutcome
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.war import SiegeStatus
+from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar
@@ -370,6 +371,9 @@ async def scorch(ctx: TickContext, owner: EntityRow, army_row: ArmyRow, region: 
         return False
     region.harvest_pct = clamp_int(region.harvest_pct - ctx.rules.campaign_depth.scorched_harvest_pct, 0, PERCENT)
     add_scar(region, ScarKind.BURNED, ctx.rules.campaign_depth.plunder_depth)
+    land = await ctx.session.get(EntityRow, region.entity_id)
+    if land is not None:
+        await fell_plantings(ctx, land, ctx.rules.perennials.felling_pct)
     return True
 
 

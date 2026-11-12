@@ -50,6 +50,7 @@ class GiftOccasion(StrEnum):
     MARRIAGE = "marriage"
     RETURN = "return"
     ALLIANCE = "alliance"
+    RELIEF = "relief"
 
 
 class GiftState(StrEnum):

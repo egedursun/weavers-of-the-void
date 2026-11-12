@@ -14,6 +14,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, DistrictKind
+from aerona.engine.agrarian.ruin import harm_ruin
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -232,6 +233,7 @@ async def damage_districts(ctx: TickContext, settlement: EntityRow, harm: Distri
     if not struck:
         return 0
     await ctx.session.flush()
+    await harm_ruin(ctx, settlement, harm)
     await note(
         ctx,
         f"{HARM_WORDS[harm]} the {', '.join(sorted(set(struck)))} of {settlement.name}.",

@@ -1,3 +1,4 @@
+import { AgrarianSection } from '@/features/agrarian/AgrarianSection'
 import { ArcanaSection } from '@/features/arcana/ArcanaSection'
 import { MythicSection } from '@/features/arcana/MythicSection'
 import { CollectiveSection } from '@/features/collective/CollectiveSection'
@@ -79,6 +80,7 @@ export function ThingSections({
       <CollectiveSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <CyclesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RegimeSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <AgrarianSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

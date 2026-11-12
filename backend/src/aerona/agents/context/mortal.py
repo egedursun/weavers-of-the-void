@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.agents.context.agrarian_lines import mortal_agrarian_lines
 from aerona.agents.context.collective_lines import mortal_collective_lines
 from aerona.agents.context.cycle_lines import mortal_cycle_lines
 from aerona.agents.context.dominion_lines import mortal_dominion_lines
@@ -194,6 +195,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "crowds": await mortal_collective_lines(scope, me),
             "obligations": await mortal_cycle_lines(scope, me),
             "rule": await mortal_regime_lines(scope, me),
+            "land": await mortal_agrarian_lines(scope, me),
         }
     )
 

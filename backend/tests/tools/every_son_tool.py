@@ -376,4 +376,6 @@ SON_CASES: dict[str, Case] = {
     "anoint_founder": Case(plain(polity_id=created("polity"), reason=REASON), ruled_realm),
     "free_learning": Case(plain(structure_id=created("structure"), level=70, reason=REASON), learning_house),
     "inspire_school": Case(plain(founder_id=mortal, name="The First School", reason=REASON)),
+    "designate_keystone": Case(plain(species_id=lambda realm, ids: realm.species_id, region_id=region, name="The First Yield", use="rite", reason=REASON)),
+    "inspire_relief": Case(plain(giver_id=lambda realm, ids: realm.cult_id, settlement_id=settlement, kind="healers", reason=REASON)),
 }

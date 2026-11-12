@@ -130,6 +130,7 @@ export const OCCASIONS: Record<Schema['GiftOccasion'], Named> = {
   marriage: { label: 'A marriage gift', icon: Heart, tone: 'success' },
   return: { label: 'A return gift', icon: Undo2, tone: 'success' },
   alliance: { label: 'Between allies', icon: Handshake, tone: 'info' },
+  relief: { label: 'Aid in a stricken hour', icon: HandHeart, tone: 'success' },
 }
 
 export const GIFT_STATES: Record<Schema['GiftState'], Named> = {

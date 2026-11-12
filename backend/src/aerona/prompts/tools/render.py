@@ -13,6 +13,7 @@ from aerona.catalog.tenets import TENET_EFFECTS
 from aerona.catalog.theories import DISCIPLINES
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.affliction import Transmission
+from aerona.domain.enums.agrarian import AidKind, KeystoneUse, PerennialKind, PreparednessKind
 from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKind, DesignKind, StoryletId
@@ -158,6 +159,10 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "challenge_kinds": ", ".join(item.value for item in ChallengeKind),
         "manumission_paths": ", ".join(item.value for item in ManumissionPath),
         "selectorates": ", ".join(item.value for item in SelectorateKind),
+        "perennial_kinds": ", ".join(item.value for item in PerennialKind),
+        "aid_kinds": ", ".join(item.value for item in AidKind),
+        "preparedness_kinds": ", ".join(item.value for item in PreparednessKind),
+        "keystone_uses": ", ".join(item.value for item in KeystoneUse),
         "design_kinds": ", ".join(item.value for item in DesignKind),
         "design_components": ", ".join(item.value for item in DesignComponentKind),
         "registry_kinds": ", ".join(item.value for item in RegistryKind if item is not RegistryKind.LAND_TITLE),

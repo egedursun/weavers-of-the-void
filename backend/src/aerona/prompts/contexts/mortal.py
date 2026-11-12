@@ -192,6 +192,7 @@ class HomeLine(ContextItem):
     crowds: list[str] = Field(default_factory=list)
     obligations: list[str] = Field(default_factory=list)
     rule: list[str] = Field(default_factory=list)
+    land: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

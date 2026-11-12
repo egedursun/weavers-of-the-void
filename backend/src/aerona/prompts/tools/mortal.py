@@ -836,4 +836,42 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "steps": "Steps the design needs, 1 to 100",
         },
     ),
+    T.ENCLOSE_COMMONS: ToolText(
+        "You enclose a common of your land for yourself; it yields you coin each epoch, while the cottagers who used it lose their living, "
+        "grow restless and drift to the cities. 1 action.",
+        {"commons_id": "The common you enclose"},
+    ),
+    T.RULE_COMMONS: ToolText(
+        "You set a council over a common of your land; a common ruled by its users wears down far more slowly when many depend on it. 1 action.",
+        {"commons_id": "The common the council rules"},
+    ),
+    T.RESERVE_GAME: ToolText(
+        "You reserve the game of your land for your own hunts; the reserve protects its beasts from hunting, but the hungry poach "
+        "and the folk resent the law. 1 action.",
+        {"species_id": "The beast the reserve protects, or none for all game", "strictness": "How strictly it is kept, 0 to 100"},
+    ),
+    T.POACH_GAME: ToolText(
+        "You take game from a reserve in your land that is not yours; it feeds you and earns a little coin, but it breaks the holder's law. 1 action.",
+        {"reserve_id": "The reserve you poach in"},
+    ),
+    T.PLANT_PERENNIAL: ToolText(
+        "You plant a long-lived planting in your land ({{ perennial_kinds }}); it bears only after epochs, then yields you coin each epoch "
+        "until war or neglect cuts it down. 1 action.",
+        {"kind": "What you plant", "species_id": "The plant you set, if any"},
+    ),
+    T.SEND_AID: ToolText(
+        "As ruler you send aid to a town ({{ aid_kinds }}); the town owes your realm a favour and a gift in return and its folk love your god "
+        "more, but a rival may turn the aid away. 1 action.",
+        {"settlement_id": "The town you aid", "kind": "What you send"},
+    ),
+    T.PLAN_REBUILDING: ToolText(
+        "You draw the plan for rebuilding your town after its ruin; a planned rebuilding costs more and takes longer, but it rises in stone "
+        "with wider streets and burns less. 1 action.",
+        {},
+    ),
+    T.PREPARE_TOWN: ToolText(
+        "You pay to raise one of your town's works against disaster ({{ preparedness_kinds }}); each level lowers the losses of the disaster "
+        "it guards against. 1 action.",
+        {"kind": "The work you raise"},
+    ),
 }

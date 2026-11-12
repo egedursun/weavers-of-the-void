@@ -58,6 +58,7 @@ PHASE_FLOWS: dict[str, FlowCategory] = {
     "travel": C.JOURNEY,
     "exploration": C.MIGRATION,
     "famine_migration": C.MIGRATION,
+    "agrarian_cycles": C.MIGRATION,
     "refugees": C.MIGRATION,
     "settlement_cycles": C.MIGRATION,
     "institution_cycles": C.MERGE,

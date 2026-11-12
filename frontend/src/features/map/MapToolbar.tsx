@@ -28,6 +28,7 @@ import {
   ShieldAlert,
   Sparkles,
   Sprout,
+  Store,
   Sun,
   Swords,
   Tag,
@@ -106,6 +107,9 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   coverage: Droplets,
   niches: Network,
   solidarity: Shield,
+  rings: Wheat,
+  centrality: Store,
+  nutrients: Sprout,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {

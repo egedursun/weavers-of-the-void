@@ -20,6 +20,7 @@ from aerona.db.tables.happenings import RegionGeomorphRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held, unheld
+from aerona.domain.enums.agrarian import NutrientKind
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -37,6 +38,7 @@ from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
+from aerona.engine.agrarian.book import deposit, shield_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import cold_snap
@@ -63,7 +65,7 @@ from aerona.engine.phases.society_economy import population_bounds, society_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap, LawBook
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
-from aerona.engine.primitives.queries import BondIndex, canon
+from aerona.engine.primitives.queries import BondIndex, canon, top_region
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, headcount_value, set_stats, stat, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
@@ -279,6 +281,11 @@ async def strike_disaster(ctx: TickContext, target: EntityRow, disaster: Disaste
             continue
         if disaster is Disaster.FLOOD:
             scale *= 1 - await strength_at(ctx.session, entity.id, [StructureKind.DAM]) * ctx.rules.structure_functions.dam_flood_cut_pct / PERCENT
+        if entity.entity_type is EntityType.SETTLEMENT:
+            shielded = await shield_of(ctx, entity, disaster)
+            scale *= 1 - shielded
+            if shielded > 0:
+                impact.notes.append(f"the works of {entity.name} held back part of it")
         before = headcount_value(entity)
         if disaster in SHAKING and entity.entity_type is EntityType.STRUCTURE and await _quake_structure(ctx, entity, scale, knowledge, disaster):
             impact.destroyed.append(entity)
@@ -509,6 +516,7 @@ async def strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severi
 
 
 async def after_strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int, event: EntityRow, *, impact: DisasterImpact) -> None:
+    await silt_land(ctx, target, disaster, severity)
     if disaster is Disaster.FLOOD and await river_after_flood(ctx, target, severity, event) is not None:
         impact.notes.append("the river left its bed")
     elif disaster is Disaster.EARTHQUAKE and await river_after_quake(ctx, target, severity, event) is not None:
@@ -521,6 +529,14 @@ async def after_strike(ctx: TickContext, target: EntityRow, disaster: Disaster, 
     elif disaster is Disaster.VOLCANIC_QUAKE and await quaked(ctx, target):
         woken, _ = await strike(ctx, target, Disaster.ERUPTION, severity)
         impact.notes.append(f"the shaking woke {woken.name}")
+
+
+async def silt_land(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int) -> None:
+    table = ctx.rules.nutrients
+    gift = {Disaster.FLOOD: table.flood_mineral, Disaster.ERUPTION: table.ash_mineral}.get(disaster, 0)
+    region = await top_region(ctx.session, target) if gift else None
+    if region is not None:
+        await deposit(ctx, region.id, NutrientKind.MINERAL, round_half_up(gift * severity / PERCENT))
 
 
 def _sentence(impact: DisasterImpact) -> str:
@@ -783,8 +799,10 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.place_environment",
     "table.plague_responses",
     "table.polity_members",
+    "table.preparedness",
     "table.prostheses",
     "table.quarantines",
+    "table.reconstructions",
     "table.region_dominion",
     "table.region_environment",
     "table.region_geomorphology",
@@ -792,6 +810,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.routes",
     "table.sieges",
     "table.sky_events",
+    "table.soil_nutrients",
     "table.sons",
     "table.species_hosts",
     "table.species_profiles",
@@ -845,9 +864,11 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.name_registry",
     "table.notable_years",
     "table.place_environment",
+    "table.reconstructions",
     "table.region_environment",
     "table.region_geomorphology",
     "table.river_shifts",
+    "table.soil_nutrients",
     "table.sons",
     "table.spirit_profiles",
 )

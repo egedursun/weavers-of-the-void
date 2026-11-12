@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.evolution import STAGE_COVER, climax_stage, keystone_of, next_stage, trophic_level
+from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.ecology import HerdRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
@@ -362,3 +363,9 @@ async def test_a_town_that_drives_out_its_sick_sends_them_to_a_colony_and_a_loos
     await session.flush()
     await release_herd(ctx, herd)
     assert await has_flag(session, goat.id, EntityFlag.INVASIVE)
+
+
+def test_a_people_that_reviles_every_response_still_weighs_each_above_zero() -> None:
+    scorn = dict.fromkeys(ValueAxis, -PERCENT)
+    assert all(leaning(scorn, response) > 0 for response in PlagueResponse)
+    assert leaning(dict.fromkeys(ValueAxis, PERCENT), PlagueResponse.QUARANTINE) > leaning(scorn, PlagueResponse.QUARANTINE)

@@ -40,6 +40,7 @@ import {
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Muted, PageTitle, Text } from '@/components/typography'
+import { CosmosAgrarianSection } from '@/features/agrarian/CosmosAgrarianSection'
 import { ChronicleEntry } from '@/features/chronicle/ChronicleEntry'
 import { useChronicleKindLabels } from '@/features/chronicle/api'
 import { WorldPlacementSection } from '@/features/cosmography/HeavenlyLife'
@@ -455,6 +456,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       <StorytellerSection worldId={data.world.id} />
       <CosmosCyclesSection />
       <CosmosRegimeSection />
+      <CosmosAgrarianSection />
       <CelestialDepthSection
         kind='world'
         id={data.world.id}

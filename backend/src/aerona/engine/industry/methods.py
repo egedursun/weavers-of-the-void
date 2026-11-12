@@ -33,6 +33,7 @@ from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import EnergyKind, MethodKind, ProcessKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.agrarian.book import method_lift
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, holding
@@ -50,6 +51,7 @@ TENTH = 10
 CELLAR_LEVEL = 2
 CELLAR_METHODS = frozenset({MethodKind.ICING, MethodKind.CAVE_AGEING})
 CELLARS = (WorkshopKind.WAREHOUSE, WorkshopKind.GRANARY)
+INTENSIVE = frozenset({MethodKind.IRRIGATED_TERRACES, MethodKind.CROP_ROTATION})
 
 
 @dataclass
@@ -332,6 +334,9 @@ async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityR
         current = METHODS[row.method] if row is not None else None
         candidates = dict.fromkeys([*options, *([current] if current else [])])
         worth = {spec.kind: await expected_profit(ctx, book, community, spec, nature=nature) for spec in candidates}
+        if process is ProcessKind.FARMING:
+            lift = await method_lift(ctx.session, ctx.rules, community)
+            worth = {kind: value * lift if kind in INTENSIVE and value > 0 else value for kind, value in worth.items()}
         best = min(options, key=lambda spec: (-worth[spec.kind], spec.kind.value))
         if current is not None and current in options and worth[best.kind] <= worth[current.kind] * margin:
             continue

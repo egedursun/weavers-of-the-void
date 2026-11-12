@@ -89,6 +89,10 @@ class RegionStocks(ApiModel):
     desirability: int = 0
     coverage: int = 0
     niches: int = 0
+    ring: int = 0
+    market: int = 0
+    soil: int = 0
+    salt: int = 0
     solidarity: int = 0
     frontier: int = 0
 

@@ -21,6 +21,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.agrarian.book import farming_boost
 from aerona.engine.context import TickContext
 from aerona.engine.lore.eras import era_factor
 from aerona.engine.lore.kinds import custom_bases
@@ -147,6 +148,7 @@ async def research_factor(ctx: TickContext, community: EntityRow, branch: Knowle
         * await branch_factor(ctx.session, ctx.rules, community.id, branch)
         * await freedom_factor(ctx.session, ctx.rules, community.id)
         * await school_factor(ctx.session, ctx.rules, community.id)
+        * (await farming_boost(ctx.session, community) if branch is KnowledgeBranch.AGRICULTURE else 1.0)
     )
 
 

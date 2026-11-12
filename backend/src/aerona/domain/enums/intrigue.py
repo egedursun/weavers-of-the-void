@@ -48,6 +48,7 @@ class FavourOrigin(StrEnum):
     SUCCESSION_SUPPORT = "succession_support"
     SCHEME_AID = "scheme_aid"
     VOTE = "vote"
+    RELIEF = "relief"
 
 
 class IdentityReason(StrEnum):

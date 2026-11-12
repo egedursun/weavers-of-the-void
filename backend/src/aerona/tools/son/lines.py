@@ -205,3 +205,5 @@ SHAPE_RULE = Line("tools.son.shape_rule", "{son} reshaped who chooses the rulers
 ANOINT_FOUNDER = Line("tools.son.anoint_founder", "{son} marked {ruler} as the founder of {realm}: {reason}")
 FREE_LEARNING = Line("tools.son.free_learning", "{son} set the freedom of learning at {house}: {reason}")
 INSPIRE_SCHOOL = Line("tools.son.inspire_school", "{son} moved {founder} to found {school}: {reason}")
+DESIGNATE_KEYSTONE = Line("tools.son.designate_keystone", "{son} made {name} what the world depends on: {reason}")
+INSPIRE_RELIEF = Line("tools.son.inspire_relief", "{son} moved {giver} to send aid to {town}: {reason}")

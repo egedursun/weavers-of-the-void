@@ -14,6 +14,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.base import Base
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.tables.agency import CreationRewardRow
+from aerona.db.tables.agrarian import BrandRow, CommonsRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.collective import LearningEventRow
@@ -38,6 +39,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
+from aerona.domain.enums.agrarian import CommonsKind
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import SocialBias
 from aerona.domain.enums.cosmography import (
@@ -2655,6 +2657,151 @@ LEVERS.update(
         **{name: after(SCHOOL, DISCIPLE, school_id=Newest("school_lineage"), mortal_id=Pick(MORTAL, 1)) for name in ("disciple:edit", "disciple:delete")},
     }
 )
+
+
+async def free_workshop(session: AsyncSession) -> int:
+    town = await canon(session, EntityType.SETTLEMENT, 0)
+    assert town is not None
+    branded = select(BrandRow.workshop_id)
+    found = await session.scalar(
+        select(WorkshopRow.id).where(WorkshopRow.community_entity_id == town, WorkshopRow.id.not_in(branded)).order_by(WorkshopRow.id).limit(1)
+    )
+    if found is not None:
+        return int(found)
+    taken = set(await session.scalars(select(WorkshopRow.kind).where(WorkshopRow.community_entity_id == town)))
+    kind = next(item for item in WorkshopKind if item not in taken)
+    row = WorkshopRow(community_entity_id=town, kind=kind, level=2, built_epoch=0)
+    session.add(row)
+    await session.flush()
+    return row.id
+
+
+async def open_land(session: AsyncSession) -> int:
+    woods = select(CommonsRow.region_entity_id).where(CommonsRow.kind == CommonsKind.WOODS)
+    found = await session.scalar(
+        select(EntityRow.id).where(EntityRow.entity_type == EntityType.REGION, EntityRow.id.not_in(woods)).order_by(EntityRow.id).limit(1)
+    )
+    assert found is not None
+    return int(found)
+
+
+LAND = EntityType.REGION
+WORKSHOP = Computed(free_workshop)
+OPEN_LAND = Computed(open_land)
+RING = ("land_ring:set", {"region_id": Pick(LAND), "ring": "grain", "market_id": Pick(TOWN)})
+CENTRAL = ("central_place:set", {"settlement_id": Pick(TOWN)})
+NUTRIENT = ("soil_nutrient:set", {"region_id": Pick(LAND), "nutrient": "fixed", "stock": 40})
+PRESSURE = ("intensification:set", {"region_id": Pick(LAND)})
+PLANTING = ("perennial:plant", {"region_id": Pick(LAND), "kind": "orchard", "owner_id": Pick(MORTAL)})
+COMMON = ("commons:create", {"region_id": OPEN_LAND, "kind": "woods", "steward_id": Pick(TOWN)})
+RESERVE = ("game_reserve:declare", {"region_id": Pick(LAND), "holder_id": Pick(MORTAL), "strictness": 60})
+HUNGER = ("famine_lore:set", {"people_id": Pick(PEOPLE)})
+WORK = ("preparedness:build", {"settlement_id": Pick(TOWN), "kind": "levee", "level": 2})
+AID = ("relief:send", {"giver_id": Pick(REALM), "settlement_id": Pick(TOWN), "kind": "goods", "amount": 50})
+REBUILD = ("reconstruction:begin", {"settlement_id": Pick(TOWN), "cause": "fire", "plan": "planned"})
+KEYSTONE = (
+    "keystone:designate",
+    {
+        "world_id": Pick("world"),
+        "name": "The First Yield",
+        "use": "rite",
+        "producer_id": Pick(EntityType.SPECIES),
+        "source_region_id": Pick(LAND),
+        "cult_id": Pick(EntityType.CULT),
+    },
+)
+BRAND = ("brand:found", {"workshop_id": WORKSHOP, "name": "The First Brand"})
+AGRARIAN_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "land_ring:edit": {"market_entity_id": Pick(TOWN), "ring": "ranching", "distance": 200, "by_water": True, "gap": 30},
+    "central_place:edit": {"rank": "rare", "catchment": 9000, "served_by_entity_id": Pick(TOWN, 1), "centrality": 80},
+    "soil_nutrient:edit": {"stock": 35, "trend": -2},
+    "intensification:edit": {"pressure": 120, "intensity": 50, "research_boost": 30},
+    "perennial:edit": {
+        "kind": "vineyard",
+        "species_entity_id": Pick(EntityType.SPECIES),
+        "owner_node_id": Pick(MORTAL),
+        "area": 8,
+        "maturity": 60,
+        "mature_epochs": 4,
+        "condition": 80,
+    },
+    "commons:edit": {
+        "kind": "woods",
+        "rule": "council",
+        "condition": 50,
+        "use": 70,
+        "steward_entity_id": Pick(TOWN),
+        "encloser_node_id": Pick(MORTAL),
+        "dispossessed": 3,
+    },
+    "game_reserve:edit": {"holder_node_id": Pick(MORTAL, 1), "species_entity_id": Pick(EntityType.SPECIES), "strictness": 40, "poaching": 20, "resentment": 10},
+    "famine_lore:edit": {"memory": 60, "famine_foods": False, "storage": 30},
+    "preparedness:edit": {"level": 3, "condition": 70, "averted": 1},
+    "relief:edit": {"kind": "labour", "amount": 30, "god_node_id": Pick("son"), "refused": True},
+    "reconstruction:edit": {
+        "cause": "flood",
+        "plan": "opportunistic",
+        "cost": 400,
+        "paid": 100,
+        "progress": 40,
+        "planner_entity_id": Pick(MORTAL),
+        "seized_by_node_id": Pick(MORTAL, 1),
+        "seized": 5,
+    },
+    "keystone:edit": {
+        "name": "The Second Yield",
+        "producer_entity_id": Pick(EntityType.SPECIES),
+        "source_region_entity_id": Pick(LAND),
+        "commodity": "herbs",
+        "use": "navigation",
+        "cult_entity_id": Pick(EntityType.CULT),
+        "controller_entity_id": Pick(REALM),
+        "harvest": 30,
+        "supply": 40,
+        "price": 150,
+    },
+    "brand:edit": {"name": "The Second Brand", "owner_node_id": Pick(MORTAL), "reputation": 50, "quality": 70, "renowned": 2, "counterfeits": 10},
+}
+EDITS = {**EDITS, **AGRARIAN_EDITS}
+LEVERS.update(
+    {
+        "land_ring:set": given(region_id=Pick(LAND), ring="grain", market_id=Pick(TOWN)),
+        **{name: after(RING, region_id=Pick(LAND)) for name in ("land_ring:edit", "land_ring:delete")},
+        "central_place:set": given(settlement_id=Pick(TOWN)),
+        **{name: after(CENTRAL, settlement_id=Pick(TOWN)) for name in ("central_place:edit", "central_place:delete")},
+        "soil_nutrient:set": given(region_id=Pick(LAND), nutrient="fixed", stock=40),
+        **{name: after(NUTRIENT, region_id=Pick(LAND), nutrient="fixed") for name in ("soil_nutrient:edit", "soil_nutrient:delete")},
+        "intensification:set": given(region_id=Pick(LAND)),
+        **{name: after(PRESSURE, region_id=Pick(LAND)) for name in ("intensification:edit", "intensification:delete")},
+        "perennial:plant": given(region_id=Pick(LAND), kind="orchard", owner_id=Pick(MORTAL)),
+        **{name: after(PLANTING, perennial_id=Newest("perennial")) for name in ("perennial:edit", "perennial:fell", "perennial:delete")},
+        "commons:create": given(region_id=OPEN_LAND, kind="woods", steward_id=Pick(TOWN)),
+        **{name: after(COMMON, commons_id=Newest("commons")) for name in ("commons:edit", "commons:delete")},
+        "commons:enclose": after(COMMON, commons_id=Newest("commons"), encloser_id=Pick(MORTAL)),
+        "game_reserve:declare": given(region_id=Pick(LAND), holder_id=Pick(MORTAL), strictness=60),
+        **{name: after(RESERVE, reserve_id=Newest("game_reserve")) for name in ("game_reserve:edit", "game_reserve:delete")},
+        "famine_lore:set": given(people_id=Pick(PEOPLE)),
+        **{name: after(HUNGER, people_id=Pick(PEOPLE)) for name in ("famine_lore:edit", "famine_lore:delete")},
+        "preparedness:build": given(settlement_id=Pick(TOWN), kind="levee", level=2),
+        **{name: after(WORK, settlement_id=Pick(TOWN), kind="levee") for name in ("preparedness:edit", "preparedness:delete")},
+        "relief:send": given(giver_id=Pick(REALM), settlement_id=Pick(TOWN), kind="goods", amount=50),
+        **{name: after(AID, aid_id=Newest("relief_aid")) for name in ("relief:edit", "relief:delete")},
+        "reconstruction:begin": given(settlement_id=Pick(TOWN), cause="fire", plan="planned"),
+        **{name: after(REBUILD, rebuild_id=Newest("reconstruction")) for name in ("reconstruction:edit", "reconstruction:finish", "reconstruction:delete")},
+        "keystone:designate": given(
+            world_id=Pick("world"),
+            name="The First Yield",
+            use="rite",
+            producer_id=Pick(EntityType.SPECIES),
+            source_region_id=Pick(LAND),
+            cult_id=Pick(EntityType.CULT),
+        ),
+        **{name: after(KEYSTONE, keystone_id=Newest("keystone_resource")) for name in ("keystone:edit", "keystone:delete")},
+        "brand:found": Lever(values={"workshop_id": WORKSHOP, "name": "The First Brand"}),
+        **{name: after(BRAND, brand_id=Newest("brand")) for name in ("brand:edit", "brand:delete")},
+    }
+)
+
 
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})
 

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.agrarian import CommonsRow, GameReserveRow, ReconstructionRow
 from aerona.db.tables.arcana import LawUpkeepRow, VisStockRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.collective import AccountRow, StoryletRunRow
@@ -46,6 +47,7 @@ from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.urban import ConvoyRow, OrderLawRow, TurfRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
+from aerona.domain.enums.agrarian import CommonsKind, RebuildCause
 from aerona.domain.enums.arcana import LawSource, SpellForm
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
@@ -1195,3 +1197,35 @@ async def house_head(session: AsyncSession, realm: Realm) -> Ids:
     session.add(HouseProfileRow(house_entity_id=house.id, founder_entity_id=realm.mortal_id, head_entity_id=realm.mortal_id))
     await session.flush()
     return {"house": house.id}
+
+
+async def land_common(session: AsyncSession, realm: Realm) -> Ids:
+    row = CommonsRow(region_entity_id=realm.cosmos.region_id, kind=CommonsKind.PASTURE, steward_entity_id=realm.settlement_id, locked=[])
+    session.add(row)
+    await session.flush()
+    return {"commons": row.id}
+
+
+async def game_reserve(session: AsyncSession, realm: Realm) -> Ids:
+    holder = await second_mortal(session, realm)
+    row = GameReserveRow(region_entity_id=realm.cosmos.region_id, holder_node_id=holder["mortal"], strictness=60, locked=[])
+    session.add(row)
+    await session.flush()
+    return {"reserve": row.id}
+
+
+async def ruined_town(session: AsyncSession, realm: Realm) -> Ids:
+    row = ReconstructionRow(settlement_entity_id=realm.settlement_id, cause=RebuildCause.FIRE, cost=300, locked=[])
+    session.add(row)
+    await session.flush()
+    return {"rebuild": row.id}
+
+
+async def aiding_realm(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    other = await second_settlement(session, realm)
+    profile = await session.get(PolityProfileRow, found["polity"])
+    assert profile is not None
+    profile.treasury = 5000
+    await session.flush()
+    return {**found, **other}

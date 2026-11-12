@@ -66,3 +66,6 @@ class TreasuryEntry(StrEnum):
     LOAN = "loan"
     UPKEEP = "upkeep"
     OFFICE_SALE = "office_sale"
+    RELIEF = "relief"
+    REBUILDING = "rebuilding"
+    MONOPOLY = "monopoly"

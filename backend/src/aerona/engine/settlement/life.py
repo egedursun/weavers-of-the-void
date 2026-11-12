@@ -23,6 +23,7 @@ from aerona.db.tables.settlement import (
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
+from aerona.domain.enums.agrarian import RebuildCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.culture import Technique
@@ -39,6 +40,8 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.domain.enums.urban import UrbanService
 from aerona.domain.enums.war import SiegeStatus
+from aerona.engine.agrarian.book import centrality_of, counted_people, shield_of
+from aerona.engine.agrarian.ruin import mark_ruin
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
@@ -655,7 +658,11 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
         timber = [district for district in town.districts if district.material is BuildMaterial.TIMBER] or town.districts
         if not timber:
             continue
-        gale = (1 + year.wind / PERCENT * table.wind_spread_pct / PERCENT) * spread_of(ctx.rules, town.profile.morphology)
+        gale = (
+            (1 + year.wind / PERCENT * table.wind_spread_pct / PERCENT)
+            * spread_of(ctx.rules, town.profile.morphology)
+            * (1 - await shield_of(ctx, town.entity, None))
+        )
         district = max(timber, key=lambda item: (item.level, -item.id))
         level = district.level
         gone = wound_district(district, round_half_up(table.district_loss * gale))
@@ -682,6 +689,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
             kind=ChronicleKind.WORLD,
         )
         await record_fire(ctx, town.entity, dead)
+        await mark_ruin(ctx, town.entity, RebuildCause.FIRE)
     return burned
 
 
@@ -822,10 +830,10 @@ async def urban_drift(ctx: TickContext, town: Town) -> int:
     return clamp_int(value_distance(own, parent) * table.tension_pct / PERCENT * relief, 0, PERCENT) if parent else 0
 
 
-def retier(ctx: TickContext, town: Town) -> SizeTier | None:
+async def retier(ctx: TickContext, town: Town) -> SizeTier | None:
     if "size_tier" in town.profile.locked:
         return None
-    people = stat(town.entity, "population") or 0
+    people = counted_people(ctx.rules, stat(town.entity, "population") or 0, await centrality_of(ctx.session, town.entity.id))
     tier = tier_for(ctx.rules, people, town.infrastructure, town.infrastructure.granary_capacity)
     if tier is town.profile.size_tier:
         return None

@@ -260,6 +260,9 @@ export const TREASURY_SPEC: Record<TreasuryEntry, Spec> = {
   loan: { label: 'Bank loan', icon: Landmark, tone: 'warning' },
   upkeep: { label: 'Upkeep of works', icon: Building, tone: 'warning' },
   office_sale: { label: 'Office sold', icon: Landmark, tone: 'gold' },
+  relief: { label: 'Aid sent', icon: HandHeart, tone: 'success' },
+  rebuilding: { label: 'Rebuilding', icon: Hammer, tone: 'warning' },
+  monopoly: { label: 'Keystone trade', icon: Gem, tone: 'gold' },
 }
 
 export const AESTHETIC_SPEC: Record<Aesthetic, Spec> = {

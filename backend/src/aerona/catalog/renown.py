@@ -74,6 +74,8 @@ ACT_RENOWN: MappingProxyType[ActKind, ActRenown] = MappingProxyType(
         A.ABANDONING_ELDERS: renown(X.WISDOM, X.CRUELTY),
         A.FORCED_LABOUR: renown(X.HONOUR, X.CRUELTY),
         A.SELLING_OFFICES: renown(X.WISDOM, X.TROUBLEMAKER),
+        A.POACHING: renown(X.TRICKERY, X.TROUBLEMAKER),
+        A.ENCLOSING: renown(X.WISDOM, X.CRUELTY),
     }
 )
 

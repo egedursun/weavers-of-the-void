@@ -1442,4 +1442,21 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "and quicken research where they gather. 1 action.",
         {"founder_id": "The mortal who founds it", "name": "What the school is called", "reason": "Why you inspire it"},
     ),
+    T.DESIGNATE_KEYSTONE: ToolText(
+        "You make the yield of one species in one land the keystone of its world, needed by an institution ({{ keystone_uses }}) and held "
+        "sacred by a cult; harvesting it thins its producers, whoever holds its source grows rich, and realms that want it go to war. 1 action.",
+        {
+            "species_id": "The species whose yield it is",
+            "region_id": "The land it comes from",
+            "name": "What the resource is called",
+            "use": "What institution needs it",
+            "cult_id": "The cult that holds it sacred, if any",
+            "reason": "Why you make it so",
+        },
+    ),
+    T.INSPIRE_RELIEF: ToolText(
+        "You move a realm or a cult in your reach to send aid to a town ({{ aid_kinds }}); aid earns gratitude, a favour and a gift owed in "
+        "return, and love for the giver's god, though a rival may turn it away. 1 action.",
+        {"giver_id": "The realm or cult that sends it", "settlement_id": "The town it reaches", "kind": "What is sent", "reason": "Why you move them"},
+    ),
 }

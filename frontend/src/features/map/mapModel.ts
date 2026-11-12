@@ -39,6 +39,9 @@ export const LAYER_MODES = [
   'coverage',
   'niches',
   'solidarity',
+  'rings',
+  'centrality',
+  'nutrients',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -70,6 +73,9 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   coverage: 'Service coverage',
   niches: 'Ways of life',
   solidarity: 'Solidarity and frontiers',
+  rings: 'Rings of land use',
+  centrality: 'Central places',
+  nutrients: 'Soil nutrients',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -94,6 +100,9 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   coverage: 'map-layer-coverage',
   niches: 'map-layer-niches',
   solidarity: 'cycles-frontier-map',
+  rings: 'map-layer-rings',
+  centrality: 'map-layer-centrality',
+  nutrients: 'map-layer-nutrients',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {

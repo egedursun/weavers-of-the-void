@@ -1,0 +1,204 @@
+from aerona.engine.agrarian.lands import LandsTally, keep_lands
+from aerona.engine.agrarian.resilience import ResilienceTally, keep_resilience
+from aerona.engine.agrarian.rings import SpatialTally, keep_spatial
+from aerona.engine.agrarian.soil import SoilTally, keep_soil
+from aerona.engine.agrarian.staples import StaplesTally, keep_staples
+from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.phase import Phase
+from aerona.engine.phases.dominion import count
+
+
+@reads(
+    "settlement.population",
+    "table.central_places",
+    "table.land_rings",
+    "table.region_environment",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+    "table.structure_profiles",
+)
+@writes(
+    "table.central_places",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.land_rings",
+)
+async def spatial_economy(ctx: TickContext) -> None:
+    tally = SpatialTally()
+    await keep_spatial(ctx, tally)
+    count(ctx, "spatial_economy", tally)
+
+
+@reads(
+    "people.population",
+    "place.fertility",
+    "region.breadth",
+    "region.fertility",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.commons",
+    "table.community_methods",
+    "table.creator_taboos",
+    "table.famine_lore",
+    "table.game_reserves",
+    "table.geasa",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.intensification",
+    "table.notable_years",
+    "table.offices",
+    "table.perennials",
+    "table.place_environment",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
+    "table.region_environment",
+    "table.settlement_infrastructure",
+    "table.soil_nutrients",
+    "table.species_yields",
+    "table.tradition_profiles",
+    "table.vassalages",
+)
+@writes(
+    "settlement.population",
+    "settlement.prosperity",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.commons",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.famine_lore",
+    "table.game_reserves",
+    "table.incident_participants",
+    "table.incidents",
+    "table.intensification",
+    "table.mortal_profiles",
+    "table.perennials",
+    "table.settlement_profiles",
+    "table.soil_nutrients",
+)
+async def agrarian_cycles(ctx: TickContext) -> None:
+    soil = SoilTally()
+    await keep_soil(ctx, soil)
+    count(ctx, "agrarian_soil", soil)
+    lands = LandsTally()
+    await keep_lands(ctx, lands)
+    count(ctx, "agrarian_lands", lands)
+
+
+@reads(
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_relations",
+    "table.creator_taboos",
+    "table.cult_doctrines",
+    "table.cult_tenets",
+    "table.culture_values",
+    "table.district_services",
+    "table.districts",
+    "table.favours",
+    "table.geasa",
+    "table.holder_levels",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.offices",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
+    "table.preparedness",
+    "table.reconstructions",
+    "table.region_environment",
+    "table.relationships",
+    "table.relief_aid",
+    "table.reputations",
+    "table.reverences",
+    "table.ruler_currencies",
+    "table.speaker_cohorts",
+    "table.tradition_profiles",
+    "table.traits",
+    "table.turf",
+    "table.vassalages",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.districts",
+    "table.divine_standing",
+    "table.epoch_year_cursors",
+    "table.favours",
+    "table.gifts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.polity_profiles",
+    "table.preparedness",
+    "table.reconstructions",
+    "table.relief_aid",
+)
+async def resilience(ctx: TickContext) -> None:
+    tally = ResilienceTally()
+    await keep_resilience(ctx, tally)
+    count(ctx, "resilience", tally)
+
+
+@reads(
+    "table.bonds",
+    "table.brands",
+    "table.community_relations",
+    "table.creator_taboos",
+    "table.cult_doctrines",
+    "table.cult_tenets",
+    "table.geasa",
+    "table.keystone_resources",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.offices",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
+    "table.production_runs",
+    "table.relationships",
+    "table.reputations",
+    "table.reverences",
+    "table.ruler_currencies",
+    "table.species_ranges",
+    "table.species_yields",
+    "table.tradition_profiles",
+    "table.traits",
+    "table.vassalages",
+    "table.workshops",
+)
+@writes(
+    "table.brands",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.keystone_resources",
+    "table.memories",
+    "table.polity_profiles",
+    "table.polity_treasury",
+    "table.species_ranges",
+)
+async def staples(ctx: TickContext) -> None:
+    tally = StaplesTally()
+    await keep_staples(ctx, tally)
+    count(ctx, "staples", tally)
+
+
+PHASES = (
+    Phase("spatial_economy", spatial_economy),
+    Phase("agrarian_cycles", agrarian_cycles),
+    Phase("resilience", resilience),
+    Phase("staples", staples),
+)
