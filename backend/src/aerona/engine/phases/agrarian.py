@@ -138,6 +138,7 @@ async def agrarian_cycles(ctx: TickContext) -> None:
     "table.ruler_currencies",
     "table.settlement_infrastructure",
     "table.speaker_cohorts",
+    "table.structure_profiles",
     "table.tradition_profiles",
     "table.traits",
     "table.turf",

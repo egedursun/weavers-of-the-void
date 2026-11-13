@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.vessels import HULLS, SEA_LADDER, HullSpec
+from aerona.catalog.vehicles import FRAMES, SEA_LADDER, FrameSpec
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -15,15 +15,15 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
-from aerona.domain.enums.military import HullClass, VesselArmament, VesselStatus
+from aerona.domain.enums.military import VesselArmament, VesselStatus
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.collective.designs import DesignTally, design_power, fit_design, mend, wear_leg
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
-from aerona.engine.military.rule_tables import hull_values
 from aerona.engine.mind.book import skill_level
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -32,6 +32,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.services.war import current_war
+from aerona.engine.vehicles.sections import batter_vessel, mend_vessel_sections
 from aerona.rules.registry import Rules
 
 STORMS = frozenset({WeatherKind.STORM, WeatherKind.MAGIC_STORM, WeatherKind.BLIZZARD, WeatherKind.SANDSTORM, WeatherKind.HAIL})
@@ -57,26 +58,24 @@ class SeaTally:
     mended: int = 0
 
 
-def hull_spec(hull: HullClass) -> HullSpec:
-    return HULLS[hull]
-
-
-def hull_value(rules: Rules, hull: HullClass, key: str) -> int:
-    return hull_values(rules.seafaring)[(hull.value, key)]
+def frame_value(rules: Rules, frame: VehicleFrame, key: str) -> int:
+    spec = FRAMES[frame]
+    found = {"speed": spec.speed, "cargo": spec.cargo, "seaworthiness": spec.endurance}[key]
+    return round_half_up(found * rules.seafaring.frame_scale_pct / PERCENT)
 
 
 def fresh_profile(
-    rules: Rules, vessel: EntityRow, hull: HullClass, *, owner_id: int | None, home_port: int | None, kind: VehicleKind = VehicleKind.SHIP
+    rules: Rules, vessel: EntityRow, frame: VehicleFrame, *, owner_id: int | None, home_port: int | None, kind: VehicleKind = VehicleKind.SHIP
 ) -> VesselProfileRow:
-    spec = hull_spec(hull)
+    spec: FrameSpec = FRAMES[frame]
     return VesselProfileRow(
         entity_id=vessel.id,
         kind=kind,
-        hull_class=hull,
+        frame=frame,
         condition=PERCENT,
         armament=[item.value for item in spec.armament],
-        seaworthiness=hull_value(rules, hull, "seaworthiness"),
-        cargo_capacity=min(hull_value(rules, hull, "cargo"), spec.crew * rules.seafaring.crew_per_cargo),
+        seaworthiness=frame_value(rules, frame, "seaworthiness"),
+        cargo_capacity=min(frame_value(rules, frame, "cargo"), spec.crew * rules.seafaring.crew_per_cargo),
         crew=spec.crew,
         seamanship=0,
         home_port_entity_id=home_port,
@@ -89,14 +88,14 @@ def fresh_profile(
     )
 
 
-def best_hull(knowledge: KnowledgeMap, owner_id: int | None, strangeness: int) -> HullClass:
+def best_hull(knowledge: KnowledgeMap, owner_id: int | None, strangeness: int) -> VehicleFrame:
     if owner_id is None:
-        return HullClass.BOAT
-    for hull in SEA_LADDER:
-        spec = HULLS[hull]
+        return VehicleFrame.BOAT
+    for frame in SEA_LADDER:
+        spec = FRAMES[frame]
         if spec.branch is None or knowledge.level(owner_id, spec.branch) >= spec.level:
-            return hull
-    return HullClass.LIVING_SHIP if strangeness >= HULLS[HullClass.LIVING_SHIP].strangeness else HullClass.RAFT
+            return frame
+    return VehicleFrame.LIVING_SHIP if strangeness >= FRAMES[VehicleFrame.LIVING_SHIP].strangeness else VehicleFrame.RAFT
 
 
 async def owner_of(ctx: TickContext, vessel_id: int) -> EntityRow | None:
@@ -122,10 +121,12 @@ async def backfill_vessels(ctx: TickContext) -> int:
         owner = await owner_of(ctx, vessel.id)
         strangeness = stat(vessel, "strangeness") or 0
         hull = best_hull(knowledge, owner.id if owner is not None else None, strangeness)
-        if (stat(vessel, "speed") or 0) >= HULLS[HullClass.SKYSHIP].speed and knowledge.level(owner.id if owner else 0, KnowledgeBranch.SKY_NAVIGATION) >= 1:
-            hull = HullClass.SKYSHIP
+        if (stat(vessel, "speed") or 0) >= FRAMES[VehicleFrame.SKYSHIP].speed and knowledge.level(
+            owner.id if owner else 0, KnowledgeBranch.SKY_NAVIGATION
+        ) >= 1:
+            hull = VehicleFrame.SKYSHIP
         base = fresh_profile(ctx.rules, vessel, hull, owner_id=owner.id if owner is not None else None, home_port=vessel.location_id)
-        for column in ("hull_class", "armament", "seaworthiness", "cargo_capacity", "home_port_entity_id", "crew_community_entity_id"):
+        for column in ("frame", "armament", "seaworthiness", "cargo_capacity", "home_port_entity_id", "crew_community_entity_id"):
             setattr(row, column, getattr(base, column))
         row.crew = stat_or(vessel, "crew", base.crew)
         row.condition = clamp_int(stat_or(vessel, "armor", PERCENT), 0, PERCENT)
@@ -156,7 +157,7 @@ async def wreck(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, reas
         row.status = VesselStatus.GHOST
         vessel.engine_kind = EngineKind.GHOST_SHIP
         tally.ghosts += 1
-        text = f"{vessel.name} went down {reason}, yet on dark nights its sails are seen again, crewed by the drowned."
+        text = f"{vessel.name} went down {reason}, and it is still seen on the routes it sailed, though no living crew sails it."
         await ctx.chronicle(ChronicleKind.WORLD, text, template_key="seafaring.ghost_ship", entity_ids=(vessel.id,), feed_category=FeedCategory.VOYAGE)
         return
     row.status = VesselStatus.WRECKED
@@ -179,6 +180,7 @@ async def weather_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow
     damage = storm_damage(ctx.rules, row)
     if "condition" not in row.locked:
         row.condition = clamp_int(row.condition - damage, 0, PERCENT)
+    await batter_vessel(ctx, vessel, row, max(0, damage // ctx.rules.vehicles.section_hit), "storm")
     lost = round_half_up(row.crew * table.storm_crew_pct / PERCENT * (1 - row.seaworthiness / PERCENT))
     if "crew" not in row.locked:
         row.crew = max(0, row.crew - lost)
@@ -199,7 +201,7 @@ async def weather_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow
 
 async def strange_waters(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, tally: SeaTally) -> None:
     table = ctx.rules.seafaring
-    strangeness = stat_or(vessel, "strangeness", HULLS[row.hull_class].strangeness)
+    strangeness = stat_or(vessel, "strangeness", FRAMES[row.frame].strangeness)
     if strangeness < table.strange_route:
         return
     hidden = await ctx.session.scalars(
@@ -232,6 +234,7 @@ async def repair(ctx: TickContext, row: VesselProfileRow, tally: SeaTally) -> in
     gain = min(PERCENT - row.condition, table.repair_per_epoch * yard.level, affordable)
     if gain <= 0:
         return 0
+    await mend_vessel_sections(ctx.session, row.entity_id, gain)
     cost = gain * table.repair_cost
     shift_stat(owner, "wealth", -cost)
     row.condition = clamp_int(row.condition + gain, 0, PERCENT)
@@ -244,7 +247,7 @@ async def legend_of(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, 
     table = ctx.rules.seafaring
     if row.renown < table.legend_renown or row.legend_entity_id is not None:
         return None
-    feat = "sailed the river of the dead" if (stat(vessel, "strangeness") or 0) >= table.strange_route else "outlived every storm"
+    feat = "sailed a hidden route" if (stat(vessel, "strangeness") or 0) >= table.strange_route else "outlived every storm"
     legend = await create_record(
         ctx,
         RecordSpec(
@@ -275,7 +278,7 @@ def vessel_power(rules: Rules, row: VesselProfileRow, weather: WeatherKind | Non
     arms = sum(weights.get(item, 0) for item in row.armament) / PERCENT
     if weather in WINDY and VesselArmament.RITES.value in row.armament:
         arms *= table.fire_wind_pct / PERCENT
-    crew = row.crew * table.boarding_pct / PERCENT / max(1, HULLS[row.hull_class].crew)
+    crew = row.crew * table.boarding_pct / PERCENT / max(1, FRAMES[row.frame].crew)
     return (1 + arms + crew) * (0.5 + row.condition / (2 * PERCENT)) * (1 + row.seamanship / PERCENT)
 
 
@@ -288,6 +291,7 @@ async def sea_fight(
     table = ctx.rules.seafaring
     if "condition" not in loser[1].locked:
         loser[1].condition = clamp_int(loser[1].condition - table.combat_damage, 0, PERCENT)
+    await batter_vessel(ctx, loser[0], loser[1], max(1, table.combat_damage // ctx.rules.vehicles.section_hit), f"sea_fight.{winner[0].id}")
     if "renown" not in winner[1].locked:
         winner[1].renown += table.renown_per_victory
     tally.fights += 1

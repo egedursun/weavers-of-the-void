@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from aerona.catalog.battle_depth import WEAPON_PROFILES, WeaponProfile
+from aerona.core.total import total
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import ArmourType, ShieldType, Tactic, UnitFamily, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -36,12 +37,13 @@ class UnitSpec:
     profile: WeaponProfile | None = None
 
 
-UNITS: MappingProxyType[UnitKind, UnitSpec] = MappingProxyType(
+UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
+    UnitKind,
     {
         spec.kind: spec
         for spec in (
             UnitSpec(K.LEVY, F.INFANTRY, "Levy", 30, 0, 25, 40, 20, 1, 1, ArmourType.NONE, ShieldType.SMALL),
-            UnitSpec(K.SPEARMEN, F.INFANTRY, "Spearmen", 45, 0, 45, 40, 25, 2, 1, ArmourType.PADDED, ShieldType.LARGE, counters_charge=True),
+            UnitSpec(K.LINE_INFANTRY, F.INFANTRY, "Line infantry", 45, 0, 45, 40, 25, 2, 1, ArmourType.PADDED, ShieldType.LARGE, counters_charge=True),
             UnitSpec(
                 K.HEAVY_INFANTRY,
                 F.INFANTRY,
@@ -59,20 +61,51 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = MappingProxyType(
                 2,
                 SocialClass.WARRIOR,
             ),
-            UnitSpec(K.SHIELD_WALL, F.INFANTRY, "Shield wall", 50, 0, 75, 30, 30, 3, 2, ArmourType.MAIL, ShieldType.TOWER, KnowledgeBranch.WARFARE, 1),
+            UnitSpec(K.SHIELD_INFANTRY, F.INFANTRY, "Shield infantry", 50, 0, 75, 30, 30, 3, 2, ArmourType.MAIL, ShieldType.TOWER, KnowledgeBranch.WARFARE, 1),
             UnitSpec(
-                K.PIKEMEN, F.INFANTRY, "Pikemen", 50, 0, 55, 30, 30, 3, 2, ArmourType.PADDED, ShieldType.NONE, KnowledgeBranch.WARFARE, 2, counters_charge=True
+                K.PIKE_INFANTRY,
+                F.INFANTRY,
+                "Pike infantry",
+                50,
+                0,
+                55,
+                30,
+                30,
+                3,
+                2,
+                ArmourType.PADDED,
+                ShieldType.NONE,
+                KnowledgeBranch.WARFARE,
+                2,
+                counters_charge=True,
             ),
-            UnitSpec(K.SKIRMISHERS, F.INFANTRY, "Skirmishers", 30, 30, 25, 60, 15, 2, 1, terrain={T.FOREST: 1.2, T.JUNGLE: 1.2, T.HILLS: 1.1}),
+            UnitSpec(K.LIGHT_INFANTRY, F.INFANTRY, "Light infantry", 30, 30, 25, 60, 15, 2, 1, terrain={T.FOREST: 1.2, T.JUNGLE: 1.2, T.HILLS: 1.1}),
             UnitSpec(
-                K.BERSERKERS, F.INFANTRY, "Berserkers", 80, 0, 30, 50, 35, 3, 2, ArmourType.HIDE, ShieldType.SMALL, social_class=SocialClass.WARRIOR, terror=15
+                K.SHOCK_INFANTRY,
+                F.INFANTRY,
+                "Shock infantry",
+                80,
+                0,
+                30,
+                50,
+                35,
+                3,
+                2,
+                ArmourType.HIDE,
+                ShieldType.SMALL,
+                social_class=SocialClass.WARRIOR,
+                terror=15,
             ),
-            UnitSpec(K.TEMPLE_GUARD, F.INFANTRY, "Temple guard", 60, 0, 60, 35, 30, 4, 2, ArmourType.SCALE, ShieldType.LARGE, social_class=SocialClass.PRIEST),
+            UnitSpec(K.GUARD_INFANTRY, F.INFANTRY, "Guard infantry", 60, 0, 60, 35, 30, 4, 2, ArmourType.SCALE, ShieldType.LARGE, KnowledgeBranch.WARFARE, 1),
+            UnitSpec(K.MARINES, F.INFANTRY, "Marines", 45, 15, 40, 45, 25, 3, 2, ArmourType.PADDED, ShieldType.SMALL, KnowledgeBranch.SEAFARING, 1),
             UnitSpec(K.SLINGERS, F.MISSILE, "Slingers", 15, 40, 20, 50, 10, 1, 1),
             UnitSpec(K.ARCHERS, F.MISSILE, "Archers", 20, 55, 25, 45, 10, 2, 1, ArmourType.PADDED),
             UnitSpec(K.CROSSBOWMEN, F.MISSILE, "Crossbowmen", 25, 65, 35, 35, 15, 3, 2, ArmourType.PADDED, ShieldType.LARGE, KnowledgeBranch.METALLURGY, 2),
-            UnitSpec(K.HORSE_ARCHERS, F.MOUNTED, "Horse archers", 30, 55, 30, 90, 30, 4, 3, ArmourType.HIDE, terrain={T.STEPPE: 1.3, T.PLAIN: 1.3}),
             UnitSpec(K.JAVELINEERS, F.MISSILE, "Javelineers", 35, 45, 30, 50, 15, 2, 1, ArmourType.HIDE, ShieldType.SMALL),
+            UnitSpec(K.GUNNERS, F.MISSILE, "Gunners", 25, 75, 30, 35, 15, 4, 2, ArmourType.PADDED, ShieldType.NONE, KnowledgeBranch.METALLURGY, 4),
+            UnitSpec(
+                K.GRENADIERS, F.MISSILE, "Grenadiers", 40, 60, 35, 40, 20, 4, 2, ArmourType.PADDED, ShieldType.NONE, KnowledgeBranch.METALLURGY, 4, terror=10
+            ),
             UnitSpec(
                 K.LIGHT_CAVALRY,
                 F.MOUNTED,
@@ -106,10 +139,15 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = MappingProxyType(
                 SocialClass.NOBLE,
                 terrain={T.PLAIN: 1.3},
             ),
+            UnitSpec(K.MOUNTED_ARCHERS, F.MOUNTED, "Mounted archers", 30, 55, 30, 90, 30, 4, 3, ArmourType.HIDE, terrain={T.STEPPE: 1.3, T.PLAIN: 1.3}),
+            UnitSpec(
+                K.MOUNTED_GUNNERS, F.MOUNTED, "Mounted gunners", 35, 65, 30, 85, 30, 5, 3, ArmourType.PADDED, ShieldType.NONE, KnowledgeBranch.METALLURGY, 4
+            ),
             UnitSpec(K.BEAST_RIDERS, F.MOUNTED, "Beast riders", 60, 10, 45, 70, 80, 6, 4, ArmourType.HIDE, terrain={T.DESERT: 1.2}),
+            UnitSpec(K.SKY_RIDERS, F.MOUNTED, "Sky riders", 60, 30, 40, 120, 60, 9, 6, terror=20, flying=True),
             UnitSpec(
                 K.CHARIOTS,
-                F.MOUNTED,
+                F.VEHICLE,
                 "Chariots",
                 65,
                 20,
@@ -123,24 +161,23 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = MappingProxyType(
                 level=1,
                 terrain={T.PLAIN: 1.2, T.HILLS: 0.6},
             ),
+            UnitSpec(K.VEHICLE_CREW, F.VEHICLE, "Vehicle crew", 30, 30, 40, 40, 20, 4, 2, ArmourType.PADDED, branch=KnowledgeBranch.WARFARE, level=2),
+            UnitSpec(K.SIEGE_CREW, F.VEHICLE, "Siege crew", 0, 70, 20, 15, 0, 8, 4, branch=KnowledgeBranch.ARCHITECTURE, level=2),
+            UnitSpec(K.ARTILLERY_CREW, F.VEHICLE, "Artillery crew", 0, 80, 20, 20, 0, 8, 4, branch=KnowledgeBranch.METALLURGY, level=4),
+            UnitSpec(K.NAVAL_CREW, F.VEHICLE, "Naval crew", 40, 30, 40, 55, 40, 4, 2, branch=KnowledgeBranch.SEAFARING, level=1),
+            UnitSpec(K.SKY_CREW, F.VEHICLE, "Sky crew", 40, 50, 40, 100, 30, 6, 3, branch=KnowledgeBranch.SKY_NAVIGATION, level=1, flying=True),
+            UnitSpec(K.VOID_CREW, F.VEHICLE, "Void crew", 40, 50, 40, 90, 30, 8, 4, branch=KnowledgeBranch.VOID_LIVING, level=1, flying=True),
             UnitSpec(K.WAR_BEASTS, F.BEAST, "War beasts", 70, 0, 50, 60, 100, 6, 5, terror=25),
             UnitSpec(K.BOUND_BEASTS, F.BEAST, "Bound beasts", 90, 0, 70, 60, 120, 10, 6, terror=40),
-            UnitSpec(K.SKY_MOUNTS, F.BEAST, "Sky mounts", 60, 30, 40, 120, 60, 9, 6, terror=20, flying=True),
             UnitSpec(K.SAPPERS, F.ENGINEER, "Sappers", 20, 0, 30, 35, 10, 3, 2, branch=KnowledgeBranch.ARCHITECTURE, level=1),
-            UnitSpec(K.SIEGE_ENGINES, F.ENGINEER, "Siege engines", 0, 70, 20, 15, 0, 8, 4, branch=KnowledgeBranch.ARCHITECTURE, level=2),
-            UnitSpec(K.WAR_MAGES, F.MAGIC, "War mages", 20, 70, 30, 40, 5, 9, 5, branch=KnowledgeBranch.MAGIC, level=2, terror=10),
-            UnitSpec(K.PRIESTS, F.MAGIC, "Battle priests", 15, 10, 25, 40, 5, 4, 2, social_class=SocialClass.PRIEST),
-            UnitSpec(K.NECROMANCERS, F.MAGIC, "Necromancers", 15, 40, 25, 40, 5, 10, 6, branch=KnowledgeBranch.FORBIDDEN, level=1, terror=30),
-            UnitSpec(K.GALLEYS, F.NAVAL, "Galleys", 40, 20, 40, 60, 70, 8, 4, branch=KnowledgeBranch.SEAFARING, level=1),
-            UnitSpec(K.LONGSHIPS, F.NAVAL, "Longships", 55, 10, 35, 75, 50, 6, 3, branch=KnowledgeBranch.SEAFARING, level=1),
-            UnitSpec(K.WARSHIPS, F.NAVAL, "Warships", 50, 50, 60, 55, 90, 12, 6, branch=KnowledgeBranch.SHIPBUILDING, level=2),
-            UnitSpec(K.FIRE_SHIPS, F.NAVAL, "Fire ships", 80, 0, 10, 60, 60, 5, 2, branch=KnowledgeBranch.SEAFARING, level=2),
-            UnitSpec(K.SKYSHIPS, F.NAVAL, "Skyships", 40, 60, 40, 110, 50, 15, 8, branch=KnowledgeBranch.SKY_NAVIGATION, level=1, flying=True),
-            UnitSpec(K.GOLEMS, F.EXOTIC, "Golems", 85, 0, 90, 25, 110, 14, 2, ArmourType.ENCHANTED, branch=KnowledgeBranch.MAGIC, level=3, terror=30),
-            UnitSpec(K.VOID_SPAWN, F.EXOTIC, "Void spawn", 75, 20, 50, 60, 60, 10, 4, terror=50),
-            UnitSpec(K.GHOST_HOST, F.EXOTIC, "Ghost host", 55, 0, 80, 70, 10, 10, 1, terror=45),
+            UnitSpec(K.ENGINEERS, F.ENGINEER, "Engineers", 20, 0, 35, 35, 10, 3, 2, branch=KnowledgeBranch.ARCHITECTURE, level=2),
+            UnitSpec(K.BATTLE_CASTERS, F.MAGIC, "Battle casters", 20, 70, 30, 40, 5, 9, 5, branch=KnowledgeBranch.MAGIC, level=2, terror=10),
+            UnitSpec(K.SUPPORT_CASTERS, F.MAGIC, "Support casters", 15, 10, 25, 40, 5, 4, 2, social_class=SocialClass.PRIEST),
+            UnitSpec(K.SUMMONERS, F.MAGIC, "Summoners", 15, 40, 25, 40, 5, 10, 6, branch=KnowledgeBranch.MAGIC, level=2, terror=30),
+            UnitSpec(K.CONSTRUCTS, F.EXOTIC, "Constructs", 85, 0, 90, 25, 110, 14, 2, ArmourType.ENCHANTED, branch=KnowledgeBranch.MAGIC, level=3, terror=30),
+            UnitSpec(K.SUMMONED_HOST, F.EXOTIC, "Summoned host", 60, 10, 65, 65, 35, 10, 2, terror=45),
         )
-    }
+    },
 )
 
 ARMOUR_DEFENCE = MappingProxyType(
@@ -152,18 +189,18 @@ TERRAIN_EFFECTS: MappingProxyType[TerrainKind, dict[UnitFamily, float]] = Mappin
     {
         T.PLAIN: {F.MOUNTED: 1.3},
         T.STEPPE: {F.MOUNTED: 1.3},
-        T.FOREST: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8},
-        T.JUNGLE: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8},
+        T.FOREST: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8, F.VEHICLE: 0.6},
+        T.JUNGLE: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8, F.VEHICLE: 0.5},
         T.HILLS: {F.MOUNTED: 0.8, F.MISSILE: 1.1},
-        T.MOUNTAINS: {F.MOUNTED: 0.3, F.ENGINEER: 0.2, F.BEAST: 0.7},
-        T.HIGH_PASS: {F.MOUNTED: 0.3, F.ENGINEER: 0.2},
-        T.MARSH: {F.MOUNTED: 0.4, F.INFANTRY: 0.8, F.BEAST: 0.6},
+        T.MOUNTAINS: {F.MOUNTED: 0.3, F.ENGINEER: 0.2, F.BEAST: 0.7, F.VEHICLE: 0.3},
+        T.HIGH_PASS: {F.MOUNTED: 0.3, F.ENGINEER: 0.2, F.VEHICLE: 0.2},
+        T.MARSH: {F.MOUNTED: 0.4, F.INFANTRY: 0.8, F.BEAST: 0.6, F.VEHICLE: 0.4},
         T.DESERT: {F.INFANTRY: 0.9},
         T.TUNDRA: {F.INFANTRY: 0.9, F.MOUNTED: 0.8},
         T.ICE_SHEET: {F.INFANTRY: 0.8, F.MOUNTED: 0.6},
         T.RIVER_VALLEY: {F.MOUNTED: 0.9},
-        T.URBAN: {F.MOUNTED: 0.4, F.ENGINEER: 1.2},
-        T.UNDERGROUND: {F.MISSILE: 0.3, F.MOUNTED: 0.2},
+        T.URBAN: {F.MOUNTED: 0.4, F.ENGINEER: 1.2, F.VEHICLE: 0.8},
+        T.UNDERGROUND: {F.MISSILE: 0.3, F.MOUNTED: 0.2, F.VEHICLE: 0.3},
         T.CRYSTAL_FIELD: {F.MAGIC: 1.4},
         T.FLESH: {F.MAGIC: 1.2, F.BEAST: 1.2},
         T.VOID_SHORE: {F.EXOTIC: 1.4, F.MAGIC: 1.2},
@@ -178,7 +215,7 @@ WEATHER_EFFECTS: MappingProxyType[WeatherKind, dict[UnitFamily, float]] = Mappin
     {
         W.RAIN: {F.MISSILE: 0.75, F.MOUNTED: 0.9},
         W.DOWNPOUR: {F.MISSILE: 0.5, F.MOUNTED: 0.7},
-        W.STORM: {F.MISSILE: 0.5, F.MOUNTED: 0.7, F.NAVAL: 0.6},
+        W.STORM: {F.MISSILE: 0.5, F.MOUNTED: 0.7, F.VEHICLE: 0.6},
         W.FOG: {F.MISSILE: 0.4},
         W.SNOW: {F.MISSILE: 0.7, F.MOUNTED: 0.8},
         W.BLIZZARD: {F.MISSILE: 0.5, F.MOUNTED: 0.6, F.INFANTRY: 0.8},
@@ -191,7 +228,7 @@ WEATHER_EFFECTS: MappingProxyType[WeatherKind, dict[UnitFamily, float]] = Mappin
         W.ECLIPSE_DARK: {F.MISSILE: 0.6},
     }
 )
-BURROWERS = frozenset({K.SAPPERS, K.VOID_SPAWN})
+BURROWERS = frozenset({K.SAPPERS, K.SUMMONED_HOST})
 WEAPON_EDGE = MappingProxyType({"blunt": 100, "pike": 70, "crossbow": 90, "spear": 40, "bow": 30, "blade": 20, "claw": 30, "staff": 10, "sling": 50})
 FAMILY_WEAPONS: MappingProxyType[UnitFamily, tuple[str, ...]] = MappingProxyType(
     {
@@ -201,19 +238,19 @@ FAMILY_WEAPONS: MappingProxyType[UnitFamily, tuple[str, ...]] = MappingProxyType
         F.BEAST: ("claw",),
         F.ENGINEER: ("blunt",),
         F.MAGIC: ("staff",),
-        F.NAVAL: ("spear", "bow"),
+        F.VEHICLE: ("spear", "bow"),
         F.EXOTIC: ("claw",),
     }
 )
 KIND_WEAPONS = MappingProxyType(
     {
-        K.PIKEMEN: ("pike", "blade"),
-        K.SPEARMEN: ("spear", "blade"),
-        K.SHIELD_WALL: ("spear", "blade"),
+        K.PIKE_INFANTRY: ("pike", "blade"),
+        K.LINE_INFANTRY: ("spear", "blade"),
+        K.SHIELD_INFANTRY: ("spear", "blade"),
         K.HEAVY_INFANTRY: ("blade", "blunt"),
-        K.BERSERKERS: ("blunt", "blade"),
+        K.SHOCK_INFANTRY: ("blunt", "blade"),
         K.ARCHERS: ("bow", "blade"),
-        K.HORSE_ARCHERS: ("bow", "blade"),
+        K.MOUNTED_ARCHERS: ("bow", "blade"),
         K.CROSSBOWMEN: ("crossbow", "blade"),
         K.SLINGERS: ("sling",),
         K.JAVELINEERS: ("spear",),
@@ -254,16 +291,16 @@ TACTIC_TERRAIN: MappingProxyType[Tactic, frozenset[TerrainKind]] = MappingProxyT
 )
 STYLE_UNITS = MappingProxyType(
     {
-        "shieldwall": (K.SHIELD_WALL, K.SPEARMEN, K.ARCHERS),
-        "horse_archer": (K.HORSE_ARCHERS, K.LIGHT_CAVALRY, K.SPEARMEN),
-        "skirmisher": (K.SKIRMISHERS, K.JAVELINEERS, K.SLINGERS),
-        "chariot": (K.CHARIOTS, K.ARCHERS, K.SPEARMEN),
-        "phalanx": (K.PIKEMEN, K.HEAVY_INFANTRY, K.SLINGERS),
-        "berserker": (K.BERSERKERS, K.LEVY, K.JAVELINEERS),
-        "naval_raider": (K.LONGSHIPS, K.SPEARMEN, K.ARCHERS),
-        "siege_engineer": (K.HEAVY_INFANTRY, K.SIEGE_ENGINES, K.SAPPERS, K.CROSSBOWMEN),
-        "war_magic": (K.WAR_MAGES, K.SPEARMEN, K.ARCHERS),
-        "beast_war": (K.WAR_BEASTS, K.BEAST_RIDERS, K.SKIRMISHERS),
+        "shieldwall": (K.SHIELD_INFANTRY, K.LINE_INFANTRY, K.ARCHERS),
+        "horse_archer": (K.MOUNTED_ARCHERS, K.LIGHT_CAVALRY, K.LINE_INFANTRY),
+        "skirmisher": (K.LIGHT_INFANTRY, K.JAVELINEERS, K.SLINGERS),
+        "chariot": (K.CHARIOTS, K.ARCHERS, K.LINE_INFANTRY),
+        "phalanx": (K.PIKE_INFANTRY, K.HEAVY_INFANTRY, K.SLINGERS),
+        "shock": (K.SHOCK_INFANTRY, K.LEVY, K.JAVELINEERS),
+        "naval_raider": (K.NAVAL_CREW, K.LINE_INFANTRY, K.ARCHERS),
+        "siege_engineer": (K.HEAVY_INFANTRY, K.SIEGE_CREW, K.SAPPERS, K.CROSSBOWMEN),
+        "war_magic": (K.BATTLE_CASTERS, K.LINE_INFANTRY, K.ARCHERS),
+        "beast_war": (K.WAR_BEASTS, K.BEAST_RIDERS, K.LIGHT_INFANTRY),
     }
 )
 STYLE_TACTICS = MappingProxyType(
@@ -273,7 +310,7 @@ STYLE_TACTICS = MappingProxyType(
         "skirmisher": (Tactic.SKIRMISH_HARASS, Tactic.AMBUSH, Tactic.MISSILE_ATTRITION, Tactic.FEINT),
         "chariot": (Tactic.FLANK_CAVALRY, Tactic.FRONTAL_ASSAULT),
         "phalanx": (Tactic.HOLD_LINE, Tactic.FRONTAL_ASSAULT, Tactic.DOUBLE_ENVELOPMENT, Tactic.FEINT),
-        "berserker": (Tactic.FRONTAL_ASSAULT, Tactic.WEDGE, Tactic.NIGHT_RAID),
+        "shock": (Tactic.FRONTAL_ASSAULT, Tactic.WEDGE, Tactic.NIGHT_RAID),
         "naval_raider": (Tactic.NIGHT_RAID, Tactic.AMBUSH, Tactic.FRONTAL_ASSAULT),
         "siege_engineer": (Tactic.SIEGE_ASSAULT, Tactic.MISSILE_ATTRITION, Tactic.HOLD_LINE),
         "war_magic": (Tactic.MISSILE_ATTRITION, Tactic.HOLD_LINE),

@@ -154,20 +154,20 @@ def test_every_natural_trait_branches_battle_work_food_or_room() -> None:
 
 
 def test_mounts_fleets_and_the_raised_dead_follow_body_and_rite() -> None:
-    plan = {UnitKind.HEAVY_CAVALRY: 0.2, UnitKind.WARSHIPS: 0.1, UnitKind.SPEARMEN: 0.3}
+    plan = {UnitKind.HEAVY_CAVALRY: 0.2, UnitKind.NAVAL_CREW: 0.1, UnitKind.LINE_INFANTRY: 0.3}
     needs = {UnitKind.HEAVY_CAVALRY: "mount"}
     rider = kin.kin_army(RULES, biology(), None, plan, beasts=set(), mount_needs=needs)
     assert UnitKind.HEAVY_CAVALRY not in rider
     horse_folk = kin.kin_army(RULES, biology(body_plan=BodyPlan.QUADRUPED), None, plan, beasts=set(), mount_needs=needs)
     assert horse_folk[UnitKind.HEAVY_CAVALRY] == pytest.approx(0.2)
     birds = kin.kin_army(RULES, biology(body_plan=BodyPlan.AVIAN), None, plan, beasts={"mount"}, mount_needs=needs)
-    assert UnitKind.HEAVY_CAVALRY not in birds and birds[UnitKind.SKY_MOUNTS] == pytest.approx(0.2)
+    assert UnitKind.HEAVY_CAVALRY not in birds and birds[UnitKind.SKY_RIDERS] == pytest.approx(0.2)
     fish = kin.kin_army(RULES, biology(body_plan=BodyPlan.AQUATIC), None, plan, beasts={"mount"}, mount_needs=needs)
-    assert fish[UnitKind.WARSHIPS] > plan[UnitKind.WARSHIPS]
+    assert fish[UnitKind.NAVAL_CREW] > plan[UnitKind.NAVAL_CREW]
     giants = kin.mount_fit(biology(size_class=SizeClass.HUGE))
     assert giants is MountFit.CANNOT
     dead = kin.kin_army(RULES, biology(), culture(funeral_rite=FuneralCustom.REANIMATION), plan, beasts=set(), mount_needs=needs)
-    assert dead[UnitKind.GHOST_HOST] > 0
+    assert dead[UnitKind.SUMMONED_HOST] > 0
 
 
 def test_every_diet_feeds_differently_from_the_land() -> None:
@@ -271,7 +271,7 @@ def test_a_style_that_wins_is_kept_and_one_that_loses_takes_the_victors() -> Non
     beaten = culture(martial_style=MartialStyle.PHALANX)
     for _ in range(RULES.customs.martial_defeat_losses):
         tally_battle(beaten, won=False)
-    assert martial_choice(RULES, beaten, MartialStyle.PHALANX, MartialStyle.BERSERKER) is MartialStyle.BERSERKER
+    assert martial_choice(RULES, beaten, MartialStyle.PHALANX, MartialStyle.SHOCK) is MartialStyle.SHOCK
     fresh = culture(martial_style=MartialStyle.SKIRMISHER)
     assert martial_choice(RULES, fresh, MartialStyle.CHARIOT, None) is MartialStyle.CHARIOT
     assert kin.mastery(RULES, row) > 1.0
@@ -405,7 +405,7 @@ async def test_battles_reinforce_a_peoples_way_of_war(realm: Realm) -> None:
     ctx = context(session, epoch=5)
     _, first = await ensure_profiles(session, RULES, victors, None)
     _, second = await ensure_profiles(session, RULES, beaten, None)
-    first.martial_style = MartialStyle.BERSERKER
+    first.martial_style = MartialStyle.SHOCK
     second.martial_style = MartialStyle.PHALANX
     event = await make(session, "The Long War", EntityType.EVENT, EventStats(), world_id=realm.world.id)
     war = WarRow(event_entity_id=event.id, world_id=realm.world.id, cause=next(iter(WarCause)), started_epoch=4)
@@ -421,12 +421,12 @@ async def test_battles_reinforce_a_peoples_way_of_war(realm: Realm) -> None:
     tally = await BattleTally.load(session, 0, ctx.epoch)
     assert await record_battles(session, tally, first, ctx.epoch) is None
     victor = await record_battles(session, tally, second, ctx.epoch)
-    assert victor is MartialStyle.BERSERKER
-    assert first.martial_record[MartialStyle.BERSERKER.value] == [RULES.customs.martial_defeat_losses, 0]
-    assert martial_choice(RULES, second, MartialStyle.PHALANX, victor) is MartialStyle.BERSERKER
+    assert victor is MartialStyle.SHOCK
+    assert first.martial_record[MartialStyle.SHOCK.value] == [RULES.customs.martial_defeat_losses, 0]
+    assert martial_choice(RULES, second, MartialStyle.PHALANX, victor) is MartialStyle.SHOCK
     again = await BattleTally.load(session, 0, ctx.epoch)
     await record_battles(session, again, first, ctx.epoch)
-    assert first.martial_record[MartialStyle.BERSERKER.value] == [RULES.customs.martial_defeat_losses, 0]
+    assert first.martial_record[MartialStyle.SHOCK.value] == [RULES.customs.martial_defeat_losses, 0]
 
 
 async def test_trade_tongue_is_the_partners_tongue_and_widens_routes(realm: Realm) -> None:

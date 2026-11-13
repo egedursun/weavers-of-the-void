@@ -39,6 +39,7 @@ async def structure_survey(ctx: TickContext) -> None:
     "table.settlement_profiles",
     "table.structure_designs",
     "table.structure_profiles",
+    "table.structure_sections",
     "table.structure_staff",
     "table.workshops",
     "table.world_materials",

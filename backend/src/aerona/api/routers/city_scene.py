@@ -34,11 +34,11 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
-from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.db.tables.urban import DistrictServiceRow, TurfRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.settlement import DistrictKind, SizeTier, WaterSupply
-from aerona.domain.enums.structure import StructureKind
+from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.domain.enums.urban import HousingLevel, LandCover, LandGround, Morphology, ZoneKind
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.urban.cityscape import DIGGINGS, HOUSE_SLOTS, homes_of, land_tiles, pick_tile, provisional, resource_prefer, slots_of
@@ -109,6 +109,7 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
             share.cells += len(layout.footprints.get(district.id, []))
         for building in buildings:
             zones[ZONE_OF_STRUCTURE[building.kind]].buildings += 1
+        forms = await design_forms(session, [row.design_id for row in buildings])
         return CitySceneView(
             town=refs[town.id],
             morphology=morphology,
@@ -160,11 +161,21 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
                     state=row.construction_state,
                     progress=row.progress,
                     staff_pct=row.staff_pct,
+                    form=forms[row.design_id][0] if row.design_id in forms else None,
+                    storeys=forms[row.design_id][1] if row.design_id in forms else None,
                 )
                 for row in sorted(buildings, key=lambda item: item.structure_entity_id)
             ],
             zones=[zones[zone] for zone in ZoneKind],
         )
+
+
+async def design_forms(session: AsyncSession, ids: list[int | None]) -> dict[int, tuple[BuildingForm | None, int | None]]:
+    wanted = sorted({value for value in ids if value is not None})
+    if not wanted:
+        return {}
+    rows = await session.execute(select(StructureDesignRow.id, StructureDesignRow.form, StructureDesignRow.storeys).where(StructureDesignRow.id.in_(wanted)))
+    return {design_id: (form, storeys) for design_id, form, storeys in rows}
 
 
 @router.get("/land/{region_id}", response_model=LandSceneView)
@@ -212,6 +223,7 @@ async def land_scene(services: ServicesDep, region_id: NodeId) -> LandSceneView:
             )
         )
         work_refs = await node_refs(session, [row.structure_entity_id for row in works_rows])
+        work_forms = await design_forms(session, [row.design_id for row in works_rows])
         works = [
             LandWorkView(
                 node=work_refs[row.structure_entity_id],
@@ -222,6 +234,8 @@ async def land_scene(services: ServicesDep, region_id: NodeId) -> LandSceneView:
                 progress=row.progress,
                 q=cell[0],
                 r=cell[1],
+                form=work_forms[row.design_id][0] if row.design_id in work_forms else None,
+                storeys=work_forms[row.design_id][1] if row.design_id in work_forms else None,
             )
             for row in works_rows
             if row.structure_entity_id in work_refs

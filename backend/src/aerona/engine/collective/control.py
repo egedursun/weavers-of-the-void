@@ -64,7 +64,6 @@ from aerona.domain.enums.collective import (
     CollectiveTrigger,
     DatingSystemKind,
     DesignComponentKind,
-    DesignKind,
     FormativeKind,
     HeraldicDivision,
     HeraldryHolderKind,
@@ -81,12 +80,12 @@ from aerona.domain.enums.collective import (
     Tincture,
 )
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.military import HullClass
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.collective.accounts import HistoryTally, debunk, expose, keep_anniversary, record, remember_loss, revise, scholar_in, strike
 from aerona.engine.collective.crowds import CrowdTally, begin_movement, end_mob, mood_of, spark
-from aerona.engine.collective.designs import apply_design, derive, draw_design, hull_sizes
+from aerona.engine.collective.designs import apply_design, derive, draw_design
 from aerona.engine.collective.heraldry import sync_emblem
 from aerona.engine.collective.storylets import CASTERS, StoryletTally, begin, conditions_hold, resolve
 from aerona.engine.context import TickContext
@@ -448,12 +447,11 @@ async def difference_arms(ctx: TickContext, holder_id: int, parent_id: int, bord
     return row
 
 
-async def new_design(ctx: TickContext, owner_id: int, kind: DesignKind, *, hull: HullClass | None, name: str | None, quality: int) -> DesignRow:
-    owner = await entity(ctx, owner_id, "owner")
-    if kind is not DesignKind.SIEGE_ENGINE and hull is None:
-        raise ValidationFailedError("A vessel design needs a hull.")
-    sizes = hull_sizes(hull) if hull is not None and kind is not DesignKind.SIEGE_ENGINE else None
-    return await draw_design(ctx, owner, kind, hull=hull, sizes=sizes, quality=quality, name=name)
+async def new_design(ctx: TickContext, owner_id: int | None, frame: VehicleFrame, *, name: str | None, quality: int, world_id: int | None = None) -> DesignRow:
+    owner = await entity(ctx, owner_id, "owner") if owner_id is not None else None
+    if owner is None and world_id is None:
+        raise ValidationFailedError("A vehicle type needs a maker or a world.")
+    return await draw_design(ctx, owner, frame, quality=quality, name=name, world_id=world_id)
 
 
 async def edit_design(ctx: TickContext, design_id: int, values: Values, release: list[str]) -> DesignRow:
@@ -462,8 +460,10 @@ async def edit_design(ctx: TickContext, design_id: int, values: Values, release:
 
 async def refit_design(ctx: TickContext, design_id: int) -> DesignRow:
     design = await found(ctx, DesignRow, design_id, "design")
-    owner = await entity(ctx, design.owner_entity_id, "owner")
-    newer = await draw_design(ctx, owner, design.kind, hull=design.hull, parent=design, designer_id=design.designer_entity_id)
+    if design.frame is None:
+        raise ValidationFailedError("This vehicle type has no frame to build on.")
+    owner = await entity(ctx, design.owner_entity_id, "owner") if design.owner_entity_id is not None else None
+    newer = await draw_design(ctx, owner, design.frame, parent=design, designer_id=design.designer_entity_id, world_id=design.world_id)
     design.obsolete = True
     await ctx.session.flush()
     return newer

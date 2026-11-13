@@ -40,19 +40,19 @@ IMAGE_DIRECTION: dict[EntityType, str] = {
 }
 
 VESSEL_DIRECTIONS: dict[VehicleKind, str] = {
-    VehicleKind.GATE: "a gate or portal between worlds: the frame, the impossible view through it, travelers dwarfed before it",
-    VehicleKind.SHIP: "a ship between worlds: hull, sails or engines, crew on deck, the void or alien sky around it",
-    VehicleKind.MOUNT: "a mount carrying its rider across the sky or between worlds, motion and scale",
-    VehicleKind.BRIDGE: "a bridge spanning the gap between worlds, travelers crossing, vertiginous depth",
+    VehicleKind.GATE: "a gate between worlds: its frame, what shows through it, travellers before it for scale",
+    VehicleKind.SHIP: "a vessel between worlds: its frame and what moves it, its crew, the way it crosses",
+    VehicleKind.MOUNT: "a mount carrying its rider between worlds, in motion, at a scale that shows its size",
+    VehicleKind.BRIDGE: "a bridge spanning the gap between worlds, travellers crossing it",
 }
 
-MEGAFAUNA_DIRECTION = "a colossal megafauna in its habitat with tiny human figures for scale, seen from a distance"
+MEGAFAUNA_DIRECTION = "a colossal megafauna in its habitat with small figures of the folk who live there for scale, seen from a distance"
 
 OUTER_BEING_TAIL = ", shown only partially: a fragment glimpsed through fog, glare or a reflection, its full shape never visible."
 OUTER_BEING_WORDS = re.compile(
     r"\b(partial|partially|fragment|silhouette|glimpse|glimpsed|obscured|hidden|reflection|never (fully )?(seen|visible|shown))\b", re.IGNORECASE
 )
-SCALE_TAIL = ", with tiny human figures for scale."
+SCALE_TAIL = ", with small figures of the folk who live there for scale."
 SCALE_WORDS = re.compile(r"\b(scale|tiny (human )?figures?|dwarf(ed|s|ing)?|colossal|towering over)\b", re.IGNORECASE)
 
 

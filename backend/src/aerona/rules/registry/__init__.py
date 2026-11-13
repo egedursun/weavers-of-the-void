@@ -294,6 +294,17 @@ from aerona.rules.registry.lore import (
     TechniqueEffectsRules,
     TraditionsRules,
 )
+from aerona.rules.registry.made_kinds import (
+    ArmamentRules,
+    AttractionRules,
+    CosmicWoundRules,
+    CuisineRules,
+    DeclineRules,
+    IntegrityRules,
+    MegastructureRules,
+    UnitTypeRules,
+    VehicleRules,
+)
 from aerona.rules.registry.market import MarketRules
 from aerona.rules.registry.markets import BankingRules, MarketsRules, MoneyRules, TollsRules, TradeRoutesRules
 from aerona.rules.registry.materials import MaterialsRules
@@ -715,6 +726,15 @@ class Rules:
     relief: ReliefRules = field(default_factory=ReliefRules)
     reconstruction: ReconstructionRules = field(default_factory=ReconstructionRules)
     keystone_resource: KeystoneResourceRules = field(default_factory=KeystoneResourceRules)
+    armament: ArmamentRules = field(default_factory=ArmamentRules)
+    vehicles: VehicleRules = field(default_factory=VehicleRules)
+    integrity: IntegrityRules = field(default_factory=IntegrityRules)
+    megastructures: MegastructureRules = field(default_factory=MegastructureRules)
+    unit_types: UnitTypeRules = field(default_factory=UnitTypeRules)
+    cuisine: CuisineRules = field(default_factory=CuisineRules)
+    decline: DeclineRules = field(default_factory=DeclineRules)
+    attraction: AttractionRules = field(default_factory=AttractionRules)
+    cosmic_wounds: CosmicWoundRules = field(default_factory=CosmicWoundRules)
     brands: BrandRules = field(default_factory=BrandRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)

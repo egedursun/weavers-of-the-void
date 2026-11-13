@@ -34,8 +34,8 @@ HOT_WEATHER = frozenset({WeatherKind.HEAT_WAVE, WeatherKind.DROUGHT_WIND, Weathe
 WARM = frozenset({TemperatureBand.WARM, TemperatureBand.HOT, TemperatureBand.SEARING})
 HEIGHTS = frozenset({TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.CANYON})
 WATERS = frozenset({TerrainKind.MARSH, TerrainKind.COAST, TerrainKind.ISLAND, TerrainKind.RIVER_VALLEY, TerrainKind.SEA})
-NAVAL_UNITS = frozenset({UnitKind.WARSHIPS, UnitKind.GALLEYS, UnitKind.LONGSHIPS, UnitKind.FIRE_SHIPS})
-RIDDEN = frozenset({UnitKind.LIGHT_CAVALRY, UnitKind.HEAVY_CAVALRY, UnitKind.HORSE_ARCHERS, UnitKind.CHARIOTS, UnitKind.BEAST_RIDERS})
+NAVAL_UNITS = frozenset({UnitKind.NAVAL_CREW, UnitKind.MARINES})
+RIDDEN = frozenset({UnitKind.LIGHT_CAVALRY, UnitKind.HEAVY_CAVALRY, UnitKind.MOUNTED_ARCHERS, UnitKind.CHARIOTS, UnitKind.BEAST_RIDERS})
 
 
 def scaled(factor: float, pct: int) -> float:
@@ -270,14 +270,14 @@ def kin_army(
         if kind in RIDDEN and fit in {MountFit.CANNOT, MountFit.FLIES}:
             lifted += share if fit is MountFit.FLIES else 0.0
             continue
-        if need is not None and need not in beasts and not (kind is UnitKind.SKY_MOUNTS and fit is MountFit.FLIES):
+        if need is not None and need not in beasts and not (kind is UnitKind.SKY_RIDERS and fit is MountFit.FLIES):
             continue
         fleet = scaled(KIN[biology.body_plan].naval_pct / PERCENT, rules.biology.naval_pct) if kind in NAVAL_UNITS and biology is not None else 1.0
         found[kind] = found.get(kind, 0.0) + share * fleet
     if lifted > 0:
-        found[UnitKind.SKY_MOUNTS] = found.get(UnitKind.SKY_MOUNTS, 0.0) + lifted
+        found[UnitKind.SKY_RIDERS] = found.get(UnitKind.SKY_RIDERS, 0.0) + lifted
     if culture is not None and raises_dead(culture.funeral_rite):
-        found[UnitKind.GHOST_HOST] = found.get(UnitKind.GHOST_HOST, 0.0) + rules.customs.reanimation_host_pct / PERCENT
+        found[UnitKind.SUMMONED_HOST] = found.get(UnitKind.SUMMONED_HOST, 0.0) + rules.customs.reanimation_host_pct / PERCENT
     return found
 
 

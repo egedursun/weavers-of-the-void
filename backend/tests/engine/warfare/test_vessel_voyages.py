@@ -8,8 +8,9 @@ from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
-from aerona.domain.enums.military import HullClass, VesselStatus
+from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.travel import TravelMethod
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.context import TickContext
 from aerona.engine.military.vessels import (
     SeaTally,
@@ -33,7 +34,7 @@ from tests.db.factories import seed_world
 from tests.engine.warfare.factories import bond, make, make_ctx, tune
 
 
-async def ship(ctx: TickContext, world_id: int, name: str, hull: HullClass = HullClass.WARSHIP, **stats: int) -> tuple[EntityRow, VesselProfileRow]:
+async def ship(ctx: TickContext, world_id: int, name: str, hull: VehicleFrame = VehicleFrame.WARSHIP, **stats: int) -> tuple[EntityRow, VesselProfileRow]:
     vessel = await make(ctx.session, name, EntityType.VESSEL, world_id, **stats)
     row = fresh_profile(ctx.rules, vessel, hull, owner_id=None, home_port=None)
     row.status = VesselStatus.AFLOAT
@@ -45,10 +46,10 @@ async def ship(ctx: TickContext, world_id: int, name: str, hull: HullClass = Hul
 async def test_a_fresh_ship_takes_its_hull_and_the_best_hull_follows_knowledge(session: AsyncSession, world_id: int) -> None:
     ctx = make_ctx(session)
     _, row = await ship(ctx, world_id, "Gull")
-    assert row.hull_class is HullClass.WARSHIP and row.condition == PERCENT and row.crew > 0 and row.armament
+    assert row.frame is VehicleFrame.WARSHIP and row.condition == PERCENT and row.crew > 0 and row.armament
     knowledge = await KnowledgeMap.load(session)
-    assert best_hull(knowledge, None, 0) is HullClass.BOAT
-    assert best_hull(knowledge, 1, 0) in set(HullClass)
+    assert best_hull(knowledge, None, 0) is VehicleFrame.BOAT
+    assert best_hull(knowledge, 1, 0) in set(VehicleFrame)
     assert await seamanship_of(ctx, row, knowledge) == 0
 
 
@@ -93,7 +94,7 @@ async def test_strange_waters_reveal_hidden_routes_and_renown_makes_a_legend(ses
 async def test_ships_fight_at_sea_and_fleets_share_the_battle(session: AsyncSession, world_id: int) -> None:
     ctx = make_ctx(session)
     first = await ship(ctx, world_id, "Gull")
-    second = await ship(ctx, world_id, "Raft", HullClass.RAFT)
+    second = await ship(ctx, world_id, "Raft", VehicleFrame.RAFT)
     tally = SeaTally()
     winner = await sea_fight(ctx, first, second, None, tally)
     assert winner is first[0] and tally.fights == 1 and second[1].condition < PERCENT

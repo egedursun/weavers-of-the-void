@@ -61,7 +61,6 @@ from aerona.domain.enums.epoch import DeferredStepStatus
 from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import MoleHuntOutcome
-from aerona.domain.enums.military import HullClass
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import OfficeKind
@@ -70,6 +69,7 @@ from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalL
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import VehicleKind
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import CelestialStats, NaturalLawStats, OuterBeingStats, StructureStats, VesselStats
 from aerona.engine.cosmos import control
@@ -429,22 +429,20 @@ async def convicted_case(session: AsyncSession) -> int:
     return case.id
 
 
-async def town_prison(session: AsyncSession) -> int:
+async def town_work(session: AsyncSession, kind: StructureKind) -> int:
     town = await canon(session, EntityType.SETTLEMENT, 0)
     found = await session.scalar(
-        select(StructureProfileRow.structure_entity_id)
-        .where(StructureProfileRow.kind == StructureKind.PRISON, StructureProfileRow.host_entity_id == town)
-        .limit(1)
+        select(StructureProfileRow.structure_entity_id).where(StructureProfileRow.kind == kind, StructureProfileRow.host_entity_id == town).limit(1)
     )
     if found is not None:
         return int(found)
     town_row = await session.get(EntityRow, town)
     assert town_row is not None
-    jail = await EntityRepository(session).create(
+    work = await EntityRepository(session).create(
         EntityDraft(
-            name="The Keep",
+            name=f"The Town {kind.value.replace('_', ' ').title()}",
             entity_type=EntityType.STRUCTURE,
-            description="A prison of the town.",
+            description="A work of the town.",
             stats=StructureStats(),
             power_level=1,
             origin=EntityOrigin.ENGINE,
@@ -453,9 +451,21 @@ async def town_prison(session: AsyncSession) -> int:
             location_id=town,
         )
     )
-    session.add(StructureProfileRow(structure_entity_id=jail.id, kind=StructureKind.PRISON, host_entity_id=town))
+    session.add(StructureProfileRow(structure_entity_id=work.id, kind=kind, host_entity_id=town))
     await session.flush()
-    return jail.id
+    return work.id
+
+
+async def town_prison(session: AsyncSession) -> int:
+    return await town_work(session, StructureKind.PRISON)
+
+
+async def town_granary(session: AsyncSession) -> int:
+    return await town_work(session, StructureKind.GRANARY)
+
+
+async def town_beacon(session: AsyncSession) -> int:
+    return await town_work(session, StructureKind.BEACON)
 
 
 async def office_in_realm(session: AsyncSession, kind: OfficeKind) -> int:
@@ -529,7 +539,7 @@ async def any_vessel(session: AsyncSession) -> int:
             location_id=town,
         )
     )
-    session.add(VesselProfileRow(entity_id=ship.id, kind=VehicleKind.SHIP, hull_class=HullClass.COG, home_port_entity_id=town, locked=[]))
+    session.add(VesselProfileRow(entity_id=ship.id, kind=VehicleKind.SHIP, frame=VehicleFrame.COG, home_port_entity_id=town, locked=[]))
     await session.flush()
     return ship.id
 
@@ -1227,10 +1237,10 @@ LEVERS: dict[str, Lever] = {
     "material:delete": after(("material:edit", {"world_id": Pick("world"), "material": "iron", "values": {"hardness": 60}}), material="iron"),
     "material:edit": given(material="iron", values={"hardness": 60}),
     "memorial:order": given(target_id=Where("entities", "id", {"status": EntityStatus.DEAD, "entity_type": EntityType.MORTAL})),
-    "military:create": given(kind="unit_design", values={"name": "Spearwall", "base_kind": "spearmen", "owner_entity_id": Pick(TOWN)}),
+    "military:create": given(kind="unit_design", values={"name": "Spearwall", "base_kind": "line_infantry", "owner_entity_id": Pick(TOWN)}),
     **{
         name: after(
-            ("military:create", {"kind": "unit_design", "values": {"name": "Spearwall", "base_kind": "spearmen", "owner_entity_id": Pick(TOWN)}}),
+            ("military:create", {"kind": "unit_design", "values": {"name": "Spearwall", "base_kind": "line_infantry", "owner_entity_id": Pick(TOWN)}}),
             kind="unit_design",
             record_id=Newest("unit_design"),
         )
@@ -2139,7 +2149,7 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     },
     "design:edit": {
         "name": "The Swift",
-        "hull": "cog",
+        "frame": "carrack",
         "speed": 40,
         "range": 30,
         "seaworthiness": 60,
@@ -2152,7 +2162,7 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "component_wear:edit": {"wear": 30},
     "trade_route:edit": {"danger_bandits": 30, "capacity": 50, "length": 3, "chokepoint": True},
     "structure:edit": {"condition": 80, "anchor": True, "splendor": 60},
-    "structure_design:edit": {"cost_pct": 110},
+    "structure_design:edit": {"cost_pct": 110, "form": "dome", "storeys": 3, "material": "stone"},
     "species:edit": {"litter_size": 2},
     "species:range": {"abundance": 40},
     "herd:edit": {"head": 40},
@@ -2335,7 +2345,7 @@ ARMS = (
     },
 )
 OTHER_ARMS = ("arms:set", {"holder_id": Pick(REALM, 1), "holder_kind": "polity", "field": "blue"})
-DESIGN = ("design:draw", {"owner_id": Pick(REALM), "kind": "vessel", "hull": "carrack"})
+DESIGN = ("design:draw", {"owner_id": Pick(REALM), "frame": "carrack"})
 WEAR = ("component_wear:set", {"vessel_id": VESSEL, "component": "hull", "wear": 20})
 LEVERS.update(
     {
@@ -2387,7 +2397,7 @@ LEVERS.update(
         **{name: after(ARMS, holder_id=Pick(REALM)) for name in ("arms:edit", "arms:delete")},
         "arms:quarter": after(ARMS, OTHER_ARMS, holder_id=Pick(REALM), other_id=Pick(REALM, 1)),
         "arms:difference": after(ARMS, holder_id=Pick(REALM, 1), parent_id=Pick(REALM), border="vair", line="nebuly"),
-        "design:draw": given(owner_id=Pick(REALM), kind="vessel", hull="carrack"),
+        "design:draw": given(owner_id=Pick(REALM), frame="carrack"),
         **{name: after(DESIGN, design_id=Newest("design")) for name in ("design:edit", "design:refit", "design:delete")},
         "design_component:set": after(DESIGN, design_id=Newest("design"), component="hull", size=5, quality=60),
         "design_component:delete": after(DESIGN, design_id=Newest("design"), component="hull"),
@@ -2799,6 +2809,98 @@ LEVERS.update(
         **{name: after(KEYSTONE, keystone_id=Newest("keystone_resource")) for name in ("keystone:edit", "keystone:delete")},
         "brand:found": Lever(values={"workshop_id": WORKSHOP, "name": "The First Brand"}),
         **{name: after(BRAND, brand_id=Newest("brand")) for name in ("brand:edit", "brand:delete")},
+    }
+)
+
+
+VTYPE = ("design:draw", {"owner_id": Pick(REALM), "frame": "wagon"})
+VTYPE_ID = Newest("design")
+SECTION_SET = ("design_section:set", {"design_id": VTYPE_ID, "section": "tracks", "values": {"share": 10}})
+MOUNT_ADD = ("design_mount:add", {"design_id": VTYPE_ID, "mount": "deck"})
+LAST_TECHNIQUE = "drainage"
+DESIGN_TECHNIQUE = ("design_technique:add", {"design_id": VTYPE_ID, "technique": LAST_TECHNIQUE})
+GROUP = ("vehicle_group:create", {"holder_id": Pick(REALM), "design_id": VTYPE_ID, "count": 4})
+GROUP_ID = Newest("vehicle_group")
+GROUP_SECTION = ("vehicle_group_section:set", {"group_id": GROUP_ID, "section": "wheels", "values": {"damaged": 1}})
+VESSEL_SECTION = ("vessel_section:set", {"vessel_id": VESSEL, "section": "hull", "values": {"condition": 60}})
+MODEL = ("equipment_model:create", {"origin_id": Pick(REALM), "family": "spear"})
+MODEL_ID = Newest("equipment_model")
+STORE = ("equipment_store:set", {"holder_id": Pick(TOWN), "model_id": MODEL_ID, "count": 20})
+HOST = ("army:raise", {"community_id": Pick(TOWN), "size": 200})
+STACK_ID = Newest("army_unit")
+CARRIED = ("army_equipment:set", {"unit_id": STACK_ID, "model_id": MODEL_ID, "count": 50})
+UNIT_TYPE = ("unit_type:create", {"owner_id": Pick(REALM), "role": "line_infantry"})
+UNIT_TYPE_ID = Newest("unit_design")
+LOADOUT = ("unit_loadout:set", {"design_id": UNIT_TYPE_ID, "model_id": MODEL_ID, "count": 2})
+UNIT_TECHNIQUE = ("unit_technique:add", {"design_id": UNIT_TYPE_ID, "technique": LAST_TECHNIQUE})
+GRANARY = Computed(town_granary)
+BEACON_WORK = Computed(town_beacon)
+STRUCTURE_SECTION = ("structure_section:edit", {"structure_id": GRANARY, "section": "roof", "values": {"condition": 70}})
+TEMPLE_TYPE = ("structure_design:create", {"world_id": Pick("world"), "values": {"name": "Long Hall", "base_kind": "temple"}})
+TEMPLE_TYPE_ID = Newest("structure_design")
+TYPE_SECTION = ("structure_design_section:set", {"design_id": TEMPLE_TYPE_ID, "section": "dome", "values": {"share": 20}})
+MEGA = ("megastructure:edit", {"structure_id": BEACON_WORK, "values": {"output": 40}})
+DISH = ("dish:create", {"origin_id": Pick(PEOPLE), "method": "baked", "course": "festive", "ingredients": ["grain", "eggs"]})
+DISH_ID = Newest("dish")
+COOKED = ("community_dish:set", {"community_id": Pick(TOWN), "dish_id": DISH_ID, "popularity": 70})
+MADE_KIND_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "design_section:set": {"criticality": "major", "share": 20, "exposure": 30, "armour": 40, "hazard": "fire", "size": 4, "quality": 60},
+    "design_mount:add": {"count": 2, "arc": "forward", "section": "chassis"},
+    "design_mount:edit": {"count": 3, "arc": "side", "slot": 1},
+    "vehicle_group:edit": {"count": 5, "crewed": 3, "condition": 80, "fuel": 50, "status": "laid_up"},
+    "vehicle_group_section:set": {"damaged": 2, "disabled": 1, "destroyed": 0},
+    "vessel_section:set": {"state": "damaged", "condition": 60},
+    "equipment_model:edit": {"name": "The Second Spear", "quality": 70, "damage": 30, "piercing": 20, "reach": 1, "weight": 3, "cost": 5},
+    "unit_type:edit": {"name": "The Watch", "melee": 50, "defence": 50, "discipline": 60, "formation": "column", "doctrine": "shock", "training_epochs": 2},
+    "structure_section:edit": {"condition": 60, "role": "storage", "criticality": "major", "share": 30, "exposure": 40, "flammability": 50},
+    "structure_design_section:set": {"criticality": "critical", "share": 25, "material": "stone"},
+    "megastructure:edit": {"output": 60, "target_orbit": 2},
+    "dish:edit": {"name": "Second Loaf", "nourishment": 50, "delight": 40, "keeps": 2, "prestige": 20, "course": "side"},
+    "community_dish:edit": {"popularity": 70, "cooked": 3},
+}
+EDITS = {**EDITS, **MADE_KIND_EDITS}
+LEVERS.update(
+    {
+        "mortal:attraction": given(mortal_id=Pick(MORTAL), drawn_to=["female", "other"], attraction=60),
+        "design_section:set": after(VTYPE, design_id=VTYPE_ID, section="tracks"),
+        "design_section:delete": after(VTYPE, SECTION_SET, design_id=VTYPE_ID, section="tracks"),
+        "design_mount:add": after(VTYPE, design_id=VTYPE_ID, mount="deck"),
+        **{name: after(VTYPE, MOUNT_ADD, record_id=Newest("design_mount")) for name in ("design_mount:edit", "design_mount:delete")},
+        "design_technique:add": after(VTYPE, design_id=VTYPE_ID, technique=LAST_TECHNIQUE),
+        "design_technique:delete": after(VTYPE, DESIGN_TECHNIQUE, design_id=VTYPE_ID, technique=LAST_TECHNIQUE),
+        "vehicle_group:create": after(VTYPE, holder_id=Pick(REALM), design_id=VTYPE_ID, count=4, crewed=2),
+        **{name: after(VTYPE, GROUP, record_id=GROUP_ID) for name in ("vehicle_group:edit", "vehicle_group:delete")},
+        "vehicle_group:move": after(VTYPE, GROUP, group_id=GROUP_ID, holder_id=Pick(TOWN), count=2),
+        "vehicle_group:repair": after(VTYPE, GROUP, GROUP_SECTION, group_id=GROUP_ID, points=20),
+        "vehicle_group_section:set": after(VTYPE, GROUP, group_id=GROUP_ID, section="wheels"),
+        "vehicle_group_section:delete": after(VTYPE, GROUP, GROUP_SECTION, group_id=GROUP_ID, section="wheels"),
+        "vessel_section:set": given(vessel_id=VESSEL, section="hull"),
+        "vessel_section:delete": after(VESSEL_SECTION, vessel_id=VESSEL, section="hull"),
+        "equipment_model:create": given(origin_id=Pick(REALM), family="spear", quality=60),
+        **{name: after(MODEL, record_id=MODEL_ID) for name in ("equipment_model:edit", "equipment_model:delete")},
+        "equipment_store:set": after(MODEL, holder_id=Pick(TOWN), model_id=MODEL_ID, count=20),
+        "equipment_store:delete": after(MODEL, STORE, holder_id=Pick(TOWN), model_id=MODEL_ID),
+        "army_equipment:set": after(HOST, MODEL, unit_id=STACK_ID, model_id=MODEL_ID, count=50, condition=90),
+        "army_equipment:delete": after(HOST, MODEL, CARRIED, unit_id=STACK_ID, model_id=MODEL_ID),
+        "unit_type:create": given(owner_id=Pick(REALM), role="line_infantry", name="The Line"),
+        **{name: after(UNIT_TYPE, record_id=UNIT_TYPE_ID) for name in ("unit_type:edit", "unit_type:delete")},
+        "unit_loadout:set": after(UNIT_TYPE, MODEL, design_id=UNIT_TYPE_ID, model_id=MODEL_ID, count=2),
+        "unit_loadout:delete": after(UNIT_TYPE, MODEL, LOADOUT, design_id=UNIT_TYPE_ID, model_id=MODEL_ID),
+        "unit_technique:add": after(UNIT_TYPE, design_id=UNIT_TYPE_ID, technique=LAST_TECHNIQUE),
+        "unit_technique:delete": after(UNIT_TYPE, UNIT_TECHNIQUE, design_id=UNIT_TYPE_ID, technique=LAST_TECHNIQUE),
+        "structure_section:edit": given(structure_id=GRANARY, section="roof"),
+        **{name: given(structure_id=GRANARY, section="stores") for name in ("structure_section:repair", "structure_section:strike")},
+        "structure_section:delete": after(STRUCTURE_SECTION, structure_id=GRANARY, section="roof"),
+        "structure_design_section:set": after(TEMPLE_TYPE, design_id=TEMPLE_TYPE_ID, section="dome"),
+        "structure_design_section:delete": after(TEMPLE_TYPE, TYPE_SECTION, design_id=TEMPLE_TYPE_ID, section="dome"),
+        "megastructure:edit": given(structure_id=BEACON_WORK),
+        "megastructure:delete": after(MEGA, structure_id=BEACON_WORK),
+        "dish:create": given(origin_id=Pick(PEOPLE), method="baked", course="festive", ingredients=["grain", "eggs"]),
+        **{name: after(DISH, record_id=DISH_ID) for name in ("dish:edit", "dish:delete")},
+        "dish_ingredient:set": after(DISH, dish_id=DISH_ID, commodity="herbs", share=20),
+        "dish_ingredient:delete": after(DISH, dish_id=DISH_ID, commodity="grain"),
+        "community_dish:set": after(DISH, community_id=Pick(TOWN), dish_id=DISH_ID, popularity=70),
+        **{name: after(DISH, COOKED, community_id=Pick(TOWN), dish_id=DISH_ID) for name in ("community_dish:edit", "community_dish:delete")},
     }
 )
 

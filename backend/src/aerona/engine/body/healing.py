@@ -669,7 +669,7 @@ def regenerate(rules: Rules, bearer: EntityRow, body: BodyRow, infected: bool) -
 async def heal_wounds(ctx: TickContext) -> None:
     world = await HealingWorld.load(ctx.session, ctx.rules)
     list(await ctx.session.scalars(select(BodyRow)))
-    bearers: list[Bearer] = [*await canon(ctx.session, [EntityType.MORTAL, EntityType.BEAST])]
+    bearers: list[Bearer] = [*await canon(ctx.session, [EntityType.MORTAL, EntityType.BEAST, EntityType.COSMIC_BEING, EntityType.OUTER_BEING])]
     bearers.extend(await ctx.session.scalars(select(SonRow)))
     bearers.extend(await ctx.session.scalars(select(ForeignGodRow)))
     open_bearers = set(await ctx.session.scalars(select(InjuryRow.bearer_node_id).where(InjuryRow.state.in_(OPEN_INJURY_STATES))))

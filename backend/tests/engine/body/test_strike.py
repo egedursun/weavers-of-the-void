@@ -76,11 +76,11 @@ def test_only_one_rigid_layer_is_worn_per_covering() -> None:
 
 
 def test_battle_piercing_compares_weapon_and_armour_materials() -> None:
-    steel_blades = [stack(UnitKind.SPEARMEN, M.STEEL, ArmourType.NONE, ["blade"])]
-    bronze_blades = [stack(UnitKind.SPEARMEN, M.BRONZE, ArmourType.NONE, ["blade"])]
-    plate = stack(UnitKind.SPEARMEN, M.STEEL, ArmourType.PLATE, ["spear"])
-    hide = stack(UnitKind.SPEARMEN, M.STEEL, ArmourType.HIDE, ["spear"])
-    bare = stack(UnitKind.SPEARMEN, M.STEEL, ArmourType.NONE, ["spear"])
+    steel_blades = [stack(UnitKind.LINE_INFANTRY, M.STEEL, ArmourType.NONE, ["blade"])]
+    bronze_blades = [stack(UnitKind.LINE_INFANTRY, M.BRONZE, ArmourType.NONE, ["blade"])]
+    plate = stack(UnitKind.LINE_INFANTRY, M.STEEL, ArmourType.PLATE, ["spear"])
+    hide = stack(UnitKind.LINE_INFANTRY, M.STEEL, ArmourType.HIDE, ["spear"])
+    bare = stack(UnitKind.LINE_INFANTRY, M.STEEL, ArmourType.NONE, ["spear"])
     assert penetration(RULES, steel_blades, plate) > penetration(RULES, bronze_blades, plate)
     assert penetration(RULES, steel_blades, hide) >= penetration(RULES, steel_blades, plate)
     assert penetration(RULES, steel_blades, bare) == 0.0

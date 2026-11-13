@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import FINGER_COUNT, Anatomy, anatomy_of
-from aerona.catalog.body_plans import BUILD_RANK, HEIGHT_RANK, PLANS, WHOLE_PLANS
+from aerona.catalog.body_plans import BEING_PLANS, BUILD_RANK, HEIGHT_RANK, HUNGER_PLANS, PLANS, WHOLE_PLANS
 from aerona.catalog.creature_anatomy import MONSTER_PLANS
 from aerona.catalog.mind import SKILLS, TRAITS
 from aerona.catalog.tissues import FULL_COUNTS
@@ -14,6 +14,8 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, ProsthesisRow
+from aerona.db.tables.cosmography import CosmicBeingProfileRow
+from aerona.db.tables.divine import OuterBeingProfileRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow, EntityTagRow, EntityTraitRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -178,11 +180,26 @@ async def plan_for(session: AsyncSession, bearer: Bearer) -> tuple[BodyPlan, lis
         return BodyPlan.DIVINE_MANIFEST, []
     if bearer.entity_type is EntityType.BEAST:
         return await beast_plan(session, bearer)
+    if bearer.entity_type is EntityType.COSMIC_BEING:
+        being = await session.get(CosmicBeingProfileRow, bearer.id)
+        return (BEING_PLANS[being.being_kind] if being is not None else BodyPlan.COLOSSAL), []
+    if bearer.entity_type is EntityType.OUTER_BEING:
+        outer = await session.get(OuterBeingProfileRow, bearer.id)
+        return (HUNGER_PLANS[outer.hunger] if outer is not None else BodyPlan.AMORPHOUS), []
     species = await species_of(session, bearer)
     if species is None:
         return BodyPlan.HUMANOID, []
     known = await ensure_species_body(session, species)
     return known.plan, list(known.traits)
+
+
+VAST = frozenset({EntityType.COSMIC_BEING, EntityType.OUTER_BEING})
+
+
+async def vast_hp(session: AsyncSession, rules: Rules, bearer: EntityRow) -> int:
+    being = await session.get(CosmicBeingProfileRow, bearer.id)
+    might: int = being.might if being is not None else stat_or(bearer, "influence", 50)
+    return might * rules.cosmic_wounds.hp_per_might
 
 
 async def ensure_body(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: int) -> BodyRow:
@@ -193,6 +210,8 @@ async def ensure_body(session: AsyncSession, rules: Rules, bearer: Bearer, epoch
         return await ensure_species_body(session, bearer)
     plan, traits = await plan_for(session, bearer)
     hp = bearer.hp if isinstance(bearer, SonRow) else (stat(bearer, "hp") if isinstance(bearer, EntityRow) else None)
+    if isinstance(bearer, EntityRow) and bearer.entity_type in VAST:
+        hp = await vast_hp(session, rules, bearer)
     floor = rules.world_effects.heir_hp
     height, build = mortal_frame(rules, bearer, plan) if isinstance(bearer, EntityRow) else (PLANS[plan].height, PLANS[plan].build)
     body = BodyRow(

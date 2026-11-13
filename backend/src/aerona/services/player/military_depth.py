@@ -5,7 +5,8 @@ from pydantic import Field
 from aerona.core.grammar import an
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import DuelContext, HullClass, PeaceTermKind, VesselArmament, WarAimKind
+from aerona.domain.enums.military import DuelContext, PeaceTermKind, VesselArmament, WarAimKind
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.war import WarCause
 from aerona.engine.military import orders, records
 from aerona.engine.military.shipyard import Commission, commission
@@ -92,7 +93,7 @@ class PeaceBuild(Command):
 class VesselOrder(Command):
     owner_id: int
     name: str = Field(min_length=1, max_length=120)
-    hull_class: HullClass = HullClass.BOAT
+    frame: VehicleFrame = VehicleFrame.BOAT
     armament: list[VesselArmament] | None = None
     hull_material: MaterialKind | None = None
     fabric_material: MaterialKind | None = None
@@ -103,7 +104,7 @@ class VesselOrder(Command):
 
 class VesselRefit(Command):
     vessel_id: int
-    hull_class: HullClass
+    frame: VehicleFrame
     armament: list[VesselArmament] | None = None
     hull_material: MaterialKind | None = None
     fabric_material: MaterialKind | None = None
@@ -202,7 +203,7 @@ async def peace(scope: PlayerScope, command: PeaceBuild) -> Effect:
 @player_action("vessel:create", ActionKind.EDIT_RECORD)
 async def vessel_create(scope: PlayerScope, command: VesselOrder) -> Effect:
     order = Commission(
-        hull=command.hull_class,
+        frame=command.frame,
         armament=command.armament,
         hull_material=command.hull_material,
         fabric_material=command.fabric_material,
@@ -220,9 +221,9 @@ async def vessel_refit(scope: PlayerScope, command: VesselRefit) -> Effect:
     vessel = await living_entity(ctx.session, command.vessel_id)
     if vessel is None:
         return Effect("No such vessel afloat.", command.vessel_id)
-    order = Commission(hull=command.hull_class, armament=command.armament, hull_material=command.hull_material, fabric_material=command.fabric_material)
+    order = Commission(frame=command.frame, armament=command.armament, hull_material=command.hull_material, fabric_material=command.fabric_material)
     await commission(ctx.session, ctx.rules, vessel, order)
-    return Effect(f"{vessel.name} is refitted as {an(command.hull_class.value.replace('_', ' '))}.", vessel.id)
+    return Effect(f"{vessel.name} is refitted as {an(command.frame.value.replace('_', ' '))}.", vessel.id)
 
 
 @player_action("vessel:repair", ActionKind.EDIT_RECORD)

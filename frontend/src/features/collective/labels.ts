@@ -55,6 +55,11 @@ import {
   Wheat,
   Wind,
   Wrench,
+  Truck,
+  Rocket,
+  Compass,
+  Zap,
+  HeartPulse,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -550,6 +555,8 @@ export const DESIGN_KINDS: Record<Schema['DesignKind'], Named> = {
   vessel: { label: 'A vessel', icon: Ship, tone: 'info' },
   skyship: { label: 'A skyship', icon: Wind, tone: 'verdigris' },
   siege_engine: { label: 'A siege engine', icon: Castle, tone: 'warning' },
+  land_vehicle: { label: 'A land vehicle', icon: Truck, tone: 'gold' },
+  spacecraft: { label: 'A spacecraft', icon: Rocket, tone: 'verdigris' },
 }
 
 export const PARTS: Record<Schema['DesignComponentKind'], Named> = {
@@ -563,6 +570,12 @@ export const PARTS: Record<Schema['DesignComponentKind'], Named> = {
   navigation: { label: 'Navigation', icon: Anchor, tone: 'info' },
   frame: { label: 'Frame', icon: Wrench, tone: 'muted' },
   counterweight: { label: 'Counterweight', icon: Mountain, tone: 'muted' },
+  steering: { label: 'Steering', icon: Compass, tone: 'info' },
+  lift: { label: 'Lift', icon: Wind, tone: 'verdigris' },
+  power: { label: 'Power', icon: Zap, tone: 'warning' },
+  troops: { label: 'Troop room', icon: Users, tone: 'gold' },
+  command: { label: 'Command', icon: Crown, tone: 'gold' },
+  life_support: { label: 'Life support', icon: HeartPulse, tone: 'success' },
 }
 
 export const SECTION_ICONS = {

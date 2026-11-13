@@ -1,7 +1,9 @@
 from collections.abc import Awaitable, Callable
+from types import MappingProxyType
 
 from sqlalchemy import select
 
+from aerona.catalog.structures import acting
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
@@ -186,23 +188,25 @@ async def nothing(ctx: TickContext, item: Working, host: EntityRow, tally: Tally
     del ctx, item, host, tally
 
 
-EFFECTS: dict[StructureKind, Effect] = {
-    K.TEMPLE: piety_house,
-    K.SHRINE: piety_house,
-    K.MONASTERY: monastery,
-    K.WONDER: piety_house,
-    K.LIBRARY: library,
-    K.ACADEMY: academy,
-    K.COSMIC_ARCHIVE: archive,
-    K.OBSERVATORY: observatory,
-    K.SCHOOL: school,
-    K.HOSPITAL: hospital,
-    K.FORT: stronghold,
-    K.CITADEL: stronghold,
-    K.MARKET: market,
-    K.WORKSHOP: workshop,
-    K.ARENA: arena,
-}
+EFFECTS: MappingProxyType[StructureKind, Effect] = acting(
+    {
+        K.TEMPLE: piety_house,
+        K.SHRINE: piety_house,
+        K.MONASTERY: monastery,
+        K.WONDER: piety_house,
+        K.LIBRARY: library,
+        K.ACADEMY: academy,
+        K.COSMIC_ARCHIVE: archive,
+        K.OBSERVATORY: observatory,
+        K.SCHOOL: school,
+        K.HOSPITAL: hospital,
+        K.FORT: stronghold,
+        K.CITADEL: stronghold,
+        K.MARKET: market,
+        K.WORKSHOP: workshop,
+        K.ARENA: arena,
+    }
+)
 
 
 async def dedication(ctx: TickContext, item: Working, host: EntityRow | None) -> None:

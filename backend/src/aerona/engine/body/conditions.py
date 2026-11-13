@@ -24,6 +24,7 @@ VISIBLE_CONDITIONS = frozenset(
         ConditionKind.DIVINE_BRAND,
         ConditionKind.POSSESSION,
         ConditionKind.COMATOSE,
+        ConditionKind.COGNITIVE_DECLINE,
     }
 )
 
@@ -44,6 +45,7 @@ CONDITION_PHRASES: dict[ConditionKind, str] = {
     ConditionKind.DIVINE_BRAND: "bore a god's brand",
     ConditionKind.NIGHTMARES: "began to dream the same nightmare night after night",
     ConditionKind.COMATOSE: "fell into a sleep no one could wake them from",
+    ConditionKind.COGNITIVE_DECLINE: "began to lose their memory and their reckoning",
 }
 
 END_PHRASES: dict[ConditionKind, str] = {
@@ -57,6 +59,7 @@ END_PHRASES: dict[ConditionKind, str] = {
     ConditionKind.ENDLESS_HUNGER: "was freed of the endless hunger",
     ConditionKind.NIGHTMARES: "slept free of nightmares at last",
     ConditionKind.COMATOSE: "woke at last",
+    ConditionKind.COGNITIVE_DECLINE: "came back to their wits",
 }
 
 

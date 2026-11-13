@@ -19,6 +19,7 @@ from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.mind import Attribute, CareerChange, MemoryKind, SkillKind, SkillSource, ThoughtKind, TraitEffect, ValueAxis
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
+from aerona.engine.body.decline import too_forgetful
 from aerona.engine.context import TickContext
 from aerona.engine.genetics.genome import colour_factor
 from aerona.engine.mind.aspirations import focus_rate, open_wants, steered_values
@@ -160,6 +161,8 @@ async def teach_apprentices(ctx: TickContext) -> int:
         student = await living_entity(ctx.session, bond.source_node_id)
         master = await living_entity(ctx.session, bond.target_node_id)
         if student is None or master is None or student.entity_type is not EntityType.MORTAL or master.entity_type is not EntityType.MORTAL:
+            continue
+        if await too_forgetful(ctx.session, master.id, ctx.rules.decline.teach_block):
             continue
         lessons = sorted((await skills_of(ctx.session, master.id)).values(), key=lambda row: (-row.level, row.skill))[: table.taught_skills]
         teaching = (await skills_of(ctx.session, master.id)).get(SkillKind.TEACHING)

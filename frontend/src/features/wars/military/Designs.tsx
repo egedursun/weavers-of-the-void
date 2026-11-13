@@ -24,7 +24,7 @@ import {
   FAMILY,
   PERCENT,
   SHIELD,
-  UNIT_ICON,
+  unitIcon,
   busyOf,
   cardGrid,
 } from './labels'
@@ -197,7 +197,7 @@ function DesignCard({
     >
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion
-          icon={UNIT_ICON[kind] ?? family.icon}
+          icon={unitIcon(kind, family.icon)}
           tone={retired ? 'muted' : family.tone}
         />
         <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
@@ -278,7 +278,7 @@ function NewDesign({
   const create = useRecordCreate('unit_design', ownerId)
   const { specs } = useKindTable()
   const [draft, setDraft] = useState<Values>({
-    base_kind: 'spearmen',
+    base_kind: 'line_infantry',
     armour: 'none',
     shield: 'none',
     social_class: 'warrior',

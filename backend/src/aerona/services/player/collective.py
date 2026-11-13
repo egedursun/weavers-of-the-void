@@ -11,7 +11,6 @@ from aerona.domain.enums.collective import (
     CollectiveTrigger,
     DatingSystemKind,
     DesignComponentKind,
-    DesignKind,
     FormativeKind,
     HeraldicCharge,
     HeraldicDivision,
@@ -28,9 +27,9 @@ from aerona.domain.enums.collective import (
     SupporterPose,
     Tincture,
 )
-from aerona.domain.enums.military import HullClass
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.collective import control
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -373,9 +372,9 @@ class ArmsDifference(Command):
 
 
 class DesignDraft(Command):
-    owner_id: int
-    kind: DesignKind
-    hull: HullClass | None = None
+    owner_id: int | None = None
+    world_id: int | None = None
+    frame: VehicleFrame
     name: str | None = Field(default=None, max_length=NAME)
     quality: int = Field(default=50, ge=0, le=SPAN)
 
@@ -875,7 +874,7 @@ async def arms_delete(scope: PlayerScope, command: HolderTarget) -> Effect:
 @player_action("design:draw", ActionKind.EDIT_RECORD)
 async def design_draw(scope: PlayerScope, command: DesignDraft) -> Effect:
     ctx = await scope.context("design_draw")
-    row = await control.new_design(ctx, command.owner_id, command.kind, hull=command.hull, name=command.name, quality=command.quality)
+    row = await control.new_design(ctx, command.owner_id, command.frame, name=command.name, quality=command.quality, world_id=command.world_id)
     return Effect(f"{row.name} is drawn.", command.owner_id, created_ids=(row.id,))
 
 

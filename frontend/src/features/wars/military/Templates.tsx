@@ -16,7 +16,7 @@ import { Muted, Text } from '@/components/typography'
 import { Held, RecordButtons, TextField } from './controls'
 import { type RecordRow, useRecords } from './depth'
 import { useKindTable } from './kinds'
-import { DOCTRINE, PERCENT, UNIT_ICON, busyOf, cardGrid, named } from './labels'
+import { DOCTRINE, PERCENT, unitIcon, busyOf, cardGrid, named } from './labels'
 import {
   Adjust,
   ChoiceField,
@@ -78,7 +78,7 @@ function MixEditor({
           <div className='grid min-w-0 flex-1 grid-cols-1 gap-2 @md/mil:grid-cols-2'>
             <ChoiceField
               label='Kind of soldier'
-              icon={UNIT_ICON[kind] ?? Swords}
+              icon={unitIcon(kind, Swords)}
               value={kind}
               table={table}
               blocked={blocked}
@@ -273,7 +273,7 @@ function NewTemplate({
   const create = useRecordCreate('army_template', polityId)
   const [name, setName] = useState('')
   const [doctrine, setDoctrine] = useState('shieldwall')
-  const [mix, setMix] = useState<Mix>({ spearmen: DEFAULT_SHARE })
+  const [mix, setMix] = useState<Mix>({ line_infantry: DEFAULT_SHARE })
   const busy = busyOf(blocked, create.isPending)
   const trimmed = name.trim()
   return (

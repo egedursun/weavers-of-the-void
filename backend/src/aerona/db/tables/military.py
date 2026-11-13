@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
@@ -89,6 +89,10 @@ class UnitDesignRow(Base):
         at_least("cost", 0),
         at_least("upkeep", 0),
         between("terror", PERCENT_MIN, PERCENT_MAX),
+        between("discipline", PERCENT_MIN, PERCENT_MAX),
+        at_least("training_epochs", 0),
+        at_least("crew_per_vehicle", 0),
+        Index("ix_unit_designs_world", "world_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -116,6 +120,17 @@ class UnitDesignRow(Base):
     volleys: Mapped[int] = mapped_column(default=0)
     accuracy: Mapped[int] = mapped_column(default=40)
     piercing: Mapped[int] = mapped_column(default=20)
+    description: Mapped[str | None] = mapped_column(Text)
+    world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
+    origin_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    doctrine: Mapped[MartialStyle | None] = mapped_column(enum_type(MartialStyle, "doctrine"))
+    formation: Mapped[Formation | None] = mapped_column(enum_type(Formation, "formation"))
+    discipline: Mapped[int] = mapped_column(default=40, server_default="40")
+    training_epochs: Mapped[int] = mapped_column(default=1, server_default="1")
+    mount_species_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    vehicle_design_id: Mapped[int | None] = mapped_column(ForeignKey("designs.id", ondelete="SET NULL"))
+    crew_per_vehicle: Mapped[int] = mapped_column(default=0, server_default="0")
+    parent_design_id: Mapped[int | None] = mapped_column(ForeignKey("unit_designs.id", ondelete="SET NULL"))
 
 
 class ArmyProfileRow(Base):

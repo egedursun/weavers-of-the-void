@@ -4,6 +4,7 @@ from pydantic import Field
 from sqlalchemy import select
 
 from aerona.catalog.storylets import STORYLETS
+from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an
 from aerona.db.tables.collective import StoryletRunRow
@@ -14,16 +15,18 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountStance, CollectiveTrigger, DesignComponentKind, DesignKind, StoryletStatus
-from aerona.domain.enums.military import HullClass
+from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountStance, CollectiveTrigger, DesignComponentKind, StoryletStatus
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.collective.accounts import HistoryTally, record, strike
 from aerona.engine.collective.book import shift
 from aerona.engine.collective.crowds import stir
-from aerona.engine.collective.designs import PARTS, draw_design, hull_sizes
+from aerona.engine.collective.designs import FULL_SIZE, draw_design, frame_sizes
 from aerona.engine.collective.storylets import StoryletTally, cast_of, names, resolve
+from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.vehicles.fleet import opened
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
@@ -35,7 +38,6 @@ from aerona.tools.mortal import lines
 MAX_CHOICE = 3
 MAX_NAMED = 8
 EMPHASIS = 2
-FULL_SIZE = 10
 SLANT_COST = 4
 
 
@@ -59,8 +61,7 @@ class StrikeInput(ToolInput):
 
 
 class DesignInput(ToolInput):
-    kind: DesignKind
-    hull: HullClass | None = None
+    frame: VehicleFrame
     emphasis: DesignComponentKind
 
 
@@ -148,17 +149,18 @@ async def design_owner(call: MortalCall) -> EntityRow | None:
 
 
 async def draw_a_design(call: MortalCall, args: DesignInput) -> str:
-    if args.emphasis not in PARTS[args.kind]:
-        fail(MortalResult.DESIGN_REFUSED, why=f"{an(args.kind.value.replace('_', ' '))} has no {args.emphasis.value}")
-    if args.kind is not DesignKind.SIEGE_ENGINE and args.hull is None:
-        fail(MortalResult.DESIGN_REFUSED, why="a vessel design needs a hull")
+    sizes = frame_sizes(args.frame)
+    if args.emphasis not in sizes:
+        fail(MortalResult.DESIGN_REFUSED, why=f"{an(FRAMES[args.frame].label.lower())} has no {args.emphasis.value.replace('_', ' ')}")
     owner = await design_owner(call)
     if owner is None or held(owner.id):
         fail(MortalResult.DESIGN_REFUSED, why="you build for no town or realm")
-    sizes = hull_sizes(args.hull) if args.hull is not None and args.kind is not DesignKind.SIEGE_ENGINE else {}
-    sizes[args.emphasis] = min(FULL_SIZE, sizes.get(args.emphasis, 3) + EMPHASIS)
+    knowledge = await KnowledgeMap.load(call.session)
+    if not opened(FRAMES[args.frame], knowledge, owner):
+        fail(MortalResult.DESIGN_REFUSED, why=f"{owner.name} does not yet know how to build {an(FRAMES[args.frame].label.lower())}")
+    sizes[args.emphasis] = min(FULL_SIZE, sizes[args.emphasis] + EMPHASIS)
     skill = stat_or(call.me, "intellect", PERCENT // 2)
-    design = await draw_design(call.tick, owner, args.kind, hull=args.hull, sizes=sizes, quality=skill, designer_id=call.me.id)
+    design = await draw_design(call.tick, owner, args.frame, sizes=sizes, quality=skill, designer_id=call.me.id, knowledge=knowledge)
     await call.chronicle(ChronicleKind.WORLD, lines.DRAW_DESIGN, entity_ids=[call.me.id, owner.id], me=call.me.name, design=design.name)
     return result(
         MortalResult.DESIGN_DRAWN, name=design.name, speed=design.speed, reach=design.range, cargo=design.cargo, arms=design.armament, crew=design.crew

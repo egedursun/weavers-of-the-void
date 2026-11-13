@@ -7,34 +7,34 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 
 | from ↓ / to → | core | body | mind | social | household | demography | economy | polity | law | intrigue | communication | war | faith | magic | knowledge | culture | language | ecology | environment | gods | cosmos |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| core | — | 124 | 118 | 128 | 65 | 123 | 135 | 122 | 102 | 106 | 92 | 121 | 62 | 106 | 116 | 130 | 113 | 70 | 129 | 123 | 112 |
-| body | 132 | — | 141 | 148 | 80 | 149 | 157 | 136 | 112 | 118 | 103 | 138 | 85 | 130 | 133 | 150 | 125 | 84 | 146 | 149 | 130 |
-| mind | 165 | 176 | — | 196 | 102 | 162 | 207 | 193 | 167 | 166 | 151 | 188 | 109 | 155 | 177 | 190 | 172 | 106 | 180 | 183 | 167 |
-| social | 148 | 153 | 175 | — | 85 | 142 | 218 | 198 | 153 | 137 | 125 | 156 | 90 | 144 | 156 | 185 | 140 | 81 | 188 | 156 | 147 |
+| core | — | 126 | 120 | 130 | 65 | 125 | 137 | 124 | 102 | 108 | 92 | 123 | 62 | 108 | 118 | 132 | 115 | 70 | 131 | 125 | 114 |
+| body | 134 | — | 143 | 150 | 80 | 151 | 159 | 138 | 112 | 120 | 103 | 140 | 85 | 132 | 136 | 152 | 127 | 84 | 148 | 151 | 132 |
+| mind | 167 | 178 | — | 198 | 102 | 164 | 209 | 195 | 167 | 168 | 151 | 190 | 109 | 157 | 179 | 192 | 174 | 106 | 182 | 185 | 169 |
+| social | 150 | 155 | 177 | — | 86 | 144 | 221 | 200 | 153 | 139 | 125 | 158 | 90 | 146 | 158 | 188 | 142 | 82 | 191 | 159 | 149 |
 | household | 55 | 61 | 63 | 65 | — | 59 | 68 | 59 | 50 | 56 | 45 | 57 | 36 | 46 | 53 | 59 | 52 | 46 | 60 | 57 | 59 |
-| demography | 128 | 142 | 130 | 137 | 75 | — | 153 | 130 | 102 | 112 | 94 | 132 | 78 | 121 | 120 | 142 | 118 | 77 | 133 | 142 | 121 |
-| economy | 199 | 245 | 292 | 326 | 114 | 247 | — | 314 | 211 | 182 | 164 | 291 | 181 | 193 | 243 | 298 | 209 | 153 | 315 | 245 | 222 |
-| polity | 146 | 144 | 179 | 206 | 80 | 140 | 230 | — | 173 | 143 | 139 | 180 | 96 | 141 | 164 | 178 | 152 | 81 | 186 | 152 | 151 |
+| demography | 130 | 144 | 132 | 140 | 75 | — | 155 | 132 | 102 | 114 | 94 | 134 | 78 | 123 | 122 | 144 | 120 | 77 | 135 | 144 | 123 |
+| economy | 201 | 247 | 294 | 329 | 114 | 249 | — | 316 | 211 | 184 | 164 | 294 | 181 | 196 | 245 | 302 | 211 | 154 | 318 | 248 | 224 |
+| polity | 148 | 146 | 181 | 208 | 80 | 142 | 232 | — | 173 | 145 | 139 | 182 | 96 | 143 | 166 | 180 | 154 | 81 | 188 | 154 | 153 |
 | law | 105 | 106 | 123 | 136 | 57 | 95 | 141 | 136 | — | 107 | 110 | 114 | 60 | 109 | 118 | 120 | 107 | 57 | 125 | 106 | 96 |
-| intrigue | 106 | 109 | 117 | 118 | 53 | 101 | 118 | 121 | 103 | — | 99 | 116 | 49 | 106 | 105 | 111 | 107 | 56 | 111 | 107 | 104 |
+| intrigue | 108 | 111 | 119 | 120 | 53 | 103 | 120 | 123 | 103 | — | 99 | 118 | 49 | 108 | 107 | 113 | 109 | 56 | 113 | 109 | 106 |
 | communication | 88 | 88 | 106 | 108 | 45 | 83 | 114 | 115 | 109 | 98 | — | 102 | 46 | 100 | 100 | 109 | 96 | 53 | 106 | 94 | 90 |
-| war | 149 | 152 | 164 | 167 | 87 | 145 | 184 | 170 | 142 | 140 | 124 | — | 86 | 133 | 149 | 164 | 149 | 94 | 161 | 152 | 145 |
+| war | 155 | 158 | 170 | 173 | 87 | 151 | 195 | 177 | 143 | 146 | 125 | — | 87 | 140 | 158 | 171 | 155 | 94 | 168 | 158 | 153 |
 | faith | 56 | 70 | 71 | 72 | 36 | 69 | 89 | 75 | 57 | 54 | 47 | 60 | — | 67 | 60 | 81 | 57 | 42 | 67 | 81 | 63 |
-| magic | 111 | 127 | 124 | 133 | 57 | 118 | 144 | 131 | 116 | 109 | 106 | 114 | 70 | — | 128 | 134 | 107 | 63 | 133 | 134 | 116 |
-| knowledge | 135 | 132 | 146 | 158 | 71 | 129 | 169 | 161 | 136 | 121 | 118 | 143 | 76 | 133 | — | 156 | 139 | 75 | 152 | 135 | 127 |
-| culture | 161 | 165 | 186 | 201 | 92 | 165 | 218 | 192 | 149 | 145 | 136 | 172 | 111 | 160 | 174 | — | 164 | 101 | 193 | 177 | 151 |
-| language | 117 | 116 | 127 | 126 | 65 | 118 | 141 | 132 | 114 | 114 | 103 | 129 | 63 | 109 | 126 | 132 | — | 66 | 124 | 120 | 112 |
-| ecology | 71 | 75 | 75 | 82 | 46 | 65 | 107 | 69 | 56 | 53 | 48 | 81 | 46 | 57 | 68 | 81 | 64 | — | 87 | 73 | 77 |
-| environment | 164 | 170 | 173 | 207 | 93 | 169 | 241 | 190 | 148 | 133 | 127 | 176 | 122 | 157 | 179 | 197 | 155 | 114 | — | 171 | 170 |
-| gods | 155 | 170 | 173 | 166 | 96 | 166 | 194 | 158 | 129 | 135 | 122 | 165 | 124 | 152 | 150 | 179 | 148 | 105 | 172 | — | 160 |
-| cosmos | 134 | 136 | 145 | 149 | 76 | 132 | 172 | 152 | 113 | 118 | 105 | 144 | 76 | 128 | 138 | 145 | 131 | 101 | 166 | 151 | — |
+| magic | 113 | 129 | 126 | 135 | 57 | 120 | 146 | 133 | 116 | 111 | 106 | 116 | 70 | — | 130 | 136 | 109 | 63 | 135 | 136 | 118 |
+| knowledge | 137 | 134 | 148 | 160 | 71 | 131 | 171 | 163 | 136 | 123 | 118 | 145 | 76 | 135 | — | 158 | 141 | 75 | 154 | 137 | 129 |
+| culture | 163 | 167 | 188 | 207 | 92 | 167 | 224 | 194 | 149 | 147 | 136 | 176 | 112 | 162 | 176 | — | 166 | 104 | 198 | 182 | 153 |
+| language | 119 | 118 | 129 | 128 | 65 | 120 | 143 | 134 | 114 | 116 | 103 | 131 | 63 | 111 | 128 | 134 | — | 66 | 126 | 122 | 114 |
+| ecology | 71 | 75 | 75 | 83 | 46 | 65 | 108 | 69 | 56 | 53 | 48 | 81 | 46 | 57 | 68 | 82 | 64 | — | 88 | 74 | 77 |
+| environment | 166 | 172 | 175 | 210 | 93 | 171 | 244 | 192 | 148 | 135 | 127 | 178 | 122 | 159 | 181 | 200 | 157 | 115 | — | 174 | 172 |
+| gods | 157 | 172 | 175 | 169 | 96 | 168 | 197 | 160 | 129 | 137 | 122 | 167 | 124 | 154 | 152 | 182 | 150 | 106 | 175 | — | 162 |
+| cosmos | 137 | 139 | 148 | 152 | 76 | 135 | 176 | 155 | 114 | 121 | 106 | 149 | 78 | 131 | 141 | 148 | 134 | 102 | 169 | 154 | — |
 
 ## Edges by kind
 
-- modifier: 33522
-- rule_switch: 2285
-- flow: 21149706
-- trigger: 304
+- modifier: 33557
+- rule_switch: 2295
+- flow: 21266771
+- trigger: 307
 
 ## Feedback cycles between subsystems (length ≤ 3 listed)
 
@@ -2927,12 +2927,12 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | Class | Covered by |
 |---|---|
 | A: human necessities | carried_food, faith_tenet_diet, food_chain, fuel_and_food_families, healing, keystone_resource, land_eaten_out, lore_keep_harvest_rite, lore_relic_healing, lore_working_harvest_blessing, made_enchanted_harvest, made_enchanted_healing, made_limb_regrowth, made_relic_faith, mobilisation, siege_famine, speculation, structure_functions, wilds_diet_filter, wilds_plan_amorphous, wilds_trait_crop_pest, wilds_use_food |
-| B: performing operations and transporting | chartered_companies, coin_trust, convoys, cosmic_trade, disease_incubation, disease_vectors, economic_indicators, faith_missions, forced_march, journey_contagion, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_register, lore_trade_words, market_access, market_districts, patrols, pursuit, route_capacity, route_closure, route_contagion, route_culture, route_danger, route_dangers, route_decay, route_formation, route_holds, route_income, route_knowledge, route_missions, route_plague, route_volume_contagion, route_wars, route_waystations, route_words, salvage, sea_seasons, structure_functions, toll_waiver, trade_rights, trade_routes, treaty_adoption, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk |
+| B: performing operations and transporting | chartered_companies, coin_trust, convoys, cosmic_trade, disease_incubation, disease_vectors, economic_indicators, faith_missions, forced_march, journey_contagion, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_register, lore_trade_words, market_access, market_districts, megastructures, patrols, pursuit, route_capacity, route_closure, route_contagion, route_culture, route_danger, route_dangers, route_decay, route_formation, route_holds, route_income, route_knowledge, route_missions, route_plague, route_volume_contagion, route_wars, route_waystations, route_words, salvage, sea_seasons, structure_functions, toll_waiver, trade_rights, trade_routes, treaty_adoption, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk |
 | C: chemistry and metallurgy | addiction_hook, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, economy_holds, extraction, faith_tenet_monastic, fixed_reserve, forged_armour, keystone_resource, knowledge_gated_extraction, labour_reasons, lore_book_diffusion, lore_branch_metallurgy, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, made_craft_knowledge, made_knowledge_passion, map_knowledge, ore_quality, prospecting, research_holders, resource_value, route_knowledge, sacred_wrath, school_lineages, sentient_leaving, site_ownership, typed_resource_mechanics, wilds_craft_chitin, wilds_craft_dragonbone |
 | D: textiles and paper | art_forms, artwork_lives, blueprints, brands, church_works, earthwork_defence, earthworks, economy_holds, extraction, extraction_labour, guild_ranks, labour_regimes, lighting, lore_art_copies, lore_crafting, lore_cult_rites, lore_curse_betrayal, lore_curse_bloodthirst, lore_curse_madness, lore_curse_misfortune, lore_curse_wasting, lore_fixed_in_art, lore_keep_ancestor_feast, lore_keep_coming_of_age, lore_keep_duel_custom, lore_keep_fast, lore_keep_festival, lore_keep_funeral_rite, lore_keep_harvest_rite, lore_keep_hospitality_law, lore_keep_initiation, lore_keep_marriage_rite, lore_keep_mourning, lore_keep_night_vigil, lore_keep_offering, lore_keep_pilgrimage, lore_keep_scar_rite, lore_keep_siesta, lore_keep_taboo, lore_keep_war_dance, lore_licences, lore_masterworks, lore_propaganda, lore_rebirth_rite, lore_school_binding, lore_school_blood, lore_school_death, lore_school_divination, lore_school_earth, lore_school_elemental_fire, lore_school_elemental_water, lore_school_illusion, lore_school_life, lore_school_mind, lore_school_storm, lore_school_summoning, lore_school_void, lore_school_warding, lore_technique_guilds, lore_technique_monasticism, lore_technique_natural_philosophy, lore_technique_siegecraft, lore_technique_skysteel, lore_translation, lore_working_bind, lore_working_bless, lore_working_curse, lore_working_damage, lore_working_dispel, lore_working_exorcise, lore_working_fertility, lore_working_harvest_blessing, lore_working_heal, lore_working_longevity, lore_working_raise_dead, lore_working_scry, lore_working_seal_soul, lore_working_summon, lore_working_unseal_soul, lore_working_ward, lore_working_weather_change, made_bilingual_scribes, made_branch_masters, made_craft_knowledge, made_crafted_limbs, made_materials, made_performers, made_rite_requirements, made_spellcraft, made_translations, made_war_mages, polity_production, production_methods, refining, seam_wear, sick_cohorts, site_ownership, spy_assassins, spy_depth, spy_exposure, spy_quiet, structure_upkeep, tool_wear, town_prestige, unified_storage, wilds_craft_chitin, wilds_craft_dragonbone, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_magic_reagents, wilds_craft_silk, wilds_craft_venom, wilds_domestic_size, wilds_keeping_kinds, workshop_designs |
 | E: fixed constructions | bitter_emigration, brands, church_works, earthwork_defence, earthworks, economy_holds, ethnogenesis_divergence, extraction, extraction_labour, guild_ranks, labour_reasons, labour_regimes, lighting, lore_art_copies, lore_cult_rites, lore_curse_betrayal, lore_curse_bloodthirst, lore_curse_madness, lore_curse_misfortune, lore_curse_wasting, lore_fixed_in_art, lore_keep_ancestor_feast, lore_keep_coming_of_age, lore_keep_duel_custom, lore_keep_fast, lore_keep_festival, lore_keep_funeral_rite, lore_keep_harvest_rite, lore_keep_hospitality_law, lore_keep_initiation, lore_keep_marriage_rite, lore_keep_mourning, lore_keep_night_vigil, lore_keep_offering, lore_keep_pilgrimage, lore_keep_scar_rite, lore_keep_siesta, lore_keep_taboo, lore_keep_war_dance, lore_licences, lore_masterworks, lore_propaganda, lore_rebirth_rite, lore_remembered_years, lore_school_binding, lore_school_blood, lore_school_death, lore_school_divination, lore_school_earth, lore_school_elemental_fire, lore_school_elemental_water, lore_school_illusion, lore_school_life, lore_school_mind, lore_school_storm, lore_school_summoning, lore_school_void, lore_school_warding, lore_technique_monasticism, lore_technique_natural_philosophy, lore_technique_skysteel, lore_translation, lore_working_bind, lore_working_bless, lore_working_curse, lore_working_damage, lore_working_dispel, lore_working_exorcise, lore_working_fertility, lore_working_harvest_blessing, lore_working_heal, lore_working_longevity, lore_working_raise_dead, lore_working_scry, lore_working_seal_soul, lore_working_summon, lore_working_unseal_soul, lore_working_ward, lore_working_weather_change, made_bilingual_scribes, made_materials, made_performers, made_rite_requirements, made_translations, made_war_mages, polity_production, production_methods, refining, seam_wear, sick_cohorts, site_ownership, spy_assassins, spy_depth, spy_exposure, spy_quiet, structure_construction, structure_functions, structure_profiles, structure_upkeep, tool_wear, town_prestige, town_tolls, unified_storage, wilds_domestic_size, wilds_keeping_kinds, workshop_designs |
-| F: mechanical engineering, lighting, heating, weapons | arms_and_targets, army_stacks, campaign_depth, campaign_logistics, campaign_order |
-| G: physics and instruments | clusters, cosmic_features, epoch_stars, galaxy_cycles, impacts, scale_ladder, star_lives, star_systems, stellar_evolution |
+| F: mechanical engineering, lighting, heating, weapons | arms_and_targets, army_stacks, campaign_depth, campaign_logistics, campaign_order, equipment_models, vehicles |
+| G: physics and instruments | clusters, cosmic_features, epoch_stars, galaxy_cycles, impacts, megastructures, scale_ladder, star_lives, star_systems, stellar_evolution |
 | H: electricity | knowledge_gated_extraction, map_knowledge, research_holders, school_lineages |
 
 ### S-G Economics (JEL)
@@ -3004,7 +3004,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | identity: self-image and in-group identity | culture_drift_causes, honour, legacy_traits, mind_split, mortal_loyalty, people_profiles, route_diffusion, route_renown, social_norms, values |
 | emotion: emotions and their display | conviction, dreams, drink_need, mind_split, mortal_stress, needs |
 | tools: tools, fire and shelter | blueprints, faith_tenet_monastic, guild_ranks, knowledge_gated_extraction, labour_reasons, lore_book_diffusion, lore_crafting, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, lore_technique_guilds, lore_technique_siegecraft, made_branch_masters, made_craft_knowledge, made_crafted_limbs, made_knowledge_passion, made_materials, made_spellcraft, map_knowledge, research_holders, route_knowledge, school_lineages, specialised_scholars, structure_construction, structure_functions, structure_profiles, structure_upkeep, wilds_craft_chitin, wilds_craft_dragonbone, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_magic_reagents, wilds_craft_silk, wilds_craft_venom |
-| worldview: worldview, time and cosmology | clusters, cosmic_features, epoch_stars, galaxy_cycles, impacts, scale_ladder, star_lives, star_systems, stellar_evolution |
+| worldview: worldview, time and cosmology | clusters, cosmic_features, epoch_stars, galaxy_cycles, impacts, megastructures, scale_ladder, star_lives, star_systems, stellar_evolution |
 
 ### S-J Warfare
 
@@ -3012,11 +3012,11 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 |---|---|
 | command: command and control | campaign_depth, campaign_logistics, campaign_order |
 | intelligence: intelligence | mole_hunts, schemes, spy_agents, spy_cells, spy_networks |
-| fires: fires | battle_ground_record, battle_sites, battlefields, captive_cohorts, naval_war, phased_battle_decides, phased_battles, war_aims |
+| fires: fires | battle_ground_record, battle_sites, battlefields, captive_cohorts, naval_war, phased_battle_decides, phased_battles, unit_types, war_aims |
 | manoeuvre: movement and manoeuvre | campaign_depth, campaign_logistics, campaign_order, danger_on_the_road, derived_environment, typed_works, weather_exposure |
-| protection: protection | duels, engine_designs, mortal_equipment, multi_season_sieges, siege_depth, tissue_layers, war_aims |
+| protection: protection | duels, engine_designs, equipment_models, mortal_equipment, multi_season_sieges, siege_depth, structure_integrity, tissue_layers, war_aims |
 | sustainment: sustainment | campaign_logistics, campaign_order, levy_law, markets, mobilisation, over_supply, price_elasticity, raided_lines, site_ownership, smallest_stack, structure_upkeep, supply_limit, transport_fleets |
-| engineering: engineering | besiegers_sick, blueprints, camp_disease, engine_designs, labour_reasons, lore_technique_siegecraft, lore_wards, made_materials, multi_season_sieges, sally_losses, salvage, siege_defences, siege_depth, siege_disease, siege_famine, siege_rations, siege_score, siege_terms, siege_treason, spy_walls, structure_construction, structure_functions, structure_profiles, structure_upkeep, war_aims |
+| engineering: engineering | besiegers_sick, blueprints, camp_disease, engine_designs, labour_reasons, lore_technique_siegecraft, lore_wards, made_materials, multi_season_sieges, sally_losses, salvage, siege_defences, siege_depth, siege_disease, siege_famine, siege_rations, siege_score, siege_terms, siege_treason, spy_walls, structure_construction, structure_functions, structure_integrity, structure_profiles, structure_upkeep, war_aims |
 | medical: medical | drill_and_sparring, duel_ordeals, healing, hits, injuries |
 | civil: civil affairs | threat_and_coalitions, vassal_duties |
 | culture: military culture | duel_ordeals, duels, tradition_keeping |

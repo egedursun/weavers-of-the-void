@@ -472,3 +472,13 @@ class EnginePhasesRules:
     )
     resilience: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: works against disasters, aid to stricken towns, and rebuilding")
     staples: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: a world's keystone resource, and the brands of famous workshops")
+    equipment_forging: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: forging weapons, armour and engines into the models of each realm")
+    unit_types: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: realms drawing, refitting and sharing their own kinds of soldier")
+    vehicle_works: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: yards building vehicles, and the fuel and upkeep of every vehicle group")
+    megastructures: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the work of orbital rings, star collectors, beacons and planetary engines"
+    )
+    kitchens: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: peoples coming to cook new dishes, and the rations of their armies")
+    attraction: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: whom each new mortal is drawn to")
+    cognitive_decline: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the failing of minds in late life")
+    being_wounds: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the healing of cosmic and outer beings and the remains of the slain")

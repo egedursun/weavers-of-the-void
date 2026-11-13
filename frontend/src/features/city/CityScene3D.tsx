@@ -26,7 +26,7 @@ import {
   type Part,
   SHELTER,
   STAGE_LOOK,
-  STRUCTURE_LOOK,
+  typedLook,
   ROAD_DRESS,
   ROAD_LOOK,
   WALL_LOOK,
@@ -76,7 +76,9 @@ function cellsOf(district: CityDistrict): Cell[] {
 
 function buildingParts(building: CityBuilding): Part[] {
   const stage = stageOf(building.state, building.progress)
-  return stage ? [STAGE_LOOK[stage]] : [...STRUCTURE_LOOK[building.kind]]
+  return stage
+    ? [STAGE_LOOK[stage]]
+    : typedLook(building.kind, building.form, building.storeys)
 }
 
 function describeBuilding(building: CityBuilding): string {

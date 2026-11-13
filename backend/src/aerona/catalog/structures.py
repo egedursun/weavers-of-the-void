@@ -1,6 +1,8 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EngineKind
 from aerona.domain.enums.settlement import SizeTier
@@ -48,7 +50,8 @@ def spec(
     return StructureSpec(kind, group, label, staff[0], staff[1], capacity, scale, upkeep, tier, ley, workshop, branch)
 
 
-STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = MappingProxyType(
+STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = total(
+    StructureKind,
     {
         item.kind: item
         for item in (
@@ -143,6 +146,74 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = MappingProxyType(
             spec((K.MUSEUM, G.MEMORY, "Museum"), (S.SCRIBE, W.FEW), U.VOLUMES, (B.MAJOR, C.CLOTH, T.CITY)),
             spec((K.PLAZA, G.CIVIC, "Plaza"), (None, W.NONE), U.NONE, (B.MINOR, C.STONE, T.TOWN)),
             spec((K.KONTOR, G.COMMERCE, "Trading post"), (S.MERCHANT, W.FEW), U.LOADS, (B.MINOR, C.TIMBER, T.VILLAGE)),
+            spec((K.EMBASSY, G.CIVIC, "Embassy"), (S.NOBLE, W.FEW), U.SEATS, (B.MAJOR, C.LUXURIES, T.TOWN)),
+            spec((K.LIGHTHOUSE, G.INFRASTRUCTURE, "Lighthouse"), (S.ARTISAN, W.FEW), U.NONE, (B.MAJOR, C.FUEL, T.VILLAGE), branch=KnowledgeBranch.SEAFARING),
+            spec((K.SIGNAL_TOWER, G.DEFENCE, "Signal tower"), (S.WARRIOR, W.FEW), U.GARRISON, (B.MINOR, C.FUEL, T.HAMLET)),
+            spec((K.CUSTOMS_HOUSE, G.COMMERCE, "Customs house"), (S.SCRIBE, W.FEW), U.LOADS, (B.MINOR, C.CLOTH, T.TOWN)),
+            spec((K.TOLL_GATE, G.COMMERCE, "Toll gate"), (S.WARRIOR, W.FEW), U.LOADS, (B.MINOR, C.TIMBER, T.HAMLET)),
+            spec((K.COURTHOUSE, G.CIVIC, "Courthouse"), (S.SCRIBE, W.SOME), U.SEATS, (B.MAJOR, C.CLOTH, T.TOWN)),
+            spec((K.ARCHIVE, G.KNOWLEDGE, "Archive"), (S.SCRIBE, W.FEW), U.VOLUMES, (B.MAJOR, C.CLOTH, T.TOWN), branch=KnowledgeBranch.WRITING),
+            spec((K.PRINTING_HOUSE, G.KNOWLEDGE, "Printing house"), (S.ARTISAN, W.SOME), U.VOLUMES, (B.MAJOR, C.CLOTH, T.TOWN), branch=KnowledgeBranch.WRITING),
+            spec((K.LABORATORY, G.KNOWLEDGE, "Laboratory"), (S.SCRIBE, W.FEW), U.HANDS, (B.MAJOR, C.TOOLS, T.TOWN), branch=KnowledgeBranch.MEDICINE),
+            spec((K.FOUNDRY, G.PRODUCTION, "Foundry"), (S.ARTISAN, W.SOME), U.HANDS, (B.MAJOR, C.COAL, T.TOWN), branch=KnowledgeBranch.METALLURGY),
+            spec((K.SMELTER, G.PRODUCTION, "Smelter"), (S.ARTISAN, W.SOME), U.HANDS, (B.MAJOR, C.FUEL, T.VILLAGE), branch=KnowledgeBranch.METALLURGY),
+            spec((K.KILN, G.PRODUCTION, "Kiln"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.HAMLET)),
+            spec((K.GLASSWORKS, G.PRODUCTION, "Glassworks"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.VILLAGE)),
+            spec((K.TEXTILE_MILL, G.PRODUCTION, "Textile mill"), (S.ARTISAN, W.SOME), U.HANDS, (B.MAJOR, C.FIBRE, T.TOWN)),
+            spec((K.DYE_WORKS, G.PRODUCTION, "Dye works"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.DYE, T.VILLAGE)),
+            spec((K.PAPER_MILL, G.PRODUCTION, "Paper mill"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.TIMBER, T.TOWN), branch=KnowledgeBranch.WRITING),
+            spec((K.BAKERY, G.PRODUCTION, "Bakery"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.HAMLET)),
+            spec((K.DAIRY, G.PRODUCTION, "Dairy"), (S.FARMER, W.FEW), U.HANDS, (B.MINOR, C.FODDER, T.HAMLET)),
+            spec((K.DISTILLERY, G.PRODUCTION, "Distillery"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.VILLAGE)),
+            spec((K.REFINERY, G.PRODUCTION, "Refinery"), (S.ARTISAN, W.SOME), U.HANDS, (B.MAJOR, C.TOOLS, T.TOWN), branch=KnowledgeBranch.METALLURGY),
+            spec((K.POWER_PLANT, G.INFRASTRUCTURE, "Power plant"), (S.ARTISAN, W.SOME), U.HANDS, (B.GRAND, C.COAL, T.TOWN), branch=KnowledgeBranch.METALLURGY),
+            spec((K.SILO, G.COMMERCE, "Silo"), (S.FARMER, W.FEW), U.TONS, (B.MINOR, C.TIMBER, T.HAMLET)),
+            spec((K.CISTERN, G.INFRASTRUCTURE, "Cistern"), (S.ARTISAN, W.FEW), U.TONS, (B.MINOR, C.STONE, T.HAMLET)),
+            spec((K.RESERVOIR, G.INFRASTRUCTURE, "Reservoir"), (S.ARTISAN, W.SOME), U.TONS, (B.MAJOR, C.STONE, T.VILLAGE)),
+            spec((K.CANAL_LOCK, G.INFRASTRUCTURE, "Canal lock"), (S.ARTISAN, W.FEW), U.LOADS, (B.MAJOR, C.STONE, T.VILLAGE)),
+            spec((K.TUNNEL, G.INFRASTRUCTURE, "Tunnel"), (S.SERF_OR_SLAVE, W.FEW), U.LOADS, (B.GRAND, C.STONE, T.HAMLET), branch=KnowledgeBranch.ARCHITECTURE),
+            spec(
+                (K.RAIL_STATION, G.INFRASTRUCTURE, "Rail station"),
+                (S.ARTISAN, W.SOME),
+                U.TRAVELLERS,
+                (B.MAJOR, C.COAL, T.TOWN),
+                branch=KnowledgeBranch.METALLURGY,
+            ),
+            spec((K.AIRFIELD, G.INFRASTRUCTURE, "Airfield"), (S.ARTISAN, W.SOME), U.BERTHS, (B.MAJOR, C.FUEL, T.TOWN), branch=KnowledgeBranch.SKY_NAVIGATION),
+            spec((K.SPACEPORT, G.COSMIC, "Spaceport"), (S.ARTISAN, W.MANY), U.BERTHS, (B.GRAND, C.FUEL, T.CITY), branch=KnowledgeBranch.VOID_LIVING),
+            spec((K.DRY_DOCK, G.PRODUCTION, "Dry dock"), (S.ARTISAN, W.SOME), U.BERTHS, (B.MAJOR, C.TIMBER, T.TOWN), branch=KnowledgeBranch.SHIPBUILDING),
+            spec((K.ARSENAL, G.DEFENCE, "Arsenal"), (S.ARTISAN, W.SOME), U.LOADS, (B.MAJOR, C.WEAPONS, T.TOWN), branch=KnowledgeBranch.WARFARE),
+            spec((K.KENNEL, G.PRODUCTION, "Kennel"), (S.FARMER, W.FEW), U.HANDS, (B.MINOR, C.MEAT, T.HAMLET)),
+            spec((K.MENAGERIE, G.MEMORY, "Menagerie"), (S.FARMER, W.FEW), U.SEATS, (B.MAJOR, C.MEAT, T.CITY)),
+            spec((K.BOTANICAL_GARDEN, G.KNOWLEDGE, "Botanical garden"), (S.FARMER, W.FEW), U.NONE, (B.MAJOR, C.HERBS, T.TOWN), branch=KnowledgeBranch.MEDICINE),
+            spec((K.CEMETERY, G.FAITH, "Cemetery"), (S.PRIEST, W.FEW), U.WORSHIPPERS, (B.MINOR, C.STONE, T.HAMLET)),
+            spec((K.GYMNASIUM, G.CIVIC, "Gymnasium"), (S.WARRIOR, W.FEW), U.PUPILS, (B.MINOR, C.CLOTH, T.TOWN)),
+            spec((K.ASYLUM, G.KNOWLEDGE, "Asylum"), (S.PRIEST, W.FEW), U.BEDS, (B.MINOR, C.MEDICINE, T.TOWN), branch=KnowledgeBranch.MEDICINE),
+            spec(
+                (K.QUARANTINE_HOUSE, G.KNOWLEDGE, "Quarantine house"),
+                (S.PRIEST, W.FEW),
+                U.BEDS,
+                (B.MINOR, C.MEDICINE, T.VILLAGE),
+                branch=KnowledgeBranch.MEDICINE,
+            ),
+            spec((K.INN, G.COMMERCE, "Inn"), (S.MERCHANT, W.FEW), U.TRAVELLERS, (B.MINOR, C.BREW_BASE, T.HAMLET)),
+            spec((K.MARKET_HALL, G.COMMERCE, "Market hall"), (S.MERCHANT, W.SOME), U.STALLS, (B.MAJOR, C.TIMBER, T.TOWN)),
+            spec((K.EXCHANGE, G.COMMERCE, "Exchange"), (S.MERCHANT, W.FEW), U.STALLS, (B.MAJOR, C.LUXURIES, T.CITY), branch=KnowledgeBranch.TRADE),
+            spec((K.UNIVERSITY, G.KNOWLEDGE, "University"), (S.SCRIBE, W.MANY), U.PUPILS, (B.GRAND, C.CLOTH, T.CITY), branch=KnowledgeBranch.WRITING),
+            spec((K.SEMINARY, G.FAITH, "Seminary"), (S.PRIEST, W.SOME), U.PUPILS, (B.MAJOR, C.CLOTH, T.TOWN), branch=KnowledgeBranch.WRITING),
+            spec((K.CONSERVATORY, G.KNOWLEDGE, "Conservatory"), (S.ARTISAN, W.FEW), U.PUPILS, (B.MAJOR, C.CLOTH, T.CITY)),
+            spec((K.OPERA_HOUSE, G.MEMORY, "Opera house"), (S.ARTISAN, W.SOME), U.SEATS, (B.GRAND, C.LUXURIES, T.CITY)),
+            spec((K.GALLERY, G.MEMORY, "Gallery"), (S.SCRIBE, W.FEW), U.VOLUMES, (B.MAJOR, C.LUXURIES, T.TOWN)),
+            spec((K.STADIUM, G.MEMORY, "Stadium"), (S.ARTISAN, W.SOME), U.SEATS, (B.GRAND, C.STONE, T.CITY)),
+            spec((K.ORBITAL_RING, G.COSMIC, "Orbital ring"), (S.ARTISAN, W.MANY), U.BERTHS, (B.WONDER, C.TOOLS, T.CITY), branch=KnowledgeBranch.VOID_LIVING),
+            spec((K.SPACE_ELEVATOR, G.COSMIC, "Space elevator"), (S.ARTISAN, W.SOME), U.LOADS, (B.GRAND, C.TOOLS, T.CITY), branch=KnowledgeBranch.VOID_LIVING),
+            spec((K.SPACE_STATION, G.COSMIC, "Space station"), (S.ARTISAN, W.MANY), U.BERTHS, (B.GRAND, C.TOOLS, T.TOWN), branch=KnowledgeBranch.VOID_LIVING),
+            spec((K.STAR_COLLECTOR, G.COSMIC, "Star collector"), (S.ARTISAN, W.MANY), U.NONE, (B.WONDER, C.TOOLS, T.CITY), branch=KnowledgeBranch.ASTRONOMY),
+            spec((K.BEACON, G.COSMIC, "Beacon"), (S.ARTISAN, W.FEW), U.NONE, (B.GRAND, C.FUEL, T.TOWN), branch=KnowledgeBranch.PATHFINDING),
+            spec(
+                (K.PLANETARY_ENGINE, G.COSMIC, "Planetary engine"), (S.ARTISAN, W.MANY), U.NONE, (B.WONDER, C.TOOLS, T.CITY), branch=KnowledgeBranch.ASTRONOMY
+            ),
+            spec((K.HABITAT_RING, G.COSMIC, "Habitat ring"), (S.ARTISAN, W.MANY), U.SEATS, (B.WONDER, C.TOOLS, T.CITY), branch=KnowledgeBranch.VOID_LIVING),
             spec(
                 (K.COVENANT, G.KNOWLEDGE, "Covenant"),
                 (S.SCRIBE, W.SOME),
@@ -152,7 +223,7 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = MappingProxyType(
                 branch=KnowledgeBranch.MAGIC,
             ),
         )
-    }
+    },
 )
 
 ENGINE_KIND_STRUCTURES: MappingProxyType[EngineKind, StructureKind] = MappingProxyType(
@@ -170,7 +241,79 @@ STRUCTURE_ENGINE_KINDS: MappingProxyType[StructureKind, EngineKind] = MappingPro
 WORKSHOP_STRUCTURES: MappingProxyType[WorkshopKind, StructureKind] = MappingProxyType(
     {item.workshop: item.kind for item in STRUCTURES.values() if item.workshop is not None}
 )
-KNOWLEDGE_KEEPERS = frozenset({K.LIBRARY, K.SCHOOL, K.OBSERVATORY, K.ACADEMY, K.MONASTERY, K.COSMIC_ARCHIVE})
-BOOK_HOUSES = frozenset({K.LIBRARY, K.SCHOOL, K.ACADEMY, K.MONASTERY})
-RESEARCH_HOUSES = frozenset({K.LIBRARY, K.SCHOOL, K.OBSERVATORY, K.ACADEMY})
-HOLY_HOUSES = frozenset({K.TEMPLE, K.SHRINE, K.MONASTERY, K.WONDER})
+BASE_KNOWLEDGE_KEEPERS = frozenset({K.LIBRARY, K.SCHOOL, K.OBSERVATORY, K.ACADEMY, K.MONASTERY, K.COSMIC_ARCHIVE})
+BASE_BOOK_HOUSES = frozenset({K.LIBRARY, K.SCHOOL, K.ACADEMY, K.MONASTERY})
+BASE_RESEARCH_HOUSES = frozenset({K.LIBRARY, K.SCHOOL, K.OBSERVATORY, K.ACADEMY})
+BASE_HOLY_HOUSES = frozenset({K.TEMPLE, K.SHRINE, K.MONASTERY, K.WONDER})
+ACTS_AS: MappingProxyType[StructureKind, StructureKind] = MappingProxyType(
+    {
+        K.EMBASSY: K.COURT,
+        K.LIGHTHOUSE: K.HARBOUR,
+        K.SIGNAL_TOWER: K.WATCHTOWER,
+        K.CUSTOMS_HOUSE: K.KONTOR,
+        K.TOLL_GATE: K.GATE,
+        K.COURTHOUSE: K.COURT,
+        K.ARCHIVE: K.LIBRARY,
+        K.PRINTING_HOUSE: K.LIBRARY,
+        K.LABORATORY: K.ALCHEMIST_LAB,
+        K.FOUNDRY: K.FORGE,
+        K.SMELTER: K.FORGE,
+        K.KILN: K.WORKSHOP,
+        K.GLASSWORKS: K.WORKSHOP,
+        K.TEXTILE_MILL: K.WORKSHOP,
+        K.DYE_WORKS: K.TANNERY,
+        K.PAPER_MILL: K.MILL,
+        K.BAKERY: K.MILL,
+        K.DAIRY: K.SLAUGHTERHOUSE,
+        K.DISTILLERY: K.BREWERY,
+        K.REFINERY: K.CHARCOAL_KILN,
+        K.POWER_PLANT: K.CHARCOAL_KILN,
+        K.SILO: K.GRANARY,
+        K.CISTERN: K.FOUNTAIN,
+        K.RESERVOIR: K.AQUEDUCT,
+        K.CANAL_LOCK: K.CANAL,
+        K.TUNNEL: K.ROAD,
+        K.RAIL_STATION: K.ROAD,
+        K.AIRFIELD: K.HARBOUR,
+        K.SPACEPORT: K.HARBOUR,
+        K.DRY_DOCK: K.SHIPYARD,
+        K.ARSENAL: K.BARRACKS,
+        K.KENNEL: K.STABLES,
+        K.MENAGERIE: K.PARK,
+        K.BOTANICAL_GARDEN: K.APOTHECARY,
+        K.CEMETERY: K.NECROPOLIS,
+        K.GYMNASIUM: K.TRAINING_GROUND,
+        K.ASYLUM: K.HOSPITAL,
+        K.QUARANTINE_HOUSE: K.HOSPITAL,
+        K.INN: K.TAVERN,
+        K.MARKET_HALL: K.MARKET,
+        K.EXCHANGE: K.BANK,
+        K.UNIVERSITY: K.ACADEMY,
+        K.SEMINARY: K.MONASTERY,
+        K.CONSERVATORY: K.SCHOOL,
+        K.OPERA_HOUSE: K.THEATRE,
+        K.GALLERY: K.MUSEUM,
+        K.STADIUM: K.ARENA,
+        K.SPACE_ELEVATOR: K.HARBOUR,
+        K.SPACE_STATION: K.SHIPYARD,
+    }
+)
+MEGASTRUCTURES = frozenset({K.ORBITAL_RING, K.SPACE_ELEVATOR, K.SPACE_STATION, K.STAR_COLLECTOR, K.BEACON, K.PLANETARY_ENGINE, K.HABITAT_RING})
+
+
+def function_kind(kind: StructureKind) -> StructureKind:
+    return ACTS_AS.get(kind, kind)
+
+
+def acting[V](table: Mapping[StructureKind, V]) -> MappingProxyType[StructureKind, V]:
+    return MappingProxyType({**table, **{kind: table[base] for kind, base in ACTS_AS.items() if base in table and kind not in table}})
+
+
+def acting_set(kinds: frozenset[StructureKind]) -> frozenset[StructureKind]:
+    return kinds | frozenset(kind for kind, base in ACTS_AS.items() if base in kinds)
+
+
+KNOWLEDGE_KEEPERS = acting_set(BASE_KNOWLEDGE_KEEPERS)
+BOOK_HOUSES = acting_set(BASE_BOOK_HOUSES)
+RESEARCH_HOUSES = acting_set(BASE_RESEARCH_HOUSES)
+HOLY_HOUSES = acting_set(BASE_HOLY_HOUSES)

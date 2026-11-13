@@ -307,7 +307,7 @@ async def heraldry(ctx: TickContext) -> None:
     count(ctx, "heraldry", tally)
 
 
-@reads("table.design_components", "table.designs")
+@reads("table.design_components", "table.designs", "table.holder_levels")
 @writes("table.design_components", "table.designs", "table.vessel_profiles")
 async def designs(ctx: TickContext) -> None:
     tally = DesignTally()

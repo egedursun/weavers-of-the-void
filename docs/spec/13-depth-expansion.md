@@ -3342,6 +3342,30 @@ The cause sets the ghost type (3.3 reference pass), memories and legends.
 
 **Childhood play and peer groups:** children of a settlement district and class form **peer groups** (cohort-level, with named members for named mortals). Play (games, mock fights, imitation of adult roles) shapes facets (assertiveness, cooperation), skills (riding, archery and songs, by the culture's play customs) and **childhood friendships and rivalries** (F18) that persist into adulthood: a king's companions in childhood become his inner council. Lack of play (child labour, famine, war) lowers cheerfulness and raises later stress.
 
+### 3.1b Mortal attraction and late-life cognitive decline (W23+)
+
+**Current.** Romance is a relationship axis and peoples have reproductive systems (F18, 4.1 reference pass 4), but whom a mortal is drawn to is not a typed value. Old age gives wisdom and mentoring; nothing makes the mind fail with age, and a ruler's frailty is read from age alone.
+
+#### Attributes
+
+- `drawn_to` on the mortal profile: the sexes a mortal is drawn to (any subset of `female`, `male`, `other`, the values of the mortal sex stat), empty when the mortal is drawn to no one.
+- `attraction` 0–100 on the mortal profile: how strongly attraction moves the mortal; 0 means attraction plays no part.
+- Both are set at birth from rules (`attraction.*`: the share of each pattern, read against the mortal's own sex) and from the people's reproductive system (a one-sex people is drawn within the one sex; castes that do not breed get a lower strength). Every value is a rule the player edits; no default is written into any text the model reads.
+- `ConditionKind.COGNITIVE_DECLINE` (severity 1–5): a lasting condition of late life.
+
+#### Behaviours
+
+1. **Romance follows attraction.** A romantic act is open only toward a sex the actor is drawn to, and romance kindled in the target is scaled by the target's `attraction` toward the actor's sex. Lovers, affairs and marriages grow from that romance, so they follow attraction too; nothing forces conflict from it.
+2. **Onset of decline.** From `decline.onset_pct` of the mortal's lifespan, each epoch rolls onset at `decline.chance_pct`, lowered by education (`decline.reserve_pct`) and by a hospital, apothecary or asylum where the mortal lives (`decline.care_pct`), raised by a head wound that harmed the nerves (`decline.head_pct`).
+3. **Progression.** Severity rises a step at `decline.progress_pct` per epoch, scaled by care where the mortal lives; ending the condition (a god's cure or a lever) ends it; a held mortal never changes.
+4. **Effects.** Each severity step lowers the mind's capacities through the body's condition table; memories lose `decline.memory_fade` strength per step each epoch; at `decline.teach_block` a mortal can no longer teach or mentor; a ruler's standing reads the severity alongside age.
+
+#### Levers and surfaces
+
+- `mortal:attraction` sets and holds `drawn_to` and `attraction` (or releases them to the engine); `profile:set` also edits `attraction`; the body's condition levers cover the decline condition; the World Rules editor holds every `attraction.*` and `decline.*` rule.
+- The **Leanings and mind** tab of the drawer's *Vehicles, kit and made kinds* section shows both values with labels and the decline severity with its effects; the mortal's own context gives the model its attraction and decline as typed lines.
+- Book and Codex: the mortal entry lists whom the mortal is drawn to, the strength, and any decline with its severity.
+
 ### 3.2 Species (kind and population)
 
 **Current.** hp, strength, agility, intelligence, danger, abundance, might, plus 10 traits. There is no diet, habitat or climate tolerance, and domestication is one bond.
@@ -5093,6 +5117,57 @@ Diplomacy, war, economy, houses, gods (oath witness), memory (kept and broken).
 
 ---
 
+### 5.14 Unit type: a made kind of soldier (W23+)
+
+**Current.** `UnitKind` is one fixed list for every world (levy, spearmen, shield wall, berserkers, temple guard, necromancers, void spawn, ghost host…). Some values carry a theme the seed did not ask for. Unit designs exist but only as stat tweaks on a base kind; equipment is a fixed armour enum (none, hide, padded, mail, scale, plate, enchanted), a fixed shield enum and a list of weapon words. An army cannot say which weapons it carries, how many, or by which technique they were made.
+
+#### The principle
+
+A **unit type** is a made kind like a species or an art form: it has one Atlas entry, a name chosen by its makers, a role, a doctrine, a loadout of equipment models (7.6) and an optional vehicle type it crews (7.7). Soldiers of that type are never separate records; an army holds stacks of a type with a count. Peoples (through their marshals and realm templates), factions, cults, sons, foreign gods and the Creator create and edit unit types.
+
+#### `UnitKind` becomes a generic role
+
+| Family | Roles |
+|---|---|
+| Infantry | levy, line_infantry, heavy_infantry, shield_infantry, pike_infantry, light_infantry, shock_infantry, guard_infantry, marines |
+| Missile | slingers, archers, crossbowmen, javelineers, gunners, grenadiers |
+| Mounted | light_cavalry, heavy_cavalry, mounted_archers, mounted_gunners, beast_riders, sky_riders |
+| Vehicle | chariots, vehicle_crew, siege_crew, artillery_crew, naval_crew, sky_crew, void_crew |
+| Beast | war_beasts, bound_beasts |
+| Engineer | sappers, engineers |
+| Magic | battle_casters, support_casters, summoners |
+| Exotic | constructs, summoned_host |
+
+Legacy values map once: spearmen → line_infantry, shield_wall → shield_infantry, pikemen → pike_infantry, skirmishers → light_infantry, berserkers → shock_infantry, temple_guard → guard_infantry, horse_archers → mounted_archers, sky_mounts → sky_riders, siege_engines → siege_crew, war_mages → battle_casters, priests → support_casters, necromancers → summoners, galleys / longships / warships / fire_ships → naval_crew with a vehicle group of the matching frame (7.8), skyships → sky_crew with a vehicle group, golems → constructs, void_spawn / ghost_host → summoned_host. Army templates, unit designs, army stacks, battle stacks and captured records are rewritten by the migration and by a recorded fixup.
+
+#### Attributes of a unit type (`unit_designs`, extended)
+
+- `name`, `description`, `world_id` (empty for a cosmos-wide type), `origin_node_id` (the people, polity, faction, cult, son, foreign god or the Creator that made it), `created_epoch`, `retired`.
+- `base_kind` (the role above) and `family` (derived).
+- `doctrine` (`MartialStyle`), `formation` (preferred), `discipline`, `training_epochs`.
+- `loadout` (`unit_design_equipment`: equipment model, count per soldier); the armour, shield, missile, melee, reach, accuracy and piercing values are derived from the loadout when a model fills the slot.
+- `mount_species_id` (ridden or war beasts), `vehicle_design_id` (the vehicle type this unit crews or rides, 7.7), `crew_per_vehicle`.
+- `techniques` (`unit_design_techniques`: the techniques the type needs; armies muster a type only while its owner knows every one).
+- Existing stats stay editable and held values are never re-derived.
+
+#### Equipment in the field
+
+`army_unit_equipment` (stack, equipment model, count, condition) records what each stack carries. Raising and refilling a stack draws models from the owner's equipment stores (7.6); a short store leaves part of the stack without the model, which is shown. The army's **inventory** sums every stack: each model, how many, its technique and maker. Battles read the model values (damage, piercing, reach, protection, coverage) in place of the fixed tables wherever a model fills a slot; captured equipment passes to the victor's stores; worn equipment is repaired at forges.
+
+#### Behaviours
+
+1. **Peoples draw their own types.** A realm's marshal (5.1 reference pass 2) draws a unit type when its template asks for a role it has no type for, naming it through the namer from the people's language, choosing models the realm can make and a doctrine from its way of war.
+2. **Types change.** New techniques or models refit a type into a successor (a lineage); retired types stay in the Atlas with their history.
+3. **Types spread.** Mercenaries, conquest and alliances teach a type to another people (a copy with a new origin).
+4. **Gods shape types.** The player edits every value; sons shape types with `design_unit`; mortals who know war draft them with `draft_unit_type`.
+
+#### Levers and surfaces
+
+- `unit_type:create/edit/delete`, `unit_loadout:set/delete`, `unit_technique:add/delete`, `army_equipment:set/delete` (what a stack carries), son tool `design_unit`, mortal tool `draft_unit_type` (those with tactics or strategy of `unit_types.draft_skill`).
+- Atlas: a **Kinds of soldier** group per world under *Made kinds*, each entry with role, doctrine, formation, loadout, mount or vehicle, techniques, makers and the soldiers in the field.
+- Army drawer: the **Stores and kit** tab lists what each stack carries, with count and condition, and arms a stack from the models of its world.
+- Book and Codex: unit types in the Records of the Cosmos with their loadouts; armies list their inventory.
+
 ## Part 6. Land and economy
 
 ### 6.1 Region
@@ -5745,6 +5820,218 @@ Artwork quality and renown, traditions and gatherings, preferences, language (po
 **Fashion and novelty cycles:** art forms, styles, dress, cuisine and names follow **novelty dynamics**. Adoption rises with prestige (the trendsetters: courts, great artists), saturates, then the form becomes common and its prestige falls (distinction-seeking elites move on). Old forms can return as revivals. Each form has a `novelty` stock that drains with ubiquity and recovers with rarity. This is the specified brake of L33, and it gives cultures visible style periods.
 
 ---
+
+### 7.6 Equipment model: a made kind of weapon, armour or gear (W23+)
+
+**Current.** Items carry a typed class, and armies carry fixed armour and shield enums and weapon words. No people has its own weapon or armour pattern.
+
+#### Attributes (`equipment_models`)
+
+- `name`, `description`, `world_id`, `origin_node_id`, `created_epoch`, `retired`, `parent_model_id` (lineage).
+- `slot` (`ArmamentSlot`): hand_weapon, missile_weapon, armour, shield, helmet, barding, vehicle_weapon.
+- `family` (`EquipmentFamily`), one list for every slot:
+
+| Slot | Families |
+|---|---|
+| Hand weapons | club, dagger, blade, longblade, axe, mace, hammer, flail, spear, pike, polearm, staff, whip, fist_weapon |
+| Missile weapons | sling, javelin, throwing_weapon, blowgun, bow, longbow, composite_bow, crossbow, repeating_crossbow, handgun, musket, rifle, pistol, repeating_gun, grenade, flamethrower, beam_weapon, focus |
+| Armour | hide, padded, quilted, lamellar, scale, mail, brigandine, plate, laminar, composite, ceramic, synthetic, powered, warded |
+| Shields | buckler, round_shield, heater, kite, tower_shield, pavise, projected |
+| Helmets | cap, open_helm, closed_helm, full_helm |
+| Barding | light_barding, heavy_barding |
+| Vehicle weapons | ram, ballista, catapult_engine, trebuchet_engine, bombard, cannon, carronade, howitzer, mortar, rocket_launcher, missile_launcher, torpedo, mine_layer, heavy_flamethrower, beam_cannon, focus_array, harpoon, boarding_gear |
+
+- `material` (`MaterialKind`) and `world_material_id`, `quality`, `technique` (the technique that makes it) and `tech_level`.
+- Weapon values: `damage`, `piercing`, `reach` (melee reach or missile range), `rate` (shots per round), `accuracy`, `damage_type` (`DamageType`), `ammunition` (a commodity, empty for none), `crew` (vehicle weapons).
+- Protection values: `protection`, `coverage` (parts covered), `weight`.
+- `cost` (coin per piece), `renown` (grows by `armament.victory_renown` each time a side carrying it wins a battle).
+
+#### Behaviours
+
+1. **Making.** Forges turn `armament.forge_share_pct` of their holder's weapons, armour and siege materiel goods into pieces of the holder's current model of each slot (the best family its knowledge opens), recorded in `equipment_stores` (holder, model, count); a holder without a model draws one first.
+2. **Drawing.** Raising, refilling and rearming stacks draw from the stores of the army's owner, or of its realm or people when the owner keeps none (5.14); a stack that carries nothing is armed each epoch; vehicle types fit vehicle weapon models to their mounts (7.7).
+3. **Design.** A holder draws a new model when its knowledge opens a better family; smiths make models with `forge_model`, as good as their smithing or engineering and craft; a model's renown grows with victories.
+4. **Capture.** A beaten army drops the pieces of its fallen; `armament.capture_pct` of them pass to the victor's stores, and every carried piece wears by `armament.battle_wear` in each battle.
+5. **Gods.** The player creates, edits, retires and deletes models; sons give a community a model with `shape_equipment`.
+
+#### Levers and surfaces
+
+- `equipment_model:create/edit/delete`, `equipment_store:set/delete`, `army_equipment:set/delete`, son tool `shape_equipment`, mortal tool `forge_model`.
+- Atlas **Equipment models** group per world under *Made kinds* with each model's slot, family, values, technique, makers, pieces in store and pieces carried.
+- Book and Codex: models in the *Made Kinds* chapter with labelled values; holders list their stores in their own entries.
+
+### 7.7 Vehicle type: a made kind of vehicle (W23+)
+
+**Current.** Vessels are single entities with a hull class from one fixed list (raft, boat, galley, longship, cog, carrack, warship, light-sailer, bone hull, generation ship, skyship, living ship), one condition number and a list of armament words; designs (5.1 reference pass 3) add components and wear for ships, skyships and siege engines. There are no land vehicles, no air or space vehicles beyond two hulls, no weapon slots, no parts of different weight, and an army cannot say what vehicles it has.
+
+#### The principle
+
+A **vehicle type** is a made kind: one Atlas entry (a people's own pattern with its own name, never a generic class), its frame, sections, weapon mounts, technologies and capacities. Individual vehicles are not records: armies, fleets, caravans and stores hold **vehicle groups** (7.8) of a type with a count and the damage state of each section across the group. A single famous vehicle may still be an entity (the vessel type) that points to its vehicle type and carries its own section damage.
+
+#### Frames (`VehicleFrame`, replacing `HullClass`)
+
+| Domain | Frames |
+|---|---|
+| Land, ridden and drawn | riding_mount, pack_mount, travois, sledge, handcart, cart, wagon, covered_wagon, carriage, chariot, war_wagon, beast_carrier |
+| Land, engines | rail_car, locomotive, steam_carriage, motor_car, motor_truck, motorcycle, armoured_car, tank, walker, crawler |
+| Land, made bodies | construct_walker, construct_carrier |
+| Siege and artillery | battering_ram, siege_tower, mantlet, catapult, trebuchet, ballista, bombard, field_gun, mortar, rocket_battery |
+| Water | raft, canoe, rowboat, boat, river_barge, sailboat, galley, longship, cog, carrack, galleon, frigate, warship, ship_of_the_line, steamship, ironclad, battleship, submarine, living_ship, fire_ship |
+| Air | balloon, airship, glider, ornithopter, sky_sailer, skyship, flying_carriage, aeroplane, rotorcraft, flying_car, flying_construct |
+| Space and beyond | orbital_lander, shuttle, solar_sailer, starship, generation_ship, void_ark, cloud_skimmer, aerostat, deep_submersible, burrower, planar_vessel |
+
+Each frame has a catalogue entry: its **domain** (`VehicleDomain`: land, water, underwater, air, space, gas_giant, underground, planar, amphibious), its **family** (`VehicleFamily`, which also picks its drawing: mount, cart, wagon, chariot, motor, tracked, walker, rail, ram, tower, thrower, gun, boat, galley, sailing_ship, steam_ship, submarine, balloon, airship, aircraft, rotorcraft, spacecraft, burrower, construct, living), its default **propulsion** (`Propulsion`: crew, draft_animals, ridden, oars, sail, sail_and_oar, steam, combustion, electric, reaction, solar_sail, fold_drive, buoyancy, magic, divine, self, current, towed), base capacities, default sections and mounts, the knowledge branch and level that open it, and its strangeness. Legacy hull classes map once: boat → boat, light_sailer → solar_sailer, bone_hull → warship (the material column keeps whatever the hull was made of), the rest by name.
+
+#### Attributes (`designs`, extended)
+
+- `name`, `description`, `world_id`, `origin_node_id` (people, polity, faction, cult, son, foreign god or the Creator), `owner_entity_id` (now optional), `designer_entity_id`, `parent_design_id`, `epoch`, `obsolete`.
+- `frame`, `domain`, `family`, `propulsion`, `size_class` (`VehicleSize`: small, medium, large, huge, colossal).
+- Capacities: `speed`, `range`, `cargo`, `crew`, `troops` (carried soldiers), `armour`, `structure` (strength of one vehicle), `seaworthiness` (weather endurance in every domain; the frame catalogue gives it as the frame's endurance), `armament` (derived), `fuel` (a commodity) and `fuel_use`, `cost`, `upkeep`, `tech_level`, `strangeness`.
+- `fire_control` (`FireControl`: manual, drilled, sighted, directed, computed, automatic, guided): how its weapons are laid and aimed; it scales the accuracy of every mount.
+- `techniques` (`design_techniques`): the techniques the type needs; a frame family's technique is laid when the type is drawn, and yards build a type only while its owner knows every one.
+
+#### Sections (`design_sections`)
+
+Every vehicle type has sections like a body has parts:
+
+- `section` (`VehicleSection`): hull, keel, deck, bow, stern, hold, cargo_bay, troop_bay, crew_quarters, bridge, cockpit, mast, rigging, sails, oars, rudder, steering, engine, boiler, fuel_store, power_core, drive, wheels, axle, tracks, legs, chassis, frame, harness, draft_team, saddle, mount_body, armour_plating, barding, turret, gun_deck, hardpoint, magazine, wings, envelope, gondola, rotor, tail, ballast, life_support, airlock, sensors, navigation, ward, arm, counterweight, ram_head, tower, platform, core.
+- `function` (the component it serves, `DesignComponentKind` extended with steering, lift, power, troops, command and life_support), `criticality` (`Criticality`: critical, major, minor), `share` (of the vehicle's structure), `armour`, `exposure` (how often it is hit), `material_id`, `size`, `quality` (the former component rows become the function totals of the sections), `hazard` (`SectionHazard`: none, fire, explosion, flooding, breach, crash, panic), `neighbours` (sections a fire, flood or blast reaches).
+
+The frame catalogue gives each frame its default section layout; a type's sections are editable, and the derived capacities follow the sections and their materials under the mass budget.
+
+#### Mounts (`design_mounts`)
+
+- `slot` (index), `mount` (`MountKind`: bow, stern, broadside, deck, turret, spinal, hardpoint, wing, crew_station, rider, ram, bay, ward_node), `section` (where it sits; when that section is disabled the mount falls silent), `model_id` (a vehicle weapon or missile weapon model, 7.6), `count`, `arc` (`MountArc`: forward, aft, side, all_round).
+- The frame gives the number and kinds of slots; a type cannot fill more mounts than its frame and size allow.
+
+#### Behaviours
+
+1. **Drawing a type.** A realm, people or faction draws a type when it needs a role it has no type for (a fleet, a caravan, siege, transport), from frames its knowledge opens, sections its materials allow and models its forges make; names come from the people's language. Lineages refit types as techniques arrive (existing refit, now for every frame).
+2. **Building.** Shipyards, siege workshops, workshops with the matching technique, orbital rings and space stations (7.10) build groups of a type for coin, materials (by section material) and the mounted models; the build time follows size and the yard's level.
+3. **Fuel and upkeep.** Groups burn their fuel (fodder for drawn and ridden frames, fuel or coal for engines, the cosmos's travel resource for void frames, nothing for sail and self) through the goods ledger; without fuel a group cannot move and an army slows.
+4. **Travel.** Journeys and voyages pick the domain the route needs; land frames only travel land, water frames water, space frames between worlds, gas-giant frames in gas-giant air, planar frames between dimensions.
+5. **Visual.** Every type and every group is drawn as a section diagram: front, body, rear, upper and under sections laid by position and sized by share, coloured by state like the body diagram, critical sections outlined, mounts marked on their sections.
+
+#### Levers and surfaces
+
+- `design:draw/edit/refit/delete` (every value), `design_section:set/delete`, `design_mount:add/edit/delete`, `design_technique:add/delete`, son tools `shape_vehicle_type` and `commission_vessel`, mortal tool `draw_design` (now for every frame).
+- Atlas **Vehicle types** group per world under *Made kinds*: the section diagram, frame, domain, propulsion, capacities, sections with criticality, mounts with their models, fire control, techniques, makers and how many are built.
+- Book and Codex: the *Made Kinds* chapter gives each vehicle type with labelled values and tables of its sections and mounts; holders list their groups in their own entries.
+
+### 7.8 Vehicle groups: fleets, trains and parks (W23+)
+
+#### Attributes (`vehicle_groups`, `vehicle_group_sections`)
+
+- A group: `holder_node_id` (an army, a polity, a settlement, a trade route as a caravan, a vessel entity carrying smaller craft), `design_id`, `count`, `crewed` (how many are crewed), `condition`, `fuel` (stock), `status` (`VehicleStatus`: ready, moving, engaged, laid_up, building, wrecked), `region_entity_id`, `built_epoch`.
+- Its sections: for each section of the type, how many vehicles in the group have it `damaged`, `disabled` and `destroyed`.
+- A named vessel entity has the same per-section state in `vessel_sections`.
+
+#### Behaviours
+
+1. **In armies.** An army moves at the pace of its slowest land, water or air group (troops carried by transports ride at the transport's pace); its strength adds each group's firepower (mounted models × count × crew filled × fire control) and armour; transports carry troops across water and space; siege groups feed the siege batteries in place of the realm-wide engine factor.
+2. **Hits by section.** Every fire, ram, boarding, storm and impact against a group strikes sections weighted by `exposure`, minus section armour. A struck section steps sound → damaged → disabled → destroyed:
+   - **minor** sections lower their function by a share;
+   - **major** sections lose their function while disabled (a disabled rudder cannot steer, a disabled magazine cannot feed the guns, a disabled troop bay cannot carry);
+   - **critical** sections destroy the vehicle when destroyed: the count falls and a wreck is left for salvage.
+3. **Chains.** Hazards spread to neighbours: fire burns adjacent sections each round unless crews fight it, a magazine or fuel store explodes and strikes every neighbour, flooding spreads below the waterline and sinks the vessel when the hull is disabled, a breach kills the crew of the section and spreads in space or under water, a crash follows a lost envelope, wing or rotor, and panic in a draft team overturns the vehicle.
+4. **Crew.** Damage to quarters and the bridge kills or wounds crew (`army_units` of the crewing stack); an uncrewed vehicle does not fight.
+5. **Repair.** Shipyards, workshops and engineers in the field repair damaged sections first and disabled sections at a cost; destroyed sections need a yard.
+6. **Salvage and prizes.** After a battle the holder of the field salvages wrecks for materials and may take disabled vehicles as prizes into its own groups.
+7. **Caravans.** Trade routes carry their goods in vehicle groups held by the route; capacity, speed and danger follow the group (raiders strike sections; a caravan without draft animals stops).
+
+#### Levers and surfaces
+
+- `vehicle_group:create/edit/move/repair/delete`, `vehicle_group_section:set/delete` (damaged, disabled and destroyed counts), `vessel_section:set/delete`.
+- Every drawer's **Vehicles** tab (the *Vehicles, kit and made kinds* section, shown for every kind of thing): each group with its section diagram coloured by damage, count, crewed, fuel, firepower, pace, troops carried, and the move, mend and strike controls; an army also shows the pace its vehicles set.
+- Book and Codex: every holder lists its groups and their section damage in its own entry.
+
+### 7.9 Integrity: sections and criticality of every made whole (W23+)
+
+**Current.** Living beings have body plans, parts, injuries and lasting conditions; vessels and sons have bodies. Structures, wonders, cosmic gates and archives have one `condition` and one `construction_state`: a broken gate, a breached wall, a fallen keep and a ruined sanctum are the same thing. Sieges breach in the abstract; fire does not pass from part to part; a failing foundation brings nothing down.
+
+#### Attributes (`structure_sections`)
+
+- For every structure: `section` (`StructureSection`: foundation, outer_wall, gate, gatehouse, towers, keep, battlements, earthwork, roof, main_hall, upper_floors, stores, quarters, workshop_floor, kitchen, sanctum, vault, archive, wards, dome, spire, span, piers, sluice, conduits, seating, stage, pens, furnace, wheel, shafts, docks, slipway, beacon, core, spine, ring_segments, collectors, thrusters, docking_ring, habitat_decks, control_core, shielding), `criticality`, `function` (`SectionRole`: support, defence, entry, shelter, storage, worship, knowledge, production, passage, water, display, power, command, motion), `share`, `condition` 0–100, `state` (sound, damaged, disabled, destroyed), `material` and `world_material_id`, `flammability` (from the material), `neighbours`, `locked`.
+- The structure catalogue gives each kind (and each structure type, 7.11) a section layout; the structure's `condition` becomes the weighted condition of its sections and editing it scales every section.
+
+#### Behaviours
+
+1. **Damage by part.** Sieges, earthquakes, fires, floods, sabotage, war, cosmic impacts and gods strike sections by exposure: bombardment and mines strike walls, towers and the gate; quakes strike the foundation and tall sections (towers, spire, dome) more; fire strikes flammable sections.
+2. **Consequences by section and criticality:**
+   - a destroyed **gate** or **outer wall** section is a breach: the assault phase of a siege uses breached sections in place of the abstract breach;
+   - a fallen **keep** ends the citadel's defence: the holder surrenders or is stormed;
+   - a destroyed **sanctum** halts the temple's function and is a desecration incident for its faith;
+   - a burnt **archive** loses books and knowledge records in proportion; burnt **stores** lose the granary's or warehouse's stock;
+   - a broken **span** cuts the bridge's route; a broken **sluice** floods the land below the dam; broken **conduits** stop an aqueduct's sanitation;
+   - a destroyed **core** of a cosmic gate closes its route; a failed **control_core** of a megastructure (7.10) turns its function into a catastrophe of its kind;
+   - a minor section lowers the function by its share; a disabled major section stops the function it serves.
+3. **Chains.** Fire spreads to neighbours by flammability each season until put out (firehouses and staff fight it); a destroyed **foundation** collapses every section above it; a collapsed tower falls on its neighbours.
+4. **Repair.** Upkeep and builders repair damaged sections first; destroyed sections need rebuilding (a construction project for the section).
+5. **Function scale.** A structure's effect is its kind's effect × the functioning share of the sections that serve it.
+
+#### Levers and surfaces
+
+- `structure_section:edit` (every value, laying a new section), `structure_section:repair`, `structure_section:strike` (damage one section), `structure_section:delete`, `structure_design_section:set/delete`, and the existing structure levers.
+- The structure drawer's **Sections** tab shows the **section diagram** (sections laid by position: roofs, domes and spires above, gates in front, foundations below) with each section coloured by state, criticality marks and the role each serves.
+- Book and Codex: every structure entry lists its sections with condition, state and criticality.
+
+### 7.10 Megastructures (W23+)
+
+New structure kinds of the cosmic scale, each with a section layout, a technique gate from the cosmic branches, a build of generations and a real function:
+
+| Kind | Function |
+|---|---|
+| orbital_ring | its world's space works build with `vehicles.ring_points_pct` of the points; the cosmic routes of its world grow safer each epoch |
+| space_elevator | works as a harbour for its settlement |
+| space_station | works as a shipyard for its settlement, building and mending space groups |
+| star_collector | pays its owner coin each epoch and dims its star toward a floor while it stands; the star's worshippers' regard of the owner falls; a failed control core flares the star |
+| beacon | lowers the danger of every route that touches its world each epoch |
+| planetary_engine | moves its world's orbit a step per epoch toward its `target_orbit`; a failed control core jolts the orbit |
+| habitat_ring | adds housing to its settlement; breached habitat decks cost it people |
+
+Uniqueness and races follow the wonder rules (7.2 reference pass R5). Each megastructure keeps its working state (`megastructure_states`: output, target orbit, epoch) which `megastructure:edit/delete` set and reset; the Sections tab shows it with its control core.
+
+### 7.11 Structure types and forms (W23+)
+
+**Current.** Structure designs exist (a named type on a base kind, made by sons) and building types appear in the Atlas, but peoples do not draw types of their own, the drawing of a building does not follow its type, and the list of kinds is short.
+
+#### Attributes (`structure_designs`, extended)
+
+- `origin_node_id` (a people, polity, faction, cult, son, foreign god or the Creator), `form` (`BuildingForm`: hall, longhouse, tower, keep, dome, spire, stepped, pyramid, courtyard, ring, tent, mound, arcade, terrace, platform, bridge_form, wall_line, tunnel_form, orbital), `storeys`, `material` (main material), `sections` (`structure_design_sections`: section, criticality, share and material overriding the kind's layout).
+- More base kinds (each with group, staff, capacity, workshop, branch and a real function): embassy, lighthouse, signal_tower, customs_house, toll_gate, courthouse, archive, printing_house, laboratory, foundry, smelter, kiln, glassworks, textile_mill, dye_works, paper_mill, bakery, dairy, distillery, refinery, power_plant, silo, cistern, reservoir, canal_lock, tunnel, rail_station, airfield, spaceport, dry_dock, arsenal, kennel, menagerie, botanical_garden, cemetery, gymnasium, asylum, quarantine_house, inn, market_hall, exchange, university, seminary, conservatory, opera_house, gallery, stadium, plus the megastructures of 7.10.
+
+#### Behaviours
+
+1. Peoples draw a structure type when they build a kind for the first time, from their aesthetic, materials and techniques, naming it in their language.
+2. New structures of a kind take the builder's current type; the section layout and form follow the type.
+3. The city scene, the land scene and the Atlas draw each building from its type's form and storeys (the form sets its body, the kind keeps its marks, storeys raise it).
+
+#### Levers and surfaces
+
+- `structure_design:create/edit/retire` gain origin, form, storeys and material; `structure_design_section:set/delete` give a type its own sections; son tool `shape_structure_type`; mortal tool `draw_structure_type` for builders with engineering of `integrity.draw_skill`.
+- Atlas **Building types of the peoples** under *Made kinds*: the 3D drawing of the type's form, its section diagram, values and how many works are built to it.
+
+### 7.12 Dish: a made kind of food (W23+)
+
+**Current.** Food is a commodity with a quality and a production method; no named dish exists.
+
+#### Attributes (`dishes`, `dish_ingredients`, `community_dishes`)
+
+- A dish: `name`, `description`, `world_id`, `origin_node_id` (people, settlement, mortal cook, son, foreign god or the Creator), `method` (`CookingMethod`: raw, boiled, stewed, steamed, roasted, grilled, baked, fried, smoked, dried, cured, pickled, fermented, braised, simmered, ground, pressed), `course` (`DishCourse`: staple, side, festive, rite, ration, delicacy, remedy, drink), `nourishment`, `delight`, `keeps` (epochs), `prestige`, `technique` (needed), `created_epoch`, `retired`.
+- Ingredients: commodity and share.
+- Community dishes: the dishes a community cooks, with `popularity`.
+
+#### Behaviours
+
+1. **Cooking.** Each community cooks its dishes from its stores (`cuisine.portion` at full popularity): staples and remedies add to prosperity, staples, sides, drinks and feast dishes calm unrest, feast dishes and delicacies add prestige, rite dishes deepen piety; missing ingredients stop the dish for the epoch and cost it popularity.
+2. **Origin.** Peoples invent dishes from their stores and the ways of cooking their knowledge opens (`cuisine.invent_pct` per epoch); cooks create dishes with `create_dish`; sons with `shape_dish`.
+3. **Rations.** Armies carry the best ration of their realm: supply days by the dish's keeping (`cuisine.ration_days`).
+4. **Spread.** An arriving convoy teaches its destination one of its origin's dishes (`cuisine.spread_pct`).
+
+#### Levers and surfaces
+
+- `dish:create/edit/delete`, `dish_ingredient:set/delete`, `community_dish:set/edit/delete`, son tool `shape_dish`, mortal tool `create_dish`.
+- Atlas **Dishes** group per world under *Made kinds*; town and people drawers' **Kitchen** tab; the Book and Codex *Made Kinds* chapter lists dishes, their foods and who cooks them.
 
 ## Part 8. Culture, knowledge and the supernatural
 
@@ -6916,6 +7203,27 @@ Biosphere activity (3.2 trophic flows, land use) closes the cycles. Large distur
 
 ---
 
+### 10.17 Wounds of cosmic and outer beings (W23+)
+
+**Current.** Cosmic beings (10.15) and outer beings (9.6) carry might and a phase; they cannot be wounded part by part, maimed or scarred. The body, injury and lasting-condition chain of mortals stops below their scale.
+
+#### Attributes
+
+- Every cosmic and outer being gets a body (`bodies`) whose plan comes from its kind (a catalogue from `BeingKind` and the outer being's form to a body plan), with its parts, functions and hit points at its scale.
+- Injuries and conditions use the existing tables (`injuries`, `conditions`) with the being as bearer.
+- `might` becomes the being's base might; its **effective might** is the base × the body's vital and capacity factors, shown beside it.
+
+#### Behaviours
+
+1. **Harm sources.** Binding and banishing rites (`cosmic_wounds.bind_wound`, `banish_wound`), incursions met by a world's armies (`cosmic_wounds.army_wound` per thousand soldiers) and a son's strike (`strike_being`, `cosmic_wounds.strike_harm` per point of force) strike the being's parts through the strike machinery at its scale.
+2. **Consequences.** A lost part takes away what it gave: a being without its means of moving can no longer roam between galaxies or dimensions; a blinded being cannot find a target world; a maimed being keeps a lasting condition that lowers its effective might for good.
+3. **Healing.** Beings heal at their own rate (rules `cosmic_wounds.*`); bound beings heal slower; a held being never changes.
+4. **Death.** A lethal wound slays the being: it becomes a remnant (existing remnants) and its fall is a cosmic event.
+
+#### Levers and surfaces
+
+- `injury:*`, `condition:*`, `body:*` levers for beings (the generic body section in every node drawer already reaches them), son tool `strike_being`, the being's body diagram in its drawer, the wiki and the Codex.
+
 ## Part I. Interconnection
 
 ### I.1 Interconnection registry
@@ -8048,6 +8356,22 @@ Integration happens in waves, but **the whole of this document is the deliverabl
 5. **Final check:** integration of TODO item 1 is complete only when the coverage matrix has no open row, the compliance and conservation tests pass, the depth metric meets the J.7, J.10, J.12–J.15 and J.17–J.18 targets, and the acceptance stories 1–30 run as scenario tests.
 
 ---
+
+### J.20 Made kinds, integrity and vehicles addendum (W23+)
+
+**Wave:**
+
+| Wave | Content | Depends on |
+|---|---|---|
+| W23+ | Unit types (5.14), equipment models (7.6), vehicle types with frames, sections, mounts and techniques (7.7), vehicle groups in armies, fleets and caravans (7.8), sections and criticality of structures, wonders, gates and megastructures (7.9, 7.10), structure types and forms (7.11), dishes (7.12), attraction and late-life decline (3.1b), wounds of cosmic and outer beings (10.17) | W7+, W19+, W20, W23 |
+
+**Principles carried through every part:**
+
+1. **A made kind has one Atlas entry; its instances are counts.** A people's own warship, soldier, sword pattern, building or dish is one entry with its name, values, makers and holders; the vehicles, soldiers, pieces and buildings of that kind are held as counts by armies, fleets, caravans, stores and towns. Only a famous single vehicle, item or building becomes its own entity.
+2. **Peoples, gods and the Creator make kinds.** Every made kind records its origin node and can be created, edited, held and deleted by the player, by son tools and by the engine on behalf of peoples.
+3. **Every whole has parts with criticality.** Bodies already have parts; vehicles, structures, megastructures and cosmic beings now do too, with critical, major and minor parts, hazards that chain to neighbours, and consequences that follow the part.
+4. **No fixed list carries a theme.** Base lists (roles, frames, families, forms, methods) are generic; the names and materials of a world's kinds come from the world, and no name repeats within a world.
+5. **Every kind is drawn.** Vehicle types and groups, structures and structure types are drawn as section diagrams coloured by damage; structure types also as 3D buildings of their form; beings through their body diagram; in the Atlas and in every drawer.
 
 ## Part K. Decisions
 

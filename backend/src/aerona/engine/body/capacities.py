@@ -67,6 +67,7 @@ def condition_penalty(rules: CapacityRules, kind: ConditionKind) -> dict[Capacit
         ConditionKind.DIVINE_BRAND: {C.PRESENCE: -rules.brand_presence},
         ConditionKind.NIGHTMARES: {C.COMMAND: rules.nightmares_command, C.CRAFT: rules.nightmares_craft},
         ConditionKind.COMATOSE: {capacity: rules.comatose_lost for capacity in C if capacity is not C.FERTILITY},
+        ConditionKind.COGNITIVE_DECLINE: {C.SCHOLARSHIP: rules.decline_scholarship, C.COMMAND: rules.decline_command, C.CRAFT: rules.decline_craft},
     }
     return table[kind]
 

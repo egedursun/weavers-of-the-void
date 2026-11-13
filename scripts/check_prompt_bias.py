@@ -88,6 +88,10 @@ PATTERNS = (
         prompts_only=True,
     ),
     Pattern(
+        "assumed species",
+        re.compile(r"\b(?:tiny |small )?(?:human|humans|mankind|men) (?:figures?|for scale|beings? for scale)\b", re.IGNORECASE),
+    ),
+    Pattern(
         "assumed carrier",
         re.compile(r"\b(caravans|no caravan|the caravan)\b(?! way)", re.IGNORECASE),
     ),

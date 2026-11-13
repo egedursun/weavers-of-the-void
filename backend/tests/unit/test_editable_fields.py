@@ -59,6 +59,17 @@ from aerona.db.tables.collective import (
     SocialNormRow,
     StoryletRunRow,
 )
+from aerona.db.tables.cuisine import DISH_FIELDS, CommunityDishRow, DishRow
+from aerona.db.tables.equipment import MODEL_FIELDS, EquipmentModelRow
+from aerona.db.tables.integrity import (
+    DESIGN_SECTION_FIELDS,
+    MEGASTRUCTURE_FIELDS,
+    STRUCTURE_SECTION_FIELDS,
+    MegastructureRow,
+    StructureDesignSectionRow,
+    StructureSectionRow,
+)
+from aerona.db.tables.military import UnitDesignRow
 from aerona.db.tables.mythic import (
     GEAS_FIELDS,
     HEROQUEST_FIELDS,
@@ -71,6 +82,7 @@ from aerona.db.tables.mythic import (
     MantlingRow,
     ServitorRow,
 )
+from aerona.db.tables.structures import StructureDesignRow
 from aerona.db.tables.tongues import (
     DECIPHER_FIELDS,
     DIVINE_TONGUE_FIELDS,
@@ -85,7 +97,22 @@ from aerona.db.tables.tongues import (
     SoundChangeRow,
 )
 from aerona.db.tables.tongues import GRAMMAR_FIELDS as TONGUE_GRAMMAR_FIELDS
+from aerona.db.tables.vehicles import (
+    GROUP_FIELDS,
+    GROUP_SECTION_FIELDS,
+    MOUNT_FIELDS,
+    SECTION_FIELDS,
+    VESSEL_SECTION_FIELDS,
+    DesignMountRow,
+    DesignSectionRow,
+    VehicleGroupRow,
+    VehicleGroupSectionRow,
+    VesselSectionRow,
+)
+from aerona.engine.cuisine.control import EDITABLE as CUISINE_EDITABLE
+from aerona.engine.equipment.control import UNIT_TYPE_FIELDS
 from aerona.engine.primitives.edits import FIXED
+from aerona.engine.structures.control import DESIGN_CHOICES, DESIGN_NUMBERS
 
 EDITORS: tuple[tuple[type[Base], tuple[str, ...], frozenset[str]], ...] = (
     (RiteGrammarRow, GRAMMAR_FIELDS, frozenset({"difficulty"})),
@@ -106,6 +133,7 @@ EDITORS: tuple[tuple[type[Base], tuple[str, ...], frozenset[str]], ...] = (
     (DivineTongueRow, DIVINE_TONGUE_FIELDS, frozenset()),
 )
 
+STRUCTURE_DESIGN_FIELDS = (*DESIGN_NUMBERS, *DESIGN_CHOICES, "ley", "name", "description", "origin_node_id")
 FRONT_EDITORS: tuple[tuple[type[Base], tuple[str, ...], frozenset[str], str], ...] = (
     (CrowdMoodRow, MOOD_FIELDS, frozenset(), "crowd_mood:edit"),
     (MobRow, MOB_FIELDS, frozenset({"settlement_entity_id", "district_id", "cascade_id", "ended_by"}), "mob:edit"),
@@ -138,6 +166,19 @@ FRONT_EDITORS: tuple[tuple[type[Base], tuple[str, ...], frozenset[str], str], ..
     (DesignRow, DESIGN_FIELDS, frozenset({"owner_entity_id", "kind", "parent_design_id", "mass", "epoch"}), "design:edit"),
     (DesignComponentRow, COMPONENT_FIELDS, frozenset(), "design_component:set"),
     (ComponentWearRow, WEAR_FIELDS, frozenset(), "component_wear:edit"),
+    (StructureDesignRow, STRUCTURE_DESIGN_FIELDS, frozenset({"world_id", "creator_son_id", "created_epoch", "retired"}), "structure_design:edit"),
+    (DesignSectionRow, SECTION_FIELDS, frozenset(), "design_section:set"),
+    (DesignMountRow, MOUNT_FIELDS, frozenset({"design_id"}), "design_mount:edit"),
+    (VehicleGroupRow, GROUP_FIELDS, frozenset({"built_epoch"}), "vehicle_group:edit"),
+    (VehicleGroupSectionRow, GROUP_SECTION_FIELDS, frozenset(), "vehicle_group_section:set"),
+    (VesselSectionRow, VESSEL_SECTION_FIELDS, frozenset(), "vessel_section:set"),
+    (EquipmentModelRow, MODEL_FIELDS, frozenset({"parent_model_id", "created_epoch"}), "equipment_model:edit"),
+    (UnitDesignRow, UNIT_TYPE_FIELDS, frozenset({"created_epoch", "parent_design_id"}), "unit_type:edit"),
+    (StructureSectionRow, STRUCTURE_SECTION_FIELDS, frozenset(), "structure_section:edit"),
+    (StructureDesignSectionRow, DESIGN_SECTION_FIELDS, frozenset(), "structure_design_section:set"),
+    (MegastructureRow, MEGASTRUCTURE_FIELDS, frozenset({"updated_epoch"}), "megastructure:edit"),
+    (DishRow, DISH_FIELDS, frozenset({"created_epoch"}), "dish:edit"),
+    (CommunityDishRow, CUISINE_EDITABLE["community_dish"][1], frozenset({"since_epoch"}), "community_dish:edit"),
 )
 FRONTEND = Path(__file__).resolve().parents[3] / "frontend" / "src"
 

@@ -10,7 +10,8 @@ from aerona.api.schemas.military_depth import (
     BattleDepthView,
     BattleStackView,
     FeudView,
-    HullSpecView,
+    FrameSectionView,
+    FrameSpecView,
     PeaceTermView,
     RecordColumnView,
     RecordRowView,
@@ -19,7 +20,7 @@ from aerona.api.schemas.military_depth import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
-from aerona.catalog.vessels import HULLS, HullSpec
+from aerona.catalog.vehicles import FRAMES, LAYOUTS, MOUNTS, FrameSpec
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -38,17 +39,40 @@ Id = Annotated[int, Path(ge=1)]
 GRIEF = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME, MemoryKind.HUMILIATED_ME)
 
 
-def hull_view(spec: HullSpec) -> HullSpecView:
-    return HullSpecView(
-        hull=spec.hull,
+def frame_view(spec: FrameSpec) -> FrameSpecView:
+    return FrameSpecView(
+        frame=spec.frame,
         label=spec.label,
+        domain=spec.domain,
+        family=spec.family,
+        propulsion=spec.propulsion,
+        size=spec.size,
         speed=spec.speed,
         range=spec.range,
         cargo=spec.cargo,
         crew=spec.crew,
-        seaworthiness=spec.seaworthiness,
+        troops=spec.troops,
+        endurance=spec.endurance,
+        armour=spec.armour,
+        structure=spec.structure,
         slots=spec.slots,
+        mounts=list(MOUNTS[spec.family]),
+        sections=[
+            FrameSectionView(
+                section=part.section,
+                function=part.function,
+                criticality=part.criticality,
+                share=part.share,
+                exposure=part.exposure,
+                hazard=part.hazard,
+                neighbours=list(part.neighbours),
+            )
+            for part in LAYOUTS[spec.family]
+        ],
         armament=list(spec.armament),
+        branch=spec.branch,
+        level=spec.level,
+        tier=int(spec.tier),
         sky=spec.sky,
         living=spec.living,
         strangeness=spec.strangeness,
@@ -142,9 +166,9 @@ async def battle_depth(services: ServicesDep, battle_id: Id) -> BattleDepthView:
         )
 
 
-@router.get("/vessels/hulls", response_model=list[HullSpecView])
-async def hulls() -> list[HullSpecView]:
-    return [hull_view(spec) for spec in HULLS.values()]
+@router.get("/vehicles/frames", response_model=list[FrameSpecView])
+async def frames() -> list[FrameSpecView]:
+    return [frame_view(spec) for spec in FRAMES.values()]
 
 
 @router.get("/entities/{entity_id}/vessel", response_model=VesselView)
@@ -168,7 +192,7 @@ async def vessel_card(services: ServicesDep, entity_id: Id) -> VesselView:
             region=refs.get(row.region_entity_id) if row.region_entity_id else None,
             fleet=refs.get(row.fleet_army_entity_id) if row.fleet_army_entity_id else None,
             legend=refs.get(row.legend_entity_id) if row.legend_entity_id else None,
-            hull=hull_view(HULLS[row.hull_class]),
+            frame=frame_view(FRAMES[row.frame]),
             hull_material=row.hull_material,
             fabric_material=row.fabric_material,
             condition=row.condition,

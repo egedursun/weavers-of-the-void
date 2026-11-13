@@ -85,7 +85,7 @@ def side(name: str, rows: list[ArmyUnitRow], *, ident: int = 1, defending: bool 
 
 
 def test_discipline_spares_organisation_and_a_disorganised_stack_routs() -> None:
-    drilled = side("Drilled", [unit(UnitKind.SPEARMEN, 100, ident=1, discipline=100)]).stacks[0]
+    drilled = side("Drilled", [unit(UnitKind.LINE_INFANTRY, 100, ident=1, discipline=100)]).stacks[0]
     raw = side("Raw", [unit(UnitKind.LEVY, 100, ident=2, discipline=0)]).stacks[0]
     disorganise(RULES, drilled, 50)
     disorganise(RULES, raw, 50)
@@ -106,7 +106,7 @@ def test_missile_stacks_spend_ammunition_and_fall_silent_when_it_runs_out() -> N
 
 
 def test_morale_falls_through_the_ladder_and_a_standard_helps_rally() -> None:
-    rows = [unit(UnitKind.SPEARMEN, 100, ident=index, morale=morale) for index, morale in ((1, 70), (2, 50), (3, 30), (4, 15), (5, 5))]
+    rows = [unit(UnitKind.LINE_INFANTRY, 100, ident=index, morale=morale) for index, morale in ((1, 70), (2, 50), (3, 30), (4, 15), (5, 5))]
     host = side("Host", rows)
     states = [settle(RULES, stack) for stack in host.stacks]
     assert states == [MoraleState.STEADY, MoraleState.SHAKEN, MoraleState.WAVERING, MoraleState.ROUTING, MoraleState.BROKEN]
@@ -118,7 +118,7 @@ def test_morale_falls_through_the_ladder_and_a_standard_helps_rally() -> None:
 
 
 def test_a_narrow_pass_leaves_most_of_a_host_in_reserve_until_the_front_breaks() -> None:
-    host = side("Host", [unit(UnitKind.SPEARMEN, 200, ident=1), unit(UnitKind.LEVY, 300, ident=2), unit(UnitKind.LEVY, 300, ident=3)])
+    host = side("Host", [unit(UnitKind.LINE_INFANTRY, 200, ident=1), unit(UnitKind.LEVY, 300, ident=2), unit(UnitKind.LEVY, 300, ident=3)])
     plain, pass_ = Field(TerrainKind.PLAIN, None, night=False), Field(TerrainKind.HIGH_PASS, None, night=False)
     assert battle_width(RULES, pass_, False) < battle_width(RULES, plain, False)
     deploy(RULES, host, pass_)
@@ -141,7 +141,7 @@ def test_a_weak_commander_cannot_direct_every_stack_and_night_halves_his_span() 
 
 
 def test_cover_and_night_hide_stacks_that_spring_as_a_trap() -> None:
-    hunters = side("Hunters", [unit(UnitKind.SKIRMISHERS, 300, ident=1, formation=Formation.LOOSE), unit(UnitKind.SPEARMEN, 50, ident=2)])
+    hunters = side("Hunters", [unit(UnitKind.LIGHT_INFANTRY, 300, ident=1, formation=Formation.LOOSE), unit(UnitKind.LINE_INFANTRY, 50, ident=2)])
     blind = side("Blind", [unit(UnitKind.HEAVY_INFANTRY, 300, ident=3)], ident=2, skill=0)
     ground = Field(TerrainKind.FOREST, None, night=True, cover=PlaceCover.HEAVY)
     seen = spot(RULES, hunters, blind, ground)
@@ -158,8 +158,8 @@ def test_hard_targets_shrug_off_blows_that_cannot_pierce() -> None:
 
 
 def test_a_square_turns_a_charge_that_breaks_a_loose_line() -> None:
-    square = side("Square", [unit(UnitKind.PIKEMEN, 200, ident=1, formation=Formation.SQUARE)])
-    loose = side("Loose", [unit(UnitKind.SKIRMISHERS, 200, ident=2, formation=Formation.LOOSE)], ident=2)
+    square = side("Square", [unit(UnitKind.PIKE_INFANTRY, 200, ident=1, formation=Formation.SQUARE)])
+    loose = side("Loose", [unit(UnitKind.LIGHT_INFANTRY, 200, ident=2, formation=Formation.LOOSE)], ident=2)
     assert deal(square.stacks, 500, RULES, mode="charge") < deal(loose.stacks, 500, RULES, mode="charge")
 
 
@@ -176,14 +176,14 @@ def test_losses_split_into_their_classes_and_broken_stacks_shed_deserters() -> N
 
 
 def test_the_victor_salvages_arms_and_a_feint_pins_the_reserves() -> None:
-    winner = side("Winner", [unit(UnitKind.SPEARMEN, 500, ident=1)])
+    winner = side("Winner", [unit(UnitKind.LINE_INFANTRY, 500, ident=1)])
     loser = side("Loser", [unit(UnitKind.LEVY, 100, ident=2)], ident=2)
     loser.stacks[0].lost = 400
     before = winner.stacks[0].row.condition
     assert salvage(RULES, winner, loser) == 400 and winner.stacks[0].row.condition > before
-    attacker = side("Feinting", [unit(UnitKind.SKIRMISHERS, 100, ident=3)], ident=3)
+    attacker = side("Feinting", [unit(UnitKind.LIGHT_INFANTRY, 100, ident=3)], ident=3)
     attacker.tactic = Tactic.FEINT
-    defender = side("Waiting", [unit(UnitKind.SPEARMEN, 2000, ident=4), unit(UnitKind.LEVY, 2000, ident=5)], ident=4, defending=True)
+    defender = side("Waiting", [unit(UnitKind.LINE_INFANTRY, 2000, ident=4), unit(UnitKind.LEVY, 2000, ident=5)], ident=4, defending=True)
     deploy(RULES, defender, Field(TerrainKind.HIGH_PASS, None, night=False))
     rules = replace(RULES, battle_depth=replace(RULES.battle_depth, feint_reserve_pct=100))
     assert feint(rules, seeded(), attacker, defender) and refill(defender) >= 0

@@ -112,8 +112,8 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "vessel_kind": "What it is: {{ vessel_kinds | join(', ') }}; a gate, ship, mount or bridge opens the matching kind of road",
         "hull_material": "Its hull or frame: {{ materials | join(', ') }}; a hard, tough hull turns storms and raiders aside. Empty: its makers choose",
         "fabric_material": "Its sails or harness: {{ materials | join(', ') }}; a light one runs a stage faster, a tough one braves the wind. Empty: its makers choose",
-        "hull_class": "For a ship: its hull class, from a light boat to a great warship",
-        "armament": "For a ship: what it carries to fight (rams, archers, engines, boarders)",
+        "frame": "For a ship or other vehicle: the frame it is built on; one of: {{ vehicle_frames }}",
+        "armament": "For a ship: what it carries to fight; any of: rams, missiles, siege_engines, rites",
         "home_port_id": "For a ship: the settlement it sails from",
         "captain_id": "For a ship: the mortal who commands it",
     },
@@ -1334,33 +1334,38 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.COMMISSION_VESSEL: ToolText(
-        "You have a community lay down a ship of the hull you choose, armed as you wish, with a captain if you name one. "
-        "{{ rules.son_military.vessel_cost }} essence, 1 action.",
+        "You have a community lay down a vessel on the frame you choose, armed as you wish, with a captain if you name one; it is built to that "
+        "community's own type for the frame, drawn now if it has none. {{ rules.son_military.vessel_cost }} essence, 1 action.",
         {
-            "owner_id": "The community or mortal that owns the ship",
-            "name": "The ship's proper name",
-            "hull": "raft, boat, galley, longship, cog, carrack, warship, light_sailer, bone_hull, generation_ship, skyship or living_ship",
+            "owner_id": "The community or mortal that owns the vessel",
+            "name": "The vessel's proper name",
+            "frame": "The frame it is built on; one of: {{ vehicle_frames }}",
             "armament": "What it carries to fight: rams, missiles, siege_engines, rites",
             "captain_id": "A living mortal to captain it, if any",
         },
     ),
     T.DESIGN_UNIT: ToolText(
-        "You teach a community a new kind of soldier built on a known unit: its armies muster it in place of the old kind when their doctrine and stores allow. "
-        "{{ rules.son_military.design_cost }} essence, 1 action.",
+        "You teach a community a new kind of soldier: a named type of its own, built on a battlefield role, with its loadout, doctrine and "
+        "formation; its armies muster it in place of the old kind when their stores allow. Values you leave empty follow from the role and "
+        "from what the community can make. {{ rules.son_military.design_cost }} essence, 1 action.",
         {
             "owner_id": "The community that will field it",
             "name": "What the soldiers are called",
-            "base_kind": "The known unit it grows from: levy, spearmen, archers, cavalry and the rest",
+            "base_kind": "The battlefield role it fills; one of: {{ unit_roles }}",
             "melee": "Strength hand to hand, 0 to 100",
             "missile": "Strength at range, 0 to 100",
             "defence": "How well it holds, 0 to 100",
             "armour": "none, hide, padded, mail, scale, plate or enchanted",
             "shield": "none, small, large or tower",
             "terror": "Fear it strikes, 0 to 100",
-            "reach": "How far its weapons reach, 0 (hand to hand) to 5 (siege range); leave empty to keep the base unit's",
-            "volleys": "Volleys it looses in one phase of battle, 0 to 6; leave empty to keep the base unit's",
-            "accuracy": "How true its blows and shots land, 0 to 100; leave empty to keep the base unit's",
-            "piercing": "How well its weapons pierce hard armour, 0 to 100; leave empty to keep the base unit's",
+            "reach": "How far its weapons reach, 0 (hand to hand) to 5 (siege range)",
+            "volleys": "Volleys it looses in one phase of battle, 0 to 6",
+            "accuracy": "How true its blows and shots land, 0 to 100",
+            "piercing": "How well its weapons pierce hard armour, 0 to 100",
+            "doctrine": "How it fights; one of: {{ martial_styles }}",
+            "formation": "How it stands; one of: {{ formations }}",
+            "description": "What sets these soldiers apart, in your words",
+            "equipment_ids": "Equipment models it carries, by id; models of the community or its people",
         },
     ),
     T.PLANT_SPIES: ToolText(
@@ -1458,5 +1463,63 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You move a realm or a cult in your reach to send aid to a town ({{ aid_kinds }}); aid earns gratitude, a favour and a gift owed in "
         "return, and love for the giver's god, though a rival may turn it away. 1 action.",
         {"giver_id": "The realm or cult that sends it", "settlement_id": "The town it reaches", "kind": "What is sent", "reason": "Why you move them"},
+    ),
+    T.SHAPE_VEHICLE_TYPE: ToolText(
+        "You give a community a vehicle type of its own on a frame you choose: it is entered in the atlas under its name, its sections, "
+        "mounts, speed, reach, cargo and crew follow from the frame and from what the community can make, and its yards build to it. "
+        "{{ rules.vehicles.son_type_essence }} essence, 1 action.",
+        {
+            "owner_id": "The community that will build it",
+            "frame": "The frame it is built on; one of: {{ vehicle_frames }}",
+            "name": "What the type is called; left empty, the community names it in its own tongue",
+            "emphasis": "A part given more weight, if any; one of: {{ design_components }}",
+            "mounts": "Weapon mounts added to those the frame carries; each one of: {{ mount_kinds }}",
+            "description": "What sets the type apart, in your words",
+        },
+    ),
+    T.SHAPE_EQUIPMENT: ToolText(
+        "You give a community an equipment model of its own: a named weapon, armour, shield or piece of materiel entered in the atlas, made "
+        "of the material you choose or of the community's own, which its smiths then forge for its soldiers and vehicles. "
+        "{{ rules.armament.son_model_essence }} essence, 1 action.",
+        {
+            "owner_id": "The community that will make it",
+            "family": "What kind of piece it is; one of: {{ equipment_families }}",
+            "name": "What the model is called; left empty, the community names it in its own tongue",
+            "material": "What it is made of, if you choose; one of: {{ materials | join(', ') }}",
+            "quality": "How well it is made, 0 to 100",
+            "description": "What sets the model apart, in your words",
+        },
+    ),
+    T.SHAPE_DISH: ToolText(
+        "You give a community a dish of its own, entered in the atlas under its name; its towns cook it from their stores, and how it is "
+        "made sets how it nourishes, delights and keeps. {{ rules.cuisine.son_dish_essence }} essence, 1 action.",
+        {
+            "owner_id": "The community that will cook it",
+            "method": "How it is made; one of: {{ cooking_methods }}",
+            "course": "When it is eaten; one of: {{ dish_courses }}",
+            "ingredients": "One to four foods it is made of; each one of: {{ foods }}",
+            "name": "What the dish is called; left empty, the community names it in its own tongue",
+            "description": "What sets the dish apart, in your words",
+        },
+    ),
+    T.SHAPE_STRUCTURE_TYPE: ToolText(
+        "You give a community a building type of its own for one kind of structure: it is entered in the atlas under its name with the form, "
+        "storeys and material you choose, and the community's builders raise that kind to it from then on. "
+        "{{ rules.integrity.son_type_essence }} essence, 1 action.",
+        {
+            "owner_id": "The community that will raise it",
+            "structure_kind": "The kind of structure it is a type of; one of: {{ structure_kinds }}",
+            "form": "Its building form, if you choose; one of: {{ building_forms }}",
+            "storeys": "How many storeys it rises, if you choose",
+            "material": "What it is built of, if you choose; one of: {{ materials | join(', ') }}",
+            "name": "What the type is called; left empty, the community names it in its own tongue",
+            "description": "What sets the type apart, in your words",
+        },
+    ),
+    T.STRIKE_BEING: ToolText(
+        "You strike a cosmic or outer being with the force you choose; the blow wounds its body part by part, and a wounded being loses "
+        "might, sight or the power to cross between worlds until it heals. {{ rules.cosmic_wounds.strike_essence }} essence for each point "
+        "of force, 1 action.",
+        {"being_id": "The being you strike", "force": "How hard you strike, 1 to 10", "reason": "Why you strike it"},
     ),
 }

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from aerona.catalog.structures import STRUCTURES
+from aerona.catalog.structures import STRUCTURES, function_kind
 from aerona.constants.units import PERCENT
 from aerona.db.tables.structures import StructureDesignRow
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
@@ -37,6 +37,7 @@ class Resolved:
 
 def resolve(kind: StructureKind, design: StructureDesignRow | None = None) -> Resolved:
     base = STRUCTURES[design.base_kind if design is not None else kind]
+    workshop = base.workshop or STRUCTURES[function_kind(base.kind)].workshop
     if design is None:
         return Resolved(
             base.kind,
@@ -49,7 +50,7 @@ def resolve(kind: StructureKind, design: StructureDesignRow | None = None) -> Re
             base.upkeep,
             base.min_tier,
             base.ley,
-            base.workshop,
+            workshop,
             base.branch,
         )
     return Resolved(
@@ -63,7 +64,7 @@ def resolve(kind: StructureKind, design: StructureDesignRow | None = None) -> Re
         upkeep_commodity=design.upkeep_commodity or base.upkeep,
         min_tier=design.min_tier or base.min_tier,
         ley=design.ley if design.ley is not None else base.ley,
-        workshop=base.workshop,
+        workshop=workshop,
         branch=base.branch,
         capacity_pct=design.capacity_pct,
         cost_pct=design.cost_pct,

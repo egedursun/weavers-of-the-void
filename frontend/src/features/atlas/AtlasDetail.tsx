@@ -15,6 +15,8 @@ import { GalaxyView } from '@/features/cosmography/wiki/GalaxyWiki'
 import { EntityView } from '@/features/entity/EntityView'
 import { humanize } from '@/features/entity/actions/schema'
 import { useCosmos, useWorldState } from '@/features/entity/api/queries'
+import { KindPage } from '@/features/madeKinds/KindPages'
+import { parseKindKey } from '@/features/madeKinds/kindKeys'
 import { mediaUrl } from '@/features/pantheon/media'
 import { AtlasGroup } from './AtlasGroup'
 import { AtlasHome } from './AtlasHome'
@@ -60,8 +62,10 @@ export function AtlasDetail({
   const cosmos = useCosmos()
   const parsed = parseSelection(selection)
   const typed = parseTypeKey(selection)
+  const made = parseKindKey(selection)
   if (group) return <AtlasGroup node={group} onSelect={onSelect} />
   if (typed) return <TypePage selection={typed} />
+  if (made) return <KindPage selection={made} />
   if (!parsed)
     return <AtlasHome records={records} kinds={kinds} onSelect={onSelect} />
   if (parsed.kind === 'entity') return <EntityView id={parsed.id} />

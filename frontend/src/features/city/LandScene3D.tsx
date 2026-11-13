@@ -11,7 +11,7 @@ import {
   RIVER_TILE,
   SETTLEMENT_LOOK,
   STAGE_LOOK,
-  STRUCTURE_LOOK,
+  typedLook,
   coverLook,
   groundLook,
   placeLook,
@@ -189,7 +189,9 @@ export default function LandScene3D({
         {scene.works.flatMap((work) => {
           const [x, z] = hexToWorld(work.q, work.r)
           const stage = stageOf(work.state, work.progress)
-          const parts = stage ? [STAGE_LOOK[stage]] : STRUCTURE_LOOK[work.kind]
+          const parts = stage
+            ? [STAGE_LOOK[stage]]
+            : typedLook(work.kind, work.form, work.storeys)
           return parts.map((part, index) => (
             <Model
               key={`work-${work.node.id}-${index}`}

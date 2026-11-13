@@ -13,6 +13,7 @@ from aerona.db.tables.warfare import BattleRow, SiegeRow, TributeRow, WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.integrity import HarmForce
 from aerona.domain.enums.war import TributeStatus, WarEnding
 from aerona.engine.body.afflictions import desecration_curse
 from aerona.engine.context import TickContext
@@ -220,7 +221,7 @@ async def siege_wear(ctx: TickContext) -> int:
                 continue
             profile = await ctx.session.get(StructureProfileRow, structure.id)
             if profile is not None:
-                if not await harm(ctx, structure, profile, cycles.siege_durability_loss, cause=cause_name, quiet=True):
+                if not await harm(ctx, structure, profile, cycles.siege_durability_loss, cause=cause_name, force=HarmForce.SIEGE, quiet=True):
                     continue
             else:
                 remaining = (stat(structure, "durability") or 0) - cycles.siege_durability_loss

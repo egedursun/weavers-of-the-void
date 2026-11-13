@@ -79,8 +79,8 @@ def test_rule_tables_start_equal_to_the_old_catalog() -> None:
 
 
 def test_flyers_ignore_terrain_and_engines_stay_out_of_mountains() -> None:
-    sky = side("Sky", [unit(UnitKind.SKY_MOUNTS, 100, ident=1)])
-    walkers = side("Feet", [unit(UnitKind.SIEGE_ENGINES, 100, ident=2)])
+    sky = side("Sky", [unit(UnitKind.SKY_RIDERS, 100, ident=1)])
+    walkers = side("Feet", [unit(UnitKind.SIEGE_CREW, 100, ident=2)])
     mountains = Field(TerrainKind.MOUNTAINS, None, night=False)
     assert terrain_factor(RULES, sky.stacks[0], sky, mountains) == RULES.battle_terrain.sky_terrain_pct / 100
     assert terrain_factor(RULES, walkers.stacks[0], walkers, mountains) == 0.0
@@ -108,11 +108,11 @@ def test_marsh_drags_heavy_armour_and_bridges_ease_crossings() -> None:
 
 
 def test_willpower_blunts_terror_and_medicine_saves_the_wounded() -> None:
-    brave = side("Brave", [unit(UnitKind.SPEARMEN, 100, ident=1)])
+    brave = side("Brave", [unit(UnitKind.LINE_INFANTRY, 100, ident=1)])
     brave.willpower = 80
-    craven = side("Craven", [unit(UnitKind.SPEARMEN, 100, ident=2)])
+    craven = side("Craven", [unit(UnitKind.LINE_INFANTRY, 100, ident=2)])
     assert resist(RULES, brave, 20) < resist(RULES, craven, 20)
-    healers = side("Healers", [unit(UnitKind.PRIESTS, 10, ident=3)])
+    healers = side("Healers", [unit(UnitKind.SUPPORT_CASTERS, 10, ident=3)])
     healers.medicine = 100
     plain = side("Plain", [unit(UnitKind.LEVY, 10, ident=4)])
     assert treat(RULES, healers, 40, 60) > treat(RULES, plain, 40, 60)
@@ -120,12 +120,12 @@ def test_willpower_blunts_terror_and_medicine_saves_the_wounded() -> None:
 
 
 def test_war_mages_call_fog_and_necromancers_raise_the_fallen() -> None:
-    mages = side("Mages", [unit(UnitKind.WAR_MAGES, 50, ident=1)])
+    mages = side("Mages", [unit(UnitKind.BATTLE_CASTERS, 50, ident=1)])
     archers = side("Archers", [unit(UnitKind.ARCHERS, 500, ident=2)], ident=2)
     rules = Rules()
     called = [call_fog(rules, seeded(seed), mages, archers) for seed in range(20)]
     assert any(called)
-    dead = side("Dead", [unit(UnitKind.NECROMANCERS, 5, ident=3)])
+    dead = side("Dead", [unit(UnitKind.SUMMONERS, 5, ident=3)])
     assert raise_dead(RULES, dead, 1000) == min(round(1000 * RULES.battle_magic.raise_dead_pct / 100), 5 * RULES.battle_magic.raise_per_necromancer)
 
 
@@ -137,7 +137,7 @@ def test_swift_wings_turn_a_short_line() -> None:
 
 
 def test_the_phased_battle_decides_and_records_baggage_and_factors() -> None:
-    attacker = side("Host", [unit(UnitKind.HEAVY_CAVALRY, 600, ident=1, weapons=["spear"]), unit(UnitKind.SPEARMEN, 600, ident=2)])
+    attacker = side("Host", [unit(UnitKind.HEAVY_CAVALRY, 600, ident=1, weapons=["spear"]), unit(UnitKind.LINE_INFANTRY, 600, ident=2)])
     defender = side("Town", [unit(UnitKind.LEVY, 300, ident=3, army=2)], defending=True, ident=2)
     result = resolve(RULES, stream, attacker, defender, Field(TerrainKind.PLAIN, WeatherKind.CLEAR, night=False))
     assert result.winner is not None and result.outcome is not OutcomeClass.REFUSED
@@ -146,7 +146,7 @@ def test_the_phased_battle_decides_and_records_baggage_and_factors() -> None:
     again = resolve(
         RULES,
         stream,
-        side("Host", [unit(UnitKind.HEAVY_CAVALRY, 600, ident=1, weapons=["spear"]), unit(UnitKind.SPEARMEN, 600, ident=2)]),
+        side("Host", [unit(UnitKind.HEAVY_CAVALRY, 600, ident=1, weapons=["spear"]), unit(UnitKind.LINE_INFANTRY, 600, ident=2)]),
         side("Town", [unit(UnitKind.LEVY, 300, ident=3, army=2)], defending=True, ident=2),
         Field(TerrainKind.PLAIN, WeatherKind.CLEAR, night=False),
     )
@@ -154,6 +154,6 @@ def test_the_phased_battle_decides_and_records_baggage_and_factors() -> None:
 
 
 def test_stack_specs_follow_the_unit_catalog() -> None:
-    stacks = make_stacks([unit(UnitKind.SKY_MOUNTS, 10, ident=1)])
-    assert isinstance(stacks[0], Stack) and stacks[0].flying and stacks[0].spec is UNITS[UnitKind.SKY_MOUNTS]
-    assert stacks[0].spec.family is UnitFamily.BEAST
+    stacks = make_stacks([unit(UnitKind.SKY_RIDERS, 10, ident=1)])
+    assert isinstance(stacks[0], Stack) and stacks[0].flying and stacks[0].spec is UNITS[UnitKind.SKY_RIDERS]
+    assert stacks[0].spec.family is UnitFamily.MOUNTED

@@ -587,7 +587,7 @@ async def design_views(session: AsyncSession, node_id: int, vessel: VesselProfil
                 id=row.id,
                 owner=refs[row.owner_entity_id],
                 kind=row.kind,
-                hull=row.hull,
+                frame=row.frame,
                 name=row.name,
                 designer=at(refs, row.designer_entity_id),
                 parent_design_id=row.parent_design_id,

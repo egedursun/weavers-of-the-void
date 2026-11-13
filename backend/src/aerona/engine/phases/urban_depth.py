@@ -96,6 +96,7 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.species_ranges",
     "table.trade_flows",
     "table.transport_fleets",
+    "table.vehicle_groups",
     "trade_route.capacity",
 )
 @writes("table.convoys", "table.transport_fleets")

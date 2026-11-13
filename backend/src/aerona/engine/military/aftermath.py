@@ -140,11 +140,11 @@ async def recover_wounded(ctx: TickContext) -> int:
 async def raise_the_dead(ctx: TickContext, side: Side) -> int:
     if side.raised_dead <= 0:
         return 0
-    found = next((stack.row for stack in side.stacks if stack.row.kind is UnitKind.GHOST_HOST and stack.row.army_entity_id == side.army.id), None)
+    found = next((stack.row for stack in side.stacks if stack.row.kind is UnitKind.SUMMONED_HOST and stack.row.army_entity_id == side.army.id), None)
     if found is None:
         found = ArmyUnitRow(
             army_entity_id=side.army.id,
-            kind=UnitKind.GHOST_HOST,
+            kind=UnitKind.SUMMONED_HOST,
             count=0,
             quality=PERCENT // 2,
             weapons=["claw"],
@@ -155,7 +155,7 @@ async def raise_the_dead(ctx: TickContext, side: Side) -> int:
             condition=PERCENT,
             origin_entity_id=side.entity.id,
             locked=[],
-            **drill_fields(ctx.rules, UNITS[UnitKind.GHOST_HOST]),
+            **drill_fields(ctx.rules, UNITS[UnitKind.SUMMONED_HOST]),
         )
         ctx.session.add(found)
     with flowing(FlowCategory.CREATION):

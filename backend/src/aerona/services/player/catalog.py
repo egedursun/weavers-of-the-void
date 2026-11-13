@@ -76,6 +76,7 @@ from aerona.services.player import (
     life_cycles,
     living_stats,
     lore,
+    made_kinds,
     made_things,
     market,
     mechanics,
@@ -3839,6 +3840,170 @@ REGIME_ACTIONS = (
     _sync(Meta("disciple:delete", "Remove a disciple from a school", G.SOCIETY), regime.disciple_delete, regime.DiscipleTarget, free, ("S8.4/RP4",)),
 )
 
+MADE_KIND_ACTIONS = (
+    _sync(Meta("mortal:attraction", "Set whom a mortal is drawn to", G.ENTITIES), made_kinds.mortal_attraction, made_kinds.AttractionDraft, free, ("S3.1b",)),
+    _sync(
+        Meta("design_section:set", "Set a section of a vehicle type", G.WARFARE), made_kinds.design_section_set, made_kinds.SectionDraft, free, ("S7.7", "S7.9")
+    ),
+    _sync(
+        Meta("design_section:delete", "Take a section out of a vehicle type", G.WARFARE),
+        made_kinds.design_section_delete,
+        made_kinds.SectionTarget,
+        free,
+        ("S7.7", "S7.9"),
+    ),
+    _sync(Meta("design_mount:add", "Add a weapon mount to a vehicle type", G.WARFARE), made_kinds.design_mount_add, made_kinds.MountDraft, free, ("S7.7",)),
+    _sync(Meta("design_mount:edit", "Edit a weapon mount", G.WARFARE), made_kinds.design_mount_edit, made_kinds.RecordEdit, free, ("S7.7",)),
+    _sync(Meta("design_mount:delete", "Take off a weapon mount", G.WARFARE), made_kinds.design_mount_delete, made_kinds.RecordTarget, free, ("S7.7",)),
+    _sync(
+        Meta("design_technique:add", "Make a vehicle type need a technique", G.WARFARE),
+        made_kinds.design_technique_add,
+        made_kinds.TechniqueDraft,
+        free,
+        ("S7.7",),
+    ),
+    _sync(
+        Meta("design_technique:delete", "Free a vehicle type from a technique", G.WARFARE),
+        made_kinds.design_technique_delete,
+        made_kinds.TechniqueDraft,
+        free,
+        ("S7.7",),
+    ),
+    _sync(Meta("vehicle_group:create", "Give vehicles to a holder", G.WARFARE), made_kinds.vehicle_group_create, made_kinds.GroupDraft, free, ("S7.8",)),
+    _sync(Meta("vehicle_group:edit", "Edit a vehicle group", G.WARFARE), made_kinds.vehicle_group_edit, made_kinds.RecordEdit, free, ("S7.8",)),
+    _sync(Meta("vehicle_group:move", "Hand vehicles to another holder", G.WARFARE), made_kinds.vehicle_group_move, made_kinds.GroupMove, free, ("S7.8",)),
+    _sync(Meta("vehicle_group:repair", "Mend a vehicle group", G.WARFARE), made_kinds.vehicle_group_repair, made_kinds.GroupRepair, free, ("S7.8", "S7.9")),
+    _sync(Meta("vehicle_group:delete", "Strike a vehicle group", G.WARFARE), made_kinds.vehicle_group_delete, made_kinds.RecordTarget, free, ("S7.8",)),
+    _sync(
+        Meta("vehicle_group_section:set", "Set the damage of a group's section", G.WARFARE),
+        made_kinds.vehicle_group_section_set,
+        made_kinds.GroupSectionDraft,
+        free,
+        ("S7.8", "S7.9"),
+    ),
+    _sync(
+        Meta("vehicle_group_section:delete", "Make a group's section whole", G.WARFARE),
+        made_kinds.vehicle_group_section_delete,
+        made_kinds.GroupSectionTarget,
+        free,
+        ("S7.8", "S7.9"),
+    ),
+    _sync(Meta("vessel_section:set", "Set a section of a vessel", G.WARFARE), made_kinds.vessel_section_set, made_kinds.VesselSectionDraft, free, ("S7.9",)),
+    _sync(
+        Meta("vessel_section:delete", "Make a vessel's section whole", G.WARFARE),
+        made_kinds.vessel_section_delete,
+        made_kinds.VesselSectionTarget,
+        free,
+        ("S7.9",),
+    ),
+    _sync(Meta("equipment_model:create", "Make an equipment model", G.WARFARE), made_kinds.equipment_model_create, made_kinds.ModelDraft, free, ("S7.6",)),
+    _sync(Meta("equipment_model:edit", "Edit an equipment model", G.WARFARE), made_kinds.equipment_model_edit, made_kinds.RecordEdit, free, ("S7.6",)),
+    _sync(Meta("equipment_model:delete", "Forget an equipment model", G.WARFARE), made_kinds.equipment_model_delete, made_kinds.RecordTarget, free, ("S7.6",)),
+    _sync(Meta("equipment_store:set", "Set a store of equipment", G.WARFARE), made_kinds.equipment_store_set, made_kinds.StoreDraft, free, ("S7.6",)),
+    _sync(Meta("equipment_store:delete", "Empty a store of equipment", G.WARFARE), made_kinds.equipment_store_delete, made_kinds.StoreTarget, free, ("S7.6",)),
+    _sync(
+        Meta("army_equipment:set", "Set what an army stack carries", G.WARFARE), made_kinds.army_equipment_set, made_kinds.CarriedDraft, free, ("S7.6", "S5.14")
+    ),
+    _sync(
+        Meta("army_equipment:delete", "Take equipment from an army stack", G.WARFARE),
+        made_kinds.army_equipment_delete,
+        made_kinds.CarriedTarget,
+        free,
+        ("S7.6", "S5.14"),
+    ),
+    _sync(Meta("unit_type:create", "Raise a kind of soldier", G.WARFARE), made_kinds.unit_type_create, made_kinds.UnitTypeDraft, free, ("S5.14",)),
+    _sync(Meta("unit_type:edit", "Edit a kind of soldier", G.WARFARE), made_kinds.unit_type_edit, made_kinds.RecordEdit, free, ("S5.14",)),
+    _sync(Meta("unit_type:delete", "Strike a kind of soldier", G.WARFARE), made_kinds.unit_type_delete, made_kinds.RecordTarget, free, ("S5.14",)),
+    _sync(
+        Meta("unit_loadout:set", "Set a piece of a soldier's loadout", G.WARFARE), made_kinds.unit_loadout_set, made_kinds.LoadoutDraft, free, ("S5.14", "S7.6")
+    ),
+    _sync(
+        Meta("unit_loadout:delete", "Take a piece from a loadout", G.WARFARE), made_kinds.unit_loadout_delete, made_kinds.LoadoutTarget, free, ("S5.14", "S7.6")
+    ),
+    _sync(
+        Meta("unit_technique:add", "Make a kind of soldier need a technique", G.WARFARE),
+        made_kinds.unit_technique_add,
+        made_kinds.UnitTechniqueDraft,
+        free,
+        ("S5.14",),
+    ),
+    _sync(
+        Meta("unit_technique:delete", "Free a kind of soldier from a technique", G.WARFARE),
+        made_kinds.unit_technique_delete,
+        made_kinds.UnitTechniqueDraft,
+        free,
+        ("S5.14",),
+    ),
+    _sync(
+        Meta("structure_section:edit", "Edit a section of a structure", G.ENTITIES),
+        made_kinds.structure_section_edit,
+        made_kinds.StructureSectionDraft,
+        free,
+        ("S7.9",),
+    ),
+    _sync(
+        Meta("structure_section:repair", "Make a section of a structure whole", G.ENTITIES),
+        made_kinds.structure_section_repair,
+        made_kinds.StructureSectionTarget,
+        free,
+        ("S7.9",),
+    ),
+    _sync(
+        Meta("structure_section:strike", "Strike a section of a structure", G.ENTITIES),
+        made_kinds.structure_section_strike,
+        made_kinds.StructureStrike,
+        free,
+        ("S7.9",),
+    ),
+    _sync(
+        Meta("structure_section:delete", "Take a section from a structure", G.ENTITIES),
+        made_kinds.structure_section_delete,
+        made_kinds.StructureSectionTarget,
+        free,
+        ("S7.9",),
+    ),
+    _sync(
+        Meta("structure_design_section:set", "Set a section of a structure design", G.ENTITIES),
+        made_kinds.structure_design_section_set,
+        made_kinds.DesignSectionDraft,
+        free,
+        ("S7.9", "S7.11"),
+    ),
+    _sync(
+        Meta("structure_design_section:delete", "Clear a section of a structure design", G.ENTITIES),
+        made_kinds.structure_design_section_delete,
+        made_kinds.DesignSectionTarget,
+        free,
+        ("S7.9", "S7.11"),
+    ),
+    _sync(Meta("megastructure:edit", "Edit a megastructure", G.ENTITIES), made_kinds.megastructure_edit, made_kinds.MegastructureEdit, free, ("S7.10",)),
+    _sync(
+        Meta("megastructure:delete", "Start a megastructure afresh", G.ENTITIES), made_kinds.megastructure_delete, made_kinds.StructureTarget, free, ("S7.10",)
+    ),
+    _sync(Meta("dish:create", "Invent a dish", G.SOCIETY), made_kinds.dish_create, made_kinds.DishDraft, free, ("S7.12",)),
+    _sync(Meta("dish:edit", "Edit a dish", G.SOCIETY), made_kinds.dish_edit, made_kinds.RecordEdit, free, ("S7.12",)),
+    _sync(Meta("dish:delete", "Forget a dish", G.SOCIETY), made_kinds.dish_delete, made_kinds.RecordTarget, free, ("S7.12",)),
+    _sync(Meta("dish_ingredient:set", "Set an ingredient of a dish", G.SOCIETY), made_kinds.dish_ingredient_set, made_kinds.IngredientDraft, free, ("S7.12",)),
+    _sync(
+        Meta("dish_ingredient:delete", "Leave an ingredient out of a dish", G.SOCIETY),
+        made_kinds.dish_ingredient_delete,
+        made_kinds.IngredientTarget,
+        free,
+        ("S7.12",),
+    ),
+    _sync(Meta("community_dish:set", "Have a community cook a dish", G.SOCIETY), made_kinds.community_dish_set, made_kinds.CookingDraft, free, ("S7.12",)),
+    _sync(
+        Meta("community_dish:edit", "Edit how a community cooks a dish", G.SOCIETY), made_kinds.community_dish_edit, made_kinds.CookingEdit, free, ("S7.12",)
+    ),
+    _sync(
+        Meta("community_dish:delete", "Stop a community cooking a dish", G.SOCIETY),
+        made_kinds.community_dish_delete,
+        made_kinds.CookingTarget,
+        free,
+        ("S7.12",),
+    ),
+)
+
 ACTIONS: tuple[ActionSpec, ...] = (
     *CYCLE_ACTIONS,
     *REGIME_ACTIONS,
@@ -3893,6 +4058,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *DIVINITY_ACTIONS,
     *COSMOGRAPHY_ACTIONS,
     *PHYSICS_ACTIONS,
+    *MADE_KIND_ACTIONS,
 )
 
 

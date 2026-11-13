@@ -19,6 +19,7 @@ from aerona.domain.enums.intrigue import BeliefSource
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.urban import ConvoyStatus, Preservation, TransportKind
 from aerona.engine.context import TickContext
+from aerona.engine.cuisine.dishes import carry_dish
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import open_outbreak
 from aerona.engine.economy.purse import take_coin
@@ -30,6 +31,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import move_stat, shift_bounded, stat, stat_or
 from aerona.engine.renown.currencies import realm_of_community
+from aerona.engine.vehicles.caravans import carrier_group, raid_carriers
 from aerona.rules.registry import Rules
 
 WEALTH = "wealth"
@@ -51,6 +53,7 @@ class ConvoyTally:
     lost: int = 0
     delayed: int = 0
     worn: int = 0
+    carriers_lost: int = 0
 
 
 def fleet_capacity(rules: Rules, fleet: FleetRow) -> int:
@@ -106,6 +109,10 @@ async def dispatch(ctx: TickContext, route: EntityRow, profile: TradeRouteProfil
     capacity = fleet_capacity(ctx.rules, fleet)
     cargo = await load_cargo(ctx, route.id)
     vehicles = 0 if fleet.kind in ANIMAL_KINDS else fleet.count
+    carriers = await carrier_group(ctx.session, owner_id, profile.mode)
+    if carriers is not None:
+        capacity = max(capacity, carriers.cargo)
+        vehicles = max(vehicles, carriers.group.count)
     animals = fleet.count if fleet.kind in ANIMAL_KINDS else 0
     origin = await ctx.session.get(EntityRow, profile.first_market_id)
     rng = ctx.rng(f"convoy.{route.id}")
@@ -202,6 +209,7 @@ async def arrive(ctx: TickContext, convoy: ConvoyRow, profile: TradeRouteProfile
         return
     convoy.region_entity_id = atlas.top_region(destination.id)
     move_stat(origin, destination, "population", convoy.passengers.get(MIGRANTS, 0))
+    await carry_dish(ctx, origin, destination)
     shift_bounded(ctx.rules, destination, "piety", convoy.passengers.get(MISSIONARIES, 0) * ctx.rules.convoys.conversion / PERCENT)
     await carry_culture(ctx, origin, destination)
     origin_region = atlas.top_region(origin.id)
@@ -244,6 +252,10 @@ async def resolve(ctx: TickContext, convoy: ConvoyRow, tally: ConvoyTally, book:
         convoy.cargo = {}
         tally.raided += int(status is ConvoyStatus.RAIDED)
         tally.lost += int(status is ConvoyStatus.LOST)
+        carriers = await carrier_group(ctx.session, convoy.owner_entity_id, profile.mode) if convoy.owner_entity_id is not None else None
+        if carriers is not None:
+            struck = await raid_carriers(ctx, carriers.group, 2 if status is ConvoyStatus.LOST else 1, f"convoy.{convoy.id}")
+            tally.carriers_lost += struck.lost
         route = await ctx.session.get(EntityRow, convoy.route_entity_id)
         if route is not None and status is ConvoyStatus.RAIDED:
             await note(ctx, f"A convoy on {route.name} was raided and its goods taken.", key="trade.convoy_raided", ids=[route.id])

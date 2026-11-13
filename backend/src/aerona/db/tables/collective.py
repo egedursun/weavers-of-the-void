@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String
+from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.db.base import Base
@@ -33,9 +33,10 @@ from aerona.domain.enums.collective import (
     SupporterPose,
     Tincture,
 )
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.military import HullClass
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
+from aerona.domain.enums.vehicles import FireControl, Propulsion, VehicleDomain, VehicleFamily, VehicleFrame, VehicleSize
 
 KEY_LENGTH = 80
 MOOD_FIELDS = ("anger", "anxiety", "fervour", "deterrence", "agitation", "last_trigger")
@@ -78,7 +79,36 @@ ARMS_FIELDS = (
     "crest_tincture",
     "motto",
 )
-DESIGN_FIELDS = ("name", "hull", "obsolete", "speed", "range", "seaworthiness", "cargo", "armament", "crew", "designer_entity_id")
+DESIGN_FIELDS = (
+    "name",
+    "description",
+    "frame",
+    "world_id",
+    "origin_node_id",
+    "owner_entity_id",
+    "domain",
+    "family",
+    "propulsion",
+    "size_class",
+    "obsolete",
+    "speed",
+    "range",
+    "seaworthiness",
+    "cargo",
+    "armament",
+    "crew",
+    "troops",
+    "armour",
+    "structure",
+    "fuel",
+    "fuel_use",
+    "cost",
+    "upkeep",
+    "tech_level",
+    "strangeness",
+    "fire_control",
+    "designer_entity_id",
+)
 COMPONENT_FIELDS = ("material_id", "size", "quality")
 WEAR_FIELDS = ("wear",)
 
@@ -469,6 +499,15 @@ class ArmsRow(Base):
 class DesignRow(Base):
     __tablename__ = "designs"
     __table_args__ = (
+        at_least("troops", 0),
+        between("armour", PERCENT_MIN, PERCENT_MAX),
+        at_least("structure", 0),
+        at_least("fuel_use", 0),
+        at_least("cost", 0),
+        at_least("upkeep", 0),
+        between("tech_level", 0, 10),
+        between("strangeness", PERCENT_MIN, PERCENT_MAX),
+        Index("ix_designs_world", "world_id"),
         at_least("speed", 0),
         at_least("range", 0),
         between("seaworthiness", PERCENT_MIN, PERCENT_MAX),
@@ -481,10 +520,29 @@ class DesignRow(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    owner_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    owner_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     kind: Mapped[DesignKind] = mapped_column(enum_type(DesignKind, "kind"))
-    hull: Mapped[HullClass | None] = mapped_column(enum_type(HullClass, "hull"))
+    frame: Mapped[VehicleFrame | None] = mapped_column(enum_type(VehicleFrame, "frame"))
     name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str | None] = mapped_column(Text)
+    world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
+    origin_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    domain: Mapped[VehicleDomain | None] = mapped_column(enum_type(VehicleDomain, "domain"))
+    family: Mapped[VehicleFamily | None] = mapped_column(enum_type(VehicleFamily, "family"))
+    propulsion: Mapped[Propulsion | None] = mapped_column(enum_type(Propulsion, "propulsion"))
+    size_class: Mapped[VehicleSize] = mapped_column(enum_type(VehicleSize, "size_class"), default=VehicleSize.MEDIUM, server_default=VehicleSize.MEDIUM.value)
+    troops: Mapped[int] = mapped_column(default=0, server_default="0")
+    armour: Mapped[int] = mapped_column(default=0, server_default="0")
+    structure: Mapped[int] = mapped_column(default=30, server_default="30")
+    fuel: Mapped[CommodityKind | None] = mapped_column(enum_type(CommodityKind, "fuel"))
+    fuel_use: Mapped[int] = mapped_column(default=0, server_default="0")
+    cost: Mapped[int] = mapped_column(default=0, server_default="0")
+    upkeep: Mapped[int] = mapped_column(default=0, server_default="0")
+    tech_level: Mapped[int] = mapped_column(default=0, server_default="0")
+    strangeness: Mapped[int] = mapped_column(default=0, server_default="0")
+    fire_control: Mapped[FireControl] = mapped_column(
+        enum_type(FireControl, "fire_control"), default=FireControl.MANUAL, server_default=FireControl.MANUAL.value
+    )
     designer_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     parent_design_id: Mapped[int | None] = mapped_column(ForeignKey("designs.id", ondelete="SET NULL"))
     mass: Mapped[int] = mapped_column(default=0)

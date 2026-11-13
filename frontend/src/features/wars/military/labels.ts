@@ -66,8 +66,6 @@ import {
   ShieldCheck,
   ShieldHalf,
   ShieldPlus,
-  Ship,
-  ShipWheel,
   Shovel,
   Signpost,
   Skull,
@@ -89,6 +87,11 @@ import {
   Wind,
   Zap,
   type LucideIcon,
+  Anchor,
+  Target,
+  Truck,
+  Rocket,
+  Wrench,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -122,7 +125,7 @@ export const DOCTRINE: Record<Schemas['MartialStyle'], Named> = {
   skirmisher: { label: 'Skirmishers', icon: Crosshair, tone: 'gold' },
   chariot: { label: 'Chariots', icon: Disc3, tone: 'gold' },
   phalanx: { label: 'Phalanx', icon: Fence, tone: 'info' },
-  berserker: { label: 'Berserkers', icon: HandFist, tone: 'danger' },
+  shock: { label: 'Shock', icon: HandFist, tone: 'danger' },
   naval_raider: { label: 'Sea raiders', icon: Sailboat, tone: 'info' },
   siege_engineer: { label: 'Siege engineers', icon: Anvil, tone: 'muted' },
   war_magic: { label: 'War magic', icon: WandSparkles, tone: 'verdigris' },
@@ -198,51 +201,61 @@ export const TRAIT: Record<Schemas['CommanderTrait'], Named> = {
   brutal: { label: 'Brutal', icon: Skull, tone: 'danger' },
 }
 
-export const FAMILY: Record<string, Named> = {
+export const FAMILY: Record<Schemas['UnitFamily'], Named> = {
   infantry: { label: 'Infantry', icon: ChessPawn, tone: 'gold' },
   missile: { label: 'Missile troops', icon: BowArrow, tone: 'info' },
   mounted: { label: 'Mounted', icon: ChessKnight, tone: 'warning' },
   beast: { label: 'Beasts', icon: PawPrint, tone: 'danger' },
   engineer: { label: 'Engineers', icon: Anvil, tone: 'success' },
   magic: { label: 'Magic', icon: WandSparkles, tone: 'verdigris' },
-  naval: { label: 'Naval', icon: Sailboat, tone: 'info' },
+  vehicle: { label: 'Vehicle crews', icon: Truck, tone: 'info' },
   exotic: { label: 'Exotic', icon: Sparkles, tone: 'verdigris' },
 }
 
-export const UNIT_ICON: Record<string, LucideIcon> = {
+export const UNIT_ICON: Record<Schemas['UnitKind'], LucideIcon> = {
   levy: ChessPawn,
-  spearmen: Slash,
+  line_infantry: Slash,
   heavy_infantry: ShieldHalf,
-  shield_wall: Shield,
-  pikemen: Fence,
-  skirmishers: Crosshair,
-  berserkers: HandFist,
-  temple_guard: Church,
+  shield_infantry: Shield,
+  pike_infantry: Fence,
+  light_infantry: Crosshair,
+  shock_infantry: HandFist,
+  guard_infantry: Crown,
+  marines: Anchor,
   slingers: Disc3,
   archers: BowArrow,
   crossbowmen: Crosshair,
-  horse_archers: BowArrow,
   javelineers: Slash,
+  gunners: Target,
+  grenadiers: Bomb,
   light_cavalry: ChessKnight,
   heavy_cavalry: ChessKnight,
+  mounted_archers: BowArrow,
+  mounted_gunners: Target,
   beast_riders: PawPrint,
+  sky_riders: Bird,
   chariots: Disc3,
+  vehicle_crew: Truck,
+  siege_crew: Anvil,
+  artillery_crew: Bomb,
+  naval_crew: Sailboat,
+  sky_crew: Cloud,
+  void_crew: Rocket,
   war_beasts: PawPrint,
   bound_beasts: Link,
-  sky_mounts: Bird,
   sappers: Shovel,
-  siege_engines: Anvil,
-  war_mages: WandSparkles,
-  priests: Church,
-  necromancers: Skull,
-  galleys: Ship,
-  longships: Sailboat,
-  warships: ShipWheel,
-  fire_ships: Flame,
-  skyships: Cloud,
-  golems: Bot,
-  void_spawn: Eclipse,
-  ghost_host: Ghost,
+  engineers: Wrench,
+  battle_casters: WandSparkles,
+  support_casters: Sparkles,
+  summoners: Eclipse,
+  constructs: Bot,
+  summoned_host: Ghost,
+}
+
+const UNIT_ICONS: Readonly<Record<string, LucideIcon | undefined>> = UNIT_ICON
+
+export function unitIcon(kind: string, fallback: LucideIcon): LucideIcon {
+  return UNIT_ICONS[kind] ?? fallback
 }
 
 export const ARMOUR: Record<string, Named & { rank: number }> = {

@@ -218,3 +218,7 @@ PLANT_PERENNIAL = Line("tools.mortal.plant_perennial", "{me} planted {kind:an} i
 SEND_AID = Line("tools.mortal.send_aid", "{me} sent {kind} to {town}.")
 PLAN_REBUILDING = Line("tools.mortal.plan_rebuilding", "{me} drew a new plan for rebuilding {town}.")
 PREPARE_TOWN = Line("tools.mortal.prepare_town", "{me} raised the {kind}s of {town}.")
+UNIT_TYPE_DRAFTED = Line("tools.mortal.draft_unit_type", "{me} set out a new kind of soldier for {owner}: {name}.")
+MODEL_FORGED = Line("tools.mortal.forge_model", "{me} made {name}.")
+DISH_CREATED = Line("tools.mortal.create_dish", "{me} first cooked {name}.")
+STRUCTURE_TYPE_DRAWN = Line("tools.mortal.draw_structure_type", "{me} drew {name}.")

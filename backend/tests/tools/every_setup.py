@@ -1229,3 +1229,15 @@ async def aiding_realm(session: AsyncSession, realm: Realm) -> Ids:
     profile.treasury = 5000
     await session.flush()
     return {**found, **other}
+
+
+async def war_trained(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.TACTICS, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
+    await session.flush()
+    return {}
+
+
+async def builder_trained(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.ENGINEERING, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
+    await session.flush()
+    return {}

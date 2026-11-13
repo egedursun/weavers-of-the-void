@@ -256,6 +256,297 @@ export const STRUCTURE_LOOK: Record<Schema['StructureKind'], Look> = {
     { model: building('tower_A', 'green') },
     { model: spooky('arch'), scale: SPOOKY, offset: [0.5, 0.45] },
   ],
+  embassy: [
+    { model: building('home_B', 'yellow') },
+    { model: prop('flag_blue'), scale: 0.6, offset: [0.45, -0.3] },
+    { model: prop('flag_red'), scale: 0.6, offset: [-0.45, -0.3] },
+  ],
+  lighthouse: [
+    { model: building('tower_A', 'yellow') },
+    { model: spooky('lantern_standing'), scale: SPOOKY, offset: [0.45, 0.45] },
+  ],
+  signal_tower: [
+    { model: building('tower_B', 'yellow'), scale: 0.8 },
+    { model: prop('flag_yellow'), scale: 0.7, offset: [0.35, -0.3] },
+  ],
+  customs_house: [
+    { model: building('market', 'blue'), scale: 0.85 },
+    { model: prop('crate_A_small'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  toll_gate: [
+    { model: neutral('fence_stone_straight_gate') },
+    {
+      model: building('tower_base', 'yellow'),
+      scale: 0.5,
+      offset: [0.55, 0.3],
+    },
+  ],
+  courthouse: [
+    { model: building('church', 'blue'), scale: 0.9 },
+    { model: prop('flag_blue'), scale: 0.6, offset: [0.45, -0.3] },
+  ],
+  archive: [
+    { model: building('home_B', 'green') },
+    { model: prop('crate_long_B'), scale: 0.6, offset: [0.5, 0.45] },
+  ],
+  printing_house: [
+    { model: building('lumbermill', 'blue') },
+    { model: prop('pallet'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  laboratory: [
+    { model: building('tower_base', 'blue') },
+    { model: prop('bucket_water'), scale: 0.7, offset: [0.45, 0.4] },
+  ],
+  foundry: [
+    { model: building('blacksmith', 'blue') },
+    { model: prop('resource_stone'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  smelter: [
+    { model: building('blacksmith', 'yellow') },
+    {
+      model: building('tower_base', 'yellow'),
+      scale: 0.5,
+      offset: [0.55, 0.35],
+    },
+  ],
+  kiln: [
+    { model: building('well', 'red'), scale: 0.8 },
+    { model: prop('resource_stone'), scale: 0.6, offset: [0.45, 0.4] },
+  ],
+  glassworks: [
+    { model: building('lumbermill', 'blue'), scale: 0.85 },
+    { model: prop('crate_B_small'), scale: 0.6, offset: [0.5, 0.4] },
+  ],
+  textile_mill: [
+    { model: building('watermill', 'blue') },
+    { model: prop('sack'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  dye_works: [
+    { model: building('home_A', 'yellow') },
+    { model: prop('barrel'), scale: 0.7, offset: [0.5, 0.4] },
+    { model: prop('bucket_water'), scale: 0.7, offset: [-0.5, 0.4] },
+  ],
+  paper_mill: one(building('watermill', 'yellow')),
+  bakery: [
+    { model: building('home_A', 'yellow') },
+    { model: prop('sack'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  dairy: [
+    { model: building('home_B', 'green') },
+    { model: neutral('fence_wood_straight'), scale: 0.6, offset: [0, 0.6] },
+    { model: prop('bucket_empty'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  distillery: [
+    { model: building('tavern', 'blue') },
+    { model: prop('barrel'), scale: 0.8, offset: [0.5, 0.4] },
+  ],
+  refinery: [
+    { model: building('tower_base', 'red') },
+    { model: building('tower_base', 'red'), scale: 0.6, offset: [0.55, 0.35] },
+    { model: prop('barrel'), scale: 0.7, offset: [-0.5, 0.4] },
+  ],
+  power_plant: [
+    { model: building('mine', 'blue'), scale: 1.1 },
+    { model: building('tower_base', 'blue'), scale: 0.6, offset: [0.6, 0.35] },
+  ],
+  silo: [
+    { model: building('tower_base', 'yellow'), scale: 0.9 },
+    { model: neutral('building_grain'), scale: 0.6, offset: [0.55, 0.35] },
+  ],
+  cistern: [
+    { model: building('well', 'blue'), scale: 0.9 },
+    { model: prop('bucket_water'), scale: 0.7, offset: [0.45, 0.4] },
+  ],
+  reservoir: [
+    { model: hex('tiles/rivers/hex_river_A'), scale: 0.55 },
+    { model: neutral('wall_straight'), scale: 0.6, offset: [0, 0.55] },
+  ],
+  canal_lock: [
+    { model: hex('tiles/rivers/hex_river_A'), scale: 0.5 },
+    { model: neutral('wall_straight_gate'), scale: 0.6, offset: [0, 0.4] },
+  ],
+  tunnel: [
+    { model: nature('hill_single_A') },
+    { model: spooky('arch'), scale: SPOOKY, offset: [0, 0.5] },
+  ],
+  rail_station: [
+    { model: building('market', 'red'), scale: 0.9 },
+    { model: hex('tiles/roads/hex_road_A'), scale: 0.45, offset: [0, 0.6] },
+  ],
+  airfield: [
+    { model: hex('tiles/roads/hex_road_A'), scale: 0.55 },
+    { model: prop('tent'), scale: 0.8, offset: [0.55, 0.35] },
+    { model: prop('flag_blue'), scale: 0.6, offset: [-0.5, -0.3] },
+  ],
+  spaceport: [
+    { model: building('tower_A', 'blue') },
+    { model: hex('tiles/roads/hex_road_A'), scale: 0.5, offset: [0, 0.6] },
+    { model: spooky('arch_gate'), scale: SPOOKY, offset: [0.55, 0.3] },
+  ],
+  dry_dock: [
+    { model: neutral('building_bridge_B') },
+    { model: neutral('building_scaffolding'), scale: 0.6, offset: [0.5, 0.4] },
+  ],
+  arsenal: [
+    { model: building('barracks', 'red') },
+    { model: prop('weaponrack'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  kennel: [
+    { model: building('home_A', 'green'), scale: 0.8 },
+    { model: neutral('fence_wood_straight'), scale: 0.6, offset: [0, 0.6] },
+  ],
+  menagerie: [
+    { model: nature('trees_A_small') },
+    { model: neutral('fence_stone_straight'), scale: 0.6, offset: [0, 0.6] },
+    { model: neutral('fence_stone_straight'), scale: 0.6, offset: [0, -0.6] },
+  ],
+  botanical_garden: [
+    { model: nature('trees_B_small') },
+    { model: nature('waterplant_B'), scale: 0.8, offset: [0.45, 0.4] },
+    { model: building('well', 'green'), scale: 0.5, offset: [-0.5, 0.4] },
+  ],
+  cemetery: [
+    { model: spooky('gravestone'), scale: SPOOKY },
+    { model: spooky('gravemarker_A'), scale: SPOOKY, offset: [0.5, 0.4] },
+    { model: spooky('fence'), scale: SPOOKY, offset: [0, 0.6] },
+  ],
+  gymnasium: [
+    { model: building('archeryrange', 'blue') },
+    { model: prop('target'), scale: 0.6, offset: [0.5, 0.4] },
+  ],
+  asylum: [
+    { model: building('home_B', 'blue') },
+    { model: neutral('fence_stone_straight'), scale: 0.6, offset: [0, 0.6] },
+  ],
+  quarantine_house: [
+    { model: building('home_A', 'blue') },
+    { model: neutral('fence_wood_straight'), scale: 0.6, offset: [0, 0.6] },
+    { model: prop('flag_yellow'), scale: 0.6, offset: [0.45, -0.3] },
+  ],
+  inn: [
+    { model: building('tavern', 'red') },
+    { model: prop('barrel'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  market_hall: [
+    { model: building('market', 'yellow'), scale: 1.15 },
+    { model: prop('crate_A_big'), scale: 0.6, offset: [0.55, 0.45] },
+  ],
+  exchange: [
+    { model: building('church', 'yellow'), scale: 0.9 },
+    { model: prop('crate_B_small'), scale: 0.6, offset: [0.5, 0.4] },
+  ],
+  university: [
+    { model: building('tower_B', 'green') },
+    { model: building('home_B', 'green'), scale: 0.7, offset: [0.55, 0.3] },
+    { model: building('home_A', 'green'), scale: 0.7, offset: [-0.55, 0.3] },
+  ],
+  seminary: [
+    { model: building('church', 'green') },
+    { model: building('home_A', 'green'), scale: 0.6, offset: [0.55, 0.35] },
+  ],
+  conservatory: [
+    { model: building('home_B', 'yellow') },
+    { model: prop('flag_green'), scale: 0.6, offset: [0.45, -0.3] },
+  ],
+  opera_house: [
+    { model: building('church', 'red'), scale: 1.1 },
+    { model: spooky('pillar'), scale: SPOOKY, offset: [0.55, 0.5] },
+    { model: spooky('pillar'), scale: SPOOKY, offset: [-0.55, 0.5] },
+  ],
+  gallery: [
+    { model: building('home_B', 'blue') },
+    { model: spooky('plaque'), scale: SPOOKY, offset: [0.5, 0.45] },
+  ],
+  stadium: [
+    { model: building('archeryrange', 'yellow'), scale: 1.2 },
+    { model: prop('flag_yellow'), scale: 0.7, offset: [0.6, -0.3] },
+    { model: prop('flag_red'), scale: 0.7, offset: [-0.6, -0.3] },
+  ],
+  orbital_ring: [
+    { model: spooky('arch_gate'), scale: SPOOKY * 1.6 },
+    {
+      model: neutral('wall_corner_A_outside'),
+      scale: 0.5,
+      offset: [0.55, 0.4],
+    },
+    {
+      model: neutral('wall_corner_A_outside'),
+      scale: 0.5,
+      offset: [-0.55, 0.4],
+      turn: Math.PI,
+    },
+  ],
+  space_elevator: [
+    { model: building('tower_B', 'blue'), scale: 1.3 },
+    { model: building('tower_base', 'blue'), scale: 0.6, offset: [0.55, 0.35] },
+  ],
+  space_station: [
+    { model: building('tower_A', 'green'), scale: 1.1 },
+    { model: spooky('arch'), scale: SPOOKY, offset: [0.55, 0.4] },
+  ],
+  star_collector: [
+    { model: building('windmill', 'blue'), scale: 1.1 },
+    { model: spooky('lantern_standing'), scale: SPOOKY, offset: [0.5, 0.45] },
+  ],
+  beacon: [
+    { model: building('tower_A', 'red'), scale: 1.1 },
+    { model: spooky('lantern_hanging'), scale: SPOOKY, offset: [0.45, 0.4] },
+  ],
+  planetary_engine: [
+    { model: building('mine', 'green'), scale: 1.3 },
+    { model: building('tower_base', 'green'), scale: 0.7, offset: [0.6, 0.35] },
+    {
+      model: building('tower_base', 'green'),
+      scale: 0.7,
+      offset: [-0.6, 0.35],
+    },
+  ],
+  habitat_ring: [
+    { model: building('castle', 'blue'), scale: 1.1 },
+    {
+      model: neutral('wall_corner_B_outside'),
+      scale: 0.5,
+      offset: [0.55, 0.45],
+    },
+  ],
+}
+
+const FORM_BODY: Record<Schema['BuildingForm'], Part> = {
+  hall: { model: building('home_B', 'yellow') },
+  longhouse: { model: building('home_A', 'green'), scale: 1.15 },
+  tower: { model: building('tower_A', 'blue') },
+  keep: { model: building('castle', 'red') },
+  dome: { model: building('church', 'yellow') },
+  spire: { model: building('tower_B', 'green') },
+  stepped: { model: neutral('building_stage_C') },
+  pyramid: { model: neutral('building_stage_B') },
+  courtyard: { model: building('market', 'green') },
+  ring: { model: neutral('wall_corner_A_outside') },
+  tent: { model: prop('tent'), scale: 1.2 },
+  mound: { model: nature('hill_single_A'), scale: 0.8 },
+  arcade: { model: neutral('building_bridge_A') },
+  terrace: { model: neutral('building_stage_A') },
+  platform: { model: neutral('building_dirt') },
+  bridge_form: { model: neutral('building_bridge_B') },
+  wall_line: { model: neutral('wall_straight') },
+  tunnel_form: { model: spooky('arch'), scale: SPOOKY * 1.6 },
+  orbital: { model: spooky('arch_gate'), scale: SPOOKY * 1.6 },
+}
+
+const STOREY_STEP = 0.06
+const STOREY_CAP = 8
+
+export function typedLook(
+  kind: Schema['StructureKind'],
+  form: Schema['BuildingForm'] | null | undefined,
+  storeys: number | null | undefined
+): Part[] {
+  const base = STRUCTURE_LOOK[kind]
+  if (!form) return [...base]
+  const body = FORM_BODY[form]
+  const lift =
+    1 + Math.min(STOREY_CAP, Math.max(0, (storeys ?? 1) - 1)) * STOREY_STEP
+  return [{ ...body, scale: (body.scale ?? 1) * lift }, ...base.slice(1)]
 }
 
 export const HOUSING_LOOK: Record<Schema['HousingLevel'], Part> = {

@@ -13,7 +13,11 @@ import {
   type WorldState,
 } from '@/features/entity/api/types'
 import { KIND_SPEC } from '@/features/entity/society/structureLabels'
+import { type WorldKinds } from '@/features/madeKinds/api'
+import { type MadeKind, kindKey } from '@/features/madeKinds/kindKeys'
+import { COURSE, SLOT, VEHICLE_FAMILY } from '@/features/madeKinds/labels'
 import { HOUSING } from '@/features/urban/labels'
+import { FAMILY, unitIcon } from '@/features/wars/military/labels'
 import { type AtlasSort } from './atlasSearch'
 
 export type AtlasNodeKind =
@@ -29,6 +33,7 @@ export type AtlasNodeKind =
   | 'galaxy'
   | 'building-type'
   | 'dwelling-type'
+  | 'made-type'
 
 export type AtlasNode = {
   key: string
@@ -123,6 +128,7 @@ type TreeInput = {
   heavens?: Cosmography | undefined
   types: EntityTypeInfo[]
   buildings?: ReadonlyMap<number, StructureTypes>
+  kinds?: ReadonlyMap<number, WorldKinds>
 }
 
 export const INSTANCE_TYPES: ReadonlySet<string> = new Set(['structure'])
@@ -174,6 +180,127 @@ function buildingTypes(
         ]
       : []),
   ]
+}
+
+function madeGroup(
+  worldId: number,
+  kind: MadeKind,
+  label: string,
+  children: AtlasNode[]
+): AtlasNode[] {
+  return children.length
+    ? [
+        {
+          key: `group:${worldId}:made-${kind}`,
+          label,
+          kind: 'group' as const,
+          children,
+        },
+      ]
+    : []
+}
+
+function madeTypes(
+  worldId: number,
+  found: WorldKinds | undefined
+): AtlasNode[] {
+  if (!found) return []
+  const node = (
+    kind: MadeKind,
+    id: number,
+    label: string,
+    hint: string,
+    icon: AtlasNode['icon']
+  ): AtlasNode => ({
+    key: kindKey(kind, worldId, id),
+    label,
+    kind: 'made-type',
+    hint,
+    icon,
+    children: [],
+  })
+  const groups = [
+    ...madeGroup(
+      worldId,
+      'vehicle',
+      'Vehicle types',
+      found.vehicle_types.map((row) =>
+        node(
+          'vehicle',
+          row.id,
+          row.name,
+          `${row.frame_label ?? 'Vehicle'} of ${row.origin?.name ?? 'no maker'}`,
+          VEHICLE_FAMILY[row.family ?? 'cart'].icon
+        )
+      )
+    ),
+    ...madeGroup(
+      worldId,
+      'unit',
+      'Kinds of soldier',
+      found.unit_types.map((row) =>
+        node(
+          'unit',
+          row.id,
+          row.name,
+          `${row.role_label} of ${row.origin?.name ?? 'no maker'}`,
+          unitIcon(row.base_kind, FAMILY[row.family].icon)
+        )
+      )
+    ),
+    ...madeGroup(
+      worldId,
+      'equipment',
+      'Equipment models',
+      found.equipment_models.map((row) =>
+        node(
+          'equipment',
+          row.id,
+          row.name,
+          `${row.family_label} of ${row.origin?.name ?? 'no maker'}`,
+          SLOT[row.slot].icon
+        )
+      )
+    ),
+    ...madeGroup(
+      worldId,
+      'dish',
+      'Dishes',
+      found.dishes.map((row) =>
+        node(
+          'dish',
+          row.id,
+          row.name,
+          `${COURSE[row.course].label} of ${row.origin?.name ?? 'no maker'}`,
+          COURSE[row.course].icon
+        )
+      )
+    ),
+    ...madeGroup(
+      worldId,
+      'building',
+      'Building types of the peoples',
+      found.building_types.map((row) =>
+        node(
+          'building',
+          row.id,
+          row.name,
+          `${row.kind_label} of ${row.origin?.name ?? 'no maker'}`,
+          KIND_SPEC[row.base_kind].icon
+        )
+      )
+    ),
+  ]
+  return groups.length
+    ? [
+        {
+          key: `group:${worldId}:made-kinds`,
+          label: 'Made kinds',
+          kind: 'group' as const,
+          children: groups,
+        },
+      ]
+    : []
 }
 
 function humanizeKind(value: string): string {
@@ -297,6 +424,7 @@ export function buildAtlasTree({
   heavens,
   types,
   buildings,
+  kinds,
 }: TreeInput): AtlasNode[] {
   const byId = new Map(entities.map((entity) => [entity.id, entity]))
   const childrenOf = new Map<number, EntitySummary[]>()
@@ -371,6 +499,7 @@ export function buildAtlasTree({
             children: locationTree(items, childrenOf, seen),
           })),
         ...buildingTypes(worldId, buildings?.get(worldId)),
+        ...madeTypes(worldId, kinds?.get(worldId)),
         ...(gods.length
           ? [
               {

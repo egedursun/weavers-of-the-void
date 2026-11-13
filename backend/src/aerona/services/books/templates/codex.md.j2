@@ -34,6 +34,38 @@
 
 {% endfor %}
 {%- endmacro %}
+{% macro made_kind(article) -%}
+#### {{ article.name }}
+
+*{{ article.kind }} · of {{ article.maker }}*
+
+{% if article.description %}{{ article.description }}
+
+{% endif %}
+| Value | |
+|---|---|
+{% for fact in article.facts %}
+| {{ fact.label | cell }} | {{ fact.value | cell }} |
+{% endfor %}
+
+{% for table in article.tables %}
+**{{ table.title }}**
+
+| {% for header in table.headers %}{{ header | cell }} | {% endfor %}
+
+|{% for header in table.headers %}---|{% endfor %}
+
+{% for row in table.rows %}
+| {% for value in row %}{{ value | cell }} | {% endfor %}
+
+{% endfor %}
+
+{% endfor %}
+{% for line in article.lines %}
+{{ line }}
+
+{% endfor %}
+{%- endmacro %}
 {% macro typed(sections) -%}
 {% for section in sections %}
 **{{ section.title }}.**{% for fact in section.facts %} {{ fact.label }}: {{ fact.value }}{% if not loop.last %};{% endif %}{% endfor %}
@@ -256,6 +288,9 @@
 - [Deeds and Trials](#achievements)
 {% if book.ledger %}
 - [Fate's Ledger](#ledger)
+{% endif %}
+{% if book.made %}
+- [Made Kinds](#made-kinds)
 {% endif %}
 {% if book.records %}
 - [Records of the Cosmos](#records)
@@ -798,6 +833,29 @@ Score **{{ book.scores[-1].total }}** · Achievements **{{ book.achievements | l
 {% for entry in book.ledger %}
 - **Epoch {{ entry.epoch }}.** {{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone)*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary | plain }}{% endif %}
 {% for change in book.ledger_changes.get(entry.id, []) %}  - **{{ change.verb }}** {{ change.target }}{% if change.details %} — {{ change.details | join(" · ") }}{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if book.made %}
+---
+
+<a id="made-kinds"></a>
+
+## Made Kinds
+
+*The named vehicle types, kinds of soldier, equipment, dishes and buildings each people made; what is built to them lives with its holders.*
+
+{% for world in book.made %}
+{% if book.multi_world %}
+### {{ world.name }}
+
+{% endif %}
+{% for group in world.groups %}
+### {{ group.title }}
+
+{% for article in group.articles %}
+{{ made_kind(article) }}
+{% endfor %}
 {% endfor %}
 {% endfor %}
 {% endif %}

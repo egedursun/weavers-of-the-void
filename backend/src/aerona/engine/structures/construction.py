@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from sqlalchemy import func, select
 
@@ -43,6 +43,7 @@ from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.structures.profiles import aesthetic_for, durability_from, ensure_profile, fire_resistance_from, host_for, material_props, refresh
 from aerona.engine.structures.spec import build_cost, resolve, scale_index
+from aerona.engine.structures.types import builders_type
 from aerona.engine.structures.workshops import link_workshop
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
@@ -114,6 +115,8 @@ async def best_architect(ctx: TickContext, site: EntityRow) -> EntityRow | None:
 
 
 async def begin(ctx: TickContext, order: Commission) -> tuple[EntityRow, ConstructionRow]:
+    if order.design is None:
+        order = replace(order, design=await builders_type(ctx, order.builder, order.site, order.kind))
     resolved = resolve(order.kind, order.design)
     rules = ctx.rules
     builder = order.builder or order.site

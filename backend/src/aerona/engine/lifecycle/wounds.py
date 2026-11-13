@@ -248,7 +248,8 @@ async def _hp_loss(ctx: TickContext, bearer: Bearer, harm: Harm, hits: list[Hit]
 
 
 DAMAGE_TYPES = frozenset(item.value for item in DamageType)
-BODIED = frozenset({EntityType.MORTAL, EntityType.BEAST})
+BODIED = frozenset({EntityType.MORTAL, EntityType.BEAST, EntityType.COSMIC_BEING, EntityType.OUTER_BEING})
+RETIRED_ON_DEATH = frozenset({EntityType.BEAST, EntityType.COSMIC_BEING, EntityType.OUTER_BEING})
 
 
 async def armed(ctx: TickContext, harm: Harm) -> Harm:
@@ -310,7 +311,7 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
         return Wounding(WoundOutcome.WOUNDED, rows, lost)
     if not isinstance(bearer, EntityRow):
         return Wounding(WoundOutcome.DIED, rows, lost)
-    if bearer.entity_type is EntityType.BEAST:
+    if bearer.entity_type in RETIRED_ON_DEATH:
         if harm.killer_id is not None:
             await connect(ctx.session, harm.killer_id, bearer.id, BondKind.KILLED, ctx.epoch, description=harm.death_cause)
         await retire_in(ctx, bearer, harm.death_cause)

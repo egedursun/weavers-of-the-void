@@ -17,6 +17,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.economy.materials import MaterialProps, from_row, from_spec, set_node_material
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.structures.integrity import integrity_share
 from aerona.engine.structures.spec import Resolved, capacity_of, resolve, staff_needed, upkeep_of
 from aerona.rules.registry import Rules
 
@@ -201,7 +202,7 @@ async def refresh(session: AsyncSession, rules: Rules, structure: EntityRow, pro
     if "staff_pct" not in profile.locked:
         profile.staff_pct = await allocate_staff(session, rules, profile, resolved)
     if "effect_pct" not in profile.locked:
-        profile.effect_pct = effect_of(rules, structure, profile, resolved)
+        profile.effect_pct = round_half_up(effect_of(rules, structure, profile, resolved) * await integrity_share(session, structure.id))
     return resolved
 
 

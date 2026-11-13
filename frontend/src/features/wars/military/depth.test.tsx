@@ -142,7 +142,7 @@ describe('military depth surfaces', () => {
       .toBeVisible()
   })
 
-  it('shows a vessel card with hull, arms and repair', async () => {
+  it('shows a vessel card with its frame, arms and repair', async () => {
     serve()
     onApi('GET', '/api/entities/7/vessel', {
       vessel: { id: 7, kind: 'entity', name: 'Grey Gull' },
@@ -152,16 +152,28 @@ describe('military depth surfaces', () => {
       region: null,
       fleet: null,
       legend: null,
-      hull: {
-        hull: 'warship',
+      frame: {
+        frame: 'warship',
         label: 'Warship',
+        domain: 'water',
+        family: 'sailing_ship',
+        propulsion: 'sail',
+        size: 'large',
         speed: 50,
         range: 70,
         cargo: 120,
         crew: 200,
-        seaworthiness: 65,
+        troops: 40,
+        endurance: 65,
+        armour: 30,
+        structure: 60,
         slots: 3,
+        mounts: ['broadside'],
+        sections: [],
         armament: ['rams'],
+        branch: 'shipbuilding',
+        level: 2,
+        tier: 1,
         sky: false,
         living: false,
         strangeness: 0,

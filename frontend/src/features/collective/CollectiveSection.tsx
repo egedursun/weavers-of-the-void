@@ -83,7 +83,7 @@ export function CollectiveSection({
     <Section
       id='section-collective'
       title='Crowds, memory, customs and craft'
-      description='The town’s mood and the cascades, mobs and movements it breeds; the accounts kept of every event and how far they stray from the truth; storylets; customs and roles; generations, diasporas and the balance of the people; how years are counted; arms; and the designs that hulls and engines are built to.'
+      description='The town’s mood and the cascades, mobs and movements it breeds; the accounts kept of every event and how far they stray from the truth; storylets; customs and roles; generations, diasporas and the balance of the people; how years are counted; arms; and the vehicle types its yards build to.'
       icon={COLLECTIVE_ICON}
       tone='gold'
     >

@@ -19,6 +19,7 @@ class MilitaryUnitsRules:
     priest_share_pct: int = rule(3, 0, 100, W, "Share of an army that is battle priests where the priests are many (%)")
     naval_share_pct: int = rule(15, 0, 100, W, "Share of a coastal seafaring people's army that serves on ships (%)")
     engineer_share_pct: int = rule(4, 0, 100, W, "Share of an army that is sappers and engines where building is known (%)")
+    successor_share_pct: int = rule(60, 0, 100, W, "Share of an older missile role a realm moves to its newer successor once it can field it (%)")
 
 
 @dataclass(frozen=True)
@@ -123,12 +124,12 @@ class SiegecraftRules:
 
 @dataclass(frozen=True)
 class NavalRules:
-    storm_sink_pct: int = rule(10, 0, 100, W, "Ships lost to a storm in a season without seamanship (%)")
-    boarding_pct: int = rule(100, 0, 300, W, "Weight of marines' melee at sea (%)")
-    ram_pct: int = rule(60, 0, 300, W, "Weight of galleys' mass at sea (%)")
-    fire_wind_pct: int = rule(150, 0, 500, W, "Fire ships' strength in the wind (%)")
+    storm_sink_pct: int = rule(10, 0, 100, W, "Share of a fleet's vessels a storm strikes in a season without seamanship (%)")
+    boarding_pct: int = rule(100, 0, 300, W, "Weight of the troops a fleet carries when it boards (%)")
+    ram_pct: int = rule(60, 0, 300, W, "Weight of a fleet's hull strength when it rams (%)")
+    fire_wind_pct: int = rule(150, 0, 500, W, "Strength of fire ships in the wind (%)")
     blockade_trade_pct: int = rule(30, 0, 100, W, "Trade kept through a blockaded sea (%)")
-    sky_storm_pct: int = rule(15, 0, 100, W, "Skyships and sky mounts lost to a storm (%)")
+    sky_storm_pct: int = rule(15, 0, 100, W, "Share of an army's air vehicles a storm strikes (%)")
     sky_counter_pct: int = rule(40, 0, 100, W, "Strength of a ground army against flying beasts it cannot reach (%)")
 
 

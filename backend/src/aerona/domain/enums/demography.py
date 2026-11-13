@@ -50,7 +50,7 @@ class MartialStyle(StrEnum):
     SKIRMISHER = "skirmisher"
     CHARIOT = "chariot"
     PHALANX = "phalanx"
-    BERSERKER = "berserker"
+    SHOCK = "shock"
     NAVAL_RAIDER = "naval_raider"
     SIEGE_ENGINEER = "siege_engineer"
     WAR_MAGIC = "war_magic"

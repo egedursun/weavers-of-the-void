@@ -2,12 +2,13 @@ from typing import Any
 
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.collective import DesignComponentKind
+from aerona.domain.enums.integrity import Criticality, SectionHazard
 from aerona.domain.enums.military import (
     CasualtyFate,
     FeudParty,
     FeudStatus,
     Formation,
-    HullClass,
     MoraleState,
     PeaceTermKind,
     TargetClass,
@@ -15,6 +16,8 @@ from aerona.domain.enums.military import (
     VesselArmament,
     VesselStatus,
 )
+from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.vehicles import MountKind, Propulsion, VehicleDomain, VehicleFamily, VehicleFrame, VehicleSection, VehicleSize
 
 
 class RecordColumnView(ApiModel):
@@ -82,16 +85,38 @@ class BattleDepthView(ApiModel):
     magic: dict[str, int]
 
 
-class HullSpecView(ApiModel):
-    hull: HullClass
+class FrameSectionView(ApiModel):
+    section: VehicleSection
+    function: DesignComponentKind
+    criticality: Criticality
+    share: int
+    exposure: int
+    hazard: SectionHazard
+    neighbours: list[VehicleSection]
+
+
+class FrameSpecView(ApiModel):
+    frame: VehicleFrame
     label: str
+    domain: VehicleDomain
+    family: VehicleFamily
+    propulsion: Propulsion
+    size: VehicleSize
     speed: int
     range: int
     cargo: int
     crew: int
-    seaworthiness: int
+    troops: int
+    endurance: int
+    armour: int
+    structure: int
     slots: int
+    mounts: list[MountKind]
+    sections: list[FrameSectionView]
     armament: list[VesselArmament]
+    branch: KnowledgeBranch | None
+    level: int
+    tier: int
     sky: bool
     living: bool
     strangeness: int
@@ -105,7 +130,7 @@ class VesselView(ApiModel):
     region: NodeRef | None
     fleet: NodeRef | None
     legend: NodeRef | None
-    hull: HullSpecView
+    frame: FrameSpecView
     hull_material: str | None
     fabric_material: str | None
     condition: int

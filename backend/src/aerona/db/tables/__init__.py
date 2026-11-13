@@ -76,6 +76,7 @@ from aerona.db.tables.cosmography import (
     RiftRow,
 )
 from aerona.db.tables.cosmos import AppliedFixupRow, CosmosRow, CreatorMoodInputRow, CreatorRow
+from aerona.db.tables.cuisine import CommunityDishRow, DishIngredientRow, DishRow
 from aerona.db.tables.culture import (
     ArtworkProfileRow,
     BookContentRow,
@@ -228,6 +229,7 @@ from aerona.db.tables.epochs import (
     EpochStepRow,
     EpochWorldNarrativeRow,
 )
+from aerona.db.tables.equipment import ArmyUnitEquipmentRow, EquipmentModelRow, EquipmentStoreRow, UnitDesignEquipmentRow, UnitDesignTechniqueRow
 from aerona.db.tables.estates import (
     CompanyProfileRow,
     CompanyShareRow,
@@ -271,6 +273,7 @@ from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblance
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
+from aerona.db.tables.integrity import MegastructureRow, StructureDesignSectionRow, StructureSectionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.intrigue import BeliefRow, FavourRow, HookRow, IdentityRow, SchemeRow, SecretRow, TrueNameRow
 from aerona.db.tables.job import JobRow
@@ -444,6 +447,7 @@ from aerona.db.tables.urban import (
     TribunalRow,
     TurfRow,
 )
+from aerona.db.tables.vehicles import DesignMountRow, DesignSectionRow, DesignTechniqueRow, VehicleGroupRow, VehicleGroupSectionRow, VesselSectionRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, CasusBelliRow, HeroQuestRow, SiegeRow, TributeRow, WarProductionRow, WarRow, WarSideRow
 
 __all__ = [
@@ -467,6 +471,7 @@ __all__ = [
     "ArmyProfileRow",
     "ArmyRow",
     "ArmyTemplateRow",
+    "ArmyUnitEquipmentRow",
     "ArmyUnitRow",
     "ArtFormPractitionerRow",
     "ArtFormProfileRow",
@@ -522,6 +527,7 @@ __all__ = [
     "CommanderTraitRow",
     "CommemorationRow",
     "CommonsRow",
+    "CommunityDishRow",
     "CommunityIndustryRow",
     "CommunityMethodRow",
     "CommunityNeedRow",
@@ -578,7 +584,10 @@ __all__ = [
     "DeferredStepRow",
     "DemographicTransitionRow",
     "DesignComponentRow",
+    "DesignMountRow",
     "DesignRow",
+    "DesignSectionRow",
+    "DesignTechniqueRow",
     "DesignatedHeirRow",
     "DiasporaRow",
     "DimensionRow",
@@ -586,6 +595,8 @@ __all__ = [
     "DiplomacyProfileRow",
     "DiseaseCureRow",
     "DiseaseProfileRow",
+    "DishIngredientRow",
+    "DishRow",
     "DistrictDesignRow",
     "DistrictRow",
     "DistrictServiceRow",
@@ -618,6 +629,8 @@ __all__ = [
     "EpochStepRow",
     "EpochWorldNarrativeRow",
     "EpochYearCursorRow",
+    "EquipmentModelRow",
+    "EquipmentStoreRow",
     "EraDeedRow",
     "EstatePrivilegeRow",
     "EstateProfileRow",
@@ -746,6 +759,7 @@ __all__ = [
     "MarriageAllianceRow",
     "MarriageRow",
     "MeaningShiftRow",
+    "MegastructureRow",
     "MemoryRow",
     "MemoryStrikeRow",
     "MercenaryContractRow",
@@ -916,8 +930,10 @@ __all__ = [
     "StorytellerRow",
     "StressReadingRow",
     "StructureDesignRow",
+    "StructureDesignSectionRow",
     "StructureLeyRow",
     "StructureProfileRow",
+    "StructureSectionRow",
     "StructureStaffRow",
     "TaxPolicyRow",
     "TensionRecordRow",
@@ -951,10 +967,15 @@ __all__ = [
     "TrueNameRow",
     "TurfRow",
     "TurnCounterRow",
+    "UnitDesignEquipmentRow",
     "UnitDesignRow",
+    "UnitDesignTechniqueRow",
     "VassalageRow",
+    "VehicleGroupRow",
+    "VehicleGroupSectionRow",
     "VenalOfficeRow",
     "VesselProfileRow",
+    "VesselSectionRow",
     "VisStockRow",
     "WarAimRow",
     "WarProductionRow",

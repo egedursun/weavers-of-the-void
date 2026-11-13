@@ -36,7 +36,7 @@ async def armies_at_war(realm: Realm) -> tuple[int, int, int, int]:
     await realm.session.flush()
     scouts = await make(realm.session, "Ardent Riders", EntityType.ARMY, ArmyStats(), world_id=realm.world.id, location_id=realm.region.id)
     host = await make(realm.session, "Bramble Host", EntityType.ARMY, ArmyStats(), world_id=realm.world.id, location_id=realm.region.id)
-    for army, owner, kind, count in ((scouts, first, UnitKind.LIGHT_CAVALRY, 50), (host, second, UnitKind.SPEARMEN, 300)):
+    for army, owner, kind, count in ((scouts, first, UnitKind.LIGHT_CAVALRY, 50), (host, second, UnitKind.LINE_INFANTRY, 300)):
         realm.session.add(ArmyRow(entity_id=army.id, owner_entity_id=owner.id, raised_epoch=1, war_id=war.id))
         realm.session.add(ArmyProfileRow(army_entity_id=army.id, region_entity_id=realm.region.id))
         realm.session.add(ArmyUnitRow(army_entity_id=army.id, kind=kind, count=count))

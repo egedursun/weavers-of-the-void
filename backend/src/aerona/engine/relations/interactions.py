@@ -22,6 +22,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, EthicalStance, Facet, GriefStage, MemoryKind, NeedKind, SkillKind, ThoughtKind, ValueAxis, ValueHolder, WantKind
 from aerona.domain.enums.relations import AppealKind, InteractionKind, PersuasionAim, RelationType
 from aerona.domain.enums.renown import ReputationAxis
+from aerona.engine.body.decline import too_forgetful
 from aerona.engine.body.hits import Harm
 from aerona.engine.collective.book import shift as shift_field
 from aerona.engine.collective.norms import Norms, breach, norms_of, stance_in, volition
@@ -35,10 +36,12 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.mind.skills import practise
 from aerona.engine.mind.split import facets_of
 from aerona.engine.mind.thoughts import think
+from aerona.engine.mortal.attraction import drawn, pull
 from aerona.engine.mortal.kin import children_of, parents_of, partners_of, siblings_of
 from aerona.engine.mortal.kinship import betroth, marriage_between
 from aerona.engine.mortal.life import adult
 from aerona.engine.mortal.standing import add_stress
+from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.relations.book import RELATIONS_KEY, ensure_relation, mood_of, relation, shift
@@ -81,6 +84,7 @@ class Scene:
     met: set[tuple[int, int]] = field(default_factory=set)
     norms: dict[int, Norms] = field(default_factory=dict)
     gathering: NormSituation | None = None
+    forgetful: set[int] = field(default_factory=set)
 
 
 @dataclass
@@ -121,6 +125,7 @@ async def load_scene(ctx: TickContext, place_id: int, mortals: list[EntityRow]) 
     scene.grieving = set(
         await ctx.session.scalars(select(GriefRow.mourner_node_id).where(GriefRow.mourner_node_id.in_(ids), GriefRow.stage != GriefStage.ACCEPTANCE))
     )
+    scene.forgetful = {mortal_id for mortal_id in ids if await too_forgetful(ctx.session, mortal_id, ctx.rules.decline.teach_block)}
     circles = select(SocialCircleRow.faction_entity_id)
     for faction_id, mortal_id in await ctx.session.execute(
         select(FactionMembershipRow.faction_entity_id, FactionMembershipRow.mortal_entity_id).where(
@@ -208,6 +213,8 @@ def allowed(scene: Scene, actor: int, target: int, kind: InteractionKind, *, row
     romance = row.romance if row is not None else 0
     if spec.romantic and (not grown(scene, actor) or not grown(scene, target) or target in scene.kin[actor]):
         return False
+    if spec.romantic and not drawn(scene.profiles.get(actor), sex_of(scene.mortals[target])):
+        return False
     if familiarity < spec.min_familiarity or romance < spec.min_romance:
         return False
     rival = (row.rivalry if row is not None else 0) >= scene.ctx.rules.social.rival_at
@@ -215,7 +222,7 @@ def allowed(scene: Scene, actor: int, target: int, kind: InteractionKind, *, row
         K.PROPOSE: single(scene, actor) and single(scene, target) and (back.romance if back is not None else 0) >= spec.min_romance,
         K.RECONCILE: friendship < 0,
         K.COMFORT: mood_of(scene.profiles.get(target)) < 0 or target in scene.grieving,
-        K.TEACH: skill_of(scene, actor, None) - skill_of(scene, target, None) >= MIN_TEACH_GAP,
+        K.TEACH: skill_of(scene, actor, None) - skill_of(scene, target, None) >= MIN_TEACH_GAP and actor not in scene.forgetful,
         K.BRAWL: grown(scene, actor) and grown(scene, target) and (friendship <= BRAWL_BELOW or rival),
         K.CONFIDE_SECRET: friendship >= CONFIDE_AT,
         K.ASK_FAVOUR: friendship >= FAVOUR_AT,
@@ -457,6 +464,8 @@ async def interact(scene: Scene, actor: int, target: int, kind: InteractionKind,
     if success:
         if heard is not None:
             kindled = spec.romance * await ctx.hook_factor(target, DomainHook.KINDLING_LOVE) if spec.romance > 0 else spec.romance
+            if kindled > 0:
+                kindled *= pull(scene.profiles.get(target), sex_of(scene.mortals[actor])) if actor in scene.mortals else 0.0
             shift(ctx.rules, heard, ctx.epoch, friendship=spec.friendship, romance=kindled, familiarity=spec.familiarity, rivalry=spec.rivalry)
         if spoke is not None:
             share = 1 if spec.mutual else 0.5

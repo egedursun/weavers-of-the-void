@@ -5,9 +5,10 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.entity import CivilizationTier
-from aerona.domain.enums.military import HullClass, VesselStatus
+from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.enums.travel import VehicleKind
+from aerona.domain.enums.vehicles import VehicleFrame
 
 
 class VesselProfileRow(Base):
@@ -23,7 +24,7 @@ class VesselProfileRow(Base):
 
     entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     kind: Mapped[VehicleKind] = mapped_column(enum_type(VehicleKind, "kind"), index=True)
-    hull_class: Mapped[HullClass] = mapped_column(enum_type(HullClass, "hull_class"), default=HullClass.BOAT)
+    frame: Mapped[VehicleFrame] = mapped_column(enum_type(VehicleFrame, "frame"), default=VehicleFrame.BOAT)
     hull_material: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     fabric_material: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     condition: Mapped[int] = mapped_column(default=100)

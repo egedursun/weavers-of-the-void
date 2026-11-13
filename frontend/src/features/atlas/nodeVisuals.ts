@@ -6,6 +6,7 @@ import {
   Folder,
   Ghost,
   Globe,
+  Hammer,
   Layers,
   Orbit,
   Workflow,
@@ -29,6 +30,7 @@ export const KIND_TONE: Record<AtlasNodeKind, string> = {
   galaxy: 'text-primary',
   'building-type': 'text-primary',
   'dwelling-type': 'text-success',
+  'made-type': 'text-primary',
 }
 
 export function nodeIcon(node: AtlasNode): LucideIcon {
@@ -52,4 +54,5 @@ const KIND_ICON: Record<AtlasNodeKind, LucideIcon> = {
   galaxy: Orbit,
   'building-type': Building2,
   'dwelling-type': Home,
+  'made-type': Hammer,
 }

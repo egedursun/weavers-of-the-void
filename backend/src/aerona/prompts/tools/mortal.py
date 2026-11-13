@@ -192,9 +192,10 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"figure_id": "Whom you strike from memory"},
     ),
     T.DRAW_DESIGN: ToolText(
-        "You draw a new design for your realm or town ({{ design_kinds }}), giving more weight to one part ({{ design_components }}); "
-        "its speed, reach, cargo, arms and crew follow from its parts and their materials, and new hulls and engines are built to it. 1 action.",
-        {"kind": "What you design", "hull": "The hull it is for, if a vessel", "emphasis": "The part you favour"},
+        "You draw a new vehicle type for your realm or town on a frame it knows how to build, giving more weight to one part "
+        "({{ design_components }}); it is entered in the atlas under its name, its sections, mounts, speed, reach, cargo, arms and crew "
+        "follow from the frame, its parts and their materials, and new vehicles are built to it. 1 action.",
+        {"frame": "The frame it is built on; one of: {{ vehicle_frames }}", "emphasis": "The part you favour"},
     ),
     T.HUNT_MOLES: ToolText(
         "As spymaster you hunt for moles at your court; you may catch a foreign agent, clear an official, or wrongly accuse one, who may "
@@ -874,5 +875,46 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You pay to raise one of your town's works against disaster ({{ preparedness_kinds }}); each level lowers the losses of the disaster "
         "it guards against. 1 action.",
         {"kind": "The work you raise"},
+    ),
+    T.DRAFT_UNIT_TYPE: ToolText(
+        "As one who knows war, you set out a new kind of soldier for your realm or town: a named type for a battlefield role, with the "
+        "loadout, doctrine and formation its makers can give it; its armies muster it from then on. Needs tactics or strategy of "
+        "{{ rules.unit_types.draft_skill }}. 1 action.",
+        {
+            "role": "The battlefield role it fills; one of: {{ unit_roles }}",
+            "name": "What the soldiers are called; left empty, your people names them in its own tongue",
+            "description": "What sets these soldiers apart, in your words",
+        },
+    ),
+    T.FORGE_MODEL: ToolText(
+        "You make a new equipment model for your realm or town: a named weapon, armour, shield or piece of materiel, as good as your "
+        "smithing or engineering and your craft allow, made of your town's own material; its smiths forge it from then on. 1 action.",
+        {
+            "family": "What kind of piece it is; one of: {{ equipment_families }}",
+            "name": "What the model is called; left empty, your people names it in its own tongue",
+            "description": "What sets the model apart, in your words",
+        },
+    ),
+    T.CREATE_DISH: ToolText(
+        "You first cook a new dish for your people, or for your town if you belong to no people, made in a way they know; their towns cook it from their stores from then on, "
+        "and how it is made sets how it nourishes, delights and keeps. 1 action.",
+        {
+            "method": "How it is made; one of: {{ cooking_methods }}",
+            "course": "When it is eaten; one of: {{ dish_courses }}",
+            "ingredients": "One to four foods it is made of; each one of: {{ foods }}",
+            "name": "What the dish is called; left empty, your people names it in its own tongue",
+            "description": "What sets the dish apart, in your words",
+        },
+    ),
+    T.DRAW_STRUCTURE_TYPE: ToolText(
+        "As a builder, you draw a building type for your people, or for your town if you belong to no people, for one kind of structure, "
+        "with the form and storeys you choose; its builders raise that kind to it from then on. Needs engineering of {{ rules.integrity.draw_skill }}. 1 action.",
+        {
+            "structure_kind": "The kind of structure it is a type of; one of: {{ structure_kinds }}",
+            "form": "Its building form, if you choose; one of: {{ building_forms }}",
+            "storeys": "How many storeys it rises, if you choose",
+            "name": "What the type is called; left empty, your people names it in its own tongue",
+            "description": "What sets the type apart, in your words",
+        },
     ),
 }

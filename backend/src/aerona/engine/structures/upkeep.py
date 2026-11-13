@@ -16,6 +16,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.structures.integrity import ensure_sections, mend_sections, overall, state_for
 from aerona.engine.structures.profiles import host_for, material_props, refresh, standing_state
 from aerona.engine.structures.spec import Resolved
 from aerona.engine.structures.workshops import unlink
@@ -59,8 +60,16 @@ async def wear(ctx: TickContext, work: EntityRow, profile: StructureProfileRow, 
     props = await material_props(ctx.session, work)
     decay = round_half_up(decay_loss(ctx.rules, props, 0) * table.wear_decay_pct / PERCENT) if props is not None else 0
     ceiling = stat_or(work, "durability", PERCENT)
-    change = (table.repair_step if paid else -table.unpaid_condition_loss) - decay
-    profile.condition = clamp_int(min(ceiling, profile.condition + change) if paid else profile.condition + change, 0, PERCENT)
+    rows = await ensure_sections(ctx.session, work, profile)
+    if paid:
+        await mend_sections(ctx.session, ctx.rules, work.id, table.repair_step - decay, rebuild=False)
+        await mend_sections(ctx.session, ctx.rules, work.id, ctx.rules.integrity.rebuild_step, rebuild=True)
+    else:
+        for row in rows:
+            if not set(row.locked or []) & {"condition", "state"}:
+                row.condition = clamp_int(row.condition - table.unpaid_condition_loss - decay, 0, PERCENT)
+                row.state = state_for(ctx.rules, row.condition)
+    profile.condition = clamp_int(min(ceiling, overall(rows)), 0, PERCENT)
 
 
 async def fall_to_ruin(ctx: TickContext, work: EntityRow, profile: StructureProfileRow, reason: str) -> None:

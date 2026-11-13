@@ -745,7 +745,7 @@ async def do_raise(ctx: TickContext, work: Working) -> str | None:
     if army is not None:
         count = await claim_battle_dead(ctx, work.magnitude * ctx.rules.rites.undead_per_power)
         if count > 0:
-            await add_stack(ctx, army, UnitKind.GHOST_HOST, count)
+            await add_stack(ctx, army, UnitKind.SUMMONED_HOST, count)
             return f"raised {count} of the battle dead to march again"
     spirit = await wandering_near(ctx, work.caster.location_id or 0)
     if spirit is None:
@@ -1243,7 +1243,7 @@ async def war_mages(ctx: TickContext, realms: RealmBook) -> int:
     armies = await ctx.session.execute(
         select(ArmyProfileRow)
         .join(ArmyUnitRow, ArmyUnitRow.army_entity_id == ArmyProfileRow.army_entity_id)
-        .where(ArmyUnitRow.kind == UnitKind.WAR_MAGES, ArmyUnitRow.count > 0, ArmyProfileRow.target_entity_id.is_not(None))
+        .where(ArmyUnitRow.kind == UnitKind.BATTLE_CASTERS, ArmyUnitRow.count > 0, ArmyProfileRow.target_entity_id.is_not(None))
         .order_by(ArmyProfileRow.army_entity_id)
     )
     worked = 0

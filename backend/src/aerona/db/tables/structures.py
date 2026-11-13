@@ -7,9 +7,19 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.demography import Aesthetic
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, BuilderKind, BuildScale, ConstructionState, ConstructionStatus, StaffScale, StructureKind
+from aerona.domain.enums.structure import (
+    STRUCTURE_LEVEL_MAX,
+    BuilderKind,
+    BuildingForm,
+    BuildScale,
+    ConstructionState,
+    ConstructionStatus,
+    StaffScale,
+    StructureKind,
+)
 
 
 class StructureDesignRow(Base):
@@ -20,6 +30,7 @@ class StructureDesignRow(Base):
         between("upkeep_pct", 0, 1000),
         between("function_pct", 0, 300),
         between("staff_pct", 0, 1000),
+        between("storeys", 1, 200),
         Index("ix_structure_designs_world", "world_id"),
     )
 
@@ -40,6 +51,10 @@ class StructureDesignRow(Base):
     function_pct: Mapped[int] = mapped_column(default=100)
     staff_pct: Mapped[int] = mapped_column(default=100)
     creator_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    origin_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    form: Mapped[BuildingForm | None] = mapped_column(enum_type(BuildingForm, "form"))
+    storeys: Mapped[int] = mapped_column(default=1, server_default="1")
+    material: Mapped[MaterialKind | None] = mapped_column(enum_type(MaterialKind, "material"))
     created_epoch: Mapped[int] = mapped_column(default=0)
     retired: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

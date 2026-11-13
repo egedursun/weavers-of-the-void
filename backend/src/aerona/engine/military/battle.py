@@ -44,11 +44,11 @@ from aerona.engine.primitives.harshness import harshness
 from aerona.rules.registry import Rules
 
 F = UnitFamily
-MISSILE_FAMILIES = frozenset({F.MISSILE, F.MAGIC, F.ENGINEER})
+MISSILE_FAMILIES = frozenset({F.MISSILE, F.MAGIC, F.ENGINEER, F.VEHICLE})
 CHARGE_FAMILIES = frozenset({F.MOUNTED, F.BEAST})
 SWIFT_FAMILIES = frozenset({F.MOUNTED, F.BEAST})
-FLYERS = frozenset({UnitKind.SKY_MOUNTS, UnitKind.SKYSHIPS})
-SCOUTS = frozenset({UnitKind.LIGHT_CAVALRY, UnitKind.SKIRMISHERS, UnitKind.HORSE_ARCHERS, UnitKind.SKY_MOUNTS})
+FLYERS = frozenset({UnitKind.SKY_RIDERS, UnitKind.SKY_CREW})
+SCOUTS = frozenset({UnitKind.LIGHT_CAVALRY, UnitKind.LIGHT_INFANTRY, UnitKind.MOUNTED_ARCHERS, UnitKind.SKY_RIDERS})
 SHELTER = frozenset({TerrainKind.FOREST, TerrainKind.JUNGLE, TerrainKind.MOUNTAINS, TerrainKind.MARSH, TerrainKind.HIGH_PASS})
 NARROW = frozenset({TerrainKind.CANYON, TerrainKind.HIGH_PASS, TerrainKind.FOREST, TerrainKind.JUNGLE, TerrainKind.URBAN, TerrainKind.UNDERGROUND})
 HIGHLANDS = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
@@ -58,9 +58,9 @@ WIND = frozenset({WeatherKind.STORM, WeatherKind.DROUGHT_WIND, WeatherKind.SANDS
 HEAVY = frozenset({ArmourType.MAIL, ArmourType.SCALE, ArmourType.PLATE})
 SOFT_ARMOUR = {ArmourType.HIDE: MaterialKind.HIDE, ArmourType.PADDED: MaterialKind.CLOTH}
 BLUNT_WEAPONS = frozenset({"blunt", "sling", "staff"})
-BOWS = frozenset({UnitKind.ARCHERS, UnitKind.HORSE_ARCHERS})
+BOWS = frozenset({UnitKind.ARCHERS, UnitKind.MOUNTED_ARCHERS})
 CROSSBOWS = frozenset({UnitKind.CROSSBOWMEN})
-FIRE_CASTERS = frozenset({UnitKind.WAR_MAGES})
+FIRE_CASTERS = frozenset({UnitKind.BATTLE_CASTERS})
 HELMET = 5
 NORMAL = 50
 REFUSE_RATIO = 0.6
@@ -244,7 +244,7 @@ class Field:
     earthworks: int = 0
 
 
-MELEE_FIRST = (F.INFANTRY, F.EXOTIC, F.BEAST, F.MOUNTED, F.NAVAL, F.ENGINEER, F.MAGIC, F.MISSILE)
+MELEE_FIRST = (F.INFANTRY, F.EXOTIC, F.BEAST, F.MOUNTED, F.VEHICLE, F.ENGINEER, F.MAGIC, F.MISSILE)
 
 
 def target_class(rules: Rules, stack: Stack) -> TargetClass:
@@ -368,7 +368,7 @@ def terrain_factor(rules: Rules, stack: Stack, side: Side, ground: Field) -> flo
         terrain *= rules.battle_terrain.marsh_heavy_armour_pct / PERCENT
     if ground.terrain is TerrainKind.UNDERGROUND and stack.row.kind in BURROWERS:
         terrain *= rules.battle_terrain.burrower_underground_pct / PERCENT
-    if ground.terrain in HIGHLANDS and stack.row.kind is UnitKind.SIEGE_ENGINES:
+    if ground.terrain in HIGHLANDS and stack.row.kind is UnitKind.SIEGE_CREW:
         terrain *= rules.battle_terrain.mountain_engines_pct / PERCENT
     return terrain
 
@@ -601,7 +601,7 @@ def shaken(rules: Rules, side: Side, streams: Streams | None = None, *, phase: s
 
 def rally(rules: Rules, streams: Streams, side: Side, phase: str) -> int:
     table = rules.battle_depth
-    lift = min(1.0, side.leadership / PERCENT + (0.25 if side.standard else 0.0) + (0.25 if side.count_of(UnitKind.PRIESTS) else 0.0))
+    lift = min(1.0, side.leadership / PERCENT + (0.25 if side.standard else 0.0) + (0.25 if side.count_of(UnitKind.SUPPORT_CASTERS) else 0.0))
     rallied = 0
     for stack in side.stacks:
         if not stack.routed or stack.row.count <= 0 or stack.row.morale_state is MoraleState.BROKEN or stack.row.organisation <= table.disorganised_at:
@@ -646,10 +646,12 @@ def missiles(rules: Rules, streams: Streams, shooter: Side, target: Side, ground
     for stack in shooter.stacks:
         if not stack.engaged or stack.spec.missile <= 0:
             continue
-        if stack.spec.family in families:
-            share = 1.0
-        elif coastal and stack.spec.family is F.NAVAL:
+        if stack.row.kind is UnitKind.NAVAL_CREW:
+            if not coastal:
+                continue
             share = rules.battle_terrain.coastal_fleet_support_pct / PERCENT
+        elif stack.spec.family in families:
+            share = 1.0
         else:
             continue
         shot = volley(rules, stack, target, engaged=engaged)
@@ -802,7 +804,7 @@ def outflank(rules: Rules, first: Side, second: Side, ground: Field, streams: St
 
 
 def call_fog(rules: Rules, streams: Streams, caster: Side, enemy: Side) -> bool:
-    mages = caster.count_of(UnitKind.WAR_MAGES)
+    mages = caster.count_of(UnitKind.BATTLE_CASTERS)
     shooters = sum(stack.row.count for stack in enemy.stacks if stack.alive and stack.spec.family is F.MISSILE)
     mine = sum(stack.row.count for stack in caster.stacks if stack.alive and stack.spec.family is F.MISSILE)
     if mages <= 0 or shooters <= mine:
@@ -815,7 +817,7 @@ def call_fog(rules: Rules, streams: Streams, caster: Side, enemy: Side) -> bool:
 
 
 def terror_rite(rules: Rules, caster: Side, enemy: Side) -> int:
-    mages = caster.count_of(UnitKind.WAR_MAGES) + caster.count_of(UnitKind.NECROMANCERS)
+    mages = caster.count_of(UnitKind.BATTLE_CASTERS) + caster.count_of(UnitKind.SUMMONERS)
     if mages <= 0:
         return 0
     density = min(1.0, mages * PERCENT / max(1, caster.standing) / rules.battle_magic.terror_mages_per_100)
@@ -828,7 +830,7 @@ def backlash(rules: Rules, side: Side, ground: Field) -> int:
         return 0
     lost = 0
     for stack in side.stacks:
-        if stack.alive and stack.row.kind is UnitKind.WAR_MAGES:
+        if stack.alive and stack.row.kind is UnitKind.BATTLE_CASTERS:
             part = round(stack.row.count * rules.battle_weather.magic_storm_backlash_pct / PERCENT)
             stack.row.count -= part
             stack.lost += part
@@ -838,7 +840,7 @@ def backlash(rules: Rules, side: Side, ground: Field) -> int:
 
 
 def rites(rules: Rules, streams: Streams, side: Side, enemy: Side, ground: Field) -> int:
-    if side.count_of(UnitKind.PRIESTS):
+    if side.count_of(UnitKind.SUPPORT_CASTERS):
         for stack in side.stacks:
             if stack.alive:
                 stack.row.morale = min(PERCENT, stack.row.morale + rules.morale.priests_gain)
@@ -1108,7 +1110,7 @@ def victor(rules: Rules, attacker: Side, defender: Side, ground: Field) -> tuple
 
 def treat(rules: Rules, side: Side, walking: int, stretcher: int) -> int:
     magic = rules.battle_magic
-    healed = min(stretcher, side.count_of(UnitKind.PRIESTS) * magic.heal_per_priest) if side.priests_healing else 0
+    healed = min(stretcher, side.count_of(UnitKind.SUPPORT_CASTERS) * magic.heal_per_priest) if side.priests_healing else 0
     rest = stretcher - healed
     saved = round(rest * min(PERCENT, side.medicine) / PERCENT * magic.medicine_pct / PERCENT)
     dying = round((rest - saved) * magic.untreated_death_pct / PERCENT)
@@ -1159,7 +1161,7 @@ def salvage(rules: Rules, winner: Side, loser: Side) -> int:
 
 
 def raise_dead(rules: Rules, side: Side, fallen: int) -> int:
-    necromancers = side.count_of(UnitKind.NECROMANCERS)
+    necromancers = side.count_of(UnitKind.SUMMONERS)
     if necromancers <= 0:
         return 0
     side.raised_dead = min(round(fallen * rules.battle_magic.raise_dead_pct / PERCENT), necromancers * rules.battle_magic.raise_per_necromancer)
@@ -1272,12 +1274,14 @@ def ready(row: ArmyUnitRow, spec: UnitSpec) -> None:
         row.missing = 0
 
 
-def make_stacks(rows: list[ArmyUnitRow], specs: dict[int, UnitSpec] | None = None, hardness: dict[str, int] | None = None) -> list[Stack]:
+def make_stacks(
+    rows: list[ArmyUnitRow], specs: dict[int, UnitSpec] | None = None, hardness: dict[str, int] | None = None, fielded: dict[int, UnitSpec] | None = None
+) -> list[Stack]:
     found = []
     for row in rows:
         if row.count <= 0:
             continue
-        spec = (specs or {}).get(row.design_id or 0) or UNITS[row.kind]
+        spec = (fielded or {}).get(row.id) or (specs or {}).get(row.design_id or 0) or UNITS[row.kind]
         ready(row, spec)
         found.append(Stack(row, spec, row.count, hardness=(hardness or {}).get(row.material or "", NORMAL)))
     return found

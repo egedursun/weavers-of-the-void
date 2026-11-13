@@ -2,11 +2,20 @@ from collections.abc import Mapping
 
 from sqlalchemy import select
 
+from aerona.catalog.structures import MEGASTRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.integrity import (
+    DESIGN_SECTION_FIELDS,
+    MEGASTRUCTURE_FIELDS,
+    STRUCTURE_SECTION_FIELDS,
+    MegastructureRow,
+    StructureDesignSectionRow,
+    StructureSectionRow,
+)
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow
@@ -14,25 +23,33 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import Aesthetic
 from aerona.domain.enums.economy import CommodityKind, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.integrity import Criticality, HarmForce
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import (
     STRUCTURE_LEVEL_MAX,
     BuilderKind,
+    BuildingForm,
     BuildScale,
     ConstructionState,
     ConstructionStatus,
+    SectionRole,
     StaffScale,
     StructureKind,
+    StructureSection,
 )
 from aerona.engine.context import TickContext
+from aerona.engine.divine.control import apply
 from aerona.engine.economy.materials import set_node_material
+from aerona.engine.gatherings.control import Values, allowed
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.structures.construction import Commission, abandon, begin, construction_of, finish
-from aerona.engine.structures.damage import harm
+from aerona.engine.structures.damage import consequences, harm
+from aerona.engine.structures.integrity import StructureStrike, ensure_sections, match_condition, overall, sections_of, state_for, wound
+from aerona.engine.structures.megastructures import state_of
 from aerona.engine.structures.profiles import fire_resistance_from, lock, material_props, refresh, staff_rows
 from aerona.engine.structures.spec import resolve, slots_for, tier_allows
 
@@ -58,6 +75,7 @@ DESIGN_NUMBERS: dict[str, tuple[int, int]] = {
     "upkeep_pct": (0, 1000),
     "function_pct": (0, 300),
     "staff_pct": (0, 1000),
+    "storeys": (1, 200),
 }
 DESIGN_CHOICES = {
     "staff_class": SocialClass,
@@ -66,6 +84,8 @@ DESIGN_CHOICES = {
     "upkeep_commodity": CommodityKind,
     "min_tier": SizeTier,
     "base_kind": StructureKind,
+    "form": BuildingForm,
+    "material": MaterialKind,
 }
 Value = int | str | bool | None
 
@@ -189,7 +209,7 @@ async def set_staff(ctx: TickContext, structure_id: int, allocated: int | None, 
 async def damage(ctx: TickContext, structure_id: int, amount: int, cause: str) -> StructureProfileRow:
     work, profile = await structure(ctx, structure_id)
     bounded("damage", amount, 1, PERCENT)
-    await harm(ctx, work, profile, amount, cause=cause or "the Creator's hand")
+    await harm(ctx, work, profile, amount, cause=cause or "the Creator's hand", force=HarmForce.DIVINE, even=True)
     await ctx.session.flush()
     return profile
 
@@ -277,6 +297,9 @@ async def edit_structure(
             continue
         await set_field(ctx, work, profile, key, value, world_material_id=world_material_id)
         profile.locked = lock(profile.locked, key)
+        if key == "condition":
+            await ensure_sections(ctx.session, work, profile)
+            await match_condition(ctx.session, ctx.rules, work.id, profile.condition)
     for key in release:
         profile.locked = [item for item in profile.locked if item != key]
         if construction is not None:
@@ -294,6 +317,8 @@ async def edit_structure(
 async def repair(ctx: TickContext, structure_id: int) -> StructureProfileRow:
     work, profile = await structure(ctx, structure_id)
     profile.condition = stat_or(work, "durability", PERCENT)
+    await ensure_sections(ctx.session, work, profile)
+    await match_condition(ctx.session, ctx.rules, work.id, profile.condition)
     if profile.construction_state is ConstructionState.DAMAGED:
         profile.construction_state = ConstructionState.COMPLETE
     await refresh(ctx.session, ctx.rules, work, profile)
@@ -326,6 +351,8 @@ def apply_design(row: StructureDesignRow, values: Mapping[str, Value], *, hold: 
             row.name = text[:120]
         elif key == "description":
             row.description = str(value)[:2000] if value else None
+        elif key == "origin_node_id":
+            row.origin_node_id = value if isinstance(value, int) and not isinstance(value, bool) else None
         else:
             raise ValidationFailedError(f"Unknown design field: {key}.")
         if hold:
@@ -379,3 +406,97 @@ async def refresh_designed(ctx: TickContext, design_id: int) -> None:
         work = await ctx.session.get(EntityRow, profile.structure_entity_id)
         if work is not None:
             await refresh(ctx.session, ctx.rules, work, profile)
+
+
+async def strike_section(ctx: TickContext, structure_id: int, section: StructureSection, damage: int) -> StructureProfileRow:
+    work, profile = await structure(ctx, structure_id)
+    rows = await ensure_sections(ctx.session, work, profile)
+    row = next((item for item in rows if item.section is section), None)
+    if row is None:
+        raise NotFoundError("This structure has no such section.")
+    strike = StructureStrike()
+    wound(ctx.rules, row, damage, strike)
+    profile.condition = clamp_int(overall(rows), 0, PERCENT)
+    await consequences(ctx, work, profile, strike)
+    await refresh(ctx.session, ctx.rules, work, profile)
+    await ctx.session.flush()
+    return profile
+
+
+async def repair_section(ctx: TickContext, structure_id: int, section: StructureSection) -> StructureProfileRow:
+    work, profile = await structure(ctx, structure_id)
+    rows = await ensure_sections(ctx.session, work, profile)
+    row = next((item for item in rows if item.section is section), None)
+    if row is None:
+        raise NotFoundError("This structure has no such section.")
+    row.condition = PERCENT
+    row.state = state_for(ctx.rules, row.condition)
+    profile.condition = clamp_int(overall(rows), 0, PERCENT)
+    await refresh(ctx.session, ctx.rules, work, profile)
+    await ctx.session.flush()
+    return profile
+
+
+async def edit_section(ctx: TickContext, structure_id: int, section: StructureSection, values: Values, release: list[str]) -> StructureSectionRow:
+    work, profile = await structure(ctx, structure_id)
+    rows = await ensure_sections(ctx.session, work, profile)
+    row = next((item for item in rows if item.section is section), None)
+    if row is None:
+        row = StructureSectionRow(structure_entity_id=work.id, section=section, role=SectionRole.SHELTER, condition=PERCENT, locked=[])
+        ctx.session.add(row)
+        rows.append(row)
+    apply(row, allowed(values, STRUCTURE_SECTION_FIELDS, "section of a structure"), release)
+    if "condition" in values and "state" not in values:
+        row.state = state_for(ctx.rules, row.condition)
+    profile.condition = clamp_int(overall(rows), 0, PERCENT)
+    await refresh(ctx.session, ctx.rules, work, profile)
+    await ctx.session.flush()
+    return row
+
+
+async def remove_section(ctx: TickContext, structure_id: int, section: StructureSection) -> None:
+    work, profile = await structure(ctx, structure_id)
+    row = await ctx.session.get(StructureSectionRow, (structure_id, section))
+    if row is None:
+        raise NotFoundError("This structure has no such section.")
+    await ctx.session.delete(row)
+    await ctx.session.flush()
+    profile.condition = clamp_int(overall(await sections_of(ctx.session, structure_id)), 0, PERCENT)
+    await refresh(ctx.session, ctx.rules, work, profile)
+
+
+async def set_design_section(ctx: TickContext, design_id: int, section: StructureSection, values: Values) -> StructureDesignSectionRow:
+    await design(ctx, design_id)
+    row = await ctx.session.get(StructureDesignSectionRow, (design_id, section))
+    if row is None:
+        row = StructureDesignSectionRow(design_id=design_id, section=section, criticality=Criticality.MINOR, share=10)
+        ctx.session.add(row)
+    apply(row, allowed(values, DESIGN_SECTION_FIELDS, "section of a structure design"), [])
+    await ctx.session.flush()
+    return row
+
+
+async def remove_design_section(ctx: TickContext, design_id: int, section: StructureSection) -> None:
+    row = await ctx.session.get(StructureDesignSectionRow, (design_id, section))
+    if row is None:
+        raise NotFoundError("This design has no such section.")
+    await ctx.session.delete(row)
+    await ctx.session.flush()
+
+
+async def set_megastructure(ctx: TickContext, structure_id: int, values: Values, release: list[str]) -> MegastructureRow:
+    work, profile = await structure(ctx, structure_id)
+    if profile.kind not in MEGASTRUCTURES:
+        raise ValidationFailedError(f"{work.name} is no megastructure.")
+    row = await state_of(ctx.session, structure_id, ctx.epoch)
+    apply(row, allowed(values, MEGASTRUCTURE_FIELDS, "megastructure"), release)
+    await ctx.session.flush()
+    return row
+
+
+async def clear_megastructure(ctx: TickContext, structure_id: int) -> None:
+    row = await ctx.session.get(MegastructureRow, structure_id)
+    if row is None:
+        raise NotFoundError("This megastructure keeps no state yet.")
+    await ctx.session.delete(row)
+    await ctx.session.flush()

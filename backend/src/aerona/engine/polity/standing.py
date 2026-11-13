@@ -27,6 +27,7 @@ from aerona.domain.enums.polity import LawKind, OathKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.body.customs import customs_of, maimed_for_rule, presence_pct
+from aerona.engine.body.decline import decline_severity, failing_part
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import regalia_holder
@@ -234,10 +235,13 @@ async def fortunes(ctx: TickContext, book: RealmBook, realm: Realm, ruler: Entit
         )
     age = stat(ruler, "age") or 0
     lifespan = stat(ruler, "lifespan") or 0
+    failing = await decline_severity(ctx.session, ruler.id)
     if age < ctx.rules.succession.regency_age:
         parts["a child on the throne"] = -table.child
+    elif failing:
+        parts["a ruler whose mind is failing"] = failing_part(failing, table.senile)
     elif lifespan and age * PERCENT >= lifespan * ctx.rules.succession.senile_age_pct:
-        parts["an old and failing ruler"] = -table.senile
+        parts["an old and failing ruler"] = -table.senile // 2
     return parts
 
 

@@ -20,7 +20,8 @@ import { why } from '@/features/dominion/model'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { Ref } from '@/features/gatherings/parts'
-import { HULL } from '@/features/wars/military/depth'
+import { useFrames } from '@/features/madeKinds/api'
+import { frameTable } from '@/features/madeKinds/labels'
 import { ArmsCard, ArmsForge } from './ArmsPanels'
 import {
   type CollectiveView,
@@ -457,6 +458,7 @@ function DesignCard({
     'The vessel is refitted'
   )
   const kind = DESIGN_KINDS[row.kind]
+  const frames = frameTable(useFrames().data ?? [])
   const busy = why(action.busy, refitting.isPending, fitting.isPending)
   const unfit =
     vesselId === null
@@ -473,7 +475,7 @@ function DesignCard({
           ? row.name
           : `${row.name} · mark ${row.mark}`
       }
-      caption={`${kind.label}${row.hull ? ` · ${HULL[row.hull]?.label ?? row.hull}` : ''} · drawn in epoch ${row.epoch}${row.obsolete ? ' · superseded' : ''}`}
+      caption={`${kind.label}${row.frame ? ` · ${frames[row.frame]?.label ?? row.frame}` : ''} · drawn in epoch ${row.epoch}${row.obsolete ? ' · superseded' : ''}`}
       removeLabel='Strike the design'
       editTitle='Set the design'
       note='Speed, reach, cargo, arms and crew follow from its parts; set them here to hold them against the parts.'
@@ -485,7 +487,7 @@ function DesignCard({
           kind: 'node',
           types: ['mortal'],
         },
-        { key: 'hull', label: 'Hull', kind: 'pick', table: table(HULL) },
+        { key: 'frame', label: 'Frame', kind: 'pick', table: table(frames) },
         { key: 'speed', label: 'Speed', kind: 'number', min: 0, max: SPAN },
         { key: 'range', label: 'Reach', kind: 'number', min: 0, max: SPAN },
         {
@@ -619,18 +621,14 @@ function DesignForge({
   ownerId: number
   blocked: string | null
 }) {
-  const [kind, setKind] = useState<keyof typeof DESIGN_KINDS>('vessel')
-  const [hull, setHull] = useState('carrack')
+  const [frame, setFrame] = useState('boat')
   const [quality, setQuality] = useState('50')
+  const frames = frameTable(useFrames().data ?? [])
   const drawing = useCollectiveAction(
     'design:draw',
     (_: void) => ({
       owner_id: ownerId,
-      kind,
-      hull:
-        kind === 'siege_engine'
-          ? null
-          : (hull as NonNullable<DesignView['hull']>),
+      frame: frame as NonNullable<DesignView['frame']>,
       quality: clamp(quality),
     }),
     'The design is drawn'
@@ -641,7 +639,7 @@ function DesignForge({
       icon={Ship}
       tone='info'
       title='Draw a design'
-      note='Draw a vessel, skyship or siege engine for this owner; new hulls and engines are built to it.'
+      note='Draw a vehicle type on any frame for this owner; its yards build new vehicles to it.'
       columns={3}
       action={
         <Button
@@ -656,18 +654,11 @@ function DesignForge({
       }
     >
       <MindPicker
-        label='What'
-        value={kind}
-        table={table(DESIGN_KINDS)}
+        label='Frame'
+        value={frame}
+        table={table(frames)}
         blocked={busy}
-        onPick={(value) => setKind(value as keyof typeof DESIGN_KINDS)}
-      />
-      <MindPicker
-        label='Hull'
-        value={hull}
-        table={table(HULL)}
-        blocked={kind === 'siege_engine' ? 'A siege engine has no hull' : busy}
-        onPick={setHull}
+        onPick={setFrame}
       />
       <NumberField
         label='Quality'

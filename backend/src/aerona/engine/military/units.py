@@ -10,6 +10,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.equipment import ArmyUnitEquipmentRow, UnitDesignTechniqueRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, UnitDesignRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow
@@ -27,6 +28,7 @@ from aerona.engine.demography.biology import kin_army, profiles_of
 from aerona.engine.ecology.domestication import herd_uses, trained_effect, trained_heads
 from aerona.engine.economy.materials import node_material
 from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.equipment.field import equip_stack
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import techniques_of
 from aerona.engine.military.templates import blend, realm_template, weights_of
@@ -35,6 +37,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_base_stats, set_stats, stat, stat_or
 from aerona.engine.regime.book import morale_factor
+from aerona.engine.vehicles.fleet import outfit_army
 from aerona.rules.registry import Rules
 
 ARMOUR_BY_METAL = (ArmourType.HIDE, ArmourType.PADDED, ArmourType.MAIL, ArmourType.SCALE, ArmourType.PLATE)
@@ -43,14 +46,19 @@ FALLBACK = UnitKind.LEVY
 MOUNT_NEEDS = {
     UnitKind.LIGHT_CAVALRY: "mount",
     UnitKind.HEAVY_CAVALRY: "mount",
-    UnitKind.HORSE_ARCHERS: "mount",
+    UnitKind.MOUNTED_ARCHERS: "mount",
     UnitKind.CHARIOTS: "mount",
     UnitKind.BEAST_RIDERS: "mount",
     UnitKind.WAR_BEASTS: "war",
-    UnitKind.SKY_MOUNTS: "sky_mount",
+    UnitKind.SKY_RIDERS: "sky_mount",
     UnitKind.BOUND_BEASTS: "bound_beast",
 }
-NAVAL_LADDER = (UnitKind.WARSHIPS, UnitKind.GALLEYS, UnitKind.LONGSHIPS)
+SUCCESSORS = {
+    UnitKind.ARCHERS: UnitKind.GUNNERS,
+    UnitKind.CROSSBOWMEN: UnitKind.GUNNERS,
+    UnitKind.JAVELINEERS: UnitKind.GRENADIERS,
+    UnitKind.MOUNTED_ARCHERS: UnitKind.MOUNTED_GUNNERS,
+}
 
 
 def allowed(spec: UnitSpec, community_id: int, knowledge: KnowledgeMap, techniques: set[Technique] | None = None) -> bool:
@@ -90,31 +98,34 @@ async def extras(ctx: TickContext, community: EntityRow, knowledge: KnowledgeMap
         add(plan, best((UnitKind.HEAVY_CAVALRY,), cid, knowledge, techniques), society.share(SocialClass.NOBLE) / PERCENT * table.noble_share_pct / PERCENT)
     if land is not None and land.coast_kind is not CoastKind.NONE:
         fleet = table.naval_share_pct / PERCENT
-        add(plan, best(NAVAL_LADDER, cid, knowledge, techniques), fleet * 3 / 4)
-        add(plan, best((UnitKind.FIRE_SHIPS,), cid, knowledge, techniques), fleet / 4)
-    add(plan, best((UnitKind.SKYSHIPS,), cid, knowledge, techniques), table.naval_share_pct / PERCENT / 2)
+        add(plan, best((UnitKind.NAVAL_CREW,), cid, knowledge, techniques), fleet * 3 / 4)
+        add(plan, best((UnitKind.MARINES,), cid, knowledge, techniques), fleet / 4)
+    add(plan, best((UnitKind.SKY_CREW,), cid, knowledge, techniques), table.naval_share_pct / PERCENT / 2)
+    add(plan, best((UnitKind.VOID_CREW,), cid, knowledge, techniques), table.naval_share_pct / PERCENT / 2)
     if await holding(ctx.session, cid, CommodityKind.MOUNTS) > 0:
         beasts = table.beast_share_pct / PERCENT
         add(plan, UnitKind.BEAST_RIDERS, beasts / 2)
         add(plan, UnitKind.WAR_BEASTS, beasts / 2)
         if knowledge.level(cid, KnowledgeBranch.SKY_NAVIGATION) >= 1:
-            add(plan, UnitKind.SKY_MOUNTS, beasts / 2)
-        if knowledge.level(cid, KnowledgeBranch.MAGIC) >= UNITS[UnitKind.WAR_MAGES].level:
+            add(plan, UnitKind.SKY_RIDERS, beasts / 2)
+        if knowledge.level(cid, KnowledgeBranch.MAGIC) >= UNITS[UnitKind.BATTLE_CASTERS].level:
             add(plan, UnitKind.BOUND_BEASTS, beasts / 4)
     magic = table.magic_share_pct / PERCENT
-    add(plan, best((UnitKind.WAR_MAGES,), cid, knowledge, techniques), magic)
-    add(plan, best((UnitKind.GOLEMS,), cid, knowledge, techniques), magic / 2)
-    if allowed(UNITS[UnitKind.NECROMANCERS], cid, knowledge, techniques):
-        add(plan, UnitKind.NECROMANCERS, magic / 2)
-        add(plan, UnitKind.GHOST_HOST, magic)
+    add(plan, best((UnitKind.BATTLE_CASTERS,), cid, knowledge, techniques), magic)
+    add(plan, best((UnitKind.CONSTRUCTS,), cid, knowledge, techniques), magic / 2)
+    if allowed(UNITS[UnitKind.SUMMONERS], cid, knowledge, techniques):
+        add(plan, UnitKind.SUMMONERS, magic / 2)
+        add(plan, UnitKind.SUMMONED_HOST, magic)
     if land is not None and land.scars.get(ScarKind.LEAK_WOUND.value, 0) > 0:
-        add(plan, UnitKind.VOID_SPAWN, magic * land.scars[ScarKind.LEAK_WOUND.value] / PERCENT)
+        add(plan, UnitKind.SUMMONED_HOST, magic * land.scars[ScarKind.LEAK_WOUND.value] / PERCENT)
     engineers = table.engineer_share_pct / PERCENT
     add(plan, best((UnitKind.SAPPERS,), cid, knowledge, techniques), engineers / 2)
-    add(plan, best((UnitKind.SIEGE_ENGINES,), cid, knowledge, techniques), engineers / 2)
+    add(plan, best((UnitKind.ENGINEERS,), cid, knowledge, techniques), engineers / 4)
+    add(plan, best((UnitKind.ARTILLERY_CREW, UnitKind.SIEGE_CREW), cid, knowledge, techniques), engineers / 2)
+    add(plan, best((UnitKind.VEHICLE_CREW,), cid, knowledge, techniques), engineers / 2)
     if society is not None and society.share(SocialClass.PRIEST) >= PERCENT / 10:
-        add(plan, UnitKind.PRIESTS, table.priest_share_pct / PERCENT)
-        add(plan, UnitKind.TEMPLE_GUARD, table.priest_share_pct / PERCENT)
+        add(plan, UnitKind.SUPPORT_CASTERS, table.priest_share_pct / PERCENT)
+        add(plan, UnitKind.GUARD_INFANTRY, table.priest_share_pct / PERCENT)
     return plan
 
 
@@ -138,6 +149,11 @@ async def composition(ctx: TickContext, community: EntityRow, size: int, knowled
     drilled = trained_effect(ctx.rules, await trained_heads(ctx.session, community.id, HerdTraining.WAR))
     if drilled > 0:
         add(plan, UnitKind.WAR_BEASTS, ctx.rules.husbandry.war_share_pct / PERCENT * drilled)
+    for kind, successor in SUCCESSORS.items():
+        if kind in plan and allowed(UNITS[successor], community.id, knowledge, techniques):
+            moved = plan[kind] * table.successor_share_pct / PERCENT
+            plan[kind] -= moved
+            add(plan, successor, moved)
     rest = max(0.0, 1 - sum(plan.values()))
     plan[FALLBACK] = plan.get(FALLBACK, 0.0) + rest
     total = sum(plan.values()) or 1.0
@@ -161,6 +177,9 @@ async def rearm(ctx: TickContext, army: EntityRow, owner: EntityRow | None, rows
             row.condition = clamp_int(row.condition - table.wear_per_season, 0, PERCENT)
     if owner is None:
         return 0
+    for row in rows:
+        design = await ctx.session.get(UnitDesignRow, row.design_id) if row.design_id is not None else None
+        await equip_stack(ctx, row, design_spec(design) if design is not None else UNITS[row.kind], owner, design)
     worn = [row for row in rows if row.count > 0 and row.condition < PERCENT and "condition" not in (row.locked or [])]
     wanted = sum(row.count for row in worn) // max(1, ctx.rules.materials.soldiers_per_kit)
     if not worn or wanted <= 0 or await holding(ctx.session, owner.id, CommodityKind.WEAPONS) <= 0:
@@ -252,11 +271,18 @@ def design_spec(row: UnitDesignRow) -> UnitSpec:
 
 
 async def designs_of(session: AsyncSession, owner_id: int) -> list[UnitDesignRow]:
-    return list(
+    rows = list(
         await session.scalars(
             select(UnitDesignRow).where(UnitDesignRow.owner_entity_id == owner_id, UnitDesignRow.retired.is_(False)).order_by(UnitDesignRow.id)
         )
     )
+    needs: dict[int, set[Technique]] = {}
+    for design_id, technique in await session.execute(
+        select(UnitDesignTechniqueRow.design_id, UnitDesignTechniqueRow.technique).where(UnitDesignTechniqueRow.design_id.in_([row.id for row in rows]))
+    ):
+        needs.setdefault(design_id, set()).add(technique)
+    known = await techniques_of(session, owner_id) if needs else set()
+    return [row for row in rows if needs.get(row.id, set()) <= known]
 
 
 def design_worth(design: UnitDesignRow, style: str) -> int:
@@ -337,6 +363,10 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
         ctx.session.add(row)
         rows.append(row)
     await ctx.session.flush()
+    for row in rows:
+        design = next((item for item in designs if item.id == row.design_id), None)
+        await equip_stack(ctx, row, design_spec(design) if design is not None else UNITS[row.kind], owner, design)
+    await outfit_army(ctx, army, owner, rows, knowledge)
     return rows
 
 
@@ -434,3 +464,21 @@ async def reconcile_sizes(ctx: TickContext) -> dict[str, int]:
             found["aligned"] += 1
     await ctx.session.flush()
     return found
+
+
+async def equip_bare_stacks(ctx: TickContext) -> int:
+    carried = select(ArmyUnitEquipmentRow.unit_id).distinct()
+    statement = (
+        select(ArmyUnitRow, ArmyRow.owner_entity_id)
+        .join(ArmyRow, ArmyRow.entity_id == ArmyUnitRow.army_entity_id)
+        .where(ArmyRow.disbanded_epoch.is_(None), ArmyUnitRow.count > 0, ArmyUnitRow.id.not_in(carried))
+        .order_by(ArmyUnitRow.id)
+    )
+    issued = 0
+    for unit, owner_id in (await ctx.session.execute(statement)).all():
+        owner = await ctx.session.get(EntityRow, owner_id) if owner_id is not None else None
+        if owner is None:
+            continue
+        design = await ctx.session.get(UnitDesignRow, unit.design_id) if unit.design_id is not None else None
+        issued += await equip_stack(ctx, unit, design_spec(design) if design is not None else UNITS[unit.kind], owner, design)
+    return issued

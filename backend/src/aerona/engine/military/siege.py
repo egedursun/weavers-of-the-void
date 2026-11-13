@@ -17,7 +17,6 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, TreasuryEntry
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import SiegeStatus
-from aerona.engine.collective.designs import siege_design_factor
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
 from aerona.engine.economy.purse import receive_coin
@@ -55,6 +54,8 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.settlement.districts import damage_districts
+from aerona.engine.structures.damage import mend_defences, strike_defences
+from aerona.engine.vehicles.fleet import siege_power
 
 DEFAULT_SUPPLIES = 180
 HALF = 2
@@ -173,6 +174,7 @@ async def batter(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastruct
     if action is SiegeAction.BOMBARD and "walls_condition" not in (walls.locked or []):
         damage = round_half_up(table.bombard_breach * engines * bombard_factor(ctx, material) * gates)
         walls.walls_condition = clamp_int(walls.walls_condition - damage, 0, PERCENT)
+        await strike_defences(ctx, siege.besieged_entity_id, damage, "the siege engines")
     if action is SiegeAction.MINE:
         ground = await region_environment(ctx.session, siege.besieged_entity_id)
         if ctx.rng(f"mine.{siege.id}.{siege.rounds}").chance(table.mine_chance * mining_factor(ctx, ground)) and "walls_condition" not in (walls.locked or []):
@@ -214,9 +216,9 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
     atlas = await RegionAtlas.load(ctx.session)
     walls = await ctx.session.get(SettlementInfrastructureRow, besieged.id)
     engines = await siege_engines(ctx, march.owner, march.army) * await design_factor(
-        ctx.session, ctx.rules, march.owner.id, BlueprintKind.SIEGE_ENGINE, UnitKind.SIEGE_ENGINES.value
+        ctx.session, ctx.rules, march.owner.id, BlueprintKind.SIEGE_ENGINE, UnitKind.SIEGE_CREW.value
     )
-    engines *= await siege_design_factor(ctx.session, march.owner.id)
+    engines *= await siege_power(ctx.session, march.army.id)
     defence = defender_choice(ctx, siege, garrison, stat(march.army, "size") or 0, walls)
     await starve(ctx, siege, besieged, defence is DefenderAction.RATION or siege.starvation is not StarvationStage.NONE)
     action = await action_for(ctx, siege, march, engines)
@@ -227,6 +229,7 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
         found.sally_dead = await sally(ctx, siege, march)
     elif defence is DefenderAction.REPAIR:
         mend(ctx, siege, walls)
+        await mend_defences(ctx, siege.besieged_entity_id, ctx.rules.siegecraft.repair_pct)
         await mason_repair(ctx, siege, besieged, walls)
         countermine(ctx, siege)
     elif defence is DefenderAction.SEEK_RELIEF:

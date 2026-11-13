@@ -32,6 +32,10 @@ SKIPPED_TABLES = frozenset(
         "chronicle_entities",
         "cosmos",
         "councils",
+        "design_mounts",
+        "design_sections",
+        "design_techniques",
+        "dish_ingredients",
         "entities",
         "entity_tags",
         "epoch_stats",
@@ -46,7 +50,10 @@ SKIPPED_TABLES = frozenset(
         "scores",
         "son_powers",
         "son_relations",
+        "structure_design_sections",
         "threads",
+        "unit_design_equipment",
+        "unit_design_techniques",
         "world_maps",
     }
 )
@@ -255,6 +262,8 @@ REFERENCE_LABELS: dict[str, Callable[[Any, dict[int, str]], str]] = {
     "designs": lambda row, names: f"{row.name} of {_named(names, row.owner_entity_id) or 'no one'}",
     "cascades": lambda row, names: f"the {row.act.value} of epoch {row.epoch} at {_named(names, row.settlement_entity_id)}",
     "storylet_runs": lambda row, names: f"the {words(row.storylet.value).lower()} storylet of epoch {row.opened_epoch}",
+    "vehicle_groups": lambda row, names: f"the group of {row.count} held by {_named(names, row.holder_node_id) or 'no one'}",
+    "army_units": lambda row, names: f"the {words(row.kind.value).lower()} of {_named(names, row.army_entity_id) or 'an army'}",
     "gifts": lambda row, names: (
         f"the {words(row.occasion.value).lower()} gift of {_named(names, row.giver_node_id) or 'someone'} to {_named(names, row.receiver_node_id) or 'someone'}"
         f" in epoch {row.epoch}"

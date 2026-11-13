@@ -98,7 +98,7 @@ import {
   SIEGE_STATUS,
   STARVATION,
   TACTIC,
-  UNIT_ICON,
+  unitIcon,
   WORKS,
   fieldLabel,
   named,
@@ -1429,7 +1429,7 @@ function BattleItem({ battle, last }: { battle: BattleReport; last: boolean }) {
           <div className='flex min-w-0 flex-wrap items-center gap-1'>
             <Label>Fallen by unit</Label>
             {kinds.map(([kind, value]) => (
-              <Plain key={kind} icon={UNIT_ICON[kind] ?? Users}>
+              <Plain key={kind} icon={unitIcon(kind, Users)}>
                 {`${named({}, kind).label} ${formatInteger(value)}`}
               </Plain>
             ))}

@@ -202,6 +202,9 @@ class CapacityRules:
     nightmares_command: int = rule(-8, -100, 100, G, "Recurring nightmares: command lost to sleepless nights (%)")
     nightmares_craft: int = rule(-6, -100, 100, G, "Recurring nightmares: craft lost to sleepless nights (%)")
     comatose_lost: int = rule(100, 0, 100, G, "A body in a sleep no one can wake it from: every capacity but fertility lost (%)")
+    decline_scholarship: int = rule(20, -100, 100, G, "Late-life decline of the mind: scholarship lost at full severity (%)")
+    decline_command: int = rule(15, -100, 100, G, "Late-life decline of the mind: command lost at full severity (%)")
+    decline_craft: int = rule(10, -100, 100, G, "Late-life decline of the mind: craft lost at full severity (%)")
 
 
 @dataclass(frozen=True)

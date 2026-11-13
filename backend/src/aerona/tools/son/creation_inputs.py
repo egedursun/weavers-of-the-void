@@ -41,7 +41,7 @@ from aerona.domain.enums.entity import EngineKind, EntityType, LegendCategory
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath, TenetKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import HullClass, VesselArmament
+from aerona.domain.enums.military import VesselArmament
 from aerona.domain.enums.mind import ActKind, TraitKind
 from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.place import PlaceKind
@@ -49,6 +49,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, StructureKind
 from aerona.domain.enums.travel import VehicleKind
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.world import SkyEventKind
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.shared_inputs import LinkInput, WordInput
@@ -139,7 +140,7 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.VESSEL: {
             "target_world_id": (int | None, None),
             "vessel_kind": (VehicleKind | None, None),
-            "hull_class": (HullClass | None, None),
+            "frame": (VehicleFrame | None, None),
             "armament": (list[VesselArmament] | None, None),
             "hull_material": (MaterialKind | None, None),
             "fabric_material": (MaterialKind | None, None),

@@ -30,6 +30,7 @@ from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.happening import EventPhase
+from aerona.domain.enums.integrity import HarmForce
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.settlement import DistrictHarm
@@ -216,7 +217,9 @@ async def _quake_structure(ctx: TickContext, structure: EntityRow, scale: float,
     loss = await quake_loss(ctx, structure, shaking_loss(ctx.rules, disaster) * (fraction(effects.architecture_quake_severity) if sturdy else 1.0) * scale)
     profile = await ctx.session.get(StructureProfileRow, structure.id)
     if profile is not None:
-        if not await harm(ctx, structure, profile, loss, cause=f"the {label}", quiet=True):
+        if not await harm(
+            ctx, structure, profile, loss, cause=f"the {label}", force=HarmForce.IMPACT if disaster is Disaster.ERUPTION else HarmForce.QUAKE, quiet=True
+        ):
             return False
     else:
         durability = stat(structure, "durability")

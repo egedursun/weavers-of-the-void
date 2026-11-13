@@ -1,6 +1,10 @@
 from dataclasses import dataclass
+from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.body import BodyBuild, BodyPlan, HeightClass
+from aerona.domain.enums.cosmography import BeingKind
+from aerona.domain.enums.divine import OuterHunger
 
 
 @dataclass(frozen=True)
@@ -93,3 +97,35 @@ PLANS: dict[BodyPlan, PlanSpec] = {
 HEIGHT_RANK: dict[HeightClass, int] = {HeightClass.SHORT: 0, HeightClass.AVERAGE: 1, HeightClass.TALL: 2, HeightClass.GIANT: 4}
 BUILD_RANK: dict[BodyBuild, int] = {BodyBuild.SLIGHT: 0, BodyBuild.AVERAGE: 1, BodyBuild.HEAVY: 2, BodyBuild.GIANT: 4}
 WHOLE_PLANS = frozenset({BodyPlan.SERPENTINE, BodyPlan.AMORPHOUS, BodyPlan.INCORPOREAL})
+
+
+BEING_PLANS: MappingProxyType[BeingKind, BodyPlan] = total(
+    BeingKind,
+    {
+        BeingKind.PLANAR_NATIVE: BodyPlan.HUMANOID,
+        BeingKind.DIMENSION_WALKER: BodyPlan.HUMANOID,
+        BeingKind.RIFT_SPAWN: BodyPlan.INSECTOID,
+        BeingKind.HIGHER_DIMENSIONAL: BodyPlan.DIVINE_MANIFEST,
+        BeingKind.STAR_EATER: BodyPlan.COLOSSAL,
+        BeingKind.NEBULA_MIND: BodyPlan.AMORPHOUS,
+        BeingKind.GALACTIC_LEVIATHAN: BodyPlan.SERPENTINE,
+        BeingKind.VOID_SHEPHERD: BodyPlan.COLOSSAL,
+        BeingKind.ECHO: BodyPlan.INCORPOREAL,
+        BeingKind.TIME_WANDERER: BodyPlan.INCORPOREAL,
+        BeingKind.COSMIC_TITAN: BodyPlan.COLOSSAL,
+        BeingKind.VEIL_WARDEN: BodyPlan.INCORPOREAL,
+        BeingKind.PLANE_SOVEREIGN: BodyPlan.DIVINE_MANIFEST,
+        BeingKind.SWARM_INTELLIGENCE: BodyPlan.AMORPHOUS,
+        BeingKind.LIVING_CONSTELLATION: BodyPlan.INCORPOREAL,
+    },
+)
+HUNGER_PLANS: MappingProxyType[OuterHunger, BodyPlan] = total(
+    OuterHunger,
+    {
+        OuterHunger.SOULS: BodyPlan.AMORPHOUS,
+        OuterHunger.KNOWLEDGE: BodyPlan.INCORPOREAL,
+        OuterHunger.LIGHT: BodyPlan.COLOSSAL,
+        OuterHunger.NAMES: BodyPlan.INCORPOREAL,
+        OuterHunger.MEMORIES: BodyPlan.AMORPHOUS,
+    },
+)

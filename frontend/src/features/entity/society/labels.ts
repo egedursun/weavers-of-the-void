@@ -280,7 +280,7 @@ export const MARTIAL_SPEC: Record<MartialStyle, Spec> = {
   skirmisher: { label: 'Skirmishers', icon: Feather, tone: 'success' },
   chariot: { label: 'Chariots', icon: Disc3, tone: 'gold' },
   phalanx: { label: 'Phalanx', icon: ShieldHalf, tone: 'info' },
-  berserker: { label: 'Berserkers', icon: Axe, tone: 'danger' },
+  shock: { label: 'Shock', icon: Axe, tone: 'danger' },
   naval_raider: { label: 'Sea raiders', icon: Sailboat, tone: 'info' },
   siege_engineer: { label: 'Siege engineers', icon: Castle, tone: 'warning' },
   war_magic: { label: 'War magic', icon: WandSparkles, tone: 'verdigris' },

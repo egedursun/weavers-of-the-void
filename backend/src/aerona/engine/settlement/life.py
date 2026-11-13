@@ -90,7 +90,7 @@ def granary_of(rules: Rules, town: Town) -> int:
 
 def housing_of(rules: Rules, town: Town) -> int:
     table = rules.urban
-    return (town.tier_index() + 1) * table.housing_base + town.effects(rules).housing
+    return (town.tier_index() + 1) * table.housing_base + town.effects(rules).housing + town.habitat
 
 
 def slots_of(rules: Rules, town: Town) -> int:

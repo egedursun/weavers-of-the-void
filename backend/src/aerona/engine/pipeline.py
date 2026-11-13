@@ -81,6 +81,7 @@ from aerona.engine.phases import (
     life_seed,
     living_stats,
     lore,
+    made_kinds,
     magic,
     market,
     mechanics_assignment,
@@ -207,6 +208,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + cycles.PHASES
     + regimes.PHASES
     + agrarian.PHASES
+    + made_kinds.PHASES
     + exploration.PHASES
     + factions.PHASES
     + goals.PHASES
@@ -304,6 +306,9 @@ SUB_ENGINE_STAGE = stage(
     "war_upkeep",
     "tribute",
     "treaty_cycles",
+    "equipment_forging",
+    "unit_types",
+    "vehicle_works",
     "campaigns",
     "vendetta_cycles",
     "prisoners",
@@ -528,6 +533,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "spy_cells",
     "mole_hunts",
     "wonders",
+    "megastructures",
     "kin_politics",
     "long_plans",
     "dark_ages",
@@ -542,6 +548,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "culture_cycles",
     "tradition_cycles",
     "people_cycles",
+    "kitchens",
     "legacy_traits",
     "remembrance",
     "historiography",
@@ -559,9 +566,12 @@ AGING_STAGE = stage(
     "mortal_wounds",
     "body_afflictions",
     "body_conditions",
+    "cognitive_decline",
+    "being_wounds",
     "body_society",
     "mortal_life_course",
     "mortal_aging",
+    "attraction",
     "reproduction_systems",
     "dead_bonds_closing",
 )

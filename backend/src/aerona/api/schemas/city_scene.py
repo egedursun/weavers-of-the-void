@@ -5,7 +5,7 @@ from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBa
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.settlement import DistrictKind, SizeTier, WaterSupply
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.structure import ConstructionState, StructureGroup, StructureKind
+from aerona.domain.enums.structure import BuildingForm, ConstructionState, StructureGroup, StructureKind
 from aerona.domain.enums.urban import CivicService, HousingLevel, LandCover, LandGround, Morphology, UrbanService, ZoneKind
 
 
@@ -49,6 +49,8 @@ class CityBuildingView(ApiModel):
     state: ConstructionState
     progress: int
     staff_pct: int
+    form: BuildingForm | None
+    storeys: int | None
 
 
 class ZoneShare(ApiModel):
@@ -102,6 +104,8 @@ class LandWorkView(ApiModel):
     progress: int
     q: int
     r: int
+    form: BuildingForm | None
+    storeys: int | None
 
 
 class LandResourceView(ApiModel):

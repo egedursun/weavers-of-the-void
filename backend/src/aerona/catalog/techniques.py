@@ -140,18 +140,16 @@ INSTITUTIONS = frozenset(technique for technique, spec in TECHNIQUES.items() if 
 
 UNIT_TECHNIQUES = MappingProxyType(
     {
-        UnitKind.PIKEMEN: T.PHALANX_DRILL,
-        UnitKind.HORSE_ARCHERS: T.HORSE_ARCHERY,
+        UnitKind.PIKE_INFANTRY: T.PHALANX_DRILL,
+        UnitKind.MOUNTED_ARCHERS: T.HORSE_ARCHERY,
         UnitKind.SAPPERS: T.SIEGECRAFT,
-        UnitKind.SIEGE_ENGINES: T.SIEGECRAFT,
-        UnitKind.LONGSHIPS: T.SAILING,
-        UnitKind.GALLEYS: T.SAILING,
-        UnitKind.WARSHIPS: T.SHIPWRIGHTING,
-        UnitKind.FIRE_SHIPS: T.SHIPWRIGHTING,
-        UnitKind.SKYSHIPS: T.SKY_SAILING,
-        UnitKind.NECROMANCERS: T.NECROMANCY,
-        UnitKind.GHOST_HOST: T.NECROMANCY,
-        UnitKind.GOLEMS: T.ALCHEMY,
+        UnitKind.SIEGE_CREW: T.SIEGECRAFT,
+        UnitKind.NAVAL_CREW: T.SAILING,
+        UnitKind.MARINES: T.SAILING,
+        UnitKind.SKY_CREW: T.SKY_SAILING,
+        UnitKind.SUMMONERS: T.SUMMONING,
+        UnitKind.ENGINEERS: T.FORTIFICATION,
+        UnitKind.CONSTRUCTS: T.ALCHEMY,
         UnitKind.CROSSBOWMEN: T.IRON,
         UnitKind.HEAVY_CAVALRY: T.IRON,
     }

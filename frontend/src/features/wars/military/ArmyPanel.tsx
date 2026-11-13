@@ -74,6 +74,7 @@ import {
   TARGET_CLASS,
   TRAIT,
   UNIT_ICON,
+  unitIcon,
   WEAPON,
   fieldLabel,
   named,
@@ -149,7 +150,7 @@ type StackNumber = (typeof STACK_NUMBERS)[number]
 
 function unitOf(stack: { kind: string; family: string }) {
   const family = named(FAMILY, stack.family)
-  return { icon: UNIT_ICON[stack.kind] ?? family.icon, family }
+  return { icon: unitIcon(stack.kind, family.icon), family }
 }
 
 function StackEditor({
@@ -501,7 +502,7 @@ function AddStack({
   blocked: string | null
 }) {
   const kinds = useUnitKinds()
-  const [kind, setKind] = useState<string>('spearmen')
+  const [kind, setKind] = useState<string>('line_infantry')
   const [count, setCount] = useState('100')
   const add = useGodAction({
     run: () =>

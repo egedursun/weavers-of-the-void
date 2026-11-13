@@ -2,21 +2,26 @@ from aerona.catalog.body_plans import PLANS
 from aerona.catalog.bonds import BOND_KINDS
 from aerona.catalog.cosmography import CLUSTER_KINDS, DIMENSION_KINDS, GALAXY_TYPES
 from aerona.catalog.creatures import CREATURE_TRAITS
+from aerona.catalog.cuisine import DISH_FOODS
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
+from aerona.catalog.equipment import FAMILIES
 from aerona.catalog.interventions import DISASTERS, MIRACLES
 from aerona.catalog.mythic import GEAS_ACTS
 from aerona.catalog.stars import STAR_TYPES
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.tenets import TENET_EFFECTS
 from aerona.catalog.theories import DISCIPLINES
+from aerona.catalog.units import UNITS
+from aerona.catalog.vehicles import FRAMES
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.agrarian import AidKind, KeystoneUse, PerennialKind, PreparednessKind
 from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKind, DesignKind, StoryletId
+from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.cycles import (
     ChallengeKind,
@@ -28,6 +33,7 @@ from aerona.domain.enums.cycles import (
     ReproductiveSystem,
     ResidenceRule,
 )
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
 from aerona.domain.enums.ecology import (
     AwakeningTrigger,
@@ -52,11 +58,14 @@ from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.military import Formation
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, ServitorRole
 from aerona.domain.enums.place import PlaceKind, SecretKind
 from aerona.domain.enums.regime import SelectorateKind
+from aerona.domain.enums.structure import BuildingForm
 from aerona.domain.enums.tongues import LanguagePolicy, SoundChangeKind, SoundEnvironment
 from aerona.domain.enums.travel import VehicleKind
+from aerona.domain.enums.vehicles import MountKind
 from aerona.prompts.contexts.blocks import SummarySection
 from aerona.prompts.environment import normalize, string_template
 from aerona.prompts.errors import UnknownToolError
@@ -165,6 +174,16 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "keystone_uses": ", ".join(item.value for item in KeystoneUse),
         "design_kinds": ", ".join(item.value for item in DesignKind),
         "design_components": ", ".join(item.value for item in DesignComponentKind),
+        "vehicle_frames": ", ".join(f"{kind} ({spec.label})" for kind, spec in FRAMES.items()),
+        "mount_kinds": ", ".join(item.value for item in MountKind),
+        "unit_roles": ", ".join(f"{kind} ({spec.label})" for kind, spec in UNITS.items()),
+        "equipment_families": ", ".join(f"{kind} ({spec.label})" for kind, spec in FAMILIES.items()),
+        "foods": ", ".join(food.value for food in DISH_FOODS),
+        "cooking_methods": ", ".join(item.value for item in CookingMethod),
+        "dish_courses": ", ".join(item.value for item in DishCourse),
+        "building_forms": ", ".join(item.value for item in BuildingForm),
+        "martial_styles": ", ".join(item.value for item in MartialStyle),
+        "formations": ", ".join(item.value for item in Formation),
         "registry_kinds": ", ".join(item.value for item in RegistryKind if item is not RegistryKind.LAND_TITLE),
         "ideology_tenets": ", ".join(tenet.value for tenet in IdeologyTenet),
         "prophecy_predicates": ", ".join(item.value for item in ProphecyPredicate),

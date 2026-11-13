@@ -28,6 +28,7 @@ from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.body.cohorts import labour_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import ore_yield_pct
+from aerona.engine.cuisine.dishes import KitchenTally, cook_dishes
 from aerona.engine.cycles.indenture import bondage_weight, freed_stigma
 from aerona.engine.demography.backfill import society_depth_backfill
 from aerona.engine.demography.basket import (
@@ -542,6 +543,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     await harvest_goods(ctx, world.economy, entity, rate, society.shares[SocialClass.FARMER])
     await gather_commons(ctx, world.economy, entity, society.shares[SocialClass.FARMER])
     await kitchen(ctx, world.economy, entity, RefiningTally())
+    await cook_dishes(ctx, entity, KitchenTally())
     meal, basket = await consume(ctx, entity, society, world)
     await enforce_storage(ctx, world.economy, entity)
     row = await sync_aggregates(ctx.session, rules, entity)
@@ -625,6 +627,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.ciphers",
     "table.class_standing",
     "table.community_cohorts",
+    "table.community_dishes",
     "table.community_industry",
     "table.community_labour",
     "table.community_methods",
@@ -636,6 +639,8 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_values",
+    "table.dish_ingredients",
+    "table.dishes",
     "table.divine_wounds",
     "table.entity_flags",
     "table.epoch_year_cursors",
@@ -676,6 +681,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.resource_workers",
     "table.reverences",
     "table.settlement_infrastructure",
+    "table.settlement_profiles",
     "table.signal_links",
     "table.skills",
     "table.sky_events",
@@ -710,6 +716,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.chronicle_entities",
     "table.class_standing",
     "table.community_cohorts",
+    "table.community_dishes",
     "table.community_industry",
     "table.community_needs",
     "table.community_societies",
@@ -725,6 +732,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.mortal_profiles",
     "table.name_registry",
     "table.production_runs",
+    "table.settlement_profiles",
     "table.workshops",
 )
 async def society_economy(ctx: TickContext) -> None:

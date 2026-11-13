@@ -68,12 +68,13 @@ from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.intrigue import IntrigueSecret
-from aerona.domain.enums.military import HullClass, VesselStatus
+from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.travel import VehicleKind
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.models.entity_stats import HouseStats, MortalStats, PeopleStats, PolityStats, VesselStats
 from aerona.engine.collective.accounts import (
     HistoryTally,
@@ -92,7 +93,7 @@ from aerona.engine.collective.control import edit_arms, set_norm
 from aerona.engine.collective.crowds import CrowdTally, cascade, crowd_for, mood_of, rage_mobs, ready_to_arm, spark
 from aerona.engine.collective.dating import render_date
 from aerona.engine.collective.demography import DemographyTally, fertility_factor, measure
-from aerona.engine.collective.designs import DesignTally, design_power, draw_design, hull_sizes, mend, siege_design_factor, wear_leg
+from aerona.engine.collective.designs import DesignTally, design_power, draw_design, frame_sizes, mend, wear_leg
 from aerona.engine.collective.generations import GenerationTally, keep_generations
 from aerona.engine.collective.heraldry import HeraldryTally, grant_arms, invent, quarter_on_marriage, signature, signature_of
 from aerona.engine.collective.learning import LearningTally, learn_socially
@@ -500,7 +501,7 @@ async def test_designs_derive_performance_wear_on_legs_fail_and_are_mended(sessi
     ctx = await context(session, designs={"wear_per_leg": 50, "failure_at": 40, "failure_pct": 100, "shipyard_repair": 100})
     town = await town_of(session, world)
     realm = await realm_of(session, world, town)
-    design = await draw_design(ctx, realm, DesignKind.VESSEL, hull=HullClass.CARRACK, sizes=hull_sizes(HullClass.CARRACK))
+    design = await draw_design(ctx, realm, VehicleFrame.CARRACK, sizes=frame_sizes(VehicleFrame.CARRACK))
     assert design.cargo > 0 and design.seaworthiness > 0 and design.speed >= 0
     parts = list(await session.scalars(select(DesignComponentRow).where(DesignComponentRow.design_id == design.id)))
     assert {part.component for part in parts} >= {DesignComponentKind.HULL, DesignComponentKind.HOLD}
@@ -508,7 +509,7 @@ async def test_designs_derive_performance_wear_on_legs_fail_and_are_mended(sessi
     row = VesselProfileRow(
         entity_id=ship.id,
         kind=VehicleKind.SHIP,
-        hull_class=HullClass.CARRACK,
+        frame=VehicleFrame.CARRACK,
         condition=100,
         crew=40,
         home_port_entity_id=town.id,
@@ -527,8 +528,8 @@ async def test_designs_derive_performance_wear_on_legs_fail_and_are_mended(sessi
     await mend(ctx, row, tally)
     worn = list(await session.scalars(select(ComponentWearRow.wear).where(ComponentWearRow.vessel_entity_id == ship.id)))
     assert worn and max(worn) == 0
-    engine = await draw_design(ctx, realm, DesignKind.SIEGE_ENGINE)
-    assert engine.armament > 0 and await siege_design_factor(session, realm.id) > 1
+    engine = await draw_design(ctx, realm, VehicleFrame.TREBUCHET)
+    assert engine.kind is DesignKind.SIEGE_ENGINE and engine.armament > 0
 
 
 async def test_vanished_towns_end_their_crowds_and_storylets(session: AsyncSession, world: CoreWorld) -> None:

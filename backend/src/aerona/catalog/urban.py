@@ -1,5 +1,6 @@
 from types import MappingProxyType
 
+from aerona.catalog.structures import acting, acting_set
 from aerona.core.total import total
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.faction import FactionKind
@@ -12,7 +13,7 @@ V = UrbanService
 C = CommodityKind
 D = DistrictKind
 
-SERVICE_OF: MappingProxyType[StructureKind, UrbanService] = MappingProxyType(
+SERVICE_OF: MappingProxyType[StructureKind, UrbanService] = acting(
     {
         K.AQUEDUCT: V.WATER,
         K.FOUNTAIN: V.WATER,
@@ -35,28 +36,30 @@ SERVICE_OF: MappingProxyType[StructureKind, UrbanService] = MappingProxyType(
         K.BARRACKS: V.WATCH,
     }
 )
-AMENITIES = frozenset(
-    {
-        K.TEMPLE,
-        K.SHRINE,
-        K.MARKET,
-        K.BATHHOUSE,
-        K.MONUMENT,
-        K.THEATRE,
-        K.ARENA,
-        K.AQUEDUCT,
-        K.LIBRARY,
-        K.WONDER,
-        K.FOUNTAIN,
-        K.PARK,
-        K.TAVERN,
-        K.MUSEUM,
-        K.PLAZA,
-    }
+AMENITIES = acting_set(
+    frozenset(
+        {
+            K.TEMPLE,
+            K.SHRINE,
+            K.MARKET,
+            K.BATHHOUSE,
+            K.MONUMENT,
+            K.THEATRE,
+            K.ARENA,
+            K.AQUEDUCT,
+            K.LIBRARY,
+            K.WONDER,
+            K.FOUNTAIN,
+            K.PARK,
+            K.TAVERN,
+            K.MUSEUM,
+            K.PLAZA,
+        }
+    )
 )
-NUISANCES = frozenset({K.TANNERY, K.PRISON, K.FORGE, K.MILL, K.MINE, K.QUARRY, K.SLAUGHTERHOUSE, K.CHARCOAL_KILN, K.FISHERY, K.SAWMILL})
+NUISANCES = acting_set(frozenset({K.TANNERY, K.PRISON, K.FORGE, K.MILL, K.MINE, K.QUARRY, K.SLAUGHTERHOUSE, K.CHARCOAL_KILN, K.FISHERY, K.SAWMILL}))
 NUISANCE_DISTRICTS = frozenset({D.SLUMS, D.NECROPOLIS})
-HOME_DISTRICT: MappingProxyType[StructureKind, DistrictKind] = MappingProxyType(
+HOME_DISTRICT: MappingProxyType[StructureKind, DistrictKind] = acting(
     {
         K.TEMPLE: D.TEMPLE_QUARTER,
         K.SHRINE: D.TEMPLE_QUARTER,

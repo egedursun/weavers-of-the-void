@@ -494,6 +494,8 @@ class DesignKind(StrEnum):
     VESSEL = "vessel"
     SKYSHIP = "skyship"
     SIEGE_ENGINE = "siege_engine"
+    LAND_VEHICLE = "land_vehicle"
+    SPACECRAFT = "spacecraft"
 
 
 class DesignComponentKind(StrEnum):
@@ -507,3 +509,9 @@ class DesignComponentKind(StrEnum):
     NAVIGATION = "navigation"
     FRAME = "frame"
     COUNTERWEIGHT = "counterweight"
+    STEERING = "steering"
+    LIFT = "lift"
+    POWER = "power"
+    TROOPS = "troops"
+    COMMAND = "command"
+    LIFE_SUPPORT = "life_support"

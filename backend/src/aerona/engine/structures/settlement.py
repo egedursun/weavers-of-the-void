@@ -6,6 +6,7 @@ from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementP
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import MaterialFamily
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.integrity import HarmForce
 from aerona.domain.enums.settlement import BuildMaterial, WaterSupply
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
@@ -141,7 +142,7 @@ async def burn(ctx: TickContext, entity: EntityRow, fires: int) -> int:
         if loss <= 0:
             continue
         burned += 1
-        await harm(ctx, work, profile, loss, cause="fire", quiet=True)
+        await harm(ctx, work, profile, loss, cause="fire", force=HarmForce.FIRE, quiet=True)
     if burned:
         await note(
             ctx,

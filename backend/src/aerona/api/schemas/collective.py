@@ -33,9 +33,9 @@ from aerona.domain.enums.collective import (
     SupporterPose,
     Tincture,
 )
-from aerona.domain.enums.military import HullClass
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.vehicles import VehicleFrame
 
 
 class MoodView(ApiModel):
@@ -367,7 +367,7 @@ class MachineDesignView(ApiModel):
     id: int
     owner: NodeRef
     kind: DesignKind
-    hull: HullClass | None
+    frame: VehicleFrame | None
     name: str
     designer: NodeRef | None
     parent_design_id: int | None

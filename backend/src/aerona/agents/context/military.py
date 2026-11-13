@@ -1,6 +1,7 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.agents.context.made_lines import kit_line
 from aerona.catalog.command import AREAS
 from aerona.catalog.war_terms import CASUS_BELLI_LABELS
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -44,7 +45,7 @@ async def army_sheet(session: AsyncSession, rules: Rules, army_id: int) -> str:
     return (
         f"{army.name}: {stat(army, 'size') or 0} soldiers ({makeup}), morale {stat(army, 'morale') or 0}, cohesion {profile.cohesion}, "
         f"{profile.supply_days} days of food, stance {words(profile.stance.value)}{order_line(stacks)}{tail}"
-        f"{await works_line(session, rules, army_id, profile, stacks)}"
+        f"{await works_line(session, rules, army_id, profile, stacks)}{await kit_line(session, army_id)}"
     )
 
 
@@ -162,7 +163,7 @@ async def fleet_sheet(session: AsyncSession, community_id: int) -> list[str]:
         if row is None or vessel is None or row.status in {VesselStatus.WRECKED}:
             continue
         lines.append(
-            f"ship {vessel.name}: {words(row.hull_class.value)}, hull {row.condition}, crew {row.crew}, renown {row.renown}"
+            f"ship {vessel.name}: {words(row.frame.value)}, hull {row.condition}, crew {row.crew}, renown {row.renown}"
             + (f", strange ({stat(vessel, 'strangeness')})" if (stat(vessel, "strangeness") or 0) > 0 else "")
         )
     return lines

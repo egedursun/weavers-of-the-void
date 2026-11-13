@@ -98,3 +98,10 @@ def test_a_ban_on_the_model_s_own_images_is_caught() -> None:
         assert "model image ban" in rules_hit(module, PROMPT, text), text
     assert "model image ban" not in rules_hit(module, PROMPT, "Name it in the language of its people.")
     assert "model image ban" not in rules_hit(module, PROMPT, "Do not use ids that are not in the list.")
+
+
+def test_a_default_species_for_scale_is_caught() -> None:
+    module = checker()
+    for text in ("a colossal beast with tiny human figures for scale", "a tower with humans for scale", "the gate, with human figures before it"):
+        assert "assumed species" in rules_hit(module, PROMPT, text), text
+    assert "assumed species" not in rules_hit(module, PROMPT, "a beast with small figures of the folk who live there for scale")

@@ -89,7 +89,7 @@ def test_earthworks_stay_on_the_land_and_shelter_the_defender_against_charges() 
     assert leave_earthworks(RULES, profile, ground) == RULES.army_depth.earthworks_at
     shallow = ArmyProfileRow(army_entity_id=1, stance=Stance.MARCH, entrenchment=RULES.army_depth.earthworks_at - 1, locked=[])
     assert leave_earthworks(RULES, shallow, land()) == 0
-    defender = side("Holders", [unit(UnitKind.SPEARMEN, 100, ident=1)], defending=True)
+    defender = side("Holders", [unit(UnitKind.LINE_INFANTRY, 100, ident=1)], defending=True)
     field = Field(TerrainKind.PLAIN, None, night=False, earthworks=ground.scars[ScarKind.EARTHWORKS.value])
     assert dug_in(defender, field) == RULES.army_depth.earthworks_at
 
@@ -110,12 +110,12 @@ def test_commanders_lead_best_where_their_skills_and_traits_lie() -> None:
 
 def test_a_template_fills_its_share_of_a_muster_and_outdated_kinds_are_refitted() -> None:
     plan = {UnitKind.LEVY: 1.0}
-    mixed = blend(RULES, plan, {UnitKind.SPEARMEN: 1})
-    assert mixed[UnitKind.SPEARMEN] == pytest.approx(RULES.army_depth.template_share / 100)
+    mixed = blend(RULES, plan, {UnitKind.LINE_INFANTRY: 1})
+    assert mixed[UnitKind.LINE_INFANTRY] == pytest.approx(RULES.army_depth.template_share / 100)
     template = ArmyTemplateRow(composition={UnitKind.LEVY.value: 60, "not_a_kind": 5}, doctrine=MartialStyle.SHIELDWALL, locked=[])
     assert weights_of(template) == {UnitKind.LEVY: 60}
-    swaps = upgrades({UnitKind.LEVY: 60}, MartialStyle.SHIELDWALL, {UnitKind.LEVY, UnitKind.SHIELD_WALL, UnitKind.SPEARMEN})
-    assert UnitKind.LEVY in swaps and swaps[UnitKind.LEVY] in {UnitKind.SHIELD_WALL, UnitKind.SPEARMEN}
+    swaps = upgrades({UnitKind.LEVY: 60}, MartialStyle.SHIELDWALL, {UnitKind.LEVY, UnitKind.SHIELD_INFANTRY, UnitKind.LINE_INFANTRY})
+    assert UnitKind.LEVY in swaps and swaps[UnitKind.LEVY] in {UnitKind.SHIELD_INFANTRY, UnitKind.LINE_INFANTRY}
     assert upgrades({UnitKind.LEVY: 60}, MartialStyle.SHIELDWALL, {UnitKind.LEVY}) == {}
 
 
@@ -142,7 +142,7 @@ async def test_a_routed_side_loses_its_standard_to_the_victor(session: AsyncSess
     await connect(session, losers.id, banner.id, BondKind.OWNS)
     await session.flush()
     war = await open_war(ctx, victors, losers)
-    winner = side("Hill Folk", [unit(UnitKind.SPEARMEN, 100, ident=1)], ident=victors.id)
+    winner = side("Hill Folk", [unit(UnitKind.LINE_INFANTRY, 100, ident=1)], ident=victors.id)
     loser = side("River Folk", [replace_army(unit(UnitKind.LEVY, 100, ident=2, morale=50), losers.id)], ident=losers.id)
     winner.entity, loser.entity = victors, losers
     result = BattleResult(winner, loser, winner, loser, False, OutcomeClass.ROUT, 50.0, [], {}, {}, {})

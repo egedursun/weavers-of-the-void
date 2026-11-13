@@ -350,6 +350,16 @@ class SonResult(StrEnum):
     BEING_REFUSED = "The being does not yield: {{ reason }}"
     BEING_BOUND = "The being is bound to you."
     BEING_BANISHED = "The being is banished to the dimension it came from."
+    NOT_A_VAST_BEING = "#{{ id }} {{ name }} is neither a cosmic nor an outer being."
+    BEING_STRUCK = "You strike {{ name }}: {{ outcome }}."
+    SHAPING_TARGET = "#{{ id }} {{ name }} is no community; only a community takes a made kind of its own."
+    SHAPING_REFUSED = "You cannot shape that: {{ reason }}."
+    VEHICLE_TYPE_SHAPED = (
+        "{{ owner }} now builds {{ name }} (design#{{ id }}) on the {{ frame }} frame: speed {{ speed }}, arms {{ arms }}, crew {{ crew }}, cargo {{ cargo }}."
+    )
+    EQUIPMENT_SHAPED = "{{ owner }} now makes {{ name }} (model#{{ id }}), {{ family | an }} of quality {{ quality }}."
+    DISH_SHAPED = "{{ owner }} now cooks {{ name }} (dish#{{ id }}), {{ method }} and served as {{ course }}."
+    STRUCTURE_TYPE_SHAPED = "{{ owner }} now raises {{ name }} (type#{{ id }}) as its own {{ kind }}."
     NOT_A_PHENOMENON = "#{{ id }} is not a phenomenon."
     PHENOMENON_CONTAINED = "{{ name }} is held back by your ward."
     CLIMATE_REFUSED = "The climate does not turn: {{ reason }}"
@@ -757,6 +767,19 @@ class MortalResult(StrEnum):
     STRIKE_REFUSED = "You cannot strike that figure from memory: {{ why }}."
     DESIGN_DRAWN = "You drew {{ name }}: speed {{ speed }}, reach {{ reach }}, cargo {{ cargo }}, arms {{ arms }}, crew {{ crew }}."
     DESIGN_REFUSED = "You cannot draw that design: {{ why }}."
+    UNIT_TYPE_DRAFTED = (
+        "{{ owner }} now fields {{ name }} as its {{ role }}: melee {{ melee }}, missile {{ missile }}, defence {{ defence }}, speed {{ speed }}."
+    )
+    UNIT_TYPE_REFUSED = "You cannot draft that kind of soldier: {{ why }}."
+    MODEL_FORGED = "You made {{ name }}, {{ family | an }} of quality {{ quality }}: damage {{ damage }}, protection {{ protection }}."
+    MODEL_REFUSED = "You cannot make that model: {{ why }}."
+    DISH_CREATED = (
+        "{{ owner }} now cooks {{ name }}, {{ method }} and served as {{ course }}, of {{ ingredients }}: "
+        "nourishment {{ nourishment }}, delight {{ delight }}, keeps {{ keeps }} epochs."
+    )
+    DISH_REFUSED = "You cannot make that dish: {{ why }}."
+    STRUCTURE_TYPE_DRAWN = "You drew {{ name }}, {{ owner }}'s own {{ kind }} ({{ form }}, {{ storeys }} storeys); its builders raise it to this type."
+    STRUCTURE_TYPE_REFUSED = "You cannot draw that building type: {{ why }}."
     DEED_REGISTERED = "The {{ kind }} between you and {{ name }} is registered."
     DEED_REFUSED = "You cannot register that deed: {{ why }}."
     APPEAL_FILED = "Your appeal goes to the {{ court }} court for a fee of {{ fee }}."

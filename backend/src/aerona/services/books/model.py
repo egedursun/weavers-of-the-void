@@ -62,6 +62,7 @@ from aerona.services.books.citysvg import Plan, city_plan, land_plan, type_table
 from aerona.services.books.command import add_command_areas
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
+from aerona.services.books.made import MadeWorld, made_kinds
 from aerona.services.books.mapsvg import MapPicture, map_picture
 from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection, title_of
 from aerona.services.codex import CosmicEpoch, TravellerGuide, cosmic_chronicle, traveller_guide
@@ -396,6 +397,7 @@ class BookModel:
     wars: list[WarArticle] = field(default_factory=list)
     creator_typed: list[TypedSection] = field(default_factory=list)
     records: list[RecordTable] = field(default_factory=list)
+    made: list[MadeWorld] = field(default_factory=list)
     ledger_changes: dict[int, list[LedgerChange]] = field(default_factory=dict)
 
 
@@ -1106,6 +1108,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         wars=await builder.wars(),
         creator_typed=builder.typed.of(creator.id) if creator is not None else [],
         records=[*builder.typed.records, *await type_tables(session, rules)],
+        made=await made_kinds(session, builder.names),
         ledger_changes=builder.typed.ledger_changes(await session.scalars(select(LedgerChangeRow).order_by(LedgerChangeRow.entry_id, LedgerChangeRow.id))),
     )
 

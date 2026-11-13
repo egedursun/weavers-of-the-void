@@ -12,7 +12,6 @@ import {
   Crown,
   Drama,
   Factory,
-  Feather,
   Flag,
   Flame,
   Gavel,
@@ -30,14 +29,12 @@ import {
   Sailboat,
   Scale,
   Ship,
-  ShipWheel,
   Skull,
   Sparkles,
   Swords,
   Target,
   Unlock,
   Users,
-  Waves,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -56,7 +53,6 @@ export const depthKeys = {
     ['military', 'records', kind, scope] as const,
   battle: (id: number) => ['battles', id, 'depth'] as const,
   vessel: (id: number) => ['vessels', id] as const,
-  hulls: ['vessels', 'hulls'] as const,
   feuds: (id: number | null) => ['feuds', id] as const,
   terms: (id: number) => ['wars', id, 'terms'] as const,
 }
@@ -98,14 +94,6 @@ export function useVessel(id: number, enabled = true) {
           params: { path: { entity_id: id } },
         })
       ),
-  })
-}
-
-export function useHulls() {
-  return useQuery({
-    queryKey: depthKeys.hulls,
-    staleTime: Number.POSITIVE_INFINITY,
-    queryFn: () => unwrap(api.GET('/api/vessels/hulls')),
   })
 }
 
@@ -154,21 +142,6 @@ export const RECORD_ICON: Record<string, LucideIcon> = {
   army_template: ClipboardList,
   casus_belli: Flag,
   war_production: Factory,
-}
-
-export const HULL: Record<string, Named> = {
-  raft: { label: 'Raft', icon: Waves, tone: 'muted' },
-  boat: { label: 'Boat', icon: Sailboat, tone: 'muted' },
-  galley: { label: 'Galley', icon: ShipWheel, tone: 'gold' },
-  longship: { label: 'Longship', icon: Sailboat, tone: 'warning' },
-  cog: { label: 'Cog', icon: Ship, tone: 'info' },
-  carrack: { label: 'Carrack', icon: Ship, tone: 'success' },
-  warship: { label: 'Warship', icon: Swords, tone: 'danger' },
-  light_sailer: { label: 'Light-sailer', icon: Feather, tone: 'verdigris' },
-  bone_hull: { label: 'Bone hull', icon: Bone, tone: 'muted' },
-  generation_ship: { label: 'Generation ship', icon: Rocket, tone: 'info' },
-  skyship: { label: 'Skyship', icon: Sparkles, tone: 'verdigris' },
-  living_ship: { label: 'Living ship', icon: Leaf, tone: 'success' },
 }
 
 export const ARMAMENT: Record<string, Named> = {

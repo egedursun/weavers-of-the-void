@@ -17,8 +17,8 @@ RULES = Rules()
 
 
 def test_image_direction_by_kind() -> None:
-    assert image_direction(ImageSubjectTraits(EntityType.VESSEL, False, VehicleKind.GATE)).startswith("a gate or portal")
-    assert image_direction(ImageSubjectTraits(EntityType.VESSEL, False, VehicleKind.SHIP)).startswith("a ship between worlds")
+    assert image_direction(ImageSubjectTraits(EntityType.VESSEL, False, VehicleKind.GATE)).startswith("a gate between worlds")
+    assert image_direction(ImageSubjectTraits(EntityType.VESSEL, False, VehicleKind.SHIP)).startswith("a vessel between worlds")
     assert image_direction(ImageSubjectTraits(EntityType.SPECIES, True)) == MEGAFAUNA_DIRECTION
     assert image_direction(ImageSubjectTraits(EntityType.ARMY, False)).startswith("the army")
 

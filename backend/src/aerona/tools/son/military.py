@@ -2,22 +2,26 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
-from aerona.catalog.battle_depth import WEAPON_PROFILES
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.military import ArmourType, HullClass, PeaceTermKind, ShieldType, SpyCover, UnitKind, VesselArmament, WarAimKind
+from aerona.domain.enums.military import ArmourType, Formation, PeaceTermKind, ShieldType, SpyCover, UnitKind, VesselArmament, WarAimKind
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.war import WarCause
+from aerona.engine.divine.control import apply
+from aerona.engine.equipment.control import set_loadout
 from aerona.engine.military.orders import build_peace, create_vessel, declare_with_cause, raise_standing_army, start_siege
-from aerona.engine.military.records import create_record
 from aerona.engine.military.shipyard import Commission
 from aerona.engine.military.spycraft import recruit
+from aerona.engine.military.unit_types import draw_type
 from aerona.engine.phases.espionage import network_for
 from aerona.engine.phases.warfare import disband_army
+from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -30,6 +34,11 @@ from aerona.tools.son.support import ensure_in_reach, require_essence
 
 PERCENT = 100
 NAME_MAX = 120
+DESCRIPTION_MAX = 2000
+LOADOUT_MAX = 6
+UNIT_CHOICES = frozenset(
+    {"melee", "missile", "defence", "armour", "shield", "terror", "reach", "volleys", "accuracy", "piercing", "doctrine", "formation", "description"}
+)
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 Percent = Annotated[int, Field(ge=0, le=PERCENT)]
 
@@ -69,7 +78,7 @@ class OfferPeaceInput(ToolInput):
 class CommissionVesselInput(ToolInput):
     owner_id: int
     name: Annotated[str, Field(min_length=1, max_length=NAME_MAX)]
-    hull: HullClass = HullClass.BOAT
+    frame: VehicleFrame = VehicleFrame.BOAT
     armament: list[VesselArmament] = Field(default_factory=list)
     captain_id: int | None = None
 
@@ -78,16 +87,20 @@ class DesignUnitInput(ToolInput):
     owner_id: int
     name: Annotated[str, Field(min_length=1, max_length=NAME_MAX)]
     base_kind: UnitKind
-    melee: Percent = 40
-    missile: Percent = 0
-    defence: Percent = 40
-    armour: ArmourType = ArmourType.NONE
-    shield: ShieldType = ShieldType.NONE
-    terror: Percent = 0
+    melee: Percent | None = None
+    missile: Percent | None = None
+    defence: Percent | None = None
+    armour: ArmourType | None = None
+    shield: ShieldType | None = None
+    terror: Percent | None = None
     reach: Annotated[int, Field(ge=0, le=5)] | None = None
     volleys: Annotated[int, Field(ge=0, le=6)] | None = None
     accuracy: Percent | None = None
     piercing: Percent | None = None
+    doctrine: MartialStyle | None = None
+    formation: Formation | None = None
+    description: Annotated[str, Field(max_length=DESCRIPTION_MAX)] | None = None
+    equipment_ids: list[int] = Field(default_factory=list, max_length=LOADOUT_MAX)
 
 
 class PlantSpiesInput(ToolInput):
@@ -189,10 +202,10 @@ async def commission_vessel(call: SonCall, args: CommissionVesselInput) -> str:
     owner = await require_canon(call.session, args.owner_id)
     await ensure_in_reach(call, owner)
     require_essence(call, call.rules.son_military.vessel_cost)
-    order = Commission(hull=args.hull, armament=list(dict.fromkeys(args.armament)) or None, captain_id=args.captain_id)
+    order = Commission(frame=args.frame, armament=list(dict.fromkeys(args.armament)) or None, captain_id=args.captain_id)
     vessel = await create_vessel(call.tick, owner.id, args.name, order)
     pay(call, call.rules.son_military.vessel_cost, vessel.id)
-    hull = label_of(args.hull)
+    hull = label_of(args.frame)
     await call.chronicle(
         ChronicleKind.WAR, lines.COMMISSION_VESSEL, entity_ids=[owner.id, vessel.id], son=call.son.name, owner=owner.name, hull=hull, name=vessel.name
     )
@@ -202,25 +215,14 @@ async def commission_vessel(call: SonCall, args: CommissionVesselInput) -> str:
 async def design_unit(call: SonCall, args: DesignUnitInput) -> str:
     owner = await community(call, args.owner_id)
     require_essence(call, call.rules.son_military.design_cost)
-    values = {
-        "name": args.name,
-        "base_kind": args.base_kind.value,
-        "melee": args.melee,
-        "missile": args.missile,
-        "defence": args.defence,
-        "armour": args.armour.value,
-        "shield": args.shield.value,
-        "terror": args.terror,
-        "owner_entity_id": owner.id,
-        "reach": args.reach if args.reach is not None else WEAPON_PROFILES[args.base_kind].reach,
-        "volleys": args.volleys if args.volleys is not None else WEAPON_PROFILES[args.base_kind].volleys,
-        "accuracy": args.accuracy if args.accuracy is not None else WEAPON_PROFILES[args.base_kind].accuracy,
-        "piercing": args.piercing if args.piercing is not None else WEAPON_PROFILES[args.base_kind].piercing,
-    }
-    design = await create_record(call.tick, "unit_design", values)
+    design = await draw_type(call.tick, owner, args.base_kind, await KnowledgeMap.load(call.session), name=args.name)
+    chosen = {key: value for key, value in args.model_dump(include=set(UNIT_CHOICES)).items() if value is not None}
+    apply(design, chosen, [])
+    for model_id in dict.fromkeys(args.equipment_ids):
+        await set_loadout(call.tick, design.id, model_id, 1)
     pay(call, call.rules.son_military.design_cost, owner.id)
-    await call.chronicle(ChronicleKind.WAR, lines.DESIGN_UNIT, entity_ids=[owner.id], son=call.son.name, owner=owner.name, name=args.name)
-    return result(SonResult.UNIT_DESIGNED, owner=owner.name, name=args.name, id=design.id, base=label_of(args.base_kind))
+    await call.chronicle(ChronicleKind.WAR, lines.DESIGN_UNIT, entity_ids=[owner.id], son=call.son.name, owner=owner.name, name=design.name)
+    return result(SonResult.UNIT_DESIGNED, owner=owner.name, name=design.name, id=design.id, base=label_of(args.base_kind))
 
 
 async def plant_spies(call: SonCall, args: PlantSpiesInput) -> str:

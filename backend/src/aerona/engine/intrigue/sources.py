@@ -45,7 +45,7 @@ CURSED_PACKAGES = frozenset({PackageKind.VAMPIRISM})
 NEIGHBOUR_HOPS = 1
 DECEIVE_DEPTH = 60
 SOLDIERS = "soldiers"
-SCOUTS = frozenset({UnitKind.LIGHT_CAVALRY, UnitKind.SKIRMISHERS, UnitKind.HORSE_ARCHERS, UnitKind.SKY_MOUNTS})
+SCOUTS = frozenset({UnitKind.LIGHT_CAVALRY, UnitKind.LIGHT_INFANTRY, UnitKind.MOUNTED_ARCHERS, UnitKind.SKY_RIDERS})
 
 
 @dataclass

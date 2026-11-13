@@ -20,6 +20,7 @@ PROFILE_PERCENTS = (
     "loyalty_liege",
     "loyalty_community",
     "loyalty_god",
+    "attraction",
 )
 
 
@@ -57,6 +58,8 @@ class MortalProfileRow(Base):
     mood_score: Mapped[int] = mapped_column(default=0, server_default="0")
     focus: Mapped[FocusKind | None] = mapped_column(enum_type(FocusKind, "focus"))
     conviction: Mapped[int] = mapped_column(default=50, server_default="50")
+    drawn_to: Mapped[list[str] | None] = mapped_column(JSON)
+    attraction: Mapped[int] = mapped_column(default=50, server_default="50")
     cause_of_death: Mapped[DeathCause | None] = mapped_column(enum_type(DeathCause, "cause_of_death"))
     death_place_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)

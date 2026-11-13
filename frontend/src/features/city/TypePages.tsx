@@ -30,7 +30,7 @@ import { DWELLING_ICON, type TypeSelection } from './typeKeys'
 const TypePreview3D = lazy(() => import('./TypePreview3D'))
 const TOWN_TYPES = ['settlement'] as const
 
-function Preview({
+export function Preview({
   look,
   label,
   icon: Icon,

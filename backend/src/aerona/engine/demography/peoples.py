@@ -193,7 +193,7 @@ def martial_of(region: RegionEnvironmentRow | None, levels: dict[KnowledgeBranch
         (levels.get(KnowledgeBranch.WARFARE, 0) >= 3 and levels.get(KnowledgeBranch.ARCHITECTURE, 0) >= 3, MartialStyle.SIEGE_ENGINEER),
         (levels.get(KnowledgeBranch.WARFARE, 0) >= 3, MartialStyle.PHALANX),
         (terrain in HIGHLAND, MartialStyle.SKIRMISHER),
-        (values.get(ValueAxis.MARTIAL, 0) >= LEAN * 2 and values.get(ValueAxis.HONOUR, 0) < 0, MartialStyle.BERSERKER),
+        (values.get(ValueAxis.MARTIAL, 0) >= LEAN * 2 and values.get(ValueAxis.HONOUR, 0) < 0, MartialStyle.SHOCK),
         (values.get(ValueAxis.NATURE, 0) >= LEAN * 2, MartialStyle.BEAST_WAR),
         (levels.get(KnowledgeBranch.METALLURGY, 0) >= 2 and terrain not in HIGHLAND and values.get(ValueAxis.HIERARCHY, 0) >= LEAN, MartialStyle.CHARIOT),
     )

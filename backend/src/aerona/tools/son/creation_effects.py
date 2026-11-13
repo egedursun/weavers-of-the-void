@@ -168,7 +168,7 @@ async def _vessel_route(call: SonCall, args: CreationInput, created: EntityRow) 
             call.rules,
             created,
             Commission(
-                hull=args.option("hull_class"),
+                frame=args.option("frame"),
                 armament=args.option("armament"),
                 hull_material=args.option("hull_material"),
                 fabric_material=args.option("fabric_material"),

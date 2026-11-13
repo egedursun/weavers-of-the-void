@@ -17,6 +17,7 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingAgenda, BeingKind, BeingPhase, BeingScale, DimensionalEventKind, RiftCause
@@ -26,6 +27,7 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.intrigue import IdentityReason
 from aerona.domain.models.entity_stats import CosmicBeingStats, CultStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.being_wounds import can_roam, can_see, effective_might, wound_being
 from aerona.engine.cosmos.commerce import carry, market_of
 from aerona.engine.cosmos.kinds import BEING_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography, Placement
@@ -98,6 +100,8 @@ async def create_being(
 
 
 async def worlds_in_reach(ctx: TickContext, cosmography: Cosmography, being: EntityRow, profile: CosmicBeingProfileRow) -> list[WorldRow]:
+    if not await can_see(ctx.session, ctx.rules.cosmic_wounds.sight_floor, being):
+        return []
     here = cosmography.place_world_id(being.world_id)
     found: list[WorldRow] = []
     for world in sorted(cosmography.worlds.values(), key=lambda row: row.id):
@@ -124,6 +128,8 @@ async def move_to(ctx: TickContext, cosmography: Cosmography, being: EntityRow, 
 
 async def cross(ctx: TickContext, cosmography: Cosmography, being: EntityRow, profile: CosmicBeingProfileRow) -> bool:
     table = ctx.rules.cosmic_beings
+    if not await can_roam(ctx.session, ctx.rules.cosmic_wounds.roam_floor, being):
+        return False
     here = cosmography.place_world_id(being.world_id).dimension
     through = await ctx.session.scalar(
         select(RiftRow)
@@ -161,7 +167,7 @@ async def record_incursion(ctx: TickContext, cosmography: Cosmography, being: En
             subject_entity_id=being.id,
             epoch=ctx.epoch,
             until_epoch=ctx.epoch,
-            intensity=profile.might,
+            intensity=await effective_might(ctx.session, being, profile.might),
             text=f"{being.name} broke into {region.name}.",
         )
     )
@@ -218,7 +224,8 @@ async def answer_incursion(scene: Scene, region: EntityRow) -> bool:
         scale_stat(ctx.rules, army, "size", (PERCENT - table.army_answer_pct) / PERCENT)
     if "might" not in profile.locked:
         profile.might = clamp_percent(profile.might - soldiers // table.army_drive_size)
-    driven = soldiers >= max(1, profile.might) * table.army_drive_size
+    await wound_being(ctx, scene.being, soldiers / 1000 * ctx.rules.cosmic_wounds.army_wound, HarmCause.BATTLE, f"the armies of {scene.world.name}")
+    driven = soldiers >= max(1, await effective_might(ctx.session, scene.being, profile.might)) * table.army_drive_size
     if driven:
         profile.phase = BeingPhase.ROAMING
         profile.manifest_epochs = 0
@@ -384,7 +391,7 @@ async def serve(ctx: TickContext, cosmography: Cosmography, being: EntityRow, pr
     binder_id = profile.bound_by_node_id
     if binder_id is None or held(binder_id):
         return 0
-    gain = profile.might * ctx.rules.cosmic_beings.serve_pct // PERCENT
+    gain = await effective_might(ctx.session, being, profile.might) * ctx.rules.cosmic_beings.serve_pct // PERCENT
     son = await ctx.session.get(SonRow, binder_id)
     god = await ctx.session.get(ForeignGodRow, binder_id) if son is None else None
     if son is not None:
@@ -505,6 +512,7 @@ async def bind_being(ctx: TickContext, entity_id: int, binder_id: int, by: str) 
         raise ValidationFailedError(f"{being.name} is banished and cannot be bound.")
     profile.phase = BeingPhase.BOUND
     profile.bound_by_node_id = binder_id
+    await wound_being(ctx, being, ctx.rules.cosmic_wounds.bind_wound, HarmCause.RITUAL, f"bound by {by}", killer_id=binder_id)
     await connect(ctx.session, binder_id, being.id, BondKind.COMMANDS, ctx.epoch, description="bound to serve")
     await note(ctx, f"{by} bound {being.name}.", key="being.bound", ids=[being.id], world_id=being.world_id, kind=ChronicleKind.MIRACLE)
     await ctx.session.flush()
@@ -553,6 +561,7 @@ async def banish_being(ctx: TickContext, entity_id: int, by: str) -> CosmicBeing
     profile.rift_id = None
     await send_home(ctx, being, profile)
     profile.might = clamp_percent(profile.might - ctx.rules.cosmic_beings.banish_might)
+    await wound_being(ctx, being, ctx.rules.cosmic_wounds.banish_wound, HarmCause.RITUAL, f"banished by {by}")
     await note(
         ctx,
         f"{by} banished {being.name} to the dimension it came from.",

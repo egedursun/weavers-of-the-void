@@ -3,7 +3,7 @@ from math import sqrt
 from sqlalchemy import func, select
 
 from aerona.catalog.mind import COMBAT_SKILLS
-from aerona.catalog.units import UnitSpec
+from aerona.catalog.units import UNITS, UnitSpec
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
@@ -41,6 +41,7 @@ from aerona.engine.divine.battles import intervene
 from aerona.engine.ecology.beasts import beast_dread, mounted_edge
 from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.economy.sanctity import holy_strike
+from aerona.engine.equipment.field import acclaim_models, capture, carried_by_units, drop_to_losses, field_specs, wear_after_battle
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import ancestral_site, guardians_of
 from aerona.engine.intrigue.beliefs import beliefs_of
@@ -61,6 +62,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.relations.passions import invoke
 from aerona.engine.renown.book import acclaim
+from aerona.engine.vehicles.fleet import after_battle, crew_specs
 
 EDGE_FLOOR, EDGE_CEILING = 0.5, 2.0
 INSPIRING_CHARISMA = 70
@@ -225,7 +227,10 @@ async def side_of(
         rows.extend(await muster(ctx, item, owner, knowledge))
     specs = await design_specs(ctx, {unit.design_id for unit in rows if unit.design_id})
     hardness = await hardness_of(ctx, community.world_id, {unit.material for unit in rows if unit.material})
-    stacks = make_stacks(rows, specs, hardness)
+    base = {unit.id: specs.get(unit.design_id or 0) or UNITS[unit.kind] for unit in rows}
+    fielded = base | await field_specs(ctx.session, rows, base)
+    fielded |= await crew_specs(ctx.session, rows, fielded)
+    stacks = make_stacks(rows, specs, hardness, fielded)
     profile = await profile_of(ctx, army, community)
     table = ctx.rules
     commander = row.commander_entity_id
@@ -355,6 +360,7 @@ async def clash(
                 profile.contact_seasons = 0
         if side.commander_struck:
             await strike_commander(ctx, armies[side.entity.id][0][1].commander_entity_id)
+    await spoils(ctx, result, armies)
     if result.winner is not None and result.loser is not None and not result.refused:
         await take_engines(ctx, result.winner, result.loser)
         for side, enemy in ((first, second), (second, first)):
@@ -398,7 +404,7 @@ async def strike_commander(ctx: TickContext, commander_id: int | None) -> bool:
 async def take_engines(ctx: TickContext, winner: Side, loser: Side) -> int:
     taken = 0
     for stack in loser.stacks:
-        if stack.row.kind is not UnitKind.SIEGE_ENGINES or stack.row.count <= 0 or not stack.routed or held(stack.row.army_entity_id):
+        if stack.row.kind is not UnitKind.SIEGE_CREW or stack.row.count <= 0 or not stack.routed or held(stack.row.army_entity_id):
             continue
         stack.row.army_entity_id = winner.army.id
         taken += stack.row.count
@@ -495,3 +501,31 @@ async def learn_tactic(ctx: TickContext, result: BattleResult, commander_id: int
 async def cautious(ctx: TickContext, commander_id: int | None) -> None:
     if commander_id is not None and CommanderTrait.CAUTIOUS not in await traits_of(ctx, commander_id):
         ctx.session.add(CommanderTraitRow(mortal_entity_id=commander_id, trait=CommanderTrait.CAUTIOUS, since_epoch=ctx.epoch))
+
+
+def loss_share(side: Side) -> float:
+    start = sum(stack.start for stack in side.stacks)
+    return min(1.0, sum(max(0, stack.start - stack.row.count) for stack in side.stacks) / start) if start else 0.0
+
+
+async def spoils(ctx: TickContext, result: BattleResult, armies: dict[int, Armies]) -> None:
+    rows = {side.entity.id: [stack.row for stack in side.stacks] for side in (result.attacker, result.defender)}
+    for side in (result.attacker, result.defender):
+        ctx.count("equipment_worn", await wear_after_battle(ctx, rows[side.entity.id]))
+    if result.winner is None or result.loser is None or result.refused:
+        return
+    winner, loser = result.winner, result.loser
+    ctx.count("equipment_acclaimed", await acclaim_models(ctx, rows[winner.entity.id]))
+    carried = await carried_by_units(ctx.session, [row.id for row in rows[loser.entity.id]])
+    dropped = await drop_to_losses(ctx, rows[loser.entity.id])
+    models = list({item.model.id: item.model for items in carried.values() for item in items}.values())
+    ctx.count("equipment_captured", await capture(ctx, winner.entity.id, dropped, models))
+    found = await after_battle(
+        ctx,
+        [army.id for army, _ in armies[loser.entity.id]],
+        [army.id for army, _ in armies[winner.entity.id]],
+        (loss_share(loser), loss_share(winner)),
+        winner.entity.id,
+    )
+    for key, value in found.items():
+        ctx.count(key, value)

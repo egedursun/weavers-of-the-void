@@ -29,18 +29,18 @@ import {
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
+import { useFrames } from '@/features/madeKinds/api'
+import { frameTable } from '@/features/madeKinds/labels'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { EntityPicker, Held, RecordButtons, TextField } from './controls'
 import {
   ARMAMENT,
-  HULL,
   MATERIAL,
   type Vessel,
   VESSEL_STATUS,
   depthKeys,
   nameOf,
-  useHulls,
   useVessel,
 } from './depth'
 import { PERCENT, busyOf } from './labels'
@@ -210,7 +210,7 @@ function Berth({
   )
 }
 
-type Hull = components['schemas']['HullClass']
+type Frame = components['schemas']['VehicleFrame']
 type Arm = components['schemas']['VesselArmament']
 
 function Arms({
@@ -249,6 +249,8 @@ export function VesselCard({
   blocked: string | null
 }) {
   const query = useVessel(vesselId)
+  const frames = useFrames()
+  const FRAMES = frameTable(frames.data ?? [])
   const [hull, setHull] = useState<string>('')
   const [arms, setArms] = useState<string[] | null>(null)
   const vessel = query.data
@@ -259,7 +261,7 @@ export function VesselCard({
         api.POST('/api/actions/vessel:refit', {
           body: {
             vessel_id: vesselId,
-            hull_class: (hull || vessel?.hull.hull || 'boat') as Hull,
+            frame: (hull || vessel?.frame.frame || 'boat') as Frame,
             armament: (arms ?? vessel?.armament ?? []) as Arm[],
           },
         })
@@ -290,10 +292,10 @@ export function VesselCard({
         >
           <FieldGrid>
             <ChoiceField
-              label='Hull'
+              label='Frame'
               icon={Gauge}
               value={hull || 'boat'}
-              table={HULL}
+              table={FRAMES}
               blocked={blocked}
               onPick={setHull}
             />
@@ -320,10 +322,10 @@ export function VesselCard({
       title='Vessel'
       icon={Ship}
       tone='info'
-      hint={`${vessel.hull.label} · ${status.label}`}
+      hint={`${vessel.frame.label} · ${status.label}`}
     >
       <div className='flex min-w-0 flex-wrap gap-1.5'>
-        <Tag item={nameOf(HULL, vessel.hull.hull)} />
+        <Tag item={nameOf(FRAMES, vessel.frame.frame)} />
         <Tag item={status} />
         <Held locked={vessel.locked} />
         <Paged items={vessel.armament}>
@@ -331,7 +333,7 @@ export function VesselCard({
         </Paged>
       </div>
       <StatBar
-        label='Hull'
+        label='Frame'
         value={vessel.condition}
         max={100}
         icon={Hammer}
@@ -435,10 +437,10 @@ export function VesselCard({
         >
           <FieldGrid>
             <ChoiceField
-              label='Hull'
+              label='Frame'
               icon={Gauge}
-              value={hull || vessel.hull.hull}
-              table={HULL}
+              value={hull || vessel.frame.frame}
+              table={FRAMES}
               blocked={blocked}
               onPick={setHull}
             />
@@ -471,7 +473,8 @@ export function LayDownVessel({
   ownerId: number
   blocked: string | null
 }) {
-  const hulls = useHulls()
+  const frames = useFrames()
+  const FRAMES = frameTable(frames.data ?? [])
   const [name, setName] = useState('')
   const [hull, setHull] = useState('boat')
   const [arms, setArms] = useState<string[]>([])
@@ -482,14 +485,14 @@ export function LayDownVessel({
           body: {
             owner_id: ownerId,
             name: name.trim(),
-            hull_class: hull as Hull,
+            frame: hull as Frame,
             armament: arms as Arm[],
           },
         })
       ),
     onDone: () => setName(''),
   })
-  const spec = hulls.data?.find((item) => item.hull === hull)
+  const spec = frames.data?.find((item) => item.frame === hull)
   return (
     <Adjust
       title='Lay down a vessel'
@@ -502,13 +505,13 @@ export function LayDownVessel({
           icon={Ship}
           value={name}
           onChange={setName}
-          placeholder='The Saltwind'
+          placeholder='A name of your choosing'
         />
         <ChoiceField
-          label='Hull'
+          label='Frame'
           icon={Ship}
           value={hull}
-          table={HULL}
+          table={FRAMES}
           blocked={blocked}
           onPick={setHull}
         />
@@ -525,8 +528,8 @@ export function LayDownVessel({
           <MiniStat icon={Users} label='Crew' value={spec.crew} tone='muted' />
           <MiniStat
             icon={Waves}
-            label='Seaworthy'
-            value={spec.seaworthiness}
+            label='Endurance'
+            value={spec.endurance}
             tone='verdigris'
           />
           <MiniStat

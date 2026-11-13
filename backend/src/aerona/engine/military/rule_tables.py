@@ -1,7 +1,6 @@
 from functools import cache
 
 from aerona.rules.registry.battle_tables import BattleTerrainRules, BattleWeatherRules, TacticMatchupRules
-from aerona.rules.registry.war_depth import SeafaringRules
 
 
 @cache
@@ -44,6 +43,13 @@ def terrain_family(table: BattleTerrainRules) -> dict[tuple[str, str], int]:
         ("canyon", "missile"): table.canyon_missile_pct,
         ("ruin_field", "mounted"): table.ruin_field_mounted_pct,
         ("volcanic", "infantry"): table.volcanic_infantry_pct,
+        ("forest", "vehicle"): table.forest_vehicle_pct,
+        ("jungle", "vehicle"): table.jungle_vehicle_pct,
+        ("mountains", "vehicle"): table.mountains_vehicle_pct,
+        ("high_pass", "vehicle"): table.high_pass_vehicle_pct,
+        ("marsh", "vehicle"): table.marsh_vehicle_pct,
+        ("urban", "vehicle"): table.urban_vehicle_pct,
+        ("underground", "vehicle"): table.underground_vehicle_pct,
     }
 
 
@@ -62,11 +68,11 @@ def terrain_defender(table: BattleTerrainRules) -> dict[str, int]:
 @cache
 def kind_terrain(table: BattleTerrainRules) -> dict[tuple[str, str], int]:
     return {
-        ("skirmishers", "forest"): table.skirmishers_forest_pct,
-        ("skirmishers", "jungle"): table.skirmishers_jungle_pct,
-        ("skirmishers", "hills"): table.skirmishers_hills_pct,
-        ("horse_archers", "steppe"): table.horse_archers_steppe_pct,
-        ("horse_archers", "plain"): table.horse_archers_plain_pct,
+        ("light_infantry", "forest"): table.light_infantry_forest_pct,
+        ("light_infantry", "jungle"): table.light_infantry_jungle_pct,
+        ("light_infantry", "hills"): table.light_infantry_hills_pct,
+        ("mounted_archers", "steppe"): table.mounted_archers_steppe_pct,
+        ("mounted_archers", "plain"): table.mounted_archers_plain_pct,
         ("light_cavalry", "plain"): table.light_cavalry_plain_pct,
         ("light_cavalry", "steppe"): table.light_cavalry_steppe_pct,
         ("heavy_cavalry", "plain"): table.heavy_cavalry_plain_pct,
@@ -85,7 +91,7 @@ def weather_family(table: BattleWeatherRules) -> dict[tuple[str, str], int]:
         ("downpour", "mounted"): table.downpour_mounted_pct,
         ("storm", "missile"): table.storm_missile_pct,
         ("storm", "mounted"): table.storm_mounted_pct,
-        ("storm", "naval"): table.storm_naval_pct,
+        ("storm", "vehicle"): table.storm_vehicle_pct,
         ("fog", "missile"): table.fog_missile_pct,
         ("snow", "missile"): table.snow_missile_pct,
         ("snow", "mounted"): table.snow_mounted_pct,
@@ -138,46 +144,4 @@ def tactic_matchup(table: TacticMatchupRules) -> dict[tuple[str, str], int]:
         ("frontal_assault", "feint"): table.frontal_assault_vs_feint_pct,
         ("feint", "hold_line"): table.feint_vs_hold_line_pct,
         ("feint", "river_defence"): table.feint_vs_river_defence_pct,
-    }
-
-
-@cache
-def hull_values(table: SeafaringRules) -> dict[tuple[str, str], int]:
-    return {
-        ("raft", "speed"): table.raft_speed,
-        ("raft", "cargo"): table.raft_cargo,
-        ("raft", "seaworthiness"): table.raft_seaworthiness,
-        ("boat", "speed"): table.boat_speed,
-        ("boat", "cargo"): table.boat_cargo,
-        ("boat", "seaworthiness"): table.boat_seaworthiness,
-        ("galley", "speed"): table.galley_speed,
-        ("galley", "cargo"): table.galley_cargo,
-        ("galley", "seaworthiness"): table.galley_seaworthiness,
-        ("longship", "speed"): table.longship_speed,
-        ("longship", "cargo"): table.longship_cargo,
-        ("longship", "seaworthiness"): table.longship_seaworthiness,
-        ("cog", "speed"): table.cog_speed,
-        ("cog", "cargo"): table.cog_cargo,
-        ("cog", "seaworthiness"): table.cog_seaworthiness,
-        ("carrack", "speed"): table.carrack_speed,
-        ("carrack", "cargo"): table.carrack_cargo,
-        ("carrack", "seaworthiness"): table.carrack_seaworthiness,
-        ("warship", "speed"): table.warship_speed,
-        ("warship", "cargo"): table.warship_cargo,
-        ("warship", "seaworthiness"): table.warship_seaworthiness,
-        ("light_sailer", "speed"): table.light_sailer_speed,
-        ("light_sailer", "cargo"): table.light_sailer_cargo,
-        ("light_sailer", "seaworthiness"): table.light_sailer_seaworthiness,
-        ("bone_hull", "speed"): table.bone_hull_speed,
-        ("bone_hull", "cargo"): table.bone_hull_cargo,
-        ("bone_hull", "seaworthiness"): table.bone_hull_seaworthiness,
-        ("generation_ship", "speed"): table.generation_ship_speed,
-        ("generation_ship", "cargo"): table.generation_ship_cargo,
-        ("generation_ship", "seaworthiness"): table.generation_ship_seaworthiness,
-        ("skyship", "speed"): table.skyship_speed,
-        ("skyship", "cargo"): table.skyship_cargo,
-        ("skyship", "seaworthiness"): table.skyship_seaworthiness,
-        ("living_ship", "speed"): table.living_ship_speed,
-        ("living_ship", "cargo"): table.living_ship_cargo,
-        ("living_ship", "seaworthiness"): table.living_ship_seaworthiness,
     }

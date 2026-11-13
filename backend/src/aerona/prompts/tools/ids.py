@@ -197,6 +197,11 @@ class SonToolId(StrEnum):
     INSPIRE_SCHOOL = "inspire_school"
     DESIGNATE_KEYSTONE = "designate_keystone"
     INSPIRE_RELIEF = "inspire_relief"
+    SHAPE_VEHICLE_TYPE = "shape_vehicle_type"
+    SHAPE_EQUIPMENT = "shape_equipment"
+    SHAPE_DISH = "shape_dish"
+    SHAPE_STRUCTURE_TYPE = "shape_structure_type"
+    STRIKE_BEING = "strike_being"
 
 
 class MortalToolId(StrEnum):
@@ -331,6 +336,10 @@ class MortalToolId(StrEnum):
     SEND_AID = "send_aid"
     PLAN_REBUILDING = "plan_rebuilding"
     PREPARE_TOWN = "prepare_town"
+    DRAFT_UNIT_TYPE = "draft_unit_type"
+    FORGE_MODEL = "forge_model"
+    CREATE_DISH = "create_dish"
+    DRAW_STRUCTURE_TYPE = "draw_structure_type"
 
 
 ToolId = SonToolId | MortalToolId

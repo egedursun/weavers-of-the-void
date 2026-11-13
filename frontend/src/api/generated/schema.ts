@@ -5039,6 +5039,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/made-kinds/world/{world_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['world_kinds_api_made_kinds_world__world_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/made-kinds/thing/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['thing_kinds_api_made_kinds_thing__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/law/of/{node_id}': {
     parameters: {
       query?: never
@@ -5887,14 +5919,14 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/vessels/hulls': {
+  '/api/vehicles/frames': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    get: operations['hulls_api_vessels_hulls_get']
+    get: operations['frames_api_vehicles_frames_get']
     put?: never
     post?: never
     delete?: never
@@ -28719,6 +28751,758 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/mortal:attraction': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mortal_attraction_api_actions_mortal_attraction_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/design_section:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_design_section_set_api_actions_design_section_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/design_section:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_design_section_delete_api_actions_design_section_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/design_mount:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_design_mount_add_api_actions_design_mount_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/design_mount:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_design_mount_edit_api_actions_design_mount_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/design_mount:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_design_mount_delete_api_actions_design_mount_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/design_technique:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_design_technique_add_api_actions_design_technique_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/design_technique:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_design_technique_delete_api_actions_design_technique_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vehicle_group:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vehicle_group_create_api_actions_vehicle_group_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vehicle_group:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vehicle_group_edit_api_actions_vehicle_group_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vehicle_group:move': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vehicle_group_move_api_actions_vehicle_group_move_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vehicle_group:repair': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vehicle_group_repair_api_actions_vehicle_group_repair_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vehicle_group:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vehicle_group_delete_api_actions_vehicle_group_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vehicle_group_section:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vehicle_group_section_set_api_actions_vehicle_group_section_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vehicle_group_section:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vehicle_group_section_delete_api_actions_vehicle_group_section_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vessel_section:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vessel_section_set_api_actions_vessel_section_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vessel_section:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vessel_section_delete_api_actions_vessel_section_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/equipment_model:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_equipment_model_create_api_actions_equipment_model_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/equipment_model:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_equipment_model_edit_api_actions_equipment_model_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/equipment_model:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_equipment_model_delete_api_actions_equipment_model_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/equipment_store:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_equipment_store_set_api_actions_equipment_store_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/equipment_store:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_equipment_store_delete_api_actions_equipment_store_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/army_equipment:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_army_equipment_set_api_actions_army_equipment_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/army_equipment:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_army_equipment_delete_api_actions_army_equipment_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/unit_type:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_unit_type_create_api_actions_unit_type_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/unit_type:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_unit_type_edit_api_actions_unit_type_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/unit_type:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_unit_type_delete_api_actions_unit_type_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/unit_loadout:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_unit_loadout_set_api_actions_unit_loadout_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/unit_loadout:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_unit_loadout_delete_api_actions_unit_loadout_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/unit_technique:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_unit_technique_add_api_actions_unit_technique_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/unit_technique:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_unit_technique_delete_api_actions_unit_technique_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/structure_section:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_structure_section_edit_api_actions_structure_section_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/structure_section:repair': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_structure_section_repair_api_actions_structure_section_repair_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/structure_section:strike': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_structure_section_strike_api_actions_structure_section_strike_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/structure_section:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_structure_section_delete_api_actions_structure_section_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/structure_design_section:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_structure_design_section_set_api_actions_structure_design_section_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/structure_design_section:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_structure_design_section_delete_api_actions_structure_design_section_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/megastructure:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_megastructure_edit_api_actions_megastructure_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/megastructure:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_megastructure_delete_api_actions_megastructure_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dish:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dish_create_api_actions_dish_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dish:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dish_edit_api_actions_dish_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dish:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dish_delete_api_actions_dish_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dish_ingredient:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dish_ingredient_set_api_actions_dish_ingredient_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dish_ingredient:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dish_ingredient_delete_api_actions_dish_ingredient_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/community_dish:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_community_dish_set_api_actions_community_dish_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/community_dish:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_community_dish_edit_api_actions_community_dish_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/community_dish:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_community_dish_delete_api_actions_community_dish_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -29657,6 +30441,14 @@ export interface components {
     ArchiveRequest: {
       mode: components['schemas']['ArchiveMode']
     }
+    ArmamentSlot:
+      | 'hand_weapon'
+      | 'missile_weapon'
+      | 'armour'
+      | 'shield'
+      | 'helmet'
+      | 'barding'
+      | 'vehicle_weapon'
     ArmourType:
       'none' | 'hide' | 'padded' | 'mail' | 'scale' | 'plate' | 'enchanted'
     ArmourView: {
@@ -29864,6 +30656,16 @@ export interface components {
         [key: string]: number | string | boolean | null
       }
       release?: string[]
+    }
+    ArmyEquipmentDeleteInput: {
+      unit_id: number
+      model_id: number
+    }
+    ArmyEquipmentSetInput: {
+      unit_id: number
+      model_id: number
+      count: number
+      condition: number
     }
     ArmyOption: {
       id: number
@@ -30134,6 +30936,12 @@ export interface components {
       }
       release?: string[]
       world_id: number
+    }
+    AttractionView: {
+      drawn_to: components['schemas']['MortalSex'][] | null
+      attraction: number
+      decline: number
+      held: string[]
     }
     Attribute:
       | 'strength'
@@ -31186,6 +31994,54 @@ export interface components {
     BuildMaterial: 'timber' | 'stone'
     BuildScale: 'minor' | 'major' | 'grand' | 'wonder'
     BuilderKind: 'community' | 'polity' | 'faction' | 'cult' | 'patron' | 'god'
+    BuildingForm:
+      | 'hall'
+      | 'longhouse'
+      | 'tower'
+      | 'keep'
+      | 'dome'
+      | 'spire'
+      | 'stepped'
+      | 'pyramid'
+      | 'courtyard'
+      | 'ring'
+      | 'tent'
+      | 'mound'
+      | 'arcade'
+      | 'terrace'
+      | 'platform'
+      | 'bridge_form'
+      | 'wall_line'
+      | 'tunnel_form'
+      | 'orbital'
+    BuildingTypeView: {
+      id: number
+      name: string
+      description: string | null
+      world_id: number | null
+      origin: components['schemas']['NodeRef'] | null
+      base_kind: components['schemas']['StructureKind']
+      kind_label: string
+      form: components['schemas']['BuildingForm'] | null
+      storeys: number | null
+      material: components['schemas']['MaterialKind'] | null
+      staff_class: components['schemas']['SocialClass'] | null
+      staff_scale: components['schemas']['StaffScale'] | null
+      scale: components['schemas']['BuildScale'] | null
+      upkeep_commodity: components['schemas']['CommodityKind'] | null
+      min_tier: components['schemas']['SizeTier'] | null
+      ley: boolean | null
+      capacity_pct: number
+      cost_pct: number
+      upkeep_pct: number
+      function_pct: number
+      staff_pct: number
+      retired: boolean
+      created_epoch: number
+      used_by: number
+      sections: components['schemas']['DesignSectionView'][]
+      locked: string[]
+    }
     BulkLogPayload: {
       epoch?: number | null
       level: string
@@ -31437,6 +32293,15 @@ export interface components {
       material?: components['schemas']['MaterialKind'] | null
       amount: number
       item_entity_id?: number | null
+    }
+    CarriedView: {
+      model_id: number
+      model_name: string
+      family: components['schemas']['EquipmentFamily']
+      slot: components['schemas']['ArmamentSlot']
+      count: number
+      condition: number
+      locked: string[]
     }
     CarrierAddInput: {
       mortal_id: number
@@ -32048,6 +32913,8 @@ export interface components {
       state: components['schemas']['ConstructionState']
       progress: number
       staff_pct: number
+      form: components['schemas']['BuildingForm'] | null
+      storeys: number | null
     }
     CityDistrictView: {
       id: number
@@ -32651,6 +33518,23 @@ export interface components {
     CommunityCrownInput: {
       community_id: number
     }
+    CommunityDishDeleteInput: {
+      community_id: number
+      dish_id: number
+    }
+    CommunityDishEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      community_id: number
+      dish_id: number
+    }
+    CommunityDishSetInput: {
+      community_id: number
+      dish_id: number
+      popularity: number
+    }
     CommunityEconomyView: {
       community_id: number
       epoch: number
@@ -32785,6 +33669,7 @@ export interface components {
       | 'divine_brand'
       | 'nightmares'
       | 'comatose'
+      | 'cognitive_decline'
     ConditionView: {
       id: number
       kind: components['schemas']['ConditionKind']
@@ -32978,6 +33863,33 @@ export interface components {
       capacity: number
       departed_epoch: number
       arrived_epoch: number | null
+      locked: string[]
+    }
+    CookingMethod:
+      | 'raw'
+      | 'boiled'
+      | 'stewed'
+      | 'steamed'
+      | 'roasted'
+      | 'grilled'
+      | 'baked'
+      | 'fried'
+      | 'smoked'
+      | 'dried'
+      | 'cured'
+      | 'pickled'
+      | 'fermented'
+      | 'braised'
+      | 'simmered'
+      | 'ground'
+      | 'pressed'
+    CookingView: {
+      community: components['schemas']['NodeRef']
+      dish_id: number
+      dish_name: string
+      popularity: number
+      cooked: number
+      since_epoch: number
       locked: string[]
     }
     CopiedLessonView: {
@@ -33717,6 +34629,7 @@ export interface components {
       locked: string[]
       backers: components['schemas']['BackerView'][]
     }
+    Criticality: 'critical' | 'major' | 'minor'
     CropDropInput: {
       region_id: number
       plant_id: number
@@ -34356,6 +35269,12 @@ export interface components {
       | 'navigation'
       | 'frame'
       | 'counterweight'
+      | 'steering'
+      | 'lift'
+      | 'power'
+      | 'troops'
+      | 'command'
+      | 'life_support'
     DesignComponentSetInput: {
       design_id: number
       component: components['schemas']['DesignComponentKind']
@@ -34367,9 +35286,9 @@ export interface components {
       design_id: number
     }
     DesignDrawInput: {
-      owner_id: number
-      kind: components['schemas']['DesignKind']
-      hull?: components['schemas']['HullClass'] | null
+      owner_id?: number | null
+      world_id?: number | null
+      frame: components['schemas']['VehicleFrame']
       name?: string | null
       quality: number
     }
@@ -34384,9 +35303,54 @@ export interface components {
       vessel_id: number
       design_id: number
     }
-    DesignKind: 'vessel' | 'skyship' | 'siege_engine'
+    DesignKind:
+      'vessel' | 'skyship' | 'siege_engine' | 'land_vehicle' | 'spacecraft'
+    DesignMountAddInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      design_id: number
+      mount: components['schemas']['MountKind']
+    }
+    DesignMountDeleteInput: {
+      record_id: number
+    }
+    DesignMountEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
     DesignRefitInput: {
       design_id: number
+    }
+    DesignSectionDeleteInput: {
+      design_id: number
+      section: components['schemas']['VehicleSection']
+    }
+    DesignSectionSetInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      design_id: number
+      section: components['schemas']['VehicleSection']
+    }
+    DesignSectionView: {
+      section: components['schemas']['StructureSection']
+      criticality: components['schemas']['Criticality']
+      share: number
+      material: components['schemas']['MaterialKind'] | null
+    }
+    DesignTechniqueAddInput: {
+      design_id: number
+      technique: components['schemas']['Technique']
+    }
+    DesignTechniqueDeleteInput: {
+      design_id: number
+      technique: components['schemas']['Technique']
     }
     DesignView: {
       id: number
@@ -34793,6 +35757,61 @@ export interface components {
       endemic: components['schemas']['EndemicView'][]
       cures: components['schemas']['CureView'][]
       immunities: components['schemas']['ImmunityView'][]
+    }
+    DishCourse:
+      | 'staple'
+      | 'side'
+      | 'festive'
+      | 'rite'
+      | 'ration'
+      | 'delicacy'
+      | 'remedy'
+      | 'drink'
+    DishCreateInput: {
+      origin_id?: number | null
+      world_id?: number | null
+      method: components['schemas']['CookingMethod']
+      course: components['schemas']['DishCourse']
+      name?: string | null
+      ingredients?: components['schemas']['CommodityKind'][]
+    }
+    DishDeleteInput: {
+      record_id: number
+    }
+    DishEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    DishIngredientDeleteInput: {
+      dish_id: number
+      commodity: components['schemas']['CommodityKind']
+    }
+    DishIngredientSetInput: {
+      dish_id: number
+      commodity: components['schemas']['CommodityKind']
+      share: number
+    }
+    DishView: {
+      id: number
+      name: string
+      description: string | null
+      world_id: number | null
+      origin: components['schemas']['NodeRef'] | null
+      method: components['schemas']['CookingMethod']
+      course: components['schemas']['DishCourse']
+      nourishment: number
+      delight: number
+      keeps: number
+      prestige: number
+      technique: components['schemas']['Technique'] | null
+      created_epoch: number
+      retired: boolean
+      ingredients: components['schemas']['IngredientView'][]
+      cooked_in: components['schemas']['CookingView'][]
+      locked: string[]
     }
     DispatchContent:
       | 'proposal'
@@ -36363,6 +37382,136 @@ export interface components {
     } & {
       [key: string]: unknown
     }
+    EquipmentFamily:
+      | 'club'
+      | 'dagger'
+      | 'blade'
+      | 'longblade'
+      | 'axe'
+      | 'mace'
+      | 'hammer'
+      | 'flail'
+      | 'spear'
+      | 'pike'
+      | 'polearm'
+      | 'staff'
+      | 'whip'
+      | 'fist_weapon'
+      | 'sling'
+      | 'javelin'
+      | 'throwing_weapon'
+      | 'blowgun'
+      | 'bow'
+      | 'longbow'
+      | 'composite_bow'
+      | 'crossbow'
+      | 'repeating_crossbow'
+      | 'handgun'
+      | 'musket'
+      | 'rifle'
+      | 'pistol'
+      | 'repeating_gun'
+      | 'grenade'
+      | 'flamethrower'
+      | 'beam_weapon'
+      | 'focus'
+      | 'hide'
+      | 'padded'
+      | 'quilted'
+      | 'lamellar'
+      | 'scale'
+      | 'mail'
+      | 'brigandine'
+      | 'plate'
+      | 'laminar'
+      | 'composite'
+      | 'ceramic'
+      | 'synthetic'
+      | 'powered'
+      | 'warded'
+      | 'buckler'
+      | 'round_shield'
+      | 'heater'
+      | 'kite'
+      | 'tower_shield'
+      | 'pavise'
+      | 'projected'
+      | 'cap'
+      | 'open_helm'
+      | 'closed_helm'
+      | 'full_helm'
+      | 'light_barding'
+      | 'heavy_barding'
+      | 'ram'
+      | 'ballista'
+      | 'catapult_engine'
+      | 'trebuchet_engine'
+      | 'bombard'
+      | 'cannon'
+      | 'carronade'
+      | 'howitzer'
+      | 'mortar'
+      | 'rocket_launcher'
+      | 'missile_launcher'
+      | 'torpedo'
+      | 'mine_layer'
+      | 'heavy_flamethrower'
+      | 'beam_cannon'
+      | 'focus_array'
+      | 'harpoon'
+      | 'boarding_gear'
+    EquipmentModelCreateInput: {
+      origin_id?: number | null
+      world_id?: number | null
+      family: components['schemas']['EquipmentFamily']
+      name?: string | null
+      quality: number
+    }
+    EquipmentModelDeleteInput: {
+      record_id: number
+    }
+    EquipmentModelEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    EquipmentModelView: {
+      id: number
+      name: string
+      description: string | null
+      world_id: number | null
+      origin: components['schemas']['NodeRef'] | null
+      slot: components['schemas']['ArmamentSlot']
+      family: components['schemas']['EquipmentFamily']
+      family_label: string
+      material: components['schemas']['MaterialKind'] | null
+      world_material_id: number | null
+      material_name: string | null
+      quality: number
+      technique: components['schemas']['Technique'] | null
+      tech_level: number
+      damage: number
+      piercing: number
+      reach: number
+      rate: number
+      accuracy: number
+      damage_type: components['schemas']['DamageType']
+      ammunition: components['schemas']['CommodityKind'] | null
+      crew: number
+      protection: number
+      coverage: number
+      weight: number
+      cost: number
+      renown: number
+      parent_model_id: number | null
+      created_epoch: number
+      retired: boolean
+      stored: number
+      carried: number
+      locked: string[]
+    }
     EquipmentSlot:
       | 'wielded_main'
       | 'wielded_off'
@@ -36372,6 +37521,15 @@ export interface components {
       | 'armour_cover'
       | 'mount'
       | 'focus'
+    EquipmentStoreDeleteInput: {
+      holder_id: number
+      model_id: number
+    }
+    EquipmentStoreSetInput: {
+      holder_id: number
+      model_id: number
+      count: number
+    }
     EraDeed:
       | 'first_technique'
       | 'first_institution'
@@ -37382,6 +38540,14 @@ export interface components {
       credit_states: components['schemas']['LabelView'][]
       commodities: components['schemas']['LabelView'][]
     }
+    FireControl:
+      | 'manual'
+      | 'drilled'
+      | 'sighted'
+      | 'directed'
+      | 'computed'
+      | 'automatic'
+      | 'guided'
     FirstSonsOptions: {
       minimum: number
       maximum: number
@@ -37667,6 +38833,41 @@ export interface components {
     FoundingMythSetInput: {
       holder_id: number
       credence: number
+    }
+    FrameSectionView: {
+      section: components['schemas']['VehicleSection']
+      function: components['schemas']['DesignComponentKind']
+      criticality: components['schemas']['Criticality']
+      share: number
+      exposure: number
+      hazard: components['schemas']['SectionHazard']
+      neighbours: components['schemas']['VehicleSection'][]
+    }
+    FrameSpecView: {
+      frame: components['schemas']['VehicleFrame']
+      label: string
+      domain: components['schemas']['VehicleDomain']
+      family: components['schemas']['VehicleFamily']
+      propulsion: components['schemas']['Propulsion']
+      size: components['schemas']['VehicleSize']
+      speed: number
+      range: number
+      cargo: number
+      crew: number
+      troops: number
+      endurance: number
+      armour: number
+      structure: number
+      slots: number
+      mounts: components['schemas']['MountKind'][]
+      sections: components['schemas']['FrameSectionView'][]
+      armament: components['schemas']['VesselArmament'][]
+      branch: components['schemas']['KnowledgeBranch'] | null
+      level: number
+      tier: number
+      sky: boolean
+      living: boolean
+      strangeness: number
     }
     FrontView: {
       first_region: components['schemas']['NodeRef'] | null
@@ -38544,6 +39745,14 @@ export interface components {
       length_epochs: number
     }
     GroupKind: 'household' | 'court' | 'circle' | 'warband' | 'crew'
+    GroupSectionView: {
+      section: components['schemas']['VehicleSection']
+      criticality: components['schemas']['Criticality']
+      damaged: number
+      disabled: number
+      destroyed: number
+      locked: string[]
+    }
     GrowthCycle: 'annual' | 'perennial' | 'tree'
     GuardRecord: {
       id: number
@@ -39346,33 +40555,6 @@ export interface components {
       held: string[]
     }
     HousingLevel: 'hut' | 'cottage' | 'house' | 'townhouse' | 'manor'
-    HullClass:
-      | 'raft'
-      | 'boat'
-      | 'galley'
-      | 'longship'
-      | 'cog'
-      | 'carrack'
-      | 'warship'
-      | 'light_sailer'
-      | 'bone_hull'
-      | 'generation_ship'
-      | 'skyship'
-      | 'living_ship'
-    HullSpecView: {
-      hull: components['schemas']['HullClass']
-      label: string
-      speed: number
-      range: number
-      cargo: number
-      crew: number
-      seaworthiness: number
-      slots: number
-      armament: components['schemas']['VesselArmament'][]
-      sky: boolean
-      living: boolean
-      strangeness: number
-    }
     IdeaKind:
       | 'rationalism'
       | 'mysticism'
@@ -39854,6 +41036,10 @@ export interface components {
       bridges: number
       irrigation: number
       locked: string[]
+    }
+    IngredientView: {
+      commodity: components['schemas']['CommodityKind']
+      share: number
     }
     InheritanceCustom:
       | 'gavelkind'
@@ -40601,6 +41787,11 @@ export interface components {
         [key: string]: number
       }
     }
+    KindRef: {
+      id: number
+      name: string
+      family: string
+    }
     KinshipDeleteInput: {
       people_id: number
     }
@@ -40929,6 +42120,8 @@ export interface components {
       progress: number
       q: number
       r: number
+      form: components['schemas']['BuildingForm'] | null
+      storeys: number | null
     }
     LanguageCard: {
       prestige: number
@@ -41661,6 +42854,13 @@ export interface components {
     }
     LlmCallKind: 'agent' | 'structured'
     LlmCallStatus: 'ok' | 'partial' | 'error'
+    LoadoutView: {
+      model_id: number
+      model_name: string
+      family: components['schemas']['EquipmentFamily']
+      slot: components['schemas']['ArmamentSlot']
+      count: number
+    }
     LoanDeleteInput: {
       loan_id: number
     }
@@ -41944,7 +43144,7 @@ export interface components {
       id: number
       owner: components['schemas']['NodeRef']
       kind: components['schemas']['DesignKind']
-      hull: components['schemas']['HullClass'] | null
+      frame: components['schemas']['VehicleFrame'] | null
       name: string
       designer: components['schemas']['NodeRef'] | null
       parent_design_id: number | null
@@ -42450,7 +43650,7 @@ export interface components {
       | 'skirmisher'
       | 'chariot'
       | 'phalanx'
-      | 'berserker'
+      | 'shock'
       | 'naval_raider'
       | 'siege_engineer'
       | 'war_magic'
@@ -42684,6 +43884,23 @@ export interface components {
       | 'dream'
       | 'bird'
       | 'magic_sending'
+    MegastructureDeleteInput: {
+      structure_id: number
+    }
+    MegastructureEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      structure_id: number
+    }
+    MegastructureView: {
+      kind: components['schemas']['StructureKind']
+      target_orbit: number | null
+      output: number
+      updated_epoch: number
+      locked: string[]
+    }
     Member: {
       node_id: number
       role: components['schemas']['CollectionRole']
@@ -43388,6 +44605,12 @@ export interface components {
       name: string
       type: string
     }
+    MortalAttractionInput: {
+      mortal_id: number
+      drawn_to?: components['schemas']['MortalSex'][] | null
+      attraction?: number | null
+      hold: boolean
+    }
     MortalChildInput: {
       first_id: number
       second_id: number
@@ -43658,6 +44881,10 @@ export interface components {
       | 'send_aid'
       | 'plan_rebuilding'
       | 'prepare_town'
+      | 'draft_unit_type'
+      | 'forge_model'
+      | 'create_dish'
+      | 'draw_structure_type'
     MortalTurnFinishedEvent: {
       id: number
       kind: 'mortal.turn_finished'
@@ -43719,6 +44946,32 @@ export interface components {
       world_id: number | null
       motif: string
       mode: components['schemas']['MotifOverrideMode']
+    }
+    MountArc: 'forward' | 'aft' | 'side' | 'all_round'
+    MountKind:
+      | 'bow'
+      | 'stern'
+      | 'broadside'
+      | 'deck'
+      | 'turret'
+      | 'spinal'
+      | 'hardpoint'
+      | 'wing'
+      | 'crew_station'
+      | 'rider'
+      | 'ram'
+      | 'bay'
+      | 'ward_node'
+    MountView: {
+      id: number
+      slot: number
+      mount: components['schemas']['MountKind']
+      section: components['schemas']['VehicleSection'] | null
+      model_id: number | null
+      model_name: string | null
+      count: number
+      arc: components['schemas']['MountArc']
+      locked: string[]
     }
     MovementCause:
       | 'abolition'
@@ -44571,6 +45824,13 @@ export interface components {
       renown: number
       declared_epoch: number
       locked: string[]
+    }
+    OwnKindsView: {
+      vehicle_types: components['schemas']['KindRef'][]
+      unit_types: components['schemas']['KindRef'][]
+      equipment_models: components['schemas']['KindRef'][]
+      dishes: components['schemas']['KindRef'][]
+      building_types: components['schemas']['KindRef'][]
     }
     PackageKind:
       | 'snake_venom'
@@ -46567,6 +47827,25 @@ export interface components {
     }
     ProposalStance: 'support' | 'oppose' | 'obstruct'
     ProposalState: 'debating' | 'passed' | 'failed' | 'withdrawn'
+    Propulsion:
+      | 'crew'
+      | 'draft_animals'
+      | 'ridden'
+      | 'oars'
+      | 'sail'
+      | 'sail_and_oar'
+      | 'steam'
+      | 'combustion'
+      | 'electric'
+      | 'reaction'
+      | 'solar_sail'
+      | 'fold_drive'
+      | 'buoyancy'
+      | 'magic'
+      | 'divine'
+      | 'self'
+      | 'current'
+      | 'towed'
     ProsthesisView: {
       id: number
       injury_id: number
@@ -48834,6 +50113,31 @@ export interface components {
       characters: number
       limit: number | null
     }
+    SectionHazard:
+      | 'none'
+      | 'fire'
+      | 'explosion'
+      | 'flooding'
+      | 'breach'
+      | 'crash'
+      | 'panic'
+      | 'collapse'
+    SectionRole:
+      | 'support'
+      | 'defence'
+      | 'entry'
+      | 'shelter'
+      | 'storage'
+      | 'worship'
+      | 'knowledge'
+      | 'production'
+      | 'passage'
+      | 'water'
+      | 'display'
+      | 'power'
+      | 'command'
+      | 'motion'
+    SectionState: 'sound' | 'damaged' | 'disabled' | 'destroyed'
     SegmentLevel: 'lineage' | 'clan' | 'tribe'
     SelectorateKind:
       'tribe' | 'nobles' | 'council' | 'army' | 'priests' | 'citizens'
@@ -50051,6 +51355,11 @@ export interface components {
       | 'inspire_school'
       | 'designate_keystone'
       | 'inspire_relief'
+      | 'shape_vehicle_type'
+      | 'shape_equipment'
+      | 'shape_dish'
+      | 'shape_structure_type'
+      | 'strike_being'
     SonToolsView: {
       son_id: number
       rarity: components['schemas']['Rarity']
@@ -50645,6 +51954,14 @@ export interface components {
       | 'intel'
       | 'blackmail'
       | 'counterfeit'
+    StackKitView: {
+      unit_id: number
+      kind: components['schemas']['UnitKind']
+      count: number
+      design_id: number | null
+      design_name: string | null
+      carried: components['schemas']['CarriedView'][]
+    }
     StackView: {
       id: number
       kind: components['schemas']['UnitKind']
@@ -50999,6 +52316,14 @@ export interface components {
       other: number
       total: number
     }
+    StoreView: {
+      model_id: number
+      model_name: string
+      family: components['schemas']['EquipmentFamily']
+      slot: components['schemas']['ArmamentSlot']
+      count: number
+      locked: string[]
+    }
     StoryletChoiceView: {
       index: number
       text: string
@@ -51259,6 +52584,18 @@ export interface components {
       design_id: number
       retired: boolean
     }
+    StructureDesignSectionDeleteInput: {
+      design_id: number
+      section: components['schemas']['StructureSection']
+    }
+    StructureDesignSectionSetInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      design_id: number
+      section: components['schemas']['StructureSection']
+    }
     StructureEditInput: {
       structure_id: number
       values?: {
@@ -51355,6 +52692,60 @@ export interface components {
       | 'training_ground'
       | 'museum'
       | 'plaza'
+      | 'embassy'
+      | 'lighthouse'
+      | 'signal_tower'
+      | 'customs_house'
+      | 'toll_gate'
+      | 'courthouse'
+      | 'archive'
+      | 'printing_house'
+      | 'laboratory'
+      | 'foundry'
+      | 'smelter'
+      | 'kiln'
+      | 'glassworks'
+      | 'textile_mill'
+      | 'dye_works'
+      | 'paper_mill'
+      | 'bakery'
+      | 'dairy'
+      | 'distillery'
+      | 'refinery'
+      | 'power_plant'
+      | 'silo'
+      | 'cistern'
+      | 'reservoir'
+      | 'canal_lock'
+      | 'tunnel'
+      | 'rail_station'
+      | 'airfield'
+      | 'spaceport'
+      | 'dry_dock'
+      | 'arsenal'
+      | 'kennel'
+      | 'menagerie'
+      | 'botanical_garden'
+      | 'cemetery'
+      | 'gymnasium'
+      | 'asylum'
+      | 'quarantine_house'
+      | 'inn'
+      | 'market_hall'
+      | 'exchange'
+      | 'university'
+      | 'seminary'
+      | 'conservatory'
+      | 'opera_house'
+      | 'gallery'
+      | 'stadium'
+      | 'orbital_ring'
+      | 'space_elevator'
+      | 'space_station'
+      | 'star_collector'
+      | 'beacon'
+      | 'planetary_engine'
+      | 'habitat_ring'
     StructurePlaceInput: {
       structure_id: number
       district_id?: number | null
@@ -51378,6 +52769,87 @@ export interface components {
     }
     StructureRepairInput: {
       structure_id: number
+    }
+    StructureSection:
+      | 'foundation'
+      | 'outer_wall'
+      | 'gate'
+      | 'gatehouse'
+      | 'towers'
+      | 'keep'
+      | 'battlements'
+      | 'earthwork'
+      | 'roof'
+      | 'main_hall'
+      | 'upper_floors'
+      | 'stores'
+      | 'quarters'
+      | 'workshop_floor'
+      | 'kitchen'
+      | 'sanctum'
+      | 'vault'
+      | 'archive'
+      | 'wards'
+      | 'dome'
+      | 'spire'
+      | 'span'
+      | 'piers'
+      | 'sluice'
+      | 'conduits'
+      | 'seating'
+      | 'stage'
+      | 'pens'
+      | 'furnace'
+      | 'wheel'
+      | 'shafts'
+      | 'docks'
+      | 'slipway'
+      | 'beacon'
+      | 'core'
+      | 'spine'
+      | 'ring_segments'
+      | 'collectors'
+      | 'thrusters'
+      | 'docking_ring'
+      | 'habitat_decks'
+      | 'control_core'
+      | 'shielding'
+    StructureSectionDeleteInput: {
+      structure_id: number
+      section: components['schemas']['StructureSection']
+    }
+    StructureSectionEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      structure_id: number
+      section: components['schemas']['StructureSection']
+    }
+    StructureSectionRepairInput: {
+      structure_id: number
+      section: components['schemas']['StructureSection']
+    }
+    StructureSectionStrikeInput: {
+      structure_id: number
+      section: components['schemas']['StructureSection']
+      damage: number
+    }
+    StructureSectionView: {
+      section: components['schemas']['StructureSection']
+      role: components['schemas']['SectionRole']
+      criticality: components['schemas']['Criticality']
+      share: number
+      exposure: number
+      hazard: components['schemas']['SectionHazard']
+      neighbours: components['schemas']['StructureSection'][]
+      condition: number
+      state: components['schemas']['SectionState']
+      material: components['schemas']['MaterialKind'] | null
+      world_material_id: number | null
+      flammability: number
+      laid: boolean
+      locked: string[]
     }
     StructureStaffInput: {
       structure_id: number
@@ -51957,6 +53429,20 @@ export interface components {
       kind: 'theory'
       adherents?: number | null
       explanatory?: number | null
+    }
+    ThingKindsView: {
+      node: components['schemas']['NodeRef']
+      world_id: number | null
+      vehicle_groups: components['schemas']['VehicleGroupView'][]
+      stores: components['schemas']['StoreView'][]
+      stacks: components['schemas']['StackKitView'][]
+      pace: number | null
+      vessel_sections: components['schemas']['VesselSectionView'][]
+      cooking: components['schemas']['CookingView'][]
+      sections: components['schemas']['StructureSectionView'][]
+      megastructure: components['schemas']['MegastructureView'] | null
+      attraction: components['schemas']['AttractionView'] | null
+      own: components['schemas']['OwnKindsView']
     }
     ThingRecordColumnView: {
       name: string
@@ -53275,45 +54761,49 @@ export interface components {
       | 'infantry'
       | 'missile'
       | 'mounted'
+      | 'vehicle'
       | 'beast'
       | 'engineer'
       | 'magic'
-      | 'naval'
       | 'exotic'
     UnitKind:
       | 'levy'
-      | 'spearmen'
+      | 'line_infantry'
       | 'heavy_infantry'
-      | 'shield_wall'
-      | 'pikemen'
-      | 'skirmishers'
-      | 'berserkers'
-      | 'temple_guard'
+      | 'shield_infantry'
+      | 'pike_infantry'
+      | 'light_infantry'
+      | 'shock_infantry'
+      | 'guard_infantry'
+      | 'marines'
       | 'slingers'
       | 'archers'
       | 'crossbowmen'
-      | 'horse_archers'
       | 'javelineers'
+      | 'gunners'
+      | 'grenadiers'
       | 'light_cavalry'
       | 'heavy_cavalry'
+      | 'mounted_archers'
+      | 'mounted_gunners'
       | 'beast_riders'
+      | 'sky_riders'
       | 'chariots'
+      | 'vehicle_crew'
+      | 'siege_crew'
+      | 'artillery_crew'
+      | 'naval_crew'
+      | 'sky_crew'
+      | 'void_crew'
       | 'war_beasts'
       | 'bound_beasts'
-      | 'sky_mounts'
       | 'sappers'
-      | 'siege_engines'
-      | 'war_mages'
-      | 'priests'
-      | 'necromancers'
-      | 'galleys'
-      | 'longships'
-      | 'warships'
-      | 'fire_ships'
-      | 'skyships'
-      | 'golems'
-      | 'void_spawn'
-      | 'ghost_host'
+      | 'engineers'
+      | 'battle_casters'
+      | 'support_casters'
+      | 'summoners'
+      | 'constructs'
+      | 'summoned_host'
     UnitKindSpec: {
       kind: components['schemas']['UnitKind']
       family: components['schemas']['UnitFamily']
@@ -53328,6 +54818,81 @@ export interface components {
       armour: components['schemas']['ArmourType']
       shield: components['schemas']['ShieldType']
       terror: number
+    }
+    UnitLoadoutDeleteInput: {
+      design_id: number
+      model_id: number
+    }
+    UnitLoadoutSetInput: {
+      design_id: number
+      model_id: number
+      count: number
+    }
+    UnitTechniqueAddInput: {
+      design_id: number
+      technique: components['schemas']['Technique']
+    }
+    UnitTechniqueDeleteInput: {
+      design_id: number
+      technique: components['schemas']['Technique']
+    }
+    UnitTypeCreateInput: {
+      owner_id: number
+      role: components['schemas']['UnitKind']
+      name?: string | null
+    }
+    UnitTypeDeleteInput: {
+      record_id: number
+    }
+    UnitTypeEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    UnitTypeView: {
+      id: number
+      name: string
+      description: string | null
+      world_id: number | null
+      origin: components['schemas']['NodeRef'] | null
+      owner: components['schemas']['NodeRef'] | null
+      base_kind: components['schemas']['UnitKind']
+      role_label: string
+      family: components['schemas']['UnitFamily']
+      melee: number
+      missile: number
+      defence: number
+      speed: number
+      mass: number
+      cost: number
+      upkeep: number
+      armour: components['schemas']['ArmourType']
+      shield: components['schemas']['ShieldType']
+      terror: number
+      counters_charge: boolean
+      flying: boolean
+      social_class: components['schemas']['SocialClass'] | null
+      reach: number
+      volleys: number
+      accuracy: number
+      piercing: number
+      doctrine: components['schemas']['MartialStyle'] | null
+      formation: components['schemas']['Formation'] | null
+      discipline: number
+      training_epochs: number
+      mount_species: components['schemas']['NodeRef'] | null
+      vehicle_design_id: number | null
+      vehicle_design_name: string | null
+      crew_per_vehicle: number
+      parent_design_id: number | null
+      retired: boolean
+      created_epoch: number
+      fielded: number
+      loadout: components['schemas']['LoadoutView'][]
+      techniques: components['schemas']['Technique'][]
+      locked: string[]
     }
     UpkeepView: {
       law: components['schemas']['NodeRef'] | null
@@ -53487,6 +55052,296 @@ export interface components {
       treaty_id: number | null
       locked: string[]
     }
+    VehicleDomain:
+      | 'land'
+      | 'water'
+      | 'underwater'
+      | 'air'
+      | 'space'
+      | 'gas_giant'
+      | 'underground'
+      | 'planar'
+      | 'amphibious'
+    VehicleFamily:
+      | 'mount'
+      | 'cart'
+      | 'wagon'
+      | 'chariot'
+      | 'motor'
+      | 'tracked'
+      | 'walker'
+      | 'rail'
+      | 'ram'
+      | 'tower'
+      | 'thrower'
+      | 'gun'
+      | 'boat'
+      | 'galley'
+      | 'sailing_ship'
+      | 'steam_ship'
+      | 'submarine'
+      | 'balloon'
+      | 'airship'
+      | 'aircraft'
+      | 'rotorcraft'
+      | 'spacecraft'
+      | 'burrower'
+      | 'construct'
+      | 'living'
+    VehicleFrame:
+      | 'riding_mount'
+      | 'pack_mount'
+      | 'travois'
+      | 'sledge'
+      | 'handcart'
+      | 'cart'
+      | 'wagon'
+      | 'covered_wagon'
+      | 'carriage'
+      | 'chariot'
+      | 'war_wagon'
+      | 'beast_carrier'
+      | 'rail_car'
+      | 'locomotive'
+      | 'steam_carriage'
+      | 'motor_car'
+      | 'motor_truck'
+      | 'motorcycle'
+      | 'armoured_car'
+      | 'tank'
+      | 'walker'
+      | 'crawler'
+      | 'construct_walker'
+      | 'construct_carrier'
+      | 'battering_ram'
+      | 'siege_tower'
+      | 'mantlet'
+      | 'catapult'
+      | 'trebuchet'
+      | 'ballista'
+      | 'bombard'
+      | 'field_gun'
+      | 'mortar'
+      | 'rocket_battery'
+      | 'raft'
+      | 'canoe'
+      | 'rowboat'
+      | 'boat'
+      | 'river_barge'
+      | 'sailboat'
+      | 'galley'
+      | 'longship'
+      | 'cog'
+      | 'carrack'
+      | 'galleon'
+      | 'frigate'
+      | 'warship'
+      | 'ship_of_the_line'
+      | 'steamship'
+      | 'ironclad'
+      | 'battleship'
+      | 'submarine'
+      | 'living_ship'
+      | 'fire_ship'
+      | 'balloon'
+      | 'airship'
+      | 'glider'
+      | 'ornithopter'
+      | 'sky_sailer'
+      | 'skyship'
+      | 'flying_carriage'
+      | 'aeroplane'
+      | 'rotorcraft'
+      | 'flying_car'
+      | 'flying_construct'
+      | 'orbital_lander'
+      | 'shuttle'
+      | 'solar_sailer'
+      | 'starship'
+      | 'generation_ship'
+      | 'void_ark'
+      | 'cloud_skimmer'
+      | 'aerostat'
+      | 'deep_submersible'
+      | 'burrower'
+      | 'planar_vessel'
+    VehicleGroupCreateInput: {
+      holder_id: number
+      design_id: number
+      count: number
+      crewed: number
+      region_id?: number | null
+    }
+    VehicleGroupDeleteInput: {
+      record_id: number
+    }
+    VehicleGroupEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    VehicleGroupMoveInput: {
+      group_id: number
+      holder_id: number
+      count: number
+    }
+    VehicleGroupRepairInput: {
+      group_id: number
+      points: number
+    }
+    VehicleGroupSectionDeleteInput: {
+      group_id: number
+      section: components['schemas']['VehicleSection']
+    }
+    VehicleGroupSectionSetInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      group_id: number
+      section: components['schemas']['VehicleSection']
+    }
+    VehicleGroupView: {
+      id: number
+      holder: components['schemas']['NodeRef']
+      design_id: number
+      design_name: string
+      frame: components['schemas']['VehicleFrame'] | null
+      family: components['schemas']['VehicleFamily'] | null
+      domain: components['schemas']['VehicleDomain'] | null
+      count: number
+      crewed: number
+      condition: number
+      fuel: number
+      status: components['schemas']['VehicleStatus']
+      region: components['schemas']['NodeRef'] | null
+      built_epoch: number
+      firepower: number
+      armour: number
+      pace: number
+      troops: number
+      cargo: number
+      crew_needed: number
+      sections: components['schemas']['GroupSectionView'][]
+      locked: string[]
+    }
+    VehicleSection:
+      | 'hull'
+      | 'keel'
+      | 'deck'
+      | 'bow'
+      | 'stern'
+      | 'hold'
+      | 'cargo_bay'
+      | 'troop_bay'
+      | 'crew_quarters'
+      | 'bridge'
+      | 'cockpit'
+      | 'mast'
+      | 'rigging'
+      | 'sails'
+      | 'oars'
+      | 'rudder'
+      | 'steering'
+      | 'engine'
+      | 'boiler'
+      | 'fuel_store'
+      | 'power_core'
+      | 'drive'
+      | 'wheels'
+      | 'axle'
+      | 'tracks'
+      | 'legs'
+      | 'chassis'
+      | 'frame'
+      | 'harness'
+      | 'draft_team'
+      | 'saddle'
+      | 'mount_body'
+      | 'armour_plating'
+      | 'barding'
+      | 'turret'
+      | 'gun_deck'
+      | 'hardpoint'
+      | 'magazine'
+      | 'wings'
+      | 'envelope'
+      | 'gondola'
+      | 'rotor'
+      | 'tail'
+      | 'ballast'
+      | 'life_support'
+      | 'airlock'
+      | 'sensors'
+      | 'navigation'
+      | 'ward'
+      | 'arm'
+      | 'counterweight'
+      | 'ram_head'
+      | 'tower'
+      | 'platform'
+      | 'core'
+    VehicleSectionView: {
+      section: components['schemas']['VehicleSection']
+      function: components['schemas']['DesignComponentKind']
+      criticality: components['schemas']['Criticality']
+      share: number
+      exposure: number
+      armour: number
+      hazard: components['schemas']['SectionHazard']
+      neighbours: components['schemas']['VehicleSection'][]
+      material_id: number | null
+      material_name: string | null
+      size: number
+      quality: number
+      locked: string[]
+    }
+    VehicleSize: 'small' | 'medium' | 'large' | 'huge' | 'colossal'
+    VehicleStatus:
+      'ready' | 'moving' | 'engaged' | 'laid_up' | 'building' | 'wrecked'
+    VehicleTypeView: {
+      id: number
+      name: string
+      description: string | null
+      world_id: number | null
+      origin: components['schemas']['NodeRef'] | null
+      owner: components['schemas']['NodeRef'] | null
+      designer: components['schemas']['NodeRef'] | null
+      kind: components['schemas']['DesignKind']
+      frame: components['schemas']['VehicleFrame'] | null
+      frame_label: string | null
+      domain: components['schemas']['VehicleDomain'] | null
+      family: components['schemas']['VehicleFamily'] | null
+      propulsion: components['schemas']['Propulsion'] | null
+      size_class: components['schemas']['VehicleSize']
+      mass: number
+      speed: number
+      range: number
+      seaworthiness: number
+      cargo: number
+      armament: number
+      crew: number
+      troops: number
+      armour: number
+      structure: number
+      fuel: components['schemas']['CommodityKind'] | null
+      fuel_use: number
+      cost: number
+      upkeep: number
+      tech_level: number
+      strangeness: number
+      fire_control: components['schemas']['FireControl']
+      parent_design_id: number | null
+      obsolete: boolean
+      epoch: number
+      built: number
+      sections: components['schemas']['VehicleSectionView'][]
+      mounts: components['schemas']['MountView'][]
+      techniques: components['schemas']['Technique'][]
+      locked: string[]
+    }
     VenalOfficeDeleteInput: {
       office_id: number
     }
@@ -53524,7 +55379,7 @@ export interface components {
     VesselCreateInput: {
       owner_id: number
       name: string
-      hull_class: components['schemas']['HullClass']
+      frame: components['schemas']['VehicleFrame']
       armament?: components['schemas']['VesselArmament'][] | null
       hull_material?: components['schemas']['MaterialKind'] | null
       fabric_material?: components['schemas']['MaterialKind'] | null
@@ -53534,13 +55389,33 @@ export interface components {
     }
     VesselRefitInput: {
       vessel_id: number
-      hull_class: components['schemas']['HullClass']
+      frame: components['schemas']['VehicleFrame']
       armament?: components['schemas']['VesselArmament'][] | null
       hull_material?: components['schemas']['MaterialKind'] | null
       fabric_material?: components['schemas']['MaterialKind'] | null
     }
     VesselRepairInput: {
       vessel_id: number
+    }
+    VesselSectionDeleteInput: {
+      vessel_id: number
+      section: components['schemas']['VehicleSection']
+    }
+    VesselSectionSetInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      vessel_id: number
+      section: components['schemas']['VehicleSection']
+    }
+    VesselSectionView: {
+      section: components['schemas']['VehicleSection']
+      criticality: components['schemas']['Criticality']
+      state: components['schemas']['SectionState']
+      condition: number
+      laid: boolean
+      locked: string[]
     }
     VesselStats: {
       kind: 'vessel'
@@ -53559,7 +55434,7 @@ export interface components {
       region: components['schemas']['NodeRef'] | null
       fleet: components['schemas']['NodeRef'] | null
       legend: components['schemas']['NodeRef'] | null
-      hull: components['schemas']['HullSpecView']
+      frame: components['schemas']['FrameSpecView']
       hull_material: string | null
       fabric_material: string | null
       condition: number
@@ -54396,6 +56271,14 @@ export interface components {
       hook: components['schemas']['DomainHook']
       label: string
       pct: number
+    }
+    WorldKindsView: {
+      world_id: number
+      vehicle_types: components['schemas']['VehicleTypeView'][]
+      unit_types: components['schemas']['UnitTypeView'][]
+      equipment_models: components['schemas']['EquipmentModelView'][]
+      dishes: components['schemas']['DishView'][]
+      building_types: components['schemas']['BuildingTypeView'][]
     }
     WorldLaw: {
       entity: components['schemas']['EntitySummary']
@@ -64924,6 +66807,64 @@ export interface operations {
       }
     }
   }
+  world_kinds_api_made_kinds_world__world_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        world_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorldKindsView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  thing_kinds_api_made_kinds_thing__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ThingKindsView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   node_law_api_law_of__node_id__get: {
     parameters: {
       query?: never
@@ -66447,7 +68388,7 @@ export interface operations {
       }
     }
   }
-  hulls_api_vessels_hulls_get: {
+  frames_api_vehicles_frames_get: {
     parameters: {
       query?: never
       header?: never
@@ -66461,7 +68402,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HullSpecView'][]
+          'application/json': components['schemas']['FrameSpecView'][]
         }
       }
       default: {
@@ -110495,6 +112436,1463 @@ export interface operations {
       }
     }
   }
+  action_mortal_attraction_api_actions_mortal_attraction_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MortalAttractionInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_design_section_set_api_actions_design_section_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DesignSectionSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_design_section_delete_api_actions_design_section_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DesignSectionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_design_mount_add_api_actions_design_mount_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DesignMountAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_design_mount_edit_api_actions_design_mount_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DesignMountEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_design_mount_delete_api_actions_design_mount_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DesignMountDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_design_technique_add_api_actions_design_technique_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DesignTechniqueAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_design_technique_delete_api_actions_design_technique_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DesignTechniqueDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vehicle_group_create_api_actions_vehicle_group_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VehicleGroupCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vehicle_group_edit_api_actions_vehicle_group_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VehicleGroupEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vehicle_group_move_api_actions_vehicle_group_move_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VehicleGroupMoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vehicle_group_repair_api_actions_vehicle_group_repair_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VehicleGroupRepairInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vehicle_group_delete_api_actions_vehicle_group_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VehicleGroupDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vehicle_group_section_set_api_actions_vehicle_group_section_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VehicleGroupSectionSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vehicle_group_section_delete_api_actions_vehicle_group_section_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VehicleGroupSectionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vessel_section_set_api_actions_vessel_section_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VesselSectionSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vessel_section_delete_api_actions_vessel_section_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VesselSectionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_equipment_model_create_api_actions_equipment_model_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EquipmentModelCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_equipment_model_edit_api_actions_equipment_model_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EquipmentModelEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_equipment_model_delete_api_actions_equipment_model_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EquipmentModelDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_equipment_store_set_api_actions_equipment_store_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EquipmentStoreSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_equipment_store_delete_api_actions_equipment_store_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EquipmentStoreDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_army_equipment_set_api_actions_army_equipment_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ArmyEquipmentSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_army_equipment_delete_api_actions_army_equipment_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ArmyEquipmentDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_unit_type_create_api_actions_unit_type_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UnitTypeCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_unit_type_edit_api_actions_unit_type_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UnitTypeEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_unit_type_delete_api_actions_unit_type_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UnitTypeDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_unit_loadout_set_api_actions_unit_loadout_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UnitLoadoutSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_unit_loadout_delete_api_actions_unit_loadout_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UnitLoadoutDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_unit_technique_add_api_actions_unit_technique_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UnitTechniqueAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_unit_technique_delete_api_actions_unit_technique_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UnitTechniqueDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_structure_section_edit_api_actions_structure_section_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StructureSectionEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_structure_section_repair_api_actions_structure_section_repair_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StructureSectionRepairInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_structure_section_strike_api_actions_structure_section_strike_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StructureSectionStrikeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_structure_section_delete_api_actions_structure_section_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StructureSectionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_structure_design_section_set_api_actions_structure_design_section_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StructureDesignSectionSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_structure_design_section_delete_api_actions_structure_design_section_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StructureDesignSectionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_megastructure_edit_api_actions_megastructure_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MegastructureEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_megastructure_delete_api_actions_megastructure_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MegastructureDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_dish_create_api_actions_dish_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DishCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_dish_edit_api_actions_dish_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DishEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_dish_delete_api_actions_dish_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DishDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_dish_ingredient_set_api_actions_dish_ingredient_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DishIngredientSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_dish_ingredient_delete_api_actions_dish_ingredient_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DishIngredientDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_community_dish_set_api_actions_community_dish_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CommunityDishSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_community_dish_edit_api_actions_community_dish_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CommunityDishEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_community_dish_delete_api_actions_community_dish_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CommunityDishDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
 }
 type FlattenedDeepRequired<T> = {
   [K in keyof T]-?: FlattenedDeepRequired<
@@ -110961,6 +114359,17 @@ export const archiveModeValues: ReadonlyArray<
 export const archiveOverrideValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArchiveOverride']
 > = ['history', 'atlas']
+export const armamentSlotValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ArmamentSlot']
+> = [
+  'hand_weapon',
+  'missile_weapon',
+  'armour',
+  'shield',
+  'helmet',
+  'barding',
+  'vehicle_weapon',
+]
 export const armourTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArmourType']
 > = ['none', 'hide', 'padded', 'mail', 'scale', 'plate', 'enchanted']
@@ -111375,6 +114784,29 @@ export const buildScaleValues: ReadonlyArray<
 export const builderKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BuilderKind']
 > = ['community', 'polity', 'faction', 'cult', 'patron', 'god']
+export const buildingFormValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BuildingForm']
+> = [
+  'hall',
+  'longhouse',
+  'tower',
+  'keep',
+  'dome',
+  'spire',
+  'stepped',
+  'pyramid',
+  'courtyard',
+  'ring',
+  'tent',
+  'mound',
+  'arcade',
+  'terrace',
+  'platform',
+  'bridge_form',
+  'wall_line',
+  'tunnel_form',
+  'orbital',
+]
 export const calendarSlotValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CalendarSlot']
 > = ['sowing', 'harvest', 'midwinter', 'campaign', 'holy_day']
@@ -111860,6 +115292,7 @@ export const conditionKindValues: ReadonlyArray<
   'divine_brand',
   'nightmares',
   'comatose',
+  'cognitive_decline',
 ]
 export const consciousnessValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Consciousness']
@@ -111914,6 +115347,27 @@ export const contextBlockKindValues: ReadonlyArray<
 export const convoyStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ConvoyStatus']
 > = ['loading', 'travelling', 'delayed', 'arrived', 'raided', 'lost']
+export const cookingMethodValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CookingMethod']
+> = [
+  'raw',
+  'boiled',
+  'stewed',
+  'steamed',
+  'roasted',
+  'grilled',
+  'baked',
+  'fried',
+  'smoked',
+  'dried',
+  'cured',
+  'pickled',
+  'fermented',
+  'braised',
+  'simmered',
+  'ground',
+  'pressed',
+]
 export const cosmicBeingStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmicBeingStats']['kind']
 > = ['cosmic_being']
@@ -112091,6 +115545,9 @@ export const crisisSideValues: ReadonlyArray<
 export const crisisStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrisisState']
 > = ['escalating', 'backed_down', 'conceded', 'war']
+export const criticalityValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Criticality']
+> = ['critical', 'major', 'minor']
 export const cultStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CultStats']['kind']
 > = ['cult']
@@ -112205,10 +115662,16 @@ export const designComponentKindValues: ReadonlyArray<
   'navigation',
   'frame',
   'counterweight',
+  'steering',
+  'lift',
+  'power',
+  'troops',
+  'command',
+  'life_support',
 ]
 export const designKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DesignKind']
-> = ['vessel', 'skyship', 'siege_engine']
+> = ['vessel', 'skyship', 'siege_engine', 'land_vehicle', 'spacecraft']
 export const dietValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Diet']
 > = [
@@ -112307,6 +115770,18 @@ export const diseaseTargetValues: ReadonlyArray<
 export const diseaseVectorValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DiseaseVector']
 > = ['air', 'water', 'touch', 'bite', 'spirit', 'void', 'curse']
+export const dishCourseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DishCourse']
+> = [
+  'staple',
+  'side',
+  'festive',
+  'rite',
+  'ration',
+  'delicacy',
+  'remedy',
+  'drink',
+]
 export const dispatchContentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DispatchContent']
 > = [
@@ -112836,6 +116311,87 @@ export const epochStopRequestedEventKindValues: ReadonlyArray<
 export const epochStoppedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EpochStoppedEvent']['kind']
 > = ['epoch.stopped']
+export const equipmentFamilyValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EquipmentFamily']
+> = [
+  'club',
+  'dagger',
+  'blade',
+  'longblade',
+  'axe',
+  'mace',
+  'hammer',
+  'flail',
+  'spear',
+  'pike',
+  'polearm',
+  'staff',
+  'whip',
+  'fist_weapon',
+  'sling',
+  'javelin',
+  'throwing_weapon',
+  'blowgun',
+  'bow',
+  'longbow',
+  'composite_bow',
+  'crossbow',
+  'repeating_crossbow',
+  'handgun',
+  'musket',
+  'rifle',
+  'pistol',
+  'repeating_gun',
+  'grenade',
+  'flamethrower',
+  'beam_weapon',
+  'focus',
+  'hide',
+  'padded',
+  'quilted',
+  'lamellar',
+  'scale',
+  'mail',
+  'brigandine',
+  'plate',
+  'laminar',
+  'composite',
+  'ceramic',
+  'synthetic',
+  'powered',
+  'warded',
+  'buckler',
+  'round_shield',
+  'heater',
+  'kite',
+  'tower_shield',
+  'pavise',
+  'projected',
+  'cap',
+  'open_helm',
+  'closed_helm',
+  'full_helm',
+  'light_barding',
+  'heavy_barding',
+  'ram',
+  'ballista',
+  'catapult_engine',
+  'trebuchet_engine',
+  'bombard',
+  'cannon',
+  'carronade',
+  'howitzer',
+  'mortar',
+  'rocket_launcher',
+  'missile_launcher',
+  'torpedo',
+  'mine_layer',
+  'heavy_flamethrower',
+  'beam_cannon',
+  'focus_array',
+  'harpoon',
+  'boarding_gear',
+]
 export const equipmentSlotValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EquipmentSlot']
 > = [
@@ -113172,6 +116728,17 @@ export const feudPartyValues: ReadonlyArray<
 export const feudStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FeudStatus']
 > = ['active', 'mediated', 'faded', 'ended']
+export const fireControlValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['FireControl']
+> = [
+  'manual',
+  'drilled',
+  'sighted',
+  'directed',
+  'computed',
+  'automatic',
+  'guided',
+]
 export const focusKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FocusKind']
 > = [
@@ -113838,22 +117405,6 @@ export const householdRoleValues: ReadonlyArray<
 export const housingLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HousingLevel']
 > = ['hut', 'cottage', 'house', 'townhouse', 'manor']
-export const hullClassValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['HullClass']
-> = [
-  'raft',
-  'boat',
-  'galley',
-  'longship',
-  'cog',
-  'carrack',
-  'warship',
-  'light_sailer',
-  'bone_hull',
-  'generation_ship',
-  'skyship',
-  'living_ship',
-]
 export const ideaKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdeaKind']
 > = [
@@ -114627,7 +118178,7 @@ export const martialStyleValues: ReadonlyArray<
   'skirmisher',
   'chariot',
   'phalanx',
-  'berserker',
+  'shock',
   'naval_raider',
   'siege_engineer',
   'war_magic',
@@ -115054,6 +118605,10 @@ export const mortalToolIdValues: ReadonlyArray<
   'send_aid',
   'plan_rebuilding',
   'prepare_town',
+  'draft_unit_type',
+  'forge_model',
+  'create_dish',
+  'draw_structure_type',
 ]
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalTurnFinishedEvent']['kind']
@@ -115067,6 +118622,26 @@ export const mortalsStartedEventKindValues: ReadonlyArray<
 export const motifOverrideModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MotifOverrideMode']
 > = ['pinned', 'allowed']
+export const mountArcValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MountArc']
+> = ['forward', 'aft', 'side', 'all_round']
+export const mountKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MountKind']
+> = [
+  'bow',
+  'stern',
+  'broadside',
+  'deck',
+  'turret',
+  'spinal',
+  'hardpoint',
+  'wing',
+  'crew_station',
+  'rider',
+  'ram',
+  'bay',
+  'ward_node',
+]
 export const movementCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MovementCause']
 > = [
@@ -115872,6 +119447,28 @@ export const proposalStanceValues: ReadonlyArray<
 export const proposalStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ProposalState']
 > = ['debating', 'passed', 'failed', 'withdrawn']
+export const propulsionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Propulsion']
+> = [
+  'crew',
+  'draft_animals',
+  'ridden',
+  'oars',
+  'sail',
+  'sail_and_oar',
+  'steam',
+  'combustion',
+  'electric',
+  'reaction',
+  'solar_sail',
+  'fold_drive',
+  'buoyancy',
+  'magic',
+  'divine',
+  'self',
+  'current',
+  'towed',
+]
 export const punishmentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PunishmentKind']
 > = [
@@ -116240,6 +119837,39 @@ export const secretKindValues: ReadonlyArray<
 export const secretOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SecretOrigin']
 > = ['land', 'player', 'son']
+export const sectionHazardValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SectionHazard']
+> = [
+  'none',
+  'fire',
+  'explosion',
+  'flooding',
+  'breach',
+  'crash',
+  'panic',
+  'collapse',
+]
+export const sectionRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SectionRole']
+> = [
+  'support',
+  'defence',
+  'entry',
+  'shelter',
+  'storage',
+  'worship',
+  'knowledge',
+  'production',
+  'passage',
+  'water',
+  'display',
+  'power',
+  'command',
+  'motion',
+]
+export const sectionStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SectionState']
+> = ['sound', 'damaged', 'disabled', 'destroyed']
 export const segmentLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SegmentLevel']
 > = ['lineage', 'clan', 'tribe']
@@ -116687,6 +120317,11 @@ export const sonToolIdValues: ReadonlyArray<
   'inspire_school',
   'designate_keystone',
   'inspire_relief',
+  'shape_vehicle_type',
+  'shape_equipment',
+  'shape_dish',
+  'shape_structure_type',
+  'strike_being',
 ]
 export const sonTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnFinishedEvent']['kind']
@@ -117015,6 +120650,107 @@ export const structureKindValues: ReadonlyArray<
   'training_ground',
   'museum',
   'plaza',
+  'embassy',
+  'lighthouse',
+  'signal_tower',
+  'customs_house',
+  'toll_gate',
+  'courthouse',
+  'archive',
+  'printing_house',
+  'laboratory',
+  'foundry',
+  'smelter',
+  'kiln',
+  'glassworks',
+  'textile_mill',
+  'dye_works',
+  'paper_mill',
+  'bakery',
+  'dairy',
+  'distillery',
+  'refinery',
+  'power_plant',
+  'silo',
+  'cistern',
+  'reservoir',
+  'canal_lock',
+  'tunnel',
+  'rail_station',
+  'airfield',
+  'spaceport',
+  'dry_dock',
+  'arsenal',
+  'kennel',
+  'menagerie',
+  'botanical_garden',
+  'cemetery',
+  'gymnasium',
+  'asylum',
+  'quarantine_house',
+  'inn',
+  'market_hall',
+  'exchange',
+  'university',
+  'seminary',
+  'conservatory',
+  'opera_house',
+  'gallery',
+  'stadium',
+  'orbital_ring',
+  'space_elevator',
+  'space_station',
+  'star_collector',
+  'beacon',
+  'planetary_engine',
+  'habitat_ring',
+]
+export const structureSectionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StructureSection']
+> = [
+  'foundation',
+  'outer_wall',
+  'gate',
+  'gatehouse',
+  'towers',
+  'keep',
+  'battlements',
+  'earthwork',
+  'roof',
+  'main_hall',
+  'upper_floors',
+  'stores',
+  'quarters',
+  'workshop_floor',
+  'kitchen',
+  'sanctum',
+  'vault',
+  'archive',
+  'wards',
+  'dome',
+  'spire',
+  'span',
+  'piers',
+  'sluice',
+  'conduits',
+  'seating',
+  'stage',
+  'pens',
+  'furnace',
+  'wheel',
+  'shafts',
+  'docks',
+  'slipway',
+  'beacon',
+  'core',
+  'spine',
+  'ring_segments',
+  'collectors',
+  'thrusters',
+  'docking_ring',
+  'habitat_decks',
+  'control_core',
+  'shielding',
 ]
 export const structureStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StructureStats']['kind']
@@ -117798,48 +121534,52 @@ export const unitFamilyValues: ReadonlyArray<
   'infantry',
   'missile',
   'mounted',
+  'vehicle',
   'beast',
   'engineer',
   'magic',
-  'naval',
   'exotic',
 ]
 export const unitKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UnitKind']
 > = [
   'levy',
-  'spearmen',
+  'line_infantry',
   'heavy_infantry',
-  'shield_wall',
-  'pikemen',
-  'skirmishers',
-  'berserkers',
-  'temple_guard',
+  'shield_infantry',
+  'pike_infantry',
+  'light_infantry',
+  'shock_infantry',
+  'guard_infantry',
+  'marines',
   'slingers',
   'archers',
   'crossbowmen',
-  'horse_archers',
   'javelineers',
+  'gunners',
+  'grenadiers',
   'light_cavalry',
   'heavy_cavalry',
+  'mounted_archers',
+  'mounted_gunners',
   'beast_riders',
+  'sky_riders',
   'chariots',
+  'vehicle_crew',
+  'siege_crew',
+  'artillery_crew',
+  'naval_crew',
+  'sky_crew',
+  'void_crew',
   'war_beasts',
   'bound_beasts',
-  'sky_mounts',
   'sappers',
-  'siege_engines',
-  'war_mages',
-  'priests',
-  'necromancers',
-  'galleys',
-  'longships',
-  'warships',
-  'fire_ships',
-  'skyships',
-  'golems',
-  'void_spawn',
-  'ghost_host',
+  'engineers',
+  'battle_casters',
+  'support_casters',
+  'summoners',
+  'constructs',
+  'summoned_host',
 ]
 export const urbanServiceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UrbanService']
@@ -117875,6 +121615,193 @@ export const valueAxisValues: ReadonlyArray<
 export const valueHolderValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ValueHolder']
 > = ['culture', 'doctrine', 'agenda', 'personal', 'divine', 'community']
+export const vehicleDomainValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['VehicleDomain']
+> = [
+  'land',
+  'water',
+  'underwater',
+  'air',
+  'space',
+  'gas_giant',
+  'underground',
+  'planar',
+  'amphibious',
+]
+export const vehicleFamilyValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['VehicleFamily']
+> = [
+  'mount',
+  'cart',
+  'wagon',
+  'chariot',
+  'motor',
+  'tracked',
+  'walker',
+  'rail',
+  'ram',
+  'tower',
+  'thrower',
+  'gun',
+  'boat',
+  'galley',
+  'sailing_ship',
+  'steam_ship',
+  'submarine',
+  'balloon',
+  'airship',
+  'aircraft',
+  'rotorcraft',
+  'spacecraft',
+  'burrower',
+  'construct',
+  'living',
+]
+export const vehicleFrameValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['VehicleFrame']
+> = [
+  'riding_mount',
+  'pack_mount',
+  'travois',
+  'sledge',
+  'handcart',
+  'cart',
+  'wagon',
+  'covered_wagon',
+  'carriage',
+  'chariot',
+  'war_wagon',
+  'beast_carrier',
+  'rail_car',
+  'locomotive',
+  'steam_carriage',
+  'motor_car',
+  'motor_truck',
+  'motorcycle',
+  'armoured_car',
+  'tank',
+  'walker',
+  'crawler',
+  'construct_walker',
+  'construct_carrier',
+  'battering_ram',
+  'siege_tower',
+  'mantlet',
+  'catapult',
+  'trebuchet',
+  'ballista',
+  'bombard',
+  'field_gun',
+  'mortar',
+  'rocket_battery',
+  'raft',
+  'canoe',
+  'rowboat',
+  'boat',
+  'river_barge',
+  'sailboat',
+  'galley',
+  'longship',
+  'cog',
+  'carrack',
+  'galleon',
+  'frigate',
+  'warship',
+  'ship_of_the_line',
+  'steamship',
+  'ironclad',
+  'battleship',
+  'submarine',
+  'living_ship',
+  'fire_ship',
+  'balloon',
+  'airship',
+  'glider',
+  'ornithopter',
+  'sky_sailer',
+  'skyship',
+  'flying_carriage',
+  'aeroplane',
+  'rotorcraft',
+  'flying_car',
+  'flying_construct',
+  'orbital_lander',
+  'shuttle',
+  'solar_sailer',
+  'starship',
+  'generation_ship',
+  'void_ark',
+  'cloud_skimmer',
+  'aerostat',
+  'deep_submersible',
+  'burrower',
+  'planar_vessel',
+]
+export const vehicleSectionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['VehicleSection']
+> = [
+  'hull',
+  'keel',
+  'deck',
+  'bow',
+  'stern',
+  'hold',
+  'cargo_bay',
+  'troop_bay',
+  'crew_quarters',
+  'bridge',
+  'cockpit',
+  'mast',
+  'rigging',
+  'sails',
+  'oars',
+  'rudder',
+  'steering',
+  'engine',
+  'boiler',
+  'fuel_store',
+  'power_core',
+  'drive',
+  'wheels',
+  'axle',
+  'tracks',
+  'legs',
+  'chassis',
+  'frame',
+  'harness',
+  'draft_team',
+  'saddle',
+  'mount_body',
+  'armour_plating',
+  'barding',
+  'turret',
+  'gun_deck',
+  'hardpoint',
+  'magazine',
+  'wings',
+  'envelope',
+  'gondola',
+  'rotor',
+  'tail',
+  'ballast',
+  'life_support',
+  'airlock',
+  'sensors',
+  'navigation',
+  'ward',
+  'arm',
+  'counterweight',
+  'ram_head',
+  'tower',
+  'platform',
+  'core',
+]
+export const vehicleSizeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['VehicleSize']
+> = ['small', 'medium', 'large', 'huge', 'colossal']
+export const vehicleStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['VehicleStatus']
+> = ['ready', 'moving', 'engaged', 'laid_up', 'building', 'wrecked']
 export const verdictValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Verdict']
 > = ['guilty', 'acquitted', 'fled', 'dropped']

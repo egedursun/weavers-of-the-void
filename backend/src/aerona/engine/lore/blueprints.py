@@ -119,17 +119,17 @@ async def draw_designs(ctx: TickContext) -> int:
     for vessel in list(await ctx.session.scalars(select(VesselProfileRow).where(VesselProfileRow.home_port_entity_id.is_not(None)))):
         port = await community(ctx.session, vessel.home_port_entity_id)
         if port is not None:
-            drawn += int(await draw(ctx, port, BlueprintKind.VESSEL, vessel.hull_class.value) is not None)
+            drawn += int(await draw(ctx, port, BlueprintKind.VESSEL, vessel.frame.value) is not None)
     engines = await ctx.session.execute(
         select(BondRow.target_node_id)
         .join(ArmyUnitRow, ArmyUnitRow.army_entity_id == BondRow.source_node_id)
-        .where(BondRow.kind == BondKind.PROTECTS, BondRow.state == BondState.ACTIVE, ArmyUnitRow.kind == UnitKind.SIEGE_ENGINES, ArmyUnitRow.count > 0)
+        .where(BondRow.kind == BondKind.PROTECTS, BondRow.state == BondState.ACTIVE, ArmyUnitRow.kind == UnitKind.SIEGE_CREW, ArmyUnitRow.count > 0)
         .distinct()
     )
     for owner_id in sorted(engines.scalars()):
         owner = await community(ctx.session, owner_id)
         if owner is not None:
-            drawn += int(await draw(ctx, owner, BlueprintKind.SIEGE_ENGINE, UnitKind.SIEGE_ENGINES.value) is not None)
+            drawn += int(await draw(ctx, owner, BlueprintKind.SIEGE_ENGINE, UnitKind.SIEGE_CREW.value) is not None)
     made = await ctx.session.scalars(
         select(ItemProfileRow)
         .join(EntityRow, EntityRow.id == ItemProfileRow.item_entity_id)

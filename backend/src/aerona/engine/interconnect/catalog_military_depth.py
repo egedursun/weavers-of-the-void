@@ -232,7 +232,7 @@ MILITARY_DEPTH_MECHANICS = (
         surface=Surface(drawer="VesselCard"),
         backfill="seafaring: every ship gets a hull class, condition, crew and home port",
         templates=("seafaring.",),
-        fields=("hull_class", "condition", "armament", "seaworthiness", "crew", "seamanship", "renown", "status"),
+        fields=("frame", "condition", "armament", "seaworthiness", "crew", "seamanship", "renown", "status"),
         tables=(VesselProfileRow.__tablename__,),
         exposure=Exposure.TOOL,
         tools=("create_vessel",),

@@ -115,7 +115,7 @@ async def raise_host(ctx: TickContext, necromancer: EntityRow, power: int) -> En
     )
     ctx.session.add(ArmyRow(entity_id=army.id, war_id=None, owner_entity_id=necromancer.id, commander_entity_id=necromancer.id, raised_epoch=ctx.epoch))
     await ctx.session.flush()
-    await add_stack(ctx, army.id, UnitKind.GHOST_HOST, count)
+    await add_stack(ctx, army.id, UnitKind.SUMMONED_HOST, count)
     await connect(ctx.session, necromancer.id, army.id, BondKind.COMMANDS, ctx.epoch, description="raised from the dead")
     return army
 
