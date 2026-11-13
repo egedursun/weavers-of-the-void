@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/tooltip'
 import { PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { useWidth } from '@/features/entity/society/tones'
 import {
   CRITICALITY,
   type Criticality,
@@ -57,8 +58,13 @@ const PART_WIDTH = 34
 const BODY_WIDTH = 120
 const GAP = 3
 const MIN_SHARE = 4
-const LABELLED = 26
-const LETTER = 5.5
+const FONT = 7
+const SMALLEST = 4.5
+const GLYPH = 0.56
+const INSET = 4
+const LINE = 1.15
+const SCALE = 2
+const CRAMPED = 0.7
 
 function lay(
   parts: DiagramPart[],
@@ -88,6 +94,28 @@ function lay(
 
 function span(count: number): number {
   return count * PART_WIDTH + GAP * Math.max(0, count - 1)
+}
+
+const ORDER: Zone[] = ['top', 'front', 'body', 'rear', 'under']
+
+function stack(
+  parts: DiagramPart[],
+  zoneOf: (key: string) => Zone
+): { laid: Box[]; width: number; height: number } {
+  const by = (zone: Zone) => parts.filter((part) => zoneOf(part.key) === zone)
+  const width = Math.max(
+    BODY_WIDTH,
+    ...ORDER.map((zone) => span(by(zone).length))
+  )
+  const laid: Box[] = []
+  let cursor = PAD
+  for (const zone of ORDER) {
+    const row = by(zone)
+    if (row.length === 0) continue
+    laid.push(...lay(row, 0, width, zone, cursor))
+    cursor += ROW_HEIGHT[zone] + ROW_GAP
+  }
+  return { laid, width, height: cursor - ROW_GAP + PAD }
 }
 
 function boxes(
@@ -129,10 +157,41 @@ function boxes(
   }
 }
 
-function shortLabel(key: string, width: number): string {
+type Fitted = { lines: string[]; size: number }
+
+function sized(lines: string[], w: number, h: number): number {
+  const longest = Math.max(...lines.map((line) => line.length))
+  return Math.min(
+    FONT,
+    (w - INSET) / (longest * GLYPH),
+    (h - INSET) / (lines.length * LINE)
+  )
+}
+
+function halves(text: string): string[] {
+  const spaces = [...text.matchAll(/ /g)].map((match) => match.index)
+  if (spaces.length === 0) return [text]
+  const cut = spaces.reduce((best, at) =>
+    Math.abs(at - text.length / 2) < Math.abs(best - text.length / 2)
+      ? at
+      : best
+  )
+  return [text.slice(0, cut), text.slice(cut + 1)]
+}
+
+function fit(key: string, w: number, h: number): Fitted {
   const text = sectionLabel(key)
-  const room = Math.max(2, Math.floor((width - 4) / LETTER))
-  return text.length <= room ? text : `${text.slice(0, Math.max(1, room - 1))}…`
+  const single = sized([text], w, h)
+  if (single >= SMALLEST + 0.5) return { lines: [text], size: single }
+  const split = halves(text)
+  const double = split.length > 1 ? sized(split, w, h) : 0
+  if (double > single && double >= SMALLEST) {
+    return { lines: split, size: double }
+  }
+  if (single >= SMALLEST || split.length === 1) {
+    return { lines: [text], size: Math.max(SMALLEST, single) }
+  }
+  return { lines: split, size: SMALLEST }
 }
 
 function describe(part: DiagramPart): string {
@@ -141,6 +200,31 @@ function describe(part: DiagramPart): string {
       ? ''
       : `; ${HAZARD[part.hazard].label.toLowerCase()} when struck`
   return `${sectionLabel(part.key)}: ${SECTION_STATE[part.state].label.toLowerCase()}, ${CRITICALITY[part.criticality].label.toLowerCase()} section, ${part.share}% of the whole${hazard}${part.detail ? `; ${part.detail}` : ''}`
+}
+
+function BoxLabel({ box }: { box: Box }) {
+  const { lines, size } = fit(box.part.key, box.w, box.h)
+  const top = box.y + box.h / 2 - ((lines.length - 1) * size * LINE) / 2
+  return (
+    <text
+      x={box.x + box.w / 2}
+      y={top}
+      textAnchor='middle'
+      dominantBaseline='central'
+      className='fill-foreground'
+      fontSize={size}
+    >
+      {lines.map((line, index) => (
+        <tspan
+          key={line}
+          x={box.x + box.w / 2}
+          dy={index === 0 ? 0 : size * LINE}
+        >
+          {line}
+        </tspan>
+      ))}
+    </text>
+  )
 }
 
 export function IntegrityDiagram({
@@ -154,7 +238,10 @@ export function IntegrityDiagram({
   mounts?: DiagramMount[]
   zoneOf: (key: string) => Zone
 }) {
-  const { laid, width, height } = boxes(parts, zoneOf)
+  const [measure, room] = useWidth()
+  const wide = boxes(parts, zoneOf)
+  const cramped = room > 0 && room < (wide.width + 8) * SCALE * CRAMPED
+  const { laid, width, height } = cramped ? stack(parts, zoneOf) : wide
   const home = (section: string | null): Box | undefined =>
     laid.find((item) => item.part.key === section) ??
     laid.find((item) => zoneOf(item.part.key) === 'top') ??
@@ -168,12 +255,14 @@ export function IntegrityDiagram({
     return { x: box.x + step * (place + 1), y: box.y }
   }
   return (
-    <div className='flex min-w-0 flex-col gap-3'>
+    <div ref={measure} className='flex min-w-0 flex-col gap-3'>
       <svg
         role='img'
         aria-label={title}
         viewBox={`-4 0 ${width + 8} ${height}`}
-        className='h-auto w-full max-w-2xl self-center'
+        width={(width + 8) * SCALE}
+        height={height * SCALE}
+        className='h-auto max-w-full self-center'
       >
         {laid.map((box) => (
           <Tooltip key={box.part.key}>
@@ -193,15 +282,7 @@ export function IntegrityDiagram({
                     box.part.criticality === 'minor' ? '3 2' : undefined
                   }
                 />
-                <text
-                  x={box.x + box.w / 2}
-                  y={box.y + box.h / 2 + 3}
-                  textAnchor='middle'
-                  className='fill-foreground'
-                  fontSize={box.w >= LABELLED ? 7 : 6}
-                >
-                  {shortLabel(box.part.key, box.w)}
-                </text>
+                <BoxLabel box={box} />
               </g>
             </TooltipTrigger>
             <TooltipContent>{describe(box.part)}</TooltipContent>

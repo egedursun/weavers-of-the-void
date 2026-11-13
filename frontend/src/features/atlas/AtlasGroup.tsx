@@ -72,7 +72,7 @@ export function AtlasGroup({
           <Muted>{`${formatInteger(total)} ${total === 1 ? 'record' : 'records'} under this branch`}</Muted>
         </div>
       </header>
-      <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'>
+      <div className='grid min-w-0 grid-cols-2 gap-2 @md/pane:grid-cols-3'>
         <MiniStat icon={Folder} label='Records' value={total} tone='gold' />
         <MiniStat
           icon={nodeIcon(records[0] ?? node)}
@@ -91,7 +91,7 @@ export function AtlasGroup({
       </div>
       {groups.length > 0 && (
         <Section title='Branches' icon={Folder} level={3}>
-          <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+          <ul className='grid min-w-0 grid-cols-1 gap-2 @sm/pane:grid-cols-2'>
             <Paged items={groups} as='li'>
               {(child) => (
                 <ChildRow key={child.key} node={child} onSelect={onSelect} />
@@ -102,7 +102,7 @@ export function AtlasGroup({
       )}
       {records.length > 0 && (
         <Section title='Records' icon={nodeIcon(records[0])} level={3}>
-          <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+          <ul className='grid min-w-0 grid-cols-1 gap-2 @sm/pane:grid-cols-2'>
             <Paged items={records} as='li'>
               {(child) => (
                 <ChildRow key={child.key} node={child} onSelect={onSelect} />

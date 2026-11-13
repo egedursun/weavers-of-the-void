@@ -184,36 +184,39 @@ export function LeaningsPanel({
         blocked={busy}
         onSet={(next) => set.mutate({ drawn_to: next })}
       />
-      <div className='grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-3'>
-        <NumberField
-          label='Strength of attraction'
-          value={strength}
-          min={0}
-          max={SPAN}
-          blocked={busy}
-          onChange={setStrength}
-        />
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => set.mutate({ attraction: Number(strength) })}
-        >
-          Hold the strength
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={
-            (busy ?? (leaning.held.length ? null : 'Nothing is held')) !== null
-          }
-          disabledReason={
-            busy ?? (leaning.held.length ? undefined : 'Nothing is held')
-          }
-          onClick={() => release.mutate()}
-        >
-          Release to the engine
-        </Button>
+      <div className='@container/form min-w-0'>
+        <div className='grid min-w-0 grid-cols-1 items-end gap-2 @lg/form:grid-cols-3'>
+          <NumberField
+            label='Strength of attraction'
+            value={strength}
+            min={0}
+            max={SPAN}
+            blocked={busy}
+            onChange={setStrength}
+          />
+          <Button
+            size='sm'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => set.mutate({ attraction: Number(strength) })}
+          >
+            Hold the strength
+          </Button>
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={
+              (busy ?? (leaning.held.length ? null : 'Nothing is held')) !==
+              null
+            }
+            disabledReason={
+              busy ?? (leaning.held.length ? undefined : 'Nothing is held')
+            }
+            onClick={() => release.mutate()}
+          >
+            Release to the engine
+          </Button>
+        </div>
       </div>
     </div>
   )

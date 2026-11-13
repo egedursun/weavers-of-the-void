@@ -23,7 +23,7 @@ export function AtlasHome({ records, kinds, onSelect }: AtlasHomeProps) {
   const souls = worlds.reduce((sum, item) => sum + item.counts.population, 0)
   return (
     <div className='flex min-w-0 flex-col gap-6'>
-      <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4'>
+      <div className='grid min-w-0 grid-cols-2 gap-2 @lg/pane:grid-cols-4'>
         <MiniStat
           icon={Library}
           tone='verdigris'
@@ -48,7 +48,7 @@ export function AtlasHome({ records, kinds, onSelect }: AtlasHomeProps) {
         title='Worlds'
         description={`${formatCompact(souls)} souls live across the cosmos. Open a world to read its lore, peoples and chronicle.`}
       >
-        <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+        <ul className='grid min-w-0 grid-cols-1 gap-2 @sm/pane:grid-cols-2'>
           {worlds.map((item) => (
             <li
               key={item.world.id}
@@ -82,7 +82,7 @@ export function AtlasHome({ records, kinds, onSelect }: AtlasHomeProps) {
       </Section>
       {stars.length > 0 && (
         <Section title='Stars'>
-          <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+          <ul className='grid min-w-0 grid-cols-1 gap-2 @sm/pane:grid-cols-2'>
             {stars.map((star) => {
               const circling = worlds.filter(
                 (item) => item.world.star_id === star.id

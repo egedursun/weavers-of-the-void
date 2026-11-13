@@ -11,7 +11,9 @@ import {
   buildAtlasTree,
   flattenVisible,
 } from '@/features/atlas/atlasModel'
+import { Facts } from '@/features/cosmography/parts'
 import { type CosmosView, type WorldState } from '@/features/entity/api/types'
+import { IntegrityDiagram } from './IntegrityDiagram'
 import { KindPage } from './KindPages'
 import { MadeKindsSection } from './MadeKindsSection'
 import { type WorldKinds } from './api'
@@ -205,6 +207,94 @@ describe('made kinds', () => {
     })
     expect(parseKindKey('made:vehicle:0:5')).toBeNull()
     expect(parseKindKey('building-type:1:school')).toBeNull()
+  })
+
+  it('names every section in full and stacks its rows when the pane is narrow', async () => {
+    const part = (key: string, share: number) => ({
+      key,
+      state: 'sound' as const,
+      criticality: 'major' as const,
+      share,
+      hazard: 'none' as const,
+    })
+    const zones: Record<string, 'top' | 'front' | 'body' | 'rear'> = {
+      deck: 'top',
+      gun_deck: 'top',
+      rigging: 'top',
+      navigation: 'front',
+      crew_quarters: 'body',
+      hold: 'body',
+      magazine: 'body',
+      rudder: 'rear',
+    }
+    const parts = Object.keys(zones).map((key) => part(key, 10))
+    const { screen } = await renderApp(
+      <div className='w-56'>
+        <IntegrityDiagram
+          title='Sections of a carrack'
+          parts={parts}
+          zoneOf={(key) => zones[key] ?? 'body'}
+        />
+      </div>
+    )
+    const diagram = screen.getByRole('img', { name: 'Sections of a carrack' })
+    await expect.element(diagram).toBeVisible()
+    const labels = [...diagram.element().querySelectorAll('text')].map(
+      (node) => node.textContent
+    )
+    expect(labels).toEqual(
+      expect.arrayContaining(['Gun deck', 'Navigation', 'Magazine', 'Rigging'])
+    )
+    expect(labels.some((label) => label?.includes('…'))).toBe(false)
+    const rows = () =>
+      new Set(
+        [...diagram.element().querySelectorAll('rect')].map((node) =>
+          node.getAttribute('y')
+        )
+      ).size
+    await expect.poll(rows).toBe(4)
+  })
+
+  it('keeps a small structure at its own size instead of blowing it up', async () => {
+    const { screen } = await renderApp(
+      <div className='w-2xl'>
+        <IntegrityDiagram
+          title='Sections of a shrine'
+          parts={['sanctum', 'foundation', 'vault'].map((key) => ({
+            key,
+            state: 'sound' as const,
+            criticality: 'major' as const,
+            share: 30,
+            hazard: 'none' as const,
+          }))}
+          zoneOf={(key) => (key === 'foundation' ? 'under' : 'body')}
+        />
+      </div>
+    )
+    const diagram = screen.getByRole('img', { name: 'Sections of a shrine' })
+    await expect.element(diagram).toBeVisible()
+    expect(diagram.element().getBoundingClientRect().height).toBeLessThan(200)
+  })
+
+  it('lays the values of a kind in one column with whole labels in a narrow pane', async () => {
+    const { screen } = await renderApp(
+      <div className='w-72'>
+        <Facts
+          items={[
+            ['Made by', 'the Chiefdom of Nemhalet'],
+            ['Fielded by', 'the Chiefdom of Nemhalet'],
+            ['Epochs of training', 1],
+          ]}
+        />
+      </div>
+    )
+    await expect.element(screen.getByText('Fielded by')).toBeVisible()
+    const terms = [...document.querySelectorAll('dt')].map((node) =>
+      node.getBoundingClientRect()
+    )
+    expect(new Set(terms.map((box) => box.left)).size).toBe(1)
+    const line = terms[0].height
+    expect(terms.every((box) => box.height === line)).toBe(true)
   })
 
   it('reads the worst state of a section across a group', () => {

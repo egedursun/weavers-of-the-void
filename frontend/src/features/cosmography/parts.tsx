@@ -153,53 +153,55 @@ export function RecordEditor({
         onRelease={() => onRelease([...locked])}
       />
       <AdjustPanel title={title} note={note}>
-        <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
-          {fields.map((field) =>
-            field.kind === 'text' ? (
-              <TextField
-                key={field.key}
-                label={field.label}
-                long={field.long ?? false}
-                value={draft[field.key] ?? ''}
-                disabled={busy !== null}
-                onChange={set(field.key)}
-              />
-            ) : field.kind === 'node' ? (
-              <LinkField
-                key={field.key}
-                label={field.label}
-                value={draft[field.key] ?? ''}
-                types={field.types}
-                kinds={field.kinds ?? []}
-                busy={busy}
-                onChange={set(field.key)}
-              />
-            ) : field.kind === 'pick' ? (
-              <MindPicker
-                key={field.key}
-                label={field.label}
-                value={draft[field.key] ?? ''}
-                table={field.table}
-                blocked={
-                  busy ??
-                  (Object.keys(field.table).length === 0
-                    ? `No ${field.label.toLowerCase()} to choose from yet`
-                    : null)
-                }
-                onPick={set(field.key)}
-              />
-            ) : (
-              <NumberField
-                key={field.key}
-                label={field.label}
-                value={draft[field.key] ?? ''}
-                min={field.min}
-                max={field.kind === 'number' ? field.max : undefined}
-                disabled={busy !== null}
-                onChange={set(field.key)}
-              />
-            )
-          )}
+        <div className='@container/fields min-w-0'>
+          <div className='grid min-w-0 grid-cols-1 gap-2 @sm/fields:grid-cols-2'>
+            {fields.map((field) =>
+              field.kind === 'text' ? (
+                <TextField
+                  key={field.key}
+                  label={field.label}
+                  long={field.long ?? false}
+                  value={draft[field.key] ?? ''}
+                  disabled={busy !== null}
+                  onChange={set(field.key)}
+                />
+              ) : field.kind === 'node' ? (
+                <LinkField
+                  key={field.key}
+                  label={field.label}
+                  value={draft[field.key] ?? ''}
+                  types={field.types}
+                  kinds={field.kinds ?? []}
+                  busy={busy}
+                  onChange={set(field.key)}
+                />
+              ) : field.kind === 'pick' ? (
+                <MindPicker
+                  key={field.key}
+                  label={field.label}
+                  value={draft[field.key] ?? ''}
+                  table={field.table}
+                  blocked={
+                    busy ??
+                    (Object.keys(field.table).length === 0
+                      ? `No ${field.label.toLowerCase()} to choose from yet`
+                      : null)
+                  }
+                  onPick={set(field.key)}
+                />
+              ) : (
+                <NumberField
+                  key={field.key}
+                  label={field.label}
+                  value={draft[field.key] ?? ''}
+                  min={field.min}
+                  max={field.kind === 'number' ? field.max : undefined}
+                  disabled={busy !== null}
+                  onChange={set(field.key)}
+                />
+              )
+            )}
+          </div>
         </div>
         <Button
           size='sm'
@@ -233,7 +235,12 @@ function TextField({
 }) {
   const id = useId()
   return (
-    <div className={cn('flex min-w-0 flex-col gap-1', long && 'sm:col-span-2')}>
+    <div
+      className={cn(
+        'flex min-w-0 flex-col gap-1',
+        long && '@sm/fields:col-span-2'
+      )}
+    >
       <Label as='label' htmlFor={id}>
         {label}
       </Label>
@@ -330,21 +337,23 @@ export function NodeLink({
 
 export function Facts({ items }: { items: [string, ReactNode][] }) {
   return (
-    <dl className='grid min-w-0 grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2'>
-      {items.map(([label, value]) => (
-        <div
-          key={label}
-          className='flex min-w-0 items-baseline justify-between gap-2 border-b border-dashed pb-1'
-        >
-          <dt>
-            <Muted as='span' variant='caption'>
-              {label}
-            </Muted>
-          </dt>
-          <dd className='min-w-0 truncate text-right'>{value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className='@container/facts w-full min-w-0'>
+      <dl className='grid min-w-0 grid-cols-1 gap-x-4 gap-y-1.5 @md/facts:grid-cols-2'>
+        {items.map(([label, value]) => (
+          <div
+            key={label}
+            className='flex min-w-0 items-baseline justify-between gap-2 border-b border-dashed pb-1'
+          >
+            <dt className='shrink-0'>
+              <Muted as='span' variant='caption'>
+                {label}
+              </Muted>
+            </dt>
+            <dd className='min-w-0 truncate text-right'>{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   )
 }
 

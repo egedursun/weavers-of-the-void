@@ -27,7 +27,7 @@ export function KindHeader({
       <Medallion icon={icon} tone={tone ?? 'muted'} />
       <div className='flex min-w-0 flex-1 flex-col gap-1'>
         <Label variant='overline'>{overline}</Label>
-        <PageTitle truncate={2}>{title}</PageTitle>
+        <PageTitle>{title}</PageTitle>
         <Muted variant='caption'>{caption}</Muted>
         {chips && <div className='flex min-w-0 flex-wrap gap-1.5'>{chips}</div>}
       </div>

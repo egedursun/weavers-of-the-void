@@ -92,7 +92,7 @@ export function AtlasFilters({
         value={text}
         onChange={(event) => setText(event.target.value)}
       />
-      <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+      <div className='grid min-w-0 grid-cols-1 gap-2 @xs/pane:grid-cols-2'>
         <Select
           value={search.type ?? ALL}
           onValueChange={(value) =>

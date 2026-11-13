@@ -180,35 +180,37 @@ function StackKit({
           ))}
         </ul>
       )}
-      <div className='grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-3'>
-        <MindPicker
-          label='Model'
-          value={model}
-          table={table}
-          blocked={
-            Object.keys(table).length
-              ? busy
-              : 'No other model of this world can be carried'
-          }
-          onPick={setModel}
-        />
-        <NumberField
-          label='Pieces'
-          value={count}
-          min={1}
-          max={LOTS}
-          blocked={busy}
-          onChange={setCount}
-        />
-        <Button
-          size='sm'
-          disabled={(busy ?? (model ? null : 'Pick a model')) !== null}
-          disabledReason={busy ?? (model ? undefined : 'Pick a model')}
-          onClick={() => add.mutate()}
-        >
-          <Plus />
-          Arm the stack
-        </Button>
+      <div className='@container/form min-w-0'>
+        <div className='grid min-w-0 grid-cols-1 items-end gap-2 @lg/form:grid-cols-3'>
+          <MindPicker
+            label='Model'
+            value={model}
+            table={table}
+            blocked={
+              Object.keys(table).length
+                ? busy
+                : 'No other model of this world can be carried'
+            }
+            onPick={setModel}
+          />
+          <NumberField
+            label='Pieces'
+            value={count}
+            min={1}
+            max={LOTS}
+            blocked={busy}
+            onChange={setCount}
+          />
+          <Button
+            size='sm'
+            disabled={(busy ?? (model ? null : 'Pick a model')) !== null}
+            disabledReason={busy ?? (model ? undefined : 'Pick a model')}
+            onClick={() => add.mutate()}
+          >
+            <Plus />
+            Arm the stack
+          </Button>
+        </div>
       </div>
     </li>
   )
