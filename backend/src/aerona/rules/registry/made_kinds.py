@@ -22,6 +22,12 @@ class ArmamentRules:
 
 @dataclass(frozen=True)
 class VehicleRules:
+    tribe_size: int = rule(2, 0, 4, W, "Largest hull a tribe can build, counted from small (0) to colossal (4); technology alone opens a frame")
+    city_state_size: int = rule(3, 0, 4, W, "Largest hull a city-state can build, counted from small (0) to colossal (4)")
+    kingdom_size: int = rule(4, 0, 4, W, "Largest hull a kingdom can build, counted from small (0) to colossal (4)")
+    empire_size: int = rule(4, 0, 4, W, "Largest hull a world empire can build, counted from small (0) to colossal (4)")
+    interstellar_size: int = rule(4, 0, 4, W, "Largest hull an interstellar power can build, counted from small (0) to colossal (4)")
+    cosmic_size: int = rule(4, 0, 4, W, "Largest hull a cosmic power can build, counted from small (0) to colossal (4)")
     deflect_pct: int = rule(150, 1, 1000, W, "Armour at which a section turns aside every hit; a section turns aside hits in proportion to its armour (%)")
     fire_spread_pct: int = rule(35, 0, 100, W, "Chance a burning section sets a neighbouring section alight (%)")
     explosion_hits: int = rule(2, 0, 10, W, "Hits an exploding section deals to each neighbouring section")

@@ -38925,7 +38925,7 @@ export interface components {
       armament: components['schemas']['VesselArmament'][]
       branch: components['schemas']['KnowledgeBranch'] | null
       level: number
-      tier: number
+      tier: number | null
       sky: boolean
       living: boolean
       strangeness: number

@@ -21,6 +21,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.vehicles.fleet import opened
 from aerona.engine.vehicles.groups import GroupReading, groups_of, read
 from aerona.engine.vehicles.sections import StrikeResult, strike_group
+from aerona.rules.registry import Rules
 
 D = VehicleDomain
 Y = VehicleFamily
@@ -55,8 +56,8 @@ def suits(spec: FrameSpec, ground: TerrainKind | None) -> bool:
     return needs is None or ground in needs
 
 
-def best_carrier(knowledge: KnowledgeMap, owner: EntityRow, mode: TradeMode, ground: TerrainKind | None = None) -> VehicleFrame | None:
-    found = [spec for spec in FRAMES.values() if carries(mode, spec) and spec.cargo > 0 and suits(spec, ground) and opened(spec, knowledge, owner)]
+def best_carrier(knowledge: KnowledgeMap, owner: EntityRow, mode: TradeMode, rules: Rules, ground: TerrainKind | None = None) -> VehicleFrame | None:
+    found = [spec for spec in FRAMES.values() if carries(mode, spec) and spec.cargo > 0 and suits(spec, ground) and opened(spec, knowledge, owner, rules)]
     if not found:
         return None
     top = max(cargo_worth(spec) for spec in found)
@@ -78,7 +79,7 @@ async def carrier_design(ctx: TickContext, owner: EntityRow, mode: TradeMode, kn
     for design in await ctx.session.scalars(statement.order_by(DesignRow.epoch.desc(), DesignRow.id.desc())):
         if design.frame is not None and carries(mode, FRAMES[design.frame]) and design.cargo > 0 and suits(FRAMES[design.frame], ground):
             return design
-    frame = best_carrier(knowledge, maker, mode, ground)
+    frame = best_carrier(knowledge, maker, mode, ctx.rules, ground)
     return await draw_design(ctx, maker, frame, knowledge=knowledge) if frame is not None else None
 
 

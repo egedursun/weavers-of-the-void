@@ -116,7 +116,7 @@ class FrameSpecView(ApiModel):
     armament: list[VesselArmament]
     branch: KnowledgeBranch | None
     level: int
-    tier: int
+    tier: int | None
     sky: bool
     living: bool
     strangeness: int

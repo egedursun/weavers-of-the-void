@@ -156,8 +156,11 @@ async def draw_a_design(call: MortalCall, args: DesignInput) -> str:
     if owner is None or held(owner.id):
         fail(MortalResult.DESIGN_REFUSED, why="you build for no town or realm")
     knowledge = await KnowledgeMap.load(call.session)
-    if not opened(FRAMES[args.frame], knowledge, owner):
-        fail(MortalResult.DESIGN_REFUSED, why=f"{owner.name} does not yet know how to build {an(FRAMES[args.frame].label.lower())}")
+    if not opened(FRAMES[args.frame], knowledge, owner, call.rules):
+        fail(
+            MortalResult.DESIGN_REFUSED,
+            why=f"{owner.name} cannot yet build {an(FRAMES[args.frame].label.lower())}: it lacks the knowledge or is too small a power for a hull that size",
+        )
     sizes[args.emphasis] = min(FULL_SIZE, sizes[args.emphasis] + EMPHASIS)
     skill = stat_or(call.me, "intellect", PERCENT // 2)
     design = await draw_design(call.tick, owner, args.frame, sizes=sizes, quality=skill, designer_id=call.me.id, knowledge=knowledge)

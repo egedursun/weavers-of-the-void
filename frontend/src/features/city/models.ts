@@ -136,14 +136,17 @@ export const STRUCTURE_LOOK: Record<Schema['StructureKind'], Look> = {
   ],
   road: one(hex('tiles/roads/hex_road_A'), 0.5),
   bridge: one(neutral('building_bridge_A')),
-  aqueduct: one(neutral('wall_straight'), 0.8),
+  aqueduct: one(neutral('building_bridge_A'), 0.8),
   sewer: one(building('well', 'blue'), 0.6),
   canal: one(hex('tiles/rivers/hex_river_A'), 0.5),
   irrigation: [
     { model: neutral('building_grain'), scale: 0.8 },
     { model: prop('bucket_water'), scale: 0.8, offset: [0.5, 0.4] },
   ],
-  dam: one(neutral('wall_straight_gate'), 0.9),
+  dam: [
+    { model: hex('tiles/rivers/hex_river_A'), scale: 0.55 },
+    { model: building('watermill', 'blue'), scale: 0.8 },
+  ],
   monument: one(spooky('pillar'), SPOOKY * 1.4),
   tomb: one(spooky('crypt'), SPOOKY),
   arena: one(building('archeryrange', 'red')),
@@ -462,20 +465,7 @@ export const STRUCTURE_LOOK: Record<Schema['StructureKind'], Look> = {
     { model: prop('flag_yellow'), scale: 0.7, offset: [0.6, -0.3] },
     { model: prop('flag_red'), scale: 0.7, offset: [-0.6, -0.3] },
   ],
-  orbital_ring: [
-    { model: spooky('arch_gate'), scale: SPOOKY * 1.6 },
-    {
-      model: neutral('wall_corner_A_outside'),
-      scale: 0.5,
-      offset: [0.55, 0.4],
-    },
-    {
-      model: neutral('wall_corner_A_outside'),
-      scale: 0.5,
-      offset: [-0.55, 0.4],
-      turn: Math.PI,
-    },
-  ],
+  orbital_ring: one(spooky('arch_gate'), SPOOKY * 1.6),
   space_elevator: [
     { model: building('tower_B', 'blue'), scale: 1.3 },
     { model: building('tower_base', 'blue'), scale: 0.6, offset: [0.55, 0.35] },
@@ -503,11 +493,7 @@ export const STRUCTURE_LOOK: Record<Schema['StructureKind'], Look> = {
   ],
   habitat_ring: [
     { model: building('castle', 'blue'), scale: 1.1 },
-    {
-      model: neutral('wall_corner_B_outside'),
-      scale: 0.5,
-      offset: [0.55, 0.45],
-    },
+    { model: building('tower_base', 'blue'), scale: 0.6, offset: [0.6, 0.4] },
   ],
 }
 
@@ -521,7 +507,7 @@ const FORM_BODY: Record<Schema['BuildingForm'], Part> = {
   stepped: { model: neutral('building_stage_C') },
   pyramid: { model: neutral('building_stage_B') },
   courtyard: { model: building('market', 'green') },
-  ring: { model: neutral('wall_corner_A_outside') },
+  ring: { model: building('archeryrange', 'yellow'), scale: 1.15 },
   tent: { model: prop('tent'), scale: 1.2 },
   mound: { model: nature('hill_single_A'), scale: 0.8 },
   arcade: { model: neutral('building_bridge_A') },

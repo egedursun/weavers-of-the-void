@@ -4,7 +4,7 @@ from fastapi import APIRouter, Path, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.api.dependencies import ServicesDep, reader
+from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.military_depth import (
     BattleCasualtyView,
     BattleDepthView,
@@ -33,13 +33,15 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.military import records
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
+from aerona.engine.vehicles.fleet import least_tier
+from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["military"])
 Id = Annotated[int, Path(ge=1)]
 GRIEF = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME, MemoryKind.HUMILIATED_ME)
 
 
-def frame_view(spec: FrameSpec) -> FrameSpecView:
+def frame_view(spec: FrameSpec, rules: Rules) -> FrameSpecView:
     return FrameSpecView(
         frame=spec.frame,
         label=spec.label,
@@ -72,7 +74,7 @@ def frame_view(spec: FrameSpec) -> FrameSpecView:
         armament=list(spec.armament),
         branch=spec.branch,
         level=spec.level,
-        tier=int(spec.tier),
+        tier=least_tier(rules, spec.size),
         sky=spec.sky,
         living=spec.living,
         strangeness=spec.strangeness,
@@ -167,8 +169,10 @@ async def battle_depth(services: ServicesDep, battle_id: Id) -> BattleDepthView:
 
 
 @router.get("/vehicles/frames", response_model=list[FrameSpecView])
-async def frames() -> list[FrameSpecView]:
-    return [frame_view(spec) for spec in FRAMES.values()]
+async def frames(services: ServicesDep) -> list[FrameSpecView]:
+    async with reader(services) as session:
+        rules = await world_rules(services, session)
+    return [frame_view(spec, rules) for spec in FRAMES.values()]
 
 
 @router.get("/entities/{entity_id}/vessel", response_model=VesselView)
@@ -192,7 +196,7 @@ async def vessel_card(services: ServicesDep, entity_id: Id) -> VesselView:
             region=refs.get(row.region_entity_id) if row.region_entity_id else None,
             fleet=refs.get(row.fleet_army_entity_id) if row.fleet_army_entity_id else None,
             legend=refs.get(row.legend_entity_id) if row.legend_entity_id else None,
-            frame=frame_view(FRAMES[row.frame]),
+            frame=frame_view(FRAMES[row.frame], await world_rules(services, session)),
             hull_material=row.hull_material,
             fabric_material=row.fabric_material,
             condition=row.condition,

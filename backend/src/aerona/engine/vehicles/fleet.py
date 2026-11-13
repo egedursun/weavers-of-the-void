@@ -12,8 +12,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.vehicles import VehicleGroupRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.entity import CivilizationTier
 from aerona.domain.enums.military import UnitKind
-from aerona.domain.enums.vehicles import VehicleDomain, VehicleFamily, VehicleFrame
+from aerona.domain.enums.vehicles import VehicleDomain, VehicleFamily, VehicleFrame, VehicleSize
 from aerona.engine.collective.designs import draw_design
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.tiers import tier_of
@@ -67,14 +68,29 @@ def fighting_worth(spec: FrameSpec) -> int:
     return spec.structure + spec.armour + len(spec.armament) * 20 + spec.speed // 2 + spec.troops // 4
 
 
-def opened(spec: FrameSpec, knowledge: KnowledgeMap, owner: EntityRow) -> bool:
+SIZE_ORDER = tuple(VehicleSize)
+
+
+def largest_size(rules: Rules, tier: int) -> int:
+    caps = rules.vehicles
+    return (caps.tribe_size, caps.city_state_size, caps.kingdom_size, caps.empire_size, caps.interstellar_size, caps.cosmic_size)[
+        min(max(tier, CivilizationTier.TRIBE), CivilizationTier.COSMIC_POWER)
+    ]
+
+
+def least_tier(rules: Rules, size: VehicleSize) -> int | None:
+    need = SIZE_ORDER.index(size)
+    return next((int(tier) for tier in CivilizationTier if largest_size(rules, tier) >= need), None)
+
+
+def opened(spec: FrameSpec, knowledge: KnowledgeMap, owner: EntityRow, rules: Rules) -> bool:
     if spec.branch is not None and knowledge.level(owner.id, spec.branch) < spec.level:
         return False
-    return tier_of(owner) >= spec.tier
+    return SIZE_ORDER.index(spec.size) <= largest_size(rules, tier_of(owner))
 
 
-def best_frame(knowledge: KnowledgeMap, owner: EntityRow, role: UnitKind) -> VehicleFrame | None:
-    found = [spec for spec in FRAMES.values() if fits(role, spec) and opened(spec, knowledge, owner)]
+def best_frame(knowledge: KnowledgeMap, owner: EntityRow, role: UnitKind, rules: Rules) -> VehicleFrame | None:
+    found = [spec for spec in FRAMES.values() if fits(role, spec) and opened(spec, knowledge, owner, rules)]
     return max(found, key=lambda spec: (fighting_worth(spec), spec.frame.value)).frame if found else None
 
 
@@ -83,7 +99,7 @@ async def role_design(ctx: TickContext, owner: EntityRow, role: UnitKind, knowle
     for design in await ctx.session.scalars(statement.order_by(DesignRow.epoch.desc(), DesignRow.id.desc())):
         if design.frame is not None and fits(role, FRAMES[design.frame]):
             return design
-    frame = best_frame(knowledge, owner, role)
+    frame = best_frame(knowledge, owner, role, ctx.rules)
     if frame is None or held(owner.id):
         return None
     return await draw_design(ctx, owner, frame, knowledge=knowledge)
