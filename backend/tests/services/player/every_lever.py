@@ -1807,7 +1807,10 @@ LEVERS: dict[str, Lever] = {
     "rift:open": Lever(values={"world_id": Pick("world"), "region_id": Pick(EntityType.REGION), "dimension_id": Newest("dimension")}, setup=heavens),
     **{name: setup_then(heavens, rift_id=Newest("rift")) for name in ("rift:edit", "rift:seal", "rift:delete")},
     "cosmic_being:call": given(kind="nebula_mind", world_id=Pick("world"), region_id=Pick(EntityType.REGION)),
-    **{name: setup_then(heavens, being_id=Newest(EntityType.COSMIC_BEING)) for name in ("cosmic_being:edit", "cosmic_being:bind", "cosmic_being:banish")},
+    **{
+        name: setup_then(heavens, being_id=Newest(EntityType.COSMIC_BEING))
+        for name in ("cosmic_being:edit", "cosmic_being:bind", "cosmic_being:banish", "cosmic_wound:strike")
+    },
     "phenomenon:create": given(kind="singing_stones", region_id=Pick(EntityType.REGION), intensity=40),
     **{name: setup_then(heavens, phenomenon_id=Newest(EntityType.PHENOMENON)) for name in ("phenomenon:edit", "phenomenon:contain")},
     "phenomenon:footprint": setup_then(heavens, phenomenon_id=Newest(EntityType.PHENOMENON), region_id=Pick(EntityType.REGION, 1), intensity=30),

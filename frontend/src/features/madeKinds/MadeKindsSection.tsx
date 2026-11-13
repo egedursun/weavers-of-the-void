@@ -1,17 +1,45 @@
-import { useState } from 'react'
-import { Hammer, Heart, Layers, Package, Truck, Utensils } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import {
+  Hammer,
+  Heart,
+  HeartPulse,
+  Layers,
+  Package,
+  Truck,
+  Utensils,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, LoadingBlock, Section } from '@/components/domain'
 import { useNodeKind } from '@/features/cycles/model'
+import { scrollToSection } from '@/features/entity/scrollToSection'
 import { StructureSectionsPanel, VesselSectionsPanel } from './IntegrityPanels'
 import { KitPanel } from './KitPanel'
 import { KitchenPanel, LeaningsPanel } from './LifePanels'
 import { OwnKindsPanel } from './OwnKindsPanel'
 import { VehiclesPanel } from './VehiclesPanel'
+import { WoundsPanel } from './WoundsPanel'
 import { type ThingKinds, useThingKinds, useWorldKinds } from './api'
 
-type Pane = 'vehicles' | 'kit' | 'kinds' | 'sections' | 'kitchen' | 'leanings'
+const PANES = [
+  'vehicles',
+  'kit',
+  'kinds',
+  'sections',
+  'kitchen',
+  'leanings',
+  'wounds',
+] as const
+
+type Pane = (typeof PANES)[number]
+
+const LINK = '#made-kinds-'
+
+function linkedPane(): Pane | null {
+  const hash = window.location.hash
+  if (!hash.startsWith(LINK)) return null
+  return PANES.find((pane) => pane === hash.slice(LINK.length)) ?? null
+}
 
 const COMMUNITIES = new Set(['settlement', 'people'])
 
@@ -70,6 +98,13 @@ function panes(
       icon: Heart,
       count: data.attraction.decline,
     })
+  if (data.being)
+    found.push({
+      key: 'wounds',
+      label: 'Wounds',
+      icon: HeartPulse,
+      count: data.being.wounds,
+    })
   return found
 }
 
@@ -83,13 +118,17 @@ export function MadeKindsSection({
   const query = useThingKinds(nodeId)
   const world = useWorldKinds(query.data?.world_id ?? null)
   const kind = useNodeKind(nodeId)
-  const [pane, setPane] = useState<Pane | null>(null)
+  const [pane, setPane] = useState<Pane | null>(linkedPane)
   const types = world.data
+  const loaded = query.isSuccess
+  useEffect(() => {
+    if (loaded && linkedPane() !== null) scrollToSection('section-made-kinds')
+  }, [loaded])
   return (
     <Section
       id='section-made-kinds'
       title='Vehicles, kit and made kinds'
-      description='The vehicles it holds with the damage to each of their sections, the weapons, armour and materiel it keeps or carries, and the named kinds it made: vehicle types, kinds of soldier, equipment models, dishes and building types. Structures and vessels show their sections, towns and peoples their kitchens, mortals their leanings and the state of their minds.'
+      description='The vehicles it holds with the damage to each of their sections, the weapons, armour and materiel it keeps or carries, and the named kinds it made: vehicle types, kinds of soldier, equipment models, dishes and building types. Structures and vessels show their sections, towns and peoples their kitchens, mortals their leanings and the state of their minds, cosmic and outer beings their wounds.'
       icon={Truck}
       tone='gold'
     >
@@ -170,6 +209,13 @@ export function MadeKindsSection({
                 nodeId={nodeId}
                 data={query.data}
                 dishes={types?.dishes ?? []}
+                blocked={readOnlyReason}
+              />
+            </TabsContent>
+            <TabsContent value='wounds'>
+              <WoundsPanel
+                nodeId={nodeId}
+                data={query.data}
                 blocked={readOnlyReason}
               />
             </TabsContent>

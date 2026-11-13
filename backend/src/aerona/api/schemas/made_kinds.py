@@ -383,6 +383,21 @@ class OwnKindsView(ApiModel):
     building_types: list[KindRef]
 
 
+class BeingWoundsView(ApiModel):
+    grown: bool
+    hp: int | None
+    hp_max: int | None
+    might: int | None
+    effective_might: int | None
+    vital: int | None
+    mobility: int | None
+    sight: int | None
+    roams: bool
+    sees: bool
+    wounds: int
+    held: bool
+
+
 class ThingKindsView(ApiModel):
     node: NodeRef
     world_id: int | None
@@ -395,4 +410,5 @@ class ThingKindsView(ApiModel):
     sections: list[StructureSectionView]
     megastructure: MegastructureView | None
     attraction: AttractionView | None
+    being: BeingWoundsView | None
     own: OwnKindsView

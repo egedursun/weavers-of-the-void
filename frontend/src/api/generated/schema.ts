@@ -29295,6 +29295,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/cosmic_wound:strike': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_wound_strike_api_actions_cosmic_wound_strike_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/structure_section:delete': {
     parameters: {
       query?: never
@@ -31352,6 +31368,20 @@ export interface components {
     BeingPhase:
       'dormant' | 'roaming' | 'manifest' | 'incursion' | 'bound' | 'banished'
     BeingScale: 'world' | 'system' | 'galaxy' | 'cluster' | 'dimension'
+    BeingWoundsView: {
+      grown: boolean
+      hp: number | null
+      hp_max: number | null
+      might: number | null
+      effective_might: number | null
+      vital: number | null
+      mobility: number | null
+      sight: number | null
+      roams: boolean
+      sees: boolean
+      wounds: number
+      held: boolean
+    }
     BeliefDeleteInput: {
       belief_id: number
     }
@@ -34037,6 +34067,11 @@ export interface components {
       neglect: number
       duty: number
       locked: string[]
+    }
+    CosmicWoundStrikeInput: {
+      being_id: number
+      force: number
+      reason: string
     }
     CosmographyCatalog: {
       galaxy_types: components['schemas']['KindRecord'][]
@@ -53442,6 +53477,7 @@ export interface components {
       sections: components['schemas']['StructureSectionView'][]
       megastructure: components['schemas']['MegastructureView'] | null
       attraction: components['schemas']['AttractionView'] | null
+      being: components['schemas']['BeingWoundsView'] | null
       own: components['schemas']['OwnKindsView']
     }
     ThingRecordColumnView: {
@@ -113469,6 +113505,37 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['StructureSectionStrikeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmic_wound_strike_api_actions_cosmic_wound_strike_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicWoundStrikeInput']
       }
     }
     responses: {

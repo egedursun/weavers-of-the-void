@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.made_kinds import (
     AttractionView,
+    BeingWoundsView,
     BuildingTypeView,
     CarriedView,
     CookingView,
@@ -43,8 +44,10 @@ from aerona.catalog.vehicles import FRAMES
 from aerona.catalog.vehicles import LAYOUTS as VEHICLE_LAYOUTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
+from aerona.db.tables.cosmography import CosmicBeingProfileRow
 from aerona.db.tables.cuisine import CommunityDishRow, DishIngredientRow, DishRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -55,12 +58,17 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.db.tables.vehicles import DesignMountRow, DesignSectionRow, DesignTechniqueRow, VehicleGroupRow, VehicleGroupSectionRow, VesselSectionRow
+from aerona.db.write_guard import held
+from aerona.domain.enums.body import InjuryState
 from aerona.domain.enums.integrity import Criticality, SectionState
 from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.node import NodeKind
 from aerona.engine.body.decline import decline_severity
+from aerona.engine.cosmos.being_wounds import VAST, can_roam, can_see, effective_might
+from aerona.engine.primitives.stats import stat
 from aerona.engine.vehicles.fleet import army_pace
 from aerona.engine.vehicles.groups import read
+from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["made_kinds"])
 NodeId = Annotated[int, Path(ge=1)]
@@ -646,6 +654,32 @@ async def attraction_view(session: AsyncSession, node_id: int) -> AttractionView
     )
 
 
+HEALED = (InjuryState.HEALED_SCAR,)
+
+
+async def being_view(session: AsyncSession, rules: Rules, entity: EntityRow | None) -> BeingWoundsView | None:
+    if entity is None or entity.entity_type not in VAST:
+        return None
+    body = await session.get(BodyRow, entity.id)
+    profile = await session.get(CosmicBeingProfileRow, entity.id)
+    table = rules.cosmic_wounds
+    open_wounds = await session.scalar(select(func.count()).select_from(InjuryRow).where(InjuryRow.bearer_node_id == entity.id, InjuryRow.state.not_in(HEALED)))
+    return BeingWoundsView(
+        grown=body is not None,
+        hp=stat(entity, "hp"),
+        hp_max=body.hp_max if body is not None else None,
+        might=profile.might if profile is not None else None,
+        effective_might=await effective_might(session, entity, profile.might) if profile is not None else None,
+        vital=body.vital if body is not None else None,
+        mobility=body.mobility if body is not None else None,
+        sight=body.sight if body is not None else None,
+        roams=await can_roam(session, table.roam_floor, entity),
+        sees=await can_see(session, table.sight_floor, entity),
+        wounds=int(open_wounds or 0),
+        held=held(entity.id),
+    )
+
+
 async def own_kinds(session: AsyncSession, node_id: int) -> OwnKindsView:
     vehicles = await session.scalars(select(DesignRow).where(DesignRow.origin_node_id == node_id).order_by(DesignRow.name))
     units = await session.scalars(select(UnitDesignRow).where(UnitDesignRow.origin_node_id == node_id).order_by(UnitDesignRow.name))
@@ -678,6 +712,7 @@ async def thing_kinds(services: ServicesDep, node_id: NodeId) -> ThingKindsView:
             else {}
         )
         sections, megastructure = await section_views(session, node_id)
+        rules = services.rules.current
         return ThingKindsView(
             node=refs[node_id],
             world_id=entity.world_id if entity is not None else None,
@@ -690,5 +725,6 @@ async def thing_kinds(services: ServicesDep, node_id: NodeId) -> ThingKindsView:
             sections=sections,
             megastructure=megastructure,
             attraction=await attraction_view(session, node_id),
+            being=await being_view(session, rules, entity),
             own=await own_kinds(session, node_id),
         )

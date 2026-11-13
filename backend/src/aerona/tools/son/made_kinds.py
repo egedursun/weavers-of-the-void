@@ -23,7 +23,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.domain.enums.vehicles import MountKind, VehicleFrame
 from aerona.engine.collective.designs import FULL_SIZE, draw_design, frame_sizes
-from aerona.engine.cosmos.being_wounds import VAST, wound_being
+from aerona.engine.cosmos.being_wounds import FORCE_MAX, VAST, wound_being
 from aerona.engine.cuisine.dishes import found_dish
 from aerona.engine.equipment.models import draw_model
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -44,7 +44,6 @@ Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 MOUNTS_MAX = 8
 INGREDIENTS_MAX = 4
 EMPHASIS = 2
-FORCE_MAX = 10
 
 
 class ShapeVehicleTypeInput(ToolInput):

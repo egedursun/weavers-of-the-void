@@ -3956,6 +3956,13 @@ MADE_KIND_ACTIONS = (
         ("S7.9",),
     ),
     _sync(
+        Meta("cosmic_wound:strike", "Strike a cosmic or outer being", G.BEYOND),
+        made_kinds.cosmic_wound_strike,
+        made_kinds.BeingStrike,
+        free,
+        ("S10.17",),
+    ),
+    _sync(
         Meta("structure_section:delete", "Take a section from a structure", G.ENTITIES),
         made_kinds.structure_section_delete,
         made_kinds.StructureSectionTarget,

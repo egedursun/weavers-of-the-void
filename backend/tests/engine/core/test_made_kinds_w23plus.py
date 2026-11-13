@@ -1,7 +1,9 @@
+import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.vehicles import FRAMES
+from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.culture import HolderTechniqueRow
@@ -26,7 +28,7 @@ from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.models.entity_stats import ArmyStats, CosmicBeingStats, PeopleStats, PolityStats
 from aerona.engine.body.decline import onset_chance
 from aerona.engine.collective.designs import draw_design
-from aerona.engine.cosmos.being_wounds import effective_might, wound_being
+from aerona.engine.cosmos.being_wounds import effective_might, strike, wound_being
 from aerona.engine.cuisine.dishes import dish_traits
 from aerona.engine.equipment.models import draw_model
 from aerona.engine.military.unit_types import draw_type
@@ -169,6 +171,19 @@ async def test_a_struck_cosmic_being_loses_might_through_its_body(session: Async
     body = await session.get(BodyRow, being.id)
     assert body is not None
     assert await effective_might(session, being, 60) < whole
+
+
+async def test_the_creator_strikes_a_vast_being_and_its_body_grows_and_its_might_falls(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "cosmic_wounds")
+    being = await entity(session, "The Far Shape", EntityType.COSMIC_BEING, CosmicBeingStats(size=80), world_id=world.world.id)
+    assert await session.get(BodyRow, being.id) is None
+    whole = await effective_might(session, being, 60)
+    await strike(ctx, being.id, 10, "struck by the Creator")
+    assert await session.get(BodyRow, being.id) is not None
+    assert await effective_might(session, being, 60) < whole
+    town = await settlement(session, "Hollin", world, world.regions[0])
+    with pytest.raises(ValidationFailedError):
+        await strike(ctx, town.id, 1, "struck by the Creator")
 
 
 async def test_an_old_mind_may_decline_unless_learning_holds_it(session: AsyncSession, world: CoreWorld) -> None:

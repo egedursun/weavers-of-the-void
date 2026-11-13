@@ -9,8 +9,10 @@ from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.structure import StructureSection
 from aerona.domain.enums.vehicles import MountKind, VehicleSection
+from aerona.engine.cosmos.being_wounds import FORCE_MAX, strike
 from aerona.engine.cuisine import control as cuisine
 from aerona.engine.equipment import control as equipment
+from aerona.engine.lifecycle.wounds import WoundOutcome
 from aerona.engine.mortal.attraction import set_attraction
 from aerona.engine.structures import control as structures
 from aerona.engine.vehicles import control as vehicles
@@ -150,6 +152,19 @@ class StructureSectionDraft(Edited):
 class StructureSectionTarget(Command):
     structure_id: int
     section: StructureSection
+
+
+STRUCK = {
+    WoundOutcome.IMMORTAL: "The blow lands, but nothing can kill it.",
+    WoundOutcome.WOUNDED: "The blow lands and the being is wounded.",
+    WoundOutcome.DIED: "The blow lands and the being falls.",
+}
+
+
+class BeingStrike(Command):
+    being_id: int
+    force: int = Field(default=1, ge=1, le=FORCE_MAX)
+    reason: str = Field(default="struck by the Creator", min_length=1, max_length=200)
 
 
 class StructureStrike(Command):
@@ -425,6 +440,12 @@ async def structure_section_repair(scope: PlayerScope, command: StructureSection
 async def structure_section_strike(scope: PlayerScope, command: StructureStrike) -> Effect:
     await structures.strike_section(await scope.context("structure_section_strike"), command.structure_id, command.section, command.damage)
     return Effect("The section is struck.", command.structure_id)
+
+
+@player_action("cosmic_wound:strike", ActionKind.EDIT_RECORD)
+async def cosmic_wound_strike(scope: PlayerScope, command: BeingStrike) -> Effect:
+    outcome = await strike(await scope.context("cosmic_wound_strike"), command.being_id, command.force, command.reason)
+    return Effect(STRUCK[outcome], command.being_id)
 
 
 @player_action("structure_section:delete", ActionKind.EDIT_RECORD)

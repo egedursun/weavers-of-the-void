@@ -148,6 +148,7 @@ const THING = {
   sections: [],
   megastructure: null,
   attraction: null,
+  being: null,
   own: {
     vehicle_types: [{ id: 5, name: 'Tall Wagon', family: 'Wagon' }],
     unit_types: [],
@@ -320,6 +321,40 @@ describe('made kinds', () => {
     expect(
       callsTo('POST', '/api/actions/vehicle_group:repair')[0].body
     ).toEqual({ group_id: 9, points: 100 })
+  })
+
+  it('opens the wounds of a cosmic being from its link and strikes it', async () => {
+    serveBase()
+    onApi('GET', '/api/made-kinds/thing/40', {
+      ...THING,
+      being: {
+        grown: true,
+        hp: 30,
+        hp_max: 100,
+        might: 60,
+        effective_might: 25,
+        vital: 40,
+        mobility: 20,
+        sight: 70,
+        roams: false,
+        sees: true,
+        wounds: 2,
+        held: false,
+      },
+    })
+    onApi('POST', '/api/actions/cosmic_wound:strike', ACCEPTED_ACTION)
+    window.history.replaceState(null, '', '#made-kinds-wounds')
+    const { screen } = await renderApp(<MadeKindsSection nodeId={40} />)
+    await expect.element(screen.getByText('Too hurt to roam')).toBeVisible()
+    await expect.element(screen.getByText('25 of 60')).toBeVisible()
+    await screen.getByRole('button', { name: 'Strike it' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/cosmic_wound:strike'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/cosmic_wound:strike')[0].body).toEqual(
+      { being_id: 40, force: 1 }
+    )
+    window.history.replaceState(null, '', '#')
   })
 
   it('opens a vehicle type in the atlas with its sections and takes one out', async () => {

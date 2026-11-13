@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -24,6 +25,7 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
 
 VAST = (EntityType.COSMIC_BEING, EntityType.OUTER_BEING)
+FORCE_MAX = 10
 REMAINS_PREFIX = "cosmic_wounds.remains."
 
 
@@ -59,6 +61,18 @@ async def wound_being(ctx: TickContext, being: EntityRow, damage: float, cause: 
     if wounding.outcome is WoundOutcome.DIED:
         await note(ctx, f"{being.name} was slain: {why}.", key="cosmic_wounds.slain", ids=[being.id], world_id=being.world_id, kind=ChronicleKind.MIRACLE)
     return wounding.outcome
+
+
+async def strike(ctx: TickContext, being_id: int, force: int, why: str) -> WoundOutcome:
+    being = await ctx.session.get(EntityRow, being_id)
+    if being is None:
+        raise NotFoundError("No such being.")
+    if being.entity_type not in VAST:
+        raise ValidationFailedError(f"{being.name} is no cosmic or outer being.")
+    outcome = await wound_being(ctx, being, ctx.rules.cosmic_wounds.strike_harm * force, HarmCause.GOD, why)
+    if outcome is None:
+        raise ValidationFailedError(f"{being.name} cannot be struck now.")
+    return outcome
 
 
 async def regrow(ctx: TickContext, being: EntityRow, tally: WoundTally) -> None:
