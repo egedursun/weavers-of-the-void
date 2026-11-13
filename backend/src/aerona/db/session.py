@@ -13,6 +13,7 @@ from aerona.db.fast_session import FastSession
 from aerona.db.flush_batch import install_flush_batching
 from aerona.db.inline_sqlite import inline_engine
 from aerona.db.read_memo import KEEP_KEY, forget_all
+from aerona.db.read_only import install_read_only_guard, mark_read_only
 
 
 class Database:
@@ -24,6 +25,7 @@ class Database:
         event.listen(self.engine.sync_engine, "connect", self._configure_connection)
         install_activity_capture()
         install_flush_batching()
+        install_read_only_guard()
 
     @staticmethod
     def _configure_connection(connection: Any, _record: Any) -> None:
@@ -38,6 +40,7 @@ class Database:
     @asynccontextmanager
     async def read(self) -> AsyncIterator[AsyncSession]:
         async with self._sessions() as session:
+            mark_read_only(session)
             yield session
 
     @asynccontextmanager

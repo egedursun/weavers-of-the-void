@@ -21,6 +21,7 @@ from aerona.agents.runtime import AgentRuntime
 from aerona.agents.turns.session import SessionStatus, TurnOutcome
 from aerona.agents.turns.state import begin_turn, finish_turn, save_turn, turn_row
 from aerona.core.random import SeededRandom
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.session import Database
 from aerona.db.tables.celestial import WorldRow
@@ -187,9 +188,9 @@ async def test_candidates_mark_forced_and_exclude_those_who_already_acted(databa
         acted = await session.get(EntityRow, world.core.extra["town"].id)
         assert acted is not None
         acted.last_acted_epoch = 5
+        (await CosmosRepository(session).require_cosmos()).epoch = 5
     async with database.read() as session:
         scope = await load_scope(session, rules)
-        scope.cosmos.epoch = 5
         found = {candidate.entity.id: candidate for candidate in await candidates(scope)}
     assert found[world.creation.id].forced
     assert world.core.extra["town"].id not in found

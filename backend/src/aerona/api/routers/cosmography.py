@@ -88,6 +88,7 @@ from aerona.engine.cosmos.kinds import (
 )
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.phases.doom import dominant_variant, doom_items
+from aerona.engine.phases.world_age import age_of, read_world_age
 from aerona.engine.primitives.knowledge import laws_of_dimension
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import canon, flags_by_entity
@@ -318,7 +319,8 @@ async def cosmography(services: ServicesDep) -> CosmographyView:
                     pull=PullRecord(**{key: value for key, value in asdict(pull).items() if key != "minerals"}),
                 )
             )
-        likely = dominant_variant(rules, await doom_items(await manual_context(session, "cosmography_view", rules), epoch + 1))
+        view = await manual_context(session, "cosmography_view", rules)
+        likely = dominant_variant(rules, await doom_items(view, age_of(await read_world_age(view, epoch + 1))))
         return CosmographyView(
             epoch=epoch,
             dimensions=[DimensionRecord.model_validate(row) for row in ladder.dimensions.values()],

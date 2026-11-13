@@ -1,4 +1,11 @@
-import { type ReactNode, useId } from 'react'
+import {
+  type ReactNode,
+  type Ref,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { Crosshair, HeartCrack, type LucideIcon, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -71,6 +78,7 @@ const BADGE = 10
 const MOUNT_RADIUS = 7
 const ARROW = 7
 const PILL_FONT = 9.5
+const PILL_HEIGHT = 18
 const PILL_ROOM = 440
 const SKINS: ReadonlySet<string> = new Set([
   'armour_plating',
@@ -188,11 +196,19 @@ function lay(parts: DiagramPart[], hold: Hold): Box[] {
   })
 }
 
-function Defs({ ids, body }: { ids: Ids; body: string }) {
+function Defs({
+  ids,
+  body,
+  fill,
+}: {
+  ids: Ids
+  body: string
+  fill: 'evenodd' | 'nonzero'
+}) {
   return (
     <defs>
       <clipPath id={ids.clip}>
-        <path d={body} clipRule='evenodd' />
+        <path d={body} clipRule={fill} />
       </clipPath>
       <pattern
         id={ids.hatch}
@@ -214,20 +230,14 @@ function Defs({ ids, body }: { ids: Ids; body: string }) {
         <stop
           offset={0}
           stopColor='currentColor'
-          stopOpacity={0.35}
-          className='text-primary'
-        />
-        <stop
-          offset={0.5}
-          stopColor='currentColor'
-          stopOpacity={0.95}
-          className='text-card'
+          stopOpacity={0.3}
+          className='text-muted-foreground'
         />
         <stop
           offset={1}
           stopColor='currentColor'
-          stopOpacity={1}
-          className='text-muted'
+          stopOpacity={0.08}
+          className='text-muted-foreground'
         />
       </linearGradient>
       <filter id={ids.glow} x='-50%' y='-50%' width='200%' height='200%'>
@@ -389,8 +399,19 @@ function Paint({
         strokeDasharray={part.state === 'destroyed' ? '4 4' : undefined}
       />
     )
+  if (mark.solid)
+    return (
+      <Merged
+        d={mark.d}
+        fill={`url(#${ids.cells[part.state]})`}
+        stroke={STATE_STROKE[part.state]}
+        width={part.criticality === 'critical' ? 2 : 1.3}
+        hatch={part.state === 'destroyed' ? ids.hatch : null}
+      />
+    )
   return (
     <>
+      <path d={mark.d} className='fill-background' />
       <path
         d={mark.d}
         fill={`url(#${ids.cells[part.state]})`}
@@ -402,6 +423,36 @@ function Paint({
       {part.state === 'destroyed' && (
         <path d={mark.d} fill={`url(#${ids.hatch})`} />
       )}
+    </>
+  )
+}
+
+function Merged({
+  d,
+  fill,
+  stroke,
+  width,
+  hatch,
+  shellRef,
+}: {
+  d: string
+  fill: string
+  stroke: string
+  width: number
+  hatch: string | null
+  shellRef?: Ref<SVGPathElement>
+}) {
+  return (
+    <>
+      <path
+        d={d}
+        className={cn('fill-none', stroke)}
+        strokeWidth={width * 2}
+        strokeLinejoin='round'
+      />
+      <path ref={shellRef} d={d} className='fill-background' />
+      <path d={d} fill={fill} />
+      {hatch && <path d={d} fill={`url(#${hatch})`} />}
     </>
   )
 }
@@ -430,10 +481,10 @@ function Pill({ x, y, part }: { x: number; y: number; part: DiagramPart }) {
     <g aria-hidden='true'>
       <rect
         x={x - width / 2}
-        y={y - 9}
+        y={y - PILL_HEIGHT / 2}
         width={width}
-        height={18}
-        rx={9}
+        height={PILL_HEIGHT}
+        rx={PILL_HEIGHT / 2}
         className={cn('fill-background/90', STATE_STROKE[part.state])}
         strokeWidth={1}
       />
@@ -716,6 +767,46 @@ function Legend({ parts, mounts }: { parts: DiagramPart[]; mounts: number }) {
   )
 }
 
+type Placed = { part: DiagramPart; order: number; x: number; y: number }
+
+function pillWidth(part: DiagramPart): number {
+  return sectionLabel(part.key).length * PILL_FONT * GLYPH + 14
+}
+
+function placePills(
+  items: { feature: Feature; part: DiagramPart; order: number }[]
+): Placed[] {
+  const placed: (Placed & { w: number })[] = []
+  const clashes = (x: number, y: number, w: number) =>
+    placed.some(
+      (other) =>
+        Math.abs(other.x - x) < (other.w + w) / 2 + 4 &&
+        Math.abs(other.y - y) < PILL_HEIGHT + 3
+    )
+  const steps = [0, -1, 1, -2, 2, -3, 3]
+  for (const { feature, part, order } of items) {
+    const w = pillWidth(part)
+    const fit = (x: number) =>
+      Math.min(CANVAS.width - w / 2, Math.max(w / 2, x))
+    const room = (y: number) =>
+      Math.min(CANVAS.height - PILL_HEIGHT / 2, Math.max(PILL_HEIGHT / 2, y))
+    const spots = steps.flatMap((row) =>
+      [0, w * 0.6, -w * 0.6].map(
+        (shift) =>
+          [
+            fit(feature.label[0] + shift),
+            room(feature.label[1] + row * (PILL_HEIGHT + 4)),
+          ] as const
+      )
+    )
+    const [x, y] =
+      spots.find(([px, py]) => !clashes(px, py, w)) ??
+      ([fit(feature.label[0]), room(feature.label[1])] as const)
+    placed.push({ part, order, x, y, w })
+  }
+  return placed
+}
+
 function claim(blueprint: Blueprint, parts: DiagramPart[]) {
   const byKey = new Map(parts.map((part) => [part.key, part]))
   const pick = (keys: readonly string[]) =>
@@ -730,7 +821,11 @@ function claim(blueprint: Blueprint, parts: DiagramPart[]) {
     ...(body ? [body.key] : []),
   ])
   const loose = parts.filter((part) => !taken.has(part.key))
+  const claimed = new Set(features.map(({ feature }) => feature))
   return {
+    ghosts: blueprint.features.filter(
+      (feature) => feature.shape && !claimed.has(feature)
+    ),
     features,
     body,
     skins: loose.filter((part) => SKINS.has(part.key)),
@@ -757,14 +852,22 @@ function Skin({ part, body }: { part: DiagramPart; body: string }) {
   )
 }
 
-function Aura({ part, ring }: { part: DiagramPart; ring: number }) {
+function Aura({
+  part,
+  ring,
+  bounds,
+}: {
+  part: DiagramPart
+  ring: number
+  bounds: Hold
+}) {
   return (
     <Hint part={part}>
       <ellipse
-        cx={CANVAS.width / 2}
-        cy={CANVAS.height / 2}
-        rx={CANVAS.width / 2 - 6 - ring * 10}
-        ry={CANVAS.height / 2 - 6 - ring * 10}
+        cx={bounds.x + bounds.w / 2}
+        cy={bounds.y + bounds.h / 2}
+        rx={bounds.w / 2 + 22 + ring * 10}
+        ry={bounds.h / 2 + 22 + ring * 10}
         className={cn('fill-none', STATE_STROKE[part.state])}
         strokeWidth={1.6}
         strokeDasharray='2 6'
@@ -820,7 +923,16 @@ export function IntegrityDiagram({
   }
   const [measure, room] = useWidth()
   const blueprint = BLUEPRINTS[shape]
-  const { features, body, skins, auras, inside } = claim(blueprint, parts)
+  const shellRef = useRef<SVGPathElement>(null)
+  const [bounds, setBounds] = useState<Hold | null>(null)
+  useLayoutEffect(() => {
+    const box = shellRef.current?.getBBox()
+    if (box) setBounds({ x: box.x, y: box.y, w: box.width, h: box.height })
+  }, [blueprint.body])
+  const { ghosts, features, body, skins, auras, inside } = claim(
+    blueprint,
+    parts
+  )
   const ordered = [...inside].sort(
     (left, right) =>
       ZONE_ORDER.indexOf(zoneOf(left.key)) -
@@ -848,17 +960,44 @@ export function IntegrityDiagram({
     }
   }
   const back = features.filter(({ feature }) => feature.back)
-  const front = features.filter(({ feature }) => !feature.back)
-  const shell = (
-    <path
-      d={blueprint.body}
-      fillRule='evenodd'
-      fill={body ? `url(#${ids.cells[body.state]})` : `url(#${ids.surface})`}
-      className={body ? STATE_STROKE[body.state] : 'stroke-primary/60'}
-      strokeWidth={body?.criticality === 'critical' ? 2.4 : 1.6}
-      strokeLinejoin='round'
-    />
-  )
+  const front = features
+    .filter(({ feature }) => !feature.back)
+    .sort(
+      (left, right) =>
+        Number(left.feature.marks.every((mark) => mark.line)) -
+        Number(right.feature.marks.every((mark) => mark.line))
+    )
+  const fill = blueprint.fill ?? 'evenodd'
+  const shellFill = body
+    ? `url(#${ids.cells[body.state]})`
+    : `url(#${ids.surface})`
+  const shellStroke = body
+    ? STATE_STROKE[body.state]
+    : 'stroke-muted-foreground/70'
+  const shellWidth = body?.criticality === 'critical' ? 2.4 : 1.6
+  const shell =
+    fill === 'nonzero' ? (
+      <g>
+        <Merged
+          d={blueprint.body}
+          fill={shellFill}
+          stroke={shellStroke}
+          width={shellWidth}
+          hatch={body?.state === 'destroyed' ? ids.hatch : null}
+          shellRef={shellRef}
+        />
+      </g>
+    ) : (
+      <path
+        ref={shellRef}
+        d={blueprint.body}
+        fillRule={fill}
+        fill={shellFill}
+        className={shellStroke}
+        strokeWidth={shellWidth}
+        strokeLinejoin='round'
+      />
+    )
   return (
     <div ref={measure} className='flex min-w-0 flex-col gap-3'>
       <svg
@@ -867,9 +1006,16 @@ export function IntegrityDiagram({
         viewBox={`${-MARGIN} ${-MARGIN} ${CANVAS.width + MARGIN * 2} ${CANVAS.height + MARGIN * 2}`}
         className='h-auto w-full max-w-3xl self-center'
       >
-        <Defs ids={ids} body={blueprint.body} />
+        <Defs
+          ids={ids}
+          body={blueprint.body}
+          fill={blueprint.fill ?? 'evenodd'}
+        />
         <Backdrop setting={blueprint.setting} ids={ids} />
-        {blueprint.decor?.map((mark, index) => (
+        {[
+          ...(blueprint.decor ?? []),
+          ...ghosts.flatMap((feature) => feature.marks),
+        ].map((mark, index) => (
           <path
             key={index}
             d={mark.d}
@@ -885,9 +1031,10 @@ export function IntegrityDiagram({
         {back.map(({ feature, part, order }) => (
           <FeatureMark key={order} feature={feature} part={part} ids={ids} />
         ))}
-        {auras.map((part, index) => (
-          <Aura key={part.key} part={part} ring={index} />
-        ))}
+        {bounds &&
+          auras.map((part, index) => (
+            <Aura key={part.key} part={part} ring={index} bounds={bounds} />
+          ))}
         {body ? <Hint part={body}>{shell}</Hint> : shell}
         <g clipPath={`url(#${ids.clip})`}>
           {boxes.map((box) => (
@@ -904,20 +1051,15 @@ export function IntegrityDiagram({
         ))}
         {blueprint.setting === 'water' && <Waves />}
         {pills &&
-          features
-            .filter(
+          placePills(
+            features.filter(
               (item, index) =>
                 features.findIndex(({ part }) => part.key === item.part.key) ===
                 index
             )
-            .map(({ feature, part, order }) => (
-              <Pill
-                key={order}
-                x={feature.label[0]}
-                y={feature.label[1]}
-                part={part}
-              />
-            ))}
+          ).map(({ part, order, x, y }) => (
+            <Pill key={order} x={x} y={y} part={part} />
+          ))}
         {mounts.map((mount) => {
           const at = spread(mount)
           return <MountMark key={mount.key} mount={mount} x={at.x} y={at.y} />

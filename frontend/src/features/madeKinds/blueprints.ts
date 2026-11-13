@@ -5,7 +5,12 @@ type BuildingForm = components['schemas']['BuildingForm']
 
 export const CANVAS = { width: 560, height: 280 } as const
 
-export type Mark = { d: string; line?: number; neutral?: boolean }
+export type Mark = {
+  d: string
+  line?: number
+  neutral?: boolean
+  solid?: boolean
+}
 
 export type Feature = {
   keys: readonly string[]
@@ -13,6 +18,7 @@ export type Feature = {
   at: readonly [number, number]
   label: readonly [number, number]
   back?: boolean
+  shape?: boolean
 }
 
 export type Hold = { x: number; y: number; w: number; h: number }
@@ -26,6 +32,7 @@ export type Blueprint = {
   features: readonly Feature[]
   setting: Setting
   decor?: readonly Mark[]
+  fill?: 'evenodd' | 'nonzero'
 }
 
 function circle(cx: number, cy: number, r: number): string {
@@ -56,6 +63,10 @@ function wheels(radius: number, y: number, ...xs: number[]): Mark[] {
   return xs.flatMap((x) => wheel(x, y, radius))
 }
 
+function shaped(item: Feature): Feature {
+  return { ...item, shape: true }
+}
+
 function feature(
   keys: readonly string[],
   at: readonly [number, number],
@@ -66,10 +77,22 @@ function feature(
   return { keys, at, label, marks, back }
 }
 
-const QUADRUPED =
-  'M 108 32 C 114 34 118 42 117 56 L 113 62 L 112 108 L 104 108 L 101 72 L 97 72 L 95 108 L 87 108 L 86 66 Q 66 72 48 66 L 46 108 L 38 108 L 37 70 L 33 70 L 31 108 L 23 108 L 24 60 Q 20 50 21 40 L 13 31 L 4 33 Q -1 30 1 23 L 11 7 L 14 0 L 18 5 Q 28 12 33 22 Q 60 27 86 27 Q 102 27 108 32 Z'
+function leg(x: number, hock: boolean): string {
+  return hock
+    ? `M ${x} 54 L ${x + 11} 54 L ${x + 12} 76 L ${x + 8} 90 L ${x + 9} 108 L ${x + 1} 108 L ${x + 1} 90 L ${x + 3} 76 Z`
+    : `M ${x} 54 L ${x + 10} 54 L ${x + 9} 88 L ${x + 10} 108 L ${x + 1} 108 L ${x + 1} 88 Z`
+}
 
-const QUADRUPED_TAIL = 'M 117 40 Q 126 56 121 78'
+const QUADRUPED = [
+  'M 32 42 C 32 28 46 24 62 25 L 90 25 C 108 25 118 32 118 45 C 118 58 108 64 92 64 L 54 64 C 40 64 32 56 32 42 Z',
+  'M 40 54 C 28 46 20 36 14 29 L 7 31 C 2 31 0 27 2 23 C 5 16 13 9 19 7 L 24 1 L 26 9 C 32 16 40 24 46 32 Z',
+  leg(36, false),
+  leg(49, false),
+  leg(94, true),
+  leg(106, true),
+].join(' ')
+
+const QUADRUPED_TAIL = 'M 117 40 C 126 50 126 66 120 82'
 
 type Pose = {
   x: number
@@ -97,14 +120,14 @@ function place(path: string, pose: Pose): string {
   })
 }
 
-function draft(x: number, ground: number, scale = 1): Pose {
+function draft(x: number, ground: number, scale = 1.15): Pose {
   return { x, ground, sx: scale, sy: scale }
 }
 
 function team(...poses: Pose[]): Mark[] {
   return poses.flatMap((pose) => [
-    { d: place(QUADRUPED, pose) },
     { d: place(QUADRUPED_TAIL, pose), line: 3 * pose.sx },
+    { d: place(QUADRUPED, pose), solid: true },
   ])
 }
 
@@ -132,13 +155,13 @@ function drafted(pose: Pose, toX: number, toY: number): Feature[] {
   ]
 }
 
-const RIDER: Pose = { x: 154, ground: 256, sx: 2.1, sy: 2.1, right: true }
-const BEARER: Pose = { x: 148, ground: 256, sx: 2.2, sy: 2, right: true }
-const HAULER: Pose = { x: 106, ground: 256, sx: 2.9, sy: 1.75, right: true }
+const RIDER: Pose = { x: 150, ground: 258, sx: 2.15, sy: 2.1, right: true }
+const BEARER: Pose = { x: 146, ground: 258, sx: 2.25, sy: 2, right: true }
+const HAULER: Pose = { x: 104, ground: 258, sx: 2.9, sy: 1.8, right: true }
 
 function torso(pose: Pose): Hold {
-  const [left, top] = spot(pose, 104, 34)
-  const [right, bottom] = spot(pose, 40, 62)
+  const [left, top] = spot(pose, 108, 30)
+  const [right, bottom] = spot(pose, 42, 60)
   const x = Math.min(left, right)
   return { x, y: top, w: Math.abs(right - left), h: bottom - top }
 }
@@ -153,7 +176,7 @@ function barding(pose: Pose): Feature {
   return feature(['barding'], spot(pose, 66, 68), spot(pose, 66, 84), [
     {
       d: place(
-        'M 26 42 L 26 62 Q 40 74 54 68 Q 66 76 80 70 Q 94 78 106 68 L 106 40',
+        'M 34 44 L 34 60 Q 46 70 58 64 Q 70 72 82 66 Q 94 72 110 60 L 114 44',
         pose
       ),
       line: 2.6,
@@ -165,6 +188,7 @@ function beast(pose: Pose, features: readonly Feature[]): Blueprint {
   return {
     setting: 'ground',
     body: place(QUADRUPED, pose),
+    fill: 'nonzero',
     bodyKeys: ['mount_body'],
     hold: torso(pose),
     features,
@@ -177,11 +201,11 @@ const RIDING = beast(RIDER, [
   feature(['saddle'], spot(RIDER, 72, 24), spot(RIDER, 72, 6), [
     {
       d: place(
-        'M 56 28 Q 58 19 68 20 L 84 22 Q 91 23 91 28 L 91 34 L 56 34 Z',
+        'M 58 27 C 60 19 70 19 74 21 L 86 23 C 92 24 92 28 92 30 L 92 35 L 58 35 Z',
         RIDER
       ),
     },
-    { d: place('M 72 34 L 72 64', RIDER), line: 2, neutral: true },
+    { d: place('M 74 35 L 74 62', RIDER), line: 2, neutral: true },
   ]),
   bridle(RIDER),
 ])
@@ -279,10 +303,7 @@ const HANDCART: Blueprint = {
       ['harness'],
       [150, 170],
       [130, 150],
-      [
-        { d: 'M 230 160 L 96 186 M 86 186 H 110', line: 5 },
-        { d: 'M 96 186 L 96 252', line: 3, neutral: true },
-      ]
+      [{ d: 'M 230 160 L 96 186 M 86 186 H 110', line: 5 }]
     ),
     feature(['wheels', 'axle'], [320, 220], [320, 266], wheel(320, 220, 34)),
   ],
@@ -354,14 +375,7 @@ function wagon(
 const WAGON = wagon(
   rect(176, 128, 300, 72),
   { x: 184, y: 134, w: 284, h: 60 },
-  [
-    feature(
-      ['armour_plating'],
-      [326, 128],
-      [326, 112],
-      [{ d: rect(172, 122, 308, 10) }]
-    ),
-  ],
+  [],
   [220, 432]
 )
 
@@ -382,12 +396,6 @@ const COVERED = wagon(
         },
       ]
     ),
-    feature(
-      ['armour_plating'],
-      [326, 202],
-      [326, 212],
-      [{ d: rect(172, 196, 308, 8) }]
-    ),
   ],
   [220, 432]
 )
@@ -402,12 +410,6 @@ const CARRIAGE = wagon(
       [326, 62],
       [{ d: rect(220, 92, 80, 34) }, { d: rect(352, 92, 80, 34) }]
     ),
-    feature(
-      ['armour_plating'],
-      [326, 186],
-      [326, 200],
-      [{ d: 'M 190 186 H 462', line: 6 }]
-    ),
   ],
   [230, 430],
   34
@@ -416,26 +418,12 @@ const CARRIAGE = wagon(
 const WAR_WAGON = wagon(
   'M 176 200 L 176 104 L 200 88 L 452 88 L 476 104 L 476 200 Z',
   { x: 184, y: 108, w: 284, h: 86 },
-  [
-    feature(
-      ['armour_plating'],
-      [326, 96],
-      [326, 66],
-      [
-        { d: 'M 176 104 L 200 88 L 452 88 L 476 104', line: 7 },
-        {
-          d: 'M 214 120 H 242 M 282 120 H 310 M 350 120 H 378 M 418 120 H 446',
-          line: 4,
-          neutral: true,
-        },
-      ]
-    ),
-  ],
+  [],
   [220, 432]
 )
 
-const CHARIOT_NEAR = draft(46, 270, 1.04)
-const CHARIOT_FAR = draft(20, 264, 0.96)
+const CHARIOT_NEAR = draft(52, 270, 1.12)
+const CHARIOT_FAR = draft(20, 262, 1.04)
 
 const CHARIOT: Blueprint = {
   setting: 'ground',
@@ -457,15 +445,9 @@ const CHARIOT: Blueprint = {
     ),
     feature(
       ['platform'],
-      [310, 112],
-      [310, 98],
-      [{ d: rect(236, 108, 150, 12) }]
-    ),
-    feature(
-      ['armour_plating'],
-      [234, 160],
-      [204, 112],
-      [{ d: 'M 240 120 Q 222 160 228 200', line: 6 }]
+      [306, 196],
+      [420, 214],
+      [{ d: rect(226, 192, 158, 9) }]
     ),
     feature(
       ['axle'],
@@ -526,12 +508,6 @@ const CAR = motor(
       [400, 76],
       [{ d: rect(280, 88, 40, 12) }, { d: rect(318, 92, 50, 4) }]
     ),
-    feature(
-      ['armour_plating'],
-      [300, 196],
-      [300, 186],
-      [{ d: 'M 70 196 H 514', line: 6 }]
-    ),
   ],
   [150, 436]
 )
@@ -553,12 +529,6 @@ const TRUCK = motor(
       [{ d: 'M 74 160 L 74 144 Q 76 134 92 134 L 140 134 L 140 160 Z' }]
     ),
     feature(['engine'], [70, 182], [40, 230], [{ d: rect(60, 168, 44, 30) }]),
-    feature(
-      ['armour_plating'],
-      [300, 200],
-      [300, 190],
-      [{ d: 'M 60 198 H 520', line: 6 }]
-    ),
   ],
   [110, 370, 450]
 )
@@ -630,12 +600,6 @@ const ARMOURED = motor(
         { d: 'M 252 126 L 262 100 L 338 100 L 348 126 Z' },
         { d: rect(338, 106, 80, 8) },
       ]
-    ),
-    feature(
-      ['armour_plating'],
-      [96, 160],
-      [70, 120],
-      [{ d: 'M 70 200 L 92 140 L 180 126', line: 7 }]
     ),
     feature(
       ['steering'],
@@ -758,12 +722,6 @@ const TANK = tracked(
       [190, 92],
       [{ d: rect(250, 92, 26, 10) }]
     ),
-    feature(
-      ['armour_plating'],
-      [92, 150],
-      [70, 130],
-      [{ d: 'M 76 166 L 108 134', line: 7 }]
-    ),
   ]
 )
 
@@ -778,12 +736,6 @@ const CRAWLER = tracked(
       [{ d: 'M 296 70 L 306 50 H 374 L 384 70 Z' }, { d: rect(380, 56, 90, 8) }]
     ),
     feature(['cockpit'], [140, 60], [140, 36], [{ d: rect(104, 50, 90, 20) }]),
-    feature(
-      ['armour_plating'],
-      [290, 70],
-      [290, 54],
-      [{ d: rect(86, 64, 408, 8) }]
-    ),
   ]
 )
 
@@ -802,12 +754,6 @@ const AMPHIBIAN = tracked(
       [300, 110],
       [300, 92],
       [{ d: 'M 260 126 L 270 106 H 330 L 340 126 Z' }]
-    ),
-    feature(
-      ['armour_plating'],
-      [80, 150],
-      [60, 120],
-      [{ d: 'M 60 160 Q 70 128 120 126', line: 7 }]
     ),
   ]
 )
@@ -830,12 +776,6 @@ const HOVER_TANK = tracked(
         { d: 'M 230 130 L 250 98 L 356 98 L 376 130 Z' },
         { d: rect(356, 106, 140, 8) },
       ]
-    ),
-    feature(
-      ['armour_plating'],
-      [92, 150],
-      [70, 130],
-      [{ d: 'M 76 170 L 108 130', line: 7 }]
     ),
   ],
   true
@@ -860,12 +800,6 @@ const LOCOMOTIVE: Blueprint = {
       [{ d: rect(396, 102, 70, 26) }]
     ),
     feature(
-      ['armour_plating'],
-      [70, 210],
-      [44, 190],
-      [{ d: 'M 84 196 L 54 220 L 84 220 Z' }]
-    ),
-    feature(
       ['wheels'],
       [200, 216],
       [200, 264],
@@ -879,13 +813,13 @@ const RAIL_CAR: Blueprint = {
   setting: 'ground',
   body: rect(90, 96, 400, 104),
   bodyKeys: ['chassis', 'frame', 'hull'],
-  hold: { x: 98, y: 104, w: 384, h: 88 },
+  hold: { x: 168, y: 104, w: 314, h: 88 },
   features: [
     feature(
       ['cockpit'],
       [130, 110],
       [130, 80],
-      [{ d: rect(100, 104, 60, 30) }]
+      [{ d: rect(100, 110, 60, 34) }]
     ),
     feature(['engine'], [290, 86], [290, 66], [{ d: rect(240, 82, 100, 14) }]),
     feature(
@@ -920,6 +854,23 @@ const MINE_TRAIN: Blueprint = {
   decor: [{ d: 'M 30 236 H 540', line: 3 }],
 }
 
+function stilt(x: number, top: number, bottom: number, lean: number): Mark[] {
+  const knee = top + (bottom - top) * 0.48
+  const kneeX = x + lean
+  return [
+    {
+      d: `M ${x - 11} ${top} L ${x + 11} ${top} L ${kneeX + 9} ${knee} L ${kneeX - 9} ${knee} Z`,
+    },
+    {
+      d: `M ${kneeX - 9} ${knee} L ${kneeX + 9} ${knee} L ${x + 8} ${bottom - 6} L ${x - 8} ${bottom - 6} Z`,
+    },
+    {
+      d: `M ${x - 18} ${bottom - 6} L ${x + 18} ${bottom - 6} L ${x + 22} ${bottom} L ${x - 22} ${bottom} Z`,
+    },
+    { d: circle(kneeX, knee, 7), neutral: true },
+  ]
+}
+
 function walker(
   armKeys: readonly string[] | null,
   extra: readonly Feature[]
@@ -947,10 +898,16 @@ function walker(
             feature(
               armKeys,
               [150, 120],
-              [110, 98],
+              [120, 92],
               [
-                { d: 'M 174 92 L 140 120 L 150 170', line: 12 },
-                { d: 'M 386 92 L 420 120 L 410 170', line: 12 },
+                {
+                  d: 'M 176 88 L 150 96 L 136 132 L 146 136 L 160 104 L 176 100 Z',
+                },
+                { d: 'M 136 132 L 130 160 L 142 166 L 146 136 Z' },
+                {
+                  d: 'M 384 88 L 410 96 L 424 132 L 414 136 L 400 104 L 384 100 Z',
+                },
+                { d: 'M 424 132 L 430 160 L 418 166 L 414 136 Z' },
               ]
             ),
           ]
@@ -964,12 +921,9 @@ function walker(
       ...extra,
       feature(
         ['legs'],
-        [240, 220],
-        [240, 266],
-        [
-          { d: 'M 228 178 L 204 222 L 226 260 H 252', line: 14 },
-          { d: 'M 332 178 L 356 222 L 334 260 H 308', line: 14 },
-        ]
+        [226, 220],
+        [170, 250],
+        [...stilt(226, 176, 258, -14), ...stilt(334, 176, 258, 14)]
       ),
     ],
   }
@@ -981,15 +935,14 @@ const FLYING_CONSTRUCT: Blueprint = {
   ...walker(
     ['arm'],
     [
-      feature(
-        ['wings'],
-        [120, 60],
-        [80, 40],
-        [
-          { d: 'M 180 80 L 60 30 L 90 110 Z' },
-          { d: 'M 380 80 L 500 30 L 470 110 Z' },
-        ],
-        true
+      shaped(
+        feature(
+          ['wings'],
+          [120, 60],
+          [80, 40],
+          [...wing(178, 96, -1, 130, 70), ...wing(382, 96, 1, 130, 70)],
+          true
+        )
       ),
     ]
   ),
@@ -1030,13 +983,13 @@ const CARRIER_CONSTRUCT: Blueprint = {
     ),
     feature(
       ['legs'],
-      [180, 222],
-      [180, 266],
+      [150, 222],
+      [100, 236],
       [
-        { d: 'M 150 190 L 136 226 L 150 256', line: 12 },
-        { d: 'M 230 190 L 216 226 L 230 256', line: 12 },
-        { d: 'M 340 190 L 354 226 L 340 256', line: 12 },
-        { d: 'M 410 190 L 424 226 L 410 256', line: 12 },
+        ...stilt(150, 190, 258, -10),
+        ...stilt(220, 190, 258, -10),
+        ...stilt(340, 190, 258, 10),
+        ...stilt(410, 190, 258, 10),
       ]
     ),
   ],
@@ -1098,12 +1051,6 @@ const SIEGE_TOWER: Blueprint = {
           d: 'M 206 46 V 30 H 220 V 38 H 236 V 30 H 252 V 38 H 268 V 30 H 284 V 38 H 300 V 30 H 316 V 38 H 332 V 30 H 348 V 38 H 362 V 46 Z',
         },
       ]
-    ),
-    feature(
-      ['armour_plating'],
-      [210, 120],
-      [176, 120],
-      [{ d: rect(206, 46, 8, 156) }, { d: rect(354, 46, 8, 156) }]
     ),
     feature(['wheels'], [240, 220], [240, 266], wheels(20, 220, 238, 330)),
   ],
@@ -1185,42 +1132,48 @@ const BALLISTA: Blueprint = {
   ],
 }
 
-function gun(barrel: string, extra: readonly Feature[] = []): Blueprint {
+function gun(
+  barrel: string,
+  label: readonly [number, number],
+  extra: readonly Feature[] = []
+): Blueprint {
   return {
     setting: 'ground',
     body: 'M 150 176 L 380 150 L 402 196 L 166 204 Z',
     bodyKeys: ['chassis', 'frame'],
     hold: { x: 170, y: 160, w: 220, h: 38 },
     features: [
-      feature(
-        ['hardpoint'],
-        [430, 104],
-        [470, 76],
-        [{ d: barrel }, { d: circle(300, 150, 16), neutral: true }]
-      ),
+      feature(['hardpoint'], label, label, [
+        { d: barrel },
+        { d: circle(300, 150, 16), neutral: true },
+      ]),
       ...extra,
       feature(['wheels'], [300, 210], [300, 262], wheel(300, 210, 38)),
     ],
   }
 }
 
-const FIELD_GUN = gun('M 300 138 L 518 102 L 524 124 L 306 160 Z')
-const BOMBARD = gun('M 260 120 L 470 96 L 482 156 L 272 172 Z')
-const MORTAR = gun('M 270 156 L 340 50 L 380 66 L 318 166 Z')
-const ROCKET_BATTERY = gun('M 240 150 L 470 70 L 486 104 L 256 180 Z', [
-  feature(
-    ['magazine'],
-    [360, 120],
-    [400, 150],
-    [
-      {
-        d: 'M 260 152 L 470 80 M 262 162 L 474 90 M 264 172 L 478 100',
-        line: 2,
-        neutral: true,
-      },
-    ]
-  ),
-])
+const FIELD_GUN = gun('M 300 138 L 518 102 L 524 124 L 306 160 Z', [470, 92])
+const BOMBARD = gun('M 260 120 L 470 96 L 482 156 L 272 172 Z', [420, 86])
+const MORTAR = gun('M 270 156 L 340 50 L 380 66 L 318 166 Z', [390, 52])
+const ROCKET_BATTERY = gun(
+  'M 240 150 L 470 70 L 486 104 L 256 180 Z',
+  [440, 66],
+  [
+    feature(
+      ['magazine'],
+      [360, 120],
+      [400, 150],
+      [
+        {
+          d: 'M 260 152 L 470 80 M 262 162 L 474 90 M 264 172 L 478 100',
+          line: 2,
+          neutral: true,
+        },
+      ]
+    ),
+  ]
+)
 
 function ship(
   extra: readonly Feature[],
@@ -1298,12 +1251,6 @@ function ship(
         ),
         ...extra,
         feature(
-          ['armour_plating'],
-          [300, 222],
-          [300, 210],
-          [{ d: 'M 58 222 H 518', line: 6 }]
-        ),
-        feature(
           ['rudder', 'steering'],
           [512, 240],
           [540, 254],
@@ -1371,12 +1318,6 @@ function ship(
         ]
       ),
       ...extra,
-      feature(
-        ['armour_plating'],
-        [300, 196],
-        [300, 196],
-        [{ d: 'M 100 196 Q 300 208 506 190', line: 5 }]
-      ),
       rudder,
       keel,
     ],
@@ -1550,11 +1491,13 @@ const LANDING_CRAFT: Blueprint = {
   bodyKeys: ['hull', 'frame'],
   hold: { x: 146, y: 158, w: 346, h: 52 },
   features: [
-    feature(
-      ['bow', 'ram_head'],
-      [90, 190],
-      [70, 150],
-      [{ d: 'M 120 150 L 60 206 L 140 216 Z' }]
+    shaped(
+      feature(
+        ['bow', 'ram_head'],
+        [90, 190],
+        [70, 150],
+        [{ d: 'M 120 150 L 60 206 L 140 216 Z' }]
+      )
     ),
     feature(
       ['bridge', 'steering'],
@@ -2023,22 +1966,21 @@ const FLYING_CARRIAGE: Blueprint = {
   bodyKeys: ['hull', 'gondola', 'chassis'],
   hold: { x: 204, y: 140, w: 244, h: 54 },
   features: [
-    feature(
-      ['envelope', 'wings'],
-      [326, 50],
-      [326, 16],
-      [
-        { d: 'M 196 110 Q 150 50 80 34 Q 160 80 196 140 Z' },
-        { d: 'M 456 110 Q 502 50 572 34 Q 492 80 456 140 Z' },
-        { d: ring(326, 50, 112, 26) },
-      ],
-      true
+    shaped(
+      feature(
+        ['wings'],
+        [120, 70],
+        [96, 22],
+        [...wing(200, 116, -1, 128, 80), ...wing(452, 116, 1, 96, 80)],
+        true
+      )
     ),
+    feature(['envelope'], [326, 40], [326, 12], [{ d: ring(326, 42, 96, 22) }]),
     feature(
       ['frame'],
-      [326, 84],
-      [430, 76],
-      [{ d: 'M 250 72 L 240 94 M 326 76 L 326 94 M 402 72 L 412 94', line: 2 }]
+      [430, 104],
+      [470, 76],
+      [{ d: 'M 270 62 L 262 94 M 326 64 L 326 94 M 382 62 L 390 94', line: 2 }]
     ),
     feature(
       ['steering'],
@@ -2104,18 +2046,58 @@ const HARVESTER = envelope(
   ]
 )
 
+function wing(
+  rootX: number,
+  rootY: number,
+  side: 1 | -1,
+  span: number,
+  lift: number
+): Mark[] {
+  const at = (along: number, up: number) =>
+    `${rootX + side * span * along} ${rootY - lift * up}`
+  const scallop = (from: [number, number], to: [number, number]) =>
+    `Q ${rootX + side * span * ((from[0] + to[0]) / 2 - 0.06)} ${rootY - lift * ((from[1] + to[1]) / 2 - 0.14)} ${at(to[0], to[1])}`
+  const trail: [number, number][] = [
+    [1, 1],
+    [0.9, 0.6],
+    [0.7, 0.36],
+    [0.46, 0.16],
+    [0.12, -0.08],
+  ]
+  return [
+    {
+      d: `M ${at(0, 0)} C ${at(0.2, 0.7)} ${at(0.6, 1.06)} ${at(1, 1)} ${trail
+        .slice(1)
+        .map((point, index) => scallop(trail[index], point))
+        .join(' ')} Z`,
+    },
+    {
+      d: trail
+        .slice(0, 4)
+        .map(
+          (point) =>
+            `M ${at(0.04, 0)} L ${at(point[0] * 0.94, point[1] * 0.94)}`
+        )
+        .join(' '),
+      line: 1.1,
+      neutral: true,
+    },
+  ]
+}
+
 function aircraft(
   extra: readonly Feature[],
   wings: readonly Mark[],
-  rotor = false
+  rotor = false,
+  wingLabel: readonly [number, number] = [380, 214]
 ): Blueprint {
   return {
     setting: 'air',
     body: 'M 36 140 Q 56 116 116 114 L 432 114 L 520 98 L 526 128 L 442 164 L 116 166 Q 56 164 36 140 Z',
     bodyKeys: ['frame', 'hull', 'chassis'],
-    hold: { x: 120, y: 120, w: 318, h: 40 },
+    hold: { x: 148, y: 120, w: 290, h: 40 },
     features: [
-      feature(['wings'], [270, 196], [270, 254], wings, true),
+      feature(['wings'], [300, 170], wingLabel, wings, true),
       feature(
         ['tail'],
         [482, 76],
@@ -2148,22 +2130,23 @@ function aircraft(
 
 const GLIDER = aircraft(
   [],
-  [{ d: 'M 160 150 L 380 150 L 340 250 L 210 250 Z' }]
+  [{ d: 'M 196 148 L 352 148 L 446 176 L 300 176 Z' }]
 )
+
 const ORNITHOPTER = aircraft(
   [
     feature(
       ['engine', 'drive'],
       [280, 140],
-      [330, 230],
+      [330, 196],
       [{ d: circle(280, 140, 10) }]
     ),
   ],
-  [
-    { d: 'M 200 130 Q 160 40 60 30 Q 150 90 210 150 Z' },
-    { d: 'M 340 130 Q 380 40 480 30 Q 390 90 330 150 Z' },
-  ]
+  [...wing(250, 118, -1, 100, 92), ...wing(292, 118, 1, 112, 96)],
+  false,
+  [420, 30]
 )
+
 const AEROPLANE = aircraft(
   [
     feature(
@@ -2174,16 +2157,14 @@ const AEROPLANE = aircraft(
     ),
     feature(
       ['hardpoint'],
-      [220, 182],
-      [180, 196],
-      [{ d: rect(196, 176, 46, 9) }]
+      [220, 172],
+      [170, 196],
+      [{ d: rect(196, 166, 46, 8) }]
     ),
   ],
-  [
-    { d: 'M 210 150 L 336 150 L 300 244 L 262 244 Z' },
-    { d: 'M 222 128 L 322 128 L 302 74 L 272 74 Z' },
-  ]
+  [{ d: 'M 214 150 L 330 150 L 384 192 L 296 192 Z' }]
 )
+
 const JET = aircraft(
   [
     feature(
@@ -2194,44 +2175,58 @@ const JET = aircraft(
     ),
     feature(
       ['hardpoint'],
-      [260, 200],
-      [220, 210],
-      [{ d: rect(240, 196, 56, 8) }]
+      [300, 186],
+      [240, 210],
+      [{ d: rect(272, 180, 56, 7) }]
     ),
   ],
-  [{ d: 'M 200 150 L 420 150 L 330 250 L 300 250 Z' }]
+  [{ d: 'M 220 152 L 330 152 L 414 200 L 352 200 Z' }]
 )
+
 const BOMBER = aircraft(
   [
     feature(
       ['engine', 'drive'],
-      [240, 212],
-      [200, 236],
+      [300, 176],
+      [230, 214],
       [
-        { d: 'M 220 204 H 270 Q 280 212 270 220 H 220 Z' },
-        { d: 'M 310 204 H 360 Q 370 212 360 220 H 310 Z' },
+        { d: 'M 276 168 H 320 Q 328 175 320 182 H 276 Z' },
+        { d: 'M 318 188 H 362 Q 370 195 362 202 H 318 Z' },
       ]
     ),
     feature(
       ['magazine', 'hardpoint'],
-      [300, 170],
-      [380, 186],
-      [{ d: rect(260, 162, 90, 10) }]
+      [240, 168],
+      [160, 196],
+      [{ d: rect(200, 162, 80, 9) }]
     ),
   ],
-  [{ d: 'M 150 150 L 450 150 L 390 260 L 210 260 Z' }]
+  [{ d: 'M 180 152 L 340 152 L 430 210 L 320 210 Z' }]
 )
+
 const DRONE: Blueprint = {
   setting: 'air',
   body: 'M 180 140 Q 200 120 260 118 L 360 118 Q 400 120 410 140 Q 400 160 360 162 L 260 162 Q 200 160 180 140 Z',
   bodyKeys: ['frame', 'hull', 'chassis'],
-  hold: { x: 214, y: 124, w: 180, h: 32 },
+  hold: { x: 236, y: 124, w: 150, h: 32 },
   features: [
     feature(
+      ['tail'],
+      [390, 110],
+      [404, 84],
+      [{ d: 'M 370 122 L 386 96 L 404 96 L 398 122 Z' }]
+    ),
+    feature(
+      ['cockpit'],
+      [240, 168],
+      [216, 196],
+      [{ d: 'M 224 160 Q 240 180 256 160 Z' }]
+    ),
+    feature(
       ['wings'],
-      [300, 200],
-      [300, 250],
-      [{ d: 'M 230 150 L 380 150 L 340 230 L 270 230 Z' }],
+      [320, 170],
+      [380, 200],
+      [{ d: 'M 250 150 L 350 150 L 386 182 L 292 182 Z' }],
       true
     ),
     feature(['sensors'], [190, 160], [150, 190], [{ d: circle(196, 156, 10) }]),
@@ -2253,7 +2248,7 @@ const ROTORCRAFT: Blueprint = {
   setting: 'air',
   body: 'M 100 150 Q 104 112 170 108 L 320 108 Q 360 112 364 146 L 520 132 L 524 150 L 360 172 Q 330 190 170 188 Q 104 186 100 150 Z',
   bodyKeys: ['frame', 'hull', 'chassis'],
-  hold: { x: 130, y: 118, w: 220, h: 62 },
+  hold: { x: 250, y: 118, w: 104, h: 62 },
   features: [
     feature(
       ['rotor'],
@@ -2278,9 +2273,12 @@ const ROTORCRAFT: Blueprint = {
     ),
     feature(
       ['troop_bay'],
-      [250, 150],
-      [250, 210],
-      [{ d: rect(220, 130, 60, 40) }]
+      [206, 150],
+      [206, 204],
+      [
+        { d: rect(178, 124, 58, 50) },
+        { d: 'M 207 124 V 174', line: 1.2, neutral: true },
+      ]
     ),
     feature(
       ['legs', 'wheels'],
@@ -2313,15 +2311,13 @@ function starship(
   const bx = hold.x + hold.w * 0.4
   const by = hold.y + hold.h + 6
   const nx = leftmost(body)
-  const winged = extra.filter((item) => item.keys[0] === 'wings')
   return {
     setting: 'space',
     body,
     bodyKeys: ['hull', 'frame'],
     hold,
-    decor: winged.flatMap((item) => item.marks),
     features: [
-      ...extra.filter((item) => item.keys[0] !== 'wings'),
+      ...extra,
       ...(has('turret')
         ? []
         : [
@@ -2379,15 +2375,17 @@ const WARSHIP_SPACE = starship(
   'M 26 150 L 116 112 L 378 100 L 468 112 L 526 122 L 526 178 L 468 188 L 378 200 L 116 188 Z',
   { x: 120, y: 114, w: 398, h: 72 },
   [
-    feature(
-      ['wings'],
-      [380, 60],
-      [420, 26],
-      [
-        { d: 'M 290 104 L 384 34 L 436 34 L 404 106 Z' },
-        { d: 'M 290 196 L 384 266 L 436 266 L 404 194 Z' },
-      ],
-      true
+    shaped(
+      feature(
+        ['wings'],
+        [380, 60],
+        [420, 26],
+        [
+          { d: 'M 290 104 L 384 34 L 436 34 L 404 106 Z' },
+          { d: 'M 290 196 L 384 266 L 436 266 L 404 194 Z' },
+        ],
+        true
+      )
     ),
     feature(
       ['drive', 'engine'],
@@ -2415,17 +2413,6 @@ const WARSHIP_SPACE = starship(
         { d: 'M 280 102 L 286 90 L 314 90 L 320 102 Z' },
         { d: rect(312, 92, 30, 4) },
         { d: 'M 280 198 L 286 210 L 314 210 L 320 198 Z' },
-      ]
-    ),
-    feature(
-      ['armour_plating'],
-      [300, 150],
-      [250, 216],
-      [
-        {
-          d: 'M 116 112 L 378 100 L 468 112 M 116 188 L 378 200 L 468 188',
-          line: 4,
-        },
       ]
     ),
   ]
@@ -2459,17 +2446,6 @@ const DREADNOUGHT = starship(
       ]
     ),
     feature(
-      ['armour_plating'],
-      [300, 150],
-      [300, 240],
-      [
-        {
-          d: 'M 70 120 L 200 104 L 470 96 M 70 180 L 200 196 L 470 204',
-          line: 5,
-        },
-      ]
-    ),
-    feature(
       ['sensors'],
       [6, 150],
       [30, 116],
@@ -2482,15 +2458,17 @@ const FIGHTER = starship(
   'M 60 150 L 220 112 L 440 112 L 480 128 L 480 172 L 440 188 L 220 188 Z',
   { x: 226, y: 120, w: 248, h: 60 },
   [
-    feature(
-      ['wings'],
-      [380, 60],
-      [420, 28],
-      [
-        { d: 'M 300 114 L 400 40 L 440 40 L 420 114 Z' },
-        { d: 'M 300 186 L 400 260 L 440 260 L 420 186 Z' },
-      ],
-      true
+    shaped(
+      feature(
+        ['wings'],
+        [380, 60],
+        [420, 28],
+        [
+          { d: 'M 300 114 L 400 40 L 440 40 L 420 114 Z' },
+          { d: 'M 300 186 L 400 260 L 440 260 L 420 186 Z' },
+        ],
+        true
+      )
     ),
     feature(
       ['bridge', 'cockpit'],
@@ -2517,18 +2495,22 @@ const SHUTTLE = starship(
   'M 60 160 Q 70 124 140 120 L 440 118 L 500 132 L 500 176 L 440 186 L 140 188 Q 70 190 60 160 Z',
   { x: 120, y: 126, w: 370, h: 56 },
   [
-    feature(
-      ['wings'],
-      [330, 210],
-      [330, 256],
-      [{ d: 'M 240 184 L 450 184 L 470 250 L 380 250 Z' }],
-      true
+    shaped(
+      feature(
+        ['wings'],
+        [330, 210],
+        [330, 256],
+        [{ d: 'M 240 184 L 450 184 L 470 250 L 380 250 Z' }],
+        true
+      )
     ),
-    feature(
-      ['tail'],
-      [470, 96],
-      [490, 66],
-      [{ d: 'M 430 118 L 470 70 L 494 70 L 486 120 Z' }]
+    shaped(
+      feature(
+        ['tail'],
+        [470, 96],
+        [490, 66],
+        [{ d: 'M 430 118 L 470 70 L 494 70 L 486 120 Z' }]
+      )
     ),
     feature(
       ['cockpit', 'bridge'],
@@ -2555,16 +2537,18 @@ const LANDER = starship(
   'M 150 196 L 186 84 Q 280 50 374 84 L 410 196 Z',
   { x: 196, y: 98, w: 168, h: 92 },
   [
-    feature(
-      ['legs', 'wheels'],
-      [280, 232],
-      [460, 250],
-      [
-        {
-          d: 'M 172 196 L 128 252 H 106 M 388 196 L 432 252 H 454 M 248 196 L 238 252 M 312 196 L 322 252',
-          line: 4,
-        },
-      ]
+    shaped(
+      feature(
+        ['legs', 'wheels'],
+        [280, 232],
+        [460, 250],
+        [
+          {
+            d: 'M 172 196 L 128 252 H 106 M 388 196 L 432 252 H 454 M 248 196 L 238 252 M 312 196 L 322 252',
+            line: 4,
+          },
+        ]
+      )
     ),
     feature(
       ['drive', 'engine'],
@@ -2617,16 +2601,18 @@ const MINING = starship(
   'M 120 150 L 160 116 H 470 L 500 132 V 168 L 470 184 H 160 Z',
   { x: 162, y: 122, w: 306, h: 56 },
   [
-    feature(
-      ['arm', 'hardpoint'],
-      [80, 150],
-      [60, 100],
-      [
-        {
-          d: 'M 120 136 L 60 110 L 30 126 M 120 164 L 60 190 L 30 174',
-          line: 7,
-        },
-      ]
+    shaped(
+      feature(
+        ['arm', 'hardpoint'],
+        [80, 150],
+        [60, 100],
+        [
+          {
+            d: 'M 120 136 L 60 110 L 30 126 M 120 164 L 60 190 L 30 174',
+            line: 7,
+          },
+        ]
+      )
     ),
     feature(
       ['hold', 'cargo_bay'],
@@ -2647,15 +2633,17 @@ const CORVETTE = starship(
   'M 40 150 L 150 112 L 420 106 L 506 124 L 506 176 L 420 194 L 150 188 Z',
   { x: 156, y: 118, w: 340, h: 64 },
   [
-    feature(
-      ['wings'],
-      [370, 74],
-      [420, 50],
-      [
-        { d: 'M 320 108 L 390 64 L 430 64 L 414 110 Z' },
-        { d: 'M 320 192 L 390 236 L 430 236 L 414 190 Z' },
-      ],
-      true
+    shaped(
+      feature(
+        ['wings'],
+        [370, 74],
+        [420, 50],
+        [
+          { d: 'M 320 108 L 390 64 L 430 64 L 414 110 Z' },
+          { d: 'M 320 192 L 390 236 L 430 236 L 414 190 Z' },
+        ],
+        true
+      )
     ),
     feature(
       ['bridge', 'cockpit'],
@@ -2674,7 +2662,7 @@ const CORVETTE = starship(
 
 const ARK = starship(
   'M 40 150 Q 40 96 100 96 L 460 96 Q 520 96 520 150 Q 520 204 460 204 L 100 204 Q 40 204 40 150 Z',
-  { x: 70, y: 110, w: 420, h: 80 },
+  { x: 150, y: 110, w: 340, h: 80 },
   [
     feature(
       ['life_support', 'core'],
@@ -2694,11 +2682,13 @@ const ARK = starship(
       [40, 110],
       [{ d: circle(46, 150, 18) }]
     ),
-    feature(
-      ['sails', 'collectors'],
-      [280, 250],
-      [420, 256],
-      [{ d: rect(160, 216, 240, 18) }, { d: rect(160, 66, 240, 18) }]
+    shaped(
+      feature(
+        ['sails', 'collectors'],
+        [280, 250],
+        [420, 256],
+        [{ d: rect(160, 216, 240, 18) }, { d: rect(160, 66, 240, 18) }]
+      )
     ),
   ]
 )
@@ -2707,16 +2697,18 @@ const SOLAR_SAILER = starship(
   'M 140 150 L 190 116 H 390 L 430 150 L 390 184 H 190 Z',
   { x: 194, y: 122, w: 192, h: 56 },
   [
-    feature(
-      ['sails', 'envelope', 'mast'],
-      [290, 50],
-      [470, 30],
-      [
-        { d: 'M 290 116 L 110 22 L 470 22 Z' },
-        { d: 'M 290 184 L 110 278 L 470 278 Z' },
-        { d: 'M 290 22 L 290 278', line: 1.4, neutral: true },
-      ],
-      true
+    shaped(
+      feature(
+        ['sails', 'envelope', 'mast'],
+        [290, 50],
+        [470, 30],
+        [
+          { d: 'M 290 116 L 110 22 L 470 22 Z' },
+          { d: 'M 290 184 L 110 278 L 470 278 Z' },
+          { d: 'M 290 22 L 290 278', line: 1.4, neutral: true },
+        ],
+        true
+      )
     ),
     feature(
       ['drive', 'engine'],
@@ -2762,15 +2754,17 @@ const PLANAR = starship(
   'M 40 150 L 140 90 L 300 70 L 460 90 L 530 150 L 460 210 L 300 230 L 140 210 Z',
   { x: 120, y: 110, w: 360, h: 80 },
   [
-    feature(
-      ['core'],
-      [300, 80],
-      [300, 52],
-      [
-        {
-          d: 'M 300 52 L 316 72 L 300 92 L 284 72 Z',
-        },
-      ]
+    shaped(
+      feature(
+        ['core'],
+        [300, 80],
+        [300, 52],
+        [
+          {
+            d: 'M 300 52 L 316 72 L 300 92 L 284 72 Z',
+          },
+        ]
+      )
     ),
     feature(
       ['drive', 'engine'],
@@ -2879,11 +2873,22 @@ function building(
   const middle = mass.x + mass.w / 2
   const bottom = mass.y + mass.h
   const top = mass.y - roofHeight(roof, mass)
-  const towerTop = Math.max(24, mass.y - 30)
-  const domeWidth = Math.min(mass.w * 0.62, 180)
+  const towerWidth = Math.min(32, Math.max(16, mass.w * 0.18))
+  const towerTop =
+    mass.h > 150 ? mass.y + mass.h * 0.3 : Math.max(24, mass.y - 30)
+  const crowned =
+    roof === 'gable'
+      ? roofHeight(roof, mass) * 0.55
+      : roof === 'none'
+        ? 0
+        : roofHeight(roof, mass)
+  const domeWidth =
+    roof === 'gable'
+      ? Math.min(mass.w * 0.36, 110)
+      : Math.min(mass.w * 0.62, 180)
   const domeRise = Math.min(domeWidth * 0.5, 70)
   const spireAt = options.spireAt ?? mass.x + mass.w * 0.82
-  const crown = options.crown ?? mass.y
+  const crown = options.crown ?? mass.y - crowned
   return {
     setting: options.setting ?? 'ground',
     body,
@@ -2934,8 +2939,22 @@ function building(
         [mass.x - 18, (towerTop + bottom) / 2],
         [mass.x - 18, above(towerTop - 14)],
         [
-          { d: rect(mass.x - 36, towerTop, 32, bottom - towerTop) },
-          { d: rect(mass.x + mass.w + 4, towerTop, 32, bottom - towerTop) },
+          {
+            d: rect(
+              mass.x - towerWidth - 4,
+              towerTop,
+              towerWidth,
+              bottom - towerTop
+            ),
+          },
+          {
+            d: rect(
+              mass.x + mass.w + 4,
+              towerTop,
+              towerWidth,
+              bottom - towerTop
+            ),
+          },
         ]
       ),
       feature(
@@ -3160,7 +3179,7 @@ export const BLUEPRINTS = {
   flat: plain(118, 324, 108, 'flat'),
   keep: plain(170, 220, 70, 'flat'),
   tower: plain(236, 88, 40, 'flat'),
-  dome: plain(130, 300, 130, 'dome'),
+  dome: plain(130, 300, 130, 'flat'),
   wall: plain(40, 480, 140, 'flat'),
   courtyard: building(
     'M 80 232 V 120 H 190 V 170 H 370 V 120 H 480 V 232 Z',

@@ -35,7 +35,7 @@ from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import apply_disaster, record_disaster_event
 from aerona.engine.phases.horror import summon_outer_being
-from aerona.engine.phases.world_age import world_age
+from aerona.engine.phases.world_age import WorldAge, age_of, read_world_age, world_age
 from aerona.engine.primitives.doom import doom_threshold, step_doom
 from aerona.engine.primitives.faith import son_faith
 from aerona.engine.primitives.ledger import DoomItem, LedgerKey, read, record, record_doom
@@ -74,7 +74,7 @@ async def count_structures(ctx: TickContext, kind: EngineKind, flag: EntityFlag 
     return sum(1 for structure in structures if structure.engine_kind is kind or structure.id in flagged)
 
 
-async def doom_items(ctx: TickContext, new_epoch: int) -> dict[DoomItem, float]:
+async def doom_items(ctx: TickContext, age: WorldAge) -> dict[DoomItem, float]:
     rules = ctx.rules
     doom = rules.apocalypse
     godless = await count_flagged(ctx, EntityFlag.GODLESS)
@@ -90,7 +90,6 @@ async def doom_items(ctx: TickContext, new_epoch: int) -> dict[DoomItem, float]:
     )
     wonders = await count_structures(ctx, EngineKind.WONDER, EntityFlag.WONDER)
     temples = await count_structures(ctx, EngineKind.TEMPLE)
-    age = await world_age(ctx, new_epoch)
     cult = await cult_effect(ctx.session, rules)
     faith = read(ctx, LedgerKey.TOTAL_FAITH)
     return {
@@ -294,7 +293,7 @@ async def doom_clock(ctx: TickContext) -> None:
     rules = ctx.rules
     doom = rules.apocalypse
     cosmos = await cosmos_of(ctx.session)
-    items = await doom_items(ctx, ctx.epoch + 1)
+    items = await doom_items(ctx, await world_age(ctx, ctx.epoch + 1))
     for item, amount in items.items():
         record_doom(ctx, item, round_half_up(amount))
     threshold = threshold_of(ctx)
@@ -365,7 +364,7 @@ async def doom_forecast(session: AsyncSession, rules: Rules) -> DoomForecast:
     for son in await living_sons(session):
         total += await son_faith(session, rules, son)
     record(ctx, LedgerKey.TOTAL_FAITH, total)
-    items = await doom_items(ctx, ctx.epoch + 1)
+    items = await doom_items(ctx, age_of(await read_world_age(ctx, ctx.epoch + 1)))
     cosmos = await cosmos_of(session)
     raw = sum(items.values())
     return DoomForecast(

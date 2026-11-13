@@ -123,50 +123,87 @@ async def end_golden_age_in(ctx: TickContext, world: WorldRow, communities: list
     return ended
 
 
-async def world_age(ctx: TickContext, new_epoch: int) -> WorldAge:
+@dataclass(frozen=True)
+class WorldVerdict:
+    world: WorldRow
+    age: int
+    old: bool
+    communities: list[EntityRow]
+    golden: bool
+    held: bool
+
+
+@dataclass(frozen=True)
+class AgeReading:
+    turning: bool
+    verdicts: list[WorldVerdict]
+    golden_worlds: int
+    relief: int
+
+
+async def read_world_age(ctx: TickContext, new_epoch: int) -> AgeReading:
     rules = ctx.rules
     world_rules = rules.deep_world
-    relief = 0
-    golden_worlds = 0
-    if new_epoch % world_rules.era_turn_interval == 0:
-        relief += world_rules.era_turn_apocalypse_push
-        await note(
-            ctx,
-            f"Epoch turning: the world entered its {ordinal(new_epoch)} epoch. The seers closed the old accounts; fears subsided for a while.",
-            key="world_age.epoch_turning",
-            kind=ChronicleKind.WORLD_AGE,
-        )
+    turning = new_epoch % world_rules.era_turn_interval == 0
+    relief = world_rules.era_turn_apocalypse_push if turning else 0
+    verdicts: list[WorldVerdict] = []
+    flagged = await flags_by_entity(ctx.session, EntityFlag.GOLDEN_AGE)
     for world in await ctx.session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)):
         age = new_epoch - (world.created_epoch or 1)
-        if age > 0 and age % world_rules.world_age_step == 0:
+        old = age > 0 and age % world_rules.world_age_step == 0
+        if old:
             relief += rules.deep_life.world_age_apocalypse_push
-            await note(
-                ctx,
-                f"{world.name} is {age} epochs old: its mountains have worn down, its rivers have changed their beds; it is an old world now.",
-                key="world_age.old_world",
-                kind=ChronicleKind.WORLD_AGE,
-                world_id=world.id,
-            )
         communities = await canon(ctx.session, SOCIETY_TYPES, world.id)
         if not communities:
+            verdicts.append(WorldVerdict(world=world, age=age, old=old, communities=[], golden=False, held=False))
             continue
         if await is_held(ctx.session, world.id, GOLDEN_AGE_KEY, ctx.epoch):
-            flagged = await flags_by_entity(ctx.session, EntityFlag.GOLDEN_AGE)
-            if any(community.id in flagged for community in communities):
-                golden_worlds += 1
-                await enter_golden_age(ctx, world, communities, announce=False)
+            golden = any(community.id in flagged for community in communities)
+            verdicts.append(WorldVerdict(world=world, age=age, old=old, communities=communities, golden=golden, held=True))
             continue
         golden = (
             not await world_at_war(ctx, world, new_epoch)
             and average_prosperity(ctx, communities) >= world_rules.golden_age_prosperity
             and age >= rules.deep_life.golden_age_min_world_age
         )
-        if golden:
-            golden_worlds += 1
-            await enter_golden_age(ctx, world, communities, announce=True)
+        verdicts.append(WorldVerdict(world=world, age=age, old=old, communities=communities, golden=golden, held=False))
+    return AgeReading(turning=turning, verdicts=verdicts, golden_worlds=sum(1 for verdict in verdicts if verdict.golden), relief=relief)
+
+
+def age_of(reading: AgeReading) -> WorldAge:
+    return WorldAge(golden_worlds=reading.golden_worlds, relief=reading.relief)
+
+
+async def world_age(ctx: TickContext, new_epoch: int) -> WorldAge:
+    reading = await read_world_age(ctx, new_epoch)
+    if reading.turning:
+        await note(
+            ctx,
+            f"Epoch turning: the world entered its {ordinal(new_epoch)} epoch. The seers closed the old accounts; fears subsided for a while.",
+            key="world_age.epoch_turning",
+            kind=ChronicleKind.WORLD_AGE,
+        )
+    for verdict in reading.verdicts:
+        world = verdict.world
+        if verdict.old:
+            await note(
+                ctx,
+                f"{world.name} is {verdict.age} epochs old: its mountains have worn down, its rivers have changed their beds; it is an old world now.",
+                key="world_age.old_world",
+                kind=ChronicleKind.WORLD_AGE,
+                world_id=world.id,
+            )
+        if not verdict.communities:
+            continue
+        if verdict.held:
+            if verdict.golden:
+                await enter_golden_age(ctx, world, verdict.communities, announce=False)
+            continue
+        if verdict.golden:
+            await enter_golden_age(ctx, world, verdict.communities, announce=True)
         else:
-            await end_golden_age_in(ctx, world, communities)
-    return WorldAge(golden_worlds=golden_worlds, relief=relief)
+            await end_golden_age_in(ctx, world, verdict.communities)
+    return age_of(reading)
 
 
 async def proclaim_golden_age(ctx: TickContext, world_id: int) -> int:
