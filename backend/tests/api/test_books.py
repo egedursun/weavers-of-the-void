@@ -24,6 +24,16 @@ async def test_the_book_serves_its_fonts_logo_and_print_status(api: ApiWorld) ->
     assert status.status_code == 200 and status.json()["ready"] is False and status.json()["size"] is None
 
 
+async def test_the_book_offers_no_download_before_a_pdf_is_generated(api: ApiWorld) -> None:
+    page = (await api.http.get("/api/book")).text
+    toolbar = page[page.index('<header class="toolbar">') : page.index("</header>")]
+    download = toolbar[toolbar.index('id="pdf-download"') : toolbar.index("</a>", toolbar.index('id="pdf-download"'))]
+    assert 'aria-disabled="true"' in download and "href=" not in download
+    assert "Generate PDF" in toolbar and "Create PDF" not in toolbar
+    assert toolbar.index('id="pdf-make"') < toolbar.index('id="pdf-download"') < toolbar.index('id="print-book"')
+    assert "[hidden]{display:none!important}" in page
+
+
 async def test_a_language_previews_names_without_keeping_them(api: ApiWorld) -> None:
     language = seeded(api).core.language
     first = await api.http.post(f"/api/languages/{language.id}/sample-names", json={"count": 4, "salt": "a"})

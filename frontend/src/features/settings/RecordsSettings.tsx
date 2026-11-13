@@ -4,10 +4,11 @@ import {
   BookOpen,
   CircleCheck,
   FileDown,
+  FilePlusCorner,
   FileText,
   Library,
   NotebookPen,
-  Printer,
+  RefreshCw,
   TriangleAlert,
   type LucideIcon,
 } from 'lucide-react'
@@ -88,22 +89,35 @@ function BookPdfCard() {
         <Button
           variant={data?.ready && !data.stale ? 'outline' : 'default'}
           disabled={running || status.isPending}
-          disabledReason={running ? 'The book is being printed' : undefined}
+          disabledReason={
+            running
+              ? 'The book is being typeset'
+              : 'Reading whether a PDF exists'
+          }
           onClick={() =>
             print.mutate(undefined, {
               onError: (error) => toast.error(error.message),
             })
           }
         >
-          <Printer />
-          {data?.ready ? 'Update PDF' : 'Create PDF'}
+          {data?.ready ? <RefreshCw /> : <FilePlusCorner />}
+          {data?.ready ? 'Regenerate PDF' : 'Generate PDF'}
         </Button>
-        {data?.ready && (
-          <Button asChild>
+        {data?.ready ? (
+          <Button variant={data.stale ? 'outline' : 'default'} asChild>
             <a href={BOOK_PDF_URL} download>
               <FileDown />
               Download PDF
             </a>
+          </Button>
+        ) : (
+          <Button
+            variant='outline'
+            disabled
+            disabledReason='Generate the PDF first; there is nothing to download yet'
+          >
+            <FileDown />
+            Download PDF
           </Button>
         )}
       </div>

@@ -26,6 +26,7 @@
 --danger:#e0806f;--good:#9cc48c;--shadow:0 10px 30px -18px rgba(0,0,0,.8)
 }}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{background:var(--paper)}
 body{margin:0;background:var(--paper);background-image:radial-gradient(ellipse at top,var(--card),transparent 60%);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.62;font-kerning:normal;font-variant-ligatures:common-ligatures;hyphens:auto;-webkit-font-smoothing:antialiased}
 main{max-width:780px;margin:0 auto;padding:32px 22px 120px}
@@ -51,17 +52,62 @@ li::marker{color:var(--gold)}
 .lede{font-size:1.12em;color:var(--soft)}
 .ornament{display:block;text-align:center;color:var(--gold);font-size:1.3em;letter-spacing:.6em;margin:1.4em 0}
 .clear{clear:both}
-.toolbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
-.toolbar .title{font-family:var(--display);font-weight:700;font-size:1.15em;margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
-.toolbar a,.toolbar button{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--rule);color:var(--ink);padding:6px 12px;border-radius:999px;font:inherit;font-size:.82em;cursor:pointer;text-decoration:none;white-space:nowrap}
-.toolbar a:hover,.toolbar button:hover{border-color:var(--rule-strong);text-decoration:none}
-.toolbar button[disabled]{opacity:.7;cursor:progress}
-.toolbar .primary{background:var(--accent);border-color:var(--accent);color:var(--paper)}
-.toolbar .note{font-size:.76em;color:var(--faint);font-style:italic}
-.toolbar .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:.78em;font-weight:600;white-space:nowrap}
-.toolbar .badge.warn{background:color-mix(in srgb,var(--warn) 16%,var(--card));border:1px solid var(--warn);color:var(--warn)}
-.toolbar .badge[hidden]{display:none}
-.toolbar button.attention{border-color:var(--warn);color:var(--warn);font-weight:600}
+.toolbar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 90%,transparent);backdrop-filter:blur(10px) saturate(1.1);border-bottom:1px solid var(--rule);box-shadow:0 8px 24px -22px rgba(60,40,10,.6);font-size:16px;line-height:1.3}
+.toolbar .bar{display:flex;align-items:center;gap:10px 14px;max-width:1180px;margin:0 auto;padding:10px 18px}
+.toolbar .icon{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toolbar .back{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex:none;border-radius:50%;border:1px solid var(--rule);background:var(--card);color:var(--soft);transition:border-color .15s,color .15s,transform .15s}
+.toolbar .back:hover{border-color:var(--gold);color:var(--gold);text-decoration:none;transform:translateX(-2px)}
+.toolbar .heading{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
+.toolbar .eyebrow{font-family:var(--caps);font-size:.72em;letter-spacing:.2em;text-transform:lowercase;color:var(--gold)}
+.toolbar .title{font-family:var(--display);font-weight:700;font-size:1.3em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toolbar .group{display:flex;align-items:center;gap:6px;flex:none}
+.toolbar .jump{padding:3px;border:1px solid var(--rule);border-radius:999px;background:var(--paper-deep);gap:2px}
+.toolbar .jump .tool{border-color:transparent;background:transparent}
+.toolbar .jump .tool:hover{background:var(--card);border-color:var(--rule)}
+.toolbar .sep{width:1px;height:26px;background:var(--rule);flex:none}
+.toolbar .tool{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;min-width:36px;padding:0 14px;border-radius:999px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:inherit;font-size:.86em;font-weight:500;white-space:nowrap;cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .1s}
+.toolbar .tool:hover{border-color:var(--rule-strong);text-decoration:none}
+.toolbar .tool:active{transform:translateY(1px)}
+.toolbar .tool:focus-visible,.toolbar .back:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toolbar .tool.primary{background:var(--accent);border-color:var(--accent);color:var(--paper);box-shadow:0 6px 16px -10px var(--accent)}
+.toolbar .tool.primary:hover{background:color-mix(in srgb,var(--accent) 86%,var(--ink))}
+.toolbar .tool[aria-disabled=true]{opacity:.48;cursor:not-allowed;box-shadow:none;transform:none}
+.toolbar .tool[aria-disabled=true]:hover{border-color:var(--rule)}
+.toolbar .tool.primary[aria-disabled=true]:hover{background:var(--accent);border-color:var(--accent)}
+.toolbar .tool .size{font-size:.84em;font-weight:400;opacity:.8;padding-left:7px;border-left:1px solid currentColor}
+.toolbar .tool .size:empty{display:none}
+.toolbar .tool .spin{display:none;animation:book-spin .9s linear infinite}
+.toolbar .tool.busy{cursor:progress}
+.toolbar .tool.busy .spin{display:block}
+.toolbar .tool.busy .rest{display:none}
+.toolbar .tool[data-tip]:hover::after,.toolbar .tool[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;top:calc(100% + 9px);right:0;z-index:6;width:max-content;max-width:260px;padding:6px 10px;border-radius:8px;background:var(--ink);color:var(--paper);font-size:.8rem;font-weight:400;line-height:1.35;white-space:normal;text-align:left;box-shadow:var(--shadow);pointer-events:none}
+.toolbar .jump .tool[data-tip]:hover::after,.toolbar .jump .tool[data-tip]:focus-visible::after{left:0;right:auto}
+.toolbar .status{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;max-width:1180px;margin:0 auto;padding:0 18px 9px;font-size:.82em}
+.toolbar .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 11px 3px 8px;border-radius:999px;border:1px solid var(--rule);background:var(--card);color:var(--faint);font-weight:500}
+.toolbar .chip .icon{width:14px;height:14px}
+.toolbar [data-state=ready] .chip{border-color:color-mix(in srgb,var(--good) 45%,var(--rule));color:var(--good);background:color-mix(in srgb,var(--good) 9%,var(--card))}
+.toolbar [data-state=stale] .chip{border-color:var(--warn);color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,var(--card))}
+.toolbar [data-state=running] .chip{border-color:color-mix(in srgb,var(--accent) 45%,var(--rule));color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--card))}
+.toolbar .chip .icon{display:none}
+.toolbar [data-state=none] .chip .when-none,.toolbar [data-state=ready] .chip .when-ready,.toolbar [data-state=stale] .chip .when-stale,.toolbar [data-state=running] .chip .when-running{display:block}
+.toolbar [data-state=running] .chip .when-running{animation:book-spin .9s linear infinite}
+.toolbar .meter{position:relative;flex:1 1 160px;max-width:320px;height:6px;border-radius:999px;background:var(--paper-deep);border:1px solid var(--rule);overflow:hidden}
+.toolbar .meter span{position:absolute;inset:0 auto 0 0;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--gold));transition:width .6s ease}
+.toolbar .note{color:var(--faint);font-style:italic}
+.toolbar .note:empty{display:none}
+@keyframes book-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.toolbar *{transition:none!important;animation:none!important}}
+@media (max-width:900px){
+.toolbar .tool .label,.toolbar .tool .size{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.toolbar .tool{padding:0;width:38px;height:38px}
+}
+@media (max-width:560px){
+.toolbar .bar{flex-wrap:wrap;padding:8px 14px}
+.toolbar .heading{flex-basis:calc(100% - 52px)}
+.toolbar .sep{display:none}
+.toolbar .actions{margin-left:auto}
+.toolbar .status{padding:0 14px 8px}
+}
 .cover{min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0;position:relative}
 .cover .frame{border:1px solid var(--rule-strong);outline:1px solid var(--rule);outline-offset:6px;padding:48px 36px;width:100%}
 .cover h1{font-size:4.2em;letter-spacing:.02em}
@@ -200,7 +246,6 @@ h1{font-size:2.5em}
 .war .sides{grid-template-columns:1fr}
 .war .vs{text-align:center}
 .index-list,.log{columns:1}
-.toolbar .title{max-width:100%;flex-basis:100%}
 table{display:block;overflow-x:auto}
 }
 @media print{
@@ -277,21 +322,37 @@ thead{display:table-header-group}
 </style>
 </head>
 <body>
+{% macro icon(name, extra="") %}<svg class="icon{% if extra %} {{ extra }}{% endif %}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{% if name == "back" %}<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>{% elif name == "contents" %}<path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/>{% elif name == "index" %}<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="m8 13 4-7 4 7"/><path d="M9.1 11h5.7"/>{% elif name == "book" %}<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>{% elif name == "generate" %}<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="M9 15h6"/>{% elif name == "download" %}<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>{% elif name == "print" %}<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/>{% elif name == "spinner" %}<path d="M21 12a9 9 0 1 1-6.219-8.56"/>{% elif name == "check" %}<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>{% elif name == "warn" %}<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>{% elif name == "empty" %}<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/>{% endif %}</svg>{% endmacro %}
 {% if not links.printing %}
-<nav class="toolbar" aria-label="Book">
-<a href="/">&#8592; Weavers of the Void</a>
-<span class="title">{% block toolbar_title %}{{ self.title() }}{% endblock %}</span>
-{% if not single %}<a href="#contents">Contents</a><a href="#index">Index</a>{% else %}<a href="/api/book">The whole book</a>{% endif %}
-{% if pdf is not none %}
-<span id="pdf" data-ready="{{ 'yes' if pdf.ready else 'no' }}">
-<a class="primary" id="pdf-download" href="{{ pdf.url }}"{% if not pdf.ready %} hidden{% endif %}>Download PDF{% if pdf.ready %} · {{ pdf.size_mb }} MB{% endif %}</a>
-<button type="button" id="pdf-make"{% if pdf.stale %} class="attention"{% endif %} title="Typeset the whole book again on the server and replace the stored PDF">{% if pdf.ready %}Update PDF{% else %}Create PDF{% endif %}</button>
-<span class="badge warn" id="pdf-stale" role="status"{% if not pdf.stale %} hidden{% endif %}><span aria-hidden="true">&#9888;</span><span id="pdf-stale-text">{% if pdf.stale %}PDF is out of date: made at epoch {{ pdf.epoch }}, the world is at epoch {{ pdf.world_epoch }}{% endif %}</span></span>
-<span class="note" id="pdf-note"></span>
-</span>
+<header class="toolbar">
+<div class="bar">
+<a class="back" href="/" aria-label="Back to Weavers of the Void" title="Back to Weavers of the Void">{{ icon("back") }}</a>
+<div class="heading"><span class="eyebrow">{% if single %}From the book{% else %}The book of the world{% endif %}</span><span class="title">{% block toolbar_title %}{{ self.title() }}{% endblock %}</span></div>
+<nav class="group jump" aria-label="Book sections">
+{% if not single %}
+<a class="tool" href="#contents" data-tip="Jump to the table of contents">{{ icon("contents") }}<span class="label">Contents</span></a>
+<a class="tool" href="#index" data-tip="Jump to the index of every name">{{ icon("index") }}<span class="label">Index</span></a>
+{% else %}
+<a class="tool" href="/api/book" data-tip="Open the whole book">{{ icon("book") }}<span class="label">Whole book</span></a>
 {% endif %}
-<button type="button" id="print-book" title="Open your browser's print dialog for this page">Print in browser</button>
 </nav>
+<span class="sep" aria-hidden="true"></span>
+<div class="group actions" role="group" aria-label="PDF and printing">
+{% if pdf is not none %}
+<button type="button" id="pdf-make" class="tool{% if not pdf.ready or pdf.stale %} primary{% endif %}" aria-describedby="pdf-state-text" data-tip="{% if pdf.ready %}Typeset the whole book again and replace the stored PDF{% else %}Typeset the whole book into a PDF on the server{% endif %}">{{ icon("generate", "rest") }}{{ icon("spinner", "spin") }}<span class="label" id="pdf-make-label">{% if pdf.ready %}Regenerate PDF{% else %}Generate PDF{% endif %}</span></button>
+<a id="pdf-download" class="tool{% if pdf.ready and not pdf.stale %} primary{% endif %}" data-url="{{ pdf.url }}" aria-describedby="pdf-state-text" {% if pdf.ready %}href="{{ pdf.url }}" download data-tip="Download the PDF"{% else %}role="link" tabindex="0" aria-disabled="true" data-tip="Generate the PDF first; there is nothing to download yet"{% endif %}>{{ icon("download") }}<span class="label">Download PDF</span><span class="size" id="pdf-size">{% if pdf.ready %}{{ pdf.size_mb }} MB{% endif %}</span></a>
+{% endif %}
+<button type="button" id="print-book" class="tool" data-tip="Open your browser's print dialog for this page">{{ icon("print") }}<span class="label">Print</span></button>
+</div>
+</div>
+{% if pdf is not none %}
+<div class="status" id="pdf" data-state="{% if not pdf.ready %}none{% elif pdf.stale %}stale{% else %}ready{% endif %}" role="status" aria-live="polite">
+<span class="chip">{{ icon("empty", "when-none") }}{{ icon("check", "when-ready") }}{{ icon("warn", "when-stale") }}{{ icon("spinner", "when-running") }}<span id="pdf-state-text">{% if not pdf.ready %}No PDF yet: generate it to download{% elif pdf.stale %}PDF out of date: made at epoch {{ pdf.epoch }}, the world is at epoch {{ pdf.world_epoch }}{% else %}PDF up to date, made at epoch {{ pdf.epoch }}{% endif %}</span></span>
+<span class="meter" id="pdf-meter" hidden><span id="pdf-meter-fill"></span></span>
+<span class="note" id="pdf-note"></span>
+</div>
+{% endif %}
+</header>
 {% endif %}
 <main>
 {% block body %}{% endblock %}
@@ -303,11 +364,15 @@ thead{display:table-header-group}
   var holder = document.getElementById("pdf");
   if (!holder) return;
   var make = document.getElementById("pdf-make");
+  var makeLabel = document.getElementById("pdf-make-label");
   var download = document.getElementById("pdf-download");
+  var size = document.getElementById("pdf-size");
+  var stateText = document.getElementById("pdf-state-text");
+  var meter = document.getElementById("pdf-meter");
+  var fill = document.getElementById("pdf-meter-fill");
   var note = document.getElementById("pdf-note");
-  var stale = document.getElementById("pdf-stale");
-  var staleText = document.getElementById("pdf-stale-text");
   var polling = false;
+  var starting = false;
   function message(body) {
     if (!body) return "Something went wrong.";
     if (typeof body.message === "string") return body.message;
@@ -315,42 +380,96 @@ thead{display:table-header-group}
     if (typeof body.detail === "string") return body.detail;
     return "Something went wrong.";
   }
+  function busy(on, label) {
+    make.classList.toggle("busy", on);
+    make.setAttribute("aria-disabled", on ? "true" : "false");
+    if (on) {
+      make.classList.remove("primary");
+      makeLabel.textContent = label;
+      make.dataset.tip = "The book is being typeset; wait for it to finish";
+    }
+  }
+  function offer(state) {
+    if (state.ready) {
+      var megabytes = (state.size / 1048576).toFixed(1);
+      download.href = download.dataset.url;
+      download.setAttribute("download", "");
+      download.removeAttribute("aria-disabled");
+      download.removeAttribute("role");
+      download.removeAttribute("tabindex");
+      download.dataset.tip = "Download the PDF (" + megabytes + " MB)";
+      size.textContent = megabytes + " MB";
+    } else {
+      download.removeAttribute("href");
+      download.removeAttribute("download");
+      download.setAttribute("role", "link");
+      download.setAttribute("tabindex", "0");
+      download.setAttribute("aria-disabled", "true");
+      download.dataset.tip = "Generate the PDF first; there is nothing to download yet";
+      size.textContent = "";
+    }
+  }
   function show(state) {
+    offer(state);
     if (state.job_id) {
-      make.disabled = true;
-      make.textContent = "Typesetting " + Math.round((state.progress || 0) * 100) + "%";
-      note.textContent = state.stage ? state.stage + "…" : "";
+      var percent = Math.round((state.progress || 0) * 100);
+      holder.dataset.state = "running";
+      busy(true, "Typesetting " + percent + "%");
+      download.classList.remove("primary");
+      stateText.textContent = state.stage ? "Typesetting: " + state.stage + "…" : "Typesetting the book…";
+      meter.hidden = false;
+      fill.style.width = Math.max(4, percent) + "%";
+      note.textContent = "";
       polling = true;
       setTimeout(poll, 2000);
       return;
     }
-    make.disabled = false;
-    make.textContent = state.ready ? "Update PDF" : "Create PDF";
-    make.classList.toggle("attention", Boolean(state.stale));
-    stale.hidden = !state.stale;
-    staleText.textContent = state.stale ? "PDF is out of date: made at epoch " + state.epoch + ", the world is at epoch " + state.world_epoch : "";
-    note.textContent = "";
-    if (state.ready) {
-      download.hidden = false;
-      download.textContent = "Download PDF · " + (state.size / 1048576).toFixed(1) + " MB";
-      if (polling) { polling = false; note.textContent = "The PDF is up to date."; }
+    starting = false;
+    busy(false);
+    meter.hidden = true;
+    makeLabel.textContent = state.ready ? "Regenerate PDF" : "Generate PDF";
+    make.dataset.tip = state.ready ? "Typeset the whole book again and replace the stored PDF" : "Typeset the whole book into a PDF on the server";
+    make.classList.toggle("primary", !state.ready || Boolean(state.stale));
+    download.classList.toggle("primary", Boolean(state.ready) && !state.stale);
+    holder.dataset.state = !state.ready ? "none" : state.stale ? "stale" : "ready";
+    stateText.textContent = !state.ready
+      ? "No PDF yet: generate it to download"
+      : state.stale
+        ? "PDF out of date: made at epoch " + state.epoch + ", the world is at epoch " + state.world_epoch
+        : "PDF up to date, made at epoch " + state.epoch;
+    if (polling) {
+      polling = false;
+      note.textContent = state.ready ? "Your PDF is ready to download." : "";
     }
+  }
+  function lost() {
+    starting = false;
+    busy(false);
+    makeLabel.textContent = download.hasAttribute("href") ? "Regenerate PDF" : "Generate PDF";
+    note.textContent = "Lost touch with the server. Try again.";
   }
   function poll() {
     fetch("/api/book/pdf", { headers: { accept: "application/json" } })
       .then(function (response) { return response.json(); })
       .then(show)
-      .catch(function () { note.textContent = "Lost touch with the studio."; make.disabled = false; });
+      .catch(lost);
   }
+  download.addEventListener("click", function (event) {
+    if (download.getAttribute("aria-disabled") === "true") event.preventDefault();
+  });
   make.addEventListener("click", function () {
-    make.disabled = true;
-    note.textContent = "Starting…";
+    if (starting || make.getAttribute("aria-disabled") === "true") return;
+    starting = true;
+    busy(true, "Starting…");
+    holder.dataset.state = "running";
+    stateText.textContent = "Starting the typesetting…";
+    note.textContent = "";
     fetch("/api/book/pdf", { method: "POST", headers: { accept: "application/json" } })
       .then(function (response) {
         if (response.ok) { polling = true; setTimeout(poll, 600); return null; }
-        return response.json().then(function (body) { note.textContent = message(body); make.disabled = false; });
+        return response.json().then(function (body) { lost(); note.textContent = message(body); poll(); });
       })
-      .catch(function () { note.textContent = "Lost touch with the studio."; make.disabled = false; });
+      .catch(lost);
   });
   poll();
 })();
