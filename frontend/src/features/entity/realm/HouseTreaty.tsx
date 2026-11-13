@@ -47,6 +47,9 @@ import {
   LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { type Named } from '@/features/collective/labels'
+import { useFrames } from '@/features/madeKinds/api'
+import { frameTable } from '@/features/madeKinds/labels'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { RowAction } from '../actions/RowAction'
@@ -558,6 +561,20 @@ export function HouseSection({
   )
 }
 
+function termLine(
+  key: string,
+  value: unknown,
+  shipClasses: Record<string, Named>
+): string {
+  if (key === 'frame' && typeof value === 'string') {
+    return `Class of ship: ${named(shipClasses, value).label}`
+  }
+  if (typeof value === 'boolean') {
+    return `${sentence(key)}: ${value ? 'yes' : 'no'}`
+  }
+  return `${sentence(key)}: ${String(value)}`
+}
+
 export function TreatySection({
   treatyId,
   readOnlyReason,
@@ -566,6 +583,7 @@ export function TreatySection({
   readOnlyReason?: string | null
 }) {
   const view = useTreaty(treatyId)
+  const shipClasses = frameTable(useFrames().data ?? [])
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
   const [until, setUntil] = useState('')
@@ -760,9 +778,8 @@ export function TreatySection({
                         {terms.length > 0 && (
                           <Muted variant='caption' truncate>
                             {terms
-                              .map(
-                                ([key, value]) =>
-                                  `${sentence(key)}: ${typeof value === 'boolean' ? (value ? 'yes' : 'no') : String(value)}`
+                              .map(([key, value]) =>
+                                termLine(key, value, shipClasses)
                               )
                               .join(' · ')}
                           </Muted>

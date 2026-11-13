@@ -1,6 +1,10 @@
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.bonds import bond_spec
+from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.operations import (
@@ -12,12 +16,16 @@ from aerona.db.tables.operations import (
     TheatreRow,
     TransportAssetRow,
 )
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.operations import ExpeditionStatus
 from aerona.domain.enums.war import WarStatus
+from aerona.engine.primitives.stats import stat_or
 
 UNDER_WAY = (ExpeditionStatus.UNDERWAY, ExpeditionStatus.CAMPED)
+OWNER_LABEL = bond_spec(BondKind.OWNS).label
 
 
 async def mend_operations_links(session: AsyncSession) -> int:
@@ -48,4 +56,40 @@ async def mend_operations_links(session: AsyncSession) -> int:
         found = await session.execute(statement)
         mended += int(getattr(found, "rowcount", 0) or 0)
     await session.flush()
+    return mended
+
+
+async def yard_town(session: AsyncSession, polity_id: int) -> int | None:
+    profile = await session.get(PolityProfileRow, polity_id)
+    if profile is not None and profile.capital_entity_id is not None:
+        return profile.capital_entity_id
+    members = list(await session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == polity_id)))
+    towns = [item for member in members if (item := await session.get(EntityRow, member)) is not None and item.status is EntityStatus.CANON]
+    return max(towns, key=lambda item: (stat_or(item, "population", 0), -item.id)).id if towns else None
+
+
+async def own_stray_ships(session: AsyncSession, epoch: int) -> int:
+    owned = select(BondRow.target_node_id).where(BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
+    strays = await session.execute(
+        select(BondRow, EntityRow)
+        .join(EntityRow, EntityRow.id == BondRow.source_node_id)
+        .join(VesselProfileRow, VesselProfileRow.entity_id == BondRow.target_node_id)
+        .where(
+            BondRow.kind == BondKind.RELATED,
+            BondRow.state == BondState.ACTIVE,
+            BondRow.description.like(f"{OWNER_LABEL}%"),
+            EntityRow.entity_type == EntityType.POLITY,
+            BondRow.target_node_id.not_in(owned),
+        )
+        .order_by(BondRow.id)
+    )
+    bonds = BondRepository(session)
+    mended = 0
+    for bond, polity in list(strays):
+        town = await yard_town(session, polity.id)
+        if town is None:
+            continue
+        await bonds.deactivate(bond, epoch, "its realm holds its ships through its towns")
+        await bonds.connect(BondDraft(town, bond.target_node_id, BondKind.OWNS, epoch, f"held for {polity.name}"))
+        mended += 1
     return mended

@@ -14,9 +14,11 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.operations import QuirkKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.operations import control
 from aerona.engine.operations.admiralty import limited_pair
 from aerona.engine.operations.expeditions import companions_for, on_expedition
+from aerona.engine.operations.supply import draw
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.services.war import current_war
@@ -63,6 +65,7 @@ class LimitFleetsInput(ToolInput):
     first_id: int
     second_id: int
     tonnage: int = Field(ge=0, le=1_000_000)
+    frame: VehicleFrame | None = None
     reason: Reason
 
 
@@ -107,14 +110,15 @@ async def stock_depot(call: SonCall, args: StockDepotInput) -> str:
     land = await reached(call, args.region_id, frozenset({EntityType.REGION}), SonResult.DEPOT_REFUSED, "there is no such land")
     table = call.tick.rules.supply_network
     try:
-        await control.found_depot(call.tick, owner.id, land.id, field=True, capacity=table.field_capacity, supplies=table.field_capacity // 2)
+        depot = await control.found_depot(call.tick, owner.id, land.id, field=True, capacity=table.field_capacity, supplies=0)
     except ValidationFailedError as error:
         fail(SonResult.DEPOT_REFUSED, why=str(error).rstrip("."))
+    depot.supplies = await draw(call.tick, owner, depot.capacity)
     call.target(land.id)
     await call.chronicle(
         ChronicleKind.WORLD, lines.STOCK_DEPOT, entity_ids=[owner.id, land.id], son=call.son.name, owner=owner.name, land=land.name, reason=args.reason
     )
-    return result(SonResult.DEPOT_STOCKED, owner=owner.name, land=land.name)
+    return result(SonResult.DEPOT_STOCKED, owner=owner.name, land=land.name, supplies=depot.supplies)
 
 
 async def steer_theatre(call: SonCall, args: SteerTheatreInput) -> str:
@@ -155,7 +159,7 @@ async def limit_fleets(call: SonCall, args: LimitFleetsInput) -> str:
         fail(SonResult.FLEET_LIMIT_REFUSED, why="they are at war")
     if await limited_pair(call.tick, first.id, second.id):
         fail(SonResult.FLEET_LIMIT_REFUSED, why="their fleets are already bound")
-    cap = {"tonnage": args.tonnage}
+    cap: dict[str, int | str | bool] = {"tonnage": args.tonnage, **({"frame": args.frame.value} if args.frame is not None else {})}
     treaty = await sign(
         call.tick,
         TreatyKind.NAVAL_LIMIT,

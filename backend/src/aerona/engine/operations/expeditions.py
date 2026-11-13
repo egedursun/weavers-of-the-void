@@ -19,6 +19,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.operations import ExpeditionEvent, ExpeditionGround, ExpeditionRole, ExpeditionStatus, QuirkKind, ResolveKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import give_coin
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mortal.standing import add_renown
@@ -219,8 +220,14 @@ async def climate_of(ctx: TickContext, party: Party) -> RegionEnvironmentRow | N
     return await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
 
 
+def ration(party: Party, member: ExpeditionMemberRow) -> int:
+    if party.has(member, Q.EATS_ANYTHING):
+        return 0
+    return 2 if member.resolve in {ResolveKind.SELFISH, ResolveKind.HOPELESS} else 1
+
+
 def eat(ctx: TickContext, party: Party) -> None:
-    need = sum(0 if party.has(member, Q.EATS_ANYTHING) else 2 if member.resolve is ResolveKind.SELFISH else 1 for member in party.alive)
+    need = sum(ration(party, member) for member in party.alive)
     if party.row.provisions >= need:
         keep(party.row, "provisions", party.row.provisions - need)
         return
@@ -247,12 +254,14 @@ def danger_of(ctx: TickContext, party: Party) -> int:
     sighted = any(party.has(member, Q.DARK_SIGHTED) for member in party.alive)
     dark = 0 if sighted else party.row.darkness * table.dark_danger_pct // PERCENT
     eyes = (party.count(R.SCOUT) + party.count(R.GUIDE) + party.resolve(ResolveKind.FOCUSED)) * table.scout_danger
-    return clamp_int(party.row.danger + dark - eyes, 0, PERCENT)
+    tooled = table.tool_danger if party.row.ground in DARK_GROUNDS and party.row.tools > 0 else 0
+    return clamp_int(party.row.danger + dark - eyes - tooled, 0, PERCENT)
 
 
 def strain(ctx: TickContext, party: Party) -> None:
     table = ctx.rules.expeditions
     abusive, brave = party.resolve(ResolveKind.ABUSIVE), party.resolve(ResolveKind.COURAGEOUS)
+    thieves = sum(1 for member in party.alive if party.has(member, Q.LIGHT_FINGERED))
     for member in party.alive:
         amount = table.leg_stress + (table.dark_stress if party.row.darkness >= PERCENT // 2 else 0) * (2 if party.has(member, Q.FEARS_DARK) else 1)
         if party.has(member, Q.STEADY_NERVES):
@@ -263,7 +272,8 @@ def strain(ctx: TickContext, party: Party) -> None:
             amount = amount * 3 // 2
         others_abusive = abusive - (member.resolve is ResolveKind.ABUSIVE)
         others_brave = brave - (member.resolve is ResolveKind.COURAGEOUS)
-        amount += others_abusive * table.abusive_stress - others_brave * table.courage_relief
+        others_thieving = thieves - party.has(member, Q.LIGHT_FINGERED)
+        amount += others_abusive * table.abusive_stress + others_thieving * table.abusive_stress // 2 - others_brave * table.courage_relief
         if member.resolve is ResolveKind.STALWART:
             amount -= table.courage_relief
         stress(ctx, party, member, amount)
@@ -360,6 +370,8 @@ async def arrive(ctx: TickContext, party: Party, tally: ExpeditionTally) -> Walk
         found += len(walk.loot) + (1 if walk.reached_heart else 0)
     keep(party.row, "found", party.row.found + found)
     tally.finds += found
+    if leader is not None and found > 0 and not held(leader.id):
+        await give_coin(ctx.session, ctx.rules, leader, found * ctx.rules.expeditions.find_coin)
     return walk
 
 
@@ -378,7 +390,10 @@ async def leg(ctx: TickContext, party: Party, land: RegionEnvironmentRow | None,
         light_used=max(0, lit - party.row.light),
     )
     rng = ctx.rng(f"leg.{party.row.id}.{party.row.legs_done}.{ctx.epoch}")
-    if party.alive and rng.chance(danger_of(ctx, party)):
+    danger = danger_of(ctx, party)
+    if party.row.ground in DARK_GROUNDS and party.row.tools > 0:
+        keep(party.row, "tools", party.row.tools - 1)
+    if party.alive and rng.chance(danger):
         await harm(ctx, party, rng.pick(party.alive), ctx.rules.sites.delve_hp, cause=HarmCause.QUEST, reason="fell on an expedition", tally=tally)
     strain(ctx, party)
     await expose(ctx, party, land, tally)

@@ -476,7 +476,7 @@ class SonResult(StrEnum):
     RELIEF_REFUSED = "You cannot move them to send aid: {{ why }}."
     EXPEDITION_SENT = "{{ leader }} set out for {{ target }} with a party of {{ party }}; the way runs {{ legs }} legs."
     EXPEDITION_REFUSED = "You cannot send that expedition: {{ why }}."
-    DEPOT_STOCKED = "{{ owner }} stocked a depot in {{ land }}."
+    DEPOT_STOCKED = "{{ owner }} stocked a depot in {{ land }} with {{ supplies }} supplies from its own stores."
     DEPOT_REFUSED = "You cannot have that depot stocked: {{ why }}."
     THEATRE_STEERED = "{{ owner }} now sends that front {{ priority }} of every hundred of its reserves."
     THEATRE_REFUSED = "You cannot steer that theatre: {{ why }}."

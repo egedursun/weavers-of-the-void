@@ -50,6 +50,73 @@ const COMPASS_TABLE = Object.fromEntries(
   COMPASS.map((name, index) => [String(index), name])
 )
 
+function WindRose({
+  heading: course,
+  wind,
+}: {
+  heading: number
+  wind: number
+}) {
+  const point = (octant: number, radius: number) => {
+    const angle = (octant * Math.PI) / 4
+    return [50 + Math.sin(angle) * radius, 50 - Math.cos(angle) * radius]
+  }
+  const [courseX, courseY] = point(course, 30)
+  const [windX, windY] = point(wind, 44)
+  const [windInX, windInY] = point(wind, 18)
+  return (
+    <svg
+      viewBox='0 0 100 100'
+      className='size-portrait-xl shrink-0'
+      role='img'
+      aria-label={`Heading ${heading(course, COMPASS)}, the wind from the ${heading(wind, COMPASS)}`}
+    >
+      <circle
+        cx='50'
+        cy='50'
+        r='46'
+        className='fill-background stroke-border'
+        strokeWidth='1.5'
+      />
+      {COMPASS.map((name, index) => {
+        const [x, y] = point(index, 40)
+        return index % 2 === 0 ? (
+          <text
+            key={name}
+            x={x}
+            y={y + 2}
+            textAnchor='middle'
+            className='fill-muted-foreground'
+            fontSize='7'
+          >
+            {name[0].toUpperCase()}
+          </text>
+        ) : null
+      })}
+
+      <line
+        x1='50'
+        y1='50'
+        x2={courseX}
+        y2={courseY}
+        className='stroke-primary'
+        strokeWidth='4'
+        strokeLinecap='round'
+      />
+      <line
+        x1={windX}
+        y1={windY}
+        x2={windInX}
+        y2={windInY}
+        className='stroke-info'
+        strokeWidth='3'
+        strokeDasharray='4 3'
+      />
+      <circle cx='50' cy='50' r='4' className='fill-primary' />
+    </svg>
+  )
+}
+
 function ShipCard({
   row,
   blocked,
@@ -187,6 +254,13 @@ function ShipCard({
         </div>
       }
     >
+      <div className='flex min-w-0 flex-wrap items-center gap-3'>
+        <WindRose heading={row.heading} wind={row.wind_from} />
+        <Muted variant='caption'>
+          The gold line is the ship&apos;s heading, the dashed blue line the
+          wind blowing in from the {heading(row.wind_from, COMPASS)}.
+        </Muted>
+      </div>
       <div data-chart='chart-ship-damage' className='@container/tiles min-w-0'>
         <div className='grid min-w-0 grid-cols-2 gap-2 @lg/tiles:grid-cols-4'>
           <KpiTile

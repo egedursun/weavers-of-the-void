@@ -11,7 +11,8 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { KpiTile } from '@/components/domain'
+import { KpiTile, PagedList } from '@/components/domain'
+import { Label, Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
 import { Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
@@ -167,7 +168,16 @@ function OperationCard({
   )
 }
 
-function FlowCard({ row, blocked }: { row: Flow; blocked: string | null }) {
+function FlowCard({
+  row,
+  depots,
+  blocked,
+}: {
+  row: Flow
+  depots: Depot[]
+  blocked: string | null
+}) {
+  const depot = depots.find((item) => item.id === row.depot_id)
   const action = useOpsRow(
     'supply_flow:edit',
     'supply_flow:delete',
@@ -180,7 +190,7 @@ function FlowCard({ row, blocked }: { row: Flow; blocked: string | null }) {
       icon={Truck}
       tone={row.delivered >= row.need ? 'success' : 'warning'}
       title={`Supply to ${row.army.name}`}
-      caption={`Epoch ${row.epoch}, season ${row.season + 1}${row.depot_id !== null ? ` · from depot ${row.depot_id}` : ''}`}
+      caption={`Epoch ${row.epoch}, season ${row.season + 1}${depot ? ` · from the depot in ${depot.region?.name ?? 'no land'}` : row.depot_id !== null ? ' · from a depot of its realm' : ''}`}
       removeLabel='Strike the flow'
       editTitle='Set the flow'
       note='Each season a depot draws food from the realm’s stocks, the train carries what its throughput allows toward the army, and some is lost on every land it crosses and more on a raided line. What arrives is what was drawn, less what was lost on the way and what stays in the depot.'
@@ -271,7 +281,7 @@ function DepotCard({ row, blocked }: { row: Depot; blocked: string | null }) {
       icon={Warehouse}
       tone={row.cut ? 'danger' : row.field ? 'warning' : 'gold'}
       title={`${row.field ? 'Field depot' : 'Depot'} in ${row.region?.name ?? 'no land'}`}
-      caption={`Depot ${row.id} · founded in epoch ${row.founded_epoch}`}
+      caption={`Founded in epoch ${row.founded_epoch}${row.field ? ' along an advancing line' : ' at home'}`}
       removeLabel='Empty the depot'
       editTitle='Set the depot'
       note='A depot holds supplies for the armies it feeds. Field depots are founded along an advancing line and hold less; an enemy army standing in a depot’s land cuts it off, and a cut depot sends nothing.'
@@ -359,7 +369,7 @@ function TransportCard({
     <Held
       icon={look.icon}
       tone={look.tone}
-      title={`${row.count} ${look.label.toLowerCase()}`}
+      title={`${look.label}: ${row.count}`}
       caption={`Each carries ${row.capacity}${depot ? ` · based at the depot in ${depot.region?.name ?? 'no land'}` : ''}`}
       removeLabel='Remove from the train'
       editTitle='Set the transport'
@@ -623,6 +633,78 @@ function OperationForge({
   )
 }
 
+function FlowChart({ flows }: { flows: Flow[] }) {
+  const widest = Math.max(
+    1,
+    ...flows.map((item) => Math.max(item.produced, item.need, item.shipped))
+  )
+  const width = (value: number) => (value * SPAN) / widest
+  return (
+    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'>
+      <Label variant='overline'>Supply season by season</Label>
+      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+        <Badge size='sm' variant='success'>
+          Delivered
+        </Badge>
+        <Badge size='sm' variant='destructive'>
+          Lost on the way
+        </Badge>
+        <Badge size='sm' variant='outline'>
+          The gold mark is what was needed
+        </Badge>
+      </div>
+      <PagedList
+        items={flows}
+        initial={8}
+        noun={['season', 'seasons']}
+        as='ul'
+        className='flex min-w-0 flex-col gap-1.5'
+        itemKey={(item) => item.id}
+      >
+        {(item) => (
+          <li key={item.id} className='flex min-w-0 flex-col gap-0.5'>
+            <Muted as='span' variant='caption'>
+              Epoch {item.epoch}, season {item.season + 1}: {item.delivered} of{' '}
+              {item.need} delivered, {item.lost} lost
+            </Muted>
+            <svg
+              viewBox='0 0 100 6'
+              preserveAspectRatio='none'
+              className='h-icon-sm w-full'
+              role='img'
+              aria-label={`${item.delivered} of ${item.need} delivered, ${item.lost} lost`}
+            >
+              <rect x='0' y='1' width='100' height='4' className='fill-muted' />
+              <rect
+                x='0'
+                y='1'
+                width={width(item.delivered)}
+                height='4'
+                className='fill-success'
+              />
+              <rect
+                x={width(item.delivered)}
+                y='1'
+                width={width(item.lost)}
+                height='4'
+                className='fill-destructive'
+              />
+              <line
+                x1={width(item.need)}
+                x2={width(item.need)}
+                y1='0'
+                y2='6'
+                className='stroke-primary'
+                strokeWidth='0.8'
+              />
+            </svg>
+          </li>
+        )}
+      </PagedList>
+    </div>
+  )
+}
+
 export function SupplyPanel({
   nodeId,
   kind,
@@ -668,13 +750,18 @@ export function SupplyPanel({
       <Listed
         title='The offensive'
         items={data.operation ? [data.operation] : []}
-        empty='This army has not yet been read on the offensive.'
+        empty={
+          kind === 'army'
+            ? 'This army has not yet been read on the offensive.'
+            : 'Offensives belong to armies; open one of its armies to read its offensive.'
+        }
         noun={['offensive', 'offensives']}
         itemKey={(item) => item.army.id}
       >
         {(item) => <OperationCard row={item} blocked={blocked} />}
       </Listed>
       <OperationForge nodeId={nodeId} kind={kind} blocked={blocked} />
+      {data.flows.length > 0 && <FlowChart flows={data.flows} />}
       <Listed
         title='Supply flows, season by season'
         items={data.flows}
@@ -682,7 +769,9 @@ export function SupplyPanel({
         noun={['flow', 'flows']}
         itemKey={(item) => item.id}
       >
-        {(item) => <FlowCard row={item} blocked={blocked} />}
+        {(item) => (
+          <FlowCard row={item} depots={data.depots} blocked={blocked} />
+        )}
       </Listed>
       <Listed
         title='Depots'

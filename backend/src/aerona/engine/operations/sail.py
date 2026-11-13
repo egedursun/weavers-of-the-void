@@ -17,6 +17,7 @@ from aerona.domain.enums.vehicles import VehicleFrame, VehicleSection
 from aerona.engine.context import TickContext
 from aerona.engine.military.battle import stack_material
 from aerona.engine.operations.fields import keep
+from aerona.engine.operations.limits import tonnage_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.vehicles.sections import design_sections, strike_vessel
 
@@ -268,10 +269,6 @@ async def engage(
             return Engagement(sides[1 - position].vessel, sides[position].vessel, struck=True, hits=hits)
     winner, loser = (sides[0], sides[1]) if powers[0] >= powers[1] else (sides[1], sides[0])
     return Engagement(winner.vessel, loser.vessel, hits=hits)
-
-
-def tonnage_of(row: VesselProfileRow) -> int:
-    return max(1, row.cargo_capacity + row.crew)
 
 
 async def take_prize(ctx: TickContext, captor_row: VesselProfileRow, prize: EntityRow, prize_row: VesselProfileRow, captor_owner: EntityRow | None) -> int:

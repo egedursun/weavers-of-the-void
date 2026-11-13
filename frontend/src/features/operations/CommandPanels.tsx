@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Flag, Gauge, Radar, ShieldAlert, Swords, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Muted } from '@/components/typography'
+import { Label, Muted, Text } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
 import { Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
@@ -150,13 +150,15 @@ function EchelonCard({
       }
     >
       <Meter label='Staff skill' value={row.staff} tone='info' icon={Gauge} />
-      <Meter
-        label={`Command points left (${left} of ${row.command_points})`}
-        value={left}
-        max={Math.max(1, row.command_points)}
-        tone='legendary'
-        icon={Flag}
-      />
+      {row.level !== 'brigade' && (
+        <Meter
+          label={`Command points left (${left} of ${row.command_points})`}
+          value={left}
+          max={Math.max(1, row.command_points)}
+          tone='legendary'
+          icon={Flag}
+        />
+      )}
       <Facts
         items={[
           [
@@ -168,6 +170,11 @@ function EchelonCard({
             <Ref key='hq' node={row.hq} empty='nowhere fixed' />,
           ],
           ['Command range', `${row.command_range} lands`],
+          [
+            'Answers to',
+            echelons.find((item) => item.id === row.parent_id)?.name ??
+              'no headquarters above',
+          ],
           [
             'Army',
             <Ref key='army' node={row.army} empty='a group of armies' />,
@@ -205,6 +212,51 @@ function treeOrder(echelons: Echelon[]): [Echelon, number][] {
   }
   walk(null, 0)
   return found
+}
+
+function Overview({ echelons }: { echelons: Echelon[] }) {
+  return (
+    <div
+      data-chart='chart-order-of-battle'
+      className='flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-3'
+    >
+      <Label variant='overline'>The order of battle at a glance</Label>
+      <ul className='flex min-w-0 flex-col gap-1' aria-label='Order of battle'>
+        {treeOrder(echelons).map(([item, depth]) => {
+          const level = ECHELONS[item.level]
+          const order = ORDERS[item.order]
+          return (
+            <li
+              key={item.id}
+              className={`flex min-w-0 flex-wrap items-center gap-1.5 ${INDENT[Math.min(depth, INDENT.length - 1)]}`}
+            >
+              <Tag item={level} text={level.label} />
+              <Text as='span' variant='caption' className='min-w-0 truncate'>
+                {item.name}
+              </Text>
+              <Tag item={order} />
+              {!item.in_range && (
+                <Badge size='sm' variant='warning'>
+                  <Radar aria-hidden='true' />
+                  Out of range
+                </Badge>
+              )}
+              {item.level === 'brigade' ? (
+                <Muted as='span' variant='caption'>
+                  {item.stacks} stacks
+                </Muted>
+              ) : (
+                <Muted as='span' variant='caption'>
+                  {Math.max(0, item.command_points - item.points_spent)} of{' '}
+                  {item.command_points} points left
+                </Muted>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
 }
 
 function Tree({
@@ -416,11 +468,13 @@ export function OrderOfBattlePanel({
   return (
     <div
       data-surface='OrderOfBattlePanel'
-      data-chart='chart-order-of-battle'
       className='flex min-w-0 flex-col gap-4'
     >
       {data.echelons.length > 0 ? (
-        <Tree echelons={data.echelons} blocked={blocked} />
+        <>
+          <Overview echelons={data.echelons} />
+          <Tree echelons={data.echelons} blocked={blocked} />
+        </>
       ) : (
         <Muted variant='caption'>
           No order of battle is drawn here yet. Armies form theirs on the next

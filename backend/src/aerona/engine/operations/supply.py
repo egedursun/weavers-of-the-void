@@ -22,8 +22,8 @@ from aerona.engine.military.logistics import March
 from aerona.engine.military.units import stacks_of
 from aerona.engine.notes import note
 from aerona.engine.operations.fields import keep
-from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.services.war import ongoing_wars
@@ -44,6 +44,8 @@ class SupplyTally:
     culminated: int = 0
     collapsed: int = 0
     paused: int = 0
+    abandoned: int = 0
+    interdicted: int = 0
 
 
 @dataclass(frozen=True)
@@ -85,8 +87,15 @@ async def raise_train(ctx: TickContext, owner: EntityRow, tally: SupplyTally) ->
     tally.trains += 1
 
 
+async def home_region(ctx: TickContext, owner: EntityRow, web: Network) -> int | None:
+    own = web.atlas.top_region(owner.id)
+    if own is not None:
+        return own
+    return next((region for place in sorted(await homes_of(ctx.session, owner)) if (region := web.atlas.top_region(place)) is not None), None)
+
+
 async def home_depot(ctx: TickContext, owner: EntityRow, web: Network, tally: SupplyTally) -> DepotRow | None:
-    home = web.atlas.top_region(owner.id)
+    home = await home_region(ctx, owner, web)
     rows = await depots_of(ctx, owner.id)
     found = next((row for row in rows if not row.field), None)
     if found is not None or home is None or held(owner.id):
@@ -119,6 +128,11 @@ async def keep_network(ctx: TickContext, tally: SupplyTally) -> None:
         keep(depot, "cut", cut)
     for asset in await ctx.session.scalars(select(TransportAssetRow).where(TransportAssetRow.owner_entity_id.not_in(fighting or {0}))):
         keep(asset, "condition", clamp_int(asset.condition + ctx.rules.supply_network.asset_repair, 0, PERCENT))
+    for depot in list(await ctx.session.scalars(select(DepotRow).where(DepotRow.field.is_(True), DepotRow.owner_entity_id.not_in(fighting or {0})))):
+        if depot.locked or held(depot.owner_entity_id):
+            continue
+        await ctx.session.delete(depot)
+        tally.abandoned += 1
 
 
 async def army_regions(ctx: TickContext, owner_id: int) -> set[int]:
@@ -180,9 +194,7 @@ async def feeding_depot(ctx: TickContext, march: March, web: Network, tally: Sup
 async def draw(ctx: TickContext, owner: EntityRow, room: int) -> int:
     if room <= 0 or held(owner.id):
         return 0
-    book = await RealmBook.load(ctx.session)
-    realm = book.realms.get(owner.id)
-    sources = [owner.id, *sorted(realm.members)] if realm is not None else [owner.id]
+    sources = sorted(await homes_of(ctx.session, owner))
     ledger = goods_of(ctx.session, ctx.epoch)
     share = ctx.rules.supply_network.draw_pct
     drawn = 0
@@ -217,12 +229,26 @@ async def throughput(ctx: TickContext, march: March, depot: DepotRow, web: Netwo
         elif road and not spec.sea_only:
             lift = lift * table.road_throughput_pct // PERCENT
         carried += lift
+    if await interdicted(ctx, march, path):
+        carried = carried * table.interdicted_pct // PERCENT
     theatres = list(await ctx.session.scalars(select(TheatreRow).where(TheatreRow.owner_entity_id == march.owner.id)))
     if len(theatres) > 1:
-        mine = next((row for row in theatres if march.profile.target_entity_id in {row.front_region_entity_id}), None)
+        army_row = await ctx.session.get(ArmyRow, march.army.id)
+        mine = next((row for row in theatres if army_row is not None and row.war_id == army_row.war_id), None)
         share = mine.priority if mine is not None else PERCENT // len(theatres)
         carried = carried * max(share, 1) * len(theatres) // PERCENT
     return carried
+
+
+async def interdicted(ctx: TickContext, march: March, path: list[int]) -> bool:
+    inner = set(path[:-1])
+    if not inner:
+        return False
+    for item in await ongoing_wars(ctx.session, march.owner.id):
+        enemy = item.defender_id if item.attacker_id == march.owner.id else item.attacker_id
+        if inner & await army_regions(ctx, enemy):
+            return True
+    return False
 
 
 async def wear(ctx: TickContext, owner_id: int) -> None:
@@ -244,7 +270,7 @@ async def supply_season(
 ) -> SupplyFlowRow | None:
     if held(march.army.id) or march.profile.region_entity_id is None:
         return None
-    if march.profile.region_entity_id == web.atlas.top_region(march.owner.id):
+    if march.profile.region_entity_id == await home_region(ctx, march.owner, web):
         return None
     depot = await feeding_depot(ctx, march, web, tally)
     need = need_of(ctx, march)
@@ -257,6 +283,9 @@ async def supply_season(
     lost_up = min(produced, produced * table.hop_loss_pct * upstream // PERCENT)
     keep(depot, "supplies", depot.supplies + produced - lost_up)
     carried = await throughput(ctx, march, depot, web)
+    path = web.atlas.region_path(depot.region_entity_id, march.profile.region_entity_id) or []
+    if not depot.cut and await interdicted(ctx, march, path):
+        tally.interdicted += 1
     if order is EchelonOrder.RESUPPLY:
         carried = carried * table.resupply_pct // PERCENT
     shipped = min(depot.supplies, carried, need)

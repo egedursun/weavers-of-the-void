@@ -25,6 +25,9 @@ import {
   RangeField,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { MindPicker } from '@/features/entity/mind/parts'
+import { useFrames } from '@/features/madeKinds/api'
+import { frameTable } from '@/features/madeKinds/labels'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { CLAUSES, PARTY_ROLES, TREATY_KINDS, type Named, named } from './labels'
 import {
@@ -376,6 +379,46 @@ type Draft = {
   obligor: number | null
   beneficiary: number | null
   amount: string
+  frame: string
+}
+
+function termsOf(
+  kind: string,
+  amount: string,
+  frame: string
+): Record<string, number | string> {
+  return {
+    ...(amount ? { amount: Number(amount) || 0 } : {}),
+    ...(kind === 'fleet_limit' && frame ? { frame } : {}),
+  }
+}
+
+function FrameChoice({
+  value,
+  blocked,
+  onPick,
+}: {
+  value: string
+  blocked: string | null
+  onPick: (value: string) => void
+}) {
+  const frames = useFrames()
+  const table = Object.fromEntries(
+    Object.entries(frameTable(frames.data ?? [])).map(([key, spec]) => [
+      key,
+      spec.label,
+    ])
+  )
+  return (
+    <MindPicker
+      label='Class of ship'
+      value={value}
+      table={table}
+      blocked={blocked}
+      placeholder='Every class'
+      onPick={onPick}
+    />
+  )
 }
 
 export function SealTreaty({
@@ -418,9 +461,7 @@ export function SealTreaty({
               kind: clause.kind,
               obligor_id: clause.obligor ?? first,
               beneficiary_id: clause.beneficiary ?? second,
-              params: clause.amount
-                ? { amount: Number(clause.amount) || 0 }
-                : ({} as Record<string, number>),
+              params: termsOf(clause.kind, clause.amount, clause.frame),
             })),
             epochs: Number(epochs) || null,
           },
@@ -499,6 +540,19 @@ export function SealTreaty({
                     )
                   }
                 />
+                {clause.kind === 'fleet_limit' && (
+                  <FrameChoice
+                    value={clause.frame}
+                    blocked={busy}
+                    onPick={(value) =>
+                      setClauses((current) =>
+                        current.map((item, at) =>
+                          at === index ? { ...item, frame: value } : item
+                        )
+                      )
+                    }
+                  />
+                )}
                 <Button
                   size='sm'
                   variant='outline'
@@ -533,6 +587,7 @@ export function SealTreaty({
                     obligor: null,
                     beneficiary: null,
                     amount: '',
+                    frame: '',
                   },
                 ])
               }
@@ -566,6 +621,7 @@ export function TreatyBuilder({
 }) {
   const [clauseKind, setClauseKind] = useState<string>('tribute')
   const [amount, setAmount] = useState('100')
+  const [frame, setFrame] = useState('')
   const [party, setParty] = useState<number | null>(null)
   const [role, setRole] = useState<string>('guarantor')
   const first = treaty.parties[0]?.id ?? null
@@ -579,9 +635,7 @@ export function TreatyBuilder({
             kind: clauseKind as ClauseKind,
             obligor_id: first,
             beneficiary_id: second,
-            params: amount
-              ? { amount: Number(amount) || 0 }
-              : ({} as Record<string, number>),
+            params: termsOf(clauseKind, amount, frame),
           },
         })
       ),
@@ -701,6 +755,9 @@ export function TreatyBuilder({
           blocked={busy}
           onChange={setAmount}
         />
+        {clauseKind === 'fleet_limit' && (
+          <FrameChoice value={frame} blocked={busy} onPick={setFrame} />
+        )}
         <Button
           size='sm'
           className='self-start'

@@ -1137,7 +1137,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact or naval_limit",
             "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
-            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id, tonnage...)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id, tonnage, frame...)",
             "epochs": "How many ages it holds; empty for ever",
             "parties.party_id": "The party's id",
             "parties.role": "Its role: signatory, overlord, vassal or guarantor",
@@ -1529,8 +1529,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"leader_id": "The mortal who leads it", "target_id": "Where it goes", "reason": "Why you send it"},
     ),
     T.STOCK_DEPOT: ToolText(
-        "You move a realm or a people in your reach to stock a field depot in a land; depots feed its armies through the transport it has, "
-        "and an enemy that takes the land cuts the depot off. 1 action.",
+        "You move a realm or a people in your reach to stock a field depot in a land from its own food stores; depots feed its armies "
+        "through the transport it has, and an enemy that takes the land cuts the depot off. 1 action.",
         {"owner_id": "The realm or people that stocks it", "region_id": "The land it stands in", "reason": "Why you move them"},
     ),
     T.STEER_THEATRE: ToolText(
@@ -1546,6 +1546,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.LIMIT_FLEETS: ToolText(
         "You bind two realms at peace in your reach to a naval treaty capping each fleet at a tonnage; an admiralty that builds past it "
         "breaks the treaty, and one whose admiral cares little for law may hide ships until they are found out. 1 action.",
-        {"first_id": "One realm", "second_id": "The other realm", "tonnage": "The tonnage each fleet may reach", "reason": "Why you bind them"},
+        {
+            "first_id": "One realm",
+            "second_id": "The other realm",
+            "tonnage": "The tonnage each fleet may reach",
+            "frame": "The class of ship the cap counts, if only one; one of: {{ vehicle_frames }}",
+            "reason": "Why you bind them",
+        },
     ),
 }

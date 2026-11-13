@@ -621,7 +621,16 @@ export function ExpeditionPanel({
   )
 }
 
-function QuirkCard({ row, blocked }: { row: Quirk; blocked: string | null }) {
+function QuirkCard({
+  row,
+  expeditions,
+  blocked,
+}: {
+  row: Quirk
+  expeditions: Expedition[]
+  blocked: string | null
+}) {
+  const origin = expeditions.find((item) => item.id === row.expedition_id)
   const action = useOpsRow(
     'quirk:edit',
     'quirk:delete',
@@ -667,9 +676,11 @@ function QuirkCard({ row, blocked }: { row: Quirk; blocked: string | null }) {
           ],
           [
             'From expedition',
-            row.expedition_id !== null
-              ? `expedition ${row.expedition_id}`
-              : 'none',
+            origin
+              ? origin.name
+              : row.expedition_id !== null
+                ? 'an expedition long past'
+                : 'none',
           ],
         ]}
       />
@@ -706,7 +717,13 @@ export function QuirksPanel({
         noun={['quirk', 'quirks']}
         itemKey={(item) => item.id}
       >
-        {(item) => <QuirkCard row={item} blocked={blocked} />}
+        {(item) => (
+          <QuirkCard
+            row={item}
+            expeditions={data.expeditions}
+            blocked={blocked}
+          />
+        )}
       </Listed>
       <ForgeCard
         icon={Sparkles}

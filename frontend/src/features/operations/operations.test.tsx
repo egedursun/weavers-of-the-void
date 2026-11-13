@@ -120,8 +120,17 @@ describe('command, supply, ships and expeditions', () => {
     })
     onApi('POST', '/api/actions/echelon:assign', ACCEPTED_ACTION)
     const { screen } = await renderApp(<OperationsSection nodeId={50} />)
+    const overview = screen.getByRole('list', { name: 'Order of battle' })
     await expect
-      .element(screen.getByText('Brigade 1 of Vale Host', { exact: true }))
+      .element(overview.getByText('Brigade 1 of Vale Host'))
+      .toBeVisible()
+    await expect.element(overview.getByText('3 of 4 points left')).toBeVisible()
+    await expect
+      .element(
+        screen
+          .getByRole('group', { name: 'The order of battle' })
+          .getByText('Brigade 1 of Vale Host')
+      )
       .toBeVisible()
     await expect
       .element(screen.getByText('Command points left (3 of 4)'))

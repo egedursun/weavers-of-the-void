@@ -15,6 +15,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SchemeRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.operations import (
     AdmiraltyRow,
     DepotRow,
@@ -27,7 +28,7 @@ from aerona.db.tables.operations import (
 )
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, TreatyBreachRow, TreatyClauseRow, TreatyProfileRow
 from aerona.db.tables.warfare import ArmyRow
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intrigue import PlotKind
@@ -47,27 +48,31 @@ from aerona.domain.enums.operations import (
 )
 from aerona.domain.enums.polity import ClauseKind, DecisionRule, GovernmentKind, OfficeKind, PartyRole, TreatyKind
 from aerona.domain.enums.travel import VehicleKind
+from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.war import WarEnding, WarStatus
 from aerona.domain.models.entity_stats import ArmyStats, PolityStats, SpiritStats, VesselStats
 from aerona.engine.military.battle import Field, Side, linear_share, make_stacks, missiles
 from aerona.engine.military.logistics import March
 from aerona.engine.military.orders import create_vessel
 from aerona.engine.military.shipyard import Commission
+from aerona.engine.military.vessels import best_hull
 from aerona.engine.operations.admiralty import AdmiraltyTally, keep_admiralty
 from aerona.engine.operations.command import CommandTally, command_edge, issue_orders, organise
 from aerona.engine.operations.control import set_crew
-from aerona.engine.operations.expeditions import ExpeditionTally, advance, eat, launch, party_of
+from aerona.engine.operations.expeditions import ExpeditionTally, advance, arrive, danger_of, eat, launch, party_of, strain
 from aerona.engine.operations.limits import over_limit
 from aerona.engine.operations.sail import SailTally, engage, ship_state, take_prize
-from aerona.engine.operations.supply import SupplyTally, culminate, network, supply_season
+from aerona.engine.operations.supply import SupplyTally, culminate, draw, keep_network, network, supply_season, throughput
 from aerona.engine.operations.theatres import TheatreTally, keep_theatres
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.treaties import keep_clause
+from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.war import open_war
 from aerona.rules.registry import Rules
-from aerona.services.integrity.operations_links import mend_operations_links
+from aerona.services.integrity.operations_links import mend_operations_links, own_stray_ships
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 RULES = Rules()
@@ -401,3 +406,130 @@ async def test_each_event_of_an_expedition_is_logged_on_the_leg_it_happened_and_
     await set_crew(ctx, vessel.id, CrewStation.GUNNERS, {"count": 24})
     await set_crew(ctx, vessel.id, CrewStation.TOPMEN, {"count": 6})
     assert profile.crew == 30
+
+
+async def test_field_depots_are_abandoned_at_peace_and_an_enemy_army_on_the_line_chokes_it(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "lines")
+    realm, _ = await realm_with_town(session, world)
+    session.add(DepotRow(owner_entity_id=realm.id, region_entity_id=world.regions[1].id, field=True, locked=[]))
+    await session.flush()
+    await keep_network(ctx, SupplyTally())
+    assert await session.scalar(select(DepotRow.id).where(DepotRow.field.is_(True))) is None
+    rival = await entity(session, "Marsh Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    await open_war(ctx, realm, rival)
+    depot = DepotRow(owner_entity_id=realm.id, region_entity_id=world.regions[0].id, supplies=200, locked=[])
+    session.add(depot)
+    session.add(TransportAssetRow(owner_entity_id=realm.id, kind=CarrierKind.WAGONS, count=10, capacity=10, locked=[]))
+    army = await host(session, world, realm, 2)
+    profile = await session.get(ArmyProfileRow, army.id)
+    assert profile is not None
+    march = March(army, realm, profile, None, True)
+    web = await network(ctx)
+    clear = await throughput(ctx, march, depot, web)
+    await host(session, world, rival, 1)
+    choked = await throughput(ctx, march, depot, web)
+    assert clear > 0 and choked == clear * ctx.rules.supply_network.interdicted_pct // 100
+
+
+async def test_an_admiralty_pays_for_ships_built_to_its_best_hull_and_stops_at_its_share_of_people(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "yards", rules=tuned_rules(admiralty={"ship_cost": 100, "ships_per_ten_thousand": 10}))
+    realm, town = await realm_with_town(session, world)
+    profile = await session.get(PolityProfileRow, realm.id)
+    assert profile is not None
+    profile.treasury = 1000
+    await ship(session, world, town, "Gull", 20)
+    tally = AdmiraltyTally()
+    await keep_admiralty(ctx, realm, [realm.id], tally)
+    assert tally.commissioned == 0
+    profile.treasury = 1000
+    shift_stat(town, "population", 4000)
+    await keep_admiralty(ctx, realm, [realm.id], tally)
+    assert tally.commissioned >= 1 and profile.treasury < 1000
+    built = await session.scalar(select(VesselProfileRow).order_by(VesselProfileRow.entity_id.desc()).limit(1))
+    assert built is not None and built.frame is best_hull(await KnowledgeMap.load(session), town.id, 0)
+
+
+async def test_a_fleet_limit_on_one_class_of_ship_counts_only_that_class(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "classes")
+    realm, town = await realm_with_town(session, world)
+    rival = await entity(session, "Marsh Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    galley = await ship(session, world, town, "Oar", 40)
+    galley[1].frame = VehicleFrame.GALLEY
+    await ship(session, world, town, "Gull", 200)
+    treaty = await sign(
+        ctx,
+        TreatyKind.NAVAL_LIMIT,
+        [(realm.id, PartyRole.SIGNATORY), (rival.id, PartyRole.SIGNATORY)],
+        clauses=[Clause(ClauseKind.FLEET_LIMIT, realm.id, rival.id, {"tonnage": 100, "frame": "galley"})],
+    )
+    clause = await session.scalar(select(TreatyClauseRow).where(TreatyClauseRow.treaty_entity_id == treaty.id))
+    assert clause is not None and not await over_limit(ctx, clause)
+    clause.params = {"tonnage": 100}
+    assert await over_limit(ctx, clause)
+
+
+async def test_tools_lower_the_danger_in_the_dark_finds_bring_coin_and_the_lost_and_light_fingered_cost_the_party(
+    session: AsyncSession, world: CoreWorld
+) -> None:
+    ctx = await manual_context(session, "kit")
+    leader = await mortal(session, "Ilse", world, world.regions[0].id)
+    friend = await mortal(session, "Bram", world, world.regions[0].id)
+    hall = await entity(session, "The Far Hall", EntityType.SPIRIT, SpiritStats(strength=40), world_id=world.world.id, location_id=world.regions[3].id)
+    row = await launch(ctx, leader, hall, [friend], sponsor_id=None, tally=ExpeditionTally())
+    party = await party_of(ctx, row)
+    row.tools = 2
+    with_tools = danger_of(ctx, party)
+    row.tools = 0
+    assert danger_of(ctx, party) == with_tools + ctx.rules.expeditions.tool_danger or with_tools == 0
+    party.members[1].resolve = ResolveKind.HOPELESS
+    before = row.provisions
+    eat(ctx, party)
+    assert row.provisions == before - 3
+    party.quirks[leader.id] = {QuirkKind.LIGHT_FINGERED}
+    party.members[1].resolve = ResolveKind.STEADY
+    start = party.members[1].stress
+    strain(ctx, party)
+    calm = party.members[1].stress - start
+    party.quirks[leader.id] = set()
+    start = party.members[1].stress
+    strain(ctx, party)
+    assert calm > party.members[1].stress - start
+    party.quirks[leader.id] = {QuirkKind.LIGHT_FINGERED}
+    await arrive(ctx, party, ExpeditionTally())
+    purse = await session.get(MortalProfileRow, leader.id)
+    assert row.found >= 1 and purse is not None and purse.wealth > 0
+
+
+async def test_a_peoples_depot_draws_food_from_the_towns_of_that_people(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "people_supply")
+    town = await settlement(session, "Hollin", world, world.regions[0])
+    await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
+    session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.GRAIN, quantity=400))
+    await session.flush()
+    assert await draw(ctx, world.people, 100) > 0
+
+
+async def test_a_realm_without_a_land_of_its_own_keeps_its_home_depot_in_a_land_of_its_towns(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "home_depot")
+    realm, _ = await realm_with_town(session, world)
+    rival = await entity(session, "Marsh Crown", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    await open_war(ctx, realm, rival)
+    await keep_network(ctx, SupplyTally())
+    depot = await session.scalar(select(DepotRow).where(DepotRow.owner_entity_id == realm.id))
+    assert depot is not None and depot.region_entity_id == world.regions[0].id and not depot.field
+
+
+async def test_a_ship_whose_realm_bond_fell_to_related_is_held_again_by_a_town_of_the_realm(session: AsyncSession, world: CoreWorld) -> None:
+    realm, town = await realm_with_town(session, world)
+    vessel = await entity(session, "Stray Gull", EntityType.VESSEL, VesselStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(VesselProfileRow(entity_id=vessel.id, kind=VehicleKind.SHIP, crew=10, locked=[]))
+    session.add(BondRow(source_node_id=realm.id, target_node_id=vessel.id, kind=BondKind.RELATED, description="owner of: laid down by decree", epoch=1))
+    await session.flush()
+    assert await own_stray_ships(session, 3) == 1
+    owners = list(
+        await session.scalars(
+            select(BondRow.source_node_id).where(BondRow.target_node_id == vessel.id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
+        )
+    )
+    assert owners == [town.id]
+    assert await own_stray_ships(session, 4) == 0

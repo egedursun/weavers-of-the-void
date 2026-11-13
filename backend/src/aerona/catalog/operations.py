@@ -85,7 +85,7 @@ VIRTUES = frozenset({ResolveKind.COURAGEOUS, ResolveKind.FOCUSED, ResolveKind.ST
 RESOLVE_EFFECTS: dict[ResolveKind, str] = {
     ResolveKind.STEADY: "holds steady",
     ResolveKind.PARANOID: "will not rest at camp",
-    ResolveKind.HOPELESS: "slows the party and gains more stress",
+    ResolveKind.HOPELESS: "lingers, eating a companion's share, and gains more stress",
     ResolveKind.SELFISH: "eats a companion's provisions",
     ResolveKind.ABUSIVE: "raises the stress of every companion",
     ResolveKind.COURAGEOUS: "lifts the stress of every companion",
