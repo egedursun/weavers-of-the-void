@@ -46,6 +46,7 @@ async def spatial_economy(ctx: TickContext) -> None:
     "table.community_methods",
     "table.creator_taboos",
     "table.culture_ethics",
+    "table.epoch_year_cursors",
     "table.famine_lore",
     "table.game_reserves",
     "table.geasa",
@@ -69,6 +70,7 @@ async def spatial_economy(ctx: TickContext) -> None:
     "table.region_environment",
     "table.settlement_infrastructure",
     "table.soil_nutrients",
+    "table.species_ranges",
     "table.species_yields",
     "table.tradition_profiles",
     "table.vassalages",
@@ -125,6 +127,7 @@ async def agrarian_cycles(ctx: TickContext) -> None:
     "table.minds",
     "table.nodes",
     "table.offices",
+    "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
@@ -163,6 +166,8 @@ async def agrarian_cycles(ctx: TickContext) -> None:
     "table.preparedness",
     "table.reconstructions",
     "table.relief_aid",
+    "table.settlement_profiles",
+    "table.settlement_treasury",
 )
 async def resilience(ctx: TickContext) -> None:
     tally = ResilienceTally()

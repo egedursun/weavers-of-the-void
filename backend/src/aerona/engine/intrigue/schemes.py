@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from aerona.catalog.intrigue import SCHEMES
 from aerona.constants.units import PERCENT
@@ -13,6 +13,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.intrigue import FavourRow, HookRow, SchemeRow, TrueNameRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.operations import AdmiraltyRow
 from aerona.db.tables.polity import ClaimRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.settlement import SettlementTreasuryRow
@@ -494,6 +495,16 @@ async def geas_trap(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, targe
     return f"{target.name} was forced to break a geas" if row is not None else f"{target.name} slipped the trap"
 
 
+async def hide_fleet(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
+    row = await ctx.session.scalar(
+        select(AdmiraltyRow).where(or_(AdmiraltyRow.polity_entity_id == owner.id, AdmiraltyRow.admiral_entity_id == owner.id)).limit(1)
+    )
+    if row is None or row.limit_tonnage is None or "concealed" in row.locked:
+        return "there was no fleet to hide"
+    row.concealed = max(0, row.tonnage - row.limit_tonnage)
+    return f"ships past the tonnage sworn to {target.name} were built and kept out of sight"
+
+
 STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow], Awaitable[str]]] = {
     PlotKind.MURDER: murder,
     PlotKind.ABDUCT: abduct,
@@ -513,6 +524,7 @@ STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow],
     PlotKind.LEARN_TRUE_NAME: learn_true_name,
     PlotKind.FORGE_LETTER: forge_letter,
     PlotKind.GEAS_TRAP: geas_trap,
+    PlotKind.HIDE_FLEET: hide_fleet,
 }
 
 

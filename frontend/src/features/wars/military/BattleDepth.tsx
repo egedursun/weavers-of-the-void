@@ -43,6 +43,24 @@ const CASUALTY_PARTS = [
   { key: 'deserted', label: 'Deserted', icon: UserX, tone: 'muted' },
 ] as const
 
+const TACTIC_SIDES = new Set(['attacker', 'defender'])
+const SIDE_FACTORS: Record<string, (value: number) => string> = {
+  luck: (value) => `fortune ×${value.toFixed(2)}`,
+  span: (value) => `${formatInteger(value)} stacks on the front`,
+  concealment: (value) => `concealment ${formatInteger(value)}`,
+  square_reserve: (value) =>
+    `${formatInteger(value)} in reserve loosed their volleys (square law)`,
+  linear_cap: (value) =>
+    `${Math.round(value * PERCENT)}% of melee strength found no enemy front to strike (linear law)`,
+}
+const FACTOR_LABELS: Record<string, (value: number) => string> =
+  Object.fromEntries(
+    Object.entries(SIDE_FACTORS).flatMap(([key, label]) => [
+      [`attacker_${key}`, label],
+      [`defender_${key}`, label],
+    ])
+  )
+
 function Signed({ value }: { value: number }) {
   return (
     <Text
@@ -66,11 +84,14 @@ export function BattleDepthPanel({
   const depth = query.data
   if (!depth) return null
   const magic = Object.entries(depth.magic).filter(([, value]) => value > 0)
-  const factors = Object.entries(depth.tactic_factors).filter(
-    ([key]) => !key.endsWith('_flank')
+  const factors = Object.entries(depth.tactic_factors).filter(([key]) =>
+    TACTIC_SIDES.has(key)
   )
   const flanks = Object.entries(depth.tactic_factors).filter(
     ([key, value]) => key.endsWith('_flank') && value > 0
+  )
+  const readings = Object.entries(depth.tactic_factors).filter(
+    ([key, value]) => key in FACTOR_LABELS && value !== 0
   )
   return (
     <div data-surface='BattleDepth' className='flex min-w-0 flex-col gap-3'>
@@ -98,6 +119,20 @@ export function BattleDepthPanel({
               <Flag aria-hidden='true' />
               {key.startsWith('attacker') ? 'Attackers' : 'Defenders'} turned
               the flank
+            </Badge>
+          ))}
+        </div>
+      )}
+      {readings.length > 0 && (
+        <div
+          data-chart='chart-battle-laws'
+          className='flex min-w-0 flex-wrap items-center gap-1.5'
+        >
+          <Label>Laws of the fight</Label>
+          {readings.map(([key, value]) => (
+            <Badge key={key} size='sm' variant='outline'>
+              {key.startsWith('attacker') ? 'Attackers' : 'Defenders'}:{' '}
+              {FACTOR_LABELS[key](value)}
             </Badge>
           ))}
         </div>

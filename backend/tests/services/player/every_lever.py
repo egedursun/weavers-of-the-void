@@ -32,12 +32,13 @@ from aerona.db.tables.law_depth import MoleHuntRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
 from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.operations import SupplyFlowRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.db.tables.warfare import WarRow, WarSideRow
+from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.agrarian import CommonsKind
 from aerona.domain.enums.bond import BondKind, BondState
@@ -2908,9 +2909,6 @@ LEVERS.update(
 )
 
 
-LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})
-
-
 async def hidden_route(session: AsyncSession) -> None:
     route = await session.scalar(select(RouteRow).order_by(RouteRow.id).limit(1))
     assert route is not None
@@ -2941,3 +2939,145 @@ LORE_LEVERS: Mapping[str, Lever] = {
         (EntityType.THEORY, THEORY),
     )
 }
+
+
+async def supply_flow(session: AsyncSession) -> None:
+    army = await session.scalar(select(ArmyRow).order_by(ArmyRow.entity_id.desc()).limit(1))
+    assert army is not None
+    session.add(
+        SupplyFlowRow(owner_entity_id=army.owner_entity_id, army_entity_id=army.entity_id, produced=40, shipped=30, lost=5, delivered=25, need=30, locked=[])
+    )
+    await session.flush()
+
+
+ARMY_UP = ("army:raise", {"community_id": Pick(TOWN), "size": 200, "war_id": Newest("war")})
+ECHELON = ("echelon:create", {"owner_id": Pick(TOWN), "level": "brigade", "name": "Brigade 1", "army_id": Newest(EntityType.ARMY)})
+DEPOT = ("depot:create", {"owner_id": Pick(TOWN), "region_id": Pick(LAND)})
+TRANSPORT = ("transport:create", {"owner_id": Pick(TOWN), "kind": "wagons", "count": 5})
+THEATRE = ("theatre:set", {"owner_id": Pick(TOWN), "war_id": Newest("war"), "priority": 60})
+OPERATION = ("army_operation:set", {"army_id": Newest(EntityType.ARMY)})
+SHIP = ("ship_state:set", {"vessel_id": VESSEL})
+CREW = ("ship_crew:set", {"vessel_id": VESSEL, "station": "gunners"})
+ADMIRALTY = ("admiralty:set", {"polity_id": Pick(REALM)})
+EXPEDITION = ("expedition:create", {"leader_id": Pick(MORTAL), "target_id": Pick(LAND)})
+QUIRK = ("quirk:create", {"mortal_id": Pick(MORTAL), "kind": "hardy"})
+OPERATIONS_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "echelon:edit": {
+        "name": "Brigade 2",
+        "level": "division",
+        "commander_entity_id": Pick(MORTAL),
+        "hq_region_entity_id": Pick(LAND),
+        "staff": 55,
+        "command_range": 3,
+        "command_points": 6,
+        "points_spent": 1,
+        "order": "hold",
+        "in_range": False,
+    },
+    "depot:edit": {"region_entity_id": Pick(LAND), "supplies": 120, "capacity": 400, "field": True, "cut": True},
+    "transport:edit": {"kind": "pack_animals", "count": 12, "capacity": 6, "condition": 70},
+    "supply_flow:edit": {"produced": 50, "shipped": 40, "lost": 4, "delivered": 36, "need": 45, "throughput": 60},
+    "army_operation:edit": {
+        "offensive_seasons": 3,
+        "need": 40,
+        "delivered": 12,
+        "organisation": 35,
+        "culminated": True,
+        "pause_seasons": 2,
+        "foresight": 1,
+        "standing": True,
+    },
+    "theatre:edit": {
+        "front_region_entity_id": Pick(LAND),
+        "marshal_entity_id": Pick(MORTAL),
+        "priority": 70,
+        "believed_threat": 40,
+        "true_threat": 60,
+        "reserves": 80,
+        "levies": 30,
+        "transport": 4,
+        "misjudged": True,
+    },
+    "ship_state:edit": {
+        "heading": 2,
+        "wind_from": 6,
+        "point_of_sail": "running",
+        "tacks": 1,
+        "shot": "chain",
+        "leak": 20,
+        "fire": 10,
+        "magazine": True,
+        "rate_of_fire": 60,
+        "rower_fatigue": 5,
+        "raked": 1,
+        "struck": False,
+        "prize_of_entity_id": Pick(TOWN),
+        "prize_crew": 4,
+        "prize_money": 90,
+    },
+    "ship_crew:edit": {"count": 30, "skill": 65},
+    "admiralty:edit": {
+        "admiral_entity_id": Pick(MORTAL),
+        "budget_share": 40,
+        "requested": 45,
+        "influence": 55,
+        "tonnage": 300,
+        "limit_tonnage": 400,
+        "concealed": 20,
+        "commissioned": 3,
+    },
+    "expedition:edit": {
+        "name": "The Second Venture",
+        "leader_entity_id": Pick(MORTAL),
+        "target_entity_id": Pick(LAND),
+        "ground": "wilds",
+        "status": "camped",
+        "legs_done": 1,
+        "legs_total": 5,
+        "provisions": 8,
+        "light": 3,
+        "tools": 1,
+        "medicine": 2,
+        "darkness": 20,
+        "danger": 30,
+        "found": 1,
+    },
+    "expedition_member:edit": {"role": "scout", "stress": 80, "resolve": "focused", "cold": 10, "wet": 5, "hunger": 15, "fatigue": 20, "fallen": False},
+    "expedition_log:edit": {"event": "camp", "leg": 1, "provisions_used": 2, "light_used": 1, "stress": 10, "resolve": "steady", "quirk": "hardy"},
+    "quirk:edit": {"kind": "keen_eyed", "source_entity_id": Pick(LAND), "strength": 2},
+}
+EDITS = {**EDITS, **OPERATIONS_EDITS}
+LEVERS.update(
+    {
+        "echelon:create": after(WAR, ARMY_UP, owner_id=Pick(TOWN), level="brigade", name="Brigade 1", army_id=Newest(EntityType.ARMY)),
+        **{name: after(WAR, ARMY_UP, ECHELON, echelon_id=Newest("echelon")) for name in ("echelon:edit", "echelon:delete")},
+        "echelon:assign": after(WAR, ARMY_UP, ECHELON, stack_id=Newest("army_unit"), echelon_id=Newest("echelon")),
+        "depot:create": given(owner_id=Pick(TOWN), region_id=Pick(LAND)),
+        **{name: after(DEPOT, depot_id=Newest("depot")) for name in ("depot:edit", "depot:delete")},
+        "transport:create": given(owner_id=Pick(TOWN), kind="wagons", count=5),
+        **{name: after(TRANSPORT, transport_id=Newest("transport_asset")) for name in ("transport:edit", "transport:delete")},
+        **{
+            name: Lever(values={"flow_id": Newest("supply_flow")}, before=(WAR, ARMY_UP), then=supply_flow)
+            for name in ("supply_flow:edit", "supply_flow:delete")
+        },
+        "army_operation:set": after(WAR, ARMY_UP, army_id=Newest(EntityType.ARMY), culminated=True, pause_seasons=1),
+        **{name: after(WAR, ARMY_UP, OPERATION, army_id=Newest(EntityType.ARMY)) for name in ("army_operation:edit", "army_operation:delete")},
+        "theatre:set": after(WAR, owner_id=Pick(TOWN), war_id=Newest("war"), priority=60),
+        **{name: after(WAR, THEATRE, theatre_id=Newest("theatre")) for name in ("theatre:edit", "theatre:delete")},
+        "ship_state:set": given(vessel_id=VESSEL, shot="grape", point_of_sail="close_hauled"),
+        **{name: after(SHIP, vessel_id=VESSEL) for name in ("ship_state:edit", "ship_state:delete")},
+        "ship_crew:set": given(vessel_id=VESSEL, station="topmen", count=12, skill=50),
+        **{name: after(CREW, vessel_id=VESSEL, station="gunners") for name in ("ship_crew:edit", "ship_crew:delete")},
+        "admiralty:set": given(polity_id=Pick(REALM), budget_share=35),
+        **{name: after(ADMIRALTY, polity_id=Pick(REALM)) for name in ("admiralty:edit", "admiralty:delete")},
+        "expedition:create": given(leader_id=Pick(MORTAL), target_id=Pick(LAND), companion_ids=[]),
+        **{name: after(EXPEDITION, expedition_id=Newest("expedition")) for name in ("expedition:edit", "expedition:recall", "expedition:delete")},
+        "expedition:advance": after(EXPEDITION, expedition_id=Newest("expedition"), legs=1),
+        "expedition_member:create": after(EXPEDITION, expedition_id=Newest("expedition"), mortal_id=Pick(MORTAL, 1), role="healer"),
+        **{name: after(EXPEDITION, member_id=Newest("expedition_member")) for name in ("expedition_member:edit", "expedition_member:delete")},
+        **{name: after(EXPEDITION, log_id=Newest("expedition_log")) for name in ("expedition_log:edit", "expedition_log:delete")},
+        "quirk:create": given(mortal_id=Pick(MORTAL), kind="hardy"),
+        **{name: after(QUIRK, quirk_id=Newest("quirk")) for name in ("quirk:edit", "quirk:delete")},
+    }
+)
+LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})

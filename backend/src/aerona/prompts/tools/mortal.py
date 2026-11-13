@@ -690,7 +690,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You offer a typed treaty to another community or realm; it takes force when they accept. 1 action, {{ " + M + ".propose_treaty_per_epoch }} per age.",
         {
             "target_id": "The community or realm you offer it to",
-            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition or divine_pact",
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact or naval_limit",
             "clauses": "Typed clauses with who owes, who gains and their terms (amount, commodity, epochs, region_id, mortal_id...)",
             "epochs": "How many ages it should hold",
             "clauses.kind": "The clause's kind",
@@ -916,5 +916,19 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "name": "What the type is called; left empty, your people names it in its own tongue",
             "description": "What sets the type apart, in your words",
         },
+    ),
+    T.LEAD_EXPEDITION: ToolText(
+        "You lead an expedition with your companions into a site, a land, an underworld or another realm; each leg eats provisions and "
+        "light, the dark raises danger and stress, and those who return bring finds and renown. 1 action.",
+        {"target_id": "Where you go"},
+    ),
+    T.MAKE_CAMP: ToolText(
+        "You make your expedition camp now; the party rests off fatigue and stress for a ration each, though a night ambush may come. 1 action.",
+        {},
+    ),
+    T.ORDER_FORMATION: ToolText(
+        "As the commander of a formation or of its army, you give it an order ({{ echelon_orders }}); a formation on standing orders loses "
+        "organisation, one ordered to attack fights harder, to hold digs in, to manoeuvre regains order and to resupply is fed first. 1 action.",
+        {"echelon_id": "The formation", "order": "The order"},
     ),
 }

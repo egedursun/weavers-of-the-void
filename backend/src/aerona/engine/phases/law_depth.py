@@ -29,7 +29,7 @@ class BandTally:
     bands: int = 0
 
 
-@reads("table.legal_systems", "table.polity_profiles", "table.precedents")
+@reads("table.holder_techniques", "table.legal_systems", "table.polity_profiles", "table.precedents")
 @writes("table.legal_systems", "table.precedents")
 async def legal_systems(ctx: TickContext) -> None:
     tally = SystemTally()

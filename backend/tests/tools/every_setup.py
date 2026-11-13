@@ -33,6 +33,7 @@ from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, ServitorRow
+from aerona.db.tables.operations import EchelonRow, ExpeditionMemberRow, ExpeditionRow, TheatreRow
 from aerona.db.tables.physics import ImpactEventRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
@@ -73,6 +74,7 @@ from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRank, ServitorRole
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.operations import EchelonLevel, ExpeditionRole
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
@@ -87,6 +89,7 @@ from aerona.domain.enums.tongues import WordRegister
 from aerona.domain.enums.urban import ConvoyStatus, OrderLaw
 from aerona.domain.enums.world import StarType
 from aerona.domain.models.entity_stats import (
+    ArmyStats,
     BeastStats,
     CosmicBeingStats,
     DiseaseStats,
@@ -114,7 +117,7 @@ from aerona.engine.phases.physics import settle_heavens
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats
-from aerona.engine.services.war import take_captive
+from aerona.engine.services.war import open_war, take_captive
 from aerona.engine.tongues.modality import own_tongue
 from aerona.rules.registry import Rules
 from tests.tools.every_tool import Ids
@@ -1241,3 +1244,36 @@ async def builder_trained(session: AsyncSession, realm: Realm) -> Ids:
     session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.ENGINEERING, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
     await session.flush()
     return {}
+
+
+async def war_theatre(session: AsyncSession, realm: Realm) -> Ids:
+    found = await rival_realm(session, realm)
+    polity, rival = await session.get(EntityRow, found["polity"]), await session.get(EntityRow, found["rival"])
+    assert polity is not None and rival is not None
+    war = await open_war(await manual_context(session, "theatre"), polity, rival)
+    row = TheatreRow(owner_entity_id=polity.id, war_id=war.id, locked=[])
+    session.add(row)
+    await session.flush()
+    return {**found, "theatre": row.id}
+
+
+async def camping_party(session: AsyncSession, realm: Realm) -> Ids:
+    region = await second_region(session, realm)
+    row = ExpeditionRow(name="The First Venture", leader_entity_id=realm.mortal_id, target_entity_id=region["region"], provisions=10, locked=[])
+    session.add(row)
+    await session.flush()
+    session.add(ExpeditionMemberRow(expedition_id=row.id, mortal_entity_id=realm.mortal_id, role=ExpeditionRole.SCOUT, fatigue=60, locked=[]))
+    await session.flush()
+    return {"expedition": row.id}
+
+
+async def commanded_brigade(session: AsyncSession, realm: Realm) -> Ids:
+    army = await make_entity(
+        session, "Vale Host", EntityType.ARMY, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id, stats=ArmyStats(size=100)
+    )
+    session.add(ArmyRow(entity_id=army.id, owner_entity_id=realm.settlement_id, commander_entity_id=realm.mortal_id, raised_epoch=0))
+    await session.flush()
+    row = EchelonRow(owner_entity_id=realm.settlement_id, army_entity_id=army.id, level=EchelonLevel.BRIGADE, name="Brigade 1 of Vale Host", locked=[])
+    session.add(row)
+    await session.flush()
+    return {"echelon": row.id, "army": army.id}

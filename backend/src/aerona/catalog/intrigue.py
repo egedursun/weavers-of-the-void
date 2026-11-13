@@ -69,6 +69,7 @@ SCHEMES: dict[PlotKind, SchemeSpec] = {
         SchemeSpec(PlotKind.LEARN_TRUE_NAME, "Learning a true name", 70, 60, 1),
         SchemeSpec(PlotKind.FORGE_LETTER, "Forged letter", 50, 55, 1, IntrigueSecret.CRIME),
         SchemeSpec(PlotKind.GEAS_TRAP, "Geas trap", 60, 50, 1, IntrigueSecret.CRIME),
+        SchemeSpec(PlotKind.HIDE_FLEET, "Hidden fleet", 55, 60, 1, IntrigueSecret.CRIME),
     )
 }
 

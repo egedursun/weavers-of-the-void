@@ -365,6 +365,16 @@ from aerona.rules.registry.naming import NamingRules
 from aerona.rules.registry.narrative import NarrativeRules
 from aerona.rules.registry.native_faith import NativeFaithRules
 from aerona.rules.registry.notifications import NotificationsRules
+from aerona.rules.registry.operations import (
+    AdmiraltyRules,
+    AgeOfSailRules,
+    CulminationRules,
+    ExpeditionRules,
+    LanchesterRules,
+    OrderOfBattleRules,
+    SupplyNetworkRules,
+    TheatreRules,
+)
 from aerona.rules.registry.opportunities import OpportunitiesRules
 from aerona.rules.registry.pantheon import PantheonRules
 from aerona.rules.registry.physics import (
@@ -736,6 +746,14 @@ class Rules:
     attraction: AttractionRules = field(default_factory=AttractionRules)
     cosmic_wounds: CosmicWoundRules = field(default_factory=CosmicWoundRules)
     brands: BrandRules = field(default_factory=BrandRules)
+    order_of_battle: OrderOfBattleRules = field(default_factory=OrderOfBattleRules)
+    supply_network: SupplyNetworkRules = field(default_factory=SupplyNetworkRules)
+    culmination: CulminationRules = field(default_factory=CulminationRules)
+    theatres: TheatreRules = field(default_factory=TheatreRules)
+    lanchester: LanchesterRules = field(default_factory=LanchesterRules)
+    age_of_sail: AgeOfSailRules = field(default_factory=AgeOfSailRules)
+    admiralty: AdmiraltyRules = field(default_factory=AdmiraltyRules)
+    expeditions: ExpeditionRules = field(default_factory=ExpeditionRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     theories: TheoriesRules = field(default_factory=TheoriesRules)

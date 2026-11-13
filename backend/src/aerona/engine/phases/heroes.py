@@ -25,6 +25,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
 from aerona.engine.notes import note
+from aerona.engine.operations.expeditions import quest_expedition
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroism import encounter
 from aerona.engine.phases.society_support.knowledge import teach
@@ -41,7 +42,7 @@ from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import blood_feud_pairs
 from aerona.engine.services.sides import SideIndex, held_captives
 from aerona.engine.services.war_geography import Neighbourhood
-from aerona.engine.sites.rooms import delve, layout_of, rooms_of
+from aerona.engine.sites.rooms import layout_of, rooms_of
 from aerona.rules.registry import Rules
 
 HERO_SUBTYPE = "hero"
@@ -203,7 +204,7 @@ async def resolve_quest_now(ctx: TickContext, hero: EntityRow, quest: HeroQuestR
     companions = await companions_of(ctx, hero)
     chance = success_chance(ctx.rules, hero, len(companions), hero.id in world.chosen, await factor(ctx.session, hero.id, Capacity.MOBILITY))
     if await layout_of(ctx, target) is not None or await rooms_of(ctx, target.id):
-        walk = await delve(ctx, hero, target, len(companions))
+        walk = await quest_expedition(ctx, hero, target, companions)
         succeeded = forced if forced is not None else walk.reached_heart
     else:
         succeeded = forced if forced is not None else ctx.rng(f"quest.{quest.id}").probability(chance)
@@ -382,6 +383,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "species.agility",
     "species.danger",
     "species.strength",
+    "table.afterlife_strata",
     "table.avatars",
     "table.bodies",
     "table.body_customs",
@@ -401,6 +403,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.entity_tags",
     "table.entity_traits",
     "table.epoch_year_cursors",
+    "table.expedition_members",
     "table.feuds",
     "table.genomes",
     "table.griefs",
@@ -425,6 +428,8 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.personality_values",
     "table.place_profiles",
     "table.prostheses",
+    "table.quirks",
+    "table.region_environment",
     "table.reverences",
     "table.room_contents",
     "table.routes",
@@ -452,6 +457,9 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.expedition_logs",
+    "table.expedition_members",
+    "table.expeditions",
     "table.griefs",
     "table.hero_quests",
     "table.incident_participants",
@@ -463,6 +471,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.mortal_profiles",
     "table.name_registry",
     "table.personality_values",
+    "table.quirks",
     "table.site_rooms",
     "table.sons",
     "table.thoughts",

@@ -487,7 +487,7 @@ export function SealTreaty({
                   {spec.label}
                 </Badge>
                 <NumberField
-                  label='Amount'
+                  label={clause.kind === 'fleet_limit' ? 'Tonnage' : 'Amount'}
                   value={clause.amount}
                   min={0}
                   blocked={busy}
@@ -695,7 +695,7 @@ export function TreatyBuilder({
           onPick={setClauseKind}
         />
         <NumberField
-          label='Amount'
+          label={clauseKind === 'fleet_limit' ? 'Tonnage' : 'Amount'}
           value={amount}
           min={0}
           blocked={busy}

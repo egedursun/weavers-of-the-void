@@ -60,6 +60,7 @@ from aerona.engine.interconnect.catalog_military import MILITARY_MECHANICS
 from aerona.engine.interconnect.catalog_military_depth import MILITARY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_mortal import BEHAVIOURS as MORTAL_BEHAVIOURS
 from aerona.engine.interconnect.catalog_mortal import MORTAL_MECHANICS
+from aerona.engine.interconnect.catalog_operations import OPERATIONS_MECHANICS
 from aerona.engine.interconnect.catalog_peoples import PEOPLE_MECHANICS
 from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_MECHANICS
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
@@ -1012,6 +1013,7 @@ BUILT_IN = (
     *CYCLE_MECHANICS,
     *REGIME_MECHANICS,
     *AGRARIAN_MECHANICS,
+    *OPERATIONS_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,

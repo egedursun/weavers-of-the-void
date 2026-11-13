@@ -105,6 +105,8 @@ from aerona.engine.mind.book import best_effective, values_for
 from aerona.engine.mind.hooks import duelled, fought, judged
 from aerona.engine.mind.thoughts import think
 from aerona.engine.notes import note
+from aerona.engine.operations.command import CommandTally, issue_orders
+from aerona.engine.operations.supply import Network, SupplyTally, culminate, network, operation_of, supply_season
 from aerona.engine.phase import Phase
 from aerona.engine.polity.law_effects import standing_floor
 from aerona.engine.primitives.distance import RegionAtlas
@@ -161,6 +163,7 @@ class Theatre:
     neighbourhood: Neighbourhood
     laws: LawBook
     ground: EnvironmentBook
+    supply: Network | None = None
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "Theatre":
@@ -1354,9 +1357,16 @@ async def _manoeuvre(ctx: TickContext, theatre: Theatre, marches: list[March], i
     atlas = theatre.neighbourhood.atlas
     weather = ground.weather.kind if ground.weather is not None else None
     knowledge = await KnowledgeMap.load(ctx.session)
+    theatre.supply = theatre.supply or await network(ctx)
+    command, supply = CommandTally(), SupplyTally()
     for position, march in enumerate(marches):
         enemy = marches[1 - position] if len(marches) == PAIR else None
+        operation = await operation_of(ctx, march.army.id)
+        short = operation.need > 0 and operation.delivered * PERCENT < operation.need * ctx.rules.culmination.supply_pct
+        report = await issue_orders(ctx, march.army.id, march.profile, attacking=march.attacking, short=short, tally=command)
         log = await campaign_season(ctx, atlas, theatre.ground, march, index, weather=weather, season_row=ground.season, enemy=enemy)
+        flow = await supply_season(ctx, march, index, raided=log.raided, order=report.order, web=theatre.supply, tally=supply)
+        await culminate(ctx, march, flow, supply)
         ctx.count("march_regions", log.moved)
         ctx.count("attrition_dead", log.dead)
         ctx.count("deserters", log.deserted)
@@ -1365,6 +1375,8 @@ async def _manoeuvre(ctx: TickContext, theatre: Theatre, marches: list[March], i
         fight = await sea_battle(ctx, marches, weather, f"{ctx.epoch}.{index}.{marches[0].army.id}")
         if fight is not None:
             await _sea_report(ctx, fight)
+    for key, value in (*vars(command).items(), *vars(supply).items()):
+        ctx.count(f"operations_{key}", value)
     war = await ctx.session.get(WarRow, war_id)
     if war is not None:
         for march in marches:
@@ -1553,6 +1565,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.applied_fixups",
     "table.armies",
     "table.army_officers",
+    "table.army_operations",
     "table.army_profiles",
     "table.army_templates",
     "table.army_unit_equipment",
@@ -1584,11 +1597,13 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.deed_claims",
     "table.deeds",
     "table.demographic_transitions",
+    "table.depots",
     "table.designated_heirs",
     "table.disease_profiles",
     "table.districts",
     "table.divine_standing",
     "table.divine_wounds",
+    "table.echelons",
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
@@ -1674,9 +1689,11 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.spirit_profiles",
     "table.spy_agents",
     "table.spy_networks",
+    "table.theatres",
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
+    "table.transport_assets",
     "table.treaty_clauses",
     "table.treaty_profiles",
     "table.tributes",
@@ -1717,6 +1734,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.armies",
     "table.army_movements",
     "table.army_officers",
+    "table.army_operations",
     "table.army_profiles",
     "table.army_unit_equipment",
     "table.army_units",
@@ -1741,8 +1759,10 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.currencies",
     "table.deed_claims",
     "table.deeds",
+    "table.depots",
     "table.districts",
     "table.divine_standing",
+    "table.echelons",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
@@ -1787,8 +1807,10 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.sons",
     "table.spy_agents",
     "table.spy_networks",
+    "table.supply_flows",
     "table.thoughts",
     "table.traits",
+    "table.transport_assets",
     "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_parties",

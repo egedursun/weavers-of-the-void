@@ -125,6 +125,8 @@ async def send_pilgrims(ctx: TickContext, atlas: RegionAtlas, place: EntityRow, 
     "table.place_profiles",
     "table.region_environment",
     "table.relics",
+    "table.structure_profiles",
+    "table.vessel_profiles",
     "table.world_maps",
 )
 @writes(

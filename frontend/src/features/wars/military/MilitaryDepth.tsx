@@ -18,6 +18,19 @@ const COMMUNITIES = new Set([
   'polity',
 ])
 
+const SHIP_OWNERS = new Set([
+  'people',
+  'settlement',
+  'faction',
+  'cult',
+  'mortal',
+  'species',
+  'army',
+  'beast',
+])
+const NO_SHIPS =
+  'This kind of thing cannot own a ship; a realm holds its ships through its towns and peoples, so lay one down in a town of the realm'
+
 export function MilitaryDepth({
   entityId,
   kind,
@@ -79,7 +92,10 @@ export function MilitaryDepth({
         tone='info'
         hint='Lay down a vessel for this owner'
       >
-        <LayDownVessel ownerId={entityId} blocked={blocked} />
+        <LayDownVessel
+          ownerId={entityId}
+          blocked={SHIP_OWNERS.has(kind) ? blocked : NO_SHIPS}
+        />
       </Panel>
       <Vendettas entityId={entityId} blocked={blocked} />
     </div>

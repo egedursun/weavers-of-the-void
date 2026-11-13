@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildingFormValues, structureKindValues } from '@/api/generated/schema'
-import { STRUCTURE_LOOK, typedLook } from './models'
+import {
+  buildingFormValues,
+  landGroundValues,
+  structureKindValues,
+} from '@/api/generated/schema'
+import { STRUCTURE_LOOK, groundLook, riverLook, typedLook } from './models'
 
 const RIM = new Set(['wall', 'gate'])
 const WATER_GATES = new Set(['reservoir', 'canal_lock'])
@@ -21,5 +25,13 @@ describe('city models', () => {
       walled([typedLook('market', form, 1)[0].model])
     )
     expect(forms).toEqual(['wall_line'])
+  })
+
+  it('fills every hex of a land with its ground tile, rivers included, so no gap opens between hexes', () => {
+    const tiles = [
+      ...landGroundValues.map((ground) => groundLook(ground, 0, 0)[0]),
+      riverLook()[0],
+    ]
+    expect(tiles.filter((part) => (part.scale ?? 1) !== 1)).toEqual([])
   })
 })

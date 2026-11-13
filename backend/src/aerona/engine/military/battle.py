@@ -186,6 +186,8 @@ class Side:
     divine_shield: int = 0
     divine_spurned: int = 0
     divine_struck: int = 0
+    square_reserve: int = 0
+    linear_cap: float = 0.0
 
     @property
     def start(self) -> int:
@@ -666,23 +668,28 @@ def suppress(rules: Rules, target: Side, before: dict[int, int]) -> int:
     return pinned
 
 
+def loosing_share(rules: Rules, stack: Stack, families: frozenset[UnitFamily], *, coastal: bool) -> float:
+    if stack.spec.missile <= 0:
+        return 0.0
+    if stack.row.kind is UnitKind.NAVAL_CREW:
+        return rules.battle_terrain.coastal_fleet_support_pct / PERCENT if coastal else 0.0
+    return 1.0 if stack.spec.family in families else 0.0
+
+
 def missiles(rules: Rules, streams: Streams, shooter: Side, target: Side, ground: Field, *, families: frozenset[UnitFamily], engaged: bool = False) -> int:
     coastal = ground.terrain is TerrainKind.COAST
     damage = 0.0
     for stack in shooter.stacks:
-        if not stack.engaged or stack.spec.missile <= 0:
-            continue
-        if stack.row.kind is UnitKind.NAVAL_CREW:
-            if not coastal:
-                continue
-            share = rules.battle_terrain.coastal_fleet_support_pct / PERCENT
-        elif stack.spec.family in families:
-            share = 1.0
-        else:
+        massed = not engaged and stack.alive and stack.reserve
+        share = loosing_share(rules, stack, families, coastal=coastal) if stack.engaged or massed else 0.0
+        if share <= 0:
             continue
         shot = volley(rules, stack, target, engaged=engaged)
         if shot <= 0:
             continue
+        if massed:
+            share *= rules.lanchester.square_reserve_pct / PERCENT
+            shooter.square_reserve += stack.row.count
         damage += (
             stack.row.count
             * stack.spec.missile
@@ -775,10 +782,20 @@ def spring_trap(rules: Rules, side: Side, enemy: Side) -> list[Stack]:
     return sprung
 
 
+def linear_share(rules: Rules, side: Side, enemy: Side) -> float:
+    mine = sum(stack.row.count for stack in side.stacks if stack.engaged)
+    front = sum(stack.row.count for stack in enemy.stacks if stack.engaged) * rules.lanchester.linear_overlap_pct / PERCENT
+    if mine <= 0 or mine <= front:
+        return 1.0
+    share = front / mine
+    side.linear_cap = max(side.linear_cap, 1 - share)
+    return share
+
+
 def melee_power(rules: Rules, streams: Streams, sides: tuple[Side, Side], ground: Field, *, index: int, sprung: list[Stack]) -> float:
     side, enemy = sides
     trap = rules.battle_depth.trap_strength_pct / PERCENT
-    return sum(
+    return linear_share(rules, side, enemy) * sum(
         stack.row.count
         * stack.spec.melee
         / PERCENT
@@ -1273,6 +1290,10 @@ def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
         "defender_span": float(defender.span),
         "attacker_concealment": float(attacker.concealment),
         "defender_concealment": float(defender.concealment),
+        "attacker_square_reserve": float(attacker.square_reserve),
+        "defender_square_reserve": float(defender.square_reserve),
+        "attacker_linear_cap": round(attacker.linear_cap, 3),
+        "defender_linear_cap": round(defender.linear_cap, 3),
     }
     collapsed = next((side.entity.id for side in (attacker, defender) if side.commander_struck), None)
     return BattleResult(

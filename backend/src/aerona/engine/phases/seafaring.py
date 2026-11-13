@@ -89,7 +89,10 @@ from aerona.engine.phase import Phase
 async def seafaring(ctx: TickContext) -> None:
     tally = await seas(ctx)
     for key, value in vars(tally).items():
-        ctx.count(f"sea_{key}", value)
+        if isinstance(value, int):
+            ctx.count(f"sea_{key}", value)
+    for key, value in vars(tally.sail).items():
+        ctx.count(f"sail_{key}", value)
 
 
 PHASES = (Phase("seafaring", seafaring),)

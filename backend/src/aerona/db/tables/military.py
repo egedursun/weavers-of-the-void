@@ -75,6 +75,7 @@ class ArmyUnitRow(Base):
     ammunition: Mapped[int] = mapped_column(default=0)
     morale_state: Mapped[MoraleState] = mapped_column(enum_type(MoraleState, "morale_state"), default=MoraleState.STEADY)
     formation: Mapped[Formation] = mapped_column(enum_type(Formation, "formation"), default=Formation.LINE)
+    echelon_id: Mapped[int | None] = mapped_column(ForeignKey("echelons.id", ondelete="SET NULL"), index=True)
     missing: Mapped[int] = mapped_column(default=0)
 
 

@@ -108,6 +108,7 @@ async def unit_types(ctx: TickContext) -> None:
     "table.unit_designs",
     "table.vehicle_group_sections",
     "table.vehicle_groups",
+    "table.vessel_profiles",
     "table.workshops",
     "table.world_materials",
 )

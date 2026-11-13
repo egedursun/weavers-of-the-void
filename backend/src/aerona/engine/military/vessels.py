@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
@@ -10,6 +10,7 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import RouteRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import WorkshopKind
@@ -23,8 +24,11 @@ from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.collective.designs import DesignTally, design_power, fit_design, mend, wear_leg
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import give_coin
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.mind.book import skill_level
+from aerona.engine.mortal.standing import add_renown
+from aerona.engine.operations.sail import SailTally, engage, set_sail, take_prize
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -57,6 +61,8 @@ class SeaTally:
     worn: int = 0
     failures: int = 0
     mended: int = 0
+    prize_money: int = 0
+    sail: SailTally = field(default_factory=SailTally)
 
 
 def frame_value(rules: Rules, frame: VehicleFrame, key: str) -> int:
@@ -288,11 +294,13 @@ async def sea_fight(
 ) -> EntityRow:
     rng = ctx.rng(f"vessel_fight.{first[0].id}.{second[0].id}.{ctx.epoch}")
     powers = [vessel_power(ctx.rules, row, weather) * await design_power(ctx.session, row) * (0.8 + rng.below(40) / PERCENT) for _, row in (first, second)]
-    winner, loser = (first, second) if powers[0] >= powers[1] else (second, first)
+    fight = await engage(ctx, first, second, (powers[0], powers[1]), tally.sail)
+    winner, loser = (first, second) if fight.winner.id == first[0].id else (second, first)
     table = ctx.rules.seafaring
-    if "condition" not in loser[1].locked:
-        loser[1].condition = clamp_int(loser[1].condition - table.combat_damage, 0, PERCENT)
-    await battered(ctx, loser[0], loser[1], max(1, table.combat_damage // ctx.rules.vehicles.section_hit), f"sea_fight.{winner[0].id}")
+    if not (fight.sunk or fight.struck):
+        if "condition" not in loser[1].locked:
+            loser[1].condition = clamp_int(loser[1].condition - table.combat_damage, 0, PERCENT)
+        await battered(ctx, loser[0], loser[1], max(1, table.combat_damage // ctx.rules.vehicles.section_hit), f"sea_fight.{winner[0].id}")
     if "renown" not in winner[1].locked:
         winner[1].renown += table.renown_per_victory
     tally.fights += 1
@@ -303,9 +311,37 @@ async def sea_fight(
         entity_ids=(winner[0].id, loser[0].id),
         feed_category=FeedCategory.WAR,
     )
-    if loser[1].condition <= table.wreck_condition:
+    if fight.sunk:
+        await wreck(ctx, loser[0], loser[1], "when its magazine went up" if fight.exploded else "when it foundered under fire", tally)
+    elif fight.struck:
+        await prize(ctx, winner, loser, tally)
+    elif loser[1].condition <= table.wreck_condition:
         await wreck(ctx, loser[0], loser[1], f"by {winner[0].name}", tally)
     return winner[0]
+
+
+async def prize(ctx: TickContext, winner: tuple[EntityRow, VesselProfileRow], loser: tuple[EntityRow, VesselProfileRow], tally: SeaTally) -> None:
+    captor = await owner_of(ctx, winner[0].id)
+    money = await take_prize(ctx, winner[1], loser[0], loser[1], captor)
+    if captor is not None and not held(loser[0].id):
+        bonds = BondRepository(ctx.session)
+        for bond in await bonds.incoming(loser[0].id, BondKind.OWNS):
+            await bonds.deactivate(bond, ctx.epoch, f"struck its colours to {winner[0].name}")
+        await bonds.connect(BondDraft(captor.id, loser[0].id, BondKind.OWNS, ctx.epoch, f"taken as a prize by {winner[0].name}"))
+    captain = await living_entity(ctx.session, winner[1].captain_entity_id) if winner[1].captain_entity_id is not None else None
+    paid = captain or captor
+    if paid is not None:
+        await give_coin(ctx.session, ctx.rules, paid, money)
+        await add_renown(ctx.session, paid.id, ctx.rules.seafaring.renown_per_victory, ctx.epoch, rules=ctx.rules)
+    tally.sail.prizes += 1
+    tally.prize_money += money
+    await ctx.chronicle(
+        ChronicleKind.WAR,
+        f"{loser[0].name} struck its colours to {winner[0].name} and was taken as a prize.",
+        template_key="seafaring.prize_taken",
+        entity_ids=(winner[0].id, loser[0].id),
+        feed_category=FeedCategory.WAR,
+    )
 
 
 async def seas(ctx: TickContext) -> SeaTally:
@@ -342,6 +378,8 @@ async def seas(ctx: TickContext) -> SeaTally:
         row.voyages += 1
         tally.voyages += 1
         await weather_leg(ctx, vessel, row, weather, tally)
+        if row.status in AFLOAT:
+            await set_sail(ctx, vessel, row, row.region_entity_id, tally.sail)
         if row.status in AFLOAT:
             for hazard in await wear_leg(ctx, vessel, row, stormy=weather in STORMS, tally=designs):
                 await wreck_crew(ctx, vessel, row, hazard)

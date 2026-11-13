@@ -32,6 +32,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.bonds",
     "table.collection_members",
     "table.collection_places",
+    "table.community_societies",
     "table.community_stocks",
     "table.crime_cases",
     "table.culture_ethics",
@@ -60,6 +61,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 @writes(
     "cult.zeal",
     "settlement.wealth",
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.collection_members",
@@ -79,6 +81,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.polity_profiles",
     "table.relationships",
     "table.secrets",
+    "table.settlement_profiles",
     "table.thoughts",
 )
 async def gatherings(ctx: TickContext) -> None:

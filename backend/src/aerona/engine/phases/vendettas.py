@@ -270,6 +270,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "table.holder_levels",
     "table.house_members",
     "table.house_profiles",
+    "table.incident_participants",
     "table.incubating_ideas",
     "table.injuries",
     "table.inspirations",

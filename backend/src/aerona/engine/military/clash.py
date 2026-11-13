@@ -55,6 +55,7 @@ from aerona.engine.military.command import command_areas
 from aerona.engine.military.units import design_spec, muster, profile_of, sync
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.mind.split import MIDPOINT, attribute
+from aerona.engine.operations.command import command_edge
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
@@ -252,6 +253,7 @@ async def side_of(
     medicine = knowledge.level(community.id, KnowledgeBranch.MEDICINE) * PERCENT // max(1, table.morale.medicine_levels)
     medicine += await surgeon_skill(ctx, [item.id for item, _ in armies]) * table.battle_magic.surgeon_pct // PERCENT
     biology, culture = await profiles_of(ctx.session, community)
+    ordered = await command_edge(ctx, army.id)
     kin = battle_edge(ctx.rules, biology, culture, terrain=ground.terrain, weather=ground.weather, night=ground.night, river=ground.river, defending=defending)
     return Side(
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
@@ -260,7 +262,7 @@ async def side_of(
         army=army,
         profile=profile,
         stacks=stacks,
-        edge=edge * kin * await holy_strike(ctx.session, table, army.id, enemy) * await mounted_edge(ctx, row.commander_entity_id),
+        edge=edge * kin * await holy_strike(ctx.session, table, army.id, enemy) * await mounted_edge(ctx, row.commander_entity_id) * ordered,
         defending=defending,
         skill=await skill_level(ctx, commander, SkillKind.TACTICS),
         traits=await traits_of(ctx, commander),

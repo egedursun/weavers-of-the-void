@@ -35,7 +35,7 @@ from aerona.engine.collective.designs import MOUNT_ARCS, draw_design
 from aerona.engine.collective.embodied import TABLE_KINDS, align_made, settle
 from aerona.engine.cosmos.being_wounds import WoundTally, effective_might, regrow, strike, wound_being
 from aerona.engine.cuisine.dishes import dish_traits, run_kitchens
-from aerona.engine.equipment.models import draw_model
+from aerona.engine.equipment.models import draw_model, slot_order
 from aerona.engine.military.unit_types import draw_type, run_unit_types
 from aerona.engine.military.units import designs_of, equip_bare_stacks
 from aerona.engine.mortal.attraction import drawn, pull
@@ -331,3 +331,9 @@ async def test_every_made_type_is_a_record_of_its_world_like_any_other(session: 
 def test_every_made_table_names_its_entity() -> None:
     assert set(TABLE_KINDS) == set(MADE_TABLES)
     assert all("entity_id" in table.__table__.c for table in MADE_TABLES)
+
+
+def test_a_mount_tries_its_slots_in_one_fixed_order_whatever_order_they_come_in() -> None:
+    slots = [ArmamentSlot.MISSILE_WEAPON, ArmamentSlot.HAND_WEAPON, ArmamentSlot.VEHICLE_WEAPON]
+    assert slot_order(slots) == slot_order(reversed(slots)) == slot_order(set(slots))
+    assert slot_order(slots)[0] is ArmamentSlot.VEHICLE_WEAPON

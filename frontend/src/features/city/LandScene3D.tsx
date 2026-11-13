@@ -1,6 +1,7 @@
 import { type ReactNode, Suspense, useState } from 'react'
 import { Html } from '@react-three/drei'
 import { tokenHex } from '@/features/cosmography/visual/palette'
+import { RIVER } from '@/features/entity/environment/labels'
 import { Model } from './Model'
 import { SceneFrame } from './SceneFrame'
 import { SceneLabels } from './SceneLabels'
@@ -8,7 +9,7 @@ import { type LandScene } from './api'
 import { cellKey, hexDistance, hexRing, hexToWorld } from './hex'
 import { COVERS, GROUNDS, STATES } from './labels'
 import {
-  RIVER_TILE,
+  riverLook,
   SETTLEMENT_LOOK,
   STAGE_LOOK,
   typedLook,
@@ -24,7 +25,6 @@ export type LandPick =
   | { kind: 'settlement' | 'place' | 'work' | 'resource'; id: number }
   | null
 
-const RIVER_SCALE = { none: 0, stream: 0.7, river: 1, great_river: 1.15 }
 const RESOURCE_MIN = 0.45
 const SPENT_DIM = 0.5
 const SELECTED_LIFT = 0.25
@@ -109,19 +109,13 @@ export default function LandScene3D({
             selected.q === tile.q &&
             selected.r === tile.r
           const ground = tile.river
-            ? [
-                {
-                  model: RIVER_TILE,
-                  scale: RIVER_SCALE[scene.river],
-                  turn: 0,
-                },
-              ]
+            ? riverLook()
             : groundLook(tile.ground, tile.q, tile.r, shorelineOf(tile))
           const cover = busy.has(cellKey([tile.q, tile.r]))
             ? []
             : coverLook(tile.cover, tile.q, tile.r)
           const pick = () => onPick({ kind: 'tile', q: tile.q, r: tile.r })
-          const text = `${GROUNDS[tile.ground]} · ${COVERS[tile.cover]}${tile.river ? ' · river' : ''}`
+          const text = `${GROUNDS[tile.ground]} · ${COVERS[tile.cover]}${tile.river ? ` · ${RIVER[scene.river].toLowerCase()}` : ''}`
           return [...ground, ...cover].map((part, index) => (
             <Model
               key={`tile-${cellKey([tile.q, tile.r])}-${index}`}

@@ -1,6 +1,7 @@
 from aerona.engine.interconnect.registry import Mechanic
 
 TABLE_BACKFILLS: dict[tuple[str, str], str] = {
+    ("logistics_network", "supply_flows"): "none: supply flows are written from the next campaign season",
     (
         "examinations",
         "examinations",

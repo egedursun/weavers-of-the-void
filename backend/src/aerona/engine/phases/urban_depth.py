@@ -13,7 +13,9 @@ from aerona.engine.urban.housing import HousingTally, house_towns
 from aerona.engine.urban.turf import TurfTally, hold_turf
 
 
-@reads("settlement.population", "table.district_services", "table.districts", "table.settlement_infrastructure", "table.settlement_profiles")
+@reads(
+    "settlement.population", "table.district_services", "table.districts", "table.holder_levels", "table.settlement_infrastructure", "table.settlement_profiles"
+)
 @writes("table.district_services", "table.districts", "table.settlement_profiles")
 async def district_coverage(ctx: TickContext) -> None:
     tally = CoverageTally()

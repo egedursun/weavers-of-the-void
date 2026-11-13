@@ -224,6 +224,7 @@ class TreatyKind(StrEnum):
     INTERWORLD = "interworld"
     COALITION = "coalition"
     DIVINE_PACT = "divine_pact"
+    NAVAL_LIMIT = "naval_limit"
 
 
 class TreatyStatus(StrEnum):
@@ -252,6 +253,7 @@ class ClauseKind(StrEnum):
     ROUTE_CONTROL = "route_control"
     RESOURCE_DEMAND = "resource_demand"
     RESEARCH_AGREEMENT = "research_agreement"
+    FLEET_LIMIT = "fleet_limit"
 
 
 class PartyRole(StrEnum):

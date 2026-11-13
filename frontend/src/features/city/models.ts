@@ -778,6 +778,10 @@ export function groundLook(
   return [base]
 }
 
+export function riverLook(): Look {
+  return [{ model: RIVER_TILE }]
+}
+
 export function coverLook(
   cover: Schema['LandCover'],
   q: number,

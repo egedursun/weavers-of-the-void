@@ -89,6 +89,7 @@ from aerona.services.player import (
     mortals,
     mythic,
     native_faith,
+    operations,
     pantheon,
     peoples,
     physics,
@@ -3689,6 +3690,93 @@ CYCLE_ACTIONS = (
     _sync(Meta("manumission:delete", "Strike a freeing from the record", G.SOCIETY), cycles.manumission_delete, cycles.ManumissionTarget, free, ("S4.9/RP4",)),
 )
 
+OPERATIONS_ACTIONS = (
+    _sync(Meta("echelon:create", "Form a formation in an order of battle", G.WARFARE), operations.echelon_create, operations.EchelonDraft, free, ("S5.1/RP4",)),
+    _sync(Meta("echelon:edit", "Edit a formation and its headquarters", G.WARFARE), operations.echelon_edit, operations.EchelonEdit, free, ("S5.1/RP4",)),
+    _sync(Meta("echelon:assign", "Put a stack under a formation", G.WARFARE), operations.echelon_assign, operations.StackAssignment, free, ("S5.1/RP4",)),
+    _sync(
+        Meta("echelon:delete", "Strike a formation from the order of battle", G.WARFARE),
+        operations.echelon_delete,
+        operations.EchelonTarget,
+        free,
+        ("S5.1/RP4",),
+    ),
+    _sync(Meta("depot:create", "Stock a supply depot", G.WARFARE), operations.depot_create, operations.DepotDraft, free, ("S5.1/RP4",)),
+    _sync(Meta("depot:edit", "Edit a supply depot", G.WARFARE), operations.depot_edit, operations.DepotEdit, free, ("S5.1/RP4",)),
+    _sync(Meta("depot:delete", "Empty and remove a depot", G.WARFARE), operations.depot_delete, operations.DepotTarget, free, ("S5.1/RP4",)),
+    _sync(Meta("transport:create", "Add transport to a realm's train", G.WARFARE), operations.transport_create, operations.TransportDraft, free, ("S5.1/RP4",)),
+    _sync(Meta("transport:edit", "Edit transport in a train", G.WARFARE), operations.transport_edit, operations.TransportEdit, free, ("S5.1/RP4",)),
+    _sync(Meta("transport:delete", "Remove transport from a train", G.WARFARE), operations.transport_delete, operations.TransportTarget, free, ("S5.1/RP4",)),
+    _sync(Meta("supply_flow:edit", "Edit a season's supply flow", G.WARFARE), operations.supply_flow_edit, operations.FlowEdit, free, ("S5.1/RP4",)),
+    _sync(
+        Meta("supply_flow:delete", "Strike a supply flow from the record", G.WARFARE), operations.supply_flow_delete, operations.FlowTarget, free, ("S5.1/RP4",)
+    ),
+    _sync(
+        Meta("army_operation:set", "Set an army's offensive and its culmination", G.WARFARE),
+        operations.army_operation_set,
+        operations.OperationDraft,
+        free,
+        ("S5.1/RP4",),
+    ),
+    _sync(Meta("army_operation:edit", "Edit an army's offensive", G.WARFARE), operations.army_operation_edit, operations.ArmyEdit, free, ("S5.1/RP4",)),
+    _sync(
+        Meta("army_operation:delete", "Let an army's offensive be read anew", G.WARFARE),
+        operations.army_operation_delete,
+        operations.ArmyTarget,
+        free,
+        ("S5.1/RP4",),
+    ),
+    _sync(Meta("theatre:set", "Set a front's share of reserves", G.WARFARE), operations.theatre_set, operations.TheatreDraft, free, ("S5.1/RP4",)),
+    _sync(Meta("theatre:edit", "Edit a theatre of war", G.WARFARE), operations.theatre_edit, operations.TheatreEdit, free, ("S5.1/RP4",)),
+    _sync(Meta("theatre:delete", "Let a theatre be drawn anew", G.WARFARE), operations.theatre_delete, operations.TheatreTarget, free, ("S5.1/RP4",)),
+    _sync(Meta("ship_state:set", "Set a ship's sailing and gunnery", G.WARFARE), operations.ship_state_set, operations.ShipDraft, free, ("S5.5/RP4",)),
+    _sync(Meta("ship_state:edit", "Edit a ship's damage, fire and prize", G.WARFARE), operations.ship_state_edit, operations.VesselEdit, free, ("S5.5/RP4",)),
+    _sync(Meta("ship_state:delete", "Let a ship's state be read anew", G.WARFARE), operations.ship_state_delete, operations.VesselTarget, free, ("S5.5/RP4",)),
+    _sync(Meta("ship_crew:set", "Man a crew station", G.WARFARE), operations.ship_crew_set, operations.CrewDraft, free, ("S5.5/RP4",)),
+    _sync(Meta("ship_crew:edit", "Edit a crew station", G.WARFARE), operations.ship_crew_edit, operations.CrewEdit, free, ("S5.5/RP4",)),
+    _sync(Meta("ship_crew:delete", "Let a crew station be manned anew", G.WARFARE), operations.ship_crew_delete, operations.CrewTarget, free, ("S5.5/RP4",)),
+    _sync(
+        Meta("admiralty:set", "Set an admiralty's share of the war budget", G.WARFARE), operations.admiralty_set, operations.AdmiraltyDraft, free, ("S5.5/RP4",)
+    ),
+    _sync(Meta("admiralty:edit", "Edit an admiralty", G.WARFARE), operations.admiralty_edit, operations.PolityEdit, free, ("S5.5/RP4",)),
+    _sync(Meta("admiralty:delete", "Let an admiralty be drawn anew", G.WARFARE), operations.admiralty_delete, operations.PolityTarget, free, ("S5.5/RP4",)),
+    _sync(Meta("expedition:create", "Send an expedition", G.ENTITIES), operations.expedition_create, operations.ExpeditionDraft, free, ("S6.2/RP4",)),
+    _sync(Meta("expedition:edit", "Edit an expedition", G.ENTITIES), operations.expedition_edit, operations.ExpeditionEdit, free, ("S6.2/RP4",)),
+    _sync(Meta("expedition:advance", "Press an expedition on", G.ENTITIES), operations.expedition_advance, operations.ExpeditionPush, free, ("S6.2/RP4",)),
+    _sync(Meta("expedition:recall", "Recall an expedition", G.ENTITIES), operations.expedition_recall, operations.ExpeditionTarget, free, ("S6.2/RP4",)),
+    _sync(
+        Meta("expedition:delete", "Strike an expedition from the record", G.ENTITIES),
+        operations.expedition_delete,
+        operations.ExpeditionTarget,
+        free,
+        ("S6.2/RP4",),
+    ),
+    _sync(
+        Meta("expedition_member:create", "Add a member to an expedition", G.ENTITIES),
+        operations.expedition_member_create,
+        operations.MemberDraft,
+        free,
+        ("S6.2/RP4",),
+    ),
+    _sync(
+        Meta("expedition_member:edit", "Edit an expedition member", G.ENTITIES), operations.expedition_member_edit, operations.MemberEdit, free, ("S6.2/RP4",)
+    ),
+    _sync(
+        Meta("expedition_member:delete", "Remove a member from an expedition", G.ENTITIES),
+        operations.expedition_member_delete,
+        operations.MemberTarget,
+        free,
+        ("S6.2/RP4",),
+    ),
+    _sync(Meta("expedition_log:edit", "Edit an expedition log entry", G.ENTITIES), operations.expedition_log_edit, operations.LogEdit, free, ("S6.2/RP4",)),
+    _sync(
+        Meta("expedition_log:delete", "Strike an expedition log entry", G.ENTITIES), operations.expedition_log_delete, operations.LogTarget, free, ("S6.2/RP4",)
+    ),
+    _sync(Meta("quirk:create", "Give a mortal a quirk", G.ENTITIES), operations.quirk_create, operations.QuirkDraft, free, ("S6.2/RP4",)),
+    _sync(Meta("quirk:edit", "Edit a quirk", G.ENTITIES), operations.quirk_edit, operations.QuirkEdit, free, ("S6.2/RP4",)),
+    _sync(Meta("quirk:delete", "Take a quirk away", G.ENTITIES), operations.quirk_delete, operations.QuirkTarget, free, ("S6.2/RP4",)),
+)
+
 AGRARIAN_ACTIONS = (
     _sync(Meta("land_ring:set", "Set the ring of land use a land falls in", G.SOCIETY), agrarian.land_ring_set, agrarian.RingDraft, free, ("S4.2/RP4",)),
     _sync(Meta("land_ring:edit", "Edit a land's ring of use", G.SOCIETY), agrarian.land_ring_edit, agrarian.RegionEdit, free, ("S4.2/RP4",)),
@@ -4015,6 +4103,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *CYCLE_ACTIONS,
     *REGIME_ACTIONS,
     *AGRARIAN_ACTIONS,
+    *OPERATIONS_ACTIONS,
     *ROUTE_ACTIONS,
     *STRUCTURE_ACTIONS,
     *FOUNDATION_ACTIONS,

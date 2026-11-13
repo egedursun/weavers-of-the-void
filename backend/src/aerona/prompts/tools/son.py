@@ -1135,9 +1135,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You bind two or more parties (realms, communities, houses, cults, beasts) by a typed treaty sealed in your name: its kind decides how it behaves "
         "and its clauses run every age (tribute, hostages, tolls waived, freedom of faith, call to arms...). Costs essence.",
         {
-            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition or divine_pact",
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact or naval_limit",
             "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
-            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id...)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id, tonnage...)",
             "epochs": "How many ages it holds; empty for ever",
             "parties.party_id": "The party's id",
             "parties.role": "Its role: signatory, overlord, vassal or guarantor",
@@ -1521,5 +1521,31 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "might, sight or the power to cross between worlds until it heals. {{ rules.cosmic_wounds.strike_essence }} essence for each point "
         "of force, 1 action.",
         {"being_id": "The being you strike", "force": "How hard you strike, 1 to 10", "reason": "Why you strike it"},
+    ),
+    T.SEND_EXPEDITION: ToolText(
+        "You move a mortal in your reach to lead an expedition, with its companions, into a site, a land, an underworld or another realm; "
+        "each leg eats provisions and light, the dark raises danger and stress, members may break or rise to the test and come home with "
+        "quirks, and those who return bring finds and renown. 1 action.",
+        {"leader_id": "The mortal who leads it", "target_id": "Where it goes", "reason": "Why you send it"},
+    ),
+    T.STOCK_DEPOT: ToolText(
+        "You move a realm or a people in your reach to stock a field depot in a land; depots feed its armies through the transport it has, "
+        "and an enemy that takes the land cuts the depot off. 1 action.",
+        {"owner_id": "The realm or people that stocks it", "region_id": "The land it stands in", "reason": "Why you move them"},
+    ),
+    T.STEER_THEATRE: ToolText(
+        "You set how much of a realm's reserves, levies and transport one of its theatres of war receives, 0 to 100; the front you favour "
+        "is reinforced and the others go short. 1 action.",
+        {"theatre_id": "The theatre of war", "priority": "Its share, 0 to 100", "reason": "Why you steer it"},
+    ),
+    T.MARK_QUIRK: ToolText(
+        "You leave a quirk on a mortal in your reach ({{ quirk_kinds }}); it stays with them and changes how they fare on expeditions and "
+        "how often they set out. 1 action.",
+        {"mortal_id": "The mortal you mark", "kind": "The quirk", "reason": "Why you mark them"},
+    ),
+    T.LIMIT_FLEETS: ToolText(
+        "You bind two realms at peace in your reach to a naval treaty capping each fleet at a tonnage; an admiralty that builds past it "
+        "breaks the treaty, and one whose admiral cares little for law may hide ships until they are found out. 1 action.",
+        {"first_id": "One realm", "second_id": "The other realm", "tonnage": "The tonnage each fleet may reach", "reason": "Why you bind them"},
     ),
 }

@@ -51,7 +51,17 @@ async def influence(ctx: TickContext) -> None:
     ctx.count("signature_minerals", await signature_minerals(ctx))
 
 
-@reads("settlement.population", "table.community_stocks", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.routes")
+@reads(
+    "settlement.population",
+    "table.bonds",
+    "table.community_stocks",
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.galactic_structures",
+    "table.law_jurisdictions",
+    "table.polity_members",
+    "table.routes",
+)
 @writes("table.community_stocks", "table.routes")
 async def trade(ctx: TickContext) -> None:
     ctx.count("goods_carried", await cosmic_trade(ctx))

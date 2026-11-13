@@ -92,6 +92,7 @@ from aerona.engine.phases import (
     mortals,
     mythic,
     native_faith,
+    operations,
     pantheon,
     places,
     population,
@@ -208,6 +209,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + cycles.PHASES
     + regimes.PHASES
     + agrarian.PHASES
+    + operations.PHASES
     + made_kinds.PHASES
     + exploration.PHASES
     + factions.PHASES
@@ -306,9 +308,11 @@ SUB_ENGINE_STAGE = stage(
     "war_upkeep",
     "tribute",
     "treaty_cycles",
+    "admiralty",
     "equipment_forging",
     "unit_types",
     "vehicle_works",
+    "order_of_battle",
     "campaigns",
     "vendetta_cycles",
     "prisoners",
@@ -320,6 +324,7 @@ SUB_ENGINE_STAGE = stage(
     "geography",
     "place_profiles",
     "site_rooms",
+    "expeditions",
     "excavations",
     "place_secrets",
     "magic_sites",

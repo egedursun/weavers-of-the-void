@@ -474,6 +474,16 @@ class SonResult(StrEnum):
     RELIEF_INSPIRED = "{{ giver }} sent {{ kind }} to {{ town }}."
     RELIEF_TURNED_AWAY = "{{ town }} turned away the {{ kind }} {{ giver }} sent."
     RELIEF_REFUSED = "You cannot move them to send aid: {{ why }}."
+    EXPEDITION_SENT = "{{ leader }} set out for {{ target }} with a party of {{ party }}; the way runs {{ legs }} legs."
+    EXPEDITION_REFUSED = "You cannot send that expedition: {{ why }}."
+    DEPOT_STOCKED = "{{ owner }} stocked a depot in {{ land }}."
+    DEPOT_REFUSED = "You cannot have that depot stocked: {{ why }}."
+    THEATRE_STEERED = "{{ owner }} now sends that front {{ priority }} of every hundred of its reserves."
+    THEATRE_REFUSED = "You cannot steer that theatre: {{ why }}."
+    QUIRK_MARKED = "{{ mortal }} now bears the quirk {{ quirk }}."
+    QUIRK_REFUSED = "You cannot leave that quirk: {{ why }}."
+    FLEETS_LIMITED = "{{ first }} and {{ second }} swore to keep their fleets within {{ tonnage }} tons."
+    FLEET_LIMIT_REFUSED = "You cannot bind those fleets: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -878,3 +888,9 @@ class MortalResult(StrEnum):
     LINEAGE_EXISTS = "There is already a lineage bond between you and {{ name }}."
     NOT_YOUNGER = "{{ name }} is not younger than you ({{ mine }} / {{ theirs }}); nobody adopts someone older than themselves."
     ADOPTED = "{{ name }} is now of your lineage."
+    EXPEDITION_LED = "You set out for {{ target }} with a party of {{ party }}; the way runs {{ legs }} legs."
+    EXPEDITION_DECLINED = "You cannot set out: {{ why }}."
+    CAMP_MADE = "You made camp; {{ provisions }} provisions are left and {{ ambushed }}."
+    CAMP_REFUSED = "You cannot make camp: {{ why }}."
+    FORMATION_ORDERED = "{{ formation }} now holds the order: {{ order }}."
+    FORMATION_REFUSED = "You cannot order that formation: {{ why }}."

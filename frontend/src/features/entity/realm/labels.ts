@@ -361,6 +361,12 @@ export const TREATY_KINDS: Record<string, Named & { plural: string }> = {
     icon: Sparkles,
     tone: 'gold',
   },
+  naval_limit: {
+    label: 'Naval treaty',
+    plural: 'Naval treaties',
+    icon: Anchor,
+    tone: 'info',
+  },
 }
 
 export const TREATY_STATUSES: Record<
@@ -413,6 +419,11 @@ export const CLAUSES: Record<string, Named> = {
   research_agreement: {
     label: 'Shared research',
     icon: GraduationCap,
+    tone: 'info',
+  },
+  fleet_limit: {
+    label: 'Fleet limit',
+    icon: Ship,
     tone: 'info',
   },
 }

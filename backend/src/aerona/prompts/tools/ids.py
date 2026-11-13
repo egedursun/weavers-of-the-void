@@ -202,6 +202,11 @@ class SonToolId(StrEnum):
     SHAPE_DISH = "shape_dish"
     SHAPE_STRUCTURE_TYPE = "shape_structure_type"
     STRIKE_BEING = "strike_being"
+    SEND_EXPEDITION = "send_expedition"
+    STOCK_DEPOT = "stock_depot"
+    STEER_THEATRE = "steer_theatre"
+    MARK_QUIRK = "mark_quirk"
+    LIMIT_FLEETS = "limit_fleets"
 
 
 class MortalToolId(StrEnum):
@@ -340,6 +345,9 @@ class MortalToolId(StrEnum):
     FORGE_MODEL = "forge_model"
     CREATE_DISH = "create_dish"
     DRAW_STRUCTURE_TYPE = "draw_structure_type"
+    LEAD_EXPEDITION = "lead_expedition"
+    MAKE_CAMP = "make_camp"
+    ORDER_FORMATION = "order_formation"
 
 
 ToolId = SonToolId | MortalToolId

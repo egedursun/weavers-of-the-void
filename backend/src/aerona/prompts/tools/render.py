@@ -60,6 +60,7 @@ from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmourType, Formation, ShieldType
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, ServitorRole
+from aerona.domain.enums.operations import EchelonOrder, QuirkKind
 from aerona.domain.enums.place import PlaceKind, SecretKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.regime import SelectorateKind
@@ -173,6 +174,8 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "aid_kinds": ", ".join(item.value for item in AidKind),
         "preparedness_kinds": ", ".join(item.value for item in PreparednessKind),
         "keystone_uses": ", ".join(item.value for item in KeystoneUse),
+        "quirk_kinds": ", ".join(item.value for item in QuirkKind),
+        "echelon_orders": ", ".join(item.value for item in EchelonOrder),
         "design_kinds": ", ".join(item.value for item in DesignKind),
         "design_components": ", ".join(item.value for item in DesignComponentKind),
         "vehicle_frames": ", ".join(f"{kind} ({spec.label})" for kind, spec in FRAMES.items()),

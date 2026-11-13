@@ -11,7 +11,7 @@ from aerona.db.tables.military import ArmyOfficerRow, WarAimRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, CaptiveRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
+from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.military import ArmyRole, PeaceTermKind, Stance, WarAimKind
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.domain.models.entity_stats import ArmyStats, VesselStats
@@ -171,6 +171,8 @@ async def create_vessel(ctx: TickContext, owner_id: int, name: str, order: Commi
     owner = await living_entity(ctx.session, owner_id)
     if owner is None:
         raise ValidationFailedError("A vessel needs a living owner.")
+    if owner.entity_type not in AGENT_TYPES:
+        raise ValidationFailedError(f"{owner.name} cannot own a ship; a town, a people, a faction, a cult or a mortal holds one.")
     vessel = await create_record(
         ctx,
         RecordSpec(

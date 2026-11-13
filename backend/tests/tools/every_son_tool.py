@@ -35,6 +35,7 @@ from tests.tools.every_setup import (
     rewritten_account,
     rich_son,
     rifted,
+    rival_realm,
     ruled_law,
     ruled_realm,
     seasons,
@@ -57,6 +58,7 @@ from tests.tools.every_setup import (
     travel_resource,
     turf_held,
     two_stars,
+    war_theatre,
     world_body,
     wounded,
 )
@@ -383,4 +385,9 @@ SON_CASES: dict[str, Case] = {
     "inspire_school": Case(plain(founder_id=mortal, name="The First School", reason=REASON)),
     "designate_keystone": Case(plain(species_id=lambda realm, ids: realm.species_id, region_id=region, name="The First Yield", use="rite", reason=REASON)),
     "inspire_relief": Case(plain(giver_id=lambda realm, ids: realm.cult_id, settlement_id=settlement, kind="healers", reason=REASON)),
+    "send_expedition": Case(plain(leader_id=mortal, target_id=region, reason=REASON)),
+    "stock_depot": Case(plain(owner_id=people, region_id=region, reason=REASON)),
+    "steer_theatre": Case(plain(theatre_id=created("theatre"), priority=70, reason=REASON), war_theatre),
+    "mark_quirk": Case(plain(mortal_id=mortal, kind="hardy", reason=REASON)),
+    "limit_fleets": Case(plain(first_id=created("polity"), second_id=created("rival"), tonnage=200, reason=REASON), rival_realm),
 }

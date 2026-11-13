@@ -222,3 +222,6 @@ UNIT_TYPE_DRAFTED = Line("tools.mortal.draft_unit_type", "{me} set out a new kin
 MODEL_FORGED = Line("tools.mortal.forge_model", "{me} made {name}.")
 DISH_CREATED = Line("tools.mortal.create_dish", "{me} first cooked {name}.")
 STRUCTURE_TYPE_DRAWN = Line("tools.mortal.draw_structure_type", "{me} drew {name}.")
+LEAD_EXPEDITION = Line("tools.mortal.lead_expedition", "{me} set out on an expedition to {target}.")
+MAKE_CAMP = Line("tools.mortal.make_camp", "{me} made camp on {expedition}.")
+ORDER_FORMATION = Line("tools.mortal.order_formation", "{me} gave {formation} the order: {order}.")

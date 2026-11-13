@@ -18,7 +18,7 @@ from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherKind
-from aerona.domain.enums.military import CommandArea, MoraleState, MutinyOutcome, Stance
+from aerona.domain.enums.military import RESTING, CommandArea, MoraleState, MutinyOutcome, Stance
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.context import TickContext
@@ -63,7 +63,6 @@ from aerona.engine.vehicles.fleet import borne_baggage, pace_pct
 from aerona.rules.registry import Rules
 
 HUNDRED = 100
-RESTING = frozenset({Stance.ENTRENCH, Stance.GARRISON, Stance.BESIEGE})
 
 
 @dataclass

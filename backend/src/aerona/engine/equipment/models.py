@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from types import MappingProxyType
 from zlib import crc32
 
@@ -181,12 +182,15 @@ async def model_for(
     return await draw_model(ctx, holder, family, world_id=holder.world_id, parent=current)
 
 
+def slot_order(slots: Iterable[ArmamentSlot]) -> list[ArmamentSlot]:
+    return sorted(slots, key=lambda item: (item is not ArmamentSlot.VEHICLE_WEAPON, item.value))
+
+
 async def mount_model(ctx: TickContext, holder: EntityRow | None, mount: MountKind, knowledge: KnowledgeMap) -> EquipmentModelRow | None:
     if holder is None:
         return None
     allowed = MOUNT_FAMILIES[mount]
-    slots = {FAMILIES[family].slot for family in allowed}
-    for slot in sorted(slots, key=lambda item: item is not ArmamentSlot.VEHICLE_WEAPON):
+    for slot in slot_order({FAMILIES[family].slot for family in allowed}):
         found = await model_for(ctx, holder, slot, knowledge, tuple(family for family in allowed if FAMILIES[family].slot is slot))
         if found is not None:
             return found

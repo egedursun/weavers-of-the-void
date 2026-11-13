@@ -30,6 +30,7 @@ from aerona.engine.military.support import new_side
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
+from aerona.engine.operations.limits import over_limit
 from aerona.engine.polity.accords import (
     DEFAULT_CLAUSES,
     Clause,
@@ -293,6 +294,23 @@ async def misread_breach(ctx: TickContext, profile: TreatyProfileRow, clause: Tr
     return True
 
 
+async def armed_breach(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow) -> bool:
+    if clause.obligor_node_id is None:
+        return False
+    if clause.kind is ClauseKind.DEMILITARISED and "region_id" in clause.params:
+        region = int(clause.params["region_id"])
+        armies = await ctx.session.scalars(select(ArmyRow).where(ArmyRow.owner_entity_id == clause.obligor_node_id, ArmyRow.disbanded_epoch.is_(None)))
+        for row in armies:
+            army = await living_entity(ctx.session, row.entity_id)
+            if army is not None and army.location_id == region:
+                await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason="it marched soldiers into the demilitarised land")
+                return True
+    if clause.kind is ClauseKind.FLEET_LIMIT and await over_limit(ctx, clause):
+        await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason="its fleet grew past the tonnage it swore to")
+        return True
+    return False
+
+
 async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow, strength: MilitaryStrength) -> bool:
     if await misread_breach(ctx, profile, clause):
         return False
@@ -302,15 +320,9 @@ async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
         return await keep_hostage(ctx, profile, clause)
     if clause.kind is ClauseKind.TOLLS_WAIVED:
         return await tolls_kept(ctx, profile, clause)
-    if clause.kind is ClauseKind.DEMILITARISED and "region_id" in clause.params and clause.obligor_node_id is not None:
-        region = int(clause.params["region_id"])
-        armies = await ctx.session.scalars(select(ArmyRow).where(ArmyRow.owner_entity_id == clause.obligor_node_id, ArmyRow.disbanded_epoch.is_(None)))
-        for row in armies:
-            army = await living_entity(ctx.session, row.entity_id)
-            if army is not None and army.location_id == region:
-                await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason="it marched soldiers into the demilitarised land")
-                return False
-    elif clause.kind is ClauseKind.MARRIAGE and "first_id" in clause.params and "second_id" in clause.params:
+    if await armed_breach(ctx, profile, clause):
+        return False
+    if clause.kind is ClauseKind.MARRIAGE and "first_id" in clause.params and "second_id" in clause.params:
         first_spouse = await living_entity(ctx.session, int(clause.params["first_id"]))
         second_spouse = await living_entity(ctx.session, int(clause.params["second_id"]))
         if first_spouse is not None and second_spouse is not None and first_spouse.entity_type is second_spouse.entity_type is EntityType.MORTAL:

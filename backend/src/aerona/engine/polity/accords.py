@@ -45,6 +45,7 @@ TREATY_WORDS = MappingProxyType(
         TreatyKind.INTERWORLD: "the Treaty of the Worlds",
         TreatyKind.COALITION: "the Coalition",
         TreatyKind.DIVINE_PACT: "the Divine Pact",
+        TreatyKind.NAVAL_LIMIT: "the Naval Treaty",
     }
 )
 DEFAULT_CLAUSES = MappingProxyType(
@@ -63,6 +64,7 @@ DEFAULT_CLAUSES = MappingProxyType(
         TreatyKind.CONDOTTA: (ClauseKind.CALL_TO_ARMS,),
         TreatyKind.COALITION: (ClauseKind.CALL_TO_ARMS,),
         TreatyKind.DIVINE_PACT: (ClauseKind.NON_AGGRESSION,),
+        TreatyKind.NAVAL_LIMIT: (ClauseKind.FLEET_LIMIT,),
     }
 )
 DERIVED = MappingProxyType(
@@ -89,6 +91,16 @@ class Clause:
     obligor: int | None = None
     beneficiary: int | None = None
     params: dict[str, int | str | bool] = field(default_factory=dict)
+
+
+MUTUAL = frozenset({TreatyKind.NAVAL_LIMIT})
+
+
+def default_clauses(kind: TreatyKind, parties: Sequence[tuple[int, PartyRole]]) -> list[Clause]:
+    items = DEFAULT_CLAUSES.get(kind, ())
+    if kind in MUTUAL:
+        return [Clause(item, first, second) for item in items for first, _ in parties for second, _ in parties if first != second]
+    return [Clause(item, parties[0][0], parties[-1][0]) for item in items]
 
 
 def halved(value: int | str | bool) -> int | str | bool:
@@ -180,7 +192,7 @@ async def sign(
         ),
     )
     witness = await oath_god(ctx, treaty.world_id) if witnessed else None
-    chosen = [await misread(ctx, clause) for clause in list(clauses) or [Clause(item, parties[0][0], parties[-1][0]) for item in DEFAULT_CLAUSES.get(kind, ())]]
+    chosen = [await misread(ctx, clause) for clause in list(clauses) or default_clauses(kind, parties)]
     derived = bond if bond is not None else (await derive_bond(ctx, treaty, kind, bond_ends(kind, parties, chosen), until) if derive else None)
     profile = TreatyProfileRow(
         treaty_entity_id=treaty.id,
@@ -357,7 +369,7 @@ async def propose(
     )
     for party, role in parties:
         ctx.session.add(TreatyPartyRow(treaty_entity_id=treaty.id, party_node_id=party, role=role))
-    terms = list(clauses) or [Clause(item, parties[0][0], parties[-1][0]) for item in DEFAULT_CLAUSES.get(kind, ())]
+    terms = list(clauses) or default_clauses(kind, parties)
     for clause in terms:
         ctx.session.add(
             TreatyClauseRow(
