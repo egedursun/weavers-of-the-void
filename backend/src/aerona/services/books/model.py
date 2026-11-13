@@ -62,7 +62,7 @@ from aerona.services.books.citysvg import Plan, city_plan, land_plan, type_table
 from aerona.services.books.command import add_command_areas
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
-from aerona.services.books.made import MadeWorld, made_kinds
+from aerona.services.books.made import KindArticle, made_kinds
 from aerona.services.books.mapsvg import MapPicture, map_picture
 from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection, title_of
 from aerona.services.codex import CosmicEpoch, TravellerGuide, cosmic_chronicle, traveller_guide
@@ -103,6 +103,11 @@ ENCYCLOPEDIA_ORDER: tuple[EntityType, ...] = (
     EntityType.KNOWLEDGE,
     EntityType.THEORY,
     EntityType.ART_FORM,
+    EntityType.VEHICLE_TYPE,
+    EntityType.UNIT_TYPE,
+    EntityType.EQUIPMENT_MODEL,
+    EntityType.DISH,
+    EntityType.BUILDING_TYPE,
     EntityType.TRADITION,
     EntityType.LEGEND,
     EntityType.PROPHECY,
@@ -167,6 +172,7 @@ class EntityArticle:
     typed: list[TypedSection] = field(default_factory=list)
     plan: Plan | None = None
     arms: Plan | None = None
+    made: KindArticle | None = None
 
 
 @dataclass
@@ -397,7 +403,6 @@ class BookModel:
     wars: list[WarArticle] = field(default_factory=list)
     creator_typed: list[TypedSection] = field(default_factory=list)
     records: list[RecordTable] = field(default_factory=list)
-    made: list[MadeWorld] = field(default_factory=list)
     ledger_changes: dict[int, list[LedgerChange]] = field(default_factory=dict)
 
 
@@ -443,6 +448,7 @@ class BookBuilder:
         self.bonds: dict[int, list[BondRow]] = defaultdict(list)
         self.son_names: dict[int, str] = {}
         self.typed = TypedIndex({})
+        self.made: dict[int, KindArticle] = {}
 
     async def load_common(self) -> None:
         rows = await self.session.execute(select(EntityRow.id, EntityRow.name))
@@ -463,6 +469,7 @@ class BookBuilder:
         for bond in await self.session.scalars(select(BondRow).where(BondRow.state.in_([BondState.ACTIVE, BondState.PAST])).order_by(BondRow.id)):
             self.bonds[bond.source_node_id].append(bond)
         self.typed = await TypedIndex.load(self.session, self.names)
+        self.made = await made_kinds(self.session, self.names)
         await add_command_areas(self.session, self.typed)
 
     def bond_lines(self, node_id: int) -> tuple[list[str], list[str]]:
@@ -507,6 +514,7 @@ class BookBuilder:
             typed=self.typed.of(entity.id),
             plan=await self.plan_of(entity),
             arms=await arms_plan(self.session, entity),
+            made=self.made.get(entity.id),
         )
 
     async def plan_of(self, entity: EntityRow) -> Plan | None:
@@ -1108,7 +1116,6 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         wars=await builder.wars(),
         creator_typed=builder.typed.of(creator.id) if creator is not None else [],
         records=[*builder.typed.records, *await type_tables(session, rules)],
-        made=await made_kinds(session, builder.names),
         ledger_changes=builder.typed.ledger_changes(await session.scalars(select(LedgerChangeRow).order_by(LedgerChangeRow.entry_id, LedgerChangeRow.id))),
     )
 

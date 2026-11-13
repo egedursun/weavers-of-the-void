@@ -705,7 +705,12 @@
       "kuram": "theory",
       "sanat_bicimi": "art_form",
       "olgu": "phenomenon",
-      "kozmik_varlik": "cosmic_being"
+      "kozmik_varlik": "cosmic_being",
+      "tasit_tipi": "vehicle_type",
+      "asker_tipi": "unit_type",
+      "techizat_modeli": "equipment_model",
+      "yemek": "dish",
+      "bina_tipi": "building_type"
     },
     "entity_status": {
       "kanon": "canon",
@@ -2146,6 +2151,21 @@
     "cosmic_being": {
       "buyukluk": "size",
       "ilgi": "interest",
+      "un": "renown"
+    },
+    "vehicle_type": {
+      "un": "renown"
+    },
+    "unit_type": {
+      "un": "renown"
+    },
+    "equipment_model": {
+      "un": "renown"
+    },
+    "dish": {
+      "un": "renown"
+    },
+    "building_type": {
       "un": "renown"
     }
   },

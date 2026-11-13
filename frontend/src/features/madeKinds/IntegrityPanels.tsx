@@ -101,6 +101,7 @@ export function VesselSectionsPanel({
       </Muted>
       <IntegrityDiagram
         title={`Sections of ${data.node.name}`}
+        shape='ship'
         parts={data.vessel_sections.map((item) => ({
           key: item.section,
           state: item.state,
@@ -398,6 +399,7 @@ export function StructureSectionsPanel({
           detail: `condition ${item.condition}, burns at ${item.flammability}`,
         }))}
         zoneOf={structureZone}
+        shape={data.megastructure ? 'ring' : 'keep'}
       />
       {data.megastructure && (
         <>

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
 import { Anvil, Building2, CookingPot, Plus, Shield, Truck } from 'lucide-react'
 import {
   equipmentFamilyValues,
@@ -8,14 +7,13 @@ import {
 } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { PagedList } from '@/components/domain'
+import { EntityLink, PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { ForgeCard } from '@/features/cosmography/parts'
 import { why } from '@/features/dominion/model'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { KIND_SPEC } from '@/features/entity/society/structureLabels'
 import { type ThingKinds, useLever } from './api'
-import { type MadeKind, kindKey } from './kindKeys'
 import {
   COURSE,
   DISH_FOODS,
@@ -35,17 +33,7 @@ const KINDS = Object.fromEntries(
 )
 const FOODS = wordTable(DISH_FOODS)
 
-function Kinds({
-  title,
-  kind,
-  rows,
-  worldId,
-}: {
-  title: string
-  kind: MadeKind
-  rows: Ref[]
-  worldId: number | null
-}) {
+function Kinds({ title, rows }: { title: string; rows: Ref[] }) {
   return (
     <div className='flex min-w-0 flex-col gap-1.5'>
       <Label variant='overline'>{`${title} (${rows.length})`}</Label>
@@ -61,7 +49,7 @@ function Kinds({
           itemKey={(row) => row.id}
         >
           {(row) =>
-            worldId === null ? (
+            row.entity_id === null ? (
               <Badge
                 key={row.id}
                 size='sm'
@@ -69,10 +57,10 @@ function Kinds({
               >{`${row.name} · ${row.family}`}</Badge>
             ) : (
               <Badge key={row.id} size='sm' variant='outline' asChild>
-                <Link
-                  to='/atlas'
-                  search={{ select: kindKey(kind, worldId, row.id) }}
-                >{`${row.name} · ${row.family}`}</Link>
+                <EntityLink
+                  kind='entity'
+                  id={String(row.entity_id)}
+                >{`${row.name} · ${row.family}`}</EntityLink>
               </Badge>
             )
           }
@@ -158,36 +146,11 @@ export function OwnKindsPanel({
         vehicles, soldiers and goods built to them are held here, not entered in
         the atlas.
       </Muted>
-      <Kinds
-        title='Vehicle types'
-        kind='vehicle'
-        rows={data.own.vehicle_types}
-        worldId={world}
-      />
-      <Kinds
-        title='Kinds of soldier'
-        kind='unit'
-        rows={data.own.unit_types}
-        worldId={world}
-      />
-      <Kinds
-        title='Equipment models'
-        kind='equipment'
-        rows={data.own.equipment_models}
-        worldId={world}
-      />
-      <Kinds
-        title='Dishes'
-        kind='dish'
-        rows={data.own.dishes}
-        worldId={world}
-      />
-      <Kinds
-        title='Building types'
-        kind='building'
-        rows={data.own.building_types}
-        worldId={world}
-      />
+      <Kinds title='Vehicle types' rows={data.own.vehicle_types} />
+      <Kinds title='Kinds of soldier' rows={data.own.unit_types} />
+      <Kinds title='Equipment models' rows={data.own.equipment_models} />
+      <Kinds title='Dishes' rows={data.own.dishes} />
+      <Kinds title='Building types' rows={data.own.building_types} />
       <ForgeCard
         icon={Plus}
         tone='gold'

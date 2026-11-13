@@ -21,6 +21,13 @@ export const HOLDER_TYPES = [
   'structure',
 ] as const
 export const COMMUNITY_TYPES = ['settlement', 'people'] as const
+export const MADE_ENTITY_TYPES = new Set([
+  'vehicle_type',
+  'unit_type',
+  'equipment_model',
+  'dish',
+  'building_type',
+])
 
 export function numberProblem(
   text: string,

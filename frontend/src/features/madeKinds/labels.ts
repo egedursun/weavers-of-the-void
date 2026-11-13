@@ -360,13 +360,6 @@ export function familyLabel(family: string): string {
   return words(family)
 }
 
-export const STATE_FILL: Record<SectionState, string> = {
-  sound: 'fill-success/25 stroke-success',
-  damaged: 'fill-warning/30 stroke-warning',
-  disabled: 'fill-destructive/30 stroke-destructive',
-  destroyed: 'fill-muted stroke-destructive',
-}
-
 export function frameTable(
   frames: readonly {
     frame: VehicleFrame

@@ -23,7 +23,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
 from aerona.domain.enums.integrity import Criticality, HarmForce, SectionHazard, SectionState
 from aerona.domain.enums.military import UnitKind
@@ -32,6 +32,7 @@ from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.models.entity_stats import ArmyStats, CosmicBeingStats, PeopleStats, PolityStats
 from aerona.engine.body.decline import onset_chance
 from aerona.engine.collective.designs import MOUNT_ARCS, draw_design
+from aerona.engine.collective.embodied import TABLE_KINDS, align_made, settle
 from aerona.engine.cosmos.being_wounds import WoundTally, effective_might, regrow, strike, wound_being
 from aerona.engine.cuisine.dishes import dish_traits, run_kitchens
 from aerona.engine.equipment.models import draw_model
@@ -39,8 +40,9 @@ from aerona.engine.military.unit_types import draw_type, run_unit_types
 from aerona.engine.military.units import designs_of, equip_bare_stacks
 from aerona.engine.mortal.attraction import drawn, pull
 from aerona.engine.primitives.knowledge import KnowledgeMap
-from aerona.engine.primitives.made_names import made_name
+from aerona.engine.primitives.made_names import MADE_TABLES, made_name
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.renames import rename_everywhere
 from aerona.engine.primitives.stats import stat
 from aerona.engine.structures.integrity import overall, strike_rows
 from aerona.engine.vehicles.fleet import borne_baggage
@@ -304,3 +306,28 @@ async def test_a_vehicle_type_carries_only_armed_mounts_seated_and_aimed(session
     mounts = list(await session.scalars(select(DesignMountRow).where(DesignMountRow.design_id == carrack.id)))
     assert all(row.model_id is not None and row.section is not None for row in mounts)
     assert all(row.arc is MOUNT_ARCS[row.mount] for row in mounts)
+
+
+async def test_every_made_type_is_a_record_of_its_world_like_any_other(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "vehicles")
+    folk = await people(session, world)
+    wagon = await draw_design(ctx, folk, VehicleFrame.WAGON)
+    record = await session.get(EntityRow, wagon.entity_id)
+    assert record is not None and record.entity_type is EntityType.VEHICLE_TYPE and record.name == wagon.name and record.world_id == world.world.id
+    await rename_everywhere(session, record.id, "The Long Hauler")
+    assert wagon.name == "The Long Hauler"
+    wagon.obsolete = True
+    await settle(session, wagon)
+    assert record.status is EntityStatus.DEAD
+    bare = DesignRow(
+        owner_entity_id=folk.id, kind=FRAMES[VehicleFrame.CART].kind, frame=VehicleFrame.CART, name="Bare cart", world_id=world.world.id, locked=[]
+    )
+    session.add(bare)
+    await session.flush()
+    assert await align_made(session) >= 1
+    assert bare.entity_id is not None
+
+
+def test_every_made_table_names_its_entity() -> None:
+    assert set(TABLE_KINDS) == set(MADE_TABLES)
+    assert all("entity_id" in table.__table__.c for table in MADE_TABLES)

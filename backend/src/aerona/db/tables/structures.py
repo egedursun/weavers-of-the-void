@@ -35,6 +35,7 @@ class StructureDesignRow(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), unique=True)
     world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
     description: Mapped[str | None] = mapped_column(Text)

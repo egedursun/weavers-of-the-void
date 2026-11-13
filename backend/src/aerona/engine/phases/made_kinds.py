@@ -1,4 +1,5 @@
 from aerona.engine.body.decline import run_decline
+from aerona.engine.collective.embodied import align_made
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.being_wounds import tend_beings
 from aerona.engine.cuisine.dishes import run_kitchens
@@ -33,7 +34,7 @@ from aerona.engine.vehicles.production import vehicle_works
     "table.unit_designs",
     "table.world_materials",
 )
-@writes("table.community_stocks", "table.equipment_models", "table.equipment_stores", "table.goods_flows")
+@writes("table.community_stocks", "table.entities", "table.equipment_models", "table.equipment_stores", "table.goods_flows", "table.name_registry")
 async def equipment_forging(ctx: TickContext) -> None:
     count(ctx, "equipment_forging", await forge_all(ctx))
     ctx.count("equipment_issued", await equip_bare_stacks(ctx))
@@ -54,6 +55,7 @@ async def equipment_forging(ctx: TickContext) -> None:
     "table.lexemes",
     "table.name_registry",
     "table.node_materials",
+    "table.people_culture",
     "table.polity_members",
     "table.structure_designs",
     "table.unit_design_equipment",
@@ -66,10 +68,12 @@ async def equipment_forging(ctx: TickContext) -> None:
     "table.army_units",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.equipment_models",
     "table.incident_participants",
     "table.incidents",
+    "table.name_registry",
     "table.unit_design_equipment",
     "table.unit_design_techniques",
     "table.unit_designs",
@@ -94,8 +98,10 @@ async def unit_types(ctx: TickContext) -> None:
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
+    "table.node_materials",
     "table.polity_members",
     "table.polity_profiles",
+    "table.region_environment",
     "table.structure_designs",
     "table.structure_profiles",
     "table.trade_route_profiles",
@@ -103,6 +109,7 @@ async def unit_types(ctx: TickContext) -> None:
     "table.vehicle_group_sections",
     "table.vehicle_groups",
     "table.workshops",
+    "table.world_materials",
 )
 @writes(
     "table.applied_fixups",
@@ -111,12 +118,16 @@ async def unit_types(ctx: TickContext) -> None:
     "table.design_mounts",
     "table.design_sections",
     "table.designs",
+    "table.entities",
+    "table.equipment_models",
     "table.goods_flows",
+    "table.name_registry",
     "table.polity_profiles",
     "table.vehicle_group_sections",
     "table.vehicle_groups",
 )
 async def vehicle_works_phase(ctx: TickContext) -> None:
+    ctx.count("made_entities_aligned", await align_made(ctx.session))
     for key, value in (await made_kinds_fixup(ctx)).items():
         ctx.count(f"made_kinds_fixup_{key}", value)
     count(ctx, "vehicle_works", await vehicle_works(ctx))
@@ -151,9 +162,11 @@ async def megastructures(ctx: TickContext) -> None:
     "table.community_dishes",
     "table.dish_ingredients",
     "table.dishes",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.name_registry",
 )
 async def kitchens(ctx: TickContext) -> None:
     count(ctx, "kitchens", await run_kitchens(ctx))
@@ -176,7 +189,11 @@ async def attraction(ctx: TickContext) -> None:
     "mortal.strength",
     "mortal.willpower",
     "table.bodies",
+    "table.body_customs",
+    "table.bonds",
     "table.conditions",
+    "table.cult_tenets",
+    "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.genomes",
@@ -192,6 +209,7 @@ async def attraction(ctx: TickContext) -> None:
 )
 @writes(
     "table.bodies",
+    "table.body_customs",
     "table.chronicle",
     "table.chronicle_entities",
     "table.conditions",

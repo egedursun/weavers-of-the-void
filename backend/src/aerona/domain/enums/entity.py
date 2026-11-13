@@ -40,6 +40,11 @@ class EntityType(StrEnum):
     ART_FORM = "art_form"
     PHENOMENON = "phenomenon"
     COSMIC_BEING = "cosmic_being"
+    VEHICLE_TYPE = "vehicle_type"
+    UNIT_TYPE = "unit_type"
+    EQUIPMENT_MODEL = "equipment_model"
+    DISH = "dish"
+    BUILDING_TYPE = "building_type"
 
 
 class EntityStatus(StrEnum):

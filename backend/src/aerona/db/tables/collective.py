@@ -520,6 +520,7 @@ class DesignRow(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), unique=True)
     owner_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     kind: Mapped[DesignKind] = mapped_column(enum_type(DesignKind, "kind"))
     frame: Mapped[VehicleFrame | None] = mapped_column(enum_type(VehicleFrame, "frame"))

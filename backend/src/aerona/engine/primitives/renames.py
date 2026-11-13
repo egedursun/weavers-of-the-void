@@ -15,6 +15,7 @@ from aerona.db.tables.epochs import EpochRow, EpochWorldNarrativeRow
 from aerona.db.tables.lore import CanonFactRow, ChronicleRow, FolkBeliefRow, HistorianViewRow, LexemeRow, ThreadRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.entity import EntityStatus
+from aerona.engine.collective.embodied import follow_name
 
 ROMAN_SUFFIX = r"\s+(?:I{1,3}|IV|VI{0,3}|IX|X{1,3}|\d+)(?![^\W_])"
 LETTER_OR_DIGIT_BEFORE = r"(?<![^\W_])"
@@ -139,4 +140,5 @@ async def rename_everywhere(session: AsyncSession, node_id: int, new_name: str, 
     else:
         await NameRepository(session).rename(node_id, display)
     changed = await replace_texts(session, old, display, protected, from_epoch)
+    await follow_name(session, node_id, display)
     return RenameResult(old=old, new=display, changed=changed)

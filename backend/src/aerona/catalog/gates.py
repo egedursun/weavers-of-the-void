@@ -97,6 +97,11 @@ CREATION_GATE_RULES: dict[EntityType, Callable[[Rules], int]] = {
     EntityType.ART_FORM: lambda rules: rules.rarity_gates.create_art_form,
     EntityType.PHENOMENON: lambda rules: rules.rarity_gates.create_phenomenon,
     EntityType.COSMIC_BEING: lambda rules: rules.rarity_gates.create_cosmic_being,
+    EntityType.VEHICLE_TYPE: lambda rules: rules.rarity_gates.create_vehicle_type,
+    EntityType.UNIT_TYPE: lambda rules: rules.rarity_gates.create_unit_type,
+    EntityType.EQUIPMENT_MODEL: lambda rules: rules.rarity_gates.create_equipment_model,
+    EntityType.DISH: lambda rules: rules.rarity_gates.create_dish,
+    EntityType.BUILDING_TYPE: lambda rules: rules.rarity_gates.create_building_type,
 }
 
 

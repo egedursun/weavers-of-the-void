@@ -13,6 +13,7 @@ from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.vehicles import MountKind
+from aerona.engine.collective.embodied import embody
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import MaterialBook, MaterialProps, armour_protection, node_material, weapon_damage
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -145,6 +146,7 @@ async def draw_model(
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await embody(ctx.session, row)
     return row
 
 

@@ -356,6 +356,8 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.injuries",
     "table.memories",
     "table.mortal_profiles",
+    "table.passions",
+    "table.thoughts",
     "table.traits",
 )
 async def mortal_minds(ctx: TickContext) -> None:

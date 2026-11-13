@@ -13,6 +13,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, BuildingForm, BuildScale, StructureKind
 from aerona.engine.body.customs import people_of
+from aerona.engine.collective.embodied import embody
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.queries import living_entity
@@ -69,6 +70,7 @@ async def draw_structure_type(
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await embody(ctx.session, row)
     return row
 
 

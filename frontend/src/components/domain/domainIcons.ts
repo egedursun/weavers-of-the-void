@@ -48,6 +48,9 @@ import {
   Wind,
   Zap,
   type LucideIcon,
+  Truck,
+  UtensilsCrossed,
+  Building,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -82,6 +85,11 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   outer_being: Brain,
   phenomenon: CloudLightning,
   cosmic_being: Orbit,
+  vehicle_type: Truck,
+  unit_type: Swords,
+  equipment_model: Hammer,
+  dish: UtensilsCrossed,
+  building_type: Building,
   army: Swords,
   natural_law: Scale,
   trade_route: Route,

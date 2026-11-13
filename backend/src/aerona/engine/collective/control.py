@@ -86,6 +86,7 @@ from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.collective.accounts import HistoryTally, debunk, expose, keep_anniversary, record, remember_loss, revise, scholar_in, strike
 from aerona.engine.collective.crowds import CrowdTally, begin_movement, end_mob, mood_of, spark
 from aerona.engine.collective.designs import apply_design, derive, draw_design
+from aerona.engine.collective.embodied import settle, unmake
 from aerona.engine.collective.heraldry import sync_emblem
 from aerona.engine.collective.storylets import CASTERS, StoryletTally, begin, conditions_hold, resolve
 from aerona.engine.context import TickContext
@@ -124,11 +125,14 @@ async def edit_row[Row: Base](
 ) -> Row:
     row = apply(await found(ctx, kind, key, label), allowed(values, fields, label), release)
     await ctx.session.flush()
+    await settle(ctx.session, row)
     return row
 
 
 async def remove_row(ctx: TickContext, kind: type[Base], key: object, label: str) -> None:
-    await ctx.session.delete(await found(ctx, kind, key, label))
+    row = await found(ctx, kind, key, label)
+    await unmake(ctx.session, row)
+    await ctx.session.delete(row)
     await ctx.session.flush()
 
 
@@ -466,6 +470,7 @@ async def refit_design(ctx: TickContext, design_id: int) -> DesignRow:
     newer = await draw_design(ctx, owner, design.frame, parent=design, designer_id=design.designer_entity_id, world_id=design.world_id)
     design.obsolete = True
     await ctx.session.flush()
+    await settle(ctx.session, design)
     return newer
 
 

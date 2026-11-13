@@ -42,6 +42,7 @@ class KindArticle:
     facts: list[KindFact] = field(default_factory=list)
     tables: list[KindTable] = field(default_factory=list)
     lines: list[str] = field(default_factory=list)
+    entity_id: int | None = None
 
 
 @dataclass
@@ -175,6 +176,7 @@ class MadeBook:
             needed = sorted(lower(item.technique) for item in techniques.get(row.id, []))
             if needed:
                 article.lines.append(f"Its builders must know: {', '.join(needed)}.")
+            article.entity_id = row.entity_id
             found.append(article)
         return found
 
@@ -242,6 +244,7 @@ class MadeBook:
             needed = sorted(lower(item.technique) for item in techniques.get(row.id, []))
             if needed:
                 article.lines.append(f"Its makers must know: {', '.join(needed)}.")
+            article.entity_id = row.entity_id
             found.append(article)
         return found
 
@@ -270,6 +273,7 @@ class MadeBook:
                     ("Renown", row.renown),
                     ("Made since epoch", row.created_epoch),
                 ),
+                entity_id=row.entity_id,
             )
             for row in rows
         ]
@@ -313,6 +317,7 @@ class MadeBook:
                         [[self.maker(item.community_entity_id), str(item.popularity), str(item.cooked), str(item.since_epoch)] for item in cooked],
                     )
                 )
+            article.entity_id = row.entity_id
             found.append(article)
         return found
 
@@ -370,6 +375,7 @@ class MadeBook:
                         ],
                     )
                 )
+            article.entity_id = row.entity_id
             found.append(article)
         return found
 
@@ -389,5 +395,11 @@ class MadeBook:
         return found
 
 
-async def made_kinds(session: AsyncSession, names: dict[int, str]) -> list[MadeWorld]:
-    return await MadeBook(session, names).worlds()
+async def made_kinds(session: AsyncSession, names: dict[int, str]) -> dict[int, KindArticle]:
+    return {
+        article.entity_id: article
+        for world in await MadeBook(session, names).worlds()
+        for group in world.groups
+        for article in group.articles
+        if article.entity_id is not None
+    }

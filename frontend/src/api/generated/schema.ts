@@ -32044,8 +32044,13 @@ export interface components {
       | 'wall_line'
       | 'tunnel_form'
       | 'orbital'
+    BuildingTypeStats: {
+      kind: 'building_type'
+      renown?: number | null
+    }
     BuildingTypeView: {
       id: number
+      entity_id: number | null
       name: string
       description: string | null
       world_id: number | null
@@ -35830,8 +35835,13 @@ export interface components {
       commodity: components['schemas']['CommodityKind']
       share: number
     }
+    DishStats: {
+      kind: 'dish'
+      renown?: number | null
+    }
     DishView: {
       id: number
+      entity_id: number | null
       name: string
       description: string | null
       world_id: number | null
@@ -37044,6 +37054,11 @@ export interface components {
         | components['schemas']['ArtFormStats']
         | components['schemas']['PhenomenonStats']
         | components['schemas']['CosmicBeingStats']
+        | components['schemas']['VehicleTypeStats']
+        | components['schemas']['UnitTypeStats']
+        | components['schemas']['EquipmentModelStats']
+        | components['schemas']['DishStats']
+        | components['schemas']['BuildingTypeStats']
         | components['schemas']['NaturalLawStats']
       domain: components['schemas']['Domain'] | null
       origin: components['schemas']['EntityOrigin']
@@ -37119,6 +37134,11 @@ export interface components {
       | 'art_form'
       | 'phenomenon'
       | 'cosmic_being'
+      | 'vehicle_type'
+      | 'unit_type'
+      | 'equipment_model'
+      | 'dish'
+      | 'building_type'
     EntityTypeInfo: {
       key: string
       label: string
@@ -37513,8 +37533,13 @@ export interface components {
       release?: string[]
       record_id: number
     }
+    EquipmentModelStats: {
+      kind: 'equipment_model'
+      renown?: number | null
+    }
     EquipmentModelView: {
       id: number
+      entity_id: number | null
       name: string
       description: string | null
       world_id: number | null
@@ -41825,6 +41850,7 @@ export interface components {
     }
     KindRef: {
       id: number
+      entity_id: number | null
       name: string
       family: string
     }
@@ -54892,8 +54918,13 @@ export interface components {
       release?: string[]
       record_id: number
     }
+    UnitTypeStats: {
+      kind: 'unit_type'
+      renown?: number | null
+    }
     UnitTypeView: {
       id: number
+      entity_id: number | null
       name: string
       description: string | null
       world_id: number | null
@@ -55370,8 +55401,13 @@ export interface components {
     VehicleSize: 'small' | 'medium' | 'large' | 'huge' | 'colossal'
     VehicleStatus:
       'ready' | 'moving' | 'engaged' | 'laid_up' | 'building' | 'wrecked'
+    VehicleTypeStats: {
+      kind: 'vehicle_type'
+      renown?: number | null
+    }
     VehicleTypeView: {
       id: number
+      entity_id: number | null
       name: string
       description: string | null
       world_id: number | null
@@ -114907,6 +114943,9 @@ export const buildingFormValues: ReadonlyArray<
   'tunnel_form',
   'orbital',
 ]
+export const buildingTypeStatsKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BuildingTypeStats']['kind']
+> = ['building_type']
 export const calendarSlotValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CalendarSlot']
 > = ['sowing', 'harvest', 'midwinter', 'campaign', 'holy_day']
@@ -115882,6 +115921,9 @@ export const dishCourseValues: ReadonlyArray<
   'remedy',
   'drink',
 ]
+export const dishStatsKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DishStats']['kind']
+> = ['dish']
 export const dispatchContentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DispatchContent']
 > = [
@@ -116359,6 +116401,11 @@ export const entityTypeValues: ReadonlyArray<
   'art_form',
   'phenomenon',
   'cosmic_being',
+  'vehicle_type',
+  'unit_type',
+  'equipment_model',
+  'dish',
+  'building_type',
 ]
 export const envoyFateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EnvoyFate']
@@ -116492,6 +116539,9 @@ export const equipmentFamilyValues: ReadonlyArray<
   'harpoon',
   'boarding_gear',
 ]
+export const equipmentModelStatsKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EquipmentModelStats']['kind']
+> = ['equipment_model']
 export const equipmentSlotValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EquipmentSlot']
 > = [
@@ -121681,6 +121731,9 @@ export const unitKindValues: ReadonlyArray<
   'constructs',
   'summoned_host',
 ]
+export const unitTypeStatsKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['UnitTypeStats']['kind']
+> = ['unit_type']
 export const urbanServiceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UrbanService']
 > = ['water', 'faith', 'watch', 'healing', 'market', 'school', 'bath', 'fire']
@@ -121930,6 +121983,9 @@ export const vehicleSizeValues: ReadonlyArray<
 export const vehicleStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VehicleStatus']
 > = ['ready', 'moving', 'engaged', 'laid_up', 'building', 'wrecked']
+export const vehicleTypeStatsKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['VehicleTypeStats']['kind']
+> = ['vehicle_type']
 export const verdictValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Verdict']
 > = ['guilty', 'acquitted', 'fled', 'dropped']

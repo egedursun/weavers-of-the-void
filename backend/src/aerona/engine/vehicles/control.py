@@ -23,6 +23,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.integrity import Criticality, SectionHazard, SectionState
 from aerona.domain.enums.vehicles import MountKind, VehicleSection, VehicleStatus
 from aerona.engine.collective.designs import MOUNT_ARCS, derive, home_section
+from aerona.engine.collective.embodied import settle, unmake
 from aerona.engine.context import TickContext
 from aerona.engine.divine.control import apply
 from aerona.engine.equipment.models import mount_model
@@ -177,6 +178,7 @@ async def edit_record(ctx: TickContext, kind: str, key: object, values: Values, 
     table, fields, label = EDITABLE[kind]
     row = apply(await found(ctx, table, key, label), allowed(values, fields, label), release)
     await ctx.session.flush()
+    await settle(ctx.session, row)
     if isinstance(row, DesignSectionRow | DesignMountRow):
         await derive(ctx.session, ctx.rules, await design(ctx, row.design_id))
     return row
@@ -186,6 +188,7 @@ async def delete_record(ctx: TickContext, kind: str, key: object) -> None:
     table, _, label = EDITABLE[kind]
     row = await found(ctx, table, key, label)
     design_id = row.design_id if isinstance(row, DesignSectionRow | DesignMountRow) else None
+    await unmake(ctx.session, row)
     await ctx.session.delete(row)
     await ctx.session.flush()
     if design_id is not None:

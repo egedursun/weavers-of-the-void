@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cuisine import DishRow
 from aerona.db.tables.entities import EntityRow
@@ -36,11 +37,12 @@ async def made_name(session: AsyncSession, rules: Rules, origin: EntityRow | Non
     if origin is None:
         return label
     namer = Namer(session, rules)
+    registry = NameRepository(session)
     taken = await made_names_of(session, origin.world_id)
     fallback = f"{origin.name} {label.lower()}"
     for attempt in range(TRIES):
         coined = await coin(session, namer, origin, seed_of("made", origin.id, label, attempt, *seed))
         name = f"{coined} {label.lower()}" if coined else fallback
-        if name not in taken:
+        if name not in taken and not await registry.is_taken(name):
             return name
-    return fallback if fallback not in taken else f"{fallback} {len(taken) + 1}"
+    return await registry.unique_name(fallback)

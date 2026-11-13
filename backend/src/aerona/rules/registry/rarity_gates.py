@@ -117,6 +117,21 @@ class RarityGatesRules:
     create_cosmic_being: int = rule(
         3, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can call a Cosmic Being (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
+    create_vehicle_type: int = rule(
+        0, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can draw a Vehicle type (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    create_unit_type: int = rule(
+        0, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can raise a Kind of soldier (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    create_equipment_model: int = rule(
+        0, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can forge an Equipment model (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    create_dish: int = rule(
+        0, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can give a Dish (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    create_building_type: int = rule(
+        0, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can draw a Building type (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
     create_natural_law: int = rule(
         4, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can create a Natural Law (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )

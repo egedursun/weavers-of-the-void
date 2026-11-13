@@ -18,6 +18,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import people_of
+from aerona.engine.collective.embodied import embody
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.notes import note
@@ -144,6 +145,7 @@ async def found_dish(
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await embody(ctx.session, row)
     for index, food in enumerate(chosen):
         ctx.session.add(DishIngredientRow(dish_id=row.id, commodity=food, share=max(1, PERCENT // len(chosen) - index)))
     await ctx.session.flush()

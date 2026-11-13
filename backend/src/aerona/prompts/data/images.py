@@ -37,6 +37,11 @@ IMAGE_DIRECTION: dict[EntityType, str] = {
     EntityType.LAW: "the law being proclaimed or carved: a stele, scroll or assembly, the people who live under it watching",
     EntityType.PHENOMENON: "the phenomenon over the land it holds, at a scale that shows the whole region",
     EntityType.COSMIC_BEING: "the being at its own scale against the place it is in, with something in view that shows its size",
+    EntityType.VEHICLE_TYPE: "the vehicle as its makers build it, seen whole from the side so its sections and fittings show, in a place where it is made or used",
+    EntityType.UNIT_TYPE: "soldiers of this kind standing together in their gear and order, as their makers field them",
+    EntityType.EQUIPMENT_MODEL: "the piece itself, whole, on a surface that fits its makers, with its make and material clear",
+    EntityType.DISH: "the dish as its makers serve it, with the foods it is made of and the vessels it is served in",
+    EntityType.BUILDING_TYPE: "a building of this type as its makers raise it, whole, with its form, storeys and material clear",
 }
 
 VESSEL_DIRECTIONS: dict[VehicleKind, str] = {

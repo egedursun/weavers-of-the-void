@@ -118,6 +118,7 @@ async def vehicle_types(session: AsyncSession, designs: list[DesignRow]) -> list
     return [
         VehicleTypeView(
             id=row.id,
+            entity_id=row.entity_id,
             name=row.name,
             description=row.description,
             world_id=row.world_id,
@@ -208,6 +209,7 @@ async def unit_types(session: AsyncSession, designs: list[UnitDesignRow]) -> lis
     return [
         UnitTypeView(
             id=row.id,
+            entity_id=row.entity_id,
             name=row.name,
             description=row.description,
             world_id=row.world_id,
@@ -280,6 +282,7 @@ async def equipment_models(session: AsyncSession, models: list[EquipmentModelRow
     return [
         EquipmentModelView(
             id=row.id,
+            entity_id=row.entity_id,
             name=row.name,
             description=row.description,
             world_id=row.world_id,
@@ -343,6 +346,7 @@ async def dishes(session: AsyncSession, rows: list[DishRow]) -> list[DishView]:
     return [
         DishView(
             id=row.id,
+            entity_id=row.entity_id,
             name=row.name,
             description=row.description,
             world_id=row.world_id,
@@ -380,6 +384,7 @@ async def building_types(session: AsyncSession, rows: list[StructureDesignRow]) 
     return [
         BuildingTypeView(
             id=row.id,
+            entity_id=row.entity_id,
             name=row.name,
             description=row.description,
             world_id=row.world_id,
@@ -689,11 +694,14 @@ async def own_kinds(session: AsyncSession, node_id: int) -> OwnKindsView:
     foods = await session.scalars(select(DishRow).where(DishRow.origin_node_id == node_id).order_by(DishRow.name))
     buildings = await session.scalars(select(StructureDesignRow).where(StructureDesignRow.origin_node_id == node_id).order_by(StructureDesignRow.name))
     return OwnKindsView(
-        vehicle_types=[KindRef(id=row.id, name=row.name, family=FRAMES[row.frame].label if row.frame is not None else row.kind.value) for row in vehicles],
-        unit_types=[KindRef(id=row.id, name=row.name, family=UNITS[row.base_kind].label) for row in units],
-        equipment_models=[KindRef(id=row.id, name=row.name, family=FAMILIES[row.family].label) for row in models],
-        dishes=[KindRef(id=row.id, name=row.name, family=row.course.value.replace("_", " ")) for row in foods],
-        building_types=[KindRef(id=row.id, name=row.name, family=STRUCTURES[row.base_kind].label) for row in buildings],
+        vehicle_types=[
+            KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=FRAMES[row.frame].label if row.frame is not None else row.kind.value)
+            for row in vehicles
+        ],
+        unit_types=[KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=UNITS[row.base_kind].label) for row in units],
+        equipment_models=[KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=FAMILIES[row.family].label) for row in models],
+        dishes=[KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=row.course.value.replace("_", " ")) for row in foods],
+        building_types=[KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=STRUCTURES[row.base_kind].label) for row in buildings],
     )
 
 

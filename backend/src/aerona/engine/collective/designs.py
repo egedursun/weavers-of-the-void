@@ -20,6 +20,7 @@ from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.vehicles import FireControl, MountArc, MountKind, VehicleFrame, VehicleSection
 from aerona.engine.collective.book import shift
+from aerona.engine.collective.embodied import embody, settle
 from aerona.engine.context import TickContext
 from aerona.engine.equipment.models import mount_model
 from aerona.engine.notes import note
@@ -365,6 +366,7 @@ async def draw_design(
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await embody(ctx.session, row)
     await lay_sections(ctx.session, row, sizes or frame_sizes(frame), quality, parent.id if parent is not None else None)
     needed = FAMILY_TECHNIQUES[spec.family]
     if needed is not None:
@@ -505,6 +507,7 @@ async def refit(ctx: TickContext, tally: DesignTally) -> None:
             continue
         newer = await draw_design(ctx, owner, design.frame, parent=design, designer_id=design.designer_entity_id, knowledge=knowledge)
         design.obsolete = True
+        await settle(ctx.session, design)
         tally.refits += 1
         await note(ctx, f"{owner.name} drew {newer.name}, an improvement on {design.name}.", key="designs.refit", ids=[owner.id])
         for vessel in await ctx.session.scalars(

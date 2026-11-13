@@ -21,6 +21,7 @@ from aerona.domain.enums.equipment import ArmamentSlot
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import people_of
+from aerona.engine.collective.embodied import embody, settle
 from aerona.engine.collective.makers import makers_of
 from aerona.engine.context import TickContext
 from aerona.engine.equipment.models import model_for
@@ -117,6 +118,7 @@ async def draw_type(
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await embody(ctx.session, row)
     for model_id in await loadout(ctx, owner, role, knowledge):
         ctx.session.add(UnitDesignEquipmentRow(design_id=row.id, model_id=model_id, count=1))
     needed = UNIT_TECHNIQUES.get(role)
@@ -137,6 +139,7 @@ async def refit_type(ctx: TickContext, design: UnitDesignRow, owner: EntityRow, 
         return None
     successor = await draw_type(ctx, owner, design.base_kind, knowledge, parent=design)
     design.retired = True
+    await settle(ctx.session, design)
     return successor
 
 
@@ -181,6 +184,7 @@ async def copy_type(ctx: TickContext, design: UnitDesignRow, taker: EntityRow) -
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await embody(ctx.session, row)
     return row
 
 

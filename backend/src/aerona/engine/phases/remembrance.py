@@ -620,6 +620,7 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.region_environment",
     "table.resource_profiles",
     "table.structure_profiles",
+    "table.structure_sections",
     "table.structure_staff",
     "table.traits",
     "table.war_sides",

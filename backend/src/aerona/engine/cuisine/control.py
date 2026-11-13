@@ -3,6 +3,7 @@ from aerona.db.base import Base
 from aerona.db.tables.cuisine import DISH_FIELDS, CommunityDishRow, DishIngredientRow, DishRow
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.economy import CommodityKind
+from aerona.engine.collective.embodied import settle, unmake
 from aerona.engine.context import TickContext
 from aerona.engine.cuisine.dishes import found_dish
 from aerona.engine.divine.control import apply
@@ -63,10 +64,13 @@ async def edit_record(ctx: TickContext, kind: str, key: object, values: Values, 
     table, fields, label = EDITABLE[kind]
     row = apply(await found(ctx, table, key, label), allowed(values, fields, label), release)
     await ctx.session.flush()
+    await settle(ctx.session, row)
     return row
 
 
 async def delete_record(ctx: TickContext, kind: str, key: object) -> None:
     table, _, label = EDITABLE[kind]
-    await ctx.session.delete(await found(ctx, table, key, label))
+    row = await found(ctx, table, key, label)
+    await unmake(ctx.session, row)
+    await ctx.session.delete(row)
     await ctx.session.flush()

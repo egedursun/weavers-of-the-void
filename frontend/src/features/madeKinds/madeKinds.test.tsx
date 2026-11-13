@@ -6,18 +6,22 @@ import {
   resetApi,
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { type components } from '@/api/generated/schema'
 import {
   allKeys,
   buildAtlasTree,
   flattenVisible,
+  matchesEntity,
 } from '@/features/atlas/atlasModel'
 import { Facts } from '@/features/cosmography/parts'
-import { type CosmosView, type WorldState } from '@/features/entity/api/types'
+import {
+  type CosmosView,
+  type EntitySummary,
+  type WorldState,
+} from '@/features/entity/api/types'
 import { IntegrityDiagram } from './IntegrityDiagram'
-import { KindPage } from './KindPages'
+import { MadeEntitySection } from './KindPages'
 import { MadeKindsSection } from './MadeKindsSection'
-import { type WorldKinds } from './api'
-import { kindKey, parseKindKey } from './kindKeys'
 import { worst } from './model'
 
 vi.mock('@/api/client', async () => {
@@ -45,6 +49,7 @@ const SECTION = {
 
 const WAGON = {
   id: 5,
+  entity_id: 900,
   name: 'Tall Wagon',
   description: null,
   world_id: 1,
@@ -93,7 +98,7 @@ const WAGON = {
   locked: [],
 }
 
-const KINDS: WorldKinds = {
+const KINDS: components['schemas']['WorldKindsView'] = {
   world_id: 1,
   vehicle_types: [WAGON],
   unit_types: [],
@@ -150,7 +155,9 @@ const THING = {
   attraction: null,
   being: null,
   own: {
-    vehicle_types: [{ id: 5, name: 'Tall Wagon', family: 'Wagon' }],
+    vehicle_types: [
+      { id: 5, entity_id: 900, name: 'Tall Wagon', family: 'Wagon' },
+    ],
     unit_types: [],
     equipment_models: [],
     dishes: [],
@@ -174,9 +181,25 @@ function serveBase() {
 describe('made kinds', () => {
   beforeEach(() => resetApi())
 
-  it('files every made type in the atlas under its world, never its instances', () => {
+  it('files a made type in the atlas like any other record of its world', () => {
+    const wagon = {
+      id: 900,
+      name: 'Tall Wagon',
+      title: null,
+      entity_type: 'vehicle_type',
+      subtype: null,
+      status: 'canon',
+      world_id: 1,
+      location_id: null,
+      power_level: 1,
+      birth_epoch: 3,
+      end_epoch: null,
+      importance: null,
+      favorite: true,
+      pending_name: false,
+    } as EntitySummary
     const tree = buildAtlasTree({
-      entities: [],
+      entities: [wagon],
       state: { creator: null, sons: [], worlds: [] } as unknown as WorldState,
       cosmos: {
         stars: [],
@@ -194,20 +217,22 @@ describe('made kinds', () => {
         foreign_gods: [],
       } as unknown as CosmosView,
       types: [],
-      kinds: new Map([[1, KINDS]]),
     })
     const keys = flattenVisible(tree, new Set(allKeys(tree))).map(
       (row) => row.node.key
     )
-    expect(keys).toContain(kindKey('vehicle', 1, 5))
-    expect(keys).toContain('group:1:made-kinds')
-    expect(parseKindKey(kindKey('vehicle', 1, 5))).toEqual({
-      kind: 'vehicle',
-      worldId: 1,
-      id: 5,
-    })
-    expect(parseKindKey('made:vehicle:0:5')).toBeNull()
-    expect(parseKindKey('building-type:1:school')).toBeNull()
+    expect(keys).toContain('entity:900')
+    expect(keys).toContain('group:1:vehicle_type')
+    expect(keys).not.toContain('group:1:made-kinds')
+    expect(
+      matchesEntity(wagon, {
+        q: 'tall',
+        type: 'vehicle_type',
+        status: 'visible',
+        favorites: true,
+        world: 1,
+      })
+    ).toBe(true)
   })
 
   it('names every section in full and stacks its rows when the pane is narrow', async () => {
@@ -233,6 +258,7 @@ describe('made kinds', () => {
       <div className='w-56'>
         <IntegrityDiagram
           title='Sections of a carrack'
+          shape='ship'
           parts={parts}
           zoneOf={(key) => zones[key] ?? 'body'}
         />
@@ -249,8 +275,8 @@ describe('made kinds', () => {
     expect(labels.some((label) => label?.includes('…'))).toBe(false)
     const rows = () =>
       new Set(
-        [...diagram.element().querySelectorAll('rect')].map((node) =>
-          node.getAttribute('y')
+        [...diagram.element().querySelectorAll('rect[data-section]')].map(
+          (node) => node.getAttribute('y')
         )
       ).size
     await expect.poll(rows).toBe(4)
@@ -261,6 +287,7 @@ describe('made kinds', () => {
       <div className='w-2xl'>
         <IntegrityDiagram
           title='Sections of a shrine'
+          shape='keep'
           parts={['sanctum', 'foundation', 'vault'].map((key) => ({
             key,
             state: 'sound' as const,
@@ -274,7 +301,7 @@ describe('made kinds', () => {
     )
     const diagram = screen.getByRole('img', { name: 'Sections of a shrine' })
     await expect.element(diagram).toBeVisible()
-    expect(diagram.element().getBoundingClientRect().height).toBeLessThan(200)
+    expect(diagram.element().getBoundingClientRect().height).toBeLessThan(300)
   })
 
   it('lays the values of a kind in one column with whole labels in a narrow pane', async () => {
@@ -357,7 +384,7 @@ describe('made kinds', () => {
     window.history.replaceState(null, '', '#')
   })
 
-  it('opens a vehicle type in the atlas with its sections and takes one out', async () => {
+  it('shows the make of a vehicle type in its drawer and takes a section out', async () => {
     serveBase()
     onApi('GET', '/api/worlds/1/materials', {
       world_id: 1,
@@ -366,7 +393,7 @@ describe('made kinds', () => {
     })
     onApi('POST', '/api/actions/design_section:delete', ACCEPTED_ACTION)
     const { screen } = await renderApp(
-      <KindPage selection={{ kind: 'vehicle', worldId: 1, id: 5 }} />
+      <MadeEntitySection entityId={900} entityType='vehicle_type' worldId={1} />
     )
     await expect
       .element(screen.getByRole('img', { name: 'Sections of Tall Wagon' }))

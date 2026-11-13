@@ -45,6 +45,7 @@ import {
 } from './labels'
 import { OWNER_TYPES, useKindRow, useKindStep } from './model'
 import { KindHeader, ListEditor } from './parts'
+import { vehicleShape } from './silhouettes'
 import { vehicleZone } from './zones'
 
 type Section = VehicleType['sections'][number]
@@ -436,10 +437,12 @@ export function VehicleTypePage({
         mounts={row.mounts.map((item) => ({
           key: String(item.id),
           section: item.section,
-          label: `${MOUNT[item.mount].label}${item.model_name ? ` with ${item.model_name}` : ''}`,
+          label: `${MOUNT[item.mount].label}${item.model_name ? ` with ${item.model_name}` : ''}, ${ARC[item.arc].label.toLowerCase()}`,
           count: item.count,
+          arc: item.arc,
         }))}
         zoneOf={vehicleZone}
+        shape={vehicleShape(row.family)}
       />
       <div className='@container/tiles min-w-0'>
         <div className='grid min-w-0 grid-cols-2 gap-2 @2xl/tiles:grid-cols-4'>

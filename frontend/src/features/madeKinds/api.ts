@@ -1,4 +1,4 @@
-import { useQueries, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { type ActionBody, type ActionName, postAction } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -7,7 +7,6 @@ import { queryKeys } from '@/api/queryKeys'
 import { useGodAction } from '@/features/pantheon/godAction'
 
 type Schema = components['schemas']
-export type WorldKinds = Schema['WorldKindsView']
 export type ThingKinds = Schema['ThingKindsView']
 export type VehicleType = Schema['VehicleTypeView']
 export type UnitType = Schema['UnitTypeView']
@@ -38,20 +37,6 @@ function worldQuery(worldId: number) {
 
 export function useWorldKinds(worldId: number | null) {
   return useQuery({ ...worldQuery(worldId ?? 0), enabled: worldId !== null })
-}
-
-export function useWorldsKinds(
-  worldIds: number[]
-): ReadonlyMap<number, WorldKinds> {
-  return useQueries({
-    queries: worldIds.map(worldQuery),
-    combine: (results) =>
-      new Map(
-        results.flatMap((result) =>
-          result.data ? [[result.data.world_id, result.data] as const] : []
-        )
-      ),
-  })
 }
 
 export function useThingKinds(nodeId: number) {

@@ -19,7 +19,6 @@ import {
 import { type EntitySummary } from '@/features/entity/api/types'
 import { useHealth } from '@/features/images/api'
 import { useImageGenEvents } from '@/features/images/imageGenState'
-import { useWorldsKinds } from '@/features/madeKinds/api'
 import { AtlasDetail } from './AtlasDetail'
 import { AtlasFilters } from './AtlasFilters'
 import { AtlasList } from './AtlasList'
@@ -102,7 +101,6 @@ export function AtlasScreen() {
     [cosmos.data]
   )
   const buildings = useWorldsStructureTypes(worldIds)
-  const kinds = useWorldsKinds(worldIds)
   const matching = useMemo(
     () => all.filter((entity) => matchesEntity(entity, filters)),
     [all, filters]
@@ -126,9 +124,8 @@ export function AtlasScreen() {
         heavens: heavens.data,
         types,
         buildings,
-        kinds,
       }),
-    [all, state.data, cosmos.data, heavens.data, types, buildings, kinds]
+    [all, state.data, cosmos.data, heavens.data, types, buildings]
   )
   const filtering = isFiltering(filters)
   const matchIds = useMemo(

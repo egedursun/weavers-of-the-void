@@ -15,7 +15,7 @@
 {%- endmacro %}
 
 {% macro made_kind(article) -%}
-<article class="register made-kind"><h5>{{ article.name }}</h5><p class="meta small">{{ article.kind }} · of {{ article.maker }}</p>{% if article.description %}{{ article.description | paragraphs }}{% endif %}{{ facts(article.facts) }}{% for table in article.tables %}<p class="sublabel">{{ table.title }}</p><table><thead><tr>{% for header in table.headers %}<th>{{ header }}</th>{% endfor %}</tr></thead><tbody>{% for row in table.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody></table>{% endfor %}{% for line in article.lines %}<p class="small">{{ line }}</p>{% endfor %}</article>
+<section class="typed made-kind"><p class="sublabel">Its make</p><p class="meta small">{{ article.kind }} · of {{ article.maker }}</p>{{ facts(article.facts) }}{% for table in article.tables %}<p class="sublabel">{{ table.title }}</p><table><thead><tr>{% for header in table.headers %}<th>{{ header }}</th>{% endfor %}</tr></thead><tbody>{% for row in table.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody></table>{% endfor %}{% for line in article.lines %}<p class="small">{{ line }}</p>{% endfor %}</section>
 {%- endmacro %}
 
 {% macro typed(sections) -%}
@@ -120,6 +120,7 @@
 <dl class="facts">{% for label, value in article.plan.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
 {% if article.arms %}<figure class="arms"><div class="shield">{{ article.arms.figure }}</div><figcaption>{{ article.arms.caption }}</figcaption></figure>
 <dl class="facts">{% for label, value in article.arms.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
+{% if article.made %}{{ made_kind(article.made) }}{% endif %}
 {{ entity_depth(article.entity.depth) }}
 {{ typed(article.typed) }}
 {% if article.ending %}<div class="box"><span class="label">Ending</span>{{ article.ending }}</div>{% elif article.entity.fate_note %}<div class="box"><span class="label">Fate's judgement</span>{{ article.entity.fate_note }}</div>{% endif %}

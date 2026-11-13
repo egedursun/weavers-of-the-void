@@ -1,45 +1,54 @@
-import { BookOpen } from 'lucide-react'
-import { EmptyState, LoadingBlock } from '@/components/domain'
+import { BookOpen, Hammer } from 'lucide-react'
+import { EmptyState, LoadingBlock, Section } from '@/components/domain'
 import { BuildingTypePage } from './BuildingTypePage'
 import { DishPage } from './DishPage'
 import { EquipmentPage } from './EquipmentPage'
 import { UnitTypePage } from './UnitTypePage'
 import { VehicleTypePage } from './VehicleTypePage'
 import { useWorldKinds } from './api'
-import { type KindSelection } from './kindKeys'
 
 function Missing() {
   return (
     <EmptyState
       icon={BookOpen}
-      title='No such type'
-      description='This type is no longer part of the world.'
+      size='inline'
+      title='Not yet made'
+      description='Its make is laid down at the next epoch.'
     />
   )
 }
 
-export function KindPage({ selection }: { selection: KindSelection }) {
-  const query = useWorldKinds(selection.worldId)
-  if (query.isPending) return <LoadingBlock label='Reading the type' />
+function MadeBody({
+  entityId,
+  entityType,
+  worldId,
+}: {
+  entityId: number
+  entityType: string
+  worldId: number | null
+}) {
+  const query = useWorldKinds(worldId)
+  if (query.isPending) return <LoadingBlock label='Reading its make' />
   if (query.isError)
     return (
       <EmptyState
         icon={BookOpen}
-        title='The type could not be read'
+        size='inline'
+        title='Its make could not be read'
         description={query.error.message}
       />
     )
   const data = query.data
-  if (selection.kind === 'vehicle') {
-    const row = data.vehicle_types.find((item) => item.id === selection.id)
+  if (entityType === 'vehicle_type') {
+    const row = data.vehicle_types.find((item) => item.entity_id === entityId)
     return row ? (
       <VehicleTypePage row={row} models={data.equipment_models} />
     ) : (
       <Missing />
     )
   }
-  if (selection.kind === 'unit') {
-    const row = data.unit_types.find((item) => item.id === selection.id)
+  if (entityType === 'unit_type') {
+    const row = data.unit_types.find((item) => item.entity_id === entityId)
     return row ? (
       <UnitTypePage
         row={row}
@@ -50,14 +59,38 @@ export function KindPage({ selection }: { selection: KindSelection }) {
       <Missing />
     )
   }
-  if (selection.kind === 'equipment') {
-    const row = data.equipment_models.find((item) => item.id === selection.id)
+  if (entityType === 'equipment_model') {
+    const row = data.equipment_models.find(
+      (item) => item.entity_id === entityId
+    )
     return row ? <EquipmentPage row={row} /> : <Missing />
   }
-  if (selection.kind === 'dish') {
-    const row = data.dishes.find((item) => item.id === selection.id)
+  if (entityType === 'dish') {
+    const row = data.dishes.find((item) => item.entity_id === entityId)
     return row ? <DishPage row={row} /> : <Missing />
   }
-  const row = data.building_types.find((item) => item.id === selection.id)
+  const row = data.building_types.find((item) => item.entity_id === entityId)
   return row ? <BuildingTypePage row={row} /> : <Missing />
+}
+
+export function MadeEntitySection({
+  entityId,
+  entityType,
+  worldId,
+}: {
+  entityId: number
+  entityType: string
+  worldId: number | null
+}) {
+  return (
+    <Section
+      id='section-made-type'
+      title='Its make'
+      description='How its makers made it: its parts, values and fittings, every one of them editable and holdable.'
+      icon={Hammer}
+      tone='gold'
+    >
+      <MadeBody entityId={entityId} entityType={entityType} worldId={worldId} />
+    </Section>
+  )
 }

@@ -5165,7 +5165,7 @@ Legacy values map once: spearmen → line_infantry, shield_wall → shield_infan
 #### Levers and surfaces
 
 - `unit_type:create/edit/delete`, `unit_loadout:set/delete`, `unit_technique:add/delete`, `army_equipment:set/delete` (what a stack carries), son tool `design_unit`, mortal tool `draft_unit_type` (those with tactics or strategy of `unit_types.draft_skill`).
-- Atlas: a **Kinds of soldier** group per world under *Made kinds*, each entry with role, doctrine, formation, loadout, mount or vehicle, techniques, makers and the soldiers in the field.
+- Every kind of soldier is a record of its world of its own entity kind (`unit_type`): it stands in the atlas among the world's records, with search, filters, favourites, history, its drawer (its make: role, doctrine, formation, loadout, mount or vehicle, techniques, makers and the soldiers in the field), its chronicle, image and ties, like any people or vessel.
 - Army drawer: the **Stores and kit** tab lists what each stack carries, with count and condition, and arms a stack from the models of its world.
 - Book and Codex: unit types in the Records of the Cosmos with their loadouts; armies list their inventory.
 
@@ -5858,8 +5858,8 @@ Artwork quality and renown, traditions and gatherings, preferences, language (po
 #### Levers and surfaces
 
 - `equipment_model:create/edit/delete`, `equipment_store:set/delete`, `army_equipment:set/delete`, son tool `shape_equipment`, mortal tool `forge_model`.
-- Atlas **Equipment models** group per world under *Made kinds* with each model's slot, family, values, technique, makers, pieces in store and pieces carried.
-- Book and Codex: models in the *Made Kinds* chapter with labelled values; holders list their stores in their own entries.
+- Every equipment model is a record of its world (`equipment_model`) in the atlas and its drawer like any other record, its make giving its slot, family, values, technique, makers, pieces in store and pieces carried.
+- Book and Codex: each model's own encyclopedia entry carries its make with labelled values; holders list their stores in their own entries.
 
 ### 7.7 Vehicle type: a made kind of vehicle (W23+)
 
@@ -5921,8 +5921,8 @@ The frame catalogue gives each frame its default section layout; a type's sectio
 #### Levers and surfaces
 
 - `design:draw/edit/refit/delete` (every value), `design_section:set/delete`, `design_mount:add/edit/delete`, `design_technique:add/delete`, son tools `shape_vehicle_type` and `commission_vessel`, mortal tool `draw_design` (now for every frame).
-- Atlas **Vehicle types** group per world under *Made kinds*: the section diagram, frame, domain, propulsion, capacities, sections with criticality, mounts with their models, fire control, techniques, makers and how many are built.
-- Book and Codex: the *Made Kinds* chapter gives each vehicle type with labelled values and tables of its sections and mounts; holders list their groups in their own entries.
+- Every vehicle type is a record of its world (`vehicle_type`) in the atlas and its drawer like any other record; its make shows the section drawing (the type's silhouette by family, sections shaded by state and sized by share, critical sections ringed, hazards marked, mounts aimed by their arc), frame, domain, propulsion, capacities, sections, mounts with their models, fire control, techniques, makers and how many are built.
+- Book and Codex: each vehicle type's own encyclopedia entry carries its make with labelled values and tables of its sections and mounts; holders list their groups in their own entries.
 
 ### 7.8 Vehicle groups: fleets, trains and parks (W23+)
 
@@ -6016,7 +6016,7 @@ Uniqueness and races follow the wonder rules (7.2 reference pass R5). Each megas
 #### Levers and surfaces
 
 - `structure_design:create/edit/retire` gain origin, form, storeys and material; `structure_design_section:set/delete` give a type its own sections; son tool `shape_structure_type`; mortal tool `draw_structure_type` for builders with engineering of `integrity.draw_skill`.
-- Atlas **Building types of the peoples** under *Made kinds*: the 3D drawing of the type's form, its section diagram, values and how many works are built to it.
+- Every building type is a record of its world (`building_type`) in the atlas and its drawer like any other record: the 3D drawing of the type's form, its section drawing in the silhouette of its form, values and how many works are built to it.
 
 ### 7.12 Dish: a made kind of food (W23+)
 
@@ -6038,7 +6038,7 @@ Uniqueness and races follow the wonder rules (7.2 reference pass R5). Each megas
 #### Levers and surfaces
 
 - `dish:create/edit/delete`, `dish_ingredient:set/delete`, `community_dish:set/edit/delete`, son tool `shape_dish`, mortal tool `create_dish`.
-- Atlas **Dishes** group per world under *Made kinds*; town and people drawers' **Kitchen** tab; the Book and Codex *Made Kinds* chapter lists dishes, their foods and who cooks them.
+- Every dish is a record of its world (`dish`) in the atlas and its drawer like any other record; town and people drawers' **Kitchen** tab; each dish's own Book and Codex entry gives its make, its foods and who cooks them.
 
 ## Part 8. Culture, knowledge and the supernatural
 

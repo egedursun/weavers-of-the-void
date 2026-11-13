@@ -154,7 +154,7 @@ async def historiography(ctx: TickContext) -> None:
     count(ctx, "history", tally)
 
 
-@reads("table.accounts", "table.founding_myths", "table.polity_profiles")
+@reads("table.accounts", "table.epoch_year_cursors", "table.founding_myths", "table.polity_profiles")
 @writes(
     "table.account_stances",
     "table.accounts",
@@ -308,23 +308,29 @@ async def heraldry(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.cosmos",
     "table.design_components",
     "table.design_mounts",
     "table.design_sections",
     "table.designs",
     "table.epoch_year_cursors",
+    "table.equipment_models",
     "table.holder_levels",
+    "table.name_registry",
     "table.vessel_profiles",
 )
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
     "table.design_components",
+    "table.design_mounts",
     "table.design_sections",
     "table.designs",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.name_registry",
     "table.vessel_profiles",
 )
 async def designs(ctx: TickContext) -> None:

@@ -39,6 +39,7 @@ from aerona.domain.enums.structure import (
     StructureKind,
     StructureSection,
 )
+from aerona.engine.collective.embodied import embody, settle
 from aerona.engine.context import TickContext
 from aerona.engine.divine.control import apply
 from aerona.engine.economy.materials import set_node_material
@@ -381,6 +382,7 @@ async def create_design(ctx: TickContext, values: Mapping[str, Value], *, world_
     apply_design(row, values, hold=False)
     ctx.session.add(row)
     await ctx.session.flush()
+    await embody(ctx.session, row)
     return row
 
 
@@ -390,6 +392,7 @@ async def edit_design(ctx: TickContext, design_id: int, values: Mapping[str, Val
     row.locked = [item for item in row.locked if item not in release]
     await refresh_designed(ctx, row.id)
     await ctx.session.flush()
+    await settle(ctx.session, row)
     return row
 
 
@@ -398,6 +401,7 @@ async def retire_design(ctx: TickContext, design_id: int, retired: bool) -> Stru
     row.retired = retired
     await refresh_designed(ctx, row.id)
     await ctx.session.flush()
+    await settle(ctx.session, row)
     return row
 
 

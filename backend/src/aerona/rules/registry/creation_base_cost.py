@@ -44,3 +44,8 @@ class CreationBaseCostRules:
     natural_law: int = rule(30, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of decreeing a natural law")
     phenomenon: int = rule(40, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of raising a phenomenon")
     cosmic_being: int = rule(60, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of calling a cosmic being")
+    vehicle_type: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of drawing a vehicle type")
+    unit_type: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of raising a kind of soldier")
+    equipment_model: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of forging an equipment model")
+    dish: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of giving a dish")
+    building_type: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of drawing a building type")

@@ -59,6 +59,7 @@ class MountView(ApiModel):
 
 class VehicleTypeView(ApiModel):
     id: int
+    entity_id: int | None
     name: str
     description: str | None
     world_id: int | None
@@ -109,6 +110,7 @@ class LoadoutView(ApiModel):
 
 class UnitTypeView(ApiModel):
     id: int
+    entity_id: int | None
     name: str
     description: str | None
     world_id: int | None
@@ -153,6 +155,7 @@ class UnitTypeView(ApiModel):
 
 class EquipmentModelView(ApiModel):
     id: int
+    entity_id: int | None
     name: str
     description: str | None
     world_id: int | None
@@ -204,6 +207,7 @@ class CookingView(ApiModel):
 
 class DishView(ApiModel):
     id: int
+    entity_id: int | None
     name: str
     description: str | None
     world_id: int | None
@@ -256,6 +260,7 @@ class MegastructureView(ApiModel):
 
 class BuildingTypeView(ApiModel):
     id: int
+    entity_id: int | None
     name: str
     description: str | None
     world_id: int | None
@@ -372,6 +377,7 @@ class AttractionView(ApiModel):
 
 class KindRef(ApiModel):
     id: int
+    entity_id: int | None
     name: str
     family: str
 

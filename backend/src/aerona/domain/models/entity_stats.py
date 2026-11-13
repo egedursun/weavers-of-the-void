@@ -291,6 +291,31 @@ class CosmicBeingStats(ValueObject):
     hp: Count | None = None
 
 
+class VehicleTypeStats(ValueObject):
+    kind: Literal["vehicle_type"] = "vehicle_type"
+    renown: Percent | None = None
+
+
+class UnitTypeStats(ValueObject):
+    kind: Literal["unit_type"] = "unit_type"
+    renown: Percent | None = None
+
+
+class EquipmentModelStats(ValueObject):
+    kind: Literal["equipment_model"] = "equipment_model"
+    renown: Percent | None = None
+
+
+class DishStats(ValueObject):
+    kind: Literal["dish"] = "dish"
+    renown: Percent | None = None
+
+
+class BuildingTypeStats(ValueObject):
+    kind: Literal["building_type"] = "building_type"
+    renown: Percent | None = None
+
+
 EntityStats = Annotated[
     RegionStats
     | PlaceStats
@@ -329,6 +354,11 @@ EntityStats = Annotated[
     | ArtFormStats
     | PhenomenonStats
     | CosmicBeingStats
+    | VehicleTypeStats
+    | UnitTypeStats
+    | EquipmentModelStats
+    | DishStats
+    | BuildingTypeStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

@@ -96,6 +96,7 @@ class UnitDesignRow(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), unique=True)
     name: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
     base_kind: Mapped[UnitKind] = mapped_column(enum_type(UnitKind, "base_kind"), default=UnitKind.LEVY)
     family: Mapped[UnitFamily] = mapped_column(enum_type(UnitFamily, "family"), default=UnitFamily.INFANTRY)

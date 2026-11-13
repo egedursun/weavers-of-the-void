@@ -18,6 +18,8 @@ import { DedicationSection } from '@/features/foundations/DedicationSection'
 import { SiteSection } from '@/features/gatherings/SiteSection'
 import { Lightbox } from '@/features/images/Lightbox'
 import { useImageGenEvents } from '@/features/images/imageGenState'
+import { MadeEntitySection } from '@/features/madeKinds/KindPages'
+import { MADE_ENTITY_TYPES } from '@/features/madeKinds/model'
 import { ObserverSurveySection } from '@/features/physics/SurveySection'
 import { CommunityRelations } from '@/features/relations/CommunityRelations'
 import { CommunityWars } from '@/features/wars/CommunityWars'
@@ -192,6 +194,7 @@ const SECTION_LINKS = [
   { id: 'section-arcana', label: 'Magic' },
   { id: 'section-mythic', label: 'Myth' },
   { id: 'section-tongues', label: 'Tongues' },
+  { id: 'section-made-type', label: 'Its make' },
   { id: 'section-body', label: 'Body' },
   { id: 'section-afflictions', label: 'Afflictions' },
   { id: 'section-body-customs', label: 'Wounds and bodies' },
@@ -345,6 +348,8 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   if (!sited) present.delete('section-site')
   const embodied = BODIED.has(entity.entity_type)
   if (!embodied) present.delete('section-body')
+  if (!MADE_ENTITY_TYPES.has(entity.entity_type))
+    present.delete('section-made-type')
   const afflictable =
     entity.entity_type === 'mortal' || entity.entity_type === 'beast'
   if (!afflictable) present.delete('section-afflictions')
@@ -476,6 +481,13 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {entity.entity_type === 'cosmic_being' && (
           <CosmicBeingSection entityId={entity.id} />
+        )}
+        {MADE_ENTITY_TYPES.has(entity.entity_type) && (
+          <MadeEntitySection
+            entityId={entity.id}
+            entityType={entity.entity_type}
+            worldId={entity.world_id}
+          />
         )}
         {entity.entity_type === 'celestial' && (
           <CelestialReadingsSection celestialId={entity.id} />

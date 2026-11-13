@@ -29,6 +29,7 @@ import {
 } from './labels'
 import { OWNER_TYPES, useKindRow, useKindStep } from './model'
 import { KindHeader } from './parts'
+import { buildingShape } from './silhouettes'
 import { structureZone } from './zones'
 
 type Part = BuildingType['sections'][number]
@@ -203,6 +204,7 @@ export function BuildingTypePage({
             share: item.share,
             hazard: 'none',
           }))}
+          shape={buildingShape(row.form)}
           zoneOf={structureZone}
         />
       )}
