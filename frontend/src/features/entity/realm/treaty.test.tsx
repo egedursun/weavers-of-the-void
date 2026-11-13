@@ -35,7 +35,7 @@ const TREATY = {
       obligor: 'Varo',
       beneficiary_id: 41,
       beneficiary: 'Ostra',
-      params: { tonnage: 300, frame: 'galleon' },
+      params: { amount: 300, frame: 'galleon' },
       last_kept_epoch: null,
       locked: [],
     },

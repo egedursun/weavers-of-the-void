@@ -562,10 +562,14 @@ export function HouseSection({
 }
 
 function termLine(
+  clauseKind: string,
   key: string,
   value: unknown,
   shipClasses: Record<string, Named>
 ): string {
+  if (clauseKind === 'fleet_limit' && key === 'amount') {
+    return `Tonnage: ${String(value)}`
+  }
   if (key === 'frame' && typeof value === 'string') {
     return `Class of ship: ${named(shipClasses, value).label}`
   }
@@ -779,7 +783,7 @@ export function TreatySection({
                           <Muted variant='caption' truncate>
                             {terms
                               .map(([key, value]) =>
-                                termLine(key, value, shipClasses)
+                                termLine(clause.kind, key, value, shipClasses)
                               )
                               .join(' · ')}
                           </Muted>
