@@ -97,6 +97,12 @@ def test_metadata_is_explicit(spec: Any) -> None:
         assert meta.actions(RULES) == 0
 
 
+@pytest.mark.parametrize("spec", SPECS, ids=lambda spec: f"{spec.agent.value}.{spec.name}")
+def test_power_level_is_bounded_only_by_the_rarity_ceiling(spec: Any) -> None:
+    power = spec.input_model.model_json_schema().get("properties", {}).get("power_level", {})
+    assert "maximum" not in power and "exclusiveMaximum" not in power
+
+
 @pytest.mark.parametrize("template", [*CommonResult, *SonResult, *MortalResult], ids=lambda template: f"{type(template).__name__}.{template.name}")
 def test_every_result_text_renders(template: Any) -> None:
     names = jinja2.meta.find_undeclared_variables(environment().parse(template.value))

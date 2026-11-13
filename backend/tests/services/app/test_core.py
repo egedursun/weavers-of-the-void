@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.rarities import build_rarity_table
 from aerona.core.errors import InsufficientResourcesError
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -122,10 +123,11 @@ async def test_son_relations_and_progress(session: AsyncSession, rules: Rules, w
     assert [step.level for step in progress.level_ups] == [2, 3]
     assert son.level == 3
     assert son.xp == 50
-    assert sons.action_points(rules, son, []) == 3
+    base = build_rarity_table(rules)[son.rarity].action_points
+    assert sons.action_points(rules, son, []) == base
     son.existence = 20
     assert sons.band(rules, son) is ExistenceBand.FADED
-    assert sons.action_points(rules, son, []) == 2
+    assert sons.action_points(rules, son, []) == max(rules.core_rules.min_actions, base - rules.core_rules.faded_action_loss)
     son.existence = 5
     assert not sons.can_act(rules, son)
     assert sons.action_points(rules, son, []) == 0

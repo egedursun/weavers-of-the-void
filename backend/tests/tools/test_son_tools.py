@@ -21,6 +21,7 @@ from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import StarType
+from aerona.engine.gods.progress import power_ceiling
 from aerona.rules.registry import Rules
 from aerona.tools.toolkit import TurnToolkit
 from tests.tools.factories import DESCRIPTION, Realm, connect, make_entity, seed_realm, son_toolkit
@@ -185,6 +186,20 @@ async def test_power_ceiling_follows_rarity(database: Database) -> None:
     link = [{"target_id": realm.people_id, "kind": "related", "description": "near them"}]
     ceiling = await rejected(toolkit, "create_place", {"place_kind": "cave", "name": "Deepreach", "description": LONG, "power_level": 5, "links": link})
     assert "at most 2" in ceiling
+
+
+async def test_mythic_son_creates_up_to_its_own_ceiling(database: Database) -> None:
+    realm = await seed_realm(database, rarity=Rarity.MYTHIC)
+    toolkit = await son_toolkit(database, realm.son_id)
+    link = [{"target_id": realm.people_id, "kind": "related", "description": "near them"}]
+    async with database.read() as session:
+        son = await session.get(SonRow, realm.son_id)
+        assert son is not None
+        ceiling = power_ceiling(Rules(), son)
+    assert ceiling > 10
+    await ok(toolkit, "create_place", {"place_kind": "cave", "name": "Highreach", "description": LONG, "power_level": ceiling, "links": link})
+    over = await rejected(toolkit, "create_place", {"place_kind": "cave", "name": "Overreach", "description": LONG, "power_level": ceiling + 1, "links": link})
+    assert f"at most {ceiling}" in over
 
 
 async def test_make_bond_and_harvest(database: Database) -> None:

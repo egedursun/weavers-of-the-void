@@ -47,7 +47,7 @@ def test_creation_tool_text_carries_type_details() -> None:
     rendered = tool_text(SonToolId.CREATE_PEOPLE, RULES, ToolTextContext(power_ceiling=6, example_cost=4))
     assert rendered.description.startswith("Creates a People")
     assert "about 4 essence" in rendered.description
-    assert "your ceiling is 6" in rendered.fields["power_level"]
+    assert "power ceiling, which is 6" in rendered.fields["power_level"]
     assert "stats.population" in rendered.fields
     assert "worshipped_son_id" in rendered.fields
     assert "Image prompt rules" in rendered.fields["image_prompt"]

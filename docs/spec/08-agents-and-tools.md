@@ -889,17 +889,17 @@ return max(son.varlik < KURAL.varlik_solgun ? 0 : KURAL.en_az_eylem, ap)
 ```
 Unused AP is lost at end of turn. A resumed turn uses the persisted `tur_ap`.
 
-Rarity table (RARITIES, constants, not tunables):
+Rarity table (defaults of the `rarities.*` rules, all tunable):
 | key (TR) | English | order | base AP | stat range | power ceiling `guc_tavan` | essence regen/epoch | maxTurns (SDK steps) | summon weight |
 |---|---|---|---|---|---|---|---|---|
-| yaygin | Common | 0 | 3 | 20–45 | 2 | 8 | 11 | 50 |
-| seckin | Distinguished | 1 | 3 | 30–55 | 3 | 10 | 13 | 27 |
-| nadir | Rare | 2 | 3 | 40–65 | 5 | 12 | 15 | 14 |
-| destansi | Epic | 3 | 3 | 50–80 | 7 | 15 | 17 | 7 |
-| efsanevi | Legendary | 4 | 4 | 65–95 | 10 | 18 | 19 | 2 |
-| mitik | Mythic | 5 | 5 | 80–100 | 12 | 24 | 21 | 0 (only via ascension) |
+| yaygin | Common | 0 | 2 | 17–39 | 2 | 8 | 12 | 50 |
+| seckin | Distinguished | 1 | 3 | 26–50 | 4 | 12 | 15 | 26 |
+| nadir | Rare | 2 | 4 | 36–62 | 6 | 17 | 18 | 14 |
+| destansi | Epic | 3 | 5 | 48–75 | 8 | 24 | 21 | 7 |
+| efsanevi | Legendary | 4 | 6 | 61–88 | 10 | 32 | 24 | 3 |
+| mitik | Mythic | 5 | 7 | 75–100 | 12 | 44 | 27 | 0 (only via ascension) |
 
-Power ceiling for creations: `gucTavani(son) = RARITIES[r].guc_tavan + floor((yildiz-1) / KURAL.yildiz_guc_adim)`. Schema allows `guc_seviyesi` 1–10; handler rejects above the ceiling.
+Power ceiling for creations: `gucTavani(son) = RARITIES[r].guc_tavan + floor((yildiz-1) / KURAL.yildiz_guc_adim)`. The schema only requires `power_level` ≥ 1; the handler rejects anything above the son's ceiling, which is the only upper bound.
 
 Essence ceiling: `ozMax(stats) = round(KURAL.oz_taban + KURAL.oz_kudret/100 × (stats.kudret ?? KURAL.oz_kudret_varsayilan))`. HP max: `canMax = round(KURAL.can_taban + KURAL.can_dayaniklilik/100 × dayaniklilik)`.
 

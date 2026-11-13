@@ -65,16 +65,17 @@ Sons (god cards) have one of six rarities. `sira` is the ordinal used for gates 
 
 | Key (old) | EN key | Display (TR → EN) | Ordinal | Action points `ap` | Stat range on summon `stat` | Power-level cap `guc_tavan` | Essence regen / epoch `oz_yenilenme` | Agent turn limit `maxTurns` | Summon weight `agirlik` | Summon probability | Colour |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| yaygin | common | Yaygın → Common | 0 | 3 | 20–45 | 2 | 8 | 11 | 50 | 50% | `#9097a0` |
-| seckin | uncommon | Seçkin → Uncommon | 1 | 3 | 30–55 | 3 | 10 | 13 | 27 | 27% | `#7fc489` |
-| nadir | rare | Nadir → Rare | 2 | 3 | 40–65 | 5 | 12 | 15 | 14 | 14% | `#6fa0e6` |
-| destansi | epic | Destansı → Epic | 3 | 3 | 50–80 | 7 | 15 | 17 | 7 | 7% | `#b48ae6` |
-| efsanevi | legendary | Efsanevi → Legendary | 4 | 4 | 65–95 | 10 | 18 | 19 | 2 | 2% | `#e8ad48` |
-| mitik | mythic | Mitik → Mythic | 5 | 5 | 80–100 | 12 | 24 | 21 | 0 (not tunable) | 0% — only via ascension | `#f07aa0` |
+| yaygin | common | Yaygın → Common | 0 | 2 | 17–39 | 2 | 8 | 12 | 50 | 50% | `#9097a0` |
+| seckin | uncommon | Seçkin → Uncommon | 1 | 3 | 26–50 | 4 | 12 | 15 | 26 | 26% | `#7fc489` |
+| nadir | rare | Nadir → Rare | 2 | 4 | 36–62 | 6 | 17 | 18 | 14 | 14% | `#6fa0e6` |
+| destansi | epic | Destansı → Epic | 3 | 5 | 48–75 | 8 | 24 | 21 | 7 | 7% | `#b48ae6` |
+| efsanevi | legendary | Efsanevi → Legendary | 4 | 6 | 61–88 | 10 | 32 | 24 | 3 | 3% | `#e8ad48` |
+| mitik | mythic | Mitik → Mythic | 5 | 7 | 75–100 | 12 | 44 | 27 | 0 (not tunable) | 0% — only via ascension | `#f07aa0` |
 
 Notes:
 - All numeric fields except `ad`/`sira` and mythic's weight are tunable (`RARITIES.<r>.ap|oz_yenilenme|stat.0|stat.1|guc_tavan|maxTurns|agirlik`); mythic `agirlik` is deliberately excluded from the editable list so mythic can never be summoned.
-- `guc_tavan` = the maximum power level of entities the son can create (raised by stars, see A.3).
+- `guc_tavan` = the maximum power level of entities the son can create (raised by stars, see A.3). Each tier's base cap is the top power level of entities of its own tier (thresholds below), and ★5 adds 2, so a fully starred son creates at the next tier's base cap. The creation tool schema carries no upper bound of its own; the son's ceiling is the only limit.
+- Balance: base AP rises by one per tier and ★5 adds one, so a ★5 son acts like the next tier's ★1. Essence regen rises faster than creation cost (cost grows with `guc_tavan`), so the actions a son can sustain from regen alone climb from about 1.2 per epoch (Common) to about 2.7 (Mythic). `maxTurns` is 3 steps for each action point a son can hold at most (base + Tireless + ★5). Stat bands overlap per stat for variety but their midpoints step 10–13 apart, widening toward the top.
 - `maxTurns` = the Agent-SDK step limit for one son turn.
 - Colours come from the frontend (`public/style.css --r-*`, `public/core/bilesen.js RRENK`); the legendary card also has an animated conic-gradient border for mythic.
 - Entities (non-son records) use the **same rarity vocabulary** derived from their power level via `varlikSinifi(g)` (A.17) with thresholds `CORE_RULES.tier_uncommon=3, tier_rare=5, tier_epic=7, tier_legendary=9, tier_mythic=11`.
@@ -3714,47 +3715,47 @@ Old namespace `RARITIES` · 41 rows · defined in `src/rules.js` · also read by
 
 | key | old key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
-| common_action_points | yaygin.ap | 3 | 1 | 8 | Rarity tiers | Common: action points |
+| common_action_points | yaygin.ap | 2 | 1 | 8 | Rarity tiers | Common: action points |
 | common_essence_regen | yaygin.oz_yenilenme | 8 | 0 | 60 | Rarity tiers | Common: essence regeneration per epoch |
-| common_stat_min | yaygin.stat.0 | 20 | 1 | 100 | Rarity tiers | Common: lower bound of stats when summoned |
-| common_stat_max | yaygin.stat.1 | 45 | 1 | 100 | Rarity tiers | Common: upper bound of stats when summoned |
+| common_stat_min | yaygin.stat.0 | 17 | 1 | 100 | Rarity tiers | Common: lower bound of stats when summoned |
+| common_stat_max | yaygin.stat.1 | 39 | 1 | 100 | Rarity tiers | Common: upper bound of stats when summoned |
 | common_power_cap | yaygin.guc_tavan | 2 | 1 | 30 | Rarity tiers | Common: power-level cap |
-| common_max_turns | yaygin.maxTurns | 11 | 4 | 40 | Rarity tiers | Common: son turn limit (steps) |
+| common_max_turns | yaygin.maxTurns | 12 | 4 | 40 | Rarity tiers | Common: son turn limit (steps) |
 | common_summon_weight | yaygin.agirlik | 50 | 0 | 100 | Rarity tiers | Common: summon weight |
 | uncommon_action_points | seckin.ap | 3 | 1 | 8 | Rarity tiers | Uncommon: action points |
-| uncommon_essence_regen | seckin.oz_yenilenme | 10 | 0 | 60 | Rarity tiers | Uncommon: essence regeneration per epoch |
-| uncommon_stat_min | seckin.stat.0 | 30 | 1 | 100 | Rarity tiers | Uncommon: lower bound of stats when summoned |
-| uncommon_stat_max | seckin.stat.1 | 55 | 1 | 100 | Rarity tiers | Uncommon: upper bound of stats when summoned |
-| uncommon_power_cap | seckin.guc_tavan | 3 | 1 | 30 | Rarity tiers | Uncommon: power-level cap |
-| uncommon_max_turns | seckin.maxTurns | 13 | 4 | 40 | Rarity tiers | Uncommon: son turn limit (steps) |
-| uncommon_summon_weight | seckin.agirlik | 27 | 0 | 100 | Rarity tiers | Uncommon: summon weight |
-| rare_action_points | nadir.ap | 3 | 1 | 8 | Rarity tiers | Rare: action points |
-| rare_essence_regen | nadir.oz_yenilenme | 12 | 0 | 60 | Rarity tiers | Rare: essence regeneration per epoch |
-| rare_stat_min | nadir.stat.0 | 40 | 1 | 100 | Rarity tiers | Rare: lower bound of stats when summoned |
-| rare_stat_max | nadir.stat.1 | 65 | 1 | 100 | Rarity tiers | Rare: upper bound of stats when summoned |
-| rare_power_cap | nadir.guc_tavan | 5 | 1 | 30 | Rarity tiers | Rare: power-level cap |
-| rare_max_turns | nadir.maxTurns | 15 | 4 | 40 | Rarity tiers | Rare: son turn limit (steps) |
+| uncommon_essence_regen | seckin.oz_yenilenme | 12 | 0 | 60 | Rarity tiers | Uncommon: essence regeneration per epoch |
+| uncommon_stat_min | seckin.stat.0 | 26 | 1 | 100 | Rarity tiers | Uncommon: lower bound of stats when summoned |
+| uncommon_stat_max | seckin.stat.1 | 50 | 1 | 100 | Rarity tiers | Uncommon: upper bound of stats when summoned |
+| uncommon_power_cap | seckin.guc_tavan | 4 | 1 | 30 | Rarity tiers | Uncommon: power-level cap |
+| uncommon_max_turns | seckin.maxTurns | 15 | 4 | 40 | Rarity tiers | Uncommon: son turn limit (steps) |
+| uncommon_summon_weight | seckin.agirlik | 26 | 0 | 100 | Rarity tiers | Uncommon: summon weight |
+| rare_action_points | nadir.ap | 4 | 1 | 8 | Rarity tiers | Rare: action points |
+| rare_essence_regen | nadir.oz_yenilenme | 17 | 0 | 60 | Rarity tiers | Rare: essence regeneration per epoch |
+| rare_stat_min | nadir.stat.0 | 36 | 1 | 100 | Rarity tiers | Rare: lower bound of stats when summoned |
+| rare_stat_max | nadir.stat.1 | 62 | 1 | 100 | Rarity tiers | Rare: upper bound of stats when summoned |
+| rare_power_cap | nadir.guc_tavan | 6 | 1 | 30 | Rarity tiers | Rare: power-level cap |
+| rare_max_turns | nadir.maxTurns | 18 | 4 | 40 | Rarity tiers | Rare: son turn limit (steps) |
 | rare_summon_weight | nadir.agirlik | 14 | 0 | 100 | Rarity tiers | Rare: summon weight |
-| epic_action_points | destansi.ap | 3 | 1 | 8 | Rarity tiers | Epic: action points |
-| epic_essence_regen | destansi.oz_yenilenme | 15 | 0 | 60 | Rarity tiers | Epic: essence regeneration per epoch |
-| epic_stat_min | destansi.stat.0 | 50 | 1 | 100 | Rarity tiers | Epic: lower bound of stats when summoned |
-| epic_stat_max | destansi.stat.1 | 80 | 1 | 100 | Rarity tiers | Epic: upper bound of stats when summoned |
-| epic_power_cap | destansi.guc_tavan | 7 | 1 | 30 | Rarity tiers | Epic: power-level cap |
-| epic_max_turns | destansi.maxTurns | 17 | 4 | 40 | Rarity tiers | Epic: son turn limit (steps) |
+| epic_action_points | destansi.ap | 5 | 1 | 8 | Rarity tiers | Epic: action points |
+| epic_essence_regen | destansi.oz_yenilenme | 24 | 0 | 60 | Rarity tiers | Epic: essence regeneration per epoch |
+| epic_stat_min | destansi.stat.0 | 48 | 1 | 100 | Rarity tiers | Epic: lower bound of stats when summoned |
+| epic_stat_max | destansi.stat.1 | 75 | 1 | 100 | Rarity tiers | Epic: upper bound of stats when summoned |
+| epic_power_cap | destansi.guc_tavan | 8 | 1 | 30 | Rarity tiers | Epic: power-level cap |
+| epic_max_turns | destansi.maxTurns | 21 | 4 | 40 | Rarity tiers | Epic: son turn limit (steps) |
 | epic_summon_weight | destansi.agirlik | 7 | 0 | 100 | Rarity tiers | Epic: summon weight |
-| legendary_action_points | efsanevi.ap | 4 | 1 | 8 | Rarity tiers | Legendary: action points |
-| legendary_essence_regen | efsanevi.oz_yenilenme | 18 | 0 | 60 | Rarity tiers | Legendary: essence regeneration per epoch |
-| legendary_stat_min | efsanevi.stat.0 | 65 | 1 | 100 | Rarity tiers | Legendary: lower bound of stats when summoned |
-| legendary_stat_max | efsanevi.stat.1 | 95 | 1 | 100 | Rarity tiers | Legendary: upper bound of stats when summoned |
+| legendary_action_points | efsanevi.ap | 6 | 1 | 8 | Rarity tiers | Legendary: action points |
+| legendary_essence_regen | efsanevi.oz_yenilenme | 32 | 0 | 60 | Rarity tiers | Legendary: essence regeneration per epoch |
+| legendary_stat_min | efsanevi.stat.0 | 61 | 1 | 100 | Rarity tiers | Legendary: lower bound of stats when summoned |
+| legendary_stat_max | efsanevi.stat.1 | 88 | 1 | 100 | Rarity tiers | Legendary: upper bound of stats when summoned |
 | legendary_power_cap | efsanevi.guc_tavan | 10 | 1 | 30 | Rarity tiers | Legendary: power-level cap |
-| legendary_max_turns | efsanevi.maxTurns | 19 | 4 | 40 | Rarity tiers | Legendary: son turn limit (steps) |
-| legendary_summon_weight | efsanevi.agirlik | 2 | 0 | 100 | Rarity tiers | Legendary: summon weight |
-| mythic_action_points | mitik.ap | 5 | 1 | 8 | Rarity tiers | Mythic: action points |
-| mythic_essence_regen | mitik.oz_yenilenme | 24 | 0 | 60 | Rarity tiers | Mythic: essence regeneration per epoch |
-| mythic_stat_min | mitik.stat.0 | 80 | 1 | 100 | Rarity tiers | Mythic: lower bound of stats when summoned |
+| legendary_max_turns | efsanevi.maxTurns | 24 | 4 | 40 | Rarity tiers | Legendary: son turn limit (steps) |
+| legendary_summon_weight | efsanevi.agirlik | 3 | 0 | 100 | Rarity tiers | Legendary: summon weight |
+| mythic_action_points | mitik.ap | 7 | 1 | 8 | Rarity tiers | Mythic: action points |
+| mythic_essence_regen | mitik.oz_yenilenme | 44 | 0 | 60 | Rarity tiers | Mythic: essence regeneration per epoch |
+| mythic_stat_min | mitik.stat.0 | 75 | 1 | 100 | Rarity tiers | Mythic: lower bound of stats when summoned |
 | mythic_stat_max | mitik.stat.1 | 100 | 1 | 100 | Rarity tiers | Mythic: upper bound of stats when summoned |
 | mythic_power_cap | mitik.guc_tavan | 12 | 1 | 30 | Rarity tiers | Mythic: power-level cap |
-| mythic_max_turns | mitik.maxTurns | 21 | 4 | 40 | Rarity tiers | Mythic: son turn limit (steps) |
+| mythic_max_turns | mitik.maxTurns | 27 | 4 | 40 | Rarity tiers | Mythic: son turn limit (steps) |
 
 ### RARITY_GATES
 

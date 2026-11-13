@@ -30,7 +30,7 @@ CREATION_FIELDS: dict[str, str] = {
     "subtype": "What it is, e.g.: {{ entity.examples | join(', ') }}",
     "description": "3 to 7 sentences. Concrete, sensory details of its own; how it was born, what it is connected with, how mortals know it.",
     "domain": "If empty, your first domain. The domain used in this creation; one of: {{ domains | join(', ') }}. Your own domains are cheap.",
-    "power_level": "Between 1 and 10{% if context.power_ceiling %}; your ceiling is {{ context.power_ceiling }}{% endif %}. Increases the cost.",
+    "power_level": "From 1 up to your power ceiling{% if context.power_ceiling %}, which is {{ context.power_ceiling }}{% endif %}. Increases the cost.",
     "stats": "Optional stats; leave out any you do not want to set",
     **LINK_FIELDS,
     "image_prompt": IMAGE_PROMPT_FIELD,

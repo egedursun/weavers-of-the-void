@@ -9,7 +9,6 @@ from aerona.constants.tool_inputs import (
     IMAGE_PROMPT_MAX,
     NAME_MAX,
     NAME_MIN,
-    POWER_LEVEL_MAX,
     POWER_LEVEL_MIN,
     SUBTYPE_MAX,
     TAG_MAX,
@@ -78,7 +77,7 @@ class CreationInput(ToolInput):
     subtype: Annotated[str, Field(max_length=SUBTYPE_MAX)] | None = None
     description: Annotated[str, Field(min_length=CREATION_DESCRIPTION_MIN, max_length=CREATION_DESCRIPTION_MAX)]
     domain: str | None = None
-    power_level: Annotated[int, Field(ge=POWER_LEVEL_MIN, le=POWER_LEVEL_MAX)]
+    power_level: Annotated[int, Field(ge=POWER_LEVEL_MIN)]
     links: Annotated[list[CreationLinkInput], Field(min_length=1)]
     image_prompt: Annotated[str, Field(max_length=IMAGE_PROMPT_MAX)] | None = None
     tags: Annotated[list[Tag], Field(max_length=TAGS_MAX)] | None = None
