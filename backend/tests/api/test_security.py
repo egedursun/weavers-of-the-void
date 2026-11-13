@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -53,3 +55,14 @@ async def test_unknown_endpoints_and_crashes_are_structured(api: ApiWorld, monke
     assert body["correlation_id"] in body["error"]
     assert "secret" not in body["error"]
     assert crashed.headers["x-correlation-id"] == body["correlation_id"]
+
+
+VITE_CONFIG = Path(__file__).resolve().parents[3] / "frontend" / "vite.config.ts"
+
+
+@pytest.mark.parametrize("port", [5173, 5192, 5200, 6123])
+async def test_a_dev_server_on_any_port_writes_through_its_proxy(api: ApiWorld, port: int) -> None:
+    async with foreign(api, f"http://localhost:{port}") as client:
+        proxied = await client.patch("/api/creator", json={"title": "Warden"}, headers={"origin": f"http://localhost:{port}", "sec-fetch-site": "same-origin"})
+    assert proxied.status_code == 200
+    assert "changeOrigin: false" in VITE_CONFIG.read_text(encoding="utf-8")
