@@ -86,39 +86,43 @@ function LoadoutRow({
   const busy = why(remove.busy, set.isPending)
   const slot = SLOT[row.slot]
   return (
-    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-2'>
-      <Chip icon={slot.icon}>{slot.label}</Chip>
-      <Muted
-        as='span'
-        variant='caption'
-      >{`${row.model_name}, ${familyLabel(row.family).toLowerCase()}`}</Muted>
-      <NumberField
-        label='Pieces each'
-        value={count}
-        min={1}
-        max={PIECES_MAX}
-        blocked={busy}
-        onChange={setCount}
-      />
-      <Button
-        size='sm'
-        variant='outline'
-        disabled={busy !== null}
-        disabledReason={busy ?? undefined}
-        onClick={() => set.mutate()}
-      >
-        Set
-      </Button>
-      <Button
-        size='sm'
-        variant='ghost'
-        disabled={busy !== null}
-        disabledReason={busy ?? undefined}
-        onClick={remove.run}
-      >
-        <Trash2 />
-        Take it away
-      </Button>
+    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'>
+      <div className='flex min-w-0 flex-wrap items-center gap-2'>
+        <Chip icon={slot.icon}>{slot.label}</Chip>
+        <Muted
+          as='span'
+          variant='caption'
+        >{`${row.model_name}, ${familyLabel(row.family).toLowerCase()}`}</Muted>
+      </div>
+      <div className='flex min-w-0 flex-wrap items-end gap-2'>
+        <NumberField
+          label='Pieces each'
+          value={count}
+          min={1}
+          max={PIECES_MAX}
+          blocked={busy}
+          onChange={setCount}
+        />
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => set.mutate()}
+        >
+          Set
+        </Button>
+        <Button
+          size='sm'
+          variant='ghost'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={remove.run}
+        >
+          <Trash2 />
+          Take it away
+        </Button>
+      </div>
     </li>
   )
 }
@@ -325,16 +329,17 @@ export function UnitTypePage({
       </div>
       <Facts
         items={[
-          [
-            'Armour and shield',
-            `${ARMOUR[row.armour]?.label ?? row.armour} · ${SHIELD[row.shield]?.label ?? row.shield}`,
-          ],
-          ['Reach and volleys', `${row.reach} · ${row.volleys}`],
-          ['Accuracy and piercing', `${row.accuracy} · ${row.piercing}`],
+          ['Armour', ARMOUR[row.armour]?.label ?? row.armour],
+          ['Shield', SHIELD[row.shield]?.label ?? row.shield],
+          ['Reach', row.reach],
+          ['Volleys', row.volleys],
+          ['Accuracy', row.accuracy],
+          ['Piercing', row.piercing],
           ['Discipline', row.discipline],
           ['Terror it strikes', row.terror],
           ['Mass', row.mass],
-          ['Cost and upkeep', `${row.cost} · ${row.upkeep}`],
+          ['Cost', row.cost],
+          ['Upkeep', row.upkeep],
           ['Epochs of training', row.training_epochs],
           [
             'Drawn from',
