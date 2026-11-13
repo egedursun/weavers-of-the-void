@@ -7,6 +7,12 @@ class HousingLevel(StrEnum):
     HOUSE = "house"
     TOWNHOUSE = "townhouse"
     MANOR = "manor"
+    APARTMENT = "apartment"
+    TENEMENT = "tenement"
+    TOWER_BLOCK = "tower_block"
+    ARCOLOGY_UNIT = "arcology_unit"
+    HABITAT_MODULE = "habitat_module"
+    SHIP_BERTH = "ship_berth"
 
 
 class UrbanService(StrEnum):
@@ -24,6 +30,9 @@ class Morphology(StrEnum):
     ORGANIC = "organic"
     PLANNED = "planned"
     CONCENTRIC = "concentric"
+    GRID = "grid"
+    VERTICAL = "vertical"
+    SPRAWL = "sprawl"
 
 
 class RacketKind(StrEnum):

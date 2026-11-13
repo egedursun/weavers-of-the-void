@@ -75,6 +75,17 @@ OFFICE_GATES: MappingProxyType[OfficeKind, Technique] = MappingProxyType(
         OfficeKind.COURT_SCHOLAR: T.LOGIC,
     }
 )
+OFFICE_LEVELS: MappingProxyType[OfficeKind, tuple[KnowledgeBranch, int]] = MappingProxyType(
+    {
+        OfficeKind.HEAD_OF_STATE: (KnowledgeBranch.CIVICS, 5),
+        OfficeKind.HEAD_OF_GOVERNMENT: (KnowledgeBranch.CIVICS, 5),
+        OfficeKind.MINISTER: (KnowledgeBranch.CIVICS, 4),
+        OfficeKind.SPEAKER: (KnowledgeBranch.CIVICS, 5),
+        OfficeKind.GENERAL: (KnowledgeBranch.WARFARE, 5),
+        OfficeKind.ADMIRAL: (KnowledgeBranch.SHIPBUILDING, 5),
+        OfficeKind.CHIEF_SCIENTIST: (KnowledgeBranch.WRITING, 6),
+    }
+)
 LAW_GATES: MappingProxyType[LawKind, Technique] = MappingProxyType(
     {
         LawKind.PENAL_CODE: T.WRITTEN_LAW,

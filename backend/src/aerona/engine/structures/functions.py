@@ -134,7 +134,7 @@ async def school(ctx: TickContext, item: Working, host: EntityRow, tally: Tally)
         if culture.literacy < floor:
             culture.literacy = clamp_int(culture.literacy + min(table.school_literacy_step, floor - culture.literacy), 0, PERCENT)
             tally.held += 1
-    for scholar in await residents(ctx, host, frozenset({MortalRole.SCRIBE, MortalRole.SAGE, MortalRole.APPRENTICE})):
+    for scholar in await residents(ctx, host, frozenset({MortalRole.SCRIBE, MortalRole.SAGE, MortalRole.APPRENTICE, MortalRole.SCIENTIST})):
         await practised(ctx, scholar.id, SkillKind.WRITING, round_half_up(table.school_xp * item.strength))
 
 

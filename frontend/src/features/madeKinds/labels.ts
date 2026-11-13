@@ -76,6 +76,16 @@ import {
   Wrench,
   Zap,
   type LucideIcon,
+  Stethoscope,
+  FlaskConical,
+  Printer,
+  Dna,
+  Snowflake,
+  Radiation,
+  WandSparkles,
+  Hexagon,
+  Boxes,
+  Sprout,
 } from 'lucide-react'
 import {
   type components,
@@ -245,6 +255,9 @@ export const SLOT: Record<ArmamentSlot, Named> = {
   helmet: { label: 'Helmet', icon: HardHat, tone: 'muted' },
   barding: { label: 'Barding', icon: PawPrint, tone: 'muted' },
   vehicle_weapon: { label: 'Vehicle weapon', icon: Bomb, tone: 'warning' },
+  sensor: { label: 'Sensor', icon: Radar, tone: 'info' },
+  implant: { label: 'Implant', icon: Cpu, tone: 'verdigris' },
+  support: { label: 'Support kit', icon: Stethoscope, tone: 'success' },
 }
 
 export const METHOD: Record<Schema['CookingMethod'], Named> = {
@@ -265,6 +278,12 @@ export const METHOD: Record<Schema['CookingMethod'], Named> = {
   simmered: { label: 'Simmered', icon: CookingPot, tone: 'gold' },
   ground: { label: 'Ground', icon: Wheat, tone: 'gold' },
   pressed: { label: 'Pressed', icon: Layers, tone: 'muted' },
+  synthesised: { label: 'Synthesised', icon: FlaskConical, tone: 'info' },
+  printed: { label: 'Printed', icon: Printer, tone: 'info' },
+  vat_grown: { label: 'Grown in vats', icon: Dna, tone: 'verdigris' },
+  freeze_dried: { label: 'Freeze-dried', icon: Snowflake, tone: 'info' },
+  irradiated: { label: 'Irradiated', icon: Radiation, tone: 'warning' },
+  conjured: { label: 'Conjured', icon: WandSparkles, tone: 'verdigris' },
 }
 
 export const COURSE: Record<Schema['DishCourse'], Named> = {
@@ -298,6 +317,14 @@ export const FORM: Record<Schema['BuildingForm'], Named> = {
   wall_line: { label: 'Wall line', icon: Shield, tone: 'warning' },
   tunnel_form: { label: 'Tunnel', icon: Drill, tone: 'muted' },
   orbital: { label: 'Orbital', icon: Orbit, tone: 'verdigris' },
+  high_rise: { label: 'High-rise', icon: Building2, tone: 'info' },
+  arcology: { label: 'Arcology', icon: Building2, tone: 'verdigris' },
+  bunker: { label: 'Bunker', icon: ShieldHalf, tone: 'muted' },
+  floating: { label: 'Floating', icon: Waves, tone: 'info' },
+  geodesic: { label: 'Geodesic shell', icon: Hexagon, tone: 'info' },
+  modular: { label: 'Modular', icon: Boxes, tone: 'muted' },
+  grown: { label: 'Grown', icon: Sprout, tone: 'success' },
+  carved: { label: 'Carved from rock', icon: Mountain, tone: 'muted' },
 }
 
 export const ROLE: Record<Schema['SectionRole'], Named> = {

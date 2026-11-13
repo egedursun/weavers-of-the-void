@@ -8,21 +8,26 @@ from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import SiegeRow, WarRow
+from aerona.db.write_guard import held
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.divine import DomainHook
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction, StarvationStage, UnitKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, TreasuryEntry
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import SiegeStatus
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
 from aerona.engine.economy.purse import receive_coin
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.happenings.emergence import record_sack
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.art import smash
 from aerona.engine.lore.blueprints import design_factor
 from aerona.engine.military.logistics import March, desert, dishearten
@@ -50,6 +55,7 @@ from aerona.engine.military.siege_depth import (
 )
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.services.community_relations import change_relation
@@ -59,6 +65,7 @@ from aerona.engine.vehicles.fleet import siege_power
 
 DEFAULT_SUPPLIES = 180
 HALF = 2
+SHELLED = "was struck when the siege engines shelled {town}"
 
 
 @dataclass
@@ -164,6 +171,24 @@ def gate_factor(ctx: TickContext, walls: SettlementInfrastructureRow) -> float:
     return 1 + max(0, walls.gates - 1) * ctx.rules.districts.gate_breach_pct / PERCENT
 
 
+async def shelled(ctx: TickContext, siege: SiegeRow, engines: float) -> int:
+    town = await ctx.session.get(EntityRow, siege.besieged_entity_id)
+    if town is None or engines <= 0:
+        return 0
+    table = ctx.rules.siegecraft
+    folk = list(
+        await ctx.session.scalars(
+            select(EntityRow)
+            .where(await present_in(ctx.session, town), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+            .order_by(EntityRow.id)
+        )
+    )
+    struck = [mortal for mortal in ctx.rng(f"shelled.{siege.id}.{siege.rounds}").sample(folk, min(len(folk), table.bombard_hurt)) if not held(mortal.id)]
+    for mortal in struck:
+        await apply_hits(ctx, mortal, Harm(table.bombard_hp, HarmCause.BOMBARDMENT, SHELLED.format(town=town.name), event_entity_id=town.id))
+    return len(struck)
+
+
 async def batter(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None, action: SiegeAction, engines: float) -> None:
     table = ctx.rules.siegecraft
     if walls is None:
@@ -171,6 +196,8 @@ async def batter(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastruct
         return
     material = wall_material(walls, siege)
     gates = gate_factor(ctx, walls) * await ctx.hook_easing(siege.besieged_entity_id, DomainHook.BORDER_GUARD)
+    if action is SiegeAction.BOMBARD:
+        await shelled(ctx, siege, engines)
     if action is SiegeAction.BOMBARD and "walls_condition" not in (walls.locked or []):
         damage = round_half_up(table.bombard_breach * engines * bombard_factor(ctx, material) * gates)
         walls.walls_condition = clamp_int(walls.walls_condition - damage, 0, PERCENT)

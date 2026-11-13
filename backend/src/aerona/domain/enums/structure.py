@@ -140,6 +140,24 @@ class StructureKind(StrEnum):
     BEACON = "beacon"
     PLANETARY_ENGINE = "planetary_engine"
     HABITAT_RING = "habitat_ring"
+    FACTORY = "factory"
+    DATA_CENTRE = "data_centre"
+    OFFICE_TOWER = "office_tower"
+    APARTMENT_BLOCK = "apartment_block"
+    MALL = "mall"
+    BROADCAST_TOWER = "broadcast_tower"
+    SATELLITE_ARRAY = "satellite_array"
+    MILITARY_BASE = "military_base"
+    MISSILE_SILO = "missile_silo"
+    SHIELD_GENERATOR = "shield_generator"
+    TERRAFORMER = "terraformer"
+    VERTICAL_FARM = "vertical_farm"
+    RECYCLING_PLANT = "recycling_plant"
+    WATER_PURIFICATION = "water_purification"
+    CLONING_FACILITY = "cloning_facility"
+    ROBOTICS_WORKS = "robotics_works"
+    AI_CORE = "ai_core"
+    TELEPORTER = "teleporter"
 
 
 class StructureSection(StrEnum):
@@ -225,6 +243,14 @@ class BuildingForm(StrEnum):
     WALL_LINE = "wall_line"
     TUNNEL_FORM = "tunnel_form"
     ORBITAL = "orbital"
+    HIGH_RISE = "high_rise"
+    ARCOLOGY = "arcology"
+    BUNKER = "bunker"
+    FLOATING = "floating"
+    GEODESIC = "geodesic"
+    MODULAR = "modular"
+    GROWN = "grown"
+    CARVED = "carved"
 
 
 class ConstructionState(StrEnum):

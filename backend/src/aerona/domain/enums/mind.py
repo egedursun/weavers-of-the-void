@@ -258,6 +258,14 @@ class SkillKind(StrEnum):
     PROPHECY = "prophecy"
     SPELLCRAFT = "spellcraft"
     SPIRIT_SPEAKING = "spirit_speaking"
+    FIREARMS = "firearms"
+    PILOTING = "piloting"
+    DRIVING = "driving"
+    MECHANICS = "mechanics"
+    ELECTRONICS = "electronics"
+    COMPUTING = "computing"
+    SCIENCE = "science"
+    ADMINISTRATION = "administration"
 
 
 class SkillSource(StrEnum):
@@ -806,6 +814,17 @@ class Profession(StrEnum):
     HUNTER = "hunter"
     SAILOR = "sailor"
     COMMANDER = "commander"
+    ENGINEER = "engineer"
+    SCIENTIST = "scientist"
+    PILOT = "pilot"
+    TECHNICIAN = "technician"
+    PROGRAMMER = "programmer"
+    MECHANIC = "mechanic"
+    MINER = "miner"
+    FARMER = "farmer"
+    ARTIST = "artist"
+    ADMINISTRATOR = "administrator"
+    SPACER = "spacer"
 
 
 class CareerChange(StrEnum):

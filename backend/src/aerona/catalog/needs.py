@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.society import SocialClass
@@ -57,11 +58,63 @@ SHORTFALL_EFFECTS: Mapping[CommodityKind, ShortfallEffect] = MappingProxyType(
 EFFECT_BASKET: Mapping[ShortfallEffect, Mapping[SocialClass, int]] = MappingProxyType(
     {
         E.HUNGER: MappingProxyType({}),
-        E.HERDS: MappingProxyType({S.FARMER: 200, S.WARRIOR: 150, S.NOBLE: 120, S.SERF_OR_SLAVE: 80, S.OUTCAST: 10}),
-        E.COLD: MappingProxyType({S.NOBLE: 180, S.MERCHANT: 140, S.SERF_OR_SLAVE: 70, S.OUTCAST: 50}),
-        E.SICKNESS: MappingProxyType({S.NOBLE: 160, S.PRIEST: 120, S.MERCHANT: 120, S.OUTCAST: 40, S.SERF_OR_SLAVE: 50}),
+        E.HERDS: MappingProxyType(
+            {
+                S.FARMER: 200,
+                S.WARRIOR: 150,
+                S.NOBLE: 120,
+                S.SERF_OR_SLAVE: 80,
+                S.OUTCAST: 10,
+                S.WORKER: 60,
+                S.PROFESSIONAL: 90,
+                S.OFFICIAL: 100,
+                S.CITIZEN: 80,
+                S.UNEMPLOYED: 10,
+            }
+        ),
+        E.COLD: MappingProxyType(
+            {
+                S.NOBLE: 180,
+                S.MERCHANT: 140,
+                S.SERF_OR_SLAVE: 70,
+                S.OUTCAST: 50,
+                S.WORKER: 70,
+                S.PROFESSIONAL: 130,
+                S.OFFICIAL: 140,
+                S.CITIZEN: 100,
+                S.UNEMPLOYED: 50,
+            }
+        ),
+        E.SICKNESS: MappingProxyType(
+            {
+                S.NOBLE: 160,
+                S.PRIEST: 120,
+                S.MERCHANT: 120,
+                S.OUTCAST: 40,
+                S.SERF_OR_SLAVE: 50,
+                S.WORKER: 60,
+                S.PROFESSIONAL: 140,
+                S.OFFICIAL: 120,
+                S.CITIZEN: 90,
+                S.UNEMPLOYED: 40,
+            }
+        ),
         E.IMPIETY: MappingProxyType(
-            {S.PRIEST: 500, S.MONASTIC: 400, S.NOBLE: 160, S.MERCHANT: 90, S.SERF_OR_SLAVE: 40, S.OUTCAST: 20, S.WARRIOR: 70, S.FARMER: 70}
+            {
+                S.PRIEST: 500,
+                S.MONASTIC: 400,
+                S.NOBLE: 160,
+                S.MERCHANT: 90,
+                S.SERF_OR_SLAVE: 40,
+                S.OUTCAST: 20,
+                S.WARRIOR: 70,
+                S.FARMER: 70,
+                S.WORKER: 50,
+                S.PROFESSIONAL: 40,
+                S.OFFICIAL: 60,
+                S.CITIZEN: 60,
+                S.UNEMPLOYED: 30,
+            }
         ),
         E.STATUS: MappingProxyType(
             {
@@ -75,34 +128,89 @@ EFFECT_BASKET: Mapping[ShortfallEffect, Mapping[SocialClass, int]] = MappingProx
                 S.FARMER: 20,
                 S.SERF_OR_SLAVE: 0,
                 S.OUTCAST: 0,
+                S.WORKER: 20,
+                S.PROFESSIONAL: 250,
+                S.OFFICIAL: 300,
+                S.CITIZEN: 80,
+                S.UNEMPLOYED: 0,
             }
         ),
         E.TOIL: MappingProxyType(
-            {S.ARTISAN: 400, S.FARMER: 120, S.SERF_OR_SLAVE: 90, S.MERCHANT: 40, S.PRIEST: 20, S.SCRIBE: 20, S.MONASTIC: 40, S.NOBLE: 30, S.OUTCAST: 20}
+            {
+                S.ARTISAN: 400,
+                S.FARMER: 120,
+                S.SERF_OR_SLAVE: 90,
+                S.MERCHANT: 40,
+                S.PRIEST: 20,
+                S.SCRIBE: 20,
+                S.MONASTIC: 40,
+                S.NOBLE: 30,
+                S.OUTCAST: 20,
+                S.WORKER: 450,
+                S.PROFESSIONAL: 150,
+                S.OFFICIAL: 30,
+                S.CITIZEN: 120,
+                S.UNEMPLOYED: 10,
+            }
         ),
         E.INSECURITY: MappingProxyType(
-            {S.WARRIOR: 600, S.NOBLE: 250, S.FARMER: 20, S.ARTISAN: 20, S.MERCHANT: 30, S.PRIEST: 10, S.SCRIBE: 10, S.MONASTIC: 10, S.SERF_OR_SLAVE: 0}
+            {
+                S.WARRIOR: 600,
+                S.NOBLE: 250,
+                S.FARMER: 20,
+                S.ARTISAN: 20,
+                S.MERCHANT: 30,
+                S.PRIEST: 10,
+                S.SCRIBE: 10,
+                S.MONASTIC: 10,
+                S.SERF_OR_SLAVE: 0,
+                S.WORKER: 20,
+                S.PROFESSIONAL: 40,
+                S.OFFICIAL: 120,
+                S.CITIZEN: 40,
+                S.UNEMPLOYED: 0,
+            }
         ),
         E.ARCANE: MappingProxyType(
-            {S.SCRIBE: 350, S.MONASTIC: 300, S.PRIEST: 150, S.NOBLE: 100, S.MERCHANT: 30, S.FARMER: 5, S.SERF_OR_SLAVE: 0, S.OUTCAST: 0}
+            {
+                S.SCRIBE: 350,
+                S.MONASTIC: 300,
+                S.PRIEST: 150,
+                S.NOBLE: 100,
+                S.MERCHANT: 30,
+                S.FARMER: 5,
+                S.SERF_OR_SLAVE: 0,
+                S.OUTCAST: 0,
+                S.WORKER: 5,
+                S.PROFESSIONAL: 200,
+                S.OFFICIAL: 60,
+                S.CITIZEN: 20,
+                S.UNEMPLOYED: 0,
+            }
         ),
     }
 )
 
 SERVE_ORDER: tuple[SocialClass, ...] = (
     S.NOBLE,
+    S.OFFICIAL,
     S.PRIEST,
     S.MERCHANT,
+    S.PROFESSIONAL,
     S.WARRIOR,
     S.SCRIBE,
     S.MONASTIC,
+    S.CITIZEN,
     S.ARTISAN,
+    S.WORKER,
     S.FARMER,
     S.SERF_OR_SLAVE,
+    S.UNEMPLOYED,
     S.OUTCAST,
 )
 
-CLASS_INCOME: Mapping[SocialClass, int] = MappingProxyType(
+CLASS_INCOME: Mapping[SocialClass, int] = total(
+    SocialClass,
     {
         S.NOBLE: 800,
         S.MERCHANT: 450,
@@ -114,10 +222,16 @@ CLASS_INCOME: Mapping[SocialClass, int] = MappingProxyType(
         S.FARMER: 100,
         S.SERF_OR_SLAVE: 25,
         S.OUTCAST: 10,
-    }
+        S.WORKER: 120,
+        S.PROFESSIONAL: 350,
+        S.OFFICIAL: 300,
+        S.CITIZEN: 140,
+        S.UNEMPLOYED: 15,
+    },
 )
 
-JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = MappingProxyType(
+JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = total(
+    Job,
     {
         J.FARMING: (C.GRAIN, C.BREAD, C.FRUIT, C.TUBERS, C.FIBRE, C.DYE, C.HERBS, C.BREW_BASE, C.POISON),
         J.HERDING: (C.LIVESTOCK, C.FODDER, C.MOUNTS, C.MEAT, C.MILK, C.CHEESE, C.DUNG, C.EGGS, C.WOOL),
@@ -129,8 +243,9 @@ JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = MappingProxyType(
         J.SCHOLARSHIP: (C.MAGICAL_REAGENTS,),
         J.BUILDING: (C.TIMBER, C.SIEGE_MATERIEL),
         J.SOLDIERING: (),
+        J.SERVICE: (),
         J.IDLE: (),
-    }
+    },
 )
 
 MOVABLE_JOBS: frozenset[Job] = frozenset({J.FARMING, J.HERDING, J.FISHING, J.MINING, J.CRAFTING, J.TRADE, J.BUILDING})

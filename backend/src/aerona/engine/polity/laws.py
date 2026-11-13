@@ -39,6 +39,13 @@ KIND_VALUES: Mapping[LawKind, Mapping[ValueAxis, int]] = {
     LawKind.TAX_RATE: {ValueAxis.WEALTH: -1},
     LawKind.BLOOD_FEUD: {ValueAxis.HONOUR: 1, ValueAxis.KINSHIP: 1},
     LawKind.FRANCHISE: {ValueAxis.HIERARCHY: -1},
+    LawKind.LABOUR_LAW: {ValueAxis.MERCY: 1, ValueAxis.WEALTH: -1},
+    LawKind.ENVIRONMENT_LAW: {ValueAxis.NATURE: 1, ValueAxis.WEALTH: -1},
+    LawKind.DATA_PRIVACY: {ValueAxis.HIERARCHY: -1},
+    LawKind.WEAPONS_LAW: {ValueAxis.MARTIAL: -1, ValueAxis.LAW: 1},
+    LawKind.INTELLECTUAL_PROPERTY: {ValueAxis.WEALTH: 1, ValueAxis.KNOWLEDGE: -1},
+    LawKind.MACHINE_LAW: {ValueAxis.TRADITION: 1, ValueAxis.KNOWLEDGE: -1},
+    LawKind.SPACE_LAW: {ValueAxis.XENOPHILIA: 1},
 }
 
 

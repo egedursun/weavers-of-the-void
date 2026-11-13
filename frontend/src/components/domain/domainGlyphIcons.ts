@@ -39,6 +39,13 @@ import {
   Waves,
   Wheat,
   BedDouble,
+  Cpu,
+  Cog,
+  Building2,
+  Factory,
+  Network,
+  Orbit,
+  FlaskConical,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -84,6 +91,13 @@ export const DOMAIN_GLYPH: Record<components['schemas']['Domain'], LucideIcon> =
     ash: Flame,
     border: Fence,
     sleep: BedDouble,
+    technology: Cpu,
+    machines: Cog,
+    cities: Building2,
+    industry: Factory,
+    information: Network,
+    space: Orbit,
+    science: FlaskConical,
   }
 
 export const DOMAIN_GLYPH_FALLBACK: LucideIcon = MoonStar

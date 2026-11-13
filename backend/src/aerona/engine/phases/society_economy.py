@@ -211,6 +211,21 @@ async def seed_stocks(ctx: TickContext, entity: EntityRow) -> None:
         await goods_of(ctx.session, ctx.epoch).shift_aggregate(ctx.rules, entity, aggregate, row.stock(aggregate), flow=GoodsFlow.SEED)
 
 
+def modern_targets(settings: SocietyRules, inputs: EconomyInputs, target: dict[SocialClass, float]) -> None:
+    level = inputs.levels.get
+    if level(KnowledgeBranch.METALLURGY, 0) >= settings.target_worker_level:
+        target[SocialClass.WORKER] += settings.target_worker
+        target[SocialClass.FARMER] = max(0.0, target[SocialClass.FARMER] - settings.target_worker_farmer)
+        if inputs.prosperity < settings.target_unemployed_prosperity:
+            target[SocialClass.UNEMPLOYED] += settings.target_unemployed
+    if max(level(KnowledgeBranch.MEDICINE, 0), level(KnowledgeBranch.WRITING, 0)) >= settings.target_professional_level:
+        target[SocialClass.PROFESSIONAL] += settings.target_professional
+    if level(KnowledgeBranch.CIVICS, 0) >= settings.target_official_level:
+        target[SocialClass.OFFICIAL] += settings.target_official
+    if level(KnowledgeBranch.CIVICS, 0) >= settings.target_citizen_level:
+        target[SocialClass.CITIZEN] += settings.target_citizen
+
+
 def class_targets(rules: Rules, inputs: EconomyInputs) -> dict[SocialClass, float]:
     settings = rules.society
     target = dict(default_class_shares(rules))
@@ -230,6 +245,7 @@ def class_targets(rules: Rules, inputs: EconomyInputs) -> dict[SocialClass, floa
         target[SocialClass.PRIEST] += settings.target_priest
     if inputs.godless:
         target[SocialClass.PRIEST] = float(settings.target_godless_priest)
+    modern_targets(settings, inputs, target)
     return normalized_shares(target)
 
 
@@ -256,6 +272,12 @@ def _signed(condition: bool, gain: int, loss: int) -> int:
 
 def _when(condition: bool, value: int) -> int:
     return value if condition else 0
+
+
+def citizen_voice(settings: SocietyRules, justice: float | None) -> int:
+    if justice is None:
+        return 0
+    return round_half_up((justice - settings.sat_justice_midpoint) * settings.sat_citizen_justice / settings.sat_justice_divisor)
 
 
 def satisfaction_targets(
@@ -296,6 +318,15 @@ def satisfaction_targets(
         SocialClass.MONASTIC: settings.sat_monastic_base
         + _signed(writing, settings.sat_scribe_writing, settings.sat_scribe_no_writing)
         + _signed(inputs.has_god, settings.sat_priest_with_god, settings.sat_priest_godless),
+        SocialClass.WORKER: settings.sat_worker_base
+        + _signed(fed, settings.sat_farmer_fed, settings.sat_farmer_hungry)
+        + _signed(ore_plenty, settings.sat_artisan_ore_plenty, settings.sat_artisan_ore_scarce),
+        SocialClass.PROFESSIONAL: settings.sat_professional_base
+        + _signed(writing, settings.sat_scribe_writing, settings.sat_scribe_no_writing)
+        - _when(war, settings.sat_merchant_war),
+        SocialClass.OFFICIAL: settings.sat_official_base - _when(inputs.pays_tribute, settings.sat_tribute),
+        SocialClass.CITIZEN: settings.sat_citizen_base + citizen_voice(settings, inputs.justice),
+        SocialClass.UNEMPLOYED: settings.sat_unemployed_base + _signed(fed, settings.sat_farmer_fed, settings.sat_farmer_hungry),
     }
     shared: float = -_when(inputs.pays_tribute, settings.sat_tribute) - _when(inputs.cursed, settings.sat_curse)
     if inputs.justice is not None:

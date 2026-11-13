@@ -19,6 +19,7 @@ import {
   Users,
   Wallet,
   Warehouse,
+  Building2,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -42,6 +43,7 @@ export const DWELLINGS: Record<string, Named> = {
   cave: { label: 'Cave', icon: Mountain, tone: 'muted' },
   ship: { label: 'Ship', icon: Ship, tone: 'info' },
   tower: { label: 'Tower', icon: TowerControl, tone: 'verdigris' },
+  apartment: { label: 'Apartment', icon: Building2, tone: 'info' },
 }
 
 export const ROLES: Record<string, Named> = {

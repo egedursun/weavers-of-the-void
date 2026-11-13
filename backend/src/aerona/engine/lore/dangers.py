@@ -38,8 +38,8 @@ from aerona.engine.services.community_relations import change_relation
 
 DANGEROUS = frozenset(DANGEROUS_TECHNIQUES)
 HARMS = {
-    ResearchIncident.FIRE: (HarmCause.ACCIDENT, DamageType.FIRE),
-    ResearchIncident.EXPLOSION: (HarmCause.ACCIDENT, DamageType.BLUNT),
+    ResearchIncident.FIRE: (HarmCause.EXPERIMENT, DamageType.FIRE),
+    ResearchIncident.EXPLOSION: (HarmCause.EXPERIMENT, DamageType.EXPLOSIVE),
     ResearchIncident.POISONING: (HarmCause.POISON, DamageType.VENOM),
     ResearchIncident.SUMMONING_GONE_WRONG: (HarmCause.MAGIC_BACKLASH, DamageType.MAGIC),
 }

@@ -30,6 +30,11 @@ CLASS_QUALITY: dict[SocialClass, int] = {
     SocialClass.WARRIOR: 0,
     SocialClass.FARMER: -2,
     SocialClass.MONASTIC: -5,
+    SocialClass.WORKER: -3,
+    SocialClass.PROFESSIONAL: 6,
+    SocialClass.OFFICIAL: 5,
+    SocialClass.CITIZEN: 1,
+    SocialClass.UNEMPLOYED: -12,
     SocialClass.SERF_OR_SLAVE: -15,
     SocialClass.OUTCAST: -20,
 }
@@ -42,10 +47,16 @@ CLASS_EXPECTATION: dict[SocialClass, int] = {
     SocialClass.WARRIOR: 35,
     SocialClass.FARMER: 30,
     SocialClass.MONASTIC: 25,
+    SocialClass.WORKER: 35,
+    SocialClass.PROFESSIONAL: 55,
+    SocialClass.OFFICIAL: 50,
+    SocialClass.CITIZEN: 40,
+    SocialClass.UNEMPLOYED: 15,
     SocialClass.SERF_OR_SLAVE: 15,
     SocialClass.OUTCAST: 10,
 }
 COMMON_EXPECTATION = 30
+WAGE_CLASSES = frozenset({SocialClass.WORKER, SocialClass.PROFESSIONAL, SocialClass.OFFICIAL, SocialClass.CITIZEN, SocialClass.UNEMPLOYED})
 TOWN_POPULATION = 1500
 SEA_ROLES = frozenset({MortalRole.CAPTAIN, MortalRole.EXPLORER})
 TOWER_ROLES = frozenset({MortalRole.SEER, MortalRole.SAGE})
@@ -106,7 +117,7 @@ async def settled_kind(session: AsyncSession, mortal: EntityRow) -> DwellingKind
     if community is None or community.entity_type is not EntityType.SETTLEMENT:
         return DwellingKind.TENT
     if (stat(community, "population") or 0) >= TOWN_POPULATION:
-        return DwellingKind.TOWNHOUSE
+        return DwellingKind.APARTMENT if mortal.social_class in WAGE_CLASSES else DwellingKind.TOWNHOUSE
     return DwellingKind.LONGHOUSE if mortal.social_class in (SocialClass.WARRIOR, SocialClass.FARMER) else DwellingKind.HUT
 
 
@@ -132,6 +143,11 @@ CLASS_DISTRICTS: dict[SocialClass, tuple[DistrictKind, ...]] = {
     SocialClass.FARMER: (DistrictKind.FARMLAND,),
     SocialClass.SERF_OR_SLAVE: (DistrictKind.SLUMS, DistrictKind.FARMLAND),
     SocialClass.OUTCAST: (DistrictKind.SLUMS,),
+    SocialClass.WORKER: (DistrictKind.INDUSTRIAL, DistrictKind.RESIDENTIAL, DistrictKind.SLUMS),
+    SocialClass.PROFESSIONAL: (DistrictKind.BUSINESS, DistrictKind.RESEARCH, DistrictKind.SUBURB),
+    SocialClass.OFFICIAL: (DistrictKind.CIVIC_QUARTER, DistrictKind.BUSINESS),
+    SocialClass.CITIZEN: (DistrictKind.RESIDENTIAL, DistrictKind.SUBURB, DistrictKind.MARKET),
+    SocialClass.UNEMPLOYED: (DistrictKind.SLUMS, DistrictKind.RESIDENTIAL),
 }
 
 

@@ -42,6 +42,13 @@ class Domain(StrEnum):
     ASH = "ash"
     BORDER = "border"
     SLEEP = "sleep"
+    TECHNOLOGY = "technology"
+    MACHINES = "machines"
+    CITIES = "cities"
+    INDUSTRY = "industry"
+    INFORMATION = "information"
+    SPACE = "space"
+    SCIENCE = "science"
 
 
 DEATH_DOMAINS = frozenset({Domain.DEATH, Domain.BONE, Domain.MEMORY, Domain.SLEEP, Domain.ASH})

@@ -28,6 +28,7 @@ class VehicleRules:
     empire_size: int = rule(4, 0, 4, W, "Largest hull a world empire can build, counted from small (0) to colossal (4)")
     interstellar_size: int = rule(4, 0, 4, W, "Largest hull an interstellar power can build, counted from small (0) to colossal (4)")
     cosmic_size: int = rule(4, 0, 4, W, "Largest hull a cosmic power can build, counted from small (0) to colossal (4)")
+    wreck_hp: int = rule(45, 0, 200, W, "Health the captain loses when a section that keeps a vessel aloft or sealed against the void is destroyed")
     deflect_pct: int = rule(150, 1, 1000, W, "Armour at which a section turns aside every hit; a section turns aside hits in proportion to its armour (%)")
     fire_spread_pct: int = rule(35, 0, 100, W, "Chance a burning section sets a neighbouring section alight (%)")
     explosion_hits: int = rule(2, 0, 10, W, "Hits an exploding section deals to each neighbouring section")
@@ -71,6 +72,13 @@ class IntegrityRules:
     catastrophe_loss: int = rule(30, 0, 100, S, "Damage the failure of a megastructure's control core deals to every other structure of its settlement")
     son_type_essence: int = rule(10, 0, 10000, S, "Essence a son spends to give a community a building type of its own")
     draw_skill: int = rule(30, 0, 100, S, "Engineering a mortal needs to draw a building type for its people")
+    bunker_level: int = rule(6, 0, 20, S, "Warfare level at which a people builds its defences as bunkers")
+    grown_level: int = rule(2, 0, 20, S, "Biomancy level at which a people grows its buildings instead of raising them")
+    floating_level: int = rule(5, 0, 20, S, "Shipbuilding level at which a coastal people floats its waterside buildings")
+    arcology_level: int = rule(8, 0, 20, S, "Architecture level at which a people builds its homes as arcologies")
+    high_rise_level: int = rule(6, 0, 20, S, "Architecture level at which a people raises its great buildings as high-rises")
+    geodesic_level: int = rule(6, 0, 20, S, "Architecture level at which a people frames its domes as geodesic shells")
+    modular_level: int = rule(6, 0, 20, S, "Metallurgy level at which a people builds its works from modules")
 
 
 @dataclass(frozen=True)

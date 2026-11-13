@@ -103,6 +103,13 @@ DOMAIN_VALUES: MappingProxyType[Domain, MappingProxyType[ValueAxis, int]] = Mapp
             Domain.ASH: {V.DEATH: 25, V.PURITY: 10, V.TRADITION: -10, V.PERSEVERANCE: 10},
             Domain.BORDER: {V.XENOPHILIA: -25, V.MARTIAL: 15, V.KINSHIP: 15, V.LOYALTY: 15},
             Domain.SLEEP: {V.DEATH: 15, V.MERCY: 15, V.MARTIAL: -20, V.LEISURE: 25},
+            Domain.TECHNOLOGY: {V.KNOWLEDGE: 25, V.CRAFTSMANSHIP: 20, V.TRADITION: -15},
+            Domain.MACHINES: {V.CRAFTSMANSHIP: 30, V.KNOWLEDGE: 15, V.NATURE: -15},
+            Domain.CITIES: {V.LAW: 15, V.WEALTH: 15, V.XENOPHILIA: 10, V.NATURE: -10},
+            Domain.INDUSTRY: {V.WEALTH: 20, V.PERSEVERANCE: 20, V.CRAFTSMANSHIP: 15, V.NATURE: -20},
+            Domain.INFORMATION: {V.KNOWLEDGE: 25, V.TRUTH: 15},
+            Domain.SPACE: {V.XENOPHILIA: 25, V.KNOWLEDGE: 15},
+            Domain.SCIENCE: {V.KNOWLEDGE: 35, V.TRUTH: 25, V.SUPERSTITION: -25},
         }.items()
     }
 )
@@ -353,7 +360,8 @@ C, CM, SO, CR, KN, SU, FA = (
     SkillFamily.FAITH,
 )
 
-SKILLS: MappingProxyType[SkillKind, SkillSpec] = MappingProxyType(
+SKILLS: MappingProxyType[SkillKind, SkillSpec] = total(
+    SkillKind,
     {
         S.BLADE: _skill(C, Capacity.MELEE, "Blade", physical=True),
         S.SPEAR: _skill(C, Capacity.MELEE, "Spear", physical=True),
@@ -410,13 +418,21 @@ SKILLS: MappingProxyType[SkillKind, SkillSpec] = MappingProxyType(
         S.PROPHECY: _skill(FA, Capacity.SCHOLARSHIP, "Prophecy"),
         S.SPELLCRAFT: _skill(FA, Capacity.SCHOLARSHIP, "Spellcraft"),
         S.SPIRIT_SPEAKING: _skill(FA, Capacity.PRESENCE, "Spirit-speaking"),
-    }
+        S.FIREARMS: _skill(C, Capacity.MISSILE, "Firearms", physical=True),
+        S.PILOTING: _skill(SU, Capacity.MOBILITY, "Piloting"),
+        S.DRIVING: _skill(SU, Capacity.MOBILITY, "Driving"),
+        S.MECHANICS: _skill(CR, Capacity.CRAFT, "Mechanics", physical=True),
+        S.ELECTRONICS: _skill(CR, Capacity.SCHOLARSHIP, "Electronics"),
+        S.COMPUTING: _skill(KN, Capacity.SCHOLARSHIP, "Computing"),
+        S.SCIENCE: _skill(KN, Capacity.SCHOLARSHIP, "Science"),
+        S.ADMINISTRATION: _skill(CM, Capacity.COMMAND, "Administration"),
+    },
 )
 
 COMBAT_SKILLS = tuple(kind for kind, spec in SKILLS.items() if spec.family is SkillFamily.COMBAT)
 CRAFT_SKILLS = tuple(kind for kind, spec in SKILLS.items() if spec.family is SkillFamily.CRAFT)
 MELEE_SKILLS = (S.BLADE, S.SPEAR, S.AXE, S.BLUNT, S.SHIELD, S.UNARMED, S.MOUNTED_COMBAT)
-MISSILE_SKILLS = (S.BOW, S.SLING, S.THROWING, S.HUNTING)
+MISSILE_SKILLS = (S.BOW, S.SLING, S.THROWING, S.HUNTING, S.FIREARMS)
 COMMAND_SKILLS = (S.TACTICS, S.STRATEGY, S.LOGISTICS, S.LEADERSHIP)
 HEALING_SKILLS = (S.MEDICINE, S.SURGERY)
 PREACHING_SKILLS = (S.ORATORY, S.THEOLOGY, S.RITUAL)
@@ -446,6 +462,14 @@ ROLE_SKILLS: MappingProxyType[MortalRole, MappingProxyType[SkillKind, int]] = Ma
             MortalRole.SAINT: {S.RITUAL: 45, S.THEOLOGY: 40, S.ORATORY: 40, S.MEDICINE: 25},
             MortalRole.APPRENTICE: {S.TEACHING: 5, S.WRITING: 15, S.BLADE: 15},
             MortalRole.COMMONER: {S.FORAGING: 25, S.CARPENTRY: 15, S.WEAVING: 15, S.UNARMED: 10},
+            MortalRole.OFFICER: {S.TACTICS: 45, S.LEADERSHIP: 40, S.FIREARMS: 35, S.LOGISTICS: 30, S.STRATEGY: 25},
+            MortalRole.SPY: {S.INTRIGUE: 50, S.DECEPTION: 45, S.CRYPTOGRAPHY: 30, S.LANGUAGES: 30, S.FIREARMS: 15},
+            MortalRole.SCIENTIST: {S.SCIENCE: 55, S.COMPUTING: 35, S.WRITING: 30, S.TEACHING: 20},
+            MortalRole.ENGINEER: {S.ENGINEERING: 50, S.MECHANICS: 45, S.ELECTRONICS: 35, S.COMPUTING: 20},
+            MortalRole.PILOT: {S.PILOTING: 55, S.NAVIGATION: 40, S.ELECTRONICS: 20, S.FIREARMS: 15},
+            MortalRole.PHYSICIAN: {S.MEDICINE: 55, S.SURGERY: 45, S.SCIENCE: 25, S.TEACHING: 15},
+            MortalRole.JOURNALIST: {S.WRITING: 45, S.ORATORY: 35, S.INTRIGUE: 25, S.LANGUAGES: 25},
+            MortalRole.EXECUTIVE: {S.ADMINISTRATION: 45, S.NEGOTIATION: 45, S.ACCOUNTING: 40, S.LEADERSHIP: 25},
         }.items()
     }
 )
@@ -466,6 +490,14 @@ CAREER_SKILLS: MappingProxyType[MortalRole, tuple[SkillKind, ...]] = MappingProx
         MortalRole.EXPLORER: (S.NAVIGATION, S.SAILING, S.MOUNTAINEERING),
         MortalRole.CAPTAIN: COMMAND_SKILLS,
         MortalRole.BANDIT: (S.INTIMIDATION, S.DECEPTION),
+        MortalRole.OFFICER: (S.TACTICS, S.FIREARMS, S.LOGISTICS),
+        MortalRole.SPY: (S.INTRIGUE, S.DECEPTION, S.CRYPTOGRAPHY),
+        MortalRole.SCIENTIST: (S.SCIENCE, S.COMPUTING),
+        MortalRole.ENGINEER: (S.ENGINEERING, S.MECHANICS, S.ELECTRONICS),
+        MortalRole.PILOT: (S.PILOTING, S.NAVIGATION),
+        MortalRole.PHYSICIAN: (S.MEDICINE, S.SURGERY),
+        MortalRole.JOURNALIST: (S.WRITING, S.ORATORY),
+        MortalRole.EXECUTIVE: (S.ADMINISTRATION, S.NEGOTIATION, S.ACCOUNTING),
     }
 )
 
@@ -490,6 +522,14 @@ CAREER_VALUES: MappingProxyType[MortalRole, MappingProxyType[ValueAxis, int]] = 
             MortalRole.CAPTAIN: {V.MARTIAL: 25, V.HIERARCHY: 15, V.LOYALTY: 10},
             MortalRole.BANDIT: {V.HONOUR: -30, V.MERCY: -15, V.LAW: -30, V.LOYALTY: -10},
             MortalRole.COMMONER: {},
+            MortalRole.OFFICER: {V.MARTIAL: 20, V.HIERARCHY: 20, V.LOYALTY: 15},
+            MortalRole.SPY: {V.LOYALTY: 15, V.TRUTH: -20, V.KNOWLEDGE: 10},
+            MortalRole.SCIENTIST: {V.KNOWLEDGE: 35, V.TRUTH: 20, V.TRADITION: -10},
+            MortalRole.ENGINEER: {V.KNOWLEDGE: 15, V.CRAFTSMANSHIP: 30},
+            MortalRole.PILOT: {V.XENOPHILIA: 15, V.PERSEVERANCE: 15, V.COMPETITION: 10},
+            MortalRole.PHYSICIAN: {V.MERCY: 30, V.KNOWLEDGE: 20},
+            MortalRole.JOURNALIST: {V.TRUTH: 30, V.KNOWLEDGE: 10, V.HIERARCHY: -10},
+            MortalRole.EXECUTIVE: {V.WEALTH: 30, V.COMPETITION: 20, V.HIERARCHY: 10},
         }.items()
     }
 )
@@ -738,7 +778,8 @@ class ProfessionSpec:
     role: MortalRole
 
 
-PROFESSIONS: MappingProxyType[Profession, ProfessionSpec] = MappingProxyType(
+PROFESSIONS: MappingProxyType[Profession, ProfessionSpec] = total(
+    Profession,
     {
         Profession.SOLDIER: ProfessionSpec("Soldier", (S.SPEAR, S.SHIELD, S.BLADE, S.AXE, S.BOW), MortalRole.WARRIOR),
         Profession.RIDER: ProfessionSpec("Rider", (S.RIDING, S.MOUNTED_COMBAT, S.BEAST_HANDLING), MortalRole.KNIGHT),
@@ -754,7 +795,18 @@ PROFESSIONS: MappingProxyType[Profession, ProfessionSpec] = MappingProxyType(
         Profession.HUNTER: ProfessionSpec("Hunter", (S.HUNTING, S.TRACKING, S.BOW), MortalRole.HUNTER),
         Profession.SAILOR: ProfessionSpec("Sailor", (S.SAILING, S.NAVIGATION, S.SWIMMING), MortalRole.CAPTAIN),
         Profession.COMMANDER: ProfessionSpec("Commander", (S.TACTICS, S.STRATEGY, S.LEADERSHIP, S.LOGISTICS), MortalRole.KNIGHT),
-    }
+        Profession.ENGINEER: ProfessionSpec("Engineer", (S.ENGINEERING, S.MECHANICS, S.ELECTRONICS), MortalRole.ENGINEER),
+        Profession.SCIENTIST: ProfessionSpec("Scientist", (S.SCIENCE, S.COMPUTING, S.WRITING), MortalRole.SCIENTIST),
+        Profession.PILOT: ProfessionSpec("Pilot", (S.PILOTING, S.NAVIGATION, S.ELECTRONICS), MortalRole.PILOT),
+        Profession.TECHNICIAN: ProfessionSpec("Technician", (S.ELECTRONICS, S.MECHANICS), MortalRole.ENGINEER),
+        Profession.PROGRAMMER: ProfessionSpec("Programmer", (S.COMPUTING, S.CRYPTOGRAPHY, S.SCIENCE), MortalRole.SCIENTIST),
+        Profession.MECHANIC: ProfessionSpec("Mechanic", (S.MECHANICS, S.DRIVING, S.SMITHING), MortalRole.ARTISAN),
+        Profession.MINER: ProfessionSpec("Miner", (S.MASONRY, S.ENGINEERING, S.MOUNTAINEERING), MortalRole.COMMONER),
+        Profession.FARMER: ProfessionSpec("Farmer", (S.FORAGING, S.BEAST_HANDLING, S.DRIVING), MortalRole.FARMER),
+        Profession.ARTIST: ProfessionSpec("Artist", (S.WEAVING, S.POTTERY, S.JEWELLING, S.ORATORY), MortalRole.ARTISAN),
+        Profession.ADMINISTRATOR: ProfessionSpec("Administrator", (S.ADMINISTRATION, S.LAW, S.ACCOUNTING), MortalRole.SCRIBE),
+        Profession.SPACER: ProfessionSpec("Spacer", (S.PILOTING, S.NAVIGATION, S.MECHANICS), MortalRole.PILOT),
+    },
 )
 BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, SkillKind] = total(
     KnowledgeBranch,

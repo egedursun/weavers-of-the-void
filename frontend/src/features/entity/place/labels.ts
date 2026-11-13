@@ -33,6 +33,11 @@ import {
   Wand,
   Sun,
   type LucideIcon,
+  Building2,
+  Orbit,
+  Snowflake,
+  Wind,
+  CloudFog,
 } from 'lucide-react'
 import { type Named, plain } from '../environment/labels'
 
@@ -206,6 +211,66 @@ export const KIND: Record<string, Named & { hint: string }> = {
     icon: Compass,
     tone: 'warning',
     hint: 'Where roads meet and armies clash',
+  },
+  wreck_site: {
+    label: 'Wreck site',
+    icon: Anchor,
+    tone: 'warning',
+    hint: 'Where wrecks lie and salvage waits',
+  },
+  megastructure_ruin: {
+    label: 'Megastructure ruin',
+    icon: Building2,
+    tone: 'verdigris',
+    hint: 'The fallen remains of a great work',
+  },
+  anomaly: {
+    label: 'Anomaly',
+    icon: Sparkles,
+    tone: 'verdigris',
+    hint: 'Where the ordinary rules of the world fail',
+  },
+  debris_field: {
+    label: 'Debris field',
+    icon: Orbit,
+    tone: 'warning',
+    hint: 'Wreckage drifting where vessels were lost',
+  },
+  reef: {
+    label: 'Reef',
+    icon: Waves,
+    tone: 'info',
+    hint: 'Shallows that feed fish and break hulls',
+  },
+  glacier: {
+    label: 'Glacier',
+    icon: Snowflake,
+    tone: 'info',
+    hint: 'A slow river of ice',
+  },
+  dunes: {
+    label: 'Dunes',
+    icon: Wind,
+    tone: 'warning',
+    hint: 'Shifting hills of sand',
+  },
+  canyon: {
+    label: 'Canyon',
+    icon: Mountain,
+    tone: 'muted',
+    hint: 'A deep cut through the land',
+  },
+  oasis: {
+    label: 'Oasis',
+    icon: Droplets,
+    tone: 'success',
+    hint: 'Water and green in dry land',
+  },
+  geyser: {
+    label: 'Geyser',
+    icon: CloudFog,
+    tone: 'warning',
+    hint: 'Ground that throws up hot water',
   },
 }
 

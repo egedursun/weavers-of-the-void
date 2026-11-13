@@ -83,6 +83,14 @@ const ALL_SKILLS: Record<string, string> = {
   prophecy: 'Prophecy',
   spellcraft: 'Spellcraft',
   spirit_speaking: 'Spirit-speaking',
+  firearms: 'Firearms',
+  piloting: 'Piloting',
+  driving: 'Driving',
+  mechanics: 'Mechanics',
+  electronics: 'Electronics',
+  computing: 'Computing',
+  science: 'Science',
+  administration: 'Administration',
 }
 
 function SkillRow({

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.structures import WORKSHOP_STRUCTURES
+from aerona.catalog.structures import BRANCH_LEVELS, STRUCTURES, WORKSHOP_STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import OutbreakRow
@@ -53,6 +53,7 @@ class SiteFacts:
     present: Counter[StructureKind]
     workshops: set[StructureKind]
     barred: set[StructureKind]
+    harvest: int = PERCENT
 
     def tier(self) -> int:
         return TIER_ORDER.index(self.town.size_tier) if self.town is not None else 0
@@ -71,6 +72,10 @@ class SiteFacts:
 
     def civic(self, key: str) -> int:
         return int(getattr(self.town, key)) if self.town is not None else 0
+
+    def reaches(self, kind: StructureKind) -> bool:
+        branch = STRUCTURES[kind].branch
+        return branch is not None and self.knowledge.level(self.site.id, branch) >= BRANCH_LEVELS.get(kind, 0)
 
 
 Need = tuple[StructureKind, Callable[[Rules, SiteFacts], bool]]
@@ -151,6 +156,24 @@ NEEDS: tuple[Need, ...] = (
     (K.TRAINING_GROUND, lambda rules, f: f.at_least(SizeTier.TOWN) and share(f, SocialClass.WARRIOR, rules)),
     (K.MUSEUM, lambda rules, f: f.at_least(SizeTier.CITY) and f.literacy >= rules.construction.need_literacy),
     (K.PLAZA, lambda rules, f: f.at_least(SizeTier.TOWN) and f.has(K.MARKET)),
+    (K.FACTORY, lambda rules, f: f.reaches(K.FACTORY) and f.at_least(SizeTier.TOWN) and share(f, SocialClass.WORKER, rules)),
+    (K.DATA_CENTRE, lambda rules, f: f.reaches(K.DATA_CENTRE) and f.at_least(SizeTier.CITY)),
+    (K.OFFICE_TOWER, lambda rules, f: f.reaches(K.OFFICE_TOWER) and f.at_least(SizeTier.CITY) and share(f, SocialClass.PROFESSIONAL, rules)),
+    (K.APARTMENT_BLOCK, lambda rules, f: f.reaches(K.APARTMENT_BLOCK) and homeless_share(f) >= rules.city_plan.almshouse_need_pct),
+    (K.MALL, lambda rules, f: f.reaches(K.MALL) and f.at_least(SizeTier.CITY) and f.value("prosperity") >= rules.construction.need_prosperity_monument),
+    (K.BROADCAST_TOWER, lambda rules, f: f.reaches(K.BROADCAST_TOWER) and f.at_least(SizeTier.TOWN)),
+    (K.SATELLITE_ARRAY, lambda rules, f: f.reaches(K.SATELLITE_ARRAY) and f.has(K.OBSERVATORY)),
+    (K.MILITARY_BASE, lambda rules, f: f.reaches(K.MILITARY_BASE) and f.at_war and f.at_least(SizeTier.TOWN)),
+    (K.MISSILE_SILO, lambda rules, f: f.reaches(K.MISSILE_SILO) and f.at_war and f.has(K.MILITARY_BASE)),
+    (K.SHIELD_GENERATOR, lambda rules, f: f.reaches(K.SHIELD_GENERATOR) and f.at_war and f.at_least(SizeTier.CITY)),
+    (K.TERRAFORMER, lambda rules, f: f.reaches(K.TERRAFORMER) and f.harvest < rules.construction.need_terraform_harvest),
+    (K.VERTICAL_FARM, lambda rules, f: f.reaches(K.VERTICAL_FARM) and f.at_least(SizeTier.CITY)),
+    (K.RECYCLING_PLANT, lambda rules, f: f.reaches(K.RECYCLING_PLANT) and f.civic("sanitation") < rules.construction.need_sanitation),
+    (K.WATER_PURIFICATION, lambda rules, f: f.reaches(K.WATER_PURIFICATION) and f.civic("sanitation") < rules.construction.need_sanitation),
+    (K.CLONING_FACILITY, lambda rules, f: f.reaches(K.CLONING_FACILITY) and f.has(K.HOSPITAL)),
+    (K.ROBOTICS_WORKS, lambda rules, f: f.reaches(K.ROBOTICS_WORKS) and f.has(K.FACTORY)),
+    (K.AI_CORE, lambda rules, f: f.reaches(K.AI_CORE) and f.has(K.DATA_CENTRE)),
+    (K.TELEPORTER, lambda rules, f: f.reaches(K.TELEPORTER) and f.at_least(SizeTier.CITY)),
     *((kind, lambda rules, f, kind=kind: kind in f.workshops) for kind in sorted(set(WORKSHOP_STRUCTURES.values()), key=lambda item: item.value)),
 )
 TECHNIQUE_GATES = {K.AQUEDUCT: Technique.AQUEDUCT, K.SEWER: Technique.ARCH, K.CITADEL: Technique.FORTIFICATION, K.WONDER: Technique.DOME}
@@ -198,6 +221,7 @@ async def facts_for(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, 
         present=await present_at(ctx, site.id),
         workshops=workshops,
         barred=barred,
+        harvest=ground.harvest_pct if ground is not None else PERCENT,
     )
 
 

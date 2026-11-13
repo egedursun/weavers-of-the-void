@@ -227,6 +227,9 @@ class CosmographyRules:
     piracy_decay: int = rule(3, 0, 50, T, "Piracy a quiet or guarded route loses each epoch")
     ark_capacity: int = rule(400, 0, 100000, T, "Settlers a void ark carries")
     busy_traffic: int = rule(100, 1, 100000, T, "Traffic at which a route counts as busy")
+    space_law_piracy: int = rule(
+        3, 0, 100, T, "Piracy a route loses each epoch for each end that shares its claims, or gains for each end that leaves space open"
+    )
 
 
 @dataclass(frozen=True)

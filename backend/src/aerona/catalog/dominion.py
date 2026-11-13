@@ -57,6 +57,13 @@ DOMAIN_SCALES = total(
         D.SALT: ((WORK, 1),),
         D.SLEEP: ((WORK, -1),),
         D.STAR: ((MAGIC, 1),),
+        D.CITIES: ((ORDER, 1),),
+        D.INDUSTRY: ((HEAT, 1),),
+        D.INFORMATION: ((ORDER, 1),),
+        D.MACHINES: ((WORK, 1),),
+        D.SCIENCE: ((ORDER, 1),),
+        D.SPACE: ((MAGIC, 1),),
+        D.TECHNOLOGY: ((WORK, 1),),
     },
 )
 
@@ -117,6 +124,13 @@ DOMAIN_CURSES = total(
         D.SALT: PackageKind.HUNGER_CURSE,
         D.SLEEP: PackageKind.POSSESSION,
         D.STAR: PackageKind.VOID_TAINT,
+        D.CITIES: PackageKind.TRAUMA,
+        D.INDUSTRY: PackageKind.HUNGER_CURSE,
+        D.INFORMATION: PackageKind.POSSESSION,
+        D.MACHINES: PackageKind.WARPING,
+        D.SCIENCE: PackageKind.WARPING,
+        D.SPACE: PackageKind.VOID_TAINT,
+        D.TECHNOLOGY: PackageKind.TRAUMA,
     },
 )
 

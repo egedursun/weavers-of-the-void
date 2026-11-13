@@ -4,6 +4,7 @@ from enum import StrEnum
 from aerona.catalog.mind import MELEE_SKILLS
 from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, digits_phrase
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.anatomy import CreatureAnatomyRow
@@ -60,7 +61,14 @@ class Wounding:
     hp_lost: int = 0
 
 
-NON_LETHAL_KIND = {DamageType.PIERCE: InjuryKind.PUNCTURE, DamageType.FIRE: InjuryKind.BURN}
+NON_LETHAL_KIND = {
+    DamageType.PIERCE: InjuryKind.PUNCTURE,
+    DamageType.FIRE: InjuryKind.BURN,
+    DamageType.BALLISTIC: InjuryKind.GUNSHOT,
+    DamageType.EXPLOSIVE: InjuryKind.SHRAPNEL,
+    DamageType.ENERGY: InjuryKind.BURN,
+    DamageType.CHEMICAL: InjuryKind.CHEMICAL_BURN,
+}
 
 
 def _spare(hit: Hit) -> Hit:
@@ -200,25 +208,35 @@ async def _announce(ctx: TickContext, bearer: Bearer, rows: list[InjuryRow]) -> 
         row.incident_id = incident_for(ctx.session, bearer.id, ctx.epoch) or row.incident_id
 
 
-INJURY_PHRASES: dict[InjuryKind, str] = {
-    InjuryKind.BRUISE: "a bruising blow",
-    InjuryKind.CUT: "a cut",
-    InjuryKind.DEEP_CUT: "a deep cut",
-    InjuryKind.PUNCTURE: "a piercing wound",
-    InjuryKind.FRACTURE: "a broken bone",
-    InjuryKind.CRUSH: "a crushing blow",
-    InjuryKind.BURN: "burns",
-    InjuryKind.FROSTBITE: "frostbite",
-    InjuryKind.BITE: "a savage bite",
-    InjuryKind.VENOM: "venom",
-    InjuryKind.SEVERED: "the loss of a part",
-    InjuryKind.GOUGED: "a gouging",
-    InjuryKind.DESTROYED: "a ruinous wound",
-    InjuryKind.CURSE_WITHER: "a withering curse",
-    InjuryKind.VOID_TOUCH: "the touch of the void",
-    InjuryKind.DIVINE_BRAND: "a divine brand",
-    InjuryKind.SICKNESS: "a wasting sickness",
-}
+INJURY_PHRASES = total(
+    InjuryKind,
+    {
+        InjuryKind.BRUISE: "a bruising blow",
+        InjuryKind.CUT: "a cut",
+        InjuryKind.DEEP_CUT: "a deep cut",
+        InjuryKind.PUNCTURE: "a piercing wound",
+        InjuryKind.FRACTURE: "a broken bone",
+        InjuryKind.CRUSH: "a crushing blow",
+        InjuryKind.BURN: "burns",
+        InjuryKind.FROSTBITE: "frostbite",
+        InjuryKind.BITE: "a savage bite",
+        InjuryKind.VENOM: "venom",
+        InjuryKind.SEVERED: "the loss of a part",
+        InjuryKind.GOUGED: "a gouging",
+        InjuryKind.DESTROYED: "a ruinous wound",
+        InjuryKind.CURSE_WITHER: "a withering curse",
+        InjuryKind.VOID_TOUCH: "the touch of the void",
+        InjuryKind.DIVINE_BRAND: "a divine brand",
+        InjuryKind.SICKNESS: "a wasting sickness",
+        InjuryKind.GUNSHOT: "a gunshot wound",
+        InjuryKind.SHRAPNEL: "shrapnel wounds",
+        InjuryKind.CONCUSSION: "a concussion",
+        InjuryKind.ELECTRICAL_BURN: "electrical burns",
+        InjuryKind.CHEMICAL_BURN: "chemical burns",
+        InjuryKind.RADIATION_SICKNESS: "radiation sickness",
+        InjuryKind.MIND_SCAR: "harm to the mind",
+    },
+)
 
 
 def wound_sentence(name: str, kind: InjuryKind, part: str) -> str:

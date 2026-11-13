@@ -1,10 +1,11 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.structure_sections import FORM_GUARD, FORMS
 from aerona.catalog.structures import KNOWLEDGE_KEEPERS, MEGASTRUCTURES, function_kind
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.db.tables.warfare import SiegeRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
@@ -128,6 +129,10 @@ async def harm(
         return False
     before = profile.condition
     rows = await ensure_sections(ctx.session, work, profile)
+    design = await ctx.session.get(StructureDesignRow, profile.design_id) if profile.design_id is not None else None
+    form = design.form if design is not None and design.form is not None else FORMS[profile.kind]
+    guard = FORM_GUARD.get(form)
+    loss = loss * (guard.get(force, PERCENT) if guard is not None else PERCENT) / PERCENT
     strike = strike_rows(ctx, rows, loss, force, even=even)
     profile.condition = clamp_int(overall(rows), 0, PERCENT)
     if profile.construction_state in STANDING_STATES and "construction_state" not in profile.locked:

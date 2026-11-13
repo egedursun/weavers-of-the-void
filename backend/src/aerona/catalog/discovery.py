@@ -170,6 +170,9 @@ ITEM_CLASSES: MappingProxyType[ItemClass, Technique] = MappingProxyType(
         ItemClass.PROSTHESIS: T.PROSTHETICS,
         ItemClass.CURRENCY: T.COINAGE,
         ItemClass.BOOK: T.PAPER,
+        ItemClass.FIREARM: T.STEEL,
+        ItemClass.IMPLANT: T.PROSTHETICS,
+        ItemClass.DRUG: T.ALCHEMY,
     }
 )
 

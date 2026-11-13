@@ -44,6 +44,21 @@ import {
   Wind,
   Zap,
   Shirt,
+  Bomb,
+  Factory,
+  CarFront,
+  Radiation,
+  Orbit,
+  FlaskConical,
+  Wrench,
+  Plane,
+  CircuitBoard,
+  Cpu,
+  Pickaxe,
+  Wheat,
+  Palette,
+  Briefcase,
+  Rocket,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
@@ -117,6 +132,7 @@ export const CAREERS: Record<string, Named> = {
   trade: { label: 'Turned to trade', icon: Store, tone: 'success' },
   wander: { label: 'Wanders', icon: Compass, tone: 'info' },
   bandit: { label: 'Turned bandit', icon: Skull, tone: 'danger' },
+  study: { label: 'Went to study', icon: GraduationCap, tone: 'info' },
 }
 
 export const BREAKS: Record<string, Named> = {
@@ -150,6 +166,12 @@ export const DEATHS: Record<string, Named> = {
   hardship: { label: 'Hardship', icon: Footprints, tone: 'muted' },
   despair: { label: 'Despair', icon: HeartCrack, tone: 'muted' },
   unknown: { label: 'Unknown', icon: Ghost, tone: 'muted' },
+  bombardment: { label: 'Bombardment', icon: Bomb, tone: 'danger' },
+  industrial: { label: 'Industrial accident', icon: Factory, tone: 'warning' },
+  crash: { label: 'A crash', icon: CarFront, tone: 'danger' },
+  radiation: { label: 'Radiation', icon: Radiation, tone: 'danger' },
+  decompression: { label: 'Decompression', icon: Orbit, tone: 'danger' },
+  experiment: { label: 'An experiment', icon: FlaskConical, tone: 'warning' },
 }
 
 export const KIN_KINDS: Record<string, Named & { out: string; in: string }> = {
@@ -361,4 +383,15 @@ export const PROFESSIONS: Record<string, Named> = {
   hunter: { label: 'Hunter', icon: Compass, tone: 'success' },
   sailor: { label: 'Sailor', icon: Wind, tone: 'info' },
   commander: { label: 'Commander', icon: Crown, tone: 'gold' },
+  engineer: { label: 'Engineer', icon: Wrench, tone: 'gold' },
+  scientist: { label: 'Scientist', icon: FlaskConical, tone: 'info' },
+  pilot: { label: 'Pilot', icon: Plane, tone: 'info' },
+  technician: { label: 'Technician', icon: CircuitBoard, tone: 'info' },
+  programmer: { label: 'Programmer', icon: Cpu, tone: 'verdigris' },
+  mechanic: { label: 'Mechanic', icon: Wrench, tone: 'muted' },
+  miner: { label: 'Miner', icon: Pickaxe, tone: 'muted' },
+  farmer: { label: 'Farmer', icon: Wheat, tone: 'success' },
+  artist: { label: 'Artist', icon: Palette, tone: 'verdigris' },
+  administrator: { label: 'Administrator', icon: Briefcase, tone: 'gold' },
+  spacer: { label: 'Spacer', icon: Rocket, tone: 'info' },
 }

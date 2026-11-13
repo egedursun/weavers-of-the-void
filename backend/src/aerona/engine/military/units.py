@@ -24,7 +24,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.makers import makers_of
 from aerona.engine.context import TickContext
-from aerona.engine.cycles.book import solidarity
+from aerona.engine.cycles.book import at_war, solidarity
 from aerona.engine.demography.biology import kin_army, profiles_of
 from aerona.engine.ecology.domestication import herd_uses, trained_effect, trained_heads
 from aerona.engine.economy.materials import node_material
@@ -42,7 +42,7 @@ from aerona.engine.vehicles.fleet import outfit_army
 from aerona.rules.registry import Rules
 
 ARMOUR_BY_METAL = (ArmourType.HIDE, ArmourType.PADDED, ArmourType.MAIL, ArmourType.SCALE, ArmourType.PLATE)
-METAL_WEAPONS = frozenset({"crossbow", "blade", "pike"})
+METAL_WEAPONS = frozenset({"crossbow", "blade", "pike", "firearm", "launcher", "beam"})
 FALLBACK = UnitKind.LEVY
 MOUNT_NEEDS = {
     UnitKind.LIGHT_CAVALRY: "mount",
@@ -59,6 +59,10 @@ SUCCESSORS = {
     UnitKind.CROSSBOWMEN: UnitKind.GUNNERS,
     UnitKind.JAVELINEERS: UnitKind.GRENADIERS,
     UnitKind.MOUNTED_ARCHERS: UnitKind.MOUNTED_GUNNERS,
+    UnitKind.LINE_INFANTRY: UnitKind.MECHANISED_INFANTRY,
+    UnitKind.HEAVY_INFANTRY: UnitKind.POWERED_TROOPERS,
+    UnitKind.LIGHT_CAVALRY: UnitKind.PILOTS,
+    UnitKind.MARINES: UnitKind.DROP_TROOPS,
 }
 
 
@@ -127,6 +131,16 @@ async def extras(ctx: TickContext, community: EntityRow, knowledge: KnowledgeMap
     if society is not None and society.share(SocialClass.PRIEST) >= PERCENT / 10:
         add(plan, UnitKind.SUPPORT_CASTERS, table.priest_share_pct / PERCENT)
         add(plan, UnitKind.GUARD_INFANTRY, table.priest_share_pct / PERCENT)
+    add(plan, best((UnitKind.MEDICS,), cid, knowledge, techniques), table.medic_share_pct / PERCENT)
+    electronic = table.electronic_share_pct / PERCENT
+    add(plan, best((UnitKind.SIGNALS_TROOPS,), cid, knowledge, techniques), electronic / 2)
+    add(plan, best((UnitKind.DRONE_OPERATORS,), cid, knowledge, techniques), electronic / 2)
+    add(plan, best((UnitKind.PILOTS,), cid, knowledge, techniques), table.air_share_pct / PERCENT)
+    add(plan, best((UnitKind.DROP_TROOPS,), cid, knowledge, techniques), table.naval_share_pct / PERCENT / 4)
+    add(plan, best((UnitKind.SPECIAL_FORCES,), cid, knowledge, techniques), table.special_share_pct / PERCENT)
+    add(plan, best((UnitKind.PEACEKEEPERS,), cid, knowledge, techniques), table.peace_share_pct / PERCENT)
+    if await at_war(ctx, {cid}):
+        add(plan, UnitKind.PARTISANS, table.partisan_share_pct / PERCENT)
     return plan
 
 

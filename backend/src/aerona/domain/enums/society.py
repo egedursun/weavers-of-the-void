@@ -12,6 +12,11 @@ class SocialClass(StrEnum):
     SERF_OR_SLAVE = "serf_or_slave"
     OUTCAST = "outcast"
     MONASTIC = "monastic"
+    WORKER = "worker"
+    PROFESSIONAL = "professional"
+    OFFICIAL = "official"
+    CITIZEN = "citizen"
+    UNEMPLOYED = "unemployed"
 
 
 class Commodity(StrEnum):

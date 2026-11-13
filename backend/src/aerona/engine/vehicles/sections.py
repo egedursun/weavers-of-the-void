@@ -248,7 +248,7 @@ async def mend_vessel_sections(session: AsyncSession, vessel_id: int, amount: in
     return mended
 
 
-async def batter_vessel(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, hits: int, slot: str) -> list[SectionState]:
+async def batter_vessel(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, hits: int, slot: str) -> list[tuple[DesignSectionRow, SectionState]]:
     if row.design_id is None or hits <= 0 or held(vessel.id):
         return []
     sections = await design_sections(ctx.session, row.design_id)
@@ -260,5 +260,5 @@ async def batter_vessel(ctx: TickContext, vessel: EntityRow, row: VesselProfileR
             break
         if deflected(ctx, rng, section):
             continue
-        found.append(await strike_vessel(ctx, vessel, row, section.section, 1))
+        found.append((section, await strike_vessel(ctx, vessel, row, section.section, 1)))
     return found

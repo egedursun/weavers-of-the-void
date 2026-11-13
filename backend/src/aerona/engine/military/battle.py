@@ -44,7 +44,7 @@ from aerona.engine.primitives.harshness import harshness
 from aerona.rules.registry import Rules
 
 F = UnitFamily
-MISSILE_FAMILIES = frozenset({F.MISSILE, F.MAGIC, F.ENGINEER, F.VEHICLE})
+MISSILE_FAMILIES = frozenset({F.MISSILE, F.MAGIC, F.ENGINEER, F.VEHICLE, F.AIR, F.ELECTRONIC, F.SPACE})
 CHARGE_FAMILIES = frozenset({F.MOUNTED, F.BEAST})
 SWIFT_FAMILIES = frozenset({F.MOUNTED, F.BEAST})
 FLYERS = frozenset({UnitKind.SKY_RIDERS, UnitKind.SKY_CREW})
@@ -65,6 +65,7 @@ HELMET = 5
 NORMAL = 50
 REFUSE_RATIO = 0.6
 GENERIC = (Tactic.HOLD_LINE, Tactic.FRONTAL_ASSAULT)
+STRIKE_TACTICS = frozenset({Tactic.INFILTRATION, Tactic.DROP_ASSAULT})
 TRAIT_TACTICS: dict[CommanderTrait, tuple[Tactic, ...]] = {
     CommanderTrait.RECKLESS: (Tactic.FRONTAL_ASSAULT, Tactic.WEDGE),
     CommanderTrait.AGGRESSIVE_ASSAULTER: (Tactic.FRONTAL_ASSAULT, Tactic.WEDGE),
@@ -470,12 +471,37 @@ def scouting(side: Side) -> float:
     return eyes + side.skill * 10 + side.intel + side.watch
 
 
+BARRAGE_KINDS = frozenset({UnitKind.ARTILLERY_CREW, UnitKind.SIEGE_CREW, UnitKind.DRONE_OPERATORS})
+ARMOURED_KINDS = frozenset({UnitKind.MECHANISED_INFANTRY, UnitKind.POWERED_TROOPERS})
+BLOCKADE_KINDS = frozenset({UnitKind.NAVAL_CREW, UnitKind.VOID_CREW})
+IRREGULAR_KINDS = frozenset({UnitKind.PARTISANS, UnitKind.LIGHT_INFANTRY, UnitKind.SPECIAL_FORCES})
+DROP_KINDS = frozenset({UnitKind.DROP_TROOPS, UnitKind.SKY_CREW, UnitKind.VOID_CREW, UnitKind.PILOTS})
+
+
+def fielded(option: Tactic, side: Side) -> bool:
+    kinds = {stack.row.kind for stack in side.stacks if stack.alive}
+    families = {stack.spec.family for stack in side.stacks if stack.alive}
+    needs: dict[Tactic, bool] = {
+        Tactic.ARTILLERY_BARRAGE: bool(kinds & BARRAGE_KINDS),
+        Tactic.ARMOURED_THRUST: F.VEHICLE in families or bool(kinds & ARMOURED_KINDS),
+        Tactic.AIR_SUPERIORITY: any(stack.spec.flying for stack in side.stacks if stack.alive),
+        Tactic.BLOCKADE: bool(kinds & BLOCKADE_KINDS),
+        Tactic.GUERRILLA: bool(kinds & IRREGULAR_KINDS),
+        Tactic.ELECTRONIC_WARFARE: F.ELECTRONIC in families,
+        Tactic.ORBITAL_BOMBARDMENT: UnitKind.VOID_CREW in kinds or F.SPACE in families,
+        Tactic.DROP_ASSAULT: bool(kinds & DROP_KINDS),
+        Tactic.INFILTRATION: F.SPECIAL in families,
+    }
+    return needs.get(option, True)
+
+
 def choose_tactic(rules: Rules, rng: SeededRandom, side: Side, enemy_doctrine: str, ground: Field) -> Tactic:
     if side.profile.tactic is not None:
         return side.profile.tactic
     options = list(dict.fromkeys([*STYLE_TACTICS.get(side.profile.doctrine, GENERIC), *GENERIC, *side.learned]))
     for trait in side.traits:
         options.extend(item for item in TRAIT_TACTICS.get(trait, ()) if item not in options)
+    options = [option for option in options if fielded(option, side)] or list(GENERIC)
     expected = STYLE_TACTICS.get(enemy_doctrine, GENERIC)[0]
     weights = []
     for option in options:
@@ -666,6 +692,12 @@ def missiles(rules: Rules, streams: Streams, shooter: Side, target: Side, ground
             * shot
             * fortune(rules, streams, "missile", stack)
         )
+    if shooter.tactic is Tactic.ARTILLERY_BARRAGE:
+        damage *= rules.tactics.barrage_pct / PERCENT
+    elif shooter.tactic is Tactic.ORBITAL_BOMBARDMENT:
+        damage *= rules.tactics.bombardment_pct / PERCENT
+    if target.tactic is Tactic.ELECTRONIC_WARFARE:
+        damage *= rules.tactics.jammed_pct / PERCENT
     if target.defending:
         damage *= cover_missile_pct(rules, ground.cover) / PERCENT
     before = {id(stack): stack.row.count for stack in target.stacks}
@@ -1067,6 +1099,9 @@ def fighting(rules: Rules, streams: Streams, attacker: Side, defender: Side, gro
     pinned: dict[str, int | str] = {"fog": ", ".join(fog), "pinned": sum(1 for stack in (*attacker.stacks, *defender.stacks) if stack.suppressed)}
     phases.append(PhaseLog(BattlePhase.MISSILE, to_a, to_d, "the volleys flew" + (" into a called fog" if fog else ""), pinned))
     attacker.surprise = defender.surprise = 1.0
+    for striker in (attacker, defender):
+        if striker.tactic in STRIKE_TACTICS:
+            striker.surprise = rules.tactics.strike_surprise_pct / PERCENT
     flank = outflank(rules, attacker, defender, ground, streams)
     if flank is not None:
         phases.append(flank)
@@ -1111,6 +1146,7 @@ def victor(rules: Rules, attacker: Side, defender: Side, ground: Field) -> tuple
 def treat(rules: Rules, side: Side, walking: int, stretcher: int) -> int:
     magic = rules.battle_magic
     healed = min(stretcher, side.count_of(UnitKind.SUPPORT_CASTERS) * magic.heal_per_priest) if side.priests_healing else 0
+    healed += min(stretcher - healed, side.count_of(UnitKind.MEDICS) * magic.heal_per_medic)
     rest = stretcher - healed
     saved = round(rest * min(PERCENT, side.medicine) / PERCENT * magic.medicine_pct / PERCENT)
     dying = round((rest - saved) * magic.untreated_death_pct / PERCENT)

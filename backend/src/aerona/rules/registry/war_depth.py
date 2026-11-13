@@ -17,6 +17,7 @@ class BattleMagicRules:
     fog_chance: int = rule(45, 0, 100, W, "War mages call fog over a field where the enemy leans on missiles (%)")
     fog_missile_pct: int = rule(40, 0, 100, W, "Missile strength under a called fog (%)")
     heal_per_priest: int = rule(3, 0, 100, W, "Wounded soldiers each battle priest saves from death after a battle")
+    heal_per_medic: int = rule(5, 0, 100, W, "Wounded soldiers each medic saves from death after a battle")
     terror_rite: int = rule(14, 0, 100, W, "Morale shock of a terror rite cast by war mages at full strength")
     terror_mages_per_100: int = rule(2, 1, 100, W, "War mages per hundred soldiers for a terror rite at full strength")
     raise_dead_pct: int = rule(8, 0, 100, W, "Share of the fallen that summoners raise as a summoned host (%)")

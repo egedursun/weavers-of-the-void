@@ -73,6 +73,7 @@ class PollutionRules:
     blight_depth: int = rule(10, 0, 100, G, "Blight extreme soil pollution scars into the land each epoch")
     rite_clean: int = rule(10, 0, 100, G, "Pollution a purification rite clears from the land")
     void_rite: int = rule(8, 0, 100, G, "Air and soil pollution a rite of the void leaves on the land")
+    law_cut_pct: int = rule(60, 0, 100, G, "Share of the pollution of works an environment law at full strictness prevents (%)")
 
 
 @dataclass(frozen=True)

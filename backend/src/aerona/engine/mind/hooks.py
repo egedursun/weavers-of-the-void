@@ -29,7 +29,7 @@ from aerona.engine.renown.currencies import on_act
 from aerona.engine.renown.deeds import deed_seen
 
 LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED})
-FIGHTING_ROLES = frozenset({*HERO_ROLES, MortalRole.CAPTAIN, MortalRole.BANDIT})
+FIGHTING_ROLES = frozenset({*HERO_ROLES, MortalRole.CAPTAIN, MortalRole.BANDIT, MortalRole.OFFICER, MortalRole.PILOT})
 BATTLE_TRAITS = (TraitKind.BRAVE, TraitKind.CRAVEN)
 MAIMED_TRAITS = (TraitKind.MELANCHOLIC, TraitKind.IRON_WILLED)
 CAPTIVITY_TRAITS = (TraitKind.PARANOID,)

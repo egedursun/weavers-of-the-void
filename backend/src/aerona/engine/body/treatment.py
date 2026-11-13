@@ -12,7 +12,19 @@ from aerona.engine.mind.book import skills_of
 from aerona.rules.registry import Rules
 
 S = TreatmentStep
-OPEN_WOUNDS = frozenset({InjuryKind.CUT, InjuryKind.DEEP_CUT, InjuryKind.PUNCTURE, InjuryKind.BITE, InjuryKind.BURN})
+OPEN_WOUNDS = frozenset(
+    {
+        InjuryKind.CUT,
+        InjuryKind.DEEP_CUT,
+        InjuryKind.PUNCTURE,
+        InjuryKind.BITE,
+        InjuryKind.BURN,
+        InjuryKind.GUNSHOT,
+        InjuryKind.SHRAPNEL,
+        InjuryKind.CHEMICAL_BURN,
+        InjuryKind.ELECTRICAL_BURN,
+    }
+)
 BROKEN = frozenset({InjuryKind.FRACTURE, InjuryKind.CRUSH})
 SUPPLIES: dict[TreatmentStep, CommodityKind] = {
     S.CLEAN: CommodityKind.MEDICINE,

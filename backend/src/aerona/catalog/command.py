@@ -56,5 +56,9 @@ FAMILY_AREA: MappingProxyType[UnitFamily, CommandArea | None] = total(
         UnitFamily.MAGIC: None,
         UnitFamily.VEHICLE: A.MANOEUVRE,
         UnitFamily.EXOTIC: A.SHOCK,
+        UnitFamily.AIR: A.FIRE,
+        UnitFamily.SPACE: A.MANOEUVRE,
+        UnitFamily.ELECTRONIC: A.FIRE,
+        UnitFamily.SPECIAL: A.MANOEUVRE,
     },
 )

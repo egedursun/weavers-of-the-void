@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.urban import FINE_HOMES, HOUSING_ORDER, NEEDS
+from aerona.catalog.urban import FINE_HOMES, HOUSING_GATES, HOUSING_ORDER, NEEDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DistrictRow
@@ -14,6 +14,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState, StructureKind
+from aerona.domain.enums.urban import HousingLevel
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -25,7 +26,7 @@ from aerona.engine.settlement.book import Town, town_of
 from aerona.engine.settlement.life import add_district, housing_of
 from aerona.engine.urban.coverage import people_of_districts
 
-LAND_STEP = 20
+TRADITIONAL_HOMES = frozenset(level for level in HOUSING_ORDER if level not in HOUSING_GATES)
 
 
 @dataclass
@@ -47,23 +48,28 @@ async def needs_met(ctx: TickContext, district: DistrictRow) -> float:
     return sum(rows.get(service, 0) for service in NEEDS) / len(NEEDS)
 
 
-def step_home(district: DistrictRow, up: bool) -> bool:
-    index = HOUSING_ORDER.index(district.housing)
-    ceiling = min(len(HOUSING_ORDER) - 1, district.land_value // LAND_STEP)
+def homes_open(knowledge: KnowledgeMap, holder_id: int) -> frozenset[HousingLevel]:
+    return frozenset(level for level in HOUSING_ORDER if (gate := HOUSING_GATES.get(level)) is None or knowledge.level(holder_id, gate[0]) >= gate[1])
+
+
+def step_home(district: DistrictRow, up: bool, open_homes: frozenset[HousingLevel] = TRADITIONAL_HOMES) -> bool:
+    ladder = [level for level in HOUSING_ORDER if level in open_homes or level is district.housing]
+    index = ladder.index(district.housing)
+    ceiling = min(len(ladder) - 1, district.land_value * len(ladder) // PERCENT)
     after = min(ceiling, index + 1) if up else max(0, index - 1)
     if after == index or "housing" in district.locked:
         return False
-    district.housing = HOUSING_ORDER[after]
+    district.housing = ladder[after]
     return True
 
 
-async def evolve_district(ctx: TickContext, town: Town, district: DistrictRow, goods: int, tally: HousingTally) -> None:
+async def evolve_district(ctx: TickContext, town: Town, district: DistrictRow, goods: int, tally: HousingTally, *, open_homes: frozenset[HousingLevel]) -> None:
     table = ctx.rules.housing_evolution
     needs = await needs_met(ctx, district)
     rng = ctx.rng(f"homes.{district.id}")
-    if needs >= table.rise_coverage and goods >= table.goods_needed and rng.chance(table.step_pct) and step_home(district, up=True):
+    if needs >= table.rise_coverage and goods >= table.goods_needed and rng.chance(table.step_pct) and step_home(district, up=True, open_homes=open_homes):
         tally.risen += 1
-    elif needs < table.fall_coverage and rng.chance(table.step_pct) and step_home(district, up=False):
+    elif needs < table.fall_coverage and rng.chance(table.step_pct) and step_home(district, up=False, open_homes=open_homes):
         tally.fallen += 1
 
 
@@ -117,8 +123,9 @@ async def house_town(ctx: TickContext, settlement: EntityRow, knowledge: Knowled
     if not town.districts:
         return
     goods = await supply_index(ctx.session, settlement.id, Commodity.GOODS) or 0
+    open_homes = homes_open(knowledge, settlement.id)
     for district in town.districts:
-        await evolve_district(ctx, town, district, goods, tally)
+        await evolve_district(ctx, town, district, goods, tally, open_homes=open_homes)
     population = stat_or(settlement, "population", 0)
     people = people_of_districts(ctx.rules, population, town.districts)
     almshouses = await almshouse_levels(ctx, settlement.id)

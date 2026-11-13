@@ -26,6 +26,8 @@ class SkyRules:
     event_weight_black_sun: int = rule(1, 0, 50, RuleGroup.SKY, "Spontaneous sky event weight: black sun")
     event_weight_flare: int = rule(2, 0, 50, RuleGroup.SKY, "Spontaneous sky event weight: stellar flare")
     flare_fertility_loss: int = rule(4, 0, 100, RuleGroup.SKY, "Fertility the regions under a flaring star lose (scorched crops)")
+    flare_radiation_hurt: int = rule(2, 0, 20, RuleGroup.SKY, "Named mortals on each world of a flaring star sickened by its radiation")
+    flare_radiation_hp: int = rule(25, 0, 200, RuleGroup.SKY, "Health a flare's radiation takes from each mortal it sickens")
     flare_piety_gain: int = rule(3, 0, 100, RuleGroup.SKY, "Piety the communities under a flaring star gain (auroras read as omens)")
     flare_sail_scorch_chance: int = rule(25, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Chance a light-sail route bound to a flaring star is scorched shut (%)")
     flare_sail_epochs: int = rule(2, 1, 50, RuleGroup.COSMOS_AND_TRAVEL, "Epochs a light-sail route scorched by a flare stays shut")

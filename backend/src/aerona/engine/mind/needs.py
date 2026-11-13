@@ -74,6 +74,14 @@ def role_status(rules: Rules, role: MortalRole) -> int:
         MortalRole.FARMER: table.status_farmer,
         MortalRole.COMMONER: table.status_commoner,
         MortalRole.BANDIT: table.status_bandit,
+        MortalRole.OFFICER: table.status_officer,
+        MortalRole.SPY: table.status_spy,
+        MortalRole.SCIENTIST: table.status_scientist,
+        MortalRole.ENGINEER: table.status_engineer,
+        MortalRole.PILOT: table.status_pilot,
+        MortalRole.PHYSICIAN: table.status_physician,
+        MortalRole.JOURNALIST: table.status_journalist,
+        MortalRole.EXECUTIVE: table.status_executive,
     }
     return statuses.get(role, table.unknown_pressure)
 

@@ -58,6 +58,11 @@ CLASS_DWELLING: dict[SocialClass, DwellingKind] = {
     SocialClass.MONASTIC: DwellingKind.TOWER,
     SocialClass.SERF_OR_SLAVE: DwellingKind.HUT,
     SocialClass.OUTCAST: DwellingKind.HUT,
+    SocialClass.WORKER: DwellingKind.APARTMENT,
+    SocialClass.PROFESSIONAL: DwellingKind.APARTMENT,
+    SocialClass.OFFICIAL: DwellingKind.TOWNHOUSE,
+    SocialClass.CITIZEN: DwellingKind.APARTMENT,
+    SocialClass.UNEMPLOYED: DwellingKind.HUT,
 }
 CRAFT_MASTERS = frozenset({MortalRole.ARTISAN, MortalRole.HEALER, MortalRole.SCRIBE, MortalRole.MERCHANT})
 

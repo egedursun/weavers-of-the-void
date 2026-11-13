@@ -25,6 +25,9 @@ const KIND_ICON: Record<string, LucideIcon> = {
   world: DRAWER_KIND_ICON.world,
   star: DRAWER_KIND_ICON.star,
   entity: DRAWER_KIND_ICON.entity,
+  galaxy: DRAWER_KIND_ICON.galaxy,
+  cluster: DRAWER_KIND_ICON.cluster,
+  dimension: DRAWER_KIND_ICON.dimension,
 }
 
 const KIND_LABEL: Record<string, string> = {
@@ -34,6 +37,9 @@ const KIND_LABEL: Record<string, string> = {
   world: 'Worlds',
   star: 'Stars',
   entity: 'Records',
+  galaxy: 'Galaxies',
+  cluster: 'Clusters',
+  dimension: 'Dimensions',
 }
 
 export function categoryOf(item: ImageListView): string {

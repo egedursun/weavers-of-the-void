@@ -67,6 +67,14 @@ class DamageType(StrEnum):
     MAGIC = "magic"
     VOID = "void"
     HOLY = "holy"
+    BALLISTIC = "ballistic"
+    EXPLOSIVE = "explosive"
+    ENERGY = "energy"
+    ELECTRIC = "electric"
+    RADIATION = "radiation"
+    CHEMICAL = "chemical"
+    SONIC = "sonic"
+    PSYCHIC = "psychic"
 
 
 class InjuryKind(StrEnum):
@@ -87,6 +95,13 @@ class InjuryKind(StrEnum):
     VOID_TOUCH = "void_touch"
     DIVINE_BRAND = "divine_brand"
     SICKNESS = "sickness"
+    GUNSHOT = "gunshot"
+    SHRAPNEL = "shrapnel"
+    CONCUSSION = "concussion"
+    ELECTRICAL_BURN = "electrical_burn"
+    CHEMICAL_BURN = "chemical_burn"
+    RADIATION_SICKNESS = "radiation_sickness"
+    MIND_SCAR = "mind_scar"
 
 
 class InjuryState(StrEnum):
@@ -121,6 +136,12 @@ class HarmCause(StrEnum):
     PLAYER = "player"
     EXPOSURE = "exposure"
     RITUAL = "ritual"
+    BOMBARDMENT = "bombardment"
+    INDUSTRIAL = "industrial"
+    CRASH = "crash"
+    RADIATION = "radiation"
+    DECOMPRESSION = "decompression"
+    EXPERIMENT = "experiment"
 
 
 class ConditionKind(StrEnum):

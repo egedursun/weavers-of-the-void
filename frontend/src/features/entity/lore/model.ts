@@ -98,6 +98,11 @@ import {
   Shirt,
   Atom,
   Eraser,
+  Cog,
+  Monitor,
+  Cpu,
+  Pill,
+  Radio,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -435,6 +440,13 @@ export const ITEM_CLASSES: Record<Schemas['ItemClass'], LoreNamed> = {
   key: { label: 'Key', icon: Key, tone: 'muted' },
   jewel: { label: 'Jewel', icon: Gem, tone: 'gold' },
   currency: { label: 'Coin', icon: Coins, tone: 'gold' },
+  firearm: { label: 'Firearm', icon: Crosshair, tone: 'danger' },
+  device: { label: 'Device', icon: Cog, tone: 'info' },
+  computer: { label: 'Computer', icon: Monitor, tone: 'info' },
+  implant: { label: 'Implant', icon: Cpu, tone: 'verdigris' },
+  drug: { label: 'Drug', icon: Pill, tone: 'warning' },
+  vehicle_part: { label: 'Vehicle part', icon: Wrench, tone: 'muted' },
+  communicator: { label: 'Communicator', icon: Radio, tone: 'info' },
 }
 
 export const CURSES: Record<Schemas['CurseKind'], LoreNamed> = {

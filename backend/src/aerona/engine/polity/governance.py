@@ -15,6 +15,7 @@ from aerona.db.tables.disease import OutbreakRow, QuarantineRow
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultTenetRow
+from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.justice import LawProposalRow
 from aerona.db.tables.mind import PersonalityValueRow
 from aerona.db.tables.polity import LawProfileRow, PolityTreasuryRow
@@ -32,13 +33,14 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind, OfficePower, SuccessionRule
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import culture_of
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import INHERITANCE_RULES
 from aerona.engine.factions.balance import faction_pull
+from aerona.engine.industry.pollution import worst
 from aerona.engine.lore.research import lacks
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.ethics import ethics_of, honour_of
@@ -49,7 +51,7 @@ from aerona.engine.polity.law_effects import jubilee, levy_terms, standing_soldi
 from aerona.engine.polity.laws import LawBook, discord, enact, repeal, settle_justice, validate
 from aerona.engine.polity.offices import best_skill, powers_of
 from aerona.engine.polity.standing import war_record
-from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.knowledge import KnowledgeMap, known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -65,7 +67,19 @@ LEAN = 25
 BASELINE_LAWS = frozenset({LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE, LawKind.TAX_RATE, LawKind.PENAL_CODE})
 SWAY_SCALE = 10
 COUNCIL_OFFICES = frozenset(
-    {OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER, OfficeKind.REGENT, OfficeKind.CHAPLAIN}
+    {
+        OfficeKind.CHANCELLOR,
+        OfficeKind.MARSHAL,
+        OfficeKind.TREASURER,
+        OfficeKind.HIGH_JUDGE,
+        OfficeKind.SPYMASTER,
+        OfficeKind.REGENT,
+        OfficeKind.CHAPLAIN,
+        OfficeKind.HEAD_OF_GOVERNMENT,
+        OfficeKind.MINISTER,
+        OfficeKind.GENERAL,
+        OfficeKind.SPEAKER,
+    }
 )
 T = TenetKind
 CHURCH_LAWS: dict[TenetKind, tuple[LawKind, dict[str, int | str | bool]]] = {
@@ -227,7 +241,39 @@ async def wanted_laws(
         wants.append((LawKind.VETERAN_PENSION, {}))
     if values.get(ValueAxis.HIERARCHY, 0) >= LEAN * 2 and laws.in_force(polity.id, LawKind.SUMPTUARY) is None:
         wants.append((LawKind.SUMPTUARY, {}))
+    wants.extend(law for law in await modern_laws(ctx, realm, values) if laws.in_force(polity.id, law[0]) is None)
     return wants
+
+
+async def modern_laws(ctx: TickContext, realm: Realm, values: dict[ValueAxis, int]) -> list[tuple[LawKind, dict[str, int | str | bool]]]:
+    table = ctx.rules.legislation
+    core = realm.profile.core_entity_id or realm.entity.id
+    society = await ctx.session.get(CommunitySocietyRow, core)
+    share = society.share if society is not None else (lambda _social_class: 0.0)
+    levels = (await known_levels(ctx.session, [core])).get(core, {})
+    town = await ctx.session.get(SettlementProfileRow, realm.profile.capital_entity_id or -1)
+    capital = await ctx.session.get(EntityRow, realm.profile.capital_entity_id or -1)
+    region = capital.location_id if capital is not None else None
+    fouled = worst(await ctx.session.get(RegionPollutionRow, region)) if region is not None else 0
+    lean = values.get
+    found: list[tuple[LawKind, dict[str, int | str | bool]]] = []
+    if share(SocialClass.WORKER) >= table.labour_law_worker_pct:
+        found.append((LawKind.LABOUR_LAW, {"unions": lean(ValueAxis.MERCY, 0) >= 0, "child_labour": lean(ValueAxis.MERCY, 0) <= -LEAN}))
+    if fouled >= table.environment_law_pollution:
+        found.append((LawKind.ENVIRONMENT_LAW, {"strictness": clamp_int(PERCENT // 2 + lean(ValueAxis.NATURE, 0) // 2, 0, PERCENT)}))
+    if levels.get(KnowledgeBranch.CIVICS, 0) >= table.privacy_civics_level and lean(ValueAxis.HIERARCHY, 0) < 0:
+        found.append((LawKind.DATA_PRIVACY, {"strictness": clamp_int(PERCENT // 2 - lean(ValueAxis.HIERARCHY, 0) // 2, 0, PERCENT)}))
+    if town is not None and town.crime >= table.weapons_law_crime and levels.get(KnowledgeBranch.METALLURGY, 0) >= table.weapons_law_metallurgy:
+        found.append((LawKind.WEAPONS_LAW, {"level": "banned" if lean(ValueAxis.HIERARCHY, 0) >= 0 else "licensed"}))
+    if share(SocialClass.PROFESSIONAL) >= table.patent_professional_pct and lean(ValueAxis.WEALTH, 0) > 0:
+        found.append((LawKind.INTELLECTUAL_PROPERTY, {}))
+    if share(SocialClass.PROFESSIONAL) >= table.machine_law_professional_pct:
+        tradition = lean(ValueAxis.TRADITION, 0)
+        found.append((LawKind.MACHINE_LAW, {"level": "banned" if tradition >= LEAN else "free" if tradition <= -LEAN else "licensed"}))
+    if levels.get(KnowledgeBranch.VOID_LIVING, 0) >= 1:
+        open_minded = lean(ValueAxis.XENOPHILIA, 0)
+        found.append((LawKind.SPACE_LAW, {"claims": "shared" if open_minded >= LEAN else "national" if open_minded <= -LEAN else "open"}))
+    return found
 
 
 async def agenda(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook) -> list[str]:

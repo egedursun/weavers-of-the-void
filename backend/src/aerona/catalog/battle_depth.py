@@ -69,6 +69,16 @@ WEAPON_PROFILES = total(
         K.VEHICLE_CREW: WeaponProfile(2, 1, 45, 45),
         K.ARTILLERY_CREW: WeaponProfile(6, 1, 50, 95),
         K.ENGINEERS: WeaponProfile(0, 0, 35, 40),
+        K.MECHANISED_INFANTRY: WeaponProfile(4, 3, 60, 75),
+        K.SPECIAL_FORCES: WeaponProfile(4, 3, 70, 80),
+        K.PARTISANS: WeaponProfile(3, 2, 45, 55),
+        K.PEACEKEEPERS: WeaponProfile(2, 1, 50, 50),
+        K.MEDICS: WeaponProfile(0, 0, 30, 20),
+        K.DRONE_OPERATORS: WeaponProfile(8, 2, 70, 85),
+        K.SIGNALS_TROOPS: WeaponProfile(3, 1, 50, 60),
+        K.POWERED_TROOPERS: WeaponProfile(4, 3, 65, 95),
+        K.DROP_TROOPS: WeaponProfile(4, 3, 60, 80),
+        K.PILOTS: WeaponProfile(9, 3, 70, 90),
     },
 )
 
@@ -112,6 +122,16 @@ BASE_DISCIPLINE = total(
         K.VEHICLE_CREW: 55,
         K.ARTILLERY_CREW: 60,
         K.ENGINEERS: 50,
+        K.MECHANISED_INFANTRY: 60,
+        K.SPECIAL_FORCES: 85,
+        K.PARTISANS: 35,
+        K.PEACEKEEPERS: 65,
+        K.MEDICS: 55,
+        K.DRONE_OPERATORS: 60,
+        K.SIGNALS_TROOPS: 60,
+        K.POWERED_TROOPERS: 80,
+        K.DROP_TROOPS: 75,
+        K.PILOTS: 70,
     },
 )
 
@@ -124,6 +144,12 @@ FORMATIONS = total(
         Formation.SQUARE: FormationSpec("Square", 90, 115, 135, 50, 60, 90),
         Formation.LOOSE: FormationSpec("Loose order", 80, 85, 60, 140, 70, 115),
         Formation.SHIELDWALL: FormationSpec("Shield wall", 90, 130, 70, 80, 70, 80),
+        Formation.DISPERSED: FormationSpec("Dispersed", 75, 90, 45, 120, 60, 110),
+        Formation.ENTRENCHED: FormationSpec("Entrenched", 85, 140, 55, 60, 40, 70),
+        Formation.ECHELON: FormationSpec("Echelon", 105, 95, 95, 100, 110, 100),
+        Formation.CONVOY: FormationSpec("Convoy", 70, 70, 120, 140, 50, 140),
+        Formation.SCREEN: FormationSpec("Screen", 80, 85, 70, 110, 70, 105),
+        Formation.LAYERED: FormationSpec("Layered", 95, 120, 70, 85, 80, 90),
     },
 )
 
@@ -138,10 +164,23 @@ FAMILY_FORMATION = total(
         F.MAGIC: Formation.LOOSE,
         F.VEHICLE: Formation.LINE,
         F.EXOTIC: Formation.LINE,
+        F.AIR: Formation.ECHELON,
+        F.SPACE: Formation.LAYERED,
+        F.ELECTRONIC: Formation.SCREEN,
+        F.SPECIAL: Formation.DISPERSED,
     },
 )
 
-KIND_FORMATION = {K.SHIELD_INFANTRY: Formation.SHIELDWALL, K.PIKE_INFANTRY: Formation.SQUARE, K.LIGHT_INFANTRY: Formation.LOOSE}
+KIND_FORMATION = {
+    K.SHIELD_INFANTRY: Formation.SHIELDWALL,
+    K.PIKE_INFANTRY: Formation.SQUARE,
+    K.LIGHT_INFANTRY: Formation.LOOSE,
+    K.MECHANISED_INFANTRY: Formation.DISPERSED,
+    K.PARTISANS: Formation.DISPERSED,
+    K.PEACEKEEPERS: Formation.LINE,
+    K.ARTILLERY_CREW: Formation.ENTRENCHED,
+    K.GUNNERS: Formation.DISPERSED,
+}
 
 TERRAIN_WIDTH = total(
     TerrainKind,

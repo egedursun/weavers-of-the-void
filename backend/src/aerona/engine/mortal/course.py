@@ -62,6 +62,14 @@ ROLE_CLASSES: dict[MortalRole, SocialClass] = {
     MortalRole.HEALER: SocialClass.ARTISAN,
     MortalRole.APPRENTICE: SocialClass.ARTISAN,
     MortalRole.BANDIT: SocialClass.OUTCAST,
+    MortalRole.OFFICER: SocialClass.OFFICIAL,
+    MortalRole.SPY: SocialClass.OFFICIAL,
+    MortalRole.SCIENTIST: SocialClass.PROFESSIONAL,
+    MortalRole.ENGINEER: SocialClass.PROFESSIONAL,
+    MortalRole.PILOT: SocialClass.PROFESSIONAL,
+    MortalRole.PHYSICIAN: SocialClass.PROFESSIONAL,
+    MortalRole.JOURNALIST: SocialClass.PROFESSIONAL,
+    MortalRole.EXECUTIVE: SocialClass.MERCHANT,
 }
 DEATH_FLAGS: dict[EntityFlag, DeathCause] = {
     EntityFlag.FELL_IN_BATTLE: DeathCause.BATTLE,

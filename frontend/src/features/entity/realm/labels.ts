@@ -56,6 +56,11 @@ import {
   VolumeX,
   WandSparkles,
   GraduationCap,
+  Briefcase,
+  Anchor,
+  FlaskConical,
+  Network,
+  Cpu,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -79,6 +84,13 @@ export const GOVERNMENTS: Record<string, Named> = {
   hive_council: { label: 'Hive council', icon: Hexagon, tone: 'verdigris' },
   god_kingdom: { label: 'God-kingdom', icon: Sun, tone: 'gold' },
   occupation: { label: 'Occupation', icon: Swords, tone: 'danger' },
+  junta: { label: 'Military government', icon: Medal, tone: 'danger' },
+  corporate_state: { label: 'Corporate state', icon: Briefcase, tone: 'gold' },
+  technocracy: { label: 'Technocracy', icon: FlaskConical, tone: 'info' },
+  federation: { label: 'Federation', icon: Network, tone: 'success' },
+  commune: { label: 'Commune', icon: Users, tone: 'success' },
+  machine_rule: { label: 'Machine rule', icon: Cpu, tone: 'verdigris' },
+  colonial_administration: { label: 'Colony', icon: Flag, tone: 'warning' },
 }
 
 export const RULES: Record<string, Named & { hint: string }> = {
@@ -129,6 +141,21 @@ export const OFFICES: Record<string, Named> = {
   herald: { label: 'Herald', icon: Megaphone, tone: 'warning' },
   chaplain: { label: 'Court chaplain', icon: Church, tone: 'verdigris' },
   court_scholar: { label: 'Court scholar', icon: GraduationCap, tone: 'info' },
+  head_of_state: { label: 'Head of state', icon: Crown, tone: 'gold' },
+  head_of_government: {
+    label: 'Head of government',
+    icon: Landmark,
+    tone: 'info',
+  },
+  minister: { label: 'Minister', icon: Briefcase, tone: 'info' },
+  general: { label: 'General', icon: Medal, tone: 'danger' },
+  admiral: { label: 'Admiral', icon: Anchor, tone: 'info' },
+  speaker: { label: 'Speaker', icon: Megaphone, tone: 'verdigris' },
+  chief_scientist: {
+    label: 'Chief scientist',
+    icon: FlaskConical,
+    tone: 'info',
+  },
 }
 
 export const LAW_AREAS: Record<string, Named> = {
@@ -185,6 +212,13 @@ export const LAW_KINDS: Record<string, string> = {
   franchise: 'Franchise',
   constitution: 'Constitution',
   custom: 'Custom',
+  labour_law: 'Labour law',
+  environment_law: 'Environment law',
+  data_privacy: 'Privacy law',
+  weapons_law: 'Weapons law',
+  intellectual_property: 'Patent law',
+  machine_law: 'Machine law',
+  space_law: 'Space law',
 }
 
 export const LAW_PARAMS: Record<string, string> = {
@@ -403,6 +437,9 @@ export const TREASURY_ENTRIES: Record<string, Named> = {
   loan: { label: 'Loan', icon: Coins, tone: 'info' },
   upkeep: { label: 'Upkeep', icon: Hammer, tone: 'muted' },
   office_sale: { label: 'Office sold', icon: Coins, tone: 'gold' },
+  relief: { label: 'Relief for the needy', icon: HandHeart, tone: 'success' },
+  rebuilding: { label: 'Rebuilding', icon: Hammer, tone: 'info' },
+  monopoly: { label: 'Monopoly trade', icon: Gem, tone: 'gold' },
 }
 
 export const MEMBER_TYPES: Record<string, Named> = {

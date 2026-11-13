@@ -85,6 +85,18 @@ import {
   Zap,
   type LucideIcon,
   Trees,
+  Truck,
+  Plane,
+  Drone,
+  Layers,
+  Factory,
+  Briefcase,
+  CirclePause,
+  FlaskConical,
+  TrainFront,
+  GraduationCap,
+  Ticket,
+  Building2,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -129,6 +141,11 @@ export const CLASS_SPEC: Record<SocialClass, Spec> = {
   serf_or_slave: { label: 'Serfs and slaves', icon: Link, tone: 'warning' },
   outcast: { label: 'Outcasts', icon: Tent, tone: 'muted' },
   monastic: { label: 'Monastics', icon: ScrollText, tone: 'verdigris' },
+  worker: { label: 'Workers', icon: Factory, tone: 'info' },
+  professional: { label: 'Professionals', icon: Briefcase, tone: 'verdigris' },
+  official: { label: 'Officials', icon: Landmark, tone: 'gold' },
+  citizen: { label: 'Citizens', icon: Vote, tone: 'success' },
+  unemployed: { label: 'The unemployed', icon: CirclePause, tone: 'muted' },
 }
 export const CLASS_ORDER = Object.keys(CLASS_SPEC) as SocialClass[]
 
@@ -144,6 +161,7 @@ export const JOB_SPEC: Record<Job, Spec> = {
   scholarship: { label: 'Scholarship', icon: BookOpen },
   building: { label: 'Building', icon: TreePine },
   idle: { label: 'No work', icon: User },
+  service: { label: 'Services and offices', icon: Briefcase },
 }
 export const JOB_ORDER = Object.keys(JOB_SPEC) as Job[]
 
@@ -221,6 +239,23 @@ export const DISTRICT_SPEC: Record<DistrictKind, Spec> = {
     tone: 'info',
   },
   gardens: { label: 'Gardens', icon: Trees, tone: 'success' },
+  industrial: { label: 'Industrial district', icon: Factory, tone: 'muted' },
+  business: { label: 'Business district', icon: Briefcase, tone: 'gold' },
+  research: { label: 'Research district', icon: FlaskConical, tone: 'info' },
+  transport_hub: { label: 'Transport hub', icon: TrainFront, tone: 'info' },
+  military_base: { label: 'Military base', icon: Medal, tone: 'danger' },
+  university: {
+    label: 'University district',
+    icon: GraduationCap,
+    tone: 'verdigris',
+  },
+  entertainment: {
+    label: 'Entertainment district',
+    icon: Ticket,
+    tone: 'warning',
+  },
+  suburb: { label: 'Suburb', icon: House, tone: 'success' },
+  arcology: { label: 'Arcology', icon: Building2, tone: 'verdigris' },
 }
 export const DISTRICT_MAX_LEVEL = 5
 
@@ -285,6 +320,12 @@ export const MARTIAL_SPEC: Record<MartialStyle, Spec> = {
   siege_engineer: { label: 'Siege engineers', icon: Castle, tone: 'warning' },
   war_magic: { label: 'War magic', icon: WandSparkles, tone: 'verdigris' },
   beast_war: { label: 'War beasts', icon: PawPrint, tone: 'warning' },
+  mechanised: { label: 'Mechanised war', icon: Truck, tone: 'gold' },
+  air_mobile: { label: 'Air mobile', icon: Plane, tone: 'info' },
+  guerrilla: { label: 'Guerrilla war', icon: Trees, tone: 'success' },
+  drone_war: { label: 'Drone war', icon: Drone, tone: 'verdigris' },
+  orbital: { label: 'Orbital war', icon: Orbit, tone: 'info' },
+  combined_arms: { label: 'Combined arms', icon: Layers, tone: 'gold' },
 }
 
 export const MARRIAGE_SPEC: Record<MarriageCustom, Spec> = {

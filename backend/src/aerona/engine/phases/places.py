@@ -2,16 +2,22 @@ from collections import Counter, defaultdict
 
 from sqlalchemy import func, select
 
-from aerona.catalog.place_terrain import BATTLEFIELD_FROM, kind_spec
+from aerona.catalog.place_terrain import BATTLEFIELD_FROM, DEBRIS_FROM, MEGA_RUIN_FROM, WRECK_FROM, kind_spec
+from aerona.catalog.structures import MEGASTRUCTURES
+from aerona.catalog.vehicles import FRAMES
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import BattleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.place import DiscoveryMode, PlaceKind, SecretOrigin
+from aerona.domain.enums.structure import ConstructionState
 from aerona.engine.context import TickContext
 from aerona.engine.environment.places import (
     KIND_LOCK,
@@ -32,12 +38,51 @@ from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
+from aerona.engine.vehicles.wrecks import VOID_DOMAINS
+from aerona.rules.registry import Rules
 
 EXPLORER_ROLES = frozenset({MortalRole.EXPLORER, MortalRole.HUNTER, MortalRole.HERO})
 SEER_ROLES = frozenset({MortalRole.SEER, MortalRole.PRIEST, MortalRole.SAGE, MortalRole.SAINT})
 CALLED = frozenset({MortalRole.EXPLORER, MortalRole.SEER})
 EXPLORER_SKILLS = (SkillKind.TRACKING, SkillKind.NAVIGATION, SkillKind.MOUNTAINEERING)
 SEER_SKILLS = (SkillKind.PROPHECY, SkillKind.SPIRIT_SPEAKING, SkillKind.LORE)
+
+
+async def wrecks_by_region(ctx: TickContext) -> tuple[Counter[int], Counter[int]]:
+    wrecks: Counter[int] = Counter()
+    debris: Counter[int] = Counter()
+    rows = await ctx.session.execute(
+        select(VesselProfileRow.region_entity_id, VesselProfileRow.frame).where(
+            VesselProfileRow.status == VesselStatus.WRECKED, VesselProfileRow.region_entity_id.is_not(None)
+        )
+    )
+    for region_id, frame in rows:
+        if region_id is not None:
+            (debris if FRAMES[frame].domain in VOID_DOMAINS else wrecks)[region_id] += 1
+    return wrecks, debris
+
+
+async def fallen_megastructures(ctx: TickContext) -> set[int]:
+    atlas = await RegionAtlas.load(ctx.session)
+    hosts = await ctx.session.scalars(
+        select(StructureProfileRow.host_entity_id).where(
+            StructureProfileRow.kind.in_(list(MEGASTRUCTURES)), StructureProfileRow.construction_state == ConstructionState.RUINED
+        )
+    )
+    return {region for host in hosts if host is not None and (region := atlas.top_region(int(host))) is not None}
+
+
+def remade_kind(
+    rules: Rules, profile: PlaceProfileRow, region_id: int | None, *, wrecks: Counter[int], debris: Counter[int], fallen: set[int]
+) -> PlaceKind | None:
+    if region_id is None:
+        return None
+    table = rules.places
+    if profile.kind in WRECK_FROM and wrecks[region_id] >= table.wreck_site_wrecks:
+        return PlaceKind.WRECK_SITE
+    if profile.kind in DEBRIS_FROM and debris[region_id] >= table.wreck_site_wrecks:
+        return PlaceKind.DEBRIS_FIELD
+    return PlaceKind.MEGASTRUCTURE_RUIN if profile.kind in MEGA_RUIN_FROM and region_id in fallen else None
 
 
 async def battles_at(ctx: TickContext, place_ids: list[int]) -> Counter[int]:
@@ -104,6 +149,8 @@ async def place_profiles(ctx: TickContext) -> None:
     grounds = {row.entity_id: row for row in await ctx.session.scalars(select(PlaceEnvironmentRow).where(PlaceEnvironmentRow.entity_id.in_(ids)))}
     regions = {row.entity_id: row for row in await ctx.session.scalars(select(RegionEnvironmentRow))}
     temples, relics, battles = await temples_at(ctx.session, ids), await relics_at(ctx.session, ids), await battles_at(ctx, ids)
+    wrecks, debris = await wrecks_by_region(ctx)
+    fallen = await fallen_megastructures(ctx)
     marked = await flags_by_entity(ctx.session, EntityFlag.PILGRIMAGE_SITE)
     atlas = await RegionAtlas.load(ctx.session)
     people = await region_people(ctx, atlas)
@@ -123,6 +170,10 @@ async def place_profiles(ctx: TickContext) -> None:
                 ids=[place.id],
                 roles={place.id: IncidentRole.PLACE},
             )
+        remade = remade_kind(rules, profile, region_id, wrecks=wrecks, debris=debris, fallen=fallen)
+        if KIND_LOCK not in profile.locked and remade is not None:
+            await write_kind(ctx.session, rules, place.id, remade)
+            turned += 1
         if SACREDNESS_LOCK not in profile.locked:
             inputs = SacredInputs(temples.get(place.id, 0), relics.get(place.id, 0), place.id in marked, ground is not None and ground.nexus)
             profile.sacredness = drift_toward(profile.sacredness, sacred_target(rules, profile.kind, inputs), table.sacred_drift)

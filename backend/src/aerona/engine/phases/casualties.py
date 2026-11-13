@@ -42,7 +42,7 @@ from aerona.engine.services.war import release_captive, war_event
 from aerona.engine.services.war_geography import Neighbourhood
 from aerona.rules.registry import Rules
 
-FIGHTER_ROLES = HERO_ROLES | {MortalRole.CAPTAIN, MortalRole.BANDIT}
+FIGHTER_ROLES = HERO_ROLES | {MortalRole.CAPTAIN, MortalRole.BANDIT, MortalRole.OFFICER, MortalRole.PILOT}
 COMMANDER_SUBTYPES = ("commander", "standard bearer", "raider captain", "guard captain")
 DECAPITATORS = frozenset({CommanderTrait.BRUTAL, CommanderTrait.AGGRESSIVE_ASSAULTER})
 HOLY_COMMANDER_SUBTYPE = "guard captain"

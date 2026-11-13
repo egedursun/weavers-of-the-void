@@ -27,6 +27,7 @@ ALL = frozenset(SocialClass)
 VOTERS: dict[str, frozenset[SocialClass]] = {
     "nobles": frozenset({SocialClass.NOBLE}),
     "landholders": frozenset({SocialClass.NOBLE, SocialClass.FARMER, SocialClass.MERCHANT}),
+    "citizens": frozenset({SocialClass.NOBLE, SocialClass.MERCHANT, SocialClass.PROFESSIONAL, SocialClass.OFFICIAL, SocialClass.CITIZEN}),
     "free": frozenset(ALL - {SocialClass.SERF_OR_SLAVE, SocialClass.OUTCAST}),
     "all": ALL,
 }

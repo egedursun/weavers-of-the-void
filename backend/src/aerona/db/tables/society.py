@@ -28,6 +28,11 @@ class CommunitySocietyRow(Base):
     share_serf_or_slave: Mapped[float] = mapped_column(Float, default=0.0)
     share_outcast: Mapped[float] = mapped_column(Float, default=0.0)
     share_monastic: Mapped[float] = mapped_column(Float, default=0.0)
+    share_worker: Mapped[float] = mapped_column(Float, default=0.0)
+    share_professional: Mapped[float] = mapped_column(Float, default=0.0)
+    share_official: Mapped[float] = mapped_column(Float, default=0.0)
+    share_citizen: Mapped[float] = mapped_column(Float, default=0.0)
+    share_unemployed: Mapped[float] = mapped_column(Float, default=0.0)
     satisfaction_farmer: Mapped[int]
     satisfaction_artisan: Mapped[int]
     satisfaction_merchant: Mapped[int]
@@ -38,6 +43,11 @@ class CommunitySocietyRow(Base):
     satisfaction_serf_or_slave: Mapped[int] = mapped_column(default=30)
     satisfaction_outcast: Mapped[int] = mapped_column(default=25)
     satisfaction_monastic: Mapped[int] = mapped_column(default=55)
+    satisfaction_worker: Mapped[int] = mapped_column(default=45)
+    satisfaction_professional: Mapped[int] = mapped_column(default=55)
+    satisfaction_official: Mapped[int] = mapped_column(default=55)
+    satisfaction_citizen: Mapped[int] = mapped_column(default=50)
+    satisfaction_unemployed: Mapped[int] = mapped_column(default=20)
     stock_food: Mapped[int]
     stock_ore: Mapped[int]
     stock_goods: Mapped[int]

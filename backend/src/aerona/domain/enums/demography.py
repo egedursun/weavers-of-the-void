@@ -32,6 +32,7 @@ class Job(StrEnum):
     CLERGY = "clergy"
     SCHOLARSHIP = "scholarship"
     BUILDING = "building"
+    SERVICE = "service"
     IDLE = "idle"
 
 
@@ -55,6 +56,12 @@ class MartialStyle(StrEnum):
     SIEGE_ENGINEER = "siege_engineer"
     WAR_MAGIC = "war_magic"
     BEAST_WAR = "beast_war"
+    MECHANISED = "mechanised"
+    AIR_MOBILE = "air_mobile"
+    GUERRILLA = "guerrilla"
+    DRONE_WAR = "drone_war"
+    ORBITAL = "orbital"
+    COMBINED_ARMS = "combined_arms"
 
 
 class MarriageCustom(StrEnum):

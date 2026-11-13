@@ -16,7 +16,7 @@ from aerona.domain.enums.mortal import EquipmentSlot
 from aerona.engine.economy.materials import MaterialBook, MaterialProps, from_spec, node_material
 from aerona.rules.registry import Rules
 
-EDGED = frozenset({DamageType.CUT, DamageType.PIERCE})
+EDGED = frozenset({DamageType.CUT, DamageType.PIERCE, DamageType.BALLISTIC})
 HEAD = frozenset({BodyRegion.HEAD})
 BODY = frozenset({BodyRegion.TORSO, BodyRegion.ARMS, BodyRegion.LEGS, BodyRegion.WINGS, BodyRegion.TAIL})
 EVERYWHERE = frozenset(BodyRegion)

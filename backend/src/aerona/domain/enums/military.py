@@ -10,6 +10,10 @@ class UnitFamily(StrEnum):
     ENGINEER = "engineer"
     MAGIC = "magic"
     EXOTIC = "exotic"
+    AIR = "air"
+    SPACE = "space"
+    ELECTRONIC = "electronic"
+    SPECIAL = "special"
 
 
 class UnitKind(StrEnum):
@@ -50,6 +54,16 @@ class UnitKind(StrEnum):
     SUMMONERS = "summoners"
     CONSTRUCTS = "constructs"
     SUMMONED_HOST = "summoned_host"
+    MECHANISED_INFANTRY = "mechanised_infantry"
+    SPECIAL_FORCES = "special_forces"
+    PARTISANS = "partisans"
+    PEACEKEEPERS = "peacekeepers"
+    MEDICS = "medics"
+    DRONE_OPERATORS = "drone_operators"
+    SIGNALS_TROOPS = "signals_troops"
+    POWERED_TROOPERS = "powered_troopers"
+    DROP_TROOPS = "drop_troops"
+    PILOTS = "pilots"
 
 
 class ArmourType(StrEnum):
@@ -60,6 +74,10 @@ class ArmourType(StrEnum):
     SCALE = "scale"
     PLATE = "plate"
     ENCHANTED = "enchanted"
+    BALLISTIC = "ballistic"
+    COMPOSITE = "composite"
+    POWERED = "powered"
+    FORCE_FIELD = "force_field"
 
 
 class ShieldType(StrEnum):
@@ -67,6 +85,8 @@ class ShieldType(StrEnum):
     SMALL = "small"
     LARGE = "large"
     TOWER = "tower"
+    RIOT = "riot"
+    ENERGY = "energy"
 
 
 class Stance(StrEnum):
@@ -94,6 +114,15 @@ class Tactic(StrEnum):
     RIVER_DEFENCE = "river_defence"
     SIEGE_ASSAULT = "siege_assault"
     FEINT = "feint"
+    ARTILLERY_BARRAGE = "artillery_barrage"
+    ARMOURED_THRUST = "armoured_thrust"
+    AIR_SUPERIORITY = "air_superiority"
+    BLOCKADE = "blockade"
+    GUERRILLA = "guerrilla"
+    ELECTRONIC_WARFARE = "electronic_warfare"
+    ORBITAL_BOMBARDMENT = "orbital_bombardment"
+    DROP_ASSAULT = "drop_assault"
+    INFILTRATION = "infiltration"
 
 
 class BattlePhase(StrEnum):
@@ -361,6 +390,12 @@ class Formation(StrEnum):
     SQUARE = "square"
     LOOSE = "loose"
     SHIELDWALL = "shieldwall"
+    DISPERSED = "dispersed"
+    ENTRENCHED = "entrenched"
+    ECHELON = "echelon"
+    CONVOY = "convoy"
+    SCREEN = "screen"
+    LAYERED = "layered"
 
 
 class TargetClass(StrEnum):

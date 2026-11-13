@@ -144,6 +144,14 @@ class MortalRole(StrEnum):
     SAINT = "saint"
     APPRENTICE = "apprentice"
     COMMONER = "commoner"
+    OFFICER = "officer"
+    SPY = "spy"
+    SCIENTIST = "scientist"
+    ENGINEER = "engineer"
+    PILOT = "pilot"
+    PHYSICIAN = "physician"
+    JOURNALIST = "journalist"
+    EXECUTIVE = "executive"
 
 
 HERO_ROLES = frozenset({MortalRole.HERO, MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HUNTER, MortalRole.CHOSEN})

@@ -177,34 +177,117 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
             UnitSpec(K.SUMMONERS, F.MAGIC, "Summoners", 15, 40, 25, 40, 5, 10, 6, branch=KnowledgeBranch.MAGIC, level=2, terror=30),
             UnitSpec(K.CONSTRUCTS, F.EXOTIC, "Constructs", 85, 0, 90, 25, 110, 14, 2, ArmourType.ENCHANTED, branch=KnowledgeBranch.MAGIC, level=3, terror=30),
             UnitSpec(K.SUMMONED_HOST, F.EXOTIC, "Summoned host", 60, 10, 65, 65, 35, 10, 2, terror=45),
+            UnitSpec(
+                K.MECHANISED_INFANTRY,
+                F.INFANTRY,
+                "Mechanised infantry",
+                45,
+                60,
+                55,
+                75,
+                45,
+                6,
+                3,
+                ArmourType.BALLISTIC,
+                branch=KnowledgeBranch.METALLURGY,
+                level=5,
+                terrain={T.PLAIN: 1.2, T.STEPPE: 1.2, T.FOREST: 0.8, T.MARSH: 0.6},
+            ),
+            UnitSpec(
+                K.SPECIAL_FORCES,
+                F.SPECIAL,
+                "Special forces",
+                60,
+                60,
+                45,
+                65,
+                20,
+                9,
+                4,
+                ArmourType.BALLISTIC,
+                branch=KnowledgeBranch.WARFARE,
+                level=4,
+                terrain={T.FOREST: 1.25, T.JUNGLE: 1.25, T.URBAN: 1.25, T.MOUNTAINS: 1.15},
+            ),
+            UnitSpec(
+                K.PARTISANS,
+                F.INFANTRY,
+                "Partisans",
+                30,
+                30,
+                25,
+                55,
+                15,
+                1,
+                1,
+                terrain={T.FOREST: 1.3, T.JUNGLE: 1.3, T.HILLS: 1.2, T.MARSH: 1.2, T.MOUNTAINS: 1.2, T.URBAN: 1.25},
+            ),
+            UnitSpec(K.PEACEKEEPERS, F.INFANTRY, "Peacekeepers", 35, 25, 55, 40, 25, 3, 2, ArmourType.BALLISTIC, ShieldType.RIOT, KnowledgeBranch.CIVICS, 3),
+            UnitSpec(K.MEDICS, F.SPECIAL, "Medics", 5, 5, 25, 45, 10, 3, 2, branch=KnowledgeBranch.MEDICINE, level=2),
+            UnitSpec(K.DRONE_OPERATORS, F.ELECTRONIC, "Drone operators", 0, 75, 25, 40, 5, 9, 4, branch=KnowledgeBranch.SKY_NAVIGATION, level=6),
+            UnitSpec(K.SIGNALS_TROOPS, F.ELECTRONIC, "Signals troops", 10, 15, 30, 45, 10, 6, 3, branch=KnowledgeBranch.WARFARE, level=5),
+            UnitSpec(
+                K.POWERED_TROOPERS,
+                F.SPECIAL,
+                "Powered troopers",
+                90,
+                65,
+                90,
+                50,
+                70,
+                16,
+                6,
+                ArmourType.POWERED,
+                branch=KnowledgeBranch.METALLURGY,
+                level=7,
+                terror=15,
+                counters_charge=True,
+            ),
+            UnitSpec(K.DROP_TROOPS, F.SPACE, "Drop troops", 60, 55, 50, 75, 30, 10, 5, ArmourType.BALLISTIC, branch=KnowledgeBranch.VOID_LIVING, level=2),
+            UnitSpec(K.PILOTS, F.AIR, "Pilots", 0, 85, 30, 130, 10, 10, 5, branch=KnowledgeBranch.SKY_NAVIGATION, level=4, flying=True),
         )
     },
 )
 
-ARMOUR_DEFENCE = MappingProxyType(
-    {ArmourType.NONE: 0, ArmourType.HIDE: 8, ArmourType.PADDED: 12, ArmourType.MAIL: 22, ArmourType.SCALE: 26, ArmourType.PLATE: 35, ArmourType.ENCHANTED: 45}
+ARMOUR_DEFENCE = total(
+    ArmourType,
+    {
+        ArmourType.NONE: 0,
+        ArmourType.HIDE: 8,
+        ArmourType.PADDED: 12,
+        ArmourType.MAIL: 22,
+        ArmourType.SCALE: 26,
+        ArmourType.PLATE: 35,
+        ArmourType.ENCHANTED: 45,
+        ArmourType.BALLISTIC: 30,
+        ArmourType.COMPOSITE: 38,
+        ArmourType.POWERED: 50,
+        ArmourType.FORCE_FIELD: 55,
+    },
 )
-SHIELD_DEFENCE = MappingProxyType({ShieldType.NONE: 0, ShieldType.SMALL: 6, ShieldType.LARGE: 12, ShieldType.TOWER: 18})
+SHIELD_DEFENCE = total(
+    ShieldType, {ShieldType.NONE: 0, ShieldType.SMALL: 6, ShieldType.LARGE: 12, ShieldType.TOWER: 18, ShieldType.RIOT: 14, ShieldType.ENERGY: 22}
+)
 
 TERRAIN_EFFECTS: MappingProxyType[TerrainKind, dict[UnitFamily, float]] = MappingProxyType(
     {
         T.PLAIN: {F.MOUNTED: 1.3},
         T.STEPPE: {F.MOUNTED: 1.3},
-        T.FOREST: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8, F.VEHICLE: 0.6},
-        T.JUNGLE: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8, F.VEHICLE: 0.5},
+        T.FOREST: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8, F.VEHICLE: 0.6, F.AIR: 0.7, F.SPECIAL: 1.2},
+        T.JUNGLE: {F.MOUNTED: 0.5, F.MISSILE: 0.6, F.BEAST: 0.8, F.VEHICLE: 0.5, F.AIR: 0.6, F.SPECIAL: 1.2},
         T.HILLS: {F.MOUNTED: 0.8, F.MISSILE: 1.1},
-        T.MOUNTAINS: {F.MOUNTED: 0.3, F.ENGINEER: 0.2, F.BEAST: 0.7, F.VEHICLE: 0.3},
+        T.MOUNTAINS: {F.MOUNTED: 0.3, F.ENGINEER: 0.2, F.BEAST: 0.7, F.VEHICLE: 0.3, F.ELECTRONIC: 0.7},
         T.HIGH_PASS: {F.MOUNTED: 0.3, F.ENGINEER: 0.2, F.VEHICLE: 0.2},
         T.MARSH: {F.MOUNTED: 0.4, F.INFANTRY: 0.8, F.BEAST: 0.6, F.VEHICLE: 0.4},
         T.DESERT: {F.INFANTRY: 0.9},
         T.TUNDRA: {F.INFANTRY: 0.9, F.MOUNTED: 0.8},
         T.ICE_SHEET: {F.INFANTRY: 0.8, F.MOUNTED: 0.6},
         T.RIVER_VALLEY: {F.MOUNTED: 0.9},
-        T.URBAN: {F.MOUNTED: 0.4, F.ENGINEER: 1.2, F.VEHICLE: 0.8},
-        T.UNDERGROUND: {F.MISSILE: 0.3, F.MOUNTED: 0.2, F.VEHICLE: 0.3},
+        T.URBAN: {F.MOUNTED: 0.4, F.ENGINEER: 1.2, F.VEHICLE: 0.8, F.SPECIAL: 1.25, F.AIR: 0.8},
+        T.UNDERGROUND: {F.MISSILE: 0.3, F.MOUNTED: 0.2, F.VEHICLE: 0.3, F.AIR: 0.1, F.SPACE: 0.4, F.ELECTRONIC: 0.5},
         T.CRYSTAL_FIELD: {F.MAGIC: 1.4},
         T.FLESH: {F.MAGIC: 1.2, F.BEAST: 1.2},
-        T.VOID_SHORE: {F.EXOTIC: 1.4, F.MAGIC: 1.2},
+        T.VOID_SHORE: {F.EXOTIC: 1.4, F.MAGIC: 1.2, F.SPACE: 1.3},
         T.CANYON: {F.MOUNTED: 0.6, F.MISSILE: 1.2},
         T.RUIN_FIELD: {F.MOUNTED: 0.7},
         T.VOLCANIC: {F.INFANTRY: 0.9},
@@ -216,21 +299,36 @@ WEATHER_EFFECTS: MappingProxyType[WeatherKind, dict[UnitFamily, float]] = Mappin
     {
         W.RAIN: {F.MISSILE: 0.75, F.MOUNTED: 0.9},
         W.DOWNPOUR: {F.MISSILE: 0.5, F.MOUNTED: 0.7},
-        W.STORM: {F.MISSILE: 0.5, F.MOUNTED: 0.7, F.VEHICLE: 0.6},
-        W.FOG: {F.MISSILE: 0.4},
+        W.STORM: {F.MISSILE: 0.5, F.MOUNTED: 0.7, F.VEHICLE: 0.6, F.AIR: 0.4, F.ELECTRONIC: 0.7},
+        W.FOG: {F.MISSILE: 0.4, F.AIR: 0.5},
         W.SNOW: {F.MISSILE: 0.7, F.MOUNTED: 0.8},
         W.BLIZZARD: {F.MISSILE: 0.5, F.MOUNTED: 0.6, F.INFANTRY: 0.8},
         W.HEAT_WAVE: {F.INFANTRY: 0.85, F.MOUNTED: 0.85},
-        W.SANDSTORM: {F.MISSILE: 0.4},
+        W.SANDSTORM: {F.MISSILE: 0.4, F.AIR: 0.5},
         W.HAIL: {F.MISSILE: 0.7},
-        W.MAGIC_STORM: {F.MAGIC: 1.5},
+        W.MAGIC_STORM: {F.MAGIC: 1.5, F.ELECTRONIC: 0.5},
         W.ASH_FALL: {F.MISSILE: 0.7},
         W.VOID_RAIN: {F.EXOTIC: 1.3},
         W.ECLIPSE_DARK: {F.MISSILE: 0.6},
     }
 )
 BURROWERS = frozenset({K.SAPPERS, K.SUMMONED_HOST})
-WEAPON_EDGE = MappingProxyType({"blunt": 100, "pike": 70, "crossbow": 90, "spear": 40, "bow": 30, "blade": 20, "claw": 30, "staff": 10, "sling": 50})
+WEAPON_EDGE = MappingProxyType(
+    {
+        "blunt": 100,
+        "pike": 70,
+        "crossbow": 90,
+        "spear": 40,
+        "bow": 30,
+        "blade": 20,
+        "claw": 30,
+        "staff": 10,
+        "sling": 50,
+        "firearm": 95,
+        "launcher": 100,
+        "beam": 100,
+    }
+)
 FAMILY_WEAPONS: MappingProxyType[UnitFamily, tuple[str, ...]] = MappingProxyType(
     {
         F.INFANTRY: ("spear", "blade", "blunt"),
@@ -241,6 +339,10 @@ FAMILY_WEAPONS: MappingProxyType[UnitFamily, tuple[str, ...]] = MappingProxyType
         F.MAGIC: ("staff",),
         F.VEHICLE: ("spear", "bow"),
         F.EXOTIC: ("claw",),
+        F.AIR: ("launcher", "firearm"),
+        F.SPACE: ("firearm", "beam", "blade"),
+        F.ELECTRONIC: ("launcher", "firearm"),
+        F.SPECIAL: ("firearm", "blade"),
     }
 )
 KIND_WEAPONS = MappingProxyType(
@@ -257,11 +359,22 @@ KIND_WEAPONS = MappingProxyType(
         K.JAVELINEERS: ("spear",),
         K.HEAVY_CAVALRY: ("spear", "blade"),
         K.LIGHT_CAVALRY: ("spear", "blade"),
+        K.GUNNERS: ("firearm", "blade"),
+        K.MOUNTED_GUNNERS: ("firearm", "blade"),
+        K.GRENADIERS: ("launcher", "firearm"),
+        K.ARTILLERY_CREW: ("launcher",),
+        K.MECHANISED_INFANTRY: ("firearm", "launcher"),
+        K.PARTISANS: ("firearm", "blade", "blunt"),
+        K.PEACEKEEPERS: ("firearm", "blunt"),
+        K.MEDICS: ("blunt",),
+        K.POWERED_TROOPERS: ("beam", "firearm", "blunt"),
+        K.DROP_TROOPS: ("firearm", "launcher"),
     }
 )
 HEAVY_WEATHER = frozenset({W.HEAT_WAVE, W.SNOW, W.BLIZZARD})
 
-TACTIC_COUNTERS: MappingProxyType[Tactic, frozenset[Tactic]] = MappingProxyType(
+TACTIC_COUNTERS: MappingProxyType[Tactic, frozenset[Tactic]] = total(
+    Tactic,
     {
         Tactic.HOLD_LINE: frozenset({Tactic.FRONTAL_ASSAULT, Tactic.WEDGE}),
         Tactic.FRONTAL_ASSAULT: frozenset({Tactic.SKIRMISH_HARASS, Tactic.MISSILE_ATTRITION, Tactic.FEINT}),
@@ -272,12 +385,21 @@ TACTIC_COUNTERS: MappingProxyType[Tactic, frozenset[Tactic]] = MappingProxyType(
         Tactic.SHIELD_WALL: frozenset({Tactic.FRONTAL_ASSAULT, Tactic.FLANK_CAVALRY}),
         Tactic.WEDGE: frozenset({Tactic.SHIELD_WALL, Tactic.SKIRMISH_HARASS}),
         Tactic.NIGHT_RAID: frozenset({Tactic.HOLD_LINE, Tactic.SIEGE_ASSAULT}),
-        Tactic.AMBUSH: frozenset({Tactic.FRONTAL_ASSAULT, Tactic.FLANK_CAVALRY, Tactic.WEDGE}),
+        Tactic.AMBUSH: frozenset({Tactic.FRONTAL_ASSAULT, Tactic.FLANK_CAVALRY, Tactic.WEDGE, Tactic.ARMOURED_THRUST}),
         Tactic.SKIRMISH_HARASS: frozenset({Tactic.HOLD_LINE, Tactic.SHIELD_WALL}),
         Tactic.RIVER_DEFENCE: frozenset({Tactic.FRONTAL_ASSAULT, Tactic.FLANK_CAVALRY}),
         Tactic.SIEGE_ASSAULT: frozenset({Tactic.HOLD_LINE}),
         Tactic.FEINT: frozenset({Tactic.HOLD_LINE, Tactic.RIVER_DEFENCE}),
-    }
+        Tactic.ARTILLERY_BARRAGE: frozenset({Tactic.HOLD_LINE, Tactic.SHIELD_WALL, Tactic.SIEGE_ASSAULT, Tactic.RIVER_DEFENCE}),
+        Tactic.ARMOURED_THRUST: frozenset({Tactic.HOLD_LINE, Tactic.FRONTAL_ASSAULT, Tactic.SKIRMISH_HARASS, Tactic.SHIELD_WALL}),
+        Tactic.AIR_SUPERIORITY: frozenset({Tactic.ARMOURED_THRUST, Tactic.ARTILLERY_BARRAGE, Tactic.FLANK_CAVALRY, Tactic.DROP_ASSAULT}),
+        Tactic.BLOCKADE: frozenset({Tactic.SIEGE_ASSAULT, Tactic.RIVER_DEFENCE, Tactic.HOLD_LINE}),
+        Tactic.GUERRILLA: frozenset({Tactic.ARMOURED_THRUST, Tactic.FRONTAL_ASSAULT, Tactic.HOLD_LINE}),
+        Tactic.ELECTRONIC_WARFARE: frozenset({Tactic.AIR_SUPERIORITY, Tactic.ARTILLERY_BARRAGE, Tactic.ORBITAL_BOMBARDMENT}),
+        Tactic.ORBITAL_BOMBARDMENT: frozenset({Tactic.HOLD_LINE, Tactic.ARMOURED_THRUST, Tactic.ARTILLERY_BARRAGE, Tactic.SIEGE_ASSAULT}),
+        Tactic.DROP_ASSAULT: frozenset({Tactic.RIVER_DEFENCE, Tactic.HOLD_LINE, Tactic.ARTILLERY_BARRAGE}),
+        Tactic.INFILTRATION: frozenset({Tactic.HOLD_LINE, Tactic.ARTILLERY_BARRAGE, Tactic.ELECTRONIC_WARFARE}),
+    },
 )
 TACTIC_TERRAIN: MappingProxyType[Tactic, frozenset[TerrainKind]] = MappingProxyType(
     {
@@ -288,6 +410,10 @@ TACTIC_TERRAIN: MappingProxyType[Tactic, frozenset[TerrainKind]] = MappingProxyT
         Tactic.SHIELD_WALL: frozenset({T.PLAIN, T.HILLS, T.HIGH_PASS, T.COAST}),
         Tactic.MISSILE_ATTRITION: frozenset({T.HILLS, T.PLAIN, T.CANYON}),
         Tactic.DOUBLE_ENVELOPMENT: frozenset({T.PLAIN, T.STEPPE}),
+        Tactic.ARMOURED_THRUST: frozenset({T.PLAIN, T.STEPPE, T.DESERT}),
+        Tactic.GUERRILLA: AMBUSH_TERRAIN | frozenset({T.URBAN, T.MOUNTAINS, T.HILLS}),
+        Tactic.BLOCKADE: frozenset({T.COAST, T.RIVER_VALLEY}),
+        Tactic.INFILTRATION: frozenset({T.URBAN, T.FOREST, T.JUNGLE}),
     }
 )
 STYLE_UNITS = MappingProxyType(
@@ -302,6 +428,12 @@ STYLE_UNITS = MappingProxyType(
         "siege_engineer": (K.HEAVY_INFANTRY, K.SIEGE_CREW, K.SAPPERS, K.CROSSBOWMEN),
         "war_magic": (K.BATTLE_CASTERS, K.LINE_INFANTRY, K.ARCHERS),
         "beast_war": (K.WAR_BEASTS, K.BEAST_RIDERS, K.LIGHT_INFANTRY),
+        "mechanised": (K.MECHANISED_INFANTRY, K.VEHICLE_CREW, K.ARTILLERY_CREW),
+        "air_mobile": (K.PILOTS, K.SKY_CREW, K.SPECIAL_FORCES),
+        "guerrilla": (K.PARTISANS, K.LIGHT_INFANTRY, K.SPECIAL_FORCES),
+        "drone_war": (K.DRONE_OPERATORS, K.SIGNALS_TROOPS, K.MECHANISED_INFANTRY),
+        "orbital": (K.DROP_TROOPS, K.VOID_CREW, K.POWERED_TROOPERS),
+        "combined_arms": (K.MECHANISED_INFANTRY, K.ARTILLERY_CREW, K.PILOTS, K.MEDICS),
     }
 )
 STYLE_TACTICS = MappingProxyType(
@@ -312,10 +444,16 @@ STYLE_TACTICS = MappingProxyType(
         "chariot": (Tactic.FLANK_CAVALRY, Tactic.FRONTAL_ASSAULT),
         "phalanx": (Tactic.HOLD_LINE, Tactic.FRONTAL_ASSAULT, Tactic.DOUBLE_ENVELOPMENT, Tactic.FEINT),
         "shock": (Tactic.FRONTAL_ASSAULT, Tactic.WEDGE, Tactic.NIGHT_RAID),
-        "naval_raider": (Tactic.NIGHT_RAID, Tactic.AMBUSH, Tactic.FRONTAL_ASSAULT),
-        "siege_engineer": (Tactic.SIEGE_ASSAULT, Tactic.MISSILE_ATTRITION, Tactic.HOLD_LINE),
+        "naval_raider": (Tactic.NIGHT_RAID, Tactic.AMBUSH, Tactic.FRONTAL_ASSAULT, Tactic.BLOCKADE),
+        "siege_engineer": (Tactic.SIEGE_ASSAULT, Tactic.MISSILE_ATTRITION, Tactic.HOLD_LINE, Tactic.ARTILLERY_BARRAGE),
         "war_magic": (Tactic.MISSILE_ATTRITION, Tactic.HOLD_LINE),
         "beast_war": (Tactic.WEDGE, Tactic.AMBUSH, Tactic.FLANK_CAVALRY),
+        "mechanised": (Tactic.ARMOURED_THRUST, Tactic.ARTILLERY_BARRAGE, Tactic.DOUBLE_ENVELOPMENT),
+        "air_mobile": (Tactic.AIR_SUPERIORITY, Tactic.DROP_ASSAULT, Tactic.FLANK_CAVALRY),
+        "guerrilla": (Tactic.GUERRILLA, Tactic.AMBUSH, Tactic.INFILTRATION, Tactic.NIGHT_RAID),
+        "drone_war": (Tactic.ELECTRONIC_WARFARE, Tactic.ARTILLERY_BARRAGE, Tactic.MISSILE_ATTRITION),
+        "orbital": (Tactic.ORBITAL_BOMBARDMENT, Tactic.DROP_ASSAULT, Tactic.ARMOURED_THRUST),
+        "combined_arms": (Tactic.ARTILLERY_BARRAGE, Tactic.ARMOURED_THRUST, Tactic.AIR_SUPERIORITY, Tactic.HOLD_LINE),
     }
 )
 
@@ -365,5 +503,15 @@ ROLE_STYLES: MappingProxyType[UnitKind, MartialStyle] = total(
         K.BATTLE_CASTERS: Y.WAR_MAGIC,
         K.SUPPORT_CASTERS: Y.WAR_MAGIC,
         K.SUMMONERS: Y.WAR_MAGIC,
+        K.MECHANISED_INFANTRY: Y.MECHANISED,
+        K.SPECIAL_FORCES: Y.GUERRILLA,
+        K.PARTISANS: Y.GUERRILLA,
+        K.PEACEKEEPERS: Y.COMBINED_ARMS,
+        K.MEDICS: Y.COMBINED_ARMS,
+        K.DRONE_OPERATORS: Y.DRONE_WAR,
+        K.SIGNALS_TROOPS: Y.DRONE_WAR,
+        K.POWERED_TROOPERS: Y.ORBITAL,
+        K.DROP_TROOPS: Y.ORBITAL,
+        K.PILOTS: Y.AIR_MOBILE,
     },
 )

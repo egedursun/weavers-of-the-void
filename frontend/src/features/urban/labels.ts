@@ -35,6 +35,9 @@ import {
   Users,
   Waves,
   Wheat,
+  Orbit,
+  Rocket,
+  Expand,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -50,6 +53,12 @@ export const HOUSING: Record<Schema['HousingLevel'], Named> = {
   house: { label: 'Houses', icon: Building, tone: 'verdigris' },
   townhouse: { label: 'Townhouses', icon: Building2, tone: 'gold' },
   manor: { label: 'Manors', icon: Castle, tone: 'gold' },
+  apartment: { label: 'Apartments', icon: Building2, tone: 'info' },
+  tenement: { label: 'Tenements', icon: Building, tone: 'muted' },
+  tower_block: { label: 'Tower blocks', icon: Building2, tone: 'verdigris' },
+  arcology_unit: { label: 'Arcology units', icon: Building2, tone: 'gold' },
+  habitat_module: { label: 'Habitat modules', icon: Orbit, tone: 'info' },
+  ship_berth: { label: 'Ship berths', icon: Rocket, tone: 'muted' },
 }
 
 export const SERVICES: Record<Schema['UrbanService'], Named> = {
@@ -67,6 +76,9 @@ export const MORPHOLOGIES: Record<Schema['Morphology'], Named> = {
   organic: { label: 'Grown at random', icon: Shrub, tone: 'muted' },
   planned: { label: 'Planned on a grid', icon: Grid3x3, tone: 'info' },
   concentric: { label: 'Grown in rings', icon: Target, tone: 'gold' },
+  grid: { label: 'Laid out on a street grid', icon: Grid3x3, tone: 'info' },
+  vertical: { label: 'Built upward', icon: Building2, tone: 'verdigris' },
+  sprawl: { label: 'Sprawling', icon: Expand, tone: 'warning' },
 }
 
 export const RACKETS: Record<Schema['RacketKind'], Named> = {

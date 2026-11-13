@@ -126,6 +126,15 @@ def field_spec(spec: UnitSpec, carried: list[Carried], soldiers: int) -> UnitSpe
         elif item.model.slot is S.SHIELD:
             defence = blend(defence, defence + item.model.protection // 2, share)
             shield = family.shield if family.shield is not None and share >= 0.5 else shield
+        elif item.model.slot is S.SENSOR:
+            accuracy = blend(accuracy, max(accuracy, item.model.accuracy), share)
+        elif item.model.slot is S.IMPLANT:
+            melee = blend(melee, max(melee, item.model.damage), share)
+            accuracy = blend(accuracy, max(accuracy, item.model.accuracy), share)
+            defence = blend(defence, defence + item.model.protection // 2, share)
+        elif item.model.slot is S.SUPPORT:
+            defence = blend(defence, defence + item.model.protection // 2, share)
+            accuracy = blend(accuracy, max(accuracy, item.model.accuracy), share)
     return replace(
         spec,
         melee=melee,

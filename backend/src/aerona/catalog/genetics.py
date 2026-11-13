@@ -211,6 +211,11 @@ CLASS_INCOME_PCT: dict[SocialClass, int] = {
     SocialClass.WARRIOR: 110,
     SocialClass.FARMER: 100,
     SocialClass.MONASTIC: 50,
+    SocialClass.WORKER: 90,
+    SocialClass.PROFESSIONAL: 220,
+    SocialClass.OFFICIAL: 180,
+    SocialClass.CITIZEN: 110,
+    SocialClass.UNEMPLOYED: 25,
     SocialClass.SERF_OR_SLAVE: 40,
     SocialClass.OUTCAST: 20,
 }
@@ -238,5 +243,6 @@ DWELLINGS: dict[DwellingKind, DwellingSpec] = {
         DwellingSpec(DwellingKind.CAVE, "Cave", 2, 15, 0),
         DwellingSpec(DwellingKind.SHIP, "Ship", 2, 35, 3, mobile=True),
         DwellingSpec(DwellingKind.TOWER, "Tower", 6, 60, 6),
+        DwellingSpec(DwellingKind.APARTMENT, "Apartment", 2, 50, 3),
     )
 }

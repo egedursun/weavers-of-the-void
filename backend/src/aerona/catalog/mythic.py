@@ -186,5 +186,13 @@ SKILL_DOMAINS = total(
         S.PROPHECY: frozenset({D.DREAM, D.SLEEP, D.MADNESS, D.TIME}),
         S.SPELLCRAFT: frozenset({D.KNOWLEDGE}),
         S.SPIRIT_SPEAKING: frozenset({D.DEATH, D.SHADOW, D.SLEEP}),
+        S.FIREARMS: frozenset({D.WAR, D.FIRE}),
+        S.PILOTING: frozenset({D.SKY, D.SPACE}),
+        S.DRIVING: frozenset({D.ROAD, D.MACHINES}),
+        S.MECHANICS: frozenset({D.MACHINES, D.CRAFT, D.INDUSTRY}),
+        S.ELECTRONICS: frozenset({D.MACHINES, D.TECHNOLOGY}),
+        S.COMPUTING: frozenset({D.INFORMATION, D.TECHNOLOGY}),
+        S.SCIENCE: frozenset({D.SCIENCE, D.KNOWLEDGE}),
+        S.ADMINISTRATION: frozenset({D.CITIES, D.KNOWLEDGE}),
     },
 )

@@ -56,6 +56,9 @@ const DRAWER_OF_NODE: Record<string, DrawerKind> = {
   world: 'world',
   star: 'star',
   creator: 'creator',
+  galaxy: 'galaxy',
+  cluster: 'cluster',
+  dimension: 'dimension',
 }
 
 export function drawerOfNode(kind: string): DrawerKind | null {

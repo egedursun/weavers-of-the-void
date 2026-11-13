@@ -415,7 +415,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "subtype": "What exactly it is",
             "description": DESCRIPTION_FIELD,
             "related_ids": "Existing records it tells of (at most {{ " + M + ".culture_max_related }})",
-            "law_kind": "For a law: what it rules (succession_rule, tax_rate, penal_code, levy_law, slavery, tolls, sumptuary...); required for laws",
+            "law_kind": "For a law: what it rules, one of: {{ law_kinds }}; required for laws",
             "law_params": "For a law: its terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: "
             + law_terms_guide(),
             "image_prompt": 'English image prompt: the ritual being performed or a scene of the legend. {% include "shared/image_prompt_rules.md.j2" %}',
@@ -681,7 +681,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "In a realm that decides by council, assembly or divine will, the law goes before them as a proposal instead of passing at once. "
         "1 action, {{ " + M + ".enact_law_per_epoch }} per age.",
         {
-            "kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic, rite_restrictions, censorship, fair_market, franchise, constitution or custom",
+            "kind": "What the law rules; one of: {{ law_kinds }}",
             "params": "The law's terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: " + law_terms_guide(),
             "name": "The law's name, if it should have one of its own",
         },

@@ -26,6 +26,15 @@ class DistrictKind(StrEnum):
     RESIDENTIAL = "residential"
     CIVIC_QUARTER = "civic_quarter"
     GARDENS = "gardens"
+    INDUSTRIAL = "industrial"
+    BUSINESS = "business"
+    RESEARCH = "research"
+    TRANSPORT_HUB = "transport_hub"
+    MILITARY_BASE = "military_base"
+    UNIVERSITY = "university"
+    ENTERTAINMENT = "entertainment"
+    SUBURB = "suburb"
+    ARCOLOGY = "arcology"
 
 
 class DistrictHarm(StrEnum):

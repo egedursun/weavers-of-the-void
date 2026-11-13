@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
+from aerona.catalog.urban import QUARTER_WORKS
 from aerona.catalog.zones import CIVIC_SERVICE_OF
 from aerona.constants.units import PERCENT
 from aerona.db.tables.communication import PublicOpinionRow
@@ -35,10 +36,11 @@ from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, WeatherEffect
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import ConstructionState, StructureKind
-from aerona.domain.enums.urban import UrbanService
+from aerona.domain.enums.urban import HousingLevel, Morphology, UrbanService
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.agrarian.book import centrality_of, counted_people, shield_of
 from aerona.engine.agrarian.ruin import mark_ruin
@@ -61,7 +63,7 @@ from aerona.engine.mind.drives import unrest as needs_unrest
 from aerona.engine.mind.space import value_distance
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
-from aerona.engine.polity.laws import LawBook
+from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.polity.trials import judge_for, open_case
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -95,6 +97,13 @@ def housing_of(rules: Rules, town: Town) -> int:
 
 def slots_of(rules: Rules, town: Town) -> int:
     return 1 + town.tier_index() * rules.urban.district_slots_per_tier
+
+
+async def weapons_crime(ctx: TickContext, town_id: int) -> int:
+    level = await law_param(ctx.session, town_id, LawKind.WEAPONS_LAW, "level")
+    if level == "banned":
+        return -ctx.rules.crime.weapons_ban
+    return ctx.rules.crime.weapons_open if level == "open" else 0
 
 
 async def labour(ctx: TickContext, town: Town, *jobs: Job) -> int:
@@ -301,7 +310,21 @@ async def quarter_wants(ctx: TickContext, town: Town) -> list[str]:
     greens = {StructureKind.PARK, StructureKind.FOUNTAIN}
     if DistrictKind.GARDENS not in kinds and greens & set(built) and (stat(town.entity, "prosperity") or 0) >= table.gardens_prosperity:
         wants.append("district:gardens")
-    return wants
+    for quarter, works in QUARTER_WORKS.items():
+        if quarter not in kinds and sum(1 for kind in built if kind in works) >= table.modern_quarter_at:
+            wants.append(f"district:{quarter.value}")
+    society = await ctx.session.get(CommunitySocietyRow, town.entity.id)
+    if society is not None and DistrictKind.INDUSTRIAL not in kinds and society.share(SocialClass.WORKER) >= table.industrial_worker_pct:
+        wants.append("district:industrial")
+    city = town.tier_index() >= TIER_ORDER.index(SizeTier.CITY)
+    traders = society.share(SocialClass.PROFESSIONAL) + society.share(SocialClass.MERCHANT) if society is not None else 0.0
+    if DistrictKind.BUSINESS not in kinds and city and traders >= table.business_share_pct:
+        wants.append("district:business")
+    if town.profile.morphology is Morphology.SPRAWL and DistrictKind.SUBURB not in kinds:
+        wants.append("district:suburb")
+    if DistrictKind.ARCOLOGY not in kinds and any(district.housing is HousingLevel.ARCOLOGY_UNIT for district in town.districts):
+        wants.append("district:arcology")
+    return list(dict.fromkeys(wants))
 
 
 def spend(ctx: TickContext, town: Town, cost: int, work: int, label: str) -> bool:
@@ -508,6 +531,7 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
             - rule * ctx.rules.dominion.crime_per_step
             + (1 - urban.covered(UrbanService.WATCH)) * ctx.rules.coverage.crime
             + urban.homeless_share * ctx.rules.homelessness.crime
+            + await weapons_crime(ctx, town.entity.id)
             + urban.turf * ctx.rules.turf.crime_per_turf
         )
         profile.crime = clamp_int(crime, 0, PERCENT)

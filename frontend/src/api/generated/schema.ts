@@ -30465,8 +30465,21 @@ export interface components {
       | 'helmet'
       | 'barding'
       | 'vehicle_weapon'
+      | 'sensor'
+      | 'implant'
+      | 'support'
     ArmourType:
-      'none' | 'hide' | 'padded' | 'mail' | 'scale' | 'plate' | 'enchanted'
+      | 'none'
+      | 'hide'
+      | 'padded'
+      | 'mail'
+      | 'scale'
+      | 'plate'
+      | 'enchanted'
+      | 'ballistic'
+      | 'composite'
+      | 'powered'
+      | 'force_field'
     ArmourView: {
       head: number
       torso: number
@@ -32044,6 +32057,14 @@ export interface components {
       | 'wall_line'
       | 'tunnel_form'
       | 'orbital'
+      | 'high_rise'
+      | 'arcology'
+      | 'bunker'
+      | 'floating'
+      | 'geodesic'
+      | 'modular'
+      | 'grown'
+      | 'carved'
     BuildingTypeStats: {
       kind: 'building_type'
       renown?: number | null
@@ -32318,6 +32339,7 @@ export interface components {
       | 'trade'
       | 'wander'
       | 'bandit'
+      | 'study'
     CareerView: {
       role: components['schemas']['MortalRole'] | null
       ended_epoch: number | null
@@ -33918,6 +33940,12 @@ export interface components {
       | 'simmered'
       | 'ground'
       | 'pressed'
+      | 'synthesised'
+      | 'printed'
+      | 'vat_grown'
+      | 'freeze_dried'
+      | 'irradiated'
+      | 'conjured'
     CookingView: {
       community: components['schemas']['NodeRef']
       dish_id: number
@@ -34526,7 +34554,14 @@ export interface components {
       granter_id?: number | null
       skill?: components['schemas']['SkillKind'] | null
     }
-    CredentialKind: 'examination' | 'master' | 'doctor' | 'ordination'
+    CredentialKind:
+      | 'examination'
+      | 'master'
+      | 'doctor'
+      | 'ordination'
+      | 'degree'
+      | 'licence'
+      | 'commission'
     CredentialView: {
       id: number
       mortal: components['schemas']['NodeRef']
@@ -34976,6 +35011,14 @@ export interface components {
       | 'magic'
       | 'void'
       | 'holy'
+      | 'ballistic'
+      | 'explosive'
+      | 'energy'
+      | 'electric'
+      | 'radiation'
+      | 'chemical'
+      | 'sonic'
+      | 'psychic'
     Danger: {
       id: number | null
       name: string
@@ -35077,6 +35120,12 @@ export interface components {
       | 'hardship'
       | 'despair'
       | 'unknown'
+      | 'industrial'
+      | 'crash'
+      | 'radiation'
+      | 'decompression'
+      | 'experiment'
+      | 'bombardment'
     DebtDeleteInput: {
       god_id: number
       community_id: number
@@ -36020,6 +36069,15 @@ export interface components {
       | 'residential'
       | 'civic_quarter'
       | 'gardens'
+      | 'industrial'
+      | 'business'
+      | 'research'
+      | 'transport_hub'
+      | 'military_base'
+      | 'university'
+      | 'entertainment'
+      | 'suburb'
+      | 'arcology'
     DistrictMoveInput: {
       district_id: number
       q: number
@@ -36277,6 +36335,13 @@ export interface components {
       | 'ash'
       | 'border'
       | 'sleep'
+      | 'technology'
+      | 'machines'
+      | 'cities'
+      | 'industry'
+      | 'information'
+      | 'space'
+      | 'science'
     DomainActivity:
       | 'battles'
       | 'deaths'
@@ -36533,6 +36598,7 @@ export interface components {
       | 'cave'
       | 'ship'
       | 'tower'
+      | 'apartment'
     DwellingRemoveInput: {
       household_id: number
     }
@@ -37516,6 +37582,29 @@ export interface components {
       | 'focus_array'
       | 'harpoon'
       | 'boarding_gear'
+      | 'assault_rifle'
+      | 'submachine_gun'
+      | 'shotgun'
+      | 'sniper_rifle'
+      | 'machine_gun'
+      | 'railgun'
+      | 'plasma_gun'
+      | 'stun_weapon'
+      | 'chemical_sprayer'
+      | 'ballistic_vest'
+      | 'riot_shield'
+      | 'energy_shield'
+      | 'combat_helmet'
+      | 'optics'
+      | 'scanner'
+      | 'neural_implant'
+      | 'bionic_limb'
+      | 'medkit'
+      | 'jammer'
+      | 'recon_drone'
+      | 'autocannon'
+      | 'mass_driver'
+      | 'plasma_cannon'
     EquipmentModelCreateInput: {
       origin_id?: number | null
       world_id?: number | null
@@ -38835,7 +38924,19 @@ export interface components {
       name: string
       share: number
     }
-    Formation: 'line' | 'column' | 'wedge' | 'square' | 'loose' | 'shieldwall'
+    Formation:
+      | 'line'
+      | 'column'
+      | 'wedge'
+      | 'square'
+      | 'loose'
+      | 'shieldwall'
+      | 'dispersed'
+      | 'entrenched'
+      | 'echelon'
+      | 'convoy'
+      | 'screen'
+      | 'layered'
     FormativeKind:
       | 'great_war'
       | 'victory'
@@ -39247,6 +39348,12 @@ export interface components {
       | 'milestone'
       | 'wake'
       | 'examination'
+      | 'election'
+      | 'rally'
+      | 'strike'
+      | 'convention'
+      | 'launch'
+      | 'broadcast'
     GatheringOutcome:
       'convivial' | 'uneventful' | 'quarrelsome' | 'violent' | 'massacre'
     GatheringStatus: 'planned' | 'held' | 'disrupted' | 'cancelled'
@@ -39692,6 +39799,13 @@ export interface components {
       | 'hive_council'
       | 'god_kingdom'
       | 'occupation'
+      | 'junta'
+      | 'corporate_state'
+      | 'technocracy'
+      | 'federation'
+      | 'commune'
+      | 'machine_rule'
+      | 'colonial_administration'
     GrammarEditInput: {
       values?: {
         [key: string]: number | string | boolean | null
@@ -39896,6 +40010,12 @@ export interface components {
       | 'player'
       | 'exposure'
       | 'ritual'
+      | 'bombardment'
+      | 'industrial'
+      | 'crash'
+      | 'radiation'
+      | 'decompression'
+      | 'experiment'
     HazardExposure: {
       hazard: components['schemas']['TerrainHazard']
       label: string
@@ -40615,7 +40735,18 @@ export interface components {
       dwelling: components['schemas']['DwellingView'] | null
       held: string[]
     }
-    HousingLevel: 'hut' | 'cottage' | 'house' | 'townhouse' | 'manor'
+    HousingLevel:
+      | 'hut'
+      | 'cottage'
+      | 'house'
+      | 'townhouse'
+      | 'manor'
+      | 'apartment'
+      | 'tenement'
+      | 'tower_block'
+      | 'arcology_unit'
+      | 'habitat_module'
+      | 'ship_berth'
     IdeaKind:
       | 'rationalism'
       | 'mysticism'
@@ -41127,6 +41258,13 @@ export interface components {
       | 'void_touch'
       | 'divine_brand'
       | 'sickness'
+      | 'gunshot'
+      | 'shrapnel'
+      | 'concussion'
+      | 'electrical_burn'
+      | 'chemical_burn'
+      | 'radiation_sickness'
+      | 'mind_scar'
     InjuryState:
       'fresh' | 'infected' | 'healing' | 'healed_scar' | 'permanent' | 'lethal'
     InjuryView: {
@@ -41339,6 +41477,13 @@ export interface components {
       | 'key'
       | 'jewel'
       | 'currency'
+      | 'firearm'
+      | 'device'
+      | 'computer'
+      | 'implant'
+      | 'drug'
+      | 'vehicle_part'
+      | 'communicator'
     ItemContentInput: {
       book_id: number
       knowledge_id: number
@@ -41396,6 +41541,7 @@ export interface components {
       | 'clergy'
       | 'scholarship'
       | 'building'
+      | 'service'
       | 'idle'
     JobAccepted: {
       job_id: string
@@ -42375,6 +42521,13 @@ export interface components {
       | 'franchise'
       | 'constitution'
       | 'custom'
+      | 'labour_law'
+      | 'environment_law'
+      | 'data_privacy'
+      | 'weapons_law'
+      | 'intellectual_property'
+      | 'machine_law'
+      | 'space_law'
     LawKindSpec: {
       kind: components['schemas']['LawKind']
       area: components['schemas']['LawArea']
@@ -43717,6 +43870,12 @@ export interface components {
       | 'siege_engineer'
       | 'war_magic'
       | 'beast_war'
+      | 'mechanised'
+      | 'air_mobile'
+      | 'guerrilla'
+      | 'drone_war'
+      | 'orbital'
+      | 'combined_arms'
     MaterialChoice: {
       id: number
       name: string
@@ -44636,7 +44795,8 @@ export interface components {
     }
     MoraleState:
       'steady' | 'shaken' | 'wavering' | 'routing' | 'broken' | 'rallied'
-    Morphology: 'organic' | 'planned' | 'concentric'
+    Morphology:
+      'organic' | 'planned' | 'concentric' | 'grid' | 'vertical' | 'sprawl'
     MorphologyType: 'isolating' | 'agglutinative' | 'fusional' | 'polysynthetic'
     MortalAbilityInput: {
       mortal_id: number
@@ -44776,6 +44936,14 @@ export interface components {
       | 'saint'
       | 'apprentice'
       | 'commoner'
+      | 'officer'
+      | 'spy'
+      | 'scientist'
+      | 'engineer'
+      | 'pilot'
+      | 'physician'
+      | 'journalist'
+      | 'executive'
     MortalSentenceInput: {
       mortal_id: number
       crime: components['schemas']['CrimeKind']
@@ -45665,6 +45833,13 @@ export interface components {
       | 'herald'
       | 'chaplain'
       | 'court_scholar'
+      | 'head_of_state'
+      | 'head_of_government'
+      | 'minister'
+      | 'general'
+      | 'admiral'
+      | 'speaker'
+      | 'chief_scientist'
     OfficeView: {
       id: number
       kind: components['schemas']['OfficeKind']
@@ -46671,6 +46846,16 @@ export interface components {
       | 'mine_site'
       | 'harbour_site'
       | 'crossroads'
+      | 'wreck_site'
+      | 'megastructure_ruin'
+      | 'anomaly'
+      | 'debris_field'
+      | 'reef'
+      | 'glacier'
+      | 'dunes'
+      | 'canyon'
+      | 'oasis'
+      | 'geyser'
     PlaceProfileView: {
       place_id: number
       kind: components['schemas']['PlaceKind']
@@ -47619,6 +47804,17 @@ export interface components {
       | 'hunter'
       | 'sailor'
       | 'commander'
+      | 'engineer'
+      | 'scientist'
+      | 'pilot'
+      | 'technician'
+      | 'programmer'
+      | 'mechanic'
+      | 'miner'
+      | 'farmer'
+      | 'artist'
+      | 'administrator'
+      | 'spacer'
     ProfileColumnRecord: {
       name: string
       kind: string
@@ -50206,7 +50402,15 @@ export interface components {
     SectionState: 'sound' | 'damaged' | 'disabled' | 'destroyed'
     SegmentLevel: 'lineage' | 'clan' | 'tribe'
     SelectorateKind:
-      'tribe' | 'nobles' | 'council' | 'army' | 'priests' | 'citizens'
+      | 'tribe'
+      | 'nobles'
+      | 'council'
+      | 'army'
+      | 'priests'
+      | 'citizens'
+      | 'party'
+      | 'shareholders'
+      | 'algorithm'
     SenseShift:
       | 'broadened'
       | 'narrowed'
@@ -50464,7 +50668,7 @@ export interface components {
       | 'oval'
       | 'round'
       | 'banner'
-    ShieldType: 'none' | 'small' | 'large' | 'tower'
+    ShieldType: 'none' | 'small' | 'large' | 'tower' | 'riot' | 'energy'
     ShiftView: {
       id: number
       community: components['schemas']['NodeRef'] | null
@@ -50711,6 +50915,14 @@ export interface components {
       | 'prophecy'
       | 'spellcraft'
       | 'spirit_speaking'
+      | 'firearms'
+      | 'piloting'
+      | 'driving'
+      | 'mechanics'
+      | 'electronics'
+      | 'computing'
+      | 'science'
+      | 'administration'
     SkillSource: 'backfill' | 'birth' | 'practice' | 'teaching' | 'player'
     SkillView: {
       id: number
@@ -50802,6 +51014,11 @@ export interface components {
       | 'serf_or_slave'
       | 'outcast'
       | 'monastic'
+      | 'worker'
+      | 'professional'
+      | 'official'
+      | 'citizen'
+      | 'unemployed'
     SocialNormDeleteInput: {
       holder_id: number
       situation: components['schemas']['NormSituation']
@@ -52812,6 +53029,24 @@ export interface components {
       | 'beacon'
       | 'planetary_engine'
       | 'habitat_ring'
+      | 'factory'
+      | 'data_centre'
+      | 'office_tower'
+      | 'apartment_block'
+      | 'mall'
+      | 'broadcast_tower'
+      | 'satellite_array'
+      | 'military_base'
+      | 'missile_silo'
+      | 'shield_generator'
+      | 'terraformer'
+      | 'vertical_farm'
+      | 'recycling_plant'
+      | 'water_purification'
+      | 'cloning_facility'
+      | 'robotics_works'
+      | 'ai_core'
+      | 'teleporter'
     StructurePlaceInput: {
       structure_id: number
       district_id?: number | null
@@ -53175,6 +53410,15 @@ export interface components {
       | 'river_defence'
       | 'siege_assault'
       | 'feint'
+      | 'artillery_barrage'
+      | 'armoured_thrust'
+      | 'air_superiority'
+      | 'blockade'
+      | 'guerrilla'
+      | 'electronic_warfare'
+      | 'orbital_bombardment'
+      | 'drop_assault'
+      | 'infiltration'
     TargetClass: 'soft' | 'hard'
     TargetKind: 'entity' | 'foreign_god'
     TaskInfo: {
@@ -54836,6 +55080,10 @@ export interface components {
       | 'engineer'
       | 'magic'
       | 'exotic'
+      | 'air'
+      | 'space'
+      | 'electronic'
+      | 'special'
     UnitKind:
       | 'levy'
       | 'line_infantry'
@@ -54874,6 +55122,16 @@ export interface components {
       | 'summoners'
       | 'constructs'
       | 'summoned_host'
+      | 'mechanised_infantry'
+      | 'special_forces'
+      | 'partisans'
+      | 'peacekeepers'
+      | 'medics'
+      | 'drone_operators'
+      | 'signals_troops'
+      | 'powered_troopers'
+      | 'drop_troops'
+      | 'pilots'
     UnitKindSpec: {
       kind: components['schemas']['UnitKind']
       family: components['schemas']['UnitFamily']
@@ -55268,6 +55526,30 @@ export interface components {
       | 'catamaran'
       | 'fleet_carrier'
       | 'hover_tank'
+      | 'bicycle'
+      | 'rickshaw'
+      | 'palanquin'
+      | 'tram'
+      | 'maglev'
+      | 'bus'
+      | 'tractor'
+      | 'apc'
+      | 'self_propelled_gun'
+      | 'missile_carrier'
+      | 'motorboat'
+      | 'hydrofoil'
+      | 'container_ship'
+      | 'tanker'
+      | 'destroyer'
+      | 'cruiser'
+      | 'icebreaker'
+      | 'vtol'
+      | 'spaceplane'
+      | 'escape_pod'
+      | 'space_tug'
+      | 'mothership'
+      | 'battle_mech'
+      | 'bioship'
     VehicleGroupCreateInput: {
       holder_id: number
       design_id: number
@@ -114508,10 +114790,25 @@ export const armamentSlotValues: ReadonlyArray<
   'helmet',
   'barding',
   'vehicle_weapon',
+  'sensor',
+  'implant',
+  'support',
 ]
 export const armourTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArmourType']
-> = ['none', 'hide', 'padded', 'mail', 'scale', 'plate', 'enchanted']
+> = [
+  'none',
+  'hide',
+  'padded',
+  'mail',
+  'scale',
+  'plate',
+  'enchanted',
+  'ballistic',
+  'composite',
+  'powered',
+  'force_field',
+]
 export const armsInkValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArmsInk']
 > = [
@@ -114945,6 +115242,14 @@ export const buildingFormValues: ReadonlyArray<
   'wall_line',
   'tunnel_form',
   'orbital',
+  'high_rise',
+  'arcology',
+  'bunker',
+  'floating',
+  'geodesic',
+  'modular',
+  'grown',
+  'carved',
 ]
 export const buildingTypeStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BuildingTypeStats']['kind']
@@ -115022,6 +115327,7 @@ export const careerPathValues: ReadonlyArray<
   'trade',
   'wander',
   'bandit',
+  'study',
 ]
 export const cascadeOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CascadeOutcome']
@@ -115509,6 +115815,12 @@ export const cookingMethodValues: ReadonlyArray<
   'simmered',
   'ground',
   'pressed',
+  'synthesised',
+  'printed',
+  'vat_grown',
+  'freeze_dried',
+  'irradiated',
+  'conjured',
 ]
 export const cosmicBeingStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmicBeingStats']['kind']
@@ -115668,7 +115980,15 @@ export const creatureTraitValues: ReadonlyArray<
 ]
 export const credentialKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CredentialKind']
-> = ['examination', 'master', 'doctor', 'ordination']
+> = [
+  'examination',
+  'master',
+  'doctor',
+  'ordination',
+  'degree',
+  'licence',
+  'commission',
+]
 export const creditStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreditState']
 > = ['normal', 'strained', 'default', 'restructuring']
@@ -115720,7 +116040,25 @@ export const cyclePhaseValues: ReadonlyArray<
 > = ['growth', 'stagflation', 'crisis', 'depression']
 export const damageTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DamageType']
-> = ['cut', 'pierce', 'blunt', 'fire', 'cold', 'venom', 'magic', 'void', 'holy']
+> = [
+  'cut',
+  'pierce',
+  'blunt',
+  'fire',
+  'cold',
+  'venom',
+  'magic',
+  'void',
+  'holy',
+  'ballistic',
+  'explosive',
+  'energy',
+  'electric',
+  'radiation',
+  'chemical',
+  'sonic',
+  'psychic',
+]
 export const dangerHarmValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DangerHarm']
 > = ['settlers', 'livestock', 'travellers', 'armies', 'ambush', 'merchants']
@@ -115766,6 +116104,12 @@ export const deathCauseValues: ReadonlyArray<
   'hardship',
   'despair',
   'unknown',
+  'industrial',
+  'crash',
+  'radiation',
+  'decompression',
+  'experiment',
+  'bombardment',
 ]
 export const debtRemedyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DebtRemedy']
@@ -115959,6 +116303,15 @@ export const districtKindValues: ReadonlyArray<
   'residential',
   'civic_quarter',
   'gardens',
+  'industrial',
+  'business',
+  'research',
+  'transport_hub',
+  'military_base',
+  'university',
+  'entertainment',
+  'suburb',
+  'arcology',
 ]
 export const divineScaleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DivineScale']
@@ -116009,6 +116362,13 @@ export const domainValues: ReadonlyArray<
   'ash',
   'border',
   'sleep',
+  'technology',
+  'machines',
+  'cities',
+  'industry',
+  'information',
+  'space',
+  'science',
 ]
 export const domainActivityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DomainActivity']
@@ -116129,6 +116489,7 @@ export const dwellingKindValues: ReadonlyArray<
   'cave',
   'ship',
   'tower',
+  'apartment',
 ]
 export const edgeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EdgeKind']
@@ -116541,6 +116902,29 @@ export const equipmentFamilyValues: ReadonlyArray<
   'focus_array',
   'harpoon',
   'boarding_gear',
+  'assault_rifle',
+  'submachine_gun',
+  'shotgun',
+  'sniper_rifle',
+  'machine_gun',
+  'railgun',
+  'plasma_gun',
+  'stun_weapon',
+  'chemical_sprayer',
+  'ballistic_vest',
+  'riot_shield',
+  'energy_shield',
+  'combat_helmet',
+  'optics',
+  'scanner',
+  'neural_implant',
+  'bionic_limb',
+  'medkit',
+  'jammer',
+  'recon_drone',
+  'autocannon',
+  'mass_driver',
+  'plasma_cannon',
 ]
 export const equipmentModelStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EquipmentModelStats']['kind']
@@ -116943,7 +117327,20 @@ export const foreignGodStatusValues: ReadonlyArray<
 > = ['awake', 'asleep', 'defeated', 'dead']
 export const formationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Formation']
-> = ['line', 'column', 'wedge', 'square', 'loose', 'shieldwall']
+> = [
+  'line',
+  'column',
+  'wedge',
+  'square',
+  'loose',
+  'shieldwall',
+  'dispersed',
+  'entrenched',
+  'echelon',
+  'convoy',
+  'screen',
+  'layered',
+]
 export const formativeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FormativeKind']
 > = [
@@ -117113,6 +117510,12 @@ export const gatheringKindValues: ReadonlyArray<
   'milestone',
   'wake',
   'examination',
+  'election',
+  'rally',
+  'strike',
+  'convention',
+  'launch',
+  'broadcast',
 ]
 export const gatheringOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GatheringOutcome']
@@ -117210,6 +117613,13 @@ export const governmentKindValues: ReadonlyArray<
   'hive_council',
   'god_kingdom',
   'occupation',
+  'junta',
+  'corporate_state',
+  'technocracy',
+  'federation',
+  'commune',
+  'machine_rule',
+  'colonial_administration',
 ]
 export const gravityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Gravity']
@@ -117275,6 +117685,12 @@ export const harmCauseValues: ReadonlyArray<
   'player',
   'exposure',
   'ritual',
+  'bombardment',
+  'industrial',
+  'crash',
+  'radiation',
+  'decompression',
+  'experiment',
 ]
 export const heightClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HeightClass']
@@ -117557,7 +117973,19 @@ export const householdRoleValues: ReadonlyArray<
 ]
 export const housingLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HousingLevel']
-> = ['hut', 'cottage', 'house', 'townhouse', 'manor']
+> = [
+  'hut',
+  'cottage',
+  'house',
+  'townhouse',
+  'manor',
+  'apartment',
+  'tenement',
+  'tower_block',
+  'arcology_unit',
+  'habitat_module',
+  'ship_berth',
+]
 export const ideaKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdeaKind']
 > = [
@@ -117679,6 +118107,13 @@ export const injuryKindValues: ReadonlyArray<
   'void_touch',
   'divine_brand',
   'sickness',
+  'gunshot',
+  'shrapnel',
+  'concussion',
+  'electrical_burn',
+  'chemical_burn',
+  'radiation_sickness',
+  'mind_scar',
 ]
 export const injuryStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InjuryState']
@@ -117754,6 +118189,13 @@ export const itemClassValues: ReadonlyArray<
   'key',
   'jewel',
   'currency',
+  'firearm',
+  'device',
+  'computer',
+  'implant',
+  'drug',
+  'vehicle_part',
+  'communicator',
 ]
 export const itemDeedValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ItemDeed']
@@ -117788,6 +118230,7 @@ export const jobValues: ReadonlyArray<
   'clergy',
   'scholarship',
   'building',
+  'service',
   'idle',
 ]
 export const jobCancelledEventKindValues: ReadonlyArray<
@@ -118045,6 +118488,13 @@ export const lawKindValues: ReadonlyArray<
   'franchise',
   'constitution',
   'custom',
+  'labour_law',
+  'environment_law',
+  'data_privacy',
+  'weapons_law',
+  'intellectual_property',
+  'machine_law',
+  'space_law',
 ]
 export const lawScopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawScope']
@@ -118336,6 +118786,12 @@ export const martialStyleValues: ReadonlyArray<
   'siege_engineer',
   'war_magic',
   'beast_war',
+  'mechanised',
+  'air_mobile',
+  'guerrilla',
+  'drone_war',
+  'orbital',
+  'combined_arms',
 ]
 export const materialFamilyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MaterialFamily']
@@ -118587,7 +119043,7 @@ export const moraleStateValues: ReadonlyArray<
 > = ['steady', 'shaken', 'wavering', 'routing', 'broken', 'rallied']
 export const morphologyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Morphology']
-> = ['organic', 'planned', 'concentric']
+> = ['organic', 'planned', 'concentric', 'grid', 'vertical', 'sprawl']
 export const morphologyTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MorphologyType']
 > = ['isolating', 'agglutinative', 'fusional', 'polysynthetic']
@@ -118614,6 +119070,14 @@ export const mortalRoleValues: ReadonlyArray<
   'saint',
   'apprentice',
   'commoner',
+  'officer',
+  'spy',
+  'scientist',
+  'engineer',
+  'pilot',
+  'physician',
+  'journalist',
+  'executive',
 ]
 export const mortalSexValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalSex']
@@ -119008,6 +119472,13 @@ export const officeKindValues: ReadonlyArray<
   'herald',
   'chaplain',
   'court_scholar',
+  'head_of_state',
+  'head_of_government',
+  'minister',
+  'general',
+  'admiral',
+  'speaker',
+  'chief_scientist',
 ]
 export const omenReadingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OmenReading']
@@ -119247,6 +119718,16 @@ export const placeKindValues: ReadonlyArray<
   'mine_site',
   'harbour_site',
   'crossroads',
+  'wreck_site',
+  'megastructure_ruin',
+  'anomaly',
+  'debris_field',
+  'reef',
+  'glacier',
+  'dunes',
+  'canyon',
+  'oasis',
+  'geyser',
 ]
 export const placeReleaseInputFieldValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlaceReleaseInput']['field']
@@ -119425,6 +119906,17 @@ export const professionValues: ReadonlyArray<
   'hunter',
   'sailor',
   'commander',
+  'engineer',
+  'scientist',
+  'pilot',
+  'technician',
+  'programmer',
+  'mechanic',
+  'miner',
+  'farmer',
+  'artist',
+  'administrator',
+  'spacer',
 ]
 export const promptAreaValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PromptArea']
@@ -120028,7 +120520,17 @@ export const segmentLevelValues: ReadonlyArray<
 > = ['lineage', 'clan', 'tribe']
 export const selectorateKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SelectorateKind']
-> = ['tribe', 'nobles', 'council', 'army', 'priests', 'citizens']
+> = [
+  'tribe',
+  'nobles',
+  'council',
+  'army',
+  'priests',
+  'citizens',
+  'party',
+  'shareholders',
+  'algorithm',
+]
 export const senseShiftValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SenseShift']
 > = [
@@ -120072,7 +120574,7 @@ export const shieldShapeValues: ReadonlyArray<
 ]
 export const shieldTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ShieldType']
-> = ['none', 'small', 'large', 'tower']
+> = ['none', 'small', 'large', 'tower', 'riot', 'energy']
 export const shortfallEffectValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ShortfallEffect']
 > = [
@@ -120187,6 +120689,14 @@ export const skillKindValues: ReadonlyArray<
   'prophecy',
   'spellcraft',
   'spirit_speaking',
+  'firearms',
+  'piloting',
+  'driving',
+  'mechanics',
+  'electronics',
+  'computing',
+  'science',
+  'administration',
 ]
 export const skillSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SkillSource']
@@ -120223,6 +120733,11 @@ export const socialClassValues: ReadonlyArray<
   'serf_or_slave',
   'outcast',
   'monastic',
+  'worker',
+  'professional',
+  'official',
+  'citizen',
+  'unemployed',
 ]
 export const socialityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Sociality']
@@ -120857,6 +121372,24 @@ export const structureKindValues: ReadonlyArray<
   'beacon',
   'planetary_engine',
   'habitat_ring',
+  'factory',
+  'data_centre',
+  'office_tower',
+  'apartment_block',
+  'mall',
+  'broadcast_tower',
+  'satellite_array',
+  'military_base',
+  'missile_silo',
+  'shield_generator',
+  'terraformer',
+  'vertical_farm',
+  'recycling_plant',
+  'water_purification',
+  'cloning_facility',
+  'robotics_works',
+  'ai_core',
+  'teleporter',
 ]
 export const structureSectionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StructureSection']
@@ -121002,6 +121535,15 @@ export const tacticValues: ReadonlyArray<
   'river_defence',
   'siege_assault',
   'feint',
+  'artillery_barrage',
+  'armoured_thrust',
+  'air_superiority',
+  'blockade',
+  'guerrilla',
+  'electronic_warfare',
+  'orbital_bombardment',
+  'drop_assault',
+  'infiltration',
 ]
 export const targetClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TargetClass']
@@ -121692,6 +122234,10 @@ export const unitFamilyValues: ReadonlyArray<
   'engineer',
   'magic',
   'exotic',
+  'air',
+  'space',
+  'electronic',
+  'special',
 ]
 export const unitKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UnitKind']
@@ -121733,6 +122279,16 @@ export const unitKindValues: ReadonlyArray<
   'summoners',
   'constructs',
   'summoned_host',
+  'mechanised_infantry',
+  'special_forces',
+  'partisans',
+  'peacekeepers',
+  'medics',
+  'drone_operators',
+  'signals_troops',
+  'powered_troopers',
+  'drop_troops',
+  'pilots',
 ]
 export const unitTypeStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UnitTypeStats']['kind']
@@ -121920,6 +122476,30 @@ export const vehicleFrameValues: ReadonlyArray<
   'catamaran',
   'fleet_carrier',
   'hover_tank',
+  'bicycle',
+  'rickshaw',
+  'palanquin',
+  'tram',
+  'maglev',
+  'bus',
+  'tractor',
+  'apc',
+  'self_propelled_gun',
+  'missile_carrier',
+  'motorboat',
+  'hydrofoil',
+  'container_ship',
+  'tanker',
+  'destroyer',
+  'cruiser',
+  'icebreaker',
+  'vtol',
+  'spaceplane',
+  'escape_pod',
+  'space_tug',
+  'mothership',
+  'battle_mech',
+  'bioship',
 ]
 export const vehicleSectionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VehicleSection']

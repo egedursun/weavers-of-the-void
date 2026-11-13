@@ -1277,7 +1277,7 @@ function detailText(key: string, value: number | string): string {
   const text =
     typeof value === 'number'
       ? formatInteger(value)
-      : (TACTIC[value]?.label ?? named({}, value).label)
+      : named(TACTIC, value).label
   return `${label}: ${text}`
 }
 

@@ -21,6 +21,12 @@ class GatheringKind(StrEnum):
     MILESTONE = "milestone"
     WAKE = "wake"
     EXAMINATION = "examination"
+    ELECTION = "election"
+    RALLY = "rally"
+    STRIKE = "strike"
+    CONVENTION = "convention"
+    LAUNCH = "launch"
+    BROADCAST = "broadcast"
 
 
 class GatheringStatus(StrEnum):

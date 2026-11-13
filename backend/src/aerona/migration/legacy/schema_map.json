@@ -780,7 +780,14 @@
       "Tuz": "salt",
       "Kül": "ash",
       "Sınır": "border",
-      "Uyku": "sleep"
+      "Uyku": "sleep",
+      "Teknoloji": "technology",
+      "Makineler": "machines",
+      "Şehirler": "cities",
+      "Sanayi": "industry",
+      "Enformasyon": "information",
+      "Uzay": "space",
+      "Bilim": "science"
     },
     "son_stat": {
       "guc": "strength",

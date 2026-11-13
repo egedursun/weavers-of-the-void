@@ -74,6 +74,7 @@ class DwellingKind(StrEnum):
     CAVE = "cave"
     SHIP = "ship"
     TOWER = "tower"
+    APARTMENT = "apartment"
 
 
 class HouseholdDecision(StrEnum):

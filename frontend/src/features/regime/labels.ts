@@ -24,6 +24,11 @@ import {
   UserCheck,
   Users,
   Vote,
+  Flag,
+  Briefcase,
+  Cpu,
+  BadgeCheck,
+  Medal,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -43,6 +48,9 @@ export const SELECTORATES: Record<Schema['SelectorateKind'], Named> = {
   army: { label: 'The army', icon: Swords, tone: 'danger' },
   priests: { label: 'The priests', icon: Church, tone: 'verdigris' },
   citizens: { label: 'The citizens', icon: Vote, tone: 'success' },
+  party: { label: 'The party', icon: Flag, tone: 'danger' },
+  shareholders: { label: 'The shareholders', icon: Briefcase, tone: 'gold' },
+  algorithm: { label: 'A reckoning machine', icon: Cpu, tone: 'verdigris' },
 }
 
 export const LEGITIMACY_KINDS: Record<Schema['LegitimacyType'], Named> = {
@@ -106,6 +114,9 @@ export const CREDENTIALS: Record<Schema['CredentialKind'], Named> = {
   master: { label: 'Master', icon: GraduationCap, tone: 'verdigris' },
   doctor: { label: 'Doctor', icon: Award, tone: 'gold' },
   ordination: { label: 'Ordained', icon: Church, tone: 'verdigris' },
+  degree: { label: 'Degree', icon: GraduationCap, tone: 'info' },
+  licence: { label: 'Licensed', icon: BadgeCheck, tone: 'success' },
+  commission: { label: 'Commissioned', icon: Medal, tone: 'danger' },
 }
 
 export const PROOFING: Record<

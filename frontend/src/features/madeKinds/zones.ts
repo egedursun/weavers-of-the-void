@@ -1,6 +1,7 @@
 import { type Zone } from './IntegrityDiagram'
+import { type StructureSection, type VehicleSection } from './labels'
 
-const VEHICLE_ZONES: Record<string, Zone> = {
+const VEHICLE_ZONES: Record<VehicleSection, Zone> = {
   bow: 'front',
   cockpit: 'front',
   bridge: 'front',
@@ -45,9 +46,20 @@ const VEHICLE_ZONES: Record<string, Zone> = {
   gondola: 'under',
   ballast: 'under',
   airlock: 'under',
+  cargo_bay: 'body',
+  chassis: 'body',
+  core: 'body',
+  crew_quarters: 'body',
+  frame: 'body',
+  hold: 'body',
+  hull: 'body',
+  life_support: 'body',
+  magazine: 'body',
+  mount_body: 'body',
+  troop_bay: 'body',
 }
 
-const STRUCTURE_ZONES: Record<string, Zone> = {
+const STRUCTURE_ZONES: Record<StructureSection, Zone> = {
   roof: 'top',
   dome: 'top',
   spire: 'top',
@@ -76,12 +88,29 @@ const STRUCTURE_ZONES: Record<string, Zone> = {
   conduits: 'under',
   spine: 'under',
   vault: 'under',
+  archive: 'body',
+  core: 'body',
+  habitat_decks: 'body',
+  keep: 'top',
+  kitchen: 'body',
+  main_hall: 'body',
+  outer_wall: 'body',
+  pens: 'rear',
+  quarters: 'body',
+  sanctum: 'body',
+  seating: 'body',
+  stores: 'under',
+  upper_floors: 'top',
+  wards: 'body',
+  workshop_floor: 'body',
 }
 
 export function vehicleZone(section: string): Zone {
-  return VEHICLE_ZONES[section] ?? 'body'
+  return (VEHICLE_ZONES as Record<string, Zone | undefined>)[section] ?? 'body'
 }
 
 export function structureZone(section: string): Zone {
-  return STRUCTURE_ZONES[section] ?? 'body'
+  return (
+    (STRUCTURE_ZONES as Record<string, Zone | undefined>)[section] ?? 'body'
+  )
 }

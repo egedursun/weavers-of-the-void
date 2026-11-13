@@ -21,7 +21,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.military import SabotageKind, SpyCover, SpyOperation
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.mortal import CrimeKind, DeathCause
-from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
@@ -54,6 +54,7 @@ from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.phases.society_support.knowledge import teach
+from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, living_entity
@@ -254,7 +255,9 @@ async def incite_uprising_quietly(ctx: TickContext, community: EntityRow) -> boo
 
 
 async def gather(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
-    gain = cover_access(network, ctx.rules.espionage.intel_gain) * await ctx.hook_factor(spymaster.id, DomainHook.SPY_DEPTH)
+    privacy = await law_param(ctx.session, target.id, LawKind.DATA_PRIVACY, "strictness")
+    shield = 1 - (int(privacy) if isinstance(privacy, int) else 0) * ctx.rules.espionage.privacy_pct / PERCENT / PERCENT
+    gain = cover_access(network, ctx.rules.espionage.intel_gain) * await ctx.hook_factor(spymaster.id, DomainHook.SPY_DEPTH) * shield
     network.intel = clamp_int(network.intel + round_half_up(gain), 0, PERCENT)
     aims = await reveal_aims(ctx, network, target)
     tail = f"; {len(aims)} of its war aims lie open" if aims else ""

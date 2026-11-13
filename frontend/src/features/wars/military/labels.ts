@@ -92,6 +92,19 @@ import {
   Truck,
   Rocket,
   Wrench,
+  Plane,
+  Trees,
+  Drone,
+  Orbit,
+  Radio,
+  HandHeart,
+  Stethoscope,
+  RadioTower,
+  BicepsFlexed,
+  PlaneTakeoff,
+  Atom,
+  ShieldEllipsis,
+  Radar,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -130,6 +143,12 @@ export const DOCTRINE: Record<Schemas['MartialStyle'], Named> = {
   siege_engineer: { label: 'Siege engineers', icon: Anvil, tone: 'muted' },
   war_magic: { label: 'War magic', icon: WandSparkles, tone: 'verdigris' },
   beast_war: { label: 'Beast war', icon: PawPrint, tone: 'danger' },
+  mechanised: { label: 'Mechanised war', icon: Truck, tone: 'gold' },
+  air_mobile: { label: 'Air mobile', icon: Plane, tone: 'info' },
+  guerrilla: { label: 'Guerrilla war', icon: Trees, tone: 'success' },
+  drone_war: { label: 'Drone war', icon: Drone, tone: 'verdigris' },
+  orbital: { label: 'Orbital war', icon: Orbit, tone: 'info' },
+  combined_arms: { label: 'Combined arms', icon: Layers, tone: 'gold' },
 }
 
 export const AIM: Record<string, Named> = {
@@ -210,6 +229,10 @@ export const FAMILY: Record<Schemas['UnitFamily'], Named> = {
   magic: { label: 'Magic', icon: WandSparkles, tone: 'verdigris' },
   vehicle: { label: 'Vehicle crews', icon: Truck, tone: 'info' },
   exotic: { label: 'Exotic', icon: Sparkles, tone: 'verdigris' },
+  air: { label: 'Air arm', icon: Plane, tone: 'info' },
+  space: { label: 'Space arm', icon: Rocket, tone: 'verdigris' },
+  electronic: { label: 'Signals and drones', icon: Radio, tone: 'info' },
+  special: { label: 'Special troops', icon: Crosshair, tone: 'danger' },
 }
 
 export const UNIT_ICON: Record<Schemas['UnitKind'], LucideIcon> = {
@@ -250,6 +273,16 @@ export const UNIT_ICON: Record<Schemas['UnitKind'], LucideIcon> = {
   summoners: Eclipse,
   constructs: Bot,
   summoned_host: Ghost,
+  mechanised_infantry: Truck,
+  special_forces: Crosshair,
+  partisans: Trees,
+  peacekeepers: HandHeart,
+  medics: Stethoscope,
+  drone_operators: Drone,
+  signals_troops: RadioTower,
+  powered_troopers: BicepsFlexed,
+  drop_troops: PlaneTakeoff,
+  pilots: Plane,
 }
 
 const UNIT_ICONS: Readonly<Record<string, LucideIcon | undefined>> = UNIT_ICON
@@ -258,7 +291,7 @@ export function unitIcon(kind: string, fallback: LucideIcon): LucideIcon {
   return UNIT_ICONS[kind] ?? fallback
 }
 
-export const ARMOUR: Record<string, Named & { rank: number }> = {
+export const ARMOUR: Record<Schemas['ArmourType'], Named & { rank: number }> = {
   none: { label: 'No armour', icon: Ban, tone: 'muted', rank: 0 },
   hide: { label: 'Hide', icon: Shell, tone: 'muted', rank: 1 },
   padded: { label: 'Padded cloth', icon: Layers, tone: 'muted', rank: 2 },
@@ -271,13 +304,34 @@ export const ARMOUR: Record<string, Named & { rank: number }> = {
     tone: 'verdigris',
     rank: 6,
   },
+  ballistic: {
+    label: 'Ballistic vest',
+    icon: ShieldCheck,
+    tone: 'info',
+    rank: 7,
+  },
+  composite: { label: 'Composite', icon: Layers, tone: 'gold', rank: 8 },
+  powered: {
+    label: 'Powered armour',
+    icon: BicepsFlexed,
+    tone: 'gold',
+    rank: 9,
+  },
+  force_field: {
+    label: 'Force field',
+    icon: Atom,
+    tone: 'verdigris',
+    rank: 10,
+  },
 }
 
-export const SHIELD: Record<string, Named & { rank: number }> = {
+export const SHIELD: Record<Schemas['ShieldType'], Named & { rank: number }> = {
   none: { label: 'No shield', icon: Ban, tone: 'muted', rank: 0 },
   small: { label: 'Small shield', icon: ShieldHalf, tone: 'info', rank: 1 },
   large: { label: 'Large shield', icon: Shield, tone: 'info', rank: 2 },
   tower: { label: 'Tower shield', icon: ShieldPlus, tone: 'gold', rank: 3 },
+  riot: { label: 'Riot shield', icon: ShieldEllipsis, tone: 'info', rank: 4 },
+  energy: { label: 'Energy shield', icon: Atom, tone: 'verdigris', rank: 5 },
 }
 
 export const WEAPON: Record<string, Named> = {
@@ -359,7 +413,7 @@ export const OUTCOME_CLASS: Record<string, Named> = {
   refused: { label: 'Battle refused', icon: Ban, tone: 'muted' },
 }
 
-export const TACTIC: Record<string, Named> = {
+export const TACTIC: Record<Schemas['Tactic'], Named> = {
   hold_line: { label: 'Hold the line', icon: Fence },
   frontal_assault: { label: 'Frontal assault', icon: Swords },
   double_envelopment: { label: 'Double envelopment', icon: Merge },
@@ -374,6 +428,15 @@ export const TACTIC: Record<string, Named> = {
   river_defence: { label: 'River defence', icon: Waves },
   siege_assault: { label: 'Storm the walls', icon: ChessRook },
   feint: { label: 'Feint', icon: ArrowRightLeft },
+  artillery_barrage: { label: 'Artillery barrage', icon: Bomb },
+  armoured_thrust: { label: 'Armoured thrust', icon: Truck },
+  air_superiority: { label: 'Command of the air', icon: Plane },
+  blockade: { label: 'Blockade', icon: Anchor },
+  guerrilla: { label: 'Guerrilla war', icon: Trees },
+  electronic_warfare: { label: 'Electronic warfare', icon: Radar },
+  orbital_bombardment: { label: 'Orbital bombardment', icon: Orbit },
+  drop_assault: { label: 'Drop assault', icon: PlaneTakeoff },
+  infiltration: { label: 'Infiltration', icon: VenetianMask },
 }
 
 export const PHASE: Record<string, Named> = {
@@ -555,6 +618,12 @@ export const FORMATION: Record<Schemas['Formation'], Named> = {
   square: { label: 'Square', icon: Grid3x3, tone: 'info' },
   loose: { label: 'Loose order', icon: Feather, tone: 'verdigris' },
   shieldwall: { label: 'Shield wall', icon: BrickWall, tone: 'gold' },
+  dispersed: { label: 'Dispersed', icon: Sparkles, tone: 'verdigris' },
+  entrenched: { label: 'Entrenched', icon: Shovel, tone: 'gold' },
+  echelon: { label: 'Echelon', icon: ChevronsUp, tone: 'warning' },
+  convoy: { label: 'Convoy', icon: Truck, tone: 'muted' },
+  screen: { label: 'Screen', icon: Eye, tone: 'info' },
+  layered: { label: 'Layered defence', icon: Layers, tone: 'info' },
 }
 
 export const MORALE_STATE: Record<Schemas['MoraleState'], Named> = {

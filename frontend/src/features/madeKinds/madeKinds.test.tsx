@@ -336,6 +336,53 @@ describe('made kinds', () => {
     expect(buildingShape(null)).toBe('flat')
   })
 
+  it('draws every frame and form of other settings in a silhouette of its own', () => {
+    const modern = [
+      'bicycle',
+      'rickshaw',
+      'palanquin',
+      'tram',
+      'maglev',
+      'bus',
+      'tractor',
+      'apc',
+      'self_propelled_gun',
+      'missile_carrier',
+      'motorboat',
+      'hydrofoil',
+      'container_ship',
+      'tanker',
+      'destroyer',
+      'cruiser',
+      'icebreaker',
+      'vtol',
+      'spaceplane',
+      'escape_pod',
+      'space_tug',
+      'mothership',
+      'battle_mech',
+      'bioship',
+    ] as const
+    const shapes = new Set(modern.map((frame) => vehicleShape(frame, null)))
+    expect(shapes.size).toBe(modern.length)
+    expect(modern.every((frame) => vehicleShape(frame, null) === frame)).toBe(
+      true
+    )
+    const forms = [
+      'high_rise',
+      'arcology',
+      'bunker',
+      'floating',
+      'geodesic',
+      'modular',
+      'grown',
+      'carved',
+    ] as const
+    expect(new Set(forms.map((form) => buildingShape(form))).size).toBe(
+      forms.length
+    )
+  })
+
   it('keeps a structure drawing at the proportions of its blueprint', async () => {
     const { screen } = await renderApp(
       <div className='w-2xl'>

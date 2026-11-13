@@ -60,6 +60,10 @@ import {
   Worm,
   Zap,
   Brain,
+  Bomb,
+  FlaskConical,
+  Radiation,
+  BrainCircuit,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { MATERIAL_LABEL } from '../economy/labels'
@@ -166,7 +170,7 @@ export const CAPACITIES: Record<
   },
 }
 
-export const INJURIES: Record<string, Named> = {
+export const INJURIES: Record<components['schemas']['InjuryKind'], Named> = {
   bruise: { label: 'Bruise', icon: Bandage, tone: 'muted' },
   cut: { label: 'Cut', icon: Scissors, tone: 'warning' },
   deep_cut: { label: 'Deep cut', icon: Axe, tone: 'danger' },
@@ -188,6 +192,25 @@ export const INJURIES: Record<string, Named> = {
   void_touch: { label: 'Touched by the void', icon: Eclipse, tone: 'danger' },
   divine_brand: { label: 'Divine brand', icon: Sun, tone: 'gold' },
   sickness: { label: 'Ravaged by sickness', icon: Biohazard, tone: 'danger' },
+  gunshot: { label: 'Gunshot wound', icon: Target, tone: 'danger' },
+  shrapnel: { label: 'Shrapnel', icon: Bomb, tone: 'danger' },
+  concussion: { label: 'Concussion', icon: Brain, tone: 'warning' },
+  electrical_burn: { label: 'Electrical burn', icon: Zap, tone: 'warning' },
+  chemical_burn: {
+    label: 'Chemical burn',
+    icon: FlaskConical,
+    tone: 'warning',
+  },
+  radiation_sickness: {
+    label: 'Radiation sickness',
+    icon: Radiation,
+    tone: 'danger',
+  },
+  mind_scar: {
+    label: 'Scar on the mind',
+    icon: BrainCircuit,
+    tone: 'verdigris',
+  },
 }
 
 export const STATES: Record<string, Named & { badge: BadgeTone }> = {
@@ -217,7 +240,7 @@ export const STATES: Record<string, Named & { badge: BadgeTone }> = {
 export type BadgeTone =
   'secondary' | 'info' | 'success' | 'warning' | 'destructive' | 'default'
 
-export const DAMAGE: Record<string, string> = {
+export const DAMAGE: Record<components['schemas']['DamageType'], string> = {
   cut: 'Blade',
   pierce: 'Point',
   blunt: 'Blunt',
@@ -227,6 +250,14 @@ export const DAMAGE: Record<string, string> = {
   magic: 'Magic',
   void: 'Void',
   holy: 'Holy',
+  ballistic: 'Ballistic',
+  explosive: 'Blast',
+  energy: 'Energy',
+  electric: 'Electric',
+  radiation: 'Radiation',
+  chemical: 'Chemical',
+  sonic: 'Sonic',
+  psychic: 'Psychic',
 }
 
 export const CAUSES: Record<components['schemas']['HarmCause'], string> = {
@@ -248,6 +279,12 @@ export const CAUSES: Record<components['schemas']['HarmCause'], string> = {
   player: 'Your hand',
   exposure: 'Exposure',
   ritual: 'A rite',
+  bombardment: 'Bombardment',
+  industrial: 'Industrial accident',
+  crash: 'A crash',
+  radiation: 'Radiation',
+  decompression: 'Decompression',
+  experiment: 'An experiment',
 }
 
 export const CONDITIONS: Record<string, Named> = {
@@ -267,6 +304,7 @@ export const CONDITIONS: Record<string, Named> = {
   divine_brand: { label: "A god's brand", icon: Sun, tone: 'gold' },
   nightmares: { label: 'Recurring nightmares', icon: Moon, tone: 'verdigris' },
   comatose: { label: 'Comatose', icon: EyeOff, tone: 'muted' },
+  cognitive_decline: { label: 'Failing mind', icon: Brain, tone: 'warning' },
 }
 
 export const MEDICINE: Record<string, Named & { hint: string }> = {

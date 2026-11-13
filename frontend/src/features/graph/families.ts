@@ -113,6 +113,9 @@ const NODE_KIND_LABEL: Record<string, string> = {
   world: 'World',
   star: 'Star',
   entity: 'Record',
+  galaxy: 'Galaxy',
+  cluster: 'Cluster',
+  dimension: 'Dimension',
 }
 
 export function capitalized(text: string): string {

@@ -11,6 +11,8 @@ from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.titles import TitleHolderRow
 from aerona.db.write_guard import held
@@ -19,7 +21,7 @@ from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole, Milestone
 from aerona.domain.enums.mortal import LifeStage, PunishmentKind
-from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.polity import DecisionRule, OfficeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import STANDING_STATES, StructureKind
 from aerona.engine.context import TickContext
@@ -320,6 +322,33 @@ async def feasts(ctx: TickContext) -> list[Occasion]:
     return found
 
 
+async def elections(ctx: TickContext, ruled: Sequence[tuple[EntityRow, EntityRow, PolityProfileRow]]) -> list[Occasion]:
+    found: list[Occasion] = []
+    for polity, ruler, profile in ruled:
+        if profile.decision_rule is DecisionRule.ASSEMBLY and chance(ctx, f"election.{polity.id}", ctx.rules.gatherings.election_pct):
+            found.append(Occasion(G.ELECTION, ruler.id, polity.world_id, profile.capital_entity_id or polity.id))
+    return found
+
+
+async def unrest_gatherings(ctx: TickContext) -> list[Occasion]:
+    table = ctx.rules.gatherings
+    found: list[Occasion] = []
+    for town, profile in await ctx.session.execute(
+        select(EntityRow, SettlementProfileRow)
+        .join(SettlementProfileRow, SettlementProfileRow.settlement_entity_id == EntityRow.id)
+        .where(EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    ):
+        society = await ctx.session.get(CommunitySocietyRow, town.id)
+        workers = society.share(SocialClass.WORKER) if society is not None else 0.0
+        sour = society is not None and society.satisfaction(SocialClass.WORKER) <= table.strike_satisfaction
+        if workers >= table.strike_worker_pct and sour and chance(ctx, f"strike.{town.id}", table.strike_pct):
+            found.append(Occasion(G.STRIKE, town.id, town.world_id, town.id))
+        elif profile.unrest >= table.rally_unrest and chance(ctx, f"rally.{town.id}", table.rally_pct):
+            found.append(Occasion(G.RALLY, town.id, town.world_id, town.id))
+    return found
+
+
 async def occasions(ctx: TickContext, atlas: RegionAtlas) -> list[Occasion]:
     table = ctx.rules.gatherings
     ruled = await realms(ctx)
@@ -340,6 +369,11 @@ async def occasions(ctx: TickContext, atlas: RegionAtlas) -> list[Occasion]:
         *await structured(ctx, StructureKind.MARKET, G.FAIR, table.fair_pct),
         *await hunts(ctx),
         *await feasts(ctx),
+        *await elections(ctx, ruled),
+        *await unrest_gatherings(ctx),
+        *await structured(ctx, StructureKind.OFFICE_TOWER, G.CONVENTION, table.convention_pct),
+        *await structured(ctx, StructureKind.SPACEPORT, G.LAUNCH, table.launch_pct),
+        *await structured(ctx, StructureKind.BROADCAST_TOWER, G.BROADCAST, table.broadcast_pct),
     ]
     kept: list[Occasion] = []
     per_world: dict[int | None, int] = {}

@@ -41,7 +41,7 @@ from aerona.engine.structures.readers import workshop_output
 from aerona.rules.registry import Rules
 
 THOUSAND = 1000
-WORKING_ROLES = frozenset({MortalRole.FARMER, MortalRole.ARTISAN, MortalRole.COMMONER, MortalRole.APPRENTICE, MortalRole.HUNTER})
+WORKING_ROLES = frozenset({MortalRole.FARMER, MortalRole.ARTISAN, MortalRole.COMMONER, MortalRole.APPRENTICE, MortalRole.HUNTER, MortalRole.ENGINEER})
 ARTISAN_KINDS = frozenset({ExtractionKind.MINING, ExtractionKind.QUARRYING})
 BRANCH_OF: dict[ExtractionKind, KnowledgeBranch] = {
     ExtractionKind.MINING: KnowledgeBranch.METALLURGY,
@@ -57,6 +57,7 @@ HAZARD_HARM: dict[HazardKind, tuple[InjuryKind, str, int]] = {
     HazardKind.DROWNING: (InjuryKind.BRUISE, "dragged under by rough water", 35),
     HazardKind.GORING: (InjuryKind.PUNCTURE, "gored by the herd", 25),
 }
+WORKS_HAZARDS = frozenset({HazardKind.CAVE_IN, HazardKind.FLOODED_SHAFT})
 HAZARD_MAIMS: dict[HazardKind, MaimedKind] = {
     HazardKind.CAVE_IN: MaimedKind.ONE_LEGGED,
     HazardKind.FLOODED_SHAFT: MaimedKind.BROKEN_MINDED,
@@ -264,7 +265,8 @@ async def _hurt_named(ctx: TickContext, book: EconomyBook, community: EntityRow,
     rng = ctx.rng(f"hazard.named.{resource.id}.{hazard.value}")
     hurt: list[int] = []
     for mortal in rng.sample(workers, min(len(workers), ctx.rules.mining_hazards.named_hurt)):
-        await apply_hits(ctx, mortal, Harm(damage, HarmCause.ACCIDENT, words, kind=kind, severity=3, event_entity_id=resource.id))
+        cause = HarmCause.INDUSTRIAL if hazard in WORKS_HAZARDS else HarmCause.ACCIDENT
+        await apply_hits(ctx, mortal, Harm(damage, cause, words, kind=kind, severity=3, event_entity_id=resource.id))
         hurt.append(mortal.id)
     return hurt
 

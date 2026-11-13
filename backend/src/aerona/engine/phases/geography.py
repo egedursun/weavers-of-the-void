@@ -59,15 +59,15 @@ COMMON = (
     Nature("upland", "Upland", None, PlaceKind.MOUNTAIN),
 )
 WORLD_NATURES: dict[WorldType, tuple[Nature, ...]] = {
-    WorldType.OCEAN: (Nature("island", "Island", "fertility", PlaceKind.ISLAND), Nature("reef", "Reef", "danger", PlaceKind.ISLAND)),
-    WorldType.SAND: (Nature("oasis", "Oasis", "fertility", PlaceKind.SPRING), Nature("dune", "Dune", "danger", PlaceKind.CRATER)),
-    WorldType.ICE: (Nature("glacier", "Glacier", "danger", PlaceKind.MOUNTAIN), Nature("hot spring", "Hot Spring", "fertility", PlaceKind.SPRING)),
+    WorldType.OCEAN: (Nature("island", "Island", "fertility", PlaceKind.ISLAND), Nature("reef", "Reef", "danger", PlaceKind.REEF)),
+    WorldType.SAND: (Nature("oasis", "Oasis", "fertility", PlaceKind.OASIS), Nature("dune", "Dune", "danger", PlaceKind.DUNES)),
+    WorldType.ICE: (Nature("glacier", "Glacier", "danger", PlaceKind.GLACIER), Nature("hot spring", "Hot Spring", "fertility", PlaceKind.SPRING)),
     WorldType.LAVA: (Nature("lava lake", "Lava Lake", "danger", PlaceKind.VOLCANO), Nature("ash plain", "Ash Plain", "mystery", PlaceKind.CRATER)),
     WorldType.SUPER_EARTH: (
         Nature("great plain", "Great Plain", "fertility", PlaceKind.VALLEY),
-        Nature("deep trench", "Deep Trench", "danger", PlaceKind.CLIFF),
+        Nature("deep trench", "Deep Trench", "danger", PlaceKind.CANYON),
     ),
-    WorldType.ICE_GIANT: (Nature("cloud reef", "Cloud Reef", "fertility", PlaceKind.ISLAND), Nature("dark spot", "Dark Spot", "danger", PlaceKind.CRATER)),
+    WorldType.ICE_GIANT: (Nature("cloud reef", "Cloud Reef", "fertility", PlaceKind.REEF), Nature("dark spot", "Dark Spot", "danger", PlaceKind.CRATER)),
     WorldType.HOT_GIANT: (Nature("glow band", "Glow Band", "danger", PlaceKind.VALLEY), Nature("night band", "Night Band", "mystery", PlaceKind.CRATER)),
     WorldType.IRON: (Nature("lodestone", "Lodestone", "mystery", PlaceKind.MINE_SITE), Nature("rust field", "Rust Field", "danger", PlaceKind.CRATER)),
     WorldType.CARBON: (Nature("diamond scarp", "Diamond Scarp", "fertility", PlaceKind.CLIFF), Nature("tar pit", "Tar Pit", "danger", PlaceKind.SWAMP)),
@@ -78,13 +78,13 @@ WORLD_NATURES: dict[WorldType, tuple[Nature, ...]] = {
     WorldType.JUNGLE: (Nature("canopy", "Canopy", "fertility", PlaceKind.FOREST), Nature("swamp", "Swamp", "danger", PlaceKind.SWAMP)),
     WorldType.FORGE: (Nature("ore vein", "Ore Vein", "fertility", PlaceKind.MINE_SITE), Nature("slag field", "Slag Field", "danger", PlaceKind.CRATER)),
     WorldType.FUNGAL: (Nature("spore grove", "Spore Grove", "mystery", PlaceKind.GROVE), Nature("mycelium mat", "Mycelium Mat", "fertility", PlaceKind.FOREST)),
-    WorldType.SHATTERED: (Nature("floating isle", "Floating Isle", "mystery", PlaceKind.ISLAND), Nature("sky rift", "Sky Rift", "danger", PlaceKind.CLIFF)),
+    WorldType.SHATTERED: (Nature("floating isle", "Floating Isle", "mystery", PlaceKind.ISLAND), Nature("sky rift", "Sky Rift", "danger", PlaceKind.ANOMALY)),
     WorldType.HOLLOW: (
         Nature("polar opening", "Polar Opening", "danger", PlaceKind.CAVERN_SYSTEM),
         Nature("shadow band", "Shadow Band", "mystery", PlaceKind.GROVE),
     ),
-    WorldType.ICE_SHELL: (Nature("geyser", "Geyser", "danger", PlaceKind.SPRING), Nature("vent garden", "Vent Garden", "fertility", PlaceKind.SPRING)),
-    WorldType.METHANE: (Nature("methane lake", "Methane Lake", "danger", PlaceKind.LAKE), Nature("haze dune", "Haze Dune", "mystery", PlaceKind.CRATER)),
+    WorldType.ICE_SHELL: (Nature("geyser", "Geyser", "danger", PlaceKind.GEYSER), Nature("vent garden", "Vent Garden", "fertility", PlaceKind.SPRING)),
+    WorldType.METHANE: (Nature("methane lake", "Methane Lake", "danger", PlaceKind.LAKE), Nature("haze dune", "Haze Dune", "mystery", PlaceKind.DUNES)),
 }
 
 

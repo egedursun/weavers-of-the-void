@@ -161,7 +161,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market, void_pirates, social_circle, crime_family, thieves_guild, smuggling_ring or pirate_confederacy; its kind decides what it strives for and how it acts",
     },
     EntityType.LAW: {
-        "law_kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic, rite_restrictions, censorship, fair_market, franchise, constitution or custom",
+        "law_kind": "What the law rules; one of: {{ law_kinds }}",
         "law_params": "The law's terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: " + law_terms_guide(),
     },
     EntityType.RESOURCE: {
@@ -1355,8 +1355,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "melee": "Strength hand to hand, 0 to 100",
             "missile": "Strength at range, 0 to 100",
             "defence": "How well it holds, 0 to 100",
-            "armour": "none, hide, padded, mail, scale, plate or enchanted",
-            "shield": "none, small, large or tower",
+            "armour": "What it wears; one of: {{ armour_types }}",
+            "shield": "What it carries to ward blows; one of: {{ shield_types }}",
             "terror": "Fear it strikes, 0 to 100",
             "reach": "How far its weapons reach, 0 (hand to hand) to 5 (siege range)",
             "volleys": "Volleys it looses in one phase of battle, 0 to 6",

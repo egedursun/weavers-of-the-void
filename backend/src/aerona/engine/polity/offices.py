@@ -3,7 +3,7 @@ from types import MappingProxyType
 
 from sqlalchemy import delete, select
 
-from aerona.catalog.civics import OFFICE_GATES
+from aerona.catalog.civics import OFFICE_GATES, OFFICE_LEVELS
 from aerona.constants.units import PERCENT
 from aerona.core.total import partial
 from aerona.db.tables.body import InjuryRow
@@ -36,7 +36,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
-from aerona.engine.lore.civics import realm_allows
+from aerona.engine.lore.civics import realm_allows, realm_reaches
 from aerona.engine.military.causes import press_claim_war
 from aerona.engine.military.support import new_side
 from aerona.engine.mind.book import traits_of
@@ -75,6 +75,13 @@ OFFICE_SKILLS = partial(
         OfficeKind.CHAPLAIN: ((S.THEOLOGY, S.ORATORY), "wisdom"),
         OfficeKind.REGENT: ((S.LEADERSHIP, S.LAW), "charisma"),
         OfficeKind.COURT_SCHOLAR: ((S.LORE, S.WRITING, S.ASTRONOMY), "intellect"),
+        OfficeKind.HEAD_OF_STATE: ((S.LEADERSHIP, S.ORATORY, S.ETIQUETTE), "charisma"),
+        OfficeKind.HEAD_OF_GOVERNMENT: ((S.ADMINISTRATION, S.LEADERSHIP, S.NEGOTIATION), "intellect"),
+        OfficeKind.MINISTER: ((S.ADMINISTRATION, S.LAW, S.ACCOUNTING), "intellect"),
+        OfficeKind.GENERAL: ((S.STRATEGY, S.TACTICS, S.LOGISTICS), "strength"),
+        OfficeKind.ADMIRAL: ((S.NAVAL_COMBAT, S.NAVIGATION, S.STRATEGY), "wisdom"),
+        OfficeKind.SPEAKER: ((S.ORATORY, S.LAW, S.NEGOTIATION), "charisma"),
+        OfficeKind.CHIEF_SCIENTIST: ((S.SCIENCE, S.COMPUTING, S.ENGINEERING), "intellect"),
     },
     without={OfficeKind.HEIR_DESIGNATE, OfficeKind.RULER},
 )
@@ -87,6 +94,13 @@ COUNCIL = (
     OfficeKind.HERALD,
     OfficeKind.CHAPLAIN,
     OfficeKind.COURT_SCHOLAR,
+    OfficeKind.HEAD_OF_STATE,
+    OfficeKind.HEAD_OF_GOVERNMENT,
+    OfficeKind.MINISTER,
+    OfficeKind.GENERAL,
+    OfficeKind.ADMIRAL,
+    OfficeKind.SPEAKER,
+    OfficeKind.CHIEF_SCIENTIST,
 )
 W = OfficePower
 DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
@@ -104,6 +118,13 @@ DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
         OfficeKind.HERALD: (W.PROCLAIM,),
         OfficeKind.CHAPLAIN: (W.PREACH,),
         OfficeKind.COURT_SCHOLAR: (W.RESEARCH,),
+        OfficeKind.HEAD_OF_STATE: (W.PROCLAIM,),
+        OfficeKind.HEAD_OF_GOVERNMENT: (W.GOVERN, W.NEGOTIATE),
+        OfficeKind.MINISTER: (W.TREASURY,),
+        OfficeKind.GENERAL: (W.COMMAND,),
+        OfficeKind.ADMIRAL: (W.COMMAND,),
+        OfficeKind.SPEAKER: (W.PROCLAIM,),
+        OfficeKind.CHIEF_SCIENTIST: (W.RESEARCH,),
     }
 )
 POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
@@ -238,7 +259,9 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, occupied: set[i
             await appoint(ctx, realm, seat, None, by_id=realm.ruler_id, reason="the embassy was recalled")
     for kind, region, target in wanted_offices(book, realm, embassies, ctx.rules, await towns(ctx.session)):
         office = next((row for row in realm.offices if row.kind is kind and row.region_entity_id == region and row.target_entity_id == target), None)
-        if office is None and not await realm_allows(ctx.session, realm, OFFICE_GATES.get(kind)):
+        if office is None and not (
+            await realm_allows(ctx.session, realm, OFFICE_GATES.get(kind)) and await realm_reaches(ctx.session, realm, OFFICE_LEVELS.get(kind))
+        ):
             continue
         if office is None:
             office = OfficeRow(

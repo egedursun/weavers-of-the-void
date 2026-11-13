@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.body_plans import BUILD_RANK, HEIGHT_RANK
 from aerona.catalog.peoples import CREATURE_DIETS, CREATURE_NATURES, CREATURE_PLANS, ECOLOGY_DIETS, PLAN_DIETS, PLAN_NATURES
+from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow
@@ -26,6 +27,7 @@ from aerona.domain.enums.ecology import Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainKind
+from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.body.customs import culture_of
@@ -45,6 +47,7 @@ FERTILITY_FLOOR, FERTILITY_CEILING = 10, 300
 LEAN = 25
 STEPPE = frozenset({TerrainKind.STEPPE, TerrainKind.DESERT})
 HIGHLAND = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HILLS})
+COVERED = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HILLS, TerrainKind.FOREST, TerrainKind.JUNGLE, TerrainKind.MARSH})
 SKY_LANDS = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.TUNDRA, TerrainKind.ICE_SHEET})
 STAPLE_FOODS = frozenset({CommodityKind.GRAIN, CommodityKind.LIVESTOCK, CommodityKind.FISH})
 SIZE_STEPS = ((0, SizeClass.SMALL), (2, SizeClass.MEDIUM), (3, SizeClass.LARGE), (5, SizeClass.HUGE), (8, SizeClass.COLOSSAL))
@@ -183,10 +186,21 @@ def aesthetic_of(values: dict[ValueAxis, int]) -> Aesthetic:
     return max(ranked, key=lambda kind: (ranked[kind], kind.value))
 
 
+def fields(levels: dict[KnowledgeBranch, int], kind: UnitKind) -> bool:
+    spec = UNITS[kind]
+    return spec.branch is None or levels.get(spec.branch, 0) >= spec.level
+
+
 def martial_of(region: RegionEnvironmentRow | None, levels: dict[KnowledgeBranch, int], values: dict[ValueAxis, int]) -> MartialStyle:
     coastal = region is not None and region.coast_kind is not CoastKind.NONE
     terrain = region.dominant_terrain if region is not None else None
     ladder = (
+        (fields(levels, UnitKind.DROP_TROOPS), MartialStyle.ORBITAL),
+        (fields(levels, UnitKind.DRONE_OPERATORS), MartialStyle.DRONE_WAR),
+        (fields(levels, UnitKind.MECHANISED_INFANTRY) and fields(levels, UnitKind.PILOTS), MartialStyle.COMBINED_ARMS),
+        (fields(levels, UnitKind.PILOTS), MartialStyle.AIR_MOBILE),
+        (fields(levels, UnitKind.MECHANISED_INFANTRY), MartialStyle.MECHANISED),
+        (terrain in COVERED and fields(levels, UnitKind.SPECIAL_FORCES) and values.get(ValueAxis.HIERARCHY, 0) < 0, MartialStyle.GUERRILLA),
         (levels.get(KnowledgeBranch.MAGIC, 0) >= 3, MartialStyle.WAR_MAGIC),
         (coastal and levels.get(KnowledgeBranch.SEAFARING, 0) >= 1, MartialStyle.NAVAL_RAIDER),
         (terrain in STEPPE, MartialStyle.HORSE_ARCHER),

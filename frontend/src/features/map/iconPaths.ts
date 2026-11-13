@@ -19,6 +19,9 @@ import {
   Sun,
   Swords,
   Zap,
+  Orbit,
+  Workflow,
+  Layers,
 } from 'lucide-react'
 import { flushSync } from 'react-dom'
 import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
@@ -51,6 +54,9 @@ const KIND_ICON: Record<string, LucideIcon> = {
   world: Globe2,
   star: Star,
   entity: BookOpen,
+  galaxy: Orbit,
+  cluster: Workflow,
+  dimension: Layers,
 }
 
 function number(element: Element, name: string): number {

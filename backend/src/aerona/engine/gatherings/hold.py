@@ -16,6 +16,8 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.culture import TraditionKind
@@ -26,6 +28,7 @@ from aerona.domain.enums.intrigue import PlotKind, SchemePhase
 from aerona.domain.enums.mind import ActKind, EthicalStance, MemoryKind, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind, TreatyKind
+from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
@@ -466,6 +469,58 @@ async def execution(ctx: TickContext, holding: Holding) -> str:
     return ""
 
 
+async def election(ctx: TickContext, holding: Holding) -> str:
+    profile = await realm_ruled_by(ctx, holding.row.host_node_id)
+    if profile is not None and "legitimacy" not in (profile.locked or []) and not held(profile.polity_entity_id):
+        profile.legitimacy = clamp_int(profile.legitimacy + ctx.rules.gatherings.election_legitimacy, 0, PERCENT)
+    return ""
+
+
+async def unrest_of(ctx: TickContext, town_id: int, amount: int) -> None:
+    profile = await ctx.session.get(SettlementProfileRow, town_id)
+    if profile is not None and "unrest" not in profile.locked and not held(town_id):
+        profile.unrest = clamp_int(profile.unrest + amount, 0, PERCENT)
+
+
+async def rally(ctx: TickContext, holding: Holding) -> str:
+    await unrest_of(ctx, holding.row.host_node_id, ctx.rules.gatherings.rally_unrest_gain)
+    return ""
+
+
+async def strike(ctx: TickContext, holding: Holding) -> str:
+    table = ctx.rules.gatherings
+    town = await ctx.session.get(EntityRow, holding.row.host_node_id)
+    society = await ctx.session.get(CommunitySocietyRow, holding.row.host_node_id)
+    if town is None or held(town.id):
+        return ""
+    shift_stat(town, "prosperity", -table.strike_prosperity_loss, 0, high=PERCENT)
+    if society is not None:
+        society.satisfaction_worker = clamp_int(society.satisfaction_worker + table.strike_satisfaction_gain, 0, PERCENT)
+    return ""
+
+
+async def convention(ctx: TickContext, holding: Holding) -> str:
+    for node in holding.attendees:
+        found = await ctx.session.get(EntityRow, node)
+        if found is not None and found.social_class is SocialClass.PROFESSIONAL and not held(node):
+            await add_renown(ctx.session, node, ctx.rules.gatherings.convention_renown, ctx.epoch, rules=ctx.rules)
+    return ""
+
+
+async def launch(ctx: TickContext, holding: Holding) -> str:
+    town = await ctx.session.get(SettlementProfileRow, holding.row.host_node_id)
+    if town is not None and "prestige" not in town.locked and not held(town.settlement_entity_id):
+        town.prestige = clamp_int(town.prestige + ctx.rules.gatherings.launch_prestige, 0, PERCENT)
+    return ""
+
+
+async def broadcast(ctx: TickContext, holding: Holding) -> str:
+    community = await ctx.session.get(EntityRow, holding.row.host_node_id)
+    if community is not None:
+        await cohere(ctx, community, ctx.rules.gatherings.broadcast_cohesion)
+    return ""
+
+
 async def nothing(ctx: TickContext, holding: Holding) -> str:
     return ""
 
@@ -483,6 +538,12 @@ OUTCOMES: dict[GatheringKind, Callable[[TickContext, Holding], Awaitable[str]]] 
     G.PROCESSION: procession,
     G.COUNCIL: council,
     G.EXECUTION: execution,
+    G.ELECTION: election,
+    G.RALLY: rally,
+    G.STRIKE: strike,
+    G.CONVENTION: convention,
+    G.LAUNCH: launch,
+    G.BROADCAST: broadcast,
 }
 
 

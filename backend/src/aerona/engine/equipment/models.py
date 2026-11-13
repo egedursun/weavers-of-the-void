@@ -51,10 +51,14 @@ SLOT_MATERIALS = MappingProxyType(
         ArmamentSlot.SHIELD: MaterialSlot.ARMOUR,
         ArmamentSlot.HELMET: MaterialSlot.ARMOUR,
         ArmamentSlot.BARDING: MaterialSlot.ARMOUR,
+        ArmamentSlot.SENSOR: MaterialSlot.WEAPONS,
+        ArmamentSlot.IMPLANT: MaterialSlot.BODY,
+        ArmamentSlot.SUPPORT: MaterialSlot.ARMOUR,
     }
 )
 NEAR_PCT = 80
 GUARD_SLOTS = frozenset({ArmamentSlot.ARMOUR, ArmamentSlot.SHIELD, ArmamentSlot.HELMET, ArmamentSlot.BARDING})
+GEAR_SLOTS = frozenset({ArmamentSlot.SENSOR, ArmamentSlot.IMPLANT, ArmamentSlot.SUPPORT})
 
 
 def known(spec: FamilySpec, knowledge: KnowledgeMap, holder_id: int) -> bool:
@@ -62,6 +66,8 @@ def known(spec: FamilySpec, knowledge: KnowledgeMap, holder_id: int) -> bool:
 
 
 def worth(spec: FamilySpec) -> int:
+    if spec.slot in GEAR_SLOTS:
+        return spec.accuracy + spec.protection * 2 + spec.damage // 2
     return spec.protection * 3 + spec.coverage if spec.slot in GUARD_SLOTS else spec.damage + spec.piercing // 2 + spec.accuracy // 4 + spec.rate * 5
 
 

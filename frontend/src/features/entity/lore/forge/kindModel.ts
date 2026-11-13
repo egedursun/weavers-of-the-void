@@ -10,6 +10,13 @@ import {
   Wheat,
   Package,
   Pickaxe,
+  Crosshair,
+  Bomb,
+  Zap,
+  Radiation,
+  FlaskConical,
+  AudioWaveform,
+  Brain,
 } from 'lucide-react'
 import {
   type components,
@@ -82,6 +89,14 @@ const DAMAGE_ICON: Record<string, LoreNamed['icon']> = {
   holy: Sparkles,
   magic: Sparkles,
   venom: Skull,
+  ballistic: Crosshair,
+  explosive: Bomb,
+  energy: Zap,
+  electric: Zap,
+  radiation: Radiation,
+  chemical: FlaskConical,
+  sonic: AudioWaveform,
+  psychic: Brain,
 }
 
 function named(

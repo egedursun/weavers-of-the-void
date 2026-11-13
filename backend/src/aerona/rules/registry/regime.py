@@ -168,6 +168,9 @@ class CredentialRules:
     master_at: int = rule(40, 0, 100, K, "Skill at which a scholar at a school or academy is made a master")
     doctor_at: int = rule(70, 0, 100, K, "Skill at which a scholar at an academy is made a doctor")
     ordain_at: int = rule(30, 0, 100, K, "Skill in rites at which a priest is ordained where the clergy are ranked")
+    degree_at: int = rule(50, 0, 100, K, "Skill at which a scholar at a university is given a degree")
+    licence_at: int = rule(45, 0, 100, K, "Skill in their calling at which a physician, engineer or pilot is licensed where law is written")
+    commission_at: int = rule(45, 0, 100, K, "Skill in their calling at which an officer is commissioned where law is written")
     renown: int = rule(3, 0, 100, K, "Importance a credential adds to its holder")
 
 

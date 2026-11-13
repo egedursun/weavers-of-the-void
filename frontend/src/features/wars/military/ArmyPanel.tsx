@@ -350,8 +350,8 @@ function StackCard({
   blocked: string | null
 }) {
   const { icon, family } = unitOf(stack)
-  const armour = named(ARMOUR, stack.armour) as (typeof ARMOUR)[string]
-  const shield = named(SHIELD, stack.shield) as (typeof SHIELD)[string]
+  const armour = ARMOUR[stack.armour]
+  const shield = SHIELD[stack.shield]
   const broken = stack.count === 0
   return (
     <li

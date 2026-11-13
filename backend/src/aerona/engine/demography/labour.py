@@ -39,7 +39,7 @@ from aerona.engine.demography.prices import cheapest, dearest, local_prices
 from aerona.engine.disease.harm import community_targets, sick_levy, sick_work
 from aerona.engine.economy.extraction import KIND_JOBS, extraction_kind
 from aerona.engine.polity.law_effects import feudal_levy
-from aerona.engine.polity.laws import LawBook
+from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -63,6 +63,11 @@ CLASS_JOBS = partial(
         C.MONASTIC: {J.CLERGY: 0.5, J.SCHOLARSHIP: 0.3, J.FARMING: 0.2},
         C.SCRIBE: {J.SCHOLARSHIP: 1.0},
         C.NOBLE: {J.IDLE: 0.8, J.SOLDIERING: 0.2},
+        C.WORKER: {J.CRAFTING: 0.6, J.MINING: 0.2, J.BUILDING: 0.2},
+        C.PROFESSIONAL: {J.SCHOLARSHIP: 0.4, J.SERVICE: 0.4, J.CRAFTING: 0.2},
+        C.OFFICIAL: {J.SERVICE: 1.0},
+        C.CITIZEN: {J.SERVICE: 0.3, J.TRADE: 0.3, J.CRAFTING: 0.2, J.FARMING: 0.2},
+        C.UNEMPLOYED: {J.IDLE: 0.8, J.BUILDING: 0.2},
     },
     without={SocialClass.OUTCAST, SocialClass.WARRIOR},
 )
@@ -289,8 +294,9 @@ async def allocate(
     plan = Plan()
     output: dict[Job, float] = {}
     food = split_food(region)
+    children_work = await law_param(ctx.session, community.id, LawKind.LABOUR_LAW, "child_labour") is not False
     for (band, _sex, social_class, condition), row in rows.items():
-        hands = row.count * AGE_WORK[band]
+        hands = row.count * (AGE_WORK[band] if children_work or band is not AgeBand.CHILD else 0.0)
         bound = social_class is C.SERF_OR_SLAVE or condition in {CohortCondition.ENSLAVED, CohortCondition.CAPTIVE}
         mood = satisfaction_factor(rules, society, social_class)
         for job, share in jobs_for(rules, C.SERF_OR_SLAVE if bound else social_class).items():

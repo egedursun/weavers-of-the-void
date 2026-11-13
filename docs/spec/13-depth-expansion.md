@@ -7232,6 +7232,33 @@ Biosphere activity (3.2 trophic flows, land use) closes the cycles. Large distur
 - `cosmic_wound:strike` (the Creator strikes a being with a force from 1 to 10; the Wounds tab of the being's made-kinds section shows its health, the might it can bring, vitality, mobility, sight, whether it can still roam and find worlds, and its open wounds), the `body:*` levers of the generic body section, which reach every kind that grows a body (mortals, beasts, species, cosmic and outer beings), son tool `strike_being`, the being's body diagram in its drawer, the wiki and the Codex.
 - A being keeps its hit points in its own stats (`hp`), set to its body's full measure when the body grows, so blows add up and healing restores them.
 
+### 10.18 Breadth across settings (W42)
+
+**Current.** Many typed catalogues stop at an ancient or feudal world: classes, roles, offices, governments, laws, districts, homes, battle taxonomies, wounds, items, places, gatherings, divine domains, made frames, building forms, dishes and structures. A world the player seeds as industrial, modern, spacefaring or mixed cannot be told in its own kinds. Vehicle frames also needed a realm's political tier to open, which tied technology to empire.
+
+#### Attributes
+
+- **Military and body.** New unit families (air, space, electronic, special) and unit kinds (mechanised infantry, special forces, partisans, peacekeepers, medics, drone operators, signals troops, powered troopers, drop troops, pilots); armour (ballistic, composite, powered, force field) and shields (riot, energy); tactics (artillery barrage, armoured thrust, air superiority, blockade, guerrilla, electronic warfare, orbital bombardment, drop assault, infiltration); formations (dispersed, entrenched, echelon, convoy, screen, layered); martial styles (mechanised, air mobile, guerrilla, drone war, orbital, combined arms); damage types (ballistic, explosive, energy, electric, radiation, chemical, sonic, psychic); injuries (gunshot, shrapnel, concussion, electrical and chemical burns, radiation sickness, scars on the mind); harm and death causes (bombardment, industrial, crash, radiation, decompression, experiment); equipment families and armament slots (sensor, implant, support) for firearms, beam weapons, protective gear, optics, implants, medical kits, jammers and drones.
+- **Society, state and city.** Social classes (worker, professional, official, citizen, unemployed) with their own shares and satisfaction columns; the service job; skills (firearms, piloting, driving, mechanics, electronics, computing, science, administration) and professions built on them; mortal roles (officer, spy, scientist, engineer, pilot, physician, journalist, executive) and the study career; offices (head of state, head of government, minister, general, admiral, speaker, chief scientist); governments (military government, corporate state, technocracy, federation, commune, machine rule, colony) and selectorates (party, shareholders, algorithm); credentials (degree, licence, commission); laws (labour, environment, privacy, weapons, patents, machines, space); homes (tenement, apartment, tower block, arcology unit, habitat module, ship berth) and the apartment dwelling; districts (industrial, business, research, transport hub, military base, university, entertainment, suburb, arcology); town forms (grid, vertical, sprawl).
+- **Things, places and gods.** Item classes (firearm, device, computer, implant, drug, vehicle part, communicator); place kinds (wreck site, megastructure ruin, anomaly, debris field, reef, glacier, dunes, canyon, oasis, geyser); gatherings (election, rally, strike, convention, launch, broadcast); divine domains (technology, machines, cities, industry, information, space, science).
+- **Made kinds.** Vehicle frames (bicycle, rickshaw, palanquin, tram, maglev, bus, tractor, armoured personnel carrier, self-propelled gun, missile carrier, motorboat, hydrofoil, container ship, tanker, destroyer, cruiser, icebreaker, vertical lift craft, spaceplane, escape pod, space tug, mothership, battle mech, bioship); building forms (high-rise, arcology, bunker, floating, geodesic, modular, grown, carved); cooking methods (synthesised, printed, grown in vats, freeze-dried, irradiated, conjured); structures (factory, data centre, office tower, apartment block, mall, broadcast tower, satellite array, military base, missile silo, shield generator, terraformer, vertical farm, recycling plant, water purification, cloning facility, robotics works, machine mind core, teleporter), each with its own cutaway drawing and city look.
+
+#### Behaviours
+
+1. **Technology opens frames, tier sets scale.** A frame opens on knowledge and technique alone; the realm's tier caps only the size of what it builds (`vehicles.*_size`).
+2. **Battle.** A tactic is chosen only when the army fields the troops that carry it; barrages and bombardments multiply missile fire, electronic warfare dulls the enemy's, infiltration and drop assaults strike first, medics save the stretcher-borne. New damage types choose their own wounds; wrecks harm their captains by crash or lost air; siege engines shell towns, star flares sicken folk, works accidents and failed experiments wound.
+3. **Classes follow knowledge and hard times.** Metallurgy opens wage work, medicine or writing trains professionals, civics seats officials and makes citizens; poor prosperity where wage work exists breeds unemployment. Classes drive needs baskets, income, jobs, districts, homes, factions, traditions, notable births, ruler titles, taxes (consumption), administration (officials and service workers), elections (the citizens franchise) and selectorates.
+4. **State.** Modern offices are seated when the realm knows enough civics, warfare, shipbuilding or writing; modern governments arise from officers, professionals, workers, merchants, federated members and civics; machine rule needs a machine law that is not a ban. Realms want the new laws when their workers, pollution, civics, crime, professionals or void lore call for them, and each law acts: child labour off removes children from work, environment strictness cuts works' pollution, privacy cuts spies' intel, weapons bans cut crime, patents slow technique diffusion, shared space claims cut route piracy.
+5. **Towns.** Homes rise through a ladder that opens with architecture and void living; towns turn to grids, build upward or sprawl; modern districts are laid out when their works stand or their classes call; each district adds stores, investment, order, policing or sanitation.
+6. **Structures, forms and places.** Towns want the new structures by knowledge level and need; each acts as an older kind for every table that reads it. A people chooses forms by its knowledge and ground, and a form guards its building against the forces that strike it. Places become wreck sites, debris fields or megastructure ruins where wrecks lie or megastructures fall; natural features take their own kinds.
+7. **Gatherings.** Assemblies hold elections, sour workers strike, restless towns rally, office towers hold conventions, spaceports launch and broadcast towers broadcast, each with its own effect.
+
+#### Levers and surfaces
+
+- Every new value is editable through the existing levers of its table (class shares and satisfaction, profile, record row, law, office, government, district, structure, made-kind and gathering levers) and offered by the screens that call them; son and mortal tools list every value from the enums.
+- Labels, icons, cutaways and city looks for every value; the Codex and the lore book render them through the generic and typed sections.
+- Migration `d4f2a8c61e97` widens every enum column and adds the class share and satisfaction columns.
+
 ## Part I. Interconnection
 
 ### I.1 Interconnection registry
@@ -8380,6 +8407,17 @@ Integration happens in waves, but **the whole of this document is the deliverabl
 3. **Every whole has parts with criticality.** Bodies already have parts; vehicles, structures, megastructures and cosmic beings now do too, with critical, major and minor parts, hazards that chain to neighbours, and consequences that follow the part.
 4. **No fixed list carries a theme.** Base lists (roles, frames, families, forms, methods) are generic; the names and materials of a world's kinds come from the world, and no name repeats within a world.
 5. **Every kind is drawn.** Vehicle types and groups, structures and structure types are drawn as section diagrams coloured by damage; structure types also as 3D buildings of their form; beings through their body diagram; in the Atlas and in every drawer.
+
+### J.21 Breadth across settings addendum (W42)
+
+| Wave | Content | Depends on |
+|---|---|---|
+| W42 | Breadth across settings (10.18): military and body taxonomies, society, state and city kinds, things, places, gatherings and domains, modern and fantastic made kinds with drawings, technology decoupled from tier | W23+, W41 |
+
+**Tests:**
+
+- **Modern war tests:** tactics need their troops, barrages and jamming change fire, medics heal, every damage type wounds, wrecks harm captains, peoples reach modern doctrines.
+- **Guard tests:** every frontend label map, tool enum list and near-total table covers every value.
 
 ## Part K. Decisions
 

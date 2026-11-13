@@ -495,6 +495,88 @@ export const STRUCTURE_LOOK: Record<Schema['StructureKind'], Look> = {
     { model: building('castle', 'blue'), scale: 1.1 },
     { model: building('tower_base', 'blue'), scale: 0.6, offset: [0.6, 0.4] },
   ],
+  factory: [
+    { model: building('lumbermill', 'blue'), scale: 1.15 },
+    { model: building('tower_base', 'blue'), scale: 0.55, offset: [0.6, 0.35] },
+    {
+      model: building('tower_base', 'blue'),
+      scale: 0.55,
+      offset: [-0.6, 0.35],
+    },
+  ],
+  data_centre: [
+    { model: building('barracks', 'blue') },
+    { model: prop('crate_long_A'), scale: 0.7, offset: [0.55, 0.4] },
+  ],
+  office_tower: [
+    { model: building('tower_B', 'yellow'), scale: 1.25 },
+    { model: building('tower_A', 'yellow'), scale: 0.7, offset: [0.55, 0.35] },
+  ],
+  apartment_block: [
+    { model: building('tower_base', 'yellow'), scale: 1.15 },
+    { model: building('home_B', 'yellow'), scale: 0.55, offset: [0.55, 0.4] },
+  ],
+  mall: [
+    { model: building('market', 'blue'), scale: 1.2 },
+    { model: prop('crate_A_big'), scale: 0.7, offset: [0.55, 0.4] },
+  ],
+  broadcast_tower: [
+    { model: building('tower_B', 'red'), scale: 1.3 },
+    { model: spooky('post_lantern'), scale: SPOOKY, offset: [0.45, 0.4] },
+  ],
+  satellite_array: [
+    { model: building('windmill', 'green'), scale: 1.05 },
+    { model: spooky('lantern_standing'), scale: SPOOKY, offset: [0.5, 0.4] },
+  ],
+  military_base: [
+    { model: building('barracks', 'red'), scale: 1.15 },
+    {
+      model: building('tower_catapult', 'red'),
+      scale: 0.6,
+      offset: [0.6, 0.35],
+    },
+    { model: prop('flag_red'), scale: 0.6, offset: [-0.55, -0.3] },
+  ],
+  missile_silo: [
+    { model: building('tower_base', 'red'), scale: 0.9 },
+    { model: neutral('projectile_catapult'), scale: 0.8, offset: [0.5, 0.4] },
+  ],
+  shield_generator: [
+    { model: building('tower_A', 'blue'), scale: 1.1 },
+    { model: spooky('arch'), scale: SPOOKY, offset: [0.5, 0.4] },
+  ],
+  terraformer: [
+    { model: building('mine', 'green'), scale: 1.2 },
+    { model: nature('hills_A_trees'), scale: 0.5, offset: [0.6, 0.35] },
+  ],
+  vertical_farm: [
+    { model: building('tower_base', 'green'), scale: 1.1 },
+    { model: neutral('building_grain'), scale: 0.6, offset: [0.55, 0.4] },
+  ],
+  recycling_plant: [
+    { model: building('lumbermill', 'green') },
+    { model: prop('crate_open'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  water_purification: [
+    { model: building('watermill', 'blue') },
+    { model: prop('bucket_water'), scale: 0.7, offset: [0.5, 0.4] },
+  ],
+  cloning_facility: [
+    { model: building('church', 'green'), scale: 0.95 },
+    { model: spooky('candle_triple'), scale: SPOOKY, offset: [0.5, 0.4] },
+  ],
+  robotics_works: [
+    { model: building('blacksmith', 'blue'), scale: 1.1 },
+    { model: prop('crate_long_B'), scale: 0.7, offset: [0.55, 0.4] },
+  ],
+  ai_core: [
+    { model: building('castle', 'green'), scale: 1.05 },
+    { model: spooky('lantern_hanging'), scale: SPOOKY, offset: [0.5, 0.4] },
+  ],
+  teleporter: [
+    { model: spooky('arch_gate'), scale: SPOOKY * 1.4 },
+    { model: spooky('shrine_candles'), scale: SPOOKY, offset: [0.5, 0.4] },
+  ],
 }
 
 const FORM_BODY: Record<Schema['BuildingForm'], Part> = {
@@ -517,6 +599,14 @@ const FORM_BODY: Record<Schema['BuildingForm'], Part> = {
   wall_line: { model: neutral('wall_straight') },
   tunnel_form: { model: spooky('arch'), scale: SPOOKY * 1.6 },
   orbital: { model: spooky('arch_gate'), scale: SPOOKY * 1.6 },
+  high_rise: { model: building('tower_B', 'yellow'), scale: 1.3 },
+  arcology: { model: building('castle', 'yellow'), scale: 1.25 },
+  bunker: { model: nature('hill_single_C'), scale: 0.9 },
+  floating: { model: neutral('building_bridge_A'), scale: 1.05 },
+  geodesic: { model: building('church', 'blue') },
+  modular: { model: building('barracks', 'yellow') },
+  grown: { model: nature('trees_A_large'), scale: 0.9 },
+  carved: { model: nature('rock_single_C'), scale: 1.3 },
 }
 
 const STOREY_STEP = 0.06
@@ -541,6 +631,12 @@ export const HOUSING_LOOK: Record<Schema['HousingLevel'], Part> = {
   house: { model: building('home_A', 'yellow'), scale: 0.5 },
   townhouse: { model: building('home_B', 'yellow'), scale: 0.5 },
   manor: { model: building('home_B', 'blue'), scale: 0.62 },
+  tenement: { model: building('home_A', 'red'), scale: 0.55 },
+  apartment: { model: building('tower_base', 'yellow'), scale: 0.55 },
+  tower_block: { model: building('tower_B', 'yellow'), scale: 0.6 },
+  arcology_unit: { model: building('castle', 'yellow'), scale: 0.55 },
+  habitat_module: { model: building('tower_base', 'blue'), scale: 0.5 },
+  ship_berth: { model: neutral('building_bridge_B'), scale: 0.45 },
 }
 
 export const SHELTER: Part = { model: prop('tent'), scale: 0.35 }
@@ -552,6 +648,12 @@ export const DISTRICT_DRESS: Partial<Record<Schema['DistrictKind'], Look>> = {
     { model: spooky('grave_A'), scale: SPOOKY, offset: [0.15, 0.15] },
     { model: spooky('gravestone'), scale: SPOOKY, offset: [-0.15, -0.1] },
   ],
+  industrial: [{ model: building('tower_base', 'blue'), scale: 0.5 }],
+  business: [{ model: building('tower_A', 'yellow'), scale: 0.5 }],
+  transport_hub: [{ model: hex('tiles/roads/hex_road_A'), scale: 0.4 }],
+  military_base: [{ model: prop('flag_red'), scale: 0.5 }],
+  entertainment: [{ model: prop('flag_yellow'), scale: 0.5 }],
+  suburb: [{ model: nature('tree_single_A'), scale: 0.6 }],
 }
 
 export const GROUND_TILE = hex('tiles/base/hex_grass')
@@ -752,6 +854,16 @@ const PLACE_LOOK: Record<Schema['PlaceKind'], Part> = {
   mine_site: { model: building('mine', 'red'), scale: 0.6 },
   harbour_site: { model: neutral('building_bridge_A'), scale: 0.6 },
   crossroads: { model: nature('rock_single_A'), scale: 0.5 },
+  wreck_site: { model: neutral('building_destroyed'), scale: 0.6 },
+  megastructure_ruin: { model: building('tower_base', 'blue'), scale: 0.7 },
+  anomaly: { model: spooky('arch_gate'), scale: SPOOKY },
+  debris_field: { model: nature('rock_single_B'), scale: 0.8 },
+  reef: { model: nature('waterplant_A') },
+  glacier: { model: nature('mountain_C'), scale: 0.4 },
+  dunes: { model: nature('hills_A'), scale: 0.5 },
+  canyon: { model: nature('rock_single_D'), scale: 1.3 },
+  oasis: { model: nature('trees_A_small') },
+  geyser: { model: nature('cloud_small'), scale: 0.5 },
 }
 
 const SACRED: Part = { model: spooky('shrine_candles'), scale: SPOOKY }

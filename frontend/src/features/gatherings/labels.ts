@@ -64,6 +64,10 @@ import {
   Zap,
   Wind,
   BookOpenCheck,
+  Vote,
+  Briefcase,
+  Rocket,
+  RadioTower,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -91,6 +95,12 @@ export const GATHERING_KINDS: Record<Schema['GatheringKind'], Named> = {
   milestone: { label: 'Milestone', icon: Star, tone: 'success' },
   wake: { label: 'Wake', icon: Hourglass, tone: 'muted' },
   examination: { label: 'Examination', icon: BookOpenCheck, tone: 'info' },
+  election: { label: 'Election', icon: Vote, tone: 'info' },
+  rally: { label: 'Rally', icon: Megaphone, tone: 'warning' },
+  strike: { label: 'Strike', icon: Ban, tone: 'danger' },
+  convention: { label: 'Convention', icon: Briefcase, tone: 'verdigris' },
+  launch: { label: 'Launch', icon: Rocket, tone: 'gold' },
+  broadcast: { label: 'Broadcast', icon: RadioTower, tone: 'info' },
 }
 
 export const GATHERING_STATUSES: Record<Schema['GatheringStatus'], Named> = {

@@ -28,12 +28,26 @@ MATERIAL_KEY = "material"
 DISTRICT_LOCKS = (LEVEL_KEY, CONDITION_KEY, MATERIAL_KEY)
 DISASTER_TARGETS: Mapping[DistrictHarm, frozenset[DistrictKind]] = MappingProxyType(
     {
-        DistrictHarm.FLOOD: frozenset({DistrictKind.FARMLAND, DistrictKind.HARBOUR, DistrictKind.SLUMS, DistrictKind.MARKET, DistrictKind.NECROPOLIS}),
+        DistrictHarm.FLOOD: frozenset(
+            {
+                DistrictKind.FARMLAND,
+                DistrictKind.HARBOUR,
+                DistrictKind.SLUMS,
+                DistrictKind.MARKET,
+                DistrictKind.NECROPOLIS,
+                DistrictKind.TRANSPORT_HUB,
+                DistrictKind.SUBURB,
+            }
+        ),
         DistrictHarm.EARTHQUAKE: frozenset(DistrictKind),
         DistrictHarm.STORM: frozenset({DistrictKind.HARBOUR, DistrictKind.SLUMS, DistrictKind.FARMLAND, DistrictKind.FOREIGN_QUARTER}),
         DistrictHarm.DROUGHT: frozenset({DistrictKind.FARMLAND}),
         DistrictHarm.SACK: frozenset(
             {
+                DistrictKind.BUSINESS,
+                DistrictKind.INDUSTRIAL,
+                DistrictKind.ENTERTAINMENT,
+                DistrictKind.SUBURB,
                 DistrictKind.MARKET,
                 DistrictKind.PALACE,
                 DistrictKind.TEMPLE_QUARTER,
@@ -127,7 +141,26 @@ def base_parameters(rules: Rules, kind: DistrictKind) -> dict[str, int]:
     if kind is DistrictKind.FOREIGN_QUARTER:
         found["investment_pct"] = table.foreign_quarter_investment_pct
         found["tension_relief_pct"] = table.foreign_quarter_tension_pct
-    return found
+    return found | modern_parameters(rules, kind)
+
+
+def modern_parameters(rules: Rules, kind: DistrictKind) -> dict[str, int]:
+    table = rules.districts
+    return {
+        DistrictKind.INDUSTRIAL: {"goods_store": table.warehouse_per_level * 2, "sanitation": -table.industrial_sanitation},
+        DistrictKind.BUSINESS: {"investment_pct": table.business_investment_pct},
+        DistrictKind.RESEARCH: {"admin_pct": table.research_admin_pct},
+        DistrictKind.UNIVERSITY: {"admin_pct": table.university_admin_pct, "order": table.university_order},
+        DistrictKind.TRANSPORT_HUB: {
+            "goods_store": table.warehouse_per_level,
+            "food_store": rules.urban.granary_per_level,
+            "investment_pct": table.hub_investment_pct,
+        },
+        DistrictKind.MILITARY_BASE: {"policing": table.base_policing, "order": table.base_order},
+        DistrictKind.ENTERTAINMENT: {"order": table.entertainment_order, "tension_relief_pct": table.entertainment_tension_pct},
+        DistrictKind.SUBURB: {"sanitation": table.suburb_sanitation},
+        DistrictKind.ARCOLOGY: {"sanitation": table.arcology_sanitation, "food_store": rules.urban.granary_per_level},
+    }.get(kind, {})
 
 
 def parameters_of(rules: Rules, kind: DistrictKind, design: DistrictDesignRow | None) -> dict[str, int]:

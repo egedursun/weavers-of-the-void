@@ -44,6 +44,9 @@ class PlacesRules:
     spirit_power: int = rule(3, 1, 12, G, "Power level of a spirit released from a place")
     chokepoint_battle_pct: int = rule(35, 0, 100, G, "Chance a campaign season's battle is drawn to a chokepoint or pass of the defender's region (%)")
     battlefield_battles: int = rule(3, 1, 100, G, "Recorded battles that turn a valley or crossroads into a battlefield")
+    wreck_site_wrecks: int = rule(
+        2, 1, 100, G, "Wrecks lying in a land that turn its waterside place into a wreck site, or its open ground into a debris field in the void"
+    )
     cover_missile_light_pct: int = rule(85, 0, 100, G, "Share of missile harm that reaches troops in light cover (%)")
     cover_missile_heavy_pct: int = rule(65, 0, 100, G, "Share of missile harm that reaches troops in heavy cover such as forests and ruins (%)")
     cover_defender_light_pct: int = rule(3, 0, 100, G, "Defence bonus of holding ground with light cover (%)")

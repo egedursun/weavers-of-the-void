@@ -58,9 +58,10 @@ from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import Formation
+from aerona.domain.enums.military import ArmourType, Formation, ShieldType
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, ServitorRole
 from aerona.domain.enums.place import PlaceKind, SecretKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.regime import SelectorateKind
 from aerona.domain.enums.structure import BuildingForm
 from aerona.domain.enums.tongues import LanguagePolicy, SoundChangeKind, SoundEnvironment
@@ -184,6 +185,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "building_forms": ", ".join(item.value for item in BuildingForm),
         "martial_styles": ", ".join(item.value for item in MartialStyle),
         "formations": ", ".join(item.value for item in Formation),
+        "law_kinds": ", ".join(item.value for item in LawKind),
+        "armour_types": ", ".join(item.value for item in ArmourType),
+        "shield_types": ", ".join(item.value for item in ShieldType),
         "registry_kinds": ", ".join(item.value for item in RegistryKind if item is not RegistryKind.LAND_TITLE),
         "ideology_tenets": ", ".join(tenet.value for tenet in IdeologyTenet),
         "prophecy_predicates": ", ".join(item.value for item in ProphecyPredicate),

@@ -36,6 +36,9 @@ def redundancy(rules: CapacityRules, function: BodyFunction) -> int:
     return table.get(function, rules.default_redundancy_pct)
 
 
+MIND_WOUNDS = frozenset({InjuryKind.VOID_TOUCH, InjuryKind.MIND_SCAR, InjuryKind.CONCUSSION})
+
+
 def part_losses(anatomy: Anatomy, wounds: Iterable[Wound], venom_paralysis_at: int) -> tuple[dict[str, float], dict[BodyFunction, float]]:
     losses: dict[str, float] = defaultdict(float)
     direct: dict[BodyFunction, float] = defaultdict(float)
@@ -46,8 +49,11 @@ def part_losses(anatomy: Anatomy, wounds: Iterable[Wound], venom_paralysis_at: i
             if wound.severity >= venom_paralysis_at:
                 direct[BodyFunction.LOCOMOTION] = max(direct[BodyFunction.LOCOMOTION], share)
             continue
-        if wound.kind is InjuryKind.VOID_TOUCH:
+        if wound.kind in MIND_WOUNDS:
             direct[BodyFunction.COGNITION] = max(direct[BodyFunction.COGNITION], share)
+            continue
+        if wound.kind is InjuryKind.RADIATION_SICKNESS:
+            direct[BodyFunction.VITAL] = max(direct[BodyFunction.VITAL], share)
             continue
         if anatomy.part(wound.part) is not None:
             losses[wound.part] = min(1.0, max(losses[wound.part], share))

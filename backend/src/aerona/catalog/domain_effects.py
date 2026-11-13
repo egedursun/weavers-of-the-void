@@ -155,6 +155,13 @@ DOMAIN_EFFECTS: MappingProxyType[Domain, DomainEffect] = MappingProxyType(
             _effect(D.ASH, A.DEATHS, (H.FIRE_CURSE,), (H.DEATH_TOLL,)),
             _effect(D.BORDER, A.BATTLES, (H.BORDER_GUARD,), (H.LEVY_MORALE,)),
             _effect(D.SLEEP, A.DREAMS, (H.REST,), (H.DREAM_SENDING,)),
+            _effect(D.TECHNOLOGY, A.DISCOVERIES, (H.LEARNING, H.CRAFT_SKILL)),
+            _effect(D.MACHINES, A.WORKS, (H.CRAFT_SKILL, H.STONEWORK)),
+            _effect(D.CITIES, A.BUILDING, (H.STONEWORK,), (H.TRADE_GAIN,)),
+            _effect(D.INDUSTRY, A.WORKS, (H.CRAFT_SKILL,), (H.PRESERVATION,)),
+            _effect(D.INFORMATION, A.SCHEMES, (H.SPY_DEPTH,), (H.LEARNING, H.LEGEND_SPREAD)),
+            _effect(D.SPACE, A.VOYAGES, (H.STARGAZING,), (H.ROAD_SAFETY,)),
+            _effect(D.SCIENCE, A.DISCOVERIES, (H.LEARNING,), (H.HEALING,)),
         )
     }
 )

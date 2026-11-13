@@ -108,17 +108,17 @@ IDEOLOGY_VALUES = MappingProxyType(
 
 IDEOLOGY_APPEAL = MappingProxyType(
     {
-        IT.LEGALISM: {SC.SCRIBE: 60, SC.NOBLE: 40},
+        IT.LEGALISM: {SC.SCRIBE: 60, SC.NOBLE: 40, SC.OFFICIAL: 70},
         IT.RESTRAINT: {SC.PRIEST: 40, SC.SCRIBE: 40},
-        IT.EGALITARIANISM: {SC.FARMER: 60, SC.SERF_OR_SLAVE: 80, SC.OUTCAST: 70, SC.ARTISAN: 40},
+        IT.EGALITARIANISM: {SC.FARMER: 60, SC.SERF_OR_SLAVE: 80, SC.OUTCAST: 70, SC.ARTISAN: 40, SC.WORKER: 70, SC.UNEMPLOYED: 70, SC.CITIZEN: 50},
         IT.DIVINE_RIGHT: {SC.NOBLE: 80, SC.PRIEST: 60},
         IT.MERCANTILISM: {SC.MERCHANT: 80, SC.ARTISAN: 50},
         IT.MILITARISM: {SC.WARRIOR: 80, SC.NOBLE: 50},
         IT.ASCETICISM: {SC.MONASTIC: 80, SC.PRIEST: 40},
-        IT.RATIONALISM: {SC.SCRIBE: 70, SC.MERCHANT: 30},
+        IT.RATIONALISM: {SC.SCRIBE: 70, SC.MERCHANT: 30, SC.PROFESSIONAL: 70},
         IT.NATURE_HARMONY: {SC.FARMER: 50, SC.OUTCAST: 30},
         IT.XENOPHOBIA: {SC.FARMER: 40, SC.WARRIOR: 40},
-        IT.COSMOPOLITANISM: {SC.MERCHANT: 60, SC.SCRIBE: 40},
+        IT.COSMOPOLITANISM: {SC.MERCHANT: 60, SC.SCRIBE: 40, SC.CITIZEN: 40, SC.PROFESSIONAL: 40},
         IT.ANTI_GOD: {SC.SCRIBE: 40, SC.OUTCAST: 50},
         IT.CREATORISM: {SC.PRIEST: 50, SC.MONASTIC: 50},
     }
@@ -244,6 +244,8 @@ ITEM_CLASSES = total(
             ItemSpec(ItemClass.HELMET, coverage=10, weight=2),
             ItemSpec(ItemClass.PADDING, coverage=50, weight=2),
             ItemSpec(ItemClass.CLOAK, coverage=20, weight=1),
+            ItemSpec(ItemClass.FIREARM, reach=5, weight=3, damage_type="ballistic"),
+            ItemSpec(ItemClass.IMPLANT, coverage=5, weight=1),
             *(
                 ItemSpec(kind)
                 for kind in (
@@ -267,6 +269,11 @@ ITEM_CLASSES = total(
                     ItemClass.KEY,
                     ItemClass.JEWEL,
                     ItemClass.CURRENCY,
+                    ItemClass.DEVICE,
+                    ItemClass.COMPUTER,
+                    ItemClass.DRUG,
+                    ItemClass.VEHICLE_PART,
+                    ItemClass.COMMUNICATOR,
                 )
             ),
         )
@@ -285,10 +292,11 @@ WEAPONS = frozenset(
         ItemClass.SLING,
         ItemClass.THROWING,
         ItemClass.STAFF,
+        ItemClass.FIREARM,
     }
 )
 REGALIA = frozenset({ItemClass.CROWN, ItemClass.SCEPTRE, ItemClass.SEAL, ItemClass.RING})
-KNOWLEDGE_ITEMS = frozenset({ItemClass.BOOK, ItemClass.SCROLL, ItemClass.PRAYER_BOOK})
+KNOWLEDGE_ITEMS = frozenset({ItemClass.BOOK, ItemClass.SCROLL, ItemClass.PRAYER_BOOK, ItemClass.COMPUTER})
 
 ITEM_WORDS = MappingProxyType(
     {
@@ -322,6 +330,13 @@ ITEM_WORDS = MappingProxyType(
         ItemClass.VESSEL_OBJECT: ("cup", "urn", "chalice", "grail", "bowl", "goblet"),
         ItemClass.KEY: ("key",),
         ItemClass.JEWEL: ("jewel", "gem", "pearl", "amulet", "necklace", "stone"),
+        ItemClass.FIREARM: ("gun", "rifle", "pistol", "musket", "carbine", "revolver"),
+        ItemClass.COMPUTER: ("computer", "terminal", "datapad"),
+        ItemClass.COMMUNICATOR: ("radio", "phone", "communicator", "transmitter"),
+        ItemClass.DRUG: ("drug", "pill", "serum", "stimulant"),
+        ItemClass.IMPLANT: ("implant", "cybernetic"),
+        ItemClass.DEVICE: ("device", "machine", "gadget"),
+        ItemClass.VEHICLE_PART: ("engine", "thruster", "wheel"),
     }
 )
 

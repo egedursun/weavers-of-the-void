@@ -37,6 +37,9 @@ ROLE_DOMAINS: MappingProxyType[UnitKind, frozenset[VehicleDomain]] = MappingProx
         UnitKind.SIEGE_CREW: frozenset({D.LAND}),
         UnitKind.ARTILLERY_CREW: frozenset({D.LAND}),
         UnitKind.CHARIOTS: frozenset({D.LAND}),
+        UnitKind.MECHANISED_INFANTRY: LAND_DOMAINS,
+        UnitKind.PILOTS: frozenset({D.AIR}),
+        UnitKind.DROP_TROOPS: frozenset({D.SPACE, D.AIR}),
     }
 )
 ROLE_FAMILIES: MappingProxyType[UnitKind, frozenset[VehicleFamily]] = MappingProxyType(
@@ -48,6 +51,9 @@ ROLE_FAMILIES: MappingProxyType[UnitKind, frozenset[VehicleFamily]] = MappingPro
         UnitKind.SIEGE_CREW: SIEGE,
         UnitKind.ARTILLERY_CREW: frozenset({Y.GUN}),
         UnitKind.CHARIOTS: frozenset({Y.CHARIOT}),
+        UnitKind.MECHANISED_INFANTRY: frozenset({Y.MOTOR, Y.TRACKED}),
+        UnitKind.PILOTS: frozenset({Y.AIRCRAFT, Y.ROTORCRAFT}),
+        UnitKind.DROP_TROOPS: frozenset({Y.SPACECRAFT, Y.ROTORCRAFT}),
     }
 )
 CREW_ROLES = frozenset(ROLE_DOMAINS)

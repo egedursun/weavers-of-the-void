@@ -9,10 +9,12 @@ from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import RouteScope
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.routes import current_calendar, forgotten_world_ids, route_status
 from aerona.engine.economy.purse import receive_coin
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat_or
@@ -96,7 +98,12 @@ async def carry(ctx: TickContext, route: RouteRow, scope: RouteScope, first: Ent
     return moved, delivered_total
 
 
-async def tend_route(ctx: TickContext, route: RouteRow, moved: int) -> None:
+async def lawful_ends(ctx: TickContext, ends: list[EntityRow | None]) -> int:
+    claims = [await law_param(ctx.session, end.id, LawKind.SPACE_LAW, "claims") for end in ends if end is not None]
+    return sum(1 for claim in claims if claim == "shared") - sum(1 for claim in claims if claim == "open")
+
+
+async def tend_route(ctx: TickContext, route: RouteRow, moved: int, lawful: int = 0) -> None:
     table = ctx.rules.cosmography
     if "traffic" not in route.locked:
         route.traffic = moved
@@ -104,7 +111,7 @@ async def tend_route(ctx: TickContext, route: RouteRow, moved: int) -> None:
     if "wear" not in route.locked:
         route.wear = clamp_percent(route.wear + route.traffic // table.traffic_wear - (0 if busy else table.wear_repair))
     if "piracy" not in route.locked:
-        route.piracy = clamp_percent(route.piracy + (table.piracy_growth if busy else -table.piracy_decay))
+        route.piracy = clamp_percent(route.piracy + (table.piracy_growth if busy else -table.piracy_decay) - lawful * table.space_law_piracy)
     if "danger" not in route.locked and route.wear:
         route.danger = clamp_percent(max(route.danger, route.wear * table.wear_danger_pct // PERCENT))
 
@@ -123,7 +130,7 @@ async def cosmic_trade(ctx: TickContext) -> int:
         moved = delivered = 0
         if first is not None and second is not None:
             moved, delivered = await carry(ctx, route, cosmography.scope_by_id(route.world_a_id, route.world_b_id), first, second)
-        await tend_route(ctx, route, moved + (route.traffic if moved == 0 and "traffic" in route.locked else 0))
+        await tend_route(ctx, route, moved + (route.traffic if moved == 0 and "traffic" in route.locked else 0), await lawful_ends(ctx, [first, second]))
         if route.toll_controller_entity_id is not None and route.toll_pct and delivered:
             tolls[route.toll_controller_entity_id] += delivered * route.toll_pct // PERCENT
         carried += moved

@@ -17,6 +17,7 @@ from aerona.db.tables.vehicles import DesignMountRow, DesignSectionRow, DesignTe
 from aerona.db.write_guard import held
 from aerona.domain.enums.collective import DesignComponentKind, DesignKind
 from aerona.domain.enums.economy import WorkshopKind
+from aerona.domain.enums.integrity import SectionHazard, SectionState
 from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.vehicles import FireControl, MountArc, MountKind, VehicleFrame, VehicleSection
 from aerona.engine.collective.book import shift
@@ -428,7 +429,7 @@ async def wear_of(session: AsyncSession, vessel_id: int, part: DesignComponentKi
     return row
 
 
-async def fail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, part: DesignComponentKind) -> None:
+async def fail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, part: DesignComponentKind) -> SectionHazard | None:
     if part is C.HULL:
         shift(row, "condition", -HULL_DAMAGE)
     elif part is C.PROPULSION and "status" not in row.locked:
@@ -439,22 +440,25 @@ async def fail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, part:
         shift(row, "crew", -row.crew * CREW_LOSS_PCT / PERCENT, high=1_000_000)
     elif part is C.NAVIGATION:
         row.region_entity_id = row.region_entity_id if "region_entity_id" in row.locked else None
+    wrecked = None
     if row.design_id is not None:
         section = next((item for item in await sections_of(ctx.session, row.design_id) if item.function is part), None)
-        if section is not None:
-            await strike_vessel(ctx, vessel, row, section.section, 1)
+        if section is not None and await strike_vessel(ctx, vessel, row, section.section, 1) is SectionState.DESTROYED:
+            wrecked = section.hazard
     await note(
         ctx,
         f"{vessel.name} {FAILURE_TEXT[part]} when its {part.value.replace('_', ' ')} failed.",
         key=f"designs.failure_{part.value}",
         ids=[vessel.id],
     )
+    return wrecked
 
 
-async def wear_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, *, stormy: bool, tally: DesignTally) -> None:
+async def wear_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, *, stormy: bool, tally: DesignTally) -> list[SectionHazard]:
     table = ctx.rules.designs
+    wrecks: list[SectionHazard] = []
     if row.design_id is None or held(vessel.id):
-        return
+        return wrecks
     parts = await components_of(ctx.session, row.design_id)
     for kind, part in sorted(parts.items()):
         if part.size <= 0:
@@ -465,8 +469,10 @@ async def wear_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, *
         shift(wear, "wear", step)
         tally.worn += 1
         if wear.wear >= table.failure_at and ctx.rng(f"failure.{vessel.id}.{kind.value}.{ctx.epoch}").chance(table.failure_pct):
-            await fail(ctx, vessel, row, kind)
+            hazard = await fail(ctx, vessel, row, kind)
+            wrecks.extend([hazard] if hazard is not None else [])
             tally.failures += 1
+    return wrecks
 
 
 async def mend(ctx: TickContext, row: VesselProfileRow, tally: DesignTally) -> int:

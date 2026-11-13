@@ -17,10 +17,12 @@ from aerona.db.tables.cosmography import GalaxyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, SkyEventKind, StarType
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.ladder import ensure_ladder, home_galaxy, settle_star
 from aerona.engine.cosmos.placement import Cosmography
@@ -29,6 +31,7 @@ from aerona.engine.cosmos.routes import restore_sail_routes, scorch_sail_routes,
 from aerona.engine.cosmos.star_types import fitted_brightness, kindled_brightness
 from aerona.engine.cosmos.stellar import physics_of_stars
 from aerona.engine.cosmos.worlds import align_moons
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.doom import advance_doom
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import scale_stat, shift_bounded, stat_or
@@ -39,6 +42,7 @@ FERTILITY_KEY = "fertility"
 POPULATION_KEY = "population"
 FOLLOWERS_KEY = "followers"
 PIETY_KEY = "piety"
+FLARE_SICKNESS = "was sickened by a flare of its star"
 
 
 def star_label(star_type: StarType) -> str:
@@ -191,6 +195,17 @@ async def auroras(ctx: TickContext, star: StarRow, worlds: list[WorldRow]) -> li
     return lit
 
 
+async def irradiate(ctx: TickContext, worlds: list[WorldRow]) -> int:
+    sky = ctx.rules.sky
+    sickened = 0
+    for world in worlds:
+        folk = [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL], world.id) if not held(mortal.id)]
+        for mortal in ctx.rng(f"flare.radiation.{world.id}.{ctx.epoch}").sample(folk, min(len(folk), sky.flare_radiation_hurt)):
+            await apply_hits(ctx, mortal, Harm(sky.flare_radiation_hp, HarmCause.RADIATION, FLARE_SICKNESS, damage_type=DamageType.RADIATION))
+            sickened += 1
+    return sickened
+
+
 async def flare(ctx: TickContext, star: StarRow) -> str:
     sky = ctx.rules.sky
     worlds = await worlds_of_star(ctx.session, star.id)
@@ -199,12 +214,15 @@ async def flare(ctx: TickContext, star: StarRow) -> str:
             shift_bounded(ctx.rules, region, FERTILITY_KEY, -sky.flare_fertility_loss)
         for community in await canon(ctx.session, COMMUNITY_TYPES, world.id):
             shift_bounded(ctx.rules, community, PIETY_KEY, sky.flare_piety_gain)
+    sickened = await irradiate(ctx, worlds)
     lit = await auroras(ctx, star, worlds)
     scorched = await scorch_sail_routes(ctx, star.id)
     names = ", ".join(world.name for world in worlds) or "the empty void around it"
     text = f"{star.name} flared: the fields of {names} lost fertility."
     if lit:
         text += f" Auroras filled the skies of {', '.join(lit)}."
+    if sickened:
+        text += f" Its radiation sickened {sickened} mortal{'s' if sickened > 1 else ''}."
     if scorched:
         text += f" The flare scorched shut {scorched} light-sail route{'s' if scorched > 1 else ''} bound to it."
     await ctx.session.flush()

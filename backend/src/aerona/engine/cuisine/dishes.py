@@ -52,6 +52,12 @@ METHOD_GATES: MappingProxyType[CookingMethod, tuple[KnowledgeBranch | None, int]
         M.SIMMERED: (None, 0),
         M.GROUND: (KnowledgeBranch.AGRICULTURE, 1),
         M.PRESSED: (KnowledgeBranch.AGRICULTURE, 2),
+        M.CONJURED: (KnowledgeBranch.MAGIC, 1),
+        M.FREEZE_DRIED: (KnowledgeBranch.AGRICULTURE, 5),
+        M.IRRADIATED: (KnowledgeBranch.METALLURGY, 7),
+        M.PRINTED: (KnowledgeBranch.METALLURGY, 7),
+        M.SYNTHESISED: (KnowledgeBranch.MEDICINE, 6),
+        M.VAT_GROWN: (KnowledgeBranch.BIOMANCY, 1),
     },
 )
 METHOD_KEEPS: MappingProxyType[CookingMethod, int] = total(
@@ -74,6 +80,12 @@ METHOD_KEEPS: MappingProxyType[CookingMethod, int] = total(
         M.SIMMERED: 0,
         M.GROUND: 2,
         M.PRESSED: 2,
+        M.CONJURED: 0,
+        M.FREEZE_DRIED: 6,
+        M.IRRADIATED: 6,
+        M.PRINTED: 3,
+        M.SYNTHESISED: 5,
+        M.VAT_GROWN: 3,
     },
 )
 COURSE_LABELS: MappingProxyType[DishCourse, str] = total(

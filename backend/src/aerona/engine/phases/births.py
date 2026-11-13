@@ -233,6 +233,32 @@ NOTABLE_ROLES: dict[SocialClass, tuple[NotableRole, ...]] = {
         NotableRole("outlaw", "Outlaw", "outlaw", MortalRole.BANDIT, {"agility": lambda r: r.deep_life.role_outcast_outlaw_agility}),
     ),
     SocialClass.MONASTIC: (NotableRole("monk", "Monastic", "monk", MortalRole.SAGE, {"intellect": lambda r: r.deep_life.role_monastic_intellect}),),
+    SocialClass.WORKER: (
+        NotableRole("labourer", "Labourer", "labourer", MortalRole.COMMONER, {"strength": lambda r: r.deep_life.role_worker_strength}),
+        NotableRole("organiser", "Organiser", "organiser", MortalRole.COMMONER, {"charisma": lambda r: r.deep_life.role_worker_organiser_charisma}),
+        NotableRole("mechanic", "Mechanic", "mechanic", MortalRole.ENGINEER, {"intellect": lambda r: r.deep_life.role_worker_mechanic_intellect}),
+    ),
+    SocialClass.PROFESSIONAL: (
+        NotableRole("physician", "Physician", "physician", MortalRole.PHYSICIAN, {"intellect": lambda r: r.deep_life.role_professional_physician_intellect}),
+        NotableRole("engineer", "Engineer", "engineer", MortalRole.ENGINEER, {"intellect": lambda r: r.deep_life.role_professional_engineer_intellect}),
+        NotableRole("scientist", "Scientist", "scientist", MortalRole.SCIENTIST, {"intellect": lambda r: r.deep_life.role_professional_scientist_intellect}),
+        NotableRole("journalist", "Journalist", "journalist", MortalRole.JOURNALIST, {"charisma": lambda r: r.deep_life.role_professional_journalist_charisma}),
+    ),
+    SocialClass.OFFICIAL: (
+        NotableRole(
+            "administrator", "Administrator", "administrator", MortalRole.SCRIBE, {"intellect": lambda r: r.deep_life.role_official_administrator_intellect}
+        ),
+        NotableRole("officer", "Officer", "officer", MortalRole.OFFICER, {"strength": lambda r: r.deep_life.role_official_officer_strength}),
+    ),
+    SocialClass.CITIZEN: (
+        NotableRole("citizen", "Citizen", "citizen", MortalRole.COMMONER, {"charisma": lambda r: r.deep_life.role_citizen_charisma}),
+        NotableRole("executive", "Executive", "executive", MortalRole.EXECUTIVE, {"charisma": lambda r: r.deep_life.role_citizen_executive_charisma}),
+        NotableRole("pilot", "Pilot", "pilot", MortalRole.PILOT, {"agility": lambda r: r.deep_life.role_citizen_pilot_agility}),
+    ),
+    SocialClass.UNEMPLOYED: (
+        NotableRole("drifter", "Drifter", "drifter", MortalRole.COMMONER, {"agility": lambda r: r.deep_life.role_unemployed_agility}),
+        NotableRole("informant", "Informant", "informant", MortalRole.SPY, {"agility": lambda r: r.deep_life.role_unemployed_informant_agility}),
+    ),
 }
 
 RULER_TITLES: dict[EntityType, tuple[str, str]] = {

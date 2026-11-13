@@ -37,6 +37,12 @@ GATHERING_COLLECTIONS = total(
         G.MILESTONE: C.CEREMONY,
         G.WAKE: C.FUNERAL,
         G.EXAMINATION: C.COMPETITION,
+        G.BROADCAST: C.PERFORMANCE,
+        G.CONVENTION: C.SUMMIT,
+        G.ELECTION: C.COUNCIL,
+        G.LAUNCH: C.CEREMONY,
+        G.RALLY: C.PROCESSION,
+        G.STRIKE: C.COUNCIL,
     },
 )
 
@@ -62,6 +68,12 @@ GATHERING_THOUGHTS = total(
         G.MILESTONE: ThoughtKind.AMONG_KIN,
         G.WAKE: ThoughtKind.MADE_PEACE_WITH_LOSS,
         G.EXAMINATION: ThoughtKind.FELT_PURPOSE,
+        G.BROADCAST: ThoughtKind.ENJOYED_LEISURE,
+        G.CONVENTION: ThoughtKind.FELT_PURPOSE,
+        G.ELECTION: ThoughtKind.RESPECTED,
+        G.LAUNCH: ThoughtKind.FELT_PURPOSE,
+        G.RALLY: ThoughtKind.BELONGED,
+        G.STRIKE: ThoughtKind.RESPECTED,
     },
 )
 
@@ -74,6 +86,8 @@ HONOURED_ROLES = MappingProxyType(
         G.TRIAL: GuestRole.ACCUSED,
         G.EXECUTION: GuestRole.ACCUSED,
         G.MILESTONE: GuestRole.HONOURED,
+        G.ELECTION: GuestRole.HONOURED,
+        G.LAUNCH: GuestRole.HONOURED,
     }
 )
 
@@ -189,6 +203,9 @@ ROOM_PLACES = MappingProxyType(
         PlaceKind.GOD_CORPSE: (R.GATE, R.CHAMBER, R.CRYPT, R.HEART),
         PlaceKind.BURIAL_GROUND: (R.GATE, R.CRYPT, R.CRYPT, R.VAULT),
         PlaceKind.MINE_SITE: (R.GATE, R.STAIR, R.CHAMBER, R.STORE),
+        PlaceKind.WRECK_SITE: (R.GATE, R.HALL, R.STORE, R.VAULT),
+        PlaceKind.MEGASTRUCTURE_RUIN: (R.GATE, R.STAIR, R.HALL, R.LABORATORY, R.VAULT, R.HEART),
+        PlaceKind.CANYON: (R.GATE, R.CHAMBER, R.LAIR),
     }
 )
 
@@ -208,6 +225,11 @@ ROOM_STRUCTURES = MappingProxyType(
         StructureKind.LIBRARY: (R.GATE, R.HALL, R.LIBRARY, R.VAULT),
         StructureKind.ALCHEMIST_LAB: (R.GATE, R.LABORATORY, R.STORE),
         StructureKind.WONDER: (R.GATE, R.HALL, R.STAIR, R.HEART),
+        StructureKind.MILITARY_BASE: (R.GATE, R.HALL, R.ARMOURY, R.STORE),
+        StructureKind.MISSILE_SILO: (R.GATE, R.STAIR, R.ARMOURY, R.HEART),
+        StructureKind.DATA_CENTRE: (R.GATE, R.HALL, R.LIBRARY, R.VAULT),
+        StructureKind.AI_CORE: (R.GATE, R.STAIR, R.LIBRARY, R.HEART),
+        StructureKind.CLONING_FACILITY: (R.GATE, R.LABORATORY, R.CELL, R.STORE),
     }
 )
 
@@ -216,7 +238,17 @@ ROOM_SETTLEMENTS = MappingProxyType({SizeTier.HAMLET: (R.GATE, R.HOUSE, R.HOUSE,
 ITEM_ROOMS = frozenset({R.VAULT, R.STORE, R.ARMOURY, R.LIBRARY, R.CRYPT, R.HEART})
 GUARDED_ROOMS = frozenset({R.LAIR, R.HEART, R.VAULT, R.CRYPT})
 
-EXCAVATION_PLACES = frozenset({PlaceKind.RUIN, PlaceKind.GOD_CORPSE, PlaceKind.CRATER, PlaceKind.BURIAL_GROUND})
+EXCAVATION_PLACES = frozenset(
+    {
+        PlaceKind.RUIN,
+        PlaceKind.GOD_CORPSE,
+        PlaceKind.CRATER,
+        PlaceKind.BURIAL_GROUND,
+        PlaceKind.WRECK_SITE,
+        PlaceKind.MEGASTRUCTURE_RUIN,
+        PlaceKind.DEBRIS_FIELD,
+    }
+)
 EXCAVATION_FLAGS = frozenset({EntityFlag.PREVIOUS_CREATION, EntityFlag.RUIN})
 
 STAGE_ORDER = (

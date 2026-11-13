@@ -47,6 +47,12 @@ class DeathCause(StrEnum):
     HARDSHIP = "hardship"
     DESPAIR = "despair"
     UNKNOWN = "unknown"
+    INDUSTRIAL = "industrial"
+    CRASH = "crash"
+    RADIATION = "radiation"
+    DECOMPRESSION = "decompression"
+    EXPERIMENT = "experiment"
+    BOMBARDMENT = "bombardment"
 
 
 class MarriageKind(StrEnum):
@@ -71,6 +77,7 @@ class CareerPath(StrEnum):
     TRADE = "trade"
     WANDER = "wander"
     BANDIT = "bandit"
+    STUDY = "study"
 
 
 class StressBreak(StrEnum):

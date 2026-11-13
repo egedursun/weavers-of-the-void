@@ -12,6 +12,13 @@ class GovernmentKind(StrEnum):
     HIVE_COUNCIL = "hive_council"
     GOD_KINGDOM = "god_kingdom"
     OCCUPATION = "occupation"
+    JUNTA = "junta"
+    CORPORATE_STATE = "corporate_state"
+    TECHNOCRACY = "technocracy"
+    FEDERATION = "federation"
+    COMMUNE = "commune"
+    MACHINE_RULE = "machine_rule"
+    COLONIAL_ADMINISTRATION = "colonial_administration"
 
 
 class DecisionRule(StrEnum):
@@ -35,6 +42,13 @@ class OfficeKind(StrEnum):
     HERALD = "herald"
     CHAPLAIN = "chaplain"
     COURT_SCHOLAR = "court_scholar"
+    HEAD_OF_STATE = "head_of_state"
+    HEAD_OF_GOVERNMENT = "head_of_government"
+    MINISTER = "minister"
+    GENERAL = "general"
+    ADMIRAL = "admiral"
+    SPEAKER = "speaker"
+    CHIEF_SCIENTIST = "chief_scientist"
 
 
 class OfficePower(StrEnum):
@@ -132,6 +146,13 @@ class LawKind(StrEnum):
     FRANCHISE = "franchise"
     CONSTITUTION = "constitution"
     CUSTOM = "custom"
+    LABOUR_LAW = "labour_law"
+    ENVIRONMENT_LAW = "environment_law"
+    DATA_PRIVACY = "data_privacy"
+    WEAPONS_LAW = "weapons_law"
+    INTELLECTUAL_PROPERTY = "intellectual_property"
+    MACHINE_LAW = "machine_law"
+    SPACE_LAW = "space_law"
 
 
 class DebtRemedy(StrEnum):
@@ -274,4 +295,11 @@ LAW_AREAS: dict[LawKind, LawArea] = {
     LawKind.FRANCHISE: LawArea.CONSTITUTIONAL,
     LawKind.CONSTITUTION: LawArea.CONSTITUTIONAL,
     LawKind.CUSTOM: LawArea.SOCIAL,
+    LawKind.LABOUR_LAW: LawArea.SOCIAL,
+    LawKind.ENVIRONMENT_LAW: LawArea.PUBLIC_HEALTH,
+    LawKind.DATA_PRIVACY: LawArea.SOCIAL,
+    LawKind.WEAPONS_LAW: LawArea.PENAL,
+    LawKind.INTELLECTUAL_PROPERTY: LawArea.PROPERTY,
+    LawKind.MACHINE_LAW: LawArea.SOCIAL,
+    LawKind.SPACE_LAW: LawArea.PROPERTY,
 }

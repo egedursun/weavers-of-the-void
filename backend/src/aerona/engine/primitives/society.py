@@ -21,6 +21,11 @@ def default_class_shares(rules: Rules) -> dict[SocialClass, float]:
         SocialClass.SERF_OR_SLAVE: float(society.class_serf_pct),
         SocialClass.OUTCAST: float(society.class_outcast_pct),
         SocialClass.MONASTIC: float(society.class_monastic_pct),
+        SocialClass.WORKER: float(society.class_worker_pct),
+        SocialClass.PROFESSIONAL: float(society.class_professional_pct),
+        SocialClass.OFFICIAL: float(society.class_official_pct),
+        SocialClass.CITIZEN: float(society.class_citizen_pct),
+        SocialClass.UNEMPLOYED: float(society.class_unemployed_pct),
     }
 
 

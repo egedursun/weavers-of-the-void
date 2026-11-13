@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
-from aerona.domain.enums.integrity import Criticality, SectionHazard
+from aerona.domain.enums.integrity import Criticality, HarmForce, SectionHazard
 from aerona.domain.enums.structure import BuildingForm, SectionRole, StructureKind, StructureSection
 
 K = StructureKind
@@ -432,6 +432,24 @@ LAYOUTS: MappingProxyType[StructureKind, tuple[PartSpec, ...]] = total(
         K.BEACON: COSMIC_BEACON,
         K.PLANETARY_ENGINE: ENGINE,
         K.HABITAT_RING: HABITAT,
+        K.AI_CORE: KNOWLEDGE,
+        K.APARTMENT_BLOCK: HOUSE,
+        K.BROADCAST_TOWER: TOWER,
+        K.CLONING_FACILITY: CARE,
+        K.DATA_CENTRE: KNOWLEDGE,
+        K.FACTORY: FURNACE_WORKS,
+        K.MALL: MARKET,
+        K.MILITARY_BASE: BARRACKS,
+        K.MISSILE_SILO: BARRACKS,
+        K.OFFICE_TOWER: SEAT,
+        K.RECYCLING_PLANT: PLANT,
+        K.ROBOTICS_WORKS: FURNACE_WORKS,
+        K.SATELLITE_ARRAY: KNOWLEDGE,
+        K.SHIELD_GENERATOR: FORTRESS,
+        K.TELEPORTER: GATEWAY,
+        K.TERRAFORMER: ENGINE,
+        K.VERTICAL_FARM: PLANT,
+        K.WATER_PURIFICATION: PLANT,
     },
 )
 
@@ -505,3 +523,18 @@ FORMS: MappingProxyType[StructureKind, BuildingForm] = total(
         K.HABITAT_RING: F.ORBITAL,
     },
 )
+
+
+FORM_GUARD: MappingProxyType[BuildingForm, MappingProxyType[HarmForce, int]] = MappingProxyType(
+    {
+        F.BUNKER: MappingProxyType({HarmForce.SIEGE: 40, HarmForce.WAR: 40, HarmForce.IMPACT: 50, HarmForce.STORM: 60}),
+        F.CARVED: MappingProxyType({HarmForce.SIEGE: 50, HarmForce.FIRE: 50, HarmForce.STORM: 40, HarmForce.QUAKE: 130}),
+        F.FLOATING: MappingProxyType({HarmForce.FLOOD: 10, HarmForce.QUAKE: 40, HarmForce.STORM: 140}),
+        F.GEODESIC: MappingProxyType({HarmForce.STORM: 60, HarmForce.QUAKE: 70}),
+        F.HIGH_RISE: MappingProxyType({HarmForce.QUAKE: 140, HarmForce.FIRE: 120, HarmForce.FLOOD: 60}),
+        F.ARCOLOGY: MappingProxyType({HarmForce.STORM: 50, HarmForce.FLOOD: 50, HarmForce.FIRE: 80}),
+        F.MODULAR: MappingProxyType({HarmForce.DECAY: 120, HarmForce.SABOTAGE: 80}),
+        F.GROWN: MappingProxyType({HarmForce.DECAY: 50, HarmForce.FIRE: 150, HarmForce.QUAKE: 70}),
+    }
+)
+TALL_FORMS = frozenset({F.HIGH_RISE, F.ARCOLOGY, F.SPIRE, F.TOWER})

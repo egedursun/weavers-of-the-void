@@ -1,5 +1,8 @@
+from types import MappingProxyType
+
 from sqlalchemy import select
 
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.domain.enums.body import HarmCause
@@ -16,26 +19,35 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 
-HARM_DEATHS: dict[HarmCause, DeathCause] = {
-    HarmCause.BATTLE: DeathCause.BATTLE,
-    HarmCause.DUEL: DeathCause.DUEL,
-    HarmCause.PUNISHMENT: DeathCause.EXECUTION,
-    HarmCause.TORTURE: DeathCause.EXECUTION,
-    HarmCause.ACCIDENT: DeathCause.ACCIDENT,
-    HarmCause.MONSTER: DeathCause.MONSTER,
-    HarmCause.DISASTER: DeathCause.DISASTER,
-    HarmCause.CURSE: DeathCause.CURSE,
-    HarmCause.MAGIC_BACKLASH: DeathCause.MAGIC,
-    HarmCause.GOD: DeathCause.DIVINE,
-    HarmCause.POISON: DeathCause.POISON,
-    HarmCause.QUEST: DeathCause.HARDSHIP,
-    HarmCause.ESCAPE: DeathCause.MURDER,
-    HarmCause.SACRIFICE: DeathCause.SACRIFICE,
-    HarmCause.AGE: DeathCause.OLD_AGE,
-    HarmCause.PLAYER: DeathCause.DIVINE,
-    HarmCause.EXPOSURE: DeathCause.EXPOSURE,
-    HarmCause.RITUAL: DeathCause.ACCIDENT,
-}
+HARM_DEATHS: MappingProxyType[HarmCause, DeathCause] = total(
+    HarmCause,
+    {
+        HarmCause.BATTLE: DeathCause.BATTLE,
+        HarmCause.DUEL: DeathCause.DUEL,
+        HarmCause.PUNISHMENT: DeathCause.EXECUTION,
+        HarmCause.TORTURE: DeathCause.EXECUTION,
+        HarmCause.ACCIDENT: DeathCause.ACCIDENT,
+        HarmCause.MONSTER: DeathCause.MONSTER,
+        HarmCause.DISASTER: DeathCause.DISASTER,
+        HarmCause.CURSE: DeathCause.CURSE,
+        HarmCause.MAGIC_BACKLASH: DeathCause.MAGIC,
+        HarmCause.GOD: DeathCause.DIVINE,
+        HarmCause.POISON: DeathCause.POISON,
+        HarmCause.QUEST: DeathCause.HARDSHIP,
+        HarmCause.ESCAPE: DeathCause.MURDER,
+        HarmCause.SACRIFICE: DeathCause.SACRIFICE,
+        HarmCause.AGE: DeathCause.OLD_AGE,
+        HarmCause.PLAYER: DeathCause.DIVINE,
+        HarmCause.EXPOSURE: DeathCause.EXPOSURE,
+        HarmCause.RITUAL: DeathCause.ACCIDENT,
+        HarmCause.BOMBARDMENT: DeathCause.BOMBARDMENT,
+        HarmCause.INDUSTRIAL: DeathCause.INDUSTRIAL,
+        HarmCause.CRASH: DeathCause.CRASH,
+        HarmCause.RADIATION: DeathCause.RADIATION,
+        HarmCause.DECOMPRESSION: DeathCause.DECOMPRESSION,
+        HarmCause.EXPERIMENT: DeathCause.EXPERIMENT,
+    },
+)
 GLORIOUS_DEATHS = frozenset({DeathCause.BATTLE, DeathCause.DUEL, DeathCause.MONSTER, DeathCause.SACRIFICE})
 SHAMEFUL_DEATHS = frozenset({DeathCause.EXECUTION, DeathCause.DESPAIR})
 

@@ -124,8 +124,10 @@ def band_of(rules: Rules, kind: DistrictKind) -> int:
 
 def ordered(cells: Iterable[Hex], morphology: Morphology, rng: SeededRandom) -> list[Hex]:
     items = list(cells)
-    if morphology is Morphology.PLANNED:
+    if morphology in {Morphology.PLANNED, Morphology.GRID}:
         return sorted(items, key=lambda cell: (cell[1], cell[0]))
+    if morphology is Morphology.VERTICAL:
+        return sorted(items, key=lambda cell: (distance(cell, CENTRE), cell))
     if morphology is Morphology.CONCENTRIC:
         return items
     weights = {cell: rng.random() for cell in sorted(items)}

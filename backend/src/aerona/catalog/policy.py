@@ -41,18 +41,43 @@ def penal(terms: Terms) -> Shift:
 def franchise(terms: Terms) -> Shift:
     voters = terms.get("voters")
     if voters == "all":
-        return {C.FARMER: 6, C.ARTISAN: 6, C.SERF_OR_SLAVE: 4, C.NOBLE: -6}
+        return {C.FARMER: 6, C.ARTISAN: 6, C.WORKER: 6, C.CITIZEN: 4, C.UNEMPLOYED: 4, C.SERF_OR_SLAVE: 4, C.NOBLE: -6}
     if voters == "free":
-        return {C.FARMER: 4, C.ARTISAN: 4, C.NOBLE: -3}
+        return {C.FARMER: 4, C.ARTISAN: 4, C.WORKER: 4, C.CITIZEN: 4, C.NOBLE: -3}
+    if voters == "citizens":
+        return {C.CITIZEN: 6, C.PROFESSIONAL: 4, C.OFFICIAL: 2, C.WORKER: -2, C.NOBLE: -2}
     if voters == "landholders":
         return {C.FARMER: 3, C.MERCHANT: 3, C.NOBLE: -1}
-    return {C.NOBLE: 3, C.FARMER: -2, C.ARTISAN: -2}
+    return {C.NOBLE: 3, C.FARMER: -2, C.ARTISAN: -2, C.CITIZEN: -4, C.WORKER: -2}
 
 
 def constitution(terms: Terms) -> Shift:
     rights = {C.NOBLE: 3, C.PRIEST: 2} if terms.get("estates_rights") else {C.NOBLE: -3}
     voters = franchise(terms)
     return {social_class: rights.get(social_class, 0) + voters.get(social_class, 0) for social_class in {*rights, *voters}}
+
+
+def labour(terms: Terms) -> Shift:
+    shift = {C.WORKER: 6, C.UNEMPLOYED: 2, C.MERCHANT: -3} if terms.get("unions") else {C.WORKER: -3, C.MERCHANT: 3}
+    return shift | ({C.FARMER: -2} if terms.get("child_labour") else {})
+
+
+def weapons(terms: Terms) -> Shift:
+    level = terms.get("level")
+    if level == "banned":
+        return {C.WARRIOR: -4, C.CITIZEN: 2, C.OFFICIAL: 2}
+    if level == "open":
+        return {C.WARRIOR: 3, C.CITIZEN: 2, C.OFFICIAL: -3}
+    return {C.OFFICIAL: 1}
+
+
+def machines(terms: Terms) -> Shift:
+    level = terms.get("level")
+    if level == "banned":
+        return {C.WORKER: 4, C.PROFESSIONAL: -4}
+    if level == "free":
+        return {C.PROFESSIONAL: 4, C.WORKER: -4, C.UNEMPLOYED: -3}
+    return {C.PROFESSIONAL: 1}
 
 
 def fixed(shift: Shift) -> Callable[[Terms], Shift]:
@@ -85,6 +110,13 @@ LAW_POLICY: MappingProxyType[LawKind, Callable[[Terms], Shift]] = MappingProxyTy
         LawKind.LICENSED_MAGIC: fixed({C.SCRIBE: 2}),
         LawKind.FRANCHISE: franchise,
         LawKind.CONSTITUTION: constitution,
+        LawKind.LABOUR_LAW: labour,
+        LawKind.ENVIRONMENT_LAW: fixed({C.FARMER: 3, C.WORKER: -2, C.MERCHANT: -2}),
+        LawKind.DATA_PRIVACY: fixed({C.CITIZEN: 4, C.PROFESSIONAL: 2, C.OFFICIAL: -3}),
+        LawKind.WEAPONS_LAW: weapons,
+        LawKind.INTELLECTUAL_PROPERTY: fixed({C.PROFESSIONAL: 4, C.MERCHANT: 3, C.ARTISAN: -2}),
+        LawKind.MACHINE_LAW: machines,
+        LawKind.SPACE_LAW: fixed({C.MERCHANT: 2, C.PROFESSIONAL: 2}),
     }
 )
 MANDATE_POLICY: MappingProxyType[MandateKind, Shift] = MappingProxyType(

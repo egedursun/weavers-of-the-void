@@ -12,9 +12,13 @@ from aerona.engine.body.tissues import PLAIN, Hardness, TissueHit, tissue_hit
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import InjuryRules
 
-PHYSICAL = frozenset({DamageType.CUT, DamageType.PIERCE, DamageType.BLUNT, DamageType.FIRE})
+PHYSICAL = frozenset({DamageType.CUT, DamageType.PIERCE, DamageType.BLUNT, DamageType.FIRE, DamageType.BALLISTIC, DamageType.EXPLOSIVE})
 PERMANENT_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED, InjuryKind.DESTROYED, InjuryKind.VOID_TOUCH, InjuryKind.DIVINE_BRAND})
 MARK_KINDS = frozenset({InjuryKind.VOID_TOUCH, InjuryKind.DIVINE_BRAND})
+DEEP_DAMAGE = frozenset({DamageType.PIERCE, DamageType.BLUNT, DamageType.VENOM, DamageType.BALLISTIC, DamageType.EXPLOSIVE})
+BODILY_DAMAGE = frozenset(
+    {DamageType.CUT, DamageType.PIERCE, DamageType.BLUNT, DamageType.COLD, DamageType.VENOM, DamageType.BALLISTIC, DamageType.EXPLOSIVE, DamageType.CHEMICAL}
+)
 TOTAL_LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED, InjuryKind.DESTROYED})
 
 
@@ -103,6 +107,27 @@ def cause_mix(rules: InjuryRules, cause: HarmCause) -> dict[DamageType, int]:
         HarmCause.PLAYER: {DamageType.CUT: rules.player_cut, DamageType.BLUNT: rules.player_blunt, DamageType.PIERCE: rules.player_pierce},
         HarmCause.EXPOSURE: {DamageType.COLD: rules.exposure_cold, DamageType.FIRE: rules.exposure_heat},
         HarmCause.RITUAL: {DamageType.CUT: rules.ritual_cut, DamageType.FIRE: rules.ritual_fire},
+        HarmCause.BOMBARDMENT: {
+            DamageType.EXPLOSIVE: rules.bombardment_explosive,
+            DamageType.BLUNT: rules.bombardment_blunt,
+            DamageType.FIRE: rules.bombardment_fire,
+        },
+        HarmCause.INDUSTRIAL: {
+            DamageType.BLUNT: rules.industrial_blunt,
+            DamageType.CUT: rules.industrial_cut,
+            DamageType.FIRE: rules.industrial_fire,
+            DamageType.CHEMICAL: rules.industrial_chemical,
+            DamageType.ELECTRIC: rules.industrial_electric,
+        },
+        HarmCause.CRASH: {DamageType.BLUNT: rules.crash_blunt, DamageType.CUT: rules.crash_cut, DamageType.FIRE: rules.crash_fire},
+        HarmCause.RADIATION: {DamageType.RADIATION: rules.radiation_radiation},
+        HarmCause.DECOMPRESSION: {DamageType.COLD: rules.decompression_cold, DamageType.BLUNT: rules.decompression_blunt},
+        HarmCause.EXPERIMENT: {
+            DamageType.CHEMICAL: rules.experiment_chemical,
+            DamageType.RADIATION: rules.experiment_radiation,
+            DamageType.ELECTRIC: rules.experiment_electric,
+            DamageType.PSYCHIC: rules.experiment_psychic,
+        },
     }
     return {kind: weight for kind, weight in mixes[cause].items() if weight > 0}
 
@@ -149,7 +174,7 @@ def pick_part(rules: Rules, anatomy: Anatomy, region: BodyRegion, damage_type: D
     exposed = [part for part in parts if not part.internal] or list(parts)
     inner = [part for part in parts if part.internal]
     reach = rules.anatomy
-    deep = damage_type in {DamageType.PIERCE, DamageType.BLUNT, DamageType.VENOM} and severity >= reach.organ_reach_severity
+    deep = damage_type in DEEP_DAMAGE and severity >= reach.organ_reach_severity
     if inner and deep and rng.chance(reach.organ_reach_chance):
         return inner[rng.below(len(inner))]
     return exposed[rng.below(len(exposed))]
@@ -202,6 +227,32 @@ def _magic(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> I
     return InjuryKind.CURSE_WITHER if severity >= rules.magic_wither_at else InjuryKind.BURN
 
 
+def _ballistic(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
+    if _sight(part) and severity >= rules.pierce_gouge_at:
+        return InjuryKind.GOUGED
+    if part.vital and severity >= rules.pierce_destroy_at:
+        return InjuryKind.DESTROYED
+    return InjuryKind.GUNSHOT
+
+
+def _explosive(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
+    if part.severable and severity >= rules.blast_sever_at:
+        return InjuryKind.SEVERED
+    if part.region is BodyRegion.HEAD and severity >= rules.blast_concussion_at:
+        return InjuryKind.CONCUSSION
+    return InjuryKind.SHRAPNEL
+
+
+def _energy(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
+    if (_sight(part) and severity >= rules.fire_blind_at) or (part.vital and severity >= rules.pierce_destroy_at):
+        return InjuryKind.DESTROYED
+    return InjuryKind.BURN
+
+
+def _chemical(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:
+    return InjuryKind.DESTROYED if _sight(part) and severity >= rules.fire_blind_at else InjuryKind.CHEMICAL_BURN
+
+
 KindRule = Callable[[InjuryRules, Part, int, HarmCause], InjuryKind]
 
 KIND_RULES: dict[DamageType, KindRule] = {
@@ -211,12 +262,20 @@ KIND_RULES: dict[DamageType, KindRule] = {
     DamageType.FIRE: _fire,
     DamageType.COLD: _cold,
     DamageType.MAGIC: _magic,
+    DamageType.BALLISTIC: _ballistic,
+    DamageType.EXPLOSIVE: _explosive,
+    DamageType.ENERGY: _energy,
+    DamageType.CHEMICAL: _chemical,
 }
 
 FIXED_KINDS: dict[DamageType, InjuryKind] = {
     DamageType.VOID: InjuryKind.VOID_TOUCH,
     DamageType.HOLY: InjuryKind.DIVINE_BRAND,
     DamageType.VENOM: InjuryKind.VENOM,
+    DamageType.ELECTRIC: InjuryKind.ELECTRICAL_BURN,
+    DamageType.RADIATION: InjuryKind.RADIATION_SICKNESS,
+    DamageType.SONIC: InjuryKind.CONCUSSION,
+    DamageType.PSYCHIC: InjuryKind.MIND_SCAR,
 }
 
 
@@ -234,8 +293,7 @@ def loss_for(rules: InjuryRules, kind: InjuryKind, severity: int) -> int:
 
 
 def harm_resisted(anatomy: Anatomy, damage_type: DamageType) -> bool:
-    physical = damage_type in {DamageType.CUT, DamageType.PIERCE, DamageType.BLUNT, DamageType.COLD, DamageType.VENOM}
-    return physical and not anatomy.material
+    return damage_type in BODILY_DAMAGE and not anatomy.material
 
 
 def edged_mix(mix: dict[DamageType, int], edge: int | None, heft: int | None) -> dict[DamageType, int]:

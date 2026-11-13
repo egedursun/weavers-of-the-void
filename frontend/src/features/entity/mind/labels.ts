@@ -83,6 +83,15 @@ import {
   Waves,
   Wheat,
   Zap,
+  Crosshair,
+  Plane,
+  Car,
+  Wrench,
+  CircuitBoard,
+  Cpu,
+  Briefcase,
+  VenetianMask,
+  Newspaper,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named, named, plain } from '../environment/labels'
@@ -271,6 +280,14 @@ export const SKILL_ICONS: Record<string, Named> = {
   mountaineering: { label: 'Mountaineering', icon: Mountain },
   swimming: { label: 'Swimming', icon: Waves },
   ritual: { label: 'Ritual', icon: Flame },
+  firearms: { label: 'Firearms', icon: Crosshair },
+  piloting: { label: 'Piloting', icon: Plane },
+  driving: { label: 'Driving', icon: Car },
+  mechanics: { label: 'Mechanics', icon: Wrench },
+  electronics: { label: 'Electronics', icon: CircuitBoard },
+  computing: { label: 'Computing', icon: Cpu },
+  science: { label: 'Science', icon: FlaskConical },
+  administration: { label: 'Administration', icon: Briefcase },
 }
 
 export const SKILL_SOURCES: Record<string, string> = {
@@ -470,6 +487,14 @@ export const ROLE_ICONS: Record<string, Named> = {
   saint: { label: 'Saint', icon: Sparkles, tone: 'gold' },
   apprentice: { label: 'Apprentice', icon: GraduationCap, tone: 'verdigris' },
   commoner: { label: 'Commoner', icon: Users, tone: 'muted' },
+  officer: { label: 'Officer', icon: Medal, tone: 'danger' },
+  spy: { label: 'Spy', icon: VenetianMask, tone: 'verdigris' },
+  scientist: { label: 'Scientist', icon: FlaskConical, tone: 'info' },
+  engineer: { label: 'Engineer', icon: Wrench, tone: 'gold' },
+  pilot: { label: 'Pilot', icon: Plane, tone: 'info' },
+  physician: { label: 'Physician', icon: Stethoscope, tone: 'success' },
+  journalist: { label: 'Journalist', icon: Newspaper, tone: 'info' },
+  executive: { label: 'Executive', icon: Briefcase, tone: 'gold' },
 }
 
 export function labelTable<T extends { label: string }>(

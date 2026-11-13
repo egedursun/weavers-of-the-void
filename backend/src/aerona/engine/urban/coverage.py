@@ -13,15 +13,17 @@ from aerona.db.tables.urban import DistrictServiceRow, TurfRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.settlement import DistrictKind, WaterSupply
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import STANDING_STATES
 from aerona.domain.enums.urban import Morphology, UrbanService
 from aerona.engine.context import TickContext
+from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.settlement.districts import density_pct
 from aerona.engine.urban.layout import falloff
-from aerona.engine.urban.morphology import grow_rings
+from aerona.engine.urban.morphology import grow_rings, modernise
 from aerona.engine.urban.planning import plan_town
 from aerona.rules.registry import Rules
 
@@ -44,6 +46,7 @@ class CoverageTally:
     placed: int = 0
     covered: int = 0
     ringed: int = 0
+    modernised: int = 0
 
 
 def reach_of(rules: Rules, morphology: Morphology) -> float:
@@ -135,12 +138,19 @@ async def cover_town(ctx: TickContext, settlement: EntityRow, tally: CoverageTal
 
 
 async def cover_towns(ctx: TickContext, tally: CoverageTally) -> None:
+    knowledge = await KnowledgeMap.load(ctx.session)
     for settlement in await canon(ctx.session, [EntityType.SETTLEMENT]):
         if held(settlement.id):
             continue
         profile = await ctx.session.get(SettlementProfileRow, settlement.id)
         if profile is not None:
             tally.ringed += int(grow_rings(ctx.rules, profile, await ctx.session.get(SettlementInfrastructureRow, settlement.id)))
+            homes = list(await ctx.session.scalars(select(DistrictRow.housing).where(DistrictRow.settlement_entity_id == settlement.id)))
+            architecture = knowledge.level(settlement.id, KnowledgeBranch.ARCHITECTURE)
+            metallurgy = knowledge.level(settlement.id, KnowledgeBranch.METALLURGY)
+            tally.modernised += int(
+                modernise(ctx.rules, profile, homes, architecture=architecture, metallurgy=metallurgy, population=stat_or(settlement, "population", 0))
+            )
         await cover_town(ctx, settlement, tally)
 
 

@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.civics import GOVERNMENT_GATES
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.polity import OfficeHistoryRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
@@ -13,15 +14,17 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.polity import DecisionRule, GovernmentKind, LawKind, OfficeKind
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.faith import living_patron
+from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
@@ -29,30 +32,50 @@ from aerona.engine.primitives.stats import set_stats, stat
 
 COMMUNITIES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 PRIESTLY = frozenset({MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER})
-RULES_OF: dict[GovernmentKind, DecisionRule] = {
-    GovernmentKind.CHIEFDOM: DecisionRule.AUTOCRATIC,
-    GovernmentKind.MONARCHY: DecisionRule.AUTOCRATIC,
-    GovernmentKind.EMPIRE: DecisionRule.AUTOCRATIC,
-    GovernmentKind.OCCUPATION: DecisionRule.AUTOCRATIC,
-    GovernmentKind.THEOCRACY: DecisionRule.DIVINE,
-    GovernmentKind.GOD_KINGDOM: DecisionRule.DIVINE,
-    GovernmentKind.OLIGARCHY: DecisionRule.COUNCIL,
-    GovernmentKind.TRIBAL_CONFEDERATION: DecisionRule.COUNCIL,
-    GovernmentKind.REPUBLIC: DecisionRule.ASSEMBLY,
-    GovernmentKind.HIVE_COUNCIL: DecisionRule.ASSEMBLY,
-}
-TITLES: dict[GovernmentKind, str] = {
-    GovernmentKind.CHIEFDOM: "Chiefdom",
-    GovernmentKind.MONARCHY: "Kingdom",
-    GovernmentKind.EMPIRE: "Empire",
-    GovernmentKind.OCCUPATION: "Occupied Lands",
-    GovernmentKind.THEOCRACY: "Holy Realm",
-    GovernmentKind.GOD_KINGDOM: "Divine Kingdom",
-    GovernmentKind.OLIGARCHY: "Merchant League",
-    GovernmentKind.TRIBAL_CONFEDERATION: "Confederation",
-    GovernmentKind.REPUBLIC: "Republic",
-    GovernmentKind.HIVE_COUNCIL: "Hive",
-}
+RULES_OF = total(
+    GovernmentKind,
+    {
+        GovernmentKind.CHIEFDOM: DecisionRule.AUTOCRATIC,
+        GovernmentKind.MONARCHY: DecisionRule.AUTOCRATIC,
+        GovernmentKind.EMPIRE: DecisionRule.AUTOCRATIC,
+        GovernmentKind.OCCUPATION: DecisionRule.AUTOCRATIC,
+        GovernmentKind.THEOCRACY: DecisionRule.DIVINE,
+        GovernmentKind.GOD_KINGDOM: DecisionRule.DIVINE,
+        GovernmentKind.OLIGARCHY: DecisionRule.COUNCIL,
+        GovernmentKind.TRIBAL_CONFEDERATION: DecisionRule.COUNCIL,
+        GovernmentKind.REPUBLIC: DecisionRule.ASSEMBLY,
+        GovernmentKind.HIVE_COUNCIL: DecisionRule.ASSEMBLY,
+        GovernmentKind.JUNTA: DecisionRule.AUTOCRATIC,
+        GovernmentKind.COLONIAL_ADMINISTRATION: DecisionRule.AUTOCRATIC,
+        GovernmentKind.CORPORATE_STATE: DecisionRule.COUNCIL,
+        GovernmentKind.TECHNOCRACY: DecisionRule.COUNCIL,
+        GovernmentKind.MACHINE_RULE: DecisionRule.COUNCIL,
+        GovernmentKind.FEDERATION: DecisionRule.ASSEMBLY,
+        GovernmentKind.COMMUNE: DecisionRule.ASSEMBLY,
+    },
+)
+TITLES = total(
+    GovernmentKind,
+    {
+        GovernmentKind.CHIEFDOM: "Chiefdom",
+        GovernmentKind.MONARCHY: "Kingdom",
+        GovernmentKind.EMPIRE: "Empire",
+        GovernmentKind.OCCUPATION: "Occupied Lands",
+        GovernmentKind.THEOCRACY: "Holy Realm",
+        GovernmentKind.GOD_KINGDOM: "Divine Kingdom",
+        GovernmentKind.OLIGARCHY: "Merchant League",
+        GovernmentKind.TRIBAL_CONFEDERATION: "Confederation",
+        GovernmentKind.REPUBLIC: "Republic",
+        GovernmentKind.HIVE_COUNCIL: "Hive",
+        GovernmentKind.JUNTA: "Military Government",
+        GovernmentKind.COLONIAL_ADMINISTRATION: "Colony",
+        GovernmentKind.CORPORATE_STATE: "Corporate State",
+        GovernmentKind.TECHNOCRACY: "Technocracy",
+        GovernmentKind.MACHINE_RULE: "Machine Rule",
+        GovernmentKind.FEDERATION: "Federation",
+        GovernmentKind.COMMUNE: "Commune",
+    },
+)
 
 
 async def lords(ctx: TickContext) -> tuple[dict[int, int], dict[int, int], dict[int, int]]:
@@ -114,8 +137,23 @@ async def government_for(ctx: TickContext, core: EntityRow, members: list[Entity
     hierarchy = values.get(ValueAxis.HIERARCHY, 0)
     priestly = ruler is not None and ruler.mortal_role in PRIESTLY and values.get(ValueAxis.PIETY, 0) >= table.theocracy_piety
     imperial = len(members) >= table.empire_members or await has_flag(ctx.session, core.id, EntityFlag.EMPIRE)
+    civics = (await known_levels(ctx.session, [core.id])).get(core.id, {}).get(KnowledgeBranch.CIVICS, 0)
+    workers = society.share(SocialClass.WORKER) if society is not None else 0.0
+    professionals = society.share(SocialClass.PROFESSIONAL) if society is not None else 0.0
+    soldiers = society.share(SocialClass.WARRIOR) if society is not None else 0.0
     ladder = (
         (priestly, GovernmentKind.THEOCRACY),
+        (ruler is not None and ruler.mortal_role is MortalRole.OFFICER and soldiers >= table.junta_warrior_pct, GovernmentKind.JUNTA),
+        (
+            professionals >= table.machine_professional_pct
+            and civics >= table.machine_civics_level
+            and await law_param(ctx.session, core.id, LawKind.MACHINE_LAW, "level") != "banned",
+            GovernmentKind.MACHINE_RULE,
+        ),
+        (professionals >= table.technocracy_professional_pct and civics >= table.technocracy_civics_level, GovernmentKind.TECHNOCRACY),
+        (workers >= table.commune_worker_pct and hierarchy <= table.republic_hierarchy, GovernmentKind.COMMUNE),
+        (merchants >= table.oligarchy_merchant_pct and workers >= table.corporate_worker_pct, GovernmentKind.CORPORATE_STATE),
+        (len(members) >= table.federation_members and civics >= table.federation_civics_level and hierarchy <= 0, GovernmentKind.FEDERATION),
         (merchants >= table.oligarchy_merchant_pct and hierarchy <= table.republic_hierarchy, GovernmentKind.REPUBLIC),
         (merchants >= table.oligarchy_merchant_pct, GovernmentKind.OLIGARCHY),
         (ruler is None and hierarchy <= table.republic_hierarchy, GovernmentKind.REPUBLIC),

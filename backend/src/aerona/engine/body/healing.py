@@ -116,6 +116,9 @@ def infection_base(rules: HealingRules, kind: InjuryKind) -> int:
         InjuryKind.GOUGED: rules.infection_gouged,
         InjuryKind.CRUSH: rules.infection_crush,
         InjuryKind.FROSTBITE: rules.infection_frostbite,
+        InjuryKind.GUNSHOT: rules.infection_gunshot,
+        InjuryKind.SHRAPNEL: rules.infection_shrapnel,
+        InjuryKind.CHEMICAL_BURN: rules.infection_chemical_burn,
     }
     return table.get(kind, rules.infection_other)
 
@@ -129,6 +132,13 @@ def permanent_chance(rules: HealingRules, kind: InjuryKind) -> int:
         InjuryKind.FROSTBITE: rules.permanent_frostbite,
         InjuryKind.VENOM: rules.permanent_venom,
         InjuryKind.CURSE_WITHER: rules.permanent_wither,
+        InjuryKind.GUNSHOT: rules.permanent_gunshot,
+        InjuryKind.SHRAPNEL: rules.permanent_shrapnel,
+        InjuryKind.CONCUSSION: rules.permanent_concussion,
+        InjuryKind.ELECTRICAL_BURN: rules.permanent_electrical_burn,
+        InjuryKind.CHEMICAL_BURN: rules.permanent_burn,
+        InjuryKind.RADIATION_SICKNESS: rules.permanent_radiation,
+        InjuryKind.MIND_SCAR: rules.permanent_mind_scar,
     }
     return table.get(kind, rules.permanent_other)
 
@@ -147,6 +157,13 @@ def heal_chance(rules: HealingRules, severity: int, kind: InjuryKind) -> float:
         InjuryKind.BITE: rules.heal_bite_pct,
         InjuryKind.VENOM: rules.heal_venom_pct,
         InjuryKind.CURSE_WITHER: rules.heal_curse_wither_pct,
+        InjuryKind.GUNSHOT: rules.heal_gunshot_pct,
+        InjuryKind.SHRAPNEL: rules.heal_shrapnel_pct,
+        InjuryKind.CONCUSSION: rules.heal_concussion_pct,
+        InjuryKind.ELECTRICAL_BURN: rules.heal_electrical_burn_pct,
+        InjuryKind.CHEMICAL_BURN: rules.heal_chemical_burn_pct,
+        InjuryKind.RADIATION_SICKNESS: rules.heal_radiation_pct,
+        InjuryKind.MIND_SCAR: rules.heal_mind_scar_pct,
     }.get(kind, PERCENT)
     return by_severity * by_kind / PERCENT
 

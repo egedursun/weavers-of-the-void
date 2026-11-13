@@ -5,6 +5,7 @@ from aerona.core.total import total
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.settlement import DistrictKind
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.urban import CargoClass, HousingLevel, Morphology, RacketKind, UrbanService
 
@@ -109,14 +110,79 @@ HOME_DISTRICT: MappingProxyType[StructureKind, DistrictKind] = acting(
         K.PARK: D.GARDENS,
         K.FOUNTAIN: D.GARDENS,
         K.PLAZA: D.GARDENS,
+        K.FOUNDRY: D.INDUSTRIAL,
+        K.SMELTER: D.INDUSTRIAL,
+        K.REFINERY: D.INDUSTRIAL,
+        K.POWER_PLANT: D.INDUSTRIAL,
+        K.TEXTILE_MILL: D.INDUSTRIAL,
+        K.GLASSWORKS: D.INDUSTRIAL,
+        K.PAPER_MILL: D.INDUSTRIAL,
+        K.DYE_WORKS: D.INDUSTRIAL,
+        K.EXCHANGE: D.BUSINESS,
+        K.LABORATORY: D.RESEARCH,
+        K.UNIVERSITY: D.UNIVERSITY,
+        K.RAIL_STATION: D.TRANSPORT_HUB,
+        K.AIRFIELD: D.TRANSPORT_HUB,
+        K.SPACEPORT: D.TRANSPORT_HUB,
+        K.ARSENAL: D.MILITARY_BASE,
+        K.STADIUM: D.ENTERTAINMENT,
+        K.OPERA_HOUSE: D.ENTERTAINMENT,
+        K.GALLERY: D.ENTERTAINMENT,
+        K.CONSERVATORY: D.ENTERTAINMENT,
     }
 )
 NEEDS = (V.WATER, V.FAITH, V.MARKET)
-HOUSING_ORDER = tuple(HousingLevel)
-FINE_HOMES = frozenset({HousingLevel.TOWNHOUSE, HousingLevel.MANOR})
-REACH_RULE = {Morphology.PLANNED: "planned_reach", Morphology.CONCENTRIC: "concentric_reach", Morphology.ORGANIC: "organic_reach"}
-FIRE_RULE = {Morphology.PLANNED: "planned_fire_pct", Morphology.ORGANIC: "organic_fire_pct"}
-HAULING_RULE = {Morphology.PLANNED: "planned_hauling_pct", Morphology.ORGANIC: "organic_hauling_pct"}
+QUARTER_WORKS: MappingProxyType[DistrictKind, frozenset[StructureKind]] = MappingProxyType(
+    {
+        D.INDUSTRIAL: frozenset(kind for kind, home in HOME_DISTRICT.items() if home is D.INDUSTRIAL),
+        D.BUSINESS: frozenset(kind for kind, home in HOME_DISTRICT.items() if home is D.BUSINESS),
+        D.RESEARCH: frozenset(kind for kind, home in HOME_DISTRICT.items() if home is D.RESEARCH),
+        D.UNIVERSITY: frozenset(kind for kind, home in HOME_DISTRICT.items() if home is D.UNIVERSITY),
+        D.TRANSPORT_HUB: frozenset(kind for kind, home in HOME_DISTRICT.items() if home is D.TRANSPORT_HUB),
+        D.MILITARY_BASE: frozenset(kind for kind, home in HOME_DISTRICT.items() if home is D.MILITARY_BASE),
+        D.ENTERTAINMENT: frozenset(kind for kind, home in HOME_DISTRICT.items() if home is D.ENTERTAINMENT),
+    }
+)
+H = HousingLevel
+HOUSING_ORDER = (H.HUT, H.SHIP_BERTH, H.TENEMENT, H.COTTAGE, H.HOUSE, H.HABITAT_MODULE, H.APARTMENT, H.TOWNHOUSE, H.TOWER_BLOCK, H.ARCOLOGY_UNIT, H.MANOR)
+HOUSING_GATES = MappingProxyType(
+    {
+        H.TENEMENT: (KnowledgeBranch.ARCHITECTURE, 3),
+        H.APARTMENT: (KnowledgeBranch.ARCHITECTURE, 4),
+        H.TOWER_BLOCK: (KnowledgeBranch.ARCHITECTURE, 6),
+        H.ARCOLOGY_UNIT: (KnowledgeBranch.ARCHITECTURE, 8),
+        H.HABITAT_MODULE: (KnowledgeBranch.VOID_LIVING, 1),
+        H.SHIP_BERTH: (KnowledgeBranch.VOID_LIVING, 1),
+    }
+)
+FINE_HOMES = frozenset({H.TOWNHOUSE, H.ARCOLOGY_UNIT, H.MANOR})
+TALL_HOMES = frozenset({H.TOWER_BLOCK, H.ARCOLOGY_UNIT})
+M = Morphology
+REACH_RULE = total(
+    Morphology,
+    {
+        M.PLANNED: "planned_reach",
+        M.CONCENTRIC: "concentric_reach",
+        M.ORGANIC: "organic_reach",
+        M.GRID: "grid_reach",
+        M.VERTICAL: "vertical_reach",
+        M.SPRAWL: "sprawl_reach",
+    },
+)
+FIRE_RULE = {
+    M.PLANNED: "planned_fire_pct",
+    M.ORGANIC: "organic_fire_pct",
+    M.GRID: "grid_fire_pct",
+    M.VERTICAL: "vertical_fire_pct",
+    M.SPRAWL: "sprawl_fire_pct",
+}
+HAULING_RULE = {
+    M.PLANNED: "planned_hauling_pct",
+    M.ORGANIC: "organic_hauling_pct",
+    M.GRID: "grid_hauling_pct",
+    M.VERTICAL: "vertical_hauling_pct",
+    M.SPRAWL: "sprawl_hauling_pct",
+}
 DENSITY_RULE = total(
     DistrictKind,
     {
@@ -133,9 +199,29 @@ DENSITY_RULE = total(
         D.RESIDENTIAL: "residential_housing_pct",
         D.CIVIC_QUARTER: "civic_quarter_housing_pct",
         D.GARDENS: "gardens_housing_pct",
+        D.ARCOLOGY: "arcology_housing_pct",
+        D.BUSINESS: "business_housing_pct",
+        D.ENTERTAINMENT: "entertainment_housing_pct",
+        D.INDUSTRIAL: "industrial_housing_pct",
+        D.MILITARY_BASE: "military_base_housing_pct",
+        D.RESEARCH: "research_housing_pct",
+        D.SUBURB: "suburb_housing_pct",
+        D.TRANSPORT_HUB: "transport_hub_housing_pct",
+        D.UNIVERSITY: "university_housing_pct",
     },
 )
-HOUSING_RULE = {HousingLevel.HUT: "hut_pct", HousingLevel.COTTAGE: "cottage_pct", HousingLevel.TOWNHOUSE: "townhouse_pct", HousingLevel.MANOR: "manor_pct"}
+HOUSING_RULE = {
+    H.HUT: "hut_pct",
+    H.COTTAGE: "cottage_pct",
+    H.TOWNHOUSE: "townhouse_pct",
+    H.MANOR: "manor_pct",
+    H.APARTMENT: "apartment_pct",
+    H.TENEMENT: "tenement_pct",
+    H.TOWER_BLOCK: "tower_block_pct",
+    H.ARCOLOGY_UNIT: "arcology_unit_pct",
+    H.HABITAT_MODULE: "habitat_module_pct",
+    H.SHIP_BERTH: "ship_berth_pct",
+}
 
 PERISHABLES = frozenset({C.FISH, C.BREAD, C.MEAT, C.MILK, C.CHEESE, C.FRUIT, C.EGGS, C.HERBS})
 WALKING = frozenset({C.LIVESTOCK, C.MOUNTS})

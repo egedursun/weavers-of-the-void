@@ -214,6 +214,62 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = total(
                 (K.PLANETARY_ENGINE, G.COSMIC, "Planetary engine"), (S.ARTISAN, W.MANY), U.NONE, (B.WONDER, C.TOOLS, T.CITY), branch=KnowledgeBranch.ASTRONOMY
             ),
             spec((K.HABITAT_RING, G.COSMIC, "Habitat ring"), (S.ARTISAN, W.MANY), U.SEATS, (B.WONDER, C.TOOLS, T.CITY), branch=KnowledgeBranch.VOID_LIVING),
+            spec((K.FACTORY, G.PRODUCTION, "Factory"), (S.WORKER, W.MANY), U.HANDS, (B.GRAND, C.COAL, T.TOWN), branch=KnowledgeBranch.METALLURGY),
+            spec((K.DATA_CENTRE, G.KNOWLEDGE, "Data centre"), (S.PROFESSIONAL, W.FEW), U.VOLUMES, (B.GRAND, C.FUEL, T.CITY), branch=KnowledgeBranch.WRITING),
+            spec(
+                (K.OFFICE_TOWER, G.COMMERCE, "Office tower"), (S.PROFESSIONAL, W.MANY), U.SEATS, (B.GRAND, C.TOOLS, T.CITY), branch=KnowledgeBranch.ARCHITECTURE
+            ),
+            spec((K.APARTMENT_BLOCK, G.CIVIC, "Apartment block"), (None, W.NONE), U.BEDS, (B.MAJOR, C.STONE, T.TOWN), branch=KnowledgeBranch.ARCHITECTURE),
+            spec((K.MALL, G.COMMERCE, "Mall"), (S.MERCHANT, W.MANY), U.STALLS, (B.GRAND, C.TOOLS, T.CITY), branch=KnowledgeBranch.TRADE),
+            spec(
+                (K.BROADCAST_TOWER, G.KNOWLEDGE, "Broadcast tower"), (S.PROFESSIONAL, W.FEW), U.NONE, (B.MAJOR, C.TOOLS, T.TOWN), branch=KnowledgeBranch.WRITING
+            ),
+            spec(
+                (K.SATELLITE_ARRAY, G.COSMIC, "Satellite array"), (S.PROFESSIONAL, W.FEW), U.NONE, (B.GRAND, C.TOOLS, T.CITY), branch=KnowledgeBranch.ASTRONOMY
+            ),
+            spec((K.MILITARY_BASE, G.DEFENCE, "Military base"), (S.WARRIOR, W.MANY), U.GARRISON, (B.GRAND, C.FUEL, T.TOWN), branch=KnowledgeBranch.WARFARE),
+            spec((K.MISSILE_SILO, G.DEFENCE, "Missile silo"), (S.WARRIOR, W.FEW), U.GARRISON, (B.GRAND, C.FUEL, T.TOWN), branch=KnowledgeBranch.METALLURGY),
+            spec(
+                (K.SHIELD_GENERATOR, G.DEFENCE, "Shield generator"),
+                (S.PROFESSIONAL, W.FEW),
+                U.NONE,
+                (B.GRAND, C.FUEL, T.CITY),
+                branch=KnowledgeBranch.ASTRONOMY,
+            ),
+            spec((K.TERRAFORMER, G.COSMIC, "Terraformer"), (S.PROFESSIONAL, W.MANY), U.NONE, (B.WONDER, C.TOOLS, T.CITY), branch=KnowledgeBranch.VOID_LIVING),
+            spec((K.VERTICAL_FARM, G.PRODUCTION, "Vertical farm"), (S.WORKER, W.SOME), U.HANDS, (B.MAJOR, C.TOOLS, T.CITY), branch=KnowledgeBranch.AGRICULTURE),
+            spec(
+                (K.RECYCLING_PLANT, G.INFRASTRUCTURE, "Recycling plant"),
+                (S.WORKER, W.SOME),
+                U.HANDS,
+                (B.MAJOR, C.TOOLS, T.TOWN),
+                branch=KnowledgeBranch.METALLURGY,
+            ),
+            spec(
+                (K.WATER_PURIFICATION, G.INFRASTRUCTURE, "Water purification"),
+                (S.WORKER, W.FEW),
+                U.TONS,
+                (B.MAJOR, C.TOOLS, T.TOWN),
+                branch=KnowledgeBranch.ARCHITECTURE,
+            ),
+            spec(
+                (K.CLONING_FACILITY, G.CIVIC, "Cloning facility"),
+                (S.PROFESSIONAL, W.SOME),
+                U.BEDS,
+                (B.GRAND, C.MEDICINE, T.CITY),
+                branch=KnowledgeBranch.BIOMANCY,
+            ),
+            spec(
+                (K.ROBOTICS_WORKS, G.PRODUCTION, "Robotics works"),
+                (S.PROFESSIONAL, W.SOME),
+                U.HANDS,
+                (B.GRAND, C.TOOLS, T.CITY),
+                branch=KnowledgeBranch.METALLURGY,
+            ),
+            spec(
+                (K.AI_CORE, G.KNOWLEDGE, "Machine mind core"), (S.PROFESSIONAL, W.FEW), U.VOLUMES, (B.WONDER, C.TOOLS, T.CITY), branch=KnowledgeBranch.WRITING
+            ),
+            spec((K.TELEPORTER, G.COSMIC, "Teleporter"), (S.PROFESSIONAL, W.FEW), U.TRAVELLERS, (B.WONDER, C.TOOLS, T.CITY), branch=KnowledgeBranch.GATE_LORE),
             spec(
                 (K.COVENANT, G.KNOWLEDGE, "Covenant"),
                 (S.SCRIBE, W.SOME),
@@ -296,6 +352,46 @@ ACTS_AS: MappingProxyType[StructureKind, StructureKind] = MappingProxyType(
         K.STADIUM: K.ARENA,
         K.SPACE_ELEVATOR: K.HARBOUR,
         K.SPACE_STATION: K.SHIPYARD,
+        K.FACTORY: K.WORKSHOP,
+        K.DATA_CENTRE: K.LIBRARY,
+        K.OFFICE_TOWER: K.GUILDHALL,
+        K.APARTMENT_BLOCK: K.ALMSHOUSE,
+        K.MALL: K.MARKET,
+        K.BROADCAST_TOWER: K.LIBRARY,
+        K.SATELLITE_ARRAY: K.OBSERVATORY,
+        K.MILITARY_BASE: K.BARRACKS,
+        K.MISSILE_SILO: K.BARRACKS,
+        K.SHIELD_GENERATOR: K.WALL,
+        K.TERRAFORMER: K.IRRIGATION,
+        K.VERTICAL_FARM: K.IRRIGATION,
+        K.RECYCLING_PLANT: K.SEWER,
+        K.WATER_PURIFICATION: K.AQUEDUCT,
+        K.CLONING_FACILITY: K.HOSPITAL,
+        K.ROBOTICS_WORKS: K.WORKSHOP,
+        K.AI_CORE: K.ACADEMY,
+        K.TELEPORTER: K.COSMIC_GATE,
+    }
+)
+BRANCH_LEVELS: MappingProxyType[StructureKind, int] = MappingProxyType(
+    {
+        K.FACTORY: 5,
+        K.DATA_CENTRE: 7,
+        K.OFFICE_TOWER: 6,
+        K.APARTMENT_BLOCK: 4,
+        K.MALL: 5,
+        K.BROADCAST_TOWER: 6,
+        K.SATELLITE_ARRAY: 6,
+        K.MILITARY_BASE: 5,
+        K.MISSILE_SILO: 7,
+        K.SHIELD_GENERATOR: 8,
+        K.TERRAFORMER: 3,
+        K.VERTICAL_FARM: 6,
+        K.RECYCLING_PLANT: 5,
+        K.WATER_PURIFICATION: 5,
+        K.CLONING_FACILITY: 3,
+        K.ROBOTICS_WORKS: 7,
+        K.AI_CORE: 9,
+        K.TELEPORTER: 3,
     }
 )
 MEGASTRUCTURES = frozenset({K.ORBITAL_RING, K.SPACE_ELEVATOR, K.SPACE_STATION, K.STAR_COLLECTOR, K.BEACON, K.PLANETARY_ENGINE, K.HABITAT_RING})

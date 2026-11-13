@@ -6,7 +6,7 @@ from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.culture import ArtworkProfileRow, ItemProfileRow
-from aerona.db.tables.demography import PeopleCultureRow
+from aerona.db.tables.demography import LabourRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultTenetRow
 from aerona.db.tables.genetics import GenomeRow
@@ -20,6 +20,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.communication import OpinionSubject
 from aerona.domain.enums.culture import ItemClass
+from aerona.domain.enums.demography import Job
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import ValueAxis
@@ -300,6 +301,8 @@ async def administration(ctx: TickContext, book: RealmBook, realm: Realm, knowle
         literacy = culture.literacy
     society = await ctx.session.get(CommunitySocietyRow, core_id)
     scribes = society.share(SocialClass.SCRIBE) if society is not None else 0.0
+    officials = society.share(SocialClass.OFFICIAL) if society is not None else 0.0
+    service = await ctx.session.scalar(select(LabourRow.workers).where(LabourRow.community_entity_id == core_id, LabourRow.job == Job.SERVICE)) or 0
     roads = 0
     for member in members:
         infra = await ctx.session.get(SettlementInfrastructureRow, member.id)
@@ -308,6 +311,8 @@ async def administration(ctx: TickContext, book: RealmBook, realm: Realm, knowle
         table.base
         + literacy // TEN * table.per_literacy
         + round_half_up(scribes * table.per_scribe_pct)
+        + round_half_up(officials * table.per_official_pct)
+        + service // table.service_per_point
         + knowledge.level(core_id, KnowledgeBranch.WRITING) * table.per_writing_level
         + roads * table.per_road
     )

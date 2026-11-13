@@ -10,9 +10,9 @@ from aerona.domain.enums.ecology import TissueMaterial
 from aerona.rules.registry import Rules
 
 T = TissueKind
-CUTTING = frozenset({DamageType.CUT, DamageType.PIERCE})
-STRIKING = frozenset({*CUTTING, DamageType.BLUNT})
-SEARING = frozenset({DamageType.FIRE, DamageType.COLD})
+CUTTING = frozenset({DamageType.CUT, DamageType.PIERCE, DamageType.BALLISTIC})
+STRIKING = frozenset({*CUTTING, DamageType.BLUNT, DamageType.EXPLOSIVE, DamageType.SONIC})
+SEARING = frozenset({DamageType.FIRE, DamageType.COLD, DamageType.ENERGY, DamageType.ELECTRIC, DamageType.CHEMICAL})
 
 
 @dataclass(frozen=True)

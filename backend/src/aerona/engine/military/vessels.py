@@ -32,7 +32,8 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.services.war import current_war
-from aerona.engine.vehicles.sections import batter_vessel, mend_vessel_sections
+from aerona.engine.vehicles.sections import mend_vessel_sections
+from aerona.engine.vehicles.wrecks import battered, wreck_crew
 from aerona.rules.registry import Rules
 
 STORMS = frozenset({WeatherKind.STORM, WeatherKind.MAGIC_STORM, WeatherKind.BLIZZARD, WeatherKind.SANDSTORM, WeatherKind.HAIL})
@@ -180,7 +181,7 @@ async def weather_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow
     damage = storm_damage(ctx.rules, row)
     if "condition" not in row.locked:
         row.condition = clamp_int(row.condition - damage, 0, PERCENT)
-    await batter_vessel(ctx, vessel, row, max(0, damage // ctx.rules.vehicles.section_hit), "storm")
+    await battered(ctx, vessel, row, max(0, damage // ctx.rules.vehicles.section_hit), "storm")
     lost = round_half_up(row.crew * table.storm_crew_pct / PERCENT * (1 - row.seaworthiness / PERCENT))
     if "crew" not in row.locked:
         row.crew = max(0, row.crew - lost)
@@ -291,7 +292,7 @@ async def sea_fight(
     table = ctx.rules.seafaring
     if "condition" not in loser[1].locked:
         loser[1].condition = clamp_int(loser[1].condition - table.combat_damage, 0, PERCENT)
-    await batter_vessel(ctx, loser[0], loser[1], max(1, table.combat_damage // ctx.rules.vehicles.section_hit), f"sea_fight.{winner[0].id}")
+    await battered(ctx, loser[0], loser[1], max(1, table.combat_damage // ctx.rules.vehicles.section_hit), f"sea_fight.{winner[0].id}")
     if "renown" not in winner[1].locked:
         winner[1].renown += table.renown_per_victory
     tally.fights += 1
@@ -342,7 +343,8 @@ async def seas(ctx: TickContext) -> SeaTally:
         tally.voyages += 1
         await weather_leg(ctx, vessel, row, weather, tally)
         if row.status in AFLOAT:
-            await wear_leg(ctx, vessel, row, stormy=weather in STORMS, tally=designs)
+            for hazard in await wear_leg(ctx, vessel, row, stormy=weather in STORMS, tally=designs):
+                await wreck_crew(ctx, vessel, row, hazard)
         if row.status in AFLOAT:
             row.renown += ctx.rules.seafaring.renown_per_voyage if "renown" not in row.locked else 0
             await strange_waters(ctx, vessel, row, tally)

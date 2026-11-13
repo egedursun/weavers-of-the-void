@@ -10,14 +10,19 @@ import { PERCENT_MAX } from '../constants'
 
 const CLASS_ORDER = [
   'scribe',
+  'professional',
+  'official',
   'artisan',
+  'worker',
   'priest',
   'merchant',
   'warrior',
   'farmer',
   'noble',
   'monastic',
+  'citizen',
   'outcast',
+  'unemployed',
   'serf_or_slave',
 ]
 const HALF = 50

@@ -33,7 +33,19 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat
 
 COUNCIL = frozenset(
-    {OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER, OfficeKind.REGENT, OfficeKind.CHAPLAIN}
+    {
+        OfficeKind.CHANCELLOR,
+        OfficeKind.MARSHAL,
+        OfficeKind.TREASURER,
+        OfficeKind.HIGH_JUDGE,
+        OfficeKind.SPYMASTER,
+        OfficeKind.REGENT,
+        OfficeKind.CHAPLAIN,
+        OfficeKind.HEAD_OF_GOVERNMENT,
+        OfficeKind.MINISTER,
+        OfficeKind.GENERAL,
+        OfficeKind.SPEAKER,
+    }
 )
 FOR = frozenset({ProposalStance.SUPPORT})
 AGAINST = frozenset({ProposalStance.OPPOSE, ProposalStance.OBSTRUCT})

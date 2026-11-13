@@ -319,7 +319,10 @@ export const AGENT_STATUS: Record<string, Named> = {
   retired: { label: 'Retired', icon: Leaf, tone: 'muted' },
 }
 
-export const OWNER_KIND: Record<string, Named> = {
+export const OWNER_KIND: Record<
+  Exclude<components['schemas']['BuilderKind'], 'god' | 'patron'>,
+  Named
+> = {
   polity: { label: 'Spies of a realm', icon: Crown, tone: 'gold' },
   faction: { label: 'Spies of a faction', icon: Users, tone: 'info' },
   cult: { label: 'Spies of a cult', icon: Sparkles, tone: 'verdigris' },
@@ -357,6 +360,13 @@ const GOVERNMENTS: Record<string, string> = {
   hive_council: 'a hive council',
   god_kingdom: 'a kingdom of its god',
   occupation: 'an occupied land',
+  junta: 'a military government',
+  corporate_state: 'a corporate state',
+  technocracy: 'a technocracy',
+  federation: 'a federation',
+  commune: 'a commune',
+  machine_rule: 'a realm ruled by machines',
+  colonial_administration: 'a colony',
 }
 
 export function aimParamText(

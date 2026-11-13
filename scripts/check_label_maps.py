@@ -7,9 +7,9 @@ ROOT = Path(__file__).resolve().parent.parent
 FRONTEND = ROOT / "frontend" / "src"
 SCHEMA = FRONTEND / "api" / "generated" / "schema.ts"
 ENUM_LIST = re.compile(r"export const (\w+)Values: ReadonlyArray<[^>]*>[^=]*= \[([^\]]*)\]")
-MAP_START = re.compile(r"(?:export )?const (\w+)(?::\s*Record<[^=]+>)?\s*=\s*\{\n")
-MAP_KEY = re.compile(r"\s*([a-z_][a-z0-9_-]*|'[^']+'|\"[^\"]+\")\s*:")
-NEARLY_ALL = 0.8
+MAP_START = re.compile(r"(?:export )?const (\w+)(?::\s*(Record<[^=]+>))?\s*=\s*\{\n")
+MAP_KEY = re.compile(r"\s*([a-z_][a-z0-9_-]*|'[^']+'|\"[^\"]+\")\s*(?::|,\s*$)")
+NEARLY_ALL = 0.65
 SMALLEST = 3
 
 
@@ -22,7 +22,7 @@ class Gap:
 
 
 def enum_values(schema: str) -> dict[str, frozenset[str]]:
-    return {match.group(1): frozenset(value.strip().strip('"') for value in match.group(2).split(",") if value.strip()) for match in ENUM_LIST.finditer(schema)}
+    return {match.group(1): frozenset(value.strip().strip("'\"") for value in match.group(2).split(",") if value.strip()) for match in ENUM_LIST.finditer(schema)}
 
 
 def top_keys(body: str) -> set[str]:
@@ -42,7 +42,8 @@ def maps_in(text: str) -> list[tuple[str, set[str]]]:
         while index < len(text) and depth:
             depth += {"{": 1, "}": -1}.get(text[index], 0)
             index += 1
-        found.append((match.group(1), top_keys(text[match.end() : index - 1])))
+        if "Exclude<" not in (match.group(2) or ""):
+            found.append((match.group(1), top_keys(text[match.end() : index - 1])))
     return found
 
 

@@ -47,6 +47,7 @@ class ConstructionRules:
     need_prison_crime: int = rule(45, 0, 100, G, "Crime that calls for a prison")
     need_unrest: int = rule(35, 0, 100, G, "Unrest that calls for an arena or theatre")
     need_prosperity_monument: int = rule(55, 0, 100, G, "Prosperity at which a community raises a monument")
+    need_terraform_harvest: int = rule(60, 0, 200, G, "Harvest of its land below which a settlement that can terraform wants a terraformer (%)")
     need_prosperity_wonder: int = rule(80, 0, 100, G, "Prosperity at which a great city begins a wonder")
     need_literacy: int = rule(40, 0, 100, G, "Literacy below which a town wants a school")
     need_wealth_bank: int = rule(60, 0, 100, G, "Wealth at which a town opens a bank")

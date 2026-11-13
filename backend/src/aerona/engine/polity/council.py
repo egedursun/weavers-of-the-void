@@ -33,6 +33,11 @@ TASKS: dict[OfficeKind, CouncilTask] = {
     OfficeKind.SPYMASTER: CouncilTask.DISRUPT_SCHEMES,
     OfficeKind.CHAPLAIN: CouncilTask.CONVERT_PROVINCE,
     OfficeKind.HIGH_JUDGE: CouncilTask.PURGE_CORRUPTION,
+    OfficeKind.HEAD_OF_GOVERNMENT: CouncilTask.IMPROVE_RELATIONS,
+    OfficeKind.MINISTER: CouncilTask.COLLECT_TAXES,
+    OfficeKind.GENERAL: CouncilTask.TRAIN_TROOPS,
+    OfficeKind.ADMIRAL: CouncilTask.TRAIN_TROOPS,
+    OfficeKind.SPEAKER: CouncilTask.PURGE_CORRUPTION,
 }
 TASK = "task"
 DILIGENCE = "diligence"

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.mind import CAREER_SKILLS
 from aerona.catalog.structures import RESEARCH_HOUSES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import IdeologyAdherentRow
@@ -18,7 +19,7 @@ from aerona.db.tables.regime import (
 )
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole
 from aerona.domain.enums.mind import MemoryKind, SkillKind, ValueAxis, ValueHolder
@@ -52,6 +53,7 @@ from aerona.engine.structures.readers import Working, working
 
 EXAMINED = (SkillKind.LAW, SkillKind.WRITING, SkillKind.LORE)
 CARRIED = 3
+LICENSED_ROLES = frozenset({MortalRole.PHYSICIAN, MortalRole.ENGINEER, MortalRole.PILOT, MortalRole.OFFICER})
 
 
 @dataclass
@@ -183,6 +185,23 @@ async def confer(ctx: TickContext, house: Working, tally: LearningTally) -> None
             await grant(ctx, mortal, CredentialKind.MASTER, granter_id=house.structure.id, skill=skill, tally=tally)
         if house.profile.kind is StructureKind.ACADEMY and level >= table.doctor_at and not await holds(ctx, mortal.id, CredentialKind.DOCTOR):
             await grant(ctx, mortal, CredentialKind.DOCTOR, granter_id=house.structure.id, skill=skill, tally=tally)
+        if house.profile.kind is StructureKind.UNIVERSITY and level >= table.degree_at and not await holds(ctx, mortal.id, CredentialKind.DEGREE):
+            await grant(ctx, mortal, CredentialKind.DEGREE, granter_id=house.structure.id, skill=skill, tally=tally)
+
+
+async def license_holders(ctx: TickContext, realm: Realm, tally: LearningTally) -> None:
+    table = ctx.rules.credentials
+    if not await realm_allows(ctx.session, realm, Technique.WRITTEN_LAW):
+        return
+    for mortal in await subjects(ctx, realm):
+        kind = CredentialKind.COMMISSION if mortal.mortal_role is MortalRole.OFFICER else CredentialKind.LICENCE
+        skills = CAREER_SKILLS.get(mortal.mortal_role) if mortal.mortal_role in LICENSED_ROLES else None
+        if skills is None or held(mortal.id) or not adult(ctx, mortal) or await holds(ctx, mortal.id, kind):
+            continue
+        best = await best_skill(ctx, mortal.id, skills)
+        mark = table.commission_at if kind is CredentialKind.COMMISSION else table.licence_at
+        if best is not None and best[1] >= mark:
+            await grant(ctx, mortal, kind, granter_id=realm.entity.id, skill=best[0], tally=tally)
 
 
 async def ordain(ctx: TickContext, book: RealmBook, temple: Working, tally: LearningTally) -> None:
@@ -379,6 +398,7 @@ async def keep_learning(ctx: TickContext, tally: LearningTally) -> None:
         row = await exam_row(ctx, realm)
         if row is not None:
             await sit(ctx, book, realm, row, tally)
+        await license_holders(ctx, realm, tally)
     houses = await working(ctx.session, RESEARCH_HOUSES)
     rows: dict[int, tuple[Working, AcademicFreedomRow]] = {}
     for house in houses:

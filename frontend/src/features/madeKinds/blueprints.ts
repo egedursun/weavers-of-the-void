@@ -3086,6 +3086,845 @@ const RING: Blueprint = {
   ],
 }
 
+function walkerFigure(x: number, ground: number, lean = 0): Mark[] {
+  const hip = ground - 54
+  return [
+    { d: circle(x + lean, ground - 104, 11) },
+    { d: `M ${x + lean} ${ground - 92} L ${x} ${hip}`, line: 6 },
+    {
+      d: `M ${x} ${hip} L ${x - 14} ${ground} M ${x} ${hip} L ${x + 16} ${ground}`,
+      line: 6,
+    },
+  ]
+}
+
+function windows(
+  x: number,
+  y: number,
+  count: number,
+  step: number,
+  w: number,
+  h: number
+): string {
+  return Array.from({ length: count }, (_, index) =>
+    rect(x + index * step, y, w, h)
+  ).join(' ')
+}
+
+const BICYCLE: Blueprint = {
+  setting: 'ground',
+  body: 'M 206 196 L 262 126 L 372 126 L 336 196 Z',
+  bodyKeys: ['chassis', 'frame'],
+  hold: { x: 262, y: 134, w: 80, h: 52 },
+  features: [
+    feature(
+      ['draft_team'],
+      [300, 40],
+      [240, 30],
+      [
+        { d: circle(318, 30, 11) },
+        { d: 'M 314 42 L 286 112', line: 6 },
+        { d: 'M 304 64 L 372 106', line: 5 },
+        { d: 'M 286 112 L 320 196', line: 6 },
+      ]
+    ),
+    feature(
+      ['harness'],
+      [384, 104],
+      [440, 86],
+      [
+        { d: 'M 370 126 L 382 98 L 404 94', line: 5 },
+        { d: circle(300, 196, 15) },
+      ]
+    ),
+    feature(
+      ['cargo_bay'],
+      [186, 116],
+      [150, 96],
+      [{ d: rect(150, 112, 74, 10) }]
+    ),
+    feature(
+      ['wheels'],
+      [170, 198],
+      [100, 262],
+      [...wheel(170, 198, 54), ...wheel(410, 198, 54)]
+    ),
+  ],
+}
+
+const RICKSHAW: Blueprint = {
+  setting: 'ground',
+  body: 'M 260 200 L 260 124 Q 262 98 304 94 L 388 94 L 410 124 L 410 200 Z',
+  bodyKeys: ['chassis', 'frame'],
+  hold: { x: 270, y: 126, w: 130, h: 68 },
+  features: [
+    feature(
+      ['cargo_bay'],
+      [330, 62],
+      [330, 40],
+      [{ d: 'M 252 102 Q 320 30 420 84 L 408 100 Q 320 58 266 112 Z' }]
+    ),
+    feature(
+      ['harness'],
+      [180, 178],
+      [180, 150],
+      [{ d: 'M 262 172 L 102 178 M 262 186 L 102 192', line: 5 }]
+    ),
+    feature(
+      ['draft_team'],
+      [96, 140],
+      [60, 110],
+      [...walkerFigure(96, 240, -4), { d: 'M 96 130 L 106 180', line: 5 }]
+    ),
+    feature(['wheels', 'axle'], [350, 214], [350, 266], wheel(350, 214, 42)),
+  ],
+}
+
+const PALANQUIN: Blueprint = {
+  setting: 'ground',
+  body: rect(214, 96, 152, 82),
+  bodyKeys: ['chassis', 'frame'],
+  hold: { x: 224, y: 104, w: 132, h: 66 },
+  features: [
+    feature(
+      ['cargo_bay'],
+      [290, 72],
+      [290, 44],
+      [{ d: 'M 202 98 L 290 54 L 378 98 Z' }]
+    ),
+    feature(
+      ['harness'],
+      [140, 150],
+      [140, 124],
+      [{ d: 'M 60 150 H 520', line: 6 }]
+    ),
+    feature(
+      ['draft_team'],
+      [110, 170],
+      [70, 120],
+      [...walkerFigure(110, 250), ...walkerFigure(470, 250)]
+    ),
+  ],
+}
+
+const TRAM: Blueprint = {
+  setting: 'ground',
+  body: 'M 80 200 L 80 122 Q 84 98 112 96 L 468 96 Q 496 98 500 122 L 500 200 Z',
+  bodyKeys: ['chassis', 'frame', 'hull'],
+  hold: { x: 160, y: 104, w: 330, h: 88 },
+  features: [
+    feature(
+      ['engine'],
+      [300, 72],
+      [400, 40],
+      [
+        { d: 'M 268 96 L 290 64 L 330 64 L 310 96', line: 3 },
+        { d: 'M 256 60 H 360', line: 3 },
+      ]
+    ),
+    feature(['cockpit'], [120, 128], [110, 80], [{ d: rect(92, 108, 58, 42) }]),
+    feature(
+      ['cargo_bay'],
+      [300, 128],
+      [300, 150],
+      [{ d: windows(170, 110, 5, 64, 48, 32), neutral: true }]
+    ),
+    feature(
+      ['wheels'],
+      [160, 218],
+      [160, 264],
+      wheels(18, 218, 140, 190, 390, 440)
+    ),
+  ],
+  decor: [
+    { d: 'M 30 240 H 540', line: 3 },
+    { d: 'M 30 56 H 540', line: 1.4, neutral: true },
+  ],
+}
+
+const MAGLEV: Blueprint = {
+  setting: 'ground',
+  body: 'M 40 186 Q 46 122 150 106 L 510 100 L 524 112 L 524 186 Z',
+  bodyKeys: ['chassis', 'frame', 'hull'],
+  hold: { x: 170, y: 112, w: 340, h: 68 },
+  features: [
+    feature(
+      ['cockpit'],
+      [100, 136],
+      [90, 100],
+      [{ d: 'M 70 152 Q 96 118 156 112 L 160 142 Z' }]
+    ),
+    feature(
+      ['cargo_bay'],
+      [340, 128],
+      [340, 150],
+      [{ d: windows(190, 118, 6, 54, 38, 22), neutral: true }]
+    ),
+    feature(
+      ['engine'],
+      [330, 192],
+      [330, 172],
+      [{ d: rect(130, 186, 394, 10) }]
+    ),
+    feature(
+      ['wheels'],
+      [200, 206],
+      [200, 262],
+      [{ d: 'M 110 206 H 530', line: 6 }]
+    ),
+  ],
+  decor: [
+    { d: 'M 30 222 H 540', line: 9 },
+    { d: 'M 120 226 V 266 M 300 226 V 266 M 480 226 V 266', line: 6 },
+  ],
+}
+
+const BUS = motor(
+  'M 60 206 L 60 116 Q 62 92 92 90 L 500 90 Q 518 92 520 112 L 520 206 Z',
+  { x: 120, y: 98, w: 390, h: 100 },
+  [
+    feature(
+      ['cockpit'],
+      [86, 122],
+      [80, 70],
+      [{ d: 'M 66 150 L 66 106 Q 68 98 86 98 L 112 98 L 112 150 Z' }]
+    ),
+    feature(
+      ['steering'],
+      [100, 160],
+      [70, 176],
+      [{ d: ring(100, 160, 8, 8), line: 3 }]
+    ),
+    feature(
+      ['cargo_bay'],
+      [300, 122],
+      [300, 150],
+      [{ d: windows(130, 104, 6, 62, 50, 36), neutral: true }]
+    ),
+    feature(
+      ['engine'],
+      [490, 184],
+      [530, 230],
+      [{ d: rect(470, 168, 42, 30) }]
+    ),
+  ],
+  [130, 430]
+)
+
+const TRACTOR: Blueprint = {
+  setting: 'ground',
+  body: 'M 120 196 L 120 150 L 300 150 L 300 96 L 404 96 L 412 196 Z',
+  bodyKeys: ['chassis', 'frame', 'hull'],
+  hold: { x: 130, y: 158, w: 160, h: 32 },
+  features: [
+    feature(
+      ['cockpit'],
+      [350, 112],
+      [350, 72],
+      [{ d: rect(312, 104, 82, 44) }]
+    ),
+    feature(
+      ['engine'],
+      [190, 170],
+      [190, 120],
+      [{ d: rect(132, 156, 130, 34) }, { d: 'M 232 150 V 108', line: 6 }]
+    ),
+    feature(
+      ['steering'],
+      [300, 140],
+      [280, 120],
+      [{ d: ring(300, 142, 8, 8), line: 3 }]
+    ),
+    feature(
+      ['cargo_bay'],
+      [440, 182],
+      [480, 160],
+      [{ d: rect(412, 176, 56, 10) }]
+    ),
+    feature(
+      ['wheels', 'tracks'],
+      [370, 200],
+      [370, 266],
+      [...wheel(370, 200, 58), ...wheel(166, 222, 34)]
+    ),
+  ],
+}
+
+const APC = tracked(
+  'M 70 172 L 104 120 L 462 120 L 502 152 L 502 194 L 80 194 Z',
+  { x: 104, y: 128, w: 388, h: 60 },
+  [
+    feature(
+      ['cockpit'],
+      [130, 116],
+      [120, 96],
+      [{ d: 'M 106 120 L 118 108 H 152 L 158 120 Z' }]
+    ),
+    feature(
+      ['turret'],
+      [334, 102],
+      [334, 82],
+      [
+        { d: 'M 302 120 L 312 100 L 360 100 L 370 120 Z' },
+        { d: rect(360, 104, 74, 6) },
+      ]
+    ),
+    feature(
+      ['armour_plating'],
+      [280, 150],
+      [280, 168],
+      [{ d: rect(116, 144, 330, 8) }]
+    ),
+    feature(
+      ['engine'],
+      [430, 132],
+      [470, 104],
+      [{ d: rect(404, 126, 54, 14) }]
+    ),
+  ]
+)
+
+const SELF_PROPELLED_GUN = tracked(
+  'M 76 172 L 100 142 L 480 142 L 504 172 L 486 194 L 96 194 Z',
+  { x: 102, y: 148, w: 378, h: 42 },
+  [
+    feature(
+      ['turret'],
+      [360, 96],
+      [200, 84],
+      [
+        { d: 'M 300 142 L 312 88 L 462 88 L 472 142 Z' },
+        { d: rect(64, 102, 252, 12) },
+      ]
+    ),
+    feature(
+      ['cockpit'],
+      [130, 138],
+      [120, 116],
+      [{ d: 'M 108 142 L 120 130 H 150 L 156 142 Z' }]
+    ),
+    feature(
+      ['magazine'],
+      [440, 112],
+      [500, 84],
+      [{ d: rect(420, 100, 36, 30) }]
+    ),
+  ]
+)
+
+const MISSILE_CARRIER = motor(
+  'M 60 206 L 60 150 Q 62 128 88 126 L 150 126 L 150 162 L 520 162 L 520 206 Z',
+  { x: 160, y: 166, w: 352, h: 34 },
+  [
+    feature(
+      ['cockpit'],
+      [104, 140],
+      [96, 108],
+      [{ d: 'M 74 160 L 74 144 Q 76 134 92 134 L 140 134 L 140 160 Z' }]
+    ),
+    feature(
+      ['steering'],
+      [128, 170],
+      [128, 186],
+      [{ d: ring(128, 170, 7, 7), line: 3 }]
+    ),
+    feature(
+      ['cargo_bay'],
+      [340, 110],
+      [420, 60],
+      [
+        { d: 'M 198 158 L 468 72 L 482 92 L 214 170 Z' },
+        { d: 'M 214 150 L 476 62 L 486 76 L 226 160 Z' },
+      ]
+    ),
+    feature(['engine'], [70, 182], [40, 230], [{ d: rect(60, 168, 44, 30) }]),
+  ],
+  [110, 330, 400, 470]
+)
+
+const MOTORBOAT: Blueprint = {
+  setting: 'water',
+  body: 'M 70 168 L 476 160 L 508 150 L 494 200 Q 460 228 300 230 Q 130 228 70 168 Z',
+  bodyKeys: ['hull', 'frame'],
+  hold: { x: 110, y: 172, w: 340, h: 44 },
+  features: [
+    feature(
+      ['rudder', 'steering'],
+      [340, 140],
+      [340, 110],
+      [
+        { d: 'M 300 162 L 330 128 L 384 128 L 384 160 Z' },
+        { d: ring(360, 150, 7, 7), line: 2.4, neutral: true },
+      ]
+    ),
+    feature(
+      ['oars'],
+      [512, 200],
+      [540, 250],
+      [{ d: 'M 498 160 L 522 160 L 528 236 L 510 236 Z' }]
+    ),
+  ],
+  decor: [{ d: 'M 20 214 H 540', line: 1.2, neutral: true }],
+}
+
+const HYDROFOIL: Blueprint = {
+  setting: 'water',
+  body: 'M 60 140 Q 80 110 160 106 L 484 104 L 506 120 L 494 152 L 94 158 Q 66 156 60 140 Z',
+  bodyKeys: ['hull', 'frame'],
+  hold: { x: 120, y: 114, w: 360, h: 38 },
+  features: [
+    feature(
+      ['hold'],
+      [300, 124],
+      [300, 90],
+      [{ d: windows(150, 116, 7, 46, 30, 14), neutral: true }]
+    ),
+    feature(
+      ['oars'],
+      [150, 206],
+      [110, 250],
+      [
+        { d: 'M 150 156 V 206 M 420 154 V 206', line: 6 },
+        { d: 'M 116 208 H 184 M 386 208 H 454', line: 5 },
+      ]
+    ),
+    feature(
+      ['rudder', 'steering'],
+      [500, 160],
+      [530, 190],
+      [{ d: 'M 488 150 L 508 152 L 504 186 L 486 180 Z' }]
+    ),
+  ],
+  decor: [{ d: 'M 20 200 H 540', line: 1.2, neutral: true }],
+}
+
+const CONTAINER_SHIP = ship(
+  [
+    feature(
+      ['bridge'],
+      [474, 106],
+      [474, 76],
+      [{ d: 'M 442 146 L 446 92 L 504 92 L 508 146 Z' }]
+    ),
+    feature(
+      ['boiler', 'engine'],
+      [424, 114],
+      [410, 84],
+      [{ d: 'M 414 146 L 418 108 L 432 108 L 436 146 Z' }]
+    ),
+    feature(
+      ['hold'],
+      [230, 112],
+      [230, 64],
+      [
+        { d: windows(60, 120, 10, 35, 32, 24) },
+        { d: windows(94, 94, 8, 35, 32, 24) },
+      ]
+    ),
+  ],
+  [],
+  'steam'
+)
+
+const TANKER = ship(
+  [
+    feature(
+      ['bridge'],
+      [470, 110],
+      [470, 80],
+      [{ d: 'M 440 146 L 444 96 L 500 96 L 504 146 Z' }]
+    ),
+    feature(
+      ['boiler', 'engine'],
+      [420, 118],
+      [400, 88],
+      [{ d: 'M 410 146 L 414 112 L 428 112 L 432 146 Z' }]
+    ),
+    feature(
+      ['hold'],
+      [230, 130],
+      [230, 96],
+      [
+        ...[90, 170, 250, 330].map((x) => ({
+          d: `M ${x} 146 A 34 18 0 0 1 ${x + 68} 146 Z`,
+        })),
+        { d: 'M 70 134 H 410', line: 3, neutral: true },
+      ]
+    ),
+  ],
+  [],
+  'steam'
+)
+
+const DESTROYER = ship(
+  [
+    feature(
+      ['bridge'],
+      [230, 108],
+      [230, 60],
+      [
+        { d: 'M 204 146 L 208 112 L 254 112 L 258 146 Z' },
+        { d: 'M 230 112 V 70 M 216 82 H 244', line: 3 },
+      ]
+    ),
+    feature(
+      ['boiler', 'engine'],
+      [320, 116],
+      [320, 86],
+      [
+        { d: 'M 296 146 L 300 108 L 320 108 L 324 146 Z' },
+        { d: 'M 334 146 L 338 112 L 356 112 L 360 146 Z' },
+      ]
+    ),
+    feature(
+      ['turret'],
+      [130, 134],
+      [100, 116],
+      [
+        { d: 'M 114 146 L 120 130 L 150 130 L 156 146 Z' },
+        { d: rect(70, 134, 46, 4) },
+        { d: 'M 428 146 L 434 130 L 464 130 L 470 146 Z' },
+      ]
+    ),
+  ],
+  [],
+  'steam'
+)
+
+const CRUISER = ship(
+  [
+    feature(
+      ['bridge'],
+      [290, 90],
+      [290, 52],
+      [
+        {
+          d: 'M 260 146 L 264 108 L 276 108 L 280 72 L 304 72 L 308 108 L 320 108 L 324 146 Z',
+        },
+      ]
+    ),
+    feature(
+      ['boiler', 'engine'],
+      [370, 108],
+      [400, 80],
+      [
+        { d: 'M 350 146 L 356 100 L 378 100 L 384 146 Z' },
+        { d: 'M 390 146 L 396 104 L 416 104 L 422 146 Z' },
+      ]
+    ),
+    feature(
+      ['turret'],
+      [170, 132],
+      [150, 112],
+      [
+        { d: 'M 140 146 L 148 128 L 196 128 L 204 146 Z' },
+        { d: rect(84, 132, 60, 6) },
+        { d: 'M 210 146 L 216 132 L 248 132 L 254 146 Z' },
+        { d: 'M 452 146 L 460 128 L 500 128 L 508 146 Z' },
+      ]
+    ),
+  ],
+  [],
+  'steam'
+)
+
+const ICEBREAKER = ship(
+  [
+    feature(
+      ['armour_plating'],
+      [60, 196],
+      [40, 254],
+      [{ d: 'M 26 150 L 92 150 L 110 228 L 72 232 Z' }]
+    ),
+    feature(
+      ['bridge'],
+      [190, 100],
+      [190, 66],
+      [{ d: 'M 150 146 L 156 86 L 226 86 L 232 146 Z' }]
+    ),
+    feature(
+      ['boiler', 'engine'],
+      [330, 112],
+      [330, 82],
+      [{ d: 'M 312 146 L 316 102 L 344 102 L 348 146 Z' }]
+    ),
+    feature(['hold'], [430, 134], [470, 112], [{ d: rect(392, 124, 90, 22) }]),
+  ],
+  [],
+  'steam'
+)
+
+const VTOL = aircraft(
+  [
+    feature(
+      ['engine', 'drive'],
+      [300, 70],
+      [400, 40],
+      [{ d: rect(288, 60, 26, 56) }, { d: 'M 236 56 H 366', line: 3 }]
+    ),
+    feature(
+      ['hardpoint'],
+      [200, 174],
+      [150, 200],
+      [{ d: rect(178, 166, 46, 8) }]
+    ),
+  ],
+  [{ d: 'M 244 152 L 344 152 L 364 178 L 264 178 Z' }]
+)
+
+const SPACEPLANE = starship(
+  'M 40 158 Q 60 132 140 128 L 470 124 L 510 136 L 510 170 L 470 178 L 140 184 Q 60 184 40 158 Z',
+  { x: 130, y: 132, w: 370, h: 44 },
+  [
+    shaped(
+      feature(
+        ['wings'],
+        [380, 214],
+        [380, 258],
+        [{ d: 'M 200 180 L 462 176 L 494 240 L 360 242 Z' }],
+        true
+      )
+    ),
+    shaped(
+      feature(
+        ['tail'],
+        [474, 100],
+        [494, 70],
+        [{ d: 'M 440 124 L 474 76 L 496 76 L 490 126 Z' }]
+      )
+    ),
+    feature(
+      ['cockpit', 'bridge'],
+      [84, 142],
+      [70, 112],
+      [{ d: 'M 54 154 Q 74 134 126 134 L 130 150 Z' }]
+    ),
+    feature(
+      ['drive', 'engine'],
+      [516, 154],
+      [534, 204],
+      engines(506, [146, 162], 20, 12)
+    ),
+  ]
+)
+
+const ESCAPE_POD = starship(
+  'M 184 204 L 222 94 Q 280 56 338 94 L 376 204 Z',
+  { x: 220, y: 112, w: 120, h: 84 },
+  [
+    feature(
+      ['drive', 'engine'],
+      [280, 216],
+      [280, 250],
+      [{ d: 'M 228 204 L 218 228 H 342 L 332 204 Z' }]
+    ),
+    feature(
+      ['life_support'],
+      [376, 150],
+      [430, 120],
+      [{ d: rect(370, 136, 30, 28) }, { d: 'M 360 150 H 370', line: 3 }]
+    ),
+    feature(
+      ['cockpit', 'bridge'],
+      [280, 88],
+      [280, 50],
+      [{ d: circle(280, 86, 10) }]
+    ),
+  ]
+)
+
+const SPACE_TUG = starship(
+  'M 180 196 L 180 116 Q 182 102 198 100 L 384 100 Q 400 102 402 116 L 402 196 Z',
+  { x: 196, y: 112, w: 192, h: 78 },
+  [
+    feature(
+      ['cargo_bay'],
+      [120, 150],
+      [100, 96],
+      [
+        { d: 'M 182 116 L 100 104 L 92 118 L 182 134 Z' },
+        { d: 'M 182 180 L 100 192 L 92 178 L 182 162 Z' },
+      ]
+    ),
+    feature(
+      ['cockpit', 'bridge'],
+      [214, 116],
+      [214, 82],
+      [{ d: rect(194, 106, 40, 18) }]
+    ),
+    feature(
+      ['drive', 'engine'],
+      [414, 148],
+      [450, 200],
+      engines(400, [126, 148, 170], 26, 16)
+    ),
+  ]
+)
+
+const MOTHERSHIP = starship(
+  'M 30 150 Q 120 92 280 88 Q 440 92 530 150 Q 440 208 280 212 Q 120 208 30 150 Z',
+  { x: 130, y: 120, w: 300, h: 60 },
+  [
+    feature(
+      ['bridge', 'cockpit'],
+      [280, 80],
+      [280, 50],
+      [{ d: 'M 240 92 A 40 22 0 0 1 320 92 Z' }]
+    ),
+    feature(
+      ['cargo_bay'],
+      [280, 196],
+      [280, 240],
+      [{ d: rect(214, 186, 132, 16) }]
+    ),
+    feature(
+      ['crew_quarters'],
+      [180, 148],
+      [120, 236],
+      [{ d: windows(140, 104, 8, 36, 20, 7), neutral: true }]
+    ),
+    feature(
+      ['drive', 'engine'],
+      [520, 150],
+      [540, 196],
+      engines(510, [138, 162], 18, 12)
+    ),
+  ]
+)
+
+const BATTLE_MECH: Blueprint = {
+  ...walker(null, [
+    feature(
+      ['armour_plating'],
+      [280, 112],
+      [140, 60],
+      [{ d: 'M 196 80 L 364 80 L 352 150 L 208 150 Z' }]
+    ),
+    feature(
+      ['power_core'],
+      [280, 114],
+      [280, 190],
+      [{ d: circle(280, 114, 14) }]
+    ),
+  ]),
+  body: 'M 196 40 L 364 40 L 404 70 L 412 160 Q 400 184 360 186 L 200 186 Q 160 184 148 160 L 156 70 Z',
+}
+
+const BIOSHIP: Blueprint = {
+  setting: 'space',
+  body: 'M 30 150 Q 80 96 200 100 Q 340 104 470 120 Q 530 128 548 150 Q 530 172 470 180 Q 340 196 200 200 Q 80 204 30 150 Z',
+  bodyKeys: ['hull', 'core'],
+  hold: { x: 120, y: 124, w: 320, h: 52 },
+  features: [
+    feature(['core'], [280, 150], [280, 90], [{ d: circle(280, 150, 22) }]),
+    feature(
+      ['drive'],
+      [540, 150],
+      [540, 100],
+      [{ d: 'M 540 138 Q 562 118 548 96 M 540 162 Q 562 182 548 204', line: 3 }]
+    ),
+    feature(['sensors'], [64, 150], [40, 116], [{ d: circle(70, 150, 8) }]),
+    feature(
+      ['ward'],
+      [200, 210],
+      [200, 254],
+      [{ d: ring(280, 150, 220, 70), line: 1.6, neutral: true }]
+    ),
+  ],
+  decor: [
+    {
+      d: 'M 160 108 Q 170 150 160 192 M 230 102 Q 242 150 230 198 M 380 112 Q 392 150 380 188',
+      line: 1.4,
+      neutral: true,
+    },
+  ],
+}
+
+const HIGH_RISE: Blueprint = {
+  ...building(
+    'M 186 232 V 80 H 212 V 52 H 238 V 26 H 322 V 52 H 348 V 80 H 374 V 232 Z',
+    { x: 186, y: 80, w: 188, h: 152 },
+    'none',
+    { x: 196, y: 90, w: 168, h: 136 }
+  ),
+  decor: [{ d: windows(246, 32, 4, 18, 8, 16), line: 1, neutral: true }],
+}
+
+const ARCOLOGY = building(
+  'M 60 232 L 112 172 L 156 172 L 196 112 L 236 112 L 266 56 L 294 56 L 324 112 L 364 112 L 404 172 L 448 172 L 500 232 Z',
+  { x: 156, y: 112, w: 248, h: 120 },
+  'none',
+  { x: 170, y: 124, w: 220, h: 100 }
+)
+
+const BUNKER: Blueprint = {
+  ...building(
+    'M 112 232 Q 132 168 280 160 Q 428 168 448 232 Z',
+    { x: 150, y: 172, w: 260, h: 60 },
+    'none',
+    { x: 170, y: 184, w: 220, h: 42 }
+  ),
+  decor: [{ d: rect(236, 186, 88, 6) }],
+}
+
+const FLOATING = building(
+  rect(130, 116, 300, 84),
+  { x: 130, y: 116, w: 300, h: 84 },
+  'flat',
+  { x: 140, y: 124, w: 280, h: 68 },
+  {
+    setting: 'water',
+    footing: `${rect(120, 200, 80, 30)} ${rect(240, 200, 80, 30)} ${rect(360, 200, 80, 30)}`,
+  }
+)
+
+const GEODESIC: Blueprint = {
+  ...building(
+    'M 140 232 A 140 120 0 0 1 420 232 Z',
+    { x: 160, y: 140, w: 240, h: 92 },
+    'none',
+    { x: 190, y: 160, w: 180, h: 66 }
+  ),
+  decor: [
+    {
+      d: 'M 280 112 L 200 172 L 160 232 M 280 112 L 360 172 L 400 232 M 200 172 H 360 M 200 172 L 280 232 L 360 172 M 240 142 H 320',
+      line: 1.2,
+      neutral: true,
+    },
+  ],
+}
+
+const MODULAR = building(
+  'M 140 232 V 160 H 250 V 108 H 198 V 60 H 310 V 106 H 378 V 148 H 464 V 232 Z',
+  { x: 140, y: 106, w: 324, h: 126 },
+  'none',
+  { x: 196, y: 118, w: 230, h: 106 }
+)
+
+const GROWN = building(
+  'M 150 232 Q 118 160 168 108 Q 220 48 292 58 Q 382 70 402 140 Q 422 200 412 232 Z',
+  { x: 170, y: 110, w: 222, h: 122 },
+  'none',
+  { x: 190, y: 128, w: 186, h: 96 }
+)
+
+const CARVED: Blueprint = {
+  ...building(
+    'M 40 232 L 62 122 L 120 72 L 262 42 L 402 58 L 500 112 L 522 232 Z',
+    { x: 150, y: 120, w: 260, h: 112 },
+    'none',
+    { x: 170, y: 134, w: 220, h: 92 },
+    { setting: 'deep' }
+  ),
+  decor: [
+    {
+      d: 'M 256 232 V 182 Q 280 160 304 182 V 232 M 196 150 H 224 V 176 H 196 Z M 336 150 H 364 V 176 H 336 Z',
+      line: 2,
+      neutral: true,
+    },
+  ],
+}
+
 export const BLUEPRINTS = {
   riding: RIDING,
   pack: PACK,
@@ -3280,6 +4119,38 @@ export const BLUEPRINTS = {
     { setting: 'deep' }
   ),
   ring: RING,
+  bicycle: BICYCLE,
+  rickshaw: RICKSHAW,
+  palanquin: PALANQUIN,
+  tram: TRAM,
+  maglev: MAGLEV,
+  bus: BUS,
+  tractor: TRACTOR,
+  apc: APC,
+  self_propelled_gun: SELF_PROPELLED_GUN,
+  missile_carrier: MISSILE_CARRIER,
+  motorboat: MOTORBOAT,
+  hydrofoil: HYDROFOIL,
+  container_ship: CONTAINER_SHIP,
+  tanker: TANKER,
+  destroyer: DESTROYER,
+  cruiser: CRUISER,
+  icebreaker: ICEBREAKER,
+  vtol: VTOL,
+  spaceplane: SPACEPLANE,
+  escape_pod: ESCAPE_POD,
+  space_tug: SPACE_TUG,
+  mothership: MOTHERSHIP,
+  battle_mech: BATTLE_MECH,
+  bioship: BIOSHIP,
+  high_rise: HIGH_RISE,
+  arcology: ARCOLOGY,
+  bunker: BUNKER,
+  floating: FLOATING,
+  geodesic: GEODESIC,
+  modular: MODULAR,
+  grown: GROWN,
+  carved: CARVED,
 } as const satisfies Record<string, Blueprint>
 
 export type Silhouette = keyof typeof BLUEPRINTS
@@ -3389,6 +4260,30 @@ const FRAME_SHAPES: Record<VehicleFrame, Silhouette> = {
   corvette: 'corvette',
   dreadnought: 'dreadnought',
   burrower: 'burrower',
+  bicycle: 'bicycle',
+  rickshaw: 'rickshaw',
+  palanquin: 'palanquin',
+  tram: 'tram',
+  maglev: 'maglev',
+  bus: 'bus',
+  tractor: 'tractor',
+  apc: 'apc',
+  self_propelled_gun: 'self_propelled_gun',
+  missile_carrier: 'missile_carrier',
+  motorboat: 'motorboat',
+  hydrofoil: 'hydrofoil',
+  container_ship: 'container_ship',
+  tanker: 'tanker',
+  destroyer: 'destroyer',
+  cruiser: 'cruiser',
+  icebreaker: 'icebreaker',
+  vtol: 'vtol',
+  spaceplane: 'spaceplane',
+  escape_pod: 'escape_pod',
+  space_tug: 'space_tug',
+  mothership: 'mothership',
+  battle_mech: 'battle_mech',
+  bioship: 'bioship',
 }
 
 const FAMILY_SHAPES: Record<VehicleFamily, Silhouette> = {
@@ -3439,6 +4334,14 @@ const FORM_SHAPES: Record<BuildingForm, Silhouette> = {
   wall_line: 'wall',
   tunnel_form: 'tunnel',
   orbital: 'ring',
+  high_rise: 'high_rise',
+  arcology: 'arcology',
+  bunker: 'bunker',
+  floating: 'floating',
+  geodesic: 'geodesic',
+  modular: 'modular',
+  grown: 'grown',
+  carved: 'carved',
 }
 
 export function vehicleShape(

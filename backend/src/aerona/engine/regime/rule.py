@@ -51,6 +51,13 @@ SELECTORATES = total(
         GovernmentKind.THEOCRACY: SelectorateKind.PRIESTS,
         GovernmentKind.GOD_KINGDOM: SelectorateKind.PRIESTS,
         GovernmentKind.OCCUPATION: SelectorateKind.ARMY,
+        GovernmentKind.COLONIAL_ADMINISTRATION: SelectorateKind.ARMY,
+        GovernmentKind.COMMUNE: SelectorateKind.PARTY,
+        GovernmentKind.CORPORATE_STATE: SelectorateKind.SHAREHOLDERS,
+        GovernmentKind.FEDERATION: SelectorateKind.CITIZENS,
+        GovernmentKind.JUNTA: SelectorateKind.ARMY,
+        GovernmentKind.MACHINE_RULE: SelectorateKind.ALGORITHM,
+        GovernmentKind.TECHNOCRACY: SelectorateKind.COUNCIL,
     },
 )
 SELECTING_CLASSES = total(
@@ -62,6 +69,9 @@ SELECTING_CLASSES = total(
         SelectorateKind.ARMY: (SocialClass.WARRIOR,),
         SelectorateKind.PRIESTS: (SocialClass.PRIEST,),
         SelectorateKind.CITIZENS: (),
+        SelectorateKind.ALGORITHM: (SocialClass.PROFESSIONAL, SocialClass.OFFICIAL),
+        SelectorateKind.PARTY: (SocialClass.OFFICIAL, SocialClass.CITIZEN, SocialClass.WORKER),
+        SelectorateKind.SHAREHOLDERS: (SocialClass.MERCHANT, SocialClass.PROFESSIONAL),
     },
 )
 COALITION_RULES = total(
@@ -74,8 +84,8 @@ COALITION_RULES = total(
     },
 )
 TRIBAL = frozenset({GovernmentKind.CHIEFDOM, GovernmentKind.TRIBAL_CONFEDERATION})
-LOWER_CLASSES = (SocialClass.FARMER, SocialClass.ARTISAN)
-ELITES = (SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.WARRIOR, SocialClass.SCRIBE, SocialClass.MERCHANT)
+LOWER_CLASSES = (SocialClass.FARMER, SocialClass.ARTISAN, SocialClass.WORKER)
+ELITES = (SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.WARRIOR, SocialClass.SCRIBE, SocialClass.MERCHANT, SocialClass.OFFICIAL, SocialClass.PROFESSIONAL)
 LAW_TECHNIQUES = (Technique.WRITTEN_LAW, Technique.CODIFIED_LAW)
 
 

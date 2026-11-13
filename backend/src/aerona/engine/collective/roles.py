@@ -43,6 +43,7 @@ CAREER_ROLES: MappingProxyType[CareerPath, RoleKind] = MappingProxyType(
         CareerPath.APPRENTICE: RoleKind.PROFESSION,
         CareerPath.TRADE: RoleKind.PROFESSION,
         CareerPath.VOWS: RoleKind.PRIESTHOOD,
+        CareerPath.STUDY: RoleKind.PROFESSION,
     }
 )
 ELITE = (SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.SCRIBE, SocialClass.WARRIOR)

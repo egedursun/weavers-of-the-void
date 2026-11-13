@@ -26,6 +26,11 @@ CLASS_ROLES: dict[SocialClass, str] = {
     SocialClass.SERF_OR_SLAVE: "freed king",
     SocialClass.OUTCAST: "beggar king",
     SocialClass.MONASTIC: "abbot-king",
+    SocialClass.WORKER: "workers' leader",
+    SocialClass.PROFESSIONAL: "expert ruler",
+    SocialClass.OFFICIAL: "chief administrator",
+    SocialClass.CITIZEN: "first citizen",
+    SocialClass.UNEMPLOYED: "voice of the jobless",
 }
 CLASSED_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
 

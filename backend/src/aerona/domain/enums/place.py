@@ -30,6 +30,16 @@ class PlaceKind(StrEnum):
     MINE_SITE = "mine_site"
     HARBOUR_SITE = "harbour_site"
     CROSSROADS = "crossroads"
+    WRECK_SITE = "wreck_site"
+    MEGASTRUCTURE_RUIN = "megastructure_ruin"
+    ANOMALY = "anomaly"
+    DEBRIS_FIELD = "debris_field"
+    REEF = "reef"
+    GLACIER = "glacier"
+    DUNES = "dunes"
+    CANYON = "canyon"
+    OASIS = "oasis"
+    GEYSER = "geyser"
 
 
 class SacredClass(StrEnum):

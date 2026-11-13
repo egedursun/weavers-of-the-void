@@ -22,7 +22,7 @@ from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind, Facet, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
 from aerona.domain.enums.polity import LawKind
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.conditions import gain_condition
@@ -50,6 +50,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
+from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
@@ -77,6 +78,7 @@ CAREER_ROLES = partial(
         CareerPath.TRADE: MortalRole.MERCHANT,
         CareerPath.WANDER: MortalRole.EXPLORER,
         CareerPath.BANDIT: MortalRole.BANDIT,
+        CareerPath.STUDY: MortalRole.SCIENTIST,
     },
     without={CareerPath.STAY},
 )
@@ -88,6 +90,7 @@ CAREER_TRAITS: dict[CareerPath, frozenset[TraitKind]] = {
     CareerPath.TRADE: frozenset({TraitKind.GREEDY, TraitKind.GREGARIOUS, TraitKind.DECEITFUL}),
     CareerPath.WANDER: frozenset({TraitKind.CURIOUS, TraitKind.RECKLESS, TraitKind.FICKLE}),
     CareerPath.BANDIT: frozenset({TraitKind.CRUEL, TraitKind.GREEDY, TraitKind.DECEITFUL}),
+    CareerPath.STUDY: frozenset({TraitKind.CURIOUS, TraitKind.SCHOLARLY, TraitKind.PATIENT}),
 }
 CAREER_VALUES: dict[CareerPath, ValueAxis] = {
     CareerPath.ARMY: ValueAxis.MARTIAL,
@@ -96,6 +99,7 @@ CAREER_VALUES: dict[CareerPath, ValueAxis] = {
     CareerPath.VOWS: ValueAxis.PIETY,
     CareerPath.TRADE: ValueAxis.WEALTH,
     CareerPath.WANDER: ValueAxis.XENOPHILIA,
+    CareerPath.STUDY: ValueAxis.KNOWLEDGE,
 }
 CAREER_NEEDS: dict[CareerPath, NeedKind] = {
     CareerPath.ARMY: NeedKind.STATUS,
@@ -105,8 +109,11 @@ CAREER_NEEDS: dict[CareerPath, NeedKind] = {
     CareerPath.TRADE: NeedKind.SUSTENANCE,
     CareerPath.WANDER: NeedKind.PURPOSE,
     CareerPath.BANDIT: NeedKind.SUSTENANCE,
+    CareerPath.STUDY: NeedKind.PURPOSE,
 }
-OFFICE_CLASSES = frozenset({SocialClass.NOBLE, SocialClass.SCRIBE, SocialClass.PRIEST})
+OFFICE_CLASSES = frozenset({SocialClass.NOBLE, SocialClass.SCRIBE, SocialClass.PRIEST, SocialClass.OFFICIAL, SocialClass.PROFESSIONAL})
+OFFICER_CLASSES = frozenset({SocialClass.NOBLE, SocialClass.OFFICIAL, SocialClass.PROFESSIONAL})
+STUDY_ROLES = frozenset({MortalRole.SCIENTIST, MortalRole.ENGINEER, MortalRole.PILOT, MortalRole.PHYSICIAN, MortalRole.JOURNALIST})
 FULL = PERCENT
 PERSECUTION = "persecution"
 
@@ -450,7 +457,21 @@ async def openings(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRo
     table = ctx.rules.careers
     if profile.wealth < table.bandit_wealth_below and profile.honour < table.bandit_honour_below:
         open_paths.add(CareerPath.BANDIT)
+    home = mortal.location_id
+    if home is not None and (await known_levels(ctx.session, [home])).get(home, {}).get(KnowledgeBranch.WRITING, 0) >= table.study_level:
+        open_paths.add(CareerPath.STUDY)
     return open_paths
+
+
+def career_role(path: CareerPath, mortal: EntityRow, profile: MortalProfileRow) -> MortalRole:
+    pulled = PROFESSIONS[profile.profession].role if profile.profession is not None else None
+    if path is CareerPath.STUDY and pulled in STUDY_ROLES:
+        return pulled
+    if path is CareerPath.ARMY and mortal.social_class in OFFICER_CLASSES:
+        return MortalRole.OFFICER
+    if path is CareerPath.TRADE and mortal.social_class is SocialClass.PROFESSIONAL:
+        return MortalRole.EXECUTIVE
+    return CAREER_ROLES[path]
 
 
 async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> CareerPath | None:
@@ -490,7 +511,7 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
     shame = await breach_cost(ctx.session, mortal, ROLE_OF_CAREER[best]) if best in ROLE_OF_CAREER else 0
     if shame and "honour" not in profile.locked:
         profile.honour = max(0, profile.honour - shame * ctx.rules.role_norms.breach_stance_cost)
-    role = CAREER_ROLES[best]
+    role = career_role(best, mortal, profile)
     old = mortal.mortal_role
     mortal.mortal_role = role
     if best is CareerPath.VOWS:

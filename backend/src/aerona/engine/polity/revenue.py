@@ -123,7 +123,8 @@ async def base_of(ctx: TickContext, book: RealmBook, realm: Realm, kind: TaxKind
         if kind is TaxKind.POLL:
             total += (stat(member, "population") or 0) / 1000 * table.poll_take
         elif kind is TaxKind.CONSUMPTION:
-            total += prosperity * (shares.get(C.NOBLE, 0.0) + shares.get(C.MERCHANT, 0.0)) / PERCENT * table.consumption_take / RATE_UNIT
+            spenders = shares.get(C.NOBLE, 0.0) + shares.get(C.MERCHANT, 0.0) + shares.get(C.PROFESSIONAL, 0.0) + shares.get(C.CITIZEN, 0.0)
+            total += prosperity * spenders / PERCENT * table.consumption_take / RATE_UNIT
         elif kind is TaxKind.LAND:
             total += prosperity * (shares.get(C.FARMER, 0.0) + shares.get(C.NOBLE, 0.0)) / PERCENT * table.land_take / RATE_UNIT
         else:

@@ -255,6 +255,13 @@ class ItemClass(StrEnum):
     KEY = "key"
     JEWEL = "jewel"
     CURRENCY = "currency"
+    FIREARM = "firearm"
+    DEVICE = "device"
+    COMPUTER = "computer"
+    IMPLANT = "implant"
+    DRUG = "drug"
+    VEHICLE_PART = "vehicle_part"
+    COMMUNICATOR = "communicator"
 
 
 class CurseKind(StrEnum):

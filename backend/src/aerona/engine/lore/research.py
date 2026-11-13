@@ -20,6 +20,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.agrarian.book import farming_boost
 from aerona.engine.context import TickContext
@@ -28,6 +29,7 @@ from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.lore.learning import institution_factor, patron_factor
 from aerona.engine.lore.printing import banned_for, read_in_secret
 from aerona.engine.lore.truth import branch_factor
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -272,8 +274,12 @@ async def diffuse_techniques(ctx: TickContext) -> int:
                 if TECHNIQUES[row.technique].branch not in hidden
             }
             mine = await techniques_of(ctx.session, taker)
+            term = await law_param(ctx.session, giver, LawKind.INTELLECTUAL_PROPERTY, "term")
+            guarded = min(PERCENT, (int(term) if isinstance(term, int) else 0) * ctx.rules.tech_graph.patent_block_pct)
             for technique in sorted(theirs - mine):
                 spec = TECHNIQUES[technique]
+                if guarded and ctx.rng(f"patent.{giver}.{taker}.{technique.value}.{ctx.epoch}").chance(guarded):
+                    continue
                 if levels.get(taker, {}).get(spec.branch, 0) >= spec.level:
                     ctx.session.add(HolderTechniqueRow(holder_entity_id=taker, technique=technique, since_epoch=ctx.epoch, secret=False))
                     mine.add(technique)

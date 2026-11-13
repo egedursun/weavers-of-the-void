@@ -8,6 +8,9 @@ class SelectorateKind(StrEnum):
     ARMY = "army"
     PRIESTS = "priests"
     CITIZENS = "citizens"
+    PARTY = "party"
+    SHAREHOLDERS = "shareholders"
+    ALGORITHM = "algorithm"
 
 
 class LegitimacyType(StrEnum):
@@ -55,3 +58,6 @@ class CredentialKind(StrEnum):
     MASTER = "master"
     DOCTOR = "doctor"
     ORDINATION = "ordination"
+    DEGREE = "degree"
+    LICENCE = "licence"
+    COMMISSION = "commission"

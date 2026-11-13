@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from aerona.core.grammar import fill
+from aerona.core.total import total
 from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.polity import DebtRemedy, DecisionRule, GenderRule, GovernmentKind, LawKind, SuccessionRule
 
@@ -25,11 +26,12 @@ def pick(*values: str, default: str | None = None) -> Param:
     return Param(default if default is not None else values[0], choices=values)
 
 
-FRANCHISES = ("nobles", "landholders", "free", "all")
+FRANCHISES = ("nobles", "landholders", "citizens", "free", "all")
 CRIME_TERMS = ("theft", "murder", "treason", "blasphemy", "desertion")
 TORTURE_CRUELTY = 15
 PENALTIES = ("fine", "pillory", "flogging", "prison", "hand", "blinding", "tongue", "exile", "wergild", "death")
-LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
+LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
+    LawKind,
     {
         LawKind.SUCCESSION_RULE: {
             "rule": pick(*(item.value for item in SuccessionRule)),
@@ -86,7 +88,14 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
             "estates_rights": Param(True),
         },
         LawKind.CUSTOM: {},
-    }
+        LawKind.LABOUR_LAW: {"max_hours": Param(60, 20, 100), "child_labour": Param(False), "unions": Param(True)},
+        LawKind.ENVIRONMENT_LAW: {"strictness": Param(40)},
+        LawKind.DATA_PRIVACY: {"strictness": Param(50)},
+        LawKind.WEAPONS_LAW: {"level": pick("open", "licensed", "banned", default="licensed")},
+        LawKind.INTELLECTUAL_PROPERTY: {"term": Param(20, 1, 100)},
+        LawKind.MACHINE_LAW: {"level": pick("free", "licensed", "banned", default="licensed")},
+        LawKind.SPACE_LAW: {"claims": pick("open", "national", "shared", default="shared")},
+    },
 )
 
 
@@ -127,6 +136,13 @@ LAW_TITLES = MappingProxyType(
         LawKind.RELIGIOUS_TOLERANCE: "the Law of the Temples",
         LawKind.FOREIGNER_RIGHTS: "the Law of Strangers",
         LawKind.MAGIC_BAN: "the Ban on Sorcery",
+        LawKind.LABOUR_LAW: "the Labour Law",
+        LawKind.ENVIRONMENT_LAW: "the Environment Law",
+        LawKind.DATA_PRIVACY: "the Privacy Law",
+        LawKind.WEAPONS_LAW: "the Weapons Law",
+        LawKind.INTELLECTUAL_PROPERTY: "the Patent Law",
+        LawKind.MACHINE_LAW: "the Machine Law",
+        LawKind.SPACE_LAW: "the Space Law",
     }
 )
 
@@ -179,6 +195,13 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.FRANCHISE: "The vote belongs to the {voters}.",
         LawKind.CONSTITUTION: "The realm is {government:an} that decides by {decision_rule}; the vote belongs to the {voters}, and {estates}.",
         LawKind.CUSTOM: "An old custom without a written rule.",
+        LawKind.LABOUR_LAW: "Work is capped at {max_hours} hours a week; child labour: {child_labour}; unions: {unions}.",
+        LawKind.ENVIRONMENT_LAW: "Works must hold back their pollution with strictness {strictness}.",
+        LawKind.DATA_PRIVACY: "Records of the people are shielded from prying with strictness {strictness}.",
+        LawKind.WEAPONS_LAW: "Weapons are {level}; where banned, crime falls.",
+        LawKind.INTELLECTUAL_PROPERTY: "Inventions are protected for {term} epochs; techniques spread more slowly.",
+        LawKind.MACHINE_LAW: "Thinking machines are {level}; banned, they may never rule.",
+        LawKind.SPACE_LAW: "Claims beyond the world are {claims}; shared claims keep space routes safer.",
     }
 )
 

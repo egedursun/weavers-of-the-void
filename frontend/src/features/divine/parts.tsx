@@ -17,7 +17,15 @@ type Ref = { id: number; name: string; kind?: string } | null | undefined
 
 const LINK_KINDS: Record<
   string,
-  'son' | 'foreign-god' | 'world' | 'star' | 'creator' | 'entity'
+  | 'son'
+  | 'foreign-god'
+  | 'world'
+  | 'star'
+  | 'galaxy'
+  | 'cluster'
+  | 'dimension'
+  | 'creator'
+  | 'entity'
 > = {
   son: 'son',
   foreign_god: 'foreign-god',
@@ -25,6 +33,9 @@ const LINK_KINDS: Record<
   star: 'star',
   creator: 'creator',
   entity: 'entity',
+  galaxy: 'galaxy',
+  cluster: 'cluster',
+  dimension: 'dimension',
 }
 
 export function NodeName({ item }: { item: Ref }) {

@@ -141,6 +141,7 @@ class TechGraphRules:
     secret_pct: int = rule(30, 0, 100, C, "Techniques a guild or cult keeps secret (%)")
     steal_chance: int = rule(20, 0, 100, C, "Spies steal a secret technique (%)")
     cap: int = rule(40, 0, 1000, C, "Most techniques adopted in an epoch")
+    patent_block_pct: int = rule(2, 0, 100, C, "Chance per epoch of patent term that a protected technique does not pass to a neighbour (%)")
 
 
 @dataclass(frozen=True)
