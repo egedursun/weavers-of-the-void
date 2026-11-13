@@ -123,22 +123,55 @@ export const STATES: Record<Schema['ConstructionState'], string> = {
 }
 
 export const GROUND_FILL: Record<Schema['LandGround'], string> = {
-  water: 'fill-brand-azure',
-  shore: 'fill-chart-4',
-  lowland: 'fill-chart-2',
-  wetland: 'fill-brand-verdigris',
-  hills: 'fill-chart-3',
-  mountains: 'fill-muted-foreground',
-  peaks: 'fill-muted',
+  water: 'fill-land-water',
+  shore: 'fill-land-shore',
+  lowland: 'fill-land-lowland',
+  wetland: 'fill-land-wetland',
+  hills: 'fill-land-hills',
+  mountains: 'fill-land-mountains',
+  peaks: 'fill-land-peaks',
+}
+
+export type LandTexture =
+  | 'trees'
+  | 'furrows'
+  | 'grass'
+  | 'reeds'
+  | 'stubble'
+  | 'blocks'
+  | 'spoil'
+  | 'ridges'
+  | 'snow'
+  | 'swell'
+
+export const GROUND_RELIEF: Record<Schema['LandGround'], LandTexture | null> = {
+  water: 'swell',
+  shore: null,
+  lowland: null,
+  wetland: 'reeds',
+  hills: 'ridges',
+  mountains: 'ridges',
+  peaks: 'snow',
+}
+
+export const COVER_TEXTURE: Record<Schema['LandCover'], LandTexture | null> = {
+  open: null,
+  forest: 'trees',
+  fields: 'furrows',
+  pasture: 'grass',
+  marsh: 'reeds',
+  cleared: 'stubble',
+  built: 'blocks',
+  mined: 'spoil',
 }
 
 export const COVER_FILL: Record<Schema['LandCover'], string> = {
-  open: 'fill-chart-2',
-  forest: 'fill-success',
-  fields: 'fill-brand-gold',
-  pasture: 'fill-chart-4',
-  marsh: 'fill-brand-verdigris',
-  cleared: 'fill-warning',
-  built: 'fill-chart-5',
-  mined: 'fill-destructive',
+  open: 'fill-land-lowland',
+  forest: 'fill-land-forest',
+  fields: 'fill-land-fields',
+  pasture: 'fill-land-pasture',
+  marsh: 'fill-land-marsh',
+  cleared: 'fill-land-cleared',
+  built: 'fill-land-built',
+  mined: 'fill-land-mined',
 }

@@ -10,10 +10,12 @@ import { CitiesView } from './CitiesScreen'
 import { CityPlan2D } from './CityPlan2D'
 import { CityPlane } from './CityPlane'
 import { CitySection } from './CitySection'
+import { LandPlan2D } from './LandPlan2D'
 import { LandPlane } from './LandPlane'
 import { LandSection } from './LandSection'
 import { TypePage } from './TypePages'
 import { type CityScene, type LandScene, type StructureTypes } from './api'
+import { COVER_FILL, GROUND_FILL } from './labels'
 
 vi.mock('@/api/client', async () => {
   const { createFakeClient } = await import('@/test-utils/fakeApi')
@@ -353,6 +355,59 @@ describe('city', () => {
     await expect
       .element(walk)
       .toHaveAttribute('href', '/cities?view=land&region=5')
+  })
+
+  it('draws the land in its own colours with its rivers, towns and a legend', async () => {
+    serve()
+    const { screen } = await renderApp(<LandSection regionId={5} />)
+    const plan = screen.getByRole('img', { name: /Land of Ashreach/ })
+    await expect.element(plan).toBeVisible()
+    const svg = plan.element()
+    expect(svg.querySelector('.fill-destructive')).toBeNull()
+    expect(svg.querySelectorAll('line.stroke-land-river')).toHaveLength(1)
+    expect(
+      [...svg.querySelectorAll('text')].map((node) => node.textContent)
+    ).toContain('Harrowmere')
+    expect(svg.querySelectorAll('pattern').length).toBeGreaterThan(0)
+    await expect
+      .element(screen.getByRole('list', { name: 'Ground of the land' }))
+      .toHaveTextContent(/Diggings · 1 of 3 tiles/)
+    await expect
+      .element(screen.getByRole('list', { name: 'Symbols on the land' }))
+      .toHaveTextContent(/Town.*Place.*Work.*Deposit.*River.*Coast/)
+  })
+
+  it('paints every ground and cover from the land palette, never a chart or warning colour', () => {
+    for (const fill of [
+      ...Object.values(GROUND_FILL),
+      ...Object.values(COVER_FILL),
+    ])
+      expect(fill).toMatch(/^fill-land-/)
+  })
+
+  it('names a town below its mark or above it when the space below is taken', async () => {
+    const crowded = {
+      ...LAND,
+      settlements: [
+        { node: TOWN, q: 0, r: 0, detail: '4200' },
+        {
+          node: { id: 9, name: 'Sohranin', entity_type: 'settlement' },
+          q: 1,
+          r: 0,
+          detail: '900',
+        },
+      ],
+    } as unknown as LandScene
+    const { screen } = await renderApp(
+      <LandPlan2D scene={crowded} selected={null} onPick={() => undefined} />
+    )
+    const svg = screen.getByRole('img', { name: /Land of Ashreach/ }).element()
+    const names = [...svg.querySelectorAll('text')]
+    expect(names.map((node) => node.textContent)).toEqual([
+      'Harrowmere',
+      'Sohranin',
+    ])
+    expect(names[0].getAttribute('y')).not.toBe(names[1].getAttribute('y'))
   })
 
   it('chooses the most important town of the world and switches to its land', async () => {

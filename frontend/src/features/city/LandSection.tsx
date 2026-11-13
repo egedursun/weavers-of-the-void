@@ -3,6 +3,7 @@ import { Gem, Maximize2, Mountain, Pickaxe, Trees, Wheat } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState, KpiTile, LoadingBlock, Section } from '@/components/domain'
 import { Text } from '@/components/typography'
+import { LandLegend } from './LandLegend'
 import { LandPlan2D } from './LandPlan2D'
 import { type LandScene, useLandScene } from './api'
 
@@ -39,7 +40,7 @@ function Summary({ scene }: { scene: LandScene }) {
         to='/cities'
         search={{ view: 'land', region: scene.region.id }}
         aria-label={`Walk the land of ${scene.region.name}`}
-        className='group relative block min-w-0 overflow-hidden rounded-xl border bg-card p-3 transition-colors hover:border-primary'
+        className='group relative block min-w-0 overflow-hidden rounded-xl border bg-muted/30 p-3 transition-colors hover:border-primary'
       >
         <LandPlan2D scene={scene} selected={null} onPick={() => undefined} />
         <div className='pointer-events-none absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full border bg-popover/90 px-3 py-1 text-popover-foreground shadow-sm backdrop-blur-sm'>
@@ -49,6 +50,7 @@ function Summary({ scene }: { scene: LandScene }) {
           </Text>
         </div>
       </Link>
+      <LandLegend scene={scene} />
       <Button asChild>
         <Link to='/cities' search={{ view: 'land', region: scene.region.id }}>
           <Maximize2 />

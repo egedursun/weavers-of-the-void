@@ -56,7 +56,7 @@ if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^frontend/src/.*\.(ts
   PROVING="$PROVING tests/api/test_frontend_reads_every_field.py tests/unit/test_frontend_orphans.py tests/unit/test_editable_fields.py tests/api/test_material_slot_fields.py"
 fi
 if [ -n "$PROVING" ]; then
-  run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider -n auto --dist worksteal --durations=15 $PROVING"
+  run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider --basetemp='$LOGS/pytest' -n auto --dist worksteal --durations=15 $PROVING"
 fi
 
 FRONT=$(echo "$STAGED" | grep -E '^frontend/.*\.(ts|tsx)$' | grep -v '^frontend/src/api/generated/' | sed 's#^frontend/##' || true)
