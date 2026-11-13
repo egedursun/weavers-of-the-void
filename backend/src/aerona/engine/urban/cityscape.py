@@ -2,13 +2,16 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from aerona.core.random import SeededRandom
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.settlement import DistrictRow
-from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import RiverClass
-from aerona.domain.enums.structure import StructureKind
+from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.domain.enums.urban import LandCover, LandGround, Morphology
 from aerona.engine.urban.coverage import home_of
 from aerona.engine.urban.layout import CENTRE, CityLayout, Hex, distance, layout_of, ring
@@ -26,6 +29,7 @@ class Tile:
 
 
 SLOTS = 7
+PERIMETER_KINDS = frozenset({StructureKind.WALL, StructureKind.GATE})
 HOUSE_SLOTS = 6
 LAND_RADIUS = 4
 GROUND_ORDER = (LandGround.WATER, LandGround.SHORE, LandGround.WETLAND, LandGround.LOWLAND, LandGround.HILLS, LandGround.MOUNTAINS, LandGround.PEAKS)
@@ -64,13 +68,30 @@ def provisional(rules: Rules, districts: list[DistrictRow], morphology: Morpholo
     return layout_of(rules, stand_ins, walls)
 
 
-def slots_of(layout: CityLayout, buildings: list[StructureProfileRow], districts: list[DistrictRow]) -> dict[int, tuple[Hex, int]]:
+async def perimeter_of(session: AsyncSession, buildings: list[StructureProfileRow]) -> frozenset[int]:
+    designs = {row.design_id for row in buildings if row.design_id is not None}
+    lined = (
+        set(await session.scalars(select(StructureDesignRow.id).where(StructureDesignRow.id.in_(designs), StructureDesignRow.form == BuildingForm.WALL_LINE)))
+        if designs
+        else set()
+    )
+    return frozenset(row.structure_entity_id for row in buildings if row.kind in PERIMETER_KINDS or row.design_id in lined)
+
+
+def perimeter_ring(layout: CityLayout) -> list[Hex]:
+    reach = layout.walls_radius if layout.walls_radius is not None else max((distance(cell, CENTRE) for cell in layout.cells), default=0) + 1
+    return ring(max(1, reach))
+
+
+def slots_of(
+    layout: CityLayout, buildings: list[StructureProfileRow], districts: list[DistrictRow], perimeter: frozenset[int] = frozenset()
+) -> dict[int, tuple[Hex, int]]:
     used: dict[Hex, int] = defaultdict(int)
     found: dict[int, tuple[Hex, int]] = {}
     for profile in sorted(buildings, key=lambda item: item.structure_entity_id):
         chosen = home_of(profile, districts)
         home = profile.district_id if profile.district_id in layout.footprints else chosen.id if chosen is not None else None
-        cells = layout.footprints.get(home, []) if home is not None else []
+        cells = perimeter_ring(layout) if profile.structure_entity_id in perimeter else layout.footprints.get(home, []) if home is not None else []
         if not cells:
             cells = [cell for radius in range(3) for cell in ring(radius)]
         cell = min(cells, key=lambda item: (used[item], distance(item, CENTRE), item))

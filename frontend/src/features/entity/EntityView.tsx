@@ -100,6 +100,7 @@ import { SkillsSection } from './sections/SkillsSection'
 import { SocietyEconomy } from './sections/SocietyEconomy'
 import { TagEditor } from './sections/TagEditor'
 import { ThingSections } from './sections/ThingSections'
+import { MADE_HIDDEN_SECTIONS } from './sections/thingScope'
 import {
   CultureDriftSection,
   LoyaltySection,
@@ -348,8 +349,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   if (!sited) present.delete('section-site')
   const embodied = BODIED.has(entity.entity_type)
   if (!embodied) present.delete('section-body')
-  if (!MADE_ENTITY_TYPES.has(entity.entity_type))
-    present.delete('section-made-type')
+  const made = MADE_ENTITY_TYPES.has(entity.entity_type)
+  if (!made) present.delete('section-made-type')
+  if (made) for (const id of MADE_HIDDEN_SECTIONS) present.delete(id)
   const afflictable =
     entity.entity_type === 'mortal' || entity.entity_type === 'beast'
   if (!afflictable) present.delete('section-afflictions')
@@ -482,7 +484,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         {entity.entity_type === 'cosmic_being' && (
           <CosmicBeingSection entityId={entity.id} />
         )}
-        {MADE_ENTITY_TYPES.has(entity.entity_type) && (
+        {made && (
           <MadeEntitySection
             entityId={entity.id}
             entityType={entity.entity_type}
@@ -725,6 +727,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
           nodeId={entity.id}
           statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}
           readOnlyReason={readOnly}
+          scope={made ? 'made' : 'every'}
         />
         <EntityEditForm
           key={`${entity.id}-${entity.name}-${entity.description.length}`}

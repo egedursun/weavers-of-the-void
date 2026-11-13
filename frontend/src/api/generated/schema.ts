@@ -53504,8 +53504,11 @@ export interface components {
       stacks: components['schemas']['StackKitView'][]
       pace: number | null
       vessel_sections: components['schemas']['VesselSectionView'][]
+      vessel_frame: components['schemas']['VehicleFrame'] | null
+      vessel_family: components['schemas']['VehicleFamily'] | null
       cooking: components['schemas']['CookingView'][]
       sections: components['schemas']['StructureSectionView'][]
+      structure_form: components['schemas']['BuildingForm'] | null
       megastructure: components['schemas']['MegastructureView'] | null
       attraction: components['schemas']['AttractionView'] | null
       being: components['schemas']['BeingWoundsView'] | null

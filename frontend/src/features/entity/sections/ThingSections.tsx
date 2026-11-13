@@ -1,3 +1,4 @@
+import { Muted } from '@/components/typography'
 import { AgrarianSection } from '@/features/agrarian/AgrarianSection'
 import { ArcanaSection } from '@/features/arcana/ArcanaSection'
 import { MythicSection } from '@/features/arcana/MythicSection'
@@ -33,16 +34,42 @@ import { StatecraftSection } from './StatecraftSection'
 import { TastesSection } from './TastesSection'
 import { TitlesSection } from './TitlesSection'
 import { WorksSection } from './WorksSection'
+import { type ThingScope } from './thingScope'
 
 export function ThingSections({
   nodeId,
   statKeys = [],
   readOnlyReason = null,
+  scope = 'every',
 }: {
   nodeId: number
   statKeys?: string[]
   readOnlyReason?: string | null
+  scope?: ThingScope
 }) {
+  if (scope === 'made')
+    return (
+      <>
+        <Muted variant='caption'>
+          A made type is a design its makers draw, cook, forge, field or build.
+          It has no mind, household, purse, lands, offices, rule, magic or
+          tongue of its own, so those sections stay with the beings who make and
+          use it. Every record tied to it is still listed and editable under
+          Every record.
+        </Muted>
+        <EntityMechanics
+          nodeId={nodeId}
+          statKeys={statKeys}
+          readOnlyReason={readOnlyReason}
+        />
+        <NameSection nodeId={nodeId} />
+        <BondsSection nodeId={nodeId} />
+        <RenownSection nodeId={nodeId} />
+        <HistoriesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+        <MythicSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+        <RecordRowsSection nodeId={nodeId} />
+      </>
+    )
   return (
     <>
       <EntityMechanics

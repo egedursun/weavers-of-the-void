@@ -6,7 +6,7 @@ import {
   resetApi,
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { type components } from '@/api/generated/schema'
+import { type components, vehicleFrameValues } from '@/api/generated/schema'
 import {
   allKeys,
   buildAtlasTree,
@@ -19,9 +19,11 @@ import {
   type EntitySummary,
   type WorldState,
 } from '@/features/entity/api/types'
+import { ThingSections } from '@/features/entity/sections/ThingSections'
 import { IntegrityDiagram } from './IntegrityDiagram'
 import { MadeEntitySection } from './KindPages'
 import { MadeKindsSection } from './MadeKindsSection'
+import { BLUEPRINTS, buildingShape, vehicleShape } from './blueprints'
 import { worst } from './model'
 
 vi.mock('@/api/client', async () => {
@@ -235,7 +237,7 @@ describe('made kinds', () => {
     ).toBe(true)
   })
 
-  it('names every section in full and stacks its rows when the pane is narrow', async () => {
+  it('lays the inner sections of a vessel inside its hull and names them in full', async () => {
     const part = (key: string, share: number) => ({
       key,
       state: 'sound' as const,
@@ -258,7 +260,7 @@ describe('made kinds', () => {
       <div className='w-56'>
         <IntegrityDiagram
           title='Sections of a carrack'
-          shape='ship'
+          shape='three_master'
           parts={parts}
           zoneOf={(key) => zones[key] ?? 'body'}
         />
@@ -266,28 +268,80 @@ describe('made kinds', () => {
     )
     const diagram = screen.getByRole('img', { name: 'Sections of a carrack' })
     await expect.element(diagram).toBeVisible()
+    const inside = [
+      ...diagram.element().querySelectorAll('rect[data-section]'),
+    ].map((node) => node.getAttribute('data-section'))
+    expect(inside.sort()).toEqual(
+      ['crew_quarters', 'hold', 'magazine', 'navigation'].sort()
+    )
     const labels = [...diagram.element().querySelectorAll('text')].map(
       (node) => node.textContent
     )
-    expect(labels).toEqual(
-      expect.arrayContaining(['Gun deck', 'Navigation', 'Magazine', 'Rigging'])
-    )
     expect(labels.some((label) => label?.includes('…'))).toBe(false)
-    const rows = () =>
-      new Set(
-        [...diagram.element().querySelectorAll('rect[data-section]')].map(
-          (node) => node.getAttribute('y')
-        )
-      ).size
-    await expect.poll(rows).toBe(4)
   })
 
-  it('keeps a small structure at its own size instead of blowing it up', async () => {
+  it('keeps the sections a made type cannot hold out of its entry and says why', async () => {
+    const { screen } = await renderApp(
+      <ThingSections nodeId={900} scope='made' />
+    )
+    await expect
+      .element(screen.getByText(/A made type is a design its makers/))
+      .toBeVisible()
+    for (const id of [
+      'section-dominion',
+      'section-feelings',
+      'section-tastes',
+      'section-ethics',
+      'section-tongues',
+      'section-arcana',
+    ])
+      expect(document.getElementById(id)).toBeNull()
+  })
+
+  it('gives every frame a drawing of its own', () => {
+    expect(
+      vehicleFrameValues.every(
+        (frame) => vehicleShape(frame, null) in BLUEPRINTS
+      )
+    ).toBe(true)
+    const distinct = (frames: (typeof vehicleFrameValues)[number][]) =>
+      new Set(frames.map((frame) => vehicleShape(frame, null))).size
+    expect(
+      distinct(['riding_mount', 'pack_mount', 'beast_carrier', 'wagon'])
+    ).toBe(4)
+    expect(
+      distinct([
+        'cart',
+        'handcart',
+        'travois',
+        'sledge',
+        'covered_wagon',
+        'carriage',
+      ])
+    ).toBe(6)
+    expect(
+      distinct([
+        'space_fighter',
+        'freighter',
+        'dreadnought',
+        'shuttle',
+        'orbital_lander',
+        'generation_ship',
+        'galley',
+      ])
+    ).toBe(7)
+    expect(
+      distinct(['motor_car', 'motor_truck', 'motorcycle', 'tank', 'locomotive'])
+    ).toBe(5)
+    expect(buildingShape(null)).toBe('flat')
+  })
+
+  it('keeps a structure drawing at the proportions of its blueprint', async () => {
     const { screen } = await renderApp(
       <div className='w-2xl'>
         <IntegrityDiagram
           title='Sections of a shrine'
-          shape='keep'
+          shape='hall'
           parts={['sanctum', 'foundation', 'vault'].map((key) => ({
             key,
             state: 'sound' as const,
@@ -301,7 +355,8 @@ describe('made kinds', () => {
     )
     const diagram = screen.getByRole('img', { name: 'Sections of a shrine' })
     await expect.element(diagram).toBeVisible()
-    expect(diagram.element().getBoundingClientRect().height).toBeLessThan(300)
+    const box = diagram.element().getBoundingClientRect()
+    expect(Math.abs(box.height / box.width - 308 / 588)).toBeLessThan(0.02)
   })
 
   it('lays the values of a kind in one column with whole labels in a narrow pane', async () => {

@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { type ReactNode, useId } from 'react'
 import { Crosshair, HeartCrack, type LucideIcon, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -9,7 +9,16 @@ import {
 import { PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useWidth } from '@/features/entity/society/tones'
-import { Hull } from './Silhouette'
+import {
+  BLUEPRINTS,
+  type Blueprint,
+  CANVAS,
+  type Feature,
+  type Hold,
+  type Mark,
+  type Setting,
+  type Silhouette,
+} from './blueprints'
 import {
   CRITICALITY,
   type Criticality,
@@ -18,7 +27,6 @@ import {
   type SectionState,
   sectionLabel,
 } from './labels'
-import { MARGINS, type Silhouette } from './silhouettes'
 
 export type Zone = 'top' | 'front' | 'body' | 'rear' | 'under'
 
@@ -42,127 +50,73 @@ export type DiagramMount = {
 }
 
 type Box = { part: DiagramPart; x: number; y: number; w: number; h: number }
+type Fitted = { lines: string[]; size: number }
+type Ids = {
+  clip: string
+  hatch: string
+  surface: string
+  glow: string
+  cells: Record<SectionState, string>
+}
 
-const ROW_HEIGHT: Record<Zone, number> = {
-  top: 30,
-  front: 34,
-  body: 34,
-  rear: 34,
-  under: 22,
-}
-const ROW_OF: Record<Zone, 'upper' | 'middle' | 'lower'> = {
-  top: 'upper',
-  front: 'middle',
-  body: 'middle',
-  rear: 'middle',
-  under: 'lower',
-}
-const PAD = 8
-const ROW_GAP = 4
-const PART_WIDTH = 34
-const BODY_WIDTH = 120
+const FONT = 11
+const SMALLEST = 6.5
+const GLYPH = 0.56
+const INSET = 6
+const LINE = 1.15
 const GAP = 3
 const MIN_SHARE = 4
-const FONT = 7
-const SMALLEST = 4.5
-const GLYPH = 0.56
-const INSET = 4
-const LINE = 1.15
-const SCALE = 2
-const CRAMPED = 0.7
-
-function lay(
-  parts: DiagramPart[],
-  x: number,
-  width: number,
-  zone: Zone,
-  y: number
-): Box[] {
-  if (parts.length === 0) return []
-  const total = parts.reduce(
-    (sum, part) => sum + Math.max(MIN_SHARE, part.share),
-    0
-  )
-  const floor = Math.min(PART_WIDTH, width / parts.length - GAP)
-  const spare = Math.max(
-    0,
-    width - GAP * (parts.length - 1) - floor * parts.length
-  )
-  let cursor = x
-  return parts.map((part) => {
-    const w = floor + (spare * Math.max(MIN_SHARE, part.share)) / total
-    const box = { part, x: cursor, y, w, h: ROW_HEIGHT[zone] }
-    cursor += w + GAP
-    return box
-  })
+const SHARE_BAR = 3
+const BADGE = 10
+const MOUNT_RADIUS = 7
+const ARROW = 7
+const PILL_FONT = 9.5
+const PILL_ROOM = 440
+const SKINS: ReadonlySet<string> = new Set([
+  'armour_plating',
+  'barding',
+  'shielding',
+])
+const AURAS: ReadonlySet<string> = new Set(['ward', 'wards'])
+const MARGIN = 14
+const ZONE_ORDER: Zone[] = ['front', 'top', 'body', 'under', 'rear']
+const STATE_HUE: Record<SectionState, string> = {
+  sound: 'text-success',
+  damaged: 'text-warning',
+  disabled: 'text-destructive',
+  destroyed: 'text-muted-foreground',
 }
-
-function span(count: number): number {
-  return count * PART_WIDTH + GAP * Math.max(0, count - 1)
+const STATE_STROKE: Record<SectionState, string> = {
+  sound: 'stroke-success',
+  damaged: 'stroke-warning',
+  disabled: 'stroke-destructive',
+  destroyed: 'stroke-destructive',
 }
-
-const ORDER: Zone[] = ['top', 'front', 'body', 'rear', 'under']
-
-function stack(
-  parts: DiagramPart[],
-  zoneOf: (key: string) => Zone
-): { laid: Box[]; width: number; height: number } {
-  const by = (zone: Zone) => parts.filter((part) => zoneOf(part.key) === zone)
-  const width = Math.max(
-    BODY_WIDTH,
-    ...ORDER.map((zone) => span(by(zone).length))
-  )
-  const laid: Box[] = []
-  let cursor = PAD
-  for (const zone of ORDER) {
-    const row = by(zone)
-    if (row.length === 0) continue
-    laid.push(...lay(row, 0, width, zone, cursor))
-    cursor += ROW_HEIGHT[zone] + ROW_GAP
-  }
-  return { laid, width, height: cursor - ROW_GAP + PAD }
+const STATE_TEXT: Record<SectionState, string> = {
+  sound: 'text-success',
+  damaged: 'text-warning',
+  disabled: 'text-destructive',
+  destroyed: 'text-destructive',
 }
-
-function boxes(
-  parts: DiagramPart[],
-  zoneOf: (key: string) => Zone
-): { laid: Box[]; width: number; height: number } {
-  const by = (zone: Zone) => parts.filter((part) => zoneOf(part.key) === zone)
-  const rows = { upper: 0, middle: 0, lower: 0 }
-  let cursor = PAD
-  for (const row of ['upper', 'middle', 'lower'] as const) {
-    const zones = (Object.keys(ROW_OF) as Zone[]).filter(
-      (zone) => ROW_OF[zone] === row && by(zone).length > 0
-    )
-    if (zones.length === 0) continue
-    rows[row] = cursor
-    cursor += Math.max(...zones.map((zone) => ROW_HEIGHT[zone])) + ROW_GAP
-  }
-  const at = (zone: Zone) => rows[ROW_OF[zone]]
-  const front = by('front')
-  const rear = by('rear')
-  const middle = Math.max(
-    BODY_WIDTH,
-    span(by('top').length),
-    span(by('body').length),
-    span(by('under').length)
-  )
-  const left = front.length ? span(front.length) + GAP : 0
-  const right = rear.length ? span(rear.length) + GAP : 0
-  return {
-    width: left + middle + right,
-    height: cursor - ROW_GAP + PAD,
-    laid: [
-      ...lay(by('top'), left, middle, 'top', at('top')),
-      ...lay(front, 0, span(front.length), 'front', at('front')),
-      ...lay(by('body'), left, middle, 'body', at('body')),
-      ...lay(rear, left + middle + GAP, span(rear.length), 'rear', at('rear')),
-      ...lay(by('under'), left, middle, 'under', at('under')),
-    ],
-  }
-}
-
-type Fitted = { lines: string[]; size: number }
+const STARS = [
+  [40, 30],
+  [120, 250],
+  [190, 18],
+  [260, 262],
+  [330, 22],
+  [420, 256],
+  [500, 34],
+  [548, 230],
+  [70, 210],
+  [470, 70],
+  [22, 120],
+  [540, 120],
+] as const
+const CLOUDS = [
+  [80, 236, 46],
+  [470, 34, 38],
+  [500, 252, 30],
+] as const
 
 function sized(lines: string[], w: number, h: number): number {
   const longest = Math.max(...lines.map((line) => line.length))
@@ -190,12 +144,10 @@ function fit(key: string, w: number, h: number): Fitted {
   if (single >= SMALLEST + 0.5) return { lines: [text], size: single }
   const split = halves(text)
   const double = split.length > 1 ? sized(split, w, h) : 0
-  if (double > single && double >= SMALLEST) {
+  if (double > single && double >= SMALLEST)
     return { lines: split, size: double }
-  }
-  if (single >= SMALLEST || split.length === 1) {
+  if (single >= SMALLEST || split.length === 1)
     return { lines: [text], size: Math.max(SMALLEST, single) }
-  }
   return { lines: split, size: SMALLEST }
 }
 
@@ -207,68 +159,45 @@ function describe(part: DiagramPart): string {
   return `${sectionLabel(part.key)}: ${SECTION_STATE[part.state].label.toLowerCase()}, ${CRITICALITY[part.criticality].label.toLowerCase()} section, ${part.share}% of the whole${hazard}${part.detail ? `; ${part.detail}` : ''}`
 }
 
-function BoxLabel({ box }: { box: Box }) {
-  const { lines, size } = fit(box.part.key, box.w, box.h)
-  const top = box.y + box.h / 2 - ((lines.length - 1) * size * LINE) / 2
-  return (
-    <text
-      x={box.x + box.w / 2}
-      y={top}
-      textAnchor='middle'
-      dominantBaseline='central'
-      className='fill-foreground'
-      fontSize={size}
-    >
-      {lines.map((line, index) => (
-        <tspan
-          key={line}
-          x={box.x + box.w / 2}
-          dy={index === 0 ? 0 : size * LINE}
-        >
-          {line}
-        </tspan>
-      ))}
-    </text>
-  )
+function lay(parts: DiagramPart[], hold: Hold): Box[] {
+  if (parts.length === 0) return []
+  const rows = parts.length <= 5 ? 1 : parts.length <= 10 ? 2 : 3
+  const perRow = Math.ceil(parts.length / rows)
+  const height = (hold.h - GAP * (rows - 1)) / rows
+  return Array.from({ length: rows }, (_, row) =>
+    parts.slice(row * perRow, (row + 1) * perRow)
+  ).flatMap((items, row) => {
+    const total = items.reduce(
+      (sum, part) => sum + Math.max(MIN_SHARE, part.share),
+      0
+    )
+    const room = hold.w - GAP * (items.length - 1)
+    let cursor = hold.x
+    return items.map((part) => {
+      const w = (room * Math.max(MIN_SHARE, part.share)) / total
+      const box = {
+        part,
+        x: cursor,
+        y: hold.y + row * (height + GAP),
+        w,
+        h: height,
+      }
+      cursor += w + GAP
+      return box
+    })
+  })
 }
 
-const SHARE_BAR = 2.2
-const BADGE = 6.5
-const MOUNT_RADIUS = 5
-const ARROW = 5
-const STATE_HUE: Record<SectionState, string> = {
-  sound: 'text-success',
-  damaged: 'text-warning',
-  disabled: 'text-destructive',
-  destroyed: 'text-muted-foreground',
-}
-const CELL_STROKE: Record<SectionState, string> = {
-  sound: 'stroke-success',
-  damaged: 'stroke-warning',
-  disabled: 'stroke-destructive',
-  destroyed: 'stroke-destructive',
-}
-const STATE_TEXT: Record<SectionState, string> = {
-  sound: 'text-success',
-  damaged: 'text-warning',
-  disabled: 'text-destructive',
-  destroyed: 'text-destructive',
-}
-
-type Ids = {
-  hatch: string
-  surface: string
-  shadow: string
-  cells: Record<SectionState, string>
-}
-
-function Defs({ ids }: { ids: Ids }) {
+function Defs({ ids, body }: { ids: Ids; body: string }) {
   return (
     <defs>
+      <clipPath id={ids.clip}>
+        <path d={body} clipRule='evenodd' />
+      </clipPath>
       <pattern
         id={ids.hatch}
-        width={5}
-        height={5}
+        width={6}
+        height={6}
         patternUnits='userSpaceOnUse'
         patternTransform='rotate(45)'
       >
@@ -276,22 +205,22 @@ function Defs({ ids }: { ids: Ids }) {
           x1={0}
           y1={0}
           x2={0}
-          y2={5}
-          className='stroke-destructive/45'
-          strokeWidth={1.6}
+          y2={6}
+          className='stroke-destructive/50'
+          strokeWidth={2}
         />
       </pattern>
       <linearGradient id={ids.surface} x1={0} y1={0} x2={0} y2={1}>
         <stop
           offset={0}
           stopColor='currentColor'
-          stopOpacity={0.26}
+          stopOpacity={0.35}
           className='text-primary'
         />
         <stop
-          offset={0.45}
+          offset={0.5}
           stopColor='currentColor'
-          stopOpacity={0.9}
+          stopOpacity={0.95}
           className='text-card'
         />
         <stop
@@ -301,8 +230,8 @@ function Defs({ ids }: { ids: Ids }) {
           className='text-muted'
         />
       </linearGradient>
-      <filter id={ids.shadow} x='-20%' y='-200%' width='140%' height='500%'>
-        <feGaussianBlur stdDeviation={3} />
+      <filter id={ids.glow} x='-50%' y='-50%' width='200%' height='200%'>
+        <feGaussianBlur stdDeviation={6} />
       </filter>
       {(Object.keys(STATE_HUE) as SectionState[]).map((state) => (
         <linearGradient
@@ -316,13 +245,13 @@ function Defs({ ids }: { ids: Ids }) {
           <stop
             offset={0}
             stopColor='currentColor'
-            stopOpacity={state === 'destroyed' ? 0.25 : 0.42}
+            stopOpacity={state === 'destroyed' ? 0.3 : 0.62}
             className={STATE_HUE[state]}
           />
           <stop
             offset={1}
             stopColor='currentColor'
-            stopOpacity={state === 'destroyed' ? 0.12 : 0.14}
+            stopOpacity={state === 'destroyed' ? 0.14 : 0.24}
             className={STATE_HUE[state]}
           />
         </linearGradient>
@@ -331,106 +260,277 @@ function Defs({ ids }: { ids: Ids }) {
   )
 }
 
-function Cell({ box, ids }: { box: Box; ids: Ids }) {
-  const { part } = box
-  const w = Math.max(2, box.w)
-  const hazard = part.hazard !== 'none' ? HAZARD[part.hazard] : null
-  const HazardIcon = hazard?.icon
+function Backdrop({ setting, ids }: { setting: Setting; ids: Ids }) {
+  const { width, height } = CANVAS
+  if (setting === 'water')
+    return (
+      <rect
+        x={-MARGIN}
+        y={226}
+        width={width + MARGIN * 2}
+        height={height - 226 + MARGIN}
+        className='fill-info/15 stroke-none'
+      />
+    )
+  if (setting === 'deep')
+    return (
+      <rect
+        x={-MARGIN}
+        y={-MARGIN}
+        width={width + MARGIN * 2}
+        height={height + MARGIN * 2}
+        rx={12}
+        className='fill-info/10 stroke-none'
+      />
+    )
+  if (setting === 'space')
+    return (
+      <g>
+        <ellipse
+          cx={width * 0.45}
+          cy={height / 2}
+          rx={width * 0.42}
+          ry={height * 0.36}
+          className='fill-primary/10 stroke-none'
+          filter={`url(#${ids.glow})`}
+        />
+        {STARS.map(([x, y]) => (
+          <circle
+            key={`${x}.${y}`}
+            cx={x}
+            cy={y}
+            r={1.4}
+            className='fill-foreground/60 stroke-none'
+          />
+        ))}
+      </g>
+    )
+  if (setting === 'air')
+    return (
+      <g>
+        {CLOUDS.map(([x, y, r]) => (
+          <ellipse
+            key={x}
+            cx={x}
+            cy={y}
+            rx={r}
+            ry={r * 0.32}
+            className='fill-foreground/10 stroke-none'
+          />
+        ))}
+      </g>
+    )
+  return (
+    <g>
+      <ellipse
+        cx={width / 2}
+        cy={258}
+        rx={width * 0.42}
+        ry={8}
+        className='fill-foreground/25 stroke-none'
+        filter={`url(#${ids.glow})`}
+      />
+      <line
+        x1={-MARGIN}
+        y1={258}
+        x2={width + MARGIN}
+        y2={258}
+        className='stroke-border'
+        strokeWidth={1.2}
+      />
+    </g>
+  )
+}
+
+function Waves() {
+  const step = 14
+  const count = Math.ceil((CANVAS.width + MARGIN * 2) / step)
+  const crest = Array.from(
+    { length: count },
+    () => `q ${step / 4} -4 ${step / 2} 0 t ${step / 2} 0`
+  ).join(' ')
+  return (
+    <path
+      d={`M ${-MARGIN} 230 ${crest}`}
+      className='fill-none stroke-info/60'
+      strokeWidth={1.4}
+    />
+  )
+}
+
+function Paint({
+  mark,
+  part,
+  ids,
+}: {
+  mark: Mark
+  part: DiagramPart
+  ids: Ids
+}) {
+  if (mark.neutral)
+    return mark.line ? (
+      <path
+        d={mark.d}
+        className='fill-none stroke-foreground/40'
+        strokeWidth={mark.line}
+        strokeLinecap='round'
+      />
+    ) : (
+      <path d={mark.d} className='fill-muted stroke-border' strokeWidth={1} />
+    )
+  if (mark.line)
+    return (
+      <path
+        d={mark.d}
+        className={cn('fill-none', STATE_STROKE[part.state])}
+        strokeWidth={mark.line}
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        strokeDasharray={part.state === 'destroyed' ? '4 4' : undefined}
+      />
+    )
   return (
     <>
-      {part.criticality === 'critical' && (
-        <rect
-          x={box.x - 1.6}
-          y={box.y - 1.6}
-          width={w + 3.2}
-          height={box.h + 3.2}
-          rx={5.5}
-          className='fill-none stroke-destructive/35'
-          strokeWidth={2.4}
-        />
+      <path
+        d={mark.d}
+        fill={`url(#${ids.cells[part.state]})`}
+        className={STATE_STROKE[part.state]}
+        strokeWidth={part.criticality === 'critical' ? 2 : 1.3}
+        strokeDasharray={part.criticality === 'minor' ? '4 3' : undefined}
+        strokeLinejoin='round'
+      />
+      {part.state === 'destroyed' && (
+        <path d={mark.d} fill={`url(#${ids.hatch})`} />
       )}
+    </>
+  )
+}
+
+function Hint({ part, children }: { part: DiagramPart; children: ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <g
+          tabIndex={0}
+          aria-label={describe(part)}
+          className='outline-none focus-visible:opacity-80'
+        >
+          {children}
+        </g>
+      </TooltipTrigger>
+      <TooltipContent>{describe(part)}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function Pill({ x, y, part }: { x: number; y: number; part: DiagramPart }) {
+  const text = sectionLabel(part.key)
+  const width = text.length * PILL_FONT * GLYPH + 14
+  return (
+    <g aria-hidden='true'>
+      <rect
+        x={x - width / 2}
+        y={y - 9}
+        width={width}
+        height={18}
+        rx={9}
+        className={cn('fill-background/90', STATE_STROKE[part.state])}
+        strokeWidth={1}
+      />
+      <text
+        x={x}
+        y={y}
+        textAnchor='middle'
+        dominantBaseline='central'
+        className='fill-foreground'
+        fontSize={PILL_FONT}
+      >
+        {text}
+      </text>
+    </g>
+  )
+}
+
+function Compartment({ box, ids }: { box: Box; ids: Ids }) {
+  const { part } = box
+  const hazard = part.hazard !== 'none' ? HAZARD[part.hazard] : null
+  const HazardIcon = hazard?.icon
+  const { lines, size } = fit(part.key, box.w, box.h - SHARE_BAR * 2)
+  const top = box.y + box.h / 2 - ((lines.length - 1) * size * LINE) / 2
+  return (
+    <>
       <rect
         x={box.x}
         y={box.y}
-        width={w}
+        width={Math.max(1, box.w)}
         height={box.h}
-        rx={4}
         data-section={part.key}
         fill={`url(#${ids.cells[part.state]})`}
-        className={CELL_STROKE[part.state]}
-        strokeWidth={part.criticality === 'critical' ? 1.6 : 1}
-        strokeDasharray={part.criticality === 'minor' ? '3 2' : undefined}
+        className={STATE_STROKE[part.state]}
+        strokeWidth={part.criticality === 'critical' ? 2.2 : 0.9}
+        strokeDasharray={part.criticality === 'minor' ? '4 3' : undefined}
       />
       {part.state === 'destroyed' && (
         <rect
           x={box.x}
           y={box.y}
-          width={w}
+          width={box.w}
           height={box.h}
-          rx={4}
           fill={`url(#${ids.hatch})`}
         />
       )}
       <rect
-        x={box.x + 1}
-        y={box.y + 1}
-        width={Math.max(0, w - 2)}
-        height={box.h * 0.38}
-        rx={3}
-        className='fill-foreground/5 stroke-none'
-      />
-      <rect
-        x={box.x + 2}
-        y={box.y + box.h - SHARE_BAR - 2}
-        width={Math.max(0, w - 4)}
+        x={box.x + 3}
+        y={box.y + box.h - SHARE_BAR - 3}
+        width={Math.max(0, ((box.w - 6) * Math.min(100, part.share)) / 100)}
         height={SHARE_BAR}
         rx={SHARE_BAR / 2}
-        className='fill-foreground/10 stroke-none'
+        className='fill-primary/80 stroke-none'
       />
-      <rect
-        x={box.x + 2}
-        y={box.y + box.h - SHARE_BAR - 2}
-        width={Math.max(0, ((w - 4) * Math.min(100, part.share)) / 100)}
-        height={SHARE_BAR}
-        rx={SHARE_BAR / 2}
-        className='fill-primary/70 stroke-none'
-      />
-      {HazardIcon && w > BADGE * 2.4 && (
-        <g>
-          <circle
-            cx={box.x + w - BADGE / 2 - 1.5}
-            cy={box.y + BADGE / 2 + 1.5}
-            r={BADGE / 2}
-            className='fill-background stroke-border'
-            strokeWidth={0.6}
-          />
-          <HazardIcon
-            x={box.x + w - BADGE + 0.5 - 1.5}
-            y={box.y + 2}
-            width={BADGE - 1}
-            height={BADGE - 1}
-            strokeWidth={2.4}
-            className={
-              hazard.tone === 'info'
-                ? 'text-info'
-                : hazard.tone === 'warning'
-                  ? 'text-warning'
-                  : 'text-destructive'
-            }
-          />
-        </g>
+      {HazardIcon && box.w > BADGE * 2.6 && (
+        <HazardIcon
+          x={box.x + box.w - BADGE - 2}
+          y={box.y + 2}
+          width={BADGE}
+          height={BADGE}
+          strokeWidth={2.2}
+          className={
+            hazard.tone === 'info'
+              ? 'text-info'
+              : hazard.tone === 'warning'
+                ? 'text-warning'
+                : 'text-destructive'
+          }
+        />
       )}
-      {part.criticality === 'critical' && w > BADGE * 2.4 && (
+      {part.criticality === 'critical' && box.w > BADGE * 2.6 && (
         <HeartCrack
           x={box.x + 2}
           y={box.y + 2}
-          width={BADGE - 1}
-          height={BADGE - 1}
-          strokeWidth={2.4}
+          width={BADGE}
+          height={BADGE}
+          strokeWidth={2.2}
           className={STATE_TEXT[part.state]}
         />
       )}
-      <BoxLabel box={box} />
+      <text
+        x={box.x + box.w / 2}
+        y={top}
+        textAnchor='middle'
+        dominantBaseline='central'
+        className='fill-foreground'
+        fontSize={size}
+      >
+        {lines.map((line, index) => (
+          <tspan
+            key={line}
+            x={box.x + box.w / 2}
+            dy={index === 0 ? 0 : size * LINE}
+          >
+            {line}
+          </tspan>
+        ))}
+      </text>
     </>
   )
 }
@@ -442,10 +542,10 @@ function Aim({ x, y, arc }: { x: number; y: number; arc: MountArc }) {
       <circle
         cx={x}
         cy={y}
-        r={MOUNT_RADIUS + 2.2}
-        className='fill-none stroke-primary/50'
-        strokeWidth={0.9}
-        strokeDasharray='1.6 1.4'
+        r={MOUNT_RADIUS + 3}
+        className='fill-none stroke-primary/60'
+        strokeWidth={1.2}
+        strokeDasharray='2 2'
       />
     )
   if (arc === 'forward')
@@ -473,6 +573,67 @@ function Aim({ x, y, arc }: { x: number; y: number; arc: MountArc }) {
         className={className}
       />
     </>
+  )
+}
+
+function MountMark({
+  mount,
+  x,
+  y,
+}: {
+  mount: DiagramMount
+  x: number
+  y: number
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <g
+          tabIndex={0}
+          aria-label={`${mount.label} × ${mount.count}`}
+          className='outline-none'
+        >
+          <Aim x={x} y={y} arc={mount.arc ?? 'all_round'} />
+          <circle
+            cx={x}
+            cy={y}
+            r={MOUNT_RADIUS}
+            className='fill-background stroke-primary'
+            strokeWidth={1.6}
+          />
+          <Crosshair
+            x={x - MOUNT_RADIUS * 0.72}
+            y={y - MOUNT_RADIUS * 0.72}
+            width={MOUNT_RADIUS * 1.44}
+            height={MOUNT_RADIUS * 1.44}
+            strokeWidth={2.6}
+            className='text-primary'
+          />
+          {mount.count > 1 && (
+            <g>
+              <circle
+                cx={x + MOUNT_RADIUS}
+                cy={y - MOUNT_RADIUS}
+                r={5}
+                className='fill-primary stroke-background'
+                strokeWidth={1}
+              />
+              <text
+                x={x + MOUNT_RADIUS}
+                y={y - MOUNT_RADIUS}
+                textAnchor='middle'
+                dominantBaseline='central'
+                className='fill-primary-foreground'
+                fontSize={6.5}
+              >
+                {mount.count}
+              </text>
+            </g>
+          )}
+        </g>
+      </TooltipTrigger>
+      <TooltipContent>{`${mount.label} × ${mount.count}`}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -555,6 +716,82 @@ function Legend({ parts, mounts }: { parts: DiagramPart[]; mounts: number }) {
   )
 }
 
+function claim(blueprint: Blueprint, parts: DiagramPart[]) {
+  const byKey = new Map(parts.map((part) => [part.key, part]))
+  const pick = (keys: readonly string[]) =>
+    keys.map((key) => byKey.get(key)).find((part) => part !== undefined)
+  const features = blueprint.features.flatMap((feature, index) => {
+    const part = pick(feature.keys)
+    return part ? [{ feature, part, order: index }] : []
+  })
+  const body = pick(blueprint.bodyKeys)
+  const taken = new Set([
+    ...features.map(({ part }) => part.key),
+    ...(body ? [body.key] : []),
+  ])
+  const loose = parts.filter((part) => !taken.has(part.key))
+  return {
+    features,
+    body,
+    skins: loose.filter((part) => SKINS.has(part.key)),
+    auras: loose.filter((part) => AURAS.has(part.key)),
+    inside: loose.filter(
+      (part) => !SKINS.has(part.key) && !AURAS.has(part.key)
+    ),
+  }
+}
+
+function Skin({ part, body }: { part: DiagramPart; body: string }) {
+  return (
+    <Hint part={part}>
+      <path
+        d={body}
+        fillRule='evenodd'
+        className={cn('fill-none', STATE_STROKE[part.state])}
+        strokeWidth={6}
+        strokeLinejoin='round'
+        strokeDasharray={part.state === 'destroyed' ? '10 6' : undefined}
+        opacity={0.75}
+      />
+    </Hint>
+  )
+}
+
+function Aura({ part, ring }: { part: DiagramPart; ring: number }) {
+  return (
+    <Hint part={part}>
+      <ellipse
+        cx={CANVAS.width / 2}
+        cy={CANVAS.height / 2}
+        rx={CANVAS.width / 2 - 6 - ring * 10}
+        ry={CANVAS.height / 2 - 6 - ring * 10}
+        className={cn('fill-none', STATE_STROKE[part.state])}
+        strokeWidth={1.6}
+        strokeDasharray='2 6'
+        strokeLinecap='round'
+      />
+    </Hint>
+  )
+}
+
+function FeatureMark({
+  feature,
+  part,
+  ids,
+}: {
+  feature: Feature
+  part: DiagramPart
+  ids: Ids
+}) {
+  return (
+    <Hint part={part}>
+      {feature.marks.map((mark, index) => (
+        <Paint key={index} mark={mark} part={part} ids={ids} />
+      ))}
+    </Hint>
+  )
+}
+
 export function IntegrityDiagram({
   title,
   parts,
@@ -570,9 +807,10 @@ export function IntegrityDiagram({
 }) {
   const base = useId().replace(/:/g, '')
   const ids: Ids = {
+    clip: `${base}clip`,
     hatch: `${base}hatch`,
     surface: `${base}surface`,
-    shadow: `${base}shadow`,
+    glow: `${base}glow`,
     cells: {
       sound: `${base}sound`,
       damaged: `${base}damaged`,
@@ -581,111 +819,108 @@ export function IntegrityDiagram({
     },
   }
   const [measure, room] = useWidth()
-  const margins = MARGINS[shape]
-  const wide = boxes(parts, zoneOf)
-  const full = (layout: { width: number }) =>
-    layout.width + margins.left + margins.right
-  const cramped = room > 0 && room < full(wide) * SCALE * CRAMPED
-  const { laid, width, height } = cramped ? stack(parts, zoneOf) : wide
-  const frameWidth = width + margins.left + margins.right
-  const frameHeight = height + margins.top + margins.bottom
-  const home = (section: string | null): Box | undefined =>
-    laid.find((item) => item.part.key === section) ??
-    laid.find((item) => zoneOf(item.part.key) === 'top') ??
-    laid[0]
-  const anchor = (mount: DiagramMount, index: number) => {
-    const box = home(mount.section)
-    if (!box) return { x: 12 + index * 14, y: 4 }
-    const siblings = mounts.filter((item) => home(item.section) === box)
-    const place = siblings.findIndex((item) => item.key === mount.key)
-    const step = box.w / (siblings.length + 1)
-    return { x: box.x + step * (place + 1), y: box.y }
+  const blueprint = BLUEPRINTS[shape]
+  const { features, body, skins, auras, inside } = claim(blueprint, parts)
+  const ordered = [...inside].sort(
+    (left, right) =>
+      ZONE_ORDER.indexOf(zoneOf(left.key)) -
+      ZONE_ORDER.indexOf(zoneOf(right.key))
+  )
+  const boxes = lay(ordered, blueprint.hold)
+  const pills = room === 0 || room >= PILL_ROOM
+  const anchor = (section: string | null) => {
+    const found = features.find(({ part }) => part.key === section)
+    if (found) return { x: found.feature.at[0], y: found.feature.at[1] }
+    const box = boxes.find((item) => item.part.key === section)
+    if (box) return { x: box.x + box.w / 2, y: box.y }
+    return {
+      x: blueprint.hold.x + blueprint.hold.w / 2,
+      y: blueprint.hold.y,
+    }
   }
+  const spread = (mount: DiagramMount) => {
+    const point = anchor(mount.section)
+    const siblings = mounts.filter((item) => item.section === mount.section)
+    const place = siblings.findIndex((item) => item.key === mount.key)
+    return {
+      x: point.x + (place - (siblings.length - 1) / 2) * MOUNT_RADIUS * 3.2,
+      y: point.y,
+    }
+  }
+  const back = features.filter(({ feature }) => feature.back)
+  const front = features.filter(({ feature }) => !feature.back)
+  const shell = (
+    <path
+      d={blueprint.body}
+      fillRule='evenodd'
+      fill={body ? `url(#${ids.cells[body.state]})` : `url(#${ids.surface})`}
+      className={body ? STATE_STROKE[body.state] : 'stroke-primary/60'}
+      strokeWidth={body?.criticality === 'critical' ? 2.4 : 1.6}
+      strokeLinejoin='round'
+    />
+  )
   return (
     <div ref={measure} className='flex min-w-0 flex-col gap-3'>
       <svg
         role='img'
         aria-label={title}
-        viewBox={`${-margins.left} ${-margins.top} ${frameWidth} ${frameHeight}`}
-        width={frameWidth * SCALE}
-        height={frameHeight * SCALE}
-        className='h-auto max-w-full self-center'
+        viewBox={`${-MARGIN} ${-MARGIN} ${CANVAS.width + MARGIN * 2} ${CANVAS.height + MARGIN * 2}`}
+        className='h-auto w-full max-w-3xl self-center'
       >
-        <Defs ids={ids} />
-        <Hull
-          shape={shape}
-          x={0}
-          y={PAD}
-          w={width}
-          h={height - PAD * 2}
-          paint={{ surface: ids.surface, shadow: ids.shadow }}
-        />
-        {laid.map((box) => (
-          <Tooltip key={box.part.key}>
-            <TooltipTrigger asChild>
-              <g
-                tabIndex={0}
-                aria-label={describe(box.part)}
-                className='outline-none focus-visible:opacity-80'
-              >
-                <Cell box={box} ids={ids} />
-              </g>
-            </TooltipTrigger>
-            <TooltipContent>{describe(box.part)}</TooltipContent>
-          </Tooltip>
+        <Defs ids={ids} body={blueprint.body} />
+        <Backdrop setting={blueprint.setting} ids={ids} />
+        {blueprint.decor?.map((mark, index) => (
+          <path
+            key={index}
+            d={mark.d}
+            className={
+              mark.line
+                ? 'fill-none stroke-foreground/30'
+                : 'fill-muted stroke-foreground/30'
+            }
+            strokeWidth={mark.line ?? 1.2}
+            strokeLinejoin='round'
+          />
         ))}
-        {mounts.map((mount, index) => {
-          const at = anchor(mount, index)
-          return (
-            <Tooltip key={mount.key}>
-              <TooltipTrigger asChild>
-                <g
-                  tabIndex={0}
-                  aria-label={`${mount.label} × ${mount.count}`}
-                  className='outline-none'
-                >
-                  <Aim x={at.x} y={at.y} arc={mount.arc ?? 'all_round'} />
-                  <circle
-                    cx={at.x}
-                    cy={at.y}
-                    r={MOUNT_RADIUS}
-                    className='fill-background stroke-primary'
-                    strokeWidth={1.2}
-                  />
-                  <Crosshair
-                    x={at.x - MOUNT_RADIUS * 0.75}
-                    y={at.y - MOUNT_RADIUS * 0.75}
-                    width={MOUNT_RADIUS * 1.5}
-                    height={MOUNT_RADIUS * 1.5}
-                    strokeWidth={2.6}
-                    className='text-primary'
-                  />
-                  {mount.count > 1 && (
-                    <g>
-                      <circle
-                        cx={at.x + MOUNT_RADIUS}
-                        cy={at.y - MOUNT_RADIUS}
-                        r={3.4}
-                        className='fill-primary stroke-background'
-                        strokeWidth={0.6}
-                      />
-                      <text
-                        x={at.x + MOUNT_RADIUS}
-                        y={at.y - MOUNT_RADIUS}
-                        textAnchor='middle'
-                        dominantBaseline='central'
-                        className='fill-primary-foreground'
-                        fontSize={4.4}
-                      >
-                        {mount.count}
-                      </text>
-                    </g>
-                  )}
-                </g>
-              </TooltipTrigger>
-              <TooltipContent>{`${mount.label} × ${mount.count}`}</TooltipContent>
-            </Tooltip>
-          )
+        {back.map(({ feature, part, order }) => (
+          <FeatureMark key={order} feature={feature} part={part} ids={ids} />
+        ))}
+        {auras.map((part, index) => (
+          <Aura key={part.key} part={part} ring={index} />
+        ))}
+        {body ? <Hint part={body}>{shell}</Hint> : shell}
+        <g clipPath={`url(#${ids.clip})`}>
+          {boxes.map((box) => (
+            <Hint key={box.part.key} part={box.part}>
+              <Compartment box={box} ids={ids} />
+            </Hint>
+          ))}
+        </g>
+        {skins.map((part) => (
+          <Skin key={part.key} part={part} body={blueprint.body} />
+        ))}
+        {front.map(({ feature, part, order }) => (
+          <FeatureMark key={order} feature={feature} part={part} ids={ids} />
+        ))}
+        {blueprint.setting === 'water' && <Waves />}
+        {pills &&
+          features
+            .filter(
+              (item, index) =>
+                features.findIndex(({ part }) => part.key === item.part.key) ===
+                index
+            )
+            .map(({ feature, part, order }) => (
+              <Pill
+                key={order}
+                x={feature.label[0]}
+                y={feature.label[1]}
+                part={part}
+              />
+            ))}
+        {mounts.map((mount) => {
+          const at = spread(mount)
+          return <MountMark key={mount.key} mount={mount} x={at.x} y={at.y} />
         })}
       </svg>
       <Legend parts={parts} mounts={mounts.length} />
@@ -708,14 +943,7 @@ export function IntegrityDiagram({
             >
               <Icon
                 aria-hidden='true'
-                className={cn(
-                  'size-icon-xs shrink-0',
-                  part.state === 'sound'
-                    ? 'text-success'
-                    : part.state === 'damaged'
-                      ? 'text-warning'
-                      : 'text-destructive'
-                )}
+                className={cn('size-icon-xs shrink-0', STATE_TEXT[part.state])}
               />
               <Text as='span' variant='caption' truncate>
                 {sectionLabel(part.key)}

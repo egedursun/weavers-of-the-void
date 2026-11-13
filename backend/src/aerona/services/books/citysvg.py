@@ -19,7 +19,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.domain.enums.urban import HousingLevel, LandCover, LandGround, Morphology, ZoneKind
 from aerona.engine.primitives.stats import stat_or
-from aerona.engine.urban.cityscape import Tile, homes_of, land_tiles, pick_tile, provisional, resource_prefer, slots_of
+from aerona.engine.urban.cityscape import Tile, homes_of, land_tiles, perimeter_of, pick_tile, provisional, resource_prefer, slots_of
 from aerona.engine.urban.coverage import people_of_districts
 from aerona.engine.urban.layout import Hex, ring
 from aerona.rules.registry import Rules
@@ -131,7 +131,7 @@ async def city_plan(session: AsyncSession, rules: Rules, town: EntityRow) -> Pla
     walls = infrastructure.walls_level if infrastructure is not None else 0
     morphology = profile.morphology if profile is not None else Morphology.ORGANIC
     layout = provisional(rules, districts, morphology, walls, town.id)
-    slots = slots_of(layout, buildings, districts)
+    slots = slots_of(layout, buildings, districts, await perimeter_of(session, buildings))
     people = people_of_districts(rules, round(stat_or(town, "population", 0)), districts)
     body: list[str] = []
     cells: list[Hex] = []

@@ -37,6 +37,7 @@ from aerona.api.schemas.made_kinds import (
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.catalog.equipment import FAMILIES
+from aerona.catalog.structure_sections import FORMS
 from aerona.catalog.structure_sections import LAYOUTS as STRUCTURE_LAYOUTS
 from aerona.catalog.structures import MEGASTRUCTURES, STRUCTURES
 from aerona.catalog.units import UNITS
@@ -63,6 +64,7 @@ from aerona.domain.enums.body import InjuryState
 from aerona.domain.enums.integrity import Criticality, SectionState
 from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.structure import BuildingForm
 from aerona.engine.body.decline import decline_severity
 from aerona.engine.cosmos.being_wounds import VAST, can_roam, can_see, effective_might
 from aerona.engine.equipment.models import MOUNT_FAMILIES
@@ -592,6 +594,14 @@ async def vessel_views(session: AsyncSession, node_id: int) -> list[VesselSectio
     return found
 
 
+async def structure_form(session: AsyncSession, node_id: int) -> BuildingForm | None:
+    profile = await session.get(StructureProfileRow, node_id)
+    if profile is None:
+        return None
+    design = await session.get(StructureDesignRow, profile.design_id) if profile.design_id is not None else None
+    return design.form if design is not None and design.form is not None else FORMS[profile.kind]
+
+
 async def section_views(session: AsyncSession, node_id: int) -> tuple[list[StructureSectionView], MegastructureView | None]:
     profile = await session.get(StructureProfileRow, node_id)
     if profile is None:
@@ -722,6 +732,7 @@ async def thing_kinds(services: ServicesDep, node_id: NodeId) -> ThingKindsView:
             else {}
         )
         sections, megastructure = await section_views(session, node_id)
+        vessel = await session.get(VesselProfileRow, node_id)
         rules = services.rules.current
         return ThingKindsView(
             node=refs[node_id],
@@ -731,8 +742,11 @@ async def thing_kinds(services: ServicesDep, node_id: NodeId) -> ThingKindsView:
             stacks=await stack_views(session, node_id),
             pace=await army_pace(session, node_id),
             vessel_sections=await vessel_views(session, node_id),
+            vessel_frame=vessel.frame if vessel is not None else None,
+            vessel_family=FRAMES[vessel.frame].family if vessel is not None else None,
             cooking=[cooking_view(row, refs, names) for row in cooking_rows],
             sections=sections,
+            structure_form=await structure_form(session, node_id),
             megastructure=megastructure,
             attraction=await attraction_view(session, node_id),
             being=await being_view(session, rules, entity),

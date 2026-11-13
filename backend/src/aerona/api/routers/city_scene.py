@@ -41,7 +41,7 @@ from aerona.domain.enums.settlement import DistrictKind, SizeTier, WaterSupply
 from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.domain.enums.urban import HousingLevel, LandCover, LandGround, Morphology, ZoneKind
 from aerona.engine.primitives.stats import stat_or
-from aerona.engine.urban.cityscape import DIGGINGS, HOUSE_SLOTS, homes_of, land_tiles, pick_tile, provisional, resource_prefer, slots_of
+from aerona.engine.urban.cityscape import DIGGINGS, HOUSE_SLOTS, homes_of, land_tiles, perimeter_of, pick_tile, provisional, resource_prefer, slots_of
 from aerona.engine.urban.coverage import home_of, people_of_districts
 from aerona.engine.urban.layout import CENTRE, CityLayout, Hex, water_side
 from aerona.engine.urban.planning import coastal
@@ -96,7 +96,7 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
         buildings = list(await session.scalars(select(StructureProfileRow).where(StructureProfileRow.host_entity_id == town.id)))
         refs = await node_refs(session, [town.id, *(row.structure_entity_id for row in buildings)])
         buildings = [row for row in buildings if row.structure_entity_id in refs]
-        slots = slots_of(layout, buildings, districts)
+        slots = slots_of(layout, buildings, districts, await perimeter_of(session, buildings))
         household = rules.city_plan.household
         dwellings = {district.id: homes_of(people.get(district.id, 0), household) for district in districts}
         homeless = profile.homeless if profile is not None else 0

@@ -27,6 +27,7 @@ import { MindPicker } from '@/features/entity/mind/parts'
 import { Ref } from '@/features/gatherings/parts'
 import { IntegrityDiagram } from './IntegrityDiagram'
 import { type EquipmentModel, type VehicleType, useLever } from './api'
+import { vehicleShape } from './blueprints'
 import {
   ARC,
   CRITICALITY,
@@ -45,7 +46,6 @@ import {
 } from './labels'
 import { OWNER_TYPES, useKindRow, useKindStep } from './model'
 import { KindHeader, ListEditor } from './parts'
-import { vehicleShape } from './silhouettes'
 import { vehicleZone } from './zones'
 
 type Section = VehicleType['sections'][number]
@@ -442,7 +442,7 @@ export function VehicleTypePage({
           arc: item.arc,
         }))}
         zoneOf={vehicleZone}
-        shape={vehicleShape(row.family)}
+        shape={vehicleShape(row.frame, row.family)}
       />
       <div className='@container/tiles min-w-0'>
         <div className='grid min-w-0 grid-cols-2 gap-2 @2xl/tiles:grid-cols-4'>

@@ -413,8 +413,11 @@ class ThingKindsView(ApiModel):
     stacks: list[StackKitView]
     pace: int | None
     vessel_sections: list[VesselSectionView]
+    vessel_frame: VehicleFrame | None
+    vessel_family: VehicleFamily | None
     cooking: list[CookingView]
     sections: list[StructureSectionView]
+    structure_form: BuildingForm | None
     megastructure: MegastructureView | None
     attraction: AttractionView | None
     being: BeingWoundsView | None

@@ -13,14 +13,14 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
-from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.db.tables.urban import DistrictServiceRow
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import RiverClass
 from aerona.domain.enums.settlement import DistrictKind, SizeTier
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.structure import ConstructionState, StructureKind
+from aerona.domain.enums.structure import BuildingForm, ConstructionState, StructureKind
 from aerona.domain.enums.urban import LandCover, LandGround, Morphology, UrbanService
 from aerona.domain.models.entity_stats import SettlementStats, StructureStats
 from aerona.engine.context import TickContext
@@ -32,7 +32,7 @@ from aerona.engine.settlement.life import quarter_wants
 from aerona.engine.structures.needs import SiteFacts, wanted
 from aerona.engine.structures.readers import Working
 from aerona.engine.structures.settlement import civic_from
-from aerona.engine.urban.cityscape import land_tiles, pick_tile, provisional, slots_of
+from aerona.engine.urban.cityscape import land_tiles, perimeter_of, perimeter_ring, pick_tile, provisional, slots_of
 from aerona.engine.urban.coverage import CoverageTally, cover_town, people_of_districts, place
 from aerona.engine.urban.housing import HousingTally, house_town
 from aerona.engine.urban.layout import HEX_KEY, distance, falloff, layout_of, plan_seed, seed_of
@@ -189,6 +189,31 @@ async def test_the_scene_draws_an_unplaced_building_in_the_district_the_engine_w
     cell, _ = slots_of(layout, [profile], districts)[market]
     assert place(profile, districts) and profile.district_id is not None
     assert cell in layout.footprints[profile.district_id]
+
+
+async def test_walls_gates_and_wall_lined_kinds_stand_on_the_rim_of_the_town_not_inside_it(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town_id, districts = await built_town(session, world, ctx)
+    layout = await plan_town(ctx, town_id)
+    wall = await work(session, world, town_id, StructureKind.WALL)
+    gate = await work(session, world, town_id, StructureKind.GATE)
+    lined = await work(session, world, town_id, StructureKind.WATCHTOWER)
+    market = await work(session, world, town_id, StructureKind.MARKET)
+    design = StructureDesignRow(name="Long rampart", base_kind=StructureKind.WATCHTOWER, form=BuildingForm.WALL_LINE)
+    session.add(design)
+    await session.flush()
+    lined_profile = await session.get(StructureProfileRow, lined)
+    assert lined_profile is not None
+    lined_profile.design_id = design.id
+    profiles = list(await session.scalars(select(StructureProfileRow).where(StructureProfileRow.host_entity_id == town_id)))
+    perimeter = await perimeter_of(session, profiles)
+    assert {wall, gate, lined} <= perimeter and market not in perimeter
+    slots = slots_of(layout, profiles, districts, perimeter)
+    rim = set(perimeter_ring(layout))
+    inside = {cell for cells in layout.footprints.values() for cell in cells}
+    for node in (wall, gate, lined):
+        assert slots[node][0] in rim and slots[node][0] not in inside
+    assert slots[market][0] in inside
 
 
 async def test_the_land_tiles_follow_the_land_shares_and_its_river(session: AsyncSession, world: CoreWorld) -> None:

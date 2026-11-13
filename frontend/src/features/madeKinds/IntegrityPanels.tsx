@@ -15,6 +15,7 @@ import { NumberField } from '@/features/entity/realm/parts'
 import { KIND_SPEC } from '@/features/entity/society/structureLabels'
 import { IntegrityDiagram } from './IntegrityDiagram'
 import { type ThingKinds, useLever } from './api'
+import { buildingShape, vehicleShape } from './blueprints'
 import {
   CRITICALITY,
   HAZARD,
@@ -101,7 +102,7 @@ export function VesselSectionsPanel({
       </Muted>
       <IntegrityDiagram
         title={`Sections of ${data.node.name}`}
-        shape='ship'
+        shape={vehicleShape(data.vessel_frame, data.vessel_family)}
         parts={data.vessel_sections.map((item) => ({
           key: item.section,
           state: item.state,
@@ -399,7 +400,7 @@ export function StructureSectionsPanel({
           detail: `condition ${item.condition}, burns at ${item.flammability}`,
         }))}
         zoneOf={structureZone}
-        shape={data.megastructure ? 'ring' : 'keep'}
+        shape={data.megastructure ? 'ring' : buildingShape(data.structure_form)}
       />
       {data.megastructure && (
         <>

@@ -5921,7 +5921,7 @@ The frame catalogue gives each frame its default section layout; a type's sectio
 #### Levers and surfaces
 
 - `design:draw/edit/refit/delete` (every value), `design_section:set/delete`, `design_mount:add/edit/delete`, `design_technique:add/delete`, son tools `shape_vehicle_type` and `commission_vessel`, mortal tool `draw_design` (now for every frame).
-- Every vehicle type is a record of its world (`vehicle_type`) in the atlas and its drawer like any other record; its make shows the section drawing (the type's silhouette by family, sections shaded by state and sized by share, critical sections ringed, hazards marked, mounts aimed by their arc), frame, domain, propulsion, capacities, sections, mounts with their models, fire control, techniques, makers and how many are built.
+- Every vehicle type is a record of its world (`vehicle_type`) in the atlas and its drawer like any other record; its make shows the cutaway drawing of its own frame (every frame has a blueprint of its own: a body that clips the inner sections, outer parts such as wheels, legs, sails, wings, rotors, turrets, saddles or draft teams drawn only when the type has that section, armour as the outline of the body and wards as a ring around it, set on ground, water, air, deep or space; inner sections shaded by state and sized by share, critical sections ringed, hazards marked, mounts aimed by their arc), frame, domain, propulsion, capacities, sections, mounts with their models, fire control, techniques, makers and how many are built.
 - Book and Codex: each vehicle type's own encyclopedia entry carries its make with labelled values and tables of its sections and mounts; holders list their groups in their own entries.
 
 ### 7.8 Vehicle groups: fleets, trains and parks (W23+)
@@ -6016,7 +6016,7 @@ Uniqueness and races follow the wonder rules (7.2 reference pass R5). Each megas
 #### Levers and surfaces
 
 - `structure_design:create/edit/retire` gain origin, form, storeys and material; `structure_design_section:set/delete` give a type its own sections; son tool `shape_structure_type`; mortal tool `draw_structure_type` for builders with engineering of `integrity.draw_skill`.
-- Every building type is a record of its world (`building_type`) in the atlas and its drawer like any other record: the 3D drawing of the type's form, its section drawing in the silhouette of its form, values and how many works are built to it.
+- Every building type is a record of its world (`building_type`) in the atlas and its drawer like any other record: the 3D drawing of the type's form, its cutaway drawing in the body of its form (every building form has its own body; roof, dome, spire, battlements, towers, gate, docks, wheel, beacon, piers and foundation are drawn to the size of that body only when the type has the section; walls, gates and wall-lined kinds stand on the rim of their town in the city scene and the book's city plan), values and how many works are built to it.
 
 ### 7.12 Dish: a made kind of food (W23+)
 

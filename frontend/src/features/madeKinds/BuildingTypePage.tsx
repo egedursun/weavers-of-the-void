@@ -19,6 +19,7 @@ import {
 import { Ref } from '@/features/gatherings/parts'
 import { IntegrityDiagram } from './IntegrityDiagram'
 import { type BuildingType, useLever } from './api'
+import { buildingShape } from './blueprints'
 import {
   CRITICALITY,
   FORM,
@@ -29,7 +30,6 @@ import {
 } from './labels'
 import { OWNER_TYPES, useKindRow, useKindStep } from './model'
 import { KindHeader } from './parts'
-import { buildingShape } from './silhouettes'
 import { structureZone } from './zones'
 
 type Part = BuildingType['sections'][number]

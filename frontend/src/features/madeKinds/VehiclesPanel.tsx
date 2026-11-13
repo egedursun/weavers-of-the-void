@@ -27,6 +27,7 @@ import {
   type VehicleType,
   useLever,
 } from './api'
+import { vehicleShape } from './blueprints'
 import {
   CRITICALITY,
   VEHICLE_FAMILY,
@@ -35,7 +36,6 @@ import {
   sectionLabel,
 } from './labels'
 import { HOLDER_TYPES, numberProblem, useKindRow, worst } from './model'
-import { vehicleShape } from './silhouettes'
 import { vehicleZone } from './zones'
 
 type GroupSection = VehicleGroup['sections'][number]
@@ -230,7 +230,7 @@ function GroupCard({
         title={`Damage across ${row.design_name}`}
         parts={parts}
         zoneOf={vehicleZone}
-        shape={vehicleShape(row.family)}
+        shape={vehicleShape(row.frame, row.family)}
       />
       <div className='@container/tiles min-w-0'>
         <div className='grid min-w-0 grid-cols-2 gap-2 @2xl/tiles:grid-cols-4'>

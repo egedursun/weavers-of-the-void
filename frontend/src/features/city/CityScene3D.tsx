@@ -215,7 +215,7 @@ export default function CityScene3D({
     scene.walls_radius ?? 0,
     scene.walls_level,
     scene.roads
-  )
+  ).filter((piece) => !occupied.has(cellKey(piece.cell)))
   const names: SceneLabel[] = scene.districts
     .filter((district) => visible(district.zone) && district.cells.length > 0)
     .map((district) => {
