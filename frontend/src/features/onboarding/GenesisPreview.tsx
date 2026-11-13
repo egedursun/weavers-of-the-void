@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import {
   CircleAlert,
   CircleCheck,
@@ -66,6 +67,15 @@ function Meter({
   )
 }
 
+function Group({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className='flex min-w-0 flex-col gap-1.5'>
+      <Label variant='overline'>{label}</Label>
+      <div className='flex min-w-0 flex-wrap gap-1.5'>{children}</div>
+    </div>
+  )
+}
+
 export function GenesisPreview({
   draft,
   options,
@@ -80,6 +90,7 @@ export function GenesisPreview({
   const CosmosIcon = COSMOS_ICON[draft.cosmos]
   const StorytellerIcon = STORYTELLER_ICON[draft.storyteller]
   const shape = effectiveShape(draft)
+  const languageLabel = options.language[draft.language] ?? draft.language
   const ShapeIcon = SHAPE_ICON[shape]
   const shapeLabel =
     options.shapes.find((item) => item.shape === shape)?.label ?? shape
@@ -161,67 +172,70 @@ export function GenesisPreview({
           value={draft.danger}
           level={dangerLevel(draft.danger)}
         />
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <Label variant='overline'>The first world</Label>
-          <div className='flex min-w-0 flex-wrap gap-1.5'>
-            <Badge variant={worldKind ? 'default' : 'outline'}>
-              <Globe />
-              {worldKind ?? 'Kind chosen by the seed'}
+        <Group label='The first world'>
+          <Badge variant={worldKind ? 'default' : 'outline'}>
+            <Globe />
+            {worldKind ?? 'Kind chosen by the seed'}
+          </Badge>
+          <Badge variant='outline' className='max-w-full'>
+            <Droplets />
+            <span className='truncate'>
+              {landShaped(draft)
+                ? `Water ${draft.seaPct ?? 0}% · high ground ${draft.mountainsPct ?? 0}% · moisture ${draft.moisturePct ?? 0}`
+                : 'Land shaped by the seed'}
+            </span>
+          </Badge>
+          {climate && ClimateIcon && (
+            <Badge variant='outline'>
+              <ClimateIcon />
+              {climate}
             </Badge>
-            <Badge variant='outline' className='max-w-full'>
-              <Droplets />
-              <span className='truncate'>
-                {landShaped(draft)
-                  ? `Water ${draft.seaPct ?? 0}% · high ground ${draft.mountainsPct ?? 0}% · moisture ${draft.moisturePct ?? 0}`
-                  : 'Land shaped by the seed'}
-              </span>
+          )}
+          {age && AgeIcon && (
+            <Badge variant='outline'>
+              <AgeIcon />
+              {`${age} at the first epoch`}
             </Badge>
-            {climate && ClimateIcon && (
-              <Badge variant='outline'>
-                <ClimateIcon />
-                {climate}
-              </Badge>
-            )}
-            {age && AgeIcon && (
-              <Badge variant='outline'>
-                <AgeIcon />
-                {`${age} at the first epoch`}
-              </Badge>
-            )}
-          </div>
-        </div>
-        <div className='flex min-w-0 flex-wrap gap-1.5'>
+          )}
+        </Group>
+        <Group label='The peoples'>
+          <Badge variant='outline'>
+            <Users />
+            {`${draft.peoples} ${draft.peoples === 1 ? 'people' : 'peoples'}`}
+          </Badge>
           <Badge variant='outline'>
             <TechIcon />
             {options.technology[draft.technology] ?? draft.technology}
           </Badge>
-          <Badge variant='outline'>
+          <Badge variant='outline' title={languageLabel}>
             <LanguageIcon />
-            {options.language[draft.language] ?? draft.language}
+            {languageLabel.split(',')[0]}
           </Badge>
+        </Group>
+        <Group label='The cosmos'>
           <Badge variant='outline'>
             <CosmosIcon />
             {cosmos
               ? `${cosmos.label} · ${cosmos.worlds} ${cosmos.worlds === 1 ? 'world' : 'worlds'}`
               : draft.cosmos}
           </Badge>
-          <Badge variant='outline'>
-            <ShapeIcon />
-            {shapeLabel}
-          </Badge>
+          {draft.cosmos !== 'single' && (
+            <Badge variant='outline'>
+              <ShapeIcon />
+              {shapeLabel}
+            </Badge>
+          )}
           {layer && (
             <Badge variant='outline'>
               <Layers />
               {layer}
             </Badge>
           )}
+        </Group>
+        <Group label='The telling'>
           <Badge variant='outline'>
             <StorytellerIcon />
             {`${options.storyteller[draft.storyteller] ?? draft.storyteller} storyteller`}
-          </Badge>
-          <Badge variant='outline'>
-            <Users />
-            {`${draft.peoples} ${draft.peoples === 1 ? 'people' : 'peoples'}`}
           </Badge>
           <Badge variant='outline' className='max-w-full'>
             <ImageIcon />
@@ -229,7 +243,7 @@ export function GenesisPreview({
               {imageStyleLabel(draft.imageStyle, draft.imageStyleCustom)}
             </span>
           </Badge>
-        </div>
+        </Group>
         <div className='flex min-w-0 flex-col gap-1.5'>
           <Label variant='overline'>{`First sons · ${sons.length}`}</Label>
           <PagedList

@@ -296,7 +296,7 @@ Layout (`form#genesisForm.genesis-card`):
 - Collapsible "Settings: magic, darkness, technology, language, cosmos" (`details[data-k=sihirbaz-ayar]`) containing:
   - Magic (`Büyü`) — range 0–100 with live `<output>`, default rule `SIHIRBAZ.buyu` (50).
   - Danger (legacy `Karanlık`, darkness) — range 0–100, default `setup_wizard.danger` (50); levels Safe, Calm, Balanced, Perilous, Deadly.
-  - New app (13 §10.19): a "The first world" group with the kind of the first world, a "Shape the land yourself" switch over water, high ground and moisture sliders (disabled with their reason while the seed shapes the land), the climate age and the age at the first epoch, each with "The seed decides"; under Cosmos the shape of the cosmos (one sun, many suns, layered; disabled with its reason for a single world) and the second layer kind (disabled with its reason unless layered).
+  - New app (13 §10.19): a "The first world" panel in three parts (its kind; its land, whose water, high ground and moisture sliders open behind a "Shape it yourself" switch; its climate and age), each choice offering "The seed decides"; a "Cosmos" panel in two numbered steps, 1 "How many worlds" and 2 "Where the further worlds lie" (one sun, many suns, layered; disabled with its reason for a single world), with the second layer kind nested under step 2 and disabled with its reason unless layered. The preview groups its badges under the first world, the peoples, the cosmos and the telling.
   - Technology (`Teknoloji`) select, default `demir`.
   - Language texture (`Dilin dokusu`) select, default `karisik`.
   - Cosmos (`Kozmos`) select, default `tek`.

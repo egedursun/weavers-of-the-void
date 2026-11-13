@@ -37,9 +37,8 @@ import { Label, Muted, Text } from '@/components/typography'
 import { ImageStylePicker } from '@/features/images/ImageStylePicker'
 import { romanNumeral } from '@/features/pantheon/labels'
 import { Counter } from './Counter'
-import { CosmosShapeFields, FirstWorldFields } from './WorldShapeFields'
+import { CosmosFields, FirstWorldFields } from './WorldShapeFields'
 import {
-  type CosmosSize,
   type LanguageTexture,
   type LoreLanguage,
   type Rarity,
@@ -56,7 +55,6 @@ import {
 } from './wizardModel'
 import { type StepProps } from './wizardTypes'
 import {
-  COSMOS_ICON,
   LANGUAGE_HINT,
   LANGUAGE_ICON,
   LORE_LANGUAGE_ICON,
@@ -320,12 +318,6 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
     hint: STORYTELLER_HINT[key as StorytellerProfile],
     icon: STORYTELLER_ICON[key as StorytellerProfile] ?? Sparkles,
   }))
-  const cosmos: Choice<CosmosSize>[] = options.cosmos.map((option) => ({
-    value: option.size,
-    label: option.label,
-    hint: `${option.worlds} ${option.worlds === 1 ? 'world' : 'worlds'} under the sky`,
-    icon: COSMOS_ICON[option.size] ?? Sparkles,
-  }))
   return (
     <div className='flex min-w-0 flex-col gap-5'>
       <FormRow
@@ -437,23 +429,12 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           onChange={(value) => update({ language: value })}
         />
       </SettingGroup>
-      <SettingGroup
-        label='Cosmos'
-        description='How many worlds wait beside the first, and how they are placed.'
-      >
-        <ChoiceTiles
-          label='Cosmos'
-          value={draft.cosmos}
-          options={cosmos}
-          onChange={(value) => update({ cosmos: value })}
-        />
-        <CosmosShapeFields
-          draft={draft}
-          update={update}
-          options={options}
-          peoplesMax={peoplesMax}
-        />
-      </SettingGroup>
+      <CosmosFields
+        draft={draft}
+        update={update}
+        options={options}
+        peoplesMax={peoplesMax}
+      />
       <SettingGroup
         label='Storyteller'
         description='How the tension of the world rises and falls across the epochs. You can change it later in the world drawer.'
@@ -463,6 +444,7 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           value={draft.storyteller}
           options={storyteller}
           onChange={(value) => update({ storyteller: value })}
+          columns={2}
         />
       </SettingGroup>
       <SettingGroup

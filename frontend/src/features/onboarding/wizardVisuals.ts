@@ -156,7 +156,7 @@ export const LANGUAGE_HINT: Record<LanguageTexture, string> = {
 }
 
 export const COSMOS_ICON: Record<CosmosSize, LucideIcon> = {
-  single: Sun,
+  single: Globe,
   small: Orbit,
   large: Telescope,
 }

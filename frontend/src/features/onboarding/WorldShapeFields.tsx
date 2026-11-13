@@ -1,3 +1,4 @@
+import { type ReactNode, useId } from 'react'
 import {
   Cloudy,
   Droplets,
@@ -9,6 +10,8 @@ import {
   Sparkles,
   Thermometer,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -16,18 +19,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
 import { RangeField } from '@/components/domain'
+import { Medallion } from '@/components/domain/KpiTile'
 import {
   type Choice,
   ChoiceTiles,
   SettingGroup,
-  SettingRow,
-  SwitchRow,
 } from '@/components/domain/SettingsKit'
-import { Muted } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
 import {
   type ClimateEra,
   type CosmosShape,
+  type CosmosSize,
   type DimensionKind,
   type WorldAge,
   type WorldType,
@@ -35,18 +40,22 @@ import {
 import {
   MOISTURE_MIN,
   PERCENT_MAX,
+  effectiveShape,
   landShaped,
   layerBlocked,
   shapeBlocked,
   shapeLand,
 } from './wizardModel'
 import { type StepProps } from './wizardTypes'
-import { AGE_ICON, CLIMATE_ICON, SHAPE_ICON } from './wizardVisuals'
+import {
+  AGE_ICON,
+  CLIMATE_ICON,
+  COSMOS_ICON,
+  SHAPE_ICON,
+} from './wizardVisuals'
 
 const SEED_DECIDES = 'seed'
 const SEED_LABEL = 'The seed decides'
-const LAND_HELD =
-  'The seed shapes the land; turn on "Shape the land yourself" to set it.'
 
 type Option<T extends string> = {
   value: T
@@ -55,68 +64,144 @@ type Option<T extends string> = {
   icon?: LucideIcon
 }
 
-function SeedSelect<T extends string>({
+function SeedField<T extends string>({
   icon,
   label,
-  description,
   value,
   options,
   blocked = null,
+  quiet = false,
   onChange,
 }: {
   icon: LucideIcon
   label: string
-  description: string
   value: T | null
   options: Option<T>[]
   blocked?: string | null
+  quiet?: boolean
   onChange: (value: T | null) => void
 }) {
+  const id = useId()
+  const noteId = useId()
   const chosen = options.find((option) => option.value === value)
+  const note = blocked ?? chosen?.description ?? null
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <SettingRow
-        icon={icon}
-        label={label}
-        description={description}
-        active={blocked === null}
+    <div className='flex min-w-0 flex-col gap-1.5'>
+      <FieldLabel htmlFor={id} className={cn(quiet && 'sr-only')}>
+        {label}
+      </FieldLabel>
+      <Select
+        value={value ?? SEED_DECIDES}
+        onValueChange={(next) =>
+          onChange(next === SEED_DECIDES ? null : (next as T))
+        }
+        disabled={blocked !== null}
       >
-        {(id) => (
-          <Select
-            value={value ?? SEED_DECIDES}
-            onValueChange={(next) =>
-              onChange(next === SEED_DECIDES ? null : (next as T))
-            }
-            disabled={blocked !== null}
-          >
-            <SelectTrigger id={id} aria-label={label} className='w-full'>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={SEED_DECIDES}>
-                <Sparkles aria-hidden='true' />
-                {SEED_LABEL}
+        <SelectTrigger
+          id={id}
+          aria-label={label}
+          aria-describedby={note ? noteId : undefined}
+          className='w-full'
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={SEED_DECIDES}>
+            <Sparkles aria-hidden='true' />
+            {SEED_LABEL}
+          </SelectItem>
+          {options.map((option) => {
+            const Icon = option.icon ?? icon
+            return (
+              <SelectItem key={option.value} value={option.value}>
+                <Icon aria-hidden='true' />
+                {option.label}
               </SelectItem>
-              {options.map((option) => {
-                const Icon = option.icon ?? icon
-                return (
-                  <SelectItem key={option.value} value={option.value}>
-                    <Icon aria-hidden='true' />
-                    {option.label}
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
-        )}
-      </SettingRow>
-      {blocked !== null ? (
-        <Muted variant='caption'>{blocked}</Muted>
-      ) : (
-        chosen?.description && (
-          <Muted variant='caption'>{chosen.description}</Muted>
-        )
+            )
+          })}
+        </SelectContent>
+      </Select>
+      {note && (
+        <Text
+          id={noteId}
+          as='p'
+          variant='caption'
+          tone={blocked === null ? 'primary' : 'muted'}
+        >
+          {note}
+        </Text>
       )}
+    </div>
+  )
+}
+
+function Part({
+  icon,
+  title,
+  hint,
+  action,
+  children,
+}: {
+  icon: LucideIcon
+  title: string
+  hint: string
+  action?: ReactNode
+  children?: ReactNode
+}) {
+  return (
+    <div className='flex min-w-0 flex-col gap-3'>
+      <div className='flex min-w-0 flex-wrap items-center gap-3'>
+        <Medallion icon={icon} tone='gold' size='sm' />
+        <div className='flex min-w-0 flex-1 basis-48 flex-col gap-0.5'>
+          <Text as='span' weight='semibold'>
+            {title}
+          </Text>
+          <Muted variant='caption'>{hint}</Muted>
+        </div>
+        {action}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function Step({
+  number,
+  title,
+  hint,
+  blocked = null,
+  children,
+}: {
+  number: number
+  title: string
+  hint: string
+  blocked?: string | null
+  children: ReactNode
+}) {
+  return (
+    <div className='flex min-w-0 flex-col gap-3'>
+      <div className='flex min-w-0 items-start gap-3'>
+        <span
+          aria-hidden='true'
+          className={cn(
+            'flex size-control-sm shrink-0 items-center justify-center rounded-full border',
+            blocked === null
+              ? 'border-primary/50 bg-primary/10 text-primary'
+              : 'border-border bg-muted text-muted-foreground'
+          )}
+        >
+          <Text as='span' variant='caption' weight='semibold' tone='inherit'>
+            {number}
+          </Text>
+        </span>
+        <div className='flex min-w-0 flex-col gap-0.5'>
+          <Text as='span' weight='semibold'>
+            {title}
+          </Text>
+          <Muted variant='caption'>{blocked ?? hint}</Muted>
+        </div>
+      </div>
+      {children}
     </div>
   )
 }
@@ -139,7 +224,6 @@ function shareLevel(value: number): string {
 
 export function FirstWorldFields({ draft, update, options }: StepProps) {
   const shaped = landShaped(draft)
-  const held = shaped ? null : LAND_HELD
   const kinds: Option<WorldType>[] = options.world_types.map((option) => ({
     value: option.world_type,
     label: option.label,
@@ -161,87 +245,121 @@ export function FirstWorldFields({ draft, update, options }: StepProps) {
   return (
     <SettingGroup
       label='The first world'
-      description='Leave any of these to the seed, or fix them yourself. Every value can be changed later in the world drawer.'
+      description='Its kind, its land, its climate and its age. Each is left to the seed unless you fix it, and every value can be changed later in the world drawer.'
     >
-      <SeedSelect
-        icon={Globe}
-        label='Kind of the first world'
-        description='What sort of world it is: its ground, sky and nature.'
-        value={draft.worldType}
-        options={kinds}
-        onChange={(worldType) => update({ worldType })}
-      />
-      <SwitchRow
-        icon={Mountain}
-        label='Shape the land yourself'
-        description='Set how much water, high ground and moisture the first world has.'
-        checked={shaped}
-        onChange={(on) => update(shapeLand(draft, on))}
-      />
-      <div className='flex min-w-0 flex-col gap-3'>
-        <RangeField
-          label='Water'
-          icon={Droplets}
-          hint='Share of the surface under water'
-          value={draft.seaPct ?? 0}
-          min={0}
-          max={PERCENT_MAX}
-          level={shaped ? shareLevel(draft.seaPct ?? 0) : SEED_LABEL}
-          lowLabel='Dry world'
-          highLabel='All water'
-          disabledReason={held}
-          onChange={(seaPct) => update({ seaPct })}
-        />
-        <RangeField
-          label='High ground'
+      <div className='flex min-w-0 flex-col gap-5 rounded-xl border bg-muted/20 p-4'>
+        <Part
+          icon={Globe}
+          title='Its kind'
+          hint='What sort of world it is: its ground, sky and nature.'
+        >
+          <SeedField
+            icon={Globe}
+            label='Kind of the first world'
+            quiet
+            value={draft.worldType}
+            options={kinds}
+            onChange={(worldType) => update({ worldType })}
+          />
+        </Part>
+        <Separator />
+        <Part
           icon={Mountain}
-          hint='Share of the land that rises high'
-          value={draft.mountainsPct ?? 0}
-          min={0}
-          max={PERCENT_MAX}
-          level={shaped ? shareLevel(draft.mountainsPct ?? 0) : SEED_LABEL}
-          lowLabel='Flat'
-          highLabel='All peaks'
-          disabledReason={held}
-          onChange={(mountainsPct) => update({ mountainsPct })}
-        />
-        <RangeField
-          label='Moisture'
-          icon={Cloudy}
-          hint='How wet the land is'
-          value={draft.moisturePct ?? 0}
-          min={MOISTURE_MIN}
-          max={PERCENT_MAX}
-          level={shaped ? moistureLevel(draft.moisturePct ?? 0) : SEED_LABEL}
-          lowLabel='Parched'
-          highLabel='Soaked'
-          disabledReason={held}
-          onChange={(moisturePct) => update({ moisturePct })}
-        />
-      </div>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-        <SeedSelect
+          title='Its land'
+          hint={
+            shaped
+              ? 'Water, high ground and moisture as you set them.'
+              : 'The seed shapes the land: its water, high ground and moisture.'
+          }
+          action={
+            <label className='flex items-center gap-2'>
+              <Text as='span' variant='caption' tone='muted'>
+                Shape it yourself
+              </Text>
+              <Switch
+                aria-label='Shape the land yourself'
+                checked={shaped}
+                onCheckedChange={(on) => update(shapeLand(draft, on))}
+              />
+            </label>
+          }
+        >
+          {shaped && (
+            <div className='flex min-w-0 flex-col gap-3'>
+              <RangeField
+                label='Water'
+                icon={Droplets}
+                hint='Share of the surface under water'
+                value={draft.seaPct ?? 0}
+                min={0}
+                max={PERCENT_MAX}
+                level={shareLevel(draft.seaPct ?? 0)}
+                lowLabel='Dry world'
+                highLabel='All water'
+                onChange={(seaPct) => update({ seaPct })}
+              />
+              <RangeField
+                label='High ground'
+                icon={Mountain}
+                hint='Share of the land that rises high'
+                value={draft.mountainsPct ?? 0}
+                min={0}
+                max={PERCENT_MAX}
+                level={shareLevel(draft.mountainsPct ?? 0)}
+                lowLabel='Flat'
+                highLabel='All peaks'
+                onChange={(mountainsPct) => update({ mountainsPct })}
+              />
+              <RangeField
+                label='Moisture'
+                icon={Cloudy}
+                hint='How wet the land is'
+                value={draft.moisturePct ?? 0}
+                min={MOISTURE_MIN}
+                max={PERCENT_MAX}
+                level={moistureLevel(draft.moisturePct ?? 0)}
+                lowLabel='Parched'
+                highLabel='Soaked'
+                onChange={(moisturePct) => update({ moisturePct })}
+              />
+            </div>
+          )}
+        </Part>
+        <Separator />
+        <Part
           icon={Thermometer}
-          label='Climate age'
-          description='The climate the first world begins in.'
-          value={draft.climateEra}
-          options={climates}
-          onChange={(climateEra) => update({ climateEra })}
-        />
-        <SeedSelect
-          icon={Hourglass}
-          label='Age at the first epoch'
-          description='How old the world already is when time begins.'
-          value={draft.worldAge}
-          options={ages}
-          onChange={(worldAge) => update({ worldAge })}
-        />
+          title='Its climate and age'
+          hint='The climate it begins in and how old it already is when time begins.'
+        >
+          <div className='grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2'>
+            <SeedField
+              icon={Thermometer}
+              label='Climate age'
+              value={draft.climateEra}
+              options={climates}
+              onChange={(climateEra) => update({ climateEra })}
+            />
+            <SeedField
+              icon={Hourglass}
+              label='Age at the first epoch'
+              value={draft.worldAge}
+              options={ages}
+              onChange={(worldAge) => update({ worldAge })}
+            />
+          </div>
+        </Part>
       </div>
     </SettingGroup>
   )
 }
 
-export function CosmosShapeFields({ draft, update, options }: StepProps) {
+export function CosmosFields({ draft, update, options }: StepProps) {
+  const sizes: Choice<CosmosSize>[] = options.cosmos.map((option) => ({
+    value: option.size,
+    label: option.label,
+    hint: `${option.worlds} ${option.worlds === 1 ? 'world' : 'worlds'} under the sky`,
+    icon: COSMOS_ICON[option.size] ?? Sparkles,
+  }))
   const shapes: Choice<CosmosShape>[] = options.shapes.map((option) => ({
     value: option.shape,
     label: option.label,
@@ -255,24 +373,53 @@ export function CosmosShapeFields({ draft, update, options }: StepProps) {
   }))
   const blocked = shapeBlocked(draft)
   return (
-    <div className='flex min-w-0 flex-col gap-3'>
-      <ChoiceTiles
-        label='Shape of the cosmos'
-        value={draft.cosmos === 'single' ? 'one_sun' : draft.shape}
-        options={shapes}
-        blocked={blocked}
-        onChange={(shape) => update({ shape })}
-      />
-      {blocked !== null && <Muted variant='caption'>{blocked}</Muted>}
-      <SeedSelect
-        icon={Layers}
-        label='Second layer'
-        description='What kind of layer of reality lies beside the first world.'
-        value={draft.layerKind}
-        options={layers}
-        blocked={layerBlocked(draft)}
-        onChange={(layerKind) => update({ layerKind })}
-      />
-    </div>
+    <SettingGroup
+      label='Cosmos'
+      description='Two choices: how many worlds the cosmos begins with, and where the worlds beyond the first one lie.'
+    >
+      <div className='flex min-w-0 flex-col gap-5 rounded-xl border bg-muted/20 p-4'>
+        <Step
+          number={1}
+          title='How many worlds'
+          hint='Choose one. The first world is always made; the others wait beside it.'
+        >
+          <ChoiceTiles
+            label='How many worlds'
+            value={draft.cosmos}
+            options={sizes}
+            onChange={(cosmos) => update({ cosmos })}
+          />
+        </Step>
+        <Separator />
+        <Step
+          number={2}
+          title='Where the further worlds lie'
+          hint='Choose one for the worlds beyond the first.'
+          blocked={blocked}
+        >
+          <ChoiceTiles
+            label='Where the further worlds lie'
+            value={effectiveShape(draft)}
+            options={shapes}
+            blocked={blocked}
+            onChange={(shape) => update({ shape })}
+          />
+          <div className='flex min-w-0 flex-col gap-1 border-l-2 border-primary/30 pl-4'>
+            <Muted variant='caption'>
+              Only for a layered cosmos: what kind of layer of reality lies
+              beside the first world.
+            </Muted>
+            <SeedField
+              icon={Layers}
+              label='Second layer'
+              value={draft.layerKind}
+              options={layers}
+              blocked={layerBlocked(draft)}
+              onChange={(layerKind) => update({ layerKind })}
+            />
+          </div>
+        </Step>
+      </div>
+    </SettingGroup>
   )
 }
