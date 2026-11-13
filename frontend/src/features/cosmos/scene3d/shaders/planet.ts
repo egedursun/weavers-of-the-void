@@ -73,14 +73,14 @@ void main(){
     float haze = fbm(q*1.6 + vec3(drift, 0.0, -drift*0.7), 6);
     float band = sin(p.y*6.0 + haze*3.0 + uSeed)*0.5 + 0.5;
     base = mix(mix(uPal[2], uPal[9], smoothstep(0.2, 0.8, band)), uPal[4], smoothstep(-0.3, 0.6, haze)*0.45);
-    emis += uPal[0]*pow(1.0 - nv, 3.0)*0.12;
+    emis += uPal[0]*pow(max(1.0 - nv, 0.0), 3.0)*0.12;
     spec = 0.0;
   } else if (uType == 12) {
     float swirl = fbm(q*2.0 + vec3(0.0, uTime*0.02, 0.0), 5);
     float spiral = sin(atan(p.z, p.x)*3.0 + p.y*6.0 + swirl*4.0 - uTime*0.3);
     base = mix(uPal[0], uPal[1], smoothstep(-0.6, 0.6, swirl)) * 0.25;
     emis += uViolet * smoothstep(0.7, 1.0, spiral) * 0.35;
-    emis += uViolet * pow(1.0 - nv, 3.0) * 0.8;
+    emis += uViolet * pow(max(1.0 - nv, 0.0), 3.0) * 0.8;
     spec = 0.0;
   } else if (uType == 14) {
     float bands = step(0.5, fract(p.y*9.0 + 0.25));
@@ -159,7 +159,7 @@ void main(){
     } else if (uType == 13) {
       float vein = smoothstep(0.88, 0.99, 1.0 - abs(snoise(q*7.0)));
       base = mix(base, uPal[9], 0.35);
-      emis += uCopper * vein * 0.9 + uCopper * pow(1.0 - nv, 2.0) * 0.25;
+      emis += uCopper * vein * 0.9 + uCopper * pow(max(1.0 - nv, 0.0), 2.0) * 0.25;
       spec = 0.8; specPow = 60.0;
     } else if (uType == 18) {
       float rust = smoothstep(0.35, 0.75, fbm(q*5.0 + 3.0, 4) + 0.5);
@@ -207,7 +207,7 @@ void main(){
   col += uStarColor * pow(max(dot(N, H), 0.0), specPow) * spec * term;
   if (uType == 10) {
     vec3 R = reflect(-V, N);
-    float fr = 0.35 + 0.65*pow(1.0 - nv, 3.0);
+    float fr = 0.35 + 0.65*pow(max(1.0 - nv, 0.0), 3.0);
     col = mix(col, envAt(R) + base*0.18*diff, 0.72) + uStarColor*pow(max(dot(R, L), 0.0), 400.0)*3.0*term*fr;
   }
   if (uClouds > 0.0) {
@@ -220,10 +220,10 @@ void main(){
     float ct = smoothstep(0.55, 0.9, snoise(q*38.0)) * smoothstep(0.2, 0.7, snoise(q*6.0) + 0.5);
     col += uCityColor * ct * land * (1.0 - term) * uCity * 0.9;
   }
-  float fr = pow(1.0 - nv, 3.2);
+  float fr = pow(max(1.0 - nv, 0.0), 3.2);
   col += uAtmColor * fr * uAtm * (0.12 + term*0.8);
   col += emis;
-  col += vec3(0.95, 0.78, 0.52) * pow(1.0 - nv, 2.4) * uHover * 0.9;
+  col += vec3(0.95, 0.78, 0.52) * pow(max(1.0 - nv, 0.0), 2.4) * uHover * 0.9;
   col = mix(col, vec3(0.02, 0.024, 0.032) + uAtmColor*fr*0.25 + vec3(0.2, 0.22, 0.26)*fr*0.4, uDim);
   gl_FragColor = vec4(col, uOpacity);
 }`
@@ -241,7 +241,7 @@ void main(){
   float t = dot(oc, dir);
   float b = length(oc - dir*t) / uRadius;
   float x = clamp((b - 1.0)/(uShell - 1.0), 0.0, 1.0);
-  float a = pow(1.0 - x, 2.4) * smoothstep(0.88, 1.0, b);
+  float a = pow(max(1.0 - x, 0.0), 2.4) * smoothstep(0.88, 1.0, b);
   vec3 nrm = normalize(cameraPosition + dir*t - uCenter);
   vec3 L = uLit > 0.5 ? normalize(uStarPos - uCenter) : nrm;
   float lit = mix(0.12, 1.0, smoothstep(-0.35, 0.55, dot(nrm, L)));

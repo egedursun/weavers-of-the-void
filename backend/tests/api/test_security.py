@@ -66,3 +66,9 @@ async def test_a_dev_server_on_any_port_writes_through_its_proxy(api: ApiWorld, 
         proxied = await client.patch("/api/creator", json={"title": "Warden"}, headers={"origin": f"http://localhost:{port}", "sec-fetch-site": "same-origin"})
     assert proxied.status_code == 200
     assert "changeOrigin: false" in VITE_CONFIG.read_text(encoding="utf-8")
+
+
+def test_each_dev_server_keeps_its_own_dependency_cache_and_may_read_the_real_modules() -> None:
+    config = VITE_CONFIG.read_text(encoding="utf-8")
+    assert "cacheDir: path.resolve(ROOT, '.vite-cache', SERVER_KEY)" in config
+    assert "realpathSync(path.resolve(ROOT, 'node_modules'))" in config

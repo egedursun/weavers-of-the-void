@@ -97,6 +97,23 @@ tester.run('scene-tap', rules['scene-tap'], {
   ],
 })
 
+tester.run('glsl-safe-pow', rules['glsl-safe-pow'], {
+  valid: [
+    'const glsl = `float a = pow(max(x, 0.0), 2.0);`',
+    'const glsl = `float a = pow(clamp(1.0 - up, 0.0, 1.0), 2.6) + pow(abs(q.x), 3.0);`',
+    'const glsl = `float a = exp(-d*d); float b = pow(2.0, x);`',
+    'const glsl = `float a = 1.0 - smoothstep(0.97, 1.0, s) + smoothstep(-0.2, 0.6, n);`',
+    'const text = `power(x, 2)`',
+  ],
+  invalid: [
+    { code: 'const glsl = `float a = pow(1.0 - d, 2.0);`', errors: [{ messageId: 'negativeBase' }] },
+    { code: 'const glsl = `float a = exp(-pow((d - 0.7)*7.0, 2.0));`', errors: [{ messageId: 'negativeBase' }] },
+    { code: 'const glsl = `float a = pow(max(x, 0.0), 2.0) + pow(0.5 + 0.5*sin(t), 3.0);`', errors: [{ messageId: 'negativeBase' }] },
+    { code: 'const glsl = `float a = smoothstep(1.0, 0.97, s);`', errors: [{ messageId: 'reversedEdges' }] },
+    { code: 'const glsl = `float a = smoothstep(0.5, 0.5, s);`', errors: [{ messageId: 'reversedEdges' }] },
+  ],
+})
+
 const typedTester = new RuleTester({
   languageOptions: { ecmaVersion: 'latest', sourceType: 'module', parser: tseslint.parser },
 })

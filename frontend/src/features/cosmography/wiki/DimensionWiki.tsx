@@ -41,9 +41,9 @@ import { CreateClusterStudio, CreateGalaxyStudio } from '../create/CreateStudio'
 import { CAUSALITIES, ELEMENTS } from '../labels'
 import { type Ladder, nameTable } from '../ladder'
 import { Chip, Facts, Meter, NodeLink, RecordEditor } from '../parts'
-import { ClusterThumb, DimensionSigil } from '../visual/ScaleThumbs'
+import { ClusterThumb, DimensionThumb } from '../visual/ScaleThumbs'
+import { stateOf } from '../visual/dimensionState'
 import { drawerKindOf } from '../visual/drawerKind'
-import { sigilOf } from '../visual/sigil'
 import { GalaxyCard } from './ClusterWiki'
 import { DimensionLaws } from './DimensionLaws'
 import { HostedStrata } from './HostedStrata'
@@ -87,8 +87,8 @@ function DimensionHero({
       description={dimension.description}
       cover={cover}
       emblem={
-        <DimensionSigil
-          dimension={sigilOf(dimension)}
+        <DimensionThumb
+          dimension={stateOf(dimension)}
           label={dimension.name}
           className='size-portrait-xl shrink-0'
         />
@@ -372,8 +372,8 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
                 key={row.id}
                 className='flex min-w-0 items-center gap-3 rounded-xl border bg-background p-2'
               >
-                <DimensionSigil
-                  dimension={sigilOf(row)}
+                <DimensionThumb
+                  dimension={stateOf(row)}
                   label={row.name}
                   className='size-portrait-lg shrink-0'
                 />

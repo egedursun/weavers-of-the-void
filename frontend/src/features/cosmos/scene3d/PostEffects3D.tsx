@@ -6,11 +6,17 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
-const BLOOM_STRENGTH = 0.55
-const BLOOM_RADIUS = 0.08
-const BLOOM_THRESHOLD = 0.95
+export type Bloom = { strength: number; radius: number; threshold: number }
 
-export function PostEffects3D({ samples }: { samples: number }) {
+const SOFT_BLOOM: Bloom = { strength: 0.55, radius: 0.08, threshold: 0.95 }
+
+export function PostEffects3D({
+  samples,
+  bloom = SOFT_BLOOM,
+}: {
+  samples: number
+  bloom?: Bloom
+}) {
   const gl = useThree((state) => state.gl)
   const scene = useThree((state) => state.scene)
   const camera = useThree((state) => state.camera)
@@ -23,14 +29,14 @@ export function PostEffects3D({ samples }: { samples: number }) {
     effects.addPass(
       new UnrealBloomPass(
         new Vector2(1, 1),
-        BLOOM_STRENGTH,
-        BLOOM_RADIUS,
-        BLOOM_THRESHOLD
+        bloom.strength,
+        bloom.radius,
+        bloom.threshold
       )
     )
     effects.addPass(new OutputPass())
     return effects
-  }, [gl, scene, camera, samples])
+  }, [gl, scene, camera, samples, bloom])
   useEffect(() => {
     composer.setPixelRatio(ratio)
     composer.setSize(size.width, size.height)

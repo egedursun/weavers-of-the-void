@@ -1,8 +1,18 @@
+import { Globe2, Moon } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { ShowMore, useShowMore } from '@/components/domain'
+import { Section, ShowMore, useShowMore } from '@/components/domain'
+import { type CosmosWorld } from './api'
 import { type CosmosIndex } from './model/cosmosModel'
 
 const WORLD_PAGE = 12
+
+function isMoon(item: CosmosWorld) {
+  return item.world.parent_world_id !== null
+}
+
+function count(amount: number, one: string, many: string) {
+  return `${amount} ${amount === 1 ? one : many}`
+}
 
 type WorldChooserProps = {
   index: CosmosIndex
@@ -13,8 +23,20 @@ type WorldChooserProps = {
 export function WorldChooser({ index, worldId, onSelect }: WorldChooserProps) {
   const more = useShowMore(index.worlds, WORLD_PAGE)
   if (index.worlds.length < 2) return null
+  const moons = index.worlds.filter(isMoon).length
+  const planets = index.worlds.length - moons
+  const tally = [
+    count(planets, 'planet', 'planets'),
+    ...(moons > 0 ? [count(moons, 'moon', 'moons')] : []),
+  ].join(' · ')
   return (
-    <div className='flex min-w-0 flex-col gap-2'>
+    <Section
+      title='Worlds'
+      level={3}
+      icon={Globe2}
+      tone='verdigris'
+      description={`${tally}. Choose one to open it below.`}
+    >
       <ToggleGroup
         type='single'
         variant='outline'
@@ -35,6 +57,11 @@ export function WorldChooser({ index, worldId, onSelect }: WorldChooserProps) {
             }
             className='max-w-full'
           >
+            {isMoon(item) ? (
+              <Moon aria-hidden='true' />
+            ) : (
+              <Globe2 aria-hidden='true' />
+            )}
             <span className='min-w-0 truncate'>
               {item.world.discovery === 'forgotten'
                 ? `${item.world.name} · forgotten`
@@ -44,6 +71,6 @@ export function WorldChooser({ index, worldId, onSelect }: WorldChooserProps) {
         ))}
       </ToggleGroup>
       <ShowMore state={more} noun={['world', 'worlds']} />
-    </div>
+    </Section>
   )
 }

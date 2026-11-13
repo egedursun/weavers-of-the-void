@@ -23,8 +23,8 @@ import { GALAXY_AGES, NUCLEI } from './labels'
 import { type Ladder } from './ladder'
 import { Chip } from './parts'
 import { GalaxyThumb } from './visual/GalaxyThumb'
-import { ClusterThumb, DimensionSigil } from './visual/ScaleThumbs'
-import { sigilOf } from './visual/sigil'
+import { ClusterThumb, DimensionThumb } from './visual/ScaleThumbs'
+import { stateOf } from './visual/dimensionState'
 
 type Props = {
   ladder: Ladder
@@ -199,8 +199,8 @@ export function SelectedScale({ ladder, catalog, kind, id, onClear }: Props) {
   return (
     <Frame
       emblem={
-        <DimensionSigil
-          dimension={sigilOf(dimension)}
+        <DimensionThumb
+          dimension={stateOf(dimension)}
           label={dimension.name}
           className='size-portrait-xl shrink-0'
         />

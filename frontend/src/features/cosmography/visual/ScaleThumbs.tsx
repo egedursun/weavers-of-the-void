@@ -1,12 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useLatest } from '@/features/cosmos/scene3d/useLatest'
-import {
-  type ClusterInput,
-  type SigilInput,
-  paintCluster,
-  paintSigil,
-} from './scalePaint'
+import { type DimensionState } from './dimensionMaterial'
+import { paintDimension } from './dimensionPaint'
+import { type ClusterInput, paintCluster } from './scalePaint'
 
 function useCanvas<T>(
   value: T,
@@ -27,16 +24,16 @@ function useCanvas<T>(
   return canvas
 }
 
-export function DimensionSigil({
+export function DimensionThumb({
   dimension,
   label,
   className,
 }: {
-  dimension: SigilInput
+  dimension: DimensionState
   label: string
   className?: string
 }) {
-  const canvas = useCanvas(dimension, paintSigil)
+  const canvas = useCanvas(dimension, paintDimension)
   return (
     <canvas
       ref={canvas}

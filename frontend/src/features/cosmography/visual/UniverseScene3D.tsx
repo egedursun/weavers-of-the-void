@@ -26,15 +26,23 @@ import {
   DUST_FRAGMENT,
   DUST_VERTEX,
 } from '@/features/cosmos/scene3d/shaders/sky'
+import { useLatest } from '@/features/cosmos/scene3d/useLatest'
 import {
   type CosmographyCatalog,
   type GalaxyRecord,
   type RouteRecord,
 } from '../api'
 import { type Ladder } from '../ladder'
+import {
+  CosmicWeb,
+  DeepSky,
+  DimensionAura,
+  DriftDust,
+  NebulaBanks,
+} from './CosmicBackdrop'
+import { DimensionOrbs } from './DimensionOrbs'
 import { CoreGlow, GalaxyParticles } from './GalaxyScene3D'
 import { type SceneLabel, LabelLayer, LabelProjector } from './SceneLabels'
-import { StarField } from './StarField'
 import { ClockDriver, useTicking } from './clock'
 import {
   CLUSTER_LOOK,
@@ -44,6 +52,7 @@ import {
   clusterSkeleton,
   veilSpan,
 } from './clusterForm'
+import { DIMENSION_ACCENTS, webStrands } from './cosmicWeb'
 import { DIMENSION_TOKEN } from './galaxyForm'
 import { useLabelElements } from './labelElements'
 import { scenePalette, tokenHex } from './palette'
@@ -56,6 +65,7 @@ import {
 import {
   type UniverseLayout,
   type Vec3,
+  dimensionAnchor,
   universeLayout,
 } from './universeLayout'
 
@@ -70,6 +80,7 @@ type UniverseProps = {
   routes: readonly RouteRecord[]
   selected: ScalePick
   onPick: (pick: ScalePick) => void
+  overview: number
   fallback: ReactNode
 }
 
@@ -77,6 +88,13 @@ const MINI_POINTS = 2600
 const FOCUS_EASE = 0.06
 const FOV = 45
 const OPEN_RIFTS = new Set(['opening', 'open', 'closing'])
+const SKY_REACH = 10
+const OPENING_VIEW = 2.3
+const OPENING_SIDE = 0.42
+const OPENING_HEIGHT = 0.78
+const OPENING_FRONT = 0.62
+const WIDE_ASPECT = 1.6
+const HEAVENS_BLOOM = { strength: 0.7, radius: 0.22, threshold: 0.82 }
 
 class Boundary extends Component<
   { fallback: ReactNode; children: ReactNode },
@@ -111,6 +129,8 @@ const DimensionPlane = memo(function DimensionPlane({
   const token = dimension
     ? DIMENSION_TOKEN[dimension.dimension_kind]
     : '--dimension-prime'
+  const accent =
+    DIMENSION_ACCENTS[id % DIMENSION_ACCENTS.length] ?? '--cosmos-violet'
   const material = useMemo(
     () =>
       shaderMaterial({
@@ -118,6 +138,7 @@ const DimensionPlane = memo(function DimensionPlane({
         fragment: PLANE_FRAGMENT,
         uniforms: {
           uColor: uniform(scenePalette(token)),
+          uAccent: uniform(scenePalette(accent)),
           uAlpha: uniform(
             (selected ? 0.95 : 0.55) * (0.45 + (dimension?.veil ?? 50) / 180)
           ),
@@ -128,7 +149,7 @@ const DimensionPlane = memo(function DimensionPlane({
         blend: 'additive',
         side: DoubleSide,
       }),
-    [token, selected, dimension?.veil, id]
+    [token, accent, selected, dimension?.veil, id]
   )
   useEffect(() => () => material.dispose(), [material])
   useTicking(material)
@@ -142,6 +163,12 @@ const DimensionPlane = memo(function DimensionPlane({
       >
         <planeGeometry args={[placed.radius * 2, placed.radius * 2]} />
       </mesh>
+      <DimensionAura
+        placed={placed}
+        token={token}
+        accent={accent}
+        selected={selected}
+      />
     </group>
   )
 })
@@ -499,12 +526,14 @@ function Rifts({ ladder, layout }: { ladder: Ladder; layout: UniverseLayout }) {
               : undefined
           const home =
             place?.dimension_id != null
-              ? layout.dimensions.get(place.dimension_id)
-              : undefined
-          const target = layout.dimensions.get(rift.dimension_id)
+              ? dimensionAnchor(layout, place.dimension_id)
+              : null
+          const target = dimensionAnchor(layout, rift.dimension_id)
           if (!target) return null
-          const start: Vec3 = galaxy ? galaxy.position : [0, home?.y ?? 0, 0]
-          const end: Vec3 = [start[0] * 0.6, target.y, start[2] * 0.6]
+          const start: Vec3 = galaxy ? galaxy.position : (home ?? [0, 0, 0])
+          const end: Vec3 = layout.orbs.has(rift.dimension_id)
+            ? target
+            : [start[0] * 0.6, target[1], start[2] * 0.6]
           return (
             <Line
               key={rift.id}
@@ -539,22 +568,7 @@ function Beings({
             being.galaxy_id != null
               ? layout.galaxies.get(being.galaxy_id)
               : undefined
-          const dimension =
-            being.home_dimension_id != null
-              ? layout.dimensions.get(being.home_dimension_id)
-              : undefined
-          const offset = unitHash(`being-${being.entity_id}`) * Math.PI * 2
-          const base: Vec3 = galaxy
-            ? [
-                galaxy.position[0] + Math.cos(offset) * galaxy.size * 1.3,
-                galaxy.position[1] + 60,
-                galaxy.position[2] + Math.sin(offset) * galaxy.size * 1.3,
-              ]
-            : [
-                Math.cos(offset) * 300,
-                (dimension?.y ?? 0) + 80,
-                Math.sin(offset) * 300,
-              ]
+          const base = beingSpot(layout, being, galaxy, BEING_LIFT)
           return (
             <group key={being.entity_id} position={base}>
               <Billboard>
@@ -578,24 +592,75 @@ function Beings({
   )
 }
 
-function Focus({ target }: { target: Vec3 | null }) {
+type FocusGoal = {
+  key: string
+  point: Vec3
+  distance: number
+  wide?: boolean
+}
+
+function narrowFit(aspect: number): number {
+  return Math.max(1, WIDE_ASPECT / Math.max(aspect, 0.1))
+}
+
+function Focus({ goal }: { goal: FocusGoal | null }) {
   const controls = useThree(
     (state) => state.controls
   ) as OrbitControlsImpl | null
+  const camera = useThree((state) => state.camera)
   const invalidate = useThree((state) => state.invalidate)
-  const goal = useRef(new Vector3())
+  const aspect = useThree(
+    (state) => state.size.width / Math.max(state.size.height, 1)
+  )
+  const fitted = useRef(false)
+  const aim = useRef(new Vector3())
+  const place = useRef(new Vector3())
   const moving = useRef(false)
+  const latest = useLatest(goal)
+  const key = goal?.key ?? null
   useEffect(() => {
-    if (!target) return
-    goal.current.set(...target)
+    if (fitted.current || !controls) return
+    fitted.current = true
+    const away = camera.position.clone().sub(controls.target)
+    camera.position
+      .copy(controls.target)
+      .addScaledVector(away, narrowFit(aspect))
+    controls.update()
+    invalidate()
+  }, [controls, camera, aspect, invalidate])
+  useEffect(() => {
+    if (!controls) return
+    const stop = () => {
+      moving.current = false
+    }
+    controls.addEventListener('start', stop)
+    return () => controls.removeEventListener('start', stop)
+  }, [controls])
+  useEffect(() => {
+    const next = latest.current
+    if (!controls || !next || key === null) return
+    aim.current.set(...next.point)
+    const away = camera.position.clone().sub(controls.target)
+    if (away.lengthSq() === 0) away.set(0, 1, 1)
+    place.current
+      .copy(aim.current)
+      .addScaledVector(
+        away.normalize(),
+        next.distance * (next.wide ? narrowFit(aspect) : 1)
+      )
     moving.current = true
     invalidate()
-  }, [target, invalidate])
+  }, [key, latest, controls, camera, aspect, invalidate])
   useFrame(() => {
     if (!controls || !moving.current) return
-    controls.target.lerp(goal.current, FOCUS_EASE)
+    controls.target.lerp(aim.current, FOCUS_EASE)
+    camera.position.lerp(place.current, FOCUS_EASE)
     controls.update()
-    if (controls.target.distanceTo(goal.current) < 1) moving.current = false
+    if (
+      controls.target.distanceTo(aim.current) < 1 &&
+      camera.position.distanceTo(place.current) < 1
+    )
+      moving.current = false
     else invalidate()
   })
   return null
@@ -610,6 +675,76 @@ function IdleTicker() {
     return () => window.clearInterval(timer)
   }, [invalidate])
   return null
+}
+
+const BEING_LIFT = 60
+const BEING_LABEL_LIFT = 94
+const BEING_REACH = 1.3
+const LOOSE_BEING_REACH = 300
+const GALAXY_VIEW = 5
+const CLUSTER_VIEW = 2.8
+const ORB_VIEW = 16
+const ORB_LABEL_LIFT = 2.4
+const PLANE_VIEW = 1.7
+
+function beingSpot(
+  layout: UniverseLayout,
+  being: Ladder['data']['beings'][number],
+  galaxy: { position: Vec3; size: number } | undefined,
+  lift: number
+): Vec3 {
+  const offset = unitHash(`being-${being.entity_id}`) * Math.PI * 2
+  if (galaxy)
+    return [
+      galaxy.position[0] + Math.cos(offset) * galaxy.size * BEING_REACH,
+      galaxy.position[1] + lift,
+      galaxy.position[2] + Math.sin(offset) * galaxy.size * BEING_REACH,
+    ]
+  const orb =
+    being.home_dimension_id != null
+      ? layout.orbs.get(being.home_dimension_id)
+      : undefined
+  if (orb)
+    return [
+      orb.position[0] + Math.cos(offset) * orb.size * BEING_REACH,
+      orb.position[1] + lift,
+      orb.position[2] + Math.sin(offset) * orb.size * BEING_REACH,
+    ]
+  const plane =
+    being.home_dimension_id != null
+      ? layout.dimensions.get(being.home_dimension_id)
+      : undefined
+  return [
+    Math.cos(offset) * LOOSE_BEING_REACH,
+    (plane?.y ?? 0) + lift,
+    Math.sin(offset) * LOOSE_BEING_REACH,
+  ]
+}
+
+function focusGoal(
+  layout: UniverseLayout,
+  selected: ScalePick
+): FocusGoal | null {
+  if (!selected) return null
+  const key = `${selected.kind}-${selected.id}`
+  if (selected.kind === 'galaxy') {
+    const placed = layout.galaxies.get(selected.id)
+    return placed
+      ? { key, point: placed.position, distance: placed.size * GALAXY_VIEW }
+      : null
+  }
+  if (selected.kind === 'cluster') {
+    const placed = layout.clusters.get(selected.id)
+    return placed
+      ? { key, point: placed.position, distance: placed.size * CLUSTER_VIEW }
+      : null
+  }
+  const orb = layout.orbs.get(selected.id)
+  if (orb) return { key, point: orb.position, distance: orb.size * ORB_VIEW }
+  const plane = layout.dimensions.get(selected.id)
+  return plane
+    ? { key, point: [0, plane.y, 0], distance: plane.radius * PLANE_VIEW }
+    : null
 }
 
 const WORLDS_NAMED = 3
@@ -660,14 +795,23 @@ function universeLabels(
   const labels: SceneLabel[] = []
   for (const dimension of ladder.data.dimensions) {
     const placed = layout.dimensions.get(dimension.id)
-    if (!placed) continue
+    const orb = layout.orbs.get(dimension.id)
+    if (!placed && !orb) continue
     const kind =
       catalog.dimension_kinds.find(
         (row) => row.value === dimension.dimension_kind
       )?.label ?? dimension.dimension_kind
     labels.push({
       key: `dimension-${dimension.id}`,
-      position: [-placed.radius * 0.92, placed.y, placed.radius * 0.38],
+      position: orb
+        ? [
+            orb.position[0],
+            orb.position[1] + orb.size * ORB_LABEL_LIFT,
+            orb.position[2],
+          ]
+        : placed
+          ? [-placed.radius * 0.92, placed.y, placed.radius * 0.38]
+          : [0, 0, 0],
       text: dimension.name,
       detail: `${kind} · time ×${dimension.time_factor}`,
       strong: chosen('dimension', dimension.id),
@@ -710,22 +854,7 @@ function universeLabels(
   )) {
     const galaxy =
       being.galaxy_id != null ? layout.galaxies.get(being.galaxy_id) : undefined
-    const dimension =
-      being.home_dimension_id != null
-        ? layout.dimensions.get(being.home_dimension_id)
-        : undefined
-    const offset = unitHash(`being-${being.entity_id}`) * Math.PI * 2
-    const base: Vec3 = galaxy
-      ? [
-          galaxy.position[0] + Math.cos(offset) * galaxy.size * 1.3,
-          galaxy.position[1] + 94,
-          galaxy.position[2] + Math.sin(offset) * galaxy.size * 1.3,
-        ]
-      : [
-          Math.cos(offset) * 300,
-          (dimension?.y ?? 0) + 114,
-          Math.sin(offset) * 300,
-        ]
+    const base = beingSpot(layout, being, galaxy, BEING_LABEL_LIFT)
     labels.push({
       key: `being-${being.entity_id}`,
       position: base,
@@ -741,6 +870,7 @@ export default function UniverseScene3D({
   routes,
   selected,
   onPick,
+  overview,
   fallback,
 }: UniverseProps) {
   const layout = useMemo(() => universeLayout(ladder, routes), [ladder, routes])
@@ -748,16 +878,33 @@ export default function UniverseScene3D({
     ladder.data.galaxies.length,
     GALAXIES_PER_FRAME
   )
-  const target = useMemo<Vec3 | null>(() => {
-    if (!selected) return null
-    if (selected.kind === 'galaxy')
-      return layout.galaxies.get(selected.id)?.position ?? null
-    if (selected.kind === 'cluster')
-      return layout.clusters.get(selected.id)?.position ?? null
-    const plane = layout.dimensions.get(selected.id)
-    return plane ? [0, plane.y, 0] : null
-  }, [selected, layout])
-  const distance = layout.extent * 1.6
+  const planes = [...layout.dimensions.values()]
+  const centre =
+    planes.reduce((sum, plane) => sum + plane.y, 0) / Math.max(planes.length, 1)
+  const goal = useMemo<FocusGoal | null>(
+    () =>
+      focusGoal(layout, selected) ??
+      (overview > 0
+        ? {
+            key: `overview-${overview}`,
+            point: [0, centre, 0],
+            distance: layout.extent * OPENING_VIEW,
+            wide: true,
+          }
+        : null),
+    [selected, layout, overview, centre]
+  )
+  const distance = layout.extent * OPENING_VIEW
+  const strands = useMemo(
+    () =>
+      webStrands(layout, (clusterId) => {
+        const cluster = ladder.data.clusters.find((row) => row.id === clusterId)
+        return cluster
+          ? CLUSTER_LOOK[cluster.cluster_kind].body
+          : '--galaxy-halo'
+      }),
+    [layout, ladder]
+  )
   const elements = useLabelElements()
   const labels = universeLabels(ladder, catalog, layout, selected)
   return (
@@ -776,7 +923,11 @@ export default function UniverseScene3D({
             fov: FOV,
             near: 1,
             far: Math.max(60000, layout.extent * 24),
-            position: [distance * 0.55, distance * 0.55, distance * 0.75],
+            position: [
+              distance * OPENING_SIDE,
+              distance * OPENING_HEIGHT,
+              distance * OPENING_FRONT,
+            ],
           }}
           onCreated={({ gl }) => {
             gl.toneMapping = NeutralToneMapping
@@ -785,7 +936,10 @@ export default function UniverseScene3D({
           onPointerMissed={() => onPick(null)}
         >
           <color attach='background' args={[tokenHex('--cosmos-void')]} />
-          <StarField radius={layout.extent * 8} />
+          <DeepSky radius={layout.extent * SKY_REACH} />
+          <NebulaBanks extent={layout.extent} centre={centre} />
+          <DriftDust extent={layout.extent} centre={centre} />
+          <CosmicWeb strands={strands} extent={layout.extent} />
           {ladder.data.dimensions.map((row) => (
             <DimensionPlane
               key={row.id}
@@ -798,6 +952,12 @@ export default function UniverseScene3D({
               onPick={onPick}
             />
           ))}
+          <DimensionOrbs
+            ladder={ladder}
+            layout={layout}
+            selectedId={selected?.kind === 'dimension' ? selected.id : null}
+            onPick={onPick}
+          />
           {ladder.data.clusters.map((row) => (
             <ClusterCloud
               key={row.id}
@@ -833,11 +993,11 @@ export default function UniverseScene3D({
             minDistance={200}
             maxDistance={layout.extent * 6}
           />
-          <Focus target={target} />
+          <Focus goal={goal} />
           <ClockDriver />
           <IdleTicker />
           <LabelProjector labels={labels} elements={elements} />
-          <PostEffects3D samples={4} />
+          <PostEffects3D samples={4} bloom={HEAVENS_BLOOM} />
         </Canvas>
         <LabelLayer labels={labels} elements={elements} />
       </div>

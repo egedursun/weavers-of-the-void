@@ -2,7 +2,7 @@ import { type ReactNode } from 'react'
 import { Ghost, Globe2, Rocket, Sun, Wand } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { EmptyState } from '@/components/domain'
+import { EmptyState, Section } from '@/components/domain'
 import { CommandPanel } from './CommandPanel'
 import { ForeignGodsPanel } from './ForeignGodsPanel'
 import { NodeChooser } from './NodeChooser'
@@ -110,13 +110,20 @@ export function CosmosSidePanel({
           )}
         </TabsList>
         <TabsContent value='world' className='flex min-w-0 flex-col gap-4'>
-          <NodeChooser
-            label='Choose a star'
-            nodes={index.data.stars}
-            selectedId={starId}
-            noun={['star', 'stars']}
-            onSelect={onSelectStar}
-          />
+          <Section
+            title='Stars'
+            level={3}
+            icon={Sun}
+            description='Choose a star to open it in the Star tab.'
+          >
+            <NodeChooser
+              label='Choose a star'
+              nodes={index.data.stars}
+              selectedId={starId}
+              noun={['star', 'stars']}
+              onSelect={onSelectStar}
+            />
+          </Section>
           <WorldChooser
             index={index}
             worldId={selected?.world.id}

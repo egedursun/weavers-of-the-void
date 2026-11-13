@@ -13,6 +13,15 @@ export type PlacedDimension = {
 
 export type PlacedCluster = { id: number; position: Vec3; size: number }
 
+export type PlacedOrb = {
+  id: number
+  position: Vec3
+  size: number
+  parentId: number | null
+}
+
+export type OrbRing = { radius: number; y: number }
+
 export type PlacedGalaxy = {
   id: number
   position: Vec3
@@ -31,6 +40,8 @@ export type GalaxyLink = {
 
 export type UniverseLayout = {
   dimensions: Map<number, PlacedDimension>
+  orbs: Map<number, PlacedOrb>
+  rings: OrbRing[]
   clusters: Map<number, PlacedCluster>
   galaxies: Map<number, PlacedGalaxy>
   links: GalaxyLink[]
@@ -44,6 +55,14 @@ const MIN_GALAXY = 70
 const MIN_CLUSTER = 160
 const CLUSTER_MARGIN = 1.35
 const PLANE_MARGIN = 1.18
+const ORB_SIZE = 165
+const SMALL_ORB = 0.75
+const SMALL_KINDS = new Set(['pocket', 'bubble_universe', 'compactified'])
+const ORB_RING = 1.18
+const ORB_SPACING = 3.8
+const ORB_RING_STEP = 4.2
+const ORB_LIFT = 140
+const ORB_WAVE = 0.9
 const MIN_TILT = 0.15
 const TILT_RANGE = 0.75
 
@@ -103,6 +122,86 @@ function dimensionOrder(ladder: Ladder): number[] {
     .map((row) => row.id)
 }
 
+function holdsSpace(ladder: Ladder, dimensionId: number): boolean {
+  return (
+    ladder.prime?.id === dimensionId ||
+    ladder.clustersIn(dimensionId).length > 0 ||
+    ladder.looseGalaxies(dimensionId).length > 0
+  )
+}
+
+function familyOrder(ladder: Ladder, ids: readonly number[]): number[] {
+  const kept = new Set(ids)
+  const parentOf = (id: number) =>
+    ladder.data.dimensions.find((row) => row.id === id)?.parent_dimension_id ??
+    null
+  const ordered: number[] = []
+  const visit = (id: number) => {
+    if (ordered.includes(id)) return
+    ordered.push(id)
+    for (const child of ids.filter((other) => parentOf(other) === id))
+      visit(child)
+  }
+  for (const id of ids) {
+    const parent = parentOf(id)
+    if (parent === null || !kept.has(parent)) visit(id)
+  }
+  for (const id of ids) visit(id)
+  return ordered
+}
+
+function placeOrbs(
+  ladder: Ladder,
+  ids: readonly number[],
+  around: PlacedDimension | undefined
+): { orbs: Map<number, PlacedOrb>; rings: OrbRing[] } {
+  const orbs = new Map<number, PlacedOrb>()
+  const rings: OrbRing[] = []
+  const y = (around?.y ?? 0) + ORB_LIFT
+  let radius = (around?.radius ?? MIN_PLANE) * ORB_RING + ORB_SIZE
+  let left = familyOrder(ladder, ids)
+  while (left.length > 0) {
+    const room = Math.max(
+      Math.floor((Math.PI * 2 * radius) / (ORB_SIZE * ORB_SPACING)),
+      1
+    )
+    const ring = left.slice(0, room)
+    left = left.slice(room)
+    rings.push({ radius, y })
+    const offset = rings.length * 0.37
+    ring.forEach((id, slot) => {
+      const row = ladder.data.dimensions.find(
+        (dimension) => dimension.id === id
+      )
+      const angle = offset + (slot / ring.length) * Math.PI * 2
+      const size =
+        ORB_SIZE * (row && SMALL_KINDS.has(row.dimension_kind) ? SMALL_ORB : 1)
+      orbs.set(id, {
+        id,
+        position: [
+          Math.cos(angle) * radius,
+          y + Math.sin(angle * 3) * ORB_SIZE * ORB_WAVE,
+          Math.sin(angle) * radius,
+        ],
+        size,
+        parentId: row?.parent_dimension_id ?? null,
+      })
+    })
+    radius += ORB_SIZE * ORB_RING_STEP
+  }
+  return { orbs, rings }
+}
+
+export function dimensionAnchor(
+  layout: UniverseLayout,
+  id: number
+): Vec3 | null {
+  const orb = layout.orbs.get(id)
+  if (orb) return orb.position
+  const plane = layout.dimensions.get(id)
+  return plane ? [0, plane.y, 0] : null
+}
+
 export function universeLayout(
   ladder: Ladder,
   routes: readonly RouteRecord[]
@@ -110,7 +209,9 @@ export function universeLayout(
   const dimensions = new Map<number, PlacedDimension>()
   const clusters = new Map<number, PlacedCluster>()
   const galaxies = new Map<number, PlacedGalaxy>()
-  const order = dimensionOrder(ladder)
+  const everyDimension = dimensionOrder(ladder)
+  const spaced = everyDimension.filter((id) => holdsSpace(ladder, id))
+  const order = spaced.length > 0 ? spaced : everyDimension.slice(0, 1)
   let extent = MIN_PLANE
   order.forEach((dimensionId, index) => {
     const tops = ladder.clustersIn(dimensionId)
@@ -191,6 +292,13 @@ export function universeLayout(
     extent = Math.max(extent, radius)
     dimensions.set(dimensionId, { id: dimensionId, y, radius, index })
   })
+  const { orbs, rings } = placeOrbs(
+    ladder,
+    everyDimension.filter((id) => !dimensions.has(id)),
+    order[0] !== undefined ? dimensions.get(order[0]) : undefined
+  )
+  const outer = rings.at(-1)
+  if (outer) extent = Math.max(extent, outer.radius + ORB_SIZE)
   const galaxyOfWorld = new Map(
     ladder.data.placements.map((row) => [row.world_id, row.galaxy_id])
   )
@@ -216,9 +324,11 @@ export function universeLayout(
   }
   return {
     dimensions,
+    orbs,
+    rings,
     clusters,
     galaxies,
     links: [...grouped.values()],
-    extent: extent + (order.length - 1) * PLANE_GAP * 0.5,
+    extent: extent + Math.max(order.length - 1, 0) * PLANE_GAP * 0.5,
   }
 }

@@ -1,5 +1,6 @@
 import '@/styles/index.css'
 import { describe, expect, it } from 'vitest'
+import { paintDimension } from './dimensionPaint'
 import {
   DIMENSION_TOKEN,
   type FormInput,
@@ -7,7 +8,7 @@ import {
   type GalaxyShape,
 } from './galaxyForm'
 import { paintGalaxy } from './galaxyPaint'
-import { paintCluster, paintSigil } from './scalePaint'
+import { paintCluster } from './scalePaint'
 
 const SIDE = 96
 const GRID = 16
@@ -116,12 +117,13 @@ describe('the kinds of the heavens', () => {
       (Object.keys(DIMENSION_TOKEN) as (keyof typeof DIMENSION_TOKEN)[]).map(
         (kind) => {
           const element = canvas()
-          paintSigil(element, {
+          paintDimension(element, {
             id: 1,
             kind,
             veil: 50,
             stability: 70,
             magic: 50,
+            time_factor: 1,
           })
           return [kind, signature(element)]
         }

@@ -25,6 +25,7 @@ SKIPPED_DIRS = {
     ".pytest_cache",
     "coverage",
     ".import_linter_cache",
+    ".vite-cache",
 }
 PYTHON_SUFFIXES = {".py"}
 SKIPPED_FILES = {"routeTree.gen.ts", "package-lock.json", "uv.lock"}

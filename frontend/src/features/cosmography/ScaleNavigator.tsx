@@ -15,8 +15,8 @@ import {
 import { type ScaleKind } from './heavensSearch'
 import { type Ladder } from './ladder'
 import { GalaxyThumb } from './visual/GalaxyThumb'
-import { ClusterThumb, DimensionSigil } from './visual/ScaleThumbs'
-import { sigilOf } from './visual/sigil'
+import { ClusterThumb, DimensionThumb } from './visual/ScaleThumbs'
+import { stateOf } from './visual/dimensionState'
 
 type Selection = { kind: ScaleKind; id: number } | null
 
@@ -244,8 +244,8 @@ export function ScaleNavigator({
             name={dimension.name}
             detail={`${catalogLabel(catalog.dimension_kinds, dimension.dimension_kind)} · time ×${dimension.time_factor}`}
             emblem={
-              <DimensionSigil
-                dimension={sigilOf(dimension)}
+              <DimensionThumb
+                dimension={stateOf(dimension)}
                 label={dimension.name}
                 className='size-portrait-md shrink-0 rounded-md'
               />

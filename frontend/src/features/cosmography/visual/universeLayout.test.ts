@@ -4,6 +4,7 @@ import { ladderOf } from '../ladder'
 import {
   type UniverseLayout,
   type Vec3,
+  dimensionAnchor,
   universeLayout,
 } from './universeLayout'
 
@@ -11,6 +12,33 @@ const LONE = {
   ...VIEW,
   clusters: VIEW.clusters.map((row) => ({ ...row, x: 0, y: 0, radius: 4000 })),
   galaxies: VIEW.galaxies.map((row) => ({ ...row, x: 0, y: 0, radius: 900 })),
+}
+
+const KINDS = [
+  'parallel',
+  'mirror',
+  'pocket',
+  'dream',
+  'shadow',
+  'infernal',
+  'celestial',
+  'underworld',
+  'clockwork',
+  'chaos',
+] as const
+
+const PLANES = {
+  ...VIEW,
+  dimensions: [
+    ...VIEW.dimensions,
+    ...KINDS.map((kind, index) => ({
+      ...VIEW.dimensions[0],
+      id: 7000 + index,
+      name: `Empty ${kind}`,
+      dimension_kind: kind,
+      parent_dimension_id: kind === 'pocket' ? 7000 : null,
+    })),
+  ],
 }
 
 const SPREAD = {
@@ -113,5 +141,38 @@ describe('the map of the heavens', () => {
         left.size + right.size
       )
     }
+  })
+
+  it('draws a dimension that holds no cluster or galaxy as an orb around the layers, not as a layer of its own', () => {
+    const layout = universeLayout(ladderOf(PLANES), [])
+    for (const index of KINDS.keys()) {
+      expect(layout.orbs.has(7000 + index)).toBe(true)
+      expect(layout.dimensions.has(7000 + index)).toBe(false)
+    }
+    expect(layout.dimensions.has(VIEW.dimensions[0].id)).toBe(true)
+    const prime = layout.dimensions.get(VIEW.dimensions[0].id)
+    expect(prime).toBeTruthy()
+    if (!prime) return
+    for (const orb of layout.orbs.values())
+      expect(Math.hypot(orb.position[0], orb.position[2])).toBeGreaterThan(
+        prime.radius
+      )
+    expect(layout.extent).toBeLessThan(prime.radius * 3)
+  })
+
+  it('keeps every orb apart, so each is easy to click', () => {
+    const orbs = [...universeLayout(ladderOf(PLANES), []).orbs.values()]
+    for (const [index, orb] of orbs.entries())
+      for (const other of orbs.slice(index + 1))
+        expect(apart(orb.position, other.position)).toBeGreaterThan(
+          (orb.size + other.size) * 1.35
+        )
+  })
+
+  it('ties a pocket to the dimension it lies inside and anchors every dimension', () => {
+    const layout = universeLayout(ladderOf(PLANES), [])
+    expect(layout.orbs.get(7002)?.parentId).toBe(7000)
+    for (const row of PLANES.dimensions)
+      expect(dimensionAnchor(layout, row.id)).not.toBeNull()
   })
 })

@@ -18,6 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { type ControlSize } from '@/components/ui/control-size'
 import {
   Dialog,
   DialogContent,
@@ -51,11 +52,15 @@ export function GalaxySwitcher({
   catalog,
   value,
   onChange,
+  stretch = false,
+  size = 'default',
 }: {
   heavens: Cosmography
   catalog: CosmographyCatalog
   value: number | undefined
   onChange: (galaxyId: number) => void
+  stretch?: boolean
+  size?: ControlSize
 }) {
   const outside = heavens.placements.some((row) => row.galaxy_id === null)
   return (
@@ -63,7 +68,11 @@ export function GalaxySwitcher({
       value={value !== undefined ? String(value) : undefined}
       onValueChange={(next) => onChange(Number(next))}
     >
-      <SelectTrigger aria-label='Galaxy shown' className='min-w-0'>
+      <SelectTrigger
+        size={size}
+        aria-label='Galaxy shown'
+        className={stretch ? 'w-full min-w-0' : 'min-w-0'}
+      >
         <SelectValue placeholder='Choose a galaxy' />
       </SelectTrigger>
       <SelectContent>
@@ -149,23 +158,27 @@ export function CosmosGalaxyPanel({
               ? `Galaxy · ${catalogLabel(catalog.galaxy_types, galaxy.galaxy_type)}`
               : 'Outside every galaxy'}
           </Label>
-          <GalaxySwitcher
-            heavens={heavens}
-            catalog={catalog}
-            value={galaxyId}
-            onChange={onChange}
-          />
+          <div className='flex min-w-0 items-center gap-2'>
+            <div className='min-w-0 flex-1'>
+              <GalaxySwitcher
+                heavens={heavens}
+                catalog={catalog}
+                value={galaxyId}
+                onChange={onChange}
+                stretch
+              />
+            </div>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant='outline'
+                aria-label={open ? 'Hide the galaxy' : 'Show the galaxy'}
+              >
+                {open ? <ChevronUp /> : <ChevronDown />}
+                {open ? 'Less' : 'More'}
+              </Button>
+            </CollapsibleTrigger>
+          </div>
         </div>
-        <CollapsibleTrigger asChild>
-          <Button
-            variant='outline'
-            size='sm'
-            aria-label={open ? 'Hide the galaxy' : 'Show the galaxy'}
-          >
-            {open ? <ChevronUp /> : <ChevronDown />}
-            {open ? 'Less' : 'More'}
-          </Button>
-        </CollapsibleTrigger>
       </div>
       <div className='flex min-w-0 flex-wrap gap-1'>
         <Chip icon={Star}>{plural(stars.length, 'star')}</Chip>

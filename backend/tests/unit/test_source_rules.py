@@ -30,3 +30,9 @@ def test_a_local_named_like_the_hold_guard_is_caught() -> None:
     assert rules.shadowed_guards(tree, rules.guard_imports(tree)) == [(5, "held")]
     tree = ast.parse(clean)
     assert rules.shadowed_guards(tree, rules.guard_imports(tree)) == []
+
+
+def test_build_caches_of_every_dev_server_are_not_source() -> None:
+    module = load_rules()
+    for cache in (".vite-cache", "node_modules", "dist"):
+        assert cache in module.SKIPPED_DIRS

@@ -1,13 +1,11 @@
 import type { components } from '@/api/generated/schema'
 import { seededRandom } from '@/lib/hash'
 import { CLUSTER_LOOK } from './clusterForm'
-import { DIMENSION_MOTIF } from './dimensionMotifs'
-import { DIMENSION_TOKEN, type DimensionKind } from './galaxyForm'
 import { cssColor } from './palette'
 
 type ClusterKind = components['schemas']['ClusterKind']
 
-function prepare(canvas: HTMLCanvasElement) {
+export function prepareCanvas(canvas: HTMLCanvasElement) {
   const ratio = window.devicePixelRatio || 1
   const width = Math.max(canvas.clientWidth, 1)
   const height = Math.max(canvas.clientHeight, 1)
@@ -29,34 +27,6 @@ function prepare(canvas: HTMLCanvasElement) {
   context.fillStyle = background
   context.fillRect(0, 0, width, height)
   return { context, width, height }
-}
-
-export type SigilInput = {
-  id: number
-  kind: DimensionKind
-  veil: number
-  stability: number
-  magic: number
-}
-
-export function paintSigil(canvas: HTMLCanvasElement, input: SigilInput) {
-  const prepared = prepare(canvas)
-  if (!prepared) return
-  const { context, width, height } = prepared
-  context.globalCompositeOperation = 'lighter'
-  DIMENSION_MOTIF[input.kind]({
-    context,
-    x: width / 2,
-    y: height / 2,
-    r: Math.min(width, height) * 0.4,
-    token: DIMENSION_TOKEN[input.kind],
-    random: seededRandom(input.id * 131 + 7),
-    veil: input.veil,
-    magic: input.magic,
-    stability: input.stability,
-  })
-  context.setLineDash([])
-  context.globalCompositeOperation = 'source-over'
 }
 
 export type ClusterInput = {
@@ -204,7 +174,7 @@ const CLUSTER_ARRANGE: Record<ClusterKind, Arrange> = {
 }
 
 export function paintCluster(canvas: HTMLCanvasElement, input: ClusterInput) {
-  const prepared = prepare(canvas)
+  const prepared = prepareCanvas(canvas)
   if (!prepared) return
   const { context, width, height } = prepared
   const random = seededRandom(input.id * 977 + 3)

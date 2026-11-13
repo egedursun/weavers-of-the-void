@@ -285,6 +285,64 @@ const sceneTap = {
   },
 }
 
+const SAFE_POW_BASES = ['max(', 'clamp(', 'abs(', 'exp(', 'length(', 'smoothstep(']
+
+function powBases(text) {
+  const bases = []
+  let from = 0
+  for (;;) {
+    const found = text.slice(from).search(/\bpow\(/)
+    if (found === -1) return bases
+    const open = from + found + 'pow('.length
+    let depth = 0
+    let end = open
+    while (end < text.length) {
+      const character = text[end]
+      if (character === '(') depth += 1
+      if (character === ')') depth -= 1
+      if ((character === ',' && depth === 0) || depth < 0) break
+      end += 1
+    }
+    bases.push(text.slice(open, end).trim())
+    from = open
+  }
+}
+
+function reversedSmoothsteps(text) {
+  return [...text.matchAll(/\bsmoothstep\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,/g)]
+    .filter((match) => Number(match[1]) >= Number(match[2]))
+    .map((match) => match[0])
+}
+
+function safeBase(base) {
+  return SAFE_POW_BASES.some((safe) => base.startsWith(safe)) || /^\d+(\.\d+)?$/.test(base)
+}
+
+const glslSafePow = {
+  meta: {
+    type: 'problem',
+    messages: {
+      negativeBase:
+        'GLSL pow({{base}}, …) is undefined for a negative base, and its NaN spreads over the whole scene through bloom; wrap the base in max(…, 0.0), clamp(…) or abs(…), or multiply it out.',
+      reversedEdges:
+        'GLSL {{call}} …) has its first edge at or above its second, which GLSL leaves undefined; write 1.0 - smoothstep(low, high, x) instead.',
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      TemplateElement(node) {
+        for (const base of powBases(node.value.raw)) {
+          if (safeBase(base)) continue
+          context.report({ node, messageId: 'negativeBase', data: { base } })
+        }
+        for (const call of reversedSmoothsteps(node.value.raw))
+          context.report({ node, messageId: 'reversedEdges', data: { call } })
+      },
+    }
+  },
+}
+
 export const aeronaPlugin = {
   meta: { name: 'aerona' },
   rules: {
@@ -295,6 +353,7 @@ export const aeronaPlugin = {
     'disabled-needs-reason': disabledNeedsReason,
     'typed-request-body': typedRequestBody,
     'scene-tap': sceneTap,
+    'glsl-safe-pow': glslSafePow,
   },
 }
 
@@ -306,6 +365,7 @@ export const FEATURE_RULES = {
   'aerona/disabled-needs-reason': 'error',
   'aerona/typed-request-body': 'error',
   'aerona/scene-tap': 'error',
+  'aerona/glsl-safe-pow': 'error',
 }
 
 export const GEOMETRY_FILES = [

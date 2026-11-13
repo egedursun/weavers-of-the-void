@@ -21,15 +21,15 @@ void main(){
   float g1 = fbm(p*3.2 + vec3(0.0, 0.0, uTime*0.035) + uSeed, 5);
   float g2 = snoise(p*15.0 + vec3(uTime*0.09)) * 0.5 + 0.5;
   vec3 col = mix(uEdge, uColor, smoothstep(-0.4, 0.4, g1)) * (0.62 + 0.55*g2);
-  col *= 0.5 + 0.5*pow(mu, 0.55);
-  col += vec3(1.0, 0.97, 0.92) * pow(mu, 3.0) * 0.45;
+  col *= 0.5 + 0.5*pow(max(mu, 0.0), 0.55);
+  col += vec3(1.0, 0.97, 0.92) * pow(max(mu, 0.0), 3.0) * 0.45;
   col *= uIntensity;
   if (uKind == 1) {
     float cr = smoothstep(0.86, 0.985, 1.0 - abs(snoise(p*4.5 + uSeed)));
     col = vec3(0.10, 0.105, 0.11) * (0.6 + 0.6*g2) * (0.4 + 0.6*mu);
     col += uColor * cr * (0.9 + 0.5*sin(uTime*0.7 + g1*6.0)) * 1.4;
   } else if (uKind == 2) {
-    col = uColor * pow(1.0 - mu, 10.0) * 1.6;
+    col = uColor * pow(max(1.0 - mu, 0.0), 10.0) * 1.6;
   } else if (uKind == 3) {
     vec2 w = worley(p*3.3 + uSeed);
     float crack = 1.0 - smoothstep(0.015, 0.09, w.y - w.x);
@@ -39,8 +39,8 @@ void main(){
     col *= 0.55 + uPulse*1.1;
   } else if (uKind == 7) {
     float bands = 0.5 + 0.5*sin(p.y*11.0 + g1*2.6 + uSeed);
-    col = mix(uEdge*0.35, uColor*0.75, bands) * (0.45 + 0.55*pow(mu, 0.7));
-    col += uColor*pow(1.0 - mu, 4.0)*0.35;
+    col = mix(uEdge*0.35, uColor*0.75, bands) * (0.45 + 0.55*pow(max(mu, 0.0), 0.7));
+    col += uColor*pow(max(1.0 - mu, 0.0), 4.0)*0.35;
   } else if (uKind == 8) {
     float dust = smoothstep(-0.25, 0.55, fbm(p*3.6 + vec3(uTime*0.02) + uSeed*2.0, 5));
     col = mix(col, uEdge*0.22, dust*0.72);
@@ -63,7 +63,7 @@ void main(){
     col *= 0.45 + uPulse*1.5;
     col += vec3(0.6, 0.8, 1.0)*loops*0.6;
   }
-  col += vec3(0.25, 0.2, 0.12) * uHover * pow(1.0 - mu, 2.0);
+  col += vec3(0.25, 0.2, 0.12) * uHover * pow(max(1.0 - mu, 0.0), 2.0);
   gl_FragColor = vec4(col, 1.0);
 }`
 
@@ -132,7 +132,7 @@ void main(){
   vec2 cs = vec2(cos(aa), sin(aa));
   float n = fbm(vec3(cs*(1.2 + u*5.0), u*9.0 + uSeed), 4);
   float streak = 0.45 + 0.55*smoothstep(-0.5, 0.6, n);
-  float prof = smoothstep(0.0, 0.06, u) * pow(1.0 - u, 1.7);
+  float prof = smoothstep(0.0, 0.06, u) * pow(max(1.0 - u, 0.0), 1.7);
   vec3 hot = mix(vec3(1.0, 0.95, 0.86), vec3(1.0, 0.52, 0.18), smoothstep(0.0, 0.32, u));
   hot = mix(hot, vec3(0.5, 0.22, 0.7), smoothstep(0.35, 1.0, u));
   vec3 V = normalize(cameraPosition - vPosW);
@@ -155,7 +155,7 @@ uniform vec3 uColor; uniform float uIntensity;
 varying vec3 vNormalW; varying vec3 vPosW; varying float vAlong;
 void main(){
   vec3 V = normalize(cameraPosition - vPosW);
-  float fres = pow(1.0 - abs(dot(normalize(vNormalW), V)), 1.5);
-  float fade = pow(vAlong, 2.0);
+  float fres = pow(max(1.0 - abs(dot(normalize(vNormalW), V)), 0.0), 1.5);
+  float fade = pow(max(vAlong, 0.0), 2.0);
   gl_FragColor = vec4(uColor * fres * fade * uIntensity, 1.0);
 }`

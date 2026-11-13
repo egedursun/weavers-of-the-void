@@ -176,8 +176,8 @@ void main(){
   } else if (st == 9) {
     float helix = 0.5 + 0.5*sin(s*0.22 + vSide*7.0 - tt*2.2);
     float throat = 0.65 + 0.35*sin(uTime*0.9 + uSeed*6.0);
-    m = (0.35 + 0.9*pow(helix, 3.0))*throat;
-    col = mix(uColor, vec3(0.85, 0.75, 1.0), pow(helix, 6.0)*0.6);
+    m = (0.35 + 0.9*pow(max(helix, 0.0), 3.0))*throat;
+    col = mix(uColor, vec3(0.85, 0.75, 1.0), pow(max(helix, 0.0), 6.0)*0.6);
   } else {
     m = 0.8 + 0.4*sin(vT*34.0 - uTime*2.6);
   }

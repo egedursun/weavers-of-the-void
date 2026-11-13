@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useRef } from 'react'
+import { Suspense, lazy, useCallback, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   CloudFog,
@@ -7,6 +7,7 @@ import {
   Gem,
   History,
   Layers,
+  Maximize2,
   Orbit,
   Plus,
   RefreshCw,
@@ -89,7 +90,15 @@ function StillUniverse({
   )
 }
 
-function Legend({ ladder }: { ladder: Ladder }) {
+function Legend({
+  ladder,
+  selectedId,
+  onPick,
+}: {
+  ladder: Ladder
+  selectedId: number | null
+  onPick: (id: number) => void
+}) {
   return (
     <div className='flex min-w-0 flex-col gap-2'>
       <PagedList
@@ -97,11 +106,18 @@ function Legend({ ladder }: { ladder: Ladder }) {
         initial={12}
         noun={['entry', 'entries']}
         as='div'
-        className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1'
+        className='flex min-w-0 flex-wrap items-center gap-1'
         itemKey={(dimension) => dimension.id}
       >
         {(dimension) => (
-          <span key={dimension.id} className='flex items-center gap-1.5'>
+          <Button
+            key={dimension.id}
+            variant={dimension.id === selectedId ? 'secondary' : 'ghost'}
+            size='sm'
+            aria-pressed={dimension.id === selectedId}
+            title={`Fly to ${dimension.name}`}
+            onClick={() => onPick(dimension.id)}
+          >
             <svg
               aria-hidden='true'
               viewBox='0 0 10 10'
@@ -117,13 +133,14 @@ function Legend({ ladder }: { ladder: Ladder }) {
             <Text as='span' variant='caption' tone='inherit'>
               {dimension.name}
             </Text>
-          </span>
+          </Button>
         )}
       </PagedList>
       <div className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1'>
         <Text as='span' variant='caption' tone='inherit' className='opacity-70'>
-          Dashed arcs: routes between galaxies · beams: open rifts between
-          dimensions
+          Layers: dimensions with clusters of their own · orbs on the dashed
+          ring: dimensions that hold none · dashed arcs: routes between galaxies
+          · beams: open rifts between dimensions
         </Text>
       </div>
     </div>
@@ -160,6 +177,11 @@ export function HeavensView({
     [onSearch]
   )
   const setTab = (tab: HeavensTab) => onSearch({ pane: tab })
+  const [overview, setOverview] = useState(0)
+  const showWhole = () => {
+    select(undefined, undefined)
+    setOverview((count) => count + 1)
+  }
   const panes = useRef<HTMLDivElement>(null)
   const openStudio = () => {
     setTab('create')
@@ -259,6 +281,7 @@ export function HeavensView({
                 routes={cosmos.data?.routes ?? []}
                 selected={selection}
                 onPick={pick}
+                overview={overview}
                 fallback={still}
               />
             </Suspense>
@@ -276,6 +299,19 @@ export function HeavensView({
               />
             </div>
           )}
+          {data.dimensions.length > 0 && hasWebGL2() && (
+            <div className='absolute top-3 right-3'>
+              <Button
+                variant='outline'
+                size='sm'
+                title='Bring the whole of the heavens back into view'
+                onClick={showWhole}
+              >
+                <Maximize2 />
+                Whole heavens
+              </Button>
+            </div>
+          )}
           <div className='pointer-events-none absolute right-3 bottom-3 hidden max-w-sm md:block'>
             <Text variant='caption' tone='inherit' className='opacity-70'>
               Click a dimension, cluster or galaxy to read it · drag: turn ·
@@ -284,7 +320,11 @@ export function HeavensView({
           </div>
         </div>
         <div className='flex min-w-0 flex-col gap-2 bg-cosmos-void px-4 py-3 text-cosmos-label md:px-6'>
-          <Legend ladder={ladder} />
+          <Legend
+            ladder={ladder}
+            selectedId={selection?.kind === 'dimension' ? selection.id : null}
+            onPick={(id) => select('dimension', id)}
+          />
         </div>
       </section>
       <div className='flex min-w-0 flex-col gap-4 p-4 md:p-6'>

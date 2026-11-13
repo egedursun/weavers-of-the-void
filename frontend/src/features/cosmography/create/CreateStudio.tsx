@@ -21,7 +21,7 @@ import { ELEMENTS, NUCLEI } from '../labels'
 import { type Ladder, nameTable } from '../ladder'
 import { Chip } from '../parts'
 import { GalaxyThumb } from '../visual/GalaxyThumb'
-import { ClusterThumb, DimensionSigil } from '../visual/ScaleThumbs'
+import { ClusterThumb, DimensionThumb } from '../visual/ScaleThumbs'
 import { type FormInput } from '../visual/galaxyForm'
 
 const EFFECT_LABEL: Record<string, string> = {
@@ -515,7 +515,7 @@ export function CreateDimensionStudio({
         ? 'Name the dimension first'
         : null
   const chosen = catalog.dimension_kinds.find((row) => row.value === kind)
-  const sigil = (
+  const preview = (
     value: string,
     effects: Record<string, number> | undefined,
     id: number
@@ -525,6 +525,7 @@ export function CreateDimensionStudio({
     veil: effects?.veil ?? 50,
     stability: effects?.stability ?? 70,
     magic: effects?.magic ?? 30,
+    time_factor: (effects?.time ?? 100) / 100,
   })
   return (
     <Studio
@@ -535,8 +536,8 @@ export function CreateDimensionStudio({
       note='A dimension is a whole layer of the one cosmos, with its own time, magic, veil and laws.'
       chosen={chosen}
       preview={
-        <DimensionSigil
-          dimension={sigil(kind, chosen?.effects, PREVIEW_ID)}
+        <DimensionThumb
+          dimension={preview(kind, chosen?.effects, PREVIEW_ID)}
           label='Preview of the new dimension'
           className='aspect-video w-full'
         />
@@ -548,8 +549,8 @@ export function CreateDimensionStudio({
           onPick={setKind}
           noun={['dimension', 'dimensions']}
           render={(row) => (
-            <DimensionSigil
-              dimension={sigil(
+            <DimensionThumb
+              dimension={preview(
                 row.value,
                 row.effects,
                 PREVIEW_ID + row.value.length

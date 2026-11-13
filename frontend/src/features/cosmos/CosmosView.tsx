@@ -164,6 +164,7 @@ export function CosmosView() {
                 catalog={catalog.data}
                 value={galaxyId}
                 onChange={selection.selectGalaxy}
+                size='sm'
               />
             ) : undefined
           }

@@ -3,16 +3,25 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { playwright } from '@vitest/browser-playwright'
-import { readFileSync } from 'fs'
+import { readFileSync, realpathSync } from 'fs'
 import { defineConfig } from 'vitest/config'
 
 const ELEMENT_WAIT_MS = 5000
+
+const ROOT = import.meta.dirname
+const PORT_AT = process.argv.indexOf('--port')
+const SERVER_KEY = process.env.VITEST
+  ? 'vitest'
+  : PORT_AT >= 0
+    ? (process.argv[PORT_AT + 1] ?? 'dev')
+    : 'dev'
 
 const { version } = JSON.parse(
   readFileSync(path.resolve(import.meta.dirname, 'package.json'), 'utf-8')
 ) as { version: string }
 
 export default defineConfig({
+  cacheDir: path.resolve(ROOT, '.vite-cache', SERVER_KEY),
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },
@@ -27,6 +36,9 @@ export default defineConfig({
   server: process.env.VITEST
     ? {}
     : {
+        fs: {
+          allow: [ROOT, realpathSync(path.resolve(ROOT, 'node_modules'))],
+        },
         proxy: {
           '/api': {
             target: process.env.AERONA_API_ORIGIN ?? 'http://127.0.0.1:8000',
