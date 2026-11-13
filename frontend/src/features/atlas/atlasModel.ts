@@ -1,4 +1,8 @@
 import { type LucideIcon } from 'lucide-react'
+import {
+  type DrawerEntry,
+  type DrawerKind,
+} from '@/components/layout/drawer/drawerEntries'
 import { type StructureTypes } from '@/features/city/api'
 import {
   DWELLING_ICON,
@@ -40,6 +44,23 @@ export type AtlasNode = {
   typeKey?: string
   icon?: LucideIcon
   children: AtlasNode[]
+}
+
+const DRAWER_OF: Partial<Record<AtlasNodeKind, DrawerKind>> = {
+  entity: 'entity',
+  son: 'son',
+  'foreign-god': 'foreign-god',
+  world: 'world',
+  star: 'star',
+  galaxy: 'galaxy',
+  cluster: 'cluster',
+  dimension: 'dimension',
+}
+
+export function drawerFor(node: AtlasNode): DrawerEntry | null {
+  if (node.kind === 'creator') return { kind: 'creator' }
+  const kind = DRAWER_OF[node.kind]
+  return kind && node.id !== undefined ? { kind, id: String(node.id) } : null
 }
 
 export type AtlasFilters = {

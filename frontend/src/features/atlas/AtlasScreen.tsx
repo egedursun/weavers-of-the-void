@@ -5,6 +5,12 @@ import { BookOpen, ChevronsDownUp, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, PageHeader } from '@/components/domain'
+import {
+  type DrawerEntry,
+  parseDrawerStack,
+  pushDrawerEntry,
+  serializeDrawerStack,
+} from '@/components/layout/drawer/drawerEntries'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { useGlobalWorld } from '@/components/layout/worldFilter'
 import { Text } from '@/components/typography'
@@ -31,6 +37,7 @@ import {
   VISIBLE_STATUS,
   allKeys,
   buildAtlasTree,
+  drawerFor,
   findNode,
   isFiltering,
   matchesEntity,
@@ -166,23 +173,26 @@ export function AtlasScreen() {
   const selected = search.select ?? null
   const selectedNode = selected ? findNode(tree, selected) : null
   const selectedGroup = selectedNode?.kind === 'group' ? selectedNode : null
-  const select = (key: string) => change({ select: key })
+  const show = (key: string, entry: DrawerEntry | null) =>
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        select: key,
+        drawer: entry
+          ? serializeDrawerStack(
+              pushDrawerEntry(parseDrawerStack(previous.drawer), entry)
+            )
+          : previous.drawer,
+      }),
+      replace: true,
+    })
+  const pick = (key: string) => {
+    const node = findNode(tree, key)
+    show(key, node ? drawerFor(node) : null)
+  }
   const activate = (node: AtlasNode) => {
-    const id = node.id !== undefined ? String(node.id) : undefined
-    if (node.kind === 'entity' && id) drawers.open({ kind: 'entity', id })
-    else if (node.kind === 'son' && id) drawers.open({ kind: 'son', id })
-    else if (node.kind === 'foreign-god' && id)
-      drawers.open({ kind: 'foreign-god', id })
-    else if (node.kind === 'world' && id) drawers.open({ kind: 'world', id })
-    else if (node.kind === 'star' && id) drawers.open({ kind: 'star', id })
-    else if (node.kind === 'creator') drawers.open({ kind: 'creator' })
-    else if (
-      (node.kind === 'galaxy' ||
-        node.kind === 'cluster' ||
-        node.kind === 'dimension') &&
-      id
-    )
-      drawers.open({ kind: node.kind, id })
+    const entry = drawerFor(node)
+    if (entry) drawers.open(entry)
     else if (node.children.length)
       branches.toggle(node.key, !open.has(node.key))
   }
@@ -258,7 +268,7 @@ export function AtlasScreen() {
                   open={open}
                   onToggle={branches.toggle}
                   selected={selected}
-                  onSelect={(node) => select(node.key)}
+                  onSelect={(node) => show(node.key, drawerFor(node))}
                   onActivate={activate}
                   query={filters.q}
                   imageWorkerOn={health.data?.image_worker_configured ?? false}
@@ -285,7 +295,10 @@ export function AtlasScreen() {
                       : null
                   }
                   onSelect={(entity: EntitySummary) =>
-                    select(`entity:${entity.id}`)
+                    show(`entity:${entity.id}`, {
+                      kind: 'entity',
+                      id: String(entity.id),
+                    })
                   }
                   typeLabel={typeLabel}
                   locationName={(id) =>
@@ -312,7 +325,7 @@ export function AtlasScreen() {
                 group={selectedGroup}
                 records={all.length}
                 kinds={typeCounts.size}
-                onSelect={select}
+                onSelect={pick}
               />
             </section>
           </div>

@@ -8,6 +8,7 @@ import {
 import {
   allKeys,
   buildAtlasTree,
+  drawerFor,
   flattenVisible,
   isFiltering,
   matchesEntity,
@@ -282,5 +283,43 @@ describe('atlas tree', () => {
     expect(worlds.size).toBeGreaterThan(0)
     expect(validateAtlasSearch({ world: '3' })).toEqual({ world: 3 })
     expect(validateAtlasSearch({ world: 'x' })).toEqual({})
+  })
+})
+
+describe('drawerFor', () => {
+  const node = (
+    kind: Parameters<typeof drawerFor>[0]['kind'],
+    id?: number
+  ) => ({
+    key: `${kind}:${id ?? ''}`,
+    label: kind,
+    kind,
+    id,
+    children: [],
+  })
+
+  it('opens every record and every node of the heavens in its own drawer', () => {
+    expect(drawerFor(node('entity', 7))).toEqual({ kind: 'entity', id: '7' })
+    expect(drawerFor(node('son', 2))).toEqual({ kind: 'son', id: '2' })
+    expect(drawerFor(node('foreign-god', 3))).toEqual({
+      kind: 'foreign-god',
+      id: '3',
+    })
+    for (const kind of [
+      'world',
+      'star',
+      'galaxy',
+      'cluster',
+      'dimension',
+    ] as const)
+      expect(drawerFor(node(kind, 5))).toEqual({ kind, id: '5' })
+    expect(drawerFor(node('creator'))).toEqual({ kind: 'creator' })
+  })
+
+  it('keeps groups and type pages in the atlas pane', () => {
+    expect(drawerFor(node('group'))).toBeNull()
+    expect(drawerFor(node('building-type', 4))).toBeNull()
+    expect(drawerFor(node('dwelling-type', 4))).toBeNull()
+    expect(drawerFor(node('entity'))).toBeNull()
   })
 })
