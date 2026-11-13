@@ -30,7 +30,7 @@ from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import DISASTER_KINDS
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
-from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.knowledge import KnowledgeMap, known_levels
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, connect, flags_by_entity, living_entity, remove_flag
@@ -290,6 +290,7 @@ async def raise_commander(ctx: TickContext, army: EntityRow, row: ArmyRow) -> En
     lifespan = losses.commander_lifespan + rng.die(losses.commander_lifespan_die)
     stats = {key: clamp_int(losses.commander_stat_base + rng.die(losses.commander_stat_die), 0, 100) for key in STAT_KEYS}
     name = await Namer(ctx.session, ctx.rules).person([community], seed_of(army.id, ctx.epoch, "commander"), community.world_id)
+    warfare = (await known_levels(ctx.session, [community.id])).get(community.id, {}).get(KnowledgeBranch.WARFARE, 0)
     commander = await create_record(
         ctx,
         RecordSpec(
@@ -301,7 +302,7 @@ async def raise_commander(ctx: TickContext, army: EntityRow, row: ArmyRow) -> En
             location_id=community.id if community.entity_type is EntityType.SETTLEMENT else community.location_id,
             world_id=community.world_id,
             subtype=subtype,
-            mortal_role=MortalRole.WARRIOR,
+            mortal_role=MortalRole.OFFICER if warfare >= losses.officer_warfare_level else MortalRole.WARRIOR,
             flags=(EntityFlag.NAME_FROM_LANGUAGE,) if name else (),
         ),
     )

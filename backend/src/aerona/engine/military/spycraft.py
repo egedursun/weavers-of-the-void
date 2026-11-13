@@ -12,7 +12,7 @@ from aerona.db.tables.warfare import WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import AgentStatus, SpyCover, SpyOwnerKind
 from aerona.domain.enums.mind import MemoryKind
@@ -96,17 +96,18 @@ async def recruit(ctx: TickContext, network: SpyNetworkRow) -> SpyAgentRow | Non
         .limit(50)
     )
     mortal = None
-    for item in candidates:
+    for item in sorted(candidates, key=lambda row: (row.mortal_role is not MortalRole.SPY, row.id)):
         if item.id not in taken and await held_captive(ctx.session, item.id) is None:
             mortal = item
             break
     if mortal is None:
         return None
+    trained = ctx.rules.espionage.spy_role_skill if mortal.mortal_role is MortalRole.SPY else 0
     agent = SpyAgentRow(
         network_id=network.id,
         mortal_entity_id=mortal.id,
         cover=network.cover,
-        skill=clamp_int(network.depth // 2 + PERCENT // 5, 0, PERCENT),
+        skill=clamp_int(network.depth // 2 + PERCENT // 5 + trained, 0, PERCENT),
         exposure=0,
         status=AgentStatus.ACTIVE,
         since_epoch=ctx.epoch,

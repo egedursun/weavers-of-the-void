@@ -257,6 +257,22 @@ export const LAW_PARAMS: Record<string, string> = {
   fee: 'Fee',
   trial: 'Trial by',
   torture: 'Questioning under torture',
+  theft: 'Theft',
+  murder: 'Murder',
+  treason: 'Treason',
+  blasphemy: 'Blasphemy',
+  desertion: 'Desertion',
+  strictness: 'Strictness',
+  strength: 'Strength',
+  voters: 'Who votes',
+  government: 'Government',
+  decision_rule: 'Decided by',
+  estates_rights: 'Rights of the estates',
+  max_hours: 'Most hours of work a week',
+  child_labour: 'Child labour',
+  unions: 'Unions',
+  term: 'Protection (epochs)',
+  claims: 'Claims beyond the world',
 }
 
 export const LEGITIMACY_BASES: Record<string, Named> = {

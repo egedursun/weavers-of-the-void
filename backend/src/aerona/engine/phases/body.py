@@ -56,7 +56,9 @@ VIOLENT_DEATHS: dict[EntityFlag, HarmCause] = {
 }
 BACKFILL_CAUSE = "fell long ago"
 PLAN_FIXUP = "body.species_plans"
-EXPOSED_ROLES = frozenset({MortalRole.EXPLORER, MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HUNTER, MortalRole.CAPTAIN, MortalRole.HERO})
+EXPOSED_ROLES = frozenset(
+    {MortalRole.EXPLORER, MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HUNTER, MortalRole.CAPTAIN, MortalRole.HERO, MortalRole.OFFICER, MortalRole.PILOT}
+)
 COLD_BANDS = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 HOT_BANDS = frozenset({TemperatureBand.HOT, TemperatureBand.SEARING})
 
@@ -404,7 +406,7 @@ async def _marks(ctx: TickContext, mortal: EntityRow, flags: set[EntityFlag]) ->
         await end_condition(ctx, mortal, ConditionKind.CHRONIC_ILLNESS)
 
 
-SCHOLAR_ROLES = frozenset({MortalRole.SAGE, MortalRole.SCRIBE, MortalRole.SEER, MortalRole.PRIEST})
+SCHOLAR_ROLES = frozenset({MortalRole.SAGE, MortalRole.SCRIBE, MortalRole.SEER, MortalRole.PRIEST, MortalRole.SCIENTIST})
 
 
 async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:

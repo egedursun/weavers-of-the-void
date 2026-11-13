@@ -20,7 +20,7 @@ from aerona.api.schemas.military_depth import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
-from aerona.catalog.vehicles import FRAMES, LAYOUTS, MOUNTS, FrameSpec
+from aerona.catalog.vehicles import FRAMES, MOUNTS, FrameSpec, frame_layout
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -69,7 +69,7 @@ def frame_view(spec: FrameSpec, rules: Rules) -> FrameSpecView:
                 hazard=part.hazard,
                 neighbours=list(part.neighbours),
             )
-            for part in LAYOUTS[spec.family]
+            for part in frame_layout(spec.frame)
         ],
         armament=list(spec.armament),
         branch=spec.branch,

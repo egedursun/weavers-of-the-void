@@ -32,8 +32,8 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.renown.currencies import ruler_of_realm
 
 G = GatheringKind
-MARTIAL_ROLES = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.HUNTER})
-PERFORMER_ROLES = frozenset({MortalRole.ARTISAN, MortalRole.SCRIBE, MortalRole.PRIEST})
+MARTIAL_ROLES = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.HUNTER, MortalRole.OFFICER})
+PERFORMER_ROLES = frozenset({MortalRole.ARTISAN, MortalRole.SCRIBE, MortalRole.PRIEST, MortalRole.JOURNALIST})
 
 
 @dataclass(frozen=True)

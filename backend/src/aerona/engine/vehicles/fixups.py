@@ -1,15 +1,16 @@
 from sqlalchemy import select
 
-from aerona.catalog.vehicles import FRAMES, LAYOUTS
+from aerona.catalog.vehicles import FRAMES, frame_layout, section_swap
 from aerona.db.tables.collective import DesignRow
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyUnitRow
-from aerona.db.tables.vehicles import DesignMountRow
+from aerona.db.tables.vehicles import DesignMountRow, DesignSectionRow, VesselSectionRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.vehicles import MountArc
+from aerona.domain.enums.vehicles import MountArc, VehicleSection
 from aerona.engine.collective.designs import MOUNT_ARCS, arm_mounts, catalogue_fields, derive, frame_sizes, home_section, lay_sections, mounts_of, sections_of
 from aerona.engine.context import TickContext
 from aerona.engine.equipment.models import mount_model
@@ -20,6 +21,8 @@ from aerona.engine.vehicles.groups import add_vehicles
 
 FIXUP = "vehicles.made_kinds"
 REARM = "vehicles.mounts_seated"
+RESEAT = "vehicles.frame_sections"
+DESIGN_SECTION_FIELDS = ("design_id", "function", "criticality", "share", "exposure", "armour", "hazard", "neighbours", "material_id", "size", "quality")
 
 
 async def complete_designs(ctx: TickContext, knowledge: KnowledgeMap) -> int:
@@ -86,7 +89,7 @@ async def rearm(ctx: TickContext, knowledge: KnowledgeMap) -> dict[str, int]:
             row.model_id = model.id
             tally["armed"] += 1
         if row.section is None and "section" not in locked:
-            row.section = home_section(row.mount, {part.section for part in LAYOUTS[FRAMES[found.frame].family]})
+            row.section = home_section(row.mount, {part.section for part in frame_layout(found.frame)})
             tally["seated"] += row.section is not None
         if row.arc is MountArc.ALL_ROUND and "arc" not in locked and MOUNT_ARCS[row.mount] is not MountArc.ALL_ROUND:
             row.arc = MOUNT_ARCS[row.mount]
@@ -95,6 +98,41 @@ async def rearm(ctx: TickContext, knowledge: KnowledgeMap) -> dict[str, int]:
     for found in list(await ctx.session.scalars(select(DesignRow).where(DesignRow.frame.is_not(None)).order_by(DesignRow.id))):
         await derive(ctx.session, ctx.rules, found)
     return tally
+
+
+async def reseat_sections(ctx: TickContext) -> int:
+    moved = 0
+    for design in list(await ctx.session.scalars(select(DesignRow).where(DesignRow.frame.is_not(None)).order_by(DesignRow.id))):
+        swap = section_swap(design.frame) if design.frame is not None else {}
+        rows = list(await ctx.session.scalars(select(DesignSectionRow).where(DesignSectionRow.design_id == design.id)))
+        present = {row.section for row in rows}
+        for row in rows:
+            row.neighbours = [str(found) for item in row.neighbours if (found := swap.get(VehicleSection(item), VehicleSection(item))) is not None]
+            if row.section not in swap:
+                continue
+            target = swap[row.section]
+            await ctx.session.delete(row)
+            if target is not None and target not in present:
+                ctx.session.add(DesignSectionRow(**{**{key: getattr(row, key) for key in DESIGN_SECTION_FIELDS}, "section": target}))
+            moved += 1
+    for vessel in list(await ctx.session.scalars(select(VesselProfileRow).order_by(VesselProfileRow.entity_id))):
+        swap = section_swap(vessel.frame)
+        laid_rows = list(await ctx.session.scalars(select(VesselSectionRow).where(VesselSectionRow.vessel_entity_id == vessel.entity_id)))
+        present = {laid.section for laid in laid_rows}
+        for laid in laid_rows:
+            if laid.section not in swap:
+                continue
+            target = swap[laid.section]
+            await ctx.session.delete(laid)
+            if target is not None and target not in present:
+                ctx.session.add(
+                    VesselSectionRow(
+                        vessel_entity_id=laid.vessel_entity_id, section=target, state=laid.state, condition=laid.condition, locked=list(laid.locked)
+                    )
+                )
+            moved += 1
+    await ctx.session.flush()
+    return moved
 
 
 async def made_kinds_fixup(ctx: TickContext) -> dict[str, int]:
@@ -107,4 +145,8 @@ async def made_kinds_fixup(ctx: TickContext) -> dict[str, int]:
         seated = await rearm(ctx, knowledge)
         ctx.session.add(AppliedFixupRow(key=REARM, result=seated))
         result |= seated
+    if await ctx.session.get(AppliedFixupRow, RESEAT) is None:
+        reseated = {"reseated": await reseat_sections(ctx)}
+        ctx.session.add(AppliedFixupRow(key=RESEAT, result=reseated))
+        result |= reseated
     return result

@@ -20,7 +20,7 @@ from aerona.engine.primitives.queries import living_entity
 
 ALWAYS_NAMED = frozenset({EntityType.SPIRIT, EntityType.OUTER_BEING})
 SOMETIMES_NAMED = frozenset({EntityType.MORTAL, EntityType.PLACE, EntityType.ITEM, EntityType.SPECIES})
-SCHOLARS = frozenset({MortalRole.SAGE, MortalRole.SCRIBE, MortalRole.SEER})
+SCHOLARS = frozenset({MortalRole.SAGE, MortalRole.SCRIBE, MortalRole.SEER, MortalRole.SCIENTIST, MortalRole.JOURNALIST})
 KNOWN = "known_by"
 INTIMATE_AT = 70
 

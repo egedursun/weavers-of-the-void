@@ -64,7 +64,9 @@ CLASS_DWELLING: dict[SocialClass, DwellingKind] = {
     SocialClass.CITIZEN: DwellingKind.APARTMENT,
     SocialClass.UNEMPLOYED: DwellingKind.HUT,
 }
-CRAFT_MASTERS = frozenset({MortalRole.ARTISAN, MortalRole.HEALER, MortalRole.SCRIBE, MortalRole.MERCHANT})
+CRAFT_MASTERS = frozenset(
+    {MortalRole.ARTISAN, MortalRole.HEALER, MortalRole.SCRIBE, MortalRole.MERCHANT, MortalRole.ENGINEER, MortalRole.PHYSICIAN, MortalRole.EXECUTIVE}
+)
 
 
 @dataclass

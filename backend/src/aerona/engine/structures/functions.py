@@ -140,7 +140,7 @@ async def school(ctx: TickContext, item: Working, host: EntityRow, tally: Tally)
 
 async def hospital(ctx: TickContext, item: Working, host: EntityRow, tally: Tally) -> None:
     xp = round_half_up(ctx.rules.structure_functions.hospital_healer_xp * item.strength)
-    for healer in await residents(ctx, host, frozenset({MortalRole.HEALER, MortalRole.PRIEST})):
+    for healer in await residents(ctx, host, frozenset({MortalRole.HEALER, MortalRole.PRIEST, MortalRole.PHYSICIAN})):
         await practised(ctx, healer.id, SkillKind.MEDICINE, xp)
 
 

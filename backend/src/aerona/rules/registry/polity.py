@@ -15,6 +15,7 @@ class GovernmentRules:
     empire_members: int = rule(6, 1, 1000, P, "Communities a realm must hold to count as an empire")
     confederation_peoples: int = rule(3, 1, 1000, P, "Peoples a loose realm must hold to count as a confederation")
     chiefdom_tier: int = rule(1, 0, 10, P, "Realm tier at or below which a monarchy is still a chiefdom")
+    occupation_loyalty: int = rule(15, 0, 100, P, "Loyalty to its overlord at or below which a subject realm is ruled as occupied land")
     junta_warrior_pct: int = rule(20, 0, 100, P, "Warrior share at which a realm ruled by an officer becomes a military government (%)")
     technocracy_professional_pct: int = rule(12, 0, 100, P, "Professional share at which a learned realm is ruled by its experts (%)")
     technocracy_civics_level: int = rule(4, 0, 20, P, "Civics level a realm needs to be ruled by its experts")

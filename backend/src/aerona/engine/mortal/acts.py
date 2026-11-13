@@ -67,7 +67,7 @@ BREAK_TRAITS: dict[StressBreak, frozenset[TraitKind]] = {
     StressBreak.VICE: frozenset({TraitKind.GLUTTONOUS, TraitKind.LUSTFUL, TraitKind.GREEDY}),
     StressBreak.REVELATION: frozenset({TraitKind.CURIOUS, TraitKind.SCHOLARLY}),
 }
-FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.CAPTAIN})
+FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.CAPTAIN, MortalRole.OFFICER})
 CAREER_ROLES = partial(
     CareerPath,
     {

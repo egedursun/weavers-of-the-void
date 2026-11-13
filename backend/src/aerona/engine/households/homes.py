@@ -58,8 +58,8 @@ CLASS_EXPECTATION: dict[SocialClass, int] = {
 COMMON_EXPECTATION = 30
 WAGE_CLASSES = frozenset({SocialClass.WORKER, SocialClass.PROFESSIONAL, SocialClass.OFFICIAL, SocialClass.CITIZEN, SocialClass.UNEMPLOYED})
 TOWN_POPULATION = 1500
-SEA_ROLES = frozenset({MortalRole.CAPTAIN, MortalRole.EXPLORER})
-TOWER_ROLES = frozenset({MortalRole.SEER, MortalRole.SAGE})
+SEA_ROLES = frozenset({MortalRole.CAPTAIN, MortalRole.EXPLORER, MortalRole.PILOT})
+TOWER_ROLES = frozenset({MortalRole.SEER, MortalRole.SAGE, MortalRole.SCIENTIST})
 
 
 async def household_of(session: AsyncSession, member_id: int) -> HouseholdRow | None:

@@ -8,6 +8,7 @@ from aerona.catalog.lore import ITEM_CLASSES, KNOWLEDGE_ITEMS, REGALIA, WEAPONS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import HolderLevelRow, ItemEnchantmentRow, ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.economy import NodeMaterialRow
@@ -16,7 +17,9 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import RelicRow, SpiritProfileRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, OfficeRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CurseKind, CustomCatalog, ItemClass, ItemDeed, RiteEffectKind
@@ -29,6 +32,7 @@ from aerona.domain.enums.mind import MemoryKind, SkillKind, ThoughtKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.engine.arcana.items import use_charge
+from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.conditions import end_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -42,6 +46,7 @@ from aerona.engine.lore.intel import gain_intel
 from aerona.engine.lore.kinds import ItemClassParams, kind_of, params_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.thoughts import mood_factor, mood_of, think
+from aerona.engine.mortal.standing import add_stress
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
@@ -512,6 +517,42 @@ async def enshrine(ctx: TickContext, held: Holding) -> str | None:
     return "enshrined"
 
 
+async def dose(ctx: TickContext, held: Holding) -> str | None:
+    if held.holder.entity_type is not EntityType.MORTAL:
+        return None
+    table = ctx.rules.item_powers
+    await add_stress(ctx.session, held.holder.id, -table.drug_relief, ctx.epoch)
+    if ctx.rng(f"dose.{held.item.id}.{ctx.epoch}").chance(table.drug_dependence_pct):
+        await afflict(ctx, held.holder, PackageKind.DRUG_DEPENDENCE, Transmission.INGESTION, source_node_id=held.item.id)
+        return "dependence"
+    return "dose"
+
+
+async def device(ctx: TickContext, held: Holding) -> str | None:
+    if held.home is None or stat(held.home, "prosperity") is None:
+        return None
+    shift_stat(held.home, "prosperity", ctx.rules.item_powers.device_prosperity)
+    return "device"
+
+
+async def signal(ctx: TickContext, held: Holding) -> str | None:
+    town = await ctx.session.get(SettlementProfileRow, held.home.id) if held.home is not None else None
+    if town is None or "public_order" in town.locked:
+        return None
+    town.public_order = clamp_int(town.public_order + ctx.rules.item_powers.communicator_order, 0, PERCENT)
+    return "signal"
+
+
+async def spare(ctx: TickContext, held: Holding) -> str | None:
+    vessel = await ctx.session.scalar(
+        select(VesselProfileRow).where(VesselProfileRow.captain_entity_id == held.holder.id).order_by(VesselProfileRow.entity_id).limit(1)
+    )
+    if vessel is None or "condition" in vessel.locked:
+        return None
+    vessel.condition = clamp_int(vessel.condition + ctx.rules.item_powers.part_repair, 0, PERCENT)
+    return "repaired"
+
+
 POWERS: dict[ItemClass, Callable[[TickContext, Holding], Awaitable[str | None]]] = {
     C.INSTRUMENT: music,
     C.MIRROR: seeing,
@@ -524,6 +565,11 @@ POWERS: dict[ItemClass, Callable[[TickContext, Holding], Awaitable[str | None]]]
     C.RING: prestige,
     C.PROSTHESIS: limb,
     C.HOLY_RELIC: enshrine,
+    C.IMPLANT: limb,
+    C.DRUG: dose,
+    C.DEVICE: device,
+    C.COMMUNICATOR: signal,
+    C.VEHICLE_PART: spare,
 }
 
 

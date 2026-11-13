@@ -44,3 +44,4 @@ class EspionageRules:
     roll_up_exposure: int = rule(80, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Exposure at which a network with no agents left is rolled up")
     poison_severity: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Severity of the sickness from poisoned wells")
     privacy_pct: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of the intel spies gather that a privacy law at full strictness denies them (%)")
+    spy_role_skill: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Skill a trained spy brings to a network that recruits them")

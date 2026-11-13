@@ -7,7 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
-from aerona.db.tables.polity import OfficeHistoryRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
+from aerona.db.tables.polity import OfficeHistoryRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, VassalageRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
@@ -16,6 +16,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, Mor
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, LawKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.statecraft import SubjectKind
 from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
@@ -127,8 +128,20 @@ def root_of(entity_id: int, community_lord: dict[int, int], kin_root: dict[int, 
     return current
 
 
-async def government_for(ctx: TickContext, core: EntityRow, members: list[EntityRow], ruler: EntityRow | None) -> GovernmentKind:
+async def subject_government(ctx: TickContext, realm_id: int | None) -> GovernmentKind | None:
+    subject = await ctx.session.get(VassalageRow, realm_id) if realm_id is not None else None
+    if subject is None:
+        return None
+    if subject.kind is SubjectKind.COLONY:
+        return GovernmentKind.COLONIAL_ADMINISTRATION
+    return GovernmentKind.OCCUPATION if subject.loyalty <= ctx.rules.government.occupation_loyalty else None
+
+
+async def government_for(ctx: TickContext, core: EntityRow, members: list[EntityRow], ruler: EntityRow | None, realm_id: int | None = None) -> GovernmentKind:
     table = ctx.rules.government
+    imposed = await subject_government(ctx, realm_id)
+    if imposed is not None:
+        return imposed
     values = await culture_of(ctx.session, core.id)
     society = await ctx.session.get(CommunitySocietyRow, core.id)
     merchants = society.share(SocialClass.MERCHANT) if society is not None else 0.0
@@ -323,7 +336,7 @@ async def shape(ctx: TickContext, book: RealmBook, realm: Realm) -> None:
         return
     ruler = await ctx.session.get(EntityRow, realm.ruler_id) if realm.ruler_id is not None else None
     if "government" not in profile.locked:
-        government = await government_for(ctx, core, members, ruler)
+        government = await government_for(ctx, core, members, ruler, realm.entity.id)
         if government is not profile.government:
             profile.government = government
             if "name" not in profile.locked:

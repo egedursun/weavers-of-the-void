@@ -37,6 +37,7 @@ class CasualtiesRules:
     commander_stat_base: int = rule(40, 0, 100, W, "Base stat of a commander risen from the ranks")
     commander_stat_die: int = rule(40, 1, 100, W, "Stat die of a commander risen from the ranks")
     commander_hp: int = rule(80, 1, 1000, W, "Hit points of a commander risen from the ranks")
+    officer_warfare_level: int = rule(5, 0, 20, W, "Warfare level at which a commander risen from the ranks is a trained officer")
     commander_lifespan: int = rule(60, 1, 1000, W, "Base lifespan of a commander risen from the ranks")
     commander_lifespan_die: int = rule(25, 1, 1000, W, "Lifespan die of a commander risen from the ranks")
     commander_age_pct: int = rule(35, 0, 100, W, "Age of a commander risen from the ranks (% of lifespan)")

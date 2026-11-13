@@ -2,6 +2,8 @@ from itertools import count
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.lore import ITEM_CLASSES, KNOWLEDGE_ITEMS, REGALIA, WEAPONS
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
@@ -10,9 +12,12 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.demography import Aesthetic, InheritanceCustom, MarriageCustom, MartialStyle
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.models.entity_stats import CultStats, HouseStats, ItemStats
+from aerona.domain.enums.travel import VehicleKind
+from aerona.domain.enums.vehicles import VehicleFrame
+from aerona.domain.models.entity_stats import CultStats, HouseStats, ItemStats, VesselStats
 from aerona.engine.context import TickContext
-from aerona.engine.lore.items import POWERS, Holding, mend_bearer, nearest_foe
+from aerona.engine.lore.arms import GUARDS
+from aerona.engine.lore.items import POWERS, WAYFINDERS, Holding, mend_bearer, nearest_foe
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats, stat
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement
@@ -90,3 +95,26 @@ async def test_idols_stir_a_cult_jewels_raise_a_house_and_limbs_need_a_stump(ses
     assert await POWERS[C.PROSTHESIS](ctx, await holding(session, world, C.PROSTHESIS, keeper, town)) is None
     assert await POWERS[C.PROSTHESIS](ctx, await holding(session, world, C.PROSTHESIS, cult, town)) is None
     assert not await mend_bearer(ctx, keeper, 10)
+
+
+async def test_drugs_devices_communicators_and_parts_each_serve_their_holder(session: AsyncSession, world: CoreWorld) -> None:
+    ctx, town, keeper = await scene(session, world)
+    assert await POWERS[C.DRUG](ctx, await holding(session, world, C.DRUG, keeper, town)) in {"dose", "dependence"}
+    assert await POWERS[C.DRUG](ctx, await holding(session, world, C.DRUG, town, town)) is None
+    set_stats(town, prosperity=10)
+    assert await POWERS[C.DEVICE](ctx, await holding(session, world, C.DEVICE, keeper, town)) == "device"
+    assert (stat(town, "prosperity") or 0) > 10
+    assert await POWERS[C.COMMUNICATOR](ctx, await holding(session, world, C.COMMUNICATOR, keeper, None)) is None
+    assert await POWERS[C.VEHICLE_PART](ctx, await holding(session, world, C.VEHICLE_PART, keeper, town)) is None
+    ship = await entity(session, "The Tern", EntityType.VESSEL, VesselStats(), world_id=world.world.id)
+    vessel = VesselProfileRow(entity_id=ship.id, kind=VehicleKind.SHIP, frame=VehicleFrame.MOTORBOAT, captain_entity_id=keeper.id, condition=50, locked=[])
+    session.add(vessel)
+    await session.flush()
+    assert await POWERS[C.VEHICLE_PART](ctx, await holding(session, world, C.VEHICLE_PART, keeper, town)) == "repaired"
+    assert vessel.condition > 50
+
+
+def test_every_class_of_item_does_something_in_the_world() -> None:
+    roles = set(WEAPONS) | set(KNOWLEDGE_ITEMS) | set(REGALIA) | set(GUARDS) | set(POWERS) | set(WAYFINDERS) | {C.TOOL, C.STANDARD}
+    assert sorted(item.value for item in ItemClass if item not in roles) == []
+    assert all(ITEM_CLASSES[item].coverage == 0 or item in GUARDS or item in POWERS for item in ItemClass)

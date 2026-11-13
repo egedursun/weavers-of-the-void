@@ -3458,7 +3458,7 @@ const MOTORBOAT: Blueprint = {
       ]
     ),
     feature(
-      ['oars'],
+      ['oars', 'engine'],
       [512, 200],
       [540, 250],
       [{ d: 'M 498 160 L 522 160 L 528 236 L 510 236 Z' }]
@@ -3480,7 +3480,7 @@ const HYDROFOIL: Blueprint = {
       [{ d: windows(150, 116, 7, 46, 30, 14), neutral: true }]
     ),
     feature(
-      ['oars'],
+      ['oars', 'engine'],
       [150, 206],
       [110, 250],
       [

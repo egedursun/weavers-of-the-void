@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from types import MappingProxyType
 
 from aerona.core.total import total
@@ -945,6 +945,41 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
         )
     },
 )
+PROPULSION_SECTIONS: MappingProxyType[Propulsion, VehicleSection | None] = MappingProxyType(
+    {
+        P.SAIL: VehicleSection.SAILS,
+        P.STEAM: VehicleSection.ENGINE,
+        P.COMBUSTION: VehicleSection.ENGINE,
+        P.ELECTRIC: VehicleSection.ENGINE,
+        P.TOWED: None,
+    }
+)
+UNWHEELED = frozenset({F.TRAVOIS, F.SLEDGE, F.PALANQUIN})
+
+
+def renamed(sections: tuple[VehicleSection, ...], swap: dict[VehicleSection, VehicleSection | None]) -> tuple[VehicleSection, ...]:
+    return tuple(found for section in sections if (found := swap.get(section, section)) is not None)
+
+
+def section_swap(frame: VehicleFrame) -> dict[VehicleSection, VehicleSection | None]:
+    spec = FRAMES[frame]
+    swap: dict[VehicleSection, VehicleSection | None] = {}
+    if spec.propulsion in PROPULSION_SECTIONS:
+        swap[VehicleSection.OARS] = PROPULSION_SECTIONS[spec.propulsion]
+    if frame in UNWHEELED:
+        swap[VehicleSection.WHEELS] = None
+    return swap
+
+
+def frame_layout(frame: VehicleFrame) -> tuple[SectionSpec, ...]:
+    swap = section_swap(frame)
+    return tuple(
+        replace(part, section=found, neighbours=renamed(part.neighbours, swap))
+        for part in LAYOUTS[FRAMES[frame].family]
+        if (found := swap.get(part.section, part.section)) is not None
+    )
+
+
 SEA_LADDER = (F.SHIP_OF_THE_LINE, F.GALLEON, F.CARRACK, F.WARSHIP, F.COG, F.GALLEY, F.LONGSHIP, F.SAILBOAT, F.BOAT, F.RAFT)
 SIZE_SCALE: MappingProxyType[VehicleSize, int] = total(VehicleSize, {Z.SMALL: 1, Z.MEDIUM: 2, Z.LARGE: 3, Z.HUGE: 4, Z.COLOSSAL: 5})
 FAMILY_TECHNIQUES: MappingProxyType[VehicleFamily, Technique | None] = total(

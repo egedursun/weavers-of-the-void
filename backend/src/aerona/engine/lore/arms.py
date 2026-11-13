@@ -15,7 +15,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
-GUARDS = frozenset({ItemClass.ARMOUR, ItemClass.SHIELD, ItemClass.HELMET})
+GUARDS = frozenset({ItemClass.ARMOUR, ItemClass.SHIELD, ItemClass.HELMET, ItemClass.PADDING, ItemClass.CLOAK})
 ARMED = frozenset({RiteEffectKind.DAMAGE, RiteEffectKind.CURSE})
 WARDED = frozenset({RiteEffectKind.WARD, RiteEffectKind.BLESS})
 NOTE = "worn in single combat"

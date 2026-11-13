@@ -41,7 +41,7 @@ from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.vehicles.wrecks import VOID_DOMAINS
 from aerona.rules.registry import Rules
 
-EXPLORER_ROLES = frozenset({MortalRole.EXPLORER, MortalRole.HUNTER, MortalRole.HERO})
+EXPLORER_ROLES = frozenset({MortalRole.EXPLORER, MortalRole.HUNTER, MortalRole.HERO, MortalRole.SCIENTIST, MortalRole.PILOT})
 SEER_ROLES = frozenset({MortalRole.SEER, MortalRole.PRIEST, MortalRole.SAGE, MortalRole.SAINT})
 CALLED = frozenset({MortalRole.EXPLORER, MortalRole.SEER})
 EXPLORER_SKILLS = (SkillKind.TRACKING, SkillKind.NAVIGATION, SkillKind.MOUNTAINEERING)

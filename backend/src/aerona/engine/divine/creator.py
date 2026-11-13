@@ -20,7 +20,7 @@ from aerona.engine.primitives.words import names_word
 
 P = CreatorPassion
 TABOO_FIXUP = "creator_taboos_typed"
-SCHOLARS = frozenset({MortalRole.SAGE, MortalRole.SCRIBE, MortalRole.SEER})
+SCHOLARS = frozenset({MortalRole.SAGE, MortalRole.SCRIBE, MortalRole.SEER, MortalRole.SCIENTIST})
 
 
 async def place_of(ctx: TickContext, node_id: int) -> EntityRow | None:

@@ -25,7 +25,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.renown.deeds import acclaim_deed, best_craft
 
-FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER})
+FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER, MortalRole.OFFICER, MortalRole.PILOT})
 FEVER_MATERIALS = (MaterialKind.GOLD, MaterialKind.SILVER, MaterialKind.IRON, MaterialKind.BRONZE, MaterialKind.STONE, MaterialKind.WOOD, MaterialKind.GLASS)
 ITEM_POWER = 3
 

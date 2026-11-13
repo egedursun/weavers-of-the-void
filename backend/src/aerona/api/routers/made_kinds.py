@@ -41,8 +41,7 @@ from aerona.catalog.structure_sections import FORMS
 from aerona.catalog.structure_sections import LAYOUTS as STRUCTURE_LAYOUTS
 from aerona.catalog.structures import MEGASTRUCTURES, STRUCTURES
 from aerona.catalog.units import UNITS
-from aerona.catalog.vehicles import FRAMES
-from aerona.catalog.vehicles import LAYOUTS as VEHICLE_LAYOUTS
+from aerona.catalog.vehicles import FRAMES, frame_layout
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.body import BodyRow, InjuryRow
@@ -573,7 +572,7 @@ async def vessel_views(session: AsyncSession, node_id: int) -> list[VesselSectio
     if vessel is None:
         return []
     laid = {row.section: row for row in await session.scalars(select(VesselSectionRow).where(VesselSectionRow.vessel_entity_id == node_id))}
-    layout = VEHICLE_LAYOUTS[FRAMES[vessel.frame].family]
+    layout = frame_layout(vessel.frame)
     found = [
         VesselSectionView(
             section=spec.section,

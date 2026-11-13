@@ -5,7 +5,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.vehicles import FAMILY_TECHNIQUES, FRAMES, FUELS, LAYOUTS, MOUNTS, SIZE_SCALE, FrameSpec
+from aerona.catalog.vehicles import FAMILY_TECHNIQUES, FRAMES, FUELS, MOUNTS, SIZE_SCALE, FrameSpec, frame_layout
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.collective import ComponentWearRow, DesignComponentRow, DesignRow
@@ -139,7 +139,7 @@ def frame_sizes(frame: VehicleFrame) -> dict[DesignComponentKind, int]:
         C.LIFE_SUPPORT: 3,
         C.COUNTERWEIGHT: 3,
     }
-    present = {part.function for part in LAYOUTS[spec.family]}
+    present = {part.function for part in frame_layout(spec.frame)}
     return {kind: clamp_int(size, 1, FULL_SIZE) for kind, size in found.items() if kind in present}
 
 
@@ -281,7 +281,7 @@ async def lay_sections(session: AsyncSession, design: DesignRow, sizes: dict[Des
         return
     spec = FRAMES[design.frame]
     old = {row.section: row for row in await sections_of(session, parent_id)} if parent_id is not None else {}
-    for part in LAYOUTS[spec.family]:
+    for part in frame_layout(spec.frame):
         before = old.get(part.section)
         session.add(
             DesignSectionRow(
@@ -311,7 +311,7 @@ async def arm_mounts(ctx: TickContext, design: DesignRow, owner: EntityRow | Non
     if design.frame is None:
         return
     spec = FRAMES[design.frame]
-    sections = {part.section for part in LAYOUTS[spec.family]}
+    sections = {part.section for part in frame_layout(spec.frame)}
     known = knowledge or await KnowledgeMap.load(ctx.session)
     for slot, mount in enumerate(MOUNTS[spec.family]):
         model = await mount_model(ctx, owner, mount, known)

@@ -73,7 +73,7 @@ from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import HealingRules, ProstheticsRules
 
-HEALER_ROLES = frozenset({MortalRole.HEALER, MortalRole.PRIEST, MortalRole.SAINT})
+HEALER_ROLES = frozenset({MortalRole.HEALER, MortalRole.PRIEST, MortalRole.SAINT, MortalRole.PHYSICIAN})
 FESTER_DEATH = "died of a festering wound"
 BLED_OUT = "bled to death from an open wound"
 PRECIOUS = frozenset({MaterialKind.SILVER, MaterialKind.GOLD, MaterialKind.STAR_METAL, MaterialKind.CRYSTAL, MaterialKind.DRAGONBONE, MaterialKind.SKYSTEEL})

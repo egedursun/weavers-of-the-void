@@ -31,7 +31,7 @@ from aerona.rules.registry import Rules
 
 TELLER_KINDS = (BondKind.CELEBRATES, BondKind.TELLS_OF)
 PLACE_BOND_KINDS = (BondKind.TELLS_OF, BondKind.RELATED, BondKind.INSIDE)
-KEEPER_ROLES = frozenset({MortalRole.SAGE, MortalRole.SEER, MortalRole.SCRIBE})
+KEEPER_ROLES = frozenset({MortalRole.SAGE, MortalRole.SEER, MortalRole.SCRIBE, MortalRole.JOURNALIST})
 BLURRED_SUBTYPE = "blurred memory"
 
 
