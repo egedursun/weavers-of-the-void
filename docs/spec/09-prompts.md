@@ -483,7 +483,7 @@ sensory details 3–6. (Table in 08.)
 
 - Role: Genesis architect. Trigger: player creates a world (`POST` genesis). Output schema: `schema.genesis`.
 - **system**:
-  > You are an architect of mythology. You write in English. {shared.cliche_ban}
+  > You are an architect of mythology. {shared.lore_language} {shared.harm_narration}
 - **user**:
   ```
   Creator god's name: {god_name}.
@@ -492,7 +492,7 @@ sensory details 3–6. (Table in 08.)
 
   [[if wizard]]{wizard_text}            ← see `genesis.wizard_settings` (sihirbazMetni) in the appended section
   [[/if]]
-  From this seed lay the foundation of a world: its name, its cosmology, its naming language, the god himself (his title, appearance, temperament, portrait prompt), the first regions (at least one sea), the first celestial body and the god's first three sons. The sons are, in order, of Common, Rare and Legendary rarity. The Legendary one is the oldest and most dangerous; the Common one is the youngest and rules the smallest domains. There must be tension among them: their domains rub against each other, their secrets touch each other. Each son's obsession must be a desire that drives him to create something in the world. Give each son three powers born of his personality and define his existence (what he is made of, his state, his manifestation, his true name).
+  From this seed lay the foundation of a world: its name, its cosmology, its naming language, the first world itself (its kind, gravity, air, surface, climate age and how old it already is), the sun it circles, the creator god (title, appearance, temperament, portrait prompt; the creator's gender, form or lack of one follows the seed), the first regions ({regions_min} to {regions_max}, land or water as the world's kind and the seed call for), the most prominent body in the world's sky besides its sun, the cosmic travel resource (the one substance that makes travel between worlds possible, with its first deposit in one of the regions)[[if layered]], the second layer of the cosmos that lies beside the first world[[/if]] and the god's first {n} son(s). The sons are, in order, of {rarities} rarity. The higher a son's rarity, the older and mightier they are; the lowest is the youngest and rules the smallest domains. Give them relations of their own that grow from their domains and natures: they may stand together, keep apart, depend on one another or contend, as this world's seed and tone call for; do not default to rivalry. Each son's obsession must be a desire that drives them to create something in the world. 'Son' is only the pantheon's word for the creator's divine children: choose each one's gender, form or lack of one freely from the seed. Give each son three powers born of their personality and define their existence (what they are made of, their state, their manifestation, their true name).
   ```
   Variables: `god_name`, `seed`, `tone` (player input; if the wizard returned cleaned settings, its `seed`/`tone`
   override); `wizard_text` = rendered wizard settings.
@@ -505,13 +505,16 @@ sensory details 3–6. (Table in 08.)
 | naming_rule (isim_kurali) | string | Phonetic rules: which sounds, syllables, suffixes; with 6 example names |
 | tone (ton) | string | The tone of the narrative, 2 sentences |
 | god (tanri) | `schema.creator_god` | — |
-| regions (bolgeler) | array, minItems `genesis.regions_min`, maxItems `max(min, genesis.regions_max)` | The first regions the god founded with his own hand ({min}–{max}): at least one sea/ocean and the rest land regions; neighbouring, rubbing against each other |
+| world | object | New app: the first world itself: `type` (WorldType), `gravity`, `atmosphere`, `sea_pct` 0–100, `mountains_pct` 0–100, `moisture_pct` −100–100, `climate_era`, `age` (WorldAge); the player's choices override each value |
+| star | object | New app: the sun the first world circles: `name`, `type` (StarType), `description`; the first world begins as a planet of this star |
+| layer | object or null | New app, layered cosmos only: `name`, `kind` (DimensionKind except prime), `description` of the second layer |
+| regions (bolgeler) | array, minItems `genesis.regions_min`, maxItems `max(min, genesis.regions_max)` | The first regions the god founded by their own hand ({min}–{max}), neighbouring one another; land or water as the world's kind and the seed call for (the legacy "at least one sea" quota is gone) |
 | regions[].name | string | — |
-| regions[].subtype | string | continent, sea, ocean, desert belt, archipelago, mountain range… |
+| regions[].subtype | string | The kind of region in a few words, in this world's own terms (the legacy example list is gone) |
 | regions[].description | string | 3–5 sentences; refer to its neighbours |
 | regions[].danger, fertility, magic (tehlike, bereket, buyu) | integer 0–100 | — |
 | regions[].image_prompt | string | English photoreal landscape prompt. {shared.image_prompt_rules} |
-| first_celestial (ilk_gok) | object | The first celestial body the god hung in the sky |
+| first_celestial (ilk_gok) | object | The most prominent body in the world's sky besides its sun, whatever that sky holds |
 | first_celestial.name, subtype, description | string | — |
 | first_celestial.domain | enum Domains | — |
 | first_celestial.image_prompt | string | {shared.image_prompt_rules} |
@@ -1680,7 +1683,7 @@ RULES: This world is another world; another language, another sky, another logic
 
 Inspiration texts produced by other callers:
 - `cosmos.inspiration.mortal_intuition` (ufuk.js `sezgiyiDogur`): `The mortals called {me.ad}, while searching by {nasil}, found the way to a world no one knew.`
-- `cosmos.inspiration.genesis_extra_world` (server.js at genesis with a "small/large cosmos" wizard setting): `The {n+2}th world of Creation; sister of the first world, yet entirely different.`
+- `cosmos.inspiration.genesis_extra_world` (genesis with a small or large cosmos): `The {ordinal} world of this creation, grown from the same seed as the first world: {seed}`, plus ` It lies in {layer}, the second layer of the cosmos.` for a layered cosmos. The legacy text demanded that the world be "entirely different"; that mandate is gone (13 §10.19).
 - Player (`epoch.dunyaYarat`): free text cut to `TANRI.ilham_uzunluk`.
 - Son tool (`tools.js` world-birth tool): the son's `ilham` argument (see agents/tools part).
 
@@ -1957,37 +1960,32 @@ else `hardly {adj} at all`.
 
 ```
 CREATION SETTINGS{?template:  (template: {template name})}:
-- Magic density {buyu}/100: the world is {degree(buyu, "magical")}. The regions' magic values should be close to this.
-- Darkness {karanlik}/100: the world is {degree(karanlik, "dark")}. Danger values and the sons' temperaments should match this.
+- Magic density {magic}/100: the world is {degree(magic, "magical")}.[[if for_genesis]] The regions' magic values should be close to this.[[/if]]
+- Danger {danger}/100: the world is {degree(danger, "dangerous")}.[[if for_genesis]] The regions' danger values should be close to this.[[/if]]
 - Technology age: {tech label}. The peoples' tools, weapons and buildings are at this level.
 - Language structure: {language label}. The naming rule and all names have this sound texture.
-- Cosmos: {cosmos label}.
+- Cosmos: {cosmos label}[[if shape_line]]; {shape_line}[[/if]].
+[[if world_type_label]]- Kind of the first world: {world_type_label} ({world_type_key}).[[/if]]
+[[if sea]]- Water covers {sea}% of the first world's surface.[[/if]]
+[[if mountains]]- High ground makes up {mountains}% of the first world's land.[[/if]]
+[[if moisture]]- Moisture of the first world's land: {moisture}, on a scale from -100 (parched) to 100 (soaked).[[/if]]
+[[if climate_label]]- The first world begins in this climate age: {climate_label}.[[/if]]
+[[if age_label]]- Age of the first world when the first epoch begins: {age_label}.[[/if]]
+[[if layer_label]]- Kind of the second layer of the cosmos: {layer_label}.[[/if]]
 ```
+
+New app (13 §10.19): one renderer (`agents/context/creation.py`) serves both genesis (`for_genesis` true) and the
+awakening of the first peoples on the first world in the first epoch (`awaken.peoples`, `creation_text`, `for_genesis`
+false). The darkness slider became danger, and no line steers the sons' temperaments.
 
 Option tables (translate fully; keys kept for storage):
 - technology: `tas` stone age, `tunc` bronze age, `demir` iron age, `ortacag` middle ages, `ronesans` renaissance, `buhar` steam and gunpowder.
 - language: `akici` flowing, vowel-rich, soft (l, m, n, y); `sert` hard-consonanted, short-syllabled (k, t, g, r); `girtlak` guttural, from deep in the throat (h, ğ, q, kh) — **LANGUAGE-SPECIFIC: replace "ğ" with an English-friendly example, e.g. (h, gh, q, kh)**; `islikli` hissing, fricative (s, ş, z, ç) — **replace with (s, sh, z, ch)**; `uzun` long, agglutinative, many-syllabled; `karisik` free.
 - cosmos: `tek` single world; `kucuk` small cosmos ({1 + SIHIRBAZ.kucuk_kozmos} worlds); `buyuk` large cosmos ({1 + SIHIRBAZ.buyuk_kozmos} worlds).
 
-Templates (`SABLONLAR`) — preset seed/tone/sliders:
+Templates:
 
-| key | name | tone | magic | darkness | tech | language | peoples | cosmos | seed |
-|---|---|---|---|---|---|---|---|---|---|
-| karanlik_fantazi | Dark fantasy | gloomy, merciless, hope comes dear | 60 | 80 | demir | girtlak | 3 | tek | A world built on top of the corpses of gods who once died; every bounty comes from a rotting. |
-| mitoloji | Mythic age | epic, solemn, full of prophecies | 70 | 40 | tunc | akici | 3 | tek | Continents born from the sea and mountains bearing the sky; every river has a name, every name has a price. |
-| kozmik_korku | Cosmic horror | uneasy, silent, in the shadow of incomprehensible things | 50 | 90 | buhar | islikli | 2 | kucuk | A cosmos where something behind the sky is waking and the stars go out one by one. |
-| masal | Fairy tale | warm, strange, wise and a little sad | 85 | 25 | ortacag | uzun | 4 | tek | A world where animals talk, forests change places, and dreams are taxed. |
-| yildiz_mitosu | Star myth | vast, full of wonder, cosmic in scale | 55 | 45 | ronesans | akici | 3 | buyuk | A cosmos where star-wind fills the ships' sails and the worlds are strung like beads on a thread. |
-| kum_ve_kul | Sand and ash | harsh, arid, proud | 35 | 60 | tunc | sert | 3 | tek | A world where the sun once fell and left a desert; where water is worth more than money and ashes speak prophecies. |
-| primordial_dawn | Primordial dawn | raw, wondrous, everything happens for the first time | 75 | 35 | tas | karisik | 5 | tek | A young world still warm from its making; the first fires are being lit, the first words spoken, and every hill waits for a name. |
-| crowns_and_knives | Crowns and knives | cunning, political, every oath hides a blade | 12 | 55 | ortacag | sert | 4 | tek | A world where magic has all but faded and power lives in bloodlines, marriages and whispered debts; every throne is one betrayal from falling. |
-| drowned_world | Drowned world | salt-worn, restless, ruled by the tides | 55 | 50 | demir | islikli | 3 | tek | A world where the sea swallowed the continents long ago; peoples live on scattered islands, reefs and floating towns, and every map is wrong by the next tide. |
-| long_winter | Long winter | stern, enduring, warmth must be earned | 40 | 65 | demir | girtlak | 3 | tek | A world whose sun has dimmed for a thousand years; the ice creeps further south each winter and the peoples burn their histories to stay warm. |
-| after_the_fall | After the fall | elegiac, scavenging, haunted by a greater past | 45 | 70 | ortacag | uzun | 3 | tek | A world built on the ruins of a civilization far greater than any living one; its towers still hum, its roads lead nowhere, and no one remembers how its wonders were made. |
-| sky_islands | Sky islands | airy, adventurous, hopeful | 70 | 30 | ronesans | akici | 3 | kucuk | A cosmos of shattered worlds whose fragments drift on rivers of wind; peoples sail between the islands on kite-ships, and falling past the edge is the oldest fear. |
-| age_of_engines | Age of engines | curious, inventive, bright with possibility | 30 | 30 | buhar | karisik | 4 | tek | A world where the first engines have just learned to breathe; tinkers rival priests, railways cut through sacred forests, and every invention wakes an old spirit. |
-
-The last seven templates are new in Weavers of the Void and have no legacy key; their key is the stored `GenesisTemplate` value.
+The templates, their seeds and their typed values (storyteller, cosmos shape, first world kind, climate age, world age) are listed in `13-depth-expansion.md` §10.19, which supersedes the legacy table that stood here. Legacy keys map once on import: `karanlik_fantazi` → dark_fantasy, `mitoloji` → mythic_age, `kozmik_korku` → cosmic_horror, `masal` → fairy_tale, `yildiz_mitosu` → star_myth, `kum_ve_kul` → sand_and_ash.
 
 Validation (`sihirbazTemizle`): numbers rounded and clamped (magic/darkness 0–100, peoples 1–`SIHIRBAZ.halk_en_cok`);
 choices accepted only if an own key of the table (prototype keys like `__proto__` rejected) — defaults

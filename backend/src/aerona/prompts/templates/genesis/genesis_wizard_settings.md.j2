@@ -2,8 +2,31 @@
 {% set language_labels = {"flowing": "flowing, vowel-rich, soft (l, m, n, y)", "hard": "hard-consonanted, short-syllabled (k, t, g, r)", "guttural": "guttural, from deep in the throat (h, gh, q, kh)", "sibilant": "hissing, fricative (s, sh, z, ch)", "long": "long, agglutinative, many-syllabled", "free": "free"} %}
 {% set cosmos_labels = {"single": "a single world", "small": "a small cosmos (" ~ (1 + rules.setup_wizard.small_cosmos_worlds) ~ " worlds)", "large": "a large cosmos (" ~ (1 + rules.setup_wizard.large_cosmos_worlds) ~ " worlds)"} %}
 CREATION SETTINGS{% if template_name %} (template: {{ template_name }}){% endif %}:
-- Magic density {{ magic }}/100: the world is {{ magic | degree("magical") }}. The regions' magic values should be close to this.
-- Darkness {{ darkness }}/100: the world is {{ darkness | degree("dark") }}. Danger values and the sons' temperaments should match this.
+- Magic density {{ magic }}/100: the world is {{ magic | degree("magical") }}.{% if for_genesis %} The regions' magic values should be close to this.{% endif %}
+
+- Danger {{ danger }}/100: the world is {{ danger | degree("dangerous") }}.{% if for_genesis %} The regions' danger values should be close to this.{% endif %}
+
 - Technology age: {{ technology_labels[technology] }}. The peoples' tools, weapons and buildings are at this level.
 - Language structure: {{ language_labels[language] }}. The naming rule and all names have this sound texture.
-- Cosmos: {{ cosmos_labels[cosmos] }}.
+- Cosmos: {{ cosmos_labels[cosmos] }}{% if shape_line %}; {{ shape_line }}{% endif %}.
+{% if world_type_label %}
+- Kind of the first world: {{ world_type_label }} ({{ world_type_key }}).
+{% endif %}
+{% if sea is not none %}
+- Water covers {{ sea }}% of the first world's surface.
+{% endif %}
+{% if mountains is not none %}
+- High ground makes up {{ mountains }}% of the first world's land.
+{% endif %}
+{% if moisture is not none %}
+- Moisture of the first world's land: {{ moisture }}, on a scale from -100 (parched) to 100 (soaked).
+{% endif %}
+{% if climate_label %}
+- The first world begins in this climate age: {{ climate_label }}.
+{% endif %}
+{% if age_label %}
+- Age of the first world when the first epoch begins: {{ age_label }}.
+{% endif %}
+{% if layer_label %}
+- Kind of the second layer of the cosmos: {{ layer_label }}.
+{% endif %}

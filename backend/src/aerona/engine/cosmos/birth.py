@@ -65,6 +65,7 @@ class BirthRequest:
     parent_world_id: int | None = None
     new_star: bool = False
     new_star_type: StarType | None = None
+    galaxy_id: int | None = None
 
 
 @dataclass
@@ -154,7 +155,7 @@ async def _placement(session: AsyncSession, rng: SeededRandom, output: NewWorldO
     return rng.pick(stars).id, None
 
 
-async def _new_star(ctx: TickContext, output: NewWorldOutput, world_name: str, requested: StarType | None) -> StarRow:
+async def _new_star(ctx: TickContext, output: NewWorldOutput, world_name: str, requested: StarType | None, galaxy_id: int | None) -> StarRow:
     birth = ctx.rules.world_birth
     fallback_type = requested or StarType.YELLOW_DWARF
     name = output.star.name.strip() if output.star is not None and output.star.name.strip() else f"{world_name} Sun"
@@ -163,7 +164,11 @@ async def _new_star(ctx: TickContext, output: NewWorldOutput, world_name: str, r
     star_type = requested or (output.star.type if output.star is not None and output.star.name.strip() else fallback_type)
     description = output.star.description if output.star is not None else None
     return await create_star(
-        ctx.session, ctx.rules, ctx.rng("birth_star"), ctx.epoch, StarSpec(name, star_type, birth.star_brightness_base, birth.star_brightness_die, description)
+        ctx.session,
+        ctx.rules,
+        ctx.rng("birth_star"),
+        ctx.epoch,
+        StarSpec(name, star_type, birth.star_brightness_base, birth.star_brightness_die, description, galaxy_id=galaxy_id),
     )
 
 
@@ -173,7 +178,7 @@ async def _insert_world(ctx: TickContext, output: NewWorldOutput, request: Birth
     name = await NameRepository(session).unique_name(output.name)
     star_id, parent_id = await _placement(session, rng, output, request)
     if star_id is None and parent_id is None:
-        star_id = (await _new_star(ctx, output, name, request.new_star_type)).id
+        star_id = (await _new_star(ctx, output, name, request.new_star_type, request.galaxy_id)).id
     mechanics = mechanics_of(world_type)
     terrain = default_terrain(world_type, rules)
     physics = rules.world_physics

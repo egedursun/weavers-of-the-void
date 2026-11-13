@@ -1196,30 +1196,14 @@ Options (`SECENEKLER`):
 - `dil` (language texture): `akici` flowing, vowel-rich, soft (l, m, n, y) · `sert` hard consonants, short syllables (k, t, g, r) · `girtlak` guttural, deep (h, ğ, q, kh) · `islikli` sibilant, fricative (s, ş, z, ç) · `uzun` long, agglutinative, polysyllabic · `karisik` free.
 - `kozmos`: `tek` single world · `kucuk` small cosmos (1 + `SIHIRBAZ.kucuk_kozmos` worlds) · `buyuk` large cosmos (1 + `SIHIRBAZ.buyuk_kozmos` worlds).
 
-Templates (`SABLONLAR`), translated in full:
+Templates:
 
-| Key | Name | Tone | Magic | Dark | Tech | Lang | Peoples | Cosmos | Seed |
-|---|---|---|---|---|---|---|---|---|---|
-| karanlik_fantazi | Dark fantasy | gloomy, merciless, hope comes at a high price | 60 | 80 | iron | guttural | 3 | single | A world built on the corpses of gods who once died; every bounty comes from a rot. |
-| mitoloji | Mythic age | epic, solemn, full of prophecies | 70 | 40 | bronze | flowing | 3 | single | Continents born from the sea and mountains carrying the sky; every river has a name, every name a price. |
-| kozmik_korku | Cosmic horror | uneasy, silent, in the shadow of incomprehensible things | 50 | 90 | steam | sibilant | 2 | small | A cosmos where something behind the sky is awakening and the stars go out one by one. |
-| masal | Fairy tale | warm, strange, wise and a little sad | 85 | 25 | medieval | long | 4 | single | A world where animals talk, forests change places, and dreams are taxed. |
-| yildiz_mitosu | Star myth | vast, full of wonder, cosmic in scale | 55 | 45 | renaissance | flowing | 3 | large | A cosmos where star-wind fills the ships' sails and worlds are strung like beads on a thread. |
-| kum_ve_kul | Sand and ash | harsh, arid, proud | 35 | 60 | bronze | hard | 3 | single | A world where the sun once fell and left a desert; where water is worth more than money and ashes speak prophecies. |
-| primordial_dawn | Primordial dawn | raw, wondrous, everything happens for the first time | 75 | 35 | stone | free | 5 | single | A young world still warm from its making; the first fires are being lit, the first words spoken, and every hill waits for a name. |
-| crowns_and_knives | Crowns and knives | cunning, political, every oath hides a blade | 12 | 55 | medieval | hard | 4 | single | A world where magic has all but faded and power lives in bloodlines, marriages and whispered debts; every throne is one betrayal from falling. |
-| drowned_world | Drowned world | salt-worn, restless, ruled by the tides | 55 | 50 | iron | sibilant | 3 | single | A world where the sea swallowed the continents long ago; peoples live on scattered islands, reefs and floating towns, and every map is wrong by the next tide. |
-| long_winter | Long winter | stern, enduring, warmth must be earned | 40 | 65 | iron | guttural | 3 | single | A world whose sun has dimmed for a thousand years; the ice creeps further south each winter and the peoples burn their histories to stay warm. |
-| after_the_fall | After the fall | elegiac, scavenging, haunted by a greater past | 45 | 70 | medieval | long | 3 | single | A world built on the ruins of a civilization far greater than any living one; its towers still hum, its roads lead nowhere, and no one remembers how its wonders were made. |
-| sky_islands | Sky islands | airy, adventurous, hopeful | 70 | 30 | renaissance | flowing | 3 | small | A cosmos of shattered worlds whose fragments drift on rivers of wind; peoples sail between the islands on kite-ships, and falling past the edge is the oldest fear. |
-| age_of_engines | Age of engines | curious, inventive, bright with possibility | 30 | 30 | steam | free | 4 | single | A world where the first engines have just learned to breathe; tinkers rival priests, railways cut through sacred forests, and every invention wakes an old spirit. |
-
-The last seven templates are new in Weavers of the Void and have no legacy key; their key is the stored `GenesisTemplate` value.
+The templates, their seeds and their typed values (storyteller, cosmos shape, first world kind, climate age, world age) are listed in `13-depth-expansion.md` §10.19, which supersedes the legacy table that stood here. Legacy keys map once on import: `karanlik_fantazi` → dark_fantasy, `mitoloji` → mythic_age, `kozmik_korku` → cosmic_horror, `masal` → fairy_tale, `yildiz_mitosu` → star_myth, `kum_ve_kul` → sand_and_ash.
 
 `sihirbazTemizle(b)` (sanitize wizard input):
 - `sablon` (template) only if it is an own key of `SABLONLAR` (prototype keys such as "toString" are rejected).
 - Each field = `b[k] ?? template[k] ?? default`.
-- `buyu` (magic) / `karanlik` (darkness): round and clamp to 0–100 (null or '' → default `SIHIRBAZ.buyu` / `karanlik`).
+- `buyu` (magic) / `karanlik` (darkness, now **danger**): round and clamp to 0–100 (null or '' → default `setup_wizard.magic` / `setup_wizard.danger`). The new app adds the cosmos shape, the second layer kind and the first world's kind, water, high ground, moisture, climate age and age (13 §10.19).
 - `teknoloji` → valid key, else `demir` (iron). `dil` → valid key, else `karisik` (free).
 - `halk` (peoples): clamp to 1..`SIHIRBAZ.halk_en_cok`, default `SIHIRBAZ.halk`. `kozmos` → valid key, else `tek` (single).
 - `ton` (tone) = `b.ton || template.ton`, ≤300 chars, else null. `tohum` (seed) = `b.tohum || template.tohum`, ≤2000 chars, else null.
@@ -1228,7 +1212,8 @@ The last seven templates are new in Weavers of the Void and have no legacy key; 
 ```
 GENESIS SETTINGS[ (template: <name>)]:
 - Magic density <buyu>/100: the world is <degree(buyu, 'magical')>. Regions' magic values should be close to this.
-- Darkness <karanlik>/100: the world is <degree(karanlik, 'dark')>. Danger values and the sons' temperaments should fit this.
+- Danger <danger>/100: the world is <degree(danger, 'dangerous')>. Regions' danger values should be close to this.
+  (new app: the first world's kind, surface, climate age and age, and the cosmos shape and second layer follow when chosen; 13 §10.19)
 - Technology era: <tech label>. The peoples' tools, weapons and buildings are at this level.
 - Language structure: <lang label>. The naming rule and all names use this sound texture.
 - Cosmos: <cosmos label>.
@@ -1236,8 +1221,8 @@ GENESIS SETTINGS[ (template: <name>)]:
 `degree(n, a)`: n≥80 "very a"; ≥60 "a"; ≥40 "moderately a"; ≥20 "slightly a"; else "hardly a at all".
 
 Applied in code after the LLM genesis:
-- `bolgeEgilimi(stats, p)` (region bias): each genesis region's `buyu` and `tehlike` = `round(v*(100−c)/100 + target*c/100)`, with `c = SIHIRBAZ.cekim`, targets = magic and darkness, missing values = 50.
-- The server wakes `p.halk` peoples (`halklariUyandir`), then births `ekDunyaSayisi(p)` (extra world count: single 0 / small `kucuk_kozmos` / large `buyuk_kozmos`) extra worlds via `kozmos.dunyaDogur({ilham: "The <n>th world of creation; sister of the first world but entirely different."})`.
+- `bolgeEgilimi(stats, p)` (region bias): each genesis region's `buyu` and `tehlike` = `round(v*(100−c)/100 + target*c/100)`, with `c = setup_wizard.setting_pull_pct`, targets = magic and danger, missing values = 50. This is the only pull: the model's region values are stored as written before it, and the first world's danger becomes the mean of its pulled regions.
+- The server wakes `p.halk` peoples (`halklariUyandir`), then births `ekDunyaSayisi(p)` (extra world count: single 0 / small `kucuk_kozmos` / large `buyuk_kozmos`) extra worlds via `kozmos.dunyaDogur`. New app: the inspiration is "The <n>th world of this creation, grown from the same seed as the first world: <seed>", with no mandate to differ; the first world is born around its own sun, and the further worlds circle that sun, circle suns of their own or lie in a second layer, by the cosmos shape (13 §10.19).
 - The settings are saved in `dunya.yaratilis_ayar`.
 
 Rules `SIHIRBAZ` (group "Genesis wizard"):
@@ -1245,7 +1230,7 @@ Rules `SIHIRBAZ` (group "Genesis wizard"):
 | Key (new) | Old | English | Default | Min | Max |
 |---|---|---|---|---|---|
 | wizard.magic | buyu | Default magic density | 50 | 0 | 100 |
-| wizard.darkness | karanlik | Default darkness | 50 | 0 | 100 |
+| wizard.danger | karanlik | Default danger | 50 | 0 | 100 |
 | wizard.peoples | halk | Default number of first peoples | 2 | 1 | 50 |
 | wizard.peoples_max | halk_en_cok | Max first peoples | 5 | 1 | 50 |
 | wizard.small_cosmos_extra | kucuk_kozmos | Small cosmos: worlds added at genesis | 1 | 0 | 20 |

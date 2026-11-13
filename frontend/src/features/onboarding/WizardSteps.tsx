@@ -1,9 +1,10 @@
 import {
   Check,
   Feather,
+  Globe,
   Lock,
-  Moon,
   PenLine,
+  ShieldAlert,
   Sparkles,
   Users,
   Wand2,
@@ -36,6 +37,7 @@ import { Label, Muted, Text } from '@/components/typography'
 import { ImageStylePicker } from '@/features/images/ImageStylePicker'
 import { romanNumeral } from '@/features/pantheon/labels'
 import { Counter } from './Counter'
+import { CosmosShapeFields, FirstWorldFields } from './WorldShapeFields'
 import {
   type CosmosSize,
   type LanguageTexture,
@@ -63,8 +65,9 @@ import {
   TECHNOLOGY_HINT,
   TECHNOLOGY_ICON,
   TEMPLATE_ICON,
+  SHAPE_ICON,
   TONE_SUGGESTIONS,
-  darknessLevel,
+  dangerLevel,
   magicLevel,
 } from './wizardVisuals'
 
@@ -72,14 +75,19 @@ function TemplateCard({
   template,
   chosen,
   technology,
+  worldKind,
+  shape,
   onPick,
 }: {
   template: WizardTemplate
   chosen: boolean
   technology: string
+  worldKind: string | null
+  shape: string | null
   onPick: () => void
 }) {
   const Icon = TEMPLATE_ICON[template.key]
+  const ShapeIcon = SHAPE_ICON[template.shape]
   return (
     <Button
       role='radio'
@@ -107,8 +115,8 @@ function TemplateCard({
           {template.magic}
         </Badge>
         <Badge size='sm' variant='outline'>
-          <Moon />
-          {template.darkness}
+          <ShieldAlert />
+          {template.danger}
         </Badge>
         <Badge size='sm' variant='outline'>
           {technology}
@@ -117,6 +125,18 @@ function TemplateCard({
           <Users />
           {template.peoples}
         </Badge>
+        {worldKind && (
+          <Badge size='sm' variant='outline'>
+            <Globe />
+            {worldKind}
+          </Badge>
+        )}
+        {shape && (
+          <Badge size='sm' variant='outline'>
+            <ShapeIcon />
+            {shape}
+          </Badge>
+        )}
       </span>
     </Button>
   )
@@ -174,6 +194,19 @@ export function TemplateStep({
             chosen={draft.template === template.key}
             technology={
               options.technology[template.technology] ?? template.technology
+            }
+            worldKind={
+              template.world_type
+                ? (options.world_types.find(
+                    (item) => item.world_type === template.world_type
+                  )?.label ?? template.world_type)
+                : null
+            }
+            shape={
+              template.shape === 'one_sun'
+                ? null
+                : (options.shapes.find((item) => item.shape === template.shape)
+                    ?.label ?? template.shape)
             }
             onPick={() => onPick(template.key)}
           />
@@ -297,7 +330,7 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
     <div className='flex min-w-0 flex-col gap-5'>
       <FormRow
         label='World seed'
-        description='One idea, as strange as you like. From it grow the cosmology, the language, the first land and the first star.'
+        description='One idea, in your own words. From it grow the cosmology, the language, the first world and its sky.'
       >
         {(id) => (
           <div className='flex w-full min-w-0 flex-col gap-1'>
@@ -364,18 +397,24 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           onChange={(magic) => update({ magic })}
         />
         <RangeField
-          label='Darkness'
-          icon={Moon}
-          hint='How cruel and grim its stories run'
-          value={draft.darkness}
+          label='Danger'
+          icon={ShieldAlert}
+          hint='How perilous its lands are'
+          value={draft.danger}
           min={0}
           max={PERCENT_MAX}
-          level={darknessLevel(draft.darkness)}
-          lowLabel='Gentle'
-          highLabel='Merciless'
-          onChange={(darkness) => update({ darkness })}
+          level={dangerLevel(draft.danger)}
+          lowLabel='Safe'
+          highLabel='Deadly'
+          onChange={(danger) => update({ danger })}
         />
       </div>
+      <FirstWorldFields
+        draft={draft}
+        update={update}
+        options={options}
+        peoplesMax={peoplesMax}
+      />
       <SettingGroup
         label='Technology'
         description='Where the first peoples stand when the world begins.'
@@ -400,13 +439,19 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
       </SettingGroup>
       <SettingGroup
         label='Cosmos'
-        description='How many worlds wait in the void beside the first.'
+        description='How many worlds wait beside the first, and how they are placed.'
       >
         <ChoiceTiles
           label='Cosmos'
           value={draft.cosmos}
           options={cosmos}
           onChange={(value) => update({ cosmos: value })}
+        />
+        <CosmosShapeFields
+          draft={draft}
+          update={update}
+          options={options}
+          peoplesMax={peoplesMax}
         />
       </SettingGroup>
       <SettingGroup

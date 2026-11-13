@@ -26,7 +26,9 @@ class LegacyFixture:
             connection.commit()
 
     def enum(self, name: str, english: str) -> str:
-        return self.vocabulary.encode(name, english)
+        legacy = self.vocabulary.encode(name, english)
+        assert legacy is not None, f"{name} {english} has no legacy value"
+        return legacy
 
     def code(self, kind: str) -> str:
         return self.vocabulary.code(kind)
@@ -103,6 +105,7 @@ def build_world(fixture: LegacyFixture) -> dict[str, int]:
         rule_overrides={threshold: 500, "UNKNOWN.key": 3},
         creator_mood=fixture.keyed("creator_mood_axis", contentment=60, anger=10, interest=70, loneliness=20),
         creator_passions=fixture.blob("creator_passions", passions=[fixture.enum("creator_passion", "mercy")], automatic=True),
+        genesis_settings={"sablon": "mitoloji", "buyu": 70, "karanlik": 30, "teknoloji": "tunc", "dil": "akici", "halk": 3, "kozmos": "kucuk", "ton": "solemn"},
     )
     fixture.insert("stars", id=1, name="Sol", kind=fixture.enum("star_type", "yellow_dwarf"), brightness=70, x=0, y=0, created_epoch=1)
     terrain = fixture.blob("terrain", sea=0.5, mountains=1.0, humidity=0.0)

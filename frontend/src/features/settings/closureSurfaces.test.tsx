@@ -114,13 +114,29 @@ describe('genesis record', () => {
         settings: {
           template: 'mythic_age',
           magic: 60,
-          darkness: 30,
+          danger: 30,
           technology: 'bronze',
           language_texture: 'flowing',
           peoples: 3,
           cosmos_size: 'small',
+          cosmos_shape: 'layered',
+          layer_kind: 'astral',
           storyteller: 'rising',
+          world_type: 'ocean',
+          sea_pct: 80,
+          mountains_pct: null,
+          moisture_pct: -20,
+          climate_era: 'rain',
+          world_age: 'old',
         },
+      },
+      'GET /api/genesis/wizard': {
+        templates: [{ key: 'mythic_age', name: 'Mythic age' }],
+        world_types: [{ world_type: 'ocean', label: 'Ocean world' }],
+        climate_eras: [{ era: 'rain', label: 'Rain age' }],
+        world_ages: { old: 'Old' },
+        shapes: [{ shape: 'layered', label: 'Layered' }],
+        layer_kinds: [{ kind: 'astral', label: 'Astral plane' }],
       },
     })
     await expect
@@ -129,6 +145,37 @@ describe('genesis record', () => {
     await expect.element(screen.getByText('Mythic age')).toBeVisible()
     await expect.element(screen.getByText('Flowing')).toBeVisible()
     await expect.element(screen.getByText('Rising')).toBeVisible()
+    await expect.element(screen.getByText('Ocean world')).toBeVisible()
+    await expect.element(screen.getByText('Astral plane')).toBeVisible()
+    await expect.element(screen.getByText('Rain age')).toBeVisible()
+    await expect.element(screen.getByText('80%')).toBeVisible()
+    await expect.element(screen.getByText('-20')).toBeVisible()
+    await expect.element(screen.getByText('Chosen by the seed')).toBeVisible()
+  })
+
+  it('reads a world made before the first world could be chosen', async () => {
+    const { screen } = await renderScreen(<GenesisRecord />, {
+      'GET /api/genesis/settings': {
+        lore_language: 'english',
+        seed_idea: 'Old seed',
+        tone: 'calm',
+        settings: {
+          template: null,
+          magic: 50,
+          danger: 50,
+          technology: 'iron',
+          language_texture: 'free',
+          peoples: 2,
+          cosmos_size: 'single',
+          cosmos_shape: 'one_sun',
+          storyteller: 'cyclic',
+        },
+      },
+    })
+    await expect.element(screen.getByText('Old seed')).toBeVisible()
+    await expect
+      .element(screen.getByText('Chosen by the seed').first())
+      .toBeVisible()
   })
 })
 

@@ -11,7 +11,22 @@ from aerona.db.tables.cosmos import CosmosRow, CreatorMoodInputRow, CreatorRow
 from aerona.domain.enums.chronicle import NotificationCategory
 from aerona.domain.enums.creator import CreatorMoodAxis
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.world import Atmosphere, ClimateEra, Discovery, FateMode, Gravity, LoreLanguage, SonDistribution, StarType, WorldType
+from aerona.domain.enums.world import (
+    Atmosphere,
+    ClimateEra,
+    CosmosSize,
+    Discovery,
+    FateMode,
+    GenesisTemplate,
+    Gravity,
+    LanguageTexture,
+    LoreLanguage,
+    SonDistribution,
+    StarType,
+    TechnologyEra,
+    WorldType,
+)
+from aerona.domain.models.genesis import GenesisSettings
 from aerona.migration.legacy import blobs
 from aerona.migration.legacy.context import MigrationContext
 from aerona.migration.legacy.idmap import LegacyKind
@@ -20,10 +35,34 @@ from aerona.migration.legacy.values import as_dict, as_float, as_int, as_list, a
 
 UNKNOWN_VALUE = "unknown value"
 DEFAULTED = "defaulted value"
-NOT_CARRIED = "not carried"
 MOOD_DEFAULT = 50
 FIRST_EPOCH = 1
 FIRST_ORBIT = 1.0
+LEGACY_TEMPLATES: dict[str, GenesisTemplate] = {
+    "karanlik_fantazi": GenesisTemplate.DARK_FANTASY,
+    "mitoloji": GenesisTemplate.MYTHIC_AGE,
+    "kozmik_korku": GenesisTemplate.COSMIC_HORROR,
+    "masal": GenesisTemplate.FAIRY_TALE,
+    "yildiz_mitosu": GenesisTemplate.STAR_MYTH,
+    "kum_ve_kul": GenesisTemplate.SAND_AND_ASH,
+}
+LEGACY_TECHNOLOGY: dict[str, TechnologyEra] = {
+    "tas": TechnologyEra.STONE,
+    "tunc": TechnologyEra.BRONZE,
+    "demir": TechnologyEra.IRON,
+    "ortacag": TechnologyEra.MEDIEVAL,
+    "ronesans": TechnologyEra.RENAISSANCE,
+    "buhar": TechnologyEra.STEAM,
+}
+LEGACY_TEXTURES: dict[str, LanguageTexture] = {
+    "akici": LanguageTexture.FLOWING,
+    "sert": LanguageTexture.HARD,
+    "girtlak": LanguageTexture.GUTTURAL,
+    "islikli": LanguageTexture.SIBILANT,
+    "uzun": LanguageTexture.LONG,
+    "karisik": LanguageTexture.FREE,
+}
+LEGACY_COSMOS: dict[str, CosmosSize] = {"tek": CosmosSize.SINGLE, "kucuk": CosmosSize.SMALL, "buyuk": CosmosSize.LARGE}
 
 
 def rng_seed(name: str, seed_idea: str) -> int:
@@ -204,11 +243,46 @@ def _notification_prefs(context: MigrationContext, state: LegacyRow) -> dict[Not
     return prefs
 
 
+def legacy_template(raw: str) -> GenesisTemplate | None:
+    if raw in LEGACY_TEMPLATES:
+        return LEGACY_TEMPLATES[raw]
+    return GenesisTemplate(raw) if raw in set(GenesisTemplate) else None
+
+
+def legacy_percent(raw: dict[str, object], key: str, fallback: int) -> int:
+    value = as_int(raw.get(key))
+    return fallback if value is None else max(PERCENT_MIN, min(PERCENT_MAX, value))
+
+
+def legacy_genesis_settings(context: MigrationContext, state: LegacyRow) -> GenesisSettings | None:
+    raw = as_dict(state.json("genesis_settings"))
+    if not raw:
+        return None
+    wizard = context.rules.setup_wizard
+    texts = {key: (as_text(raw.get(key)) or "").strip() for key in ("sablon", "teknoloji", "dil", "kozmos", "ton", "tohum")}
+    for key, table in (("teknoloji", LEGACY_TECHNOLOGY), ("dil", LEGACY_TEXTURES), ("kozmos", LEGACY_COSMOS)):
+        if texts[key] and texts[key] not in table:
+            context.report.warn(DEFAULTED, "world_state", f"genesis wizard {key} {texts[key]!r} read as the default")
+    template = legacy_template(texts["sablon"]) if texts["sablon"] else None
+    if texts["sablon"] and template is None:
+        context.report.warn(UNKNOWN_VALUE, "world_state", f"genesis wizard template {texts['sablon']!r} dropped")
+    peoples = as_int(raw.get("halk"))
+    return GenesisSettings(
+        template=template,
+        magic=legacy_percent(raw, "buyu", wizard.magic),
+        danger=legacy_percent(raw, "karanlik", wizard.danger),
+        technology=LEGACY_TECHNOLOGY.get(texts["teknoloji"], TechnologyEra.IRON),
+        language_texture=LEGACY_TEXTURES.get(texts["dil"], LanguageTexture.FREE),
+        peoples=max(1, min(wizard.peoples_max, peoples if peoples is not None else wizard.peoples)),
+        cosmos_size=LEGACY_COSMOS.get(texts["kozmos"], CosmosSize.SINGLE),
+        tone=texts["ton"] or None,
+        seed_idea=texts["tohum"] or None,
+    )
+
+
 async def import_cosmos(context: MigrationContext, state: LegacyRow) -> CosmosRow:
     name = state.required_text("name", "Cosmos")
     seed_idea = state.required_text("seed_idea", name)
-    if state.text("genesis_settings") is not None:
-        context.report.warn(NOT_CARRIED, "world_state", "genesis wizard settings are not carried; they only shape a new genesis")
     cosmos = CosmosRow(
         id=SINGLETON_ID,
         name=name,
@@ -232,6 +306,7 @@ async def import_cosmos(context: MigrationContext, state: LegacyRow) -> CosmosRo
         notification_prefs=_notification_prefs(context, state),
         rules_snapshot=snapshot_rules(context.rules),
         rules_snapshot_at=datetime.now(UTC),
+        genesis_settings=legacy_genesis_settings(context, state),
     )
     context.session.add(cosmos)
     await context.session.flush()
@@ -245,7 +320,7 @@ async def import_creator(context: MigrationContext, state: LegacyRow) -> Creator
 
     def mood_value(axis: CreatorMoodAxis) -> int:
         legacy = vocabulary.encode("creator_mood_axis", axis.value)
-        value = as_int(mood.get(legacy))
+        value = as_int(mood.get(legacy)) if legacy is not None else None
         if value is None:
             context.report.warn(DEFAULTED, "creator", f"mood {axis.value} set to {MOOD_DEFAULT}")
             return MOOD_DEFAULT

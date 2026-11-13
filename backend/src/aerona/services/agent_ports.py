@@ -13,6 +13,7 @@ from aerona.agents.runtime import AgentRuntime
 from aerona.agents.summoner import complete_son_powers
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.models.genesis import GenesisOutcome
 from aerona.epoch import retry
 from aerona.rules.registry import Rules
 from aerona.services.images.records import resolve_target
@@ -69,7 +70,7 @@ class AgentGenesisAuthor:
         self._runtime = runtime
         self._rules = rules
 
-    async def create(self, request: GenesisRequest) -> int:
+    async def create(self, request: GenesisRequest) -> GenesisOutcome:
         order = AgentGenesisRequest(
             god_name=request.creator_name,
             seed_idea=request.seed,

@@ -471,7 +471,9 @@ def summon() -> genesis.SummonSonContext:
 
 
 def awaken() -> genesis.AwakenPeoplesContext:
-    return genesis.AwakenPeoplesContext(lore_language=LORE, rules=RULES, world_name="Aerona", world_summary="SUMMARY", map="MAP", count=2, earlier=["Kael"])
+    return genesis.AwakenPeoplesContext(
+        lore_language=LORE, rules=RULES, world_name="Aerona", world_summary="SUMMARY", map="MAP", count=2, earlier=["Kael"], creation_text="CREATION SETTINGS:"
+    )
 
 
 def revelation() -> genesis.RevelationContext:
@@ -892,15 +894,25 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
         seed="A salt world",
         tone="grim",
         wizard_text="CREATION SETTINGS:",
+        layered=True,
     ),
     P.GENESIS_WIZARD_SETTINGS: lambda: genesis.GenesisWizardContext(
         rules=RULES,
         template_name="Dark fantasy",
         magic=60,
-        darkness=85,
+        danger=85,
         technology=TechnologyEra.IRON,
         language=LanguageTexture.GUTTURAL,
         cosmos=CosmosSize.SMALL,
+        shape_line="the further worlds lie in a second layer of the cosmos",
+        layer_label="Astral plane",
+        world_type_label="Ocean world",
+        world_type_key="ocean",
+        sea=80,
+        mountains=20,
+        moisture=-10,
+        climate_label="Rain age",
+        age_label="Old",
     ),
     P.SON_POWERS_SYSTEM: son_powers,
     P.SON_POWERS_USER: son_powers,

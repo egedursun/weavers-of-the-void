@@ -105,3 +105,68 @@ def test_a_default_species_for_scale_is_caught() -> None:
     for text in ("a colossal beast with tiny human figures for scale", "a tower with humans for scale", "the gate, with human figures before it"):
         assert "assumed species" in rules_hit(module, PROMPT, text), text
     assert "assumed species" not in rules_hit(module, PROMPT, "a beast with small figures of the folk who live there for scale")
+
+
+GENESIS_SCHEMA = REPOSITORY_ROOT / "backend/src/aerona/prompts/schemas/genesis.py"
+TOOL_TEXT = REPOSITORY_ROOT / "backend/src/aerona/prompts/tools/son.py"
+WIZARD_SCREEN = REPOSITORY_ROOT / "frontend/src/features/onboarding/WizardSteps.tsx"
+TEMPLATE_CATALOG = REPOSITORY_ROOT / "backend/src/aerona/catalog/genesis.py"
+
+
+def test_a_mandatory_price_on_a_creation_is_caught() -> None:
+    module = checker()
+    for text in (
+        "long use carries a price of the world's own logic",
+        "every gift must bear a cost",
+        "the rite always carries its toll",
+    ):
+        assert "mandatory price" in rules_hit(module, PROMPT, text), text
+    assert "mandatory price" not in rules_hit(module, PROMPT, "What long use does to those who use it; write none if it does nothing")
+    assert "mandatory price" not in rules_hit(module, PROMPT, "its requirements met and its price paid")
+
+
+def test_a_forced_difference_between_worlds_or_peoples_is_caught() -> None:
+    module = checker()
+    for text in ("sister of the first world but entirely different.", "The new ones must differ from them; give them relations"):
+        assert "forced difference" in rules_hit(module, PROMPT, text), text
+    assert "forced difference" not in rules_hit(module, PROMPT, "Each new people is a people of its own beside them")
+    assert "forced difference" not in rules_hit(module, PROMPT, "The secondary backup folder must differ from the main backup folder.")
+
+
+def test_a_geography_quota_is_caught() -> None:
+    module = checker()
+    for text in ("the first regions (2 to 5, at least one of them a sea)", "at least one sea or ocean and the rest land regions"):
+        assert "geography quota" in rules_hit(module, PROMPT, text), text
+    assert "geography quota" not in rules_hit(module, PROMPT, "land or water as the world's kind and the seed call for")
+    assert "geography quota" not in rules_hit(module, PROMPT, "A world keeps at least one season.")
+
+
+def test_a_canned_creation_line_is_caught() -> None:
+    module = checker()
+    canned = "{creator.name} named the void {world.name}, separated by their own hand the lands and waters of {names}"
+    assert "canned cosmogony" in rules_hit(module, PROMPT, canned)
+    assert "canned cosmogony" not in rules_hit(module, PROMPT, "{creator} made the world {world}, its first regions {names}, and {star} in its sky.")
+
+
+def test_an_example_list_in_the_creation_texts_is_caught() -> None:
+    module = checker()
+    for text in (
+        "continent, sea, ocean, desert belt, archipelago, mountain range…",
+        "continent, inland sea, desert belt, archipelago, …",
+        "if the light the world wants (yellow, red, blue, black sun, dead star…) exists",
+        "a price (an addiction, a change in the body or mind, a debt, a decay or another cost)",
+    ):
+        assert "creation example list" in rules_hit(module, GENESIS_SCHEMA, text), text
+    assert "creation example list" not in rules_hit(module, GENESIS_SCHEMA, "The kind of region in a few words, in this world's own terms")
+    assert "creation example list" not in rules_hit(module, TOOL_TEXT, "amount, commodity, epochs, region_id, mortal_id...")
+
+
+def fed_rules(module: ModuleType, path: Path, text: str) -> set[str]:
+    return {finding.rule for finding in module.matches(path, 1, text, module.under(path, module.MODEL_FEEDING))}
+
+
+def test_the_wizard_and_its_templates_are_held_to_the_model_rules() -> None:
+    module = checker()
+    assert "forced strangeness" in fed_rules(module, WIZARD_SCREEN, "One idea, as strange as you like.")
+    assert "forced strangeness" in fed_rules(module, TEMPLATE_CATALOG, "warm, strange, wise")
+    assert not fed_rules(module, REPOSITORY_ROOT / "frontend/src/features/entity/sample.tsx", "a stranger arrives")

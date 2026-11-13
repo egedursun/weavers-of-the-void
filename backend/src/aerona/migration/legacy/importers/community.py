@@ -71,6 +71,8 @@ def _merged(context: MigrationContext, payload: dict[str, Any]) -> Society:
     prices = as_dict(vocabulary.field("society", payload, "prices"))
     for social_class in SocialClass:
         legacy = vocabulary.encode("social_class", social_class.value)
+        if legacy is None:
+            continue
         share = as_float(shares.get(legacy))
         if share is not None:
             society.shares[social_class] = max(0.0, min(SHARE_CEILING, share))
@@ -79,6 +81,8 @@ def _merged(context: MigrationContext, payload: dict[str, Any]) -> Society:
             society.satisfaction[social_class] = max(PERCENT_MIN, min(PERCENT_MAX, content))
     for commodity in Commodity:
         legacy = vocabulary.encode("commodity", commodity.value)
+        if legacy is None:
+            continue
         stock = as_int(stocks.get(legacy))
         if stock is not None:
             society.stocks[commodity] = max(0, stock)

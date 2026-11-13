@@ -33162,6 +33162,11 @@ export interface components {
       imposed: boolean
     }
     ClimateEra: 'temperate' | 'drought' | 'rain' | 'ice_age' | 'scorching'
+    ClimateOption: {
+      era: components['schemas']['ClimateEra']
+      label: string
+      description: string
+    }
     ClimateShare: {
       biome: components['schemas']['Biome']
       name: string
@@ -34207,6 +34212,7 @@ export interface components {
       schools: components['schemas']['SchoolView'][]
       sittings: components['schemas']['ExamSittingView'][]
     }
+    CosmosShape: 'one_sun' | 'many_suns' | 'layered'
     CosmosSize: 'single' | 'small' | 'large'
     CosmosView: {
       stars: components['schemas']['StarRecord'][]
@@ -39490,12 +39496,20 @@ export interface components {
     GenesisSettings: {
       template?: components['schemas']['GenesisTemplate'] | null
       magic: number
-      darkness: number
+      danger: number
       technology: components['schemas']['TechnologyEra']
       language_texture: components['schemas']['LanguageTexture']
       peoples: number
       cosmos_size: components['schemas']['CosmosSize']
+      cosmos_shape: components['schemas']['CosmosShape']
+      layer_kind?: components['schemas']['DimensionKind'] | null
       storyteller: components['schemas']['StorytellerProfile']
+      world_type?: components['schemas']['WorldType'] | null
+      sea_pct?: number | null
+      mountains_pct?: number | null
+      moisture_pct?: number | null
+      climate_era?: components['schemas']['ClimateEra'] | null
+      world_age?: components['schemas']['WorldAge'] | null
       tone?: string | null
       seed_idea?: string | null
     }
@@ -39513,6 +39527,12 @@ export interface components {
       | 'after_the_fall'
       | 'sky_islands'
       | 'age_of_engines'
+      | 'many_suns'
+      | 'layered_realms'
+      | 'living_world'
+      | 'dreaming_world'
+      | 'generation_ship'
+      | 'without_magic'
     GenomeEditInput: {
       mortal_id: number
       beauty?: number | null
@@ -42613,6 +42633,11 @@ export interface components {
       enacted_epoch: number
       holder_id: number | null
       locked: string[]
+    }
+    LayerOption: {
+      kind: components['schemas']['DimensionKind']
+      label: string
+      description: string
     }
     LeadershipMode: 'achieved' | 'ascribed' | 'state'
     LearningBiasDeleteInput: {
@@ -50653,6 +50678,11 @@ export interface components {
       widows: number
       locked: string[]
     }
+    ShapeOption: {
+      shape: components['schemas']['CosmosShape']
+      label: string
+      hint: string
+    }
     ShareView: {
       holder: components['schemas']['NodeRef']
       share: number
@@ -56204,12 +56234,20 @@ export interface components {
     WizardInput: {
       template?: string | null
       magic?: unknown
-      darkness?: unknown
+      danger?: unknown
       technology?: string | null
       language?: string | null
       peoples?: unknown
       cosmos?: string | null
+      shape?: string | null
+      layer_kind?: string | null
       storyteller?: string | null
+      world_type?: string | null
+      sea_pct?: unknown
+      mountains_pct?: unknown
+      moisture_pct?: unknown
+      climate_era?: string | null
+      world_age?: string | null
       tone?: string | null
       seed?: string | null
     }
@@ -56221,6 +56259,13 @@ export interface components {
         [key: string]: string
       }
       cosmos: components['schemas']['CosmosOption'][]
+      shapes: components['schemas']['ShapeOption'][]
+      layer_kinds: components['schemas']['LayerOption'][]
+      world_types: components['schemas']['WorldTypeOption'][]
+      climate_eras: components['schemas']['ClimateOption'][]
+      world_ages: {
+        [key: string]: string
+      }
       storyteller: {
         [key: string]: string
       }
@@ -56235,12 +56280,17 @@ export interface components {
       name: string
       tone: string
       magic: number
-      darkness: number
+      danger: number
       technology: components['schemas']['TechnologyEra']
       language: components['schemas']['LanguageTexture']
       peoples: number
       cosmos: components['schemas']['CosmosSize']
       seed: string
+      storyteller: components['schemas']['StorytellerProfile']
+      shape: components['schemas']['CosmosShape']
+      world_type?: components['schemas']['WorldType'] | null
+      climate_era?: components['schemas']['ClimateEra'] | null
+      world_age?: components['schemas']['WorldAge'] | null
     }
     WordGlossOutput: {
       word: string
@@ -56939,6 +56989,11 @@ export interface components {
       world_type: components['schemas']['WorldType']
       label: string
       palette: components['schemas']['WorldPalette']
+    }
+    WorldTypeOption: {
+      world_type: components['schemas']['WorldType']
+      label: string
+      description: string
     }
     WorldWiki: {
       world: components['schemas']['WorldRecord']
@@ -115838,6 +115893,9 @@ export const cosmicFeatureKindValues: ReadonlyArray<
 export const cosmicOfficeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmicOffice']
 > = ['dead', 'gates', 'stars', 'oaths', 'herald', 'hunt']
+export const cosmosShapeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CosmosShape']
+> = ['one_sun', 'many_suns', 'layered']
 export const cosmosSizeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmosSize']
 > = ['single', 'small', 'large']
@@ -117554,6 +117612,12 @@ export const genesisTemplateValues: ReadonlyArray<
   'after_the_fall',
   'sky_islands',
   'age_of_engines',
+  'many_suns',
+  'layered_realms',
+  'living_world',
+  'dreaming_world',
+  'generation_ship',
+  'without_magic',
 ]
 export const giftOccasionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GiftOccasion']

@@ -18,10 +18,13 @@ from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.cosmography import DimensionKind, WorldAge
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.mind import Attribute, Facet
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.world import ClimateEra, CosmosShape, CosmosSize, GenesisTemplate, WorldType
+from aerona.domain.models.genesis import GenesisSettings
 from aerona.domain.models.profiles import EntityDepth
 from aerona.engine.cosmos.ladder import ensure_ladder
 from aerona.rules.registry import Rules
@@ -120,6 +123,31 @@ async def test_book_and_codex_write_the_creators_hand_and_fates(session: AsyncSe
     assert "The sky dimmed over the salt." in codex
     assert "**Fate**" in codex
     assert "- Status: active" in codex
+
+
+async def test_book_and_codex_tell_how_the_world_was_made(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
+    world.cosmos.genesis_settings = GenesisSettings(
+        template=GenesisTemplate.DROWNED_WORLD,
+        magic=55,
+        danger=35,
+        peoples=3,
+        cosmos_size=CosmosSize.SMALL,
+        cosmos_shape=CosmosShape.LAYERED,
+        layer_kind=DimensionKind.ASTRAL,
+        world_type=WorldType.OCEAN,
+        sea_pct=85,
+        climate_era=ClimateEra.RAIN,
+        world_age=WorldAge.OLD,
+        tone="restless",
+    )
+    await session.flush()
+    page = await book_page(session, rules)
+    codex = await codex_markdown(session, rules, CodexLinks())
+    for text in ("How the world was made", "Drowned world", "Danger", "35/100", "Layered", "Astral plane", "Ocean world", "85%", "Rain age", "Old"):
+        assert text in page.html, text
+        assert text in codex, text
+    assert "| Kind of the first world | Ocean world |" in codex
+    assert "| High ground | Chosen by the seed |" in codex
 
 
 async def test_book_is_never_truncated(session: AsyncSession, rules: Rules, world: Cosmos) -> None:

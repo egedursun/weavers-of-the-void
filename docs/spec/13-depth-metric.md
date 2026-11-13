@@ -7,43 +7,53 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 
 | Node type | A | B | C |
 |---|---:|---:|---:|
-| region | 245 / 215 met | 403 / 160 met | 337 / 120 met |
-| place | 71 / 25 met | 138 / 20 met | 228 / 15 met |
-| resource | 58 / 35 met | 57 / 50 met | 168 / 30 met |
-| settlement | 988 / 280 met | 947 / 230 met | 399 / 145 met |
-| species | 203 / 150 met | 183 / 150 met | 133 / 95 met |
-| people | 861 / 320 met | 755 / 220 met | 398 / 140 met |
-| mortal | 549 / 355 met | 490 / 340 met | 417 / 200 met |
-| item | 89 / 65 met | 96 / 60 met | 197 / 45 met |
-| structure | 103 / 55 met | 27 / 70 short | 112 / 55 met |
-| language | 58 / 110 short | 56 / 90 short | 112 / 55 met |
-| legend | 63 / 30 met | 47 / 40 met | 109 / 35 met |
-| tradition | 44 / 20 met | 57 / 25 met | 59 / 25 met |
-| cult | 239 / 90 met | 415 / 100 met | 377 / 75 met |
-| faction | 220 / 95 met | 365 / 110 met | 340 / 80 met |
-| celestial | 9 / 10 short | 2 / 12 short | 35 / 15 met |
-| artwork | 27 / 20 met | 35 / 20 met | 98 / 15 met |
-| law | 62 / 55 met | 76 / 60 met | 140 / 45 met |
-| spirit | 65 / 60 met | 53 / 60 short | 192 / 40 met |
-| knowledge | 75 / 70 met | 125 / 110 met | 253 / 85 met |
-| prophecy | 25 / 15 met | 22 / 15 met | 55 / 15 met |
-| event | 43 / 15 met | 184 / 20 met | 299 / 15 met |
-| vessel | 17 / 80 short | 6 / 65 short | 60 / 35 met |
-| outer_being | 17 / 15 met | 9 / 20 short | 79 / 20 met |
-| army | 330 / 240 met | 309 / 200 met | 319 / 95 met |
-| natural_law | 1 / 10 short | 2 / 30 short | 20 / 30 short |
-| trade_route | 54 / 25 met | 48 / 25 met | 139 / 25 met |
-| disease | 59 / 45 met | 50 / 50 met | 118 / 40 met |
-| polity | 333 / 225 met | 149 / 220 short | 236 / 150 met |
-| house | 103 / 60 met | 48 / 55 short | 134 / 45 met |
-| treaty | 81 / 25 met | 36 / 20 met | 116 / 20 met |
-| ideology | 24 / 20 met | 26 / 20 met | 40 / 20 met |
-| rite | 66 / 50 met | 63 / 55 met | 79 / 45 met |
-| beast | 63 / 150 short | 48 / 90 short | 79 / 65 met |
-| son | 189 / 350 short | 72 / 320 short | 177 / 190 short |
-| creator | 10 / 35 short | 3 / 40 short | 34 / 35 short |
-| foreign_god | 56 / 200 short | 12 / 140 short | 97 / 100 short |
-| war | 168 / 95 met | 161 / 110 met | 138 / 75 met |
-| world | 36 / 195 short | 20 / 135 short | 180 / 115 met |
-| star | 5 / 35 short | 2 / 30 short | 27 / 25 met |
-| route | 16 / 45 short | 4 / 30 short | 73 / 25 met |
+| region | 287 / 215 met | 464 / 160 met | 397 / 120 met |
+| place | 74 / 25 met | 160 / 20 met | 263 / 15 met |
+| resource | 59 / 35 met | 61 / 50 met | 180 / 30 met |
+| settlement | 1320 / 280 met | 1169 / 230 met | 420 / 145 met |
+| species | 224 / 150 met | 201 / 150 met | 180 / 95 met |
+| people | 1165 / 320 met | 938 / 220 met | 420 / 140 met |
+| mortal | 775 / 355 met | 798 / 340 met | 420 / 200 met |
+| item | 90 / 65 met | 100 / 60 met | 220 / 45 met |
+| structure | 204 / 55 met | 41 / 70 short | 219 / 55 met |
+| language | 62 / 110 short | 64 / 90 short | 100 / 55 met |
+| legend | 64 / 30 met | 48 / 40 met | 117 / 35 met |
+| tradition | 44 / 20 met | 57 / 25 met | 80 / 25 met |
+| cult | 355 / 90 met | 494 / 100 met | 420 / 75 met |
+| faction | 378 / 95 met | 473 / 110 met | 380 / 80 met |
+| celestial | 10 / 10 met | 2 / 12 short | 38 / 15 met |
+| artwork | 35 / 20 met | 40 / 20 met | 145 / 15 met |
+| law | 73 / 55 met | 85 / 60 met | 180 / 45 met |
+| spirit | 68 / 60 met | 176 / 60 met | 220 / 40 met |
+| knowledge | 102 / 70 met | 221 / 110 met | 300 / 85 met |
+| prophecy | 25 / 15 met | 22 / 15 met | 60 / 15 met |
+| event | 43 / 15 met | 211 / 20 met | 338 / 15 met |
+| vessel | 20 / 80 short | 8 / 65 short | 100 / 35 met |
+| outer_being | 21 / 15 met | 10 / 20 short | 100 / 20 met |
+| army | 415 / 240 met | 362 / 200 met | 380 / 95 met |
+| natural_law | 6 / 10 short | 4 / 30 short | 60 / 30 met |
+| trade_route | 54 / 25 met | 57 / 25 met | 200 / 25 met |
+| disease | 62 / 45 met | 56 / 50 met | 160 / 40 met |
+| polity | 509 / 225 met | 253 / 220 met | 262 / 150 met |
+| house | 130 / 60 met | 63 / 55 met | 198 / 45 met |
+| treaty | 83 / 25 met | 37 / 20 met | 140 / 20 met |
+| title | 0 / 25 short | 0 / 25 short | 0 / 25 short |
+| ideology | 30 / 20 met | 29 / 20 met | 60 / 20 met |
+| rite | 68 / 50 met | 69 / 55 met | 100 / 45 met |
+| beast | 79 / 150 short | 62 / 90 short | 139 / 65 met |
+| theory | 8 / 15 short | 110 / 20 met | 180 / 25 met |
+| art_form | 8 / 20 short | 1 / 20 short | 20 / 20 met |
+| phenomenon | 0 / 20 short | 0 / 20 short | 0 / 25 short |
+| cosmic_being | 0 | 1 | 20 |
+| vehicle_type | 0 | 0 | 0 |
+| unit_type | 0 | 0 | 0 |
+| equipment_model | 0 | 0 | 0 |
+| dish | 0 | 0 | 0 |
+| building_type | 0 | 0 | 0 |
+| son | 246 / 350 short | 107 / 320 short | 280 / 190 met |
+| creator | 25 / 35 short | 12 / 40 short | 77 / 35 met |
+| foreign_god | 104 / 200 short | 31 / 140 short | 140 / 100 met |
+| war | 192 / 95 met | 161 / 110 met | 140 / 75 met |
+| world | 139 / 195 short | 52 / 135 short | 202 / 115 met |
+| star | 17 / 35 short | 3 / 30 short | 30 / 25 met |
+| route | 26 / 45 short | 3 / 30 short | 40 / 25 met |

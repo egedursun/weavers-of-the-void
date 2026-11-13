@@ -295,7 +295,8 @@ Layout (`form#genesisForm.genesis-card`):
 - Template buttons (`role=radiogroup`, each `role=radio`, title = template seed): bold name + tone line. Clicking selects (class `on`) or deselects (click again). Selecting overwrites the seed and tone inputs and the settings fields with the template values.
 - Collapsible "Settings: magic, darkness, technology, language, cosmos" (`details[data-k=sihirbaz-ayar]`) containing:
   - Magic (`Büyü`) — range 0–100 with live `<output>`, default rule `SIHIRBAZ.buyu` (50).
-  - Darkness (`Karanlık`) — range 0–100, default `SIHIRBAZ.karanlik` (50).
+  - Danger (legacy `Karanlık`, darkness) — range 0–100, default `setup_wizard.danger` (50); levels Safe, Calm, Balanced, Perilous, Deadly.
+  - New app (13 §10.19): a "The first world" group with the kind of the first world, a "Shape the land yourself" switch over water, high ground and moisture sliders (disabled with their reason while the seed shapes the land), the climate age and the age at the first epoch, each with "The seed decides"; under Cosmos the shape of the cosmos (one sun, many suns, layered; disabled with its reason for a single world) and the second layer kind (disabled with its reason unless layered).
   - Technology (`Teknoloji`) select, default `demir`.
   - Language texture (`Dilin dokusu`) select, default `karisik`.
   - Cosmos (`Kozmos`) select, default `tek`.
@@ -321,29 +322,13 @@ Options (`SECENEKLER`), fully translated:
 | | kucuk | small cosmos (1 + `SIHIRBAZ.kucuk_kozmos` worlds; default 2) (küçük kozmos) |
 | | buyuk | large cosmos (1 + `SIHIRBAZ.buyuk_kozmos` worlds; default 3) (büyük kozmos) |
 
-Templates (`SABLONLAR`), fully translated:
+Templates:
 
-| key | Name | Tone | Magic | Dark | Tech | Language | Peoples | Cosmos | Seed |
-|---|---|---|---|---|---|---|---|---|---|
-| karanlik_fantazi | Dark fantasy (Karanlık fantazi) | gloomy, merciless, hope comes at a price | 60 | 80 | iron | guttural | 3 | single | A world built where the gods once died, on top of their corpses; every bounty comes from a rotting. |
-| mitoloji | Mythic age (Mitolojik çağ) | epic, solemn, full of prophecies | 70 | 40 | bronze | flowing | 3 | single | Continents born from the sea and mountains that hold up the sky; every river has a name, every name a price. |
-| kozmik_korku | Cosmic horror (Kozmik korku) | uneasy, quiet, in the shadow of incomprehensible things | 50 | 90 | steam | sibilant | 2 | small | A cosmos where something behind the sky is waking and the stars go out one by one. |
-| masal | Fairy tale (Masal) | warm, strange, wise and a little sad | 85 | 25 | middle ages | long | 4 | single | A world where animals talk, forests move around, and dreams are taxed. |
-| yildiz_mitosu | Star myth (Yıldız mitosu) | vast, full of wonder, on a cosmic scale | 55 | 45 | renaissance | flowing | 3 | large | A cosmos where star-wind fills ships' sails and worlds are strung on a thread like beads. |
-| kum_ve_kul | Sand and ash (Kum ve kül) | harsh, arid, honourable | 35 | 60 | bronze | hard | 3 | single | A world where the sun once fell and left a desert; where water is worth more than money and the ashes speak prophecies. |
-| primordial_dawn | Primordial dawn (İlk şafak) | raw, wondrous, everything happens for the first time | 75 | 35 | stone | free | 5 | single | A young world still warm from its making; the first fires are being lit, the first words spoken, and every hill waits for a name. |
-| crowns_and_knives | Crowns and knives (Taçlar ve hançerler) | cunning, political, every oath hides a blade | 12 | 55 | medieval | hard | 4 | single | A world where magic has all but faded and power lives in bloodlines, marriages and whispered debts; every throne is one betrayal from falling. |
-| drowned_world | Drowned world (Batık dünya) | salt-worn, restless, ruled by the tides | 55 | 50 | iron | sibilant | 3 | single | A world where the sea swallowed the continents long ago; peoples live on scattered islands, reefs and floating towns, and every map is wrong by the next tide. |
-| long_winter | Long winter (Uzun kış) | stern, enduring, warmth must be earned | 40 | 65 | iron | guttural | 3 | single | A world whose sun has dimmed for a thousand years; the ice creeps further south each winter and the peoples burn their histories to stay warm. |
-| after_the_fall | After the fall (Çöküşten sonra) | elegiac, scavenging, haunted by a greater past | 45 | 70 | medieval | long | 3 | single | A world built on the ruins of a civilization far greater than any living one; its towers still hum, its roads lead nowhere, and no one remembers how its wonders were made. |
-| sky_islands | Sky islands (Gök adaları) | airy, adventurous, hopeful | 70 | 30 | renaissance | flowing | 3 | small | A cosmos of shattered worlds whose fragments drift on rivers of wind; peoples sail between the islands on kite-ships, and falling past the edge is the oldest fear. |
-| age_of_engines | Age of engines (Makineler çağı) | curious, inventive, bright with possibility | 30 | 30 | steam | free | 4 | single | A world where the first engines have just learned to breathe; tinkers rival priests, railways cut through sacred forests, and every invention wakes an old spirit. |
-
-The last seven templates are new in Weavers of the Void and have no legacy key; their key is the stored `GenesisTemplate` value.
+The templates, their seeds and their typed values (storyteller, cosmos shape, first world kind, climate age, world age) are listed in `13-depth-expansion.md` §10.19, which supersedes the legacy table that stood here. Legacy keys map once on import: `karanlik_fantazi` → dark_fantasy, `mitoloji` → mythic_age, `kozmik_korku` → cosmic_horror, `masal` → fairy_tale, `yildiz_mitosu` → star_myth, `kum_ve_kul` → sand_and_ash.
 
 #### 2.5.2 Submit
 `POST /api/genesis` body `{tanri_adi, tohum, ton, sihirbaz: {buyu, karanlik, teknoloji, dil, kozmos, halk, sablon?}}`. On submit: button disabled, note becomes "The world is being thought… (about a minute)". Server: sanitizes wizard values (`sihirbazTemizle`: clamps numbers, whitelists option keys, fills blanks from the template, tone ≤300 chars, seed ≤2000 chars); 400 "God name and world seed are required."; 409 "A world already exists." / "Creation is already running."; runs creation in the background emitting SSE `mesgul {tur:'genesis'}`, then `genesis_bitti` (client does a full refresh which hides the screen) and a system line "The first mortal peoples are awakening…". On SSE `hata` before a world exists: button re-enabled, note "Try again." On a page reload mid-creation (`G.S.mesgul.tur === 'genesis'`) the button stays disabled with the "being thought" note.
-Server-side effects of the wizard: settings are appended to the creation prompt (`sihirbazMetni`: "Magic density X/100: the world is {very/ / moderately / slightly / almost not} magical…", darkness, technology, language texture, cosmos) and after creation region magic/danger are pulled toward the chosen magic/darkness by `SIHIRBAZ.cekim`% (default 50); extra worlds per cosmos size.
+Server-side effects of the wizard: settings are appended to the creation prompt (`sihirbazMetni`: "Magic density X/100: the world is {very/ / moderately / slightly / almost not} magical…", danger, technology, language texture, cosmos and, when chosen, the first world and the cosmos shape) and after creation region magic/danger are pulled once toward the chosen magic/danger by `setup_wizard.setting_pull_pct`% (default 50); the first world is born around its own sun; extra worlds per cosmos size circle that sun, circle suns of their own or lie in a second layer joined to the first world by a rift (13 §10.19).
 
 ---
 

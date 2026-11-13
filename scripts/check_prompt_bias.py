@@ -8,6 +8,16 @@ ROOT = Path(__file__).resolve().parent.parent
 BACKEND = ROOT / "backend/src/aerona"
 PROMPTS = BACKEND / "prompts"
 FRONTEND = ROOT / "frontend/src"
+MODEL_FEEDING = (
+    BACKEND / "catalog/genesis.py",
+    FRONTEND / "features/onboarding",
+)
+CREATION_TEXT = (
+    PROMPTS / "schemas/genesis.py",
+    PROMPTS / "schemas/cosmos.py",
+    PROMPTS / "templates/genesis",
+    PROMPTS / "templates/world_birth",
+)
 STYLE_HOMES = (
     BACKEND / "catalog/image_styles.py",
     BACKEND / "domain/enums/world.py",
@@ -35,6 +45,7 @@ class Pattern:
     regex: re.Pattern[str]
     prompts_only: bool = False
     prose_only: bool = False
+    creation_only: bool = False
 
 
 PATTERNS = (
@@ -67,6 +78,37 @@ PATTERNS = (
             re.IGNORECASE,
         ),
         prompts_only=True,
+    ),
+    Pattern(
+        "mandatory price",
+        re.compile(
+            r"\b(?:carr(?:y|ies)|bears?|must (?:have|carry|bear)|always (?:has|have|carries)) (?:a|an|its|their) (?:price|cost|toll)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    Pattern(
+        "forced difference",
+        re.compile(r"\b(?:entirely|completely|wholly|utterly|totally) different\b|\b(?:the new ones|each new one) must differ\b", re.IGNORECASE),
+    ),
+    Pattern(
+        "geography quota",
+        re.compile(
+            r"\bat least one (?:of them )?(?:a |an )?(?:seas?|oceans?|lakes?|rivers?|islands?|continents?|mountains?|deserts?|forests?|lands?|water)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    Pattern(
+        "canned cosmogony",
+        re.compile(r"\b(?:named the void|the lands and waters of)\b", re.IGNORECASE),
+        prose_only=True,
+    ),
+    Pattern(
+        "creation example list",
+        re.compile(
+            r"(?:[\w'-]+(?: [\w'-]+){0,3}, ){2,}(?:or |and )?[\w'-]+(?: [\w'-]+){0,3},?\s?(?:…|\.\.\.)|"
+            r"\((?:[^()]*?, ){2,}[^()]*?(?:…|\.\.\.|\bor another\b)[^()]*\)"
+        ),
+        creation_only=True,
     ),
     Pattern(
         "borrowed imagery",
@@ -136,6 +178,10 @@ def strings_of(path: Path) -> list[tuple[int, str]]:
     return list(enumerate(text.splitlines(), start=1))
 
 
+def under(path: Path, bases: tuple[Path, ...]) -> bool:
+    return any(path == base or path.is_relative_to(base) for base in bases)
+
+
 def skipped(path: Path) -> bool:
     return any(path == base or path.is_relative_to(base) for base in SKIPPED)
 
@@ -167,13 +213,16 @@ def prose(path: Path, value: str) -> str:
     return value if path.suffix == ".py" and any(character.isspace() for character in value.strip()) else ""
 
 
-def matches(path: Path, line: int, value: str, in_prompts: bool) -> list[Finding]:
+def matches(path: Path, line: int, value: str, in_prompts: bool, creation: bool | None = None) -> list[Finding]:
     if MORTAL_KINSHIP.search(value):
         return []
+    creating = under(path, CREATION_TEXT) if creation is None else creation
     return [
         Finding(path, line, pattern.rule, match.group(0))
         for pattern in PATTERNS
-        if (in_prompts or not pattern.prompts_only) and not (pattern.rule == MEDIUM_RULE and path in STYLE_HOMES)
+        if (in_prompts or not pattern.prompts_only)
+        and (creating or not pattern.creation_only)
+        and not (pattern.rule == MEDIUM_RULE and path in STYLE_HOMES)
         for match in [pattern.regex.search(prose(path, value) if pattern.prose_only else value)]
         if match
     ]
@@ -182,11 +231,14 @@ def matches(path: Path, line: int, value: str, in_prompts: bool) -> list[Finding
 def scan() -> list[Finding]:
     findings: list[Finding] = []
     for path in backend_targets():
+        feeding = path.is_relative_to(PROMPTS) or under(path, MODEL_FEEDING)
+        creating = under(path, CREATION_TEXT)
         for line, value in strings_of(path):
-            findings.extend(matches(path, line, value, path.is_relative_to(PROMPTS)))
+            findings.extend(matches(path, line, value, feeding, creating))
     for path in frontend_targets():
+        feeding = under(path, MODEL_FEEDING)
         for line, value in frontend_strings(path):
-            findings.extend(matches(path, line, value, in_prompts=False))
+            findings.extend(matches(path, line, value, feeding, False))
     return findings
 
 

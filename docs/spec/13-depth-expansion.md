@@ -7259,6 +7259,57 @@ Biosphere activity (3.2 trophic flows, land use) closes the cycles. Large distur
 - Labels, icons, cutaways and city looks for every value; the Codex and the lore book render them through the generic and typed sections.
 - Migration `d4f2a8c61e97` widens every enum column and adds the class share and satisfaction columns.
 
+### 10.19 Genesis from the seed (W43)
+
+**Current.** The genesis wizard offered magic and darkness sliders, technology, language texture, peoples, cosmos size and storyteller. Only magic and darkness reached the engine, and they were applied twice (an average in the genesis agent and the wizard pull after it). The first world was always an ordinary world with default terrain and no sun of its own, whatever the seed or template said; technology reached only the genesis prompt, never the awakening of the first peoples; the extra worlds of a small or large cosmos never saw the seed and were told to be "entirely different"; the genesis prompt demanded a sea, a price on the travel resource and carried example lists; the templates carried images beyond their genre; the wizard settings reached neither the lore book nor the Codex.
+
+#### Attributes
+
+- `GenesisSettings` (stored on the cosmos): `magic`, **`danger`** (was `darkness`; stored settings that still carry `darkness` read it as danger), `technology`, `language_texture`, `peoples`, `cosmos_size`, **`cosmos_shape`** (`CosmosShape`: one_sun, many_suns, layered), **`layer_kind`** (a `DimensionKind` other than prime, or null for the seed), `storyteller`, **`world_type`**, **`sea_pct`**, **`mountains_pct`**, **`moisture_pct`** (−100 to 100), **`climate_era`**, **`world_age`**, `tone`, `seed_idea`, `template`. Every new value may be null: the seed decides.
+- Genesis output: **`world`** (kind, gravity, atmosphere, water, high ground, moisture, climate age, age), **`star`** (the sun the first world circles: name, kind, description) and, for a layered cosmos, **`layer`** (name, kind, description of the second layer).
+- Templates (`catalog/genesis.py`) carry typed values beside their seed: storyteller, cosmos shape, first world kind, climate age and world age. Seeds name the premise of their genre and nothing more.
+- Rules: `setup_wizard.danger` (renamed from `setup_wizard.darkness`; overrides map once through the rule renames).
+
+| Template | Key | Tone | Magic | Danger | Technology | Language | Peoples | Cosmos | Shape | Storyteller | First world | Climate age | Age | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Dark fantasy | `dark_fantasy` | gloomy, merciless, hope is hard to find | 60 | 80 | Iron age | guttural | 3 | Single world | One sun | Rising | Corpse-world | seed | seed | A world raised on the bodies of gods who died before time began. |
+| Mythic age | `mythic_age` | epic, solemn, full of prophecies | 70 | 40 | Bronze age | flowing | 3 | Single world | One sun | Cyclic | seed | seed | Young | An age of myth, when the land is young and the gods still walk among the first peoples. |
+| Cosmic horror | `cosmic_horror` | uneasy, silent, in the shadow of incomprehensible things | 50 | 90 | Steam and gunpowder | sibilant | 2 | Small cosmos | One sun | Rising | seed | seed | seed | A cosmos where something vast and beyond understanding is stirring beyond the sky. |
+| Fairy tale | `fairy_tale` | warm, whimsical, wise and a little sad | 85 | 25 | Medieval | long | 4 | Single world | One sun | Steady | seed | seed | seed | A world that runs on the logic of fairy tales. |
+| Star myth | `star_myth` | vast, full of wonder, cosmic in scale | 55 | 45 | Renaissance | flowing | 3 | Large cosmos | One sun | Cyclic | seed | seed | seed | A cosmos whose peoples look up at the stars and set out to reach them. |
+| Sand and ash | `sand_and_ash` | harsh, arid, proud | 35 | 60 | Bronze age | hard | 3 | Single world | One sun | Cyclic | Sand world | Drought century | seed | A desert world where water is the rarest thing of all. |
+| Primordial dawn | `primordial_dawn` | raw, wondrous, everything happens for the first time | 75 | 35 | Stone age | free | 5 | Single world | One sun | Cyclic | seed | seed | Young | A world just made, where everything happens for the first time. |
+| Crowns and knives | `crowns_and_knives` | cunning, political, full of intrigue | 12 | 55 | Medieval | hard | 4 | Single world | One sun | Chaotic | seed | seed | seed | A world where magic has all but faded and power lies in bloodlines, marriages and debts. |
+| Drowned world | `drowned_world` | restless, wide, ruled by the tides | 55 | 50 | Iron age | sibilant | 3 | Single world | One sun | Cyclic | Ocean world | seed | seed | A world where the sea covers almost everything and the peoples live on what little rises above it. |
+| Long winter | `long_winter` | stern, enduring, warmth must be earned | 40 | 65 | Iron age | guttural | 3 | Single world | One sun | Cyclic | seed | Ice age | seed | A world held in a winter that has lasted longer than anyone remembers. |
+| After the fall | `after_the_fall` | elegiac, scavenging, haunted by a greater past | 45 | 70 | Medieval | long | 3 | Single world | One sun | Cyclic | seed | seed | Old | A world living among the remains of a civilization greater than any alive today. |
+| Sky islands | `sky_islands` | airy, adventurous, hopeful | 70 | 30 | Renaissance | flowing | 3 | Small cosmos | One sun | Cyclic | Shattered world | seed | seed | A broken world whose pieces float in an open sky, and peoples who travel between them. |
+| Age of engines | `age_of_engines` | curious, inventive, bright with possibility | 30 | 30 | Steam and gunpowder | free | 4 | Single world | One sun | Rising | seed | seed | seed | A world where the first engines have just been built and invention is changing everything. |
+| Many suns | `many_suns` | vast, adventurous, many worlds to meet | 50 | 45 | Renaissance | free | 4 | Large cosmos | Many suns | Cyclic | seed | seed | seed | A cosmos of many suns, each with worlds and peoples of its own. |
+| Layered realms | `layered_realms` | uncanny, layered, full of thresholds | 65 | 50 | Medieval | flowing | 3 | Small cosmos | Layered | Cyclic | seed | seed | seed | A cosmos of more than one layer of reality, where another realm lies beside the first and the way between them is open. |
+| Living world | `living_world` | intimate, organic, watchful | 70 | 45 | Bronze age | flowing | 3 | Single world | One sun | Cyclic | Living planet | seed | seed | A world that is itself alive and feels what is done upon it. |
+| Dreaming world | `dreaming_world` | drifting, shifting, half-remembered | 80 | 40 | Medieval | long | 3 | Single world | One sun | Cyclic | Dream realm | seed | seed | A world made of dream, where what is believed takes shape. |
+| Generation ship | `generation_ship` | close, enduring, far from home | 15 | 45 | Medieval | hard | 3 | Single world | One sun | Cyclic | Generation ship | seed | Mature | A vessel the size of a world travelling between the stars, whose peoples have lived aboard so long that they no longer know it is a ship. |
+| Without magic | `without_magic` | grounded, earthly, plain | 0 | 40 | Iron age | free | 4 | Single world | One sun | Steady | seed | seed | seed | A world without magic, where the peoples have only their own skill, their wits and one another. |
+
+#### Behaviours
+
+1. **One system from the start.** The first world is born around its own sun (`StarRow`, from the genesis output), and the cosmos ladder (home dimension, group and galaxy) is laid out at genesis, so the first world and its sun begin as one system.
+2. **The first world follows the seed or the player.** Its kind, surface (water, high ground, moisture), climate age and age come from the player's choice when given, else from the genesis output. Gravity and air follow the kind's forced values where it has them. The climate age starts with the first-age duration of the climate rules.
+3. **Worlds age one way.** A world's age stage never falls back on the clock (`grown_age`): a world born old stays old until the clock passes it.
+4. **One pull.** Region magic and danger are stored as the model wrote them and then pulled once toward the chosen magic and danger by `setup_wizard.setting_pull_pct`; the first world's danger becomes the mean of its pulled regions.
+5. **The cosmos shape places the further worlds.** One sun: every further world is a planet of the first world's sun. Many suns: each circles a new sun of its own. Layered: genesis opens a second layer (a dimension with its own galaxy) beside the first world; the further worlds are born around new suns in that galaxy, and a rift opened by the Creator joins the first world to the first of them. A single world has no shape.
+6. **Further worlds grow from the same seed.** Their inspiration carries the seed (and the layer for a layered cosmos), with no demand to differ.
+7. **The first peoples know how the world was made.** The awakening of peoples on the first world in the first epoch receives the creation settings (`creation_text`), without the region instructions meant for genesis.
+8. **Genesis text lets the world be anything.** No sea quota, no mandatory price on the travel resource, no example lists in the creation schemas, no canned cosmogony line and no "strange" seed hint; `check_prompt_bias.py` gates each of these families (mandatory price, forced difference, geography quota, canned cosmogony, creation example list, forced strangeness in the wizard and its templates).
+
+#### Levers and surfaces
+
+- The genesis wizard: a danger slider; a "The first world" group (kind, the land's shape behind a switch, climate age, age, each with "The seed decides"); the cosmos shape and the second layer under Cosmos, disabled with their reasons where they cannot apply; template cards show the first world kind and shape; the preview lists every choice.
+- After genesis every value stays the god's: the world drawer edits kind, terrain, gravity and air (`world:edit`), the climate (`climate` levers), the age stage (record row, held through `locked`); the star, galaxy, dimension and rift have their own levers; the storyteller is edited in the world drawer.
+- "How this world was born" in Settings shows every genesis setting; the lore book and the Codex render them as "How the world was made" under Cosmology.
+- Legacy worlds carry their wizard settings (`yaratilis_ayar`) on import, with the legacy template, technology, language and cosmos keys mapped once.
+
 ## Part I. Interconnection
 
 ### I.1 Interconnection registry
@@ -8418,6 +8469,18 @@ Integration happens in waves, but **the whole of this document is the deliverabl
 
 - **Modern war tests:** tactics need their troops, barrages and jamming change fire, medics heal, every damage type wounds, wrecks harm captains, peoples reach modern doctrines.
 - **Guard tests:** every frontend label map, tool enum list and near-total table covers every value.
+
+### J.22 Genesis from the seed addendum (W43)
+
+| Wave | Content | Depends on |
+|---|---|---|
+| W43 | Genesis from the seed (10.19): the first world born with its sun as one system, its kind, surface, climate age and age from the seed or the player, the cosmos shape and second layer, danger in place of darkness, one pull, further worlds from the same seed, creation settings for the first peoples, unbiased genesis text and templates with typed values, the settings in the book and the Codex | W12+, W42 |
+
+**Tests:**
+
+- **Genesis tests:** the first world takes the model's or the player's kind, surface, climate age and age; it circles its own sun inside the home galaxy; region values are pulled once; a layered cosmos opens its layer beside the home galaxy; the first peoples read the creation settings only at creation.
+- **Wizard tests:** further worlds share the first sun, take suns of their own or lie in the layer joined by a rift; shapes and layers hold only where further worlds exist.
+- **Guard tests:** each new prompt bias family catches its old text and passes the new one.
 
 ## Part K. Decisions
 

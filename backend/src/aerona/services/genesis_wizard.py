@@ -7,24 +7,51 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.achievements import ordinal_word
+from aerona.catalog.climate import CLIMATES
+from aerona.catalog.cosmography import DIMENSION_KINDS, WORLD_AGE_LABELS
+from aerona.catalog.genesis import (
+    COSMOS_LABELS,
+    LAYER_KINDS,
+    LORE_LANGUAGE_LABELS,
+    SHAPE_HINTS,
+    SHAPE_LABELS,
+    STORYTELLER_LABELS,
+    TECHNOLOGY_LABELS,
+    TEMPLATES,
+    TEXTURE_LABELS,
+    WizardTemplate,
+)
 from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH
 from aerona.catalog.rarities import DEFAULT_FIRST_SONS
+from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
+from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.cosmography import DimensionRow, GalaxyRow
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.cosmography import DimensionKind, RiftCause, WorldAge
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
 from aerona.domain.enums.storyteller import StorytellerProfile
-from aerona.domain.enums.world import CosmosSize, GenesisTemplate, ImageStyle, LanguageTexture, LoreLanguage, TechnologyEra
-from aerona.domain.models.genesis import GenesisSettings
+from aerona.domain.enums.world import (
+    ClimateEra,
+    CosmosShape,
+    CosmosSize,
+    GenesisTemplate,
+    ImageStyle,
+    LanguageTexture,
+    LoreLanguage,
+    TechnologyEra,
+    WorldType,
+)
+from aerona.domain.models.genesis import MOISTURE_FLOOR, GenesisOutcome, GenesisSettings
+from aerona.engine.cosmos.control import tear_rift
+from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JobContext
-from aerona.prompts.catalog import render
-from aerona.prompts.contexts.genesis import GenesisWizardContext
-from aerona.prompts.ids import PromptId
 from aerona.rules.registry import Rules
 from aerona.services.lore_ports import GenesisRequest, LorePorts
 from aerona.services.player.ports import WorldCreationRequest
@@ -34,7 +61,8 @@ DEFAULT_REGION_VALUE = 50
 TONE_MAX_LENGTH = 300
 SEED_MAX_LENGTH = 2000
 SEED_BITS = 62
-EXTRA_WORLD_INSPIRATION = "The {ordinal} world of creation; sister of the first world but entirely different."
+EXTRA_WORLD_INSPIRATION = "The {ordinal} world of this creation, grown from the same seed as the first world: {seed}"
+LAYER_INSPIRATION = " It lies in {layer}, the second layer of the cosmos."
 PEOPLES_WAKING = "The first mortal peoples are waking."
 STAGE_GENESIS = "genesis"
 STAGE_PEOPLES = "peoples"
@@ -42,224 +70,26 @@ STAGE_WORLDS = "worlds"
 STAGE_DONE = "done"
 FIRST_EXTRA_WORLD = 2
 
-TECHNOLOGY_LABELS: dict[TechnologyEra, str] = {
-    TechnologyEra.STONE: "Stone age",
-    TechnologyEra.BRONZE: "Bronze age",
-    TechnologyEra.IRON: "Iron age",
-    TechnologyEra.MEDIEVAL: "Medieval",
-    TechnologyEra.RENAISSANCE: "Renaissance",
-    TechnologyEra.STEAM: "Steam and gunpowder",
-}
-TEXTURE_LABELS: dict[LanguageTexture, str] = {
-    LanguageTexture.FLOWING: "Flowing, vowel-rich, soft (l, m, n, y)",
-    LanguageTexture.HARD: "Hard consonants, short syllables (k, t, g, r)",
-    LanguageTexture.GUTTURAL: "Guttural, deep (h, gh, q, kh)",
-    LanguageTexture.SIBILANT: "Sibilant, fricative (s, sh, z, ch)",
-    LanguageTexture.LONG: "Long, agglutinative, polysyllabic",
-    LanguageTexture.FREE: "Free",
-}
-COSMOS_LABELS: dict[CosmosSize, str] = {CosmosSize.SINGLE: "Single world", CosmosSize.SMALL: "Small cosmos", CosmosSize.LARGE: "Large cosmos"}
-STORYTELLER_LABELS: dict[StorytellerProfile, str] = {
-    StorytellerProfile.STEADY: "Steady",
-    StorytellerProfile.RISING: "Rising",
-    StorytellerProfile.CYCLIC: "Cyclic",
-    StorytellerProfile.CHAOTIC: "Chaotic",
-}
-LORE_LANGUAGE_LABELS: dict[LoreLanguage, str] = {LoreLanguage.ENGLISH: "English", LoreLanguage.TURKISH: "Turkish"}
-
-
-@dataclass(frozen=True)
-class WizardTemplate:
-    key: GenesisTemplate
-    name: str
-    tone: str
-    magic: int
-    darkness: int
-    technology: TechnologyEra
-    language: LanguageTexture
-    peoples: int
-    cosmos: CosmosSize
-    seed: str
-
-
-TEMPLATES: dict[GenesisTemplate, WizardTemplate] = {
-    template.key: template
-    for template in (
-        WizardTemplate(
-            GenesisTemplate.DARK_FANTASY,
-            "Dark fantasy",
-            "gloomy, merciless, hope comes at a high price",
-            60,
-            80,
-            TechnologyEra.IRON,
-            LanguageTexture.GUTTURAL,
-            3,
-            CosmosSize.SINGLE,
-            "A world built on the corpses of gods who once died; every bounty comes from a rot.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.MYTHIC_AGE,
-            "Mythic age",
-            "epic, solemn, full of prophecies",
-            70,
-            40,
-            TechnologyEra.BRONZE,
-            LanguageTexture.FLOWING,
-            3,
-            CosmosSize.SINGLE,
-            "Continents born from the sea and mountains carrying the sky; every river has a name, every name a price.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.COSMIC_HORROR,
-            "Cosmic horror",
-            "uneasy, silent, in the shadow of incomprehensible things",
-            50,
-            90,
-            TechnologyEra.STEAM,
-            LanguageTexture.SIBILANT,
-            2,
-            CosmosSize.SMALL,
-            "A cosmos where something behind the sky is awakening and the stars go out one by one.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.FAIRY_TALE,
-            "Fairy tale",
-            "warm, strange, wise and a little sad",
-            85,
-            25,
-            TechnologyEra.MEDIEVAL,
-            LanguageTexture.LONG,
-            4,
-            CosmosSize.SINGLE,
-            "A world where animals talk, forests change places, and dreams are taxed.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.STAR_MYTH,
-            "Star myth",
-            "vast, full of wonder, cosmic in scale",
-            55,
-            45,
-            TechnologyEra.RENAISSANCE,
-            LanguageTexture.FLOWING,
-            3,
-            CosmosSize.LARGE,
-            "A cosmos where star-wind fills the ships' sails and every world circles a sun of its own.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.SAND_AND_ASH,
-            "Sand and ash",
-            "harsh, arid, proud",
-            35,
-            60,
-            TechnologyEra.BRONZE,
-            LanguageTexture.HARD,
-            3,
-            CosmosSize.SINGLE,
-            "A world where the sun once fell and left a desert; where water is worth more than money and ashes speak prophecies.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.PRIMORDIAL_DAWN,
-            "Primordial dawn",
-            "raw, wondrous, everything happens for the first time",
-            75,
-            35,
-            TechnologyEra.STONE,
-            LanguageTexture.FREE,
-            5,
-            CosmosSize.SINGLE,
-            "A young world still warm from its making; the first fires are being lit, the first words spoken, and every hill waits for a name.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.CROWNS_AND_KNIVES,
-            "Crowns and knives",
-            "cunning, political, every oath hides a blade",
-            12,
-            55,
-            TechnologyEra.MEDIEVAL,
-            LanguageTexture.HARD,
-            4,
-            CosmosSize.SINGLE,
-            "A world where magic has all but faded and power lives in bloodlines, marriages and whispered debts; every throne is one betrayal from falling.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.DROWNED_WORLD,
-            "Drowned world",
-            "salt-worn, restless, ruled by the tides",
-            55,
-            50,
-            TechnologyEra.IRON,
-            LanguageTexture.SIBILANT,
-            3,
-            CosmosSize.SINGLE,
-            "A world where the sea swallowed the continents long ago; "
-            "peoples live on scattered islands, reefs and floating towns, and every map is wrong by the next tide.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.LONG_WINTER,
-            "Long winter",
-            "stern, enduring, warmth must be earned",
-            40,
-            65,
-            TechnologyEra.IRON,
-            LanguageTexture.GUTTURAL,
-            3,
-            CosmosSize.SINGLE,
-            "A world whose sun has dimmed for a thousand years; the ice creeps further south each winter and the peoples burn their histories to stay warm.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.AFTER_THE_FALL,
-            "After the fall",
-            "elegiac, scavenging, haunted by a greater past",
-            45,
-            70,
-            TechnologyEra.MEDIEVAL,
-            LanguageTexture.LONG,
-            3,
-            CosmosSize.SINGLE,
-            "A world built on the ruins of a civilization far greater than any living one; "
-            "its towers still hum, its roads lead nowhere, and no one remembers how its wonders were made.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.SKY_ISLANDS,
-            "Sky islands",
-            "airy, adventurous, hopeful",
-            70,
-            30,
-            TechnologyEra.RENAISSANCE,
-            LanguageTexture.FLOWING,
-            3,
-            CosmosSize.SMALL,
-            "A cosmos of shattered worlds whose fragments drift on rivers of wind; "
-            "peoples sail between the islands on kite-ships, and falling past the edge is the oldest fear.",
-        ),
-        WizardTemplate(
-            GenesisTemplate.AGE_OF_ENGINES,
-            "Age of engines",
-            "curious, inventive, bright with possibility",
-            30,
-            30,
-            TechnologyEra.STEAM,
-            LanguageTexture.FREE,
-            4,
-            CosmosSize.SINGLE,
-            "A world where the first engines have just learned to breathe; "
-            "tinkers rival priests, railways cut through sacred forests, and every invention wakes an old spirit.",
-        ),
-    )
-}
-
 
 class WizardInput(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     template: str | None = None
     magic: Any = None
-    darkness: Any = None
+    danger: Any = None
     technology: str | None = None
     language: str | None = None
     peoples: Any = None
     cosmos: str | None = None
+    shape: str | None = None
+    layer_kind: str | None = None
     storyteller: str | None = None
+    world_type: str | None = None
+    sea_pct: Any = None
+    mountains_pct: Any = None
+    moisture_pct: Any = None
+    climate_era: str | None = None
+    world_age: str | None = None
     tone: str | None = None
     seed: str | None = None
 
@@ -269,6 +99,34 @@ class CosmosOption:
     size: CosmosSize
     label: str
     worlds: int
+
+
+@dataclass(frozen=True)
+class ShapeOption:
+    shape: CosmosShape
+    label: str
+    hint: str
+
+
+@dataclass(frozen=True)
+class WorldTypeOption:
+    world_type: WorldType
+    label: str
+    description: str
+
+
+@dataclass(frozen=True)
+class ClimateOption:
+    era: ClimateEra
+    label: str
+    description: str
+
+
+@dataclass(frozen=True)
+class LayerOption:
+    kind: DimensionKind
+    label: str
+    description: str
 
 
 @dataclass(frozen=True)
@@ -284,6 +142,11 @@ class WizardOptions:
     technology: dict[TechnologyEra, str]
     language: dict[LanguageTexture, str]
     cosmos: list[CosmosOption]
+    shapes: list[ShapeOption]
+    layer_kinds: list[LayerOption]
+    world_types: list[WorldTypeOption]
+    climate_eras: list[ClimateOption]
+    world_ages: dict[WorldAge, str]
     storyteller: dict[StorytellerProfile, str]
     lore_languages: dict[LoreLanguage, str]
     templates: list[WizardTemplate]
@@ -311,6 +174,11 @@ def options(rules: Rules) -> WizardOptions:
         technology=dict(TECHNOLOGY_LABELS),
         language=dict(TEXTURE_LABELS),
         cosmos=[CosmosOption(size, COSMOS_LABELS[size], 1 + extra_worlds(rules, size)) for size in CosmosSize],
+        shapes=[ShapeOption(shape, SHAPE_LABELS[shape], SHAPE_HINTS[shape]) for shape in CosmosShape],
+        layer_kinds=[LayerOption(kind, DIMENSION_KINDS[kind].label, DIMENSION_KINDS[kind].description) for kind in LAYER_KINDS],
+        world_types=[WorldTypeOption(kind, spec.label, spec.description) for kind, spec in WORLD_TYPES.items()],
+        climate_eras=[ClimateOption(era, spec.label, spec.description) for era, spec in CLIMATES.items()],
+        world_ages=dict(WORLD_AGE_LABELS),
         storyteller=dict(STORYTELLER_LABELS),
         lore_languages=dict(LORE_LANGUAGE_LABELS),
         templates=list(TEMPLATES.values()),
@@ -340,20 +208,39 @@ def resolve_first_sons(rules: Rules, requested: tuple[Rarity, ...] | None) -> tu
     return tuple(sorted(requested, key=lambda item: item.rank))
 
 
-def _percent(value: Any, fallback: int) -> int:
+def _bounded(value: Any, fallback: int | None, low: int, high: int) -> int | None:
     if value is None or value == "":
         return fallback
     try:
-        return max(0, min(PERCENT, round(float(value))))
+        return max(low, min(high, round(float(value))))
     except (TypeError, ValueError):
         return fallback
 
 
-def _choice[E: (TechnologyEra, LanguageTexture, CosmosSize, StorytellerProfile)](kind: type[E], value: str | None, fallback: E) -> E:
+def _percent(value: Any, fallback: int) -> int:
+    bounded = _bounded(value, fallback, 0, PERCENT)
+    return fallback if bounded is None else bounded
+
+
+def _choice[E: (TechnologyEra, LanguageTexture, CosmosSize, CosmosShape, StorytellerProfile)](kind: type[E], value: str | None, fallback: E) -> E:
     try:
         return kind(value) if value is not None else fallback
     except ValueError:
         return fallback
+
+
+def _optional[E: (WorldType, ClimateEra, WorldAge, DimensionKind)](kind: type[E], value: str | None, fallback: E | None) -> E | None:
+    if value is None or value == "":
+        return fallback
+    try:
+        return kind(value)
+    except ValueError:
+        return fallback
+
+
+def _layer_kind(value: str | None) -> DimensionKind | None:
+    kind = _optional(DimensionKind, value, None)
+    return kind if kind in LAYER_KINDS else None
 
 
 def sanitize(rules: Rules, raw: WizardInput) -> GenesisSettings:
@@ -361,39 +248,33 @@ def sanitize(rules: Rules, raw: WizardInput) -> GenesisSettings:
     key = raw.template if raw.template in {item.value for item in GenesisTemplate} else None
     template = TEMPLATES[GenesisTemplate(key)] if key is not None else None
     magic = raw.magic if raw.magic not in (None, "") else (template.magic if template else None)
-    darkness = raw.darkness if raw.darkness not in (None, "") else (template.darkness if template else None)
-    peoples_raw = raw.peoples if raw.peoples not in (None, "") else (template.peoples if template else wizard.peoples)
-    try:
-        peoples = max(1, min(wizard.peoples_max, round(float(peoples_raw))))
-    except (TypeError, ValueError):
-        peoples = wizard.peoples
+    danger = raw.danger if raw.danger not in (None, "") else (template.danger if template else None)
+    peoples = _bounded(raw.peoples, template.peoples if template else wizard.peoples, 1, wizard.peoples_max) or wizard.peoples
     tone = (raw.tone or (template.tone if template else "") or "").strip()[:TONE_MAX_LENGTH] or None
     seed = (raw.seed or (template.seed if template else "") or "").strip()[:SEED_MAX_LENGTH] or None
+    size = _choice(CosmosSize, raw.cosmos or (template.cosmos.value if template else None), CosmosSize.SINGLE)
+    chosen_shape = _choice(CosmosShape, raw.shape or (template.shape.value if template else None), CosmosShape.ONE_SUN)
+    shape = chosen_shape if size is not CosmosSize.SINGLE else CosmosShape.ONE_SUN
     return GenesisSettings(
         template=template.key if template else None,
         magic=_percent(magic, wizard.magic),
-        darkness=_percent(darkness, wizard.darkness),
+        danger=_percent(danger, wizard.danger),
         technology=_choice(TechnologyEra, raw.technology or (template.technology.value if template else None), TechnologyEra.IRON),
         language_texture=_choice(LanguageTexture, raw.language or (template.language.value if template else None), LanguageTexture.FREE),
         peoples=peoples,
-        cosmos_size=_choice(CosmosSize, raw.cosmos or (template.cosmos.value if template else None), CosmosSize.SINGLE),
-        storyteller=_choice(StorytellerProfile, raw.storyteller, StorytellerProfile.CYCLIC),
+        cosmos_size=size,
+        cosmos_shape=shape,
+        layer_kind=_layer_kind(raw.layer_kind) if shape is CosmosShape.LAYERED else None,
+        storyteller=_choice(StorytellerProfile, raw.storyteller or (template.storyteller.value if template else None), StorytellerProfile.CYCLIC),
+        world_type=_optional(WorldType, raw.world_type, template.world_type if template else None),
+        sea_pct=_bounded(raw.sea_pct, None, 0, PERCENT),
+        mountains_pct=_bounded(raw.mountains_pct, None, 0, PERCENT),
+        moisture_pct=_bounded(raw.moisture_pct, None, MOISTURE_FLOOR, PERCENT),
+        climate_era=_optional(ClimateEra, raw.climate_era, template.climate_era if template else None),
+        world_age=_optional(WorldAge, raw.world_age, template.world_age if template else None),
         tone=tone,
         seed_idea=seed,
     )
-
-
-def wizard_text(rules: Rules, settings: GenesisSettings) -> str:
-    context = GenesisWizardContext(
-        rules=rules,
-        template_name=TEMPLATES[settings.template].name if settings.template else None,
-        magic=settings.magic,
-        darkness=settings.darkness,
-        technology=settings.technology,
-        language=settings.language_texture,
-        cosmos=settings.cosmos_size,
-    )
-    return render(PromptId.GENESIS_WIZARD_SETTINGS, context)
 
 
 def pulled(value: int | None, target: int, pull_pct: int) -> int:
@@ -403,9 +284,18 @@ def pulled(value: int | None, target: int, pull_pct: int) -> int:
 
 async def pull_regions(session: AsyncSession, rules: Rules, settings: GenesisSettings) -> int:
     pull = rules.setup_wizard.setting_pull_pct
-    regions = list(await session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.REGION, EntityRow.status == EntityStatus.CANON)))
+    cosmos = await CosmosRepository(session).require_cosmos()
+    world_id = cosmos.primary_world_id
+    regions = list(
+        await session.scalars(
+            select(EntityRow).where(EntityRow.entity_type == EntityType.REGION, EntityRow.status == EntityStatus.CANON, EntityRow.world_id == world_id)
+        )
+    )
     for region in regions:
-        set_stats(region, magic=pulled(stat(region, "magic"), settings.magic, pull), danger=pulled(stat(region, "danger"), settings.darkness, pull))
+        set_stats(region, magic=pulled(stat(region, "magic"), settings.magic, pull), danger=pulled(stat(region, "danger"), settings.danger, pull))
+    world = await session.get(WorldRow, world_id) if world_id is not None else None
+    if world is not None and regions:
+        world.danger = round(sum(stat(region, "danger") or 0 for region in regions) / len(regions))
     await session.flush()
     return len(regions)
 
@@ -414,6 +304,22 @@ async def save_settings(session: AsyncSession, settings: GenesisSettings) -> Non
     cosmos = await CosmosRepository(session).require_cosmos()
     cosmos.genesis_settings = settings
     await session.flush()
+
+
+def extra_world_order(settings: GenesisSettings, seed: str, number: int, *, sun: int | None, layer: tuple[int, str] | None) -> WorldCreationRequest:
+    inspiration = EXTRA_WORLD_INSPIRATION.format(ordinal=ordinal_word(number).lower(), seed=seed)
+    if layer is not None:
+        inspiration += LAYER_INSPIRATION.format(layer=layer[1])
+    shared = settings.cosmos_shape is CosmosShape.ONE_SUN and sun is not None
+    return WorldCreationRequest(
+        world_type=None,
+        inspiration=inspiration,
+        star_id=sun if shared else None,
+        parent_world_id=None,
+        new_star=not shared,
+        new_star_type=None,
+        galaxy_id=layer[0] if layer is not None else None,
+    )
 
 
 class GenesisWizard:
@@ -456,11 +362,10 @@ class GenesisWizard:
             lore_language=command.lore_language,
             rng_seed=secrets.randbits(SEED_BITS),
             settings=settings,
-            wizard_text=wizard_text(self._rules, settings) if settings else None,
             first_sons=resolve_first_sons(self._rules, command.first_sons),
         )
         self._report(context, 0.05, STAGE_GENESIS)
-        await author.create(request)
+        outcome = await author.create(request)
         async with self._database.write() as session:
             repository = CosmosRepository(session)
             cosmos = await repository.require_cosmos()
@@ -472,6 +377,9 @@ class GenesisWizard:
                 await save_settings(session, settings)
                 await pull_regions(session, self._rules, settings)
             first_world = cosmos.primary_world_id
+            home = await session.get(WorldRow, first_world) if first_world is not None else None
+            sun = home.star_id if home is not None else None
+            layer = await self._layer(session, outcome)
         self._publish(EventKind.GENESIS_FINISHED, {})
         peoples = settings.peoples if settings else self._rules.setup_wizard.peoples
         awakened: list[int] = []
@@ -481,13 +389,37 @@ class GenesisWizard:
             awakened = await self._ports.awakener.awaken(peoples, first_world)
         worlds: list[int] = []
         extra = extra_worlds(self._rules, settings.cosmos_size) if settings else 0
-        if extra and self._ports.worlds is not None:
+        if settings is not None and extra and self._ports.worlds is not None:
             self._report(context, 0.75, STAGE_WORLDS)
             for number in range(FIRST_EXTRA_WORLD, FIRST_EXTRA_WORLD + extra):
-                inspiration = EXTRA_WORLD_INSPIRATION.format(ordinal=ordinal_word(number).lower())
-                worlds.append(await self._ports.worlds.create(WorldCreationRequest(None, inspiration, None, None, False, None)))
+                worlds.append(await self._ports.worlds.create(extra_world_order(settings, seed, number, sun=sun, layer=layer)))
+        if layer is not None and first_world is not None:
+            await self._join_layer(first_world, layer[0], worlds[0] if worlds else None)
         self._report(context, 1.0, STAGE_DONE)
         return {"peoples": awakened, "worlds": worlds}
+
+    @staticmethod
+    async def _layer(session: AsyncSession, outcome: GenesisOutcome) -> tuple[int, str] | None:
+        galaxy = await session.get(GalaxyRow, outcome.layer_galaxy_id) if outcome.layer_galaxy_id is not None else None
+        dimension = await session.get(DimensionRow, galaxy.dimension_id) if galaxy is not None and galaxy.dimension_id is not None else None
+        return (galaxy.id, dimension.name) if galaxy is not None and dimension is not None else None
+
+    async def _join_layer(self, first_world: int, galaxy_id: int, target_world: int | None) -> None:
+        async with self._database.write() as session:
+            galaxy = await session.get(GalaxyRow, galaxy_id)
+            creator = await CosmosRepository(session).creator()
+            if galaxy is None or galaxy.dimension_id is None:
+                return
+            ctx = await manual_context(session, "genesis_layer", self._rules)
+            await tear_rift(
+                ctx,
+                first_world,
+                None,
+                dimension_id=galaxy.dimension_id,
+                target_world_id=target_world,
+                by_node_id=creator.id if creator is not None else None,
+                cause=RiftCause.CREATOR,
+            )
 
     @staticmethod
     def _report(context: JobContext | None, progress: float, stage: str) -> None:

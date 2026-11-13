@@ -115,7 +115,7 @@ async def test_a_history_is_set_down_rewritten_and_struck(ctx: TickContext, sess
 
 
 async def test_a_world_without_a_storyteller_takes_the_one_chosen_at_genesis(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
-    world.cosmos.genesis_settings = GenesisSettings(magic=50, darkness=50, peoples=1, storyteller=StorytellerProfile.CHAOTIC)
+    world.cosmos.genesis_settings = GenesisSettings(magic=50, danger=50, peoples=1, storyteller=StorytellerProfile.CHAOTIC)
     await session.flush()
     assert (await storyteller_of(ctx, world.world.id)).profile is StorytellerProfile.CHAOTIC
 

@@ -25,6 +25,7 @@ RENAMED_RULES: Mapping[RuleKey, RuleKey] = MappingProxyType(
         ("beyond", "restitch_route_cost"): ("beyond", "reopen_route_cost"),
         ("rarity_gates", "stitch_leak"): ("rarity_gates", "seal_leak"),
         ("oaths", "brotherhood_chance"): ("oaths", "kinship_chance"),
+        ("setup_wizard", "darkness"): ("setup_wizard", "danger"),
         **{
             ("factions", f"brotherhood_{name}"): ("factions", f"order_{name}")
             for name in ("min_warrior_pct", "at_war_min_warrior_pct", "strength", "wealth", "sway")

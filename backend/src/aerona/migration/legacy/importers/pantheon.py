@@ -27,7 +27,7 @@ def stat_block(context: MigrationContext, reference: str, payload: Any) -> dict[
     values: dict[Stat, int] = {}
     for stat in Stat:
         legacy = context.vocabulary.encode("son_stat", stat.value)
-        raw = as_int(data.get(legacy))
+        raw = as_int(data.get(legacy)) if legacy is not None else None
         if raw is None:
             context.report.warn(DEFAULTED, reference, f"stat {stat.value} set to {STAT_DEFAULT}")
             raw = STAT_DEFAULT
@@ -39,7 +39,8 @@ def passion_block(context: MigrationContext, reference: str, payload: Any) -> di
     data = as_dict(payload)
     values: dict[Passion, int] = {}
     for passion in Passion:
-        raw = as_int(data.get(context.vocabulary.encode("passion", passion.value)))
+        legacy = context.vocabulary.encode("passion", passion.value)
+        raw = as_int(data.get(legacy)) if legacy is not None else None
         values[passion] = required_bounded(context.report, reference, passion.value, raw, (PERCENT_MIN, PERCENT_MAX), fallback=PASSION_DEFAULT)
     return values
 

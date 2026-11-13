@@ -53,6 +53,7 @@ class BirthPlan:
     new_star: bool = False
     son_id: int | None = None
     new_star_type: StarType | None = None
+    galaxy_id: int | None = None
 
     @classmethod
     def from_payload(cls, payload: dict[str, Any]) -> "BirthPlan":
@@ -75,7 +76,7 @@ def placement_of(plan: BirthPlan) -> PlacementKind:
         return PlacementKind.MOON
     if plan.star_id is not None:
         return PlacementKind.EXISTING_STAR
-    return PlacementKind.NEW_STAR if plan.new_star or plan.new_star_type is not None else PlacementKind.FREE
+    return PlacementKind.NEW_STAR if plan.new_star or plan.new_star_type is not None or plan.galaxy_id is not None else PlacementKind.FREE
 
 
 async def banned_names(scope: Scope) -> list[str]:
@@ -154,8 +155,9 @@ async def birth_world(runtime: AgentRuntime, plan: BirthPlan) -> WorldRow:
         creator_son_id=plan.son_id,
         star_id=plan.star_id,
         parent_world_id=plan.parent_world_id,
-        new_star=plan.new_star or plan.new_star_type is not None,
+        new_star=plan.new_star or plan.new_star_type is not None or plan.galaxy_id is not None,
         new_star_type=plan.new_star_type,
+        galaxy_id=plan.galaxy_id,
     )
     async with runtime.database.write() as session:
         ctx = await manual_context(session, "world_birth", rules, runtime.publish)

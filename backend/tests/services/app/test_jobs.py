@@ -5,6 +5,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
+from aerona.agents.context.creation import creation_text
+from aerona.catalog.genesis import TEMPLATES
 from aerona.core.errors import BusyError, ConflictError, ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosDraft, CosmosRepository, CreatorDraft
 from aerona.db.session import Database
@@ -12,13 +14,14 @@ from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.storyteller import StorytellerProfile
-from aerona.domain.enums.world import CosmosSize, GenesisTemplate, LanguageTexture, LoreLanguage, TechnologyEra
+from aerona.domain.enums.world import CosmosShape, CosmosSize, GenesisTemplate, LanguageTexture, LoreLanguage, TechnologyEra
 from aerona.domain.models.entity_stats import CelestialStats, RegionStats
+from aerona.domain.models.genesis import GenesisOutcome
 from aerona.domain.models.profiles import EntityDepth
 from aerona.events.bus import EventBus
 from aerona.rules.registry import Rules
 from aerona.services.bulk_deepen import BulkDeepening, TargetKind
-from aerona.services.genesis_wizard import TEMPLATES, GenesisCommand, GenesisWizard, WizardInput, extra_worlds, options, pulled, sanitize, wizard_text
+from aerona.services.genesis_wizard import GenesisCommand, GenesisWizard, WizardInput, extra_worlds, options, pulled, sanitize
 from aerona.services.lore_ports import GenesisRequest, LorePorts
 from aerona.services.player.ports import ContentJob, RevelationRequest, WorldCreationRequest
 from aerona.services.startup_completion import StartupCompletion
@@ -101,7 +104,7 @@ def test_wizard_sanitize_and_text() -> None:
     settings = sanitize(rules, WizardInput(template="cosmic_horror", magic="200", peoples=99, technology="laser"))
     assert settings.template is GenesisTemplate.COSMIC_HORROR
     assert settings.magic == 100
-    assert settings.darkness == 90
+    assert settings.danger == 90
     assert settings.peoples == rules.setup_wizard.peoples_max
     assert settings.technology is TechnologyEra.IRON
     assert settings.cosmos_size is CosmosSize.SMALL
@@ -115,7 +118,7 @@ def test_wizard_sanitize_and_text() -> None:
     assert set(options(rules).storyteller) == set(StorytellerProfile)
     assert extra_worlds(rules, CosmosSize.LARGE) == rules.setup_wizard.large_cosmos_worlds
     assert [option.worlds for option in options(rules).cosmos] == [1, 2, 3]
-    assert "Cosmic horror" in wizard_text(rules, settings)
+    assert "Cosmic horror" in creation_text(rules, settings, for_genesis=True)
     assert pulled(None, 100, 50) == 75
     assert pulled(20, 80, 50) == 50
 
@@ -125,9 +128,16 @@ def test_every_template_survives_sanitizing_and_every_era_has_one() -> None:
     assert set(TEMPLATES) == set(GenesisTemplate)
     for template in TEMPLATES.values():
         settings = sanitize(rules, WizardInput(template=template.key.value))
-        assert (settings.magic, settings.darkness, settings.peoples) == (template.magic, template.darkness, template.peoples)
+        assert (settings.magic, settings.danger, settings.peoples) == (template.magic, template.danger, template.peoples)
         assert (settings.tone, settings.seed_idea) == (template.tone, template.seed)
-        assert template.name in wizard_text(rules, settings)
+        assert (settings.storyteller, settings.world_type, settings.climate_era, settings.world_age) == (
+            template.storyteller,
+            template.world_type,
+            template.climate_era,
+            template.world_age,
+        )
+        assert settings.cosmos_shape is (template.shape if template.cosmos is not CosmosSize.SINGLE else CosmosShape.ONE_SUN)
+        assert template.name in creation_text(rules, settings, for_genesis=True)
     assert {template.technology for template in TEMPLATES.values()} == set(TechnologyEra)
 
 
@@ -136,7 +146,7 @@ class FakeGenesis:
         self.database = database
         self.request: GenesisRequest | None = None
 
-    async def create(self, request: GenesisRequest) -> int:
+    async def create(self, request: GenesisRequest) -> GenesisOutcome:
         self.request = request
         async with self.database.write() as session:
             await CosmosRepository(session).create(
@@ -150,7 +160,7 @@ class FakeGenesis:
             assert cosmos is not None
             cosmos.primary_world_id = world.id
             await make_entity(session, "Vale", EntityType.REGION, world_id=world.id, stats=RegionStats(magic=0, danger=100))
-        return 1
+        return GenesisOutcome(world_id=world.id)
 
 
 class FakeAwakener:
@@ -179,14 +189,16 @@ async def test_genesis_pipeline(database: Database) -> None:
     with pytest.raises(ValidationFailedError):
         await wizard.run(GenesisCommand(creator_name="", seed=""))
     result = await wizard.run(
-        GenesisCommand(creator_name="Aeron", seed="salt", lore_language=LoreLanguage.TURKISH, wizard=WizardInput(template="star_myth", magic=100, darkness=0))
+        GenesisCommand(creator_name="Aeron", seed="salt", lore_language=LoreLanguage.TURKISH, wizard=WizardInput(template="star_myth", magic=100, danger=0))
     )
     assert genesis.request is not None
     assert genesis.request.lore_language is LoreLanguage.TURKISH
-    assert genesis.request.wizard_text is not None
+    assert genesis.request.settings is not None
     assert awakener.calls == [(3, awakener.calls[0][1])]
     assert result["worlds"] == [201, 202]
     assert "second world" in worlds.requests[0].inspiration
+    assert genesis.request.seed in worlds.requests[0].inspiration
+    assert "different" not in worlds.requests[0].inspiration
     async with database.read() as session:
         cosmos = await session.get(CosmosRow, 1)
         assert cosmos is not None

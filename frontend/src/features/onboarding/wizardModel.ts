@@ -4,7 +4,10 @@ import {
   imageStyleProblem,
 } from '@/features/images/imageStyles'
 import {
+  type ClimateEra,
+  type CosmosShape,
   type CosmosSize,
+  type DimensionKind,
   type GenesisRequest,
   type LanguageTexture,
   type LoreLanguage,
@@ -12,12 +15,16 @@ import {
   type StorytellerProfile,
   type TechnologyEra,
   type WizardTemplate,
+  type WorldAge,
+  type WorldType,
 } from './api'
 
 export const CREATOR_NAME_MAX = 60
 export const SEED_MAX = 2000
 export const TONE_MAX = 300
 export const PERCENT_MAX = 100
+export const MOISTURE_MIN = -100
+export const LAND_DEFAULTS = { sea: 50, mountains: 30, moisture: 0 }
 
 export const WIZARD_STEPS = ['template', 'creator', 'world', 'review'] as const
 export type WizardStep = (typeof WIZARD_STEPS)[number]
@@ -36,11 +43,19 @@ export type WizardDraft = {
   seed: string
   tone: string
   magic: number
-  darkness: number
+  danger: number
   technology: TechnologyEra
   language: LanguageTexture
   cosmos: CosmosSize
+  shape: CosmosShape
+  layerKind: DimensionKind | null
   storyteller: StorytellerProfile
+  worldType: WorldType | null
+  seaPct: number | null
+  mountainsPct: number | null
+  moisturePct: number | null
+  climateEra: ClimateEra | null
+  worldAge: WorldAge | null
   peoples: number
   firstSons: Rarity[] | null
   imageStyle: ImageStyle
@@ -49,7 +64,7 @@ export type WizardDraft = {
 
 export type WizardDefaults = {
   magic: number
-  darkness: number
+  danger: number
   peoples: number
 }
 
@@ -61,11 +76,19 @@ export function initialDraft(defaults: WizardDefaults): WizardDraft {
     seed: '',
     tone: '',
     magic: defaults.magic,
-    darkness: defaults.darkness,
+    danger: defaults.danger,
     technology: 'iron',
     language: 'free',
     cosmos: 'single',
+    shape: 'one_sun',
+    layerKind: null,
     storyteller: 'cyclic',
+    worldType: null,
+    seaPct: null,
+    mountainsPct: null,
+    moisturePct: null,
+    climateEra: null,
+    worldAge: null,
     peoples: defaults.peoples,
     firstSons: null,
     imageStyle: DEFAULT_IMAGE_STYLE,
@@ -94,10 +117,19 @@ export function applyTemplate(
     seed: template.seed,
     tone: template.tone,
     magic: template.magic,
-    darkness: template.darkness,
+    danger: template.danger,
     technology: template.technology,
     language: template.language,
     cosmos: template.cosmos,
+    shape: template.shape,
+    layerKind: null,
+    storyteller: template.storyteller,
+    worldType: template.world_type ?? null,
+    seaPct: null,
+    mountainsPct: null,
+    moisturePct: null,
+    climateEra: template.climate_era ?? null,
+    worldAge: template.world_age ?? null,
     peoples: template.peoples,
   }
 }
@@ -114,15 +146,63 @@ export function stepProblem(
     if (draft.peoples < 1 || draft.peoples > peoplesMax)
       return `Between 1 and ${peoplesMax} first peoples.`
     if (
-      [draft.magic, draft.darkness].some(
+      [draft.magic, draft.danger].some(
         (value) => value < 0 || value > PERCENT_MAX
       )
     )
-      return 'Magic and darkness go from 0 to 100.'
+      return 'Magic and danger go from 0 to 100.'
+    if (
+      [draft.seaPct, draft.mountainsPct].some(
+        (value) => value !== null && (value < 0 || value > PERCENT_MAX)
+      )
+    )
+      return 'Water and high ground go from 0 to 100.'
+    if (
+      draft.moisturePct !== null &&
+      (draft.moisturePct < MOISTURE_MIN || draft.moisturePct > PERCENT_MAX)
+    )
+      return 'Moisture goes from -100 to 100.'
     const style = imageStyleProblem(draft.imageStyle, draft.imageStyleCustom)
     if (style) return style
   }
   return null
+}
+
+export function landShaped(draft: WizardDraft): boolean {
+  return (
+    draft.seaPct !== null ||
+    draft.mountainsPct !== null ||
+    draft.moisturePct !== null
+  )
+}
+
+export function shapeLand(
+  draft: WizardDraft,
+  on: boolean
+): Partial<WizardDraft> {
+  return on
+    ? {
+        seaPct: draft.seaPct ?? LAND_DEFAULTS.sea,
+        mountainsPct: draft.mountainsPct ?? LAND_DEFAULTS.mountains,
+        moisturePct: draft.moisturePct ?? LAND_DEFAULTS.moisture,
+      }
+    : { seaPct: null, mountainsPct: null, moisturePct: null }
+}
+
+export function shapeBlocked(draft: WizardDraft): string | null {
+  return draft.cosmos === 'single'
+    ? 'A single world has no further worlds to place; choose a small or large cosmos first'
+    : null
+}
+
+export function effectiveShape(draft: WizardDraft): CosmosShape {
+  return draft.cosmos === 'single' ? 'one_sun' : draft.shape
+}
+
+export function layerBlocked(draft: WizardDraft): string | null {
+  return effectiveShape(draft) === 'layered'
+    ? null
+    : 'Only a layered cosmos has a second layer; choose the layered shape first'
 }
 
 export function resizeFirstSons(
@@ -152,11 +232,19 @@ export function toRequest(
     wizard: {
       template: draft.template,
       magic: draft.magic,
-      darkness: draft.darkness,
+      danger: draft.danger,
       technology: draft.technology,
       language: draft.language,
       cosmos: draft.cosmos,
+      shape: effectiveShape(draft),
+      layer_kind: effectiveShape(draft) === 'layered' ? draft.layerKind : null,
       storyteller: draft.storyteller,
+      world_type: draft.worldType,
+      sea_pct: draft.seaPct,
+      mountains_pct: draft.mountainsPct,
+      moisture_pct: draft.moisturePct,
+      climate_era: draft.climateEra,
+      world_age: draft.worldAge,
       peoples: draft.peoples,
       tone: draft.tone.trim() || null,
       seed: draft.seed.trim(),

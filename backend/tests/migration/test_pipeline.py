@@ -103,6 +103,10 @@ async def test_typed_state_is_converted(migrated: tuple[MigrationReport, Query, 
     assert report.unknown_tags == {}
     assert run("SELECT COUNT(*) FROM world_maps") == [(2,)]
     assert run("SELECT origin FROM entities e JOIN nodes n ON n.id = e.id WHERE n.name = 'Ola'") == [("mortal",)]
+    assert run(
+        "SELECT json_extract(genesis_settings, '$.template'), json_extract(genesis_settings, '$.danger'), "
+        "json_extract(genesis_settings, '$.technology'), json_extract(genesis_settings, '$.cosmos_size'), json_extract(genesis_settings, '$.tone') FROM cosmos"
+    ) == [("mythic_age", 30, "bronze", "small", "solemn")]
 
 
 async def test_images_are_deduplicated_and_linked(migrated: tuple[MigrationReport, Query, Path]) -> None:

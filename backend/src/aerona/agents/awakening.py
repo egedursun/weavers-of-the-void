@@ -5,8 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
 from aerona.agents.chronicle import write_line
+from aerona.agents.context.creation import creation_text
 from aerona.agents.context.geography import geography_lines
-from aerona.agents.context.scope import load_scope
+from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.context.world_summary import world_summary
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
@@ -33,6 +34,7 @@ from aerona.prompts.schemas.genesis import AwakenedPeople, AwakenedRecord, Awake
 from aerona.rules.registry import Rules
 
 KNOWLEDGE_TAG = "branch:{branch}"
+CREATION_EPOCH = 1
 
 
 async def add_record(
@@ -200,6 +202,13 @@ async def awaken_one(
     return created
 
 
+def creation_settings_text(scope: Scope, world_id: int | None) -> str | None:
+    settings = scope.cosmos.genesis_settings
+    if settings is None or scope.epoch > CREATION_EPOCH or world_id != scope.primary_world_id:
+        return None
+    return creation_text(scope.rules, settings, for_genesis=False)
+
+
 async def awaken_peoples(runtime: AgentRuntime, count: int, world_id: int | None = None) -> list[int]:
     runtime.require_llm("awakening of the peoples")
     rules = await runtime.current_rules()
@@ -228,6 +237,7 @@ async def awaken_peoples(runtime: AgentRuntime, count: int, world_id: int | None
                 map=await geography_lines(scope, target),
                 count=wanted,
                 earlier=names,
+                creation_text=creation_settings_text(scope, target),
             )
         try:
             output = await ask(

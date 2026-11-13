@@ -3,23 +3,32 @@ import { type WizardTemplate } from './api'
 import {
   applyTemplate,
   initialDraft,
+  landShaped,
+  layerBlocked,
   resizeFirstSons,
+  shapeBlocked,
+  shapeLand,
   stepProblem,
   toRequest,
 } from './wizardModel'
 
-const DEFAULTS = { magic: 50, darkness: 50, peoples: 2 }
+const DEFAULTS = { magic: 50, danger: 50, peoples: 2 }
 const TEMPLATE: WizardTemplate = {
   key: 'dark_fantasy',
   name: 'Dark fantasy',
   tone: 'gloomy',
   magic: 60,
-  darkness: 80,
+  danger: 80,
   technology: 'iron',
   language: 'guttural',
   peoples: 3,
   cosmos: 'single',
   seed: 'Corpses of gods.',
+  storyteller: 'rising',
+  shape: 'one_sun',
+  world_type: 'corpse_world',
+  climate_era: null,
+  world_age: null,
 }
 
 describe('genesis wizard model', () => {
@@ -35,7 +44,9 @@ describe('genesis wizard model', () => {
     }
     const filled = applyTemplate(named, TEMPLATE, DEFAULTS)
     expect(filled.seed).toBe('Corpses of gods.')
-    expect(filled.darkness).toBe(80)
+    expect(filled.danger).toBe(80)
+    expect(filled.worldType).toBe('corpse_world')
+    expect(filled.storyteller).toBe('rising')
     const cleared = applyTemplate(filled, null, DEFAULTS)
     expect(cleared.seed).toBe('')
     expect(cleared.creatorName).toBe('Aeron')
@@ -64,6 +75,43 @@ describe('genesis wizard model', () => {
     expect(request.lore_language).toBe('english')
     expect(request.wizard?.peoples).toBe(2)
     expect(request.first_sons).toEqual(['common', 'rare'])
+  })
+
+  it('sends the first world choices and leaves the rest to the seed', () => {
+    const draft = { ...initialDraft(DEFAULTS), creatorName: 'A', seed: 'S' }
+    expect(landShaped(draft)).toBe(false)
+    const shaped = { ...draft, ...shapeLand(draft, true) }
+    expect(landShaped(shaped)).toBe(true)
+    const wizard = toRequest(
+      { ...shaped, worldType: 'ocean', climateEra: 'rain', worldAge: 'old' },
+      ['common']
+    ).wizard
+    expect(wizard?.world_type).toBe('ocean')
+    expect(wizard?.sea_pct).toBe(50)
+    expect(wizard?.climate_era).toBe('rain')
+    expect(wizard?.world_age).toBe('old')
+    expect(toRequest(draft, ['common']).wizard?.sea_pct).toBeNull()
+    expect(stepProblem('world', { ...shaped, moisturePct: -150 }, 5)).toMatch(
+      /Moisture/
+    )
+  })
+
+  it('places further worlds by shape only when there are any', () => {
+    const single = initialDraft(DEFAULTS)
+    expect(shapeBlocked(single)).not.toBeNull()
+    expect(layerBlocked(single)).not.toBeNull()
+    const layered = {
+      ...single,
+      cosmos: 'small' as const,
+      shape: 'layered' as const,
+      layerKind: 'astral' as const,
+    }
+    expect(shapeBlocked(layered)).toBeNull()
+    expect(layerBlocked(layered)).toBeNull()
+    expect(toRequest(layered, ['common']).wizard?.layer_kind).toBe('astral')
+    const back = { ...layered, cosmos: 'single' as const }
+    expect(toRequest(back, ['common']).wizard?.shape).toBe('one_sun')
+    expect(toRequest(back, ['common']).wizard?.layer_kind).toBeNull()
   })
 
   it('resizes the first sons keeping the earlier picks', () => {

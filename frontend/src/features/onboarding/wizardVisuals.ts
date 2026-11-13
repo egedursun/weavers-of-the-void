@@ -3,16 +3,24 @@ import {
   AudioLines,
   Axe,
   Castle,
+  CircleDot,
+  CircleOff,
+  CloudMoon,
   Cloudy,
   Cog,
   Crown,
+  Droplets,
   Flame,
   Gem,
   Globe,
   Hammer,
+  HeartPulse,
+  Hourglass,
   Landmark,
   Languages,
+  Layers,
   LayoutTemplate,
+  Leaf,
   Lightbulb,
   type LucideIcon,
   Minus,
@@ -21,13 +29,16 @@ import {
   Orbit,
   Palette,
   Repeat,
+  Rocket,
   ScrollText,
   Shell,
   Shuffle,
   Skull,
   Snowflake,
+  Sprout,
   Star,
   Sun,
+  SunMedium,
   Sunrise,
   Swords,
   Waves,
@@ -39,12 +50,15 @@ import {
   Users,
 } from 'lucide-react'
 import {
+  type ClimateEra,
+  type CosmosShape,
   type CosmosSize,
   type LanguageTexture,
   type LoreLanguage,
   type StorytellerProfile,
   type TechnologyEra,
   type WizardTemplate,
+  type WorldAge,
 } from './api'
 import { type WizardStep } from './wizardModel'
 
@@ -76,6 +90,33 @@ export const TEMPLATE_ICON: Record<WizardTemplate['key'], LucideIcon> = {
   after_the_fall: Landmark,
   sky_islands: Cloudy,
   age_of_engines: Lightbulb,
+  many_suns: SunMedium,
+  layered_realms: Layers,
+  living_world: HeartPulse,
+  dreaming_world: CloudMoon,
+  generation_ship: Rocket,
+  without_magic: CircleOff,
+}
+
+export const SHAPE_ICON: Record<CosmosShape, LucideIcon> = {
+  one_sun: CircleDot,
+  many_suns: SunMedium,
+  layered: Layers,
+}
+
+export const CLIMATE_ICON: Record<ClimateEra, LucideIcon> = {
+  temperate: Leaf,
+  drought: Sun,
+  rain: Droplets,
+  ice_age: Snowflake,
+  scorching: Flame,
+}
+
+export const AGE_ICON: Record<WorldAge, LucideIcon> = {
+  young: Sprout,
+  mature: TreePine,
+  old: Hourglass,
+  dying: Moon,
 }
 
 export const TECHNOLOGY_ICON: Record<TechnologyEra, LucideIcon> = {
@@ -155,7 +196,7 @@ export const TONE_SUGGESTIONS = [
 ] as const
 
 const MAGIC_LEVELS = ['Faint', 'Rare', 'Present', 'Strong', 'Overwhelming']
-const DARKNESS_LEVELS = ['Bright', 'Hopeful', 'Balanced', 'Grim', 'Pitch black']
+const DANGER_LEVELS = ['Safe', 'Calm', 'Balanced', 'Perilous', 'Deadly']
 const LEVEL_SPAN = 20
 
 function levelOf(levels: string[], value: number): string {
@@ -170,6 +211,6 @@ export function magicLevel(value: number): string {
   return levelOf(MAGIC_LEVELS, value)
 }
 
-export function darknessLevel(value: number): string {
-  return levelOf(DARKNESS_LEVELS, value)
+export function dangerLevel(value: number): string {
+  return levelOf(DANGER_LEVELS, value)
 }

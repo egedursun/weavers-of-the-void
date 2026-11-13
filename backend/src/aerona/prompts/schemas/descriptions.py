@@ -1,5 +1,8 @@
+from aerona.catalog.climate import CLIMATES
+from aerona.catalog.cosmography import DIMENSION_KINDS, WORLD_AGE_LABELS
 from aerona.catalog.dominion import SCALE_POLES
 from aerona.catalog.foreign_gods import FOREIGN_GOD_POWERS
+from aerona.catalog.genesis import LAYER_KINDS
 from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS, RESOURCE_MECHANICS
 from aerona.catalog.powers import POWERS
 from aerona.catalog.stars import STAR_TYPES
@@ -48,6 +51,18 @@ def world_type_catalogue() -> str:
     return "; ".join(f"{kind} ({spec.label}: {spec.description})" for kind, spec in WORLD_TYPES.items())
 
 
+def climate_era_catalogue() -> str:
+    return "; ".join(f"{era} ({spec.label}: {spec.description})" for era, spec in CLIMATES.items())
+
+
+def world_age_catalogue() -> str:
+    return "; ".join(f"{age} ({label})" for age, label in WORLD_AGE_LABELS.items())
+
+
+def layer_kind_catalogue() -> str:
+    return "; ".join(f"{kind} ({DIMENSION_KINDS[kind].label}: {DIMENSION_KINDS[kind].description})" for kind in LAYER_KINDS)
+
+
 def design_budget(rules: Rules) -> str:
     table = rules.god_design
     poles = "; ".join(f"{scale}: {SCALE_POLES[scale][0]} at +3, {SCALE_POLES[scale][1]} at -3" for scale in DivineScale)
@@ -72,5 +87,8 @@ def description_variables(rules: Rules) -> dict[str, object]:
         "existence_states": ", ".join(ExistenceMode),
         "star_types": star_type_catalogue(),
         "world_types": world_type_catalogue(),
+        "climate_eras": climate_era_catalogue(),
+        "world_ages": world_age_catalogue(),
+        "dimension_kinds": layer_kind_catalogue(),
         "design_budget": design_budget(rules),
     }

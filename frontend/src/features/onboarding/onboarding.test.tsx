@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { useFeed } from '@/features/feed/feedStore'
 import { FirstEpochsGuide } from './FirstEpochsGuide'
 import { GenesisScreen } from './GenesisScreen'
+import { GenesisWizard } from './GenesisWizard'
 import { OnboardingTracker } from './OnboardingTracker'
 import {
   ONBOARDING_STEPS,
@@ -201,5 +202,107 @@ describe('creation screen', () => {
     await expect.element(screen.getByText(/is born\./)).toBeInTheDocument()
     await screen.getByRole('button', { name: /Enter your world/ }).click()
     await expect.poll(() => router.state.location.pathname).toBe('/')
+  })
+})
+
+const WIZARD_OPTIONS = {
+  technology: { iron: 'Iron age', bronze: 'Bronze age' },
+  language: { free: 'Free', sibilant: 'Sibilant' },
+  cosmos: [
+    { size: 'single', label: 'Single world', worlds: 1 },
+    { size: 'small', label: 'Small cosmos', worlds: 2 },
+  ],
+  shapes: [
+    { shape: 'one_sun', label: 'One sun', hint: 'Around the first sun' },
+    { shape: 'many_suns', label: 'Many suns', hint: 'Own suns' },
+    { shape: 'layered', label: 'Layered', hint: 'A second layer' },
+  ],
+  layer_kinds: [
+    { kind: 'astral', label: 'Astral plane', description: 'Thought' },
+  ],
+  world_types: [
+    { world_type: 'ordinary', label: 'Ordinary world', description: 'Plain' },
+    { world_type: 'ocean', label: 'Ocean world', description: 'Water' },
+  ],
+  climate_eras: [{ era: 'rain', label: 'Rain age', description: 'Wet' }],
+  world_ages: { young: 'Young', old: 'Old' },
+  storyteller: { cyclic: 'Cyclic', rising: 'Rising' },
+  lore_languages: { english: 'English', turkish: 'Turkish' },
+  templates: [
+    {
+      key: 'drowned_world',
+      name: 'Drowned world',
+      tone: 'restless',
+      magic: 55,
+      danger: 50,
+      technology: 'iron',
+      language: 'sibilant',
+      peoples: 3,
+      cosmos: 'single',
+      seed: 'A world where the sea covers almost everything.',
+      storyteller: 'cyclic',
+      shape: 'one_sun',
+      world_type: 'ocean',
+      climate_era: null,
+      world_age: null,
+    },
+  ],
+  first_sons: {
+    minimum: 1,
+    maximum: 5,
+    rarities: ['common', 'rare'],
+    default: ['common'],
+  },
+}
+
+describe('genesis wizard', () => {
+  it('fills the first world from a template, explains every locked control and sends the choices', async () => {
+    const { screen, server } = await renderScreen(
+      <GenesisWizard llmEnabled />,
+      {
+        'GET /api/genesis/wizard': WIZARD_OPTIONS,
+        'POST /api/genesis': { job_id: 'g1', kind: 'genesis' },
+      }
+    )
+    await screen.getByRole('radio', { name: /Drowned world/ }).click()
+    await expect.element(screen.getByText('Ocean world').first()).toBeVisible()
+    await screen.getByRole('button', { name: /Next: The Creator/ }).click()
+    await screen.getByPlaceholder('A name for the Creator').fill('Aeron')
+    await screen.getByRole('button', { name: /Next: The world/ }).click()
+    await expect
+      .element(screen.getByText(/The seed shapes the land/).first())
+      .toBeVisible()
+    await expect
+      .element(screen.getByText(/A single world has no further worlds/))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText(/Only a layered cosmos has a second layer/))
+      .toBeVisible()
+    await screen
+      .getByRole('switch', { name: 'Shape the land yourself' })
+      .click()
+    await expect
+      .element(screen.getByText(/The seed shapes the land/))
+      .not.toBeInTheDocument()
+    await screen.getByRole('radio', { name: /Small cosmos/ }).click()
+    await screen.getByRole('radio', { name: /Layered/ }).click()
+    await expect
+      .element(screen.getByText(/Only a layered cosmos has a second layer/))
+      .not.toBeInTheDocument()
+    await screen.getByRole('button', { name: /Next: First sons/ }).click()
+    await screen.getByRole('button', { name: /Create the world/ }).click()
+    await expect.poll(() => server.callsTo('POST /api/genesis').length).toBe(1)
+    const body = server.callsTo('POST /api/genesis')[0].body as {
+      wizard: Record<string, unknown>
+    }
+    expect(body.wizard).toMatchObject({
+      template: 'drowned_world',
+      danger: 50,
+      world_type: 'ocean',
+      sea_pct: 50,
+      cosmos: 'small',
+      shape: 'layered',
+      layer_kind: null,
+    })
   })
 })

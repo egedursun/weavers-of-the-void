@@ -26,7 +26,7 @@ import { STEP_HINT, STEP_ICON } from './wizardVisuals'
 
 const FALLBACK_DEFAULTS: WizardDefaults = {
   magic: 50,
-  darkness: 50,
+  danger: 50,
   peoples: 2,
 }
 const FALLBACK_PEOPLES_MAX = 5
@@ -38,13 +38,13 @@ type GenesisWizardProps = {
 export function GenesisWizard({ llmEnabled }: GenesisWizardProps) {
   const options = useWizardOptions()
   const magic = useRuleValue('setup_wizard.magic')
-  const darkness = useRuleValue('setup_wizard.darkness')
+  const danger = useRuleValue('setup_wizard.danger')
   const peoples = useRuleValue('setup_wizard.peoples')
   const peoplesMax =
     useRuleValue('setup_wizard.peoples_max') ?? FALLBACK_PEOPLES_MAX
   const defaults: WizardDefaults = {
     magic: magic ?? FALLBACK_DEFAULTS.magic,
-    darkness: darkness ?? FALLBACK_DEFAULTS.darkness,
+    danger: danger ?? FALLBACK_DEFAULTS.danger,
     peoples: peoples ?? FALLBACK_DEFAULTS.peoples,
   }
   const start = useStartGenesis()

@@ -4,7 +4,7 @@ from typing import Protocol
 from aerona.catalog.rarities import DEFAULT_FIRST_SONS
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.world import LoreLanguage
-from aerona.domain.models.genesis import GenesisSettings
+from aerona.domain.models.genesis import GenesisOutcome, GenesisSettings
 from aerona.services.player.ports import ContentWriter, PeopleAwakener, RevelationAuthor, WorldMaker
 
 
@@ -16,7 +16,6 @@ class GenesisRequest:
     lore_language: LoreLanguage
     rng_seed: int
     settings: GenesisSettings | None
-    wizard_text: str | None
     first_sons: tuple[Rarity, ...] = DEFAULT_FIRST_SONS
 
 
@@ -37,7 +36,7 @@ class ImagePromptWriter(Protocol):
 
 
 class GenesisAuthor(Protocol):
-    async def create(self, request: GenesisRequest) -> int: ...
+    async def create(self, request: GenesisRequest) -> GenesisOutcome: ...
 
 
 class SonPowerWriter(Protocol):

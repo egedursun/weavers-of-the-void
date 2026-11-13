@@ -33,7 +33,7 @@ class NewStarOutput(OutputModel):
 
 class BirthRegionOutput(OutputModel):
     name: str
-    subtype: str = Field(description="continent, inland sea, desert belt, archipelago, …")
+    subtype: str = Field(description="The kind of region in a few words, in this world's own terms")
     description: str = Field(description="2 to 4 sentences")
     danger: int = Field(ge=0, le=PERCENT_MAX)
     fertility: int = Field(ge=0, le=PERCENT_MAX)
@@ -119,7 +119,7 @@ class NewWorldOutput(OutputModel):
     gravity: Gravity
     atmosphere: Atmosphere
     time_factor: float = Field(
-        description="Multiplier of years that pass in one age on this world ({{ '%g' | format(rules.world_physics.time_factor_min / 100) }} to {{ '%g' | format(rules.world_physics.time_factor_max / 100) }}). In the dream realm time stretches, in the realm of the dead it nearly stops."
+        description="Multiplier of years that pass in one age on this world ({{ '%g' | format(rules.world_physics.time_factor_min / 100) }} to {{ '%g' | format(rules.world_physics.time_factor_max / 100) }})."
     )
     day: str = Field(description="Its day, night and seasons in one sentence")
     star_id: int | None = Field(default=None, description="If existing_star, the id of the star it orbits")
@@ -130,12 +130,10 @@ class NewWorldOutput(OutputModel):
     )
     regions: list[BirthRegionOutput]
     sky: SkyBodyOutput = Field(description="The most prominent body in this world's sky, whatever this world's sky holds")
-    unique_resource: UniqueResourceOutput = Field(
-        description="A resource found only on this world; it should have a rule of its own (it decays, it is addictive, it can only be gathered in one season…)"
-    )
+    unique_resource: UniqueResourceOutput = Field(description="A resource found only on this world, with a rule of its own")
     cosmic_resource: CosmicResourceOutput | None = Field(
         default=None,
-        description="Fill ONLY if the cosmos has no travel resource yet: the single substance, unique to the cosmos, that makes travel between worlds (space folding) possible; long use carries a price of the world's own logic (an addiction, a change in the body or mind, a debt, a decay or another cost). It has a deposit on this world.",
+        description="Fill ONLY if the cosmos has no travel resource yet: the single substance, unique to the cosmos, that makes travel between worlds possible. It has a deposit on this world.",
     )
     old_god: OldGodOutput | None = Field(
         default=None,

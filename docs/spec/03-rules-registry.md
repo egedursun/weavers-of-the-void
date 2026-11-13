@@ -3927,7 +3927,7 @@ Old namespace `SIHIRBAZ` · 7 rows · defined in `src/sihirbaz.js`. Genesis wiza
 | key | old key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
 | magic | buyu | 50 | 0 | 100 | Genesis wizard | Wizard: default magic density |
-| darkness | karanlik | 50 | 0 | 100 | Genesis wizard | Wizard: default darkness |
+| danger | karanlik | 50 | 0 | 100 | Genesis wizard | Wizard: default danger |
 | peoples | halk | 2 | 1 | 50 | Genesis wizard | Wizard: default number of initial peoples |
 | peoples_max | halk_en_cok | 5 | 1 | 50 | Genesis wizard | Wizard: maximum initial peoples |
 | small_cosmos_worlds | kucuk_kozmos | 1 | 0 | 20 | Genesis wizard | Small cosmos: worlds added at genesis |

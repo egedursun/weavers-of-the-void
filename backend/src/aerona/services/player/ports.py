@@ -33,6 +33,7 @@ class WorldCreationRequest:
     parent_world_id: int | None
     new_star: bool
     new_star_type: StarType | None
+    galaxy_id: int | None = None
 
 
 class ContentJobKind(StrEnum):

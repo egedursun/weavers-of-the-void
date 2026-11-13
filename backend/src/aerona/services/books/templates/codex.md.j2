@@ -309,6 +309,16 @@
 > **The seed of creation.** {{ book.cosmos.seed_idea }}
 
 {% endif %}
+{% if book.creation %}
+### How the world was made
+
+| Creation setting | Choice |
+|---|---|
+{% for fact in book.creation %}
+| {{ fact.label | cell }} | {{ fact.value | cell }} |
+{% endfor %}
+
+{% endif %}
 {% if book.laws %}
 ### Laws of nature
 

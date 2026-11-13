@@ -30685,14 +30685,14 @@
  },
  {
   "namespace": "SETUP_WIZARD",
-  "key": "darkness",
+  "key": "danger",
   "old_namespace": "SIHIRBAZ",
   "old_key": "karanlik",
   "default": 50,
   "min": 0,
   "max": 100,
   "group": "Genesis wizard",
-  "label": "Wizard: default darkness",
+  "label": "Wizard: default danger",
   "module": "src/sihirbaz.js"
  },
  {

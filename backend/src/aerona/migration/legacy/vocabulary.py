@@ -121,9 +121,9 @@ class Vocabulary(BaseModel):
         except ValueError:
             return None
 
-    def encode(self, enum_name: str, english: str) -> str:
+    def encode(self, enum_name: str, english: str) -> str | None:
         table = self.enums[enum_name]
-        return next(legacy for legacy, value in table.items() if value == english)
+        return next((legacy for legacy, value in table.items() if value == english), None)
 
     def key(self, shape: str, english: str) -> str:
         return self.json_keys[shape][english]

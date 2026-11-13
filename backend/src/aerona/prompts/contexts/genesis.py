@@ -12,15 +12,26 @@ class GenesisContext(LoreRulesContext):
     tone: str | None = None
     wizard_text: str | None = None
     first_son_rarities: list[str] = Field(default_factory=list)
+    layered: bool = False
 
 
 class GenesisWizardContext(RulesContext):
+    for_genesis: bool = True
     template_name: str | None = None
     magic: int
-    darkness: int
+    danger: int
     technology: TechnologyEra
     language: LanguageTexture
     cosmos: CosmosSize
+    shape_line: str | None = None
+    layer_label: str | None = None
+    world_type_label: str | None = None
+    world_type_key: str | None = None
+    sea: int | None = None
+    mountains: int | None = None
+    moisture: int | None = None
+    climate_label: str | None = None
+    age_label: str | None = None
 
 
 class SonPowersContext(LoreContext):
@@ -65,6 +76,7 @@ class AwakenPeoplesContext(LoreRulesContext):
     map: str
     count: int
     earlier: list[str] = Field(default_factory=list)
+    creation_text: str | None = None
 
 
 class RevelationType(ContextItem):

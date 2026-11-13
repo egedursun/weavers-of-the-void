@@ -251,10 +251,10 @@ async def test_genesis_builds_world_and_three_sons(tmp_path: Path, rules: Rules,
     data["sons"] = [{**data["sons"][index], "name": name} for index, name in enumerate(("Ozzeh", "Varum", "Kessa"))]
     model.script(output_model(PromptId.GENESIS_USER), output_model(PromptId.GENESIS_USER).model_validate(data))
     runtime = AgentRuntime(database=database, model=model, rules_override=rules)
-    world_id = await genesis(runtime, GenesisRequest("Aeron", "a salt lake", LoreLanguage.ENGLISH, 7), rules)
+    outcome = await genesis(runtime, GenesisRequest("Aeron", "a salt lake", LoreLanguage.ENGLISH, 7), rules)
     async with database.read() as session:
         sons = list(await session.scalars(select(SonRow).order_by(SonRow.id)))
-        world = await session.get(WorldRow, world_id)
+        world = await session.get(WorldRow, outcome.world_id)
     await database.dispose()
     assert [son.rarity for son in sons] == [Rarity.COMMON, Rarity.RARE, Rarity.LEGENDARY]
     assert world is not None and world.epoch_star_entity_id is not None

@@ -5089,7 +5089,7 @@
     "SIHIRBAZ.cekim": "setup_wizard.setting_pull_pct",
     "SIHIRBAZ.halk": "setup_wizard.peoples",
     "SIHIRBAZ.halk_en_cok": "setup_wizard.peoples_max",
-    "SIHIRBAZ.karanlik": "setup_wizard.darkness",
+    "SIHIRBAZ.karanlik": "setup_wizard.danger",
     "SIHIRBAZ.kucuk_kozmos": "setup_wizard.small_cosmos_worlds",
     "SINIR.can_tavan": "limits.hp_cap",
     "SINIR.halk_nufus_taban": "limits.people_population_floor",

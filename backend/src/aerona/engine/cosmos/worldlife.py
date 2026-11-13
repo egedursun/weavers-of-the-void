@@ -65,6 +65,11 @@ def age_of(rules: Rules, world: WorldRow, epoch: int) -> WorldAge:
     return WorldAge.DYING
 
 
+def grown_age(rules: Rules, world: WorldRow, epoch: int) -> WorldAge:
+    ages = list(WorldAge)
+    return max(age_of(rules, world, epoch), world.age_stage, key=ages.index)
+
+
 async def extinct_kinds(ctx: TickContext) -> Counter[int]:
     statement = select(EntityRow.world_id).join(EntityFlagRow, EntityFlagRow.entity_id == EntityRow.id).where(EntityFlagRow.flag == EntityFlag.EXTINCT)
     return Counter(await ctx.session.scalars(statement))
@@ -156,7 +161,7 @@ async def tend_biosphere(ctx: TickContext, world: WorldRow, target: int) -> None
 
 async def tend_age(ctx: TickContext, world: WorldRow, grounds: list[RegionEnvironmentRow]) -> None:
     if "age_stage" not in world.locked:
-        aged = age_of(ctx.rules, world, ctx.epoch)
+        aged = grown_age(ctx.rules, world, ctx.epoch)
         if aged is not world.age_stage:
             world.age_stage = aged
             await note(ctx, f"{world.name} grew {aged.value}.", key=f"world.aged.{aged.value}", world_id=world.id, kind=ChronicleKind.WORLD_AGE)

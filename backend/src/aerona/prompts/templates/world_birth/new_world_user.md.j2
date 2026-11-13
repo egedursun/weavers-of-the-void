@@ -28,7 +28,7 @@ This world will be the moon of world#{{ parent_world_id }}.
 {% elif placement == "new_star" %}
 A new sun is requested for this world: placement new_star, fill the star field (name, type, description).
 {% else %}
-Choose the placement by looking at the stars above: if the light the world wants (yellow, red, blue, black sun, dead star…) exists at a star in the list, choose existing_star and give that star_id; most worlds are born this way. Choose a new sun only if no star of that kind is in the list, and fill in the star field. The world's description must not contradict the star it orbits.
+Choose the placement by looking at the stars above: if the light the world wants exists at a star in the list, choose existing_star and give that star_id; most worlds are born this way. Choose a new sun only if no star of that kind is in the list, and fill in the star field. The world's description must not contradict the star it orbits.
 {% endif %}
 
 {% if creator_son %}
@@ -49,5 +49,5 @@ RULES: This world has its own language, sky and logic; kinship with other worlds
 {% if cosmic_resource %}
 The cosmos's travel resource already exists ({{ cosmic_resource }}); leave the cosmic_resource field empty.
 {% else %}
-The cosmos has no travel resource yet: fill the cosmic_resource field; this substance will shape the politics of the whole cosmos.
+The cosmos has no travel resource yet: fill the cosmic_resource field.
 {% endif %}

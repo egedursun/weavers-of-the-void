@@ -6,6 +6,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.achievements import ACHIEVEMENTS
+from aerona.catalog.climate import CLIMATES
 from aerona.catalog.cosmography import (
     CAUSALITY_LABELS,
     CLUSTER_KINDS,
@@ -21,6 +22,7 @@ from aerona.catalog.cosmography import (
 )
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import entity_type_spec
+from aerona.catalog.genesis import COSMOS_LABELS, SHAPE_LABELS, STORYTELLER_LABELS, TECHNOLOGY_LABELS, TEMPLATES, TEXTURE_LABELS
 from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS
 from aerona.catalog.powers import POWERS, power_unlock_levels
 from aerona.catalog.rarities import RARITY_LABELS, entity_rarity
@@ -49,6 +51,8 @@ from aerona.domain.enums.chronicle import ChronicleKind, ThreadStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import Passion, SonStatus, Stat
 from aerona.domain.enums.war import WarSide, WarStatus
+from aerona.domain.enums.world import CosmosShape
+from aerona.domain.models.genesis import GenesisSettings
 from aerona.domain.models.profiles import EntityDepth
 from aerona.domain.models.records import EpochStatsData
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
@@ -404,6 +408,7 @@ class BookModel:
     creator_typed: list[TypedSection] = field(default_factory=list)
     records: list[RecordTable] = field(default_factory=list)
     ledger_changes: dict[int, list[LedgerChange]] = field(default_factory=dict)
+    creation: list[Labelled] = field(default_factory=list)
 
 
 def humanize(value: str) -> str:
@@ -1029,6 +1034,49 @@ class BookBuilder:
         return dict(letters)
 
 
+SEED_CHOOSES = "Chosen by the seed"
+BLANK_CANVAS = "Blank canvas"
+NO_LAYER = "None"
+MOISTURE_SCALE = " (from -100 parched to 100 soaked)"
+
+
+def chosen(value: int | None, unit: str = "%") -> str:
+    return SEED_CHOOSES if value is None else f"{value}{unit}"
+
+
+def layer_fact(settings: GenesisSettings) -> str:
+    if settings.cosmos_shape is not CosmosShape.LAYERED:
+        return NO_LAYER
+    return DIMENSION_KINDS[settings.layer_kind].label if settings.layer_kind is not None else SEED_CHOOSES
+
+
+def settings_facts(settings: GenesisSettings) -> list[Labelled]:
+    return [
+        Labelled("Template", TEMPLATES[settings.template].name if settings.template is not None else BLANK_CANVAS),
+        Labelled("Magic", f"{settings.magic}/100"),
+        Labelled("Danger", f"{settings.danger}/100"),
+        Labelled("Technology", TECHNOLOGY_LABELS[settings.technology]),
+        Labelled("Texture of the language", TEXTURE_LABELS[settings.language_texture]),
+        Labelled("First peoples", str(settings.peoples)),
+        Labelled("Cosmos size", COSMOS_LABELS[settings.cosmos_size]),
+        Labelled("Shape of the cosmos", SHAPE_LABELS[settings.cosmos_shape]),
+        Labelled("Second layer", layer_fact(settings)),
+        Labelled("Storyteller", STORYTELLER_LABELS[settings.storyteller]),
+        Labelled("Kind of the first world", WORLD_TYPES[settings.world_type].label if settings.world_type is not None else SEED_CHOOSES),
+        Labelled("Water", chosen(settings.sea_pct)),
+        Labelled("High ground", chosen(settings.mountains_pct)),
+        Labelled("Moisture", chosen(settings.moisture_pct, MOISTURE_SCALE)),
+        Labelled("Climate age", CLIMATES[settings.climate_era].label if settings.climate_era is not None else SEED_CHOOSES),
+        Labelled("Age at the first epoch", WORLD_AGE_LABELS[settings.world_age] if settings.world_age is not None else SEED_CHOOSES),
+        Labelled("Tone asked for", settings.tone or "Free"),
+    ]
+
+
+def creation_facts(cosmos: CosmosRow) -> list[Labelled]:
+    settings = cosmos.genesis_settings
+    return settings_facts(settings) if settings is not None else []
+
+
 async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
     repository = CosmosRepository(session)
     cosmos = await repository.get()
@@ -1117,6 +1165,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         creator_typed=builder.typed.of(creator.id) if creator is not None else [],
         records=[*builder.typed.records, *await type_tables(session, rules)],
         ledger_changes=builder.typed.ledger_changes(await session.scalars(select(LedgerChangeRow).order_by(LedgerChangeRow.entry_id, LedgerChangeRow.id))),
+        creation=creation_facts(cosmos),
     )
 
 

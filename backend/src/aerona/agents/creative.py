@@ -56,6 +56,9 @@ class WorldOrder(Protocol):
     @property
     def new_star_type(self) -> StarType | None: ...
 
+    @property
+    def galaxy_id(self) -> int | None: ...
+
 
 class ContentOrder(Protocol):
     @property
@@ -120,6 +123,7 @@ class AgentWorldMaker:
             parent_world_id=request.parent_world_id,
             new_star=request.new_star,
             new_star_type=request.new_star_type,
+            galaxy_id=request.galaxy_id,
         )
         return (await birth_world(self._runtime, plan)).id
 

@@ -135,3 +135,8 @@ def test_every_table_has_unique_physical_columns(vocabulary: Vocabulary) -> None
 
 def test_the_legacy_engine_prefix_matches_the_vocabulary(vocabulary: Vocabulary) -> None:
     assert vocabulary.texts.engine_prefix.strip() == LEGACY_ENGINE_DESCRIPTION_PREFIX
+
+
+def test_a_value_the_legacy_game_never_had_encodes_to_nothing(vocabulary: Vocabulary) -> None:
+    assert vocabulary.encode("social_class", SocialClass.WORKER.value) is None
+    assert vocabulary.encode("social_class", SocialClass.PRIEST.value) is not None

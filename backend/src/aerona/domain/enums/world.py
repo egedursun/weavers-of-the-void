@@ -149,6 +149,12 @@ class CosmosSize(StrEnum):
     LARGE = "large"
 
 
+class CosmosShape(StrEnum):
+    ONE_SUN = "one_sun"
+    MANY_SUNS = "many_suns"
+    LAYERED = "layered"
+
+
 class TechnologyEra(StrEnum):
     STONE = "stone"
     BRONZE = "bronze"
@@ -181,6 +187,12 @@ class GenesisTemplate(StrEnum):
     AFTER_THE_FALL = "after_the_fall"
     SKY_ISLANDS = "sky_islands"
     AGE_OF_ENGINES = "age_of_engines"
+    MANY_SUNS = "many_suns"
+    LAYERED_REALMS = "layered_realms"
+    LIVING_WORLD = "living_world"
+    DREAMING_WORLD = "dreaming_world"
+    GENERATION_SHIP = "generation_ship"
+    WITHOUT_MAGIC = "without_magic"
 
 
 class ImageStyle(StrEnum):

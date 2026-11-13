@@ -40,6 +40,17 @@ PAYLOADS: dict[PromptId, dict[str, Any]] = {
         "naming": NAMING_RULE,
         "tone": "Grim.",
         "god": GOD,
+        "world": {
+            "type": "ordinary",
+            "gravity": "normal",
+            "atmosphere": "normal",
+            "sea_pct": 40,
+            "mountains_pct": 30,
+            "moisture_pct": 10,
+            "climate_era": "temperate",
+            "age": "young",
+        },
+        "star": {"name": "Ivar", "type": "red_dwarf", "description": "A dim, steady sun."},
         "regions": [NODE],
         "first_celestial": {"name": "Ka", "subtype": "star", "description": "Bright.", "domain": "star", "image_prompt": IMAGE},
         "cosmic_resource": {

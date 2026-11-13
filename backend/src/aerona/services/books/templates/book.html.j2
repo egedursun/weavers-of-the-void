@@ -4,7 +4,7 @@
 {% block body %}
 {% set world_count = book.stars | sum(attribute="worlds", start=[]) | length %}
 {% set parts = [] %}
-{% if book.cosmos.cosmology or book.laws %}{% set _ = parts.append(("cosmology", "Cosmology", "How the world began")) %}{% endif %}
+{% if book.cosmos.cosmology or book.laws or book.creation %}{% set _ = parts.append(("cosmology", "Cosmology", "How the world began")) %}{% endif %}
 {% if book.creator %}{% set _ = parts.append(("creator", book.creator.name, book.creator.title or "The Creator")) %}{% endif %}
 {% set _ = parts.append(("cosmos", "The Heavens", world_count ~ " worlds")) %}
 {% if book.foreign_gods %}{% set _ = parts.append(("foreign-gods", "Foreign Gods", book.foreign_gods | length ~ " gods")) %}{% endif %}
@@ -46,11 +46,12 @@
 <ol>{% for id, title, count in parts %}<li><a href="#{{ id }}">{{ title }}</a>{% if count %}<span class="count">{{ count }}</span>{% endif %}</li>{% endfor %}</ol>
 </section>
 
-{% if book.cosmos.cosmology or book.laws %}
+{% if book.cosmos.cosmology or book.laws or book.creation %}
 <section class="chapter" id="cosmology">
 {{ chapter_head("cosmology", numeral("cosmology"), "Cosmology", book.cosmos.tone) }}
 {{ book.cosmos.cosmology | paragraphs }}
 {% if book.cosmos.seed_idea %}<div class="box"><span class="label">The seed of creation</span>{{ book.cosmos.seed_idea }}</div>{% endif %}
+{% if book.creation %}<h3 class="bm2">How the world was made</h3>{{ facts(book.creation) }}{% endif %}
 {% if book.laws %}<h3 class="bm2">Laws of nature</h3>{% for law in book.laws %}{{ entity_article(law, false, links) }}{% endfor %}{% endif %}
 </section>
 {% endif %}
