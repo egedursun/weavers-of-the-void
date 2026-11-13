@@ -65,6 +65,7 @@ from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.node import NodeKind
 from aerona.engine.body.decline import decline_severity
 from aerona.engine.cosmos.being_wounds import VAST, can_roam, can_see, effective_might
+from aerona.engine.equipment.models import MOUNT_FAMILIES
 from aerona.engine.primitives.stats import stat
 from aerona.engine.vehicles.fleet import army_pace
 from aerona.engine.vehicles.groups import read
@@ -179,6 +180,7 @@ async def vehicle_types(session: AsyncSession, designs: list[DesignRow]) -> list
                     model_name=models.get(mount.model_id) if mount.model_id is not None else None,
                     count=mount.count,
                     arc=mount.arc,
+                    families=list(MOUNT_FAMILIES[mount.mount]),
                     locked=list(mount.locked),
                 )
                 for mount in mounts.get(row.id, [])

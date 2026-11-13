@@ -22,6 +22,24 @@ export const HOLDER_TYPES = [
 ] as const
 export const COMMUNITY_TYPES = ['settlement', 'people'] as const
 
+export function numberProblem(
+  text: string,
+  min: number,
+  max: number
+): string | null {
+  const value = Number(text)
+  return text.trim() !== '' &&
+    Number.isInteger(value) &&
+    value >= min &&
+    value <= max
+    ? null
+    : `Enter a whole number from ${min} to ${max}`
+}
+
+export function settled(text: string, current: number): string | null {
+  return Number(text) === current ? 'Change the number first' : null
+}
+
 export function useKindRow<
   E extends ActionName,
   D extends ActionName,

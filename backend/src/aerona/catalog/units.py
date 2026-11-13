@@ -3,6 +3,7 @@ from types import MappingProxyType
 
 from aerona.catalog.battle_depth import WEAPON_PROFILES, WeaponProfile
 from aerona.core.total import total
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import ArmourType, ShieldType, Tactic, UnitFamily, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -321,3 +322,48 @@ STYLE_TACTICS = MappingProxyType(
 
 def weapon_of(spec: UnitSpec) -> WeaponProfile:
     return spec.profile if spec.profile is not None else WEAPON_PROFILES[spec.kind]
+
+
+Y = MartialStyle
+ROLE_STYLES: MappingProxyType[UnitKind, MartialStyle] = total(
+    UnitKind,
+    {
+        K.LEVY: Y.SHIELDWALL,
+        K.LINE_INFANTRY: Y.SHIELDWALL,
+        K.GUARD_INFANTRY: Y.SHIELDWALL,
+        K.SHIELD_INFANTRY: Y.SHIELDWALL,
+        K.HEAVY_INFANTRY: Y.SHOCK,
+        K.SHOCK_INFANTRY: Y.SHOCK,
+        K.PIKE_INFANTRY: Y.PHALANX,
+        K.LIGHT_INFANTRY: Y.SKIRMISHER,
+        K.ARCHERS: Y.SKIRMISHER,
+        K.CROSSBOWMEN: Y.SKIRMISHER,
+        K.SLINGERS: Y.SKIRMISHER,
+        K.JAVELINEERS: Y.SKIRMISHER,
+        K.GUNNERS: Y.SKIRMISHER,
+        K.GRENADIERS: Y.SHOCK,
+        K.MARINES: Y.NAVAL_RAIDER,
+        K.NAVAL_CREW: Y.NAVAL_RAIDER,
+        K.SKY_CREW: Y.NAVAL_RAIDER,
+        K.VOID_CREW: Y.NAVAL_RAIDER,
+        K.MOUNTED_ARCHERS: Y.HORSE_ARCHER,
+        K.MOUNTED_GUNNERS: Y.HORSE_ARCHER,
+        K.LIGHT_CAVALRY: Y.HORSE_ARCHER,
+        K.HEAVY_CAVALRY: Y.SHOCK,
+        K.CHARIOTS: Y.CHARIOT,
+        K.BEAST_RIDERS: Y.BEAST_WAR,
+        K.SKY_RIDERS: Y.BEAST_WAR,
+        K.WAR_BEASTS: Y.BEAST_WAR,
+        K.BOUND_BEASTS: Y.BEAST_WAR,
+        K.ENGINEERS: Y.SIEGE_ENGINEER,
+        K.SAPPERS: Y.SIEGE_ENGINEER,
+        K.SIEGE_CREW: Y.SIEGE_ENGINEER,
+        K.ARTILLERY_CREW: Y.SIEGE_ENGINEER,
+        K.VEHICLE_CREW: Y.SIEGE_ENGINEER,
+        K.CONSTRUCTS: Y.WAR_MAGIC,
+        K.SUMMONED_HOST: Y.WAR_MAGIC,
+        K.BATTLE_CASTERS: Y.WAR_MAGIC,
+        K.SUPPORT_CASTERS: Y.WAR_MAGIC,
+        K.SUMMONERS: Y.WAR_MAGIC,
+    },
+)

@@ -126,6 +126,9 @@ import { PetsSection } from './wilds/PetsSection'
 import { SpeciesSection } from './wilds/SpeciesSection'
 import { TotemSection } from './wilds/TotemSection'
 
+const VAST = new Set(['cosmic_being', 'outer_being'])
+const BODIED = new Set(['mortal', 'species', 'beast', ...VAST])
+
 const MIND_TYPES = new Set([
   'mortal',
   'people',
@@ -340,8 +343,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     SITE_TYPES.has(entity.entity_type) ||
     detail.flags.some((flag) => SITE_FLAGS.has(flag))
   if (!sited) present.delete('section-site')
-  const embodied =
-    entity.entity_type === 'mortal' || entity.entity_type === 'species'
+  const embodied = BODIED.has(entity.entity_type)
   if (!embodied) present.delete('section-body')
   const afflictable =
     entity.entity_type === 'mortal' || entity.entity_type === 'beast'
@@ -677,7 +679,16 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         {entity.entity_type === 'trade_route' && (
           <TradeRouteSection routeId={entity.id} readOnlyReason={readOnly} />
         )}
-        {embodied && <BodySection nodeId={entity.id} />}
+        {embodied && (
+          <BodySection
+            nodeId={entity.id}
+            emptyNote={
+              VAST.has(entity.entity_type)
+                ? 'Its body forms the first time it is struck.'
+                : undefined
+            }
+          />
+        )}
         {afflictable && <AfflictionsSection nodeId={entity.id} />}
         {entity.entity_type === 'people' && (
           <PeopleBodyCustoms peopleId={entity.id} />

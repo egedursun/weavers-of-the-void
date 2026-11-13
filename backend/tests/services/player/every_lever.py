@@ -1436,7 +1436,7 @@ LEVERS: dict[str, Lever] = {
     "star:depth": given(history="It burned before the first world."),
     "scale:depth": given(node_id=Pick("galaxy"), history="It turned before the first star."),
     "son:outer_bargain": after(("horror:outer_being", {"world_id": Pick("world")}), outer_id=Newest(EntityType.OUTER_BEING), request="a clear sky"),
-    "star:edit": given(brightness=60),
+    "star:edit": given(brightness=60, patron_son_id=Pick("son")),
     "strip_power": after(("son:power", {"son_id": Pick("son"), "slot": 1, "name": "Long Stride", "effect": "tireless"}), slot=1),
     "structure:commission": given(site_id=Pick(TOWN), kind="temple"),
     "structure:undedicate": after(

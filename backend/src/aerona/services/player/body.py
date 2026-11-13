@@ -44,7 +44,7 @@ from aerona.domain.enums.body import (
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import KindFamily
-from aerona.engine.body.book import Bearer, anatomy_for, ensure_body
+from aerona.engine.body.book import BODIED, Bearer, anatomy_for, ensure_body
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.customs import CUSTOM_FIELDS, ensure_customs
 from aerona.engine.body.digits import restore, sync
@@ -221,7 +221,7 @@ async def bearer_of(scope: PlayerScope, node_id: int) -> Bearer:
     found: Bearer | None = await session.get(EntityRow, node_id) or await session.get(SonRow, node_id) or await session.get(ForeignGodRow, node_id)
     if found is None:
         raise NotFoundError("No such bearer.")
-    if isinstance(found, EntityRow) and found.entity_type not in {EntityType.MORTAL, EntityType.SPECIES}:
+    if isinstance(found, EntityRow) and found.entity_type not in BODIED:
         raise ValidationFailedError(f"{found.name} has no body.")
     return found
 

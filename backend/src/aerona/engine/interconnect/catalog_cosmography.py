@@ -78,6 +78,7 @@ COSMOGRAPHY_MECHANICS = (
         fields=("medium_heat", "expansion"),
         exposure=Exposure.TOOL,
         tools=("create_cluster",),
+        levers=("cluster:create", "cluster:edit", "cluster:delete"),
         targets=("cluster",),
         couplings=(Coupling(S.ECONOMY, "drifting clusters lengthen intercluster routes", EdgeKind.FLOW, "clusters.expansion_cap"),),
     ),
@@ -194,6 +195,7 @@ COSMOGRAPHY_MECHANICS = (
         fields=("age_stage", "lifecycle_clock", "stability", "radiation", "sacredness", "patron_son_id"),
         exposure=Exposure.TOOL,
         tools=("claim_star",),
+        levers=("star:edit",),
         targets=("star",),
         couplings=(
             Coupling(S.FAITH, "communities that worship their star grow or lose piety with its light", EdgeKind.MODIFIER, "star_life.worship_piety"),
@@ -243,6 +245,7 @@ COSMOGRAPHY_MECHANICS = (
         fields=("temperature_shift", "rainfall_shift", "current"),
         exposure=Exposure.TOOL,
         tools=("turn_region_climate",),
+        levers=("region_climate:turn",),
         targets=("world",),
         couplings=(Coupling(S.ENVIRONMENT, "cleared land dries its neighbours", EdgeKind.MODIFIER, "world_life.deforestation_rain"),),
     ),

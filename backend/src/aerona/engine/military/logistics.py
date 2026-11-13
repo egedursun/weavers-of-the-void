@@ -59,7 +59,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.physics import gravity_speed_pct
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.relations.book import ensure_relation, shift
-from aerona.engine.vehicles.fleet import pace_pct
+from aerona.engine.vehicles.fleet import borne_baggage, pace_pct
 from aerona.rules.registry import Rules
 
 HUNDRED = 100
@@ -114,6 +114,7 @@ def step_towards(
     inverted: bool = False,
     heavy: bool = False,
     pace: int = PERCENT,
+    borne: int = 0,
 ) -> int:
     profile = march.profile
     if march.goal is None or profile.region_entity_id is None or profile.region_entity_id == march.goal:
@@ -125,7 +126,15 @@ def step_towards(
     reach = max(1, round_half_up(reach * pace / PERCENT))
     here = ground.regions.get(profile.region_entity_id)
     budget = march_budget(
-        rules, reach, weather=weather, season=season, road=on_road(here, rules), baggage=profile.baggage, hardy=hardy, inverted=inverted, heavy=heavy
+        rules,
+        reach,
+        weather=weather,
+        season=season,
+        road=on_road(here, rules),
+        baggage=max(0, profile.baggage - borne),
+        hardy=hardy,
+        inverted=inverted,
+        heavy=heavy,
     )
     world = ground.worlds.get(here.world_id) if here is not None else None
     budget = round_half_up(budget * gravity_speed_pct(rules, world) / PERCENT)
@@ -415,6 +424,7 @@ async def advance(
             inverted=laws.has(NaturalLaw.SEASONS_REVERSED, march.army.world_id),
             heavy=laws.has(NaturalLaw.GRAVITY_SHIFT, march.army.world_id),
             pace=await pace_pct(ctx.session, ctx.rules, march.army.id, sum(row.count for row in rows)),
+            borne=await borne_baggage(ctx.session, ctx.rules, march.army.id),
         )
     if enemy is not None:
         log.raided = raid_supply(ctx.rules, profile, enemy.profile) > 0 or log.raided

@@ -1,4 +1,5 @@
 from types import MappingProxyType
+from zlib import crc32
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,6 +52,7 @@ SLOT_MATERIALS = MappingProxyType(
         ArmamentSlot.BARDING: MaterialSlot.ARMOUR,
     }
 )
+NEAR_PCT = 80
 GUARD_SLOTS = frozenset({ArmamentSlot.ARMOUR, ArmamentSlot.SHIELD, ArmamentSlot.HELMET, ArmamentSlot.BARDING})
 
 
@@ -62,10 +64,20 @@ def worth(spec: FamilySpec) -> int:
     return spec.protection * 3 + spec.coverage if spec.slot in GUARD_SLOTS else spec.damage + spec.piercing // 2 + spec.accuracy // 4 + spec.rate * 5
 
 
+def taste(holder_id: int, slot: ArmamentSlot, family: EquipmentFamily) -> int:
+    return crc32(f"{holder_id}.{slot.value}.{family.value}".encode())
+
+
 def best_family(knowledge: KnowledgeMap, holder_id: int, slot: ArmamentSlot, allowed: tuple[EquipmentFamily, ...] | None = None) -> EquipmentFamily | None:
     pool = [FAMILIES[family] for family in (allowed or SLOT_FAMILIES[slot])]
     found = [spec for spec in pool if spec.slot is slot and known(spec, knowledge, holder_id)]
-    return max(found, key=lambda spec: (worth(spec), spec.family.value)).family if found else None
+    if not found:
+        return None
+    if allowed is None:
+        return max(found, key=lambda spec: (worth(spec), spec.family.value)).family
+    top = max(worth(spec) for spec in found)
+    near = [spec for spec in found if worth(spec) * PERCENT >= top * NEAR_PCT]
+    return min(near, key=lambda spec: taste(holder_id, slot, spec.family)).family
 
 
 def material_scale(rules: Rules, slot: ArmamentSlot, props: MaterialProps | None, quality: int) -> float:

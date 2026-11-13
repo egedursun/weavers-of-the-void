@@ -26,12 +26,13 @@ from aerona.rules.registry import Rules
 D = VehicleDomain
 Y = VehicleFamily
 SIEGE = frozenset({Y.RAM, Y.TOWER, Y.THROWER})
+LAND_DOMAINS = frozenset({D.LAND, D.UNDERGROUND, D.AMPHIBIOUS})
 ROLE_DOMAINS: MappingProxyType[UnitKind, frozenset[VehicleDomain]] = MappingProxyType(
     {
         UnitKind.NAVAL_CREW: frozenset({D.WATER, D.UNDERWATER, D.AMPHIBIOUS}),
         UnitKind.SKY_CREW: frozenset({D.AIR}),
         UnitKind.VOID_CREW: frozenset({D.SPACE, D.GAS_GIANT, D.PLANAR}),
-        UnitKind.VEHICLE_CREW: frozenset({D.LAND, D.UNDERGROUND}),
+        UnitKind.VEHICLE_CREW: LAND_DOMAINS,
         UnitKind.SIEGE_CREW: frozenset({D.LAND}),
         UnitKind.ARTILLERY_CREW: frozenset({D.LAND}),
         UnitKind.CHARIOTS: frozenset({D.LAND}),
@@ -129,7 +130,7 @@ async def outfit_army(ctx: TickContext, army: EntityRow, owner: EntityRow, rows:
     return moved
 
 
-async def army_pace(session: AsyncSession, army_id: int, domains: frozenset[VehicleDomain] = frozenset({D.LAND, D.UNDERGROUND})) -> int | None:
+async def army_pace(session: AsyncSession, army_id: int, domains: frozenset[VehicleDomain] = LAND_DOMAINS) -> int | None:
     paces = [reading.pace for reading in await readings(session, army_id) if reading.design.domain in domains]
     return min(paces) if paces else None
 
@@ -209,10 +210,18 @@ async def siege_power(session: AsyncSession, army_id: int) -> float:
 
 
 async def pace_pct(session: AsyncSession, rules: Rules, army_id: int, soldiers: int) -> int:
-    land = frozenset({D.LAND, D.UNDERGROUND})
+    land = LAND_DOMAINS
     pace = await army_pace(session, army_id, land)
     if pace is None:
         return PERCENT
     ratio = round_half_up(pace * PERCENT / max(1, rules.vehicles.walk_pace))
     riding = await carried_troops(session, army_id, land) >= soldiers > 0
     return clamp_int(ratio if riding else min(PERCENT, ratio), PERCENT // 4, PERCENT * 2)
+
+
+async def land_cargo(session: AsyncSession, holder_id: int) -> int:
+    return sum(reading.cargo for reading in await readings(session, holder_id) if reading.design.domain in LAND_DOMAINS)
+
+
+async def borne_baggage(session: AsyncSession, rules: Rules, army_id: int) -> int:
+    return await land_cargo(session, army_id) // max(1, rules.vehicles.cargo_per_baggage)

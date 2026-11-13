@@ -1,21 +1,25 @@
 from sqlalchemy import select
 
-from aerona.catalog.vehicles import FRAMES
+from aerona.catalog.vehicles import FRAMES, LAYOUTS
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyUnitRow
+from aerona.db.tables.vehicles import DesignMountRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
-from aerona.engine.collective.designs import arm_mounts, catalogue_fields, derive, frame_sizes, lay_sections, mounts_of, sections_of
+from aerona.domain.enums.vehicles import MountArc
+from aerona.engine.collective.designs import MOUNT_ARCS, arm_mounts, catalogue_fields, derive, frame_sizes, home_section, lay_sections, mounts_of, sections_of
 from aerona.engine.context import TickContext
+from aerona.engine.equipment.models import mount_model
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.vehicles.fleet import CREW_ROLES, readings, role_design, serving
 from aerona.engine.vehicles.groups import add_vehicles
 
 FIXUP = "vehicles.made_kinds"
+REARM = "vehicles.mounts_seated"
 
 
 async def complete_designs(ctx: TickContext, knowledge: KnowledgeMap) -> int:
@@ -63,10 +67,44 @@ async def crew_armies(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     return granted
 
 
+async def rearm(ctx: TickContext, knowledge: KnowledgeMap) -> dict[str, int]:
+    tally = {"armed": 0, "seated": 0, "aimed": 0, "struck": 0}
+    for row in list(await ctx.session.scalars(select(DesignMountRow).order_by(DesignMountRow.id))):
+        found = await ctx.session.get(DesignRow, row.design_id)
+        if found is None or found.frame is None:
+            continue
+        owner = await ctx.session.get(EntityRow, found.owner_entity_id) if found.owner_entity_id is not None else None
+        if owner is not None and held(owner.id):
+            continue
+        locked = set(row.locked or [])
+        if row.model_id is None and "model_id" not in locked:
+            model = await mount_model(ctx, owner, row.mount, knowledge)
+            if model is None:
+                await ctx.session.delete(row)
+                tally["struck"] += 1
+                continue
+            row.model_id = model.id
+            tally["armed"] += 1
+        if row.section is None and "section" not in locked:
+            row.section = home_section(row.mount, {part.section for part in LAYOUTS[FRAMES[found.frame].family]})
+            tally["seated"] += row.section is not None
+        if row.arc is MountArc.ALL_ROUND and "arc" not in locked and MOUNT_ARCS[row.mount] is not MountArc.ALL_ROUND:
+            row.arc = MOUNT_ARCS[row.mount]
+            tally["aimed"] += 1
+    await ctx.session.flush()
+    for found in list(await ctx.session.scalars(select(DesignRow).where(DesignRow.frame.is_not(None)).order_by(DesignRow.id))):
+        await derive(ctx.session, ctx.rules, found)
+    return tally
+
+
 async def made_kinds_fixup(ctx: TickContext) -> dict[str, int]:
-    if await ctx.session.get(AppliedFixupRow, FIXUP) is not None:
-        return {}
+    result: dict[str, int] = {}
     knowledge = await KnowledgeMap.load(ctx.session)
-    result = {"designs": await complete_designs(ctx, knowledge), "vehicles": await crew_armies(ctx, knowledge)}
-    ctx.session.add(AppliedFixupRow(key=FIXUP, result=result))
+    if await ctx.session.get(AppliedFixupRow, FIXUP) is None:
+        result = {"designs": await complete_designs(ctx, knowledge), "vehicles": await crew_armies(ctx, knowledge)}
+        ctx.session.add(AppliedFixupRow(key=FIXUP, result=result))
+    if await ctx.session.get(AppliedFixupRow, REARM) is None:
+        seated = await rearm(ctx, knowledge)
+        ctx.session.add(AppliedFixupRow(key=REARM, result=seated))
+        result |= seated
     return result

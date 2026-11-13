@@ -5,7 +5,7 @@ from aerona.core.total import total
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
-from aerona.domain.enums.military import ArmourType, ShieldType, UnitFamily, VesselArmament
+from aerona.domain.enums.military import ArmourType, ShieldType, UnitFamily, UnitKind, VesselArmament
 from aerona.domain.enums.society import KnowledgeBranch
 
 E = EquipmentFamily
@@ -221,13 +221,104 @@ SLOT_FAMILIES: MappingProxyType[ArmamentSlot, tuple[EquipmentFamily, ...]] = tot
 UNIT_SLOTS: MappingProxyType[UnitFamily, tuple[ArmamentSlot, ...]] = total(
     UnitFamily,
     {
-        UnitFamily.INFANTRY: (S.HAND_WEAPON, S.ARMOUR, S.SHIELD, S.HELMET),
-        UnitFamily.MISSILE: (S.MISSILE_WEAPON, S.HAND_WEAPON, S.ARMOUR, S.HELMET),
+        UnitFamily.INFANTRY: (S.HAND_WEAPON, S.MISSILE_WEAPON, S.ARMOUR, S.SHIELD, S.HELMET),
+        UnitFamily.MISSILE: (S.MISSILE_WEAPON, S.HAND_WEAPON, S.ARMOUR, S.SHIELD, S.HELMET),
         UnitFamily.MOUNTED: (S.HAND_WEAPON, S.MISSILE_WEAPON, S.ARMOUR, S.SHIELD, S.HELMET, S.BARDING),
-        UnitFamily.VEHICLE: (S.HAND_WEAPON, S.MISSILE_WEAPON, S.ARMOUR, S.HELMET),
+        UnitFamily.VEHICLE: (S.HAND_WEAPON, S.MISSILE_WEAPON, S.ARMOUR, S.SHIELD, S.HELMET, S.BARDING),
         UnitFamily.BEAST: (S.BARDING,),
-        UnitFamily.ENGINEER: (S.HAND_WEAPON, S.ARMOUR, S.HELMET),
+        UnitFamily.ENGINEER: (S.HAND_WEAPON, S.ARMOUR, S.SHIELD, S.HELMET),
         UnitFamily.MAGIC: (S.MISSILE_WEAPON, S.HAND_WEAPON, S.ARMOUR),
         UnitFamily.EXOTIC: (S.ARMOUR,),
+    },
+)
+
+U = UnitKind
+LIGHT_GUARD = (E.QUILTED, E.PADDED, E.HIDE, E.SYNTHETIC)
+MEDIUM_GUARD = (E.MAIL, E.SCALE, E.LAMELLAR, E.BRIGANDINE, E.COMPOSITE, E.SYNTHETIC, E.QUILTED, E.PADDED)
+HEAVY_GUARD = (E.POWERED, E.PLATE, E.LAMINAR, E.CERAMIC, E.COMPOSITE, E.MAIL, E.SCALE)
+WARD_GUARD = (E.WARDED, E.QUILTED, E.PADDED)
+SMALL_SHIELDS = (E.BUCKLER, E.ROUND_SHIELD)
+BIG_SHIELDS = (E.PROJECTED, E.HEATER, E.KITE, E.ROUND_SHIELD)
+WALL_SHIELDS = (E.PROJECTED, E.TOWER_SHIELD, E.PAVISE, E.KITE, E.ROUND_SHIELD)
+LIGHT_HELMS = (E.OPEN_HELM, E.CAP)
+MEDIUM_HELMS = (E.CLOSED_HELM, E.OPEN_HELM, E.CAP)
+HEAVY_HELMS = (E.FULL_HELM, E.CLOSED_HELM, E.OPEN_HELM)
+SIDEARMS = (E.BLADE, E.DAGGER, E.AXE, E.CLUB)
+CREW_ARMS = (E.PISTOL, E.HANDGUN, E.CROSSBOW, E.BOW)
+LIGHT_BARDING = (E.LIGHT_BARDING,)
+HEAVY_BARDING = (E.HEAVY_BARDING, E.LIGHT_BARDING)
+
+
+def arms(
+    *,
+    hand: tuple[EquipmentFamily, ...] = (),
+    missile: tuple[EquipmentFamily, ...] = (),
+    armour: tuple[EquipmentFamily, ...] = LIGHT_GUARD,
+    shield: tuple[EquipmentFamily, ...] = SMALL_SHIELDS,
+    helmet: tuple[EquipmentFamily, ...] = LIGHT_HELMS,
+    barding: tuple[EquipmentFamily, ...] = (),
+) -> MappingProxyType[ArmamentSlot, tuple[EquipmentFamily, ...]]:
+    return MappingProxyType(
+        {
+            slot: families
+            for slot, families in (
+                (S.HAND_WEAPON, hand),
+                (S.MISSILE_WEAPON, missile),
+                (S.ARMOUR, armour),
+                (S.SHIELD, shield),
+                (S.HELMET, helmet),
+                (S.BARDING, barding),
+            )
+            if families
+        }
+    )
+
+
+ROLE_ARMS: MappingProxyType[UnitKind, MappingProxyType[ArmamentSlot, tuple[EquipmentFamily, ...]]] = total(
+    UnitKind,
+    {
+        U.LEVY: arms(hand=(E.SPEAR, E.CLUB, E.AXE, E.STAFF)),
+        U.LINE_INFANTRY: arms(hand=(E.SPEAR, E.BLADE, E.AXE), armour=MEDIUM_GUARD, shield=BIG_SHIELDS, helmet=MEDIUM_HELMS),
+        U.GUARD_INFANTRY: arms(hand=(E.POLEARM, E.LONGBLADE, E.HAMMER, E.BLADE), armour=HEAVY_GUARD, shield=BIG_SHIELDS, helmet=HEAVY_HELMS),
+        U.HEAVY_INFANTRY: arms(hand=(E.MACE, E.HAMMER, E.LONGBLADE, E.AXE, E.BLADE), armour=HEAVY_GUARD, shield=BIG_SHIELDS, helmet=HEAVY_HELMS),
+        U.LIGHT_INFANTRY: arms(hand=(E.SPEAR, E.BLADE, E.AXE, E.DAGGER), missile=(E.JAVELIN, E.THROWING_WEAPON, E.SLING)),
+        U.SHIELD_INFANTRY: arms(hand=(E.SPEAR, E.BLADE, E.AXE), armour=MEDIUM_GUARD, shield=WALL_SHIELDS, helmet=MEDIUM_HELMS),
+        U.SHOCK_INFANTRY: arms(hand=(E.AXE, E.HAMMER, E.FLAIL, E.MACE, E.LONGBLADE, E.FIST_WEAPON), armour=MEDIUM_GUARD, helmet=MEDIUM_HELMS),
+        U.PIKE_INFANTRY: arms(hand=(E.PIKE, E.POLEARM, E.SPEAR), armour=MEDIUM_GUARD, helmet=MEDIUM_HELMS),
+        U.MARINES: arms(hand=(E.BLADE, E.AXE, E.DAGGER, E.SPEAR), missile=(E.PISTOL, E.HANDGUN, E.CROSSBOW, E.JAVELIN)),
+        U.GRENADIERS: arms(hand=(E.BLADE, E.DAGGER), missile=(E.GRENADE, E.MUSKET, E.RIFLE), armour=MEDIUM_GUARD, helmet=MEDIUM_HELMS),
+        U.ARCHERS: arms(hand=SIDEARMS, missile=(E.LONGBOW, E.COMPOSITE_BOW, E.BOW)),
+        U.CROSSBOWMEN: arms(hand=SIDEARMS, missile=(E.REPEATING_CROSSBOW, E.CROSSBOW), armour=MEDIUM_GUARD, shield=WALL_SHIELDS, helmet=MEDIUM_HELMS),
+        U.SLINGERS: arms(hand=(E.CLUB, E.DAGGER), missile=(E.SLING,)),
+        U.JAVELINEERS: arms(hand=(E.SPEAR, E.BLADE, E.AXE), missile=(E.JAVELIN, E.THROWING_WEAPON)),
+        U.GUNNERS: arms(hand=(E.BLADE, E.DAGGER), missile=(E.BEAM_WEAPON, E.REPEATING_GUN, E.RIFLE, E.MUSKET, E.HANDGUN), armour=MEDIUM_GUARD),
+        U.MOUNTED_ARCHERS: arms(hand=(E.BLADE, E.LONGBLADE, E.AXE), missile=(E.COMPOSITE_BOW, E.BOW), barding=LIGHT_BARDING),
+        U.MOUNTED_GUNNERS: arms(hand=(E.LONGBLADE, E.BLADE), missile=(E.RIFLE, E.PISTOL, E.HANDGUN, E.MUSKET), armour=MEDIUM_GUARD, barding=LIGHT_BARDING),
+        U.LIGHT_CAVALRY: arms(hand=(E.SPEAR, E.LONGBLADE, E.BLADE, E.AXE), missile=(E.JAVELIN, E.BOW), barding=LIGHT_BARDING),
+        U.HEAVY_CAVALRY: arms(
+            hand=(E.SPEAR, E.LONGBLADE, E.MACE, E.POLEARM, E.HAMMER),
+            armour=HEAVY_GUARD,
+            shield=BIG_SHIELDS,
+            helmet=HEAVY_HELMS,
+            barding=HEAVY_BARDING,
+        ),
+        U.CHARIOTS: arms(hand=(E.SPEAR, E.AXE, E.BLADE), missile=(E.COMPOSITE_BOW, E.BOW, E.JAVELIN), armour=MEDIUM_GUARD, barding=HEAVY_BARDING),
+        U.BEAST_RIDERS: arms(hand=(E.SPEAR, E.POLEARM, E.LONGBLADE), missile=(E.JAVELIN, E.BOW), armour=MEDIUM_GUARD, barding=HEAVY_BARDING),
+        U.SKY_RIDERS: arms(hand=(E.SPEAR, E.LONGBLADE, E.BLADE), missile=(E.RIFLE, E.CROSSBOW, E.BOW, E.JAVELIN), barding=LIGHT_BARDING),
+        U.WAR_BEASTS: arms(armour=(), shield=(), helmet=(), barding=HEAVY_BARDING),
+        U.BOUND_BEASTS: arms(armour=(), shield=(), helmet=(), barding=HEAVY_BARDING),
+        U.CONSTRUCTS: arms(armour=(E.WARDED, E.POWERED, E.PLATE, E.CERAMIC), shield=(), helmet=()),
+        U.SUMMONED_HOST: arms(armour=(E.WARDED, E.HIDE), shield=(), helmet=()),
+        U.ENGINEERS: arms(hand=(E.HAMMER, E.AXE, E.CLUB), armour=MEDIUM_GUARD),
+        U.SAPPERS: arms(hand=(E.AXE, E.HAMMER, E.DAGGER)),
+        U.SIEGE_CREW: arms(hand=(E.AXE, E.CLUB, E.DAGGER), missile=CREW_ARMS),
+        U.ARTILLERY_CREW: arms(hand=(E.BLADE, E.DAGGER), missile=CREW_ARMS),
+        U.VEHICLE_CREW: arms(hand=(E.BLADE, E.DAGGER), missile=CREW_ARMS),
+        U.NAVAL_CREW: arms(hand=(E.BLADE, E.AXE, E.DAGGER, E.SPEAR), missile=(E.PISTOL, E.CROSSBOW, E.BOW, E.JAVELIN)),
+        U.SKY_CREW: arms(hand=(E.BLADE, E.DAGGER), missile=(E.RIFLE, E.PISTOL, E.CROSSBOW)),
+        U.VOID_CREW: arms(hand=(E.BLADE, E.DAGGER), missile=(E.BEAM_WEAPON, E.RIFLE, E.PISTOL)),
+        U.BATTLE_CASTERS: arms(hand=(E.STAFF, E.DAGGER), missile=(E.FOCUS,), armour=WARD_GUARD, shield=(), helmet=()),
+        U.SUPPORT_CASTERS: arms(hand=(E.STAFF,), missile=(E.FOCUS,), armour=WARD_GUARD, shield=(), helmet=()),
+        U.SUMMONERS: arms(hand=(E.STAFF, E.DAGGER), missile=(E.FOCUS,), armour=WARD_GUARD, shield=(), helmet=()),
     },
 )

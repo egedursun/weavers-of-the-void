@@ -53,6 +53,7 @@ class MountView(ApiModel):
     model_name: str | None
     count: int
     arc: MountArc
+    families: list[EquipmentFamily]
     locked: list[str]
 
 

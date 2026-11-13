@@ -206,6 +206,7 @@ LAW_MECHANICS = (
         fields=("role",),
         exposure=Exposure.TOOL,
         tools=("read_dreams",),
+        levers=("secret:keep", "secret:edit", "secret:delete"),
         targets=("son", "foreign_god", "mortal"),
         couplings=(
             Coupling(S.MAGIC, "a ward turns divine spying aside", EdgeKind.MODIFIER, "divine_spies.ward_pct"),

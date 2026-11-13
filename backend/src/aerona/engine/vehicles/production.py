@@ -3,10 +3,12 @@ from types import MappingProxyType
 
 from sqlalchemy import select
 
+from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.economy import TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.vehicles import DesignTechniqueRow, VehicleGroupRow
 from aerona.db.tables.warfare import ArmyRow
@@ -16,6 +18,7 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.structure import STANDING_STATES, StructureKind
 from aerona.domain.enums.vehicles import VehicleStatus
+from aerona.engine.collective.makers import makers_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.economy.stocks import goods_of, holding
@@ -24,9 +27,9 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.renown.currencies import realm_of_community
-from aerona.engine.vehicles.caravans import carrier_design
-from aerona.engine.vehicles.fleet import role_design
-from aerona.engine.vehicles.groups import add_vehicles, burn_fuel, groups_of, repair_group
+from aerona.engine.vehicles.caravans import carrier_design, carries, ground_of
+from aerona.engine.vehicles.fleet import land_cargo, role_design
+from aerona.engine.vehicles.groups import add_vehicles, burn_fuel, groups_of, move_vehicles, repair_group
 
 W = WorkshopKind
 YARD_ROLES: MappingProxyType[WorkshopKind, tuple[UnitKind, ...]] = MappingProxyType(
@@ -36,6 +39,8 @@ YARD_ROLES: MappingProxyType[WorkshopKind, tuple[UnitKind, ...]] = MappingProxyT
         W.STABLE: (UnitKind.CHARIOTS,),
     }
 )
+CART_WORKS = (W.MARKET, W.STABLE, W.LUMBER_CAMP)
+LAND_MODES = frozenset({TradeMode.ROAD, TradeMode.CARAVAN})
 SPACE_WORKS = frozenset({StructureKind.ORBITAL_RING, StructureKind.SPACE_STATION, StructureKind.SPACE_ELEVATOR, StructureKind.SPACEPORT})
 SKY_WORKS = frozenset({StructureKind.AIRFIELD})
 
@@ -43,6 +48,7 @@ SKY_WORKS = frozenset({StructureKind.AIRFIELD})
 @dataclass
 class WorksTally:
     built: int = 0
+    trains: int = 0
     fuelled: int = 0
     laid_up: int = 0
     repaired: int = 0
@@ -96,9 +102,46 @@ async def yards(ctx: TickContext, knowledge: KnowledgeMap, tally: WorksTally) ->
             if design is not None:
                 points = await build(ctx, town, owner, design, points=points, tally=tally)
         if yard.kind is W.SHIPYARD and points > 0:
-            carrier = await carrier_design(ctx, owner, await trade_mode(ctx, town.id), knowledge)
+            carrier = await carrier_design(ctx, owner, await trade_mode(ctx, town.id), knowledge, await ground_of(ctx.session, town))
             if carrier is not None:
                 await build(ctx, town, owner, carrier, points=points, tally=tally)
+
+
+async def cartwrights(ctx: TickContext, knowledge: KnowledgeMap, tally: WorksTally) -> None:
+    table = ctx.rules.vehicles
+    seen: set[int] = set()
+    for yard in list(await ctx.session.scalars(select(WorkshopRow).where(WorkshopRow.kind.in_(CART_WORKS)).order_by(WorkshopRow.id))):
+        if yard.community_entity_id in seen:
+            continue
+        seen.add(yard.community_entity_id)
+        town = await living_entity(ctx.session, yard.community_entity_id)
+        owner = await builder_of(ctx, yard.community_entity_id) if town is not None else None
+        if town is None or owner is None or held(town.id) or held(owner.id):
+            continue
+        mode = await trade_mode(ctx, town.id)
+        carrier = await carrier_design(ctx, owner, mode if mode in LAND_MODES else TradeMode.CARAVAN, knowledge, await ground_of(ctx.session, town))
+        if carrier is not None:
+            await build(ctx, town, owner, carrier, points=yard.level * table.cart_points, tally=tally)
+
+
+async def supply_trains(ctx: TickContext, tally: WorksTally) -> None:
+    per = max(1, ctx.rules.vehicles.cargo_per_baggage)
+    for army_row in list(await ctx.session.scalars(select(ArmyRow).where(ArmyRow.disbanded_epoch.is_(None)).order_by(ArmyRow.entity_id))):
+        profile = await ctx.session.get(ArmyProfileRow, army_row.entity_id)
+        owner = await living_entity(ctx.session, army_row.owner_entity_id)
+        if profile is None or owner is None or profile.baggage <= 0 or held(army_row.entity_id):
+            continue
+        need = profile.baggage * per - await land_cargo(ctx.session, army_row.entity_id)
+        for maker in await makers_of(ctx.session, owner):
+            for park in await groups_of(ctx.session, maker):
+                if need <= 0:
+                    break
+                design = await ctx.session.get(DesignRow, park.design_id)
+                if design is None or design.frame is None or design.cargo <= 0 or not any(carries(mode, FRAMES[design.frame]) for mode in LAND_MODES):
+                    continue
+                moved = await move_vehicles(ctx.session, park, army_row.entity_id, -(-need // design.cargo), epoch=ctx.epoch)
+                need -= moved * design.cargo
+                tally.trains += moved
 
 
 async def trade_mode(ctx: TickContext, town_id: int) -> TradeMode:
@@ -168,6 +211,8 @@ async def vehicle_works(ctx: TickContext) -> WorksTally:
     tally = WorksTally()
     knowledge = await KnowledgeMap.load(ctx.session)
     await yards(ctx, knowledge, tally)
+    await cartwrights(ctx, knowledge, tally)
     await space_works(ctx, knowledge, tally)
+    await supply_trains(ctx, tally)
     await keep_fleets(ctx, tally)
     return tally

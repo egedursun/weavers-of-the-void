@@ -29,6 +29,13 @@ def frontend_source() -> str:
     return "\n".join(path.read_text(encoding="utf-8") for path in paths if path.is_file() and "generated" not in path.parts)
 
 
+def test_every_tool_mechanic_that_owns_no_table_names_the_god_levers_that_govern_it() -> None:
+    silent = [key for key, mechanic in REGISTERED.items() if mechanic.tools and not mechanic.tables and not mechanic.levers]
+    unknown = [(key, lever) for key, mechanic in REGISTERED.items() for lever in mechanic.levers if lever not in ACTIONS_BY_ID]
+    assert silent == []
+    assert unknown == []
+
+
 def test_generic_levers_exist_for_every_mechanic() -> None:
     assert [action for action in GENERIC_LEVERS if action not in ACTIONS_BY_ID] == []
 

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.battle_depth import WeaponProfile
-from aerona.catalog.equipment import FAMILIES, UNIT_SLOTS
+from aerona.catalog.equipment import FAMILIES, ROLE_ARMS, UNIT_SLOTS
 from aerona.catalog.units import UnitSpec, weapon_of
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -13,12 +13,11 @@ from aerona.db.tables.equipment import ArmyUnitEquipmentRow, EquipmentModelRow, 
 from aerona.db.tables.military import ArmyUnitRow, UnitDesignRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.equipment import ArmamentSlot
-from aerona.engine.body.customs import people_of
+from aerona.engine.collective.makers import makers_of
 from aerona.engine.context import TickContext
 from aerona.engine.equipment.models import current_model
 from aerona.engine.equipment.stores import add_pieces, take_pieces
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.renown.currencies import realm_of_community
 
 S = ArmamentSlot
 
@@ -57,21 +56,20 @@ async def wanted_models(session: AsyncSession, unit: ArmyUnitRow, spec: UnitSpec
     if loadout:
         return {model_id: per * unit.count for model_id, per in loadout.items()}
     wanted: dict[int, int] = {}
+    kit = ROLE_ARMS[unit.kind]
     for slot in UNIT_SLOTS[spec.family]:
-        if slot is S.MISSILE_WEAPON and spec.missile <= 0:
+        if slot not in kit or (slot is S.MISSILE_WEAPON and spec.missile <= 0):
             continue
         if slot is S.SHIELD and spec.shield.value == "none":
             continue
-        model = await current_model(session, owner_id, slot)
+        model = await current_model(session, owner_id, slot, kit[slot])
         if model is not None:
             wanted[model.id] = unit.count
     return wanted
 
 
 async def supplier_of(session: AsyncSession, owner: EntityRow) -> int:
-    people = await people_of(session, owner)
-    candidates = (owner.id, await realm_of_community(session, owner.id), people.id if people is not None else None)
-    for candidate in dict.fromkeys(item for item in candidates if item is not None):
+    for candidate in await makers_of(session, owner):
         stocked = select(EquipmentStoreRow.model_id).where(EquipmentStoreRow.holder_node_id == candidate, EquipmentStoreRow.count > 0).limit(1)
         if await session.scalar(stocked) is not None:
             return candidate

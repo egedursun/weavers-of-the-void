@@ -58,6 +58,7 @@ const WORLDS = ['world'] as const
 const DESIGNERS = ['mortal'] as const
 const YES_NO = { true: 'Yes', false: 'No' }
 const SIZE_MAX = 10
+const SEAGOING = new Set(['water', 'underwater', 'amphibious'])
 
 function SectionCard({
   row,
@@ -387,14 +388,11 @@ export function VehicleTypePage({
     )
   )
   const family = row.family ? VEHICLE_FAMILY[row.family] : VEHICLE_FAMILY.cart
+  const seagoing = row.domain !== null && SEAGOING.has(row.domain)
   const sections = Object.fromEntries(
     row.sections.map((item) => [item.section, sectionLabel(item.section)])
   )
-  const weapons = Object.fromEntries(
-    models
-      .filter((item) => item.slot === 'vehicle_weapon')
-      .map((item) => [String(item.id), item.name])
-  )
+
   return (
     <div className='flex min-w-0 flex-col gap-4'>
       <KindHeader
@@ -466,23 +464,32 @@ export function VehicleTypePage({
             tone='gold'
             meter={{ value: row.armour, max: SPAN, label: 'Armour' }}
           />
-          <KpiTile
-            label='Seaworthiness'
-            value={row.seaworthiness}
-            icon={Anchor}
-            tone='verdigris'
-            meter={{
-              value: row.seaworthiness,
-              max: SPAN,
-              label: 'Seaworthiness',
-            }}
-          />
+          {seagoing ? (
+            <KpiTile
+              label='Seaworthiness'
+              value={row.seaworthiness}
+              icon={Anchor}
+              tone='verdigris'
+              meter={{
+                value: row.seaworthiness,
+                max: SPAN,
+                label: 'Seaworthiness',
+              }}
+            />
+          ) : (
+            <KpiTile
+              label='Cargo'
+              value={row.cargo}
+              icon={Package}
+              tone='verdigris'
+            />
+          )}
         </div>
       </div>
       <Facts
         items={[
           ['Reach', row.range],
-          ['Cargo', row.cargo],
+          ...(seagoing ? [['Cargo', row.cargo] as [string, number]] : []),
           ['Crew', row.crew],
           ['Troops carried', row.troops],
           ['Structure', row.structure],
@@ -684,7 +691,14 @@ export function VehicleTypePage({
           <MountCard
             row={item}
             sections={sections}
-            models={weapons}
+            models={Object.fromEntries(
+              models
+                .filter((model) => item.families.includes(model.family))
+                .map((model) => [
+                  String(model.id),
+                  `${model.name} (${model.family_label})`,
+                ])
+            )}
             blocked={blocked}
           />
         )}

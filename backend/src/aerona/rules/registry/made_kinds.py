@@ -36,6 +36,10 @@ class VehicleRules:
     yard_points: int = rule(6, 0, 1000, W, "Building points a yard of level one gives each epoch")
     cost_per_point: int = rule(30, 1, 10000, W, "Vehicle cost one building point covers")
     park_cap: int = rule(20, 0, 10000, W, "Most vehicles of one type a realm keeps in its park before its yards stop building it")
+    cart_points: int = rule(4, 0, 1000, W, "Building points a market, stable or lumber camp of level one gives each epoch to carts, wagons and pack trains")
+    cargo_per_baggage: int = rule(
+        10, 1, 1000, W, "Cargo of an army's land vehicles that bears one point of its baggage, so that point no longer slows its march"
+    )
     coin_share: int = rule(4, 1, 100, W, "A vehicle's cost and upkeep are divided by this to give the coin paid")
     ring_points_pct: int = rule(200, 100, 1000, C, "Building points an orbital ring gives against a space works of the same level (%)")
     unpaid_decay: int = rule(5, 0, 100, W, "Condition a vehicle group loses in an epoch its upkeep goes unpaid")
@@ -87,6 +91,9 @@ class UnitTypeRules:
 @dataclass(frozen=True)
 class CuisineRules:
     invent_pct: int = rule(8, 0, 100, S, "Chance each epoch a people comes to cook a new dish from its stores (%)")
+    starting_dishes: int = rule(
+        3, 0, 8, S, "Dishes of its own a people cooks from its stores before new ones come only by chance: a staple, a drink, a feast dish and on"
+    )
     ration_keeping: int = rule(3, 0, 20, S, "Epochs a dish must keep for a people to take it as a ration")
     portion: int = rule(10, 0, 10000, S, "Ingredients a community spends to cook one of its dishes at full popularity")
     delight_pct: int = rule(10, 0, 100, S, "Share of a dish's delight that calms its community's unrest when cooked (%)")

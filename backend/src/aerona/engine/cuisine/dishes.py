@@ -150,15 +150,15 @@ async def found_dish(
     return row
 
 
-async def invent_dish(ctx: TickContext, people: EntityRow, knowledge: KnowledgeMap, homes: set[int]) -> DishRow | None:
+async def invent_dish(ctx: TickContext, people: EntityRow, knowledge: KnowledgeMap, homes: set[int], *, course: DishCourse | None = None) -> DishRow | None:
     stock = await larder(ctx.session, homes)
     if not stock:
         return None
-    rng = ctx.rng(f"dish.{people.id}.{ctx.epoch}")
+    rng = ctx.rng(f"dish.{people.id}.{ctx.epoch}.{course.value if course is not None else 'any'}")
     method = rng.pick(known_methods(knowledge, people.id))
     ranked = sorted(stock, key=lambda food: (-stock[food], food.value))
     chosen = ranked[: 1 + rng.below(min(3, len(ranked)))]
-    course = rng.pick([D.STAPLE, D.STAPLE, D.SIDE, D.FESTIVE, D.RITE, D.RATION, D.DELICACY, D.REMEDY, D.DRINK])
+    course = course or rng.pick([D.STAPLE, D.STAPLE, D.SIDE, D.FESTIVE, D.RITE, D.RATION, D.DELICACY, D.REMEDY, D.DRINK])
     if METHOD_KEEPS[method] >= ctx.rules.cuisine.ration_keeping and course is D.STAPLE:
         course = D.RATION
     row = await found_dish(ctx, people, method, course, chosen, world_id=people.world_id)
@@ -170,18 +170,27 @@ async def invent_dish(ctx: TickContext, people: EntityRow, knowledge: KnowledgeM
     return row
 
 
+FIRST_COURSES = (D.STAPLE, D.DRINK, D.FESTIVE, D.SIDE, D.RITE, D.RATION, D.DELICACY, D.REMEDY)
+
+
 async def invent(ctx: TickContext, knowledge: KnowledgeMap, tally: KitchenTally) -> None:
     table = ctx.rules.cuisine
     peoples = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
     for people in list(peoples):
-        if held(people.id) or not ctx.rng(f"invent_dish.{people.id}.{ctx.epoch}").chance(table.invent_pct):
+        if held(people.id):
             continue
-        dish = await invent_dish(ctx, people, knowledge, await homes_of(ctx.session, people))
-        if dish is not None:
-            tally.invented += 1
-            await note(ctx, f"{people.name} came to cook {dish.name}.", key="cuisine.invented", ids=[people.id])
+        known = set(await ctx.session.scalars(select(DishRow.course).where(DishRow.origin_node_id == people.id)))
+        missing: list[DishCourse | None] = [course for course in FIRST_COURSES[: table.starting_dishes] if course not in known]
+        if not missing and not ctx.rng(f"invent_dish.{people.id}.{ctx.epoch}").chance(table.invent_pct):
+            continue
+        homes = await homes_of(ctx.session, people)
+        for course in missing or [None]:
+            dish = await invent_dish(ctx, people, knowledge, homes, course=course)
+            if dish is not None:
+                tally.invented += 1
+                await note(ctx, f"{people.name} came to cook {dish.name}.", key="cuisine.invented", ids=[people.id])
 
 
 async def ingredients_of(session: AsyncSession, dish_id: int) -> list[DishIngredientRow]:

@@ -9,6 +9,7 @@ import { SPAN } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
 import { NumberField } from '@/features/entity/realm/parts'
 import { type ThingKinds, useLever } from './api'
+import { numberProblem } from './model'
 
 const FORCE_MAX = 10
 
@@ -39,11 +40,7 @@ export function WoundsPanel({
     blocked ?? (being.held ? 'This being is held against change' : null),
     strike.isPending
   )
-  const forceValue = Number(force)
-  const badForce =
-    !Number.isInteger(forceValue) || forceValue < 1 || forceValue > FORCE_MAX
-      ? `Force runs from 1 to ${FORCE_MAX}`
-      : null
+  const badForce = numberProblem(force, 1, FORCE_MAX)
   return (
     <div className='flex min-w-0 flex-col gap-3'>
       <Muted variant='caption'>

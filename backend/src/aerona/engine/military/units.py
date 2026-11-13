@@ -22,6 +22,7 @@ from aerona.domain.enums.environment import CoastKind, ScarKind
 from aerona.domain.enums.military import ArmourType, MoraleState, ShieldType, Stance, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
+from aerona.engine.collective.makers import makers_of
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import solidarity
 from aerona.engine.demography.biology import kin_army, profiles_of
@@ -270,18 +271,18 @@ def design_spec(row: UnitDesignRow) -> UnitSpec:
     )
 
 
-async def designs_of(session: AsyncSession, owner_id: int) -> list[UnitDesignRow]:
-    rows = list(
-        await session.scalars(
-            select(UnitDesignRow).where(UnitDesignRow.owner_entity_id == owner_id, UnitDesignRow.retired.is_(False)).order_by(UnitDesignRow.id)
-        )
+async def designs_of(session: AsyncSession, owner: EntityRow) -> list[UnitDesignRow]:
+    makers = await makers_of(session, owner)
+    rows = sorted(
+        await session.scalars(select(UnitDesignRow).where(UnitDesignRow.owner_entity_id.in_(makers), UnitDesignRow.retired.is_(False))),
+        key=lambda row: (makers.index(row.owner_entity_id or owner.id), row.id),
     )
     needs: dict[int, set[Technique]] = {}
     for design_id, technique in await session.execute(
         select(UnitDesignTechniqueRow.design_id, UnitDesignTechniqueRow.technique).where(UnitDesignTechniqueRow.design_id.in_([row.id for row in rows]))
     ):
         needs.setdefault(design_id, set()).add(technique)
-    known = await techniques_of(session, owner_id) if needs else set()
+    known = {technique for maker in makers for technique in await techniques_of(session, maker)} if needs else set()
     return [row for row in rows if needs.get(row.id, set()) <= known]
 
 
@@ -299,15 +300,16 @@ def armour_allowed(armour: ArmourType, metallurgy: int) -> bool:
 async def choose_design(
     ctx: TickContext, owner: EntityRow, kind: UnitKind, count: int, *, metallurgy: int, designs: Sequence[UnitDesignRow]
 ) -> UnitDesignRow | None:
-    fitting = [design for design in designs if design.base_kind is kind and armour_allowed(design.armour, metallurgy)]
+    same = [design for design in designs if design.base_kind is kind]
+    fitting = [design for design in same if armour_allowed(design.armour, metallurgy)]
     if not fitting:
-        return None
+        return same[0] if same else None
     kits = count // max(1, ctx.rules.materials.soldiers_per_kit)
     stocked = await holding(ctx.session, owner.id, CommodityKind.WEAPONS) >= kits
     base = UNITS[kind].cost
     affordable = [design for design in fitting if design.cost <= base or stocked]
     if not affordable:
-        return None
+        return fitting[0]
     style = await doctrine_of(ctx.session, owner)
     return max(affordable, key=lambda design: (design_worth(design, style), -design.id))
 
@@ -334,7 +336,7 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
     issued = await node_material(ctx.session, army.id, MaterialSlot.WEAPONS)
     material = issued.material.value if issued is not None and issued.material is not None else None
     condition = clamp_int(PERCENT // 2 + equipment // 2, 0, PERCENT)
-    designs = await designs_of(ctx.session, owner.id)
+    designs = await designs_of(ctx.session, owner)
     for kind, count in (await composition(ctx, owner, size, knowledge)).items():
         design = await choose_design(ctx, owner, kind, count, metallurgy=metallurgy, designs=designs)
         spec = design_spec(design) if design is not None else UNITS[kind]

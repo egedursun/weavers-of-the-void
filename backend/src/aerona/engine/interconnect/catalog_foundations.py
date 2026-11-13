@@ -57,6 +57,7 @@ FOUNDATION_MECHANICS = (
         fields=("anchor_entity_id",),
         exposure=Exposure.TOOL,
         tools=("choose_anchor",),
+        levers=("son:anchor", "son:clear_anchor"),
         targets=("son", "structure"),
         couplings=(
             Coupling(Subsystem.CULTURE, "a dedicated structure that falls leaves its anchored god fading"),

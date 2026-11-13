@@ -42,7 +42,13 @@ import {
   sectionLabel,
   wordTable,
 } from './labels'
-import { OWNER_TYPES, useKindRow, useKindStep } from './model'
+import {
+  OWNER_TYPES,
+  numberProblem,
+  settled,
+  useKindRow,
+  useKindStep,
+} from './model'
 import { KindHeader } from './parts'
 
 type Loadout = UnitType['loadout'][number]
@@ -84,6 +90,8 @@ function LoadoutRow({
     'The loadout is set'
   )
   const busy = why(remove.busy, set.isPending)
+  const problem =
+    numberProblem(count, 1, PIECES_MAX) ?? settled(count, row.count)
   const slot = SLOT[row.slot]
   return (
     <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'>
@@ -106,8 +114,8 @@ function LoadoutRow({
         <Button
           size='sm'
           variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
+          disabled={(busy ?? problem) !== null}
+          disabledReason={busy ?? problem ?? undefined}
           onClick={() => set.mutate()}
         >
           Set

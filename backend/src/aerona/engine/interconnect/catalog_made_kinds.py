@@ -191,6 +191,7 @@ MADE_KIND_MECHANICS = (
         tables=(),
         exposure=Exposure.TOOL,
         tools=("strike_being",),
+        levers=("cosmic_wound:strike",),
         targets=("cosmic_being", "outer_being"),
         couplings=(
             Coupling(S.COSMOS, "a wounded being loses might", E.MODIFIER, "cosmic_wounds.damage_pct"),

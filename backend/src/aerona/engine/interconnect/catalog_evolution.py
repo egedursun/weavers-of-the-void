@@ -280,6 +280,7 @@ EVOLUTION_MECHANICS = (
         backfill=f"{MIGRATION}: a raised or lowered land keeps the height a god gives it",
         exposure=Exposure.TOOL,
         tools=("reshape_land",),
+        levers=("land:reshape", "land:shape", "land:stir", "land:release"),
         targets=("region", "son", "creator"),
         couplings=(
             Coupling(S.ENVIRONMENT, "a raised or lowered land keeps its height and its climate follows", EdgeKind.MODIFIER, "land_shaping.step"),

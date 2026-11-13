@@ -1710,7 +1710,13 @@ function BodyControls({ body }: { body: Body }) {
   )
 }
 
-export function BodySection({ nodeId }: { nodeId: number }) {
+export function BodySection({
+  nodeId,
+  emptyNote = 'The next epoch gives this bearer a body.',
+}: {
+  nodeId: number
+  emptyNote?: string
+}) {
   const { reason } = useGodGate()
   const view = useQuery({
     queryKey: bodyKey(nodeId),
@@ -1734,7 +1740,7 @@ export function BodySection({ nodeId }: { nodeId: number }) {
         <EmptyState
           icon={PersonStanding}
           title='No body yet'
-          description='The next epoch gives this bearer a body.'
+          description={emptyNote}
         />
       ) : (
         <div className='@container/body flex min-w-0 flex-col gap-4'>

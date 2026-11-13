@@ -13,12 +13,14 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { FormRow } from '@/components/domain'
+import { useSons } from '@/features/pantheon/api'
 import { CosmicActionButton } from './CosmicActionButton'
 import { type StarRecord, type StarType } from './api'
 import { STAR_TYPES, STAR_TYPE_LABEL } from './model/labels'
 import { useCosmicAction } from './useCosmicAction'
 
 const BRIGHTNESS_MAX = 100
+const NO_PATRON = 'none'
 
 type StarBody = components['schemas']['PatchStarsStarIdBody']
 
@@ -30,7 +32,15 @@ export function StarEditForm({ star }: { star: StarRecord }) {
   const [y, setY] = useState(String(star.y))
   const [description, setDescription] = useState(star.description ?? '')
   const [prompt, setPrompt] = useState(star.image_prompt ?? '')
+  const sons = useSons()
+  const claimed = star.patron_son_id ?? null
+  const current = claimed === null ? NO_PATRON : String(claimed)
+  const [patron, setPatron] = useState(current)
   const body: StarBody = {}
+  if (patron !== current) {
+    if (patron === NO_PATRON) body.clear_patron = true
+    else body.patron_son_id = Number(patron)
+  }
   if (name.trim() !== star.name) body.name = name.trim()
   if (type !== star.star_type) body.star_type = type
   if (Number(brightness) !== star.brightness)
@@ -84,6 +94,26 @@ export function StarEditForm({ star }: { star: StarRecord }) {
               {STAR_TYPES.map((value) => (
                 <SelectItem key={value} value={value}>
                   {STAR_TYPE_LABEL[value]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </FormRow>
+      <FormRow
+        label='Patron son'
+        description='The son who has claimed this star as their own.'
+      >
+        {(id) => (
+          <Select value={patron} onValueChange={setPatron}>
+            <SelectTrigger id={id} className='w-full'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_PATRON}>No patron</SelectItem>
+              {(sons.data ?? []).map(({ son }) => (
+                <SelectItem key={son.id} value={String(son.id)}>
+                  {son.name}
                 </SelectItem>
               ))}
             </SelectContent>

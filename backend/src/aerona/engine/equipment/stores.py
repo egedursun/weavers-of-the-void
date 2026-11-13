@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.equipment import EquipmentModelRow, EquipmentStoreRow
+from aerona.db.tables.equipment import EquipmentModelRow, EquipmentStoreRow, UnitDesignEquipmentRow
+from aerona.db.tables.military import UnitDesignRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -68,6 +69,18 @@ async def take_pieces(session: AsyncSession, holder_id: int, model_id: int, coun
     return taken
 
 
+async def kit_models(session: AsyncSession, holder_id: int) -> list[EquipmentModelRow]:
+    statement = (
+        select(EquipmentModelRow)
+        .join(UnitDesignEquipmentRow, UnitDesignEquipmentRow.model_id == EquipmentModelRow.id)
+        .join(UnitDesignRow, UnitDesignRow.id == UnitDesignEquipmentRow.design_id)
+        .where(UnitDesignRow.owner_entity_id == holder_id, UnitDesignRow.retired.is_(False))
+        .distinct()
+        .order_by(EquipmentModelRow.id)
+    )
+    return list(await session.scalars(statement))
+
+
 async def forge(ctx: TickContext, town: EntityRow, holder: EntityRow, knowledge: KnowledgeMap, tally: ForgeTally) -> None:
     if held(holder.id) or held(town.id):
         return
@@ -79,8 +92,10 @@ async def forge(ctx: TickContext, town: EntityRow, holder: EntityRow, knowledge:
         budget = round_half_up(stock * table.forge_share_pct / PERCENT)
         if budget <= 0:
             continue
-        models: list[EquipmentModelRow] = []
+        models = [model for model in await kit_models(ctx.session, holder.id) if model.slot in slots]
         for slot in slots:
+            if any(model.slot is slot for model in models):
+                continue
             model = await model_for(ctx, holder, slot, knowledge)
             if model is not None:
                 models.append(model)

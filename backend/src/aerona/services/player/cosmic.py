@@ -136,6 +136,8 @@ class EditStar(Command):
     brightness: int | None = None
     x: float | None = None
     y: float | None = None
+    patron_son_id: int | None = None
+    clear_patron: bool | None = None
 
 
 class OpenRoute(Command):
@@ -492,6 +494,12 @@ async def edit_star(scope: PlayerScope, command: EditStar) -> Effect:
     if command.y is not None:
         star.y = command.y
         fields.append("position")
+    if command.clear_patron and star.patron_son_id is not None:
+        star.patron_son_id = None
+        fields.append("patron")
+    elif command.patron_son_id is not None and command.patron_son_id != star.patron_son_id:
+        star.patron_son_id = (await guards.son(scope.session, command.patron_son_id)).id
+        fields.append("patron")
     if not fields:
         raise ValidationFailedError(f"Nothing to change on {star.name}.")
     ctx = await scope.context("edit_star")

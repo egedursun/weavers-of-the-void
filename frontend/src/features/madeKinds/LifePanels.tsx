@@ -13,6 +13,7 @@ import { NumberField } from '@/features/entity/realm/parts'
 import { CookingCard } from './DishPage'
 import { type Dish, type ThingKinds, useLever } from './api'
 import { wordTable } from './labels'
+import { numberProblem } from './model'
 import { ListEditor } from './parts'
 
 const SEXES = wordTable(mortalSexValues)
@@ -196,8 +197,10 @@ export function LeaningsPanel({
           />
           <Button
             size='sm'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
+            disabled={(busy ?? numberProblem(strength, 0, SPAN)) !== null}
+            disabledReason={
+              busy ?? numberProblem(strength, 0, SPAN) ?? undefined
+            }
             onClick={() => set.mutate({ attraction: Number(strength) })}
           >
             Hold the strength

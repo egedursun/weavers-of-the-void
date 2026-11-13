@@ -34004,6 +34004,7 @@ export interface components {
       size?: number | null
       interest?: number | null
       renown?: number | null
+      hp?: number | null
     }
     CosmicEpoch: {
       epoch: number
@@ -45006,6 +45007,7 @@ export interface components {
       model_name: string | null
       count: number
       arc: components['schemas']['MountArc']
+      families: components['schemas']['EquipmentFamily'][]
       locked: string[]
     }
     MovementCause:
@@ -45827,6 +45829,7 @@ export interface components {
       size?: number | null
       interest?: number | null
       influence?: number | null
+      hp?: number | null
     }
     OuterHunger: 'souls' | 'knowledge' | 'light' | 'names' | 'memories'
     OuterProfileEditInput: {
@@ -46149,6 +46152,8 @@ export interface components {
       brightness?: number | null
       x?: number | null
       y?: number | null
+      patron_son_id?: number | null
+      clear_patron?: boolean | null
     }
     PatchWorldsWorldIdBody: {
       name?: string | null
@@ -55201,6 +55206,34 @@ export interface components {
       | 'deep_submersible'
       | 'burrower'
       | 'planar_vessel'
+      | 'hovercraft'
+      | 'amphibious_carrier'
+      | 'landing_craft'
+      | 'amphibious_raft'
+      | 'tunnel_cart'
+      | 'mine_train'
+      | 'delving_construct'
+      | 'deep_crawler'
+      | 'diving_bell'
+      | 'attack_submarine'
+      | 'gas_harvester'
+      | 'deep_diver'
+      | 'rift_skiff'
+      | 'planar_ark'
+      | 'divine_vessel'
+      | 'space_fighter'
+      | 'freighter'
+      | 'mining_barge'
+      | 'corvette'
+      | 'dreadnought'
+      | 'jet_fighter'
+      | 'bomber'
+      | 'drone'
+      | 'trireme'
+      | 'coastal_trader'
+      | 'catamaran'
+      | 'fleet_carrier'
+      | 'hover_tank'
     VehicleGroupCreateInput: {
       holder_id: number
       design_id: number
@@ -121803,6 +121836,34 @@ export const vehicleFrameValues: ReadonlyArray<
   'deep_submersible',
   'burrower',
   'planar_vessel',
+  'hovercraft',
+  'amphibious_carrier',
+  'landing_craft',
+  'amphibious_raft',
+  'tunnel_cart',
+  'mine_train',
+  'delving_construct',
+  'deep_crawler',
+  'diving_bell',
+  'attack_submarine',
+  'gas_harvester',
+  'deep_diver',
+  'rift_skiff',
+  'planar_ark',
+  'divine_vessel',
+  'space_fighter',
+  'freighter',
+  'mining_barge',
+  'corvette',
+  'dreadnought',
+  'jet_fighter',
+  'bomber',
+  'drone',
+  'trireme',
+  'coastal_trader',
+  'catamaran',
+  'fleet_carrier',
+  'hover_tank',
 ]
 export const vehicleSectionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VehicleSection']

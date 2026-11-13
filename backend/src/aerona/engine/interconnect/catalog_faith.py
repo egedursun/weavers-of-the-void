@@ -206,6 +206,7 @@ FAITH_MECHANICS = (
         fields=("rebirth_path", "reincarnations", "house"),
         exposure=Exposure.TOOL,
         tools=("open_rebirth_gate",),
+        levers=("soul:reincarnate",),
         targets=(SP, C, "house", "son"),
         couplings=(Coupling(Subsystem.GODS, "a god opens the gate of rebirth", EdgeKind.TRIGGER, "necromancy.rebirth_gate_cost"),),
     ),
@@ -321,6 +322,7 @@ FAITH_MECHANICS = (
         fields=("tenets", "passions", "liturgical_language", "liturgy_reach"),
         exposure=Exposure.TOOL,
         tools=("reveal_tenet",),
+        levers=("cult:tenet",),
         targets=(C, "son", "language"),
         couplings=(
             Coupling(Subsystem.GODS, "a god's passions seed the tenets", EdgeKind.MODIFIER, "doctrine.passion_tenet"),

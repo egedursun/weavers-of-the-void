@@ -8,6 +8,7 @@ import { Held, Listed } from '@/features/collective/parts'
 import { ForgeCard } from '@/features/cosmography/parts'
 import { SPAN } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
+import { useWorldMaterials } from '@/features/entity/economy/api'
 import { MATERIAL_LABEL } from '@/features/entity/economy/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
@@ -129,11 +130,13 @@ function StructurePartCard({
   row,
   structureId,
   blow,
+  materials,
   blocked,
 }: {
   row: StructurePart
   structureId: number
   blow: number
+  materials: Record<string, string>
   blocked: string | null
 }) {
   const action = useKindRow(
@@ -226,8 +229,8 @@ function StructurePartCard({
         {
           key: 'world_material_id',
           label: 'Material of this world',
-          kind: 'number',
-          min: 1,
+          kind: 'pick',
+          table: materials,
         },
         {
           key: 'flammability',
@@ -351,6 +354,14 @@ export function StructureSectionsPanel({
 }) {
   const [section, setSection] = useState('')
   const [damage, setDamage] = useState('40')
+  const worldMaterials = useWorldMaterials(data.world_id)
+  const materials = Object.fromEntries(
+    (worldMaterials.data?.materials ?? []).flatMap((item) =>
+      item.world_material_id === null
+        ? []
+        : [[String(item.world_material_id), item.label]]
+    )
+  )
   const add = useLever(
     'structure_section:edit',
     (_: void) => ({
@@ -410,6 +421,7 @@ export function StructureSectionsPanel({
             row={item}
             structureId={nodeId}
             blow={Math.max(1, Math.min(SPAN, Number(damage) || 1))}
+            materials={materials}
             blocked={blocked}
           />
         )}

@@ -49,7 +49,7 @@ from aerona.engine.mortal.variants import strength, variants_by_id
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.queries import active_bonds, living_entity
-from aerona.engine.primitives.stats import base_stat, clamp_to_field, stat, stat_or
+from aerona.engine.primitives.stats import base_stat, clamp_to_field, set_stats, stat, stat_or
 from aerona.rules.registry import Rules
 
 Bearer = EntityRow | SonRow | ForeignGodRow
@@ -194,6 +194,7 @@ async def plan_for(session: AsyncSession, bearer: Bearer) -> tuple[BodyPlan, lis
 
 
 VAST = frozenset({EntityType.COSMIC_BEING, EntityType.OUTER_BEING})
+BODIED = frozenset({EntityType.MORTAL, EntityType.BEAST, EntityType.SPECIES, *VAST})
 
 
 async def vast_hp(session: AsyncSession, rules: Rules, bearer: EntityRow) -> int:
@@ -227,6 +228,8 @@ async def ensure_body(session: AsyncSession, rules: Rules, bearer: Bearer, epoch
         build=build,
     )
     session.add(body)
+    if isinstance(bearer, EntityRow) and bearer.entity_type in VAST and stat(bearer, "hp") is None:
+        set_stats(bearer, hp=body.hp_max)
     await session.flush()
     return body
 

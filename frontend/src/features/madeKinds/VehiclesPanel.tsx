@@ -34,7 +34,7 @@ import {
   namedTable,
   sectionLabel,
 } from './labels'
-import { HOLDER_TYPES, useKindRow, worst } from './model'
+import { HOLDER_TYPES, numberProblem, useKindRow, worst } from './model'
 import { vehicleZone } from './zones'
 
 type GroupSection = VehicleGroup['sections'][number]
@@ -284,8 +284,17 @@ function GroupCard({
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
               size='sm'
-              disabled={(busy ?? (target ? null : 'Pick a holder')) !== null}
-              disabledReason={busy ?? (target ? undefined : 'Pick a holder')}
+              disabled={
+                (busy ??
+                  (target ? null : 'Pick a holder') ??
+                  numberProblem(count, 1, row.count)) !== null
+              }
+              disabledReason={
+                busy ??
+                (target ? undefined : 'Pick a holder') ??
+                numberProblem(count, 1, row.count) ??
+                undefined
+              }
               onClick={() => move.mutate()}
             >
               <ArrowLeftRight />
@@ -411,10 +420,15 @@ export function VehiclesPanel({
           <Button
             size='sm'
             disabled={
-              (busy ?? (design ? null : 'Pick a vehicle type')) !== null
+              (busy ??
+                (design ? null : 'Pick a vehicle type') ??
+                numberProblem(count, 1, LOTS)) !== null
             }
             disabledReason={
-              busy ?? (design ? undefined : 'Pick a vehicle type')
+              busy ??
+              (design ? undefined : 'Pick a vehicle type') ??
+              numberProblem(count, 1, LOTS) ??
+              undefined
             }
             onClick={() => give.mutate()}
           >

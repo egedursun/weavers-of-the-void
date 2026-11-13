@@ -52,10 +52,16 @@ async def can_see(session: AsyncSession, rules_floor: int, being: EntityRow) -> 
     return body is None or body.sight >= rules_floor
 
 
+def whole(being: EntityRow, body: BodyRow) -> None:
+    if stat(being, "hp") is None:
+        set_stats(being, hp=body.hp_max)
+
+
 async def wound_being(ctx: TickContext, being: EntityRow, damage: float, cause: HarmCause, why: str, *, killer_id: int | None = None) -> WoundOutcome | None:
     if being.entity_type not in VAST or being.status is not EntityStatus.CANON or held(being.id) or damage <= 0:
         return None
-    await ensure_body(ctx.session, ctx.rules, being, ctx.epoch)
+    body = await ensure_body(ctx.session, ctx.rules, being, ctx.epoch)
+    whole(being, body)
     scaled = damage * ctx.rules.cosmic_wounds.damage_pct / PERCENT
     wounding = await apply_hits(ctx, being, Harm(scaled, cause, why, killer_id=killer_id, source_node_id=killer_id))
     if wounding.outcome is WoundOutcome.DIED:
@@ -77,6 +83,7 @@ async def strike(ctx: TickContext, being_id: int, force: int, why: str) -> Wound
 
 async def regrow(ctx: TickContext, being: EntityRow, tally: WoundTally) -> None:
     body = await ensure_body(ctx.session, ctx.rules, being, ctx.epoch)
+    whole(being, body)
     hp = stat(being, "hp")
     if hp is None or hp >= body.hp_max:
         return

@@ -1,7 +1,10 @@
+from sqlalchemy import select
+
 from aerona.core.errors import ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.vehicles import (
     GROUP_FIELDS,
     GROUP_SECTION_FIELDS,
@@ -18,11 +21,13 @@ from aerona.db.tables.vehicles import (
 from aerona.domain.enums.collective import DesignComponentKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.integrity import Criticality, SectionHazard, SectionState
-from aerona.domain.enums.vehicles import MountArc, MountKind, VehicleSection, VehicleStatus
-from aerona.engine.collective.designs import derive
+from aerona.domain.enums.vehicles import MountKind, VehicleSection, VehicleStatus
+from aerona.engine.collective.designs import MOUNT_ARCS, derive, home_section
 from aerona.engine.context import TickContext
 from aerona.engine.divine.control import apply
+from aerona.engine.equipment.models import mount_model
 from aerona.engine.gatherings.control import Values, allowed, found, node
+from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.vehicles.groups import add_vehicles, move_vehicles, repair_group
 
 EDITABLE: dict[str, tuple[type[Base], tuple[str, ...], str]] = {
@@ -70,8 +75,21 @@ async def remove_section(ctx: TickContext, design_id: int, section: VehicleSecti
 
 
 async def add_mount(ctx: TickContext, design_id: int, mount: MountKind, values: Values) -> DesignMountRow:
-    await design(ctx, design_id)
-    row = DesignMountRow(design_id=design_id, slot=0, mount=mount, count=1, arc=MountArc.ALL_ROUND, locked=[])
+    found_design = await design(ctx, design_id)
+    sections = {row.section for row in await ctx.session.scalars(select(DesignSectionRow).where(DesignSectionRow.design_id == design_id))}
+    slots = list(await ctx.session.scalars(select(DesignMountRow.slot).where(DesignMountRow.design_id == design_id)))
+    owner = await ctx.session.get(EntityRow, found_design.owner_entity_id) if found_design.owner_entity_id is not None else None
+    model = await mount_model(ctx, owner, mount, await KnowledgeMap.load(ctx.session))
+    row = DesignMountRow(
+        design_id=design_id,
+        slot=max(slots, default=-1) + 1,
+        mount=mount,
+        section=home_section(mount, sections),
+        model_id=model.id if model is not None else None,
+        count=1,
+        arc=MOUNT_ARCS[mount],
+        locked=[],
+    )
     ctx.session.add(row)
     apply(row, allowed(values, MOUNT_FIELDS, "weapon mount"), [])
     await ctx.session.flush()

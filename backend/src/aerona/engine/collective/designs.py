@@ -18,7 +18,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.collective import DesignComponentKind, DesignKind
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.military import VesselStatus
-from aerona.domain.enums.vehicles import FireControl, MountKind, VehicleFrame, VehicleSection
+from aerona.domain.enums.vehicles import FireControl, MountArc, MountKind, VehicleFrame, VehicleSection
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
 from aerona.engine.equipment.models import mount_model
@@ -72,6 +72,25 @@ MOUNT_SECTIONS: MappingProxyType[MountKind, VehicleSection] = total(
         M.RAM: X.RAM_HEAD,
         M.BAY: X.CARGO_BAY,
         M.WARD_NODE: X.WARD,
+    },
+)
+MOUNT_FALLBACKS = (X.DECK, X.PLATFORM, X.TURRET, X.HULL, X.CHASSIS, X.FRAME, X.GONDOLA, X.MOUNT_BODY, X.CORE)
+MOUNT_ARCS: MappingProxyType[MountKind, MountArc] = total(
+    MountKind,
+    {
+        M.BOW: MountArc.FORWARD,
+        M.STERN: MountArc.AFT,
+        M.BROADSIDE: MountArc.SIDE,
+        M.DECK: MountArc.ALL_ROUND,
+        M.TURRET: MountArc.ALL_ROUND,
+        M.SPINAL: MountArc.FORWARD,
+        M.HARDPOINT: MountArc.FORWARD,
+        M.WING: MountArc.FORWARD,
+        M.CREW_STATION: MountArc.ALL_ROUND,
+        M.RIDER: MountArc.ALL_ROUND,
+        M.RAM: MountArc.FORWARD,
+        M.BAY: MountArc.ALL_ROUND,
+        M.WARD_NODE: MountArc.ALL_ROUND,
     },
 )
 FIRE_ORDER = (
@@ -282,6 +301,10 @@ async def lay_sections(session: AsyncSession, design: DesignRow, sizes: dict[Des
     await session.flush()
 
 
+def home_section(mount: MountKind, sections: set[VehicleSection]) -> VehicleSection | None:
+    return next((place for place in (MOUNT_SECTIONS[mount], *MOUNT_FALLBACKS) if place in sections), None)
+
+
 async def arm_mounts(ctx: TickContext, design: DesignRow, owner: EntityRow | None, knowledge: KnowledgeMap | None) -> None:
     if design.frame is None:
         return
@@ -290,15 +313,17 @@ async def arm_mounts(ctx: TickContext, design: DesignRow, owner: EntityRow | Non
     known = knowledge or await KnowledgeMap.load(ctx.session)
     for slot, mount in enumerate(MOUNTS[spec.family]):
         model = await mount_model(ctx, owner, mount, known)
-        place = MOUNT_SECTIONS[mount]
+        if model is None:
+            continue
         ctx.session.add(
             DesignMountRow(
                 design_id=design.id,
                 slot=slot,
                 mount=mount,
-                section=place if place in sections else None,
-                model_id=model.id if model is not None else None,
+                section=home_section(mount, sections),
+                model_id=model.id,
                 count=1,
+                arc=MOUNT_ARCS[mount],
                 locked=[],
             )
         )

@@ -179,6 +179,8 @@ async def resilience(ctx: TickContext) -> None:
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_ethics",
+    "table.deed_claims",
+    "table.deeds",
     "table.epoch_year_cursors",
     "table.geasa",
     "table.keystone_resources",
@@ -207,6 +209,8 @@ async def resilience(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_relations",
+    "table.deed_claims",
+    "table.deeds",
     "table.entities",
     "table.epoch_year_cursors",
     "table.incident_participants",
@@ -215,6 +219,7 @@ async def resilience(ctx: TickContext) -> None:
     "table.memories",
     "table.polity_profiles",
     "table.polity_treasury",
+    "table.reputations",
     "table.species_ranges",
 )
 async def staples(ctx: TickContext) -> None:

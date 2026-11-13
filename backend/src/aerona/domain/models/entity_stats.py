@@ -184,6 +184,7 @@ class OuterBeingStats(ValueObject):
     size: Percent | None = None
     interest: Percent | None = None
     influence: Percent | None = None
+    hp: Count | None = None
 
 
 class ArmyStats(ValueObject):
@@ -287,6 +288,7 @@ class CosmicBeingStats(ValueObject):
     size: Percent | None = None
     interest: Percent | None = None
     renown: Percent | None = None
+    hp: Count | None = None
 
 
 EntityStats = Annotated[

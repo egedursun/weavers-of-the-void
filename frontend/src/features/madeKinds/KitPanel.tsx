@@ -12,7 +12,7 @@ import { NumberField } from '@/features/entity/realm/parts'
 import { unitIcon } from '@/features/wars/military/labels'
 import { type EquipmentModel, type ThingKinds, useLever } from './api'
 import { SLOT, familyLabel, sectionLabel } from './labels'
-import { useKindStep } from './model'
+import { numberProblem, useKindStep } from './model'
 
 type Store = ThingKinds['stores'][number]
 type Stack = ThingKinds['stacks'][number]
@@ -203,8 +203,17 @@ function StackKit({
           />
           <Button
             size='sm'
-            disabled={(busy ?? (model ? null : 'Pick a model')) !== null}
-            disabledReason={busy ?? (model ? undefined : 'Pick a model')}
+            disabled={
+              (busy ??
+                (model ? null : 'Pick a model') ??
+                numberProblem(count, 1, LOTS)) !== null
+            }
+            disabledReason={
+              busy ??
+              (model ? undefined : 'Pick a model') ??
+              numberProblem(count, 1, LOTS) ??
+              undefined
+            }
             onClick={() => add.mutate()}
           >
             <Plus />
@@ -267,8 +276,17 @@ export function KitPanel({
         action={
           <Button
             size='sm'
-            disabled={(busy ?? (model ? null : 'Pick a model')) !== null}
-            disabledReason={busy ?? (model ? undefined : 'Pick a model')}
+            disabled={
+              (busy ??
+                (model ? null : 'Pick a model') ??
+                numberProblem(count, 1, LOTS)) !== null
+            }
+            disabledReason={
+              busy ??
+              (model ? undefined : 'Pick a model') ??
+              numberProblem(count, 1, LOTS) ??
+              undefined
+            }
             onClick={() => add.mutate()}
           >
             <Plus />

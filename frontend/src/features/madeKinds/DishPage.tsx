@@ -30,7 +30,14 @@ import {
   namedTable,
   wordTable,
 } from './labels'
-import { COMMUNITY_TYPES, OWNER_TYPES, useKindRow, useKindStep } from './model'
+import {
+  COMMUNITY_TYPES,
+  OWNER_TYPES,
+  numberProblem,
+  settled,
+  useKindRow,
+  useKindStep,
+} from './model'
 import { KindHeader } from './parts'
 
 type Ingredient = Dish['ingredients'][number]
@@ -68,6 +75,7 @@ function IngredientRow({
     'The ingredient is left out'
   )
   const busy = why(remove.busy, set.isPending)
+  const problem = numberProblem(share, 1, SPAN) ?? settled(share, row.share)
   return (
     <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-2'>
       <Chip icon={FOOD_ICON[row.commodity] ?? Wheat}>
@@ -84,8 +92,8 @@ function IngredientRow({
       <Button
         size='sm'
         variant='outline'
-        disabled={busy !== null}
-        disabledReason={busy ?? undefined}
+        disabled={(busy ?? problem) !== null}
+        disabledReason={busy ?? problem ?? undefined}
         onClick={() => set.mutate()}
       >
         Set

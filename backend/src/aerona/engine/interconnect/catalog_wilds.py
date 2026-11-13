@@ -72,6 +72,7 @@ WILDS_MECHANICS = (
         fields=("training", "trained"),
         templates=("tools.mortal.herd_trained",),
         tools=("train_herd",),
+        levers=("herd:edit",),
         targets=("settlement", "people"),
         couplings=(
             Coupling(S.SOCIAL, "beast handling sets how fast a herd learns", EdgeKind.MODIFIER, "husbandry.train_pct"),
@@ -89,6 +90,7 @@ WILDS_MECHANICS = (
         backfill="none: mortals take pets from the herds of their people from the next epoch",
         templates=("pets.taken", "tools.mortal.pet_taken"),
         tools=("keep_pet",),
+        levers=("pet:give", "pet:set"),
         targets=("mortal", "beast"),
         couplings=(
             Coupling(S.MIND, "a pet's death is mourned", EdgeKind.TRIGGER, "husbandry.pet_grief_strength"),

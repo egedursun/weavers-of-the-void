@@ -15,6 +15,7 @@ from aerona.engine.vehicles.production import vehicle_works
 
 
 @reads(
+    "table.army_unit_equipment",
     "table.community_stocks",
     "table.designs",
     "table.dishes",
@@ -28,6 +29,7 @@ from aerona.engine.vehicles.production import vehicle_works
     "table.node_materials",
     "table.polity_members",
     "table.structure_designs",
+    "table.unit_design_equipment",
     "table.unit_designs",
     "table.world_materials",
 )
@@ -38,7 +40,10 @@ async def equipment_forging(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.applied_fixups",
+    "table.armies",
     "table.army_templates",
+    "table.army_units",
     "table.bonds",
     "table.designs",
     "table.dishes",
@@ -49,12 +54,16 @@ async def equipment_forging(ctx: TickContext) -> None:
     "table.lexemes",
     "table.name_registry",
     "table.node_materials",
+    "table.polity_members",
     "table.structure_designs",
     "table.unit_design_equipment",
+    "table.unit_design_techniques",
     "table.unit_designs",
     "table.world_materials",
 )
 @writes(
+    "table.applied_fixups",
+    "table.army_units",
     "table.chronicle",
     "table.chronicle_entities",
     "table.epoch_year_cursors",
@@ -72,14 +81,41 @@ async def unit_types(ctx: TickContext) -> None:
 @reads(
     "table.applied_fixups",
     "table.armies",
+    "table.army_profiles",
+    "table.design_components",
+    "table.design_mounts",
+    "table.design_sections",
+    "table.design_techniques",
     "table.designs",
+    "table.dishes",
+    "table.equipment_models",
+    "table.goods_flows",
     "table.holder_levels",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
     "table.polity_members",
+    "table.polity_profiles",
+    "table.structure_designs",
     "table.structure_profiles",
+    "table.trade_route_profiles",
+    "table.unit_designs",
+    "table.vehicle_group_sections",
     "table.vehicle_groups",
     "table.workshops",
 )
-@writes("table.applied_fixups", "table.design_mounts", "table.design_sections", "table.designs", "table.vehicle_group_sections", "table.vehicle_groups")
+@writes(
+    "table.applied_fixups",
+    "table.community_stocks",
+    "table.design_components",
+    "table.design_mounts",
+    "table.design_sections",
+    "table.designs",
+    "table.goods_flows",
+    "table.polity_profiles",
+    "table.vehicle_group_sections",
+    "table.vehicle_groups",
+)
 async def vehicle_works_phase(ctx: TickContext) -> None:
     for key, value in (await made_kinds_fixup(ctx)).items():
         ctx.count(f"made_kinds_fixup_{key}", value)
