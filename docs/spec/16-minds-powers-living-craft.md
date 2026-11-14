@@ -3959,7 +3959,7 @@ The 100 subcategories that existing waves give kinds but not behaviour are marke
 
 ### 50.17a Integration of every family
 
-The rules below apply to each family of 50.1–50.13. The per-family blocks that follow name what is specific to each.
+The rules below apply to each family of 50.1–50.13, and to 50.22–50.29 (50.30). The per-family blocks that follow name what is specific to each.
 
 - **Every era and every kind of world.**
   - Each family reads the world's technology levels per family (47.2), its natural laws, its biologies and its peoples' cultures.
@@ -4253,7 +4253,7 @@ Every new agent tool has a case in `every_son_tool.py` or `every_mortal_tool.py`
 15. 50.16 facets.
 16. 50.14 couplings.
 17. 50.15 depth targets.
-18. 50.22–50.29, nature, cosmos and standing.
+18. 50.22–50.29, nature, cosmos and standing, with the detail of 50.30.
 19. Surfaces, fixups and the audit.
 
 The wave is gated once.
@@ -4530,6 +4530,204 @@ Methods of observation, the accuracy of forecasts by method, and mortal attempts
 **Rules namespace.** `standing`.
 
 **Legacy.** Derived from values and recorded acts.
+
+### 50.30 Integration detail for 50.22–50.29
+
+The rules of 50.17a apply to 50.22–50.29 in full:
+
+- every era and every kind of world;
+- every kind of thing through `ThingSections`, where a section applies to every node, with a stated reason where it applies to some kinds only;
+- genesis through typed fields only;
+- typed context blocks;
+- incidents under F58;
+- every number a rule key;
+- balance bands in `13-balance-bands.json`;
+- recorded fixups;
+- checks under 47.13;
+- designed sections in the book and the Codex, never truncated.
+
+What is specific to each section follows.
+
+#### 50.22 Space weather and magnetic fields
+
+- **Applies to:** worlds, moons, stars, orbits, vessels and stations in space, and every being outside shelter. Worlds without a star (rogue worlds, made realms) read only the fields and sources they have.
+- **Incidents:** `sky.flare`, `sky.particle_storm`, `sky.field_storm`, `sky.field_reversal`, `sky.cosmic_ray_burst`, `sky.wind_surge`, `sky.outage`, `sky.aurora_spread`.
+- **Rules:**
+
+  | Key | Default | Range |
+  |---|---|---|
+  | `space_weather.flare_base_pct` | 5 | 0–100 |
+  | `space_weather.storm_base_pct` | 3 | 0–100 |
+  | `space_weather.shield_per_field_point` | 1 | 0–5 |
+  | `space_weather.shield_per_air_point` | 1 | 0–5 |
+  | `space_weather.outage_threshold` | 40 | 0–100 |
+  | `space_weather.compass_error_threshold` | 30 | 0–100 |
+  | `space_weather.dose_harm_per_point` | 1 | 0–20 |
+  | `space_weather.mutation_per_dose_pct` | 1 | 0–100 |
+  | `space_weather.reversal_chance_per_epoch_pct` | 1 | 0–100 |
+  | `space_weather.reversal_length_epochs` | 2 | 1–50 |
+
+- **Tool:** son `shield_world` (`world_id`, `change` of field strength −100 to 100, `epochs`, `reason`).
+- **Couplings:** body harm, genetics (mutation), networks and signals, navigation, agrarian stress, vessels, omens, natural laws.
+
+#### 50.23 Water, ice and sediment in place
+
+- **Applies to:** every region of every world, by its climate and terrain. Worlds of other liquids and ices read their own (methane seas freeze and silt by the same rules with their own temperatures).
+- **Incidents:** `land.ice_closed`, `land.ice_opened`, `land.ice_road`, `land.thaw_collapse`, `land.thaw_release`, `land.snow_drought`, `land.silted`, `land.dredged`, `land.coast_lost`, `land.delta_grew`, `land.glacier_advanced`, `land.glacier_retreated`.
+- **Rules:**
+
+  | Key | Default | Range |
+  |---|---|---|
+  | `water_and_ice.silting_per_epoch` | 2 | 0–50 |
+  | `water_and_ice.dredge_cost` | 10 | 0–500 |
+  | `water_and_ice.coast_wear_per_epoch` | 1 | 0–50 |
+  | `water_and_ice.delta_growth_per_epoch` | 1 | 0–50 |
+  | `water_and_ice.thaw_collapse_pct` | 5 | 0–100 |
+  | `water_and_ice.snow_water_share_pct` | 30 | 0–100 |
+  | `water_and_ice.ice_route_block_months` | 3 | 0–12 |
+  | `water_and_ice.local_heat_per_density` | 1 | 0–10 |
+
+- **Tools:**
+  - mortal `dredge` (`region_id` or `works_id`, `budget`);
+  - son `move_ice` (`region_id`, `change` of ice months −12 to 12, `reason`).
+- **Couplings:** routes, fisheries, irrigation, harvests, construction, burials, excavation layers, harbours, settlement choice, disease (waterlogged and frozen ground).
+
+#### 50.24 Agents of disease
+
+- **Applies to:** every disease, including diseases of beasts, plants (crop pests and blight), made bodies (W44, `made` agents) and spirits where they exist.
+- **Incidents:** `disease.resistance_rose`, `disease.wrong_cure`, `disease.right_cure`, `disease.reservoir_found`, `disease.agent_identified`.
+- **Rules:**
+
+  | Key | Default | Range |
+  |---|---|---|
+  | `disease.resistance_per_overuse` | 5 | 0–50 |
+  | `disease.mutation_virus_pct` | 10 | 0–100 |
+  | `disease.mutation_bacterium_pct` | 5 | 0–100 |
+  | `disease.mutation_fungus_pct` | 3 | 0–100 |
+  | `disease.mutation_parasite_pct` | 2 | 0–100 |
+  | `disease.mutation_prion_pct` | 0 | 0–100 |
+  | `disease.survival_water_pct` | 30 | 0–100 |
+  | `disease.survival_soil_pct` | 20 | 0–100 |
+  | `disease.survival_object_pct` | 10 | 0–100 |
+  | `disease.wrong_cure_trust_loss` | 5 | 0–100 |
+
+  The mutation and survival defaults are set per agent kind in `catalog/disease_agents.py`, a `total()` table.
+- **Tool:** the existing `seek_cure` and `answer_sickness` tools take `cure_class`.
+- **Couplings:** cures, theories of disease (50.7), trade in medicines, diet (deficiencies), ecology (reservoirs), faith (rites as cures), powers.
+
+#### 50.25 Bodies: systems and sensitivities
+
+- **Applies to:** every biology, including bodies without some systems (spirits, constructs, made bodies), whose rows say `none` for the systems they lack.
+- **Incidents:** `body.system_failed`, `body.system_recovered`, `body.sensitivity_reaction`, `body.tolerance_exceeded`, `body.adapted`.
+- **Rules:**
+
+  | Key | Default | Range |
+  |---|---|---|
+  | `body_systems.tolerance_harm_per_point` | 2 | 0–20 |
+  | `body_systems.adaptation_per_epoch` | 2 | 0–20 |
+  | `body_systems.sensitivity_reaction_pct` | 50 | 0–100 |
+  | `body_systems.low_gravity_wear` | 1 | 0–20 |
+  | `body_systems.system_loss_capacity_pct` | 30 | 0–100 |
+
+- **Tool:** no new tool. Travel, colonisation and expedition tools read tolerances.
+- **Couplings:** travel and colonisation, equipment, augments (W44), grown organs (W46), diet, folk knowledge (what to avoid), medicine.
+
+#### 50.26 Plant bodies
+
+- **Applies to:** every plant and plant-like species on every world, including fungus-like, colonial and made plants.
+- **Incidents:** `life.plant_spread`, `life.plant_invaded`, `life.plant_domesticated`.
+- **Rules:**
+
+  | Key | Default | Range |
+  |---|---|---|
+  | `plants.years_to_first_harvest_tree` | 5 | 0–50 |
+  | `plants.storm_damage_tree_pct` | 20 | 0–100 |
+  | `plants.fire_damage_grass_pct` | 40 | 0–100 |
+  | `plants.spread_by_wind_pct` | 10 | 0–100 |
+  | `plants.spread_by_animal_pct` | 5 | 0–100 |
+
+- **Tool:** no new tool. Sowing and shaping tools read anatomy.
+- **Couplings:** species products, land use, labour, disasters, ecology (invasion), W46 design.
+
+#### 50.27 The deep record of life
+
+- **Applies to:** every world with past life. Worlds made recently, or without life, hold none.
+- **Incidents:** `land.fossil_found`, `land.fossil_read`, `land.fossil_traded`, `life.revived`.
+- **Rules:**
+
+  | Key | Default | Range |
+  |---|---|---|
+  | `fossils.find_chance_per_dig_pct` | 10 | 0–100 |
+  | `fossils.theory_shift` | 10 | 0–100 |
+  | `fossils.value` | 5 | 0–100 |
+  | `fossils.revival_preservation_min` | 60 | 0–100 |
+
+- **Tool:** mortal `study_fossils` (`bed_id` or `item_id`, `scholar_id`).
+- **Couplings:** excavation, mining, theories, legends and relics, trade, coal and oil, W46 revival.
+
+#### 50.28 Observation, forecasting and the shaping of weather
+
+- **Applies to:** every people, and every holder of a power, rite or structure that can work weather.
+- **Incidents:** `weather.forecast_kept`, `weather.forecast_failed`, `weather.forecast_ignored`, `weather.worked`, `weather.side_effect`, `weather.work_banned`.
+- **Rules:**
+
+  | Key | Default | Range |
+  |---|---|---|
+  | `forecasting.accuracy_sight` | 20 | 0–100 |
+  | `forecasting.accuracy_lore` | 35 | 0–100 |
+  | `forecasting.accuracy_almanac` | 45 | 0–100 |
+  | `forecasting.accuracy_instrument` | 60 | 0–100 |
+  | `forecasting.accuracy_network_of_observers` | 70 | 0–100 |
+  | `forecasting.accuracy_model` | 85 | 0–100 |
+  | `forecasting.weather_work_strength` | 20 | 0–100 |
+  | `forecasting.weather_work_cost` | 20 | 0–500 |
+  | `forecasting.side_effect_share_pct` | 50 | 0–100 |
+
+- **Tools:**
+  - mortal `forecast` (`region_id`, `season`, `method`);
+  - mortal `work_weather` (`region_id`, `aim`, `method`, `strength`).
+- **Couplings:** sowing, sailing, war timing, disaster preparation, trust and media (50.2), treaties, navigation, calendars.
+
+#### 50.29 Professed values and acts
+
+- **Applies to:** every being that holds values: mortals, peoples, polities, faiths, factions, sons, foreign gods and the Creator, whose professed passions are already revealed by the reputation mechanics.
+- **Incidents:** `standing.hypocrisy_exposed`, `standing.hypocrisy_forgiven`.
+- **Rules:**
+
+  | Key | Default | Range |
+  |---|---|---|
+  | `standing.hypocrisy_gap_threshold` | 30 | 0–100 |
+  | `standing.hypocrisy_trust_loss` | 15 | 0–100 |
+  | `standing.hypocrisy_follower_loss_pct` | 10 | 0–100 |
+
+- **Tool:** mortal `expose_hypocrisy` (`target_id`, `value_axis_or_tenet`, `evidence_incident_ids`).
+- **Couplings:** trust, legitimacy, following, secrets and leverage, media, faith (clergy), reputation of gods.
+
+#### Guards, couplings, loops, stories
+
+**Tests.** `tests/engine/core/test_space_weather.py`, `test_water_and_ice.py`, `test_disease_agents.py`, `test_body_systems.py`, `test_plant_bodies.py`, `test_fossils.py`, `test_forecasting.py` and `test_hypocrisy.py` each prove their section's effects on a seeded world. Each new tool has a case in `every_son_tool.py` or `every_mortal_tool.py`, and each lever runs with real values in `test_every_lever.py`.
+
+**Couplings.**
+
+- C63 Space weather → body, signals, navigation.
+- C64 Ice and sediment → routes, harvests, works.
+- C65 Disease agents → cures and trust.
+- C66 Body tolerances → travel and colonisation.
+- C67 Fossils → theories and legends.
+- C68 Forecasts → sowing, sailing and war.
+- C69 Hypocrisy → trust and following.
+
+**Loops.**
+
+- L118 (B) overused cure → resistance → cure fails → use falls → resistance fades.
+- L119 (R) silting harbour → trade moves to a new harbour → the old town declines → no dredging → more silting.
+- L120 (B) weather work → drought downwind → neighbours' grievance → treaty ban.
+
+**Acceptance stories.**
+
+- AS61 **The Quiet Compass.** A field reversal weakens a world's shield; auroras reach the equator; signals fail; a fleet's compasses err and it is lost; its people read the auroras as an omen.
+- AS62 **The Silted Port.** A river's sediment silts a trading port; the realm cannot pay for dredging; trade moves to a delta town; the old port's guilds decline.
+- AS63 **The Wrong Cure.** A people treats a bacterial sickness with rites, as its theory of disease holds; the sickness spreads; a neighbour's antimicrobial cures it; the theory falls and the faith's healers lose standing.
 
 ### Appendix 48.A — The 300 enums without an authored layer
 
