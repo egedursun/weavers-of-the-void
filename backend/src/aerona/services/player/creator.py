@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from aerona.core.errors import ValidationFailedError
+from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleRow, FolkBeliefRow
 from aerona.domain.enums.action import ActionKind
@@ -177,7 +178,7 @@ async def creator_profile(scope: PlayerScope) -> CreatorProfile:
     )
     traces = await scope.session.scalars(
         select(ChronicleRow)
-        .where(ChronicleRow.kind.in_(PROFILE_TRACE_KINDS), ChronicleRow.visible.is_(True))
+        .where(ChronicleRow.kind.in_(PROFILE_TRACE_KINDS), shown_lines())
         .order_by(ChronicleRow.id.desc())
         .limit(scope.rules.server.god_traces)
     )

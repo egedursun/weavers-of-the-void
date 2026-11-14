@@ -56,6 +56,7 @@ from aerona.catalog.knowledge import NATURAL_LAWS
 from aerona.catalog.travel import METHOD_REACH
 from aerona.constants.api import WIKI_TIMELINE_LINES
 from aerona.core.errors import NotFoundError
+from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
@@ -187,10 +188,7 @@ async def scale_wiki(services: ServicesDep, node_id: int = Path(ge=1)) -> ScaleW
         lines = (
             list(
                 await session.scalars(
-                    select(ChronicleRow)
-                    .where(ChronicleRow.visible.is_(True), ChronicleRow.text.contains(name))
-                    .order_by(ChronicleRow.id.desc())
-                    .limit(WIKI_TIMELINE_LINES)
+                    select(ChronicleRow).where(shown_lines(), ChronicleRow.text.contains(name)).order_by(ChronicleRow.id.desc()).limit(WIKI_TIMELINE_LINES)
                 )
             )
             if name

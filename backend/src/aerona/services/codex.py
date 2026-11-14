@@ -10,6 +10,7 @@ from aerona.catalog.travel import TRAVEL_METHODS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.errors import NotFoundError
 from aerona.core.grammar import several
+from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -293,7 +294,7 @@ async def cosmic_chronicle(session: AsyncSession, rules: Rules, last: int | None
     result: list[CosmicEpoch] = []
     for epoch in epochs:
         grouped: dict[int, list[ChronicleRow]] = {}
-        for line in await session.scalars(select(ChronicleRow).where(ChronicleRow.epoch == epoch, ChronicleRow.visible.is_(True)).order_by(ChronicleRow.id)):
+        for line in await session.scalars(select(ChronicleRow).where(ChronicleRow.epoch == epoch, shown_lines()).order_by(ChronicleRow.id)):
             world_id = await _world_of_line(session, line)
             if world_id is not None and world_id in names:
                 grouped.setdefault(world_id, []).append(line)

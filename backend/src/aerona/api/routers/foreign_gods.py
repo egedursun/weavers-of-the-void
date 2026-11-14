@@ -8,6 +8,7 @@ from aerona.api.schemas.records import EntitySummary, ForeignGodPower, ForeignGo
 from aerona.api.views.common import bond_count, bond_views, chronicle_lines, foreign_god_record, foreign_god_records, images_of
 from aerona.constants.api import RELATION_PAGE_DEFAULT, RELATION_PAGE_MAX
 from aerona.core.errors import NotFoundError
+from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -69,7 +70,7 @@ async def read_foreign_god(
         lines = list(
             await session.scalars(
                 select(ChronicleRow)
-                .where(ChronicleRow.visible.is_(True), ChronicleRow.kind == ChronicleKind.FOREIGN_GOD, ChronicleRow.world_id == god.world_id)
+                .where(shown_lines(), ChronicleRow.kind == ChronicleKind.FOREIGN_GOD, ChronicleRow.world_id == god.world_id)
                 .order_by(ChronicleRow.id.desc())
                 .limit(rules.server.foreign_god_chronicle_lines)
             )

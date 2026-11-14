@@ -17,6 +17,7 @@ from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.api import WIKI_PEOPLES_SHOWN, WIKI_TIMELINE_LINES
 from aerona.core.errors import NotFoundError
+from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -80,10 +81,7 @@ async def world_wiki(services: ServicesDep, world_id: int = Path(ge=1)) -> World
         covers = await covers_of(session, [people.id for people in shown])
         lines = list(
             await session.scalars(
-                select(ChronicleRow)
-                .where(ChronicleRow.visible.is_(True), ChronicleRow.world_id == world.id)
-                .order_by(ChronicleRow.id.desc())
-                .limit(WIKI_TIMELINE_LINES)
+                select(ChronicleRow).where(shown_lines(), ChronicleRow.world_id == world.id).order_by(ChronicleRow.id.desc()).limit(WIKI_TIMELINE_LINES)
             )
         )
         return WorldWiki(
@@ -116,7 +114,7 @@ async def star_wiki(services: ServicesDep, star_id: int = Path(ge=1)) -> StarWik
         lines = list(
             await session.scalars(
                 select(ChronicleRow)
-                .where(ChronicleRow.visible.is_(True), ChronicleRow.kind == ChronicleKind.STAR, ChronicleRow.text.contains(star.name))
+                .where(shown_lines(), ChronicleRow.kind == ChronicleKind.STAR, ChronicleRow.text.contains(star.name))
                 .order_by(ChronicleRow.id.desc())
                 .limit(WIKI_TIMELINE_LINES)
             )

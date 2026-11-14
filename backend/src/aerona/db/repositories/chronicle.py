@@ -3,12 +3,13 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 
-from sqlalchemy import ColumnElement, case, event, exists, false, func, or_, select, true
+from sqlalchemy import ColumnElement, and_, case, event, exists, false, func, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from aerona.catalog.chronicle import chronicle_notification, is_visible
 from aerona.catalog.incident_roles import positional_role
+from aerona.constants.engine import FOLDED_TEMPLATE_SUFFIX
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.random import SeededRandom
@@ -55,6 +56,32 @@ class LastIncident:
 
 
 LAST_INCIDENT = "last_incident"
+
+
+def folded_away() -> ColumnElement[bool]:
+    return and_(ChronicleRow.kind == ChronicleKind.ENGINE_RAW, ChronicleRow.hidden_as_duplicate.is_(False))
+
+
+def not_a_fold() -> ColumnElement[bool]:
+    return func.coalesce(ChronicleRow.template_key, "").not_like(f"%{FOLDED_TEMPLATE_SUFFIX}")
+
+
+def shown_lines() -> ColumnElement[bool]:
+    return and_(or_(ChronicleRow.visible.is_(True), folded_away()), not_a_fold())
+
+
+def kept_lines() -> ColumnElement[bool]:
+    return and_(or_(ChronicleRow.kind != ChronicleKind.ENGINE_RAW, folded_away()), not_a_fold())
+
+
+def feed_lines() -> ColumnElement[bool]:
+    return ChronicleRow.visible.is_(True)
+
+
+def told_kind(row: ChronicleRow) -> ChronicleKind:
+    return ChronicleKind.WORLD if row.kind is ChronicleKind.ENGINE_RAW else row.kind
+
+
 CAUSE_SCOPE: ContextVar[int | None] = ContextVar("cause_scope", default=None)
 
 

@@ -7,6 +7,7 @@ from aerona.api.schemas.gods import CreatorDetail, CreatorMood, CreatorReputatio
 from aerona.api.schemas.records import CreatorRecord, EntitySummary
 from aerona.api.views.common import chronicle_lines, images_of
 from aerona.catalog.creator import CREATOR_PASSIONS
+from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleRow, FolkBeliefRow
@@ -47,10 +48,7 @@ async def read_creator(services: ServicesDep) -> CreatorDetail:
         )
         traces = list(
             await session.scalars(
-                select(ChronicleRow)
-                .where(ChronicleRow.kind.in_(TRACE_KINDS), ChronicleRow.visible.is_(True))
-                .order_by(ChronicleRow.id.desc())
-                .limit(rules.server.god_traces)
+                select(ChronicleRow).where(ChronicleRow.kind.in_(TRACE_KINDS), shown_lines()).order_by(ChronicleRow.id.desc()).limit(rules.server.god_traces)
             )
         )
         return CreatorDetail(

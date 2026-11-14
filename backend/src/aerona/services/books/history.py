@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.foreign_gods import ForeignGodRow, GodConflictRow
 from aerona.db.tables.ledger import LedgerEntryRow
@@ -51,7 +52,7 @@ async def creator_hand(session: AsyncSession) -> list[HandEpoch]:
         epochs.setdefault(entry.epoch, HandEpoch(entry.epoch)).deeds.append(HandDeed(text, undone=entry.undone))
     lines = await session.scalars(
         select(ChronicleRow)
-        .where(ChronicleRow.kind.in_(CREATOR_HAND_KINDS), ChronicleRow.visible.is_(True), ChronicleRow.son_id.is_(None))
+        .where(ChronicleRow.kind.in_(CREATOR_HAND_KINDS), shown_lines(), ChronicleRow.son_id.is_(None))
         .order_by(ChronicleRow.epoch, ChronicleRow.id)
     )
     for line in lines:
@@ -82,9 +83,7 @@ async def son_fate(session: AsyncSession, son: SonRow, names: dict[int, str]) ->
     if worshippers:
         lines.append(f"Worshipped by {worshippers}")
     rows = await session.scalars(
-        select(ChronicleRow)
-        .where(ChronicleRow.son_id == son.id, ChronicleRow.kind.in_(SON_FATE_KINDS), ChronicleRow.visible.is_(True))
-        .order_by(ChronicleRow.id)
+        select(ChronicleRow).where(ChronicleRow.son_id == son.id, ChronicleRow.kind.in_(SON_FATE_KINDS), shown_lines()).order_by(ChronicleRow.id)
     )
     lines.extend(f"Epoch {row.epoch}: {clean_lore(row.text)}" for row in rows)
     return lines

@@ -20,6 +20,7 @@ from aerona.api.schemas.records import (
     SonPublic,
     SonRecord,
 )
+from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -160,7 +161,7 @@ async def mentioning(session: AsyncSession, entity_id: int, *, offset: int, limi
     base = (
         select(ChronicleRow)
         .join(ChronicleEntityRow, ChronicleEntityRow.chronicle_id == ChronicleRow.id)
-        .where(ChronicleEntityRow.entity_id == entity_id, ChronicleRow.visible.is_(True))
+        .where(ChronicleEntityRow.entity_id == entity_id, shown_lines())
     )
     total = int(await session.scalar(select(func.count()).select_from(base.subquery())) or 0)
     rows = list(await session.scalars(base.order_by(ChronicleRow.id.desc()).offset(offset).limit(limit)))
@@ -168,11 +169,7 @@ async def mentioning(session: AsyncSession, entity_id: int, *, offset: int, limi
 
 
 async def son_chronicle(session: AsyncSession, son_id: int, limit: int) -> list[ChronicleLineRecord]:
-    rows = list(
-        await session.scalars(
-            select(ChronicleRow).where(ChronicleRow.son_id == son_id, ChronicleRow.visible.is_(True)).order_by(ChronicleRow.id.desc()).limit(limit)
-        )
-    )
+    rows = list(await session.scalars(select(ChronicleRow).where(ChronicleRow.son_id == son_id, shown_lines()).order_by(ChronicleRow.id.desc()).limit(limit)))
     return await chronicle_lines(session, list(reversed(rows)))
 
 

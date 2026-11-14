@@ -9,6 +9,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.rarities import RARITY_LABELS
+from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -195,7 +196,7 @@ class SearchIndex:
             rows.append((SearchCategory.WORD, word.language_entity_id, word.epoch, word.word, word.meaning))
         for epoch in await session.scalars(select(EpochRow)):
             rows.append((SearchCategory.EPOCH, epoch.epoch, epoch.epoch, epoch.name or "", f"{epoch.narrative or ''} {epoch.summary or ''}"))
-        for line in await session.scalars(select(ChronicleRow).where(ChronicleRow.kind != ChronicleKind.SYSTEM, ChronicleRow.visible.is_(True))):
+        for line in await session.scalars(select(ChronicleRow).where(ChronicleRow.kind != ChronicleKind.SYSTEM, shown_lines())):
             rows.append((SearchCategory.CHRONICLE, line.id, line.epoch, "", line.text))
         for note in await session.scalars(select(MapNoteRow)):
             rows.append((SearchCategory.MAP_NOTE, note.id, note.world_id, "", note.text))

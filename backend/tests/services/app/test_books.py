@@ -5,6 +5,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.api.views.common import mentioning
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
 from aerona.db.tables.cosmography import GalaxyRow
@@ -27,11 +28,13 @@ from aerona.domain.enums.world import ClimateEra, CosmosShape, CosmosSize, Genes
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.domain.models.profiles import EntityDepth
 from aerona.engine.cosmos.ladder import ensure_ladder
+from aerona.engine.notes import fold_tick_lines, last_chronicle_id
 from aerona.rules.registry import Rules
 from aerona.services.books import book_page, codex_markdown
 from aerona.services.books.model import build_book, roman
 from aerona.services.books.render import CodexLinks, render_book
 from aerona.services.codex import cosmic_chronicle, guide_markdown, traveller_guide
+from aerona.services.search import SearchCategory, SearchIndex, search
 from tests.services.app.factories import Cosmos, bond, make_entity, make_world
 
 
@@ -173,6 +176,31 @@ async def test_book_is_never_truncated(session: AsyncSession, rules: Rules, worl
     assert [people.name for people in guide.peoples] == ["Velari Folk"]
     page = render_book(book, tight).html
     assert " ".join(f"{long_line}3-5".split()) in page
+
+
+async def test_folded_lines_still_reach_the_codex_the_entry_and_search(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
+    since = await last_chronicle_id(session)
+    texts = [f"The Velari Folk raised the {place} granary." for place in ("north", "south", "east", "west")]
+    for text in texts:
+        await ChronicleRepository(session).append(
+            ChronicleDraft(
+                epoch=1, kind=ChronicleKind.WORLD, text=text, entity_ids=[world.people.id], world_id=world.world.id, template_key="settlement.granary"
+            )
+        )
+    await session.flush()
+    folded = await fold_tick_lines(session, rules, 1, since)
+    assert folded.folded_groups == 1
+    codex = await codex_markdown(session, rules, CodexLinks())
+    entry = (await book_page(session, rules, entity_id=world.people.id)).html
+    hits = await search(session, rules, SearchIndex(), "west granary", "folded")
+    drawer, total = await mentioning(session, world.people.id, offset=0, limit=len(texts) + 1)
+    assert total == len(texts)
+    for text in texts:
+        assert text in codex
+        assert text in entry
+        assert text in [line.text for line in drawer]
+    assert "more events of the same kind" not in entry
+    assert any(hit.category is SearchCategory.CHRONICLE for hit in hits)
 
 
 async def test_every_record_reaches_the_book_and_the_codex(session: AsyncSession, rules: Rules, world: Cosmos) -> None:

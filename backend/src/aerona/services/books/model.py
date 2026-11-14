@@ -31,6 +31,7 @@ from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.stats import PASSIONS, STATS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.grammar import several
+from aerona.db.repositories.chronicle import kept_lines, told_kind
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -1172,10 +1173,10 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
 
 
 async def entry_chronicle(session: AsyncSession, *, son_id: int | None, entity_id: int | None) -> list[ChronicleLine]:
-    statement = select(ChronicleRow).where(ChronicleRow.kind != ChronicleKind.ENGINE_RAW)
+    statement = select(ChronicleRow).where(kept_lines())
     if entity_id is not None:
         statement = statement.join(ChronicleEntityRow, ChronicleEntityRow.chronicle_id == ChronicleRow.id).where(ChronicleEntityRow.entity_id == entity_id)
     else:
         statement = statement.where(ChronicleRow.son_id == son_id)
     rows = await session.scalars(statement.order_by(ChronicleRow.id))
-    return [ChronicleLine(row.kind.value.replace("_", " "), row.year, clean_lore(row.text), row.son_id) for row in rows]
+    return [ChronicleLine(told_kind(row).value.replace("_", " "), row.year, clean_lore(row.text), row.son_id) for row in rows]

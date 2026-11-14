@@ -272,6 +272,9 @@
 {% if book.chapters %}
 - [The Epochs](#epochs)
 {% endif %}
+{% if book.chapters | selectattr("raw_lines") | list %}
+- [Event Log](#event-log)
+{% endif %}
 {% if book.wars %}
 - [Wars](#wars)
 {% endif %}
@@ -671,6 +674,24 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 *Born in this epoch: {% for id, name in chapter.born %}[{{ name }}](#entity-{{ id }}){% if not loop.last %}, {% endif %}{% endfor %}*
 
 {% endif %}
+{% endfor %}
+{% endif %}
+{% if book.chapters | selectattr("raw_lines") | list %}
+---
+
+<a id="event-log"></a>
+
+## Event Log
+
+*The engine's own terse record.*
+
+{% for chapter in book.chapters if chapter.raw_lines %}
+### Epoch {{ chapter.epoch }}
+
+{% for line in chapter.raw_lines %}
+- {{ line }}
+{% endfor %}
+
 {% endfor %}
 {% endif %}
 {% if book.wars %}

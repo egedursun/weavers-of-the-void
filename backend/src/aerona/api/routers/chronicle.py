@@ -7,7 +7,7 @@ from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.chronicle import ChronicleEpoch, ChroniclePage, PerspectiveLine
 from aerona.api.schemas.records import ThreadRecord
 from aerona.api.views.common import chronicle_lines, node_refs
-from aerona.db.repositories.chronicle import in_world
+from aerona.db.repositories.chronicle import feed_lines, in_world
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -42,7 +42,7 @@ async def read_chronicle(
     async with reader(services) as session:
         rules = await world_rules(services, session)
         server = rules.server
-        statement = select(ChronicleRow).where(ChronicleRow.visible.is_(True))
+        statement = select(ChronicleRow).where(feed_lines())
         if epoch is not None:
             statement = statement.where(ChronicleRow.epoch == epoch)
         if world_id is not None:
@@ -61,9 +61,7 @@ async def read_chronicle(
 @router.get("/chronicle/epochs", response_model=list[ChronicleEpoch])
 async def chronicle_epochs(services: ServicesDep) -> list[ChronicleEpoch]:
     async with reader(services) as session:
-        counts = await session.execute(
-            select(ChronicleRow.epoch, func.count()).where(ChronicleRow.visible.is_(True)).group_by(ChronicleRow.epoch).order_by(ChronicleRow.epoch)
-        )
+        counts = await session.execute(select(ChronicleRow.epoch, func.count()).where(feed_lines()).group_by(ChronicleRow.epoch).order_by(ChronicleRow.epoch))
         names = {row.epoch: row.name for row in await session.scalars(select(EpochRow))}
         return [ChronicleEpoch(epoch=epoch, name=names.get(epoch), lines=int(count)) for epoch, count in counts]
 
