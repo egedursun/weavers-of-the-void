@@ -16,6 +16,7 @@ from aerona.engine.phases.dominion import count
     "table.age_sets",
     "table.body_marks",
     "table.bonds",
+    "table.cosmopolitan_members",
     "table.culture_drift_causes",
     "table.intoxicant_customs",
     "table.language_profiles",

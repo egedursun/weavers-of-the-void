@@ -16,6 +16,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.society_depth import DriftCause
 from aerona.engine.body.customs import people_of
+from aerona.engine.climes.crossings import road_belonging
 from aerona.engine.context import TickContext
 from aerona.engine.lore.names import tongue_of
 from aerona.engine.mind.book import clamp_value, stored_values, write_values
@@ -45,6 +46,11 @@ async def towns_of(ctx: TickContext, people_id: int) -> list[int]:
 
 
 async def pressure_on(ctx: TickContext, people_id: int) -> int:
+    eased = 1 - await road_belonging(ctx.session, people_id) * ctx.rules.cosmopolitan.nativism_ease_pct / PERCENT / PERCENT
+    return round(await pressed_on(ctx, people_id) * eased)
+
+
+async def pressed_on(ctx: TickContext, people_id: int) -> int:
     homes = [people_id, *await towns_of(ctx, people_id)]
     since = ctx.epoch - ctx.rules.revivals.memory_epochs
     rows = await ctx.session.execute(

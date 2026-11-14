@@ -66,6 +66,7 @@ CLIMES_MECHANICS = (
         targets=("world", "region"),
         couplings=(
             Coupling(S.ECONOMY, "cold water rising off a coast feeds its fishing grounds", E.MODIFIER, "currents.upwelling_catch_pct"),
+            Coupling(S.ECOLOGY, "a current carries living kinds from one coast to the next", E.TRIGGER, "currents.stowaway_chance"),
             Coupling(S.ECONOMY, "a warm current eases the sea roads of its coast", E.MODIFIER, "currents.current_speed_pct"),
             Coupling(S.COMMUNICATION, "wrecks and castaways a current carries bring word to the next coast", E.FLOW, "rumours.current_chance"),
             Coupling(S.ENVIRONMENT, "a climate swing shifts the rain and heat of the warm latitudes", E.MODIFIER, "oscillations.strength"),
@@ -105,6 +106,9 @@ CLIMES_MECHANICS = (
             Coupling(S.CULTURE, "a member people's values drift toward the culture of the road", E.FLOW, "cosmopolitan.value_pull_pct"),
             Coupling(S.LANGUAGE, "a member community comes to speak the common tongue of the road", E.FLOW, "cosmopolitan.lingua_share"),
             Coupling(S.SOCIAL, "a member's share of the culture grows while the road stays busy", E.FLOW, "cosmopolitan.share_gain"),
+            Coupling(S.SOCIAL, "a member's share fades while the road is quiet", E.FLOW, "cosmopolitan.share_fade"),
+            Coupling(S.CULTURE, "belonging to a road culture eases what stirs a people to a movement", E.MODIFIER, "cosmopolitan.nativism_ease_pct"),
+            Coupling(S.CULTURE, "a road culture makes an art of its own that its members practise", E.TRIGGER, "cosmopolitan.traffic_from"),
         ),
     ),
 )

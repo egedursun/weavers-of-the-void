@@ -52,6 +52,8 @@ class OscillationRules:
 class CurrentRules:
     upwelling_catch_pct: int = rule(30, 0, 200, W, "Catch a fishing ground in waters of upwelling gains (%)")
     current_speed_pct: int = rule(15, 0, 100, W, "Sea danger a warm current takes off the sea roads of its coast (%)")
+    stowaway_chance: int = rule(5, 0, 100, W, "Chance each epoch that a current carries a living kind of one coast to the next coast it reaches (%)")
+    stowaway_abundance: int = rule(10, 0, 100, W, "Abundance a kind carried by a current first holds on the coast it reaches")
 
 
 @dataclass(frozen=True)
@@ -66,5 +68,9 @@ class CosmopolitanRules:
     traffic_from: int = rule(20, 0, 100000, C, "Traffic of a road between worlds from which its travellers form a culture of their own")
     join_share: int = rule(20, 0, 100, C, "Share of a member community that belongs to the culture of the road when it joins")
     share_gain: int = rule(5, 0, 100, C, "Share a member community gains each epoch while the road stays busy")
+    share_fade: int = rule(5, 0, 100, C, "Share a member community loses each epoch while the road is quiet")
+    nativism_ease_pct: int = rule(
+        50, 0, 100, C, "Share of the pressure that would stir a people to a movement that its towns' full belonging to a road culture eases (%)"
+    )
     value_pull_pct: int = rule(10, 0, 100, L, "Share of the gap to the culture's values a member people closes each epoch at full share (%)")
     lingua_share: int = rule(50, 0, 100, L, "Share of a member community from which it speaks the lingua franca of the road")

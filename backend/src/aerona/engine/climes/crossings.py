@@ -1,19 +1,23 @@
 from collections import Counter
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import CosmopolitanCultureRow, CosmopolitanMemberRow, LaunchWindowRow
 from aerona.db.tables.culture import SpeakerCohortRow
+from aerona.db.tables.discovery import ArtFormPractitionerRow, ArtFormProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import SpeakerKind
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.discovery import ArtDiscipline
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.models.entity_stats import ArtFormStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.climes.windows import PHYSICAL, opens, pair
 from aerona.engine.context import TickContext
@@ -21,6 +25,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import spoken_language
+from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.language.generator import NameKind
 
 DAYS = 365
@@ -119,7 +124,43 @@ async def found_culture(ctx: TickContext, route: RouteRow, tally: CrossingTally)
             CosmopolitanMemberRow(culture_id=culture.id, community_entity_id=member, share=ctx.rules.cosmopolitan.join_share, joined_epoch=ctx.epoch, locked=[])
         )
     tally.cultures += 1
+    await found_art(ctx, called, members)
     await note(ctx, f"The travellers of a busy road between worlds grew into a culture of their own, {called}.", key="cosmopolitan.formed", ids=members[:3])
+
+
+async def found_art(ctx: TickContext, called: str, members: list[int]) -> None:
+    first = await ctx.session.get(EntityRow, members[0])
+    if first is None:
+        return
+    folk = await people_of(ctx.session, first)
+    discipline = ctx.rng(seed_of("road.art", members[0], ctx.epoch)).pick(list(ArtDiscipline))
+    art = await open_record(
+        ctx.session,
+        ctx.epoch,
+        RecordSpec(
+            entity_type=EntityType.ART_FORM,
+            name=f"The art of {called}",
+            body=f"An art the travellers of {called} made their own on the road between worlds.",
+            stats=ArtFormStats(),
+            power=1,
+            world_id=first.world_id,
+            subtype="art of the road",
+        ),
+    )
+    ctx.session.add(ArtFormProfileRow(art_form_entity_id=art.id, discipline=discipline, origin_culture_id=folk.id if folk is not None else None, locked=[]))
+    for member in members:
+        ctx.session.add(ArtFormPractitionerRow(art_form_entity_id=art.id, practitioner_entity_id=member, since_epoch=ctx.epoch, locked=[]))
+    await ctx.session.flush()
+
+
+async def road_belonging(session: AsyncSession, people_id: int) -> int:
+    towns = select(EntityRow.id).where(EntityRow.affiliated_entity_id == people_id)
+    found = await session.scalar(
+        select(func.max(CosmopolitanMemberRow.share)).where(
+            or_(CosmopolitanMemberRow.community_entity_id == people_id, CosmopolitanMemberRow.community_entity_id.in_(towns))
+        )
+    )
+    return int(found or 0)
 
 
 async def pull_values(ctx: TickContext, culture: CosmopolitanCultureRow, member: CosmopolitanMemberRow) -> None:
@@ -172,8 +213,9 @@ async def keep_cultures(ctx: TickContext, tally: CrossingTally) -> None:
         for member in members:
             if held(member.community_entity_id):
                 continue
-            if culture.route_id in busy_ids and "share" not in member.locked:
-                member.share = clamp_int(member.share + table.share_gain, 0, PERCENT)
+            if "share" not in member.locked:
+                step = table.share_gain if culture.route_id in busy_ids else -table.share_fade
+                member.share = clamp_int(member.share + step, 0, PERCENT)
             await pull_values(ctx, culture, member)
             await speak_lingua(ctx, culture, member, tally)
             tally.members += 1

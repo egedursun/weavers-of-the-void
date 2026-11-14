@@ -15,6 +15,7 @@ from aerona.engine.phases.dominion import count
     "table.region_environment",
     "table.region_pollution",
     "table.region_winds",
+    "table.species_ranges",
     "table.world_maps",
     "table.world_physics",
 )

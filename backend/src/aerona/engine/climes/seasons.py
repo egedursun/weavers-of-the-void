@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import ClimateOscillationRow, MonsoonSeasonRow, RegionWindRow
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow
 from aerona.db.tables.physics import WorldPhysicsRow
@@ -12,6 +13,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.climes import OscillationPhase
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
+from aerona.engine.climes.shifts import current_coasts
 from aerona.engine.context import TickContext
 from aerona.engine.environment.notable import year_in
 from aerona.engine.notes import note
@@ -28,6 +30,7 @@ class SeasonTally:
     failed: int = 0
     oscillations: int = 0
     turned: int = 0
+    carried: int = 0
 
 
 def phase_at(row: ClimateOscillationRow) -> OscillationPhase:
@@ -104,10 +107,41 @@ async def keep_oscillation(ctx: TickContext, world: WorldRow, tally: SeasonTally
             )
 
 
+async def carry_kinds(ctx: TickContext, tally: SeasonTally) -> None:
+    table = ctx.rules.currents
+    for coast, downstream in await current_coasts(ctx.session):
+        here, there = await ctx.session.get(EntityRow, coast), await ctx.session.get(EntityRow, downstream)
+        if here is None or there is None or here.location_id is None or there.location_id is None or here.location_id == there.location_id:
+            continue
+        if held(there.location_id) or not ctx.rng(seed_of("current.stowaway", coast, downstream, ctx.epoch)).chance(table.stowaway_chance):
+            continue
+        settled = select(SpeciesRangeRow.species_entity_id).where(SpeciesRangeRow.region_entity_id == there.location_id)
+        kind = await ctx.session.scalar(
+            select(SpeciesRangeRow.species_entity_id)
+            .where(SpeciesRangeRow.region_entity_id == here.location_id, SpeciesRangeRow.abundance > 0, SpeciesRangeRow.species_entity_id.not_in(settled))
+            .order_by(SpeciesRangeRow.abundance.desc(), SpeciesRangeRow.species_entity_id)
+            .limit(1)
+        )
+        if kind is None or held(kind):
+            continue
+        ctx.session.add(
+            SpeciesRangeRow(species_entity_id=kind, region_entity_id=there.location_id, abundance=table.stowaway_abundance, since_epoch=ctx.epoch, locked=[])
+        )
+        tally.carried += 1
+        species = await ctx.session.get(EntityRow, kind)
+        await note(
+            ctx,
+            f"The current carried {species.name if species else 'a living kind'} from the coast of {here.name} to the coast of {there.name}.",
+            key="currents.carried",
+            ids=[kind, there.id],
+        )
+
+
 async def keep_seasons(ctx: TickContext, tally: SeasonTally) -> None:
     for world in list(await ctx.session.scalars(select(WorldRow).order_by(WorldRow.id))):
         if held(world.id):
             continue
         await keep_monsoons(ctx, world, tally)
         await keep_oscillation(ctx, world, tally)
+    await carry_kinds(ctx, tally)
     await ctx.session.flush()

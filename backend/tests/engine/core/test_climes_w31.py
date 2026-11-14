@@ -7,28 +7,36 @@ from aerona.cartography.biomes import Biome
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.climes import ClimateOscillationRow, CosmopolitanCultureRow, CosmopolitanMemberRow, LaunchWindowRow, MonsoonSeasonRow, RegionWindRow
 from aerona.db.tables.culture import SpeakerCohortRow
+from aerona.db.tables.discovery import ArtFormPractitionerRow
+from aerona.db.tables.ecology import SpeciesRangeRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
 from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
+from aerona.db.tables.society_depth import DriftCauseRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.climes import CirculationBand, OscillationPhase
 from aerona.domain.enums.cosmography import OceanCurrent
 from aerona.domain.enums.culture import RumourChannel, SpeakerKind
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, NotableYearKind
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.society_depth import DriftCause
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus, TravelMethod
+from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.climes.crossings import CrossingTally, keep_cultures, keep_windows
 from aerona.engine.climes.seasons import SeasonTally, keep_seasons
 from aerona.engine.climes.shifts import clime_shifts, current_coasts, fire_wind, sea_navigation
 from aerona.engine.climes.windows import window_delay
 from aerona.engine.climes.winds import WindTally, keep_winds
 from aerona.engine.context import TickContext
+from aerona.engine.customs.revival import pressure_on
 from aerona.engine.lore.rumours import links
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import stat
-from tests.engine.core.factories import CoreWorld, add_empty_world, bond, mortal, settlement, tuned_rules
+from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, settlement, tuned_rules
 
 MOUNTAIN_MIX = [100 if biome is Biome.MOUNTAINS else 0 for biome in Biome]
 
@@ -189,6 +197,10 @@ async def test_travellers_of_a_busy_road_grow_a_culture_that_pulls_their_values_
     assert culture is not None and culture.lingua_franca_entity_id == world.language.id and culture.values == {"tradition": 40} and tally.cultures == 1
     members = set(await session.scalars(select(CosmopolitanMemberRow.community_entity_id).where(CosmopolitanMemberRow.culture_id == culture.id)))
     assert members == {first.id, second.id}
+    art = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.ART_FORM, EntityRow.subtype == "art of the road"))
+    assert art is not None
+    practised = set(await session.scalars(select(ArtFormPractitionerRow.practitioner_entity_id).where(ArtFormPractitionerRow.art_form_entity_id == art.id)))
+    assert practised == {first.id, second.id}
     culture.values = {"tradition": 90}
     member = await session.get(CosmopolitanMemberRow, (culture.id, first.id))
     assert member is not None
@@ -216,3 +228,38 @@ async def test_a_mortal_sees_the_number_of_each_road_culture_it_can_join(session
     await session.flush()
     lines = " ".join(await mortal_climes_lines(await load_scope(session, tuned_rules()), me))
     assert f"you belong to Velmar (#{culture.id})" in lines and "reaches your world" not in lines
+
+
+async def test_a_quiet_road_loses_its_culture_and_belonging_eases_a_peoples_pressure_to_a_movement(session: AsyncSession, world: CoreWorld) -> None:
+    other, _ = await add_empty_world(session)
+    town = await settlement(session, "Wayside", world, world.regions[0])
+    town.affiliated_entity_id = world.people.id
+    route = RouteRow(world_a_id=world.world.id, world_b_id=other.id, method=TravelMethod.LIGHT_SAIL, duration_epochs=2, danger=10, created_epoch=1, traffic=0)
+    session.add(route)
+    await session.flush()
+    culture = CosmopolitanCultureRow(route_id=route.id, name="The Wayfolk", values={}, formed_epoch=1, locked=[])
+    session.add(culture)
+    await session.flush()
+    member = CosmopolitanMemberRow(culture_id=culture.id, community_entity_id=town.id, share=100, joined_epoch=1, locked=[])
+    session.add(member)
+    session.add(DriftCauseRow(community_entity_id=town.id, cause=DriftCause.CONQUEST, axis=ValueAxis.TRADITION, amount=-40, total=-40, epoch=3))
+    await session.flush()
+    ctx = await at(session, 3, cosmopolitan={"nativism_ease_pct": 50})
+    assert await pressure_on(ctx, world.people.id) == 20
+    await keep_cultures(await at(session, 3, cosmopolitan={"traffic_from": 100, "share_fade": 30}), CrossingTally())
+    assert member.share == 70
+
+
+async def test_a_current_carries_a_living_kind_to_the_next_coast_it_reaches(session: AsyncSession, world: CoreWorld) -> None:
+    grounds = await laid_out(session, world)
+    grounds[3].coast_kind = CoastKind.BEACH
+    await settlement(session, "Brinehold", world, world.regions[0])
+    await settlement(session, "Farshore", world, world.regions[3])
+    kind = await entity(session, "Drift Crab", EntityType.SPECIES, SpeciesStats(), world_id=world.world.id)
+    session.add(SpeciesRangeRow(species_entity_id=kind.id, region_entity_id=world.regions[0].id, abundance=60, locked=[]))
+    await session.flush()
+    await keep_winds(await at(session, 3), WindTally())
+    tally = SeasonTally()
+    await keep_seasons(await at(session, 3, currents={"stowaway_chance": 100, "stowaway_abundance": 15}), tally)
+    landed = await session.get(SpeciesRangeRow, (kind.id, world.regions[3].id))
+    assert landed is not None and landed.abundance == 15 and tally.carried >= 1
