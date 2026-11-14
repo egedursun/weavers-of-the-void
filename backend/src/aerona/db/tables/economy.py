@@ -392,7 +392,7 @@ class LoanRow(Base):
     issued_epoch: Mapped[int]
     due_epoch: Mapped[int]
     status: Mapped[LoanStatus] = mapped_column(enum_type(LoanStatus, "status"))
-    purpose: Mapped[str] = mapped_column(String(64))
+    purpose: Mapped[str] = mapped_column(Text)
     war_id: Mapped[int | None] = mapped_column(ForeignKey("wars.id", ondelete="SET NULL"))
     held: Mapped[bool] = mapped_column(default=False)
 

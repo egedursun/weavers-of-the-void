@@ -60,8 +60,13 @@ def test_a_stock_image_in_our_wording_is_caught() -> None:
         "The seers whisper the same prophecy.",
         "The cosmos took a breath; doom receded.",
         "Some keep watch by fire and lamp while the rest sleep.",
+        "The witch hunt in {town} burned out.",
+        "The war burnt out in exhaustion.",
+        "Its folk accuse one another until the fervour burns out.",
+        "The grudge lasted three epochs without a sword drawn.",
     ):
         assert "stock image" in rules_hit(module, engine_line, text), text
+    assert "stock image" not in rules_hit(module, engine_line, "Severity at which fire burns out an eye")
     assert "stock image" not in rules_hit(module, engine_line, "{world} was forgotten; no one can turn to a forgotten world.")
     assert "stock image" not in rules_hit(module, engine_line, "The weather to hold: clear, rain, storm, snow or fog")
 

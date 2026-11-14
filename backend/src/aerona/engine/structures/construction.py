@@ -226,9 +226,7 @@ async def spend_treasury(ctx: TickContext, site_id: int, amount: int, label: str
     if paid:
         town.treasury -= paid
         ctx.session.add(
-            SettlementTreasuryRow(
-                settlement_entity_id=site_id, epoch=ctx.epoch, entry=TreasuryEntry.BUILDING, amount=-paid, balance=town.treasury, note=label[:120]
-            )
+            SettlementTreasuryRow(settlement_entity_id=site_id, epoch=ctx.epoch, entry=TreasuryEntry.BUILDING, amount=-paid, balance=town.treasury, note=label)
         )
     return paid
 

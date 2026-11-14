@@ -527,9 +527,7 @@ def spend(ctx: TickContext, realm: Realm, amount: int, entry: TreasuryEntry, lab
     if profile.treasury < 0:
         profile.debt += -profile.treasury
         profile.treasury = 0
-    ctx.session.add(
-        PolityTreasuryRow(polity_entity_id=realm.entity.id, epoch=ctx.epoch, entry=entry, amount=amount, balance=profile.treasury, note=label[:120])
-    )
+    ctx.session.add(PolityTreasuryRow(polity_entity_id=realm.entity.id, epoch=ctx.epoch, entry=entry, amount=amount, balance=profile.treasury, note=label))
     return amount
 
 
@@ -560,7 +558,7 @@ async def collect(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
                 entry=TreasuryEntry.TAX,
                 amount=-taken,
                 balance=town.treasury,
-                note=f"to {realm.entity.name}"[:120],
+                note=f"to {realm.entity.name}",
             )
         )
         gathered += min(arriving, taken)

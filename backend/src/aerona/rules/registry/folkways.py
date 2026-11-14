@@ -29,6 +29,8 @@ class NutritionRules:
     childhood_mean: int = rule(60, 0, 100, P, "Childhood nutrition at which an adult grows to the stature of its kind")
     stature_pct: int = rule(25, 0, 100, P, "Strength and toughness an adult gains or loses for each point of childhood nutrition above or below the mean (%)")
     deficiency_health: int = rule(3, 0, 100, P, "Health a mortal loses each epoch to a deficient diet")
+    malnutrition_chance: int = rule(25, 0, 100, P, "Chance each epoch that a deficient diet wastes a body into malnutrition (%)")
+    cognition_pct: int = rule(15, 0, 100, P, "Reckoning and memory an adult gains or loses for each point of childhood nutrition above or below the mean (%)")
     voyage_epochs: int = rule(3, 1, 100, P, "Epochs of a journey from which food without fresh or preserved stores leaves its travellers deficient")
     voyage_deficiency: int = rule(15, 0, 100, P, "Condition travellers lose to a long journey without fresh or preserved food")
     stores_pct: int = rule(50, 0, 100, P, "Share of a people's food stores against hunger that counts as preserved food in its towns' diets (%)")
@@ -70,6 +72,17 @@ class PurityRules:
         "Share of the gap to what its culture now values that each source of impurity closes each epoch; sources a culture no longer keeps fade away (%)",
     )
     rise_chance: int = rule(5, 0, 100, R, "Chance each epoch that a mortal with that wealth rises a caste rank (%)")
+    avoidance_pct: int = rule(
+        30, 0, 100, R, "Share by which a people that holds the dead and bodily fluids unclean, at full weight, slows an epidemic it shuns (%)"
+    )
+    carer_loss_pct: int = rule(
+        20, 0, 100, R, "Share by which such a people's shunning of the sick, at full weight, raises an epidemic's deaths for want of carers (%)"
+    )
+    outsider_trade_pct: int = rule(
+        60, 0, 100, R, "Share of trade with another people that a people holding outsiders unclean, at full weight, refuses away from a trading post (%)"
+    )
+    corpse_exposure_pct: int = rule(50, 0, 100, R, "Share by which a plague's chance of killing rises for one made unclean by handling the dead (%)")
+    quarter_pct: int = rule(30, 0, 100, R, "Desirability a district gains or loses for each point of standing its caste holds above or below the middle (%)")
 
 
 @dataclass(frozen=True)
@@ -101,13 +114,17 @@ class WitchcraftRules:
     accuse_chance: int = rule(50, 0, 100, J, "Chance a mishap read as witchcraft brings an accusation (%)")
     envy_weight: int = rule(30, 0, 100, J, "Weight the accuser's envy of a richer neighbour adds to suspicion")
     outsider_weight: int = rule(30, 0, 100, J, "Weight an outsider to the town's people adds to suspicion")
-    isolation_weight: int = rule(25, 0, 100, J, "Weight a mortal with no close kin to defend them adds to suspicion")
+    isolation_weight: int = rule(25, 0, 100, J, "Weight a mortal with no close kin to defend them, or one who keeps apart from others, adds to suspicion")
     grievance_weight: int = rule(20, 0, 100, J, "Weight an earlier grievance of the accuser against them adds to suspicion")
     repeat_weight: int = rule(30, 0, 100, J, "Weight an earlier accusation adds to suspicion")
     caster_weight: int = rule(40, 0, 100, J, "Weight the true casting of a curse on the victim adds to suspicion")
+    rumour_weight: int = rule(30, 0, 100, J, "Weight a rumour about a mortal that the town carries adds to suspicion")
     hunt_from: int = rule(3, 1, 100, J, "Accusations in one town within the memory of a hunt that start a witch hunt")
     hunt_memory: int = rule(3, 1, 50, J, "Epochs back a town counts its accusations toward a witch hunt")
-    hunt_stress: int = rule(40, 0, 100, J, "Hunger or insecurity in a town from which its accusations become a witch hunt")
+    hunt_stress: int = rule(40, 0, 100, J, "Hunger, insecurity, plague, war or political stress in a town from which its accusations become a witch hunt")
+    plague_stress: int = rule(50, 0, 100, J, "Stress an epidemic in a town's region lays on it toward a witch hunt")
+    war_stress: int = rule(40, 0, 100, J, "Stress a war of a town's realm lays on it toward a witch hunt")
+    zealous_fervour: int = rule(30, 0, 100, J, "Fervour a witch hunt gains where the town's church has turned to inquisition")
     hunt_fervour: int = rule(60, 0, 100, J, "Fervour a witch hunt starts with")
     hunt_fade: int = rule(15, 0, 100, J, "Fervour a witch hunt loses each epoch")
     hunt_accusations: int = rule(2, 0, 50, J, "Accusations a witch hunt brings each epoch at full fervour")

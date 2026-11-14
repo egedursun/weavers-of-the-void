@@ -250,6 +250,7 @@ async def uprisings(ctx: TickContext) -> None:
     "table.bonds",
     "table.epoch_year_cursors",
     "table.house_members",
+    "table.house_profiles",
     "table.kinship_systems",
     "table.memberships",
     "table.nodes",

@@ -9,6 +9,12 @@ from aerona.domain.enums.structure import BuildingForm, ConstructionState, Struc
 from aerona.domain.enums.urban import CivicService, HousingLevel, LandCover, LandGround, Morphology, UrbanService, ZoneKind
 
 
+class CasteQuarter(ApiModel):
+    id: int
+    name: str
+    standing: int
+
+
 class ServiceShare(ApiModel):
     service: UrbanService
     coverage: int
@@ -30,6 +36,7 @@ class CityDistrictView(ApiModel):
     dwellings: int
     services: list[ServiceShare]
     turf: int
+    caste: CasteQuarter | None
     locked: list[str]
 
 
@@ -74,6 +81,7 @@ class CitySceneView(ApiModel):
     water_side: int | None
     scale: int
     districts: list[CityDistrictView]
+    castes: list[CasteQuarter]
     buildings: list[CityBuildingView]
     zones: list[ZoneShare]
 

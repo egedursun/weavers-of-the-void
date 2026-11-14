@@ -169,7 +169,7 @@ def new_stratum(rules: Rules, realm: EntityRow, kind: StratumKind) -> AfterlifeS
     return AfterlifeStratumRow(
         realm_entity_id=realm.id,
         kind=kind,
-        name=f"{STRATUM_NAMES[kind]} of {realm.name}"[:200],
+        name=f"{STRATUM_NAMES[kind]} of {realm.name}",
         criteria=default_criteria(rules.afterlife, kind).stored(),
         population=0,
         closed=False,
@@ -362,7 +362,7 @@ async def judge(ctx: TickContext, spirit: EntityRow, mortal: EntityRow, realm: E
             stratum_id=stratum.id if stratum is not None else None,
             score=score,
             rite=profile.rite,
-            reason=reason[:480],
+            reason=reason,
             epoch=ctx.epoch,
         )
     )

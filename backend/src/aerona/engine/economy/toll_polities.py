@@ -58,6 +58,6 @@ async def fund_polity(ctx: TickContext, polity_id: int, amount: int, label: str)
         return 0
     profile.treasury += amount
     ctx.session.add(
-        PolityTreasuryRow(polity_entity_id=polity_id, epoch=ctx.epoch, entry=TreasuryEntry.TOLLS, amount=amount, balance=profile.treasury, note=label[:120])
+        PolityTreasuryRow(polity_entity_id=polity_id, epoch=ctx.epoch, entry=TreasuryEntry.TOLLS, amount=amount, balance=profile.treasury, note=label)
     )
     return amount

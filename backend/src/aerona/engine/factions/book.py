@@ -176,7 +176,7 @@ def log(
             target_node_id=target,
             success=success,
             amount=amount,
-            note=note[:120] or None,
+            note=note or None,
         )
     )
     ctx.count(f"faction_act.{kind.value}")

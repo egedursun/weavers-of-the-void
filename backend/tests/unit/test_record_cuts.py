@@ -28,3 +28,18 @@ def test_a_reader_that_drops_folded_lines_is_caught() -> None:
 def test_no_reader_of_the_chronicle_drops_folded_lines() -> None:
     module = checker()
     assert module.cuts(module.readers()) == []
+
+
+def test_a_writer_that_cuts_what_it_stores_at_a_fixed_length_is_caught() -> None:
+    writer = (
+        "row.note = label[:120]\n"
+        "row.summary = phase.summary\n"
+        "first = name[:1].upper()\n"
+        "casting.effect = text[:480] or 'nothing'\n"
+    )
+    assert [item.line for item in checker().fixed_cuts({Path("writer.py"): writer})] == [1, 4]
+
+
+def test_no_writer_cuts_what_it_stores() -> None:
+    module = checker()
+    assert module.fixed_cuts(module.writers()) == []

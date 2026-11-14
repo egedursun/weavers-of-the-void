@@ -225,6 +225,7 @@ function CityBody({
                 <DistrictPanel
                   key={district.id}
                   district={district}
+                  castes={scene.castes}
                   blocked={why(blocked, move.isPending)}
                   moving={moving === district.id}
                   onMove={() =>

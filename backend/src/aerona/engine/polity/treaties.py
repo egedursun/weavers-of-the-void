@@ -131,7 +131,7 @@ async def breach(ctx: TickContext, profile: TreatyProfileRow, breaker_id: int, *
         clause_id=clause.id if clause is not None else None,
         breaker_node_id=breaker_id,
         epoch=ctx.epoch,
-        note=reason[:120],
+        note=reason,
     )
     ctx.session.add(row)
     await end_treaty(ctx, profile, TreatyStatus.BROKEN, reason)

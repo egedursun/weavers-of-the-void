@@ -66,7 +66,7 @@ async def swear(
         sworn_epoch=ctx.epoch,
         deadline_epoch=ctx.epoch + table.deadline_epochs if kind in TIMED else None,
         ended_epoch=None,
-        note=(note_text or "")[:120] or None,
+        note=note_text or None,
     )
     ctx.session.add(row)
     await ctx.session.flush()

@@ -1,7 +1,7 @@
-from sqlalchemy import ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH
+from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -47,7 +47,7 @@ class RegionMemoryRow(Base):
     source_key: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
     subject_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
-    title: Mapped[str] = mapped_column(String(SHORT_TEXT_MAX_LENGTH), default="")
+    title: Mapped[str] = mapped_column(Text, default="")
     origin: Mapped[MemoryOrigin] = mapped_column(enum_type(MemoryOrigin, "origin"), default=MemoryOrigin.DERIVED)
     held: Mapped[bool] = mapped_column(default=False)
 

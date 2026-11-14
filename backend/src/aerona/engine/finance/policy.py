@@ -202,7 +202,7 @@ async def lay(
     ctx: TickContext, realm_id: int, kind: TradePolicyKind, *, commodity: CommodityKind | None, partner: int | None, rate: int, reason: str
 ) -> TradePolicyRow:
     row = TradePolicyRow(
-        issuer_node_id=realm_id, kind=kind, commodity=commodity, partner_node_id=partner, rate_pct=rate, since_epoch=ctx.epoch, reason=reason[:120], locked=[]
+        issuer_node_id=realm_id, kind=kind, commodity=commodity, partner_node_id=partner, rate_pct=rate, since_epoch=ctx.epoch, reason=reason, locked=[]
     )
     ctx.session.add(row)
     return row

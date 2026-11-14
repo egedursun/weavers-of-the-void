@@ -91,6 +91,7 @@ from aerona.engine.environment.local import weather_here
 from aerona.engine.eras.effects import tech_relief
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
+from aerona.engine.folkways.purity import unclean
 from aerona.engine.genetics.genome import aptitude, gift_factors
 from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.industry.pollution import void_scar
@@ -460,6 +461,7 @@ async def unmet(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> str
         (need.sky is not None and not await sky_shows(ctx, str(need.sky)), "the sky does not show the sign it needs"),
         (need.slot is not None and not await season_of(ctx, caster, CalendarSlot(need.slot)), "it is not the season for it"),
         (need.participants is not None and await gathering(ctx, caster) < need.participants, "too few take part"),
+        (mortal and await unclean(ctx.session, caster.id), "the caster is unclean in the eyes of their people"),
     )
     return next((reason for failed, reason in checks if failed), None)
 
@@ -1095,7 +1097,7 @@ async def cast(
         if damp < 1:
             done.append("the wet weather smothered its fire")
         done.extend(shaping.notes)
-        casting.effect = "; ".join(text for text in done if text)[:480] or "the rite was worked to no end"
+        casting.effect = "; ".join(text for text in done if text) or "the rite was worked to no end"
         await infamy(ctx, caster, row, target)
     await judged(ctx, caster.id, target.id if target is not None else caster.id, SCHOOL_ACTS.get(row.school, ActKind.MAGIC_USE))
     await hidden_rites(ctx, caster, rite, row)
@@ -1381,6 +1383,6 @@ async def dispel(ctx: TickContext, rite_id: int) -> CastingRow | None:
         if effect.effect is E.CURSE and casting.target_entity_id is not None:
             await remove_flag(ctx.session, casting.target_entity_id, EntityFlag.CURSED)
     casting.succeeded = False
-    casting.effect = f"{casting.effect} (dispelled)"[:480]
+    casting.effect = f"{casting.effect} (dispelled)"
     await ctx.session.flush()
     return casting

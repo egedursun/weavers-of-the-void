@@ -142,7 +142,7 @@ async def _fade_grudges(ctx: TickContext, candidates: list[tuple[int, int, int]]
             await _note(ctx, text, "diplomacy.grudge_faded", (first_id, second_id))
         else:
             text = (
-                f"The grudge between {first.name} and {second.name} lasted {several(age, 'epoch', 'epochs')} without a sword drawn and was forgotten; "
+                f"The grudge between {first.name} and {second.name} lasted {several(age, 'epoch', 'epochs')} without a blow struck and was forgotten; "
                 "only the elders remember the enmity."
             )
             await _note(ctx, text, "diplomacy.grudge_forgotten", (first_id, second_id))

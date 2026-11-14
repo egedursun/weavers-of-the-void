@@ -305,6 +305,11 @@ export const CONDITIONS: Record<string, Named> = {
   nightmares: { label: 'Recurring nightmares', icon: Moon, tone: 'verdigris' },
   comatose: { label: 'Comatose', icon: EyeOff, tone: 'muted' },
   cognitive_decline: { label: 'Failing mind', icon: Brain, tone: 'warning' },
+  malnutrition: {
+    label: 'Wasted by a poor diet',
+    icon: Utensils,
+    tone: 'warning',
+  },
 }
 
 export const MEDICINE: Record<string, Named & { hint: string }> = {

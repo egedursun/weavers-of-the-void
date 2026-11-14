@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
@@ -123,7 +123,7 @@ class OfficeHistoryRow(Base):
     holder_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     from_epoch: Mapped[int]
     to_epoch: Mapped[int | None]
-    reason: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    reason: Mapped[str | None] = mapped_column(Text)
 
 
 class PolityTreasuryRow(Base):
@@ -136,7 +136,7 @@ class PolityTreasuryRow(Base):
     entry: Mapped[TreasuryEntry] = mapped_column(enum_type(TreasuryEntry, "entry"))
     amount: Mapped[int]
     balance: Mapped[int]
-    note: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    note: Mapped[str | None] = mapped_column(Text)
 
 
 class VassalageRow(Base):
@@ -264,7 +264,7 @@ class OathRow(Base):
     sworn_epoch: Mapped[int]
     deadline_epoch: Mapped[int | None]
     ended_epoch: Mapped[int | None]
-    note: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    note: Mapped[str | None] = mapped_column(Text)
 
 
 class TreatyProfileRow(Base):
@@ -318,7 +318,7 @@ class TreatyBreachRow(Base):
     breaker_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     epoch: Mapped[int]
     incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
-    note: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    note: Mapped[str | None] = mapped_column(Text)
 
 
 class SentenceRow(Base):

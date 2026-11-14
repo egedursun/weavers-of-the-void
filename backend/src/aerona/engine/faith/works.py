@@ -236,7 +236,7 @@ async def bones_of(ctx: TickContext, church: Church, saint: EntityRow) -> Entity
     bones = await create_record(
         ctx,
         RecordSpec(
-            name=f"Bones of {saint.name}"[:200],
+            name=f"Bones of {saint.name}",
             entity_type=EntityType.ITEM,
             stats=ItemStats(),
             body=f"The bones of {saint.name}, kept by {church.cult.name} as a holy relic.",

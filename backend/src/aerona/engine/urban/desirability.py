@@ -12,6 +12,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.engine.context import TickContext
+from aerona.engine.folkways.purity import caste_standing
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
@@ -87,6 +88,9 @@ async def assess_town(ctx: TickContext, settlement: EntityRow, tally: Desirabili
                 score -= table.nuisance * falloff(reach, layout.apart(other.id, district.id))
             if other.kind is DistrictKind.GARDENS:
                 score += ctx.rules.city_plan.garden_amenity * other.level * falloff(reach, layout.apart(other.id, district.id))
+        standing = await caste_standing(ctx.session, district)
+        if standing is not None:
+            score += (standing - NEUTRAL) * ctx.rules.purity.quarter_pct / PERCENT
         if "desirability" not in district.locked:
             district.desirability = clamp_int(round_half_up(score), 0, PERCENT)
         if "land_value" not in district.locked:

@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
@@ -167,7 +167,7 @@ class SoulJudgementRow(Base):
     stratum_id: Mapped[int | None] = mapped_column(ForeignKey("afterlife_strata.id", ondelete="SET NULL"))
     score: Mapped[int] = mapped_column(default=0)
     rite: Mapped[FuneralRite] = mapped_column(enum_type(FuneralRite, "rite"), default=FuneralRite.NONE)
-    reason: Mapped[str] = mapped_column(String(480), default="")
+    reason: Mapped[str] = mapped_column(Text, default="")
     epoch: Mapped[int]
 
 

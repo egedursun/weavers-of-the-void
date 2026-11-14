@@ -7,6 +7,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ages import IrregularSeasonRow
 from aerona.db.tables.agrarian import FamineLoreRow
+from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
@@ -14,6 +15,7 @@ from aerona.db.tables.folkways import DietRow, NutrientNeedRow, NutritionScoreRo
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import SeasonSpell
+from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.demography import FolkDiet
 from aerona.domain.enums.ecology import Biochemistry
 from aerona.domain.enums.economy import CommodityKind
@@ -22,6 +24,7 @@ from aerona.domain.enums.folkways import Nutrient
 from aerona.domain.enums.mind import Attribute, PressureKind
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
+from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import pressures_of
@@ -56,6 +59,7 @@ ELITE = frozenset({SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.MERCHANT, 
 LOWLY = frozenset({SocialClass.SERF_OR_SLAVE, SocialClass.OUTCAST})
 YOUNG = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.YOUTH})
 STATURE = (Attribute.STRENGTH, Attribute.TOUGHNESS)
+COGNITION = (Attribute.ANALYTICAL_ABILITY, Attribute.MEMORY)
 
 
 @dataclass
@@ -177,9 +181,10 @@ async def grow(ctx: TickContext, mortal: EntityRow, row: NutritionScoreRow, tall
     if not attributes or not has_attributes(mortal):
         row.grown = True
         return
-    shift = round_half_up(((row.childhood if row.childhood is not None else row.score) - table.childhood_mean) * table.stature_pct / PERCENT)
-    for member in STATURE:
-        attributes[member] = attributes.get(member, MIDPOINT) + shift
+    gap = (row.childhood if row.childhood is not None else row.score) - table.childhood_mean
+    for members, pct in ((STATURE, table.stature_pct), (COGNITION, table.cognition_pct)):
+        for member in members:
+            attributes[member] = attributes.get(member, MIDPOINT) + round_half_up(gap * pct / PERCENT)
     await store_attributes(ctx.session, mortal, attributes)
     row.grown = True
     tally.grown += 1
@@ -206,6 +211,11 @@ async def feed_mortal(ctx: TickContext, mortal: EntityRow, town_row: NutritionSc
     if row.deficiency is not None and not is_held(profile, "health"):
         profile.health = clamp_int(profile.health - table.deficiency_health, 0, PERCENT)
         tally.deficient += 1
+    if row.deficiency is not None:
+        severity = clamp_int(SEVERITY_MIN + (PERCENT - row.balance) * (SEVERITY_MAX - SEVERITY_MIN) // PERCENT, SEVERITY_MIN, SEVERITY_MAX)
+        await gain_condition(ctx, mortal, ConditionKind.MALNUTRITION, HarmCause.EXPOSURE, chance=table.malnutrition_chance, severity=severity)
+    else:
+        await end_condition(ctx, mortal, ConditionKind.MALNUTRITION)
     tally.scored += 1
 
 

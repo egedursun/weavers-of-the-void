@@ -183,7 +183,7 @@ async def ghost_legend(ctx: TickContext, spirit: EntityRow, haunted: EntityRow) 
     legend = await create_record(
         ctx,
         RecordSpec(
-            name=f"The Haunting of {haunted.name}"[:200],
+            name=f"The Haunting of {haunted.name}",
             entity_type=EntityType.LEGEND,
             stats=LegendStats(spread=table.haunt_legend_credence),
             body=f"The people of {haunted.name} tell how {spirit.name} haunts them.",

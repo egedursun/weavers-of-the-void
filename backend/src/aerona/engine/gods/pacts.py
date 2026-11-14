@@ -150,7 +150,7 @@ def checked_terms(values: Mapping[str, int | str | None], base: Terms) -> Terms:
         if not isinstance(value, int) or isinstance(value, bool) or value < floor or (key == "cost" and value > PERCENT):
             raise ValidationFailedError(f"{key.capitalize()} must be a whole number of at least {floor}{' and at most 100' if key == 'cost' else ''}.")
         numbers[key] = value
-    demand = str(values.get("demand") or base.demand).strip()[:120] or base.demand
+    demand = str(values.get("demand") or base.demand).strip() or base.demand
     return Terms(demand, CommodityKind(str(wanted)) if wanted else None, numbers["units"], numbers["cost"], numbers["every"])
 
 

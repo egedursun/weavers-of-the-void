@@ -1708,7 +1708,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"town_id": "The town", "kind": "The misfortune", "victim_id": "Whom it falls on, if anyone", "reason": "Why you send it"},
     ),
     T.STIR_WITCH_HUNT: ToolText(
-        "You stir a witch hunt in a town within your reach: its folk accuse one another of witchcraft each epoch until the fervour burns out, and "
+        "You stir a witch hunt in a town within your reach: its folk accuse one another of witchcraft each epoch until its fervour fades, and "
         "the courts try the accused. 1 action.",
         {"town_id": "The town", "reason": "Why you stir it"},
     ),

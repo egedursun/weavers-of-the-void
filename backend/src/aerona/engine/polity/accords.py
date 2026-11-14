@@ -291,7 +291,7 @@ async def remember_kept(ctx: TickContext, profile: TreatyProfileRow, treaty: Ent
                     kind=MemoryKind.KEPT_OATH,
                     magnitude=weight,
                     epoch=ctx.epoch,
-                    note=f"kept {treaty.name if treaty is not None else 'a treaty'}"[:120],
+                    note=f"kept {treaty.name if treaty is not None else 'a treaty'}",
                     event_id=profile.treaty_entity_id,
                 )
 

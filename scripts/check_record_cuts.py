@@ -5,6 +5,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "backend" / "src" / "aerona"
+WRITERS = (SOURCE / "engine", SOURCE / "services", SOURCE / "agents", SOURCE / "tools", SOURCE / "api")
+FIXED_CUT = re.compile(r"\[:[0-9]{2,}\]")
 READERS = (SOURCE / "services" / "books", SOURCE / "services" / "codex.py", SOURCE / "services" / "search.py", SOURCE / "services" / "player", SOURCE / "api")
 CUTS = (
     (
@@ -31,6 +33,19 @@ def cuts(files: dict[Path, str]) -> list[Cut]:
     return found
 
 
+def fixed_cuts(files: dict[Path, str]) -> list[Cut]:
+    return [
+        Cut(path, number, "cuts what it stores at a fixed length, so the record and the book lose the rest; store it whole")
+        for path, text in files.items()
+        for number, line in enumerate(text.splitlines(), start=1)
+        if FIXED_CUT.search(line)
+    ]
+
+
+def writers() -> dict[Path, str]:
+    return {path: path.read_text(encoding="utf-8") for folder in WRITERS for path in sorted(folder.rglob("*.py"))}
+
+
 def readers() -> dict[Path, str]:
     paths: list[Path] = []
     for reader in READERS:
@@ -42,6 +57,10 @@ def main() -> int:
     found = cuts(readers())
     for item in found:
         print(f"{item.path.relative_to(ROOT)}:{item.line}: a reader of the chronicle {item.reason}")
+    stored = fixed_cuts(writers())
+    for item in stored:
+        print(f"{item.path.relative_to(ROOT)}:{item.line}: a writer {item.reason}")
+    found = found + stored
     print(f"record cuts: {len(found)}")
     return 1 if found else 0
 

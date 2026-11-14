@@ -139,9 +139,7 @@ def ledger(ctx: TickContext, town: Town, entry: TreasuryEntry, amount: int, note
         return 0
     town.profile.treasury += spent
     ctx.session.add(
-        SettlementTreasuryRow(
-            settlement_entity_id=town.entity.id, epoch=ctx.epoch, entry=entry, amount=spent, balance=town.profile.treasury, note=(note or "")[:120] or None
-        )
+        SettlementTreasuryRow(settlement_entity_id=town.entity.id, epoch=ctx.epoch, entry=entry, amount=spent, balance=town.profile.treasury, note=note or None)
     )
     return spent
 

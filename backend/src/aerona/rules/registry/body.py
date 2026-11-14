@@ -225,6 +225,9 @@ class CapacityRules:
     decline_scholarship: int = rule(20, -100, 100, G, "Late-life decline of the mind: scholarship lost at full severity (%)")
     decline_command: int = rule(15, -100, 100, G, "Late-life decline of the mind: command lost at full severity (%)")
     decline_craft: int = rule(10, -100, 100, G, "Late-life decline of the mind: craft lost at full severity (%)")
+    malnutrition_melee: int = rule(20, -100, 100, G, "A body wasted by a poor diet: melee lost (%)")
+    malnutrition_craft: int = rule(15, -100, 100, G, "A body wasted by a poor diet: craft lost (%)")
+    malnutrition_fertility: int = rule(30, -100, 100, G, "A body wasted by a poor diet: fertility lost (%)")
 
 
 @dataclass(frozen=True)

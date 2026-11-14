@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
@@ -193,7 +193,7 @@ class CustomKindRow(Base):
     catalog: Mapped[CustomCatalog] = mapped_column(enum_type(CustomCatalog, "catalog"))
     base: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
     name: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
-    description: Mapped[str] = mapped_column(String(480), default="")
+    description: Mapped[str] = mapped_column(Text, default="")
     params: Mapped[dict[str, int | str | list[str] | dict[str, int]]] = mapped_column(JSON, default=dict)
     created_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
@@ -289,7 +289,7 @@ class CastingRow(Base):
     epoch: Mapped[int]
     succeeded: Mapped[bool] = mapped_column(default=True)
     backlash: Mapped[BacklashKind | None] = mapped_column(enum_type(BacklashKind, "backlash"))
-    effect: Mapped[str] = mapped_column(String(480), default="")
+    effect: Mapped[str] = mapped_column(Text, default="")
 
 
 class ProphecyConditionRow(Base):

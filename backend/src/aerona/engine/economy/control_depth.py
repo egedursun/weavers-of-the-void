@@ -553,7 +553,7 @@ async def grant_loan(ctx: TickContext, terms: NewLoan) -> LoanRow:
         issued_epoch=ctx.epoch,
         due_epoch=ctx.epoch + terms.term_epochs,
         status=LoanStatus.OPEN,
-        purpose=terms.purpose.strip()[:64] or "war",
+        purpose=terms.purpose.strip() or "war",
     )
     ctx.session.add(loan)
     await ctx.session.flush()

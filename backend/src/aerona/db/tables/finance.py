@@ -1,7 +1,6 @@
-from sqlalchemy import JSON, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import JSON, ForeignKey, Index, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.economy import CommodityKind
@@ -20,7 +19,7 @@ class TradePolicyRow(Base):
     partner_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
     rate_pct: Mapped[int] = mapped_column(default=0)
     since_epoch: Mapped[int]
-    reason: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    reason: Mapped[str | None] = mapped_column(Text)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

@@ -229,9 +229,7 @@ def set_ruler(ctx: TickContext, realm: Realm, ruler_id: int | None, reason: str,
         return False
     if office.id is not None and office.holder_entity_id is not None:
         ctx.session.add(
-            OfficeHistoryRow(
-                office_id=office.id, holder_entity_id=office.holder_entity_id, from_epoch=office.since_epoch, to_epoch=ctx.epoch, reason=reason[:120]
-            )
+            OfficeHistoryRow(office_id=office.id, holder_entity_id=office.holder_entity_id, from_epoch=office.since_epoch, to_epoch=ctx.epoch, reason=reason)
         )
     office.holder_entity_id = ruler_id
     office.since_epoch = ctx.epoch
@@ -416,6 +414,6 @@ async def provinces(ctx: TickContext, book: RealmBook, realm: Realm, members: li
         if seat is None:
             near = [other for other in book.atlas.neighbour_regions(region) if other in seats]
             seat = seats[min(near)] if near else None
-        row.province = f"the province of {seat.name}"[:120] if seat is not None else row.province
+        row.province = f"the province of {seat.name}" if seat is not None else row.province
         named += 1
     return named

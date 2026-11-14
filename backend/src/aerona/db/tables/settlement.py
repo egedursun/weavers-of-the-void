@@ -1,7 +1,7 @@
 from sqlalchemy import JSON, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
+from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -118,6 +118,7 @@ class DistrictRow(Base):
     hex_r: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
     design_id: Mapped[int | None] = mapped_column(ForeignKey("district_designs.id", ondelete="SET NULL"))
+    purity_rank_id: Mapped[int | None] = mapped_column(ForeignKey("purity_ranks.id", ondelete="SET NULL"), index=True)
 
 
 class SettlementInfrastructureRow(Base):
@@ -162,7 +163,7 @@ class SettlementTreasuryRow(Base):
     entry: Mapped[TreasuryEntry] = mapped_column(enum_type(TreasuryEntry, "entry"))
     amount: Mapped[int]
     balance: Mapped[int]
-    note: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    note: Mapped[str | None] = mapped_column(Text)
 
 
 class SettlementHistoryRow(Base):

@@ -14,6 +14,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import ImpuritySourceRow, PurificationRow, PurityRankRow, PurityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import SentenceRow
+from aerona.db.tables.settlement import DistrictRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import OPEN_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
@@ -42,6 +43,7 @@ class PurityTally:
     purified: int = 0
     ranked: int = 0
     reformed: int = 0
+    quartered: int = 0
 
 
 async def sources_of(ctx: TickContext, people_id: int) -> dict[ImpuritySource, ImpuritySourceRow]:
@@ -306,6 +308,7 @@ async def keep_purity(ctx: TickContext, tally: PurityTally) -> None:
         sources = await sources_of(ctx, people.id)
         if not held(people.id):
             await reform(ctx, people, sources, tally)
+        await quarter_castes(ctx, people, await ranks_of(ctx, people.id), tally)
         if not sources:
             continue
         methods = await methods_of(ctx, people.id)
@@ -328,6 +331,38 @@ async def keep_purity(ctx: TickContext, tally: PurityTally) -> None:
                     await defile(ctx, row, source, methods, tally)
                     break
     await ctx.session.flush()
+
+
+async def quarter_castes(ctx: TickContext, people: EntityRow, ranks: list[PurityRankRow], tally: PurityTally) -> None:
+    order = sorted(ranks, key=lambda rank: (-rank.standing, rank.id))
+    known = {rank.id for rank in ranks}
+    towns = await ctx.session.scalars(
+        select(EntityRow.id).where(
+            EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.affiliated_entity_id == people.id
+        )
+    )
+    for town in list(towns):
+        if held(town):
+            continue
+        districts = list(
+            await ctx.session.scalars(
+                select(DistrictRow).where(DistrictRow.settlement_entity_id == town).order_by(DistrictRow.desirability.desc(), DistrictRow.id)
+            )
+        )
+        for index, district in enumerate(districts):
+            if "purity_rank_id" in district.locked:
+                continue
+            if district.purity_rank_id is not None and district.purity_rank_id in known:
+                continue
+            fitting = order[index * len(order) // len(districts)].id if order else None
+            if district.purity_rank_id != fitting:
+                district.purity_rank_id = fitting
+                tally.quartered += 1
+
+
+async def caste_standing(session: AsyncSession, district: DistrictRow) -> int | None:
+    rank = await session.get(PurityRankRow, district.purity_rank_id) if district.purity_rank_id is not None else None
+    return rank.standing if rank is not None else None
 
 
 async def unclean(session: AsyncSession, node_id: int) -> bool:

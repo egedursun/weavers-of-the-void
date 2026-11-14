@@ -38,7 +38,7 @@ async def pay_coin(ctx: TickContext, profile: StructureProfileRow, work: EntityR
             entry=TreasuryEntry.UPKEEP,
             amount=-profile.upkeep_coin,
             balance=town.treasury,
-            note=f"upkeep of {work.name}"[:120],
+            note=f"upkeep of {work.name}",
         )
     )
     return True

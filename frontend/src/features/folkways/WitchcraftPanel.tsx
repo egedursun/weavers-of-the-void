@@ -112,11 +112,11 @@ function HuntCard({ row, blocked }: { row: Hunt; blocked: string | null }) {
     <Held
       icon={Flame}
       tone={burning ? 'danger' : 'muted'}
-      title={burning ? 'A witch hunt burns' : 'A witch hunt that burned out'}
+      title={burning ? 'A witch hunt under way' : 'A witch hunt that ended'}
       caption={`From epoch ${row.started_epoch}${row.ended_epoch !== null ? ` to epoch ${row.ended_epoch}` : ''} · ${row.accused} accused · ${row.killed} killed`}
       removeLabel='Strike the hunt'
       editTitle='Set the hunt'
-      note='Hunger or insecurity turns a run of accusations into a hunt: each epoch it brings accusations by its fervour, which fades until it burns out.'
+      note="Hunger, insecurity, plague, war or political stress turns a run of accusations into a hunt, fiercer where the town's church has turned to inquisition: each epoch it brings accusations by its fervour, which fades until the hunt ends."
       fields={[
         { key: 'fervour', label: 'Fervour', kind: 'number', min: 0, max: SPAN },
         { key: 'accused', label: 'Accused', kind: 'number', min: 0, max: MANY },
@@ -265,7 +265,7 @@ export function WitchcraftPanel({
         icon={Flame}
         tone='warning'
         title='Start a witch hunt'
-        note='Each epoch it brings accusations by its fervour until it burns out.'
+        note='Each epoch it brings accusations by its fervour until it fades.'
         columns={2}
         action={
           <Button

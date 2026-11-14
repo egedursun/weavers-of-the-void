@@ -63,7 +63,7 @@ def checked_key(kind: FactionGoalKind, key: str | None) -> str | None:
         return None
     if kind in {FactionGoalKind.ENACT_LAW, FactionGoalKind.ABOLISH_LAW}:
         LawKind(key)
-    return key[:120]
+    return key
 
 
 async def set_goal(

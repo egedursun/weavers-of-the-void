@@ -127,7 +127,8 @@ PATTERNS = (
         "stock image",
         re.compile(
             r"\b(?:into|inside|buried in|sank into|sinks into) (?:the )?(?:mist|fog)\b|\bwhisper(?:s|ed|ing)? (?:that|the same|it)\b|"
-            r"\b(?:their|his|her) bones\b|\btook a breath\b|\bby (?:fire and )?lamp(?:light)?\b",
+            r"\b(?:their|his|her) bones\b|\btook a breath\b|\bby (?:fire and )?lamp(?:light)?\b|\b(?:burnt|burned) out\b|\buntil [^.]{0,40}\bburns out\b|"
+            r"\bswords? (?:was |were )?drawn\b",
             re.IGNORECASE,
         ),
         prose_only=True,

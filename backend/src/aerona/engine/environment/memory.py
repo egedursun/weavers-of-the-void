@@ -200,9 +200,7 @@ async def gather(session: AsyncSession, rules: Rules, atlas: RegionAtlas, since_
         region = atlas.top_region(place_id)
         world = world_id or (atlas.world_of(region) if region is not None else None)
         if region is not None and world is not None:
-            found.append(
-                Remembered(region, world, RegionMemoryKind.MIRACLE, table.memory_miracle, epoch, f"miracle:{incident_id}", text[:200], None, incident_id)
-            )
+            found.append(Remembered(region, world, RegionMemoryKind.MIRACLE, table.memory_miracle, epoch, f"miracle:{incident_id}", text, None, incident_id))
     return [memory for memory in found if memory.magnitude >= table.memory_min_magnitude]
 
 

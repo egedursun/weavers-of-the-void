@@ -48,6 +48,7 @@ async def ensure_profiles(ctx: TickContext) -> int:
     "table.holder_levels",
     "table.holder_techniques",
     "table.immunities",
+    "table.impurity_sources",
     "table.incident_participants",
     "table.incidents",
     "table.journeys",

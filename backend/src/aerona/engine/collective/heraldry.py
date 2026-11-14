@@ -289,7 +289,7 @@ async def sync_emblem(ctx: TickContext, arms: ArmsRow) -> None:
     elif arms.holder_kind is H.TITLE:
         title = await ctx.session.get(TitleProfileRow, arms.holder_entity_id)
         if title is not None and "emblem" not in title.locked:
-            title.emblem = text[:80]
+            title.emblem = text
 
 
 async def grant(ctx: TickContext, holder: EntityRow, kind: HeraldryHolderKind, legacy: dict[str, str], taken: set[Signature]) -> ArmsRow:

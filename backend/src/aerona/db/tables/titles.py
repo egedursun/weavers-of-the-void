@@ -1,7 +1,6 @@
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -21,7 +20,7 @@ class TitleProfileRow(Base):
     polity_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     succession_law_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     capital_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
-    emblem: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    emblem: Mapped[str | None] = mapped_column(Text)
     prestige: Mapped[int] = mapped_column(default=30)
     regalia: Mapped[list[int]] = mapped_column(JSON, default=list)
     drift: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)

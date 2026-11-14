@@ -110,7 +110,7 @@ def checked_name(name: str) -> str:
     text = name.strip()
     if not text:
         raise ValidationFailedError("A new kind needs a name.")
-    return text[:120]
+    return text
 
 
 async def kind_of(session: AsyncSession, kind_id: int | None, catalog: CustomCatalog) -> CustomKindRow | None:
@@ -155,7 +155,7 @@ async def create_kind(
         catalog=catalog,
         base=checked_base(catalog, base),
         name=checked_name(name),
-        description=description.strip()[:480],
+        description=description.strip(),
         params=checked_params(catalog, params),
         created_epoch=ctx.epoch,
         locked=[],
@@ -175,7 +175,7 @@ async def edit_kind(ctx: TickContext, kind_id: int, values: Mapping[str, Any]) -
     if "name" in values:
         row.name = checked_name(str(values["name"]))
     if "description" in values:
-        row.description = str(values["description"] or "").strip()[:480]
+        row.description = str(values["description"] or "").strip()
     if "base" in values:
         row.base = checked_base(row.catalog, str(values["base"]))
     if "params" in values:

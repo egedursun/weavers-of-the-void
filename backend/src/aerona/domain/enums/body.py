@@ -162,6 +162,7 @@ class ConditionKind(StrEnum):
     NIGHTMARES = "nightmares"
     COMATOSE = "comatose"
     COGNITIVE_DECLINE = "cognitive_decline"
+    MALNUTRITION = "malnutrition"
 
 
 MADNESS_CONDITIONS = (ConditionKind.PARANOIA, ConditionKind.VISIONS, ConditionKind.RAGE, ConditionKind.MELANCHOLY)

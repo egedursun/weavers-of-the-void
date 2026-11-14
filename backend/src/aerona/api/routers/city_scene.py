@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.city_scene import (
+    CasteQuarter,
     CityBuildingView,
     CityDistrictView,
     CitySceneView,
@@ -32,6 +33,7 @@ from aerona.db.tables.dominion import MagicSiteRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.folkways import PurityRankRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
@@ -110,6 +112,19 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
         for building in buildings:
             zones[ZONE_OF_STRUCTURE[building.kind]].buildings += 1
         forms = await design_forms(session, [row.design_id for row in buildings])
+        castes = (
+            [
+                CasteQuarter(id=rank.id, name=rank.name, standing=rank.standing)
+                for rank in await session.scalars(
+                    select(PurityRankRow)
+                    .where(PurityRankRow.people_entity_id == town.affiliated_entity_id)
+                    .order_by(PurityRankRow.standing.desc(), PurityRankRow.id)
+                )
+            ]
+            if town.affiliated_entity_id is not None
+            else []
+        )
+        quarters = {caste.id: caste for caste in castes}
         return CitySceneView(
             town=refs[town.id],
             morphology=morphology,
@@ -140,10 +155,12 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
                     dwellings=dwellings[district.id],
                     services=coverage[district.id],
                     turf=turf[district.id],
+                    caste=quarters.get(district.purity_rank_id) if district.purity_rank_id is not None else None,
                     locked=list(district.locked),
                 )
                 for district in districts
             ],
+            castes=castes,
             buildings=[
                 CityBuildingView(
                     node=refs[row.structure_entity_id],

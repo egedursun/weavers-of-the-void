@@ -62,6 +62,7 @@ const CITY: CityScene = {
       dwellings: 400,
       services: [{ service: 'water', coverage: 70 }],
       turf: 0,
+      caste: { id: 31, name: 'Keepers', standing: 90 },
       locked: ['hex'],
     },
     {
@@ -80,8 +81,13 @@ const CITY: CityScene = {
       dwellings: 20,
       services: [],
       turf: 0,
+      caste: null,
       locked: [],
     },
+  ],
+  castes: [
+    { id: 31, name: 'Keepers', standing: 90 },
+    { id: 32, name: 'Diggers', standing: 10 },
   ],
   buildings: [
     {
@@ -265,6 +271,24 @@ describe('city', () => {
         district_id: 11,
         values: {},
         release: ['hex'],
+      }
+    )
+    await expect
+      .element(screen.getByText('Keepers (standing 90)'))
+      .toBeVisible()
+    await screen.getByRole('combobox', { name: 'Quarter of the caste' }).click()
+    await screen.getByRole('option', { name: 'Diggers' }).click()
+    await screen
+      .getByRole('button', { name: 'Make it their quarter and hold it' })
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/district_urban:edit'))
+      .toHaveLength(2)
+    expect(callsTo('POST', '/api/actions/district_urban:edit')[1].body).toEqual(
+      {
+        district_id: 11,
+        values: { purity_rank_id: 32 },
+        release: [],
       }
     )
     await screen.getByRole('tab', { name: /Buildings/ }).click()

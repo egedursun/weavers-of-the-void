@@ -1,11 +1,14 @@
+import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.folkways_lines import mortal_folkways_lines, son_folkways_lines
 from aerona.agents.context.scope import load_scope
+from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.agrarian import FamineLoreRow
-from aerona.db.tables.culture import CastingRow, ItemEnchantmentRow, ItemProfileRow
+from aerona.db.tables.culture import CastingRow, ItemEnchantmentRow, ItemProfileRow, RiteProfileRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import (
@@ -24,11 +27,17 @@ from aerona.db.tables.folkways import (
     WitchHuntRow,
 )
 from aerona.db.tables.justice import CrimeCaseRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.mind import CultureValueRow, FacetRow, IdeaRow, PressureRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.sacred import DivinationSystemRow
+from aerona.db.tables.settlement import DistrictRow
+from aerona.db.tables.structures import StructureProfileRow
+from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import ItemClass, RiteEffectKind
+from aerona.domain.enums.culture import ItemClass, MagicSchool, MagicSource, RiteEffectKind
+from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.folkways import (
@@ -39,6 +48,7 @@ from aerona.domain.enums.folkways import (
     IdeaStrain,
     ImpuritySource,
     MishapAttribution,
+    MishapKind,
     MishapResponse,
     Nutrient,
     Purification,
@@ -48,20 +58,27 @@ from aerona.domain.enums.justice import Verdict
 from aerona.domain.enums.mind import Attribute, Facet, IdeaKind, IdeaSource, IdeaState, PressureKind, Profession, ValueAxis
 from aerona.domain.enums.mortal import CrimeKind, LifeStage
 from aerona.domain.enums.polity import OfficeKind
-from aerona.domain.models.entity_stats import ItemStats, RiteStats
+from aerona.domain.enums.sacred import DivinationKind, DivinationValidity
+from aerona.domain.enums.settlement import DistrictKind
+from aerona.domain.enums.structure import StructureKind
+from aerona.domain.models.entity_stats import DiseaseStats, ItemStats, PeopleStats, RiteStats, StructureStats
+from aerona.engine.body.conditions import condition_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import may_wed
 from aerona.engine.folkways.biases import BiasTally, keep_biases, lean, lean_community
 from aerona.engine.folkways.control import start_hunt
 from aerona.engine.folkways.mishaps import MishapTally, keep_mishaps
 from aerona.engine.folkways.nutrition import NutritionTally, keep_nutrition
-from aerona.engine.folkways.purity import PurityTally, apart_at_table, barred_professions, keep_purity, unclean
-from aerona.engine.folkways.witchcraft import WitchTally, keep_witchcraft
+from aerona.engine.folkways.purity import PurityTally, apart_at_table, barred_professions, caste_standing, keep_purity, unclean
+from aerona.engine.folkways.shunning import corpse_exposure, outsider_barrier, shunned_sick
+from aerona.engine.folkways.witchcraft import WitchTally, hunt_stress_of, keep_witchcraft
 from aerona.engine.folkways.wrongs import wrongly_condemned
+from aerona.engine.lore.rites import unmet
 from aerona.engine.mind.ideas import turn_over
 from aerona.engine.mind.split import effective_attributes, write_attributes
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.urban.control import edit_district as edit_urban_district
 from aerona.services.integrity.folkways_links import mend_folkways_links
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
@@ -363,3 +380,112 @@ async def test_a_life_outside_any_town_is_fed_as_its_people_is(session: AsyncSes
     fed = await session.get(NutritionScoreRow, wanderer.id)
     people = await session.get(NutritionScoreRow, folk.id)
     assert people is not None and fed is not None and fed.updated_epoch == 3 and fed.energy == people.energy
+
+
+async def test_a_deficient_diet_wastes_a_body_and_childhood_feeding_sets_the_reckoning_of_the_adult(session: AsyncSession, world: CoreWorld) -> None:
+    town, _ = await home(session, world, "Thinbread")
+    session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.GRAIN, quantity=100))
+    eater = await mortal(session, "Brask", world, town.id)
+    session.add(profile(eater.id))
+    child = await mortal(session, "Lisle", world, town.id)
+    session.add(profile(child.id, life_stage=LifeStage.ADULT))
+    session.add(NutritionScoreRow(holder_node_id=child.id, score=20, childhood=20, grown=False, locked=["score", "childhood"]))
+    await session.flush()
+    await write_attributes(session, child.id, {Attribute.ANALYTICAL_ABILITY: 50, Attribute.MEMORY: 50})
+    await keep_nutrition(await at(session, 3, nutrition={"malnutrition_chance": 100, "cognition_pct": 50, "childhood_mean": 60}), NutritionTally())
+    wasted = await condition_of(await at(session, 3), eater.id, ConditionKind.MALNUTRITION)
+    assert wasted is not None and wasted.source is HarmCause.EXPOSURE
+    attributes = await effective_attributes(session, tuned_rules(), child)
+    assert attributes[Attribute.ANALYTICAL_ABILITY] == 30 and attributes[Attribute.MEMORY] == 30
+    session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.MEAT, quantity=100))
+    session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.FRUIT, quantity=100))
+    score = await session.get(NutritionScoreRow, eater.id)
+    assert score is not None
+    score.deficiency, score.locked = None, ["deficiency"]
+    await session.flush()
+    await keep_nutrition(await at(session, 4), NutritionTally())
+    assert await condition_of(await at(session, 4), eater.id, ConditionKind.MALNUTRITION) is None
+
+
+async def test_the_unclean_are_kept_from_rites_and_a_caste_town_gives_each_caste_its_quarter(session: AsyncSession, world: CoreWorld) -> None:
+    town, folk = await home(session, world, "Ringwall", purity=80, hierarchy=80)
+    session.add(ImpuritySourceRow(people_entity_id=folk.id, source=ImpuritySource.THE_DEAD, weight=80, lasts=1, locked=[]))
+    high = PurityRankRow(people_entity_id=folk.id, name="Keepers", standing=90, professions=[], locked=[])
+    low = PurityRankRow(people_entity_id=folk.id, name="Diggers", standing=10, professions=[], locked=[])
+    session.add_all([high, low])
+    fine = DistrictRow(settlement_entity_id=town.id, kind=DistrictKind.MARKET, built_epoch=1, desirability=80, locked=[])
+    poor = DistrictRow(settlement_entity_id=town.id, kind=DistrictKind.MARKET, built_epoch=1, desirability=20, locked=[])
+    session.add_all([fine, poor])
+    caster = await mortal(session, "Velt", world, town.id)
+    session.add(profile(caster.id))
+    await session.flush()
+    session.add(PurityRow(holder_node_id=caster.id, state=PurityState.IMPURE, source=ImpuritySource.THE_DEAD, locked=[]))
+    rite = await entity(session, "A Calling", EntityType.RITE, RiteStats(), world_id=world.world.id)
+    working = RiteProfileRow(rite_entity_id=rite.id, school=next(iter(MagicSchool)), source=MagicSource.LEY, requirements={}, cost={}, locked=[])
+    session.add(working)
+    await session.flush()
+    ctx = await at(session, 3)
+    assert await unmet(ctx, caster, working) == "the caster is unclean in the eyes of their people"
+    assert await corpse_exposure(session, ctx.rules, caster.id) > 1
+    assert (await shunned_sick(session))[town.id] == 80
+    await keep_purity(ctx, PurityTally())
+    assert (fine.purity_rank_id, poor.purity_rank_id) == (high.id, low.id)
+    assert await caste_standing(session, poor) == 10
+    stranger = PurityRankRow(people_entity_id=world.people.id + 1000, name="Elsewhere", standing=50, professions=[], locked=[])
+    with pytest.raises(ValidationFailedError):
+        await edit_urban_district(ctx, poor.id, {"purity_rank_id": stranger.id or 999999}, [])
+    await edit_urban_district(ctx, poor.id, {"purity_rank_id": high.id}, [])
+    assert poor.purity_rank_id == high.id and "purity_rank_id" in poor.locked
+
+
+async def test_a_people_that_holds_outsiders_unclean_trades_with_strangers_only_at_a_trading_post(session: AsyncSession, world: CoreWorld) -> None:
+    town, folk = await home(session, world, "Closegate", purity=80)
+    session.add(ImpuritySourceRow(people_entity_id=folk.id, source=ImpuritySource.OUTSIDERS, weight=100, lasts=1, locked=[]))
+    others = await entity(session, "Far Folk", EntityType.PEOPLE, PeopleStats(population=500), world_id=world.world.id)
+    market = await settlement(session, "Openport", world, world.regions[1])
+    market.affiliated_entity_id = others.id
+    await bond(session, market.id, others.id, BondKind.DESCENDS_FROM)
+    await session.flush()
+    rules = tuned_rules(purity={"outsider_trade_pct": 60})
+    assert await outsider_barrier(session, rules, town.id, market.id) == pytest.approx(0.4)
+    post = await entity(session, "The Post", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+    session.add(StructureProfileRow(structure_entity_id=post.id, kind=StructureKind.KONTOR, host_entity_id=town.id))
+    await session.flush()
+    assert await outsider_barrier(session, rules, town.id, market.id) == 1.0
+
+
+async def test_diviners_name_the_true_caster_and_plague_war_and_zeal_drive_a_hunt_that_is_remembered(session: AsyncSession, world: CoreWorld) -> None:
+    town, folk = await home(session, world, "Seerholm", superstition=90)
+    victim = await mortal(session, "Orla", world, town.id)
+    caster = await mortal(session, "Quen", world, town.id)
+    for row in (victim, caster, *[await mortal(session, f"Neighbour {index}", world, town.id) for index in range(5)]):
+        session.add(profile(row.id))
+    session.add(DivinationSystemRow(people_entity_id=folk.id, kind=DivinationKind.ASTROLOGY, validity=DivinationValidity.GOD_ANSWERS, locked=[]))
+    session.add(
+        MishapRow(
+            settlement_entity_id=town.id,
+            kind=MishapKind.ILLNESS,
+            victim_node_id=victim.id,
+            cause_node_id=caster.id,
+            true_cause="a binding",
+            attribution=MishapAttribution.WITCHCRAFT,
+            response=MishapResponse.ACCUSATION,
+            epoch=3,
+            locked=[],
+        )
+    )
+    await session.flush()
+    await keep_witchcraft(await at(session, 3, witchcraft={"accuse_chance": 100}, divination={"valid_truth": 100}), WitchTally())
+    accusation = await session.scalar(select(AccusationRow).where(AccusationRow.settlement_entity_id == town.id))
+    assert accusation is not None and accusation.accused_node_id == caster.id
+    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "witchcraft.accused"))
+    assert told is not None and "named by its diviners" in told
+    plague = await entity(session, "The Grey Cough", EntityType.DISEASE, DiseaseStats(), world_id=world.world.id)
+    session.add(OutbreakRow(disease_entity_id=plague.id, region_entity_id=world.regions[0].id, path=next(iter(SpreadPath)), severity=50, started_epoch=3))
+    await session.flush()
+    assert await hunt_stress_of(await at(session, 3, witchcraft={"plague_stress": 70}), town) >= 70
+    hunt = await start_hunt(await at(session, 4), town.id, 15)
+    hunt.accused, hunt.killed = 3, 1
+    await keep_witchcraft(await at(session, 5, witchcraft={"hunt_fade": 15, "hunt_accusations": 0}), WitchTally())
+    remembered = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.EVENT, EntityRow.subtype == "witch hunt"))
+    assert remembered is not None and "3 mortals were accused and 1 mortal was put to death" in remembered.description

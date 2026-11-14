@@ -349,9 +349,9 @@ def apply_design(row: StructureDesignRow, values: Mapping[str, Value], *, hold: 
             text = str(value or "").strip()
             if not text:
                 raise ValidationFailedError("A design needs a name.")
-            row.name = text[:120]
+            row.name = text
         elif key == "description":
-            row.description = str(value)[:2000] if value else None
+            row.description = str(value) if value else None
         elif key == "origin_node_id":
             row.origin_node_id = value if isinstance(value, int) and not isinstance(value, bool) else None
         else:

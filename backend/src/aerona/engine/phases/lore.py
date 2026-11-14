@@ -633,6 +633,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.research_incidents",
     "table.research_progress",
     "table.theory_adherents",
+    "table.theory_anomalies",
     "table.theory_profiles",
     "table.world_eras",
     "theory.adherents",

@@ -46,6 +46,7 @@ CONDITION_PHRASES: dict[ConditionKind, str] = {
     ConditionKind.NIGHTMARES: "began to dream the same nightmare night after night",
     ConditionKind.COMATOSE: "fell into a sleep no one could wake them from",
     ConditionKind.COGNITIVE_DECLINE: "began to lose their memory and their reckoning",
+    ConditionKind.MALNUTRITION: "began to waste from a poor diet",
 }
 
 END_PHRASES: dict[ConditionKind, str] = {
@@ -60,10 +61,11 @@ END_PHRASES: dict[ConditionKind, str] = {
     ConditionKind.NIGHTMARES: "slept free of nightmares at last",
     ConditionKind.COMATOSE: "woke at last",
     ConditionKind.COGNITIVE_DECLINE: "came back to their wits",
+    ConditionKind.MALNUTRITION: "was nourished back to strength",
 }
 
 
-ILLNESSES = frozenset({ConditionKind.CHRONIC_ILLNESS, ConditionKind.ENDLESS_HUNGER})
+ILLNESSES = frozenset({ConditionKind.CHRONIC_ILLNESS, ConditionKind.ENDLESS_HUNGER, ConditionKind.MALNUTRITION})
 
 
 async def condition_of(ctx: TickContext, bearer_id: int, kind: ConditionKind) -> ConditionRow | None:

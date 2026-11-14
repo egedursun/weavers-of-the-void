@@ -54,6 +54,7 @@ from aerona.engine.environment.book import EnvironmentBook, add_scar, region_env
 from aerona.engine.environment.geomorph import erupted, eruption_chance, quaked, river_after_flood, river_after_quake, shapes_by_region
 from aerona.engine.environment.notable import remember_event_year
 from aerona.engine.environment.profile import RIVER_RANK
+from aerona.engine.folkways.shunning import corpse_exposure
 from aerona.engine.happenings.profile import add_footprint, derive_footprint, flow_of, open_profile, record_casualties
 from aerona.engine.households.homes import sickness_factor
 from aerona.engine.interconnect.annotations import reads, writes
@@ -187,7 +188,8 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
     harm = Harm(
         round_half_up(effects.disaster_injury_hp * scale), HarmCause.DISASTER, f"died of wounds suffered in the {label}", damage_type=DISASTER_DAMAGE[disaster]
     )
-    if rng.chance(death_chances[disaster] * scale * medicine):
+    exposed = await corpse_exposure(ctx.session, ctx.rules, mortal.id) if disaster is Disaster.PLAGUE else 1.0
+    if rng.chance(death_chances[disaster] * scale * medicine * exposed):
         if disaster is not Disaster.PLAGUE:
             await fatal_injury(ctx, mortal, replace(harm, death_cause=phrase))
         return await death_path(ctx, mortal, phrase, manner=DeathCause.DISASTER)
@@ -780,6 +782,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.holder_levels",
     "table.holder_techniques",
     "table.immunities",
+    "table.impurity_sources",
     "table.incident_participants",
     "table.incidents",
     "table.incubating_ideas",

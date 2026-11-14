@@ -344,7 +344,7 @@ def spend(ctx: TickContext, town: Town, cost: int, work: int, label: str) -> boo
                 entry=TreasuryEntry.INVESTMENT,
                 amount=-from_pool,
                 balance=profile.treasury,
-                note=label[:120],
+                note=label,
             )
         )
     town.work_used += work

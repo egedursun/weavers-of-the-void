@@ -39349,6 +39349,11 @@ export interface components {
       release?: string[]
       mortal_id: number
     }
+    CasteQuarter: {
+      id: number
+      name: string
+      standing: number
+    }
     CasteSetInput: {
       mortal_id: number
       caste: components['schemas']['ReproductiveCaste']
@@ -39971,6 +39976,7 @@ export interface components {
       dwellings: number
       services: components['schemas']['ServiceShare'][]
       turf: number
+      caste: components['schemas']['CasteQuarter'] | null
       locked: string[]
     }
     CitySceneView: {
@@ -39987,6 +39993,7 @@ export interface components {
       water_side: number | null
       scale: number
       districts: components['schemas']['CityDistrictView'][]
+      castes: components['schemas']['CasteQuarter'][]
       buildings: components['schemas']['CityBuildingView'][]
       zones: components['schemas']['ZoneShare'][]
     }
@@ -40834,6 +40841,7 @@ export interface components {
       | 'nightmares'
       | 'comatose'
       | 'cognitive_decline'
+      | 'malnutrition'
     ConditionView: {
       id: number
       kind: components['schemas']['ConditionKind']
@@ -138456,6 +138464,7 @@ export const conditionKindValues: ReadonlyArray<
   'nightmares',
   'comatose',
   'cognitive_decline',
+  'malnutrition',
 ]
 export const consciousnessValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Consciousness']

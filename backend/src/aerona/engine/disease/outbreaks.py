@@ -143,6 +143,7 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
             factor *= resisted(book.rules, profile, 1 - book.rules.technique_effects.hospitals_pct / PERCENT)
         if community.id in book.era_cures:
             factor *= resisted(book.rules, profile, 1 - min(book.rules.eras.disease_cap_pct, book.era_cures[community.id]) / PERCENT)
+        factor *= 1 + book.shunning.get(community.id, 0) * book.rules.purity.carer_loss_pct / PERCENT / PERCENT
         weight += people * factor
         total += people
     blended = weight / total if total else 1.0
@@ -172,6 +173,7 @@ def spread_factor(
     factor *= climate_fit((table.climate_match_pct, table.climate_mismatch_pct), profile, ground)
     factor *= tolerance_fit(profile, ground)
     factor *= answered(book.rules, book.responses.get((target.id, disease_id), set()))
+    factor *= 1 - book.shunning.get(target.id, 0) * book.rules.purity.avoidance_pct / PERCENT / PERCENT
     if path in (SpreadPath.ROUTE, SpreadPath.JOURNEY) and PlagueResponse.CLOSE_BORDERS in book.responses.get((target.id, disease_id), set()):
         factor *= 1 - book.rules.plague_responses.border_trade_pct / PERCENT
     factor *= 1 - immune * table.immunity_strength_pct / PERCENT

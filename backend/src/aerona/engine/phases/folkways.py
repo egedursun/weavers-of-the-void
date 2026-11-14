@@ -10,35 +10,68 @@ from aerona.engine.phases.dominion import count
 
 
 @reads(
+    "item.protection",
+    "mortal.age",
     "mortal.agility",
     "mortal.charisma",
     "mortal.creativity",
     "mortal.endurance",
+    "mortal.hp",
     "mortal.intellect",
+    "mortal.lifespan",
     "mortal.perception",
     "mortal.strength",
     "mortal.willpower",
     "mortal.wisdom",
+    "table.assistive_aids",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
     "table.community_stocks",
+    "table.conditions",
+    "table.cult_tenets",
+    "table.culture_values",
     "table.diets",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.epoch_year_cursors",
+    "table.genomes",
     "table.holder_levels",
+    "table.injuries",
     "table.irregular_seasons",
+    "table.item_profiles",
     "table.mind_attributes",
+    "table.minds",
+    "table.mortal_equipment",
     "table.mortal_profiles",
     "table.natural_law_profiles",
+    "table.nodes",
     "table.nutrient_needs",
     "table.nutrition_scores",
     "table.pressures",
+    "table.prostheses",
+    "table.thoughts",
+    "table.tradition_profiles",
 )
 @writes(
     "mortal.endurance",
+    "mortal.intellect",
     "mortal.strength",
+    "table.bodies",
+    "table.body_customs",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.conditions",
     "table.diets",
     "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
     "table.mind_attributes",
     "table.mortal_profiles",
     "table.nutrient_needs",
     "table.nutrition_scores",
+    "table.thoughts",
 )
 async def nutrition(ctx: TickContext) -> None:
     tally = NutritionTally()
@@ -54,7 +87,7 @@ async def biases(ctx: TickContext) -> None:
     count(ctx, "biases", tally)
 
 
-@reads("table.culture_values", "table.impurity_sources")
+@reads("table.culture_values", "table.impurity_sources", "table.purity_ranks")
 async def purity(ctx: TickContext) -> None:
     tally = PurityTally()
     await keep_purity(ctx, tally)

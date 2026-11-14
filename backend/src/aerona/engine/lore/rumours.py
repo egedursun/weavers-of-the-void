@@ -543,7 +543,7 @@ async def plant(
             epoch=max(1, ctx.epoch),
             world_id=carrier.world_id,
             place_entity_id=carrier.id,
-            note=text.strip()[:480],
+            note=text.strip(),
             magnitude=ctx.rules.rumours.min_magnitude,
         )
         ctx.session.add(incident)

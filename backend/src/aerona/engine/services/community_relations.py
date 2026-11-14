@@ -236,7 +236,7 @@ async def open_feud(session: AsyncSession, rules: Rules, first: int, second: int
         grievance=rules.vendetta.grievance,
         generations=0,
         status=FeudStatus.ACTIVE,
-        cause=cause[:240],
+        cause=cause,
         since_epoch=epoch,
         last_epoch=epoch,
         locked=[],

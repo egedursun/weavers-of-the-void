@@ -258,7 +258,7 @@ class BattleCasualtyRow(Base):
     side_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     fate: Mapped[CasualtyFate] = mapped_column(enum_type(CasualtyFate, "fate"))
     harm: Mapped[int] = mapped_column(default=0)
-    note: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH * 2))
+    note: Mapped[str | None] = mapped_column(Text)
 
 
 class PeaceTermRow(Base):
@@ -273,7 +273,7 @@ class PeaceTermRow(Base):
     treaty_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     params: Mapped[dict[str, int | str | bool]] = mapped_column(JSON, default=dict)
     epoch: Mapped[int] = mapped_column(default=0)
-    note: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH * 2))
+    note: Mapped[str | None] = mapped_column(Text)
 
 
 class SpyAgentRow(Base):
@@ -313,7 +313,7 @@ class FeudRow(Base):
     grievance: Mapped[int] = mapped_column(default=40)
     generations: Mapped[int] = mapped_column(default=0)
     status: Mapped[FeudStatus] = mapped_column(enum_type(FeudStatus, "status"), default=FeudStatus.ACTIVE)
-    cause: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH * 2))
+    cause: Mapped[str | None] = mapped_column(Text)
     since_epoch: Mapped[int] = mapped_column(default=0)
     last_epoch: Mapped[int | None]
     last_action: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
@@ -347,7 +347,7 @@ class BattlePhaseRow(Base):
     phase: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
     attacker_losses: Mapped[int] = mapped_column(default=0)
     defender_losses: Mapped[int] = mapped_column(default=0)
-    summary: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH * 4))
+    summary: Mapped[str | None] = mapped_column(Text)
     details: Mapped[dict[str, int | str]] = mapped_column(JSON, default=dict)
 
 

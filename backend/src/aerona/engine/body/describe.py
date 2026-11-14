@@ -51,6 +51,7 @@ CONDITION_TEXT: dict[ConditionKind, str] = {
     ConditionKind.NIGHTMARES: "recurring nightmares",
     ConditionKind.COMATOSE: "a sleep no one can wake them from",
     ConditionKind.COGNITIVE_DECLINE: "a failing memory and reckoning",
+    ConditionKind.MALNUTRITION: "a body wasted by a poor diet",
 }
 
 NERVE_TEXT: dict[NerveDamage, str] = {NerveDamage.MOTOR: "limp", NerveDamage.SENSORY: "numb"}

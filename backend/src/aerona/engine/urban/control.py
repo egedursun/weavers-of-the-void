@@ -4,6 +4,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.folkways import PurityRankRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.urban import (
@@ -43,7 +44,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.settlement.book import town_of
 from aerona.engine.urban.housing import clear_slums
 
-DISTRICT_FIELDS = ("housing", "desirability", "land_value")
+DISTRICT_FIELDS = ("housing", "desirability", "land_value", "purity_rank_id")
 TOWN_FIELDS = ("morphology", "homeless")
 
 
@@ -66,7 +67,14 @@ async def settlement(ctx: TickContext, settlement_id: int) -> EntityRow:
 
 
 async def edit_district(ctx: TickContext, district_id: int, values: Values, release: list[str]) -> DistrictRow:
-    row = apply(await found(ctx, DistrictRow, district_id, "district"), allowed(values, DISTRICT_FIELDS, "district"), release)
+    district = await found(ctx, DistrictRow, district_id, "district")
+    rank_id = values.get("purity_rank_id")
+    if rank_id is not None:
+        rank = await ctx.session.get(PurityRankRow, rank_id)
+        town = await ctx.session.get(EntityRow, district.settlement_entity_id)
+        if rank is None or town is None or rank.people_entity_id != town.affiliated_entity_id:
+            raise ValidationFailedError("A district can only be the quarter of a caste of its own town's people.")
+    row = apply(district, allowed(values, DISTRICT_FIELDS, "district"), release)
     await ctx.session.flush()
     return row
 

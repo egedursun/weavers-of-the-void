@@ -68,7 +68,7 @@ def record_stacks(ctx: TickContext, battle: BattleRow, result: BattleResult) -> 
 def note_casualty(ctx: TickContext, battle_id: int | None, mortal: EntityRow, *, side_id: int | None, fate: CasualtyFate, harm: int, note: str) -> None:
     if battle_id is None:
         return
-    ctx.session.add(BattleCasualtyRow(battle_id=battle_id, mortal_entity_id=mortal.id, side_entity_id=side_id, fate=fate, harm=harm, note=note[:240]))
+    ctx.session.add(BattleCasualtyRow(battle_id=battle_id, mortal_entity_id=mortal.id, side_entity_id=side_id, fate=fate, harm=harm, note=note))
 
 
 def morale_sheet(result: BattleResult) -> dict[str, dict[str, int]]:

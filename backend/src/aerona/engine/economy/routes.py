@@ -58,6 +58,7 @@ from aerona.engine.economy.toll_polities import Realms, fund_polity
 from aerona.engine.environment.profile import Works
 from aerona.engine.eras.effects import channel_value, tech_relief
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, Terms, smuggle
+from aerona.engine.folkways.shunning import outsider_barrier
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research_depth import capable_among
 from aerona.engine.lore.truth import theory_factor
@@ -229,6 +230,7 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
 async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, works: dict[int, Works]) -> int:
     first, second = route.ends
     capacity = capacity_of(ctx, book, route, works) * await trade_barrier(ctx.session, ctx.rules, first, second, ctx.epoch)
+    capacity *= await outsider_barrier(ctx.session, ctx.rules, first, second)
     held = book.techniques.get(first, set()) | book.techniques.get(second, set())
     if Technique.JOINT_STOCK in held:
         capacity *= 1 + ctx.rules.technique_effects.joint_stock_pct / PERCENT
@@ -581,13 +583,13 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
         fee = round_half_up(value * toll.rate_pct / PERCENT)
         paid += fee
         pay(ctx.rules.tolls.revenue_wealth_per_value, master, fee)
-        label = route.entity.name[:120]
+        label = route.entity.name
         if master.entity_type is EntityType.POLITY:
             tally.polity_tolls += await fund_polity(ctx, master.id, fee, label)
             continue
         share = round_half_up(fee * ctx.rules.tolls.polity_share_pct / PERCENT) if toll.polity_entity_id is not None else 0
         if share and toll.polity_entity_id is not None:
-            tally.polity_tolls += await fund_polity(ctx, toll.polity_entity_id, share, f"from {master.name}: {label}"[:120])
+            tally.polity_tolls += await fund_polity(ctx, toll.polity_entity_id, share, f"from {master.name}: {label}")
         if master.entity_type is EntityType.SETTLEMENT:
             await credit(ctx, master, TreasuryEntry.TOLLS, fee - share, label)
         else:

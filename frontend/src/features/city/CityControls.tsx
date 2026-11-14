@@ -9,6 +9,7 @@ import {
   Shield,
   Trash2,
   Unlock,
+  Users,
   Wrench,
   X,
 } from 'lucide-react'
@@ -38,12 +39,14 @@ const MAX_LEVEL = 5
 
 export function DistrictPanel({
   district,
+  castes,
   blocked,
   moving,
   onMove,
   onClose,
 }: {
   district: CityDistrict
+  castes: CityScene['castes']
   blocked: string | null
   moving: boolean
   onMove: () => void
@@ -61,8 +64,14 @@ export function DistrictPanel({
     success: 'The district is set so',
   })
   const [housing, setHousing] = useState<string>(district.housing)
+  const [caste, setCaste] = useState<string>(
+    district.caste ? String(district.caste.id) : ''
+  )
   const homes = useGodAction({
-    run: (body: { values: { housing?: string }; release: string[] }) =>
+    run: (body: {
+      values: { housing?: string; purity_rank_id?: number }
+      release: string[]
+    }) =>
       postAction('district_urban:edit', { district_id: district.id, ...body }),
     success: 'The district is set so',
   })
@@ -96,6 +105,12 @@ export function DistrictPanel({
           ['Desirability', district.desirability],
           ['Land value', district.land_value],
           ['Criminal hold', district.turf],
+          [
+            'Caste quarter',
+            district.caste
+              ? `${district.caste.name} (standing ${district.caste.standing})`
+              : 'none',
+          ],
           [
             'Held values',
             district.locked.length ? district.locked.join(', ') : 'none',
@@ -220,6 +235,45 @@ export function DistrictPanel({
         >
           <Home />
           Set and hold the homes
+        </Button>
+        <MindPicker
+          label='Quarter of the caste'
+          value={caste}
+          table={Object.fromEntries(
+            castes.map((row) => [String(row.id), row.name])
+          )}
+          blocked={
+            castes.length === 0 ? "The town's people keep no castes" : busy
+          }
+          placeholder='Pick a caste'
+          onPick={setCaste}
+        />
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={
+            busy !== null ||
+            castes.length === 0 ||
+            caste === '' ||
+            caste === String(district.caste?.id ?? '')
+          }
+          disabledReason={
+            busy ??
+            (castes.length === 0
+              ? "The town's people keep no castes"
+              : caste === '' || caste === String(district.caste?.id ?? '')
+                ? 'Choose another caste first'
+                : undefined)
+          }
+          onClick={() =>
+            homes.mutate({
+              values: { purity_rank_id: Number(caste) },
+              release: [],
+            })
+          }
+        >
+          <Users />
+          Make it their quarter and hold it
         </Button>
       </div>
     </RecordRow>

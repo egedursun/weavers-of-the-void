@@ -33,7 +33,7 @@ def post(ctx: TickContext, realm: Realm, amount: int, label: str) -> None:
         profile.debt += -profile.treasury
         profile.treasury = 0
     row = PolityTreasuryRow(polity_entity_id=realm.entity.id, epoch=ctx.epoch, entry=TreasuryEntry.LOAN, amount=amount, balance=profile.treasury)
-    row.note = label[:120]
+    row.note = label
     ctx.session.add(row)
 
 

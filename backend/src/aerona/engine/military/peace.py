@@ -118,7 +118,7 @@ def record(
     ctx: TickContext, war: WarRow, kind: PeaceTermKind, *, victor_id: int | None, loser_id: int | None, params: dict[str, int | str | bool], note: str
 ) -> PeaceTermRow:
     row = PeaceTermRow(
-        war_id=war.id, kind=kind, beneficiary_entity_id=victor_id, obligor_entity_id=loser_id, params=dict(params), epoch=ctx.epoch, note=note[:240] or None
+        war_id=war.id, kind=kind, beneficiary_entity_id=victor_id, obligor_entity_id=loser_id, params=dict(params), epoch=ctx.epoch, note=note or None
     )
     ctx.session.add(row)
     return row

@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
@@ -90,4 +90,4 @@ class FactionActionRow(Base):
     target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     success: Mapped[bool] = mapped_column(default=True)
     amount: Mapped[int] = mapped_column(default=0)
-    note: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    note: Mapped[str | None] = mapped_column(Text)

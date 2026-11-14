@@ -203,9 +203,7 @@ async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: Ent
         return
     if office.holder_entity_id is not None and office.id is not None:
         ctx.session.add(
-            OfficeHistoryRow(
-                office_id=office.id, holder_entity_id=office.holder_entity_id, from_epoch=office.since_epoch, to_epoch=ctx.epoch, reason=reason[:120]
-            )
+            OfficeHistoryRow(office_id=office.id, holder_entity_id=office.holder_entity_id, from_epoch=office.since_epoch, to_epoch=ctx.epoch, reason=reason)
         )
     office.holder_entity_id = holder.id if holder is not None else None
     office.appointed_by_entity_id = by_id

@@ -320,9 +320,7 @@ async def plunder_treasury(ctx: TickContext, besieged: EntityRow, victor: Entity
     town.treasury -= seized
     note = f"plundered by {victor.name}" if victor is not None else "plundered"
     ctx.session.add(
-        SettlementTreasuryRow(
-            settlement_entity_id=besieged.id, epoch=ctx.epoch, entry=TreasuryEntry.PLUNDER, amount=-seized, balance=town.treasury, note=note[:120]
-        )
+        SettlementTreasuryRow(settlement_entity_id=besieged.id, epoch=ctx.epoch, entry=TreasuryEntry.PLUNDER, amount=-seized, balance=town.treasury, note=note)
     )
     if victor is not None:
         await receive_coin(ctx.session, ctx.rules, victor, seized)

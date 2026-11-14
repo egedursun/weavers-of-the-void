@@ -117,7 +117,7 @@ async def set_polity_value(ctx: TickContext, found: Realm, key: str, value: int 
     elif key in PROFILE_LINKS:
         setattr(profile, PROFILE_LINKS[key], int(value) if isinstance(value, int) else None)
     elif key == "name" and isinstance(value, str) and value.strip():
-        found.entity.name = value.strip()[:120]
+        found.entity.name = value.strip()
     elif key == "heir":
         await set_heir(ctx, found, int(value) if isinstance(value, int) else None)
     elif key == "core":
@@ -127,7 +127,7 @@ async def set_polity_value(ctx: TickContext, found: Realm, key: str, value: int 
     elif key == "patron":
         profile.patron_son_id = int(value) if isinstance(value, int) else None
     elif key in EMBLEM_PARTS:
-        profile.emblem = {**profile.emblem, key.removeprefix("emblem_"): str(value or "")[:40]}
+        profile.emblem = {**profile.emblem, key.removeprefix("emblem_"): str(value or "")}
     else:
         raise ValidationFailedError(f"Unknown realm field: {key}.")
 
@@ -245,7 +245,7 @@ async def enact_law(
     holder = await living_entity(ctx.session, holder_id)
     if holder is None or holder.entity_type not in {EntityType.POLITY, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.CULT}:
         raise NotFoundError("No realm, settlement or cult to lay down the law.")
-    law = await enact(ctx, holder, kind, params, basis=basis or LegitimacyBasis.DECREE, name=name.strip()[:120] if name and name.strip() else None)
+    law = await enact(ctx, holder, kind, params, basis=basis or LegitimacyBasis.DECREE, name=name.strip() if name and name.strip() else None)
     profile = await ctx.session.get(LawProfileRow, law.id)
     if profile is not None:
         if enforcement is not None:
@@ -308,7 +308,7 @@ async def change_law(
         profile.locked = lock(profile.locked, "basis")
     law = await ctx.session.get(EntityRow, law_id)
     if law is not None and name is not None and name.strip():
-        law.name = name.strip()[:120]
+        law.name = name.strip()
     if holder_ids is not None:
         await rehome_law(ctx, law_id, holder_ids)
     profile.locked = [key for key in profile.locked if key not in set(release)]
@@ -636,7 +636,7 @@ async def found_realm(ctx: TickContext, core_id: int, *, name: str | None, gover
     await add_flag(ctx.session, core.id, EntityFlag.INDEPENDENT, ctx.epoch)
     found = await found_polity(ctx, book, core)
     if name and name.strip():
-        found.entity.name = name.strip()[:120]
+        found.entity.name = name.strip()
         found.profile.locked = lock(found.profile.locked, "name")
     if government is not None:
         found.profile.government = government
@@ -680,7 +680,7 @@ async def edit_territory(
         row.control = counted("control", control, cap=PERCENT)
         row.locked = lock(row.locked, "control")
     if province is not None:
-        row.province = province.strip()[:120] or None
+        row.province = province.strip() or None
         row.locked = lock(row.locked, "province")
     row.locked = release_keys(row.locked, release)
     await ctx.session.flush()
@@ -714,7 +714,7 @@ async def create_office(
         kind=kind,
         region_entity_id=region_id,
         target_entity_id=target_id,
-        title=title.strip()[:120] if title and title.strip() else None,
+        title=title.strip() if title and title.strip() else None,
         since_epoch=ctx.epoch,
         powers=checked_powers(powers) if powers is not None else [power.value for power in DEFAULT_POWERS.get(kind, ())],
         locked=["powers"] if powers is not None else [],
@@ -750,7 +750,7 @@ async def edit_office(
     _, found = await realm(ctx, office.polity_entity_id)
     office = next(row for row in found.offices if row.id == office_id)
     if title is not None:
-        office.title = title.strip()[:120] or None
+        office.title = title.strip() or None
     if powers is not None:
         office.powers = checked_powers(powers)
         office.locked = lock(office.locked, "powers")
@@ -887,11 +887,11 @@ async def set_house_value(ctx: TickContext, profile: HouseProfileRow, house: Ent
     elif key == "wealth":
         profile.wealth = counted(key, value if isinstance(value, int) else None, cap=None)
     elif key == "motto":
-        profile.motto = str(value).strip()[:120] or None if value is not None else None
+        profile.motto = str(value).strip() or None if value is not None else None
     elif key == "name" and isinstance(value, str) and value.strip():
-        house.name = value.strip()[:120]
+        house.name = value.strip()
     elif key in {"emblem_field", "emblem_charge"}:
-        profile.emblem = {**profile.emblem, key.removeprefix("emblem_"): str(value or "")[:40]}
+        profile.emblem = {**profile.emblem, key.removeprefix("emblem_"): str(value or "")}
     elif key == "traits" and isinstance(value, list):
         known = {item.value for item in HouseTrait}
         if any(str(item) not in known for item in value):
@@ -953,7 +953,7 @@ async def edit_oath(
     if clear_deadline:
         oath.deadline_epoch = None
     if note is not None:
-        oath.note = note.strip()[:120] or None
+        oath.note = note.strip() or None
     if recipient_id is not None:
         oath.recipient_node_id = recipient_id or None
     if witness_son_id is not None:

@@ -304,10 +304,10 @@ async def _note_cap_closure(ctx: TickContext, item: OngoingWar, idle_since: int)
     idle = ctx.epoch - idle_since
     if idle >= ctx.rules.diplomacy.cap_close_idle_epochs:
         epochs_counted = several(idle, "epoch", "epochs")
-        text = f"The war between {names[0]} and {names[1]}, with no sword drawn for {epochs_counted}, burnt out in exhaustion; the two sides made a truce."
+        text = f"The war between {names[0]} and {names[1]}, with no battle fought for {epochs_counted}, ended in exhaustion; the two sides made a truce."
         key = "war.cap_closed_idle"
     else:
-        text = f"The war between {names[0]} and {names[1]} burnt out in exhaustion as the fronts multiplied; the two sides made a truce."
+        text = f"The war between {names[0]} and {names[1]} ended in exhaustion as the fronts multiplied; the two sides made a truce."
         key = "war.cap_closed_fronts"
     await ctx.chronicle(ChronicleKind.WAR, text, template_key=key, entity_ids=(item.war.event_entity_id, *item.sides), feed_category=FeedCategory.WAR)
 

@@ -3,20 +3,32 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.culture import CastingRow
+from aerona.core.grammar import agree, several
+from aerona.db.tables.culture import CastingRow, RumourRow
+from aerona.db.tables.cycles import PolityStressRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import AccusationRow, MishapRow, WitchHuntRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.justice import CrimeCaseRow
-from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.lore import ChronicleEntityRow
+from aerona.db.tables.mind import MemoryRow, TraitRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.sacred import DivinationSystemRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faith import FanaticismKind
 from aerona.domain.enums.folkways import AccusationOutcome, MishapResponse
 from aerona.domain.enums.justice import CaseStage, Verdict
-from aerona.domain.enums.mind import MemoryKind, PressureKind
+from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitKind
 from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
+from aerona.domain.enums.sacred import DivinationValidity
+from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.faith.book import FaithBook
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.notes import note
@@ -25,6 +37,10 @@ from aerona.engine.polity.trials import judge_for, trial_for
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.sacred.places import realm_of_town, region_of
+from aerona.engine.services.war import ongoing_war_count
 
 GRIEVANCES = frozenset({MemoryKind.BETRAYED_ME, MemoryKind.ILL_WILL, MemoryKind.KILLED_KIN})
 PENALTY_OUTCOMES = {PunishmentKind.DEATH.value: AccusationOutcome.KILLED, PunishmentKind.EXILE.value: AccusationOutcome.EXILED}
@@ -56,7 +72,7 @@ async def suspicion(ctx: TickContext, accuser: EntityRow | None, suspect: Entity
     folk = await people_of(ctx.session, suspect)
     if town_people is not None and (folk is None or folk.id != town_people):
         score += table.outsider_weight
-    if not await close_kin_of(ctx.session, suspect.id):
+    if not await close_kin_of(ctx.session, suspect.id) or await ctx.session.get(TraitRow, (suspect.id, TraitKind.RECLUSIVE)) is not None:
         score += table.isolation_weight
     if accuser is not None:
         grudge = await ctx.session.scalar(
@@ -70,7 +86,42 @@ async def suspicion(ctx: TickContext, accuser: EntityRow | None, suspect: Entity
         score += table.repeat_weight
     if mishap is not None and (mishap.cause_node_id == suspect.id or await cast_on(ctx, suspect.id, mishap.victim_node_id)):
         score += table.caster_weight
+    if suspect.location_id is not None and await rumoured(ctx, suspect.location_id, suspect.id):
+        score += table.rumour_weight
     return score
+
+
+async def rumoured(ctx: TickContext, town_id: int, suspect_id: int) -> bool:
+    found = await ctx.session.scalar(
+        select(RumourRow.id)
+        .join(IncidentRow, IncidentRow.id == RumourRow.incident_id)
+        .join(ChronicleEntityRow, ChronicleEntityRow.chronicle_id == IncidentRow.chronicle_id)
+        .where(RumourRow.carrier_entity_id == town_id, ChronicleEntityRow.entity_id == suspect_id)
+        .limit(1)
+    )
+    return found is not None
+
+
+async def divined(ctx: TickContext, people_id: int | None, true_caster: int | None) -> EntityRow | None:
+    if people_id is None or true_caster is None:
+        return None
+    systems = await ctx.session.scalars(
+        select(DivinationSystemRow).where(DivinationSystemRow.people_entity_id == people_id, DivinationSystemRow.diviners > 0).order_by(DivinationSystemRow.id)
+    )
+    for system in list(systems):
+        rng = ctx.rng(seed_of("witch.divined", system.id, true_caster, ctx.epoch))
+        if system.validity is not DivinationValidity.NOISE and rng.chance(ctx.rules.divination.valid_truth):
+            return await living_entity(ctx.session, true_caster)
+    return None
+
+
+async def consulted(ctx: TickContext, people_id: int | None) -> bool:
+    if people_id is None:
+        return False
+    found = await ctx.session.scalar(
+        select(DivinationSystemRow.id).where(DivinationSystemRow.people_entity_id == people_id, DivinationSystemRow.diviners > 0).limit(1)
+    )
+    return found is not None
 
 
 async def townsfolk(ctx: TickContext, town: EntityRow, besides: set[int]) -> list[EntityRow]:
@@ -119,9 +170,14 @@ async def accuse(
     if not suspects:
         return None
     folk = await people_of(ctx.session, town)
-    scores = [await suspicion(ctx, accuser, suspect, folk.id if folk is not None else None, mishap) for suspect in suspects]
-    rng = ctx.rng(seed_of("witch.accuse", town.id, mishap.id if mishap else 0, hunt.id if hunt else 0, ctx.epoch))
-    accused = rng.weighted(suspects, scores)
+    folk_id = folk.id if folk is not None else None
+    seen = await divined(ctx, folk_id, mishap.cause_node_id if mishap is not None else None) if named is None else None
+    if seen is not None:
+        accused = seen
+    else:
+        scores = [await suspicion(ctx, accuser, suspect, folk_id, mishap) for suspect in suspects]
+        rng = ctx.rng(seed_of("witch.accuse", town.id, mishap.id if mishap else 0, hunt.id if hunt else 0, ctx.epoch))
+        accused = rng.weighted(suspects, scores)
     victim = mishap.victim_node_id if mishap is not None else None
     guilty = (mishap is not None and mishap.cause_node_id == accused.id) or await cast_on(ctx, accused.id, victim)
     case = await open_case(ctx, town, accused, guilty, mishap.cause_node_id if mishap is not None else None)
@@ -142,7 +198,14 @@ async def accuse(
     tally.true += guilty
     if hunt is not None and "accused" not in hunt.locked:
         hunt.accused += 1
-    await note(ctx, f"{accused.name} of {town.name} was accused of witchcraft.", key="witchcraft.accused", ids=[accused.id, town.id])
+    named_by = (
+        ", named by its diviners"
+        if seen is not None or (named is None and await consulted(ctx, folk_id))
+        else ", named by rumour"
+        if accused.location_id is not None and await rumoured(ctx, accused.location_id, accused.id)
+        else ""
+    )
+    await note(ctx, f"{accused.name} of {town.name} was accused of witchcraft{named_by}.", key="witchcraft.accused", ids=[accused.id, town.id])
     return row
 
 
@@ -184,16 +247,63 @@ async def stir_hunts(ctx: TickContext, tally: WitchTally) -> None:
     for town_id, count in counts.all():
         if town_id is None or town_id in burning or held(town_id) or count < table.hunt_from:
             continue
-        pressures = await pressures_of(ctx.session, town_id)
-        if max(pressures.get(PressureKind.HUNGER, 0), pressures.get(PressureKind.INSECURITY, 0)) < table.hunt_stress:
-            continue
         town = await ctx.session.get(EntityRow, town_id)
-        if town is None:
+        if town is None or await hunt_stress_of(ctx, town) < table.hunt_stress:
             continue
-        ctx.session.add(WitchHuntRow(settlement_entity_id=town_id, fervour=table.hunt_fervour, started_epoch=ctx.epoch, locked=[]))
+        fervour = clamp_int(table.hunt_fervour + (table.zealous_fervour if await zealous(ctx, town) else 0), 0, PERCENT)
+        ctx.session.add(WitchHuntRow(settlement_entity_id=town_id, fervour=fervour, started_epoch=ctx.epoch, locked=[]))
         tally.hunts += 1
         await note(ctx, f"A witch hunt took hold of {town.name}.", key="witchcraft.hunt", ids=[town_id])
     await ctx.session.flush()
+
+
+async def hunt_stress_of(ctx: TickContext, town: EntityRow) -> int:
+    table = ctx.rules.witchcraft
+    pressures = await pressures_of(ctx.session, town.id)
+    region = await region_of(ctx.session, town)
+    plague = (
+        await ctx.session.scalar(select(OutbreakRow.id).where(OutbreakRow.region_entity_id == region.id, OutbreakRow.status != OutbreakStatus.ENDED).limit(1))
+        if region is not None
+        else None
+    )
+    realm = await realm_of_town(ctx.session, town.id)
+    war = realm is not None and await ongoing_war_count(ctx.session, realm) > 0
+    stress = await ctx.session.get(PolityStressRow, realm) if realm is not None else None
+    return max(
+        pressures.get(PressureKind.HUNGER, 0),
+        pressures.get(PressureKind.INSECURITY, 0),
+        table.plague_stress if plague is not None else 0,
+        table.war_stress if war else 0,
+        stress.psi if stress is not None else 0,
+    )
+
+
+async def zealous(ctx: TickContext, town: EntityRow) -> bool:
+    church = (await FaithBook.load(ctx.session)).church_of(town.id)
+    doctrine = church.doctrine if church is not None else None
+    return doctrine is not None and doctrine.fanaticism is FanaticismKind.INQUISITION
+
+
+async def remember_hunt(ctx: TickContext, town: EntityRow, hunt: WitchHuntRow) -> None:
+    record = await open_record(
+        ctx.session,
+        ctx.epoch,
+        RecordSpec(
+            entity_type=EntityType.EVENT,
+            name=f"The witch hunt of {town.name}",
+            body=(
+                f"A witch hunt held {town.name} from epoch {hunt.started_epoch} to epoch {ctx.epoch}: "
+                f"{several(hunt.accused, 'mortal', 'mortals')} {agree(hunt.accused, 'was', 'were')} accused and "
+                f"{several(hunt.killed, 'mortal', 'mortals')} {agree(hunt.killed, 'was', 'were')} put to death."
+            ),
+            stats=EventStats(),
+            power=min(PERCENT, hunt.accused + hunt.killed),
+            world_id=town.world_id,
+            location_id=town.id,
+            subtype="witch hunt",
+        ),
+    )
+    await connect(ctx.session, town.id, record.id, BondKind.TELLS_OF, ctx.epoch, description="lived through it")
 
 
 async def run_hunts(ctx: TickContext, tally: WitchTally) -> None:
@@ -208,7 +318,8 @@ async def run_hunts(ctx: TickContext, tally: WitchTally) -> None:
             hunt.fervour = clamp_int(hunt.fervour - table.hunt_fade, 0, PERCENT)
         if hunt.fervour <= 0 and "ended_epoch" not in hunt.locked:
             hunt.ended_epoch = ctx.epoch
-            await note(ctx, f"The witch hunt in {town.name} burned out.", key="witchcraft.hunt_over", ids=[town.id])
+            await remember_hunt(ctx, town, hunt)
+            await note(ctx, f"The witch hunt in {town.name} came to an end.", key="witchcraft.hunt_over", ids=[town.id])
 
 
 async def settle(ctx: TickContext, tally: WitchTally) -> None:

@@ -32,6 +32,7 @@ from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, StructureKind
 from aerona.engine.eras.effects import channel_by_holder
+from aerona.engine.folkways.shunning import shunned_sick
 from aerona.engine.lore.truth import ruling_truths
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
@@ -87,6 +88,7 @@ class DiseaseBook:
     tended: set[int] = field(default_factory=set)
     medicine: dict[int, int] = field(default_factory=dict)
     era_cures: dict[int, int] = field(default_factory=dict)
+    shunning: dict[int, int] = field(default_factory=dict)
     hosts: dict[int, set[int]] = field(default_factory=dict)
     ranges: dict[tuple[int, int], int] = field(default_factory=dict)
     ley: set[int] = field(default_factory=set)
@@ -131,6 +133,7 @@ class DiseaseBook:
         book.medicine = await ruling_truths(session, TheoryDomain.MEDICINE)
         book.tended = set(await session.scalars(select(HolderTechniqueRow.holder_entity_id).where(HolderTechniqueRow.technique == Technique.HOSPITALS)))
         book.era_cures = await channel_by_holder(session, rules, EraChannel.DISEASE)
+        book.shunning = await shunned_sick(session)
         await book.load_hosts(session)
         for line in await session.scalars(select(LeyLineRow).where(LeyLineRow.severed.is_(False))):
             book.ley |= {line.region_a_id, line.region_b_id}

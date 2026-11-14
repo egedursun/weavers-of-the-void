@@ -128,7 +128,7 @@ async def set_outcasts(ctx: TickContext, doctrine: CultDoctrineRow, value: objec
 async def set_zeal_parts(ctx: TickContext, doctrine: CultDoctrineRow, value: object) -> None:
     if not isinstance(value, dict) or not all(isinstance(part, str) and isinstance(amount, int) for part, amount in value.items()):
         raise ValidationFailedError("Zeal parts are named amounts.")
-    doctrine.zeal_parts = {str(part)[:80]: int(amount) for part, amount in value.items()}
+    doctrine.zeal_parts = {str(part): int(amount) for part, amount in value.items()}
 
 
 async def set_judgement(ctx: TickContext, doctrine: CultDoctrineRow, value: object) -> None:
@@ -215,7 +215,7 @@ async def set_tenet(
     if son_id is not None:
         row.revealed_by_son_id = son_id
     if name is not None:
-        row.name = name.strip()[:200] or None
+        row.name = name.strip() or None
     await ctx.session.flush()
     return row
 
@@ -409,7 +409,7 @@ async def raise_soul(ctx: TickContext, mortal_id: int, *, alignment: SpiritAlign
         ctx.epoch,
         RecordSpec(
             entity_type=EntityType.SPIRIT,
-            name=f"Spirit of {mortal.name}"[:200],
+            name=f"Spirit of {mortal.name}",
             body=f"{by} called up the soul of {mortal.name}.",
             stats=SpiritStats(strength=PERCENT // 2, unrest=0),
             power=max(1, mortal.power_level),
@@ -439,7 +439,7 @@ async def judge_soul(ctx: TickContext, spirit_id: int, stratum_id: int, reason: 
             stratum_id=stratum.id,
             score=PERCENT,
             rite=profile.rite,
-            reason=(reason or "judged by the Creator's hand")[:480],
+            reason=(reason or "judged by the Creator's hand"),
             epoch=ctx.epoch,
         )
     )
@@ -665,7 +665,7 @@ async def set_stratum(
         ctx.session.add(row)
     row.kind = kind
     if name:
-        row.name = name.strip()[:200]
+        row.name = name.strip()
     parsed = criteria_of(criteria)
     if parsed is not None:
         row.criteria = parsed.stored()
