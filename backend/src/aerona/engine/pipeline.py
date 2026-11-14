@@ -111,6 +111,7 @@ from aerona.engine.phases import (
     resources,
     ruins,
     rumours,
+    sacred,
     seafaring,
     settlement_life,
     settlements,
@@ -210,6 +211,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + regimes.PHASES
     + agrarian.PHASES
     + operations.PHASES
+    + sacred.PHASES
     + made_kinds.PHASES
     + exploration.PHASES
     + factions.PHASES
@@ -303,6 +305,7 @@ GRUDGE_STAGE = stage("divine_grudges")
 SUB_ENGINE_STAGE = stage(
     "labour_allocation",
     "harvest",
+    "foresight",
     "diplomacy",
     "correspondence",
     "war_upkeep",
@@ -403,6 +406,9 @@ ECONOMY_STAGE = stage(
 SOCIETY_STAGE = stage(
     "schisms",
     "faith_cycles",
+    "folk_spirits",
+    "mysteries",
+    "rites_of_passage",
     "creature_migration",
     "hero_births",
     "knowledge_diffusion",

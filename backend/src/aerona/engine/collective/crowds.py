@@ -37,6 +37,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat, stat_or
+from aerona.engine.sacred.places import church_in
 from aerona.engine.urban.coverage import people_of_districts
 
 T = CollectiveTrigger
@@ -276,10 +277,7 @@ async def leader_in(ctx: TickContext, town: EntityRow) -> int | None:
 
 
 async def cult_in(ctx: TickContext, town: EntityRow) -> EntityRow | None:
-    rows = await ctx.session.scalars(
-        select(EntityRow).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == town.id)
-    )
-    return max(list(rows), key=lambda row: (stat_or(row, "zeal", 0), -row.id), default=None)
+    return await church_in(ctx.session, town)
 
 
 async def raise_mob(ctx: TickContext, town: EntityRow, row: CascadeRow, *, district: DistrictRow | None, size: int) -> MobRow:

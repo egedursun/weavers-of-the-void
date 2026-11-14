@@ -28,6 +28,7 @@ from aerona.domain.enums.polity import OathStatus
 from aerona.engine.context import TickContext
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.primitives.queries import living_sons
+from aerona.engine.sacred.feeding import harvest_feelings
 from aerona.rules.registry import Rules
 
 A = DomainActivity
@@ -262,10 +263,11 @@ async def tend_domain_economy(ctx: TickContext) -> int:
             for world_id in worlds.get(god_id, set()):
                 claimants[(DOMAIN_EFFECTS[domain].activity, world_id)] += 1
     written = 0
+    feelings = await harvest_feelings(ctx, book) if ctx.rules.emotion_feeding.essence_max else {}
     for god_id, god in sorted(book.gods.items()):
         if held(god_id):
             continue
-        gained = 0
+        gained = feelings.get(god_id, 0)
         for domain in god.living_domains:
             activity = DOMAIN_EFFECTS[domain].activity
             if activity not in counts:

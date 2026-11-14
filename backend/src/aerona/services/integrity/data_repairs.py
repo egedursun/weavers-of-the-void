@@ -40,6 +40,7 @@ from aerona.services.integrity.mythic_links import mend_mythic_links
 from aerona.services.integrity.network import RepairLog
 from aerona.services.integrity.operations_links import mend_operations_links, own_stray_ships
 from aerona.services.integrity.regime_links import mend_regime_links
+from aerona.services.integrity.sacred_links import mend_sacred_links
 from aerona.services.integrity.single_ruler import homeland_to_lives_in, single_rule
 from aerona.services.integrity.tongue_links import mend_tongue_links
 from aerona.services.integrity.urban_links import mend_urban_links
@@ -124,6 +125,7 @@ class DataRepairs:
             ("agrarian_links", lambda session, rules, epoch: mend_agrarian_links(session)),
             ("operations_links", lambda session, rules, epoch: mend_operations_links(session)),
             ("stray_ships", lambda session, rules, epoch: own_stray_ships(session, epoch)),
+            ("sacred_links", lambda session, rules, epoch: mend_sacred_links(session)),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),

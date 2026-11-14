@@ -20,16 +20,18 @@ from aerona.engine.phase import Phase
     "table.dreams",
     "table.entities",
     "table.foreign_gods",
+    "table.god_feedings",
     "table.goods_flows",
     "table.journeys",
     "table.oaths",
     "table.schemes",
     "table.sons",
+    "table.thoughts",
     "table.trade_flows",
     "table.trade_route_profiles",
     "table.world_domain_hooks",
 )
-@writes("table.domain_activity", "table.foreign_gods", "table.sons")
+@writes("table.domain_activity", "table.emotion_harvests", "table.foreign_gods", "table.god_feedings", "table.sons")
 async def domain_economy(ctx: TickContext) -> None:
     ctx.count("activity_rows", await tend_domain_economy(ctx))
 

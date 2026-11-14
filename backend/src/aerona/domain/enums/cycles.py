@@ -34,6 +34,7 @@ class LongPlanKind(StrEnum):
     BLOODLINE = "bloodline"
     CONVERSION = "conversion"
     WONDER = "wonder"
+    FORECAST = "forecast"
 
 
 class LongPlanStatus(StrEnum):

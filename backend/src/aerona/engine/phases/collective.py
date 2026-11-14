@@ -96,8 +96,17 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     await ctx.session.flush()
 
 
-@reads("table.crowd_moods", "table.movements")
-@writes("table.entities", "table.faction_profiles", "table.movements")
+@reads("table.crowd_moods", "table.epoch_year_cursors", "table.movements")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.faction_profiles",
+    "table.incident_participants",
+    "table.incidents",
+    "table.movements",
+)
 async def popular_movements(ctx: TickContext) -> None:
     tally = CrowdTally()
     await tend_movements(ctx, tally)

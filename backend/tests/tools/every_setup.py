@@ -40,6 +40,7 @@ from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityMemberRow,
 from aerona.db.tables.regime import CoalitionMemberRow, ExaminationRow, SchoolLineageRow, SchoolMemberRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.renown import ReputationRow
+from aerona.db.tables.sacred import DivinationSystemRow, GeniusLocusRow, MysticRow, PetitionRow, SpiritOfficeRow, TheodicyCrisisRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
@@ -70,7 +71,7 @@ from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import LegalSystem
-from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource
+from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis, ValueHolder
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRank, ServitorRole
 from aerona.domain.enums.node import ActorKind
@@ -79,6 +80,7 @@ from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.renown import ReputationAxis
+from aerona.domain.enums.sacred import BureauRank, DivinationKind, GeniusLocusKind, MysticState, PetitionKind, TheodicyCause
 from aerona.domain.enums.settlement import DistrictKind, SizeTier
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -112,6 +114,7 @@ from aerona.engine.cosmos.maps import refresh_world_maps
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.households.formation import found_household
+from aerona.engine.mind.book import write_values
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.phases.physics import settle_heavens
 from aerona.engine.primitives.language_profile import language_profile
@@ -1277,3 +1280,57 @@ async def commanded_brigade(session: AsyncSession, realm: Realm) -> Ids:
     session.add(row)
     await session.flush()
     return {"echelon": row.id, "army": army.id}
+
+
+async def spirit_office(session: AsyncSession, realm: Realm) -> Ids:
+    spirit = await make_entity(session, "Spirit of Brinewatch", EntityType.SPIRIT, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
+    session.add(
+        GeniusLocusRow(
+            spirit_entity_id=spirit.id, place_entity_id=realm.settlement_id, community_entity_id=realm.settlement_id, kind=GeniusLocusKind.CITY, locked=[]
+        )
+    )
+    session.add(
+        SpiritOfficeRow(spirit_entity_id=spirit.id, rank=BureauRank.CITY, overseer_node_id=realm.son_id, jurisdiction_entity_id=realm.settlement_id, locked=[])
+    )
+    await session.flush()
+    petition = PetitionRow(
+        petitioner_node_id=realm.mortal_id, office_spirit_id=spirit.id, kind=PetitionKind.HEALING, filed_epoch=EPOCH, due_epoch=EPOCH, locked=[]
+    )
+    session.add(petition)
+    await session.flush()
+    return {"spirit": spirit.id, "petition": petition.id}
+
+
+async def faith_crisis(session: AsyncSession, realm: Realm) -> Ids:
+    row = TheodicyCrisisRow(
+        cult_entity_id=realm.cult_id, community_entity_id=realm.settlement_id, god_node_id=realm.son_id, cause=TheodicyCause.PLAGUE, suffering=60, locked=[]
+    )
+    session.add(row)
+    await session.flush()
+    return {"crisis": row.id}
+
+
+async def court_diviners(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruler(session, realm)
+    session.add(PolityMemberRow(polity_entity_id=found["polity"], member_entity_id=realm.settlement_id))
+    town = await session.get(EntityRow, realm.settlement_id)
+    assert town is not None
+    town.affiliated_entity_id = realm.people_id
+    session.add(DivinationSystemRow(people_entity_id=realm.people_id, kind=DivinationKind.AUGURY, locked=[]))
+    await session.flush()
+    return found
+
+
+async def open_mind(session: AsyncSession, realm: Realm) -> Ids:
+    mortal = await session.get(EntityRow, realm.mortal_id)
+    assert mortal is not None
+    set_stats(mortal, wisdom=90)
+    await write_values(session, ValueHolder.PERSONAL, realm.mortal_id, {ValueAxis.PIETY: 95})
+    await session.flush()
+    return {}
+
+
+async def visionary(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(MysticRow(mortal_entity_id=realm.mortal_id, state=MysticState.VISIONARY, visions=3, followers=20, locked=[]))
+    await session.flush()
+    return {}

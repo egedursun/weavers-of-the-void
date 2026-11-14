@@ -26,6 +26,7 @@ from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.sacred.forecasts import steer_forecast
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.construction import Commission, begin
 
@@ -230,6 +231,9 @@ async def complete(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None
     elif plan.kind is LongPlanKind.CONVERSION:
         converted = await convert(ctx, plan, holder)
         await note(ctx, f"{plan.name} was fulfilled: {converted} towns turned to a new worship.", key="plans.completed", ids=ids)
+    elif plan.kind is LongPlanKind.FORECAST:
+        lifted = await steer_forecast(ctx, plan.id)
+        await note(ctx, f"{plan.name} was fulfilled: the realm's stress eased by {lifted}.", key="plans.completed", ids=ids)
     else:
         work = await raise_wonder(ctx, plan)
         await note(ctx, f"{plan.name} was fulfilled: {work.name if work else 'no site'} rose from its saving.", key="plans.completed", ids=ids)

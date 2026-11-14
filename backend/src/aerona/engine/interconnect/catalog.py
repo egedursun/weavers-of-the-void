@@ -70,6 +70,7 @@ from aerona.engine.interconnect.catalog_region import REGION_MECHANICS
 from aerona.engine.interconnect.catalog_research import RESEARCH_MECHANICS
 from aerona.engine.interconnect.catalog_routes import ROUTE_MECHANICS
 from aerona.engine.interconnect.catalog_rumours import RUMOUR_MECHANICS
+from aerona.engine.interconnect.catalog_sacred import SACRED_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
 from aerona.engine.interconnect.catalog_society_depth import SOCIETY_DEPTH_MECHANICS
@@ -1014,6 +1015,7 @@ BUILT_IN = (
     *REGIME_MECHANICS,
     *AGRARIAN_MECHANICS,
     *OPERATIONS_MECHANICS,
+    *SACRED_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,

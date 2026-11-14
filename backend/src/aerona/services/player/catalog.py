@@ -104,6 +104,7 @@ from aerona.services.player import (
     rewards,
     routes,
     rumours,
+    sacred,
     settings,
     settlements,
     society,
@@ -3690,6 +3691,101 @@ CYCLE_ACTIONS = (
     _sync(Meta("manumission:delete", "Strike a freeing from the record", G.SOCIETY), cycles.manumission_delete, cycles.ManumissionTarget, free, ("S4.9/RP4",)),
 )
 
+SACRED_ACTIONS = (
+    _sync(
+        Meta("genius_locus:create", "Raise a spirit of a place, town or house", G.SOCIETY), sacred.genius_locus_create, sacred.GeniusDraft, free, ("S3.3/RP4",)
+    ),
+    _sync(
+        Meta("genius_locus:edit", "Edit a place spirit, its offerings and favour", G.SOCIETY), sacred.genius_locus_edit, sacred.SpiritEdit, free, ("S3.3/RP4",)
+    ),
+    _sync(Meta("genius_locus:delete", "Release a place from its spirit", G.SOCIETY), sacred.genius_locus_delete, sacred.SpiritTarget, free, ("S3.3/RP4",)),
+    _sync(Meta("spirit_office:set", "Set a spirit's office, rank and overseer", G.SOCIETY), sacred.spirit_office_set, sacred.OfficeDraft, free, ("S3.3/RP4",)),
+    _sync(Meta("spirit_office:edit", "Edit a spirit office", G.SOCIETY), sacred.spirit_office_edit, sacred.SpiritEdit, free, ("S3.3/RP4",)),
+    _sync(Meta("spirit_office:delete", "Strip a spirit of its office", G.SOCIETY), sacred.spirit_office_delete, sacred.SpiritTarget, free, ("S3.3/RP4",)),
+    _sync(Meta("petition:create", "File a petition with a spirit office", G.SOCIETY), sacred.petition_create, sacred.PetitionDraft, free, ("S3.3/RP4",)),
+    _sync(Meta("petition:judge", "Grant or deny a petition", G.SOCIETY), sacred.petition_judge, sacred.PetitionJudgement, free, ("S3.3/RP4",)),
+    _sync(Meta("petition:edit", "Edit a petition", G.SOCIETY), sacred.petition_edit, sacred.PetitionEdit, free, ("S3.3/RP4",)),
+    _sync(Meta("petition:delete", "Strike a petition from the rolls", G.SOCIETY), sacred.petition_delete, sacred.PetitionTarget, free, ("S3.3/RP4",)),
+    _sync(Meta("mystic:create", "Seize a mortal with a vision", G.SOCIETY), sacred.mystic_create, sacred.MysticDraft, free, ("S4.4/RP4",)),
+    _sync(Meta("mystic:edit", "Edit a mystic", G.SOCIETY), sacred.mystic_edit, sacred.MysticEdit, free, ("S4.4/RP4",)),
+    _sync(Meta("mystic:delete", "Make a mystic no longer one", G.SOCIETY), sacred.mystic_delete, sacred.MysticTarget, free, ("S4.4/RP4",)),
+    _sync(Meta("vision:create", "Send a mystic another vision", G.SOCIETY), sacred.vision_create, sacred.VisionDraft, free, ("S4.4/RP4",)),
+    _sync(Meta("vision:edit", "Edit a vision", G.SOCIETY), sacred.vision_edit, sacred.VisionEdit, free, ("S4.4/RP4",)),
+    _sync(Meta("vision:delete", "Strike a vision from the record", G.SOCIETY), sacred.vision_delete, sacred.VisionTarget, free, ("S4.4/RP4",)),
+    _sync(Meta("millenarian:create", "Stir a town to await the end", G.SOCIETY), sacred.millenarian_create, sacred.MillenarianDraft, free, ("S4.4/RP4",)),
+    _sync(Meta("millenarian:edit", "Edit a millenarian movement", G.SOCIETY), sacred.millenarian_edit, sacred.MillenarianEdit, free, ("S4.4/RP4",)),
+    _sync(Meta("millenarian:delete", "Strike a millenarian movement", G.SOCIETY), sacred.millenarian_delete, sacred.MillenarianTarget, free, ("S4.4/RP4",)),
+    _sync(
+        Meta("theodicy:create", "Put a church's teaching to the test of suffering", G.SOCIETY), sacred.theodicy_create, sacred.CrisisDraft, free, ("S4.4/RP4",)
+    ),
+    _sync(Meta("theodicy:answer", "Answer a crisis of faith visibly", G.SOCIETY), sacred.theodicy_answer, sacred.CrisisAnswer, free, ("S4.4/RP4",)),
+    _sync(Meta("theodicy:edit", "Edit a crisis of faith", G.SOCIETY), sacred.theodicy_edit, sacred.CrisisEdit, free, ("S4.4/RP4",)),
+    _sync(Meta("theodicy:delete", "Strike a crisis of faith", G.SOCIETY), sacred.theodicy_delete, sacred.CrisisTarget, free, ("S4.4/RP4",)),
+    _sync(Meta("doctrine_sacrament:set", "Teach a church a sacrament", G.DEATH), sacred.doctrine_sacrament_set, sacred.TeachingDraft, free, ("S4.4/RP4",)),
+    _sync(Meta("doctrine_sacrament:edit", "Edit a taught sacrament", G.DEATH), sacred.doctrine_sacrament_edit, sacred.TeachingEdit, free, ("S4.4/RP4",)),
+    _sync(
+        Meta("doctrine_sacrament:delete", "Stop a church teaching a sacrament", G.DEATH),
+        sacred.doctrine_sacrament_delete,
+        sacred.TeachingTarget,
+        free,
+        ("S4.4/RP4",),
+    ),
+    _sync(Meta("sacrament:create", "Give a mortal a sacrament", G.DEATH), sacred.sacrament_create, sacred.SacramentDraft, free, ("S4.4/RP4",)),
+    _sync(Meta("sacrament:edit", "Edit a sacrament given or missed", G.DEATH), sacred.sacrament_edit, sacred.SacramentEdit, free, ("S4.4/RP4",)),
+    _sync(Meta("sacrament:delete", "Strike a sacrament from the record", G.DEATH), sacred.sacrament_delete, sacred.SacramentTarget, free, ("S4.4/RP4",)),
+    _sync(
+        Meta("doctrine_afterlife:set", "Set the afterlife a church teaches", G.DEATH), sacred.doctrine_afterlife_set, sacred.AfterlifeDraft, free, ("S4.4/RP4",)
+    ),
+    _sync(
+        Meta("doctrine_afterlife:align", "Make the afterlife match a church's teaching", G.DEATH),
+        sacred.doctrine_afterlife_align,
+        sacred.AfterlifeAlignment,
+        free,
+        ("S4.4/RP4",),
+    ),
+    _sync(Meta("doctrine_afterlife:edit", "Edit a taught afterlife", G.DEATH), sacred.doctrine_afterlife_edit, sacred.AfterlifeEdit, free, ("S4.4/RP4",)),
+    _sync(
+        Meta("doctrine_afterlife:delete", "Let a church's afterlife be read anew", G.DEATH),
+        sacred.doctrine_afterlife_delete,
+        sacred.CultTarget,
+        free,
+        ("S4.4/RP4",),
+    ),
+    _sync(Meta("faith_climate:set", "Weigh a town's faith", G.SOCIETY), sacred.faith_climate_set, sacred.ClimateDraft, free, ("S4.4/RP4",)),
+    _sync(Meta("faith_climate:edit", "Edit the pulls on a town's faith", G.SOCIETY), sacred.faith_climate_edit, sacred.ClimateEdit, free, ("S4.4/RP4",)),
+    _sync(Meta("faith_climate:delete", "Let a town's faith be weighed anew", G.SOCIETY), sacred.faith_climate_delete, sacred.TownTarget, free, ("S4.4/RP4",)),
+    _sync(
+        Meta("divination_system:create", "Give a people a way of divination", G.FATE), sacred.divination_system_create, sacred.SystemDraft, free, ("S8.7/RP4",)
+    ),
+    _sync(
+        Meta("divination_system:read", "Test a divination system against the world", G.FATE),
+        sacred.divination_system_read,
+        sacred.SystemTarget,
+        free,
+        ("S8.7/RP4",),
+    ),
+    _sync(Meta("divination_system:edit", "Edit a divination system", G.FATE), sacred.divination_system_edit, sacred.SystemEdit, free, ("S8.7/RP4",)),
+    _sync(
+        Meta("divination_system:delete", "Make a people forget a divination system", G.FATE),
+        sacred.divination_system_delete,
+        sacred.SystemTarget,
+        free,
+        ("S8.7/RP4",),
+    ),
+    _sync(Meta("divination:create", "Have a ruler's diviners read the omens", G.FATE), sacred.divination_create, sacred.ReadingDraft, free, ("S8.7/RP4",)),
+    _sync(Meta("divination:edit", "Edit a reading of omens", G.FATE), sacred.divination_edit, sacred.ReadingEdit, free, ("S8.7/RP4",)),
+    _sync(Meta("divination:delete", "Strike a reading of omens", G.FATE), sacred.divination_delete, sacred.ReadingTarget, free, ("S8.7/RP4",)),
+    _sync(Meta("foresight:create", "Grant a seer a foresight", G.FATE), sacred.foresight_create, sacred.ForesightDraft, free, ("S8.7/RP4",)),
+    _sync(Meta("foresight:edit", "Edit a foresight", G.FATE), sacred.foresight_edit, sacred.ForesightEdit, free, ("S8.7/RP4",)),
+    _sync(Meta("foresight:delete", "Strike a foresight", G.FATE), sacred.foresight_delete, sacred.ForesightTarget, free, ("S8.7/RP4",)),
+    _sync(Meta("forecast_model:create", "Have a learned order forecast a realm", G.FATE), sacred.forecast_model_create, sacred.ModelDraft, free, ("S8.7/RP4",)),
+    _sync(Meta("forecast_model:edit", "Edit a forecast model", G.FATE), sacred.forecast_model_edit, sacred.ModelEdit, free, ("S8.7/RP4",)),
+    _sync(Meta("forecast_model:delete", "Set a forecast model aside", G.FATE), sacred.forecast_model_delete, sacred.ModelTarget, free, ("S8.7/RP4",)),
+    _sync(Meta("god_feeding:set", "Set a feeling a god feeds on", G.GOD_POWER), sacred.god_feeding_set, sacred.FeedingDraft, free, ("S9.1/RP4",)),
+    _sync(Meta("god_feeding:edit", "Edit a god's feeding", G.GOD_POWER), sacred.god_feeding_edit, sacred.FeedingEdit, free, ("S9.1/RP4",)),
+    _sync(Meta("god_feeding:delete", "Stop a god feeding on a feeling", G.GOD_POWER), sacred.god_feeding_delete, sacred.FeedingTarget, free, ("S9.1/RP4",)),
+)
+
 OPERATIONS_ACTIONS = (
     _sync(Meta("echelon:create", "Form a formation in an order of battle", G.WARFARE), operations.echelon_create, operations.EchelonDraft, free, ("S5.1/RP4",)),
     _sync(Meta("echelon:edit", "Edit a formation and its headquarters", G.WARFARE), operations.echelon_edit, operations.EchelonEdit, free, ("S5.1/RP4",)),
@@ -4104,6 +4200,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *REGIME_ACTIONS,
     *AGRARIAN_ACTIONS,
     *OPERATIONS_ACTIONS,
+    *SACRED_ACTIONS,
     *ROUTE_ACTIONS,
     *STRUCTURE_ACTIONS,
     *FOUNDATION_ACTIONS,

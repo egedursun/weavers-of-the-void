@@ -63,6 +63,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.relations.passions import invoke
 from aerona.engine.renown.book import acclaim
+from aerona.engine.sacred.omens import battle_omen
 from aerona.engine.vehicles.fleet import after_battle, crew_specs
 
 EDGE_FLOOR, EDGE_CEILING = 0.5, 2.0
@@ -253,7 +254,7 @@ async def side_of(
     medicine = knowledge.level(community.id, KnowledgeBranch.MEDICINE) * PERCENT // max(1, table.morale.medicine_levels)
     medicine += await surgeon_skill(ctx, [item.id for item, _ in armies]) * table.battle_magic.surgeon_pct // PERCENT
     biology, culture = await profiles_of(ctx.session, community)
-    ordered = await command_edge(ctx, army.id)
+    ordered = await command_edge(ctx, army.id) * (1 + await battle_omen(ctx, community))
     kin = battle_edge(ctx.rules, biology, culture, terrain=ground.terrain, weather=ground.weather, night=ground.night, river=ground.river, defending=defending)
     return Side(
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,

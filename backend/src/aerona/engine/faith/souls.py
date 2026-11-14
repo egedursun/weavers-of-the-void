@@ -47,6 +47,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.sacred.guards import warded_hosts
 
 LIVING_STATES = (AfterlifeState.WANDERING, AfterlifeState.JUDGED, AfterlifeState.IN_REALM)
 
@@ -304,6 +305,7 @@ async def possess(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow
             EntityRow.status == EntityStatus.CANON,
             await present_among(ctx.session, [spirit.location_id]),
             EntityRow.id.not_in(taken),
+            EntityRow.id.not_in(warded_hosts()),
             free_rows(EntityRow.id),
         )
         .order_by(EntityRow.id)

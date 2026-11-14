@@ -47,6 +47,7 @@ from aerona.engine.primitives.queries import active_bonds, close, connect, count
 from aerona.engine.primitives.records import RecordSpec, append_sentence, open_record, sweep_dead_bonds
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.relations.passions import bereaved
+from aerona.engine.sacred.guards import unrest_shift
 
 LIVING_DEATH_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
 RESTLESS_SPIRIT_SUBTYPE = "restless spirit"
@@ -253,7 +254,7 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
     ):
         return
     murdered = bool(await active_bonds(session, [BondKind.KILLED], targets=[mortal.id]))
-    base = effects.spirit_unrest_murdered if murdered else effects.spirit_unrest_natural
+    base = clamp_int((effects.spirit_unrest_murdered if murdered else effects.spirit_unrest_natural) + await unrest_shift(ctx, mortal), 0, PERCENT)
     restless = restless_by_rite(ctx.rules, rite, base, effects.spirit_restless_threshold)
     strength = stat(mortal, "strength")
     origin = f"refused to descend to {underworld.name} or returned from there" if underworld is not None else "returned from the world"

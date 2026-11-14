@@ -12,6 +12,7 @@ import { LawDepthSection } from '@/features/lawDepth/LawDepthSection'
 import { MadeKindsSection } from '@/features/madeKinds/MadeKindsSection'
 import { OperationsSection } from '@/features/operations/OperationsSection'
 import { RegimeSection } from '@/features/regime/RegimeSection'
+import { SacredSection } from '@/features/sacred/SacredSection'
 import { TonguesSection } from '@/features/tongues/TonguesSection'
 import { UrbanSection } from '@/features/urban/UrbanSection'
 import { AffairsSection } from './AffairsSection'
@@ -111,6 +112,7 @@ export function ThingSections({
       <RegimeSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <AgrarianSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <OperationsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <SacredSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>

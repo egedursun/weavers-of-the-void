@@ -207,6 +207,16 @@ class SonToolId(StrEnum):
     STEER_THEATRE = "steer_theatre"
     MARK_QUIRK = "mark_quirk"
     LIMIT_FLEETS = "limit_fleets"
+    BIND_GENIUS_LOCUS = "bind_genius_locus"
+    JUDGE_PETITION = "judge_petition"
+    APPOINT_SPIRIT = "appoint_spirit"
+    ANSWER_MYSTIC = "answer_mystic"
+    EASE_THEODICY = "ease_theodicy"
+    TEACH_SACRAMENT = "teach_sacrament"
+    ALIGN_AFTERLIFE = "align_afterlife"
+    SWAY_DIVINER = "sway_diviner"
+    GRANT_FORESIGHT = "grant_foresight"
+    FEED_ON = "feed_on"
 
 
 class MortalToolId(StrEnum):
@@ -348,6 +358,11 @@ class MortalToolId(StrEnum):
     LEAD_EXPEDITION = "lead_expedition"
     MAKE_CAMP = "make_camp"
     ORDER_FORMATION = "order_formation"
+    PETITION_SPIRIT = "petition_spirit"
+    OFFER_TO_SPIRIT = "offer_to_spirit"
+    SEEK_VISION = "seek_vision"
+    CONSULT_DIVINER = "consult_diviner"
+    PREACH_END_TIME = "preach_end_time"
 
 
 ToolId = SonToolId | MortalToolId

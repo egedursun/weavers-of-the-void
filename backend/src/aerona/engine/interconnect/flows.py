@@ -52,6 +52,8 @@ PHASE_FLOWS: dict[str, FlowCategory] = {
     "diplomacy": C.LEVY,
     "war_upkeep": C.LEVY,
     "order_of_battle": C.LEVY,
+    "folk_spirits": C.DISASTER,
+    "mysteries": C.CASUALTY,
     "campaigns": C.CASUALTY,
     "prisoners": C.CAPTIVE,
     "war_casualties": C.CASUALTY,

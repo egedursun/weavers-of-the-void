@@ -29,6 +29,7 @@ from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.sacred.guards import rite_chance
 from aerona.engine.structures.readers import rite_keeping
 from aerona.rules.registry import Rules
 from aerona.rules.registry.doctrine import AfterlifeRules
@@ -95,7 +96,7 @@ async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralRite:
     if causes & set(EXECUTIONS) and ctx.rng(f"nameless.{mortal.id}").chance(table.nameless_execution_pct):
         return FuneralRite.NAMELESS
     base = table.battle_no_rite_chance if causes & {HarmCause.BATTLE, HarmCause.DUEL} else table.no_rite_chance
-    chance = base * (1 - await rite_keeping(ctx.session, ctx.rules, mortal.location_id))
+    chance = await rite_chance(ctx, mortal, base * (1 - await rite_keeping(ctx.session, ctx.rules, mortal.location_id)))
     if ctx.rng(f"rite.{mortal.id}").chance(chance):
         return FuneralRite.NONE
     home = mortal.location_id

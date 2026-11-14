@@ -20,6 +20,7 @@ from aerona.agents.context.operations_lines import mortal_operations_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
 from aerona.agents.context.regime_lines import mortal_regime_lines
 from aerona.agents.context.research import research_for
+from aerona.agents.context.sacred_lines import mortal_sacred_lines
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.society import home_for
 from aerona.agents.context.statecraft import affairs_lines, statecraft_lines
@@ -198,6 +199,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "rule": await mortal_regime_lines(scope, me),
             "land": await mortal_agrarian_lines(scope, me),
             "operations": await mortal_operations_lines(scope, me),
+            "sacred": await mortal_sacred_lines(scope, me),
         }
     )
 

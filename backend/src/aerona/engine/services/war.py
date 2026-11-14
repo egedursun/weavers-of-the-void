@@ -47,6 +47,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.sacred.omens import war_forbidden
 from aerona.engine.services.casus_belli import press_casus_belli
 from aerona.engine.services.sides import SideIndex
 from aerona.language.generator import NameKind
@@ -283,6 +284,9 @@ async def declare_war(
     if await can_open_war(ctx.session, ctx.rules, first_id, second_id, ctx.epoch, world_cap=world_cap, community_cap=community_cap, cause=cause) is not None:
         return False
     if await forbidden_war(ctx, first_id, second_id, cause):
+        return False
+    if await war_forbidden(ctx, first_id):
+        ctx.count("wars_held_by_omens")
         return False
     if not brokered and await crisis_instead(ctx, first_id, second_id, cause):
         return False

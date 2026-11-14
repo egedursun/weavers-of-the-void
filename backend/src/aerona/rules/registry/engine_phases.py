@@ -477,6 +477,16 @@ class EnginePhasesRules:
     )
     admiralty: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: naval budgets, the admiralty in council, new ships and fleet limits")
     expeditions: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: expeditions into sites, wilds, underworlds and realms")
+    folk_spirits: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: place spirits, their offerings and favour, and the petitions of the spirit offices"
+    )
+    mysteries: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: mystics and their visions, millenarian movements and theodicy crises")
+    rites_of_passage: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: sacraments, the afterlife taught against the one met, and the drift of faith"
+    )
+    foresight: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: divination systems and their readings, seers and their foresights, and forecast models"
+    )
     equipment_forging: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: forging weapons, armour and engines into the models of each realm")
     unit_types: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: realms drawing, refitting and sharing their own kinds of soldier")
     vehicle_works: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: yards building vehicles, and the fuel and upkeep of every vehicle group")

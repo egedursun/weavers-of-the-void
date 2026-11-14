@@ -114,6 +114,7 @@ export const PLAN_KINDS: Record<Schema['LongPlanKind'], Named> = {
     tone: 'info',
   },
   wonder: { label: 'Raising a wonder', icon: Landmark, tone: 'gold' },
+  forecast: { label: 'Steering a forecast', icon: Activity, tone: 'verdigris' },
 }
 
 export const PLAN_STATUSES: Record<Schema['LongPlanStatus'], Named> = {

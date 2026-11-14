@@ -931,4 +931,27 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "organisation, one ordered to attack fights harder, to hold digs in, to manoeuvre regains order and to resupply is fed first. 1 action.",
         {"echelon_id": "The formation", "order": "The order"},
     ),
+    T.PETITION_SPIRIT: ToolText(
+        "You petition a spirit office ({{ petition_kinds }}); the office reads it after a delay and grants or denies it, and a denied "
+        "petition may be appealed to the office above. A suit is brought against an offended spirit under that office. 1 action.",
+        {"spirit_id": "The spirit office you petition", "kind": "What you ask for"},
+    ),
+    T.OFFER_TO_SPIRIT: ToolText(
+        "You bring an offering to a spirit that dwells in a place; a content spirit grants favour to its community. 1 action.",
+        {"spirit_id": "The spirit"},
+    ),
+    T.SEEK_VISION: ToolText(
+        "You seek a direct experience of the divine; it comes only to a mind of wisdom that holds piety dear, and it draws followers. 1 action.",
+        {},
+    ),
+    T.CONSULT_DIVINER: ToolText(
+        "As ruler you have your court diviners read the omens on a question ({{ divination_questions }}); if you heed diviners you act on "
+        "what they read. 1 action.",
+        {"question": "What you ask"},
+    ),
+    T.PREACH_END_TIME: ToolText(
+        "As a mystic or seer you preach that the end is near in your town; the faithful gather, stop working as the day nears and, when it "
+        "passes, read the prophecy anew, become a sect or disperse. 1 action.",
+        {},
+    ),
 }

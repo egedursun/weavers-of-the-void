@@ -8,6 +8,7 @@ from aerona.agents.context.evolution_lines import son_evolution_lines
 from aerona.agents.context.mythic_lines import mythic_lines
 from aerona.agents.context.operations_lines import son_operations_lines
 from aerona.agents.context.regime_lines import son_regime_lines
+from aerona.agents.context.sacred_lines import son_sacred_lines
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.tongue_lines import son_tongue_lines
 from aerona.catalog.domain_effects import ACTIVITY_LABELS, DOMAIN_EFFECTS, HOOKS, SYNERGY_OF
@@ -90,4 +91,5 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     lines.extend(await son_regime_lines(scope, son))
     lines.extend(await son_agrarian_lines(scope, son))
     lines.extend(await son_operations_lines(scope, son))
+    lines.extend(await son_sacred_lines(scope, son))
     return lines

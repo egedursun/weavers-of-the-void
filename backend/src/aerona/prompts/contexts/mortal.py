@@ -194,6 +194,7 @@ class HomeLine(ContextItem):
     rule: list[str] = Field(default_factory=list)
     land: list[str] = Field(default_factory=list)
     operations: list[str] = Field(default_factory=list)
+    sacred: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

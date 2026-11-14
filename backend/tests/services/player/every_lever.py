@@ -25,6 +25,7 @@ from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import DeferredStepRow, EpochRow
+from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.justice import CrimeCaseRow
@@ -35,6 +36,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.operations import SupplyFlowRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
+from aerona.db.tables.sacred import DivinationSystemRow, DoctrineSacramentRow, GeniusLocusRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -65,6 +67,7 @@ from aerona.domain.enums.law_depth import MoleHuntOutcome
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.sacred import DivinationKind, SacramentKind, SacramentProtection
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
@@ -3078,6 +3081,241 @@ LEVERS.update(
         **{name: after(EXPEDITION, log_id=Newest("expedition_log")) for name in ("expedition_log:edit", "expedition_log:delete")},
         "quirk:create": given(mortal_id=Pick(MORTAL), kind="hardy"),
         **{name: after(QUIRK, quirk_id=Newest("quirk")) for name in ("quirk:edit", "quirk:delete")},
+    }
+)
+
+
+async def unspirited_place(session: AsyncSession) -> int | None:
+    bound = select(GeniusLocusRow.place_entity_id).where(GeniusLocusRow.place_entity_id.is_not(None))
+    return await session.scalar(
+        select(EntityRow.id)
+        .where(EntityRow.entity_type == EntityType.PLACE, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(bound))
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+
+
+async def newest_spirit(session: AsyncSession) -> int | None:
+    return await session.scalar(select(GeniusLocusRow.spirit_entity_id).order_by(GeniusLocusRow.spirit_entity_id.desc()).limit(1))
+
+
+async def churched_town(session: AsyncSession) -> None:
+    town = await session.scalar(select(EntityRow).where(EntityRow.entity_type == TOWN, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1))
+    cult = await session.scalar(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1)
+    )
+    assert town is not None and cult is not None
+    cult.location_id = town.id
+    doctrine = await session.get(CultDoctrineRow, cult.id)
+    if doctrine is None:
+        session.add(CultDoctrineRow(cult_entity_id=cult.id, clergy_count=5, locked=[]))
+    else:
+        doctrine.clergy_count = max(doctrine.clergy_count, 5)
+    if await session.get(DoctrineSacramentRow, (cult.id, SacramentKind.BIRTH_BLESSING)) is None:
+        session.add(DoctrineSacramentRow(cult_entity_id=cult.id, kind=SacramentKind.BIRTH_BLESSING, protection=SacramentProtection.POSSESSION, locked=[]))
+    mortal = await session.scalar(
+        select(EntityRow).where(EntityRow.entity_type == MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1)
+    )
+    assert mortal is not None
+    mortal.location_id = town.id
+    await session.flush()
+
+
+async def church_town(session: AsyncSession) -> int | None:
+    return await session.scalar(
+        select(EntityRow.location_id).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1)
+    )
+
+
+async def church(session: AsyncSession) -> int | None:
+    return await session.scalar(
+        select(EntityRow.id).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1)
+    )
+
+
+async def unkept_divination(session: AsyncSession) -> str:
+    people = await pick(session, EntityType.PEOPLE, 0)
+    kept = set(await session.scalars(select(DivinationSystemRow.kind).where(DivinationSystemRow.people_entity_id == people)))
+    return next(kind.value for kind in DivinationKind if kind not in kept)
+
+
+async def drained_sons(session: AsyncSession) -> None:
+    for son in await session.scalars(select(SonRow)):
+        son.essence = 0
+    await session.flush()
+
+
+FREE_PLACE = Computed(unspirited_place)
+NEW_SPIRIT = Computed(newest_spirit)
+CHURCH_TOWN = Computed(church_town)
+CHURCH = Computed(church)
+RULED = Computed(ruled_realm)
+SPIRIT_UP = ("genius_locus:create", {"place_id": FREE_PLACE})
+OFFICE_UP = ("spirit_office:set", {"spirit_id": NEW_SPIRIT, "rank": "local"})
+PETITION_UP = ("petition:create", {"petitioner_id": Pick(MORTAL), "office_id": NEW_SPIRIT, "kind": "healing"})
+MYSTIC_UP = ("mystic:create", {"mortal_id": Pick(MORTAL)})
+MOVEMENT_UP = ("millenarian:create", {"town_id": Pick(TOWN)})
+CRISIS_UP = ("theodicy:create", {"town_id": CHURCH_TOWN, "cause": "famine", "suffering": 60})
+TEACHING_UP = ("doctrine_sacrament:set", {"cult_id": CHURCH, "kind": "initiation", "protection": "unrest", "strength": 55})
+SACRAMENT_UP = ("sacrament:create", {"mortal_id": Pick(MORTAL), "kind": "birth_blessing"})
+AFTERLIFE_UP = ("doctrine_afterlife:set", {"cult_id": CHURCH, "model": "rebirth"})
+CLIMATE_UP = ("faith_climate:set", {"town_id": Pick(TOWN)})
+SYSTEM_UP = ("divination_system:create", {"people_id": Pick(EntityType.PEOPLE), "kind": Computed(unkept_divination)})
+READING_UP = ("divination:create", {"realm_id": RULED, "question": "harvest", "system_id": Newest("divination_system")})
+FORESIGHT_UP = ("foresight:create", {"seer_id": Pick(MORTAL), "subject_id": Pick(MORTAL, 1), "predicate": "dies", "certainty": 60})
+MODEL_UP = ("forecast_model:create", {"order_id": Pick(EntityType.FACTION), "realm_id": Pick(REALM)})
+FEEDING_UP = ("god_feeding:set", {"god_id": Pick("son"), "emotion": "joy", "weight": 40})
+SACRED_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "genius_locus:edit": {
+        "place_entity_id": Pick(EntityType.PLACE),
+        "community_entity_id": Pick(TOWN),
+        "kind": "spring",
+        "temperament": 70,
+        "contentment": 40,
+        "offerings": 6,
+        "owed": 2,
+        "favour": 30,
+        "offended": "pollution",
+    },
+    "spirit_office:edit": {
+        "rank": "city",
+        "superior_spirit_id": None,
+        "overseer_node_id": Pick("son"),
+        "jurisdiction_entity_id": Pick(TOWN),
+        "merit": 12,
+        "corruption": 25,
+        "resolved": 3,
+        "neglected": 1,
+        "dismissed": False,
+    },
+    "petition:edit": {"kind": "harvest", "bribe": 3, "status": "delayed", "due_epoch": 9, "defendant_spirit_id": None, "appealed_to_id": None},
+    "mystic:edit": {
+        "state": "revered",
+        "visions": 4,
+        "genuine_visions": 1,
+        "followers": 30,
+        "answered_by_node_id": Pick("son"),
+        "cult_entity_id": CHURCH,
+        "founded_entity_id": None,
+        "reverence": 60,
+        "persecution": 10,
+    },
+    "vision:edit": {"kind": "union", "sender_node_id": Pick("son"), "genuine": True, "awe": 70},
+    "millenarian:edit": {
+        "cult_entity_id": CHURCH,
+        "prophet_entity_id": Pick(MORTAL),
+        "prophecy_entity_id": None,
+        "stage": "vigil",
+        "end_epoch": 12,
+        "members": 40,
+        "conviction": 80,
+        "given_up": 5,
+        "idle_share": 30,
+        "attacks": 1,
+        "dates_set": 2,
+        "sect_entity_id": None,
+    },
+    "theodicy:edit": {
+        "god_node_id": Pick("son"),
+        "cause": "defeat",
+        "suffering": 70,
+        "answered": False,
+        "resolution": "argued",
+        "theologian_entity_id": Pick(MORTAL),
+    },
+    "doctrine_sacrament:edit": {"protection": "routing", "strength": 70},
+    "sacrament:edit": {"kind": "marriage", "cult_entity_id": CHURCH, "priest_entity_id": Pick(MORTAL, 1), "missed": True},
+    "doctrine_afterlife:edit": {"model": "warrior_hall", "aligned": True, "aligned_by_node_id": Pick("son"), "shocks": 2, "testimonies": 1, "doubt": 20},
+    "faith_climate:edit": {
+        "piety_drift": -3,
+        "literacy_pull": -10,
+        "science_pull": -4,
+        "prosperity_pull": -2,
+        "city_pull": -1,
+        "silence_pull": -6,
+        "disaster_push": 5,
+        "miracle_push": 15,
+        "war_push": 10,
+        "dominion_push": 8,
+        "silent_epochs": 2,
+        "godless": False,
+    },
+    "divination_system:edit": {"kind": "lots", "validity": "seer_gift", "trust": 65, "diviners": 3},
+    "divination:edit": {
+        "diviner_entity_id": Pick(MORTAL),
+        "client_entity_id": Pick(MORTAL, 1),
+        "question": "battle",
+        "verdict": "auspicious",
+        "true_verdict": "inauspicious",
+        "heeded": True,
+        "swayed_by_node_id": Pick("son"),
+    },
+    "foresight:edit": {
+        "subject_node_id": Pick(MORTAL, 2),
+        "predicate": "dies",
+        "horizon": 20,
+        "due_epoch": 15,
+        "certainty": 75,
+        "source": "god",
+        "status": "pending",
+    },
+    "forecast_model:edit": {
+        "subject_entity_id": Pick(REALM),
+        "archive": 9,
+        "accuracy": 60,
+        "forecast_psi": 40,
+        "actual_psi": 45,
+        "plan_id": None,
+        "disruption": 10,
+        "disrupted_by_node_id": Pick("son"),
+        "horizon": 6,
+    },
+    "god_feeding:edit": {"weight": 80},
+}
+EDITS = {**EDITS, **SACRED_EDITS}
+LEVERS.update(
+    {
+        "bless": Lever(setup=drained_sons),
+        "genius_locus:create": given(place_id=FREE_PLACE, kind="grove"),
+        **{name: after(SPIRIT_UP, spirit_id=NEW_SPIRIT) for name in ("genius_locus:edit", "genius_locus:delete")},
+        "spirit_office:set": after(SPIRIT_UP, spirit_id=NEW_SPIRIT, rank="province", overseer_id=Pick("son"), jurisdiction_id=Pick(TOWN)),
+        **{name: after(SPIRIT_UP, OFFICE_UP, spirit_id=NEW_SPIRIT) for name in ("spirit_office:edit", "spirit_office:delete")},
+        "petition:create": after(SPIRIT_UP, petitioner_id=Pick(MORTAL), office_id=NEW_SPIRIT, kind="prosperity", bribe=2),
+        **{name: after(SPIRIT_UP, PETITION_UP, petition_id=Newest("petition")) for name in ("petition:edit", "petition:delete")},
+        "petition:judge": after(SPIRIT_UP, PETITION_UP, petition_id=Newest("petition"), granted=True),
+        "mystic:create": given(mortal_id=Pick(MORTAL), sender_id=Pick("son")),
+        **{name: after(MYSTIC_UP, mortal_id=Pick(MORTAL)) for name in ("mystic:edit", "mystic:delete")},
+        "vision:create": after(MYSTIC_UP, mystic_id=Pick(MORTAL), sender_id=Pick("son")),
+        **{name: after(MYSTIC_UP, vision_id=Newest("vision")) for name in ("vision:edit", "vision:delete")},
+        "millenarian:create": given(town_id=Pick(TOWN), prophet_id=Pick(MORTAL)),
+        **{name: after(MOVEMENT_UP, movement_id=Newest("millenarian_movement")) for name in ("millenarian:edit", "millenarian:delete")},
+        "theodicy:create": setup_then(churched_town, town_id=CHURCH_TOWN, cause="plague", suffering=70),
+        **{name: setup_then(churched_town, CRISIS_UP, crisis_id=Newest("theodicy_crisis")) for name in ("theodicy:edit", "theodicy:delete")},
+        "theodicy:answer": setup_then(churched_town, CRISIS_UP, crisis_id=Newest("theodicy_crisis"), god_id=Pick("son")),
+        "doctrine_sacrament:set": setup_then(churched_town, cult_id=CHURCH, kind="last_rites", protection="routing", strength=65),
+        **{
+            name: setup_then(churched_town, TEACHING_UP, cult_id=CHURCH, kind="initiation") for name in ("doctrine_sacrament:edit", "doctrine_sacrament:delete")
+        },
+        "sacrament:create": setup_then(churched_town, mortal_id=Pick(MORTAL), kind="birth_blessing", priest_id=Pick(MORTAL, 1)),
+        **{name: setup_then(churched_town, SACRAMENT_UP, sacrament_id=Newest("sacrament")) for name in ("sacrament:edit", "sacrament:delete")},
+        "doctrine_afterlife:set": setup_then(churched_town, cult_id=CHURCH, model="ancestor_hall"),
+        **{name: setup_then(churched_town, AFTERLIFE_UP, cult_id=CHURCH) for name in ("doctrine_afterlife:edit", "doctrine_afterlife:delete")},
+        "doctrine_afterlife:align": setup_then(churched_town, AFTERLIFE_UP, cult_id=CHURCH, god_id=Pick("son")),
+        "faith_climate:set": given(town_id=Pick(TOWN)),
+        **{name: after(CLIMATE_UP, town_id=Pick(TOWN)) for name in ("faith_climate:edit", "faith_climate:delete")},
+        "divination_system:create": given(people_id=Pick(EntityType.PEOPLE), kind=Computed(unkept_divination)),
+        **{
+            name: after(SYSTEM_UP, system_id=Newest("divination_system"))
+            for name in ("divination_system:edit", "divination_system:delete", "divination_system:read")
+        },
+        "divination:create": after(SYSTEM_UP, realm_id=RULED, question="coronation", system_id=Newest("divination_system")),
+        **{name: after(SYSTEM_UP, READING_UP, reading_id=Newest("divination")) for name in ("divination:edit", "divination:delete")},
+        "foresight:create": given(seer_id=Pick(MORTAL), subject_id=Pick(MORTAL, 1), predicate="dies", certainty=80, proclaimed=True),
+        **{name: after(FORESIGHT_UP, foresight_id=Newest("foresight")) for name in ("foresight:edit", "foresight:delete")},
+        "forecast_model:create": given(order_id=Pick(EntityType.FACTION), realm_id=Pick(REALM)),
+        **{name: after(MODEL_UP, model_id=Newest("forecast_model")) for name in ("forecast_model:edit", "forecast_model:delete")},
+        "god_feeding:set": given(god_id=Pick("son"), emotion="grief", weight=60),
+        **{name: after(FEEDING_UP, god_id=Pick("son"), emotion="joy") for name in ("god_feeding:edit", "god_feeding:delete")},
     }
 )
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})

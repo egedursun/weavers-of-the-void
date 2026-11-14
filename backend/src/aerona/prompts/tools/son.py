@@ -1554,4 +1554,58 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you bind them",
         },
     ),
+    T.BIND_GENIUS_LOCUS: ToolText(
+        "You raise a spirit to dwell in a place, a town or a house in your reach; its community brings it offerings, a content spirit "
+        "grants favour and an offended one brings misfortune, and it takes an office under your oversight among the spirit offices. 1 action.",
+        {"place_id": "The place, town or house", "reason": "Why you raise it"},
+    ),
+    T.JUDGE_PETITION: ToolText(
+        "You judge a petition waiting before a spirit office in your reach, granting or denying it; the work of judging raises your "
+        "standing in the petitioner's town. 1 action.",
+        {"petition_id": "The petition", "granted": "True to grant it, false to deny it", "reason": "Why you judge so"},
+    ),
+    T.APPOINT_SPIRIT: ToolText(
+        "You set the rank of a spirit in your reach among the spirit offices ({{ bureau_ranks }}) and take it under your oversight; leave "
+        "the rank empty to dismiss it. Offices you watch stay honest, and those left unwatched grow corrupt and may answer to no one. 1 action.",
+        {"spirit_id": "The spirit", "rank": "Its new rank, or empty to dismiss it", "reason": "Why you appoint it"},
+    ),
+    T.ANSWER_MYSTIC: ToolText(
+        "You answer a mortal in your reach with a direct experience of you, real contact rather than its own imagining; a mystic draws "
+        "followers outside the clergy and may found an order or, when persecuted, a heresy. 1 action.",
+        {"mortal_id": "The mortal you answer", "reason": "Why you answer"},
+    ),
+    T.EASE_THEODICY: ToolText(
+        "You answer a crisis of faith in a suffering town in your reach so that the faithful see it; the crisis ends and their love for you grows. 1 action.",
+        {"crisis_id": "The crisis of faith", "reason": "Why you answer it"},
+    ),
+    T.TEACH_SACRAMENT: ToolText(
+        "You teach a church in your reach a sacrament ({{ sacrament_kinds }}) and what it protects against ({{ sacrament_protections }}); "
+        "mortals who receive it are protected, and those who miss it feel uneasy and go unprotected. 1 action.",
+        {
+            "cult_id": "The church",
+            "kind": "The sacrament",
+            "protection": "What it protects against, or empty for its usual protection",
+            "reason": "Why you teach it",
+        },
+    ),
+    T.ALIGN_AFTERLIFE: ToolText(
+        "You make the afterlife you rule match the one a church in your reach teaches, at a cost of essence; its souls meet the afterlife "
+        "they were taught and the dead stop contradicting its doctrine. 1 action.",
+        {"cult_id": "The church", "reason": "Why you align it"},
+    ),
+    T.SWAY_DIVINER: ToolText(
+        "You sway the court diviners of a realm in your reach to read the omen you choose ({{ omen_verdicts }}) on a question "
+        "({{ divination_questions }}); a ruler who heeds diviners acts on it, true or not. 1 action.",
+        {"realm_id": "The realm", "question": "What the diviners are asked", "verdict": "The omen they read", "reason": "Why you sway them"},
+    ),
+    T.GRANT_FORESIGHT: ToolText(
+        "You show a mortal in your reach a likely future: whether a mortal dies, or whether a realm or town falls. The mortal proclaims "
+        "it, and it may come to pass or fail. 1 action.",
+        {"mortal_id": "The mortal who sees it", "subject_id": "Whose future it shows", "reason": "Why you show it"},
+    ),
+    T.FEED_ON: ToolText(
+        "You set how strongly you feed on a feeling of the mortals who worship you ({{ emotions }}), 0 to 100; each epoch you draw "
+        "essence from what your faithful feel. 1 action.",
+        {"emotion": "The feeling", "weight": "How strongly you feed on it, 0 to 100", "reason": "Why you feed on it"},
+    ),
 }

@@ -433,6 +433,20 @@ from aerona.rules.registry.reputation import ReputationRules
 from aerona.rules.registry.research_depth import ResearchDepthRules
 from aerona.rules.registry.routes import ChokepointsRules, RouteDangersRules, RouteSeasonsRules, SentientPactsRules, SonRoutesRules
 from aerona.rules.registry.rumours import RumoursRules
+from aerona.rules.registry.sacred import (
+    AfterlifeBeliefRules,
+    CelestialBureaucracyRules,
+    DivinationRules,
+    EmotionFeedingRules,
+    GeniusLociRules,
+    MillenarianRules,
+    MysticismRules,
+    PrescienceRules,
+    PsychohistoryRules,
+    SacramentRules,
+    SecularisationRules,
+    TheodicyRules,
+)
 from aerona.rules.registry.seasonal import SeasonalRules
 from aerona.rules.registry.server import ServerRules
 from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRules, SanitationRules, TaxationRules, UrbanRules
@@ -754,6 +768,18 @@ class Rules:
     age_of_sail: AgeOfSailRules = field(default_factory=AgeOfSailRules)
     admiralty: AdmiraltyRules = field(default_factory=AdmiraltyRules)
     expeditions: ExpeditionRules = field(default_factory=ExpeditionRules)
+    genius_loci: GeniusLociRules = field(default_factory=GeniusLociRules)
+    celestial_bureaucracy: CelestialBureaucracyRules = field(default_factory=CelestialBureaucracyRules)
+    mysticism: MysticismRules = field(default_factory=MysticismRules)
+    millenarianism: MillenarianRules = field(default_factory=MillenarianRules)
+    theodicy: TheodicyRules = field(default_factory=TheodicyRules)
+    sacraments: SacramentRules = field(default_factory=SacramentRules)
+    afterlife_belief: AfterlifeBeliefRules = field(default_factory=AfterlifeBeliefRules)
+    secularisation: SecularisationRules = field(default_factory=SecularisationRules)
+    divination: DivinationRules = field(default_factory=DivinationRules)
+    prescience: PrescienceRules = field(default_factory=PrescienceRules)
+    psychohistory: PsychohistoryRules = field(default_factory=PsychohistoryRules)
+    emotion_feeding: EmotionFeedingRules = field(default_factory=EmotionFeedingRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     theories: TheoriesRules = field(default_factory=TheoriesRules)
