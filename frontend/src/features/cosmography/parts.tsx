@@ -148,7 +148,9 @@ export function RecordEditor({
     <div className='flex min-w-0 flex-col gap-2'>
       <Held
         keys={locked}
-        label={heldLabel}
+        label={(key) =>
+          fields.find((field) => field.key === key)?.label ?? heldLabel(key)
+        }
         busy={busy}
         onRelease={() => onRelease([...locked])}
       />
