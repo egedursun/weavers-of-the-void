@@ -124,6 +124,23 @@ from aerona.rules.registry.creator import CreatorRules
 from aerona.rules.registry.creature_traits import CreatureTraitsRules
 from aerona.rules.registry.creatures import CreaturesRules
 from aerona.rules.registry.culture import CultureRules
+from aerona.rules.registry.customs import (
+    AgeSetRules,
+    BorderRules,
+    CitizenshipRules,
+    CommuteRules,
+    CooperativeRules,
+    EvidenceRules,
+    IntoxicationRules,
+    MarkRules,
+    MeasureRules,
+    NamingCustomRules,
+    PoorReliefRules,
+    RevivalRules,
+    TavernRules,
+    TimeBudgetRules,
+    WelfareRules,
+)
 from aerona.rules.registry.cycles import (
     AsabiyyaRules,
     ChallengeResponseRules,
@@ -579,6 +596,21 @@ class Rules:
     purity: PurityRules = field(default_factory=PurityRules)
     mishaps: MishapRules = field(default_factory=MishapRules)
     witchcraft: WitchcraftRules = field(default_factory=WitchcraftRules)
+    revivals: RevivalRules = field(default_factory=RevivalRules)
+    intoxication: IntoxicationRules = field(default_factory=IntoxicationRules)
+    marks: MarkRules = field(default_factory=MarkRules)
+    time_budgets: TimeBudgetRules = field(default_factory=TimeBudgetRules)
+    naming_customs: NamingCustomRules = field(default_factory=NamingCustomRules)
+    age_sets: AgeSetRules = field(default_factory=AgeSetRules)
+    taverns: TavernRules = field(default_factory=TavernRules)
+    welfare: WelfareRules = field(default_factory=WelfareRules)
+    commuting: CommuteRules = field(default_factory=CommuteRules)
+    cooperatives: CooperativeRules = field(default_factory=CooperativeRules)
+    evidence: EvidenceRules = field(default_factory=EvidenceRules)
+    citizenship: CitizenshipRules = field(default_factory=CitizenshipRules)
+    borders: BorderRules = field(default_factory=BorderRules)
+    poor_relief: PoorReliefRules = field(default_factory=PoorReliefRules)
+    measures: MeasureRules = field(default_factory=MeasureRules)
     body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)

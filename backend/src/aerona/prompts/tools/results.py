@@ -542,6 +542,10 @@ class SonResult(StrEnum):
     MISFORTUNE_REFUSED = "You cannot send that misfortune: {{ why }}."
     HUNT_STIRRED = "A witch hunt took hold of {{ town }} at fervour {{ fervour }}."
     HUNT_REFUSED = "You cannot stir a witch hunt there: {{ why }}."
+    REVIVAL_STIRRED = "A movement to {{ goal }} stirs among the {{ people }}."
+    REVIVAL_REFUSED = "You cannot stir that movement: {{ why }}."
+    RIGHT_PROCLAIMED = "{{ realm }} {% if granted %}now grants{% else %}no longer grants{% endif %} the right of {{ right }}."
+    RIGHT_REFUSED = "You cannot proclaim that right: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -985,3 +989,7 @@ class MortalResult(StrEnum):
     WITCH_ACCUSATION_DECLINED = "You cannot accuse them of witchcraft: {{ why }}."
     CHARM_MADE = "{{ item }} is now your charm of {{ power }}{% if real %}, and its power is real{% else %}; it is believed in{% endif %}."
     CHARM_DECLINED = "You cannot make a charm: {{ why }}."
+    COOPERATIVE_JOINED = "You pool your means in {{ faction }} ({{ purpose }})."
+    COOPERATIVE_DECLINED = "You cannot join that cooperative: {{ why }}."
+    CITIZENSHIP_GRANTED = "You are a citizen of {{ realm }} now."
+    CITIZENSHIP_DECLINED = "You cannot become a citizen: {{ why }}."

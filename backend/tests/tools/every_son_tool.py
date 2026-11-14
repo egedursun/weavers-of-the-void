@@ -425,4 +425,6 @@ SON_CASES: dict[str, Case] = {
     "bless_charm": Case(plain(item_id=created("item"), power="luck", reason=REASON), owned_item),
     "send_misfortune": Case(plain(town_id=settlement, kind="crop_failure", victim_id=mortal, reason=REASON)),
     "stir_witch_hunt": Case(plain(town_id=settlement, reason=REASON)),
+    "stir_revival": Case(plain(people_id=people, goal="revive_language", reason=REASON)),
+    "proclaim_right": Case(plain(realm_id=created("polity"), category="resident_foreigner", right="arms", granted=True, reason=REASON), ruled_realm),
 }

@@ -509,6 +509,11 @@ class EnginePhasesRules:
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: misfortunes, what peoples blame them on and how they answer, luck beliefs and charms"
     )
     witchcraft: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: witchcraft accusations, their trials and witch hunts")
+    customs: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: revival movements, intoxicant customs, naming, age-sets, body marks and time budgets"
+    )
+    town_life: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: taverns and inns, houses of welfare, the way to work and cooperatives")
+    civics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: evidence, citizenship, borders, poor relief and standard measures")
     arcs: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: arcs read in lives, their beats and outcomes, setups and payoffs, and the drama manager"
     )

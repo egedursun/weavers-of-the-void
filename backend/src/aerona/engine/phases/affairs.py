@@ -46,6 +46,7 @@ from aerona.engine.polity.revenue import RevenueTally, tend_revenue
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.mandates",
+    "table.measure_standards",
     "table.memories",
     "table.minds",
     "table.mortal_profiles",

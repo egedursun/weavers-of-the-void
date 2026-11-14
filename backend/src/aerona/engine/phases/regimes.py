@@ -95,6 +95,8 @@ async def regimes(ctx: TickContext) -> None:
     "table.house_profiles",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.membership_categories",
+    "table.memberships",
     "table.mortal_profiles",
     "table.oaths",
     "table.offices",

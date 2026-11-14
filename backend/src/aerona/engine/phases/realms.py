@@ -86,6 +86,8 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.learned_tactics",
     "table.loans",
     "table.maimed_cohorts",
+    "table.membership_categories",
+    "table.memberships",
     "table.memories",
     "table.mercenary_contracts",
     "table.minds",

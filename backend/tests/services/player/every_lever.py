@@ -1368,7 +1368,12 @@ LEVERS: dict[str, Lever] = {
     },
     "resurrect:mortal": given(entity_id=Where("entities", "id", {"status": EntityStatus.DEAD, "entity_type": EntityType.MORTAL})),
     **{f"rite:{verb}": after(RITE, rite_id=Newest(EntityType.RITE)) for verb in ("effect", "requirements", "teach")},
-    "rite:dispel": after(RITE, ("rite:cast", {"rite_id": Newest(EntityType.RITE), "caster_id": Pick(MORTAL)}), rite_id=Newest(EntityType.RITE)),
+    "rite:dispel": after(
+        RITE,
+        ("profile:set", {"node_id": Newest(EntityType.RITE), "table": "rite_profiles", "column": "backlash_chance", "value": 0}),
+        ("rite:cast", {"rite_id": Newest(EntityType.RITE), "caster_id": Pick(MORTAL)}),
+        rite_id=Newest(EntityType.RITE),
+    ),
     "rite:cast": after(RITE, rite_id=Newest(EntityType.RITE), caster_id=Pick(MORTAL)),
     "rite:forbid": after(RITE, rite_id=Newest(EntityType.RITE), authority_id=Pick(REALM)),
     "rumour:plant": given(subject_id=Pick(MORTAL), text="they say the well runs dry"),
@@ -3678,4 +3683,96 @@ LEVERS.update(
 
 LEVERS.update(
     {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in FOLKWAYS_EDITS.items()}
+)
+
+
+STRUCTURE = EntityType.STRUCTURE
+FACTION = EntityType.FACTION
+REVIVAL_UP = ("revival:create", {"people_entity_id": Pick(PEOPLE), "aim": "restore", "goal": "revive_language"})
+INTOX_UP = ("intoxicant_custom:set", {"people_id": Pick(PEOPLE), "intoxicant": "wine", "use": "feast", "acceptance": 40})
+MARKC_UP = ("mark_custom:set", {"people_id": Pick(PEOPLE), "kind": "scar", "meaning": "deed"})
+MARK_UP = ("body_mark:create", {"holder_node_id": Pick(MORTAL), "kind": "tattoo", "meaning": "clan"})
+BUDGET_UP = (
+    "time_budget:set",
+    {"people_id": Pick(PEOPLE), "social_class": "farmer", "work": 60, "rest": 20, "worship": 10, "leisure": 5, "travel": 3, "service": 2},
+)
+NAMING_UP = ("naming_custom:set", {"people_id": Pick(PEOPLE), "pattern": "clan", "secret_names": True, "taboo_epochs": 1})
+NAME_UP = ("name_form:set", {"holder_id": Pick(MORTAL), "form": "deed", "name": "The Unbowed"})
+SET_UP = ("age_set:create", {"people_entity_id": Pick(PEOPLE), "name": "The First Set", "grade": "youths"})
+MEMBER_SET_UP = ("age_set_member:set", {"mortal_id": Pick(MORTAL), "age_set_id": Newest("age_set")})
+TAVERN_UP = ("tavern:set", {"structure_id": Pick(STRUCTURE), "keeper_node_id": None})
+HOUSE_UP = ("welfare_house:set", {"structure_id": Pick(STRUCTURE, 1), "patron_node_id": None})
+COMMUTE_UP = ("commute:set", {"settlement_id": Pick(TOWN), "distance": 20})
+COOP_UP = ("cooperative:set", {"faction_id": Pick(FACTION), "purpose": "boats"})
+EVIDENCE_UP = ("evidence:create", {"case_id": Newest("crime_case"), "kind": "trace", "points_to_node_id": None, "reliability": 40})
+CATEGORY_UP = ("membership_category:set", {"polity_id": Pick(REALM), "category": "subject"})
+MEMBERSHIP_UP = ("membership:set", {"mortal_id": Pick(MORTAL), "polity_entity_id": Pick(REALM), "category": "resident_foreigner", "path": "birthplace"})
+BORDER_UP = ("border_control:set", {"polity_id": Pick(REALM), "fee": 40, "delay": 1, "enforcement": 50})
+RELIEF_UP = ("poor_relief:set", {"polity_id": Pick(REALM), "kind": "granary", "budget": 30, "reach": 30})
+MEASURE_UP = ("measure_standard:set", {"polity_id": Pick(REALM), "standard": True, "fraud": 5})
+CUSTOMS_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "revival:edit": {
+        "aim": "synthesise",
+        "stage": "revitalisation",
+        "goal": "restore_god",
+        "strength": 40,
+        "prophet_node_id": Pick(MORTAL),
+        "ended_epoch": None,
+    },
+    "intoxicant_custom:edit": {"use": "rite", "acceptance": 70},
+    "mark_custom:edit": {"meaning": "mourning"},
+    "body_mark:edit": {"kind": "scar", "meaning": "deed", "placed_epoch": 2},
+    "time_budget:edit": {"work": 50, "rest": 25, "worship": 10, "leisure": 10, "travel": 3, "service": 2},
+    "naming_custom:edit": {
+        "pattern": "parent",
+        "secret_names": False,
+        "taboo_epochs": 2,
+        "rename_on_initiation": True,
+        "rename_on_marriage": True,
+        "rename_on_vow": False,
+    },
+    "name_form:edit": {"name": "The Steadfast", "given_epoch": 3},
+    "age_set:edit": {"name": "The Bold Set", "initiated_from": 1, "initiated_to": 3, "grade": "warriors", "promoted_epoch": 3},
+    "age_set_member:edit": {"age_set_id": Newest("age_set")},
+    "tavern:edit": {"keeper_node_id": Pick(MORTAL), "patrons": 30, "brawls": 2, "lodging": 10, "rumours": 4},
+    "welfare_house:edit": {"patron_node_id": Pick(MORTAL), "inmates": 12, "upkeep": 6},
+    "commute:edit": {"distance": 30, "labour_lost": 12, "worker_camp": True},
+    "cooperative:edit": {"purpose": "credit", "pool": 20, "members": 5},
+    "evidence:edit": {"kind": "witness", "points_to_node_id": Pick(MORTAL), "reliability": 60, "forged": True, "found_epoch": 2},
+    "membership_category:edit": {"office": True, "courts": True, "arms": False},
+    "membership:edit": {"polity_entity_id": Pick(REALM), "category": "citizen", "path": "residence"},
+    "border_control:edit": {"fee": 60, "delay": 2, "enforcement": 70, "corruption": 10},
+    "poor_relief:edit": {"kind": "parish", "budget": 40, "reach": 50},
+    "measure_standard:edit": {"standard": False, "adopted_epoch": 1, "fraud": 30},
+}
+EDITS = {**EDITS, **CUSTOMS_EDITS}
+LEVERS.update(
+    {
+        **{name: after(REVIVAL_UP, record_id=Newest("revival")) for name in ("revival:edit", "revival:delete")},
+        **{name: after(INTOX_UP, people_id=Pick(PEOPLE), intoxicant="wine") for name in ("intoxicant_custom:edit", "intoxicant_custom:delete")},
+        **{name: after(MARKC_UP, people_id=Pick(PEOPLE), kind="scar") for name in ("mark_custom:edit", "mark_custom:delete")},
+        **{name: after(MARK_UP, record_id=Newest("body_mark")) for name in ("body_mark:edit", "body_mark:delete")},
+        **{name: after(BUDGET_UP, people_id=Pick(PEOPLE), social_class="farmer") for name in ("time_budget:edit", "time_budget:delete")},
+        **{name: after(NAMING_UP, people_id=Pick(PEOPLE)) for name in ("naming_custom:edit", "naming_custom:delete")},
+        **{name: after(NAME_UP, holder_id=Pick(MORTAL), form="deed") for name in ("name_form:edit", "name_form:delete")},
+        **{name: after(SET_UP, record_id=Newest("age_set")) for name in ("age_set:edit", "age_set:delete")},
+        "age_set_member:set": after(SET_UP, mortal_id=Pick(MORTAL), age_set_id=Newest("age_set")),
+        **{name: after(SET_UP, MEMBER_SET_UP, mortal_id=Pick(MORTAL)) for name in ("age_set_member:edit", "age_set_member:delete")},
+        **{name: after(TAVERN_UP, structure_id=Pick(STRUCTURE)) for name in ("tavern:edit", "tavern:delete")},
+        **{name: after(HOUSE_UP, structure_id=Pick(STRUCTURE, 1)) for name in ("welfare_house:edit", "welfare_house:delete")},
+        **{name: after(COMMUTE_UP, settlement_id=Pick(TOWN)) for name in ("commute:edit", "commute:delete")},
+        **{name: after(COOP_UP, faction_id=Pick(FACTION)) for name in ("cooperative:edit", "cooperative:delete")},
+        "evidence:create": after(ACCUSE_UP, case_id=Newest("crime_case"), kind="document", points_to_node_id=None, reliability=50),
+        **{name: after(ACCUSE_UP, EVIDENCE_UP, record_id=Newest("evidence")) for name in ("evidence:edit", "evidence:delete")},
+        **{name: after(CATEGORY_UP, polity_id=Pick(REALM), category="subject") for name in ("membership_category:edit", "membership_category:delete")},
+        "membership_category:right": given(polity_id=Pick(REALM), category="resident_foreigner", right="arms", granted=True),
+        **{name: after(MEMBERSHIP_UP, mortal_id=Pick(MORTAL)) for name in ("membership:edit", "membership:delete")},
+        **{name: after(BORDER_UP, polity_id=Pick(REALM)) for name in ("border_control:edit", "border_control:delete")},
+        **{name: after(RELIEF_UP, polity_id=Pick(REALM)) for name in ("poor_relief:edit", "poor_relief:delete")},
+        **{name: after(MEASURE_UP, polity_id=Pick(REALM)) for name in ("measure_standard:edit", "measure_standard:delete")},
+    }
+)
+
+LEVERS.update(
+    {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in CUSTOMS_EDITS.items()}
 )

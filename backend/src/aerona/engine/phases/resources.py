@@ -50,6 +50,7 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.community_methods",
     "table.community_societies",
     "table.community_stocks",
+    "table.commutes",
     "table.epoch_year_cursors",
     "table.forced_weather",
     "table.goods_flows",

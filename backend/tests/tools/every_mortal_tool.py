@@ -80,6 +80,7 @@ from tests.tools.every_setup import (
 )
 from tests.tools.every_setup_ages import remade_land, sky_scholar, slain_kin
 from tests.tools.every_setup_arts import art_work, built_construct, posted_contract, sold_work
+from tests.tools.every_setup_customs import long_foreigner, town_pool
 from tests.tools.every_setup_folkways import impure_mortal, neighbour, owned_item
 from tests.tools.every_son_tool import faction, knowledge, language, mortal, people, plain, region, resource, route, settlement, species
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
@@ -286,4 +287,6 @@ MORTAL_CASES: dict[str, Case] = {
     "purify_self": named(plain(), impure_mortal),
     "accuse_of_witchcraft": named(plain(accused_id=created("mortal")), neighbour),
     "make_charm": named(plain(power="protection"), owned_item),
+    "join_cooperative": named(plain(faction_id=created("faction")), town_pool),
+    "seek_citizenship": named(plain(), long_foreigner),
 }

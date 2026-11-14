@@ -131,6 +131,8 @@ async def mortal_survey(ctx: TickContext) -> None:
     "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
+    "table.membership_categories",
+    "table.memberships",
     "table.mind_attributes",
     "table.mind_facets",
     "table.minds",

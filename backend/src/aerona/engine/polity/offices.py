@@ -22,6 +22,7 @@ from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.collective import RoleKind
+from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
@@ -33,6 +34,7 @@ from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.collective.roles import RANK_PREFERRED, freed_rank, role_rank
 from aerona.engine.context import TickContext
+from aerona.engine.customs.rights import has_right
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
@@ -193,6 +195,8 @@ def adult(ctx: TickContext, mortal: EntityRow) -> bool:
 
 
 async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: EntityRow | None, *, by_id: int | None, reason: str) -> None:
+    if holder is not None and ctx.rules.citizenship.rightless_office and not await has_right(ctx.session, holder.id, MemberRight.OFFICE, realm.entity.id):
+        return
     if office.holder_entity_id is not None and office.id is not None:
         ctx.session.add(
             OfficeHistoryRow(

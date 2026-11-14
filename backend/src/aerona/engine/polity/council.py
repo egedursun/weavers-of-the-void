@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.customs import MeasureStandardRow
 from aerona.db.tables.intrigue import SchemeRow, SecretRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.polity import OfficeRow
@@ -117,6 +118,9 @@ async def train_troops(ctx: TickContext, book: RealmBook, work: Work) -> None:
 
 async def collect_taxes(ctx: TickContext, book: RealmBook, work: Work) -> None:
     gathered = round_half_up(ctx.rules.affairs.collect_gain * len(work.realm.members) * work.strength)
+    standard = await ctx.session.get(MeasureStandardRow, work.realm.entity.id)
+    if standard is not None and standard.standard:
+        gathered = round_half_up(gathered * (1 + ctx.rules.measures.tax_pct / PERCENT))
     if gathered > 0 and "treasury" not in work.realm.profile.locked:
         spend(ctx, work.realm, gathered, TreasuryEntry.TAX, "gathered by the treasurer")
 

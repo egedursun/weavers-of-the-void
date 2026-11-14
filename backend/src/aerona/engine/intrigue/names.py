@@ -12,6 +12,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.intrigue import HookSource
 from aerona.engine.context import TickContext
+from aerona.engine.customs.taboo import name_tabooed
 from aerona.engine.intrigue.secrets import grant_hook
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.notes import note
@@ -58,6 +59,8 @@ async def seed_true_names(ctx: TickContext, namer: Namer) -> int:
 
 async def teach_name(ctx: TickContext, row: TrueNameRow, learner_id: int) -> bool:
     if learner_id in row.known_by or KNOWN in (row.locked or []) or held(learner_id):
+        return False
+    if await name_tabooed(ctx.session, row.bearer_node_id, ctx.epoch):
         return False
     row.known_by = sorted({*row.known_by, learner_id})
     await grant_hook(ctx, learner_id, row.bearer_node_id, HookSource.TRUE_NAME, strong=True)

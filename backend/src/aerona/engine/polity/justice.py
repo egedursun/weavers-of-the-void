@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import CastingRow
 from aerona.db.tables.entities import EntityRow
@@ -16,10 +17,12 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.customs.relief import relieved_theft
 from aerona.engine.faith.book import patron_node
 from aerona.engine.mind.book import values_for
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.naming import seed_of
 
 RECENT_EPOCHS = 2
 TREASON_KINDS = frozenset({FactionKind.REBELS, FactionKind.SECRET_SOCIETY})
@@ -97,6 +100,7 @@ async def offenders(ctx: TickContext, town_id: int, laws: LawBook) -> dict[Crime
         )
     )
     war = await _at_war(ctx, town_id)
+    relief = await relieved_theft(ctx.session, ctx.rules, town_id)
     casters = set(
         await ctx.session.scalars(
             select(CastingRow.caster_entity_id).where(CastingRow.caster_entity_id.in_(list(ids)), CastingRow.epoch >= ctx.epoch - RECENT_EPOCHS)
@@ -116,6 +120,8 @@ async def offenders(ctx: TickContext, town_id: int, laws: LawBook) -> dict[Crime
             found[CrimeKind.BLASPHEMY].append(mortal)
         if war and mortal.social_class is SocialClass.WARRIOR and mortal.id not in commanders:
             found[CrimeKind.DESERTION].append(mortal)
-        if mortal.social_class is SocialClass.OUTCAST or kinds & ROBBER_KINDS:
+        if (mortal.social_class is SocialClass.OUTCAST or kinds & ROBBER_KINDS) and not ctx.rng(seed_of("relieved", mortal.id, ctx.epoch)).chance(
+            relief * PERCENT
+        ):
             found[CrimeKind.THEFT].append(mortal)
     return found

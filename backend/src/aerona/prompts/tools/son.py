@@ -1707,4 +1707,14 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "the courts try the accused. 1 action.",
         {"town_id": "The town", "reason": "Why you stir it"},
     ),
+    T.STIR_REVIVAL: ToolText(
+        "You stir a movement among a people within your reach that others press on: to revive its language, restore its old god, expel "
+        "foreigners or adopt the ways pressed on it; the movement passes through stress, distortion and revival to a new steady way. 1 action.",
+        {"people_id": "The people", "goal": "What the movement seeks", "reason": "Why you stir it"},
+    ),
+    T.PROCLAIM_RIGHT: ToolText(
+        "You proclaim in a realm within your reach that a category of its folk (citizens, subjects, resident foreigners, protected minorities "
+        "or the bound) holds or loses a right: office, marriage, arms or the courts. 1 action.",
+        {"realm_id": "The realm", "category": "Whose right", "right": "The right", "granted": "Whether they hold it", "reason": "Why"},
+    ),
 }

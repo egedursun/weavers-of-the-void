@@ -4,7 +4,7 @@ from importlib import import_module
 from pathlib import Path
 from pkgutil import iter_modules
 
-import aerona.domain.enums as enums
+from aerona.domain import enums
 
 ENGINE = Path(__file__).resolve().parents[2] / "src" / "aerona" / "engine"
 TALLY = re.compile(r"@dataclass\nclass (\w+Tally)[^:]*:\n((?:    \w+: [^\n]+\n)+)")

@@ -348,6 +348,15 @@ async def caste_bars(session: AsyncSession, first: EntityRow, second: EntityRow)
     return rank is not None and rank.endogamous
 
 
+async def apart_at_table(session: AsyncSession, first_id: int, second_id: int) -> bool:
+    one = await session.get(PurityRow, first_id)
+    two = await session.get(PurityRow, second_id)
+    if one is None or two is None or one.rank_id is None or two.rank_id is None or one.rank_id == two.rank_id:
+        return False
+    ranks = [await session.get(PurityRankRow, one.rank_id), await session.get(PurityRankRow, two.rank_id)]
+    return any(rank is not None and rank.commensal for rank in ranks)
+
+
 async def barred_professions(session: AsyncSession, mortal_id: int) -> frozenset[str]:
     row = await session.get(PurityRow, mortal_id)
     rank = await session.get(PurityRankRow, row.rank_id) if row is not None and row.rank_id is not None else None

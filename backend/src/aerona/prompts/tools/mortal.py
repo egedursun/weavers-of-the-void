@@ -997,4 +997,12 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You make an item you own a charm (protection, fertility, luck or healing); it calms you whether or not its power is real. 1 action.",
         {"power": "The charm's power"},
     ),
+    T.JOIN_COOPERATIVE: ToolText(
+        "You join a cooperative of your town and pool your means with its members; it eases their want. 1 action.",
+        {"faction_id": "The cooperative"},
+    ),
+    T.SEEK_CITIZENSHIP: ToolText(
+        "As a foreigner in your realm, you pay to become its citizen and gain the rights citizens hold. 1 action.",
+        {},
+    ),
 }

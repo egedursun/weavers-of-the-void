@@ -22,6 +22,7 @@ from aerona.domain.enums.mind import NeedKind, PreferenceKind, PressureKind, Ski
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.context import TickContext
+from aerona.engine.customs.relief import beggars, poverty_relief
 from aerona.engine.demography.basket import effect_shortfalls, fed_index, poverty_of
 from aerona.engine.gods.queries import community_of
 from aerona.engine.households.homes import home_of
@@ -127,6 +128,8 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
         gap_pct(table.poverty_prosperity, prosperity),
         pct(await poverty_of(session, community.id, await class_shares(session, ctx.rules, community.id)) * plenty.poverty_pressure_pct / PERCENT),
     )
+    poverty = max(0, poverty - await poverty_relief(session, ctx.rules, community.id))
+    insecurity += await beggars(session, ctx.rules, community.id, poverty)
     piety_value = max(0, culture.get(ValueAxis.PIETY, 0))
     piety_stat = stat(community, "piety")
     worships = bool(await active_bonds(session, [BondKind.WORSHIPS], sources=[community.id]))

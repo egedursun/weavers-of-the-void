@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import Profession, SkillKind, SkillSource
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.customs.rights import unarmed
 from aerona.engine.folkways.purity import barred_professions
 from aerona.engine.mind.book import is_locked, mind_of, set_skill, skills_of
 from aerona.engine.mind.skills import SKILL_LOCK, level_cost, practise
@@ -91,7 +92,9 @@ def best_profession(rules: Rules, rows: dict[SkillKind, SkillRow], barred: froze
 
 async def refresh_profession(session: AsyncSession, rules: Rules, mortal: EntityRow, profile: MortalProfileRow) -> Profession | None:
     if not is_held(profile, "profession"):
-        profile.profession = best_profession(rules, await skills_of(session, mortal.id), await barred_professions(session, mortal.id))
+        profile.profession = best_profession(
+            rules, await skills_of(session, mortal.id), await barred_professions(session, mortal.id) | await unarmed(session, mortal.id)
+        )
     return profile.profession
 
 

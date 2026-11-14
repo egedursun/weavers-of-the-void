@@ -39,6 +39,7 @@ from aerona.engine.phases import (
     creatures,
     culture_exchange,
     curses,
+    customs,
     cycles,
     dark_ages,
     demography,
@@ -218,6 +219,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + arts.PHASES
     + ages.PHASES
     + folkways.PHASES
+    + customs.PHASES
     + made_kinds.PHASES
     + exploration.PHASES
     + factions.PHASES
@@ -624,6 +626,9 @@ MIND_STAGE = stage(
     "purity",
     "mishaps",
     "witchcraft",
+    "customs",
+    "town_life",
+    "civics",
     "gatherings",
     "reciprocity",
     "relations_circles",

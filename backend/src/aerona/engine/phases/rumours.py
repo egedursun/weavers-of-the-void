@@ -34,6 +34,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.skills",
     "table.speaker_cohorts",
     "table.spy_networks",
+    "table.taverns",
     "table.war_sides",
     "table.world_domain_hooks",
     "table.world_maps",

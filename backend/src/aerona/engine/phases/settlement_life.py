@@ -97,6 +97,7 @@ JUSTICE_FULL = 100
     "table.people_culture",
     "table.place_environment",
     "table.polity_members",
+    "table.poor_relief",
     "table.preparedness",
     "table.pressures",
     "table.public_opinion",

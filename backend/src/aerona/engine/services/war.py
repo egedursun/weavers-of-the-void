@@ -26,8 +26,10 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.domain.enums.war import REVOLT_CAUSES, CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.body.book import effective
+from aerona.engine.body.customs import people_of
 from aerona.engine.communication.post import herald_war
 from aerona.engine.context import TickContext
+from aerona.engine.customs.grades import warriors_ready
 from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
 from aerona.engine.gods.incitement import held_incitement
@@ -453,6 +455,9 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     commander = max(heroes, key=lambda hero: (scores[hero.id], -hero.id), default=None)
     engine_kind, subtype = ARMY_KINDS.get(community.entity_type, PEOPLES_ARMY)
     share = await mobilisation(ctx.session, ctx.rules, community, harvest_share=await harvest_share(ctx, community))
+    folk = await people_of(ctx.session, community)
+    if await warriors_ready(ctx.session, folk.id if folk is not None else None):
+        share *= 1 + ctx.rules.age_sets.warrior_levy_pct / PERCENT
     wanted = clamp_int(soldier_count(ctx.rules, strength, community) * share, campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)
     adults = await fighting_age(ctx.session, community.id, ctx.rules)
     if adults is not None:

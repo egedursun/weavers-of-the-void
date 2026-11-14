@@ -11,6 +11,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import LanguageStandingRow, LegendProfileRow, RumourRow
+from aerona.db.tables.customs import TavernRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -30,6 +31,7 @@ from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.commerce import news_delay
+from aerona.engine.customs.relief import tavern_of
 from aerona.engine.folkways.biases import lean_community
 from aerona.engine.lore.language import barrier
 from aerona.engine.lore.printing import printed
@@ -264,6 +266,7 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
     )
     known = await known_pairs(ctx.session, sorted({row.incident_id for row in fresh}))
     passed = 0
+    taverns: dict[int, TavernRow | None] = {}
     for rumour in fresh:
         carrier = await is_carrier(ctx.session, rumour.carrier_entity_id)
         if carrier is None:
@@ -273,8 +276,14 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
         for target, channel in found.of(carrier.id):
             if passed >= table.cap or (rumour.incident_id, target) in known or held(carrier.id, target) or await is_carrier(ctx.session, target) is None:
                 continue
-            if not ctx.rng(f"rumour.{rumour.incident_id}.{carrier.id}.{target}.{ctx.epoch}").chance(int(getattr(table, CHANCES[channel]))):
+            if target not in taverns:
+                taverns[target] = await tavern_of(ctx.session, target)
+            tavern = taverns[target]
+            boost = ctx.rules.taverns.rumour_pct if tavern is not None else 0
+            if not ctx.rng(f"rumour.{rumour.incident_id}.{carrier.id}.{target}.{ctx.epoch}").chance(int(getattr(table, CHANCES[channel])) + boost):
                 continue
+            if tavern is not None and "rumours" not in tavern.locked:
+                tavern.rumours += 1
             fidelity = await fidelity_after(ctx, atlas, rumour.fidelity, source=carrier.id, target=target, channel=channel)
             if fidelity < table.floor:
                 continue

@@ -1,0 +1,148 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+C = RuleGroup.RELIGION_AND_LANGUAGE
+S = RuleGroup.POPULATION_AND_GROWTH
+J = RuleGroup.POLITY
+
+
+@dataclass(frozen=True)
+class RevivalRules:
+    pressure_from: int = rule(
+        30, 0, 1000, C, "Culture drift a people suffers from rulers, conquerors and neighbours within the memory of a movement before it answers with one"
+    )
+    memory_epochs: int = rule(3, 1, 50, C, "Epochs back a people counts the drift pressed on it")
+    restore_from: int = rule(20, -100, 100, C, "Tradition from which a people answers pressure by restoring its old ways")
+    adopt_from: int = rule(20, -100, 100, C, "Love of the foreign from which a people answers pressure by adopting the ways pressed on it")
+    stage_gain: int = rule(15, 0, 100, C, "Strength a movement gains each epoch; a stage passes each time it fills")
+    language_gain: int = rule(5, 0, 100, C, "Standing a movement to revive its language gives the language each epoch")
+    value_pull_pct: int = rule(10, 0, 100, C, "Share of the gap to the old or the pressed values that a movement closes each epoch (%)")
+    expel_opinion: int = rule(5, 0, 100, C, "Opinion a movement to expel foreigners takes from its people of those who press on it")
+
+
+@dataclass(frozen=True)
+class IntoxicationRules:
+    customs_per_people: int = rule(2, 0, 7, C, "Intoxicant customs a people holds when first read")
+    habit_chance: int = rule(3, 0, 100, C, "Chance each epoch a mortal of a people that takes an intoxicant daily forms a habit (%)")
+    brawl_chance: int = rule(10, 0, 100, C, "Chance a gathering of a people that drinks at feasts ends in a brawl (%)")
+    brawl_damage: int = rule(8, 0, 100, C, "Harm a brawl at a gathering deals the one hurt")
+    vision_chance: int = rule(10, 0, 100, C, "Chance a mystic of a people that takes an intoxicant in rites has a vision (%)")
+    brew_per_100: int = rule(2, 0, 100, C, "Brew base a town of a people that drinks daily or at feasts consumes for each hundred folk")
+
+
+@dataclass(frozen=True)
+class MarkRules:
+    customs_per_people: int = rule(3, 0, 8, C, "Kinds of body mark a people gives meaning to when first read")
+    renown_per_deed: int = rule(2, 0, 100, C, "Renown a mark of deeds adds where it is read")
+    calm_per_charm: int = rule(3, 0, 100, C, "Stress a protective mark takes off its bearer each epoch")
+    belonging_per_mark: int = rule(3, 0, 100, C, "Loyalty to their community a mark of clan, marriage or age-set gives its bearer")
+    shame_per_brand: int = rule(5, 0, 100, C, "Honour a brand of crime takes from its bearer where it is read")
+
+
+@dataclass(frozen=True)
+class TimeBudgetRules:
+    output_pct: int = rule(100, 0, 400, S, "Scale of output a class's share of work sets against the usual share (%)")
+    usual_work: int = rule(55, 1, 100, S, "Share of a year that is the usual share of work")
+    leisure_satisfaction: int = rule(20, 0, 100, S, "Satisfaction a class gains for each ten points of leisure above the usual")
+    usual_leisure: int = rule(10, 0, 100, S, "Share of a year that is the usual share of leisure")
+    usual_rest: int = rule(20, 0, 100, S, "Share of a year that is the usual share of rest")
+    rest_calm: int = rule(1, 0, 100, S, "Unrest a town loses each epoch for each ten points of rest above the usual")
+    travel_trade: int = rule(1, 0, 100, S, "Prosperity a town gains each epoch for each ten points of travel its folk make, in tenths")
+    service_defense: int = rule(1, 0, 100, S, "Defence a town gains each epoch for each ten points of service its folk give, in tenths")
+    worship_piety: int = rule(2, 0, 100, S, "Piety a town gains each epoch for each ten points of worship its folk give")
+
+
+@dataclass(frozen=True)
+class NamingCustomRules:
+    secret_chance: int = rule(40, 0, 100, C, "Chance a people that names is one that also gives a secret name (%)")
+    taboo_epochs: int = rule(2, 0, 50, C, "Epochs the names of the dead go unspoken where a people keeps such a taboo")
+    rename_chance: int = rule(30, 0, 100, C, "Chance a people renames its folk at each turn of life it marks (%)")
+
+
+@dataclass(frozen=True)
+class AgeSetRules:
+    from_tradition: int = rule(30, -100, 100, S, "Tradition from which a people binds its folk in age-sets")
+    span_epochs: int = rule(2, 1, 50, S, "Epochs of initiation one age-set gathers before the next opens")
+    grade_epochs: int = rule(3, 1, 50, S, "Epochs an age-set spends in a grade before it is promoted")
+    warrior_levy_pct: int = rule(20, 0, 100, S, "Share added to a town's mobilisation by an age-set in the warrior grade (%)")
+    mates_bond: int = rule(5, 0, 100, S, "Friendship age-mates gain with one another when their set is promoted")
+
+
+@dataclass(frozen=True)
+class TavernRules:
+    patrons_pct: int = rule(10, 0, 100, S, "Share of a town's folk who keep a tavern each epoch (%)")
+    rumour_pct: int = rule(20, 0, 100, S, "Chance added to a rumour reaching a town that keeps a tavern (%)")
+    brawl_chance: int = rule(5, 0, 100, S, "Chance each epoch a busy tavern sees a brawl (%)")
+    keeper_renown: int = rule(2, 0, 100, S, "Most renown the keeper of a tavern gains each epoch from the rumours that pass through it")
+    lodging_per_inn: int = rule(20, 0, 1000, S, "Travellers an inn lodges each epoch")
+
+
+@dataclass(frozen=True)
+class WelfareRules:
+    inmates_per_house: int = rule(30, 0, 1000, S, "Poor, orphans and maimed a house of welfare takes in")
+    poverty_relief: int = rule(5, 0, 100, S, "Poverty pressure each house of welfare takes off its town each epoch")
+    upkeep_per_inmate: int = rule(50, 0, 1000, S, "Upkeep a house of welfare needs for each hundred it takes in")
+    patron_renown: int = rule(1, 0, 100, S, "Renown the patron of a house of welfare gains each epoch")
+    beggars_insecurity: int = rule(10, 0, 100, S, "Insecurity beggars in the streets add to a poor town with no house of welfare")
+    beggars_from: int = rule(50, 0, 100, S, "Poverty in a town with no house of welfare from which beggars fill its streets and its insecurity rises")
+
+
+@dataclass(frozen=True)
+class CommuteRules:
+    district_distance: int = rule(8, 0, 100, S, "Distance each district beyond the first adds to the way to work")
+    road_relief: int = rule(10, 0, 100, S, "Distance a town's roads and bridges take off the way to work")
+    lost_per_distance_pct: int = rule(40, 0, 100, S, "Share of labour lost for each point of distance, in hundredths (%)")
+    camp_from: int = rule(50, 0, 100, S, "Distance from which a town keeps a worker camp that wins back half the labour lost")
+
+
+@dataclass(frozen=True)
+class CooperativeRules:
+    found_from: int = rule(40, 0, 100, S, "Poverty in a town from which its folk pool their means in a cooperative")
+    dues: int = rule(1, 0, 100, S, "Wealth each member pools each epoch")
+    relief: int = rule(3, 0, 100, S, "Poverty pressure a cooperative takes off its town each epoch")
+
+
+@dataclass(frozen=True)
+class EvidenceRules:
+    decay: int = rule(5, 0, 100, J, "Reliability evidence loses each epoch before its case is tried")
+    trace_reliability: int = rule(60, 0, 100, J, "Reliability of a trace found where a crime was done")
+    witness_weight_pct: int = rule(100, 0, 400, J, "Scale of the weight evidence adds to a case (%)")
+    forged_reliability: int = rule(50, 0, 100, J, "Reliability a forged document claims")
+
+
+@dataclass(frozen=True)
+class CitizenshipRules:
+    residence_epochs: int = rule(5, 1, 100, J, "Epochs a foreigner lives in a realm before they may be naturalised")
+    naturalise_chance: int = rule(20, 0, 100, J, "Chance each epoch a foreigner who has lived long enough is naturalised (%)")
+    purchase_cost: int = rule(20, 0, 100000, J, "Coin a foreigner pays to buy citizenship")
+    rightless_court_bias: int = rule(15, 0, 100, J, "Weight a judge's verdict leans against one without the right to the courts")
+    rightless_office: int = rule(1, 0, 1, J, "Whether a realm keeps those without the right of office out of office")
+
+
+@dataclass(frozen=True)
+class BorderRules:
+    delay_pct: int = rule(10, 0, 100, J, "Trade a route into a realm loses for each epoch of delay at its border at full enforcement (%)")
+    fee_per_100: int = rule(5, 0, 1000, J, "Coin a realm takes at its border for each hundred goods carried in at full fee, in hundredths of the fee")
+    forged_pass_pct: int = rule(50, 0, 100, J, "Share of corruption at a border by which forged passes slip past its fees (%)")
+    war_enforcement: int = rule(60, 0, 100, J, "Enforcement a realm at war sets at its border when it first closes it")
+    war_delay: int = rule(1, 0, 20, J, "Epochs of delay a realm at war sets at its border when it first closes it")
+
+
+@dataclass(frozen=True)
+class PoorReliefRules:
+    relief_per_coin: int = rule(1, 0, 100, J, "Poverty pressure each ten coin of relief takes off the towns it reaches each epoch")
+    adopt_from: int = rule(50, 0, 100, J, "Mean poverty of its towns from which a realm takes up poor relief")
+    adopt_budget: int = rule(50, 0, 100000, J, "Coin a realm sets aside for poor relief each epoch when it takes it up")
+    adopt_reach: int = rule(40, 0, 100, J, "Share of its poor that a realm's relief reaches when it takes it up (%)")
+    theft_pct: int = rule(30, 0, 100, J, "Share by which full relief lowers theft among the poor (%)")
+
+
+@dataclass(frozen=True)
+class MeasureRules:
+    trade_pct: int = rule(10, 0, 100, J, "Trade a realm with standard measures gains (%)")
+    tax_pct: int = rule(5, 0, 100, J, "Taxes a realm with standard measures collects more (%)")
+    adopt_members: int = rule(3, 1, 100, J, "Towns a realm holds before it sets standard weights and measures")
+    adopt_fraud: int = rule(10, 0, 100, J, "Fraud with false measures in a realm when it first sets its standard")
+    fraud_chance: int = rule(20, 0, 100, J, "Chance at full fraud that a merchant of the realm is tried for false measures each epoch (%)")

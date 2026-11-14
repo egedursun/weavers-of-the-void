@@ -246,10 +246,12 @@ async def uprisings(ctx: TickContext) -> None:
 
 @reads(
     "mortal.age",
+    "table.age_set_members",
     "table.bonds",
     "table.epoch_year_cursors",
     "table.house_members",
     "table.kinship_systems",
+    "table.memberships",
     "table.nodes",
     "table.people_biology",
     "table.people_culture",

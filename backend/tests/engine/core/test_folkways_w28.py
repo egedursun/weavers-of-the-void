@@ -55,7 +55,7 @@ from aerona.engine.folkways.biases import BiasTally, keep_biases, lean, lean_com
 from aerona.engine.folkways.control import start_hunt
 from aerona.engine.folkways.mishaps import MishapTally, keep_mishaps
 from aerona.engine.folkways.nutrition import NutritionTally, keep_nutrition
-from aerona.engine.folkways.purity import PurityTally, barred_professions, keep_purity, unclean
+from aerona.engine.folkways.purity import PurityTally, apart_at_table, barred_professions, keep_purity, unclean
 from aerona.engine.folkways.witchcraft import WitchTally, keep_witchcraft
 from aerona.engine.folkways.wrongs import wrongly_condemned
 from aerona.engine.mind.ideas import turn_over
@@ -184,6 +184,11 @@ async def test_a_caste_rank_passes_to_children_and_bars_the_work_of_other_ranks(
     session.add(PurityRow(holder_node_id=noble.id, state=PurityState.PURE, rank_id=high.id, locked=[]))
     await session.flush()
     assert not await may_wed(session, tuned_rules(), child, noble)
+    assert await apart_at_table(session, child.id, noble.id)
+    high.commensal = False
+    low.commensal = False
+    await session.flush()
+    assert not await apart_at_table(session, child.id, noble.id)
 
 
 async def test_misfortune_is_blamed_by_the_culture_and_witchcraft_brings_an_accusation_and_a_trial(session: AsyncSession, world: CoreWorld) -> None:

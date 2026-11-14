@@ -1565,6 +1565,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "settlement.population",
     "settlement.prosperity",
     "settlement.wealth",
+    "table.age_sets",
     "table.applied_fixups",
     "table.armies",
     "table.army_officers",

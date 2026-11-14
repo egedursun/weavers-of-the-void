@@ -5,9 +5,11 @@ from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.catalog.thoughts import THOUGHTS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.tables.customs import BodyMarkRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import BodyPart, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.customs import MarkKind, MarkMeaning
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import ActKind, ThoughtKind
 from aerona.domain.enums.mortal import CrimeKind, DeathCause, PunishmentKind
@@ -157,6 +159,7 @@ async def sentence(
             lethal=False,
         )
         await add_infamy(ctx.session, culprit.id, table.branding_infamy, ctx.epoch, rules=ctx.rules)
+        ctx.session.add(BodyMarkRow(holder_node_id=culprit.id, kind=MarkKind.BRAND, meaning=MarkMeaning.CRIME, placed_epoch=ctx.epoch, locked=[]))
     elif punishment in MUTILATIONS:
         for part in MUTILATIONS[punishment]:
             harm = Harm(

@@ -14,6 +14,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import HookDemand, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Deposition, TrialKind, Verdict
@@ -24,6 +25,7 @@ from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.customs.rights import has_right
 from aerona.engine.intrigue.favours import hook_on, use_hook
 from aerona.engine.intrigue.identities import EXPOSURE
 from aerona.engine.intrigue.secrets import learn
@@ -343,6 +345,8 @@ async def frame_case(ctx: TickContext, target: EntityRow, framer_id: int, crime:
 async def by_judge(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> bool:
     table = ctx.rules.trials
     score = case.evidence
+    if not await has_right(ctx.session, accused.id, MemberRight.COURTS, case.polity_entity_id):
+        score += ctx.rules.citizenship.rightless_court_bias
     if case.judge_entity_id is not None:
         traits = await traits_of(ctx.session, case.judge_entity_id)
         if TraitKind.ARBITRARY in traits and TraitKind.JUST not in traits:

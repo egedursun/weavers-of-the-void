@@ -236,6 +236,8 @@ class SonToolId(StrEnum):
     BLESS_CHARM = "bless_charm"
     SEND_MISFORTUNE = "send_misfortune"
     STIR_WITCH_HUNT = "stir_witch_hunt"
+    STIR_REVIVAL = "stir_revival"
+    PROCLAIM_RIGHT = "proclaim_right"
 
 
 class MortalToolId(StrEnum):
@@ -393,6 +395,8 @@ class MortalToolId(StrEnum):
     PURIFY_SELF = "purify_self"
     ACCUSE_OF_WITCHCRAFT = "accuse_of_witchcraft"
     MAKE_CHARM = "make_charm"
+    JOIN_COOPERATIVE = "join_cooperative"
+    SEEK_CITIZENSHIP = "seek_citizenship"
 
 
 ToolId = SonToolId | MortalToolId

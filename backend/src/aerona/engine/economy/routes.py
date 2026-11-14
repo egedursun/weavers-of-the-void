@@ -36,6 +36,7 @@ from aerona.domain.enums.urban import Preservation
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats, TradeRouteStats
 from aerona.engine.context import TickContext
+from aerona.engine.customs.rights import crossing
 from aerona.engine.demography.tongues import trade_barrier
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.cargo import carriage_factor, spoilage
@@ -643,6 +644,8 @@ async def carry(
     capacity = await carried_capacity(ctx, route, stat(route.entity, "capacity") or 0)
     if book.closed & set(route.ends):
         capacity = round_half_up(capacity * (PERCENT - ctx.rules.plague_responses.border_trade_pct) / PERCENT)
+    factor, fee, toll_realm = await crossing(ctx.session, ctx.rules, route.ends)
+    capacity = round_half_up(capacity * factor)
     season = season_factor(route)
     trust = await coin_trust(ctx, book, route.ends)
     moved = 0
@@ -686,6 +689,10 @@ async def carry(
         tally.tolls += paid
         if moved >= capacity:
             break
+    if toll_realm is not None and moved:
+        realm = await ctx.session.get(PolityProfileRow, toll_realm)
+        if realm is not None and "treasury" not in realm.locked:
+            realm.treasury += round_half_up(moved * fee)
     tally.moved += moved
     tally.volumes[route.entity.id] = moved
     return moved

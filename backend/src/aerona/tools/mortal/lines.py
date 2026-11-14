@@ -240,4 +240,6 @@ SABOTAGE_REMAKING = Line("tools.mortal.sabotage_remaking", "{me} set back {plan}
 SWEAR_VENGEANCE = Line("tools.mortal.swear_vengeance", "{me} swore vengeance on {foe}.")
 PURIFY_SELF = Line("tools.mortal.purify_self", "{me} sought to be made pure.")
 ACCUSE_OF_WITCHCRAFT = Line("tools.mortal.accuse_of_witchcraft", "{me} accused {accused} of witchcraft.")
+JOIN_COOPERATIVE = Line("tools.mortal.join_cooperative", "{me} pooled their means in {faction}.")
+SEEK_CITIZENSHIP = Line("tools.mortal.seek_citizenship", "{me} became a citizen.")
 MAKE_CHARM = Line("tools.mortal.make_charm", "{me} made {item} a charm.")

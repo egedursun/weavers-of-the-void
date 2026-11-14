@@ -38,6 +38,7 @@ from aerona.engine.interconnect.catalog_collective import COLLECTIVE_MECHANICS
 from aerona.engine.interconnect.catalog_communication import COMMUNICATION_MECHANICS
 from aerona.engine.interconnect.catalog_cosmography import COSMOGRAPHY_MECHANICS
 from aerona.engine.interconnect.catalog_couplings import COUPLING_MECHANICS
+from aerona.engine.interconnect.catalog_customs import CUSTOMS_MECHANICS
 from aerona.engine.interconnect.catalog_cycles import CYCLE_MECHANICS
 from aerona.engine.interconnect.catalog_divine import DIVINE_MECHANICS
 from aerona.engine.interconnect.catalog_dominion import DOMINION_MECHANICS
@@ -1022,6 +1023,7 @@ BUILT_IN = (
     *ARTS_MECHANICS,
     *AGES_MECHANICS,
     *FOLKWAYS_MECHANICS,
+    *CUSTOMS_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,

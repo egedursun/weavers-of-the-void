@@ -23,6 +23,7 @@ from aerona.engine.body.cohorts import cohort, labour_factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import cosmography_of
+from aerona.engine.customs.relief import commute_share
 from aerona.engine.dominion.effects import step_here
 from aerona.engine.ecology.domestication import draught
 from aerona.engine.economy.book import EconomyBook
@@ -409,6 +410,7 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
             row = ResourceWorkerRow(resource_entity_id=resource.id, community_entity_id=community.id, workers=0)
             ctx.session.add(row)
             book.workers.setdefault(resource.id, {})[community.id] = row
+        workers = round_half_up(workers * await commute_share(ctx.session, community.id))
         if row.held:
             workers = row.workers
         else:
