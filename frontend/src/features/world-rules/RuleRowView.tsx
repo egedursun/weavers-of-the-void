@@ -4,6 +4,7 @@ import {
   RotateCcw,
   TriangleAlert,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -61,7 +62,7 @@ export function GroupHeader({
         </SectionTitle>
       </Button>
       <Label className='shrink-0'>
-        {row.total === 1 ? '1 rule' : `${row.total} rules`}
+        {row.total === 1 ? '1 rule' : `${plural(row.total, 'rule', 'rules')}`}
       </Label>
       {row.changed > 0 && (
         <>

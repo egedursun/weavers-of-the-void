@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow
 from aerona.db.tables.polity import HouseMemberRow
@@ -77,11 +78,11 @@ async def enslaved(ctx: TickContext, community: EntityRow, count: int, *, by_han
             kind=MemoryKind.HELD_CAPTIVE,
             magnitude=-ctx.rules.mobility.enslaved_memory,
             epoch=ctx.epoch,
-            note=f"{count} were put in chains",
+            note=f"{several(count, 'was', 'were')} put in chains",
         )
     await note(
         ctx,
-        f"{community.name} put {count} captives in chains as slaves.",
+        f"{community.name} put {several(count, 'captive', 'captives')} in chains as slaves.",
         key="society.enslaved",
         ids=[community.id, *(item.id for item in kin)],
         kind=ChronicleKind.WORLD,

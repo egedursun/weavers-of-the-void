@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react'
 import { postAction } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
@@ -77,7 +78,7 @@ export function DistrictPanel({
       icon={spec.icon}
       tone={spec.tone ?? 'muted'}
       title={`${spec.label} · ${zone.label}`}
-      caption={`Level ${district.level}, hex ${district.q}, ${district.r} · ${district.cells.length} hexes · ${district.residents} people in ${district.dwellings} homes (${HOUSING[district.housing].label.toLowerCase()})`}
+      caption={`Level ${district.level}, hex ${district.q}, ${district.r} · ${plural(district.cells.length, 'hex', 'hexes')} · ${district.residents} people in ${district.dwellings} homes (${HOUSING[district.housing].label.toLowerCase()})`}
       aside={
         <Button
           size='icon-sm'

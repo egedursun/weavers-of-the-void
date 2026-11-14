@@ -13,6 +13,7 @@ from aerona.catalog.achievements import ACHIEVEMENTS
 from aerona.catalog.scenarios import SCENARIOS, doom_limit
 from aerona.constants.units import PERCENT
 from aerona.core.errors import AeronaError
+from aerona.core.grammar import several
 from aerona.db.repositories.notifications import NotificationDraft, NotificationRepository, fitted_texts, raw_title
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.bonds import BondRow
@@ -108,7 +109,7 @@ async def _one_faith(session: AsyncSession, rules: Rules) -> ScenarioProgress:
     total = len(peoples)
     return ScenarioProgress(
         _percent(most / total * PERCENT if total else 0),
-        f"{most}/{total} peoples worship the same god",
+        f"{most}/{several(total, 'people', 'peoples')} worship the same god",
         done=total >= rules.goals.one_faith_min_peoples and most == total,
     )
 
@@ -118,7 +119,9 @@ async def _many_worlds(session: AsyncSession, rules: Rules) -> ScenarioProgress:
     worlds = list(await session.scalars(select(WorldRow.id).where(WorldRow.discovery != Discovery.FORGOTTEN)))
     statement = select(EntityRow.world_id).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON)
     inhabited = len(set(await session.scalars(statement)) & set(worlds))
-    return ScenarioProgress(_percent(inhabited / target * PERCENT), f"{inhabited}/{target} worlds inhabited ({len(worlds)} worlds)", done=inhabited >= target)
+    return ScenarioProgress(
+        _percent(inhabited / target * PERCENT), f"{inhabited}/{target} worlds inhabited ({several(len(worlds), 'world', 'worlds')})", done=inhabited >= target
+    )
 
 
 async def _loyal_pantheon(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:

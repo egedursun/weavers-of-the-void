@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Check, Circle } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
@@ -68,7 +69,7 @@ export function FirstEpochsGuide({ epoch }: FirstEpochsGuideProps) {
   return (
     <Section
       title='The first epochs'
-      description={`${finished} of ${ONBOARDING_STEPS.length} steps taken. You can reopen this guide from Settings.`}
+      description={`${finished} of ${plural(ONBOARDING_STEPS.length, 'step', 'steps')} taken. You can reopen this guide from Settings.`}
       surface='card'
       actions={
         <Button variant='outline' size='sm' onClick={dismiss}>

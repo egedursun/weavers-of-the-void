@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, ListChecks, LoaderCircle, X } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatDuration } from '@/lib/units'
+import { formatDuration, plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import {
   JOB_KIND_LABEL,
@@ -190,7 +190,10 @@ export function JobsMenu() {
   const running = active.filter((job) => statusOf(job) === 'running').length
   const failed = finished.filter((job) => statusOf(job) === 'failed').length
   const now = useNow(active.length > 0)
-  const label = active.length > 0 ? `${active.length} jobs in progress` : 'Jobs'
+  const label =
+    active.length > 0
+      ? `${plural(active.length, 'job', 'jobs')} in progress`
+      : 'Jobs'
   return (
     <Popover>
       <Tooltip>

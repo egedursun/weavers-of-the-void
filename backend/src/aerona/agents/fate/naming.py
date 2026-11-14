@@ -12,6 +12,7 @@ from aerona.agents.fate.name_check import dialect_letters, fresh_name, name_prob
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.text import ENGINE_DESCRIPTION_PREFIXES, sanitize, without_engine_prefix
+from aerona.core.grammar import several
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
@@ -162,7 +163,8 @@ async def name_pending_records(runtime: AgentRuntime) -> NamingReport:
         async with runtime.database.write() as session:
             await session.execute(update(EntityRow).where(EntityRow.id.in_(ids)).values(naming_attempts=EntityRow.naming_attempts + 1))
             remaining = await pending_count(session)
-        runtime.note(f"{len(ids)} records born of the world's own course are being named in {len(batches)} batches ({remaining} remaining).")
+        records = several(len(ids), "record", "records")
+        runtime.note(f"{records} born of the world's own course are being named in {several(len(batches), 'batch', 'batches')} ({remaining} remaining).")
         results = await asyncio.gather(*(run_batch(runtime, batch, report, max_tries) for batch in batches), return_exceptions=True)
         failures = [result for result in results if isinstance(result, BaseException)]
         if len(failures) == len(results):

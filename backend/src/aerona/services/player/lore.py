@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import BoostTrigger, CustomCatalog, IdeologyTenet, MagicSchool, RiteEffectKind, SpeakerKind, SummonForm, Technique
@@ -377,7 +378,7 @@ async def teach_rite(scope: PlayerScope, command: TeachRite) -> Effect:
 @player_action("rite:forbid", ActionKind.EDIT_RECORD)
 async def forbid_rite(scope: PlayerScope, command: ForbidRite) -> Effect:
     held = await control.forbid_rite(await scope.context("rite_forbid"), command.rite_id, command.authority_id, forbidden=command.forbidden)
-    return Effect(f"The rite is forbidden in {len(held)} places." if held else "The rite is free again.", command.rite_id)
+    return Effect(f"The rite is forbidden in {several(len(held), 'place', 'places')}." if held else "The rite is free again.", command.rite_id)
 
 
 @player_action("rite:dispel", ActionKind.OTHER)
@@ -389,7 +390,7 @@ async def dispel_rite(scope: PlayerScope, command: RiteTarget) -> Effect:
 @player_action("rite:requirements", ActionKind.EDIT_RECORD)
 async def set_rite_requirements(scope: PlayerScope, command: RiteRequirements) -> Effect:
     row = await control.set_requirements(await scope.context("rite_requirements"), command.rite_id, command.requirements)
-    return Effect(f"The rite now asks {len(row.requirements)} things of its caster.", command.rite_id)
+    return Effect(f"The rite now asks {several(len(row.requirements), 'thing', 'things')} of its caster.", command.rite_id)
 
 
 @player_action("research:holder", ActionKind.EDIT_RECORD)

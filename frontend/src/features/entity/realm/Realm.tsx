@@ -33,6 +33,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -447,7 +448,7 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
     <Panel
       title='The court'
       icon={Crown}
-      hint={`${filled} of ${below.length} seats filled`}
+      hint={`${filled} of ${plural(below.length, 'seat', 'seats')} filled`}
     >
       <div data-surface='OfficesChart' className='flex min-w-0 flex-col gap-3'>
         <div className='flex min-w-0 items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3'>

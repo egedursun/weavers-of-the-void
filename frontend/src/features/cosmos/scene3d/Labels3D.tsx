@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Portrait } from '@/components/domain'
 import { Text } from '@/components/typography'
@@ -248,7 +249,7 @@ export function LabelOverlay({
             tone='inherit'
             className='opacity-70'
           >
-            {`${STAR_TYPE_LABEL[star.star_type]} · ${index.planetsOf(star.id).length} worlds`}
+            {`${STAR_TYPE_LABEL[star.star_type]} · ${plural(index.planetsOf(star.id).length, 'world', 'worlds')}`}
           </Text>
         </div>
       ))}

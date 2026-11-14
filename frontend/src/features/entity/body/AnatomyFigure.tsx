@@ -1,6 +1,7 @@
 import { type SVGProps, useId } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Muted } from '@/components/typography'
 import {
   DRAW_LABELS,
@@ -249,7 +250,7 @@ function Figure({
     <svg
       viewBox={`0 0 ${total} ${plan.height}`}
       role='img'
-      aria-label={`Body diagram, ${wounded.length} parts marked`}
+      aria-label={`Body diagram, ${plural(wounded.length, 'part', 'parts')} marked`}
       className='h-auto w-full max-w-xl'
     >
       <Raw svg={shared.defs} scope={scope} />

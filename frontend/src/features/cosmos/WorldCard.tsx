@@ -22,6 +22,7 @@ import {
   Wind,
 } from 'lucide-react'
 import { formatCompact, formatDecimal } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -220,7 +221,7 @@ export function WorldCard({
           )}
           {moons.length > 0 && (
             <>
-              {` · ${moons.length} moons: `}
+              {` · ${plural(moons.length, 'moon', 'moons')}: `}
               {moons.map((moon, position) => (
                 <span key={moon.world.id}>
                   {position > 0 && ', '}

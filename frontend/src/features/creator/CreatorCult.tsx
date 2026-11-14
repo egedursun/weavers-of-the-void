@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react'
 import { formatDecimal } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import {
   EmptyState,
@@ -9,7 +10,7 @@ import {
   Section,
 } from '@/components/domain'
 import { type EntitySummary } from '@/features/pantheon/api'
-import { plural, useLabels } from '@/features/pantheon/labels'
+import { useLabels } from '@/features/pantheon/labels'
 
 export function CreatorCult({
   cult,

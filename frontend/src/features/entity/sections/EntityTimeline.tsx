@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/typography'
 import { kindTone } from '@/features/chronicle/chronicleKinds'
@@ -49,8 +50,8 @@ export function EntityTimeline({
           >
             <a
               href={`#epoch-${column.epoch}`}
-              aria-label={`Epoch ${column.epoch}: ${column.count} records`}
-              title={`Epoch ${column.epoch}: ${column.count} records`}
+              aria-label={`Epoch ${column.epoch}: ${plural(column.count, 'record', 'records')}`}
+              title={`Epoch ${column.epoch}: ${plural(column.count, 'record', 'records')}`}
               onClick={(event) => {
                 event.preventDefault()
                 if (column.count > 0) onPick(column.epoch)

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.gathering import AttendanceReason, CollectionKind, CollectionRole, GatheringKind, GuestRole, Milestone
 from aerona.domain.enums.site import BattlefieldFeature, RoomContentKind, SiteChallenge, SiteRoomKind
@@ -306,7 +306,7 @@ async def remove_content(scope: PlayerScope, command: ContentTarget) -> Effect:
 @player_action("site:delve", ActionKind.EDIT_RECORD)
 async def delve(scope: PlayerScope, command: DelveOrder) -> Effect:
     walk = await control.force_delve(await scope.context("site_delve"), command.delver_id, command.site_id)
-    told = "reached the heart of the site" if walk.reached_heart else f"cleared {walk.cleared} rooms"
+    told = "reached the heart of the site" if walk.reached_heart else f"cleared {several(walk.cleared, 'room', 'rooms')}"
     return Effect(f"The delver {told}.", command.site_id, values={"cleared": walk.cleared})
 
 

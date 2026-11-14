@@ -8,6 +8,7 @@ import {
   Trees,
   Wheat,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -48,7 +49,7 @@ function Legend({ scene }: { scene: LandScene }) {
         <span key={cover} className='flex items-center gap-1.5'>
           <Dot fill={COVER_FILL[cover]} />
           <Text as='span' variant='caption'>
-            {`${COVERS[cover]} · ${count} of ${scene.tiles.length} tiles`}
+            {`${COVERS[cover]} · ${count} of ${plural(scene.tiles.length, 'tile', 'tiles')}`}
           </Text>
         </span>
       ))}

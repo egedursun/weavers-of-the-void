@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -483,7 +484,7 @@ export function MemoriesSection({ nodeId }: { nodeId: number }) {
             />
           ) : (
             <MindCard
-              title={`${mind.memories.length} memories`}
+              title={`${plural(mind.memories.length, 'memory', 'memories')}`}
               icon={MEMORY_ICON}
             >
               <Timeline label='Memories'>

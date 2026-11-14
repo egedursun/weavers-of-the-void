@@ -2,7 +2,7 @@ from pydantic import Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.sons import SonPowerRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
@@ -209,7 +209,7 @@ async def bloodline_curse(scope: PlayerScope, command: BloodlineCurse) -> Effect
         count = await god_power.lift_bloodline_curse(scope.session, scope.rules, root.id)
         return Effect(f"The curse was lifted from {count} of {root.name}'s line.", root.id, kind=ActionKind.LIFT_LINEAGE_CURSE, tool="bloodline_curse:lift")
     members = await god_power.curse_bloodline(scope.session, scope.rules, root.id)
-    return Effect(f"{root.name}'s bloodline was cursed ({len(members)} members).", root.id, values={"members": len(members)})
+    return Effect(f"{root.name}'s bloodline was cursed ({several(len(members), 'member', 'members')}).", root.id, values={"members": len(members)})
 
 
 @player_action("convert", ActionKind.CONVERT)

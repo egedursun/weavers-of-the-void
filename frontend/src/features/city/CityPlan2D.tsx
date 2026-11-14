@@ -1,3 +1,4 @@
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { DISTRICT_SPEC } from '@/features/entity/society/labels'
 import { type CityPick } from './CityScene3D'
@@ -96,7 +97,7 @@ export function CityPlan2D({
     <svg
       viewBox={box.join(' ')}
       role='img'
-      aria-label={`Plan of ${scene.town.name}: ${scene.districts.length} districts and ${scene.buildings.length} buildings`}
+      aria-label={`Plan of ${scene.town.name}: ${plural(scene.districts.length, 'district', 'districts')} and ${plural(scene.buildings.length, 'building', 'buildings')}`}
       className={fill ? 'block h-full w-full' : 'block h-auto w-full'}
     >
       {walls.map(([x, z], index) => (

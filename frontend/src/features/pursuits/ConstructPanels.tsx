@@ -9,6 +9,7 @@ import {
   Power,
   ScrollText,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { table } from '@/features/arcana/labels'
@@ -570,7 +571,7 @@ function RulesCard({ row, blocked }: { row: Rules; blocked: string | null }) {
       icon={binding.icon}
       tone={binding.tone}
       title={`Orders of ${row.owner.name}`}
-      caption={`${binding.label} by ${token.label.toLowerCase()} · ${row.orders.length} orders`}
+      caption={`${binding.label} by ${token.label.toLowerCase()} · ${plural(row.orders.length, 'order', 'orders')}`}
       removeLabel='Strike the orders away'
       editTitle='Set the instruction set'
       note='Whoever holds the command token commands the orders: the owner of a held item or network key, the ruler of an office, the heir of a bloodline, or whoever the word was given to. Steal the token and the construct answers the thief. A kill switch stills the construct once its will passes every order, if the keeper of the switch lives.'

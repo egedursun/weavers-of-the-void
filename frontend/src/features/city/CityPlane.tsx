@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import { postAction } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -73,7 +74,7 @@ function ZoneFilter({
               size='sm'
               variant='outline'
               pressed={shown.has(zone)}
-              aria-label={`${spec.label}: ${row?.districts ?? 0} districts, ${row?.buildings ?? 0} buildings`}
+              aria-label={`${spec.label}: ${plural(row?.districts ?? 0, 'district', 'districts')}, ${plural(row?.buildings ?? 0, 'building', 'buildings')}`}
               onPressedChange={(pressed) => {
                 const next = new Set(shown)
                 if (pressed) next.add(zone)
@@ -349,7 +350,7 @@ function CityBody({
                     icon={spec.icon}
                     tone={spec.tone ?? 'muted'}
                     title={`${spec.label} · level ${row.level}`}
-                    caption={`${ZONES[row.zone].label} · ${row.cells.length} hexes · ${row.dwellings} homes · desirability ${row.desirability}`}
+                    caption={`${ZONES[row.zone].label} · ${plural(row.cells.length, 'hex', 'hexes')} · ${row.dwellings} homes · desirability ${row.desirability}`}
                     aside={
                       <Button
                         size='sm'

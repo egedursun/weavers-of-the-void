@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { BookOpen, Building2, Mountain } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -96,8 +97,8 @@ export function CitiesView({
           description='Every town on its hexes and every land on its tiles, drawn from what the engine reckons: zones, districts, buildings at their stage, homes, walls, water, cover and deposits. Rule any of it from the scene.'
           meta={
             <>
-              <Badge variant='outline'>{`${towns.length} towns`}</Badge>
-              <Badge variant='outline'>{`${regions.length} lands`}</Badge>
+              <Badge variant='outline'>{`${plural(towns.length, 'town', 'towns')}`}</Badge>
+              <Badge variant='outline'>{`${plural(regions.length, 'land', 'lands')}`}</Badge>
             </>
           }
         />

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.culture import BookContentRow, ItemProfileRow
 from aerona.db.tables.economy import WorldMaterialRow
@@ -126,7 +127,7 @@ async def traffic(ctx: TickContext, captor: EntityRow, count: int, origin_id: in
     seller = gang_entity.name if gang_entity else "Outlaws"
     await note(
         ctx,
-        f"{seller} bought {count} captives in {captor.name}, where slavery is banned, and sold them in {market.name}.",
+        f"{seller} bought {several(count, 'captive', 'captives')} in {captor.name}, where slavery is banned, and sold them in {market.name}.",
         key="contraband.slaves",
         ids=[gang.faction_entity_id, captor.id, market.id],
         kind=ChronicleKind.TRADE,

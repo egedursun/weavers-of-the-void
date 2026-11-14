@@ -7,6 +7,7 @@ from aerona.cartography.biomes import Biome
 from aerona.catalog.weather import WEATHER
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
@@ -326,7 +327,7 @@ async def rename_months(session: AsyncSession, knowledge_id: int, names: list[st
     if calendar is None:
         raise NotFoundError("This record keeps no calendar.")
     if len(names) != len(calendar.month_names):
-        raise ValidationFailedError(f"The calendar has {len(calendar.month_names)} months; name each of them.")
+        raise ValidationFailedError(f"The calendar has {several(len(calendar.month_names), 'month', 'months')}; name each of them.")
     calendar.month_names = [name.strip() for name in names]
     await session.flush()
     return calendar

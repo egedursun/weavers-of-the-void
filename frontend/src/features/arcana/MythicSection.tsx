@@ -12,6 +12,7 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { actKindValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -347,7 +348,11 @@ function QuestForm({
       title='Send on a heroquest'
       note='The quester walks a legend step by step in a mythic realm; companions make each step easier.'
       columns={3}
-      meta={<Chip icon={UserPlus}>{`${members.length} companions`}</Chip>}
+      meta={
+        <Chip
+          icon={UserPlus}
+        >{`${plural(members.length, 'companion', 'companions')}`}</Chip>
+      }
       action={
         <Button
           size='sm'

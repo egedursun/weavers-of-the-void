@@ -3,6 +3,7 @@ import { Link2, Unlink } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -178,7 +179,7 @@ export function BondList({
         )}
       </Paged>
       {total > bonds.length && (
-        <Muted variant='caption'>{`Showing ${bonds.length} of ${total} bonds.`}</Muted>
+        <Muted variant='caption'>{`Showing ${bonds.length} of ${plural(total, 'bond', 'bonds')}.`}</Muted>
       )}
     </div>
   )

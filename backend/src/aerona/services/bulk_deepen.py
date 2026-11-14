@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.activity import ActivityLog, collecting
 from aerona.core.errors import BusyError, ConflictError
+from aerona.core.grammar import several
 from aerona.db.session import Database
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -176,9 +177,11 @@ class BulkDeepening:
         if not queue:
             raise ConflictError("No undeepened records left.")
         self.state = BulkState(running=True, total=len(queue), started=datetime.now(UTC))
-        self.log(LogLevel.INFO, f"Bulk deepening started: {len(queue)} records, by importance.")
+        self.log(LogLevel.INFO, f"Bulk deepening started: {several(len(queue), 'record', 'records')}, by importance.")
         if self._jobs is not None:
-            self._tracked = await self._jobs.begin_external(JobKind.DEEPEN, {JOB_LABEL_KEY: f"bulk deepening of {len(queue)} records", "total": len(queue)})
+            self._tracked = await self._jobs.begin_external(
+                JobKind.DEEPEN, {JOB_LABEL_KEY: f"bulk deepening of {several(len(queue), 'record', 'records')}", "total": len(queue)}
+            )
         self._task = asyncio.create_task(self._run(queue))
         return self.state
 

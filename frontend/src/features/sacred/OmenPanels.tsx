@@ -11,6 +11,7 @@ import {
   TrendingDown,
   Users,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -891,7 +892,7 @@ export function FeedingPanel({
         legend={[{ text: 'Essence drawn', variant: 'success' }]}
         rows={[...drawn.entries()].map(([feeling, essence]) => ({
           key: feeling,
-          caption: `${EMOTION_ICONS[feeling].label}: ${essence} essence over ${data.harvests.filter((item) => item.emotion === feeling).length} epochs`,
+          caption: `${EMOTION_ICONS[feeling].label}: ${essence} essence over ${plural(data.harvests.filter((item) => item.emotion === feeling).length, 'epoch', 'epochs')}`,
           segments: [{ value: essence, fill: 'fill-success' }],
         }))}
         noun={['feeling', 'feelings']}

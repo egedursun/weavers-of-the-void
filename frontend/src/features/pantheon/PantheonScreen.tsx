@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { navItem } from '@/config/navigation'
 import { Crown, LibraryBig } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -48,7 +49,7 @@ function SonGrid({ state }: { state: WorldState }) {
       : null
   return (
     <Section
-      title={`Pantheon · ${sons.length} sons`}
+      title={`Pantheon · ${plural(sons.length, 'son', 'sons')}`}
       description='Open a card to give orders, bless, add a star or ascend.'
       actions={<SummonButton />}
     >

@@ -10,6 +10,7 @@ import {
   Trash2,
   UserPlus,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -275,7 +276,7 @@ function SoundTimeline({ changes }: { changes: SoundChangeView[] }) {
       </Timeline>
       {changes.length > shown.length && (
         <Muted variant='caption'>
-          {`The latest ${shown.length} of ${changes.length} changes; every change is listed below.`}
+          {`The latest ${shown.length} of ${plural(changes.length, 'change', 'changes')}; every change is listed below.`}
         </Muted>
       )}
     </div>

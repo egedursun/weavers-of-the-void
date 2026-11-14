@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eraser, Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -797,7 +798,7 @@ function CommunityCards({ ctx }: { ctx: Ctx }) {
                 icon={PURSE_ICON}
                 tone='gold'
                 title={household.name}
-                meta={`Wealth ${household.wealth}, ${household.members.length} members${household.dwelling ? `, a ${household.dwelling.kind_label.toLowerCase()} of quality ${household.dwelling.effective_quality}` : ''}`}
+                meta={`Wealth ${household.wealth}, ${plural(household.members.length, 'member', 'members')}${household.dwelling ? `, a ${household.dwelling.kind_label.toLowerCase()} of quality ${household.dwelling.effective_quality}` : ''}`}
                 badges={
                   household.head ? (
                     <EntityLink kind='entity' id={String(household.head.id)}>

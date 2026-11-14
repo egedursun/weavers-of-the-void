@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import {
@@ -280,7 +281,7 @@ function MarketsList({ worldId }: { worldId: number }) {
         </div>
         <Badge variant='outline'>
           <Store />
-          {`${markets.data.length} markets in this world`}
+          {`${plural(markets.data.length, 'market', 'markets')} in this world`}
         </Badge>
       </div>
       <HoardControl

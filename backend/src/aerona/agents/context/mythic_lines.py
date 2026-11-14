@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.agents.context.dominion_lines import god_called, place_name, spoken
 from aerona.agents.context.scope import Scope
 from aerona.catalog.mythic import REALM_PHRASES, trial_at
+from aerona.core.grammar import several
 from aerona.db.tables.arcana import LawUpkeepRow, LongevityRow, VisStockRow, WarpingRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -54,7 +55,7 @@ async def myth_lines(scope: Scope, son: SonRow) -> list[str]:
     found = []
     questing = list(await session.scalars(select(HeroquestRow).where(HeroquestRow.god_node_id == son.id, HeroquestRow.state == HeroquestState.QUESTING)))
     if questing:
-        found.append(f"{len(questing)} mortals walk your myths in heroquests")
+        found.append(f"{several(len(questing), 'mortal', 'mortals')} walk your myths in heroquests")
     for row in await session.scalars(select(MantlingRow).where(MantlingRow.god_node_id == son.id, MantlingRow.state == MantlingState.WALKING)):
         found.append(f"{await place_name(scope, row.mortal_entity_id)} #{row.mortal_entity_id} walks your path toward godhood ({row.progress}%)")
     return found

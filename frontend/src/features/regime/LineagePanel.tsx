@@ -8,6 +8,7 @@ import {
   HeartCrack,
   Network,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -422,7 +423,7 @@ export function LineagePanel({
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Chip
           icon={GitBranch}
-        >{`${data.kin_lines.length} lines read here`}</Chip>
+        >{`${plural(data.kin_lines.length, 'line', 'lines')} read here`}</Chip>
       </div>
     </div>
   )

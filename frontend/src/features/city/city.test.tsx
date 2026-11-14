@@ -236,13 +236,13 @@ describe('city', () => {
     await expect
       .element(
         screen.getByRole('img', {
-          name: /Plan of Harrowmere: 2 districts and 1 buildings/,
+          name: /Plan of Harrowmere: 2 districts and 1 building/,
         })
       )
       .toBeVisible()
     await expect
       .element(
-        screen.getByText('Residential · 1 districts · 2 hexes · 0 buildings')
+        screen.getByText('Residential · 1 district · 2 hexes · 0 buildings')
       )
       .toBeVisible()
     await screen.getByRole('button', { name: 'Rule it' }).first().click()
@@ -323,7 +323,7 @@ describe('city', () => {
     await expect
       .element(
         screen.getByRole('img', {
-          name: /Land of Ashreach: 3 tiles, 1 settlements, 1 deposits/,
+          name: /Land of Ashreach: 3 tiles, 1 settlement, 1 deposit/,
         })
       )
       .toBeVisible()

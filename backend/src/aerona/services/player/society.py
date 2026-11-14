@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind
@@ -166,7 +167,7 @@ async def contact(scope: PlayerScope, command: Contact) -> Effect:
 @player_action("world:golden_age", ActionKind.GOLDEN_AGE)
 async def golden_age(scope: PlayerScope, command: WorldTarget) -> Effect:
     count = await proclaim_golden_age(await scope.context("golden_age"), command.world_id)
-    return Effect(f"A golden age dawned for {count} communities.", values={"communities": count})
+    return Effect(f"A golden age dawned for {several(count, 'community', 'communities')}.", values={"communities": count})
 
 
 @player_action("world:end_golden_age", ActionKind.GOLDEN_AGE)

@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.operations import AFFLICTIONS, GROUND_LABELS, QUIRK_ORIGINS, VIRTUES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -193,7 +194,7 @@ async def launch(
     tally.launched += 1
     await note(
         ctx,
-        f"{leader.name} set out with {len(companions)} companions into {GROUND_LABELS[ground]}: {target.name}.",
+        f"{leader.name} set out with {several(len(companions), 'companion', 'companions')} into {GROUND_LABELS[ground]}: {target.name}.",
         key="expedition.set_out",
         ids=[leader.id, target.id, *[mortal.id for mortal in companions]],
     )
@@ -424,9 +425,10 @@ async def finish(ctx: TickContext, party: Party, tally: ExpeditionTally) -> None
         if member.resolve in AFFLICTIONS and "resolve" not in member.locked:
             member.resolve = ResolveKind.STEADY
     await maybe_quirk(ctx, party, E.RETURN, tally)
+    crew = several(len(party.members), "member", "members")
     await note(
         ctx,
-        f"{party.row.name} came back with {party.row.found} finds and {len(party.alive)} of its {len(party.members)} members.",
+        f"{party.row.name} came back with {several(party.row.found, 'find', 'finds')} and {len(party.alive)} of its {crew}.",
         key="expedition.returned",
         ids=[member.mortal_entity_id for member in party.alive],
     )

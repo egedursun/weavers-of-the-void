@@ -1,3 +1,4 @@
+import { plural } from '@/lib/units'
 import { Label, Muted } from '@/components/typography'
 import { type AgentMotiveView, type CellView, type NodeLawView } from './api'
 import { MOTIVES } from './labels'
@@ -59,7 +60,7 @@ function Graph({
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         role='img'
-        aria-label={`${owner} spying on ${target}: ${cells.length} cells and ${agents.length} agents`}
+        aria-label={`${owner} spying on ${target}: ${plural(cells.length, 'cell', 'cells')} and ${plural(agents.length, 'agent', 'agents')}`}
         className='block h-auto w-full max-w-xs'
       >
         {cells.map((cell) => {

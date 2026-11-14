@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow, SpyNetworkRow
 from aerona.db.write_guard import held
@@ -62,7 +63,7 @@ async def sacrifice(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow) 
         patron.essence += row.count * ctx.rules.captivity.sacrifice_essence_per_100 // HUNDRED
         cap_gained_essence(ctx.rules, patron, before)
     if row.origin_entity_id is not None:
-        await judged(ctx, captor.id, row.origin_entity_id, ActKind.HUMAN_SACRIFICE, note=f"{row.count} captives")
+        await judged(ctx, captor.id, row.origin_entity_id, ActKind.HUMAN_SACRIFICE, note=f"{several(row.count, 'captive', 'captives')}")
     return row.count
 
 

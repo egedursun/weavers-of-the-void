@@ -85,7 +85,7 @@ SETTINGS = Line("player.settings", "The laws of the cosmos changed: {fields}.")
 
 LANGUAGE_EDITED = Line("player.language.edited", "{language} was reshaped: {fields}.")
 SIGNATURE_REDRAWN = Line("player.language.signature", "The sound of {language} was drawn anew.")
-EPOCH_WORDS_ADDED = Line("player.language.epoch_words", "{count} words of the epoch entered the languages by hand.")
+EPOCH_WORDS_ADDED = Line("player.language.epoch_words", "{count:word|words} of the epoch entered the languages by hand.")
 
 VERDICT_OVERRIDDEN = Line("player.fate.verdict_override", "Fate was overruled on {entity}: {verdict}.")
 HISTORIAN_EDITED = Line("player.fate.historian_edit", "The account of the historian of {people} was amended.")

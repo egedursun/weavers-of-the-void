@@ -5,6 +5,7 @@ import { Atom, Boxes, Network, Search, Waypoints } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -154,7 +155,7 @@ export function SubsystemMatrix({
                       size='icon-sm'
                       disabled={!link}
                       disabledReason={link ? undefined : 'Nothing flows here.'}
-                      aria-label={`${named(SUBSYSTEM, source).label} to ${named(SUBSYSTEM, target).label}: ${link ? link.carriers.length : 0} carriers`}
+                      aria-label={`${named(SUBSYSTEM, source).label} to ${named(SUBSYSTEM, target).label}: ${plural(link ? link.carriers.length : 0, 'carrier', 'carriers')}`}
                       aria-pressed={active}
                       onClick={() => link && onPick(link)}
                       className={cn(
@@ -239,7 +240,7 @@ function LinkDetail({
           )
         })}
       </div>
-      <Label variant='overline'>{`Carried by ${link.carriers.length} values`}</Label>
+      <Label variant='overline'>{`Carried by ${plural(link.carriers.length, 'value', 'values')}`}</Label>
       <Carriers carriers={link.carriers} />
       <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
         {(['writers', 'readers'] as const).map((side) => (

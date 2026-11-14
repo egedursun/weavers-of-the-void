@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -537,7 +538,7 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
     positions,
     cluster: cluster && worlds.length > 1,
     focused: focusId !== null,
-    label: `Knowledge network with ${filtered.nodes.length} records and ${filtered.links.length} links.`,
+    label: `Knowledge network with ${plural(filtered.nodes.length, 'record', 'records')} and ${plural(filtered.links.length, 'link', 'links')}.`,
     onSelect: (node: GraphNode | null) => {
       if (node === null && pathNodes.size > 0) return
       setSelectedId(node?.id ?? null)

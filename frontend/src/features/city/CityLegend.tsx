@@ -1,3 +1,4 @@
+import { plural } from '@/lib/units'
 import { PagedList } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { ZoneDot } from './ZoneDot'
@@ -27,7 +28,7 @@ export function CityLegend({
         <span role='listitem' className='flex items-center gap-1.5'>
           <ZoneDot spec={ZONES[row.zone]} />
           <Text as='span' variant='caption'>
-            {`${ZONES[row.zone].label} · ${row.districts} districts${hexes ? ` · ${row.cells} hexes` : ''} · ${row.buildings} buildings`}
+            {`${ZONES[row.zone].label} · ${plural(row.districts, 'district', 'districts')}${hexes ? ` · ${plural(row.cells, 'hex', 'hexes')}` : ''} · ${plural(row.buildings, 'building', 'buildings')}`}
           </Text>
         </span>
       )}

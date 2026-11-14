@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.polity import OfficeRow
@@ -70,7 +71,7 @@ async def delve_site(call: MortalCall, args: SiteInput) -> str:
         fail(MortalResult.DELVE_REFUSED, why=f"{site.name} has no rooms to walk")
     walk = await delve(call.tick, call.me, site)
     call.target(site.id)
-    told = "you reached its heart" if walk.reached_heart else f"you cleared {walk.cleared} rooms"
+    told = "you reached its heart" if walk.reached_heart else f"you cleared {several(walk.cleared, 'room', 'rooms')}"
     return result(MortalResult.SITE_DELVED, site=site.name, told=told, found=len(walk.loot))
 
 

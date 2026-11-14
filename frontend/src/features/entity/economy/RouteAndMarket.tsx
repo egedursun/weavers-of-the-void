@@ -28,6 +28,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -213,7 +214,7 @@ export function PriceBoard({ marketId }: { marketId: number }) {
         <div className='flex min-w-0 flex-wrap gap-1.5'>
           <Badge variant='outline'>
             <Store />
-            {`${series.length} goods priced`}
+            {`${plural(series.length, 'good', 'goods')} priced`}
           </Badge>
           <Badge variant={scarce > 0 ? 'destructive' : 'outline'}>
             <TriangleAlert />

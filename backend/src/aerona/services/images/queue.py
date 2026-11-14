@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.image_styles import styled_prompt
 from aerona.core.activity import ActivityLog, collecting
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.session import Database
 from aerona.domain.enums.job import JobKind, JobStatus
 from aerona.events.bus import EventBus
@@ -330,10 +331,12 @@ class ImageQueue:
         if not targets:
             raise ConflictError("Every generated image is already in the world's image style." if restyle else "Every record already has an image.")
         self.bulk = BulkRun(running=True, auto=auto, restyle=restyle, total=len(targets), started=datetime.now(UTC))
-        self.log(LogLevel.INFO, f"{'Restyling' if restyle else 'Image generation'} started for {len(targets)} records.")
+        self.log(LogLevel.INFO, f"{'Restyling' if restyle else 'Image generation'} started for {several(len(targets), 'record', 'records')}.")
         tracked = None
         if self._jobs is not None:
-            label = (f"restyling of {len(targets)} images" if restyle else f"painting of {len(targets)} images") + (" after the epoch" if auto else "")
+            label = (f"restyling of {several(len(targets), 'image', 'images')}" if restyle else f"painting of {several(len(targets), 'image', 'images')}") + (
+                " after the epoch" if auto else ""
+            )
             tracked = await self._jobs.begin_external(JobKind.IMAGE, {JOB_LABEL_KEY: label, "total": len(targets), "auto": auto})
         self._bulk_task = asyncio.create_task(self._bulk([target.node_id for target in targets], tracked))
         return self.bulk

@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import fill
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.ages import ArcFigureRow, ArcRow, SetupRow
@@ -37,7 +38,7 @@ from aerona.prompts.contexts.chronicler import (
 )
 
 CREATOR_REF = "creator"
-TIMES_SUFFIX = " ({count} times)"
+TIMES_SUFFIX = " ({count:time|times})"
 ELLIPSIS = "…"
 VERDICT_KEYS = ("fate.thread_closed", "fate.prophecy_fulfilled")
 NOT_DEEDS = frozenset(
@@ -193,7 +194,7 @@ async def creator_actor(scope: Scope, epoch: int, limit: int) -> FactActor:
     deeds = []
     for group in folded.values():
         text = shorten(group[0].summary or group[0].kind.value.replace("_", " "), limit)
-        deeds.append(text + (TIMES_SUFFIX.format(count=len(group)) if len(group) > 1 else ""))
+        deeds.append(text + (fill(TIMES_SUFFIX, count=len(group)) if len(group) > 1 else ""))
     return FactActor(ref=CREATOR_REF, id=scope.creator.id, name=scope.creator.name, deeds=deeds, deed_count=len(records))
 
 

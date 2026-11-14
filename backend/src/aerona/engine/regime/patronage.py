@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import FavourRow
@@ -371,7 +372,10 @@ async def split_command(ctx: TickContext, realm: Realm, subject: EntityRow) -> b
         army.commander_entity_id = None
     if loose:
         await note(
-            ctx, f"{realm.entity.name} took {len(loose)} hosts out of the hands of {subject.name}.", key="power_bases.split", ids=[realm.entity.id, subject.id]
+            ctx,
+            f"{realm.entity.name} took {several(len(loose), 'host', 'hosts')} out of the hands of {subject.name}.",
+            key="power_bases.split",
+            ids=[realm.entity.id, subject.id],
         )
     return bool(loose)
 

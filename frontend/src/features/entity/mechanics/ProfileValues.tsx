@@ -4,6 +4,7 @@ import { Check, Hand, Lock, Pin, Table2, Unlock } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -203,7 +204,7 @@ function TableCard({
           <Text weight='semibold' truncate>
             {humanize(table.table)}
           </Text>
-          <Muted variant='caption'>{`${table.columns.length} values${held ? `, ${held} held by your hand` : ''}`}</Muted>
+          <Muted variant='caption'>{`${plural(table.columns.length, 'value', 'values')}${held ? `, ${held} held by your hand` : ''}`}</Muted>
         </div>
       </div>
       <AdjustPanel

@@ -3,6 +3,7 @@ import logging
 from collections.abc import Callable, Sequence
 from typing import Any
 
+from aerona.core.grammar import fill
 from aerona.db.session import Database
 from aerona.events.bus import Event, EventBus
 from aerona.events.kinds import EventKind
@@ -13,11 +14,11 @@ from aerona.services.notifications import Notifier
 logger = logging.getLogger(__name__)
 
 SUMMARY_COUNTS = (
-    ("rejected", "{count} creations rejected by Fate"),
-    ("fixed", "{count} creations corrected by Fate"),
+    ("rejected", "{count:creation|creations} rejected by Fate"),
+    ("fixed", "{count:creation|creations} corrected by Fate"),
     ("worlds_born", "{count} sensed worlds born"),
-    ("engine_notes", "{count} events in the world's own course"),
-    ("localised_lines", "{count} lines localised"),
+    ("engine_notes", "{count:event|events} in the world's own course"),
+    ("localised_lines", "{count:line|lines} localised"),
 )
 EPOCH_NAME_LINE = 'The age was named "{name}"'
 COUNCIL_LINE = "Council: {motion}"
@@ -43,7 +44,7 @@ def summary_lines(summary: dict[str, Any]) -> list[str]:
     for key, template in SUMMARY_COUNTS:
         count = count_of(summary.get(key))
         if count:
-            lines.append(template.format(count=count))
+            lines.append(fill(template, count=count))
     motion = summary.get("council")
     if isinstance(motion, str) and motion:
         lines.append(COUNCIL_LINE.format(motion=motion))

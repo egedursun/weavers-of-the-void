@@ -1,4 +1,5 @@
 import { formatNumber } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -80,7 +81,7 @@ export function DoomBreakdown({ open }: { open: boolean }) {
       <div className='flex min-w-0 items-center justify-between gap-2'>
         <Label variant='overline'>Next epoch, every force</Label>
         <Muted as='span' variant='caption'>
-          {`${parts.length} parts`}
+          {`${plural(parts.length, 'part', 'parts')}`}
         </Muted>
       </div>
       <div className='flex min-w-0 items-center justify-between gap-2'>

@@ -525,7 +525,7 @@ describe('son sections', () => {
   it('groups his turns by epoch from the ledger and shows his chronicle trace', async () => {
     const { screen, server } = await openSon(7)
     await expect
-      .element(screen.getByText('Epoch 11 · 1 actions · 3 changes'))
+      .element(screen.getByText('Epoch 11 · 1 action · 3 changes'))
       .toBeVisible()
     await expect
       .element(screen.getByRole('heading', { name: 'Trace in the chronicle' }))

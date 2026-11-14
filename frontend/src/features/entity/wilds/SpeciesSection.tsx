@@ -44,6 +44,7 @@ import {
   socialityValues,
   speciesUseValues,
 } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -607,7 +608,7 @@ function UsesAndYields({ card }: { card: SpeciesCard }) {
       title='Uses and yields'
       icon={Package}
       tone='gold'
-      hint={`Kept for ${card.uses.length} of ${speciesUseValues.length} uses; yields are per head each epoch`}
+      hint={`Kept for ${card.uses.length} of ${plural(speciesUseValues.length, 'use', 'uses')}; yields are per head each epoch`}
       wide
     >
       <div

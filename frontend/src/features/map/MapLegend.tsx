@@ -8,6 +8,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { formatNumber } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -520,7 +521,7 @@ export function MapLegend({
           )}
         </ul>
       </Block>
-      <Label variant='overline'>{`${markers.length} markers · ${view.geometry.regions.length} regions`}</Label>
+      <Label variant='overline'>{`${plural(markers.length, 'marker', 'markers')} · ${plural(view.geometry.regions.length, 'region', 'regions')}`}</Label>
     </div>
   )
 }

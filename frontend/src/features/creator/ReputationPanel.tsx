@@ -1,4 +1,5 @@
 import { CloudFog, Heart, HeartCrack, Skull } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import {
   EmptyState,
@@ -12,11 +13,7 @@ import {
 import { Label } from '@/components/typography'
 import { useSons } from '@/features/pantheon/api'
 import { STAT_SCALE } from '@/features/pantheon/constants'
-import {
-  REPUTATION_BADGE,
-  REPUTATION_LABEL,
-  plural,
-} from '@/features/pantheon/labels'
+import { REPUTATION_BADGE, REPUTATION_LABEL } from '@/features/pantheon/labels'
 import { mediaUrl } from '@/features/pantheon/media'
 import { PassionsForm } from './PassionsForm'
 import { type CreatorReputation } from './api'

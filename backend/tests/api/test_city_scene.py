@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.urban import HousingLevel
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.manual import manual_context
 from tests.api.conftest import ApiWorld, seeded
@@ -69,7 +70,7 @@ async def test_the_land_scene_follows_the_land_and_types_gather_their_buildings(
     types = (await api.http.get(f"/api/structure-types/{world_id}")).json()
     school = next(row for row in types["structures"] if row["kind"] == "school")
     assert school["zone"] == "civic" and school["instances"]
-    assert {row["housing"] for row in types["dwellings"]} == {"hut", "cottage", "house", "townhouse", "manor"}
+    assert {row["housing"] for row in types["dwellings"]} == {level.value for level in HousingLevel}
 
 
 async def test_the_book_and_the_codex_draw_the_city_plan_and_gather_building_types(api: ApiWorld) -> None:

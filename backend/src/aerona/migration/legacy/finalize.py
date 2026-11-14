@@ -1,5 +1,6 @@
 from sqlalchemy import func, select, text
 
+from aerona.core.grammar import several
 from aerona.db.base import Base
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
@@ -82,7 +83,7 @@ async def check_constraints(context: MigrationContext) -> None:
     violations = list(await session.execute(text("PRAGMA foreign_key_check")))
     if violations:
         tables = sorted({str(row[0]) for row in violations})
-        raise MigrationError(f"Foreign key check failed in {len(violations)} rows ({', '.join(tables)}).")
+        raise MigrationError(f"Foreign key check failed in {several(len(violations), 'row', 'rows')} ({', '.join(tables)}).")
     context.report.checks["foreign_keys"] = PASSED
     integrity = await session.scalar(text("PRAGMA integrity_check"))
     if str(integrity) != INTEGRITY_OK:

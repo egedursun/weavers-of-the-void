@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { formatClock, formatDuration } from '@/lib/units'
+import { formatClock, formatDuration, plural } from '@/lib/units'
 import { JOB_KIND_LABEL, isJobKind } from '@/constants/jobs'
 import { useWorldState } from '@/features/overview/api'
 import { type Job, useRunningJobs } from './api'
@@ -61,7 +61,7 @@ export function useProgressSummary(): ProgressSummary {
     visible: true,
     title: jobTitle(job),
     ratio: job.status === 'running' && job.progress > 0 ? job.progress : null,
-    parts: jobs.length > 1 ? [`${jobs.length} jobs`] : [],
+    parts: jobs.length > 1 ? [`${plural(jobs.length, 'job', 'jobs')}`] : [],
     subtitle: job.stage,
   }
 }

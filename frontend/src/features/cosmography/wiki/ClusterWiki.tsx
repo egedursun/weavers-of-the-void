@@ -153,7 +153,7 @@ function ClusterHero({
             <Badge
               size='sm'
               variant='warning'
-            >{`${cluster.locked.length} values held`}</Badge>
+            >{`${plural(cluster.locked.length, 'value', 'values')} held`}</Badge>
           )}
         </>
       }

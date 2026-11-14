@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eye, Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1067,7 +1068,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
               {', '}
             </>
           )}
-          {`${scheme.phase_label.toLowerCase()}, power ${scheme.power} of ${scheme.difficulty}, secrecy ${scheme.secrecy}, ${scheme.agents.length} agents`}
+          {`${scheme.phase_label.toLowerCase()}, power ${scheme.power} of ${scheme.difficulty}, secrecy ${scheme.secrecy}, ${plural(scheme.agents.length, 'agent', 'agents')}`}
           {scheme.outcome ? `: ${scheme.outcome}` : ''}
           {scheme.discovered_by.length > 0 &&
             `; discovered by ${scheme.discovered_by.map((node) => node.name).join(', ')}`}

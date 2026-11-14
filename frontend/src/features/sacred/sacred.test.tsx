@@ -225,7 +225,7 @@ describe('spirits, mysteries, rites and omens', () => {
     const { screen } = await renderApp(<SacredSection nodeId={4} />)
     await expect.element(screen.getByText('Feeds on grief')).toBeVisible()
     await expect
-      .element(screen.getByText('Grief: 7 essence over 1 epochs'))
+      .element(screen.getByText('Grief: 7 essence over 1 epoch'))
       .toBeVisible()
     await screen.getByRole('button', { name: 'Feed on it' }).click()
     await expect

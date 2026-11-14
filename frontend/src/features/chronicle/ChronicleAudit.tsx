@@ -8,6 +8,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -180,7 +181,7 @@ export function ChronicleAudit({
               ? 'This chronicle has not been checked against the facts.'
               : clean
                 ? 'Matches the facts of the epoch.'
-                : `${remaining.length} contradictions remain.`}
+                : `${plural(remaining.length, 'contradiction', 'contradictions')} remain.`}
           </Muted>
         </div>
         {audit && (

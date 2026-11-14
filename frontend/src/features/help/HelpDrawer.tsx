@@ -9,6 +9,7 @@ import {
   Search,
   X,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Input } from '@/components/ui/input'
 import { Kbd } from '@/components/ui/kbd'
 import { EmptyState, PageHeader, Section } from '@/components/domain'
@@ -86,7 +87,7 @@ export function HelpDrawer() {
       </Section>
       <Section
         title='Terms'
-        description={`${GLOSSARY.length} words of the game, explained.`}
+        description={`${plural(GLOSSARY.length, 'word', 'words')} of the game, explained.`}
         level={3}
         icon={BookA}
       >

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eraser, RotateCcw, ShieldAlert, Sparkles, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -248,7 +249,7 @@ function MethodsCard({ view, blocked, hold }: Props) {
     <MindCard
       title='Ways of working'
       icon={WORKS_ICON}
-      hint={`Each work is done one way at a time; ${changed} of ${view.methods.length} are chosen. Better ways need techniques, knowledge and power, and those that need fewer hands put some out of work.`}
+      hint={`Each work is done one way at a time; ${plural(view.methods.length, 'way', 'ways')} in all, ${changed} in use. Better ways need techniques, knowledge and power, and those that need fewer hands put some out of work.`}
       wide
     >
       <Paged items={view.methods} initial={5} noun={['work', 'works']}>

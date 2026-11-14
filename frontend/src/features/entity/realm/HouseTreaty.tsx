@@ -30,6 +30,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -351,7 +352,7 @@ export function HouseSection({
               value={house.claims.length}
               icon={ScrollText}
               tone='info'
-              hint={`${house.heirlooms.length} heirlooms kept`}
+              hint={`${plural(house.heirlooms.length, 'heirloom', 'heirlooms')} kept`}
             />
           </div>
           <Panel title='Lineage' icon={Crown}>

@@ -2,6 +2,7 @@ from pydantic import Field
 
 from aerona.catalog.weather import WEATHER
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow
@@ -121,7 +122,7 @@ async def add_season(scope: PlayerScope, command: AddSeason) -> Effect:
 async def remove_season(scope: PlayerScope, command: SeasonTarget) -> Effect:
     season = await time_control.remove_season(scope.session, command.season_id)
     world = await _world(scope, season.world_id)
-    return Effect(f"{season.name} is gone from the year of {world.name}; {world.season_count} seasons remain.", target_node_id=world.id)
+    return Effect(f"{season.name} is gone from the year of {world.name}; {several(world.season_count, 'season', 'seasons')} remain.", target_node_id=world.id)
 
 
 @player_action("seasons:release", ActionKind.OTHER)
@@ -137,7 +138,9 @@ async def set_moons(scope: PlayerScope, command: SetMoons) -> Effect:
     world = await _world(scope, command.world_id)
     time_control.set_moons(world, scope.rules, moon_count=command.moon_count, tidal_strength=command.tidal_strength)
     await scope.session.flush()
-    return Effect(f"{world.name} now has {world.moon_count} moons and tides of {world.tidal_strength}; both are held.", target_node_id=world.id)
+    return Effect(
+        f"{world.name} now has {several(world.moon_count, 'moon', 'moons')} and tides of {world.tidal_strength}; both are held.", target_node_id=world.id
+    )
 
 
 @player_action("seasons:calendar_release", ActionKind.OTHER)

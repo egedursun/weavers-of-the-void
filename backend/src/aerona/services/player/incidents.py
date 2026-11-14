@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.base import Base
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
 from aerona.db.tables.entities import EntityRow
@@ -171,7 +172,7 @@ async def set_incident_roles(scope: PlayerScope, command: SetIncidentRoles) -> E
     incident = await _incident(scope, command.incident_id)
     await _check_nodes(scope, command.participants)
     await _replace_participants(scope, incident, command.participants)
-    return Effect(f"The incident now names {len(command.participants)} participants with their roles.")
+    return Effect(f"The incident now names {several(len(command.participants), 'participant', 'participants')} with their roles.")
 
 
 @player_action("incident:link_cause", ActionKind.OTHER)

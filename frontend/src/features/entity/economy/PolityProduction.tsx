@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -125,7 +126,7 @@ function ChainLink({ step, members }: { step: Step; members: Member[] }) {
           </Text>
           <Muted variant='caption'>
             {where
-              ? `${where.label} in ${step.able_ids.length} of ${members.length} members`
+              ? `${where.label} in ${step.able_ids.length} of ${plural(members.length, 'member', 'members')}`
               : 'By hand at home'}
           </Muted>
         </div>

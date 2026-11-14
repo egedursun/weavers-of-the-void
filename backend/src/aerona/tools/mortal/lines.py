@@ -10,7 +10,7 @@ CULTURE = Line("tools.mortal.culture", "A new {kind} was born among {me}: {name}
 DISCOVERED = Line("tools.mortal.discovered", "{me} discovered {name} in {location}{subtype}.")
 CLAIMED = Line("tools.mortal.claimed", "{me} claimed {resource}{angered}.")
 SEIZE_REPELLED = Line("tools.mortal.seize_repelled", "{me} tried to seize {resource}, but {owners} drove them back.")
-MIGRATED = Line("tools.mortal.migrated", "{count} people from among {me} migrated and founded {name} in {location}.")
+MIGRATED = Line("tools.mortal.migrated", "{count:person|people} from among {me} migrated and founded {name} in {location}.")
 TRADE = Line("tools.mortal.trade", "Trade began between {me} and {target}: {goods}.")
 WAR = Line("tools.mortal.war", "{me} declared war on {target}: {reason}")
 WORSHIP_CREATOR = Line("tools.mortal.worship_creator", "{me} began to worship the creator {creator} directly: {offering}")
@@ -33,7 +33,7 @@ EXPLORE_FAILED = Line("tools.mortal.explore_failed", "{me} set out into unknown 
 EXPLORED = Line("tools.mortal.explored", "{me} set out into unknown lands and found {found}: {name}{pioneers}.")
 SHIP = Line("tools.mortal.ship", "{me} built an inter-world ship: {name}.")
 EXPEDITION = Line(
-    "tools.mortal.expedition", "{me} set out on {intent:an} expedition to the world {world} ({count} people{vessel}, it will take {epochs} ages)."
+    "tools.mortal.expedition", "{me} set out on {intent:an} expedition to the world {world} ({count:person|people}{vessel}, it will take {epochs} ages)."
 )
 TAMED = Line("tools.mortal.tamed", "{me} tamed {species} ({how}).")
 TAME_FAILED = Line("tools.mortal.tame_failed", "{me} tried to tame {species} but failed.")
@@ -58,7 +58,7 @@ ESCAPE_FAILED = Line("tools.mortal.escape_failed", "{me} tried to escape from {c
 RANSOMED = Line("tools.mortal.ransomed", "{me} paid a ransom to {captor} for {captive}; the captive returned home.")
 RESCUED = Line("tools.mortal.rescued", "{me} rescued {captive} from {captor}: {plan}")
 RESCUE_FAILED = Line("tools.mortal.rescue_failed", "{me} tried to rescue {captive} but {captor} repelled the raid.")
-ARMY = Line("tools.mortal.army", "{me} called {count} people to arms: {name}.")
+ARMY = Line("tools.mortal.army", "{me} called {count:person|people} to arms: {name}.")
 COMMANDER = Line("tools.mortal.commander", "{mortal} took command of {army}.")
 SPIES = Line("tools.mortal.spies", "Strange faces appeared among {target} ({cover}).")
 BARTER_REFUSED = Line("tools.mortal.barter_refused", "{me} asked {target} for {take} in exchange for {give}; {target} found the offer too little.")
@@ -79,7 +79,7 @@ ANGERED = "; {owners} were angered by it"
 SEIZED_NOTE = "{me} seized it (Age {epoch})"
 CONFISCATION = "because of {resource}"
 SEIZE_ATTEMPT = "attempt to seize {resource}"
-MIGRANTS = "{count} people"
+MIGRANTS = "{count:person|people}"
 TELLS_OF_GOD = "tells of its god"
 SUBJECT_OF = "subject of the {kind}"
 DISCOVERED_BOND = "discovered"

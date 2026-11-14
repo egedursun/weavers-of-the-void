@@ -2,6 +2,7 @@ import { BookOpen, Flame, MoonStar, Trash2 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatDecimal } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -67,7 +68,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
             {star.name}
           </SectionTitle>
           <Muted variant='caption'>
-            {`${planets.length} planets · position ${formatDecimal(star.x)}, ${formatDecimal(star.y)}`}
+            {`${plural(planets.length, 'planet', 'planets')} · position ${formatDecimal(star.x)}, ${formatDecimal(star.y)}`}
           </Muted>
         </div>
       </header>
@@ -86,7 +87,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
             />
           </div>
           <Muted variant='caption'>
-            {`The star burns again at brightness ${ruleText(rules.get('rekindleBrightness'))}; leakage of the ${orbiting.length} worlds in its orbit drops by ${ruleText(rules.get('rekindleLeak'))}.`}
+            {`The star burns again at brightness ${ruleText(rules.get('rekindleBrightness'))}; leakage of the ${plural(orbiting.length, 'world', 'worlds')} in its orbit drops by ${ruleText(rules.get('rekindleLeak'))}.`}
           </Muted>
         </div>
       )}
@@ -102,14 +103,14 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
               pending={extinguish.isPending}
               confirm={{
                 title: `Extinguish ${star.name}?`,
-                description: `It becomes a dead star. ${orbiting.length === 1 ? 'The world in its orbit cools' : `The ${orbiting.length} worlds in its orbit cool`}: leakage rises by ${ruleText(rules.get('extinguishLeak'))}, every region loses ${ruleText(rules.get('extinguishFertility'))} fertility, sail roads to it snap and the end draws ${ruleText(rules.get('extinguishDoom'))} closer. It can be re-ignited later.`,
+                description: `It becomes a dead star. ${orbiting.length === 1 ? 'The world in its orbit cools' : `The ${plural(orbiting.length, 'world', 'worlds')} in its orbit cool`}: leakage rises by ${ruleText(rules.get('extinguishLeak'))}, every region loses ${ruleText(rules.get('extinguishFertility'))} fertility, sail roads to it snap and the end draws ${ruleText(rules.get('extinguishDoom'))} closer. It can be re-ignited later.`,
                 confirmText: 'Extinguish',
               }}
               onRun={() => extinguish.mutate()}
             />
           </div>
           <Muted variant='caption'>
-            {`Darkness falls on the ${orbiting.length === 1 ? 'world' : `${orbiting.length} worlds`} in its orbit; re-igniting it later costs ${ruleText(rules.get('rekindleStar'))} essence.`}
+            {`Darkness falls on the ${orbiting.length === 1 ? 'world' : `${plural(orbiting.length, 'world', 'worlds')}`} in its orbit; re-igniting it later costs ${ruleText(rules.get('rekindleStar'))} essence.`}
           </Muted>
         </div>
       )}

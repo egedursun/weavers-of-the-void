@@ -19,3 +19,6 @@ def test_a_count_of_one_reads_in_the_singular() -> None:
     assert several(1, "piece of evidence", "pieces of evidence") == "1 piece of evidence"
     assert several(0, "age-set", "age-sets") == "0 age-sets"
     assert several(3, "youth", "youths") == "3 youths"
+    assert several(None, "moon", "moons") == "an unknown number of moons"
+    assert fill("{count:person|people} set out", count=1) == "1 person set out"
+    assert fill("{count:person|people} set out", count=4) == "4 people set out"

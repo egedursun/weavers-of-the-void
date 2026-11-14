@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.collective import DiasporaRow
 from aerona.db.tables.cycles import IndentureRow, ManumissionRow, SlaveMarketRow
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
@@ -282,7 +283,7 @@ async def bind_migrants(ctx: TickContext, tally: BondageTally) -> None:
         tally.contracted += count
         await note(
             ctx,
-            f"{count} newcomers of {newcomers.name} in {town.name} signed contracts of labour for their keep.",
+            f"{several(count, 'newcomer', 'newcomers')} of {newcomers.name} in {town.name} signed contracts of labour for their keep.",
             key="indenture.contracted",
             ids=[town.id, newcomers.id],
         )

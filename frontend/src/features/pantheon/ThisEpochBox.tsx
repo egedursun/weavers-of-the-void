@@ -12,6 +12,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -29,7 +30,6 @@ import { OpportunityList } from './OpportunityList'
 import { type WorldState, useCreatorHintLines, useOpportunities } from './api'
 import { OPPORTUNITIES_HIDDEN_KEY } from './constants'
 import { useRuleLookup } from './gate'
-import { plural } from './labels'
 import { opportunitiesOf, withoutServerPhrased } from './opportunities'
 
 function hiddenEpoch(): number {

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Flag, Gauge, Radar, ShieldAlert, Swords, Users } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label, Muted, Text } from '@/components/typography'
@@ -320,7 +321,7 @@ function StackRow({
             icon: unitIcon(row.unit_kind, Users),
             tone: 'muted',
           }}
-          text={`${named({}, row.unit_kind).label} · ${row.count} soldiers`}
+          text={`${named({}, row.unit_kind).label} · ${plural(row.count, 'soldier', 'soldiers')}`}
         />
         {row.locked.includes('echelon_id') && (
           <Muted variant='caption'>held to its formation</Muted>

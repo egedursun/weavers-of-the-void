@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.gatherings import GUARDED_ROOMS, ITEM_ROOMS, ROOM_PLACES, ROOM_SETTLEMENTS, ROOM_STRUCTURES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -222,7 +223,7 @@ async def delve(ctx: TickContext, delver: EntityRow, site: EntityRow, companions
         await add_renown(ctx.session, delver.id, ctx.rules.sites.delve_renown, ctx.epoch, rules=ctx.rules)
     walk.reached_heart = bool(rooms) and all(room.cleared_epoch is not None for room in rooms)
     if rooms:
-        told = "reached its heart" if walk.reached_heart else f"cleared {walk.cleared} of its {len(rooms)} rooms"
+        told = "reached its heart" if walk.reached_heart else f"cleared {walk.cleared} of its {several(len(rooms), 'room', 'rooms')}"
         await note(
             ctx,
             f"{delver.name} walked {site.name} room by room and {told}.",

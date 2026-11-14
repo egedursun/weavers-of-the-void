@@ -75,7 +75,7 @@ describe('anatomy figure', () => {
       />
     )
     await expect
-      .element(screen.getByRole('img', { name: /1 parts marked/ }))
+      .element(screen.getByRole('img', { name: /1 part marked/ }))
       .toBeVisible()
     await expect
       .element(screen.getByText('OPEN WOUND', { exact: true }))

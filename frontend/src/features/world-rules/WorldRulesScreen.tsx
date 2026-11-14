@@ -11,6 +11,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -280,8 +281,8 @@ function RulesEditor({ rules }: RulesEditorProps) {
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
         <Muted variant='caption'>
           {shownRules === rules.length
-            ? `${rules.length} rules in ${groups.length} groups`
-            : `${shownRules} of ${rules.length} rules shown`}
+            ? `${plural(rules.length, 'rule', 'rules')} in ${plural(groups.length, 'group', 'groups')}`
+            : `${shownRules} of ${plural(rules.length, 'rule', 'rules')} shown`}
         </Muted>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
@@ -437,7 +438,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
         open={confirmAll}
         onOpenChange={setConfirmAll}
         title='Reset every rule?'
-        desc={`${changedCount} rules return to their defaults. The world keeps running with the default numbers from now on.`}
+        desc={`${plural(changedCount, 'rule', 'rules')} return to their defaults. The world keeps running with the default numbers from now on.`}
         confirmText='Reset all rules'
         destructive
         isLoading={resetAll.isPending}

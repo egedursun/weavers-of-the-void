@@ -3,6 +3,7 @@ import { Globe2, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -182,7 +183,7 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
                   open={starOpen}
                   valueOf={(item) => String(item.id)}
                   label={(item) =>
-                    `${item.name} · ${STAR_TYPE_LABEL[item.star_type]} · ${index.planetsOf(item.id).length} planets`
+                    `${item.name} · ${STAR_TYPE_LABEL[item.star_type]} · ${plural(index.planetsOf(item.id).length, 'planet', 'planets')}`
                   }
                 />
               </SelectContent>

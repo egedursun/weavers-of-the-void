@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow, CultOfficeRow, HeresyRow
@@ -124,12 +125,16 @@ async def iconoclasm(ctx: TickContext, church: Church) -> FaithLine | None:
     )
     broken = [work for home in homes for work in await smash(ctx, home, ctx.rules.art.iconoclasm_chance, f"smashed by the iconoclasts of {church.cult.name}")]
     if rival is None:
-        return FaithLine(f"The iconoclasts of {church.cult.name} smashed {len(broken)} images.", "faith.iconoclasm", (church.cult.id,)) if broken else None
+        return (
+            FaithLine(f"The iconoclasts of {church.cult.name} smashed {several(len(broken), 'image', 'images')}.", "faith.iconoclasm", (church.cult.id,))
+            if broken
+            else None
+        )
     await retire_in(ctx, rival, f"torn down by the iconoclasts of {church.cult.name}", close_bonds=True)
     place = await ctx.session.get(EntityRow, rival.location_id) if rival.location_id is not None else None
     if place is not None:
         shift_stat(place, "prosperity", -ctx.rules.inquisition.iconoclasm_prosperity)
-    images = f" and smashed {len(broken)} images" if broken else ""
+    images = f" and smashed {several(len(broken), 'image', 'images')}" if broken else ""
     return FaithLine(f"The iconoclasts of {church.cult.name} tore down {rival.name}{images}.", "faith.iconoclasm", (church.cult.id, rival.id))
 
 

@@ -1,3 +1,4 @@
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.engine.lore import rumours
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -47,4 +48,4 @@ async def edit_rumour(scope: PlayerScope, command: EditRumour) -> Effect:
 @player_action("rumour:suppress", ActionKind.EDIT_RECORD)
 async def suppress_rumour(scope: PlayerScope, command: SuppressRumour) -> Effect:
     count = await rumours.suppress(await scope.context("rumour_suppress"), command.rumour_id, everywhere=command.everywhere)
-    return Effect("The talk dies away." if count == 1 else f"The talk dies away in {count} places.", None)
+    return Effect("The talk dies away." if count == 1 else f"The talk dies away in {several(count, 'place', 'places')}.", None)

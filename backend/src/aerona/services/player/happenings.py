@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.catalog.interventions import DISASTERS
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.demography import AgeBand, Sex
 from aerona.domain.enums.entity import EngineKind
@@ -139,7 +140,7 @@ async def release_event(scope: PlayerScope, command: EventRelease) -> Effect:
 @player_action("event:footprint", ActionKind.OTHER)
 async def set_event_footprint(scope: PlayerScope, command: EventFootprint) -> Effect:
     regions = await control.set_footprint(await scope.context("event_footprint"), command.event_id, command.region_id, present=command.present)
-    return Effect(f"The event now reaches {len(regions)} lands.", command.event_id)
+    return Effect(f"The event now reaches {several(len(regions), 'land', 'lands')}.", command.event_id)
 
 
 @player_action("event:casualties", ActionKind.EDIT_RECORD)

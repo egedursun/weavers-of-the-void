@@ -5,7 +5,7 @@ from sqlalchemy import delete, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -334,7 +334,7 @@ async def set_cohort(ctx: TickContext, community_id: int, key: CohortKey, count:
     total = sum(row.count for row in rows.values())
     floor, ceiling = headcount_bounds(ctx.rules, community)
     if not floor <= total <= ceiling:
-        raise ValidationFailedError(f"The community would hold {total} people; it must hold between {floor} and {ceiling}.")
+        raise ValidationFailedError(f"The community would hold {several(total, 'person', 'people')}; it must hold between {floor} and {ceiling}.")
     set_stats(community, population=total)
     await resync_society(ctx, community, rows)
     await ctx.session.flush()

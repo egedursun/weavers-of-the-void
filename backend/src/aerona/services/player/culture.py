@@ -1,3 +1,4 @@
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.culture import LanguageRegister, SpeakerKind, TraditionEffectKind
 from aerona.engine.lore import culture_control
@@ -77,4 +78,4 @@ async def set_tradition_effect(scope: PlayerScope, command: TraditionEffect) -> 
 @player_action("tradition:reseed", ActionKind.EDIT_RECORD)
 async def reseed_tradition(scope: PlayerScope, command: TraditionTarget) -> Effect:
     count = await culture_control.reseed_tradition(await scope.context("tradition_reseed"), command.tradition_id)
-    return Effect(f"Its {count} effects are drawn again from its kind.", command.tradition_id)
+    return Effect(f"Its {several(count, 'effect', 'effects')} are drawn again from its kind.", command.tradition_id)

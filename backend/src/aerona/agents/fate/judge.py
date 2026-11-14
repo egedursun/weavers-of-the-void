@@ -16,6 +16,7 @@ from aerona.agents.fate.threads import ThreadQuota, quota, thread_states
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.constants.agents import SESSION_ERROR_CHARS
+from aerona.core.grammar import several
 from aerona.db.tables.entities import CreationVerdictRow, EntityRow
 from aerona.domain.enums.agent import Verdict
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -146,7 +147,9 @@ async def judge_overflow(runtime: AgentRuntime, rules: Rules, inputs: FateInputs
         scope = await load_scope(session, rules)
         rounds = await batches(scope, inputs.overflow, rules.fate.budget_new_creations_chars)
     group_size = rules.fate.judgment_parallel
-    runtime.step(f"Fate is weighing the remaining {len(inputs.overflow)} creations of this age in {len(rounds)} rounds.")
+    runtime.step(
+        f"Fate is weighing the remaining {several(len(inputs.overflow), 'creation', 'creations')} of this age in {several(len(rounds), 'round', 'rounds')}."
+    )
     for start in range(0, len(rounds), group_size):
         group = rounds[start : start + group_size]
         outcomes = await asyncio.gather(*(extra_round(runtime, rules, inputs, batch) for batch in group), return_exceptions=True)
@@ -160,7 +163,7 @@ async def judge_overflow(runtime: AgentRuntime, rules: Rules, inputs: FateInputs
             result.debt = min(epoch for batch in left for epoch in batch.epochs.values())
             error = next(outcome for outcome in outcomes if isinstance(outcome, BaseException))
             count = sum(len(batch.ids) for batch in left)
-            runtime.error(f"Fate could not weigh the remaining {count} creations ({error}); it will be the first task of the next age.")
+            runtime.error(f"Fate could not weigh the remaining {several(count, 'creation', 'creations')} ({error}); it will be the first task of the next age.")
             break
     return result
 
@@ -205,7 +208,7 @@ async def run_fate(runtime: AgentRuntime, epoch: int, engine_notes: Sequence[str
             judged_epochs.update(overflow.epochs)
             debt = overflow.debt
             if debt is None:
-                runtime.note(f"Fate weighed all {len(judged_epochs)} creations of this age.")
+                runtime.note(f"Fate weighed all {several(len(judged_epochs), 'creation', 'creations')} of this age.")
     else:
         pending_debt = [*inputs.judged.epochs.values(), *(entity.birth_epoch for entity in inputs.overflow)]
         debt = min(pending_debt) if pending_debt else None

@@ -13,6 +13,7 @@ import {
   Thermometer,
   Zap,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -36,7 +37,7 @@ import { CLIMATE_LABEL } from '@/features/cosmos/model/labels'
 import { RevelationDialog } from '@/features/creator/RevelationDialog'
 import { SummonButton } from '@/features/pantheon/SummonButton'
 import { useWorldState } from '@/features/pantheon/api'
-import { MOOD_LABEL, plural } from '@/features/pantheon/labels'
+import { MOOD_LABEL } from '@/features/pantheon/labels'
 import { mediaUrl } from '@/features/pantheon/media'
 import { CreateHub } from './CreateHub'
 import { DoomChip } from './DoomChip'
@@ -62,7 +63,7 @@ function StarChips() {
           data-world-star
           aria-label='The bodies that rule the sky of each world this epoch'
         >
-          {only ? only.name : `${ruled.length} worlds`}
+          {only ? only.name : `${plural(ruled.length, 'world', 'worlds')}`}
         </HudChip>
       </PopoverTrigger>
       <PopoverContent
@@ -141,7 +142,7 @@ function ClimateChips() {
           data-world-climate
           aria-label='Climates of the worlds'
         >
-          {`${active.length} climates`}
+          {`${plural(active.length, 'climate', 'climates')}`}
         </HudChip>
       </PopoverTrigger>
       <PopoverContent align='start' className='flex w-80 flex-col gap-2'>

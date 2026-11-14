@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
 import { techniqueValues, skillKindValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -308,7 +309,7 @@ function OpenRoom({
       title='Open a room'
       note='Add a room at the end of the way through this site, with its challenge and how hard it is.'
       columns={3}
-      meta={<Chip icon={DoorOpen}>{`${count} rooms`}</Chip>}
+      meta={<Chip icon={DoorOpen}>{`${plural(count, 'room', 'rooms')}`}</Chip>}
       action={
         <Button
           size='sm'
@@ -766,7 +767,11 @@ function BeginDig({
       title='Begin a dig'
       note='Send a leader, and a sponsor if you like, to dig this site stage by stage for what lies beneath.'
       columns={2}
-      meta={<Chip icon={Shovel}>{`${site.digs.length} digs`}</Chip>}
+      meta={
+        <Chip
+          icon={Shovel}
+        >{`${plural(site.digs.length, 'dig', 'digs')}`}</Chip>
+      }
       action={
         <Button
           size='sm'
@@ -941,7 +946,7 @@ export function SiteSection({
             <div className='flex min-w-0 flex-wrap gap-1.5'>
               <Chip
                 icon={DoorOpen}
-              >{`${site.rooms.length} rooms, ${site.rooms.filter((room) => room.cleared_epoch !== null).length} cleared`}</Chip>
+              >{`${plural(site.rooms.length, 'room', 'rooms')}, ${site.rooms.filter((room) => room.cleared_epoch !== null).length} cleared`}</Chip>
               <Chip
                 icon={Shovel}
                 variant={site.diggable ? 'success' : 'secondary'}

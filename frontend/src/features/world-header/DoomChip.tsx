@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Hourglass } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import {
   Popover,
@@ -124,7 +125,7 @@ export function DoomChip({ state }: { state: WorldState }) {
         <DoomBreakdown open={open} />
         {items.length > 0 && (
           <div className='flex min-w-0 flex-col gap-1 border-t pt-3'>
-            <Label variant='overline'>{`Last epoch · ${items.length} parts`}</Label>
+            <Label variant='overline'>{`Last epoch · ${plural(items.length, 'part', 'parts')}`}</Label>
             {items.map((item) => (
               <div
                 key={item.item}

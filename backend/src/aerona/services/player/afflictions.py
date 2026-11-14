@@ -2,6 +2,7 @@ from pydantic import Field
 
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
@@ -67,7 +68,7 @@ async def source_of(scope: PlayerScope, node_id: int | None) -> int | None:
 def checked_stage(package: PackageKind, stage: int) -> int:
     count = len(PACKAGES[package].stages)
     if stage > count:
-        raise ValidationFailedError(f"{PACKAGES[package].label} has only {count} stages.")
+        raise ValidationFailedError(f"{PACKAGES[package].label} has only {several(count, 'stage', 'stages')}.")
     return stage
 
 

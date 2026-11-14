@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.core.grammar import several
 from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.statecraft import PolityRegardRow
 from aerona.db.write_guard import held
@@ -96,7 +97,7 @@ async def band(ctx: TickContext, book: RealmBook, target: Realm, tally: Coalitio
     tally.formed += 1
     await note(
         ctx,
-        f"Fearing {target.entity.name}, {len(cores)} realms bound themselves into a coalition against it.",
+        f"Fearing {target.entity.name}, {several(len(cores), 'realm', 'realms')} bound themselves into a coalition against it.",
         key="statecraft.coalition",
         ids=[target.entity.id, *fearful],
         kind=ChronicleKind.WAR,

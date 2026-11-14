@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -543,7 +544,7 @@ function CompanyRow({ row, ctx }: { row: Company; ctx: Ctx }) {
               {'; '}
             </>
           )}
-          {`worth ${row.value}, pays ${row.dividend_pct}% to ${row.shares.length} shareholders, chartered in epoch ${row.chartered_epoch}`}
+          {`worth ${row.value}, pays ${row.dividend_pct}% to ${plural(row.shares.length, 'shareholder', 'shareholders')}, chartered in epoch ${row.chartered_epoch}`}
         </>
       }
       badges={

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.storylets import STORYLETS
 from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.collective import StoryletRunRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionRow
@@ -77,7 +77,7 @@ async def choose_storylet(call: MortalCall, args: StoryletChoiceInput) -> str:
         fail(MortalResult.STORYLET_CHOICE_REFUSED, why="no such storylet waits for your choice")
     choices = STORYLETS[run.storylet].steps[run.step].choices
     if args.choice >= len(choices):
-        fail(MortalResult.STORYLET_CHOICE_REFUSED, why=f"that storylet has only {len(choices)} choices")
+        fail(MortalResult.STORYLET_CHOICE_REFUSED, why=f"that storylet has only {several(len(choices), 'choice', 'choices')}")
     known = await names(call.session, cast_of(run))
     text = choices[args.choice].text.format(**known)
     await resolve(call.tick, run, args.choice, StoryletTally(), by="agent")

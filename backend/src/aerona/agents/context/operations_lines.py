@@ -3,7 +3,7 @@ from sqlalchemy import select
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
 from aerona.catalog.operations import GROUND_LABELS, QUIRKS, RESOLVE_EFFECTS
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.operations import (
@@ -67,7 +67,7 @@ async def command_lines(scope: Scope, me: EntityRow) -> list[str]:
         standing = sum(1 for row in brigades if row.order is EchelonOrder.STANDING)
         top = next((row for row in echelons if row.level is EchelonLevel.ARMY), None)
         name = await named(scope, army_row.entity_id)
-        head = f"your army {name} has {len(brigades)} brigades, {standing} on standing orders"
+        head = f"your army {name} has {several(len(brigades), 'brigade', 'brigades')}, {standing} on standing orders"
         if top is not None:
             head += f"; your headquarters (formation {top.id}) has {top.command_points - top.points_spent} of {top.command_points} command points left"
         found.append(head)
@@ -93,7 +93,7 @@ async def realm_lines(scope: Scope, me: EntityRow) -> list[str]:
             )
         depots = list(await session.scalars(select(DepotRow).where(DepotRow.owner_entity_id == realm)))
         if depots:
-            found.append(f"your realm keeps {len(depots)} depots holding {sum(row.supplies for row in depots)} supplies")
+            found.append(f"your realm keeps {several(len(depots), 'depot', 'depots')} holding {sum(row.supplies for row in depots)} supplies")
         admiralty = await session.get(AdmiraltyRow, realm)
         if admiralty is not None:
             cap = f" under a treaty limit of {admiralty.limit_tonnage}" if admiralty.limit_tonnage is not None else ""

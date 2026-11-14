@@ -17,6 +17,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { clergyOfficeValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -229,7 +230,7 @@ export function ClergyOffices({
       hint={
         doctrine.god_king
           ? `The god-king ${doctrine.god_king.name} is high priest`
-          : `${filled} of ${doctrine.clergy.length} offices filled`
+          : `${filled} of ${plural(doctrine.clergy.length, 'office', 'offices')} filled`
       }
     >
       <div data-surface='ClergyOffices' className='flex min-w-0 flex-col gap-2'>

@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { type KpiTone } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
@@ -38,7 +39,7 @@ export function FoodWebGraph({ web }: { web: FoodWeb }) {
         viewBox={`0 0 ${layout.width} ${layout.height}`}
         className='h-auto w-full'
         role='img'
-        aria-label={`Food web of ${layout.nodes.length} kinds in ${layout.tiers} tiers, ${layout.edges.length} hunts`}
+        aria-label={`Food web of ${plural(layout.nodes.length, 'kind', 'kinds')} in ${layout.tiers} tiers, ${plural(layout.edges.length, 'hunt', 'hunts')}`}
       >
         <defs>
           <marker

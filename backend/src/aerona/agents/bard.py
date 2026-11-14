@@ -16,6 +16,7 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.mind import TRAITS
 from aerona.catalog.rarities import RARITY_LABELS
 from aerona.constants.agents import CREATOR_PSEUDO_SON_ID
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -178,7 +179,8 @@ async def voices_of_peoples(runtime: AgentRuntime, epoch: int) -> VoicesResult:
             payoffs=await payoff_facts(scope, epoch),
         )
         rejected = list((await unique_rejected(scope)).values())
-    runtime.step(f"The peoples' historians and bards are writing their own accounts ({len(writers)} chronicles, {len(pairs)} beliefs)…")
+    chronicles = several(len(writers), "chronicle", "chronicles")
+    runtime.step(f"The peoples' historians and bards are writing their own accounts ({chronicles}, {several(len(pairs), 'belief', 'beliefs')})…")
     output = await ask(
         runtime.model,
         rules,

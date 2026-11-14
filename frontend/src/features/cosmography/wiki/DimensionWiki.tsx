@@ -127,7 +127,7 @@ function DimensionHero({
             <Badge
               size='sm'
               variant='warning'
-            >{`${dimension.locked.length} values held`}</Badge>
+            >{`${plural(dimension.locked.length, 'value', 'values')} held`}</Badge>
           )}
         </>
       }

@@ -1,4 +1,5 @@
 import { ChevronsUpDown, History } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -46,7 +47,7 @@ function TurnEpoch({
       <CollapsibleTrigger asChild>
         <Button variant='ghost' size='sm' className='self-start'>
           <ChevronsUpDown />
-          {`Epoch ${epoch} · ${list.length} actions · ${changes} changes`}
+          {`Epoch ${epoch} · ${plural(list.length, 'action', 'actions')} · ${changes} changes`}
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className='flex min-w-0 flex-col gap-3'>

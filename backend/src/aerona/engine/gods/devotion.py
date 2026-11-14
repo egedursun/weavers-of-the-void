@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog import god_lines
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import fill
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
@@ -167,7 +168,7 @@ async def resurrection_rite(ctx: TickContext, worshipper: EntityRow, son: SonRow
         current = trait_or(worshipper, key, 0)
         lost = max(1, round(current * death.sacrifice_population_pct / PERCENT))
         set_trait(worshipper, key, max(headcount_floor(ctx.rules, key), current - lost))
-        contribution, cost = death.sacrifice_devotion, god_lines.RITE_COST_LIVES.format(count=lost)
+        contribution, cost = death.sacrifice_devotion, fill(god_lines.RITE_COST_LIVES, count=lost)
     else:
         chosen = victim if victim is not None else (worshipper if worshipper.entity_type is EntityType.MORTAL else None)
         if chosen is None or chosen.entity_type is not EntityType.MORTAL or chosen.status is not EntityStatus.CANON:

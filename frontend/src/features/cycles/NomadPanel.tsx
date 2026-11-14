@@ -9,6 +9,7 @@ import {
   Tent,
   Users,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -418,7 +419,7 @@ export function NomadPanel({
       {data.camp && (
         <Chip
           icon={Footprints}
-        >{`${data.camp.circuit.length} pastures on its circuit`}</Chip>
+        >{`${plural(data.camp.circuit.length, 'pasture', 'pastures')} on its circuit`}</Chip>
       )}
       {data.camp && (
         <Meter

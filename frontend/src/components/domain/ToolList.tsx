@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Search, Wrench } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from './EmptyState'
@@ -53,7 +54,7 @@ export function ToolList({
         <Input
           type='search'
           leadingIcon={Search}
-          placeholder={`Find among ${tools.length} tools`}
+          placeholder={`Find among ${plural(tools.length, 'tool', 'tools')}`}
           aria-label='Find a tool'
           value={query}
           onChange={(event) => {

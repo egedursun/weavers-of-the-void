@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { councilFrequencyText } from '@/features/council/frequency'
 import { attitudeBand } from '@/features/foreign-god/attitude'
 import { sonHints } from '@/features/son/hints'
 import { doomTone } from './doom'
 import { worldIdOf } from './fateChoice'
-import { humanize, plural, romanNumeral, verbFor } from './labels'
+import { humanize, romanNumeral, verbFor } from './labels'
 import { opportunitiesOf } from './opportunities'
 import { relationLabel, signed } from './relations'
 import {

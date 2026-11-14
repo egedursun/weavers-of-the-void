@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.catalog.dominion import SCALE_POLES
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.dominion import DivineCreatureRow, DominionRow, GodDesignRow, GodImageRow, GodScaleRow, MagicSiteRow, RegionDominionRow, ThroneRow
 from aerona.db.tables.entities import EntityRow
@@ -28,7 +28,7 @@ async def realm_lines(scope: Scope, son: SonRow) -> list[str]:
     found = []
     if ruled:
         parts = [f"{await place_name(scope, row.region_entity_id)} ({row.share}% of the dominion there, {row.rivals} rival gods)" for row in ruled[:shown]]
-        found.append(f"You rule {len(ruled)} regions: {', '.join(parts)}")
+        found.append(f"You rule {several(len(ruled), 'region', 'regions')}: {', '.join(parts)}")
     ruled_ids = {row.region_entity_id for row in ruled}
     statement = select(DominionRow).where(DominionRow.god_node_id == son.id, DominionRow.strength > 0).order_by(DominionRow.strength.desc())
     claims = list(await session.scalars(statement))

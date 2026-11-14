@@ -1,3 +1,4 @@
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.creator import CreatorSignKind
 from aerona.engine.transition import pour_essence
@@ -80,7 +81,10 @@ async def evaluate(scope: PlayerScope, command: Empty) -> Effect:
         "failed": len(result.failed),
         "earned": len(result.earned),
     }
-    return Effect(f"Goals weighed: {len(result.completed)} completed, {len(result.failed)} failed, {len(result.earned)} achievements earned.", values=values)
+    return Effect(
+        f"Goals weighed: {len(result.completed)} completed, {len(result.failed)} failed, {several(len(result.earned), 'achievement', 'achievements')} earned.",
+        values=values,
+    )
 
 
 @player_action("faith:first", ActionKind.WORSHIP)

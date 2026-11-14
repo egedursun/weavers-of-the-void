@@ -13,6 +13,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -172,7 +173,7 @@ export function EnginePage() {
                   Whole epoch
                 </Text>
                 <Muted as='span' variant='caption'>
-                  {`${all.length} steps`}
+                  {`${plural(all.length, 'step', 'steps')}`}
                 </Muted>
               </span>
             </Button>
@@ -201,8 +202,8 @@ export function EnginePage() {
                     </Text>
                     <Muted as='span' variant='caption' truncate>
                       {silent > 0
-                        ? `${members.length} steps · ${silent} off`
-                        : `${members.length} steps`}
+                        ? `${plural(members.length, 'step', 'steps')} · ${silent} off`
+                        : `${plural(members.length, 'step', 'steps')}`}
                     </Muted>
                   </span>
                 </Button>

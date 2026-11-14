@@ -25,6 +25,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -590,7 +591,7 @@ export function DistrictDesigns({
       hint='Kinds of district devised for this world, each on a base kind'
       aside={
         <Badge size='sm' variant='secondary'>
-          {`${plan.designs.length} designs`}
+          {`${plural(plan.designs.length, 'design', 'designs')}`}
         </Badge>
       }
       wide

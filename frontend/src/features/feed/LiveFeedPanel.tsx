@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react'
 import { ArrowDown, Eraser, Radio } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { EmptyState, Timeline } from '@/components/domain'
@@ -107,7 +108,7 @@ export function LiveFeedPanel({
               ? 'No events yet'
               : visible === total
                 ? `${total} ${total === 1 ? 'event' : 'events'}`
-                : `Showing ${visible} of ${total} events`}
+                : `Showing ${visible} of ${plural(total, 'event', 'events')}`}
           </Muted>
           <div className='flex shrink-0 items-center gap-1'>
             <FeedSoundControls />

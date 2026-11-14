@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from enum import StrEnum
 
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.engine.primitives.records import sweep_dead_bonds
@@ -43,4 +44,4 @@ async def run_task(database: Database, task: IntegrityTask) -> IntegrityOutcome:
         cosmos = await CosmosRepository(session).require_cosmos()
         swept = await sweep_dead_bonds(session, cosmos.epoch)
     counters = {"closed": swept.closed, "transferred": swept.transferred}
-    return IntegrityOutcome(task, counters, f"Closed {swept.closed} bonds of the dead and passed {swept.transferred} to heirs.")
+    return IntegrityOutcome(task, counters, f"Closed {several(swept.closed, 'bond', 'bonds')} of the dead and passed {swept.transferred} to heirs.")

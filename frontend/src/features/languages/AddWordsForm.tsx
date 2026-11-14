@@ -3,6 +3,7 @@ import { BookPlus, Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { wordKindValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -148,7 +149,9 @@ export function AddWordsForm({
           onClick={() => add.mutate()}
         >
           <BookPlus />
-          {words.length > 1 ? `Add ${words.length} words` : 'Add the word'}
+          {words.length > 1
+            ? `Add ${plural(words.length, 'word', 'words')}`
+            : 'Add the word'}
         </Button>
       </div>
     </Section>

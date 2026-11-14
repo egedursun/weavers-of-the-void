@@ -9,6 +9,7 @@ import {
   Skull,
   Sparkles,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
@@ -221,7 +222,7 @@ export function WorldSummary({ state }: WorldSummaryProps) {
             {`${state.notifications_unread} unread notifications`}
           </Link>
         </Text>
-        <Muted as='span'>{`${state.promptless_count} records without an image prompt`}</Muted>
+        <Muted as='span'>{`${plural(state.promptless_count, 'record', 'records')} without an image prompt`}</Muted>
       </div>
     </Section>
   )

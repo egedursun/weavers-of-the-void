@@ -11,6 +11,7 @@ from aerona.catalog.place_terrain import height_of, kind_spec
 from aerona.catalog.weather import WEATHER
 from aerona.constants.cartography import BIOME_COUNT
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.agrarian import IntensificationRow, LandRingRow
@@ -1231,7 +1232,7 @@ async def adopt_calendar(ctx: TickContext, record: EntityRow, holder_id: int) ->
     first = calendar.month_names[0] if calendar.month_names else "the first"
     written = await ctx.chronicle(
         ChronicleKind.CULTURE,
-        f"{who} began to count the year by {record.name}: {len(calendar.month_names)} months, from {first}.",
+        f"{who} began to count the year by {record.name}: {several(len(calendar.month_names), 'month', 'months')}, from {first}.",
         template_key="season.calendar_adopted",
         entity_ids=[record.id, holder_id],
         world_id=record.world_id,

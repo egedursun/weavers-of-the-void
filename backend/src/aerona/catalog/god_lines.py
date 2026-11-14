@@ -89,8 +89,8 @@ BLOODLINE_CURSE = Line(
     "gods.power.bloodline_curse",
     "{creator}, {reason}cursed {root}'s bloodline: {count} living descendants fell under the curse; those yet to be born will carry it too.",
 )
-BLOODLINE_LIFT = Line("gods.power.bloodline_lift", "{creator} lifted the curse from {root}'s bloodline ({count} people).")
-BLOODLINE_NEWBORNS = Line("gods.power.bloodline_newborns", "The bloodline curse passed to {count} newborns: {names}.")
+BLOODLINE_LIFT = Line("gods.power.bloodline_lift", "{creator} lifted the curse from {root}'s bloodline ({count:person|people}).")
+BLOODLINE_NEWBORNS = Line("gods.power.bloodline_newborns", "The bloodline curse passed to {count:newborn|newborns}: {names}.")
 PROPHET_COMMUNITY = Line("gods.power.prophet_community", "{community} began worshipping the creator {creator} by the word of the prophet {prophet}.")
 PROPHET_COMMUNITY_VOW = "by the word of the prophet {prophet}"
 CONVERT = Line("gods.power.convert", "{creator} turned {entity} to the creator{old}. It now worships the creator directly.")
@@ -98,7 +98,7 @@ CONVERT_VOW = "{creator} turned them to the creator"
 WRATH = Line("gods.power.wrath", "{creator} destroyed {entity} in wrath{reason}{deaths}.")
 WRATH_NOTE = "Epoch {epoch}: destroyed by {creator}'s wrath{reason}."
 WRATH_HOW = "together with {entity}"
-WORLD_WRATH = Line("gods.power.world_wrath", "{creator} sent {disaster} upon all of {world}: all {count} regions were shaken.")
+WORLD_WRATH = Line("gods.power.world_wrath", "{creator} sent {disaster} upon all of {world}: all {count:region|regions} were shaken.")
 REBELLION = Line("gods.power.rebellion_declared", "{son} rebelled against the creator {creator}: {manifesto}")
 REBELLION_SPONTANEOUS_MANIFESTO = "loyalty exhausted and anger overflowing; no one heard a declaration, only the creator's name was erased from the altars."
 REBELLION_ENDED = Line(
@@ -107,7 +107,7 @@ REBELLION_ENDED = Line(
 CURSE_REASON_BLOODY_HAND = "{victim}'s blood did not stay on the ground"
 CURSE_REASON_TEMPLE = "{creator} did not forget the hand that tore down {place}"
 CURSE_REASON_CURSED = "anger overflowing, the curse fell on the blood of the cursed too"
-CURSE_REASON_KILLER = "the hand that took {count} lives became the target of the creator's anger"
+CURSE_REASON_KILLER = "the hand that took {count:life|lives} became the target of the creator's anger"
 
 REPUTATION_CHANGE = Line("gods.reputation.change", "{son} now sees the creator as {label:an} god.")
 PASSIONS_REVEALED = Line("gods.reputation.passions", "{creator} was revealed: the creator's passions are {passions}.")
@@ -183,7 +183,7 @@ RITE_KIND_NAMES = {"prayer": "a prayer", "offering": "a wealth offering", "blood
 RITE_COST_PRAYER = "only their prayers"
 RITE_COST_PAID = "{source} {amount}"
 RITE_COST_SOURCES = {"wealth": "from its wealth", "prosperity": "from its prosperity", "craft": "from its craft labour"}
-RITE_COST_LIVES = "{count} lives"
+RITE_COST_LIVES = "{count:life|lives}"
 RITE_COST_LIFE = "{victim}'s life"
 RITE_SACRIFICE_REASON = "sacrificed for {son}'s return"
 SCHEME = Line("gods.death.scheme", "{sibling} performed {kind} for their dead sibling {son} ({cost} essence){extra}{devotion}.")

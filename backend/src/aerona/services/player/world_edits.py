@@ -4,7 +4,7 @@ from aerona.cartography.terrain import default_terrain
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.repositories.names import NameRepository, normalize_name
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -168,7 +168,7 @@ async def _discovery(scope: PlayerScope, world: WorldRow, discovery: Discovery, 
     still = len(list(closed))
     note = "came out of the mist"
     if reopened:
-        note += f"; {len(reopened)} roads closed during forgetting were reopened"
+        note += f"; {several(len(reopened), 'road', 'roads')} closed during forgetting were reopened"
     if still:
         note += f"; {still} roads remain closed (closed for another reason or the other end is forgotten; reopen with Open road if needed)"
     notes.append(note)

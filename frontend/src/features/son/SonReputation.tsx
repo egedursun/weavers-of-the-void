@@ -1,6 +1,7 @@
 import { Eye, Heart, RefreshCw, Skull } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -9,11 +10,7 @@ import { ActionButton } from '@/features/pantheon/ActionButton'
 import { type SonRecord } from '@/features/pantheon/api'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import {
-  REPUTATION_BADGE,
-  REPUTATION_LABEL,
-  plural,
-} from '@/features/pantheon/labels'
+import { REPUTATION_BADGE, REPUTATION_LABEL } from '@/features/pantheon/labels'
 import { type SonDetail } from './api'
 
 const RULE_MISSING = 'The world rule for this push is not loaded.'

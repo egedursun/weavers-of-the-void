@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Gavel, Landmark, Minus, Plus, Scale, Shield } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
@@ -132,7 +133,7 @@ function CategoryCard({
       icon={category.icon}
       tone={category.tone}
       title={category.label}
-      caption={`${row.rights.length} rights`}
+      caption={`${plural(row.rights.length, 'right', 'rights')}`}
       removeLabel='Strike the category'
       editTitle='Set the category'
       note='Each category of folk holds its own rights: office, marriage, arms and the courts.'

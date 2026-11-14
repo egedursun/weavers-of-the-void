@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.urban import SERVICE_OF
 from aerona.catalog.zones import CIVIC_SERVICE_OF, ZONE_OF_DISTRICT, ZONE_OF_STRUCTURE
+from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -227,8 +228,16 @@ async def land_plan(session: AsyncSession, region: EntityRow) -> Plan | None:
     covers: dict[LandCover, int] = {}
     for tile in tiles:
         covers[tile.cover] = covers.get(tile.cover, 0) + 1
-    facts = [(cover.value.capitalize(), f"{count} of {len(tiles)} tiles") for cover, count in sorted(covers.items(), key=lambda item: -item[1])]
-    facts.append(("On the land", f"{len(towns)} settlements, {len(places)} places, {len(works)} works, {len(deposits)} deposits"))
+    facts = [
+        (cover.value.capitalize(), f"{count} of {several(len(tiles), 'tile', 'tiles')}") for cover, count in sorted(covers.items(), key=lambda item: -item[1])
+    ]
+    on_land = [
+        several(len(towns), "settlement", "settlements"),
+        several(len(places), "place", "places"),
+        several(len(works), "work", "works"),
+        several(len(deposits), "deposit", "deposits"),
+    ]
+    facts.append(("On the land", ", ".join(on_land)))
     caption = f"{region.name}: its ground and cover tile by tile, its river, settlements (circles), places (triangles), works (squares) and deposits (diamonds)"
     return Plan(_frame([(tile.q, tile.r) for tile in tiles], body, f"Land of {region.name}"), caption, facts)
 

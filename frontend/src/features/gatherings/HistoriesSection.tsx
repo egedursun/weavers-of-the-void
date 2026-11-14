@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { MapPin, ScrollText, UserPlus, X } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -71,7 +72,9 @@ export function SetDownHistory({
       title='Set down a history'
       note='Gather figures and places into a war, a pilgrimage, a feast or any other history; leave the name empty and one is given.'
       columns={3}
-      meta={<Chip icon={UserPlus}>{`${count} figures`}</Chip>}
+      meta={
+        <Chip icon={UserPlus}>{`${plural(count, 'figure', 'figures')}`}</Chip>
+      }
       action={
         <Button
           size='sm'
@@ -241,7 +244,9 @@ export function HistoriesSection({
         ) : (
           <>
             <div className='flex min-w-0 flex-wrap gap-1.5'>
-              <Chip icon={ScrollText}>{`${entries.length} histories`}</Chip>
+              <Chip
+                icon={ScrollText}
+              >{`${plural(entries.length, 'history', 'histories')}`}</Chip>
               <Chip
                 icon={MapPin}
                 variant='warning'

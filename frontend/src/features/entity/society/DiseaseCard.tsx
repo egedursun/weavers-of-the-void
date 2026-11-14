@@ -27,6 +27,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -850,7 +851,7 @@ export function DiseaseSection({
               hint={
                 data.outbreaks.length === 1
                   ? 'In one land'
-                  : `Across ${data.outbreaks.length} lands`
+                  : `Across ${plural(data.outbreaks.length, 'land', 'lands')}`
               }
             />
             <KpiTile

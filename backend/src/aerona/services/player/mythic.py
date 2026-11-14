@@ -2,6 +2,7 @@ from pydantic import Field
 
 from aerona.catalog.mythic import QUEST_PARTY_MAX
 from aerona.constants.schema import NAME_MAX_LENGTH
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, ServitorRank, ServitorRole
@@ -103,7 +104,7 @@ async def advance_quest(scope: PlayerScope, command: QuestTarget) -> Effect:
 @player_action("heroquest:party", ActionKind.EDIT_RECORD)
 async def set_party(scope: PlayerScope, command: QuestParty) -> Effect:
     row = await control.set_party(await scope.context("heroquest_party"), command.quest_id, command.members)
-    return Effect(f"The heroquest goes on with {len(command.members)} companions.", row.quester_entity_id)
+    return Effect(f"The heroquest goes on with {several(len(command.members), 'companion', 'companions')}.", row.quester_entity_id)
 
 
 @player_action("heroquest:delete", ActionKind.EDIT_RECORD)

@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.ages import AgeCycle, ArcRole, ArcStage, ArcTemplate, SetupKind
 from aerona.engine.storyteller import control
@@ -174,7 +175,7 @@ async def irregular_season_create(scope: PlayerScope, command: SeasonDraft) -> E
 @player_action("irregular_season:forecast", ActionKind.EDIT_RECORD)
 async def irregular_season_forecast(scope: PlayerScope, command: WorldTarget) -> Effect:
     made = await control.read_winter(await scope.context("irregular_season_forecast"), command.world_id)
-    return Effect(f"{made} peoples read the coming of the seasons.", command.world_id)
+    return Effect(f"{several(made, 'people', 'peoples')} read the coming of the seasons.", command.world_id)
 
 
 @player_action("winter_forecast:set", ActionKind.EDIT_RECORD)

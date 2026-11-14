@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.cycles import (
     ChallengeKind,
@@ -491,7 +492,7 @@ async def circuit_edit(scope: PlayerScope, command: CircuitEdit) -> Effect:
 @player_action("circuit:route", ActionKind.EDIT_RECORD)
 async def circuit_route(scope: PlayerScope, command: CircuitRoute) -> Effect:
     row = await control.route_circuit(await scope.context("circuit_route"), command.circuit_id, command.stops)
-    return Effect(f"{row.name} now turns through {len(row.stops)} stops.", command.stops[0])
+    return Effect(f"{row.name} now turns through {several(len(row.stops), 'stop', 'stops')}.", command.stops[0])
 
 
 @player_action("circuit:pass", ActionKind.EDIT_RECORD)
@@ -630,7 +631,7 @@ async def camp_edit(scope: PlayerScope, command: TownEdit) -> Effect:
 @player_action("camp:route", ActionKind.EDIT_RECORD)
 async def camp_route(scope: PlayerScope, command: CampRoute) -> Effect:
     row = await control.route_camp(await scope.context("camp_route"), command.town_id, command.regions)
-    return Effect(f"The camp now follows {len(row.circuit)} pastures.", command.town_id)
+    return Effect(f"The camp now follows {several(len(row.circuit), 'pasture', 'pastures')}.", command.town_id)
 
 
 @player_action("camp:move", ActionKind.EDIT_RECORD)
@@ -660,7 +661,7 @@ async def confederation_edit(scope: PlayerScope, command: ConfederationEdit) -> 
 @player_action("confederation:members", ActionKind.EDIT_RECORD)
 async def confederation_members(scope: PlayerScope, command: ConfederationMembers) -> Effect:
     row = await control.join_confederation(await scope.context("confederation_members"), command.confederation_id, command.members)
-    return Effect(f"{row.name} now joins {len(row.members)} camps.")
+    return Effect(f"{row.name} now joins {several(len(row.members), 'camp', 'camps')}.")
 
 
 @player_action("confederation:dissolve", ActionKind.EDIT_RECORD)
@@ -706,7 +707,7 @@ async def indenture_create(scope: PlayerScope, command: IndentureDraft) -> Effec
         employer_id=command.employer_id,
         origin_id=command.origin_id,
     )
-    return Effect(f"{row.count} are bound in labour.", command.community_id, values={"indenture_id": row.id})
+    return Effect(f"{several(row.count, 'is', 'are')} bound in labour.", command.community_id, values={"indenture_id": row.id})
 
 
 @player_action("indenture:edit", ActionKind.EDIT_RECORD)

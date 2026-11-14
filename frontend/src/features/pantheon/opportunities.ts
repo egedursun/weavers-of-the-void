@@ -1,5 +1,6 @@
+import { plural } from '@/lib/units'
 import { type PlayerHints } from './api'
-import { plural, verbFor } from './labels'
+import { verbFor } from './labels'
 
 export type Opportunity = { key: string; title: string; body: string }
 

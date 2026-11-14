@@ -1,4 +1,5 @@
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { ExpandableText, PagedList } from '@/components/domain'
 import { Label, SectionTitle, Text } from '@/components/typography'
 import { romanNumeral } from './labels'
@@ -12,7 +13,7 @@ function epochRange(start: number, end: number): string {
 export function EpicView({ epic }: { epic: Epic }) {
   return (
     <article className='flex min-w-0 flex-col gap-3'>
-      <Label>{`Written in Epoch ${epic.epoch} · ${epic.chapters.length} chapters`}</Label>
+      <Label>{`Written in Epoch ${epic.epoch} · ${plural(epic.chapters.length, 'chapter', 'chapters')}`}</Label>
       <SectionTitle level={4}>{epic.title}</SectionTitle>
       {epic.verse && (
         <Text

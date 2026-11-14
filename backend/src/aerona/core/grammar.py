@@ -22,7 +22,9 @@ def an(noun: object, *, capital: bool = False) -> str:
     return f"{article.capitalize() if capital else article} {word}"
 
 
-def several(count: int, one: str, many: str) -> str:
+def several(count: int | None, one: str, many: str) -> str:
+    if count is None:
+        return f"an unknown number of {many}"
     return f"{count} {one if count == 1 else many}"
 
 
@@ -30,6 +32,9 @@ class ArticleFormatter(Formatter):
     def format_field(self, value: Any, format_spec: str) -> str:
         if format_spec in ARTICLE_SPECS:
             return an(str(value), capital=ARTICLE_SPECS[format_spec])
+        if "|" in format_spec and isinstance(value, int):
+            one, many = format_spec.split("|", 1)
+            return several(value, one, many)
         formatted: str = super().format_field(value, format_spec)
         return formatted
 

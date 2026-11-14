@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.catalog import god_lines
+from aerona.core.grammar import fill
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
@@ -121,7 +122,7 @@ async def wrathful_pool(ctx: TickContext, creator: CreatorRow, cursed: set[int])
         for killer_id, count in counts:
             killer = await _uncursed_mortal(ctx, killer_id, cursed)
             if killer is not None and killer.id not in pool:
-                pool[killer.id] = CurseCandidate(killer, god_lines.CURSE_REASON_KILLER.format(count=count))
+                pool[killer.id] = CurseCandidate(killer, fill(god_lines.CURSE_REASON_KILLER, count=count))
     return list(pool.values())
 
 

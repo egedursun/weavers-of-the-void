@@ -145,7 +145,7 @@ function GalaxyHero({
             <Badge
               size='sm'
               variant='warning'
-            >{`${galaxy.locked.length} values held`}</Badge>
+            >{`${plural(galaxy.locked.length, 'value', 'values')} held`}</Badge>
           )}
         </>
       }

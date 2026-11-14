@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Hourglass, Pencil, Plus, Shapes, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -373,7 +374,7 @@ export function SkillsSection({ nodeId }: { nodeId: number }) {
               })}
             </div>
           )}
-          <Muted variant='caption'>{`${mind.skills.length} skills known`}</Muted>
+          <Muted variant='caption'>{`${plural(mind.skills.length, 'skill', 'skills')} known`}</Muted>
           <SkillControls mind={mind} />
         </div>
       )}

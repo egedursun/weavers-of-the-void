@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { navItem } from '@/config/navigation'
 import { Gem } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -75,8 +76,8 @@ export function CosmosTopBar({
       meta={
         index && (
           <>
-            <Badge variant='outline'>{`${index.data.stars.length} stars`}</Badge>
-            <Badge variant='outline'>{`${index.worlds.length} worlds`}</Badge>
+            <Badge variant='outline'>{`${plural(index.data.stars.length, 'star', 'stars')}`}</Badge>
+            <Badge variant='outline'>{`${plural(index.worlds.length, 'world', 'worlds')}`}</Badge>
             <Badge variant='outline'>{`${open} open routes`}</Badge>
             {closed > 0 && (
               <Badge variant='outline'>{`${closed} closed`}</Badge>

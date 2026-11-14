@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog import god_lines
+from aerona.core.grammar import fill
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
@@ -43,7 +44,7 @@ async def test_wrath_gathers_temple_breakers_the_cursed_and_killers(session: Asy
     reasons = {candidate.mortal.id: candidate.reason for candidate in pool}
     assert reasons[breaker.id] == god_lines.CURSE_REASON_TEMPLE.format(creator=world.creator.name, place=temple.name)
     assert reasons[cursed.id] == god_lines.CURSE_REASON_CURSED
-    assert reasons[killer.id] == god_lines.CURSE_REASON_KILLER.format(count=2)
+    assert reasons[killer.id] == fill(god_lines.CURSE_REASON_KILLER, count=2)
     world.creator.mood_anger = 100
     await spontaneous_curse(make_context(session, tuned, 3, "god_power"), world.creator)
     entities = EntityRepository(session)

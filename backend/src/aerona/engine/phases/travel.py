@@ -9,7 +9,7 @@ from aerona.catalog.travel import TRAVEL_METHODS
 from aerona.catalog.worlds import HARSH_ATMOSPHERES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -710,7 +710,12 @@ async def _forget_on_river(ctx: TickContext, arrival: Arrival) -> None:
     bonds = BondRepository(ctx.session)
     for bond in forgotten:
         await bonds.deactivate(bond, ctx.epoch, "forgotten on the river of the dead")
-    add_event(arrival.journey, ctx.epoch, JourneyEventKind.MEMORY_LOSS, f"the living forgot on the river; {len(forgotten)} kinds of knowledge were lost")
+    add_event(
+        arrival.journey,
+        ctx.epoch,
+        JourneyEventKind.MEMORY_LOSS,
+        f"the living forgot on the river; {several(len(forgotten), 'kind', 'kinds')} of knowledge were lost",
+    )
 
 
 async def _dream_toll(ctx: TickContext, arrival: Arrival) -> bool:

@@ -1,3 +1,4 @@
+import { plural } from '@/lib/units'
 import { PagedList } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { Dot } from './ZoneDot'
@@ -116,7 +117,7 @@ export function LandLegend({ scene }: { scene: LandScene }) {
           <span role='listitem' className='flex items-center gap-1.5'>
             <Dot fill={swatch.fill} />
             <Text as='span' variant='caption'>
-              {`${swatch.label} · ${swatch.count} of ${scene.tiles.length} tiles`}
+              {`${swatch.label} · ${swatch.count} of ${plural(scene.tiles.length, 'tile', 'tiles')}`}
             </Text>
           </span>
         )}

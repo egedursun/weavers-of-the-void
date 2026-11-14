@@ -125,7 +125,7 @@ describe('wilds sections', () => {
     await expect
       .element(
         screen.getByRole('img', {
-          name: /Food web of 2 kinds in 2 tiers, 1 hunts/,
+          name: /Food web of 2 kinds in 2 tiers, 1 hunt/,
         })
       )
       .toBeVisible()

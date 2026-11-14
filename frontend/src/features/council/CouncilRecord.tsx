@@ -11,6 +11,7 @@ import {
   ThumbsDown,
   ThumbsUp,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -171,7 +172,7 @@ export function CouncilRecord({
         <CollapsibleTrigger asChild>
           <Button variant='ghost' size='sm'>
             <ChevronDown />
-            {`${minutes.speeches.length} speeches`}
+            {`${plural(minutes.speeches.length, 'speech', 'speeches')}`}
           </Button>
         </CollapsibleTrigger>
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Gavel, Lock, Plus, Save, Trash2, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -572,7 +573,7 @@ function ProposalRow({ row, ctx }: { row: Proposal; ctx: Ctx }) {
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
         <Muted variant='caption'>
           {debating
-            ? `Stalled ${row.stalled_epochs} of ${row.stall_limit} epochs before it fails; ${row.stances.length} voices weigh in.`
+            ? `Stalled ${row.stalled_epochs} of ${row.stall_limit} epochs before it fails; ${plural(row.stances.length, 'voice', 'voices')} weigh in.`
             : `Resolved in epoch ${row.resolved_epoch ?? row.proposed_epoch}.`}
         </Muted>
         <Button
@@ -1091,7 +1092,7 @@ function CaseRow({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           {'The truth: '}
           <Ref node={row.culprit} empty='no true culprit' />
           {row.penalty ? `; sentence: ${row.penalty.replace('_', ' ')}` : ''}
-          {`; ${row.witnesses.length} witnesses`}
+          {`; ${plural(row.witnesses.length, 'witness', 'witnesses')}`}
         </Muted>
         <Button
           size='sm'

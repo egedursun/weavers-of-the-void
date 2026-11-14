@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.cycles import CampRow, ConfederationRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
@@ -132,7 +133,12 @@ async def reroute(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: C
     camp.circuit = fresh
     camp.season_index = 0
     tally.rerouted += 1
-    await note(ctx, f"With its pastures grazed bare, {town.name} set out on a new round of {len(fresh)} pastures.", key="nomads.rerouted", ids=[town.id])
+    await note(
+        ctx,
+        f"With its pastures grazed bare, {town.name} set out on a new round of {several(len(fresh), 'pasture', 'pastures')}.",
+        key="nomads.rerouted",
+        ids=[town.id],
+    )
 
 
 async def move(ctx: TickContext, town: EntityRow, camp: CampRow, tally: NomadTally) -> None:

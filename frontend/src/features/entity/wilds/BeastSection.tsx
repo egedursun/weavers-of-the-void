@@ -31,6 +31,7 @@ import {
   herdTrainingValues,
   sizeClassValues,
 } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -286,7 +287,11 @@ function Hoard({ card }: { card: BeastCard }) {
       title='Its hoard'
       icon={Coins}
       tone='gold'
-      hint={rows.length > 0 ? `${total} goods heaped in its lair` : undefined}
+      hint={
+        rows.length > 0
+          ? `${plural(total, 'good', 'goods')} heaped in its lair`
+          : undefined
+      }
       wide
     >
       {rows.length === 0 ? (

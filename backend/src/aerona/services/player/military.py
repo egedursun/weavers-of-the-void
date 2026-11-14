@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.military import CaptiveFate, CommanderTrait, Stance, UnitKind, WarAimKind
 from aerona.engine.military import control
@@ -205,7 +206,7 @@ async def edit_occupation(scope: PlayerScope, command: EditOccupation) -> Effect
 @player_action("captives:settle", ActionKind.OTHER)
 async def settle_captives(scope: PlayerScope, command: SettleCaptives) -> Effect:
     row = await control.settle_cohort(await scope.context("captives"), command.cohort_id, command.fate, command.count)
-    return Effect(f"{row.count} captives: {row.fate.value}.", row.captor_entity_id)
+    return Effect(f"{several(row.count, 'captive', 'captives')}: {row.fate.value}.", row.captor_entity_id)
 
 
 @player_action("commander:trait", ActionKind.EDIT_RECORD)

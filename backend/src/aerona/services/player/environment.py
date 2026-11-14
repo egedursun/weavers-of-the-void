@@ -3,6 +3,7 @@ from pydantic import Field
 from aerona.cartography.biomes import Biome
 from aerona.catalog.weather import WEATHER
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -196,8 +197,9 @@ async def set_world_calendar(scope: PlayerScope, command: SetWorldCalendar) -> E
     )
     if command.regenerate_seasons:
         await write_seasons(await scope.context("seasons:calendar"), world)
+    seasons = several(world.season_count, "season", "seasons")
     return Effect(
-        f"{world.name} turns with an axial tilt of {world.axial_tilt}, {world.year_length_days} days a year and {world.season_count} seasons.",
+        f"{world.name} turns with an axial tilt of {world.axial_tilt}, {world.year_length_days} days a year and {seasons}.",
         target_node_id=world.id,
     )
 
@@ -211,7 +213,7 @@ async def adopt_world_calendar(scope: PlayerScope, command: CalendarTarget) -> E
     if not knowers:
         raise ValidationFailedError(f"No one knows {record.name}; a calendar needs keepers.")
     calendar = await adopt_calendar(await scope.context("calendar:adopt"), record, knowers[0])
-    return Effect(f"{record.name} now keeps a calendar of {len(calendar.month_names)} months.", target_node_id=record.id)
+    return Effect(f"{record.name} now keeps a calendar of {several(len(calendar.month_names), 'month', 'months')}.", target_node_id=record.id)
 
 
 @player_action("calendar:drop", ActionKind.OTHER)

@@ -11,6 +11,7 @@ import {
   Target,
   Users,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { KpiTile, Paged } from '@/components/domain'
@@ -111,7 +112,7 @@ export function LegendPanel({
           value={card.tellers.length + card.bards.length}
           icon={Users}
           tone='info'
-          hint={`${card.tellers.length} peoples and ${card.bards.length} bards tell it; its moral presses on the peoples`}
+          hint={`${plural(card.tellers.length, 'people', 'peoples')} and ${plural(card.bards.length, 'bard', 'bards')} tell it; its moral presses on the peoples`}
         />
         <KpiTile
           label='Kept as'

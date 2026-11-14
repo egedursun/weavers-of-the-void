@@ -201,7 +201,7 @@ describe('law depth', () => {
     await expect
       .element(
         screen.getByRole('img', {
-          name: 'Varo spying on Ilse: 1 cells and 2 agents',
+          name: 'Varo spying on Ilse: 1 cell and 2 agents',
         })
       )
       .toBeVisible()

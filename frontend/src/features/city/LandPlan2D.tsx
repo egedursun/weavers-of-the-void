@@ -1,4 +1,5 @@
 import { type ReactNode, useId } from 'react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { type LandPick } from './LandScene3D'
 import { type LandScene } from './api'
@@ -396,7 +397,7 @@ export function LandPlan2D({
     <svg
       viewBox={box.join(' ')}
       role='img'
-      aria-label={`Land of ${scene.region.name}: ${scene.tiles.length} tiles, ${scene.settlements.length} settlements, ${scene.resources.length} deposits`}
+      aria-label={`Land of ${scene.region.name}: ${plural(scene.tiles.length, 'tile', 'tiles')}, ${plural(scene.settlements.length, 'settlement', 'settlements')}, ${plural(scene.resources.length, 'deposit', 'deposits')}`}
       className={fill ? 'block h-full w-full' : 'block h-auto w-full'}
     >
       <Textures prefix={prefix} />

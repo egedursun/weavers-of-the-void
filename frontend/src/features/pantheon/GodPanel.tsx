@@ -22,6 +22,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatCompact, formatDecimal, formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -210,7 +211,7 @@ export function GodPanel({ state }: { state: WorldState }) {
         </div>
         <div className='flex min-w-0 flex-col gap-3'>
           {multi && (
-            <Label variant='overline'>{`Whole cosmos · ${state.worlds.length} worlds`}</Label>
+            <Label variant='overline'>{`Whole cosmos · ${plural(state.worlds.length, 'world', 'worlds')}`}</Label>
           )}
           <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4'>
             <KpiTile

@@ -9,6 +9,7 @@ import {
   Wheat,
 } from 'lucide-react'
 import { techniqueValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -252,7 +253,7 @@ export function DishPage({
             <Chip icon={course.icon}>{course.label}</Chip>
             <Chip
               icon={CookingPot}
-            >{`Cooked in ${row.cooked_in.length} places`}</Chip>
+            >{`Cooked in ${plural(row.cooked_in.length, 'place', 'places')}`}</Chip>
           </>
         }
       />

@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.agents.son import run_son_turn
 from aerona.agents.son_state import initiative, turn_order
 from aerona.constants.llm import HAIKU_MODEL_ID
+from aerona.core.grammar import several
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.sons import SonRow
@@ -41,7 +42,7 @@ async def son_turns(ec: EpochContext) -> None:
         return
     order = await eligible_sons(ec) if ec.runtime.llm_enabled else []
     ec.publish(EventKind.EPOCH_STARTED, {"order": [{"id": son.id, "name": son.name, "ini": round(value)} for son, value in order], "resuming": ec.resuming})
-    await ec.enter_phase(EpochPhase.GODS, f"{len(order)} sons")
+    await ec.enter_phase(EpochPhase.GODS, f"{several(len(order), 'son', 'sons')}")
     rules = await ec.rules()
     dropped: list[SonRow] = []
     counter = iter(range(1, len(order) + 1))

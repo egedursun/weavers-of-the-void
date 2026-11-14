@@ -2,7 +2,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.intrigue import name_of
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
 from aerona.db.tables.sites import ExcavationRow, SiteRoomRow
@@ -53,7 +53,7 @@ async def site_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> list
         rooms = list(await session.scalars(select(SiteRoomRow).where(SiteRoomRow.site_entity_id == site.id)))
         if rooms:
             cleared = sum(room.cleared_epoch is not None for room in rooms)
-            found.append(f"{site.name} (id {site.id}) has {len(rooms)} rooms, {cleared} cleared")
+            found.append(f"{site.name} (id {site.id}) has {several(len(rooms), 'room', 'rooms')}, {cleared} cleared")
         if not await diggable(session, site):
             continue
         dig = await session.scalar(

@@ -5,6 +5,7 @@ from aerona.catalog.domains import match_domain
 from aerona.catalog.mind import CRAFT_SKILLS
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import fill
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
@@ -477,7 +478,7 @@ async def found_settlement(call: MortalCall, args: SettleInput) -> str:
         ),
     )
     bonds = BondRepository(call.session)
-    await bonds.connect(BondDraft(call.me.id, settlement.id, BondKind.MIGRATED_TO, call.epoch, lines.MIGRANTS.format(count=migrants)))
+    await bonds.connect(BondDraft(call.me.id, settlement.id, BondKind.MIGRATED_TO, call.epoch, fill(lines.MIGRANTS, count=migrants)))
     await bonds.connect(BondDraft(settlement.id, call.me.id, BondKind.DESCENDS_FROM, call.epoch))
     language = await spoken_language(call.session, call.me.id)
     if language is not None:

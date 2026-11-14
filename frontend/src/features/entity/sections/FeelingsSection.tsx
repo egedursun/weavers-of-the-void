@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lock, Minus, Moon, Plus, Send, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -106,7 +107,7 @@ function FeelingsHero({ view }: { view: Feelings }) {
         value={mourning}
         icon={GRIEF_ICON}
         tone='info'
-        hint={`${view.dreams.length} dreams recorded`}
+        hint={`${plural(view.dreams.length, 'dream', 'dreams')} recorded`}
       />
     </div>
   )

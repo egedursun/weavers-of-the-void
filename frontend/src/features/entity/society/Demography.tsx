@@ -23,6 +23,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1002,7 +1003,7 @@ export function LabourSection({ communityId }: { communityId: number }) {
             value={formatInteger(workers)}
             icon={Hammer}
             tone='gold'
-            hint={`Across ${working.length} trades`}
+            hint={`Across ${plural(working.length, 'trade', 'trades')}`}
           />
           <KpiTile
             label='Idle hands'

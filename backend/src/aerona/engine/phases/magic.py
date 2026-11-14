@@ -1,4 +1,5 @@
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
@@ -94,7 +95,7 @@ async def magic_storms(ctx: TickContext) -> None:
         spread = f" It ran down the ley lines into {', '.join(along)}." if along else ""
         await note(
             ctx,
-            f"A magic storm broke out in {region.name}; {len(touched)} resources and items grew stronger.{spread}",
+            f"A magic storm broke out in {region.name}; {several(len(touched), 'resource', 'resources')} and items grew stronger.{spread}",
             key="magic.storm",
             ids=[region.id, event.id, *reached[1:]],
         )

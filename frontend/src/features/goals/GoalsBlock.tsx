@@ -3,6 +3,7 @@ import { ArrowRight, Flag, Play, Target, Trophy } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -75,7 +76,7 @@ function ScorePanel({ data }: { data: GoalsData }) {
           label='Score'
           icon={Trophy}
           value={total}
-          hint={`${completed} goals completed · ${earned}/${data.achievements.length} achievements`}
+          hint={`${completed} goals completed · ${earned}/${plural(data.achievements.length, 'achievement', 'achievements')}`}
         />
         <div className='flex min-w-0 flex-col gap-2 rounded-xl border bg-background p-4 lg:col-span-2'>
           <Label variant='overline'>Score over the epochs</Label>

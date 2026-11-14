@@ -10,6 +10,7 @@ import {
   Telescope,
   Trees,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -290,7 +291,7 @@ function SeasonCard({ row, blocked }: { row: Season; blocked: string | null }) {
       icon={spell.icon}
       tone={spell.tone}
       title={`${spell.label} on ${row.world.name}`}
-      caption={`Since epoch ${row.spell_started_epoch}, for ${row.spell_length} epochs · ${cause.label.toLowerCase()}`}
+      caption={`Since epoch ${row.spell_started_epoch}, for ${plural(row.spell_length, 'epoch', 'epochs')} · ${cause.label.toLowerCase()}`}
       removeLabel='Give the seasons back their measure'
       editTitle='Set the seasons'
       note='Irregular seasons run for spells of years of no set length. A long winter eats the food of every town each epoch by its severity, less for towns whose people heeded a forecast and stored food.'

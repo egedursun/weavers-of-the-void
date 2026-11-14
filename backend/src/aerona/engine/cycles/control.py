@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.base import Base
 from aerona.db.tables.cycles import (
     ALLIANCE_FIELDS,
@@ -322,7 +323,7 @@ async def new_confederation(ctx: TickContext, name: str, leader_id: int | None, 
     if leader_id is not None:
         await of_type(ctx, leader_id, MORTALS, "a mortal")
     row = await saved(ctx, ConfederationRow(name=name, leader_entity_id=leader_id, members=await members_of(ctx, members), formed_epoch=ctx.epoch, locked=[]))
-    await note(ctx, f"{name} was formed from {len(row.members)} camps.", key="nomads.confederation", ids=list(row.members))
+    await note(ctx, f"{name} was formed from {several(len(row.members), 'camp', 'camps')}.", key="nomads.confederation", ids=list(row.members))
     return row
 
 

@@ -1,4 +1,5 @@
 import { SunMoon } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -22,7 +23,7 @@ export function EpochStarChip() {
   const text = lead?.star
     ? lead.star.name
     : crowned.length > 1
-      ? `Ruling skies · ${crowned.length} worlds`
+      ? `Ruling skies · ${plural(crowned.length, 'world', 'worlds')}`
       : 'No ruling sky yet'
   const label = `Ruling sky of the epoch: ${text}`
   return (

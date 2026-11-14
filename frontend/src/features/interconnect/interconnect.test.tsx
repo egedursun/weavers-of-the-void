@@ -32,7 +32,7 @@ describe('the interconnection explorer', () => {
       mechanics: [],
     })
     const { screen } = await renderApp(<InterconnectionExplorer />)
-    await screen.getByRole('button', { name: 'War to Law: 1 carriers' }).click()
+    await screen.getByRole('button', { name: 'War to Law: 1 carrier' }).click()
     await expect.element(screen.getByText('Written by (20)')).toBeVisible()
     await expect.element(screen.getByText('writer 7')).toBeVisible()
     expect(screen.getByText('writer 8').elements()).toHaveLength(0)
