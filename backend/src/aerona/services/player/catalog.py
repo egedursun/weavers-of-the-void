@@ -10,6 +10,7 @@ from aerona.rules.registry import Rules
 from aerona.services.player import (
     affairs,
     afflictions,
+    ages,
     agrarian,
     arcana,
     arts,
@@ -3788,6 +3789,89 @@ SACRED_ACTIONS = (
     _sync(Meta("god_feeding:delete", "Stop a god feeding on a feeling", G.GOD_POWER), sacred.god_feeding_delete, sacred.FeedingTarget, free, ("S9.1/RP4",)),
 )
 
+AGES_ACTIONS = (
+    _sync(
+        Meta("formation:read", "Read a world's forming from its disc and bombardment, or shape it anew", G.WORLDS),
+        ages.formation_read,
+        ages.FormationDraft,
+        free,
+        ("S10.2/RP4",),
+    ),
+    _sync(Meta("formation:reshape", "Give a world the shape its forming implies", G.WORLDS), ages.formation_reshape, ages.WorldTarget, free, ("S10.2/RP4",)),
+    _sync(
+        Meta("formation:edit", "Edit a world's forming: zone, migration, bombardment, core, mantle, water and exotic matter", G.WORLDS),
+        ages.formation_edit,
+        ages.WorldEdit,
+        free,
+        ("S10.2/RP4",),
+    ),
+    _sync(Meta("formation:delete", "Forget a world's forming", G.WORLDS), ages.formation_delete, ages.WorldTarget, free, ("S10.2/RP4",)),
+    _sync(Meta("irregular_season:create", "Make a world's seasons irregular", G.WORLDS), ages.irregular_season_create, ages.SeasonDraft, free, ("S10.2/RP4",)),
+    _sync(
+        Meta("irregular_season:forecast", "Have the peoples of a world forecast its seasons", G.WORLDS),
+        ages.irregular_season_forecast,
+        ages.WorldTarget,
+        free,
+        ("S10.2/RP4",),
+    ),
+    _sync(
+        Meta("irregular_season:edit", "Edit a world's irregular seasons: spell, length and severity", G.WORLDS),
+        ages.irregular_season_edit,
+        ages.WorldEdit,
+        free,
+        ("S10.2/RP4",),
+    ),
+    _sync(
+        Meta("irregular_season:delete", "Give a world back the measure of its seasons", G.WORLDS),
+        ages.irregular_season_delete,
+        ages.WorldTarget,
+        free,
+        ("S10.2/RP4",),
+    ),
+    _sync(Meta("winter_forecast:set", "Set a people's forecast of the seasons", G.WORLDS), ages.winter_forecast_set, ages.ForecastDraft, free, ("S10.2/RP4",)),
+    _sync(
+        Meta("winter_forecast:edit", "Edit a people's forecast of the seasons", G.WORLDS), ages.winter_forecast_edit, ages.ForecastEdit, free, ("S10.2/RP4",)
+    ),
+    _sync(
+        Meta("winter_forecast:delete", "Forget a people's forecast of the seasons", G.WORLDS),
+        ages.winter_forecast_delete,
+        ages.ForecastTarget,
+        free,
+        ("S10.2/RP4",),
+    ),
+    _sync(
+        Meta("eco_transformation:set", "Aim a plan to remake the land", G.WORLDS), ages.eco_transformation_set, ages.TransformationDraft, free, ("S10.2/RP4",)
+    ),
+    _sync(
+        Meta("eco_transformation:edit", "Edit the remaking of the land: targets, regions changed, resistance and sabotage", G.WORLDS),
+        ages.eco_transformation_edit,
+        ages.PlanEdit,
+        free,
+        ("S10.2/RP4",),
+    ),
+    _sync(Meta("eco_transformation:delete", "Stop a plan aiming the land", G.WORLDS), ages.eco_transformation_delete, ages.PlanTarget, free, ("S10.2/RP4",)),
+    _sync(Meta("age:cycle", "Make the cosmos turn in ages or run on to its end", G.FATE), ages.age_cycle, ages.CycleChoice, free, ("S10.8/RP4",)),
+    _sync(Meta("age:turn", "Turn the age of a cyclic cosmos", G.FATE), ages.age_turn, ages.AgeTurn, free, ("S10.8/RP4",)),
+    _sync(Meta("age:edit", "Edit an age", G.FATE), ages.age_edit, ages.AgeEdit, free, ("S10.8/RP4",)),
+    _sync(Meta("age:delete", "Strike an age from the record", G.FATE), ages.age_delete, ages.AgeTarget, free, ("S10.8/RP4",)),
+    _sync(Meta("age_echo:create", "Have a great life echo in an age", G.FATE), ages.age_echo_create, ages.EchoDraft, free, ("S10.8/RP4",)),
+    _sync(Meta("age_echo:edit", "Edit an echo", G.FATE), ages.age_echo_edit, ages.EchoEdit, free, ("S10.8/RP4",)),
+    _sync(Meta("age_echo:delete", "Silence an echo", G.FATE), ages.age_echo_delete, ages.EchoTarget, free, ("S10.8/RP4",)),
+    _sync(Meta("arc:create", "Begin a tale in a life", G.FATE), ages.arc_create, ages.ArcDraft, free, ("F36",)),
+    _sync(Meta("arc:press", "Press a tale toward its next turn", G.FATE), ages.arc_press, ages.ArcPress, free, ("F36",)),
+    _sync(Meta("arc:edit", "Edit a tale: its kind, stage, outcome, beats and drama", G.FATE), ages.arc_edit, ages.ArcEdit, free, ("F36",)),
+    _sync(Meta("arc:delete", "Strike a tale from the record", G.FATE), ages.arc_delete, ages.ArcTarget, free, ("F36",)),
+    _sync(Meta("arc_figure:create", "Bring a figure into a tale", G.FATE), ages.arc_figure_create, ages.FigureDraft, free, ("F36",)),
+    _sync(Meta("arc_figure:edit", "Edit a figure's part in a tale", G.FATE), ages.arc_figure_edit, ages.FigureEdit, free, ("F36",)),
+    _sync(Meta("arc_figure:delete", "Take a figure out of a tale", G.FATE), ages.arc_figure_delete, ages.FigureTarget, free, ("F36",)),
+    _sync(Meta("arc_beat:create", "Give a tale a beat", G.FATE), ages.arc_beat_create, ages.BeatDraft, free, ("F36",)),
+    _sync(Meta("arc_beat:edit", "Edit a beat of a tale", G.FATE), ages.arc_beat_edit, ages.BeatEdit, free, ("F36",)),
+    _sync(Meta("arc_beat:delete", "Strike a beat from a tale", G.FATE), ages.arc_beat_delete, ages.BeatTarget, free, ("F36",)),
+    _sync(Meta("setup:create", "Set something up to be paid off", G.FATE), ages.setup_create, ages.SetupDraft, free, ("F36",)),
+    _sync(Meta("setup:edit", "Edit a setup and its payoff", G.FATE), ages.setup_edit, ages.SetupEdit, free, ("F36",)),
+    _sync(Meta("setup:delete", "Strike a setup from the record", G.FATE), ages.setup_delete, ages.SetupTarget, free, ("F36",)),
+)
+
 ARTS_ACTIONS = (
     _sync(Meta("art_price:set", "Value a work on the market", G.SOCIETY), arts.art_price_set, arts.PriceDraft, free, ("S7.4/RP4",)),
     _sync(Meta("art_price:edit", "Edit the price, provenance and interest of a work", G.SOCIETY), arts.art_price_edit, arts.ArtworkEdit, free, ("S7.4/RP4",)),
@@ -4363,6 +4447,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *OPERATIONS_ACTIONS,
     *SACRED_ACTIONS,
     *ARTS_ACTIONS,
+    *AGES_ACTIONS,
     *ROUTE_ACTIONS,
     *STRUCTURE_ACTIONS,
     *FOUNDATION_ACTIONS,

@@ -522,6 +522,16 @@ class SonResult(StrEnum):
     BEAST_BOUNTY_REFUSED = "You cannot set that bounty: {{ why }}."
     BIRTH_MARKED = "{{ mortal }} now bears {{ sign }}, held to be {{ influence }}."
     BIRTH_MARK_REFUSED = "You cannot mark that birth: {{ why }}."
+    SEASONS_UNSETTLED = "The seasons of {{ world }} lost their measure; the first spell runs {{ length }} epochs."
+    SEASONS_REFUSED = "You cannot unsettle those seasons: {{ why }}."
+    WINTER_LENGTHENED = "The long winter of {{ world }} will hold {{ epochs }} epochs longer."
+    WINTER_REFUSED = "You cannot lengthen that winter: {{ why }}."
+    TALE_PRESSED = "The tale of {{ tale }} of {{ subject }} is pressed toward its next turn."
+    TALE_REFUSED = "You cannot press that tale: {{ why }}."
+    FORESHADOWED = "Something is set up about {{ subject }}; it lapses by epoch {{ lapse }} if never paid."
+    FORESHADOW_REFUSED = "You cannot set that up: {{ why }}."
+    LIFE_ECHOED = "The life of {{ mortal }} will echo into the next age as a tale of {{ tale }}."
+    ECHO_REFUSED = "You cannot make that life echo: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -952,3 +962,9 @@ class MortalResult(StrEnum):
     CONTRACT_DECLINED = "You cannot take that contract: {{ why }}."
     CONSTRUCT_COMMANDED = "{{ name }} now carries your order to {{ order }}, aimed at {{ target }}."
     COMMAND_DECLINED = "You cannot command that construct: {{ why }}."
+    SEASONS_FORECAST = "You read the seasons; {{ peoples }} peoples have a forecast."
+    FORECAST_DECLINED = "You cannot forecast the seasons: {{ why }}."
+    REMAKING_SABOTAGED = "You set back {{ plan }}; its progress stands at {{ progress }}."
+    SABOTAGE_DECLINED = "You cannot sabotage that: {{ why }}."
+    VENGEANCE_SWORN = "You swore vengeance on {{ foe }}; your tale stands at its {{ stage }}."
+    VENGEANCE_DECLINED = "You cannot swear that vengeance: {{ why }}."

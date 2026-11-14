@@ -12,6 +12,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import (
     OPEN_RIFT_STATES,
@@ -44,6 +45,7 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity, living_sons
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.war import ongoing_war_count
+from aerona.engine.storyteller.ages import turn_age
 from aerona.engine.transition import cosmos_of, doom_calling, leakiest_world
 from aerona.rules.registry import Rules
 
@@ -312,6 +314,8 @@ async def doom_clock(ctx: TickContext) -> None:
             reset = round_half_up(threshold * doom.after_calling_pct / PERCENT)
         else:
             await end_by(ctx, variant)
+            if cosmos.age_cycle is AgeCycle.CYCLIC:
+                await turn_age(ctx, variant)
             reset = round_half_up(threshold * doom.after_ruin_pct / PERCENT)
         record_doom(ctx, DoomItem.RESET, reset - clock)
         clock = reset

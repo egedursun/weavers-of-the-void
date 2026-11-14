@@ -227,6 +227,7 @@ const WIZARD_OPTIONS = {
   climate_eras: [{ era: 'rain', label: 'Rain age', description: 'Wet' }],
   world_ages: { young: 'Young', old: 'Old' },
   storyteller: { cyclic: 'Cyclic', rising: 'Rising' },
+  age_cycles: { linear: 'Linear', cyclic: 'Cyclic' },
   lore_languages: { english: 'English', turkish: 'Turkish' },
   templates: [
     {

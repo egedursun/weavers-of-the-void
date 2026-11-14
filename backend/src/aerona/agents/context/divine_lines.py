@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.agents.context.ages_lines import son_ages_lines
 from aerona.agents.context.agrarian_lines import son_agrarian_lines
 from aerona.agents.context.arts_lines import son_arts_lines
 from aerona.agents.context.collective_lines import son_collective_lines
@@ -94,4 +95,5 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     lines.extend(await son_operations_lines(scope, son))
     lines.extend(await son_sacred_lines(scope, son))
     lines.extend(await son_arts_lines(scope, son))
+    lines.extend(await son_ages_lines(scope, son))
     return lines

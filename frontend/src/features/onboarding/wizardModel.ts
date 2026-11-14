@@ -12,6 +12,7 @@ import {
   type LanguageTexture,
   type LoreLanguage,
   type Rarity,
+  type AgeCycle,
   type StorytellerProfile,
   type TechnologyEra,
   type WizardTemplate,
@@ -50,6 +51,7 @@ export type WizardDraft = {
   shape: CosmosShape
   layerKind: DimensionKind | null
   storyteller: StorytellerProfile
+  ageCycle: AgeCycle
   worldType: WorldType | null
   seaPct: number | null
   mountainsPct: number | null
@@ -83,6 +85,7 @@ export function initialDraft(defaults: WizardDefaults): WizardDraft {
     shape: 'one_sun',
     layerKind: null,
     storyteller: 'cyclic',
+    ageCycle: 'linear',
     worldType: null,
     seaPct: null,
     mountainsPct: null,
@@ -107,6 +110,7 @@ export function applyTemplate(
       creatorName: draft.creatorName,
       loreLanguage: draft.loreLanguage,
       storyteller: draft.storyteller,
+      ageCycle: draft.ageCycle,
       firstSons: draft.firstSons,
       imageStyle: draft.imageStyle,
       imageStyleCustom: draft.imageStyleCustom,
@@ -239,6 +243,7 @@ export function toRequest(
       shape: effectiveShape(draft),
       layer_kind: effectiveShape(draft) === 'layered' ? draft.layerKind : null,
       storyteller: draft.storyteller,
+      age_cycle: draft.ageCycle,
       world_type: draft.worldType,
       sea_pct: draft.seaPct,
       mountains_pct: draft.mountainsPct,

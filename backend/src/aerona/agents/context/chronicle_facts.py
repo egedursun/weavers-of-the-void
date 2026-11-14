@@ -6,6 +6,7 @@ from sqlalchemy import or_, select
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
 from aerona.db.tables.agency import ActionRecordRow
+from aerona.db.tables.ages import ArcRow, SetupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import GodConflictRow
 from aerona.db.tables.gatherings import CollectionRow
@@ -14,6 +15,7 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.storyteller import StorytellerRow
 from aerona.db.tables.warfare import WarRow
+from aerona.domain.enums.ages import PayoffKind
 from aerona.domain.enums.chronicle import ChronicleKind, MajorEventCategory
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.node import ActorKind
@@ -27,7 +29,9 @@ from aerona.prompts.contexts.chronicler import (
     FactEvent,
     FactHistory,
     FactOutcome,
+    FactPayoff,
     FactRecord,
+    FactTale,
     FactVerdict,
 )
 
@@ -72,6 +76,8 @@ class EpochFacts:
     draws: list[FactDraw] = field(default_factory=list)
     events: list[FactEvent] = field(default_factory=list)
     histories: list[FactHistory] = field(default_factory=list)
+    tales: list[FactTale] = field(default_factory=list)
+    payoffs: list[FactPayoff] = field(default_factory=list)
     verdicts: list[FactVerdict] = field(default_factory=list)
     rejected_recent: list[str] = field(default_factory=list)
     counts: dict[str, int] = field(default_factory=dict)
@@ -93,6 +99,8 @@ class EpochFacts:
             draws=self.draws,
             events=self.events,
             histories=self.histories,
+            tales=self.tales,
+            payoffs=self.payoffs,
             verdicts=self.verdicts,
             rejected=self.rejected_recent,
         )
@@ -315,6 +323,23 @@ async def recent_rejections(scope: Scope, rejected: dict[int, str], epoch: int) 
     return sorted(rejected[entity_id] for entity_id in recent)
 
 
+async def tale_facts(scope: Scope, epoch: int) -> list[FactTale]:
+    found: list[FactTale] = []
+    for arc in await scope.session.scalars(select(ArcRow).where(or_(ArcRow.last_beat_epoch == epoch, ArcRow.ended_epoch == epoch)).order_by(ArcRow.id)):
+        subject = await scope.session.get(EntityRow, arc.subject_node_id)
+        if subject is not None:
+            found.append(FactTale(subject=subject.name, template=arc.template.value.replace("_", " "), stage=arc.stage.value, outcome=arc.outcome.value))
+    return found
+
+
+async def payoff_facts(scope: Scope, epoch: int) -> list[FactPayoff]:
+    found: list[FactPayoff] = []
+    for row in await scope.session.scalars(select(SetupRow).where(SetupRow.paid_epoch == epoch, SetupRow.payoff != PayoffKind.LAPSED).order_by(SetupRow.id)):
+        subject = await scope.session.get(EntityRow, row.subject_node_id) if row.subject_node_id is not None else None
+        found.append(FactPayoff(kind=row.kind.value, since=row.opened_epoch, subject=subject.name if subject else None, text=row.payoff_text))
+    return found
+
+
 async def history_facts(scope: Scope, epoch: int) -> list[FactHistory]:
     rows = list(
         await scope.session.scalars(
@@ -366,6 +391,8 @@ async def epoch_facts(scope: Scope, epoch: int) -> EpochFacts:
     generic = {scope.creator.name, *son_names.values(), *(world.name for world in scope.worlds.values())}
     add_events(scope, facts, rows, links, skip=son_rows, generic=generic)
     facts.histories.extend(await history_facts(scope, epoch))
+    facts.tales.extend(await tale_facts(scope, epoch))
+    facts.payoffs.extend(await payoff_facts(scope, epoch))
     verdicts, keys = await previous_verdict_facts(scope, epoch, settings.previous_verdicts, set(son_names.values()))
     facts.verdicts.extend(verdicts)
     facts.names.update(keys)

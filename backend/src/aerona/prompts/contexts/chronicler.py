@@ -82,6 +82,20 @@ class FactEvent(ContextItem):
     repeats: int = 1
 
 
+class FactTale(ContextItem):
+    subject: str
+    template: str
+    stage: str
+    outcome: str
+
+
+class FactPayoff(ContextItem):
+    kind: str
+    since: int
+    subject: str | None = None
+    text: str
+
+
 class FactVerdict(ContextItem):
     ref: str
     text: str
@@ -94,6 +108,8 @@ class ChroniclerFactSheet(ContextItem):
     draws: list[FactDraw] = Field(default_factory=list)
     events: list[FactEvent] = Field(default_factory=list)
     histories: list[FactHistory] = Field(default_factory=list)
+    tales: list[FactTale] = Field(default_factory=list)
+    payoffs: list[FactPayoff] = Field(default_factory=list)
     verdicts: list[FactVerdict] = Field(default_factory=list)
     rejected: list[str] = Field(default_factory=list)
 

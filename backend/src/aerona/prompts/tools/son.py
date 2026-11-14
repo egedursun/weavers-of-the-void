@@ -1656,4 +1656,27 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "shapes the mortal, and a people reading the stars may send away a child of a dreaded sign. 1 action.",
         {"mortal_id": "The mortal", "dreaded": "True for a dreaded sign, false for a kindly one", "reason": "Why you mark it"},
     ),
+    T.UNSETTLE_SEASONS: ToolText(
+        "You unsettle the seasons of the world you walk: from now its summers and winters run for spells of no set length, and a long "
+        "winter eats the food of every town unless its people heeded a forecast. 1 action.",
+        {"world_id": "The world you walk", "reason": "Why you unsettle them"},
+    ),
+    T.LENGTHEN_WINTER: ToolText(
+        "You make the long winter now holding the world you walk last longer. 1 action.",
+        {"world_id": "The world you walk", "epochs": "How many epochs longer it holds", "reason": "Why you lengthen it"},
+    ),
+    T.PRESS_TALE: ToolText(
+        "You press a tale under way in a life in your reach toward its next turn: the schemes and happenings that would bring it grow "
+        "likelier. Its outcome stays open; it may still fail or turn. 1 action.",
+        {"arc_id": "The tale", "reason": "Why you press it"},
+    ),
+    T.FORESHADOW: ToolText(
+        "You set something up about a subject in your reach for the tale of the world to pay off later; the chroniclers tell its payoff as such. 1 action.",
+        {"subject_id": "Whom or what it is about", "reason": "What you set up"},
+    ),
+    T.ECHO_LIFE: ToolText(
+        "In a cosmos that turns in ages, you mark the life of a mortal whose tale was told to echo into the next age: a newborn of that "
+        "age may take up the same tale. 1 action.",
+        {"mortal_id": "The mortal", "reason": "Why that life should echo"},
+    ),
 }

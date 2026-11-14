@@ -26,6 +26,7 @@ from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.storyteller import StorytellerRow
+from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import DimensionKind, GalaxyType, WorldAge
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityType
@@ -181,6 +182,7 @@ async def write_genesis(session: AsyncSession, rules: Rules, request: GenesisReq
             genesis_settings=settings,
         )
     )
+    cosmos.age_cycle = settings.age_cycle if settings is not None else AgeCycle.LINEAR
     mood = rules.creator
     god = output.god
     creator = await cosmos_repository.create_creator(

@@ -2,6 +2,7 @@ from typing import Any
 
 from pydantic import Field, model_validator
 
+from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.cosmography import DimensionKind, WorldAge
 from aerona.domain.enums.storyteller import StorytellerProfile
 from aerona.domain.enums.world import ClimateEra, CosmosShape, CosmosSize, GenesisTemplate, LanguageTexture, TechnologyEra, WorldType
@@ -24,6 +25,7 @@ class GenesisSettings(ValueObject):
     cosmos_shape: CosmosShape = CosmosShape.ONE_SUN
     layer_kind: DimensionKind | None = None
     storyteller: StorytellerProfile = StorytellerProfile.CYCLIC
+    age_cycle: AgeCycle = AgeCycle.LINEAR
     world_type: WorldType | None = None
     sea_pct: int | None = Field(default=None, ge=0, le=PERCENT_CEILING)
     mountains_pct: int | None = Field(default=None, ge=0, le=PERCENT_CEILING)

@@ -19,6 +19,7 @@ from aerona.tools.framework.spec import ToolSpec
 from aerona.tools.framework.turn import counter_value
 from aerona.tools.mortal import (
     affairs,
+    ages,
     agrarian,
     armies,
     arts,
@@ -222,6 +223,7 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     operations.specs,
     sacred.specs,
     arts.specs,
+    ages.specs,
     gatherings.specs,
     letters.specs,
     titles.specs,

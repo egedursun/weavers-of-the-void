@@ -13,6 +13,7 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.spec import ToolSpec
 from aerona.tools.son import (
+    ages,
     agrarian,
     arts,
     bloodline,
@@ -98,6 +99,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     operations.specs,
     sacred.specs,
     arts.specs,
+    ages.specs,
     gatherings.specs,
     war.specs,
     military.specs,

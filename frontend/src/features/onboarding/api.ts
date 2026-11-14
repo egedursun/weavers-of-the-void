@@ -18,6 +18,7 @@ export type ClimateEra = components['schemas']['ClimateEra']
 export type WorldAge = components['schemas']['WorldAge']
 export type DimensionKind = components['schemas']['DimensionKind']
 export type StorytellerProfile = components['schemas']['StorytellerProfile']
+export type AgeCycle = components['schemas']['AgeCycle']
 
 export type SavedGenesis = components['schemas']['SavedGenesis']
 

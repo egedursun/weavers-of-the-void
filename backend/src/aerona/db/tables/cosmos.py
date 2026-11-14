@@ -11,6 +11,7 @@ from aerona.db.base import Base, CreatedAtMixin, TimestampMixin
 from aerona.db.columns import at_least, between, enum_type
 from aerona.db.tables.node import NodeRow
 from aerona.db.types import PydanticJSON, UtcDateTime
+from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.chronicle import NotificationCategory
 from aerona.domain.enums.cosmography import ApocalypseVariant
 from aerona.domain.enums.creator import CreatorMoodAxis, CreatorPassion
@@ -64,6 +65,7 @@ class CosmosRow(TimestampMixin, Base):
     rules_snapshot: Mapped[dict[str, dict[str, float]]] = mapped_column(JSON, default=dict)
     rules_snapshot_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
     apocalypse_variant: Mapped[ApocalypseVariant | None] = mapped_column(enum_type(ApocalypseVariant, "apocalypse_variant"))
+    age_cycle: Mapped[AgeCycle] = mapped_column(enum_type(AgeCycle, "age_cycle"), default=AgeCycle.LINEAR, server_default=AgeCycle.LINEAR.value)
 
     @validates("lore_language", "rng_seed")
     def _freeze_genesis_choices(self, key: str, value: Any) -> Any:

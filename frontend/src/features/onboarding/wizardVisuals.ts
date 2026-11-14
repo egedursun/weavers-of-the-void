@@ -1,5 +1,7 @@
 import {
   Anchor,
+  MoveRight,
+  RefreshCcw,
   AudioLines,
   Axe,
   Castle,
@@ -55,6 +57,7 @@ import {
   type CosmosSize,
   type LanguageTexture,
   type LoreLanguage,
+  type AgeCycle,
   type StorytellerProfile,
   type TechnologyEra,
   type WizardTemplate,
@@ -173,6 +176,16 @@ export const STORYTELLER_HINT: Record<StorytellerProfile, string> = {
   rising: 'Tension grows with the ages',
   cyclic: 'Hard years and quiet years in turn',
   chaotic: 'Tension rises and falls without warning',
+}
+
+export const AGE_CYCLE_ICON: Record<AgeCycle, LucideIcon> = {
+  linear: MoveRight,
+  cyclic: RefreshCcw,
+}
+
+export const AGE_CYCLE_HINT: Record<AgeCycle, string> = {
+  linear: 'The cosmos runs on to its end; an apocalypse ruins a world',
+  cyclic: 'Each end turns a new age that half-remembers the last',
 }
 
 export const LORE_LANGUAGE_ICON: Record<LoreLanguage, LucideIcon> = {

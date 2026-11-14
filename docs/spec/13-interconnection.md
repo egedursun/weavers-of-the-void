@@ -7,34 +7,34 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 
 | from ↓ / to → | core | body | mind | social | household | demography | economy | polity | law | intrigue | communication | war | faith | magic | knowledge | culture | language | ecology | environment | gods | cosmos |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| core | — | 131 | 125 | 137 | 68 | 130 | 142 | 128 | 102 | 112 | 93 | 128 | 120 | 112 | 123 | 137 | 119 | 73 | 136 | 130 | 119 |
-| body | 139 | — | 151 | 161 | 81 | 156 | 164 | 142 | 112 | 125 | 104 | 146 | 147 | 136 | 141 | 157 | 131 | 87 | 156 | 156 | 137 |
-| mind | 172 | 187 | — | 209 | 106 | 169 | 214 | 201 | 167 | 174 | 153 | 197 | 180 | 161 | 183 | 198 | 178 | 111 | 189 | 190 | 175 |
-| social | 157 | 168 | 188 | — | 90 | 151 | 231 | 206 | 155 | 146 | 129 | 168 | 163 | 152 | 168 | 200 | 148 | 88 | 204 | 167 | 157 |
+| core | — | 131 | 125 | 137 | 68 | 130 | 142 | 128 | 102 | 112 | 93 | 128 | 120 | 112 | 123 | 139 | 119 | 73 | 136 | 130 | 119 |
+| body | 139 | — | 151 | 161 | 81 | 156 | 164 | 142 | 112 | 125 | 104 | 146 | 147 | 136 | 141 | 158 | 131 | 87 | 156 | 156 | 137 |
+| mind | 172 | 187 | — | 209 | 106 | 169 | 214 | 201 | 167 | 174 | 153 | 197 | 180 | 161 | 183 | 200 | 178 | 111 | 189 | 190 | 175 |
+| social | 157 | 168 | 188 | — | 90 | 151 | 231 | 206 | 155 | 146 | 129 | 168 | 163 | 152 | 168 | 201 | 148 | 88 | 204 | 167 | 157 |
 | household | 56 | 62 | 64 | 65 | — | 60 | 69 | 59 | 50 | 56 | 45 | 59 | 53 | 46 | 53 | 60 | 52 | 49 | 60 | 58 | 60 |
-| demography | 135 | 150 | 137 | 146 | 79 | — | 160 | 136 | 102 | 120 | 97 | 140 | 140 | 127 | 128 | 149 | 124 | 81 | 141 | 149 | 129 |
-| economy | 206 | 253 | 299 | 337 | 118 | 254 | — | 320 | 211 | 190 | 166 | 301 | 257 | 200 | 251 | 309 | 215 | 159 | 323 | 254 | 230 |
-| polity | 153 | 152 | 188 | 217 | 83 | 147 | 238 | — | 176 | 154 | 143 | 188 | 167 | 150 | 173 | 187 | 160 | 84 | 194 | 160 | 159 |
-| law | 107 | 108 | 125 | 140 | 59 | 97 | 144 | 140 | — | 109 | 112 | 116 | 105 | 111 | 120 | 123 | 109 | 58 | 127 | 108 | 98 |
-| intrigue | 112 | 115 | 123 | 125 | 53 | 107 | 124 | 129 | 103 | — | 99 | 122 | 110 | 112 | 111 | 117 | 113 | 57 | 117 | 113 | 110 |
-| communication | 88 | 88 | 106 | 109 | 45 | 83 | 114 | 117 | 109 | 98 | — | 102 | 91 | 100 | 100 | 109 | 96 | 54 | 106 | 94 | 90 |
-| war | 162 | 167 | 179 | 183 | 89 | 159 | 206 | 184 | 143 | 152 | 127 | — | 162 | 146 | 165 | 179 | 161 | 97 | 178 | 166 | 161 |
-| faith | 123 | 143 | 142 | 147 | 68 | 137 | 167 | 148 | 110 | 121 | 101 | 135 | — | 132 | 135 | 152 | 124 | 75 | 137 | 162 | 132 |
-| magic | 117 | 133 | 130 | 142 | 57 | 124 | 151 | 139 | 116 | 117 | 107 | 121 | 130 | — | 135 | 140 | 113 | 64 | 140 | 140 | 122 |
-| knowledge | 141 | 138 | 152 | 166 | 71 | 135 | 178 | 170 | 136 | 128 | 119 | 149 | 144 | 139 | — | 162 | 146 | 76 | 159 | 143 | 134 |
-| culture | 168 | 173 | 195 | 217 | 96 | 172 | 232 | 200 | 149 | 153 | 137 | 183 | 185 | 166 | 181 | — | 170 | 109 | 203 | 187 | 159 |
-| language | 123 | 122 | 133 | 133 | 65 | 124 | 147 | 138 | 114 | 120 | 103 | 135 | 124 | 115 | 133 | 138 | — | 67 | 130 | 127 | 118 |
-| ecology | 75 | 81 | 80 | 89 | 51 | 69 | 114 | 72 | 58 | 57 | 53 | 86 | 68 | 60 | 73 | 87 | 67 | — | 92 | 79 | 82 |
-| environment | 171 | 179 | 182 | 221 | 93 | 176 | 248 | 196 | 148 | 141 | 129 | 183 | 199 | 163 | 186 | 205 | 161 | 117 | — | 179 | 176 |
-| gods | 162 | 178 | 181 | 175 | 100 | 173 | 203 | 165 | 129 | 142 | 123 | 174 | 194 | 158 | 158 | 187 | 155 | 111 | 181 | — | 169 |
-| cosmos | 142 | 144 | 153 | 157 | 77 | 140 | 181 | 159 | 114 | 125 | 106 | 155 | 143 | 135 | 146 | 154 | 138 | 105 | 174 | 160 | — |
+| demography | 135 | 150 | 137 | 146 | 79 | — | 160 | 136 | 102 | 120 | 97 | 140 | 140 | 127 | 128 | 150 | 124 | 81 | 141 | 149 | 129 |
+| economy | 206 | 253 | 299 | 337 | 118 | 254 | — | 320 | 211 | 190 | 166 | 301 | 257 | 200 | 251 | 313 | 215 | 159 | 323 | 254 | 230 |
+| polity | 153 | 152 | 188 | 217 | 83 | 147 | 238 | — | 176 | 154 | 143 | 188 | 167 | 150 | 173 | 190 | 160 | 85 | 194 | 160 | 159 |
+| law | 107 | 108 | 125 | 140 | 59 | 97 | 144 | 140 | — | 109 | 112 | 116 | 105 | 111 | 120 | 124 | 109 | 58 | 127 | 108 | 98 |
+| intrigue | 112 | 115 | 123 | 125 | 53 | 107 | 124 | 129 | 103 | — | 99 | 122 | 110 | 112 | 111 | 118 | 113 | 57 | 117 | 113 | 110 |
+| communication | 88 | 88 | 106 | 109 | 45 | 83 | 114 | 117 | 109 | 98 | — | 102 | 91 | 100 | 100 | 110 | 96 | 54 | 106 | 94 | 90 |
+| war | 162 | 167 | 179 | 183 | 89 | 159 | 206 | 184 | 143 | 152 | 127 | — | 162 | 146 | 165 | 180 | 161 | 97 | 178 | 166 | 161 |
+| faith | 123 | 143 | 142 | 147 | 68 | 137 | 167 | 148 | 110 | 121 | 101 | 135 | — | 132 | 135 | 156 | 124 | 76 | 137 | 162 | 132 |
+| magic | 117 | 133 | 130 | 142 | 57 | 124 | 151 | 139 | 116 | 117 | 107 | 121 | 130 | — | 135 | 141 | 113 | 64 | 140 | 140 | 122 |
+| knowledge | 141 | 138 | 152 | 166 | 71 | 135 | 178 | 170 | 136 | 128 | 119 | 149 | 144 | 139 | — | 165 | 146 | 77 | 159 | 143 | 134 |
+| culture | 168 | 173 | 195 | 220 | 96 | 172 | 232 | 200 | 149 | 154 | 137 | 183 | 186 | 166 | 181 | — | 170 | 109 | 203 | 187 | 159 |
+| language | 123 | 122 | 133 | 133 | 65 | 124 | 147 | 138 | 114 | 120 | 103 | 135 | 124 | 115 | 133 | 139 | — | 67 | 130 | 127 | 118 |
+| ecology | 75 | 81 | 80 | 90 | 51 | 69 | 114 | 72 | 58 | 57 | 53 | 86 | 68 | 60 | 73 | 87 | 67 | — | 94 | 79 | 82 |
+| environment | 171 | 179 | 182 | 222 | 93 | 176 | 249 | 196 | 148 | 141 | 129 | 183 | 199 | 163 | 187 | 205 | 161 | 117 | — | 179 | 176 |
+| gods | 162 | 178 | 181 | 175 | 100 | 173 | 203 | 165 | 129 | 142 | 123 | 174 | 194 | 158 | 158 | 188 | 155 | 111 | 181 | — | 169 |
+| cosmos | 142 | 144 | 154 | 157 | 77 | 140 | 182 | 159 | 114 | 125 | 106 | 155 | 144 | 135 | 147 | 156 | 138 | 105 | 176 | 160 | — |
 
 ## Edges by kind
 
-- modifier: 34647
-- rule_switch: 2382
-- flow: 22571444
-- trigger: 344
+- modifier: 34675
+- rule_switch: 2390
+- flow: 22590491
+- trigger: 349
 
 ## Feedback cycles between subsystems (length ≤ 3 listed)
 
@@ -2920,7 +2920,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | symbiosis: symbiosis types | extinction_cascade, food_web, game_laws, hunting_grounds, monster_contracts, species_ranges, trophic_flow, vermin |
 | ethology: ethology | beast_lives, creature_migration, monster_contracts, monsters_of_the_deep, nomadism |
 | physiology: physiology and the senses | anatomy, body_functions, conditions, effect_packages, injuries |
-| biogeography: biogeography | battle_tables, biome_succession, boserup, crop_pests, danger_on_the_road, environment_layers, field_works, flora_crops, food_web, frontage_and_reserves, keystones, land_use, lineages, niches, people_climate_immunity, pests, phenomena, place_kind_island, pollution, region_dangers, region_environment, regional_climate, river_course, species_ranges, terrain_hazards, trophic_flow, weather_exposure, world_physics |
+| biogeography: biogeography | battle_tables, biome_succession, boserup, crop_pests, danger_on_the_road, eco_transformations, environment_layers, field_works, flora_crops, food_web, frontage_and_reserves, keystones, land_use, lineages, niches, people_climate_immunity, pests, phenomena, place_kind_island, pollution, region_dangers, region_environment, regional_climate, river_course, species_ranges, terrain_hazards, trophic_flow, weather_exposure, world_physics |
 
 ### S-F Technology (IPC)
 
@@ -2985,7 +2985,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | U: the nature of life | not yet covered |
 | V: religion | cultural_exchange, culture_drift_causes, dating_systems, divine_battle_hands, domain_hooks, emotion_feeding, people_profiles, realm_population, revealed_doctrine, route_diffusion, route_renown |
 | W: traits of character | divine_wounds, legacy_traits |
-| X: humour | contests, ghost_legends, legend_belief, legend_memories, route_renown |
+| X: humour | contests, drama_manager, ghost_legends, legend_belief, legend_memories, narrative_arcs, route_renown |
 | Z: miscellaneous groups of motifs | ghost_legends, legend_belief, legend_memories, remembrance, route_renown |
 
 ### S-I Human universals (Brown)

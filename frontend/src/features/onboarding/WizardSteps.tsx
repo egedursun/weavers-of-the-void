@@ -42,6 +42,7 @@ import {
   type LanguageTexture,
   type LoreLanguage,
   type Rarity,
+  type AgeCycle,
   type StorytellerProfile,
   type TechnologyEra,
   type WizardTemplate,
@@ -58,6 +59,8 @@ import {
   LANGUAGE_HINT,
   LANGUAGE_ICON,
   LORE_LANGUAGE_ICON,
+  AGE_CYCLE_HINT,
+  AGE_CYCLE_ICON,
   STORYTELLER_HINT,
   STORYTELLER_ICON,
   TECHNOLOGY_HINT,
@@ -310,6 +313,14 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
     hint: LANGUAGE_HINT[key as LanguageTexture],
     icon: LANGUAGE_ICON[key as LanguageTexture] ?? Sparkles,
   }))
+  const ageCycles: Choice<AgeCycle>[] = Object.entries(options.age_cycles).map(
+    ([key, label]) => ({
+      value: key as AgeCycle,
+      label,
+      hint: AGE_CYCLE_HINT[key as AgeCycle],
+      icon: AGE_CYCLE_ICON[key as AgeCycle] ?? Sparkles,
+    })
+  )
   const storyteller: Choice<StorytellerProfile>[] = Object.entries(
     options.storyteller
   ).map(([key, label]) => ({
@@ -444,6 +455,18 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           value={draft.storyteller}
           options={storyteller}
           onChange={(value) => update({ storyteller: value })}
+          columns={2}
+        />
+      </SettingGroup>
+      <SettingGroup
+        label='Ages'
+        description='Whether the end of the cosmos is final or turns a new age. You can change it later in the drawer of any record, under tales and ages.'
+      >
+        <ChoiceTiles
+          label='Ages'
+          value={draft.ageCycle}
+          options={ageCycles}
+          onChange={(value) => update({ ageCycle: value })}
           columns={2}
         />
       </SettingGroup>

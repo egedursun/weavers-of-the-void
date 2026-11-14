@@ -64,6 +64,7 @@ from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.records import death_path
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.services.war import release_captive, take_captive
+from aerona.engine.storyteller.drama import pressed, pressing_foe
 from aerona.engine.tongues.modality import modality_of
 
 TEN = 10
@@ -651,9 +652,11 @@ async def plotters(ctx: TickContext, tally: SchemeTally) -> None:
         traits = set(await traits_of(ctx.session, mortal.id))
         if not traits & {TraitKind.AMBITIOUS, TraitKind.CRUEL, TraitKind.DECEITFUL}:
             continue
-        if not ctx.rng(f"scheme.begin.{mortal.id}.{ctx.epoch}").chance(table.scheme_ambition_pct):
+        pressing = await pressing_foe(ctx, mortal.id)
+        if not ctx.rng(f"scheme.begin.{mortal.id}.{ctx.epoch}").chance(pressed(ctx, table.scheme_ambition_pct, pressing[0] if pressing else 0)):
             continue
-        rival = await rival_of(ctx, mortal.id)
+        rival = await living_entity(ctx.session, pressing[1]) if pressing is not None else None
+        rival = rival or await rival_of(ctx, mortal.id)
         if rival is None:
             continue
         if await begin_scheme(ctx, mortal, await choose_kind(ctx, mortal, rival), rival) is not None:

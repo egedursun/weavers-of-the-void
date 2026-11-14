@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.cosmography import DimensionKind, WorldAge
 from aerona.domain.enums.storyteller import StorytellerProfile
 from aerona.domain.enums.world import ClimateEra, CosmosShape, CosmosSize, GenesisTemplate, LanguageTexture, LoreLanguage, TechnologyEra, WorldType
@@ -54,6 +55,9 @@ STORYTELLER_LABELS: MappingProxyType[StorytellerProfile, str] = MappingProxyType
         StorytellerProfile.CYCLIC: "Cyclic",
         StorytellerProfile.CHAOTIC: "Chaotic",
     }
+)
+AGE_CYCLE_LABELS: MappingProxyType[AgeCycle, str] = MappingProxyType(
+    {AgeCycle.LINEAR: "Linear: the cosmos runs on to its end", AgeCycle.CYCLIC: "Cyclic: each end turns a new age"}
 )
 LORE_LANGUAGE_LABELS: MappingProxyType[LoreLanguage, str] = MappingProxyType({LoreLanguage.ENGLISH: "English", LoreLanguage.TURKISH: "Turkish"})
 LAYER_KINDS: tuple[DimensionKind, ...] = tuple(kind for kind in DimensionKind if kind is not DimensionKind.PRIME)

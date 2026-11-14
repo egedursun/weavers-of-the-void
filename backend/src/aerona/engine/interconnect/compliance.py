@@ -12,6 +12,18 @@ from aerona.db.tables.affairs import (
     ResolutionVoteRow,
     TaxPolicyRow,
 )
+from aerona.db.tables.ages import (
+    AgeEchoRow,
+    AgeRow,
+    ArcBeatRow,
+    ArcFigureRow,
+    ArcRow,
+    EcoTransformationRow,
+    FormationHistoryRow,
+    IrregularSeasonRow,
+    SetupRow,
+    WinterForecastRow,
+)
 from aerona.db.tables.agrarian import (
     BrandRow,
     CentralPlaceRow,
@@ -416,6 +428,139 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "S10.2/RP4",
+        (
+            FormationHistoryRow.__tablename__,
+            IrregularSeasonRow.__tablename__,
+            WinterForecastRow.__tablename__,
+            EcoTransformationRow.__tablename__,
+        ),
+        (
+            "formation_history",
+            "long_seasons",
+            "eco_transformations",
+        ),
+        (
+            "formation:read",
+            "formation:reshape",
+            "formation:edit",
+            "formation:delete",
+            "irregular_season:create",
+            "irregular_season:forecast",
+            "irregular_season:edit",
+            "irregular_season:delete",
+            "winter_forecast:set",
+            "winter_forecast:edit",
+            "winter_forecast:delete",
+            "eco_transformation:set",
+            "eco_transformation:edit",
+            "eco_transformation:delete",
+        ),
+        (
+            "FormationPanel",
+            "SeasonsPanel",
+            "TransformationPanel",
+            "section-tales",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        (
+            "unsettle_seasons",
+            "lengthen_winter",
+            "forecast_seasons",
+            "sabotage_remaking",
+        ),
+        (
+            "formation.shaped",
+            "seasons.irregular",
+            "seasons.winter",
+            "seasons.summer",
+            "plans.eco_sabotage",
+        ),
+        ("88d61a5796a9",),
+    ),
+    ComplianceRow(
+        "S10.8/RP4",
+        (
+            AgeRow.__tablename__,
+            AgeEchoRow.__tablename__,
+        ),
+        (
+            "ages",
+            "doom_clock",
+        ),
+        (
+            "age:cycle",
+            "age:turn",
+            "age:edit",
+            "age:delete",
+            "age_echo:create",
+            "age_echo:edit",
+            "age_echo:delete",
+        ),
+        (
+            "AgesPanel",
+            "section-tales",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("echo_life",),
+        (
+            "ages.turned",
+            "ages.echo",
+        ),
+        ("88d61a5796a9",),
+    ),
+    ComplianceRow(
+        "F36",
+        (
+            ArcRow.__tablename__,
+            ArcFigureRow.__tablename__,
+            ArcBeatRow.__tablename__,
+            SetupRow.__tablename__,
+        ),
+        ("arcs",),
+        (
+            "arc:create",
+            "arc:press",
+            "arc:edit",
+            "arc:delete",
+            "arc_figure:create",
+            "arc_figure:edit",
+            "arc_figure:delete",
+            "arc_beat:create",
+            "arc_beat:edit",
+            "arc_beat:delete",
+            "setup:create",
+            "setup:edit",
+            "setup:delete",
+        ),
+        (
+            "TalesPanel",
+            "SetupsPanel",
+            "section-tales",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        (
+            "press_tale",
+            "swear_vengeance",
+            "foreshadow",
+        ),
+        (
+            "arcs.begun",
+            "arcs.ended",
+            "arcs.payoff",
+        ),
+        ("88d61a5796a9",),
+    ),
     ComplianceRow(
         "S7.4/RP4",
         (

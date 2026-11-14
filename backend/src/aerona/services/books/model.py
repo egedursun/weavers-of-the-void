@@ -22,7 +22,7 @@ from aerona.catalog.cosmography import (
 )
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import entity_type_spec
-from aerona.catalog.genesis import COSMOS_LABELS, SHAPE_LABELS, STORYTELLER_LABELS, TECHNOLOGY_LABELS, TEMPLATES, TEXTURE_LABELS
+from aerona.catalog.genesis import AGE_CYCLE_LABELS, COSMOS_LABELS, SHAPE_LABELS, STORYTELLER_LABELS, TECHNOLOGY_LABELS, TEMPLATES, TEXTURE_LABELS
 from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS
 from aerona.catalog.powers import POWERS, power_unlock_levels
 from aerona.catalog.rarities import RARITY_LABELS, entity_rarity
@@ -1062,6 +1062,7 @@ def settings_facts(settings: GenesisSettings) -> list[Labelled]:
         Labelled("Shape of the cosmos", SHAPE_LABELS[settings.cosmos_shape]),
         Labelled("Second layer", layer_fact(settings)),
         Labelled("Storyteller", STORYTELLER_LABELS[settings.storyteller]),
+        Labelled("Ages", AGE_CYCLE_LABELS[settings.age_cycle]),
         Labelled("Kind of the first world", WORLD_TYPES[settings.world_type].label if settings.world_type is not None else SEED_CHOOSES),
         Labelled("Water", chosen(settings.sea_pct)),
         Labelled("High ground", chosen(settings.mountains_pct)),

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from aerona.rules.registry.affairs import AffairsRules
 from aerona.rules.registry.agents import AgentsRules
+from aerona.rules.registry.ages import AgeRules, ArcRules, EcoTransformationRules, FormationRules, LongSeasonRules
 from aerona.rules.registry.agrarian import (
     BoserupRules,
     BrandRules,
@@ -802,6 +803,11 @@ class Rules:
     monster_contracts: MonsterContractRules = field(default_factory=MonsterContractRules)
     astrology: AstrologyRules = field(default_factory=AstrologyRules)
     punitive_remaking: PunitiveRemakingRules = field(default_factory=PunitiveRemakingRules)
+    formation: FormationRules = field(default_factory=FormationRules)
+    long_seasons: LongSeasonRules = field(default_factory=LongSeasonRules)
+    eco_transformations: EcoTransformationRules = field(default_factory=EcoTransformationRules)
+    ages: AgeRules = field(default_factory=AgeRules)
+    arcs: ArcRules = field(default_factory=ArcRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     theories: TheoriesRules = field(default_factory=TheoriesRules)

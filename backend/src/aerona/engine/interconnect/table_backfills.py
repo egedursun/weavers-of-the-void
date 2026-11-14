@@ -80,6 +80,15 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("constructs", "instruction_orders"): "none: every construct built carries its first orders",
     ("monster_contracts", "monster_contracts"): "none: towns near raiding beasts post contracts from the next epoch",
     ("punitive_remaking", "remade"): "none: courts able to remake choose it from the next sentence passed",
+    ("irregular_seasons", "winter_forecasts"): "none: peoples forecast the seasons once their scholars read them, from the next epoch",
+    ("eco_transformations", "eco_transformations"): "none: plans to remake the land begin their work from the next epoch",
+    ("cyclic_ages", "ages"): "none: a cosmos set to turn opens its first age from the next epoch",
+    ("cyclic_ages", "age_echoes"): "none: echoes are seeded when an age turns",
+    ("narrative_arcs", "arcs"): "none: lives take the shape of tales from the next epoch",
+    ("narrative_arcs", "arc_figures"): "none: figures enter the tales read from the next epoch",
+    ("narrative_arcs", "arc_beats"): "none: beats are recorded as tales are read from the next epoch",
+    ("drama_manager", "setups"): "none: setups are logged from the next epoch",
+    ("irregular_seasons", "irregular_seasons"): "none: worlds whose orbits are chaotic find their seasons irregular from the next epoch",
 }
 
 

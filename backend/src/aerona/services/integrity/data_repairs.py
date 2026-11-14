@@ -25,6 +25,7 @@ from aerona.services.bonds import BondService, flip_reversed, resolve_all_friend
 from aerona.services.images.records import clear_file_name_captions
 from aerona.services.importance import persist_if_missing
 from aerona.services.integrity.age_consistency import raise_lifespans
+from aerona.services.integrity.ages_links import mend_ages_links
 from aerona.services.integrity.agrarian_links import mend_agrarian_links
 from aerona.services.integrity.arts_links import mend_arts_links
 from aerona.services.integrity.collective_links import mend_collective_links
@@ -128,6 +129,7 @@ class DataRepairs:
             ("stray_ships", lambda session, rules, epoch: own_stray_ships(session, epoch)),
             ("sacred_links", lambda session, rules, epoch: mend_sacred_links(session)),
             ("arts_links", lambda session, rules, epoch: mend_arts_links(session, epoch)),
+            ("ages_links", lambda session, rules, epoch: mend_ages_links(session, epoch)),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),

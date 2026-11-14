@@ -971,4 +971,16 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You give a construct you command a new first order ({{ order_kinds }}), aimed at a target or at no one. 1 action.",
         {"construct_id": "The construct", "kind": "The order", "target_id": "Whom or what it aims at, or empty"},
     ),
+    T.FORECAST_SEASONS: ToolText(
+        "As one learned in the sky, you read when the long season of your world will turn; your people may heed you and store food. 1 action.",
+        {},
+    ),
+    T.SABOTAGE_REMAKING: ToolText(
+        "You set back a plan that remakes the land you live from. 1 action.",
+        {"plan_id": "The plan"},
+    ),
+    T.SWEAR_VENGEANCE: ToolText(
+        "You swear vengeance on one who killed your kin; your life takes the shape of that tale, which may end in their fall, in yours or in neither. 1 action.",
+        {"foe_id": "The one who killed your kin"},
+    ),
 }

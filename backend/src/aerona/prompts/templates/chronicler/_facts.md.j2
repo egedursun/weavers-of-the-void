@@ -34,6 +34,18 @@ Major events:
 
 {% endfor %}
 {% endif %}
+{% if facts.tales %}
+Tales under way in lives this age (tell their events as parts of these tales):
+{% for tale in facts.tales %}
+- {{ tale.subject }}: a tale of {{ tale.template }}, now at its {{ tale.stage }}{% if tale.outcome != "open" %}, ended {{ tale.outcome }}{% endif %}
+{% endfor %}
+{% endif %}
+{% if facts.payoffs %}
+Payoffs this age (each pays off what was set up in an earlier age; tell it as that payoff):
+{% for payoff in facts.payoffs %}
+- the {{ payoff.kind }} set up in age {{ payoff.since }}{% if payoff.subject %} about {{ payoff.subject }}{% endif %}: {{ payoff.text }}
+{% endfor %}
+{% endif %}
 {% if facts.verdicts %}
 Fate's verdicts of the previous age (their consequences live in this age; mention each):
 {% for verdict in facts.verdicts %}

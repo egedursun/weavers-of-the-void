@@ -65,6 +65,7 @@ from tests.tools.every_setup import (
     world_body,
     wounded,
 )
+from tests.tools.every_setup_ages import long_winter, open_tale, turning_cosmos
 from tests.tools.every_setup_arts import art_work, built_construct, forged_work, two_clubs, wild_beast
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
@@ -413,4 +414,9 @@ SON_CASES: dict[str, Case] = {
     "rig_match": Case(plain(home_id=created("home"), away_id=created("away"), winner_id=created("away"), reason=REASON), two_clubs),
     "set_beast_bounty": Case(plain(town_id=settlement, beast_id=created("beast"), reason=REASON), wild_beast),
     "mark_birth": Case(plain(mortal_id=mortal, dreaded=True, reason=REASON)),
+    "unsettle_seasons": Case(plain(world_id=world, reason=REASON)),
+    "lengthen_winter": Case(plain(world_id=world, epochs=2, reason=REASON), long_winter),
+    "press_tale": Case(plain(arc_id=created("arc"), reason=REASON), open_tale),
+    "foreshadow": Case(plain(subject_id=mortal, reason=REASON)),
+    "echo_life": Case(plain(mortal_id=mortal, reason=REASON), turning_cosmos),
 }

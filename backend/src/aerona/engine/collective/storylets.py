@@ -52,6 +52,7 @@ from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.relations.book import ensure_relation
 from aerona.engine.relations.book import shift as shift_relation
+from aerona.engine.storyteller.drama import pressed, world_drama
 
 R = StoryletRole
 E = StoryletEffect
@@ -348,9 +349,10 @@ async def open_storylets(ctx: TickContext, tally: StoryletTally) -> None:
         if (waiting or 0) >= table.max_open:
             continue
         boost = await boost_of(ctx, world_id)
+        drama = await world_drama(ctx, world_id)
         for storylet in StoryletId:
             spec = STORYLETS[storylet]
-            chance = table.chance_pct * spec.weight / WEIGHT_UNIT * (1 + boost / PERCENT)
+            chance = pressed(ctx, table.chance_pct * spec.weight / WEIGHT_UNIT * (1 + boost / PERCENT), drama)
             if await cooling(ctx, world_id, storylet) or not ctx.rng(f"storylet.{world_id}.{storylet.value}.{ctx.epoch}").chance(chance):
                 continue
             cast = await CASTERS[storylet](ctx, world_id)

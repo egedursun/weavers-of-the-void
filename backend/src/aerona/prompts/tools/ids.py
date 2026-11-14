@@ -226,6 +226,11 @@ class SonToolId(StrEnum):
     RIG_MATCH = "rig_match"
     SET_BEAST_BOUNTY = "set_beast_bounty"
     MARK_BIRTH = "mark_birth"
+    UNSETTLE_SEASONS = "unsettle_seasons"
+    LENGTHEN_WINTER = "lengthen_winter"
+    PRESS_TALE = "press_tale"
+    FORESHADOW = "foreshadow"
+    ECHO_LIFE = "echo_life"
 
 
 class MortalToolId(StrEnum):
@@ -377,6 +382,9 @@ class MortalToolId(StrEnum):
     FOUND_CLUB = "found_club"
     TAKE_CONTRACT = "take_contract"
     COMMAND_CONSTRUCT = "command_construct"
+    FORECAST_SEASONS = "forecast_seasons"
+    SABOTAGE_REMAKING = "sabotage_remaking"
+    SWEAR_VENGEANCE = "swear_vengeance"
 
 
 ToolId = SonToolId | MortalToolId

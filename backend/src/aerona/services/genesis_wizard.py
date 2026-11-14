@@ -10,6 +10,7 @@ from aerona.catalog.achievements import ordinal_word
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.cosmography import DIMENSION_KINDS, WORLD_AGE_LABELS
 from aerona.catalog.genesis import (
+    AGE_CYCLE_LABELS,
     COSMOS_LABELS,
     LAYER_KINDS,
     LORE_LANGUAGE_LABELS,
@@ -30,6 +31,7 @@ from aerona.db.session import Database
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmography import DimensionRow, GalaxyRow
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.cosmography import DimensionKind, RiftCause, WorldAge
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
@@ -84,6 +86,7 @@ class WizardInput(BaseModel):
     shape: str | None = None
     layer_kind: str | None = None
     storyteller: str | None = None
+    age_cycle: str | None = None
     world_type: str | None = None
     sea_pct: Any = None
     mountains_pct: Any = None
@@ -148,6 +151,7 @@ class WizardOptions:
     climate_eras: list[ClimateOption]
     world_ages: dict[WorldAge, str]
     storyteller: dict[StorytellerProfile, str]
+    age_cycles: dict[AgeCycle, str]
     lore_languages: dict[LoreLanguage, str]
     templates: list[WizardTemplate]
     first_sons: FirstSonsOptions
@@ -180,6 +184,7 @@ def options(rules: Rules) -> WizardOptions:
         climate_eras=[ClimateOption(era, spec.label, spec.description) for era, spec in CLIMATES.items()],
         world_ages=dict(WORLD_AGE_LABELS),
         storyteller=dict(STORYTELLER_LABELS),
+        age_cycles=dict(AGE_CYCLE_LABELS),
         lore_languages=dict(LORE_LANGUAGE_LABELS),
         templates=list(TEMPLATES.values()),
         first_sons=FirstSonsOptions(
@@ -222,7 +227,7 @@ def _percent(value: Any, fallback: int) -> int:
     return fallback if bounded is None else bounded
 
 
-def _choice[E: (TechnologyEra, LanguageTexture, CosmosSize, CosmosShape, StorytellerProfile)](kind: type[E], value: str | None, fallback: E) -> E:
+def _choice[E: (TechnologyEra, LanguageTexture, CosmosSize, CosmosShape, StorytellerProfile, AgeCycle)](kind: type[E], value: str | None, fallback: E) -> E:
     try:
         return kind(value) if value is not None else fallback
     except ValueError:
@@ -266,6 +271,7 @@ def sanitize(rules: Rules, raw: WizardInput) -> GenesisSettings:
         cosmos_shape=shape,
         layer_kind=_layer_kind(raw.layer_kind) if shape is CosmosShape.LAYERED else None,
         storyteller=_choice(StorytellerProfile, raw.storyteller or (template.storyteller.value if template else None), StorytellerProfile.CYCLIC),
+        age_cycle=_choice(AgeCycle, raw.age_cycle, AgeCycle.LINEAR),
         world_type=_optional(WorldType, raw.world_type, template.world_type if template else None),
         sea_pct=_bounded(raw.sea_pct, None, 0, PERCENT),
         mountains_pct=_bounded(raw.mountains_pct, None, 0, PERCENT),

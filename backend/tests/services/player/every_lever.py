@@ -12,8 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.random import SeededRandom
 from aerona.db.base import Base
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.tables.agency import CreationRewardRow
+from aerona.db.tables.ages import EcoTransformationRow
 from aerona.db.tables.agrarian import BrandRow, CommonsRow
 from aerona.db.tables.arts import ArtMovementRow, ClubRow, LeagueRow
 from aerona.db.tables.bonds import BondRow
@@ -45,6 +47,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
+from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.agrarian import CommonsKind
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import SocialBias
@@ -3523,6 +3526,77 @@ LEVERS.update(
         "monster_contract:assign": after(BEAST, CONTRACT_UP, contract_id=Newest("monster_contract"), hunter_id=Pick(MORTAL)),
         "birth_sign:create": given(mortal_id=Pick(MORTAL, 4)),
         **{name: after(SIGN_UP, mortal_id=Pick(MORTAL, 4)) for name in ("birth_sign:edit", "birth_sign:delete")},
+    }
+)
+
+
+async def cyclic_cosmos(session: AsyncSession) -> None:
+    cosmos = await CosmosRepository(session).require_cosmos()
+    cosmos.age_cycle = AgeCycle.CYCLIC
+    await session.flush()
+
+
+async def newest_eco_plan(session: AsyncSession) -> int | None:
+    return await session.scalar(select(EcoTransformationRow.plan_id).order_by(EcoTransformationRow.plan_id.desc()).limit(1))
+
+
+WORLD = Pick("world")
+ECO_PLAN = ("plan:create", {"holder_id": Pick(REALM), "kind": "ecological_transformation", "name": "The Green Work", "target_id": Pick(EntityType.REGION)})
+ECO_UP = ("eco_transformation:set", {"plan_id": Newest("plan"), "target_moisture": 70})
+SEASON_UP = ("irregular_season:create", {"world_id": WORLD})
+FORMATION_UP = ("formation:read", {"world_id": WORLD, "reshape": False})
+FORECAST_UP = ("winter_forecast:set", {"world_id": WORLD, "people_id": Pick(EntityType.PEOPLE), "predicted_end_epoch": 9})
+CYCLE_UP = ("age:cycle", {"cycle": "cyclic"})
+TURN_UP = ("age:turn", {})
+ECHO_UP = ("age_echo:create", {"age_id": Newest("age"), "template": "quest", "source_id": Pick(MORTAL), "weight": 50})
+ARC_UP = ("arc:create", {"subject_id": Pick(MORTAL), "template": "rivalry", "figure_id": Pick(MORTAL, 1), "role": "rival"})
+BEAT_UP = ("arc_beat:create", {"arc_id": Newest("arc"), "stage": "crisis", "text": "They met at the ford."})
+SETUP_UP = ("setup:create", {"kind": "omen", "source_id": 0, "subject_id": Pick(MORTAL)})
+AGES_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "formation:edit": {
+        "zone": "outer",
+        "migration": "inward",
+        "bombardment": 50,
+        "craters": 3,
+        "core_share": 20,
+        "mantle_heat": 45,
+        "water_delivered": 70,
+        "exotic_delivered": 10,
+    },
+    "irregular_season:edit": {"cause": "divine", "spell": "winter", "spell_started_epoch": 2, "spell_length": 4, "severity": 80},
+    "winter_forecast:edit": {"scholar_entity_id": Pick(MORTAL), "predicted_end_epoch": 12, "heeded": False},
+    "eco_transformation:edit": {"target_moisture": 40, "target_forest": 30, "target_fertility": 50, "regions_changed": 2, "resistance": 20, "sabotage": 1},
+    "age:edit": {"number": 3, "began_epoch": 1, "ended_epoch": 4, "variant": "ruin", "carried": 25},
+    "age_echo:edit": {"template": "revenge", "role": "foe", "source_node_id": Pick(MORTAL), "echo_node_id": Pick(MORTAL, 1), "weight": 70},
+    "arc:edit": {"template": "tragedy", "stage": "climax", "outcome": "open", "beats": 3, "drama": 60, "ended_epoch": None},
+    "arc_figure:edit": {"role": "betrayer"},
+    "arc_beat:edit": {"stage": "climax", "text": "The ford ran red."},
+    "setup:edit": {"kind": "dream", "subject_node_id": Pick(MORTAL), "payoff": "fulfilled", "paid_epoch": 5, "payoff_text": "It came true."},
+}
+EDITS = {**EDITS, **AGES_EDITS}
+LEVERS.update(
+    {
+        "formation:read": given(world_id=WORLD, reshape=True),
+        **{name: after(FORMATION_UP, world_id=WORLD) for name in ("formation:reshape", "formation:edit", "formation:delete")},
+        "irregular_season:create": given(world_id=WORLD),
+        **{name: after(SEASON_UP, world_id=WORLD) for name in ("irregular_season:forecast", "irregular_season:edit", "irregular_season:delete")},
+        "winter_forecast:set": given(world_id=WORLD, people_id=Pick(EntityType.PEOPLE), predicted_end_epoch=8, heeded=True),
+        **{name: after(FORECAST_UP, forecast_id=Newest("winter_forecast")) for name in ("winter_forecast:edit", "winter_forecast:delete")},
+        "eco_transformation:set": after(ECO_PLAN, plan_id=Newest("plan"), target_moisture=80, target_forest=60, target_fertility=70),
+        **{name: after(ECO_PLAN, ECO_UP, plan_id=Computed(newest_eco_plan)) for name in ("eco_transformation:edit", "eco_transformation:delete")},
+        "age:cycle": given(cycle="cyclic"),
+        "age:turn": setup_then(cyclic_cosmos),
+        **{name: after(CYCLE_UP, TURN_UP, age_id=Newest("age")) for name in ("age:edit", "age:delete")},
+        "age_echo:create": after(CYCLE_UP, TURN_UP, age_id=Newest("age"), template="redemption", source_id=Pick(MORTAL), weight=40),
+        **{name: after(CYCLE_UP, TURN_UP, ECHO_UP, echo_id=Newest("age_echo")) for name in ("age_echo:edit", "age_echo:delete")},
+        "arc:create": given(subject_id=Pick(MORTAL), template="quest", figure_id=Pick(MORTAL, 2), role="ally"),
+        **{name: after(ARC_UP, arc_id=Newest("arc")) for name in ("arc:press", "arc:edit", "arc:delete")},
+        "arc_figure:create": after(ARC_UP, arc_id=Newest("arc"), node_id=Pick(MORTAL, 3), role="mentor"),
+        **{name: after(ARC_UP, arc_id=Newest("arc"), node_id=Pick(MORTAL, 1)) for name in ("arc_figure:edit", "arc_figure:delete")},
+        "arc_beat:create": after(ARC_UP, arc_id=Newest("arc"), stage="rising", text="A first meeting."),
+        **{name: after(ARC_UP, BEAT_UP, beat_id=Newest("arc_beat")) for name in ("arc_beat:edit", "arc_beat:delete")},
+        "setup:create": given(kind="prophecy", source_id=0, subject_id=Pick(MORTAL)),
+        **{name: after(SETUP_UP, setup_id=Newest("setup")) for name in ("setup:edit", "setup:delete")},
     }
 )
 

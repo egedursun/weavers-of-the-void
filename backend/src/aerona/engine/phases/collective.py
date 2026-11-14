@@ -205,6 +205,7 @@ async def lost_lands(ctx: TickContext) -> None:
     "mortal.age",
     "mortal.lifespan",
     "settlement.population",
+    "table.arcs",
     "table.bonds",
     "table.collection_members",
     "table.collection_places",

@@ -19,6 +19,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases import (
     affairs,
     afterlife,
+    ages,
     agrarian,
     arcana,
     arts,
@@ -214,6 +215,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + operations.PHASES
     + sacred.PHASES
     + arts.PHASES
+    + ages.PHASES
     + made_kinds.PHASES
     + exploration.PHASES
     + factions.PHASES
@@ -287,6 +289,7 @@ CLEANUP_STAGE = stage(
     "world_maps",
     "scale_ladder",
     "stellar_systems",
+    "formation_history",
     "cosmic_influence",
     "environment_survey",
     "environment_modifiers",
@@ -307,6 +310,7 @@ GRUDGE_STAGE = stage("divine_grudges")
 SUB_ENGINE_STAGE = stage(
     "labour_allocation",
     "harvest",
+    "long_seasons",
     "foresight",
     "diplomacy",
     "correspondence",
@@ -555,6 +559,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "megastructures",
     "kin_politics",
     "long_plans",
+    "eco_transformations",
     "dark_ages",
     "ruins",
     "settlement_cycles",
@@ -579,6 +584,8 @@ SOCIETY_ENGINE_STAGE = stage(
     "item_cycles",
     "artwork_cycles",
     "rumour_cycles",
+    "ages",
+    "arcs",
 )
 AGING_STAGE = stage(
     "body_healing",
