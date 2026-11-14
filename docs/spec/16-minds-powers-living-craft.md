@@ -129,6 +129,10 @@ Some pieces of spec 13 that these waves touch are still planned. The rule is: **
 | Non-vocal language modality | 8.1 reference pass 3 (planned) | W44 adds the `data` modality, W45 the `mind` modality, W46 the `chemical` modality, each on one `modality` column | The column and its reader are built once. |
 | Divination systems and prescience | W25 (done, `14b0fedf`) | none: W25 built `divination_systems`, `divinations`, `foresights` and `forecast_models` | W45 adds foresights written by innate powers (`power_id`, strain) and W44 the `made_oracle` source. |
 | Emotion-fed gods | W25 (done, `14b0fedf`) | none: W25 built `god_feedings` and `emotion_harvests` | F52's `emotion` locus reads them: a source of locus `emotion` draws on the same harvests, so gods and mortal users compete for one pool. |
+| Rivers with flow, estuaries, flood plains, snowmelt floods, aquifers | spec 13 6.1 reference pass (planned) | whichever wave runs first builds it fully (0.7) | W50 50.23 reads its rivers and adds ice, sediment, coasts and local climate |
+| Fossil beds and their readings | spec 13 6.2 reference pass 7 (planned) | whichever wave runs first builds it fully | W50 50.27 adds preservation, richness, fossil fuels and revival |
+| Flares and auroras | spec 13 10.1 reference pass | whichever wave runs first builds it fully | W50 50.22 makes the flare one space weather kind and adds fields, shielding, storms, outages and compass error |
+| Climate oscillations and their prediction | spec 13 10.7 reference pass 5 | whichever wave runs first builds it fully | W50 50.28 types forecasting methods |
 | Sympathy, material magic, emotion spirits | W30 (planned); sympathy and material affinity in 8.6 reference pass 5 | W45 builds the emotion source and the link modifier if absent | |
 | Identity layers and salience | F43 (W32, planned) | W44 adds the `made` and `augmented` identity facets, W45 the `gifted` facet, W46 the `designed` facet, each on F43's model if built, else as typed columns that F43 later absorbs through a fixup | |
 | Purity and castes | F41 (W28, planned) | W45 and W46 read purity only if F41 exists; their own stances are typed doctrine columns | |
@@ -4284,7 +4288,9 @@ Below the engine's scale (cells, molecules, chromosomes), the world is read thro
 
 ### 50.22 Space weather and magnetic fields
 
-**Current.** Stars have activity and radiation, worlds have radiation and an aurora column, flares are a sky event kind, and the compass works only where a world has a magnetosphere (spec 13 10.9). Fields, particle storms and their effects are not modelled.
+**Builds on.** Spec 13 10.1 reference pass (flares that paint auroras, mutate life, fail crops and wreck light-sail routes) and 10.9 (the magnetosphere that makes a compass work). Spec 13's coverage table counts space weather as covered by those (`13-depth-expansion.md` 1R lane table). 50.22 keeps them and makes the flare one kind of space weather event among several, so the existing flare effects are read through this section.
+
+**Current.** Stars have activity and radiation, worlds have radiation and an aurora column, flares are a sky event kind, and the compass works only where a world has a magnetosphere. Field strength, reversals, shielding, particle storms, signal outages and compass error are not modelled.
 
 **State.**
 
@@ -4325,6 +4331,8 @@ Below the engine's scale (cells, molecules, chromosomes), the world is read thro
 **Legacy.** World fields come from world physics (mass, rotation, core); star activity from star type and age.
 
 ### 50.23 Water, ice and sediment in place
+
+**Builds on.** Spec 13 6.1 reference pass: rivers with flow, navigability, salinity in estuaries, flood plains, spring floods from snowmelt, dams and canals, aquifers. That pass is built first by whichever wave reaches it (0.7); 50.23 reads its rivers and adds what it lacks.
 
 **Current.** Rainfall, winds, rain shadows, currents, monsoons, climate ages and a global cryosphere exist. Rivers with flow and aquifers are planned in spec 13. Seasonal ice on seas and lakes, frozen ground, snowpack, sediment carried and laid down by water and wind, coasts that build or wear away, and the climate of a valley or a city are not modelled.
 
@@ -4395,6 +4403,8 @@ Below the engine's scale (cells, molecules, chromosomes), the world is read thro
 
 ### 50.25 Bodies: systems and sensitivities
 
+**Builds on.** Spec 13 10.9 world physics (gravity slows armies and caps buildings, thin air saps endurance, toxic air breeds disease) and spec 13 W34 (thermoregulation, senses). 50.25 reads those world values through each biology's tolerances, so the same world weighs differently on different bodies.
+
 **Current.** Bodies have plans, parts, tissues, organs, senses (planned), functions, conditions, immunity and decompression harm. The internal systems that run a body (breath, blood, digestion, hormones, nerves), and individual sensitivities, are not modelled as systems.
 
 **State.**
@@ -4446,7 +4456,9 @@ Below the engine's scale (cells, molecules, chromosomes), the world is read thro
 
 ### 50.27 The deep record of life
 
-**Current.** Extinction exists and excavations find typed items. Fossils of past life, and the remains of extinct species in rock, ice and bog, are not modelled.
+**Builds on.** Spec 13 6.2 reference pass 7 is the base: fossil beds in the geology column hold remains of extinct species, megafauna, beasts, earlier creations and extinct peoples. They are found by mining, by erosion after floods and quakes, and by excavation. Cultures read them through their theories (dragon bones in legends, relics of giants, evidence of deep time). Fossil materials are luxuries. It is built first by whichever wave reaches it (0.7). 50.27 extends it and does not replace it.
+
+**Current.** Extinction exists and excavations find typed items. Fossil beds are planned in spec 13 but not built. Preservation kinds, the richness of beds, the link from organic beds to coal and oil, and revival of extinct species from preserved remains are not specified anywhere.
 
 **State.**
 
@@ -4475,6 +4487,8 @@ Below the engine's scale (cells, molecules, chromosomes), the world is read thro
 **Legacy.** Beds derived from prehistory, extinctions and region geology.
 
 ### 50.28 Observation, forecasting and the shaping of weather
+
+**Builds on.** Spec 13 10.7 reference pass 5: climate oscillations whose rhythm diviners and astronomers can learn and predict. Also W25's forecast models and winter forecasts. 50.28 types the methods behind such prediction and extends them to every forecast.
 
 **Current.**
 
@@ -6783,11 +6797,11 @@ Generated on 2026-11-14 from the six-digit UNESCO nomenclature (TESEO list) for 
 | 241411 | Degradacion De Residuos Vegetales | own state and behaviour in code | spec 13 W34 microbes; code (fermentation methods) |
 | 241501 | Biologia Molecular De Microorganismos | a label only | below scale: W46 46.3 |
 | 241502 | Biologia Molecular De Plantas | absent from code | below scale: W46 46.3 |
-| 241601 | Paleontologia Animal | absent from code | **50.27** |
-| 241602 | Paleontologia De Los Invertebrados | absent from code | **50.27** |
-| 241603 | Palinologia | absent from code | **50.27** |
-| 241604 | Paleontologia De Las Plantas | absent from code | **50.27** |
-| 241605 | Paleontologia De Los Vertebrados | absent from code | **50.27** |
+| 241601 | Paleontologia Animal | absent from code | **50.27** on spec 13 6.2 reference pass 7 |
+| 241602 | Paleontologia De Los Invertebrados | absent from code | **50.27** on spec 13 6.2 reference pass 7 |
+| 241603 | Palinologia | absent from code | **50.27** on spec 13 6.2 reference pass 7 |
+| 241604 | Paleontologia De Las Plantas | absent from code | **50.27** on spec 13 6.2 reference pass 7 |
+| 241605 | Paleontologia De Los Vertebrados | absent from code | **50.27** on spec 13 6.2 reference pass 7 |
 | 241701 | Briologia | a label only | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
 | 241702 | Dendrologia | own state and behaviour in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
 | 241703 | Botanica General | own state and behaviour in code | **50.26**; also code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
@@ -6797,7 +6811,7 @@ Generated on 2026-11-14 from the six-digit UNESCO nomenclature (TESEO list) for 
 | 241707 | Algologia | absent from code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
 | 241708 | Fitobiologia | own state and behaviour in code | **50.26**; also code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
 | 241709 | Fitopatologia | a label only | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
-| 241710 | Paleobotanica | absent from code | **50.27** |
+| 241710 | Paleobotanica | absent from code | **50.27** on spec 13 6.2 reference pass 7 |
 | 241711 | Anatomia Vegetal | absent from code | **50.26** |
 | 241712 | Citologia Vegetal | absent from code | **50.26** |
 | 241713 | Ecologia Vegetal | own state and behaviour in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
@@ -6915,7 +6929,7 @@ Generated on 2026-11-14 from the six-digit UNESCO nomenclature (TESEO list) for 
 | 250621 | Vulcanologia | some typed state in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
 | 250622 | Analisis De Diagrafias | absent from code | **50.28** |
 | 250623 | Petrologia Sedimentaria Del Carbon | own state and behaviour in code | **50.27**; also spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
-| 250624 | Paleontologia Estratigrafica | absent from code | **50.27** |
+| 250624 | Paleontologia Estratigrafica | absent from code | **50.27** on spec 13 6.2 reference pass 7 |
 | 250701 | Geomagnetismo Y Prospeccion Magnetica | absent from code | **50.22** |
 | 250702 | Gravedad Terrestre Y Prospeccion Gravimetrica | some typed state in code | spec 13 G1R.4.7 tectonics; code (quakes, gravity) |
 | 250703 | Flujos De Calor Terrestre | absent from code | spec 13 G1R.4.7 tectonics; code (quakes, gravity) |
