@@ -33,6 +33,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.economy.stocks import GoodsLedger
+from aerona.engine.folkways.purity import unclean
 from aerona.engine.gatherings.occasions import Guest, Occasion, household_of
 from aerona.engine.happenings.profile import season_for, year_at
 from aerona.engine.history.collections import open_collection
@@ -188,6 +189,9 @@ async def attend(ctx: TickContext, holding: Holding, atlas: RegionAtlas) -> None
             guest.attended = node is not None and guest.role is GuestRole.MOURNED
             if guest.attended:
                 holding.attendees.append(guest.node_id)
+            continue
+        if await unclean(ctx.session, guest.node_id):
+            guest.attended = False
             continue
         tie = await relation(ctx.session, guest.node_id, row.host_node_id)
         odds = table.attend_base_pct + (tie.friendship * table.attend_friendship_pct / PERCENT if tie is not None else 0)

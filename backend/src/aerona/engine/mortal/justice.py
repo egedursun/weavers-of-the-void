@@ -75,6 +75,7 @@ CRIME_TEXT = total(
         CrimeKind.TREASON: "treason",
         CrimeKind.MURDER: "murder",
         CrimeKind.DESERTION: "desertion",
+        CrimeKind.WITCHCRAFT: "witchcraft",
     },
 )
 

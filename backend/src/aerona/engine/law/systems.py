@@ -29,6 +29,8 @@ SYSTEM = "system"
 ADVOCATE = "advocate"
 DIVINE_TRIALS = frozenset({TrialKind.COMBAT, TrialKind.ORDEAL})
 
+SACRED_CRIMES = frozenset({CrimeKind.BLASPHEMY, CrimeKind.WITCHCRAFT})
+
 
 @dataclass
 class SystemTally:
@@ -156,7 +158,7 @@ async def customary(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) ->
 async def religious(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> bool:
     table = ctx.rules.legal_systems
     piety = (await values_for(ctx.session, accused.id)).get(ValueAxis.PIETY, 0)
-    sacred = table.clergy_bonus if case.crime is CrimeKind.BLASPHEMY else 0
+    sacred = table.clergy_bonus if case.crime in SACRED_CRIMES else 0
     return case.evidence + sacred - round_half_up(max(0, piety) * table.piety_pct / PERCENT) >= ctx.rules.trials.standard
 
 
@@ -222,7 +224,7 @@ async def by_system(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, gu
     if system is None or trial in DIVINE_TRIALS:
         return guilty
     if system is LegalSystem.MIXED:
-        system = LegalSystem.RELIGIOUS if case.crime is CrimeKind.BLASPHEMY else LegalSystem.CODIFIED
+        system = LegalSystem.RELIGIOUS if case.crime in SACRED_CRIMES else LegalSystem.CODIFIED
     if system is LegalSystem.CUSTOMARY:
         return await customary(ctx, case, accused)
     if system is LegalSystem.RELIGIOUS:

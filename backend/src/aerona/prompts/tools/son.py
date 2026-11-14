@@ -1679,4 +1679,32 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "age may take up the same tale. 1 action.",
         {"mortal_id": "The mortal", "reason": "Why that life should echo"},
     ),
+    T.NUDGE_BIAS: ToolText(
+        "You sway how a mortal within your reach decides: one leaning of their mind (overconfidence, sunk cost, loss aversion, confirmation, "
+        "recency, groupthink, hostile attribution, optimism, status quo, availability, anchoring, in-group favour, authority deference, "
+        "scarcity panic, fatalism, risk seeking, planning fallacy, halo or projection) is set to the weight you give, and their choices of war, "
+        "peace, surrender, schemes, belief, conversion and migration lean by it. 1 action.",
+        {"mortal_id": "The mortal", "bias": "The leaning", "weight": "Its weight, 0 to 100; 50 leaves it level", "reason": "Why you sway them"},
+    ),
+    T.DECLARE_IMPURITY: ToolText(
+        "You make a people within your reach count something impure (the dead, birth, bodily fluids, a food, a species, a profession, outsiders, "
+        "a place, an object, an act, a made thing, a taboo or a wound); their folk who touch it are shut out of gatherings and unions until they "
+        "purify. 1 action.",
+        {"people_id": "The people", "source": "What they count impure", "reason": "Why"},
+    ),
+    T.BLESS_CHARM: ToolText(
+        "You give an item within your reach the true power of a charm (protection, fertility, luck or healing); its bearer is warded, made "
+        "fruitful, spared or mended by it. 1 action.",
+        {"item_id": "The item", "power": "The charm's power", "reason": "Why you bless it"},
+    ),
+    T.SEND_MISFORTUNE: ToolText(
+        "You send a misfortune on a town within your reach (an illness, a failed harvest, the death of a child, a loss of herds, an accident or "
+        "bad luck), on one of its folk if you name them; its folk read it by their own beliefs and answer it their own way. 1 action.",
+        {"town_id": "The town", "kind": "The misfortune", "victim_id": "Whom it falls on, if anyone", "reason": "Why you send it"},
+    ),
+    T.STIR_WITCH_HUNT: ToolText(
+        "You stir a witch hunt in a town within your reach: its folk accuse one another of witchcraft each epoch until the fervour burns out, and "
+        "the courts try the accused. 1 action.",
+        {"town_id": "The town", "reason": "Why you stir it"},
+    ),
 }

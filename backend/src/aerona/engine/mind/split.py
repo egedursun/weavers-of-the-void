@@ -14,9 +14,11 @@ from aerona.db.tables.mind import ATTRIBUTE_MAX, ATTRIBUTE_MIN, FACET_MAX, FACET
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.folkways import IdeaStrain
 from aerona.domain.enums.mind import Attribute, Facet, IdeaState, SkillKind, TraitKind, TraitSource, ValueHolder
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR
 from aerona.engine.body.customs import people_of
+from aerona.engine.folkways.fed import healing_charm, underfed
 from aerona.engine.mind.book import Values, add_trait, is_locked, mind_of, stored_values, traits_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import base_stat, set_base_stats, stat
@@ -28,6 +30,13 @@ TRAIT_LOCK = "traits"
 ATTRIBUTES_KEY = "attributes"
 FACETS_KEY = "facets"
 MIDPOINT = 50
+FED_ATTRIBUTES = (Attribute.DISEASE_RESISTANCE, Attribute.RECUPERATION)
+STRAIN_EFFECTS: dict[IdeaStrain, tuple[tuple[Attribute, int], ...]] = {
+    IdeaStrain.NONE: (),
+    IdeaStrain.DISTRACTION: ((Attribute.FOCUS, -1),),
+    IdeaStrain.FOCUS_LOSS: ((Attribute.FOCUS, -1), (Attribute.PATIENCE, -1)),
+    IdeaStrain.OBSESSION: ((Attribute.FOCUS, 1), (Attribute.WILLPOWER, -1)),
+}
 NEUTRAL_FACET = 0
 
 Bodied = EntityRow | SonRow | ForeignGodRow
@@ -225,11 +234,18 @@ async def incubating(session: AsyncSession, node_id: int) -> list[IdeaRow]:
 
 
 async def effective_attributes(session: AsyncSession, rules: Rules, node: Bodied) -> Attributes:
-    found = await attributes_of(session, node.id) or estimate(node)
-    distraction = sum(IDEAS[row.idea].distraction for row in await incubating(session, node.id))
-    if distraction:
-        found = dict(found)
-        found[Attribute.FOCUS] = clamp_attribute(found.get(Attribute.FOCUS, MIDPOINT) - distraction * rules.ideas.distraction_pct / PERCENT)
+    found = dict(await attributes_of(session, node.id) or estimate(node))
+    for row in await incubating(session, node.id):
+        cost = IDEAS[row.idea].distraction * rules.ideas.distraction_pct / PERCENT
+        for member, sign in STRAIN_EFFECTS[row.strain]:
+            found[member] = clamp_attribute(found.get(member, MIDPOINT) + sign * cost)
+    mending = await healing_charm(session, rules, node.id)
+    if mending:
+        found[Attribute.RECUPERATION] = clamp_attribute(found.get(Attribute.RECUPERATION, MIDPOINT) + mending)
+    hunger = await underfed(session, rules, node.id)
+    if hunger:
+        for member in FED_ATTRIBUTES:
+            found[member] = clamp_attribute(found.get(member, MIDPOINT) - hunger * rules.nutrition.immunity_pct / PERCENT)
     return found
 
 

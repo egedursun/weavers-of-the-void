@@ -59,6 +59,7 @@ CRIME_SECRETS: dict[CrimeKind, frozenset[IntrigueSecret]] = {
     CrimeKind.BLASPHEMY: frozenset({IntrigueSecret.HERESY, IntrigueSecret.SECRET_CULT_MEMBERSHIP}),
     CrimeKind.TREASON: frozenset({IntrigueSecret.CRIME, IntrigueSecret.BROKEN_OATH}),
     CrimeKind.DESERTION: frozenset({IntrigueSecret.COWARDICE_IN_BATTLE}),
+    CrimeKind.WITCHCRAFT: frozenset({IntrigueSecret.DEAL_WITH_OUTER_BEING, IntrigueSecret.SECRET_CULT_MEMBERSHIP}),
 }
 TRIAL_KINDS = {kind.value: kind for kind in TrialKind}
 TRIAL_TEXT: dict[TrialKind, str] = {

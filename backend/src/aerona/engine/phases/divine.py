@@ -37,6 +37,7 @@ async def domain_economy(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.bias_weights",
     "table.bonds",
     "table.divine_wounds",
     "table.epoch_year_cursors",
@@ -47,6 +48,7 @@ async def domain_economy(ctx: TickContext) -> None:
     "table.personality_values",
     "table.polity_members",
     "table.relics",
+    "table.skills",
     "table.son_goals",
     "table.son_powers",
     "table.sons",
@@ -57,6 +59,7 @@ async def domain_economy(ctx: TickContext) -> None:
     "table.worlds",
 )
 @writes(
+    "table.bias_weights",
     "table.chronicle",
     "table.epoch_year_cursors",
     "table.foreign_gods",

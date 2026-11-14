@@ -12,6 +12,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "belief.distortion_rate",
     "settlement.defense",
     "table.applied_fixups",
+    "table.bias_weights",
     "table.bonds",
     "table.chronicle",
     "table.divine_wounds",

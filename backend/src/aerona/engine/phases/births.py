@@ -31,6 +31,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.breeding import assign_caste, bearer_among, born_sex
 from aerona.engine.cycles.lineage import breeds, system_of
 from aerona.engine.demography.urban import founding_factor
+from aerona.engine.folkways.fed import fed_fertility
 from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, upbringing_pct
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
@@ -892,6 +893,7 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
         chance *= await sustenance_need(ctx.session, parent.id)
         chance *= scaled_by(await effect_of(ctx.session, parent.id, TraitEffect.FERTILITY, rules.traits.effect_scale_pct))
         chance *= fertility_factor(rules, await ctx.session.get(GenomeRow, parent.id))
+        chance *= await fed_fertility(ctx.session, rules, parent.id)
     culture = await culture_of(ctx.session, first.location_id) if first.location_id is not None else {}
     chance *= max(0.0, 1 + culture.get(ValueAxis.KINSHIP, 0) * table.kinship_pct / PERCENT / PERCENT)
     return chance if await breeds(ctx.session, first, second) else 0.0

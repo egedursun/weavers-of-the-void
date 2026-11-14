@@ -27,7 +27,7 @@ def pick(*values: str, default: str | None = None) -> Param:
 
 
 FRANCHISES = ("nobles", "landholders", "citizens", "free", "all")
-CRIME_TERMS = ("theft", "murder", "treason", "blasphemy", "desertion")
+CRIME_TERMS = ("theft", "murder", "treason", "blasphemy", "desertion", "witchcraft")
 TORTURE_CRUELTY = 15
 PENALTIES = ("fine", "pillory", "flogging", "prison", "hand", "blinding", "tongue", "exile", "wergild", "death", "remaking")
 LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
@@ -53,6 +53,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
             "treason": pick(*PENALTIES, default="death"),
             "blasphemy": pick(*PENALTIES, default="fine"),
             "desertion": pick(*PENALTIES, default="flogging"),
+            "witchcraft": pick(*PENALTIES, default="fine"),
             "trial": pick("judge", "jury", "combat", "ordeal"),
             "torture": pick("allowed", "forbidden", default="forbidden"),
         },
@@ -169,7 +170,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.TOLLS: "Roads through the realm charge {rate}%.",
         LawKind.DEBT_LAW: "Defaulters face {remedy}.",
         LawKind.PENAL_CODE: (
-            "Theft: {theft}; murder: {murder}; treason: {treason}; blasphemy: {blasphemy}; desertion: {desertion}; "
+            "Theft: {theft}; murder: {murder}; treason: {treason}; blasphemy: {blasphemy}; desertion: {desertion}; witchcraft: {witchcraft}; "
             "trial by {trial}; questioning under torture {torture}."
         ),
         LawKind.LEVY_LAW: "{share}% of the able are levied for {duration} seasons; armies grow.",

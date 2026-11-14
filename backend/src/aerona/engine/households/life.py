@@ -15,6 +15,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.genetics import DwellingKind, HouseholdDecision, HouseholdRole
 from aerona.domain.enums.mind import ActKind, ThoughtKind, ValueHolder
 from aerona.domain.enums.mortal import DeathCause, LifeStage, MarriageKind
@@ -24,6 +25,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.lineage import preference_bonus
 from aerona.engine.demography.kinship import has_room, may_wed
 from aerona.engine.factions.guilds import enrol_apprentice
+from aerona.engine.folkways.biases import lean
 from aerona.engine.genetics.genome import body_marks
 from aerona.engine.households.formation import OLD, YOUNG, found_household, join_household
 from aerona.engine.households.homes import district_for, dwelling_of, expectation, home_quality, starting_quality
@@ -327,7 +329,10 @@ async def migrate(
     ctx: TickContext, household: HouseholdRow, members: list[Member], dwelling: DwellingRow | None, tally: HouseholdTally, *, forced: bool = False
 ) -> bool:
     table = ctx.rules.households
-    if not forced and (household.burden < table.migrate_burden or not ctx.rng(f"households.migrate.{household.id}.{ctx.epoch}").chance(table.migrate_pct)):
+    if not forced and household.burden < table.migrate_burden:
+        return False
+    leaning = await lean(ctx, household.head_node_id, BiasedDecision.MIGRATION)
+    if not forced and not ctx.rng(f"households.migrate.{household.id}.{ctx.epoch}").chance(table.migrate_pct * leaning):
         return False
     target = await richer_place(ctx, household)
     if target is None or any(held(member.mortal.id) for member in members):

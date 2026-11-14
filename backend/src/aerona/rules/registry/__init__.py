@@ -228,6 +228,7 @@ from aerona.rules.registry.finance import AccessRules, ArbitrageRules, CreditRul
 from aerona.rules.registry.flora import FloraRules
 from aerona.rules.registry.folk import BiologyRules, CustomsRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
+from aerona.rules.registry.folkways import BiasRules, MishapRules, NutritionRules, PurityRules, WitchcraftRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
 from aerona.rules.registry.gatherings import CollectionRules, GatheringRules
 from aerona.rules.registry.genesis import GenesisRules
@@ -573,6 +574,11 @@ class Rules:
     strike: StrikeRules = field(default_factory=StrikeRules)
     tissues: TissueRules = field(default_factory=TissueRules)
     effect_packages: EffectPackageRules = field(default_factory=EffectPackageRules)
+    nutrition: NutritionRules = field(default_factory=NutritionRules)
+    biases: BiasRules = field(default_factory=BiasRules)
+    purity: PurityRules = field(default_factory=PurityRules)
+    mishaps: MishapRules = field(default_factory=MishapRules)
+    witchcraft: WitchcraftRules = field(default_factory=WitchcraftRules)
     body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)

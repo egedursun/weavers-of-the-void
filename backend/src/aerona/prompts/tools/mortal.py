@@ -270,7 +270,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.ACCUSE: ToolText(
-        "You accuse a mortal of your settlement of a crime (theft, murder, treason, blasphemy or desertion) and stand as a witness against them. "
+        "You accuse a mortal of your settlement of a crime (theft, murder, treason, blasphemy, desertion or witchcraft) and stand as a witness against them. "
         "The case is tried in a later epoch in the way the realm's penal code sets, and a true charge is easier to prove than a false one. 1 action.",
         {"accused_id": "Whom you accuse", "crime": "The crime you charge them with"},
     ),
@@ -982,5 +982,19 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.SWEAR_VENGEANCE: ToolText(
         "You swear vengeance on one who killed your kin; your life takes the shape of that tale, which may end in their fall, in yours or in neither. 1 action.",
         {"foe_id": "The one who killed your kin"},
+    ),
+    T.PURIFY_SELF: ToolText(
+        "You seek purification in the way your people knows, paying what it costs; if it takes, you are pure again and may join gatherings and "
+        "unions. 1 action.",
+        {},
+    ),
+    T.ACCUSE_OF_WITCHCRAFT: ToolText(
+        "You accuse a neighbour of your town of witchcraft; the court tries them in a later epoch by the way your realm tries cases, and the charge "
+        "may be true or false. 1 action.",
+        {"accused_id": "Whom you accuse"},
+    ),
+    T.MAKE_CHARM: ToolText(
+        "You make an item you own a charm (protection, fertility, luck or healing); it calms you whether or not its power is real. 1 action.",
+        {"power": "The charm's power"},
     ),
 }

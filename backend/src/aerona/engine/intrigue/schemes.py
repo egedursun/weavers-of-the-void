@@ -26,6 +26,7 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind, WeatherKind
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, HookSource, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
 from aerona.domain.enums.mind import Attribute, MemoryKind, SkillKind, TraitKind
 from aerona.domain.enums.mortal import CrimeKind, DeathCause, MarriageKind
@@ -41,6 +42,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.environment.book import add_scar
 from aerona.engine.environment.local import weather_here
+from aerona.engine.folkways.biases import lean
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.intrigue.identities import assume
 from aerona.engine.intrigue.leverage import leaned_on
@@ -653,7 +655,8 @@ async def plotters(ctx: TickContext, tally: SchemeTally) -> None:
         if not traits & {TraitKind.AMBITIOUS, TraitKind.CRUEL, TraitKind.DECEITFUL}:
             continue
         pressing = await pressing_foe(ctx, mortal.id)
-        if not ctx.rng(f"scheme.begin.{mortal.id}.{ctx.epoch}").chance(pressed(ctx, table.scheme_ambition_pct, pressing[0] if pressing else 0)):
+        leaning = await lean(ctx, mortal.id, BiasedDecision.SCHEME)
+        if not ctx.rng(f"scheme.begin.{mortal.id}.{ctx.epoch}").chance(pressed(ctx, table.scheme_ambition_pct, pressing[0] if pressing else 0) * leaning):
             continue
         rival = await living_entity(ctx.session, pressing[1]) if pressing is not None else None
         rival = rival or await rival_of(ctx, mortal.id)

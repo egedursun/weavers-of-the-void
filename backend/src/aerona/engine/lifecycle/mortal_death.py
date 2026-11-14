@@ -29,6 +29,7 @@ from aerona.engine.demography.rites import mourning_factor, rite_of, spirit_fact
 from aerona.engine.demography.rites import restless as restless_by_rite
 from aerona.engine.divine.wounds import avatar_slain
 from aerona.engine.faith.judgement import profile_for
+from aerona.engine.folkways.wrongs import wrongly_condemned
 from aerona.engine.interconnect.causes import killing_incident
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
@@ -254,7 +255,8 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
     ):
         return
     murdered = bool(await active_bonds(session, [BondKind.KILLED], targets=[mortal.id]))
-    base = clamp_int((effects.spirit_unrest_murdered if murdered else effects.spirit_unrest_natural) + await unrest_shift(ctx, mortal), 0, PERCENT)
+    wronged = ctx.rules.witchcraft.wrongful_unrest if await wrongly_condemned(session, mortal.id) else 0
+    base = clamp_int((effects.spirit_unrest_murdered if murdered else effects.spirit_unrest_natural) + await unrest_shift(ctx, mortal) + wronged, 0, PERCENT)
     restless = restless_by_rite(ctx.rules, rite, base, effects.spirit_restless_threshold)
     strength = stat(mortal, "strength")
     origin = f"refused to descend to {underworld.name} or returned from there" if underworld is not None else "returned from the world"

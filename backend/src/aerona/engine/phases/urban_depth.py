@@ -116,7 +116,7 @@ async def transport_fleets(ctx: TickContext) -> None:
     count(ctx, "fleet", tally)
 
 
-@reads("table.market_plays")
+@reads("table.community_stocks", "table.market_plays", "table.trading_posts")
 async def market_manipulation(ctx: TickContext) -> None:
     tally = PlayTally()
     await play_markets(ctx, tally)

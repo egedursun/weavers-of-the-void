@@ -786,8 +786,31 @@ async def rite_cycles(ctx: TickContext) -> None:
     ctx.count("rites_branded", await rites.heresies(ctx))
 
 
-@reads("prophecy.certainty", "table.bonds", "table.house_members", "table.offices", "table.prophecy_conditions", "table.sky_events", "table.wars")
-@writes("prophecy.certainty", "table.claims", "table.entities", "table.prophecy_conditions", "table.relations")
+@reads(
+    "prophecy.certainty",
+    "table.bonds",
+    "table.divine_wounds",
+    "table.epoch_year_cursors",
+    "table.house_members",
+    "table.legend_profiles",
+    "table.offices",
+    "table.prophecy_conditions",
+    "table.sky_events",
+    "table.wars",
+    "table.world_domain_hooks",
+)
+@writes(
+    "prophecy.certainty",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.claims",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.prophecy_conditions",
+    "table.relations",
+)
 async def prophecy_cycles(ctx: TickContext) -> None:
     for seen in await canon(ctx.session, [EntityType.PROPHECY]):
         state, pressed = await prophecy.resolve(ctx, seen)

@@ -10,11 +10,11 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | region | 287 / 215 met | 472 / 160 met | 397 / 120 met |
 | place | 74 / 25 met | 161 / 20 met | 283 / 15 met |
 | resource | 59 / 35 met | 61 / 50 met | 180 / 30 met |
-| settlement | 1321 / 280 met | 1202 / 230 met | 420 / 145 met |
+| settlement | 1321 / 280 met | 1205 / 230 met | 420 / 145 met |
 | species | 224 / 150 met | 202 / 150 met | 200 / 95 met |
-| people | 1166 / 320 met | 955 / 220 met | 420 / 140 met |
-| mortal | 775 / 355 met | 834 / 340 met | 420 / 200 met |
-| item | 90 / 65 met | 102 / 60 met | 220 / 45 met |
+| people | 1166 / 320 met | 958 / 220 met | 420 / 140 met |
+| mortal | 775 / 355 met | 839 / 340 met | 420 / 200 met |
+| item | 90 / 65 met | 103 / 60 met | 220 / 45 met |
 | structure | 204 / 55 met | 41 / 70 short | 219 / 55 met |
 | language | 62 / 110 short | 64 / 90 short | 100 / 55 met |
 | legend | 64 / 30 met | 48 / 40 met | 117 / 35 met |
@@ -50,9 +50,9 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | equipment_model | 0 | 0 | 0 |
 | dish | 0 | 0 | 0 |
 | building_type | 0 | 0 | 0 |
-| son | 246 / 350 short | 116 / 320 short | 280 / 190 met |
+| son | 246 / 350 short | 117 / 320 short | 280 / 190 met |
 | creator | 25 / 35 short | 13 / 40 short | 97 / 35 met |
-| foreign_god | 104 / 200 short | 32 / 140 short | 141 / 100 met |
+| foreign_god | 104 / 200 short | 33 / 140 short | 141 / 100 met |
 | war | 192 / 95 met | 161 / 110 met | 140 / 75 met |
 | world | 139 / 195 short | 56 / 135 short | 202 / 115 met |
 | star | 17 / 35 short | 3 / 30 short | 30 / 25 met |

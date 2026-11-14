@@ -502,6 +502,13 @@ class EnginePhasesRules:
     long_seasons: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: irregular seasons, long winters, forecasts and preparation")
     eco_transformations: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: plans that remake a world's land against its climate and its folk")
     ages: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the ages of a cyclic cosmos and the echoes reborn in them")
+    nutrition: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: diets, nutrient needs, nutrition and the stature it leaves")
+    biases: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the decision biases of those who decide")
+    purity: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: purity and impurity, purification and caste ranks")
+    mishaps: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: misfortunes, what peoples blame them on and how they answer, luck beliefs and charms"
+    )
+    witchcraft: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: witchcraft accusations, their trials and witch hunts")
     arcs: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: arcs read in lives, their beats and outcomes, setups and payoffs, and the drama manager"
     )

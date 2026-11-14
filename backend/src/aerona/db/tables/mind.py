@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
+from aerona.domain.enums.folkways import IdeaStrain
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN, RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import (
     ActKind,
@@ -205,6 +206,7 @@ class IdeaRow(Base):
     source_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     progress: Mapped[int] = mapped_column(default=0)
     state: Mapped[IdeaState] = mapped_column(enum_type(IdeaState, "state"))
+    strain: Mapped[IdeaStrain] = mapped_column(enum_type(IdeaStrain, "strain"), default=IdeaStrain.DISTRACTION, server_default=IdeaStrain.DISTRACTION.value)
     started_epoch: Mapped[int]
     finished_epoch: Mapped[int | None]
 

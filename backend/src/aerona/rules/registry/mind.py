@@ -289,6 +289,11 @@ class IdeasRules:
     belief_scale_pct: int = rule(100, 0, 400, G, "Scale of the belief shifts an internalised idea brings (%)")
     teacher_pct: int = rule(50, 0, 100, G, "Share of encounters that come from a master's own ideas when a mortal has one (%)")
     distraction_pct: int = rule(100, 0, 400, G, "Scale of the focus an incubating idea costs (%)")
+    strain_from: int = rule(
+        15, 0, 50, G, "Facet from which an incubating idea strains a mind: curiosity distracts, want of discipline loses focus, perseverance obsesses"
+    )
+    obsession_stress: int = rule(4, 0, 100, G, "Stress an idea that obsesses its holder adds each epoch it incubates")
+    obsession_speed_pct: int = rule(50, 0, 400, G, "Speed an obsession adds to an idea's incubation (%)")
 
 
 @dataclass(frozen=True)

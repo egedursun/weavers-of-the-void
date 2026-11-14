@@ -67,6 +67,7 @@ from tests.tools.every_setup import (
 )
 from tests.tools.every_setup_ages import long_winter, open_tale, turning_cosmos
 from tests.tools.every_setup_arts import art_work, built_construct, forged_work, two_clubs, wild_beast
+from tests.tools.every_setup_folkways import owned_item
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
 
@@ -419,4 +420,9 @@ SON_CASES: dict[str, Case] = {
     "press_tale": Case(plain(arc_id=created("arc"), reason=REASON), open_tale),
     "foreshadow": Case(plain(subject_id=mortal, reason=REASON)),
     "echo_life": Case(plain(mortal_id=mortal, reason=REASON), turning_cosmos),
+    "nudge_bias": Case(plain(mortal_id=mortal, bias="sunk_cost", weight=80, reason=REASON)),
+    "declare_impurity": Case(plain(people_id=people, source="the_dead", reason=REASON)),
+    "bless_charm": Case(plain(item_id=created("item"), power="luck", reason=REASON), owned_item),
+    "send_misfortune": Case(plain(town_id=settlement, kind="crop_failure", victim_id=mortal, reason=REASON)),
+    "stir_witch_hunt": Case(plain(town_id=settlement, reason=REASON)),
 }

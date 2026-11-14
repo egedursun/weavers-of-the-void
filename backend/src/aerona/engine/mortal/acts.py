@@ -19,6 +19,7 @@ from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType, MortalRole
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import ActKind, Facet, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
 from aerona.domain.enums.polity import LawKind
@@ -31,6 +32,7 @@ from aerona.engine.collective.roles import CAREER_ROLES as ROLE_OF_CAREER
 from aerona.engine.collective.roles import breach_cost, career_open
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
+from aerona.engine.folkways.biases import lean
 from aerona.engine.genetics.life import madness_factor
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -172,7 +174,7 @@ async def convert(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow
     atlas = await RegionAtlas.load(ctx.session)
     share = (await DominionBook.load(ctx.session)).share(atlas.top_region(mortal.id), target.id)
     if not ctx.rng(seed_of("convert", mortal.id, ctx.epoch)).chance(
-        table.conversion_chance * (1 + share * ctx.rules.dominion.conversion_pct / PERCENT / PERCENT)
+        table.conversion_chance * (1 + share * ctx.rules.dominion.conversion_pct / PERCENT / PERCENT) * await lean(ctx, mortal.id, BiasedDecision.CONVERSION)
     ):
         return False
     for bond in await active_bonds(ctx.session, [BondKind.WORSHIPS], sources=[mortal.id]):

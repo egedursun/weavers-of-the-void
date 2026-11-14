@@ -238,3 +238,6 @@ COMMAND_CONSTRUCT = Line("tools.mortal.command_construct", "{me} ordered {name} 
 FORECAST_SEASONS = Line("tools.mortal.forecast_seasons", "{me} read the coming of the seasons.")
 SABOTAGE_REMAKING = Line("tools.mortal.sabotage_remaking", "{me} set back {plan}.")
 SWEAR_VENGEANCE = Line("tools.mortal.swear_vengeance", "{me} swore vengeance on {foe}.")
+PURIFY_SELF = Line("tools.mortal.purify_self", "{me} sought to be made pure.")
+ACCUSE_OF_WITCHCRAFT = Line("tools.mortal.accuse_of_witchcraft", "{me} accused {accused} of witchcraft.")
+MAKE_CHARM = Line("tools.mortal.make_charm", "{me} made {item} a charm.")

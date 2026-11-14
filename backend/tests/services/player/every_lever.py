@@ -3601,3 +3601,81 @@ LEVERS.update(
 )
 
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})
+
+
+ITEM = EntityType.ITEM
+PEOPLE = EntityType.PEOPLE
+DIET_UP = ("diet:set", {"holder_id": Pick(TOWN), "values": {"staple": 50}})
+NEED_UP = ("nutrient_need:set", {"people_id": Pick(PEOPLE), "nutrient": "fresh", "weight": 60})
+SCORE_UP = ("nutrition_score:set", {"holder_id": Pick(MORTAL), "values": {"score": 55}})
+BIAS_UP = ("bias_weight:set", {"holder_id": Pick(MORTAL), "bias": "optimism", "weight": 70})
+PURITY_UP = ("purity:set", {"mortal_id": Pick(MORTAL), "values": {"state": "impure", "source": "the_dead"}})
+SOURCE_UP = ("impurity_source:set", {"people_id": Pick(PEOPLE), "source": "birth", "weight": 40, "lasts": 2})
+METHOD_UP = ("purification:set", {"people_id": Pick(PEOPLE), "method": "fasting", "epochs": 1, "cost": 0, "success": 90})
+RANK_UP = ("purity_rank:create", {"people_id": Pick(PEOPLE), "name": "The First Rank", "standing": 80, "professions": ["priest"]})
+MISHAP_UP = ("mishap:create", {"town_id": Pick(TOWN), "kind": "illness", "victim_id": Pick(MORTAL)})
+BELIEF_UP = ("luck_belief:create", {"people_id": Pick(PEOPLE), "sign": "number", "reach": "battle", "lucky": True, "name": "A lucky number of the folk"})
+CHARM_UP = ("charm:set", {"item_id": Pick(ITEM), "power": "luck", "strength": 40})
+ACCUSE_UP = ("accusation:create", {"town_id": Pick(TOWN), "accuser_id": None, "mishap_id": None})
+HUNT_UP = ("witch_hunt:create", {"town_id": Pick(TOWN), "fervour": 50})
+FOLKWAYS_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "diet:edit": {"staple": 40, "protein": 20, "fat": 10, "fresh": 15, "mineral": 5, "preserved": 5, "special": 5, "energy": 80},
+    "nutrient_need:edit": {"weight": 70},
+    "nutrition_score:edit": {"energy": 70, "balance": 60, "score": 65, "deficiency": "mineral", "childhood": 50},
+    "bias_weight:edit": {"weight": 30},
+    "purity:edit": {"state": "defiled", "source": "act", "until_epoch": 6, "rank_id": None},
+    "impurity_source:edit": {"weight": 70, "lasts": 3},
+    "purification:edit": {"epochs": 2, "cost": 5, "success": 60},
+    "purity_rank:edit": {"name": "The High Rank", "standing": 90, "endogamous": False, "commensal": True},
+    "mishap:edit": {
+        "kind": "accident",
+        "true_cause": "a fall",
+        "explained": True,
+        "attribution": "omen",
+        "response": "rite",
+        "victim_node_id": Pick(MORTAL, 1),
+        "cause_node_id": None,
+    },
+    "luck_belief:edit": {"name": "An unlucky gesture of the folk", "sign": "gesture", "reach": "journey", "lucky": False},
+    "charm:edit": {"power": "healing", "real": True, "strength": 70},
+    "accusation:edit": {"accuser_node_id": Pick(MORTAL, 2), "outcome": "cleared", "guilty_in_truth": False},
+    "witch_hunt:edit": {"fervour": 30, "accused": 2, "killed": 1, "ended_epoch": None},
+}
+EDITS = {**EDITS, **FOLKWAYS_EDITS}
+LEVERS.update(
+    {
+        "diet:set": given(holder_id=Pick(TOWN), values={"energy": 90}),
+        **{name: after(DIET_UP, holder_id=Pick(TOWN)) for name in ("diet:edit", "diet:delete")},
+        "nutrient_need:set": given(people_id=Pick(PEOPLE), nutrient="protein", weight=55),
+        **{name: after(NEED_UP, people_id=Pick(PEOPLE), nutrient="fresh") for name in ("nutrient_need:edit", "nutrient_need:delete")},
+        "nutrition_score:set": given(holder_id=Pick(MORTAL), values={"score": 40}),
+        **{name: after(SCORE_UP, holder_id=Pick(MORTAL)) for name in ("nutrition_score:edit", "nutrition_score:delete")},
+        "nutrition:feed": given(),
+        "bias_weight:set": given(holder_id=Pick(MORTAL), bias="sunk_cost", weight=80),
+        **{name: after(BIAS_UP, holder_id=Pick(MORTAL), bias="optimism") for name in ("bias_weight:edit", "bias_weight:delete")},
+        "bias:read": given(holder_id=Pick(MORTAL)),
+        "purity:set": given(mortal_id=Pick(MORTAL), values={"state": "impure"}),
+        **{name: after(PURITY_UP, mortal_id=Pick(MORTAL)) for name in ("purity:edit", "purity:delete", "purity:cleanse")},
+        "impurity_source:set": given(people_id=Pick(PEOPLE), source="wound", weight=30, lasts=1),
+        **{name: after(SOURCE_UP, people_id=Pick(PEOPLE), source="birth") for name in ("impurity_source:edit", "impurity_source:delete")},
+        "purification:set": given(people_id=Pick(PEOPLE), method="rite", epochs=0, cost=3, success=70),
+        **{name: after(METHOD_UP, people_id=Pick(PEOPLE), method="fasting") for name in ("purification:edit", "purification:delete")},
+        "purity_rank:create": given(people_id=Pick(PEOPLE), name="The Low Rank", standing=20, professions=["farmer"]),
+        **{name: after(RANK_UP, rank_id=Newest("purity_rank")) for name in ("purity_rank:edit", "purity_rank:delete")},
+        "purity_rank:profession": after(RANK_UP, rank_id=Newest("purity_rank"), profession="smith", member=True),
+        "mishap:create": given(town_id=Pick(TOWN), kind="bad_luck", victim_id=None, cause_id=None),
+        **{name: after(MISHAP_UP, mishap_id=Newest("mishap")) for name in ("mishap:edit", "mishap:delete")},
+        "luck_belief:create": given(people_id=Pick(PEOPLE), sign="day", reach="harvest", lucky=False, name="An unlucky day of the folk"),
+        **{name: after(BELIEF_UP, belief_id=Newest("luck_belief")) for name in ("luck_belief:edit", "luck_belief:delete")},
+        "charm:set": given(item_id=Pick(ITEM), power="protection", strength=60),
+        **{name: after(CHARM_UP, item_id=Pick(ITEM)) for name in ("charm:edit", "charm:delete")},
+        "accusation:create": given(town_id=Pick(TOWN), accuser_id=None, mishap_id=None),
+        **{name: after(ACCUSE_UP, accusation_id=Newest("accusation")) for name in ("accusation:edit", "accusation:delete")},
+        "witch_hunt:create": given(town_id=Pick(TOWN), fervour=70),
+        **{name: after(HUNT_UP, hunt_id=Newest("witch_hunt")) for name in ("witch_hunt:edit", "witch_hunt:delete")},
+    }
+)
+
+LEVERS.update(
+    {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in FOLKWAYS_EDITS.items()}
+)

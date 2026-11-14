@@ -23,12 +23,14 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import RumourChannel
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.commerce import news_delay
+from aerona.engine.folkways.biases import lean_community
 from aerona.engine.lore.language import barrier
 from aerona.engine.lore.printing import printed
 from aerona.engine.mind.memories import remember
@@ -360,7 +362,7 @@ async def alarm(ctx: TickContext, atlas: RegionAtlas, rumour: RumourRow, inciden
     hops = atlas.hops(rumour.carrier_entity_id, near)
     if hops is None or hops > table.alarm_regions:
         return None
-    weight = rumour.fidelity / PERCENT
+    weight = rumour.fidelity / PERCENT * await lean_community(ctx, rumour.carrier_entity_id, BiasedDecision.BELIEF)
     town = await living_entity(ctx.session, rumour.carrier_entity_id)
     if town is not None and stat(town, "defense") is not None:
         shift_stat(town, "defense", table.alarm_defense * weight)

@@ -439,6 +439,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.cosmos",
     "table.creator_taboos",
     "table.creature_anatomy",
+    "table.crime_cases",
     "table.culture_ethics",
     "table.culture_values",
     "table.deed_claims",

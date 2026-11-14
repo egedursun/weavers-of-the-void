@@ -7,9 +7,11 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.folkways.biases import lean_community
 from aerona.engine.military.aims import REGION_AIMS, advance
 from aerona.engine.military.logistics import March
 from aerona.engine.military.support import peace_pressure
@@ -111,7 +113,7 @@ async def weary(ctx: TickContext, war: WarRow, side: WarSideRow, *, dead: int, m
 
 async def seeks_peace(ctx: TickContext, war: WarRow, side: WarSideRow, *, humiliated: bool) -> bool:
     table = ctx.rules.war_weariness
-    pressure = side.weariness + await peace_pressure(ctx, side)
+    pressure = (side.weariness + await peace_pressure(ctx, side)) * await lean_community(ctx, side.entity_id, BiasedDecision.PEACE)
     if humiliated and (await values_for(ctx.session, side.entity_id)).get(ValueAxis.HONOUR, 0) > 0:
         pressure = round_half_up(pressure * (1 - table.honour_hold_pct / PERCENT))
     return pressure >= table.peace_threshold

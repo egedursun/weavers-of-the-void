@@ -42,7 +42,7 @@ async def thrones(ctx: TickContext) -> None:
     count(ctx, "throne", tally)
 
 
-@reads("table.community_stocks", "table.magic_sites", "table.skills")
+@reads("table.community_stocks", "table.epoch_year_cursors", "table.magic_sites", "table.place_profiles", "table.skills")
 @writes(
     "table.chronicle",
     "table.chronicle_entities",

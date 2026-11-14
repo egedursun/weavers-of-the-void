@@ -58,6 +58,7 @@ from aerona.engine.phases import (
     factions,
     faith,
     finance,
+    folkways,
     gatherings,
     genetics,
     geography,
@@ -216,6 +217,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + sacred.PHASES
     + arts.PHASES
     + ages.PHASES
+    + folkways.PHASES
     + made_kinds.PHASES
     + exploration.PHASES
     + factions.PHASES
@@ -295,6 +297,7 @@ CLEANUP_STAGE = stage(
     "environment_modifiers",
     "region_survey",
     "mind_survey",
+    "biases",
     "body_survey",
     "mortal_survey",
     "genetics_survey",
@@ -311,6 +314,7 @@ SUB_ENGINE_STAGE = stage(
     "labour_allocation",
     "harvest",
     "long_seasons",
+    "nutrition",
     "foresight",
     "diplomacy",
     "correspondence",
@@ -617,6 +621,9 @@ MIND_STAGE = stage(
     "social_norms",
     "social_learning",
     "relations_social",
+    "purity",
+    "mishaps",
+    "witchcraft",
     "gatherings",
     "reciprocity",
     "relations_circles",

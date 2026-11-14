@@ -2,6 +2,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.entity import MortalRole
+from aerona.domain.enums.folkways import IdeaStrain
 from aerona.domain.enums.mind import (
     ActKind,
     Attribute,
@@ -230,6 +231,7 @@ class IdeaView(ApiModel):
     source_node: NodeRef | None
     progress: int
     state: IdeaState
+    strain: IdeaStrain
     started_epoch: int
     finished_epoch: int | None
     fit: int

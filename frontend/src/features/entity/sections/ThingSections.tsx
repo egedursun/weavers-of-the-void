@@ -6,6 +6,7 @@ import { CollectiveSection } from '@/features/collective/CollectiveSection'
 import { CyclesSection } from '@/features/cycles/CyclesSection'
 import { DominionSection } from '@/features/dominion/DominionSection'
 import { EvolutionSection } from '@/features/evolution/EvolutionSection'
+import { FolkwaysSection } from '@/features/folkways/FolkwaysSection'
 import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
 import { LawDepthSection } from '@/features/lawDepth/LawDepthSection'
@@ -117,6 +118,7 @@ export function ThingSections({
       <SacredSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <PursuitsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <TalesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <FolkwaysSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>

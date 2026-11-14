@@ -532,6 +532,16 @@ class SonResult(StrEnum):
     FORESHADOW_REFUSED = "You cannot set that up: {{ why }}."
     LIFE_ECHOED = "The life of {{ mortal }} will echo into the next age as a tale of {{ tale }}."
     ECHO_REFUSED = "You cannot make that life echo: {{ why }}."
+    BIAS_NUDGED = "{{ mortal }} now leans {% if stronger %}toward{% else %}away from{% endif %} {{ bias }} (weight {{ weight }}); their decisions will show it."
+    BIAS_REFUSED = "You cannot sway that mind: {{ why }}."
+    IMPURITY_DECLARED = "The {{ people }} now count {{ source }} impure."
+    IMPURITY_REFUSED = "You cannot change what that people counts impure: {{ why }}."
+    CHARM_BLESSED = "{{ item }} is now a charm of {{ power }}, and its power is real."
+    CHARM_REFUSED = "You cannot bless that item: {{ why }}."
+    MISFORTUNE_SENT = "A misfortune ({{ kind }}) befell {{ town }}; its folk blame {{ blamed }}."
+    MISFORTUNE_REFUSED = "You cannot send that misfortune: {{ why }}."
+    HUNT_STIRRED = "A witch hunt took hold of {{ town }} at fervour {{ fervour }}."
+    HUNT_REFUSED = "You cannot stir a witch hunt there: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -968,3 +978,10 @@ class MortalResult(StrEnum):
     SABOTAGE_DECLINED = "You cannot sabotage that: {{ why }}."
     VENGEANCE_SWORN = "You swore vengeance on {{ foe }}; your tale stands at its {{ stage }}."
     VENGEANCE_DECLINED = "You cannot swear that vengeance: {{ why }}."
+    PURIFIED = "You are pure again."
+    STILL_IMPURE = "Your purification did not take; you are still {{ state }}."
+    PURIFY_DECLINED = "You cannot purify yourself: {{ why }}."
+    WITCH_ACCUSED = "You accused {{ accused }} of witchcraft; the case will be tried."
+    WITCH_ACCUSATION_DECLINED = "You cannot accuse them of witchcraft: {{ why }}."
+    CHARM_MADE = "{{ item }} is now your charm of {{ power }}{% if real %}, and its power is real{% else %}; it is believed in{% endif %}."
+    CHARM_DECLINED = "You cannot make a charm: {{ why }}."

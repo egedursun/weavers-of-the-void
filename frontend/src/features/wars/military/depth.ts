@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import {
+  Clover,
   Anchor,
   Axe,
   BadgeCheck,
@@ -214,6 +215,7 @@ export const MORALE_PART: Record<string, Named> = {
   faith: { label: 'Faith', icon: Sparkles, tone: 'verdigris' },
   babel: { label: 'Many tongues', icon: Brain, tone: 'warning' },
   beast_dread: { label: 'Dread of beasts', icon: Skull, tone: 'danger' },
+  luck: { label: 'Luck they believe in', icon: Clover, tone: 'gold' },
   warned: { label: 'Warned by spies', icon: Drama, tone: 'info' },
   terror_taken: { label: 'Terror', icon: Ghost, tone: 'danger' },
   willpower: { label: 'Willpower', icon: Brain, tone: 'success' },

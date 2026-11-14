@@ -262,6 +262,7 @@ export const LAW_PARAMS: Record<string, string> = {
   treason: 'Treason',
   blasphemy: 'Blasphemy',
   desertion: 'Desertion',
+  witchcraft: 'Witchcraft',
   strictness: 'Strictness',
   strength: 'Strength',
   voters: 'Who votes',

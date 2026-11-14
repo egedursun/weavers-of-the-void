@@ -50,6 +50,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
 
 @reads(
     "faction.wealth",
+    "mortal.creativity",
     "people.population",
     "people.prosperity",
     "people.wealth",
@@ -59,6 +60,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "settlement.wealth",
     "table.army_units",
     "table.beliefs",
+    "table.bias_weights",
     "table.favours",
     "table.forced_weather",
     "table.hooks",
@@ -84,6 +86,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
 )
 @writes(
     "table.beliefs",
+    "table.bias_weights",
     "table.bonds",
     "table.chronicle",
     "table.claims",

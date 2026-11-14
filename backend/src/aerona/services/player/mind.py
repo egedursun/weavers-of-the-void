@@ -27,6 +27,7 @@ from aerona.db.tables.mortal import KindVariantRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType, MortalRole
+from aerona.domain.enums.folkways import IdeaStrain
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import (
     Attribute,
@@ -182,6 +183,7 @@ class EditIdea(IdeaTarget):
     source: IdeaSource | None = None
     source_id: int | None = None
     clear_source: bool = False
+    strain: IdeaStrain | None = None
 
 
 class SetRole(MindTarget):
@@ -512,6 +514,8 @@ async def edit_idea(scope: PlayerScope, command: EditIdea) -> Effect:
         row.source_node_id = command.source_id
     if command.clear_source:
         row.source_node_id = None
+    if command.strain is not None:
+        row.strain = command.strain
     if command.state is not None:
         await settle_idea(scope, node, row, command.state)
     await scope.session.flush()

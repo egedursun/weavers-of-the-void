@@ -231,6 +231,11 @@ class SonToolId(StrEnum):
     PRESS_TALE = "press_tale"
     FORESHADOW = "foreshadow"
     ECHO_LIFE = "echo_life"
+    NUDGE_BIAS = "nudge_bias"
+    DECLARE_IMPURITY = "declare_impurity"
+    BLESS_CHARM = "bless_charm"
+    SEND_MISFORTUNE = "send_misfortune"
+    STIR_WITCH_HUNT = "stir_witch_hunt"
 
 
 class MortalToolId(StrEnum):
@@ -385,6 +390,9 @@ class MortalToolId(StrEnum):
     FORECAST_SEASONS = "forecast_seasons"
     SABOTAGE_REMAKING = "sabotage_remaking"
     SWEAR_VENGEANCE = "swear_vengeance"
+    PURIFY_SELF = "purify_self"
+    ACCUSE_OF_WITCHCRAFT = "accuse_of_witchcraft"
+    MAKE_CHARM = "make_charm"
 
 
 ToolId = SonToolId | MortalToolId

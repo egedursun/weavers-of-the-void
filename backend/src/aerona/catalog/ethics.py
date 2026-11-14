@@ -88,6 +88,7 @@ CRIME_ACTS: MappingProxyType[CrimeKind, ActKind] = MappingProxyType(
         CrimeKind.TREASON: A.TREASON,
         CrimeKind.MURDER: A.KILLING_OUTSIDER,
         CrimeKind.DESERTION: A.COWARDICE,
+        CrimeKind.WITCHCRAFT: A.MAGIC_USE,
     }
 )
 

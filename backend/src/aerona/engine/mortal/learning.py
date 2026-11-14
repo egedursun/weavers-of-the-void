@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import Profession, SkillKind, SkillSource
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.folkways.purity import barred_professions
 from aerona.engine.mind.book import is_locked, mind_of, set_skill, skills_of
 from aerona.engine.mind.skills import SKILL_LOCK, level_cost, practise
 from aerona.engine.mortal.profile import is_held
@@ -76,15 +77,21 @@ async def school_level(session: AsyncSession, caster_id: int, rite_id: int) -> i
     return int(found or 0)
 
 
-def best_profession(rules: Rules, rows: dict[SkillKind, SkillRow]) -> Profession | None:
-    scored = {profession: max((rows[skill].level for skill in spec.skills if skill in rows), default=0) for profession, spec in PROFESSIONS.items()}
+def best_profession(rules: Rules, rows: dict[SkillKind, SkillRow], barred: frozenset[str] = frozenset()) -> Profession | None:
+    scored = {
+        profession: max((rows[skill].level for skill in spec.skills if skill in rows), default=0)
+        for profession, spec in PROFESSIONS.items()
+        if profession.value not in barred
+    }
+    if not scored:
+        return None
     best = max(scored, key=lambda profession: (scored[profession], profession.value))
     return best if scored[best] >= rules.skills.profession_level else None
 
 
 async def refresh_profession(session: AsyncSession, rules: Rules, mortal: EntityRow, profile: MortalProfileRow) -> Profession | None:
     if not is_held(profile, "profession"):
-        profile.profession = best_profession(rules, await skills_of(session, mortal.id))
+        profile.profession = best_profession(rules, await skills_of(session, mortal.id), await barred_professions(session, mortal.id))
     return profile.profession
 
 

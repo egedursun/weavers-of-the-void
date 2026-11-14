@@ -63,6 +63,7 @@ JUSTICE_FULL = 100
     "table.bonds",
     "table.calendars",
     "table.case_witnesses",
+    "table.castings",
     "table.central_places",
     "table.claims",
     "table.community_cohorts",

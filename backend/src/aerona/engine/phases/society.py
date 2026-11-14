@@ -254,6 +254,7 @@ async def uprisings(ctx: TickContext) -> None:
     "table.people_biology",
     "table.people_culture",
     "table.people_reproduction",
+    "table.purity",
 )
 @writes(
     "table.bonds", "table.chronicle", "table.chronicle_entities", "table.entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents"

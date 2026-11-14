@@ -44,6 +44,7 @@ from aerona.engine.economy.sanctity import holy_strike
 from aerona.engine.equipment.field import acclaim_models, capture, carried_by_units, drop_to_losses, field_specs, wear_after_battle
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import ancestral_site, guardians_of
+from aerona.engine.folkways.fed import battle_luck
 from aerona.engine.intrigue.beliefs import beliefs_of
 from aerona.engine.intrigue.sources import cowardice
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -243,6 +244,7 @@ async def side_of(
         "faith": await faith_spirit(ctx, community, enemy, army.location_id),
         "babel": -await babel(ctx, community),
         "beast_dread": -await beast_dread(ctx, enemy.id),
+        "luck": await battle_luck(ctx.session, ctx.rules, community),
         "warned": table.morale.warned_morale if await warned(ctx, community.id, enemy.id) else 0,
         "passion": await passion_morale(ctx, commander, [community.id, enemy.id]),
         "divine": round(

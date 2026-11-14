@@ -46,6 +46,7 @@ from aerona.engine.interconnect.catalog_estates import ESTATE_MECHANICS
 from aerona.engine.interconnect.catalog_evolution import EVOLUTION_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
+from aerona.engine.interconnect.catalog_folkways import FOLKWAYS_MECHANICS
 from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
 from aerona.engine.interconnect.catalog_gatherings import GATHERING_MECHANICS
 from aerona.engine.interconnect.catalog_industry import INDUSTRY_MECHANICS
@@ -1020,6 +1021,7 @@ BUILT_IN = (
     *SACRED_MECHANICS,
     *ARTS_MECHANICS,
     *AGES_MECHANICS,
+    *FOLKWAYS_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,

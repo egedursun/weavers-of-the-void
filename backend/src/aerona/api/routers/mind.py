@@ -372,6 +372,7 @@ async def mind_split_view(services: ServicesDep, node_id: int = Path(ge=1)) -> M
                     source_node=sources.get(row.source_node_id) if row.source_node_id is not None else None,
                     progress=row.progress,
                     state=row.state,
+                    strain=row.strain,
                     started_epoch=row.started_epoch,
                     finished_epoch=row.finished_epoch,
                     fit=fit(values, row.idea),

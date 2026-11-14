@@ -95,6 +95,7 @@ class CrimeKind(StrEnum):
     TREASON = "treason"
     MURDER = "murder"
     DESERTION = "desertion"
+    WITCHCRAFT = "witchcraft"
 
 
 class PunishmentKind(StrEnum):

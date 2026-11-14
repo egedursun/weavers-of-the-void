@@ -15,6 +15,7 @@ from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction, StarvationStage, UnitKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, TreasuryEntry
@@ -25,6 +26,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
 from aerona.engine.economy.purse import receive_coin
 from aerona.engine.environment.book import region_environment, scar_region
+from aerona.engine.folkways.biases import lean_community
 from aerona.engine.happenings.emergence import record_sack
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -227,14 +229,15 @@ async def sally(ctx: TickContext, siege: SiegeRow, march: March) -> int:
     return lost
 
 
-def surrenders(ctx: TickContext, siege: SiegeRow, action: SiegeAction) -> bool:
+async def surrenders(ctx: TickContext, siege: SiegeRow, action: SiegeAction) -> bool:
     table = ctx.rules.siegecraft
     rng = ctx.rng(f"surrender.{siege.id}.{siege.rounds}")
+    leaning = await lean_community(ctx, siege.besieged_entity_id, BiasedDecision.SURRENDER)
     if siege.starvation is StarvationStage.TABOO_BROKEN:
-        return rng.chance(table.surrender_chance * HALF)
+        return rng.chance(table.surrender_chance * HALF * leaning)
     if siege.starvation is StarvationStage.FAMINE:
-        return rng.chance(table.surrender_chance)
-    return action is SiegeAction.NEGOTIATE and rng.chance(table.negotiate_chance)
+        return rng.chance(table.surrender_chance * leaning)
+    return action is SiegeAction.NEGOTIATE and rng.chance(table.negotiate_chance * leaning)
 
 
 async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march: March, garrison: int) -> SiegeSeason:
@@ -278,7 +281,7 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
         found.relieved = True
         return found
     found.betrayed = await hunger_betrayal(ctx, siege, besieged)
-    found.surrendered = found.betrayed or surrenders(ctx, siege, action)
+    found.surrendered = found.betrayed or await surrenders(ctx, siege, action)
     found.assault = not found.surrendered and action is SiegeAction.ASSAULT
     return found
 

@@ -18,6 +18,7 @@ import {
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
+import { STRAINS } from '@/features/folkways/labels'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -264,12 +265,14 @@ function IdeaCard({
   blocked,
   onSettle,
   onSource,
+  onStrain,
   onRemove,
 }: {
   idea: MindIdea
   blocked: string | null
   onSettle: (state: IdeaState) => void
   onSource: (source: IdeaSource) => void
+  onStrain: (strain: MindIdea['strain']) => void
   onRemove: () => void
 }) {
   const spec = named(IDEA_ICONS, idea.idea)
@@ -315,6 +318,13 @@ function IdeaCard({
         table={labelTable(IDEA_SOURCES)}
         blocked={blocked}
         onPick={(value) => onSource(value as IdeaSource)}
+      />
+      <MindPicker
+        label='How it strains the mind while it turns'
+        value={idea.strain}
+        table={labelTable(STRAINS)}
+        blocked={blocked}
+        onPick={(value) => onStrain(value as MindIdea['strain'])}
       />
       <Muted variant='caption'>
         {idea.fit >= 0
@@ -392,6 +402,14 @@ function Ideas({ view }: { view: MindSplit }) {
         })
       ),
   })
+  const strain = useGodAction({
+    run: ({ id, kind }: { id: number; kind: MindIdea['strain'] }) =>
+      unwrap(
+        api.POST('/api/actions/mind:idea_edit', {
+          body: { idea_id: id, strain: kind, clear_source: false },
+        })
+      ),
+  })
   const remove = useGodAction({
     run: (id: number) =>
       unwrap(
@@ -415,7 +433,11 @@ function Ideas({ view }: { view: MindSplit }) {
   })
   const blocked =
     reason() ??
-    (settle.isPending || source.isPending || remove.isPending || plant.isPending
+    (settle.isPending ||
+    source.isPending ||
+    strain.isPending ||
+    remove.isPending ||
+    plant.isPending
       ? WORKING
       : null)
   const held = new Set(view.ideas.map((item) => item.idea))
@@ -450,6 +472,7 @@ function Ideas({ view }: { view: MindSplit }) {
                 blocked={blocked}
                 onSettle={(state) => settle.mutate({ id: idea.id, state })}
                 onSource={(kind) => source.mutate({ id: idea.id, kind })}
+                onStrain={(kind) => strain.mutate({ id: idea.id, kind })}
                 onRemove={() => remove.mutate(idea.id)}
               />
             )}

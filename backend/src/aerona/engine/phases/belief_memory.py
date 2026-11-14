@@ -393,6 +393,7 @@ async def fairy_tales(ctx: TickContext) -> None:
     "table.name_registry",
     "table.nodes",
     "table.notable_years",
+    "table.prophecy_conditions",
     "table.routes",
     "table.skills",
     "table.world_maps",

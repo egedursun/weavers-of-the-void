@@ -4,12 +4,14 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import WarAimRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.military import WarAimKind
 from aerona.domain.enums.mind import ActKind, ValueAxis
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import solidarity
 from aerona.engine.cycles.indenture import captive_price
+from aerona.engine.folkways.biases import lean_community
 from aerona.engine.intrigue.beliefs import BeliefView
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
@@ -74,6 +76,7 @@ async def raiders(ctx: TickContext) -> int:
             table.raid_war_chance
             * await captive_price(ctx.session, ctx.rules, raider.id)
             * await solidarity(ctx.session, raider, ctx.rules.asabiyya.conquest_weight)
+            * await lean_community(ctx, raider.id, BiasedDecision.RAID)
         ):
             continue
         martial = (await values_for(ctx.session, raider.id)).get(ValueAxis.MARTIAL, 0)

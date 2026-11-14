@@ -2684,7 +2684,7 @@ Biases make decisions fallible in characterful ways. Rulers lose wars they shoul
 
 **Witchcraft as a believed cause of misfortune** (Evans-Pritchard-style):
 
-- In cultures with a witchcraft belief, unexplained misfortunes (illness, crop failure, the death of a child, livestock deaths) are attributed to **witches**. The accused is chosen through belief state (F22), grievances and social distance: envied neighbours, widows, outsiders, the eccentric.
+- In cultures with a witchcraft belief, unexplained misfortunes (illness, crop failure, the death of a child, livestock deaths) are attributed to **witches**. The accused is chosen through belief state (F22), grievances and social distance: envied neighbours, outsiders, the isolated, the eccentric.
 - **Accusations** follow divination (8.7 reference pass 4) or rumour (F11 reference pass 3), and lead to trials (4.5), ordeals, exile or killing.
 - **Witch hunts** are collective behaviour cascades (F32) under stress (plague, famine, war, PSI) and with zealous authorities (cults, inquisitions). They are major incidents with memories, accounts and ghosts (wrongful deaths: vengeful ghosts, 3.3 reference pass).
 - **Real witches:** where rites (8.6) and curses (F30) exist, some accused may really be casters. The engine knows who is, and the player can see accurate and false accusations. This is a uniquely sharp beyond-the-leader effect: a world where magic is real makes the witch-hunt ambiguous rather than simply false.

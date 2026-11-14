@@ -197,6 +197,7 @@ class HomeLine(ContextItem):
     sacred: list[str] = Field(default_factory=list)
     pursuits: list[str] = Field(default_factory=list)
     tales: list[str] = Field(default_factory=list)
+    folkways: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

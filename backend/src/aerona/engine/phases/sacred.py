@@ -103,7 +103,9 @@ async def folk_spirits(ctx: TickContext) -> None:
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_societies",
     "table.community_society",
+    "table.community_stocks",
     "table.cult_tenets",
     "table.divine_standing",
     "table.entities",
@@ -184,6 +186,8 @@ async def rites_of_passage(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.age",
+    "mortal.lifespan",
     "mortal.wisdom",
     "table.archive_holdings",
     "table.bonds",
@@ -199,6 +203,7 @@ async def rites_of_passage(ctx: TickContext) -> None:
     "table.holder_techniques",
     "table.miracle_records",
     "table.mortal_profiles",
+    "table.name_registry",
     "table.natural_law_profiles",
     "table.offices",
     "table.personality_values",
@@ -225,6 +230,7 @@ async def rites_of_passage(ctx: TickContext) -> None:
     "table.incidents",
     "table.long_plans",
     "table.mortal_profiles",
+    "table.name_registry",
     "table.prophecy_conditions",
 )
 async def foresight(ctx: TickContext) -> None:

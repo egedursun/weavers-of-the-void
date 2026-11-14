@@ -10,6 +10,7 @@ from aerona.agents.context.economy import resource_yield, stores_for
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.entity_line import line_items
 from aerona.agents.context.evolution_lines import mortal_evolution_lines
+from aerona.agents.context.folkways_lines import mortal_folkways_lines
 from aerona.agents.context.gatherings import gathering_lines, site_lines
 from aerona.agents.context.geography import environment_facts, region_records, weather_words
 from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_lines, title_lines
@@ -204,6 +205,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "sacred": await mortal_sacred_lines(scope, me),
             "pursuits": await mortal_arts_lines(scope, me),
             "tales": await mortal_ages_lines(scope, me),
+            "folkways": await mortal_folkways_lines(scope, me),
         }
     )
 

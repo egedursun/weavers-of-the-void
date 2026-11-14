@@ -247,6 +247,7 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.mortal_profiles",
     "table.needs",
     "table.nodes",
+    "table.nutrition_scores",
     "table.personality_values",
     "table.preferences",
     "table.pressures",

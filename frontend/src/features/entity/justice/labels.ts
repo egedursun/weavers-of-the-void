@@ -6,6 +6,7 @@ import {
   Flame,
   Footprints,
   Gavel,
+  Ghost,
   Hand,
   HandCoins,
   Handshake,
@@ -98,6 +99,7 @@ export const CRIMES: Record<string, Named> = {
   treason: { label: 'Treason', icon: Landmark, tone: 'danger' },
   blasphemy: { label: 'Blasphemy', icon: Flame, tone: 'warning' },
   desertion: { label: 'Desertion', icon: Wind, tone: 'warning' },
+  witchcraft: { label: 'Witchcraft', icon: Ghost, tone: 'danger' },
 }
 
 export function labelTable(

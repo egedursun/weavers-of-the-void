@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import CastingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.mind import MemoryRow
@@ -9,13 +10,14 @@ from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import ROBBER_KINDS, FactionKind
-from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
+from aerona.engine.mind.book import values_for
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.folk import present_among
 
@@ -95,7 +97,15 @@ async def offenders(ctx: TickContext, town_id: int, laws: LawBook) -> dict[Crime
         )
     )
     war = await _at_war(ctx, town_id)
+    casters = set(
+        await ctx.session.scalars(
+            select(CastingRow.caster_entity_id).where(CastingRow.caster_entity_id.in_(list(ids)), CastingRow.epoch >= ctx.epoch - RECENT_EPOCHS)
+        )
+    )
+    believers = (await values_for(ctx.session, town_id)).get(ValueAxis.SUPERSTITION, 0) >= ctx.rules.witchcraft.belief_from
     for mortal in mortals:
+        if believers and mortal.id in casters:
+            found[CrimeKind.WITCHCRAFT].append(mortal)
         kinds = bands.get(mortal.id, set())
         if kinds & TREASON_KINDS or mortal.id in pressing:
             found[CrimeKind.TREASON].append(mortal)

@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -10,10 +11,12 @@ from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyProfileRow, It
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.mind import IdeaRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import IdeologyTenet, ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.folkways import IdeaStrain
 from aerona.domain.enums.mind import Facet, IdeaKind, IdeaSource, IdeaState, ThoughtKind, ValueHolder
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -31,6 +34,7 @@ from aerona.engine.mind.split import (
 )
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.values import VALUE_LOCK
+from aerona.engine.mortal.profile import is_held
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import seed_of
 from aerona.rules.registry import Rules
@@ -38,6 +42,7 @@ from aerona.rules.registry import Rules
 IDEA_LOCK = "ideas"
 TEXT_CLASSES = frozenset({ItemClass.BOOK, ItemClass.SCROLL, ItemClass.PRAYER_BOOK})
 FULL = 100
+STRAIN_FROM = 15
 
 
 @dataclass(frozen=True)
@@ -160,7 +165,17 @@ async def encounters(session: AsyncSession, mortal: EntityRow, knowledge: Knowle
     return taught, met
 
 
-async def take_up(session: AsyncSession, holder_id: int, encounter: Encounter, epoch: int, *, progress: int = 0) -> IdeaRow | None:
+def strain_of(facets: Mapping[Facet, int], threshold: int) -> IdeaStrain:
+    if facets.get(Facet.PERSEVERANCE, 0) >= threshold:
+        return IdeaStrain.OBSESSION
+    if facets.get(Facet.DISCIPLINE, 0) <= -threshold:
+        return IdeaStrain.FOCUS_LOSS
+    return IdeaStrain.DISTRACTION
+
+
+async def take_up(
+    session: AsyncSession, holder_id: int, encounter: Encounter, epoch: int, *, progress: int = 0, strain_from: int = STRAIN_FROM
+) -> IdeaRow | None:
     if await session.scalar(select(IdeaRow.id).where(IdeaRow.holder_node_id == holder_id, IdeaRow.idea == encounter.idea)) is not None:
         return None
     row = IdeaRow(
@@ -170,6 +185,7 @@ async def take_up(session: AsyncSession, holder_id: int, encounter: Encounter, e
         source_node_id=encounter.source_node_id,
         progress=max(0, min(FULL, progress)),
         state=IdeaState.INCUBATING,
+        strain=strain_of(await facets_of(session, holder_id), strain_from),
         started_epoch=epoch,
     )
     session.add(row)
@@ -203,6 +219,12 @@ async def internalise(session: AsyncSession, rules: Rules, node: Holder, row: Id
     await session.flush()
 
 
+async def obsess(ctx: TickContext, mortal: EntityRow) -> None:
+    profile = await ctx.session.get(MortalProfileRow, mortal.id)
+    if profile is not None and not is_held(profile, "stress"):
+        profile.stress = min(FULL, profile.stress + ctx.rules.ideas.obsession_stress)
+
+
 def reject(row: IdeaRow, epoch: int) -> None:
     row.state, row.finished_epoch = IdeaState.REJECTED, epoch
 
@@ -230,6 +252,9 @@ async def turn_over(ctx: TickContext, mortal: EntityRow, knowledge: KnowledgeMap
             tally.rejected += 1
             continue
         rate = table.incubation_rate * eager * max(0.0, 1 + suits / FULL * table.fit_pct / PERCENT)
+        if row.strain is IdeaStrain.OBSESSION:
+            rate *= 1 + table.obsession_speed_pct / PERCENT
+            await obsess(ctx, mortal)
         row.progress = min(FULL, row.progress + max(1, round(rate)))
         if row.progress >= FULL:
             await internalise(ctx.session, ctx.rules, mortal, row, ctx.epoch)
@@ -244,6 +269,6 @@ async def turn_over(ctx: TickContext, mortal: EntityRow, knowledge: KnowledgeMap
     taught = [item for item in taught if item.idea not in held]
     met = [item for item in met if item.idea not in held]
     pool = taught if taught and (not met or rng.chance(table.teacher_pct)) else met
-    if pool and await take_up(ctx.session, mortal.id, rng.pick(pool), ctx.epoch) is not None:
+    if pool and await take_up(ctx.session, mortal.id, rng.pick(pool), ctx.epoch, strain_from=table.strain_from) is not None:
         tally.taken += 1
     return tally

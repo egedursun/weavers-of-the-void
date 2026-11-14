@@ -18,6 +18,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import GoalSource, GoalState, GodGoalKind
 from aerona.domain.enums.entity import HERO_ROLES, EntityType
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.mythic import MantlingState
@@ -27,6 +28,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, alive, domains_of, faithful_communities, god_of, living_gods
 from aerona.engine.divine.hooks import foes_of
 from aerona.engine.dominion.sites import thrones_held
+from aerona.engine.folkways.biases import lean
 from aerona.engine.gods.progress import grant_progress, xp_for_next_level
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
@@ -365,7 +367,7 @@ async def pursue_goals(ctx: TickContext) -> int:
         for goal in goals:
             await measure(ctx, god, goal)
         current = [goal for goal in goals if goal.state is GoalState.ACTIVE]
-        if not current and ctx.rng(f"goal_new.{god.id}").chance(table.choose_chance):
+        if not current and ctx.rng(f"goal_new.{god.id}").chance(table.choose_chance * await lean(ctx, god.id, BiasedDecision.GOD_GOAL)):
             chosen = await choose(ctx, god)
             if chosen is not None:
                 ctx.session.add(chosen)

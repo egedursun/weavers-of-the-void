@@ -24,7 +24,7 @@ async def art_market(ctx: TickContext) -> None:
     count(ctx, "forgeries", forgeries)
 
 
-@reads("table.art_movements", "table.canon_works", "table.faction_memberships", "table.faction_profiles")
+@reads("settlement.population", "table.art_movements", "table.canon_works", "table.faction_memberships", "table.faction_profiles")
 async def art_movements(ctx: TickContext) -> None:
     tally = MovementTally()
     await keep_movements(ctx, tally)

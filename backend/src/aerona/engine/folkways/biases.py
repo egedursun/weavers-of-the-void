@@ -1,0 +1,194 @@
+from collections.abc import Mapping
+from dataclasses import dataclass
+
+from sqlalchemy import select
+
+from aerona.constants.units import PERCENT
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.folkways import BiasWeightRow
+from aerona.db.tables.mind import FACET_MAX, SkillRow
+from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.folkways import BiasedDecision, DecisionBias
+from aerona.domain.enums.mind import Facet, SkillKind
+from aerona.engine.context import TickContext
+from aerona.engine.divine.gods import living_gods
+from aerona.engine.mind.drives import rulers_of
+from aerona.engine.mind.split import facets_of
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+
+MIDDLE = 50
+
+SOURCES: Mapping[DecisionBias, tuple[tuple[Facet, int], ...]] = {
+    DecisionBias.OVERCONFIDENCE: ((Facet.VANITY, 1), (Facet.AMBITION, 1), (Facet.MODESTY, -1)),
+    DecisionBias.SUNK_COST: ((Facet.PERSEVERANCE, 1), (Facet.ABSTRACTION, -1)),
+    DecisionBias.LOSS_AVERSION: ((Facet.ANXIETY, 1), (Facet.CAUTION, 1), (Facet.EXCITEMENT_SEEKING, -1)),
+    DecisionBias.CONFIRMATION: ((Facet.CURIOSITY, -1), (Facet.TOLERANCE_OF_STRANGENESS, -1)),
+    DecisionBias.RECENCY: ((Facet.ACTIVITY_LEVEL, 1), (Facet.DISCIPLINE, -1)),
+    DecisionBias.GROUPTHINK: ((Facet.COOPERATION, 1), (Facet.POLITENESS, 1), (Facet.ASSERTIVENESS, -1)),
+    DecisionBias.HOSTILE_ATTRIBUTION: ((Facet.ANGER, 1), (Facet.TRUST, -1)),
+    DecisionBias.OPTIMISM: ((Facet.CHEERFULNESS, 1), (Facet.DEPRESSION, -1)),
+    DecisionBias.STATUS_QUO: ((Facet.ORDERLINESS, 1), (Facet.IMAGINATION, -1)),
+    DecisionBias.AVAILABILITY: ((Facet.VULNERABILITY, 1), (Facet.THOROUGHNESS, -1)),
+    DecisionBias.ANCHORING: ((Facet.SELF_CONSCIOUSNESS, 1), (Facet.ABSTRACTION, -1)),
+    DecisionBias.IN_GROUP_FAVOUR: ((Facet.GREGARIOUSNESS, 1), (Facet.TOLERANCE_OF_STRANGENESS, -1), (Facet.ALTRUISM, -1)),
+    DecisionBias.AUTHORITY_DEFERENCE: ((Facet.SENSE_OF_DUTY, 1), (Facet.ASSERTIVENESS, -1)),
+    DecisionBias.SCARCITY_PANIC: ((Facet.GREED, 1), (Facet.ANXIETY, 1), (Facet.EMOTIONAL_STABILITY, -1)),
+    DecisionBias.FATALISM: ((Facet.DEPRESSION, 1), (Facet.ACTIVITY_LEVEL, -1)),
+    DecisionBias.RISK_SEEKING: ((Facet.EXCITEMENT_SEEKING, 1), (Facet.CAUTION, -1)),
+    DecisionBias.PLANNING_FALLACY: ((Facet.IMAGINATION, 1), (Facet.THOROUGHNESS, -1)),
+    DecisionBias.HALO: ((Facet.FRIENDLINESS, 1), (Facet.GRATITUDE, 1), (Facet.THOROUGHNESS, -1)),
+    DecisionBias.PROJECTION: ((Facet.SELF_CONSCIOUSNESS, 1), (Facet.IMAGINATION, -1), (Facet.FRIENDLINESS, 1)),
+}
+
+PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = {
+    BiasedDecision.RAID: {
+        DecisionBias.OVERCONFIDENCE: 1,
+        DecisionBias.RISK_SEEKING: 1,
+        DecisionBias.LOSS_AVERSION: -1,
+        DecisionBias.OPTIMISM: 1,
+        DecisionBias.HOSTILE_ATTRIBUTION: 1,
+    },
+    BiasedDecision.PEACE: {
+        DecisionBias.SUNK_COST: -1,
+        DecisionBias.OVERCONFIDENCE: -1,
+        DecisionBias.LOSS_AVERSION: 1,
+        DecisionBias.FATALISM: 1,
+        DecisionBias.OPTIMISM: -1,
+        DecisionBias.ANCHORING: -1,
+        DecisionBias.GROUPTHINK: -1,
+    },
+    BiasedDecision.SURRENDER: {
+        DecisionBias.SUNK_COST: -1,
+        DecisionBias.FATALISM: 1,
+        DecisionBias.SCARCITY_PANIC: 1,
+        DecisionBias.PLANNING_FALLACY: -1,
+        DecisionBias.AUTHORITY_DEFERENCE: -1,
+    },
+    BiasedDecision.SCHEME: {
+        DecisionBias.HOSTILE_ATTRIBUTION: 1,
+        DecisionBias.RECENCY: 1,
+        DecisionBias.PROJECTION: 1,
+        DecisionBias.HALO: -1,
+    },
+    BiasedDecision.BELIEF: {
+        DecisionBias.AVAILABILITY: 1,
+        DecisionBias.AUTHORITY_DEFERENCE: 1,
+        DecisionBias.GROUPTHINK: 1,
+        DecisionBias.RECENCY: 1,
+        DecisionBias.CONFIRMATION: -1,
+    },
+    BiasedDecision.CONVERSION: {
+        DecisionBias.STATUS_QUO: -1,
+        DecisionBias.IN_GROUP_FAVOUR: -1,
+        DecisionBias.CONFIRMATION: -1,
+        DecisionBias.AUTHORITY_DEFERENCE: 1,
+        DecisionBias.HALO: 1,
+    },
+    BiasedDecision.MIGRATION: {
+        DecisionBias.STATUS_QUO: -1,
+        DecisionBias.LOSS_AVERSION: -1,
+        DecisionBias.SCARCITY_PANIC: 1,
+        DecisionBias.OPTIMISM: 1,
+        DecisionBias.RISK_SEEKING: 1,
+    },
+    BiasedDecision.GOD_GOAL: {
+        DecisionBias.OVERCONFIDENCE: 1,
+        DecisionBias.PLANNING_FALLACY: 1,
+        DecisionBias.SUNK_COST: 1,
+        DecisionBias.ANCHORING: 1,
+        DecisionBias.IN_GROUP_FAVOUR: 1,
+    },
+}
+
+COUNTERS = (SkillKind.STRATEGY, SkillKind.TACTICS)
+DECIDING = frozenset({BondKind.RULES, BondKind.COMMANDS})
+
+
+@dataclass
+class BiasTally:
+    derived: int = 0
+    leaned: int = 0
+
+
+def derived_weight(facets: Mapping[Facet, int], bias: DecisionBias, stress: int, stress_pct: int) -> int:
+    parts = SOURCES[bias]
+    lean = sum(facets.get(facet, 0) * sign for facet, sign in parts) / len(parts)
+    return clamp_int(round_half_up(MIDDLE + lean * MIDDLE / FACET_MAX + stress * stress_pct / PERCENT), 0, PERCENT)
+
+
+async def weights_of(ctx: TickContext, node_id: int) -> dict[DecisionBias, BiasWeightRow]:
+    rows = await ctx.session.scalars(select(BiasWeightRow).where(BiasWeightRow.holder_node_id == node_id))
+    return {row.bias: row for row in rows}
+
+
+async def counter_of(ctx: TickContext, node_id: int) -> int:
+    levels = await ctx.session.scalars(select(SkillRow.level).where(SkillRow.holder_node_id == node_id, SkillRow.skill.in_(COUNTERS)))
+    return max(levels, default=0)
+
+
+async def derive(ctx: TickContext, node_id: int, tally: BiasTally) -> dict[DecisionBias, BiasWeightRow]:
+    table = ctx.rules.biases
+    found = await weights_of(ctx, node_id)
+    facets = await facets_of(ctx.session, node_id)
+    if not facets:
+        return found
+    profile = await ctx.session.get(MortalProfileRow, node_id)
+    stress = profile.stress if profile is not None else 0
+    for bias in DecisionBias:
+        weight = derived_weight(facets, bias, stress, table.stress_pct)
+        row = found.get(bias)
+        if row is None:
+            row = BiasWeightRow(holder_node_id=node_id, bias=bias, weight=weight, last_shift=0, locked=[])
+            ctx.session.add(row)
+            found[bias] = row
+            tally.derived += 1
+        elif "weight" not in (row.locked or []):
+            row.weight = clamp_int(round_half_up(row.weight + (weight - row.weight) * table.drift_pct / PERCENT), 0, PERCENT)
+    return found
+
+
+async def lean(ctx: TickContext, node_id: int | None, decision: BiasedDecision) -> float:
+    if node_id is None:
+        return 1.0
+    rows = await weights_of(ctx, node_id)
+    if not rows:
+        return 1.0
+    table = ctx.rules.biases
+    damp = max(0.0, 1 - await counter_of(ctx, node_id) * table.skill_damp_pct / PERCENT)
+    total = 0.0
+    strongest: tuple[float, BiasWeightRow] | None = None
+    for bias, sign in PUSHES[decision].items():
+        row = rows.get(bias)
+        if row is None:
+            continue
+        push = (row.weight - MIDDLE) / MIDDLE * sign * table.push_pct * damp
+        total += push
+        if strongest is None or abs(push) > abs(strongest[0]):
+            strongest = (push, row)
+    if strongest is not None and round_half_up(strongest[0]) != 0:
+        row = strongest[1]
+        row.last_decision, row.last_shift, row.last_epoch = decision, round_half_up(strongest[0]), ctx.epoch
+    return max(0.0, 1 + total / PERCENT)
+
+
+async def lean_community(ctx: TickContext, community_id: int, decision: BiasedDecision) -> float:
+    rulers = await rulers_of(ctx.session, community_id)
+    return await lean(ctx, rulers[0].id if rulers else None, decision)
+
+
+async def deciders(ctx: TickContext) -> list[int]:
+    found = set(await ctx.session.scalars(select(BondRow.source_node_id).where(BondRow.kind.in_(list(DECIDING)), BondRow.state == BondState.ACTIVE)))
+    found |= set(await ctx.session.scalars(select(BiasWeightRow.holder_node_id)))
+    mortals = select(EntityRow.id).where(EntityRow.id.in_(list(found)), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+    living = set(await ctx.session.scalars(mortals)) | {god.id for god in await living_gods(ctx.session)}
+    return sorted(node for node in living if not held(node))
+
+
+async def keep_biases(ctx: TickContext, tally: BiasTally) -> None:
+    for node_id in await deciders(ctx):
+        await derive(ctx, node_id, tally)
+    await ctx.session.flush()

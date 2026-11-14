@@ -80,6 +80,7 @@ from tests.tools.every_setup import (
 )
 from tests.tools.every_setup_ages import remade_land, sky_scholar, slain_kin
 from tests.tools.every_setup_arts import art_work, built_construct, posted_contract, sold_work
+from tests.tools.every_setup_folkways import impure_mortal, neighbour, owned_item
 from tests.tools.every_son_tool import faction, knowledge, language, mortal, people, plain, region, resource, route, settlement, species
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
@@ -282,4 +283,7 @@ MORTAL_CASES: dict[str, Case] = {
     "forecast_seasons": named(plain(), sky_scholar),
     "sabotage_remaking": named(plain(plan_id=created("plan")), remade_land),
     "swear_vengeance": named(plain(foe_id=created("foe")), slain_kin),
+    "purify_self": named(plain(), impure_mortal),
+    "accuse_of_witchcraft": named(plain(accused_id=created("mortal")), neighbour),
+    "make_charm": named(plain(power="protection"), owned_item),
 }
