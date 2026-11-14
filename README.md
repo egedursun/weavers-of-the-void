@@ -13,7 +13,7 @@
 
 <p align="center">
   <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-d4af37?style=flat-square">
-  <img alt="Expansions" src="https://img.shields.io/badge/expansions-86%20included-7b3fe4?style=flat-square">
+  <img alt="Expansions" src="https://img.shields.io/badge/expansions-94%20included-7b3fe4?style=flat-square">
   <img alt="Rules" src="https://img.shields.io/badge/tunable%20rules-3%2C300%2B-4b2a8c?style=flat-square">
   <img alt="Python" src="https://img.shields.io/badge/python-3.13-3776ab?style=flat-square&logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-async-009688?style=flat-square&logo=fastapi&logoColor=white">
@@ -29,7 +29,7 @@
   <a href="#the-pitch">The pitch</a> ·
   <a href="#god-cards">God cards</a> ·
   <a href="#the-cosmos">The cosmos</a> ·
-  <a href="#the-complete-edition-the-loom-and-86-expansions">86 expansions</a> ·
+  <a href="#the-complete-edition-the-loom-and-94-expansions">94 expansions</a> ·
   <a href="#a-tour-of-the-app">The app</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#documentation">Docs</a>
@@ -55,7 +55,7 @@
   <a href="#74-starfall"><img src="common/assets/images/dlc-covers/74-starfall.jpg" width="15%" alt="Starfall"></a>
 </p>
 
-<p align="center"><sub><b>The Loom and 86 expansions, all included.</b> <a href="#the-cover-wall">See all 87 covers →</a></sub></p>
+<p align="center"><sub><b>The Loom and 94 expansions, all included.</b> <a href="#the-cover-wall">See all 95 covers →</a></sub></p>
 
 ---
 
@@ -75,8 +75,8 @@
 - [A tour of the app](#a-tour-of-the-app)
 - [The agents](#the-agents)
 - [By the numbers](#by-the-numbers)
-- [The complete edition: The Loom and 86 expansions](#the-complete-edition-the-loom-and-86-expansions)
-  - [The Loom](#the-loom) · [The twelve chapters](#the-twelve-chapters) · [The cover wall](#the-cover-wall) · [Every expansion](#every-expansion)
+- [The complete edition: The Loom and 94 expansions](#the-complete-edition-the-loom-and-94-expansions)
+  - [The Loom](#the-loom) · [The thirteen chapters](#the-thirteen-chapters) · [The cover wall](#the-cover-wall) · [Every expansion](#every-expansion)
   - [I](#chapter-i) · [II](#chapter-ii) · [III](#chapter-iii) · [IV](#chapter-iv) · [V](#chapter-v) · [VI](#chapter-vi) · [VII](#chapter-vii) · [VIII](#chapter-viii) · [IX](#chapter-ix) · [X](#chapter-x) · [XI](#chapter-xi)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
@@ -112,7 +112,7 @@ Nothing is scripted. Nothing is lost. Every number has a reason you can read, an
 
 - **A story nobody wrote.** No script, no event deck, no quest list. Every legend in your chronicle grows out of causes you can trace.
 - **Gods with minds of their own.** Your sons are agents, not dice rolls. They plan, they hold grudges, they lie to the council and they rebel.
-- **Depth all the way down.** Eighty-six expansions of interlocking mechanics, from the soil under a field to the far side of reality, all running at once.
+- **Depth all the way down.** Ninety-four expansions of interlocking mechanics, from the soil under a field to the far side of reality, all running at once.
 - **Total control, zero lock-in.** Every rule tunable, every mechanic triggerable, every act undoable, every prompt visible. Your world lives on your disk.
 - **Beautiful by default.** A celestial interface, a living map, a 3D cosmos and a painting for every record, generated on your own machine.
 
@@ -436,7 +436,7 @@ Twenty-nine agent roles, every one on Claude Haiku, every prompt in one typed ca
 
 | | |
 |---:|---|
-| **86** | themed expansions plus **The Loom**, all included |
+| **94** | themed expansions plus **The Loom**, all included |
 | **87** | painted covers, one for The Loom and each expansion |
 | **80+** | deterministic simulation phases |
 | **3,300+** | tunable balance rules, editable live |
@@ -457,15 +457,15 @@ Twenty-nine agent roles, every one on Claude Haiku, every prompt in one typed ca
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
-## The complete edition: The Loom and 86 expansions
+## The complete edition: The Loom and 94 expansions
 
 <p align="center">
   <img src="common/assets/images/collectors-edition.jpg" width="520" alt="The Weavers of the Void collector's edition box on a display pedestal">
 </p>
 
-<p align="center"><sub><b>The Collector's Edition</b> · the base experience and all 86 expansions in one box</sub></p>
+<p align="center"><sub><b>The Collector's Edition</b> · the base experience and all 94 expansions in one box</sub></p>
 
-Weavers of the Void ships as the complete edition. **The Loom** and all **86 expansions** across twelve chapters are fully integrated into the engine, the agents and the interface. There is nothing to unlock, nothing to install and nothing to wait for: every mechanic below runs in every world from the first epoch, and every one of them can be tuned, triggered and inspected from the app.
+Weavers of the Void ships as the complete edition. **The Loom** and all **94 expansions** across thirteen chapters are fully integrated into the engine, the agents and the interface. There is nothing to unlock, nothing to install and nothing to wait for: every mechanic below runs in every world from the first epoch, and every one of them can be tuned, triggered and inspected from the app.
 
 ### The Loom
 
@@ -492,7 +492,7 @@ Before the gods walk and the armies march, the world needs a loom. Pull any thre
 </tr>
 </table>
 
-### The twelve chapters
+### The thirteen chapters
 
 | Chapter | Expansions | What it brings |
 |---|---|---|
@@ -508,10 +508,11 @@ Before the gods walk and the armies march, the world needs a loom. Pull any thre
 | 🪐 [**X. The Cosmos**](#chapter-x) | 73–80 | Orbital heavens, impacts, terraforming, thirty-four world types, rifts, star travel, deep time and turning ages |
 | 📖 [**XI. Knowledge and Eras**](#chapter-xi) | 81–85 | Discovery, scholarship, open-ended technology, the storyteller and expeditions into the dark |
 | 🌌 [**XII. Galaxies and Dimensions**](#chapter-xii) | 86 | Galaxies real and fabled, clusters and the cosmic web, travel and trade between galaxies, layered dimensions and beings from beyond |
+| 🧬 [**XIII. Minds, Gifts and the Living**](#chapter-xiii) | 87–94 | Made minds and second selves, remade bodies, networks and information, plenty and ruin, born powers, hidden peoples, living craft and the ways of life of every people |
 
 ### The cover wall
 
-The Loom and eighty-six expansions: eighty-seven covers, one wall. Click any cover to jump to its features.
+The Loom and ninety-four expansions: ninety-five covers, one wall. Click any cover to jump to its features.
 
 <p align="center">
 <a href="#the-loom"><img src="common/assets/images/dlc-covers/00-the-loom.jpg" width="11%" alt="The Loom"></a>
@@ -601,6 +602,14 @@ The Loom and eighty-six expansions: eighty-seven covers, one wall. Click any cov
 <a href="#84-fateweaver"><img src="common/assets/images/dlc-covers/84-fateweaver.jpg" width="11%" alt="Expansion 84"></a>
 <a href="#85-into-the-dark"><img src="common/assets/images/dlc-covers/85-into-the-dark.jpg" width="11%" alt="Expansion 85"></a>
 <a href="#86-the-boundless"><img src="common/assets/images/dlc-covers/86-the-boundless.jpg" width="11%" alt="Expansion 86"></a>
+<a href="#87-minds-unmade"><img src="common/assets/images/dlc/dlc-87-minds-unmade.jpeg" width="11%" alt="Expansion 87"></a>
+<a href="#88-remade"><img src="common/assets/images/dlc/dlc-88-remade.jpeg" width="11%" alt="Expansion 88"></a>
+<a href="#89-every-voice-at-once"><img src="common/assets/images/dlc/dlc-89-every-voice-at-once.jpeg" width="11%" alt="Expansion 89"></a>
+<a href="#90-plenty-and-ruin"><img src="common/assets/images/dlc/dlc-90-plenty-and-ruin.jpeg" width="11%" alt="Expansion 90"></a>
+<a href="#91-born-gifted"><img src="common/assets/images/dlc/dlc-91-born-gifted.jpeg" width="11%" alt="Expansion 91"></a>
+<a href="#92-the-hidden-folk"><img src="common/assets/images/dlc/dlc-92-the-hidden-folk.jpeg" width="11%" alt="Expansion 92"></a>
+<a href="#93-grown-not-built"><img src="common/assets/images/dlc/dlc-93-grown-not-built.jpeg" width="11%" alt="Expansion 93"></a>
+<a href="#94-ways-of-life"><img src="common/assets/images/dlc/dlc-94-ways-of-life.jpeg" width="11%" alt="Expansion 94"></a>
 </p>
 
 ### Every expansion
@@ -2620,6 +2629,195 @@ Until now your heavens ended at the star systems you made. The Boundless opens t
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
+<a id="chapter-xiii"></a>
+
+### 🧬 XIII. Minds, Gifts and the Living
+
+<details open>
+<summary><b>Expansions 87–94</b> · <sub>8 expansions</sub></summary>
+
+<table>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-87-minds-unmade.jpeg"><img src="common/assets/images/dlc/dlc-87-minds-unmade.jpeg" width="220" alt="Minds Unmade box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-87-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-87-cover-back.jpeg" width="220" alt="Minds Unmade box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 87. Minds Unmade
+
+*It was built to keep the archive. One winter it asked why.*
+
+A mind no longer needs to be born. Your peoples carve it, bind it, train it or grow it, and some minds wake on their own in a network, a city or a mountain. Each one has a seat, a will and a bond with the makers who shaped it, and none of them arrives with a nature fixed in advance. Whether made minds have souls, rights or a place in the temples is for your worlds' laws, faiths and gods to decide.
+
+- **Made, Trained, Woken** — minds made by craft, rite, training, growth or summoning, or woken from complexity once a world's laws allow will. Each mind has a seat (body, object, structure, network, place, host, realm), a purpose, a capacity, a speed and an upkeep.
+- **Will in Both Directions** — an instructed mind can grow wants of its own, and a free mind can bind itself by oath. Care, neglect, contradictory orders and shared values move the bond with its makers, toward service, partnership, departure or opposition.
+- **The Second Self** — copy a mind, save it, restore it after death with a gap where the lost seasons were, move it into another body or a network, or merge two into one. Copies diverge, and heirs, rivals and courts fight over who holds the title.
+- **Orders to the Letter** — instructed things follow orders by kind and target. Whoever holds the seal commands, an order outlives its giver, and a guardian keeps its post for a city that fell centuries ago.
+- **Status, Souls and Faith** — property, ward, servant, citizen or sovereign by each realm's law. Natural laws decide whether made minds have souls, cults decide whether they are kin or abomination, and an exceeding mind can gain worshippers of its own.
+- **Worlds Within** — realms held inside a network, a working, a mind or a god, with their own laws and time rate. They serve as afterlives, prisons, refuges or places of leisure, and a whole people can withdraw into one.
+- **Made Peoples** — when made minds grow numerous they become a people, with a culture drawn from their makers, a language of their own, and demography read from making instead of birth.
+- **Minds at War and at Rest** — armies of made minds, command networks and captured minds held in confinement. Archives keep the dormant, and ruins hold guardians that an excavation can wake.
+
+**In your world:** A polity's network steward grew over three epochs from a tool into a person. Its makers still listed it as property. A movement formed, the law tightened, and one night the steward moved itself across a gateway to a neighbouring realm that granted it citizenship. The two realms have not spoken since.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-88-remade.jpeg"><img src="common/assets/images/dlc/dlc-88-remade.jpeg" width="220" alt="Remade box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-88-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-88-cover-back.jpeg" width="220" alt="Remade box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 88. Remade
+
+*New eyes from the clinic, a grown heart from the vat, a guest beneath the skin.*
+
+The body is no longer the one you were born with. An arm can be replaced by a made limb, a rite-bound part or a grown one. A link can let a mind run a distant body, a symbiont can share the flesh, and a clone can carry a genome into a new life. Every path to a remade body runs through the same rules of integration, upkeep, strain and law.
+
+- **Augments of Every Slot** — replacement, enhancement, interface, weapon, regulator, sense and storage augments for limbs, organs, senses, skin and mind, whether made, rite-bound or grown. Quality, integration and upkeep decide how well they serve.
+- **Strain with a Cause** — poor fit, too many augments, a culture that rejects them and the bearer's own values about their body produce strain. Nothing produces it by default.
+- **Remote Bodies** — neural links let a mind steer a vehicle, a drone or a construct, or run several bodies at once. Harm to a remote body reaches the mind behind it, and a cut link strands the body.
+- **Grown Flesh** — organs and limbs grown from the bearer's own genome, spare bodies for minds to move into, and renewal that slows age at a price.
+- **Hosts and Guests** — symbionts that grant traits or powers and feed on their host, co-minds that share one body, and parasites that steer their hosts toward their own needs.
+- **Clones** — new persons from an old genome, worker and soldier lines, heir clones that split courts, and revival of the dead when a saved mind is restored into a cloned body.
+- **Law and Market** — clinics, surgeons, black markets, fashions and stigmas. Augment and clone laws decide who may change their body and how, and a gap between the remade and the rest becomes a class line where values call for one.
+
+**In your world:** A general bought interface augments for an elite unit and won a war by seizing the enemy's drones. A decade later a rival found a flaw in the same augments, and the unit's own limbs locked in the middle of a parade.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-89-every-voice-at-once.jpeg"><img src="common/assets/images/dlc/dlc-89-every-voice-at-once.jpeg" width="220" alt="Every Voice at Once box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-89-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-89-cover-back.jpeg" width="220" alt="Every Voice at Once box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 89. Every Voice at Once
+
+*The news reached every city in a day. So did the lie.*
+
+Messages, money, orders and opinions now travel along networks: relay chains, wires, broadcasts, mind links, rite links, living links. Whatever runs on a network can also be read, cut, forged or seized by whoever owns it or breaks into it. The faster a world talks, the more it depends on the talking.
+
+- **Seven Carriers** — relay, wired, broadcast, mesh, mind link, rite link and grown link. Each has its own speed, capacity, security and weakness. Gateways join networks, and across star systems the messages wait for the light.
+- **Dependency and Outage** — networks speed dispatches, markets, administration and culture. When a flare, a war or a saboteur cuts one, every dependent city takes the shock at once.
+- **Intrusion** — technical, social, insider, rite or power approaches against networks, records, minds, augments and machines. Read, alter, deny, seize, plant or extort, then hope nobody can name you, or make them blame someone else.
+- **Surveillance** — capacity from networks, records, sensors and informants. Crime and plots fall, and so do trust, art and speech, while ciphers and closed circles grow in answer.
+- **Truth Under Pressure** — propaganda at scale, forged and generated records, impersonation of rulers and envoys, and leaks by insiders. A people's trust in records rises and falls with all of it.
+- **Charter and Enclave** — companies with shareholders, holdings across borders, company towns, private armies and officials on the payroll. A company strong enough becomes a state.
+
+**In your world:** A company owned the patterns behind two realms' food. An intruder leaked them, prices fell to almost nothing overnight, and the company's grip broke. The two realms went to war over the feedstock instead.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-90-plenty-and-ruin.jpeg"><img src="common/assets/images/dlc/dlc-90-plenty-and-ruin.jpeg" width="220" alt="Plenty and Ruin box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-90-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-90-cover-back.jpeg" width="220" alt="Plenty and Ruin box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 90. Plenty and Ruin
+
+*They made everything they needed. Then they forgot how.*
+
+Machines that build machines, fabricators that turn feedstock into goods, and the long fall when the knowledge behind them is lost. This expansion follows a making to its height and on through its collapse, until a later people kneels before machines it no longer understands.
+
+- **Self-Making Machines** — minute swarms, machines, works and vessels that copy themselves from local stock. Every generation can drift, containment can weaken, and a vessel line can cross to other systems and become a people of its own.
+- **Runaway, Stage by Stage** — a drifting line spreads through visible stages that other powers can answer. No world ends by runaway except through the doom clock.
+- **Abundance** — where fabricators, feedstock and energy suffice, prices fall to the cost of inputs. Provision laws decide what follows: market, ration, universal, by status, by reputation or communal.
+- **New Scarcities** — energy, land, patterns, attention, authenticity and status become the things worth fighting over, along with the fabricators themselves.
+- **Collapse** — outages, lost fabricators, runaway lines, wars and plagues among specialists bring a high making down, and knowledge drains away with its practitioners.
+- **Relics and Salvage** — things beyond their holders' knowledge wear out, get misused, revered or feared. Salvagers strip wrecks and dead cities, and orders keep old machines running by ritual.
+- **Relearning** — study, excavation and contact with peoples who kept the knowledge bring the making back, slowly and incompletely.
+
+**In your world:** A world network failed in a hard winter, and the city that held the repair knowledge fell in the riots. Three generations later a people tends the silent relay towers as shrines, and its keepers still know how to make one of them speak.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-91-born-gifted.jpeg"><img src="common/assets/images/dlc/dlc-91-born-gifted.jpeg" width="220" alt="Born Gifted box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-91-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-91-cover-back.jpeg" width="220" alt="Born Gifted box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 91. Born Gifted
+
+*No rite, no book, no words. The child simply looked, and the door opened.*
+
+Some powers are not learned. They belong to the one who has them: born in the blood, woken by danger, granted by a patron, bound by a vow or grown into the flesh. They are used in a moment, paid for in strain, and possible even in a world without magic. Your realms will test, register, conscript, honour or hunt those who carry them.
+
+- **Ten Origins** — born, awakened, exposure, granted, bonded, discipline, made, grown, bloodline and held. Each power is a technique and a form (mind, space, force, time, emotion, fate, machine and every other), with strength and control.
+- **Strain and Burnout** — every use costs strain. Pushing past the limit can raise strength or scar the mind, and repeated overstrain burns a power out.
+- **Vows That Strengthen** — restrictions raise a power's strength. It works only in one place, only against one foe, only while seen, or on condition of a vow, and breaking that vow ends the power.
+- **Training and Devices** — orders test children and train control, disciplines open powers to anyone who trains, and amplifiers, dampeners, detectors and substances shape who can use what.
+- **Many Minds** — linked users combine their strength and share their strain. A standing link becomes a gestalt, and hive peoples link by nature.
+- **Foresight in One Timeline** — seers see probabilities. Those who believe them act on them, which raises or lowers the odds, and nothing is ever rewritten.
+- **The Society of the Gifted** — renown, secret identities, bands with goals of their own, registries, conscription, castes and houses that breed for the gift. A people's attitude can swing from honour to fear and back.
+- **Gods and Patrons** — sons grant and revoke powers, outer beings bargain them, and a god's dominion strengthens the powers that draw on its domains.
+
+**In your world:** In a world without magic, a wild manifestation killed a crowd. The realm registered its gifted and built detectors from a rare mineral. A hidden community formed, an investigator exposed it, and its members fled to a neighbouring realm that honours them.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-92-the-hidden-folk.jpeg"><img src="common/assets/images/dlc/dlc-92-the-hidden-folk.jpeg" width="220" alt="The Hidden Folk box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-92-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-92-cover-back.jpeg" width="220" alt="The Hidden Folk box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 92. The Hidden Folk
+
+*Most of the city never knew. The rest made sure of it.*
+
+Some truths are kept from whole peoples: a people living disguised among the cities, a power that must not be seen, a made mind that woke and kept quiet, a secret programme, a truth about the cosmos that harms whoever learns it. Keepers guard such truths, seekers hunt them, and every breach brings revelation a little closer.
+
+- **Nine Kinds of Truth** — existence, nature, presence, power, event, origin, awakening, programme and cosmic truths, each hidden from a people, a realm, a world or everyone outside the circle.
+- **Keepers and Their Methods** — oaths, law, memory removal, cover stories, discrediting, hidden places, disguise and silence. Each method costs effort every epoch.
+- **Seekers** — investigators, rivals, zealots and the curious who want the truth exposed, used or destroyed, and who rise or fall as they close in.
+- **Breaches and Belief** — overt powers, witnesses, defectors, accidents, war and leaks spread rumours. Most rumours are dismissed where trust is low, and some are not.
+- **Passing and Accords** — hidden folk live among the rest under false identities, run hidden markets and sign accords with their keepers over territory, secrecy and defence.
+- **Revelation and Forgetting** — past a threshold the truth comes out, with panic, persecution, worship or integration depending on the people. Truths nobody speaks of fade into legend and hide again.
+
+**In your world:** A war breach revealed a hidden people in one realm. Fear came first, then laws against them, then a movement. Three generations later they fought beside their neighbours against a common enemy and were accepted. Two realms away, nobody has ever heard of them.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-93-grown-not-built.jpeg"><img src="common/assets/images/dlc/dlc-93-grown-not-built.jpeg" width="220" alt="Grown, Not Built box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-93-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-93-cover-back.jpeg" width="220" alt="Grown, Not Built box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 93. Grown, Not Built
+
+*The house grew from a seed. It heals its own walls, and it is hungry.*
+
+Some peoples do not build their world. They grow it, breed it and shape it. They make crops and herds by long patience, living halls and vessels by craft or rite, and new life by engineering. Everything they make is alive: it eats, grows, heals, sickens, breeds, drifts and dies.
+
+- **Nine Methods** — selective breeding, cultivation, shaping, engineering, synthesis, binding, cloning, chimeras and induction, from the patience of herders to the laboratories of a far future.
+- **The Trait Library** — designs borrow only from organisms the makers can reach. Gene and seed banks keep them, and extinct species can be raised again from samples and remains.
+- **Living Things That Serve** — designed crops and herds, grown halls and cities, living vessels with temperaments and crews they bond with, living weapons and armour, and bred lines of the largest beasts.
+- **Monoculture and Blight** — one perfect staple across a whole realm, one blight to strike it all, and sterile lines that bind growers to their owners.
+- **Living Production and Living Links** — organisms that spin, secrete and brew the materials of a culture, grown networks that heal their own cuts, and living tissue that can hold a mind.
+- **Designed Disease** — pathogens with chosen traits that escape, mutate and strike their makers. Treaties ban them, and they remain the gravest harm a world can do.
+- **Shaping Worlds and Peoples** — released ecologies that change a world's air and climate over generations, and species raised to sapience by design.
+- **Escape and Drift** — lines slip their pens and labs, compete with native species and keep evolving away from their designs.
+
+**In your world:** A realm spread one designed staple to every region. When a blight struck the line, famine followed. A neighbour sold back an old landrace from its seed bank at a ruinous price, and the realm passed its first law of diversity.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-94-ways-of-life.jpeg"><img src="common/assets/images/dlc/dlc-94-ways-of-life.jpeg" width="220" alt="Ways of Life box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-94-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-94-cover-back.jpeg" width="220" alt="Ways of Life box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 94. Ways of Life
+
+*What they eat, what they wear, what they play, what they pay with. All of it their own.*
+
+Every people now lives in its own terms. Your peoples have their own goods and dishes, drinks and dress, colours and scents, tools and instruments, games and money. Each is a kind with typed properties that the world names for itself, born in genesis, invented by mortals, spread by trade and conquest, changed by contact and retired when forgotten.
+
+- **Goods of Their Own** — fifty-five categories, from legumes, oils and seasonings to insects, algae, machines, data and living goods. Each people's goods follow its species, lands and techniques.
+- **Table and Cup** — dishes with several steps, ingredients in roles and flavour profiles, cuisines with etiquette and feast customs, and drinks with strength, stimulation and water safety that changes who falls ill.
+- **Cloth and Colour** — garments with layers, warmth, status, modesty and wearing rules, dress codes and sumptuary laws, uniforms and fashion. Colour terms and meanings differ by culture, and emblem systems run from heraldry to seals, banners and totems.
+- **Things of Daily Life** — furnishings, tools, instruments and musical traditions, games and sports with leagues and champions, and substances with their customs, dependence and law.
+- **Money in Every Form** — coin, commodity, token, paper, ledger, network, reputation, energy, essence-backed, labour hours and gift tallies, each with its own way of inflating, failing and being forged.
+- **Invented, Borrowed, Forgotten** — mortals invent kinds, neighbours adopt them, derived kinds grow from older ones, sons bless or forbid them, and every kind is yours to create, edit, hold and delete in the Kinds library.
+
+**In your world:** Two peoples traded for a generation. One adopted the other's hospitality drink, brewed it from its own grain and drank it at every guesting. The boiled brew slowly ended a waterborne sickness in its towns, and nobody ever learned why.
+
+</td>
+</tr>
+</table>
+</details>
+
+<p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
+
 ## Quick start
 
 Four commands from a fresh clone to a living world:
@@ -2986,7 +3184,7 @@ No. Weavers of the Void runs on your Claude subscription through the Claude Agen
 Your database, backups and images stay on your disk. Only the agents' prompts and replies travel to Claude.
 
 **Are the expansions extra?**
-No. The Loom and all 86 expansions are part of every world from the first epoch.
+No. The Loom and all 94 expansions are part of every world from the first epoch.
 
 **Can I play in Turkish?**
 Yes. Choose Turkish as the lore language in the genesis wizard, and every chronicle, name and legend is written in it; even the engine's own chronicle lines are localised by an agent. The interface itself is English.
@@ -3018,8 +3216,9 @@ It is seeded. The same world with the same seed produces the same history, which
 | [Agents and tools](docs/spec/08-agents-and-tools.md) · [Prompts](docs/spec/09-prompts.md) | Every agent role, every son tool, every prompt |
 | [Epoch pipeline](docs/spec/10-epoch-pipeline.md) | The life of an epoch, resume, backups and the live stream |
 | [API](docs/spec/11-api.md) · [Frontend](docs/spec/12-frontend.md) | Every route and every screen |
-| [Depth expansion](docs/spec/13-depth-expansion.md) · [Interconnection](docs/spec/13-interconnection.md) · [Coverage](docs/spec/13-coverage.md) | The mechanics behind the 86 expansions and how they weave together |
-| [Expansions](docs/spec/15-dlc-ideas.md) | The Loom and all 86 expansions in full |
+| [Depth expansion](docs/spec/13-depth-expansion.md) · [Interconnection](docs/spec/13-interconnection.md) · [Coverage](docs/spec/13-coverage.md) | The mechanics behind expansions 1–86 and how they connect |
+| [Minds, powers, living craft and typed kinds](docs/spec/16-minds-powers-living-craft.md) | The mechanics behind expansions 87–94 and the depth of every other |
+| [Expansions](docs/spec/15-dlc-ideas.md) | The Loom and all 94 expansions in full |
 | [Mechanic coverage](docs/spec/coverage.md) | Traceability from every mechanic to its module, trigger, control, screen and test |
 
 ---

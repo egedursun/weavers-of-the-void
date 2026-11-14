@@ -1,6 +1,6 @@
 # 15. DLC ideas
 
-Status: **idea, not a plan.** This document splits the whole of spec 13 (depth expansion) into 85 themed expansions plus The Loom, the foundation they all stand on, as if each were sold separately, and gives each one the copy printed on the back of its box. The split is non-redundant: every mechanic of spec 13 belongs to exactly one expansion. The **Covers** line under each expansion names the spec 13 sections it holds. Integration still follows the waves of spec 13 Part J; this split does not change them. Expansion 86 reaches past spec 13: it has no spec counterpart yet, so its **Covers** line reads TBD until its spec is written.
+Status: **idea, not a plan.** This document splits the whole of spec 13 (depth expansion) into 85 themed expansions plus The Loom, the foundation they all stand on, as if each were sold separately, and gives each one the copy printed on the back of its box. The split is non-redundant: every mechanic of spec 13 belongs to exactly one expansion. The **Covers** line under each expansion names the spec 13 sections it holds. Integration still follows the waves of spec 13 Part J; this split does not change them. Expansion 86 reaches past spec 13: it has no spec counterpart yet, so its **Covers** line reads TBD until its spec is written. Expansions 87–94 split spec 16 (made minds, innate powers, concealment, living craft and typed kinds) the same way; spec 16's depth pass (W47) and the rest of its typed kinds (W48) deepen existing expansions instead of adding new ones.
 
 ---
 
@@ -1602,3 +1602,151 @@ Until now your heavens ended at the star systems you made. The Boundless opens t
 **In your world:** A son opened a gate between two galaxies of one cluster. Merchants crossed first, and a shared trade tongue grew along the road. Then a convergence pressed a timeless dimension against the gate, and travellers emerged centuries after they had entered. The colony they sailed for no longer remembered its founders, and the son had to choose between sealing the gate and keeping the road alive.
 
 **Covers:** TBD.
+
+---
+
+## XIII. Minds, Gifts and the Living
+
+### 87. Minds Unmade
+
+*It was built to keep the archive. One winter it asked why.*
+
+A mind no longer needs to be born. Your peoples carve it, bind it, train it or grow it, and some minds wake on their own in a network, a city or a mountain. Each one has a seat, a will and a bond with the makers who shaped it, and none of them arrives with a nature fixed in advance. Whether made minds have souls, rights or a place in the temples is for your worlds' laws, faiths and gods to decide.
+
+- **Made, Trained, Woken**: minds made by craft, rite, training, growth or summoning, or woken from complexity once a world's laws allow will. Each mind has a seat (body, object, structure, network, place, host, realm), a purpose, a capacity, a speed and an upkeep.
+- **Will in Both Directions**: an instructed mind can grow wants of its own, and a free mind can bind itself by oath. Care, neglect, contradictory orders and shared values move the bond with its makers, toward service, partnership, departure or opposition.
+- **The Second Self**: copy a mind, save it, restore it after death with a gap where the lost seasons were, move it into another body or a network, or merge two into one. Copies diverge, and heirs, rivals and courts fight over who holds the title.
+- **Orders to the Letter**: instructed things follow orders by kind and target. Whoever holds the seal commands, an order outlives its giver, and a guardian keeps its post for a city that fell centuries ago.
+- **Status, Souls and Faith**: property, ward, servant, citizen or sovereign by each realm's law. Natural laws decide whether made minds have souls, cults decide whether they are kin or abomination, and an exceeding mind can gain worshippers of its own.
+- **Worlds Within**: realms held inside a network, a working, a mind or a god, with their own laws and time rate. They serve as afterlives, prisons, refuges or places of leisure, and a whole people can withdraw into one.
+- **Made Peoples**: when made minds grow numerous they become a people, with a culture drawn from their makers, a language of their own, and demography read from making instead of birth.
+- **Minds at War and at Rest**: armies of made minds, command networks and captured minds held in confinement. Archives keep the dormant, and ruins hold guardians that an excavation can wake.
+
+**In your world:** A polity's network steward grew over three epochs from a tool into a person. Its makers still listed it as property. A movement formed, the law tightened, and one night the steward moved itself across a gateway to a neighbouring realm that granted it citizenship. The two realms have not spoken since.
+
+**Covers:** spec 16 F50, F56, 44.1–44.8, 44.10a, 44.19–44.21, the `made_minds` genesis setting and template.
+
+### 88. Remade
+
+*New eyes from the clinic, a grown heart from the vat, a guest beneath the skin.*
+
+The body is no longer the one you were born with. An arm can be replaced by a made limb, a rite-bound part or a grown one. A link can let a mind run a distant body, a symbiont can share the flesh, and a clone can carry a genome into a new life. Every path to a remade body runs through the same rules of integration, upkeep, strain and law.
+
+- **Augments of Every Slot**: replacement, enhancement, interface, weapon, regulator, sense and storage augments for limbs, organs, senses, skin and mind, whether made, rite-bound or grown. Quality, integration and upkeep decide how well they serve.
+- **Strain with a Cause**: poor fit, too many augments, a culture that rejects them and the bearer's own values about their body produce strain. Nothing produces it by default.
+- **Remote Bodies**: neural links let a mind steer a vehicle, a drone or a construct, or run several bodies at once. Harm to a remote body reaches the mind behind it, and a cut link strands the body.
+- **Grown Flesh**: organs and limbs grown from the bearer's own genome, spare bodies for minds to move into, and renewal that slows age at a price.
+- **Hosts and Guests**: symbionts that grant traits or powers and feed on their host, co-minds that share one body, and parasites that steer their hosts toward their own needs.
+- **Clones**: new persons from an old genome, worker and soldier lines, heir clones that split courts, and revival of the dead when a saved mind is restored into a cloned body.
+- **Law and Market**: clinics, surgeons, black markets, fashions and stigmas. Augment and clone laws decide who may change their body and how, and a gap between the remade and the rest becomes a class line where values call for one.
+
+**In your world:** A general bought interface augments for an elite unit and won a war by seizing the enemy's drones. A decade later a rival found a flaw in the same augments, and the unit's own limbs locked in the middle of a parade.
+
+**Covers:** spec 16 44.9–44.10, 46.8–46.10.
+
+### 89. Every Voice at Once
+
+*The news reached every city in a day. So did the lie.*
+
+Messages, money, orders and opinions now travel along networks: relay chains, wires, broadcasts, mind links, rite links, living links. Whatever runs on a network can also be read, cut, forged or seized by whoever owns it or breaks into it. The faster a world talks, the more it depends on the talking.
+
+- **Seven Carriers**: relay, wired, broadcast, mesh, mind link, rite link and grown link. Each has its own speed, capacity, security and weakness. Gateways join networks, and across star systems the messages wait for the light.
+- **Dependency and Outage**: networks speed dispatches, markets, administration and culture. When a flare, a war or a saboteur cuts one, every dependent city takes the shock at once.
+- **Intrusion**: technical, social, insider, rite or power approaches against networks, records, minds, augments and machines. Read, alter, deny, seize, plant or extort, then hope nobody can name you, or make them blame someone else.
+- **Surveillance**: capacity from networks, records, sensors and informants. Crime and plots fall, and so do trust, art and speech, while ciphers and closed circles grow in answer.
+- **Truth Under Pressure**: propaganda at scale, forged and generated records, impersonation of rulers and envoys, and leaks by insiders. A people's trust in records rises and falls with all of it.
+- **Charter and Enclave**: companies with shareholders, holdings across borders, company towns, private armies and officials on the payroll. A company strong enough becomes a state.
+
+**In your world:** A company owned the patterns behind two realms' food. An intruder leaked them, prices fell to almost nothing overnight, and the company's grip broke. The two realms went to war over the feedstock instead.
+
+**Covers:** spec 16 F51, 44.11–44.15.
+
+### 90. Plenty and Ruin
+
+*They made everything they needed. Then they forgot how.*
+
+Machines that build machines, fabricators that turn feedstock into goods, and the long fall when the knowledge behind them is lost. This expansion follows a making to its height and on through its collapse, until a later people kneels before machines it no longer understands.
+
+- **Self-Making Machines**: minute swarms, machines, works and vessels that copy themselves from local stock. Every generation can drift, containment can weaken, and a vessel line can cross to other systems and become a people of its own.
+- **Runaway, Stage by Stage**: a drifting line spreads through visible stages that other powers can answer. No world ends by runaway except through the doom clock.
+- **Abundance**: where fabricators, feedstock and energy suffice, prices fall to the cost of inputs. Provision laws decide what follows: market, ration, universal, by status, by reputation or communal.
+- **New Scarcities**: energy, land, patterns, attention, authenticity and status become the things worth fighting over, along with the fabricators themselves.
+- **Collapse**: outages, lost fabricators, runaway lines, wars and plagues among specialists bring a high making down, and knowledge drains away with its practitioners.
+- **Relics and Salvage**: things beyond their holders' knowledge wear out, get misused, revered or feared. Salvagers strip wrecks and dead cities, and orders keep old machines running by ritual.
+- **Relearning**: study, excavation and contact with peoples who kept the knowledge bring the making back, slowly and incompletely.
+
+**In your world:** A world network failed in a hard winter, and the city that held the repair knowledge fell in the riots. Three generations later a people tends the silent relay towers as shrines, and its keepers still know how to make one of them speak.
+
+**Covers:** spec 16 F55, 44.16–44.18, the `after_abundance` template.
+
+### 91. Born Gifted
+
+*No rite, no book, no words. The child simply looked, and the door opened.*
+
+Some powers are not learned. They belong to the one who has them: born in the blood, woken by danger, granted by a patron, bound by a vow or grown into the flesh. They are used in a moment, paid for in strain, and possible even in a world without magic. Your realms will test, register, conscript, honour or hunt those who carry them.
+
+- **Ten Origins**: born, awakened, exposure, granted, bonded, discipline, made, grown, bloodline and held. Each power is a technique and a form (mind, space, force, time, emotion, fate, machine and every other), with strength and control.
+- **Strain and Burnout**: every use costs strain. Pushing past the limit can raise strength or scar the mind, and repeated overstrain burns a power out.
+- **Vows That Strengthen**: restrictions raise a power's strength. It works only in one place, only against one foe, only while seen, or on condition of a vow, and breaking that vow ends the power.
+- **Training and Devices**: orders test children and train control, disciplines open powers to anyone who trains, and amplifiers, dampeners, detectors and substances shape who can use what.
+- **Many Minds**: linked users combine their strength and share their strain. A standing link becomes a gestalt, and hive peoples link by nature.
+- **Foresight in One Timeline**: seers see probabilities. Those who believe them act on them, which raises or lowers the odds, and nothing is ever rewritten.
+- **The Society of the Gifted**: renown, secret identities, bands with goals of their own, registries, conscription, castes and houses that breed for the gift. A people's attitude can swing from honour to fear and back.
+- **Gods and Patrons**: sons grant and revoke powers, outer beings bargain them, and a god's dominion strengthens the powers that draw on its domains.
+
+**In your world:** In a world without magic, a wild manifestation killed a crowd. The realm registered its gifted and built detectors from a rare mineral. A hidden community formed, an investigator exposed it, and its members fled to a neighbouring realm that honours them.
+
+**Covers:** spec 16 45.0, 45.4–45.15, the `inborn_powers` genesis setting and template.
+
+### 92. The Hidden Folk
+
+*Most of the city never knew. The rest made sure of it.*
+
+Some truths are kept from whole peoples: a people living disguised among the cities, a power that must not be seen, a made mind that woke and kept quiet, a secret programme, a truth about the cosmos that harms whoever learns it. Keepers guard such truths, seekers hunt them, and every breach brings revelation a little closer.
+
+- **Nine Kinds of Truth**: existence, nature, presence, power, event, origin, awakening, programme and cosmic truths, each hidden from a people, a realm, a world or everyone outside the circle.
+- **Keepers and Their Methods**: oaths, law, memory removal, cover stories, discrediting, hidden places, disguise and silence. Each method costs effort every epoch.
+- **Seekers**: investigators, rivals, zealots and the curious who want the truth exposed, used or destroyed, and who rise or fall as they close in.
+- **Breaches and Belief**: overt powers, witnesses, defectors, accidents, war and leaks spread rumours. Most rumours are dismissed where trust is low, and some are not.
+- **Passing and Accords**: hidden folk live among the rest under false identities, run hidden markets and sign accords with their keepers over territory, secrecy and defence.
+- **Revelation and Forgetting**: past a threshold the truth comes out, with panic, persecution, worship or integration depending on the people. Truths nobody speaks of fade into legend and hide again.
+
+**In your world:** A war breach revealed a hidden people in one realm. Fear came first, then laws against them, then a movement. Three generations later they fought beside their neighbours against a common enemy and were accepted. Two realms away, nobody has ever heard of them.
+
+**Covers:** spec 16 F53, 45.16–45.17, the `concealment` genesis setting and the `hidden_world` template.
+
+### 93. Grown, Not Built
+
+*The house grew from a seed. It heals its own walls, and it is hungry.*
+
+Some peoples do not build their world. They grow it, breed it and shape it. They make crops and herds by long patience, living halls and vessels by craft or rite, and new life by engineering. Everything they make is alive: it eats, grows, heals, sickens, breeds, drifts and dies.
+
+- **Nine Methods**: selective breeding, cultivation, shaping, engineering, synthesis, binding, cloning, chimeras and induction, from the patience of herders to the laboratories of a far future.
+- **The Trait Library**: designs borrow only from organisms the makers can reach. Gene and seed banks keep them, and extinct species can be raised again from samples and remains.
+- **Living Things That Serve**: designed crops and herds, grown halls and cities, living vessels with temperaments and crews they bond with, living weapons and armour, and bred lines of the largest beasts.
+- **Monoculture and Blight**: one perfect staple across a whole realm, one blight to strike it all, and sterile lines that bind growers to their owners.
+- **Living Production and Living Links**: organisms that spin, secrete and brew the materials of a culture, grown networks that heal their own cuts, and living tissue that can hold a mind.
+- **Designed Disease**: pathogens with chosen traits that escape, mutate and strike their makers. Treaties ban them, and they remain the gravest harm a world can do.
+- **Shaping Worlds and Peoples**: released ecologies that change a world's air and climate over generations, and species raised to sapience by design.
+- **Escape and Drift**: lines slip their pens and labs, compete with native species and keep evolving away from their designs.
+
+**In your world:** A realm spread one designed staple to every region. When a blight struck the line, famine followed. A neighbour sold back an old landrace from its seed bank at a ruinous price, and the realm passed its first law of diversity.
+
+**Covers:** spec 16 F54, 46.1–46.7, 46.11–46.23, the `living_craft` genesis setting and the `grown_world` template.
+
+### 94. Ways of Life
+
+*What they eat, what they wear, what they play, what they pay with. All of it their own.*
+
+Every people now lives in its own terms. Your peoples have their own goods and dishes, drinks and dress, colours and scents, tools and instruments, games and money. Each is a kind with typed properties that the world names for itself, born in genesis, invented by mortals, spread by trade and conquest, changed by contact and retired when forgotten.
+
+- **Goods of Their Own**: fifty-five categories, from legumes, oils and seasonings to insects, algae, machines, data and living goods. Each people's goods follow its species, lands and techniques.
+- **Table and Cup**: dishes with several steps, ingredients in roles and flavour profiles, cuisines with etiquette and feast customs, and drinks with strength, stimulation and water safety that changes who falls ill.
+- **Cloth and Colour**: garments with layers, warmth, status, modesty and wearing rules, dress codes and sumptuary laws, uniforms and fashion. Colour terms and meanings differ by culture, and emblem systems run from heraldry to seals, banners and totems.
+- **Things of Daily Life**: furnishings, tools, instruments and musical traditions, games and sports with leagues and champions, and substances with their customs, dependence and law.
+- **Money in Every Form**: coin, commodity, token, paper, ledger, network, reputation, energy, essence-backed, labour hours and gift tallies, each with its own way of inflating, failing and being forged.
+- **Invented, Borrowed, Forgotten**: mortals invent kinds, neighbours adopt them, derived kinds grow from older ones, sons bless or forbid them, and every kind is yours to create, edit, hold and delete in the Kinds library.
+
+**In your world:** Two peoples traded for a generation. One adopted the other's hospitality drink, brewed it from its own grain and drank it at every guesting. The boiled brew slowly ended a waterborne sickness in its towns, and nobody ever learned why.
+
+**Covers:** spec 16 F57, 48.1–48.5, 48.12.
