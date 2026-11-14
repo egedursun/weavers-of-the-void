@@ -2,7 +2,9 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.ages import IrregularSeasonRow, WinterForecastRow
 from aerona.db.tables.body import ConditionRow
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.crafts import (
     AssistiveAidRow,
     CatchGroundRow,
@@ -21,19 +23,21 @@ from aerona.db.tables.crafts import (
 from aerona.db.tables.culture import ArtworkProfileRow, HolderTechniqueRow
 from aerona.db.tables.customs import EvidenceRow
 from aerona.db.tables.ecology import SpeciesRangeRow
-from aerona.db.tables.economy import CommunityStockRow, ResourceProfileRow, WorldMaterialRow
+from aerona.db.tables.economy import CommunityStockRow, ResourceProfileRow, ResourceWorkerRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import AccusationRow
 from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.mind import SkillRow, ThoughtRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.domain.enums.ages import SeasonCause, SeasonSpell
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.crafts import (
     AffinityMode,
     AssistiveAid,
     CatchGround,
+    CatchRight,
     ChemicalProduct,
     ClockKind,
     GameKind,
@@ -41,6 +45,7 @@ from aerona.domain.enums.crafts import (
     Gear,
     InsuranceCover,
     LinkToken,
+    Notation,
     RightAcquired,
     RightKind,
 )
@@ -50,10 +55,11 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.justice import CaseStage
-from aerona.domain.enums.mind import Emotion, SkillKind, ThoughtKind
+from aerona.domain.enums.mind import Emotion, SkillKind, SkillSource, ThoughtKind
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import ArtworkStats, ResourceStats
 from aerona.engine.body.state import has_reader, reading_of
 from aerona.engine.context import TickContext
@@ -75,6 +81,7 @@ from aerona.engine.crafts.spirits import SpiritTally, keep_spirits
 from aerona.engine.crafts.sympathy import SympathyTally, keep_sympathy
 from aerona.engine.crafts.timekeeping import clock_muster, clock_output
 from aerona.engine.crafts.works import blasted, fertilised, soap_relief
+from aerona.engine.environment.long_seasons import SeasonTally, keep_seasons
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.stats import set_stats, stat
@@ -264,7 +271,8 @@ async def test_games_shape_their_followers_by_their_rule(session: AsyncSession, 
     tally = GameTally()
     await keep_games(await at(session, 3, games={"invent_chance": 0, "spread_chance": 0, "strategy_xp": 50}), tally)
     trained = await session.scalar(select(SkillRow).where(SkillRow.holder_node_id == noble.id, SkillRow.skill == SkillKind.TACTICS))
-    assert trained is not None and tally.trained >= 1 and tally.gambled >= 1 and profile.crime > crime
+    planned = await session.scalar(select(SkillRow).where(SkillRow.holder_node_id == noble.id, SkillRow.skill == SkillKind.STRATEGY))
+    assert trained is not None and planned is not None and tally.trained >= 2 and tally.gambled >= 1 and profile.crime > crime
 
 
 async def test_a_people_that_knows_logic_finds_the_zero_and_reckons_sharper(session: AsyncSession, world: CoreWorld) -> None:
@@ -323,3 +331,51 @@ async def test_shared_feeling_in_a_land_of_magic_takes_shape_feeds_and_can_be_bo
     assert await bind_spirit(session, revellers[0].id, region.id) and spirit.bound_by_node_id == revellers[0].id
     await keep_spirits(await at(session, 4), tally)
     assert tally.reagents > 0 and (stat(region, "magic") or 0) == 90
+
+
+async def test_an_owner_holding_its_poachers_in_contempt_goes_to_war_over_its_waters(session: AsyncSession, world: CoreWorld) -> None:
+    owner = await home(session, world, "Netholm")
+    poacher = await settlement(session, "Hookby", world, world.regions[0])
+    water = await entity(session, "The Narrows", EntityType.RESOURCE, ResourceStats(abundance=60), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(
+        ResourceProfileRow(
+            resource_entity_id=water.id, commodity=CommodityKind.FISH, reserve=100, initial_reserve=100, richness=50, extraction_difficulty=10, quality=50
+        )
+    )
+    session.add(ResourceWorkerRow(resource_entity_id=water.id, community_entity_id=poacher.id, workers=20))
+    await session.flush()
+    session.add(
+        CatchGroundRow(
+            source_entity_id=water.id,
+            region_entity_id=world.regions[0].id,
+            ground=CatchGround.FISHERY,
+            gear=Gear.NETS,
+            right=CatchRight.OWNED,
+            owner_node_id=owner.id,
+            locked=[],
+        )
+    )
+    await session.flush()
+    tally = GroundTally()
+    await keep_grounds(await at(session, 3, grounds={"poach_opinion": 100, "war_at": -1, "war_pct": 100}), tally)
+    war = await session.scalar(
+        select(BondRow).where(BondRow.kind == BondKind.ENEMY, BondRow.war_cause == WarCause.RESOURCE, BondRow.source_node_id == owner.id)
+    )
+    assert tally.poached == 1 and tally.wars == 1 and war is not None
+
+
+async def test_numeracy_and_a_telescope_sharpen_a_forecast_of_the_long_seasons(session: AsyncSession, world: CoreWorld) -> None:
+    town = await home(session, world, "Starwatch")
+    scholar = await mortal(session, "Ilen", world, town.id)
+    session.add(SkillRow(holder_node_id=scholar.id, skill=SkillKind.ASTRONOMY, level=3, peak=3, last_used_epoch=1, source=SkillSource.PRACTICE))
+    session.add(NumberSystemRow(people_entity_id=world.people.id, base=10, numeracy=100, zero=True, notation=Notation.POSITIONAL, locked=[]))
+    session.add(AssistiveAidRow(holder_node_id=scholar.id, kind=AssistiveAid.TELESCOPE, quality=100, locked=[]))
+    season = IrregularSeasonRow(
+        world_id=world.world.id, cause=SeasonCause.ORBIT, spell=SeasonSpell.WINTER, severity=50, spell_length=4, spell_started_epoch=2, locked=[]
+    )
+    session.add(season)
+    await session.flush()
+    rules = {"scholar_skill": 1, "scholar_error": 13}
+    await keep_seasons(await at(session, 3, long_seasons=rules, numeracy={"forecast_pct": 50}, aids={"telescope_forecast_pct": 50}), SeasonTally())
+    forecast = await session.scalar(select(WinterForecastRow).where(WinterForecastRow.people_entity_id == world.people.id))
+    assert forecast is not None and forecast.predicted_end_epoch == 6

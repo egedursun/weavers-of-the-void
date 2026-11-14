@@ -11,11 +11,14 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import SeasonCause, SeasonSpell
+from aerona.domain.enums.crafts import AssistiveAid
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.aiding import aid_quality
+from aerona.engine.crafts.reckoning import numeracy_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import shift_stock, stock
@@ -127,7 +130,12 @@ async def forecast(ctx: TickContext, world: WorldRow, row: IrregularSeasonRow, t
             continue
         scholar, level = found
         rng = ctx.rng(f"season.forecast.{people.id}.{ctx.epoch}")
-        error = max(0, table.scholar_error - level)
+        sharpened = (
+            1
+            - await numeracy_of(ctx.session, people.id) * ctx.rules.numeracy.forecast_pct / PERCENT / PERCENT
+            - await aid_quality(ctx.session, scholar.id, AssistiveAid.TELESCOPE) * ctx.rules.aids.telescope_forecast_pct / PERCENT / PERCENT
+        )
+        error = max(0, round_half_up((table.scholar_error - level) * max(0.0, sharpened)))
         predicted = end + rng.integer(-error, error)
         heeded = rng.chance(clamp_int(table.heed_base + level * table.heed_per_level, 0, PERCENT))
         existing = await ctx.session.scalar(

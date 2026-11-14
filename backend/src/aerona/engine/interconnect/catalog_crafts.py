@@ -37,6 +37,7 @@ CRAFTS_MECHANICS = (
             Coupling(S.ECONOMY, "a collapsed ground regrows slowly", E.MODIFIER, "grounds.collapsed_regrowth_pct"),
             Coupling(S.BODY, "sea beasts wound their hunters", E.TRIGGER, "grounds.marine_risk"),
             Coupling(S.SOCIAL, "working owned waters sours the owner", E.FLOW, "grounds.poach_opinion"),
+            Coupling(S.WAR, "an owner holding its poachers in contempt goes to war over its waters", E.TRIGGER, "grounds.war_pct"),
         ),
     ),
     Mechanic(
@@ -98,6 +99,7 @@ CRAFTS_MECHANICS = (
             Coupling(S.BODY, "a hearing horn restores hearing", E.MODIFIER, "aids.hearing_restore_pct"),
             Coupling(S.BODY, "a cane restores walking", E.MODIFIER, "aids.cane_aid_pct"),
             Coupling(S.KNOWLEDGE, "a telescope trains astronomy", E.FLOW, "aids.telescope_xp"),
+            Coupling(S.ENVIRONMENT, "a scholar with a telescope forecasts a long season more truly", E.MODIFIER, "aids.telescope_forecast_pct"),
             Coupling(S.ECONOMY, "a public clock raises output", E.MODIFIER, "clocks.output_pct"),
             Coupling(S.SOCIAL, "the discipline of the clock breeds unrest", E.FLOW, "clocks.discipline_unrest"),
             Coupling(S.WAR, "a precise clock speeds the levy", E.MODIFIER, "clocks.command_pct"),
@@ -119,7 +121,7 @@ CRAFTS_MECHANICS = (
         targets=("people",),
         couplings=(
             Coupling(S.CULTURE, "games spread to neighbouring peoples", E.TRIGGER, "games.spread_chance"),
-            Coupling(S.WAR, "strategy games train nobles and officers in tactics", E.FLOW, "games.strategy_xp"),
+            Coupling(S.WAR, "strategy games train nobles and officers in tactics and strategy", E.FLOW, "games.strategy_xp"),
             Coupling(S.ECONOMY, "chance games drain prosperity", E.FLOW, "games.gamble_loss"),
             Coupling(S.LAW, "chance games breed crime", E.FLOW, "games.gamble_crime"),
             Coupling(S.SOCIAL, "ball games ease unrest", E.FLOW, "games.ball_contentment"),
@@ -141,6 +143,7 @@ CRAFTS_MECHANICS = (
             Coupling(S.ECONOMY, "numeracy raises building quality", E.MODIFIER, "numeracy.build_pct"),
             Coupling(S.ECONOMY, "numerate merchants trade on thinner gaps", E.MODIFIER, "numeracy.trade_pct"),
             Coupling(S.KNOWLEDGE, "the zero and positional notation speed the reckoning sciences", E.MODIFIER, "numeracy.research_pct"),
+            Coupling(S.ENVIRONMENT, "a numerate people forecasts a long season more truly", E.MODIFIER, "numeracy.forecast_pct"),
         ),
     ),
     Mechanic(

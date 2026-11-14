@@ -107,10 +107,11 @@ async def play(ctx: TickContext, row: GameFollowingRow, game: GameRow, tally: Ga
         officers = list(await ctx.session.scalars(select(OfficeRow.holder_entity_id).where(OfficeRow.holder_entity_id.is_not(None)).order_by(OfficeRow.id)))
         seats = set(await ctx.session.scalars(select(EntityRow.id).where(EntityRow.id.in_(officers), await present_among(ctx.session, ids))))
         for player in sorted(set(players) | seats):
-            if not held(player) and await practise_subject(
-                ctx.session, ctx.rules, player, SkillKind.TACTICS, subject_id=game.id, xp=table.strategy_xp * share, epoch=ctx.epoch
-            ):
-                tally.trained += 1
+            if held(player):
+                continue
+            for skill in (SkillKind.TACTICS, SkillKind.STRATEGY):
+                if await practise_subject(ctx.session, ctx.rules, player, skill, subject_id=game.id, xp=table.strategy_xp * share, epoch=ctx.epoch):
+                    tally.trained += 1
         return
     for town in towns:
         profile = await ctx.session.get(SettlementProfileRow, town.id)

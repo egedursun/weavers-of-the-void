@@ -14,6 +14,8 @@ P = RuleGroup.PHENOMENA
 @dataclass(frozen=True)
 class GroundRules:
     marine_hunt_chance: int = rule(15, 0, 100, E, "Chance a fishing ground is first read as a hunt of great sea beasts (%)")
+    war_at: int = rule(-40, -100, 0, E, "Opinion of those who work its waters at or below which the owner of a ground may go to war over them")
+    war_pct: int = rule(10, 0, 100, E, "Chance each epoch that the owner of a ground goes to war on those it holds in such contempt for working it (%)")
     fowling_chance: int = rule(40, 0, 100, E, "Chance a gathering ground is first read as fowling rather than trapping (%)")
     owned_chance: int = rule(20, 0, 100, E, "Chance a ground is first held as owned water or land by the realm or community that works it (%)")
     lines_pct: int = rule(80, 0, 400, E, "Catch with lines (% of the plain catch)")
@@ -73,6 +75,9 @@ class AidRules:
     cane_aid_pct: int = rule(40, 0, 100, B, "Walking a cane restores at full quality (%)")
     magnifier_craft_pct: int = rule(15, 0, 100, B, "Fine craft a magnifier adds at full quality (%)")
     telescope_xp: int = rule(3, 0, 100, B, "Astronomy practice a telescope gives its holder each epoch")
+    telescope_forecast_pct: int = rule(
+        40, 0, 100, B, "Error a scholar with a telescope of full quality no longer makes forecasting the turn of a long season (%)"
+    )
 
 
 @dataclass(frozen=True)
@@ -104,6 +109,7 @@ class NumeracyRules:
     trade_pct: int = rule(10, 0, 100, V, "Price gap a merchant of a fully numerate people still trades on (% less than the usual)")
     milestone_pct: int = rule(10, 0, 100, V, "Numeracy the zero and positional notation each add at once")
     research_pct: int = rule(10, 0, 100, V, "Research the zero and positional notation each add to astronomy, architecture, trade and seafaring (%)")
+    forecast_pct: int = rule(40, 0, 100, V, "Error a fully numerate people's scholars no longer make when they forecast the turn of a long season (%)")
 
 
 @dataclass(frozen=True)

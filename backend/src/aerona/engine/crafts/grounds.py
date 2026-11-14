@@ -14,6 +14,7 @@ from aerona.domain.enums.crafts import CatchGround, CatchRight, Gear
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.catch import LAND_GROUNDS
@@ -22,7 +23,8 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.services.community_relations import change_relation
+from aerona.engine.services.community_relations import change_relation, relation
+from aerona.engine.services.war import declare_war
 
 FISH_GEAR = (Gear.LINES, Gear.NETS, Gear.WEIRS)
 LAND_GEAR = (Gear.TRAPS, Gear.SNARES)
@@ -35,6 +37,7 @@ class GroundTally:
     recovered: int = 0
     hurt: int = 0
     poached: int = 0
+    wars: int = 0
 
 
 async def owner_of(ctx: TickContext, community_id: int) -> int:
@@ -184,6 +187,20 @@ async def poaching(ctx: TickContext, row: CatchGroundRow, workers: list[int], ta
             ctx, row.owner_node_id, community, -ctx.rules.grounds.poach_opinion, MemoryKind.ILL_WILL, note="worked our waters and hunting grounds"
         )
         tally.poached += 1
+        await dispute(ctx, row, community, tally)
+
+
+async def dispute(ctx: TickContext, row: CatchGroundRow, community: int, tally: GroundTally) -> None:
+    table = ctx.rules.grounds
+    owner = row.owner_node_id
+    if owner is None or held(owner) or await relation(ctx.session, ctx.rules, owner, community) > table.war_at:
+        return
+    if not ctx.rng(seed_of("ground.war", row.source_entity_id, community, ctx.epoch)).chance(table.war_pct):
+        return
+    source = await ctx.session.get(EntityRow, row.source_entity_id)
+    named = source.name if source is not None else "its waters"
+    if await declare_war(ctx, owner, community, f"over the working of {named}", cause=WarCause.RESOURCE):
+        tally.wars += 1
 
 
 async def keep_grounds(ctx: TickContext, tally: GroundTally) -> None:
