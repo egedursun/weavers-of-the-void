@@ -5,6 +5,7 @@ from pydantic import Field
 from aerona.domain.enums.entity import EntityType
 from aerona.prompts.contexts.base import ContextItem, LoreContext, LoreRulesContext
 from aerona.prompts.contexts.blocks import FolkBeliefLine
+from aerona.prompts.contexts.chronicler import FactPayoff, FactTale
 from aerona.prompts.contexts.common import ChronicleRow, EntityLineItem, LabelValue, NamingRuleItem, SonBrief
 from aerona.prompts.contexts.fate import WorldEvents
 
@@ -62,6 +63,8 @@ class VoicesContext(LoreRulesContext):
     world_events: list[WorldEvents] = Field(default_factory=list)
     historians: list[HistorianEntry] = Field(default_factory=list)
     beliefs: list[BeliefPair] = Field(default_factory=list)
+    tales: list[FactTale] = Field(default_factory=list)
+    payoffs: list[FactPayoff] = Field(default_factory=list)
 
 
 class DeepenEntityContext(LoreRulesContext):
@@ -221,4 +224,5 @@ class SonEpicContext(LoreContext):
     plan: str | None = None
     creations: list[EpicCreation] = Field(default_factory=list)
     records: list[ChronicleRow] = Field(default_factory=list)
+    tales: list[FactTale] = Field(default_factory=list)
     listed_ages: int = 0

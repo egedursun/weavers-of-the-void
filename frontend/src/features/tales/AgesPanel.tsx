@@ -45,7 +45,7 @@ function AgeCard({ row, blocked }: { row: Age; blocked: string | null }) {
       caption={`From epoch ${row.began_epoch}${row.ended_epoch !== null ? ` to epoch ${row.ended_epoch}` : ', under way'}${variant ? ` · ended in ${variant.label.toLowerCase()}` : ''}`}
       removeLabel='Strike the age'
       editTitle='Set the age'
-      note='When the doom clock runs out in a cosmos that turns in ages, the age ends: the ruins and relics of the age are found, its tales are half-remembered by the share it carries, its arts are lost by the rest, and its great lives echo into the next age.'
+      note='When the doom clock runs out in a cosmos that turns in ages, or the period the rules give an age is spent, the age ends: the ruins and relics of the age are found, its tales are half-remembered by the share it carries, its arts are lost by the rest, and its great lives echo into the next age.'
       fields={[
         { key: 'number', label: 'Number', kind: 'number', min: 1, max: MANY },
         {
@@ -82,12 +82,18 @@ function AgeCard({ row, blocked }: { row: Age; blocked: string | null }) {
       onRemove={action.onRemove}
       extra={variant ? <Tag item={variant} /> : undefined}
     >
-      <Meter
-        label={`Lore carried into the next age (${row.carried} of ${SPAN})`}
-        value={row.carried}
-        tone='info'
-        icon={BookOpen}
-      />
+      {row.ended_epoch === null ? (
+        <Muted variant='caption'>
+          Under way: what it carries into the next age is set when it ends.
+        </Muted>
+      ) : (
+        <Meter
+          label={`Lore carried into the next age (${row.carried} of ${SPAN})`}
+          value={row.carried}
+          tone='info'
+          icon={BookOpen}
+        />
+      )}
     </Held>
   )
 }

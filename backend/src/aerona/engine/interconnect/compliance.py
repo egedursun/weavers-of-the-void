@@ -478,6 +478,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
             "seasons.irregular",
             "seasons.winter",
             "seasons.summer",
+            "seasons.settled",
             "plans.eco_sabotage",
         ),
         ("88d61a5796a9",),

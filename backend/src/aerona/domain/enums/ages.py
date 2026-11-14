@@ -15,6 +15,7 @@ class GiantMigration(StrEnum):
 
 class SeasonCause(StrEnum):
     ORBIT = "orbit"
+    NATURAL_LAW = "natural_law"
     DIVINE = "divine"
 
 

@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.ages_lines import mortal_ages_lines, son_ages_lines
-from aerona.agents.context.chronicle_facts import payoff_facts, tale_facts
+from aerona.agents.context.chronicle_facts import payoff_facts, tale_facts, tales_of
 from aerona.agents.context.scope import load_scope
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.ages import (
@@ -16,6 +16,7 @@ from aerona.db.tables.ages import (
     SetupRow,
     WinterForecastRow,
 )
+from aerona.db.tables.agrarian import FamineLoreRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.cycles import LongPlanRow
@@ -34,7 +35,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.sacred import ForesightSource, ForesightStatus
-from aerona.domain.enums.society import Commodity, SocialClass
+from aerona.domain.enums.society import Commodity, NaturalLaw, SocialClass
 from aerona.domain.models.entity_stats import KnowledgeStats, LegendStats, PeopleStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.formation import FormationTally, form_worlds
@@ -48,8 +49,11 @@ from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.storyteller.ages import AgeTally, keep_ages, turn_age
 from aerona.engine.storyteller.arcs import ArcTally, detect, keep_arcs, open_arc
 from aerona.engine.storyteller.drama import DramaTally, keep_drama, pressed, pressing_foe
+from aerona.prompts import PromptId
+from aerona.prompts.catalog import render
+from aerona.prompts.contexts.narrative import VoicesContext
 from aerona.services.integrity.ages_links import mend_ages_links
-from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, settlement, tuned_rules
+from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, natural_law, settlement, tuned_rules
 
 
 async def at(session: AsyncSession, epoch: int, **rules: dict[str, int]) -> TickContext:
@@ -121,6 +125,38 @@ async def test_a_chaotic_orbit_brings_long_winters_that_starve_the_unprepared_mo
     assert fed > hungry and tally.starved == 2
 
 
+async def test_a_people_that_remembers_its_famines_loses_less_to_a_long_winter(session: AsyncSession, world: CoreWorld) -> None:
+    home, _ = await add_empty_world(session, "Corvane")
+    regions = list(await session.scalars(select(EntityRow).where(EntityRow.world_id == home.id, EntityRow.entity_type == EntityType.REGION)))
+    wise = await entity(session, "Corvani", EntityType.PEOPLE, PeopleStats(population=900), world_id=home.id)
+    stored = await settlement(session, "Granary Hold", world, regions[0], population=900)
+    bare = await settlement(session, "Barewick", world, regions[1], population=900)
+    stored.world_id = bare.world_id = home.id
+    stored.affiliated_entity_id = wise.id
+    session.add_all([society(stored.id, 0), society(bare.id, 0), FamineLoreRow(people_entity_id=wise.id, memory=80, famine_foods=True, storage=100, locked=[])])
+    session.add(IrregularSeasonRow(world_id=home.id, spell=SeasonSpell.WINTER, spell_started_epoch=3, spell_length=5, severity=100, locked=[]))
+    await session.flush()
+    for town in (stored, bare):
+        await shift_stock(session, tuned_rules(), town.id, Commodity.FOOD, 1000, epoch=1, flow=GoodsFlow.PRODUCTION)
+    rules = {"winter_loss_pct": 50, "storage_ease_pct": 50, "famine_foods_share": 50}
+    await keep_seasons(await at(session, 4, long_seasons=rules), SeasonTally())
+    kept = await stock(session, tuned_rules(), stored.id, Commodity.FOOD)
+    left = await stock(session, tuned_rules(), bare.id, Commodity.FOOD)
+    assert 1000 - left == 500 and 1000 - kept == 120
+
+
+async def test_a_natural_law_makes_seasons_irregular_until_it_is_lifted(session: AsyncSession, world: CoreWorld) -> None:
+    law = await natural_law(session, world, "Long Measure", NaturalLaw.LONG_SEASONS)
+    tally = SeasonTally()
+    await keep_seasons(await at(session, 3), tally)
+    row = await session.get(IrregularSeasonRow, world.world.id)
+    assert row is not None and row.cause is SeasonCause.NATURAL_LAW and row.spell is SeasonSpell.SUMMER
+    law.status, law.end_epoch = EntityStatus.DESTROYED, 4
+    await session.flush()
+    await keep_seasons(await at(session, 4, long_seasons={"longest_spell": 50, "shortest_spell": 50}), tally)
+    assert await session.get(IrregularSeasonRow, world.world.id) is None and tally.settled == 1
+
+
 async def test_a_plan_remakes_the_land_against_its_climate_and_its_folk(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await at(session, 3, eco_transformations={"step": 10, "resistance_pct": 100, "sabotage_chance": 100})
     plan = LongPlanRow(
@@ -182,6 +218,19 @@ async def test_a_turning_age_carries_tales_loses_arts_and_echoes_a_great_life_in
         select(BondRow).where(BondRow.source_node_id == hero.id, BondRow.target_node_id == child.id, BondRow.kind == BondKind.SOUL_DESCENDED_TO)
     )
     assert reborn_arc is not None and soul is not None
+
+
+async def test_an_age_turns_by_itself_once_its_period_is_spent(session: AsyncSession, world: CoreWorld) -> None:
+    cosmos = await CosmosRepository(session).require_cosmos()
+    cosmos.age_cycle = AgeCycle.CYCLIC
+    await session.flush()
+    await keep_ages(await at(session, 3, ages={"period_epochs": 4}), AgeTally())
+    tally = AgeTally()
+    await keep_ages(await at(session, 6, ages={"period_epochs": 4}), tally)
+    assert tally.turned == 0
+    await keep_ages(await at(session, 7, ages={"period_epochs": 4}), tally)
+    second = await session.scalar(select(AgeRow).where(AgeRow.number == 2))
+    assert tally.turned == 1 and second is not None and second.began_epoch == 7
 
 
 async def test_a_killing_of_kin_starts_a_revenge_that_ends_when_the_avenger_slays_the_foe(session: AsyncSession, world: CoreWorld) -> None:
@@ -247,7 +296,16 @@ async def test_a_foresight_is_set_up_and_paid_off_and_the_chronicler_is_told(ses
     payoffs = await payoff_facts(scope, 4)
     assert payoffs and payoffs[0].subject == doomed.name
     await open_arc(await at(session, 4), seer.id, ArcTemplate.QUEST)
-    assert any(item.subject == seer.name for item in await tale_facts(scope, 4))
+    tales = await tale_facts(scope, 4)
+    assert any(item.subject == seer.name for item in tales)
+    voices = render(
+        PromptId.VOICES_USER,
+        VoicesContext(lore_language="english", rules=tuned_rules(), world_name="W", world_header="W", age=4, tales=tales, payoffs=payoffs),
+    )
+    assert "TALES UNDER WAY" in voices and "PAYOFFS THIS AGE" in voices and seer.name in voices and doomed.name in voices
+    await open_arc(await at(session, 4), world.son.id, ArcTemplate.APOTHEOSIS)
+    assert any(item.subject == world.son.name for item in await tale_facts(scope, 4))
+    assert [item.template for item in await tales_of(scope, world.son.id)] == ["apotheosis"]
 
 
 async def test_integrity_fails_the_tales_of_vanished_lives_and_lapses_their_setups(session: AsyncSession, world: CoreWorld) -> None:

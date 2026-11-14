@@ -67,6 +67,7 @@ class NaturalLaw(StrEnum):
     MAGIC_REQUIRES_BLOOD = "magic_requires_blood"
     GRAVITY_SHIFT = "gravity_shift"
     SEASONS_REVERSED = "seasons_reversed"
+    LONG_SEASONS = "long_seasons"
     DREAMS_ARE_REAL = "dreams_are_real"
     OATHS_BIND = "oaths_bind"
     THE_DEAD_SPEAK = "the_dead_speak"

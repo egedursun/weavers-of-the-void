@@ -88,7 +88,7 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("narrative_arcs", "arc_figures"): "none: figures enter the tales read from the next epoch",
     ("narrative_arcs", "arc_beats"): "none: beats are recorded as tales are read from the next epoch",
     ("drama_manager", "setups"): "none: setups are logged from the next epoch",
-    ("irregular_seasons", "irregular_seasons"): "none: worlds whose orbits are chaotic find their seasons irregular from the next epoch",
+    ("irregular_seasons", "irregular_seasons"): "none: worlds with chaotic orbits or a law of long seasons find their seasons irregular from the next epoch",
 }
 
 

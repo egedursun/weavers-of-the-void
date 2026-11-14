@@ -23,6 +23,7 @@ import {
   Mountain,
   Orbit,
   RefreshCcw,
+  Scale,
   Route,
   Scroll,
   ScrollText,
@@ -76,6 +77,7 @@ export const MIGRATIONS: Record<Schema['GiantMigration'], Named> = {
 
 export const SEASON_CAUSES: Record<Schema['SeasonCause'], Named> = {
   orbit: { label: 'A chaotic orbit', icon: Orbit, tone: 'info' },
+  natural_law: { label: 'A natural law', icon: Scale, tone: 'warning' },
   divine: { label: 'A god', icon: Sparkles, tone: 'gold' },
 }
 

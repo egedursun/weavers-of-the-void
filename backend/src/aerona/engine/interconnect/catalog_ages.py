@@ -39,12 +39,12 @@ AGES_MECHANICS = (
     Mechanic(
         key="irregular_seasons",
         spec_item="S10.2/RP4",
-        title="Irregular seasons: a chaotic orbit or a god makes summers and winters run for years; scholars forecast them and peoples store food",
+        title="Irregular seasons: an orbit, a natural law or a god makes summers and winters run for years; scholars forecast them and peoples store food",
         subsystem=S.ENVIRONMENT,
         phases=("long_seasons",),
         surface=Surface(drawer=DRAWER, chart="chart-seasons"),
-        backfill="long_seasons: worlds whose orbits are chaotic find their seasons irregular from the next epoch",
-        templates=("seasons.irregular", "seasons.winter", "seasons.summer"),
+        backfill="long_seasons: worlds with chaotic orbits or a law of long seasons find their seasons irregular from the next epoch",
+        templates=("seasons.irregular", "seasons.winter", "seasons.summer", "seasons.settled"),
         tables=(IrregularSeasonRow.__tablename__, WinterForecastRow.__tablename__),
         exposure=Exposure.TOOL,
         tools=("unsettle_seasons", "lengthen_winter", "forecast_seasons"),
@@ -54,6 +54,8 @@ AGES_MECHANICS = (
             Coupling(S.KNOWLEDGE, "scholars of the sky forecast the turn of a long season", E.TRIGGER, "long_seasons.scholar_skill"),
             Coupling(S.SOCIAL, "a people that heeds its scholars stores food against the winter", E.MODIFIER, "long_seasons.prepared_share"),
             Coupling(S.COSMOS, "a chaotic orbit makes the seasons irregular", E.RULE_SWITCH, "long_seasons.chaos_eccentricity"),
+            Coupling(S.SOCIAL, "a people's food stores ease the loss of a long winter", E.MODIFIER, "long_seasons.storage_ease_pct"),
+            Coupling(S.SOCIAL, "a people that knows its famine foods loses less in a long winter", E.MODIFIER, "long_seasons.famine_foods_share"),
         ),
     ),
     Mechanic(
@@ -90,6 +92,7 @@ AGES_MECHANICS = (
         targets=("mortal", "creator", "world"),
         couplings=(
             Coupling(S.CULTURE, "tales and prophecies of an ended age are half-remembered", E.FLOW, "ages.carry_pct"),
+            Coupling(S.COSMOS, "an age turns by itself once its period is spent", E.TRIGGER, "ages.period_epochs"),
             Coupling(S.KNOWLEDGE, "arts of an ended age are lost", E.FLOW, "ages.carry_pct"),
             Coupling(S.FAITH, "great lives of an ended age echo and their souls are reborn", E.TRIGGER, "ages.rebirth_chance"),
             Coupling(S.MIND, "echoed tales are read more readily in the new age", E.MODIFIER, "ages.echo_weight"),

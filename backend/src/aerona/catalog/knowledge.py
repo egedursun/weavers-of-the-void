@@ -59,6 +59,11 @@ NATURAL_LAWS: dict[NaturalLaw, KeyedText[NaturalLaw]] = {
         KeyedText(NaturalLaw.MAGIC_REQUIRES_BLOOD, "Magic requires blood", "Every rite costs the caster's blood as well as its price."),
         KeyedText(NaturalLaw.GRAVITY_SHIFT, "Shifted weight", "Things weigh differently; building and marching are slower."),
         KeyedText(NaturalLaw.SEASONS_REVERSED, "Seasons reversed", "The seasons run backwards; growth comes in the cold half of the year."),
+        KeyedText(
+            NaturalLaw.LONG_SEASONS,
+            "Long seasons",
+            "Summers and winters run for years of no set length; scholars forecast their turn and peoples store food against them.",
+        ),
         KeyedText(NaturalLaw.DREAMS_ARE_REAL, "Dreams are real", "Dream routes never close and mortals dream more often."),
         KeyedText(NaturalLaw.OATHS_BIND, "Oaths bind", "Whoever breaks an oath is branded at once."),
         KeyedText(

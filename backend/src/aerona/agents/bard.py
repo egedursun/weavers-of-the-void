@@ -4,7 +4,7 @@ from sqlalchemy import delete, func, select
 
 from aerona.agents.ask import ask
 from aerona.agents.chronicle_audit import drop_sentences, mentioned
-from aerona.agents.context.chronicle_facts import unique_rejected
+from aerona.agents.context.chronicle_facts import payoff_facts, tale_facts, tales_of, unique_rejected
 from aerona.agents.context.chronicler import age_events, events_by_world, living_world_items
 from aerona.agents.context.entity_line import line_item
 from aerona.agents.context.scope import Scope, load_scope
@@ -174,6 +174,8 @@ async def voices_of_peoples(runtime: AgentRuntime, epoch: int) -> VoicesResult:
             world_events=[section for section in sections if section.world_id is not None],
             historians=writers,
             beliefs=pairs,
+            tales=await tale_facts(scope, epoch),
+            payoffs=await payoff_facts(scope, epoch),
         )
         rejected = list((await unique_rejected(scope)).values())
     runtime.step(f"The peoples' historians and bards are writing their own accounts ({len(writers)} chronicles, {len(pairs)} beliefs)…")
@@ -266,6 +268,7 @@ async def write_son_epic(runtime: AgentRuntime, son_id: int) -> Epic:
                 for item in creations
             ],
             records=[ChronicleLine(age=row.epoch, text=row.text) for row in reversed(records)],
+            tales=await tales_of(scope, son.id),
         )
 
     async def write(attempt: SonEpicContext) -> SonEpicOutput:

@@ -191,9 +191,8 @@ async def pay_setups(ctx: TickContext, tally: DramaTally) -> None:
         row.paid_epoch = ctx.epoch
         setattr(tally, found[0].value, getattr(tally, found[0].value) + 1)
         if found[0] is not PayoffKind.LAPSED:
-            subject = await ctx.session.get(EntityRow, row.subject_node_id) if row.subject_node_id is not None else None
             told = f"What was set up in epoch {row.opened_epoch} ({row.kind.value}) was paid off: {found[1]}."
-            await note(ctx, told, key="arcs.payoff", ids=[subject.id] if subject is not None else [])
+            await note(ctx, told, key="arcs.payoff", ids=[row.subject_node_id] if row.subject_node_id is not None else [])
 
 
 async def keep_drama(ctx: TickContext, moved: list[ArcRow], tally: DramaTally) -> None:

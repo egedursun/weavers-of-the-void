@@ -243,7 +243,13 @@ function ArcCard({ row, blocked }: { row: Arc; blocked: string | null }) {
           kind: 'pick',
           table: table(OUTCOMES),
         },
-        { key: 'beats', label: 'Beats', kind: 'number', min: 0, max: MANY },
+        {
+          key: 'beats',
+          label: 'Turns reached',
+          kind: 'number',
+          min: 0,
+          max: MANY,
+        },
         { key: 'drama', label: 'Drama', kind: 'number', min: 0, max: SPAN },
         {
           key: 'ended_epoch',
@@ -274,7 +280,7 @@ function ArcCard({ row, blocked }: { row: Arc; blocked: string | null }) {
             tone={stage.tone}
           />
           <KpiTile
-            label='Beats'
+            label='Turns reached'
             value={row.beats}
             icon={BookOpen}
             tone='info'

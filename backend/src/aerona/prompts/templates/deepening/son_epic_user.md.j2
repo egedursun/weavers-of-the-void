@@ -12,6 +12,13 @@ CREATIONS: {% if creations %}{% for item in creations %}{{ item.name }} ({{ item
 
 RECORDS:
 {{ chronicle_rows(records) if records else "(none)" }}
+{% if tales %}
+
+TALES THIS SON HAS LIVED OR TAKEN PART IN (the epic may tell its records as parts of these tales):
+{% for tale in tales %}
+- {{ tale.subject }}: a tale of {{ tale.template }}, at its {{ tale.stage }}{% if tale.outcome != "open" %}, ended {{ tale.outcome }}{% endif %}
+{% endfor %}
+{% endif %}
 
 {% include "shared/_epic_rule.md.j2" %}
 Write this son's epic.{% if listed_ages %}

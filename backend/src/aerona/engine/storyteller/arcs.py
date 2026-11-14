@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.ages import AgeEchoRow, ArcBeatRow, ArcFigureRow, ArcRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -305,10 +306,10 @@ async def close(ctx: TickContext, arc: ArcRow, outcome: ArcOutcome, tally: ArcTa
     arc.stage = ArcStage.RESOLUTION
     setattr(tally, outcome.value, getattr(tally, outcome.value) + 1)
     ctx.session.add(ArcBeatRow(arc_id=arc.id, stage=ArcStage.RESOLUTION, text=outcome.value, epoch=ctx.epoch, locked=[]))
-    subject = await ctx.session.get(EntityRow, arc.subject_node_id)
+    subject = await NodeRepository(ctx.session).name_of(arc.subject_node_id)
     await note(
         ctx,
-        f"The tale of {arc.template.value.replace('_', ' ')} of {subject.name if subject else 'one'} ended: {outcome.value}.",
+        f"The tale of {arc.template.value.replace('_', ' ')} of {subject or 'one'} ended: {outcome.value}.",
         key="arcs.ended",
         ids=[arc.subject_node_id],
     )

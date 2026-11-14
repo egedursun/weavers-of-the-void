@@ -18,7 +18,7 @@ async def formation_history(ctx: TickContext) -> None:
     count(ctx, "formation", tally)
 
 
-@reads("table.irregular_seasons", "table.world_physics")
+@reads("table.irregular_seasons", "table.natural_law_profiles", "table.world_physics")
 async def long_seasons(ctx: TickContext) -> None:
     tally = SeasonTally()
     await keep_seasons(ctx, tally)
@@ -52,6 +52,7 @@ async def ages(ctx: TickContext) -> None:
     "table.house_profiles",
     "table.mantlings",
     "table.mortal_profiles",
+    "table.nodes",
     "table.office_history",
     "table.offices",
     "table.prophecy_conditions",

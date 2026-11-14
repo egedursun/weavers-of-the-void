@@ -5,8 +5,9 @@ from sqlalchemy import or_, select
 
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
+from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.agency import ActionRecordRow
-from aerona.db.tables.ages import ArcRow, SetupRow
+from aerona.db.tables.ages import ArcFigureRow, ArcRow, SetupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import GodConflictRow
 from aerona.db.tables.gatherings import CollectionRow
@@ -326,17 +327,27 @@ async def recent_rejections(scope: Scope, rejected: dict[int, str], epoch: int) 
 async def tale_facts(scope: Scope, epoch: int) -> list[FactTale]:
     found: list[FactTale] = []
     for arc in await scope.session.scalars(select(ArcRow).where(or_(ArcRow.last_beat_epoch == epoch, ArcRow.ended_epoch == epoch)).order_by(ArcRow.id)):
-        subject = await scope.session.get(EntityRow, arc.subject_node_id)
+        subject = await NodeRepository(scope.session).name_of(arc.subject_node_id)
         if subject is not None:
-            found.append(FactTale(subject=subject.name, template=arc.template.value.replace("_", " "), stage=arc.stage.value, outcome=arc.outcome.value))
+            found.append(FactTale(subject=subject, template=arc.template.value.replace("_", " "), stage=arc.stage.value, outcome=arc.outcome.value))
+    return found
+
+
+async def tales_of(scope: Scope, node_id: int) -> list[FactTale]:
+    found: list[FactTale] = []
+    figured = select(ArcFigureRow.arc_id).where(ArcFigureRow.node_id == node_id)
+    for arc in await scope.session.scalars(select(ArcRow).where(or_(ArcRow.subject_node_id == node_id, ArcRow.id.in_(figured))).order_by(ArcRow.id)):
+        subject = await NodeRepository(scope.session).name_of(arc.subject_node_id)
+        if subject is not None:
+            found.append(FactTale(subject=subject, template=arc.template.value.replace("_", " "), stage=arc.stage.value, outcome=arc.outcome.value))
     return found
 
 
 async def payoff_facts(scope: Scope, epoch: int) -> list[FactPayoff]:
     found: list[FactPayoff] = []
     for row in await scope.session.scalars(select(SetupRow).where(SetupRow.paid_epoch == epoch, SetupRow.payoff != PayoffKind.LAPSED).order_by(SetupRow.id)):
-        subject = await scope.session.get(EntityRow, row.subject_node_id) if row.subject_node_id is not None else None
-        found.append(FactPayoff(kind=row.kind.value, since=row.opened_epoch, subject=subject.name if subject else None, text=row.payoff_text))
+        subject = await NodeRepository(scope.session).name_of(row.subject_node_id) if row.subject_node_id is not None else None
+        found.append(FactPayoff(kind=row.kind.value, since=row.opened_epoch, subject=subject, text=row.payoff_text))
     return found
 
 

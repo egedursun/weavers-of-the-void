@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ages import IrregularSeasonRow, WinterForecastRow
+from aerona.db.tables.agrarian import FamineLoreRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
@@ -13,7 +14,7 @@ from aerona.domain.enums.ages import SeasonCause, SeasonSpell
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
-from aerona.domain.enums.society import Commodity
+from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -29,6 +30,7 @@ class SeasonTally:
     starved: int = 0
     forecasts: int = 0
     heeded: int = 0
+    settled: int = 0
 
 
 def chaotic(ctx: TickContext, physics: WorldPhysicsRow | None) -> bool:
@@ -55,11 +57,15 @@ async def begin(ctx: TickContext, world: WorldRow, cause: SeasonCause, by_node_i
 
 async def find_irregular(ctx: TickContext, tally: SeasonTally) -> None:
     known = set(await ctx.session.scalars(select(IrregularSeasonRow.world_id)))
+    laws = await ctx.laws()
     for world in list(await ctx.session.scalars(select(WorldRow).order_by(WorldRow.id))):
         if world.id in known or held(world.id):
             continue
-        if chaotic(ctx, await ctx.session.get(WorldPhysicsRow, world.id)):
-            await begin(ctx, world, SeasonCause.ORBIT, None)
+        cause = SeasonCause.NATURAL_LAW if laws.has(NaturalLaw.LONG_SEASONS, world.id) else None
+        if cause is None and chaotic(ctx, await ctx.session.get(WorldPhysicsRow, world.id)):
+            cause = SeasonCause.ORBIT
+        if cause is not None:
+            await begin(ctx, world, cause, None)
             tally.turned += 1
             await note(
                 ctx,
@@ -144,6 +150,15 @@ async def prepared(ctx: TickContext, world_id: int, town: EntityRow) -> bool:
     return row is not None and row.heeded
 
 
+async def eased(ctx: TickContext, town: EntityRow, loss_pct: int) -> int:
+    lore = await ctx.session.get(FamineLoreRow, town.affiliated_entity_id) if town.affiliated_entity_id is not None else None
+    if lore is None:
+        return loss_pct
+    table = ctx.rules.long_seasons
+    loss_pct = loss_pct * (PERCENT - lore.storage * table.storage_ease_pct // PERCENT) // PERCENT
+    return loss_pct * table.famine_foods_share // PERCENT if lore.famine_foods else loss_pct
+
+
 async def bite(ctx: TickContext, world: WorldRow, row: IrregularSeasonRow, tally: SeasonTally) -> None:
     table = ctx.rules.long_seasons
     towns = await ctx.session.scalars(
@@ -158,9 +173,20 @@ async def bite(ctx: TickContext, world: WorldRow, row: IrregularSeasonRow, tally
         loss_pct = row.severity * table.winter_loss_pct // PERCENT
         if await prepared(ctx, world.id, town):
             loss_pct = loss_pct * table.prepared_share // PERCENT
+        loss_pct = await eased(ctx, town, loss_pct)
         loss = round_half_up(food * loss_pct / PERCENT)
         if loss > 0 and await shift_stock(ctx.session, ctx.rules, town.id, Commodity.FOOD, -loss, epoch=ctx.epoch, flow=GoodsFlow.LOSS):
             tally.starved += 1
+
+
+async def lost_cause(ctx: TickContext, world: WorldRow, row: IrregularSeasonRow) -> bool:
+    if row.locked or row.spell is SeasonSpell.WINTER:
+        return False
+    if row.cause is SeasonCause.NATURAL_LAW:
+        return not (await ctx.laws()).has(NaturalLaw.LONG_SEASONS, world.id)
+    if row.cause is SeasonCause.ORBIT:
+        return not chaotic(ctx, await ctx.session.get(WorldPhysicsRow, world.id))
+    return False
 
 
 async def keep_seasons(ctx: TickContext, tally: SeasonTally) -> None:
@@ -168,6 +194,11 @@ async def keep_seasons(ctx: TickContext, tally: SeasonTally) -> None:
     for row in list(await ctx.session.scalars(select(IrregularSeasonRow).order_by(IrregularSeasonRow.world_id))):
         world = await ctx.session.get(WorldRow, row.world_id)
         if world is None or held(world.id):
+            continue
+        if await lost_cause(ctx, world, row):
+            await ctx.session.delete(row)
+            tally.settled += 1
+            await note(ctx, f"The seasons of {world.name} found their measure again.", key="seasons.settled", world_id=world.id)
             continue
         await turn(ctx, world, row, tally)
         await forecast(ctx, world, row, tally)

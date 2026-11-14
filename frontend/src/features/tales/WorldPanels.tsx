@@ -48,6 +48,12 @@ type Season = NonNullable<TalesNodeView['season']>
 type Forecast = TalesNodeView['forecasts'][number]
 type Transformation = TalesNodeView['transformations'][number]
 
+const UNSETTLERS: Record<Season['cause'], string> = {
+  orbit: 'the orbit itself',
+  natural_law: 'a natural law of the world',
+  divine: 'a hand from beyond',
+}
+
 const NOT_A_WORLD =
   'Only a world forms from a disc and keeps seasons; this is not one'
 
@@ -334,7 +340,7 @@ function SeasonCard({ row, blocked }: { row: Season; blocked: string | null }) {
         items={[
           [
             'Unsettled by',
-            <Ref key='by' node={row.by_node} empty='the orbit itself' />,
+            <Ref key='by' node={row.by_node} empty={UNSETTLERS[row.cause]} />,
           ],
         ]}
       />
@@ -393,7 +399,14 @@ function ForecastCard({
     >
       <Facts
         items={[
-          ['Scholar', <Ref key='scholar' node={row.scholar} empty='none' />],
+          [
+            'Scholar',
+            <Ref
+              key='scholar'
+              node={row.scholar}
+              empty='no scholar; the forecast was set by hand'
+            />,
+          ],
         ]}
       />
     </Held>

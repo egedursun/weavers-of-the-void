@@ -31,6 +31,8 @@ class LongSeasonRules:
     mildest: int = rule(30, 0, 100, E, "Least severity an irregular season can have")
     winter_loss_pct: int = rule(40, 0, 100, E, "Share of a town's food a long winter of full severity eats each epoch (%)")
     prepared_share: int = rule(40, 0, 100, E, "Share of that loss a town suffers when its people heeded a forecast (%)")
+    storage_ease_pct: int = rule(50, 0, 100, E, "Share of a long winter's loss that a people's full food stores take off (%)")
+    famine_foods_share: int = rule(70, 0, 100, E, "Share of a long winter's loss a town suffers when its people know what the land gives in a failed year (%)")
     scholar_skill: int = rule(3, 0, 10, E, "Astronomy a mortal needs to forecast the end of a long season")
     scholar_error: int = rule(8, 0, 50, E, "Epochs a forecast can miss by, before the scholar's skill")
     heed_base: int = rule(30, 0, 100, E, "Chance a people heeds its scholar's forecast before the scholar's skill (%)")
@@ -51,6 +53,7 @@ class AgeRules:
     echo_weight: int = rule(60, 0, 100, A, "Weight with which the arcs of an ended age's great figures are seeded in the next age")
     echoes_per_age: int = rule(5, 0, 100, A, "Great figures of an ended age who echo into the next")
     rebirth_chance: int = rule(30, 0, 100, A, "Chance each epoch that an unborn echo is reborn into a newborn (%)")
+    period_epochs: int = rule(0, 0, 10000, A, "Epochs after which an age turns by itself in a cosmos that turns in ages; 0 lets only the doom clock turn it")
 
 
 @dataclass(frozen=True)

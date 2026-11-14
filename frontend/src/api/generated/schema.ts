@@ -49576,6 +49576,7 @@ export interface components {
       | 'magic_requires_blood'
       | 'gravity_shift'
       | 'seasons_reversed'
+      | 'long_seasons'
       | 'dreams_are_real'
       | 'oaths_bind'
       | 'the_dead_speak'
@@ -54728,7 +54729,7 @@ export interface components {
       snippet: string | null
       epoch?: number | null
     }
-    SeasonCause: 'orbit' | 'divine'
+    SeasonCause: 'orbit' | 'natural_law' | 'divine'
     SeasonOption: {
       position: number
       name: string
@@ -130088,6 +130089,7 @@ export const naturalLawValues: ReadonlyArray<
   'magic_requires_blood',
   'gravity_shift',
   'seasons_reversed',
+  'long_seasons',
   'dreams_are_real',
   'oaths_bind',
   'the_dead_speak',
@@ -131343,7 +131345,7 @@ export const searchCategoryValues: ReadonlyArray<
 ]
 export const seasonCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SeasonCause']
-> = ['orbit', 'divine']
+> = ['orbit', 'natural_law', 'divine']
 export const seasonSpellValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SeasonSpell']
 > = ['summer', 'winter']

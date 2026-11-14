@@ -27,6 +27,7 @@ CARRIED_KINDS = (EntityType.LEGEND, EntityType.PROPHECY)
 class AgeTally:
     opened: int = 0
     reborn: int = 0
+    turned: int = 0
 
 
 async def current_age(ctx: TickContext) -> AgeRow | None:
@@ -156,5 +157,9 @@ async def keep_ages(ctx: TickContext, tally: AgeTally) -> None:
     if cosmos.age_cycle is not AgeCycle.CYCLIC:
         return
     age = await ensure_age(ctx, tally)
+    period = ctx.rules.ages.period_epochs
+    if period and ctx.epoch - age.began_epoch >= period and "ended_epoch" not in age.locked:
+        age = await turn_age(ctx, None)
+        tally.turned += 1
     await rebirth(ctx, age, tally)
     await ctx.session.flush()
