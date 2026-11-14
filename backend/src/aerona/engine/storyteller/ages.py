@@ -121,7 +121,9 @@ async def turn_age(ctx: TickContext, variant: ApocalypseVariant | None) -> AgeRo
     arts_counted = several(lost, "art", "arts")
     await note(
         ctx,
-        f"The age turned and age {opened.number} began. {tales_counted} were half-remembered, {arts_counted} were lost and {echoes} great lives will echo.",
+        f"The age turned and age {opened.number} began. {tales_counted} were half-remembered, {arts_counted} were lost and "
+        + several(echoes, "great life", "great lives")
+        + " will echo.",
         key="ages.turned",
     )
     return opened

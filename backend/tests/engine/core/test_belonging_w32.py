@@ -1,3 +1,4 @@
+import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +14,7 @@ from aerona.db.tables.law_depth import DefectionRow, OutlawRow
 from aerona.db.tables.mind import FacetRow, SkillRow
 from aerona.db.tables.mortal import MarriageRow, MortalProfileRow
 from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.belonging import FugitiveKind, IdentityLayer, PlayKind, SalienceDriver, SanctuaryKind, SanctuaryState, SatireSource
@@ -24,6 +26,7 @@ from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.mind import EthicalStance, Facet
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, Jurisdiction, LawArea, LawKind, OfficeKind
+from aerona.domain.enums.relations import RelationType
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LoyaltyPart
 from aerona.domain.enums.structure import StructureKind
@@ -42,6 +45,7 @@ from aerona.engine.polity.book import Realm
 from aerona.engine.polity.loyalty import loyalty_parts
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import bond_exists
+from aerona.engine.relations.book import refresh_kinds
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 
@@ -324,3 +328,14 @@ async def test_a_law_that_puts_children_to_work_keeps_labouring_children_from_pl
     await keep_peers(await at(session, 3), tally)
     group = await session.scalar(select(PeerGroupRow).where(PeerGroupRow.settlement_entity_id == town.id))
     assert group is not None and group.deprived and tally.deprived == 2
+
+
+async def test_childhood_friends_keep_relationships_of_known_kinds_that_the_social_step_can_read(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Velmor", world, world.regions[0])
+    first, second = await youngster(session, world, "Iri", town), await youngster(session, world, "Oss", town)
+    await keep_peers(await at(session, 3, peer_groups={"friend_chance": 100, "rival_chance": 0}), PeerTally())
+    rows = list(await session.scalars(select(RelationshipRow).where(RelationshipRow.holder_node_id.in_([first.id, second.id]))))
+    assert rows and all(set(row.kinds) <= set(RelationType) for row in rows)
+    await refresh_kinds(session, tuned_rules(), first.id, 3)
+    with pytest.raises(ValueError, match="known kind"):
+        rows[0].kinds = ["childhood"]

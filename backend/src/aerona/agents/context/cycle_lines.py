@@ -100,7 +100,10 @@ async def town_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(f"your settlement is {an(words(camp.mode.value))} camp with a herd of {camp.herd}, grazing {camp.grazing}, water {camp.water}")
     for bond in await session.scalars(select(IndentureRow).where(IndentureRow.community_entity_id == me.location_id).limit(GIFT_LINES)):
         newcomers = f", newcomers of {await named(scope, bond.origin_entity_id)}" if bond.origin_entity_id is not None else ""
-        found.append(f"{bond.count} here are bound in {words(bond.regime.value)}{newcomers}, debt {bond.debt}, exploited at {bond.exploitation}")
+        found.append(
+            f"{several(bond.count, 'labourer here is', 'labourers here are')} bound in {words(bond.regime.value)}{newcomers}, "
+            f"debt {bond.debt}, exploited at {bond.exploitation}"
+        )
     for freed in await session.scalars(
         select(ManumissionRow)
         .where(ManumissionRow.community_entity_id == me.location_id, ManumissionRow.standing < FULL_STANDING)

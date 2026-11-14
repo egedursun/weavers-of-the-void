@@ -12,7 +12,7 @@ def test_budget_keeps_whole_lines_and_appends_a_hint() -> None:
     text = "\n".join(["line one", "line two", "line three"])
     result = budget(text, 18, "look with search_entities", TRIM)
     assert result.startswith("line one\nline two")
-    assert result.endswith("(+1 more lines; look with search_entities)")
+    assert result.endswith("(+1 more line; look with search_entities)")
 
 
 def test_budget_cuts_the_first_line_when_nothing_fits() -> None:

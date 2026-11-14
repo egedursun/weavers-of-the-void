@@ -280,7 +280,12 @@ async def confederate(
         for member in joined:
             leagues[member] = row
         tally.confederations += 1
-        await note(ctx, f"{leader.name} gathered {len(joined)} wandering camps under one banner.", key="nomads.confederation", ids=[leader.id, *joined])
+        await note(
+            ctx,
+            f"{leader.name} gathered {several(len(joined), 'wandering camp', 'wandering camps')} under one banner.",
+            key="nomads.confederation",
+            ids=[leader.id, *joined],
+        )
 
 
 async def fragment(ctx: TickContext, tally: NomadTally) -> None:

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.language import EPOCH_WORD_SEED_PREFIX
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import LexemeRow
@@ -105,7 +106,7 @@ async def transition(ec: EpochContext) -> None:
                 count = await add_epoch_words(session, await ec.runtime.rules(session), ec.epoch)
                 await mark_step(session, ec.epoch, EpochStepKind.EPOCH_WORDS, EpochStepStatus.DONE)
             if count:
-                ec.runtime.note(f"{count} new words entered the languages.")
+                ec.runtime.note(f"{several(count, 'new word', 'new words')} entered the languages.")
         except Exception as error:
             ec.runtime.error(f"Epoch words: {error}")
     if not gods_done:

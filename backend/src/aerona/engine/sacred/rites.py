@@ -273,7 +273,10 @@ async def weigh_town(ctx: TickContext, town: EntityRow, signs: tuple[dict[int, i
     put(row, "science_pull", -min(table.science_cap, theories.get(town.world_id or 0, 0) * table.science_per_theory))
     put(row, "prosperity_pull", -round_half_up(max(0, stat_or(town, "prosperity", 0) - MIDDLE) * table.prosperity_pct / PERCENT))
     put(row, "city_pull", -min(CITY_CAP, stat_or(town, "population", 0) // max(1, table.city_scale)))
-    put(row, "silence_pull", -min(table.silence_cap, row.silent_epochs * table.silence_per_epoch))
+    church = await church_of(ctx.session, town)
+    unseen = church is not None and await ctx.session.get(CultTenetRow, (church.id, TenetKind.HIDDEN_GOD)) is not None
+    silence = min(table.silence_cap, row.silent_epochs * table.silence_per_epoch)
+    put(row, "silence_pull", -round_half_up(silence * (PERCENT - table.hidden_god_pct) / PERCENT if unseen else silence))
     put(row, "disaster_push", table.disaster_push if region is not None and region.id in struck else 0)
     put(row, "miracle_push", wonders * table.miracle_push)
     put(row, "war_push", table.war_push if realm is not None and await ongoing_wars(ctx.session, realm) else 0)

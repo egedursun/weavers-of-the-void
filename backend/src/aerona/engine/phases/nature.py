@@ -6,6 +6,8 @@ from aerona.engine.phases.dominion import count
 
 
 @reads(
+    "people.population",
+    "settlement.population",
     "table.entity_traits",
     "table.ferment_cultures",
     "table.outbreaks",

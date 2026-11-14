@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.epochs import DeferredStepRow
 from aerona.db.tables.routes import HorizonIntuitionRow
 from aerona.domain.enums.action import ActionKind
@@ -44,7 +45,7 @@ async def discard_all(scope: PlayerScope, command: DiscardAll) -> Effect:
     waiting = list(await scope.session.scalars(select(HorizonIntuitionRow).where(HorizonIntuitionRow.status == HorizonStatus.PENDING)))
     for intuition in waiting:
         intuition.status = HorizonStatus.WASTED
-    return Effect(f"{len(waiting)} waiting intuitions were let go.", values={"discarded": len(waiting)})
+    return Effect(f"{several(len(waiting), 'waiting intuition was', 'waiting intuitions were')} let go.", values={"discarded": len(waiting)})
 
 
 async def sensed_step(scope: PlayerScope, step_id: int) -> DeferredStepRow:

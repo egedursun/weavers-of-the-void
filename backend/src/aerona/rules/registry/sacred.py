@@ -62,6 +62,7 @@ class CelestialBureaucracyRules:
 @dataclass(frozen=True)
 class MysticismRules:
     vision_chance: int = rule(4, 0, 100, R, "Chance each epoch that a mortal open to the divine has a first direct experience (%)")
+    contemplative_pct: int = rule(100, 0, 500, R, "More often a mortal of a contemplative tradition has a first direct experience (%)")
     mystics_per_epoch: int = rule(6, 0, 1000, R, "New mystics that may arise across the cosmos in one epoch")
     wisdom_floor: int = rule(60, 0, 100, R, "Wisdom a mortal needs before visions come to it")
     piety_floor: int = rule(65, 0, 100, R, "Piety a mortal holds dear before visions come to it")
@@ -82,6 +83,8 @@ class MysticismRules:
 @dataclass(frozen=True)
 class MillenarianRules:
     stir_chance: int = rule(10, 0, 100, R, "Chance each epoch that a town under an end-time sign stirs into a millenarian movement (%)")
+    doom_at: int = rule(50, 0, 100000, R, "Doom on the clock from which the end feels near and stirs the faithful to await it")
+    tension_at: int = rule(70, 0, 100, R, "Tension of a world from which its faithful are stirred to await the end")
     movements_per_epoch: int = rule(3, 0, 1000, R, "Millenarian movements that may begin across the cosmos in one epoch")
     psi_floor: int = rule(55, 0, 100, R, "Political stress of a realm from which immiseration alone stirs its towns")
     horizon: int = rule(3, 1, 50, R, "Epochs from a movement's start to the end it awaits")
@@ -102,6 +105,9 @@ class MillenarianRules:
 @dataclass(frozen=True)
 class TheodicyRules:
     suffering_at: int = rule(40, 0, 100, R, "Suffering of a faithful community that tests its doctrine")
+    silent_hidden: int = rule(
+        5, 0, 100, R, "Epochs of divine silence after which a faith in crisis comes to hold its god hidden rather than its suffering a trial"
+    )
     plague_suffering: int = rule(60, 0, 100, R, "Suffering a plague in a town brings")
     famine_suffering: int = rule(55, 0, 100, R, "Suffering hunger in a town brings")
     defeat_suffering: int = rule(45, 0, 100, R, "Suffering a lost battle brings the towns of the losing realm")
@@ -148,6 +154,7 @@ class SecularisationRules:
     city_scale: int = rule(4000, 1, 10000000, R, "People of a town for each point of pull away from faith, capped at twenty")
     silence_per_epoch: int = rule(3, 0, 100, R, "Pull away from faith for each epoch its gods stay silent")
     silence_cap: int = rule(30, 0, 100, R, "Most pull away from faith divine silence can bring")
+    hidden_god_pct: int = rule(100, 0, 100, R, "Share of the pull of divine silence a faith that holds its god hidden ignores (%)")
     disaster_push: int = rule(20, 0, 100, R, "Push toward faith a disaster brings")
     miracle_push: int = rule(15, 0, 100, R, "Push toward faith each miracle brings")
     war_push: int = rule(10, 0, 100, R, "Push toward faith a war brings")

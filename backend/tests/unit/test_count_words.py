@@ -73,3 +73,33 @@ def test_a_count_template_read_by_format_is_flagged() -> None:
 def test_the_backend_counts_every_word_in_the_singular_and_plural() -> None:
     module = checker()
     assert module.counts({path: path.read_text(encoding="utf-8") for path in sorted(module.SOURCE.rglob("*.py"))}) == []
+
+
+SCOPED = """
+async def keep(ctx):
+    laid = 0
+    laid += 1
+    echoes = await seed(ctx)
+    note(f"The admiralty laid down {laid} new ships.")
+    note(f"{echoes} great lives will echo.")
+    note(f"{laid} in reparations")
+
+
+async def seed(ctx) -> int:
+    return 2
+"""
+
+
+def test_a_counted_name_before_an_adjective_and_a_plural_word_is_flagged() -> None:
+    found = checker().counts({Path("module.py"): SCOPED})
+    assert sorted(item.text for item in found) == ["{echoes} great lives", "{laid} new ships"]
+
+
+def test_a_jinja_count_before_its_own_plural_noun_is_flagged() -> None:
+    source = (
+        "class Result:\n"
+        '    SEEN = "You have {{ followers }} followers and {{ renown }} renown."\n'
+        "    FINE = \"You have {{ followers | several('follower', 'followers') }}.\"\n"
+    )
+    found = checker().counts({Path("module.py"): source})
+    assert [item.text for item in found] == ["{{ followers }} followers"]

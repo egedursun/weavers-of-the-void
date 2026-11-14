@@ -532,6 +532,16 @@ RAW = (
         (S.KNOWLEDGE, "doctrine.monastic_protection_pct", "kept knowledge"),
     ),
     (
+        "tenet_hidden",
+        "S4.4/RP4",
+        "A faith that holds its god hidden is not shaken by its silence",
+        ("rites_of_passage",),
+        DOCTRINE,
+        (C, "settlement"),
+        ("tenet_hidden_god",),
+        (S.FAITH, "secularisation.hidden_god_pct", "silence"),
+    ),
+    (
         "tenet_magic",
         "S4.4",
         "Faith hunts or hallows wizards",

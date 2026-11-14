@@ -223,7 +223,13 @@ async def voices_of_peoples(runtime: AgentRuntime, epoch: int) -> VoicesResult:
             else:
                 row.local_name, row.account, row.misconception, row.epoch = name, story, belief.wrong or None, epoch
             beliefs += 1
-    runtime.step(f"The voices of the peoples were written: {views} partisan chronicles, {beliefs} folk beliefs.")
+    runtime.step(
+        "The voices of the peoples were written: "
+        + several(views, "partisan chronicle", "partisan chronicles")
+        + ", "
+        + several(beliefs, "folk belief", "folk beliefs")
+        + "."
+    )
     return VoicesResult(views, beliefs)
 
 

@@ -142,6 +142,11 @@ PATTERNS = (
         prose_only=True,
     ),
     Pattern(
+        "canned afterlife name",
+        re.compile(r"\b(?:blessed fields|the grey plain|the gray plain|the pits|the forgetting|hall of the fallen|house of the ancestors)\b", re.IGNORECASE),
+        prose_only=True,
+    ),
+    Pattern(
         "model image ban",
         re.compile(
             r"\b(tired (?:images?|motifs?|names?|words?|openings?)|clich(?:e|é)s?|stock (?:names?|phrases?|images?)|overused (?:images?|words?|names?)|"

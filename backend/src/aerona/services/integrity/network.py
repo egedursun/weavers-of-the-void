@@ -667,7 +667,8 @@ async def repair_dangling_ends(session: AsyncSession, rules: Rules, epoch: int, 
     repair = DanglingEndRepair(session, rules, epoch)
     counters = await repair.run()
     text = (
-        f"{counters.total} dangling ends connected (inside {counters.inside}, struck place {counters.caused}, event {counters.event}, "
+        f"{several(counters.total, 'dangling end', 'dangling ends')} connected ("
+        f"inside {counters.inside}, struck place {counters.caused}, event {counters.event}, "
         f"narrative {counters.narrative}, prophecy {counters.prophecy}, ruin {counters.remnant}, destruction {counters.destruction}, "
         f"structure {counters.structure}, produced {counters.produced}, named {counters.mentioned}); "
         f"{counters.related_converted} vague bonds converted to concrete types, {several(counters.cleaned, 'duplicate', 'duplicates')} hidden."

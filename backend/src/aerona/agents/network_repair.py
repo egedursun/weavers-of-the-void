@@ -425,6 +425,7 @@ async def network_rule_repair(runtime: AgentRuntime, epoch: int) -> int:
         repaired = await repair_loose_ends(session, epoch)
     if repaired:
         runtime.publish(
-            EventKind.NETWORK_REPAIRED, {"type": "rule", "text": f"Network repaired: {repaired} loose ends bonded.", "counts": {"location": repaired}}
+            EventKind.NETWORK_REPAIRED,
+            {"type": "rule", "text": f"Network repaired: {several(repaired, 'loose end', 'loose ends')} bonded.", "counts": {"location": repaired}},
         )
     return repaired

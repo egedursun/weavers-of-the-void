@@ -33,7 +33,6 @@ from aerona.engine.primitives.queries import active_bonds, connect
 from aerona.engine.relations.book import ensure_relation
 
 YOUNG = frozenset({LifeStage.CHILD, LifeStage.YOUTH})
-CHILDHOOD = "childhood"
 PLAY_SKILLS = {
     PlayKind.GAMES: SkillKind.TACTICS,
     PlayKind.MOCK_FIGHTS: SkillKind.UNARMED,
@@ -118,7 +117,6 @@ async def befriend(ctx: TickContext, group: PeerGroupRow, members: list[int], ta
                 row.friendship = max(row.friendship, table.friendship)
             if rival and not friend and "rivalry" not in row.locked:
                 row.rivalry = max(row.rivalry, table.rivalry)
-            row.kinds = sorted({*row.kinds, CHILDHOOD})
             row.last_epoch = ctx.epoch
         tally.friendships += int(friend)
         tally.rivalries += int(rival and not friend)

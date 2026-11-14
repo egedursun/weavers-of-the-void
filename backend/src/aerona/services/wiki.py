@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.schema import MAP_NOTE_COLOR_MAX_LENGTH, MAP_NOTE_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
@@ -375,7 +376,7 @@ async def similar_entities(session: AsyncSession, entity_id: int, count: int) ->
         reasons: list[str] = []
         score = SHARED_WEIGHT * shared
         if shared:
-            reasons.append(f"{shared} shared bonds")
+            reasons.append(several(shared, "shared bond", "shared bonds"))
         if candidate.entity_type is entity.entity_type:
             score += SAME_TYPE_WEIGHT
             reasons.append("same type")

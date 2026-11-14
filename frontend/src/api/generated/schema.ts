@@ -63711,6 +63711,7 @@ export interface components {
       | 'void_communion'
       | 'feeding_the_hunger'
       | 'whispered_secrets'
+      | 'hidden_god'
     TenetKindSpec: {
       tenet: components['schemas']['TenetKind']
       effect: string
@@ -145005,6 +145006,7 @@ export const tenetKindValues: ReadonlyArray<
   'void_communion',
   'feeding_the_hunger',
   'whispered_secrets',
+  'hidden_god',
 ]
 export const tensionBandValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TensionBand']

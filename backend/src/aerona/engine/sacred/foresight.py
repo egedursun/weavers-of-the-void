@@ -79,6 +79,20 @@ async def seers_among(ctx: TickContext, people_id: int) -> bool:
     return found is not None
 
 
+async def diviners_among(ctx: TickContext, people_id: int) -> int:
+    found = await ctx.session.scalar(
+        select(func.count())
+        .select_from(EntityRow)
+        .where(
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.mortal_role.in_([MortalRole.SEER, MortalRole.PRIEST]),
+            await folk_among(ctx.session, [people_id]),
+        )
+    )
+    return int(found or 0)
+
+
 async def validity_of(ctx: TickContext, system: DivinationSystemRow) -> DivinationValidity:
     people = await living_entity(ctx.session, system.people_entity_id)
     if people is None:
@@ -269,7 +283,7 @@ async def court_systems(ctx: TickContext, realm_id: int) -> list[DivinationSyste
         return []
     rows = await ctx.session.scalars(
         select(DivinationSystemRow)
-        .where(DivinationSystemRow.people_entity_id.in_(people_ids))
+        .where(DivinationSystemRow.people_entity_id.in_(people_ids), DivinationSystemRow.diviners > 0)
         .order_by(DivinationSystemRow.trust.desc(), DivinationSystemRow.id)
     )
     return list(rows)
@@ -279,8 +293,12 @@ async def keep_divination(ctx: TickContext, tally: ForesightTally) -> None:
     table = ctx.rules.divination
     await take_up_systems(ctx, tally)
     for system in list(await ctx.session.scalars(select(DivinationSystemRow).order_by(DivinationSystemRow.id))):
-        if not held(system.people_entity_id) and "validity" not in system.locked:
+        if held(system.people_entity_id):
+            continue
+        if "validity" not in system.locked:
             system.validity = await validity_of(ctx, system)
+        if "diviners" not in system.locked:
+            system.diviners = await diviners_among(ctx, system.people_entity_id)
     realms = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.POLITY, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
@@ -541,9 +559,17 @@ async def run_model(ctx: TickContext, row: ForecastModelRow, tally: ForesightTal
     actual = stress.psi if stress is not None else 0
     spread = max(0, (PERCENT - row.accuracy) // 2)
     guess = clamp_int(actual + ctx.rng(f"forecast.{row.id}").integer(-spread, spread), 0, PERCENT)
-    row.forecast_psi, row.actual_psi = guess, actual
-    if abs(guess - actual) <= table.near_at and "accuracy" not in row.locked:
-        row.accuracy = min(table.accuracy_cap, row.accuracy + table.learn_step)
+    if "forecast_psi" not in row.locked:
+        row.forecast_psi = guess
+    if "actual_psi" not in row.locked:
+        row.actual_psi = actual
+    order = await ctx.session.get(FactionProfileRow, row.order_entity_id)
+    if order is not None and order.home_entity_id is not None and "archive" not in row.locked:
+        row.archive = await archive_of(ctx, order.home_entity_id)
+    ceiling = min(table.accuracy_cap, row.archive * table.accuracy_per_work)
+    if "accuracy" not in row.locked:
+        learned = row.accuracy + table.learn_step if abs(row.forecast_psi - actual) <= table.near_at else row.accuracy
+        row.accuracy = min(ceiling, learned)
     if "disruption" not in row.locked:
         row.disruption, row.disrupted_by_node_id = await disruption_of(ctx, row.subject_entity_id)
     if row.accuracy >= table.plan_at and row.plan_id is None:

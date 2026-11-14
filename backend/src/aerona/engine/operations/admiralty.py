@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SchemeRow
@@ -117,7 +118,7 @@ async def commission_ships(ctx: TickContext, polity: EntityRow, row: AdmiraltyRo
     tally.commissioned += laid
     if laid:
         keep(row, "commissioned", row.commissioned + laid)
-        await note(ctx, f"The admiralty of {polity.name} laid down {laid} new ships.", key="admiralty.commissioned", ids=[polity.id])
+        await note(ctx, f"The admiralty of {polity.name} laid down {several(laid, 'new ship', 'new ships')}.", key="admiralty.commissioned", ids=[polity.id])
 
 
 async def room_for(ctx: TickContext, polity: EntityRow, fleet: list[VesselProfileRow]) -> int:

@@ -291,6 +291,7 @@ TENET_IDEAS: MappingProxyType[TenetKind, IdeaKind] = MappingProxyType(
         TK.SACRED_SPECIES: IK.REVERENCE_FOR_NATURE,
         TK.PILGRIMAGE_DUTY: IK.WANDERLUST,
         TK.SOULS_REST: IK.MERCY_FOR_ALL,
+        TK.HIDDEN_GOD: IK.MYSTICISM,
     }
 )
 

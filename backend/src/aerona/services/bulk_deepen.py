@@ -226,7 +226,7 @@ class BulkDeepening:
             async with self._database.read() as session:
                 unnamed = await unnamed_count(session)
             if unnamed and self._namer is not None:
-                self.log(LogLevel.INFO, f"{unnamed} unnamed records are also being named.")
+                self.log(LogLevel.INFO, f"{several(unnamed, 'unnamed record is', 'unnamed records are')} also being named.")
                 naming = asyncio.create_task(self._namer.name_pending())
             seen = {(item.kind, item.id) for item in queue}
             await self._round(deque(queue))

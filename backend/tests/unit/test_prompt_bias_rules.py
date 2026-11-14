@@ -241,3 +241,10 @@ def test_a_lowercase_example_placeholder_is_caught() -> None:
     assert "example placeholder" in rules_hit(module, form, "placeholder='a kinsman slain at the ford'")
     assert "example placeholder" in rules_hit(module, form, "placeholder='luxuries'")
     assert "example placeholder" not in rules_hit(module, form, "placeholder='What began the feud'")
+
+
+def test_a_canned_afterlife_name_is_caught() -> None:
+    module = checker()
+    for text in ("the Blessed Fields", "the Grey Plain", "the Pits", "the Forgetting", "the Hall of the Fallen", "the House of the Ancestors"):
+        assert "canned afterlife name" in rules_hit(module, PROMPT, text), text
+    assert "canned afterlife name" not in rules_hit(module, PROMPT, "the paradise")

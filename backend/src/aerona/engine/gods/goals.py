@@ -186,7 +186,7 @@ async def _lost_star(session: AsyncSession, rules: Rules, row: ScenarioRow, epoc
     if not reborn and not dead:
         return ScenarioProgress(0, "There is no dead star in the cosmos yet; one must die first.")
     done = reborn > (row.baseline_count or 0)
-    return ScenarioProgress(PERCENT if done else 0, f"{dead} dead stars are waiting", done=done)
+    return ScenarioProgress(PERCENT if done else 0, f"{several(dead, 'dead star is', 'dead stars are')} waiting", done=done)
 
 
 async def _long_peace(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:

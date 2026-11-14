@@ -1,6 +1,8 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from aerona.core.grammar import several
+
 ELLIPSIS = "…"
 LINE_BREAK = "\n"
 PARTIAL_LINE_RESERVE = 2
@@ -14,7 +16,7 @@ class BudgetSection:
 
 
 def budget_trailer(hidden_lines: int, hint: str) -> str:
-    return f"{LINE_BREAK}{ELLIPSIS} (+{hidden_lines} more lines; {hint})"
+    return f"{LINE_BREAK}{ELLIPSIS} (+{several(hidden_lines, 'more line', 'more lines')}; {hint})"
 
 
 def budget(text: str, limit: int, hint: str, trim_min: int) -> str:

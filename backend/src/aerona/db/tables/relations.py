@@ -1,5 +1,5 @@
 from sqlalchemy import JSON, ForeignKey, Index, String, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
@@ -16,6 +16,7 @@ from aerona.domain.enums.relations import (
     PassionKind,
     PassionSource,
     PersuasionAim,
+    RelationType,
 )
 
 
@@ -44,6 +45,13 @@ class RelationshipRow(Base):
     since_epoch: Mapped[int]
     last_epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+    @validates("kinds")
+    def _typed_kinds(self, _key: str, value: list[str]) -> list[str]:
+        unknown = sorted(set(value) - set(RelationType))
+        if unknown:
+            raise ValueError(f"A relationship can only be of a known kind, not {', '.join(unknown)}.")
+        return value
 
 
 class SocialCircleRow(Base):

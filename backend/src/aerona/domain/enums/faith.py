@@ -29,6 +29,7 @@ class TenetKind(StrEnum):
     VOID_COMMUNION = "void_communion"
     FEEDING_THE_HUNGER = "feeding_the_hunger"
     WHISPERED_SECRETS = "whispered_secrets"
+    HIDDEN_GOD = "hidden_god"
 
 
 class JudgementDoctrine(StrEnum):

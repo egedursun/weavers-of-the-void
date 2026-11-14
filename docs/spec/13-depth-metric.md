@@ -10,21 +10,21 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | region | 289 / 215 met | 483 / 160 met | 397 / 120 met |
 | place | 74 / 25 met | 161 / 20 met | 283 / 15 met |
 | resource | 59 / 35 met | 67 / 50 met | 200 / 30 met |
-| settlement | 1358 / 280 met | 1259 / 230 met | 420 / 145 met |
+| settlement | 1359 / 280 met | 1260 / 230 met | 420 / 145 met |
 | species | 233 / 150 met | 209 / 150 met | 200 / 95 met |
-| people | 1204 / 320 met | 1014 / 220 met | 420 / 140 met |
+| people | 1205 / 320 met | 1014 / 220 met | 420 / 140 met |
 | mortal | 778 / 355 met | 887 / 340 met | 420 / 200 met |
 | item | 90 / 65 met | 104 / 60 met | 220 / 45 met |
 | structure | 204 / 55 met | 44 / 70 short | 219 / 55 met |
 | language | 62 / 110 short | 64 / 90 short | 100 / 55 met |
 | legend | 64 / 30 met | 48 / 40 met | 117 / 35 met |
 | tradition | 44 / 20 met | 57 / 25 met | 80 / 25 met |
-| cult | 356 / 90 met | 512 / 100 met | 420 / 75 met |
+| cult | 357 / 90 met | 513 / 100 met | 420 / 75 met |
 | faction | 379 / 95 met | 499 / 110 met | 380 / 80 met |
 | celestial | 11 / 10 met | 3 / 12 short | 38 / 15 met |
 | artwork | 35 / 20 met | 45 / 20 met | 145 / 15 met |
 | law | 73 / 55 met | 88 / 60 met | 200 / 45 met |
-| spirit | 68 / 60 met | 189 / 60 met | 220 / 40 met |
+| spirit | 68 / 60 met | 190 / 60 met | 220 / 40 met |
 | knowledge | 133 / 70 met | 259 / 110 met | 300 / 85 met |
 | prophecy | 25 / 15 met | 23 / 15 met | 60 / 15 met |
 | event | 43 / 15 met | 220 / 20 met | 340 / 15 met |
@@ -50,7 +50,7 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | equipment_model | 0 | 0 | 0 |
 | dish | 0 | 0 | 0 |
 | building_type | 0 | 0 | 0 |
-| son | 246 / 350 short | 117 / 320 short | 280 / 190 met |
+| son | 247 / 350 short | 117 / 320 short | 280 / 190 met |
 | creator | 25 / 35 short | 13 / 40 short | 97 / 35 met |
 | foreign_god | 104 / 200 short | 33 / 140 short | 141 / 100 met |
 | war | 192 / 95 met | 161 / 110 met | 140 / 75 met |

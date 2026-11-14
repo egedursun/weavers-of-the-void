@@ -98,7 +98,9 @@ def render_markdown(report: MigrationReport) -> str:
         *_grouped(report.warnings),
         "## Tags",
         "",
-        f"Free descriptive tags kept: {several(sum(report.free_tags.values()), 'use', 'uses')} of {len(report.free_tags)} distinct words.",
+        f"Free descriptive tags kept: {several(sum(report.free_tags.values()), 'use', 'uses')} of "
+        + several(len(report.free_tags), "distinct word", "distinct words")
+        + ".",
         "",
         "### Not understood",
         "",

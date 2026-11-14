@@ -885,7 +885,8 @@ async def sever_route(
     hidden_word = "hidden " if was_hidden else ""
     text = f"{opener}{verb} the {hidden_word}route between {first} and {second}; it reopens at the start of Epoch {ctx.epoch + span}"
     if lost or waiting:
-        text += f"; of the {several(lost + waiting, 'expedition', 'expeditions')} under way, {lost} were lost, {waiting} survived and wait for it to reopen"
+        under = several(lost + waiting, "expedition", "expeditions")
+        text += f"; of the {under} under way, {several(lost, 'was', 'were')} lost, {waiting} survived and wait for it to reopen"
     text += "."
     if revealed:
         text += " As the route snapped, light leaking through the crack betrayed it: it is no longer hidden; it can be used again once the storm calms."

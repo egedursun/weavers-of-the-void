@@ -329,7 +329,7 @@ async def wrath(ctx: TickContext, creator: CreatorRow, target: EntityRow, reason
     clause = f" ({reason})" if reason else ""
     await entities.set_status(target, EntityStatus.DESTROYED, ctx.epoch, god_lines.WRATH_NOTE.format(epoch=ctx.epoch, creator=creator.name, reason=clause))
     line = god_lines.WRATH
-    deaths = f"; the {died} named mortals inside also perished" if died else ""
+    deaths = f"; the {several(died, 'named mortal', 'named mortals')} inside also perished" if died else ""
     await ctx.chronicle(
         ChronicleKind.CREATOR_HAND,
         line.render(creator=creator.name, entity=target.name, reason=clause, deaths=deaths),

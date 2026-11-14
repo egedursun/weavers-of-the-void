@@ -326,7 +326,9 @@ async def strike_hazard(
             cavern = await _open_cavern(ctx, resource)
     woodcutters_counted = several(killed, "woodcutter", "woodcutters")
     words = {
-        HazardKind.CAVE_IN: f"The galleries of {resource.name} caved in on the miners of {community.name}: {killed} died and {maimed} were maimed",
+        HazardKind.CAVE_IN: f"The galleries of {resource.name} caved in on the miners of {community.name}: {killed} died and "
+        + several(maimed, "was", "were")
+        + " maimed",
         HazardKind.FLOODED_SHAFT: f"Water broke into the shafts of {resource.name}: {killed} of {community.name} drowned",
         HazardKind.FELLING_ACCIDENT: f"Falling trees at {resource.name} killed {woodcutters_counted} of {community.name} and crippled {maimed}",
         HazardKind.DROWNING: f"Rough water at {resource.name} took {several(killed, 'fisher', 'fishers')} of {community.name}",

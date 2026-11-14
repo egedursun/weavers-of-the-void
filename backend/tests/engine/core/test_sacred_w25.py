@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.sacred_lines import mortal_sacred_lines, son_sacred_lines
 from aerona.agents.context.scope import load_scope
 from aerona.catalog.sacred import DOMAIN_FEEDINGS
+from aerona.catalog.tenets import STRATUM_NAMES
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import HolderTechniqueRow
@@ -46,6 +47,7 @@ from aerona.db.tables.sacred import (
     TheodicyCrisisRow,
 )
 from aerona.db.tables.society import ArchiveHoldingRow, CommunitySocietyRow
+from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ProphecyPredicate, Technique
 from aerona.domain.enums.demography import Aesthetic, InheritanceCustom, MarriageCustom, MartialStyle
@@ -89,6 +91,7 @@ from aerona.domain.models.entity_stats import (
     SpiritStats,
     StructureStats,
 )
+from aerona.engine.body.conditions import condition_of
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.plans import PlanTally, complete
 from aerona.engine.mind.book import write_values
@@ -99,11 +102,20 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.sacred import control
 from aerona.engine.sacred.bureau import BureauTally, keep_bureau
 from aerona.engine.sacred.feeding import harvest_feelings
-from aerona.engine.sacred.foresight import ForesightTally, keep_divination, keep_prescience, keep_psychohistory
+from aerona.engine.sacred.foresight import ForesightTally, court_systems, keep_divination, keep_prescience, keep_psychohistory
 from aerona.engine.sacred.guards import guarded, perform, rite_chance, unrest_shift, warded_hosts
-from aerona.engine.sacred.mysteries import MysteryTally, keep_millenarians, keep_mystics, keep_theodicy
+from aerona.engine.sacred.mysteries import (
+    MysteryTally,
+    become_mystic,
+    contemplative,
+    keep_millenarians,
+    keep_mystics,
+    keep_theodicy,
+    pressure_on,
+    seek_another_way,
+)
 from aerona.engine.sacred.omens import battle_omen, war_forbidden
-from aerona.engine.sacred.rites import RiteTally, keep_afterlife_belief, keep_climates, keep_sacraments
+from aerona.engine.sacred.rites import RiteTally, keep_afterlife_belief, keep_climates, keep_sacraments, weigh_town
 from aerona.engine.sacred.spirits import SpiritTally, keep_place_spirits
 from aerona.engine.services.war import declare_war
 from aerona.services.integrity.sacred_links import mend_sacred_links
@@ -537,3 +549,66 @@ async def test_a_revered_mystic_founds_a_holy_order(session: AsyncSession, world
     assert row is not None and row.state is MysticState.FOUNDER and row.founded_entity_id is not None
     order = await session.get(FactionProfileRow, row.founded_entity_id)
     assert order is not None and order.kind is FactionKind.HOLY_ORDER
+
+
+async def test_a_divination_system_counts_its_diviners_and_one_with_none_is_never_consulted(session: AsyncSession, world: CoreWorld) -> None:
+    people = await entity(session, "Lot Casters", EntityType.PEOPLE, PeopleStats(population=900), world_id=world.world.id, location_id=world.regions[0].id)
+    town = await settlement(session, "Lotby", world, world.regions[0])
+    town.affiliated_entity_id = people.id
+    king = await mortal(session, "Brand", world, town.id)
+    realm = await ruled_realm(session, world, town, king)
+    system = DivinationSystemRow(people_entity_id=people.id, kind=DivinationKind.AUGURY, locked=[])
+    session.add(system)
+    await session.flush()
+    await keep_divination(await at(session, 3, divination={"consult_chance": 0}), ForesightTally())
+    assert system.diviners == 0
+    assert await court_systems(await at(session, 3), realm.id) == []
+    seer = await mortal(session, "Wren", world, town.id)
+    seer.mortal_role = MortalRole.SEER
+    seer.affiliated_entity_id = people.id
+    await session.flush()
+    await keep_divination(await at(session, 3, divination={"consult_chance": 0}), ForesightTally())
+    assert system.diviners == 1 and await court_systems(await at(session, 3), realm.id) == [system]
+
+
+async def test_a_mystic_s_vision_marks_its_body_and_a_contemplative_tradition_opens_the_way(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Cloisterby", world, world.regions[0])
+    seeker = await mortal(session, "Anwen", world, town.id, wisdom=90)
+    await session.flush()
+    ctx = await at(session, 3)
+    assert not await contemplative(ctx, seeker)
+    session.add(HolderTechniqueRow(holder_entity_id=town.id, technique=Technique.MONASTICISM, since_epoch=0, secret=False))
+    await session.flush()
+    assert await contemplative(ctx, seeker)
+    await become_mystic(ctx, seeker, None, MysteryTally())
+    assert await condition_of(ctx, seeker.id, ConditionKind.VISIONS) is not None
+
+
+async def test_long_silence_makes_a_tested_faith_hold_its_god_hidden_and_silence_no_longer_erodes_it(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Stillwater", world, world.regions[0], piety=60)
+    cult = await church(session, world, town)
+    session.add(FaithClimateRow(community_entity_id=town.id, silent_epochs=10, updated_epoch=0, locked=[]))
+    crisis = TheodicyCrisisRow(cult_entity_id=cult.id, community_entity_id=town.id, cause=TheodicyCause.PLAGUE, suffering=60, started_epoch=0, locked=[])
+    session.add(crisis)
+    await session.flush()
+    ctx = await at(session, 9, theodicy={"argue_base": 0, "doctrine_chance": 100})
+    assert await seek_another_way(ctx, crisis, town, cult, MysteryTally()) is TheodicyResolution.NEW_DOCTRINE
+    assert await session.get(CultTenetRow, (cult.id, TenetKind.HIDDEN_GOD)) is not None
+    row = await weigh_town(ctx, town, ({}, set(), {}))
+    assert row.silence_pull == 0
+
+
+async def test_a_doom_near_its_end_stirs_the_faithful_to_await_it(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Lastlight", world, world.regions[0])
+    ctx = await at(session, 3, millenarianism={"doom_at": 10})
+    calm, _ = await pressure_on(ctx, town, set())
+    cosmos = await CosmosRepository(session).require_cosmos()
+    cosmos.doom_clock = 20
+    await session.flush()
+    stirred, _ = await pressure_on(ctx, town, set())
+    assert stirred == calm + 1
+
+
+def test_afterlife_strata_take_plain_names_from_their_kind() -> None:
+    assert all("Blessed" not in name and "Pits" not in name for name in STRATUM_NAMES.values())
+    assert STRATUM_NAMES[StratumKind.PARADISE] == "the paradise"

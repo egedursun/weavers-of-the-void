@@ -550,7 +550,9 @@ async def do_heal(ctx: TickContext, work: Working) -> str | None:
             wound.function_loss = max(0, wound.function_loss - restore)
     if not wounds:
         return None
-    return f"mended {several(min(len(wounds), work.magnitude), 'wound', 'wounds')}" + (f" and made {regrown} lost limbs whole" if regrown else "")
+    return f"mended {several(min(len(wounds), work.magnitude), 'wound', 'wounds')}" + (
+        f" and made {several(regrown, 'lost limb', 'lost limbs')} whole" if regrown else ""
+    )
 
 
 async def lasting(ctx: TickContext, casting: CastingRow) -> bool:
@@ -838,7 +840,7 @@ async def do_dispel(ctx: TickContext, work: Working) -> str | None:
         if other is not None and other.power < power and await lasting(ctx, casting) and await dispel(ctx, casting.rite_entity_id) is not None:
             ended += 1
     text = await dispel_force(ctx, work.caster, work.target, power)
-    return f"{text}; ended {ended} lasting rites" if ended else text
+    return f"{text}; ended {several(ended, 'lasting rite', 'lasting rites')}" if ended else text
 
 
 async def do_longevity(ctx: TickContext, work: Working) -> str | None:

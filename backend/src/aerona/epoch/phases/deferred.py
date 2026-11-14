@@ -6,6 +6,7 @@ from aerona.agents.bard import write_son_epic
 from aerona.agents.deepener import creator_deepen, creator_epic, deepen_entity, deepen_foreign_god, refresh_awakened_god
 from aerona.agents.network_repair import network_fate_repair
 from aerona.agents.world_birth import process_deferred_births, process_intuitions
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -120,7 +121,7 @@ async def launch_background(ec: EpochContext) -> None:
         elif son_id is not None:
             refreshed += spawn(key, partial(write_son_epic, runtime, son_id))
     if refreshed:
-        runtime.note(f"{refreshed} outdated epics are being rewritten in the background.")
+        runtime.note(f"{several(refreshed, 'outdated epic is', 'outdated epics are')} being rewritten in the background.")
     if rules.link_graph.fate_auto:
         spawn("network:fate", partial(network_fate_repair, runtime, automatic=True))
     await ec.mark(EpochStepKind.BACKGROUND, EpochStepStatus.DONE)

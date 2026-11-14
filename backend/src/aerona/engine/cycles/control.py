@@ -394,7 +394,7 @@ async def release_indenture(ctx: TickContext, indenture_id: int) -> int:
     row = await found(ctx, IndentureRow, indenture_id, "bond of labour")
     community_id, count = row.community_entity_id, row.count
     await ctx.session.delete(row)
-    await note(ctx, f"{count} bound labourers were released from their bond.", key="indenture.released", ids=[community_id])
+    await note(ctx, f"{several(count, 'bound labourer was', 'bound labourers were')} released from their bond.", key="indenture.released", ids=[community_id])
     await ctx.session.flush()
     return community_id
 

@@ -126,17 +126,18 @@ TENET_EFFECTS = MappingProxyType(
         T.VOID_COMMUNION: "The faithful commune with a being from outside; they and their home lose sanity and the world leaks.",
         T.FEEDING_THE_HUNGER: "The faithful make offerings that feed the being they worship.",
         T.WHISPERED_SECRETS: "The being they worship passes forbidden knowledge to their home.",
+        T.HIDDEN_GOD: "The god's silence does not shake the faith; the faithful hold that it works unseen.",
     }
 )
 
 STRATUM_NAMES = MappingProxyType(
     {
-        StratumKind.PARADISE: "the Blessed Fields",
-        StratumKind.PLAIN: "the Grey Plain",
-        StratumKind.TORMENT: "the Pits",
-        StratumKind.OBLIVION: "the Forgetting",
-        StratumKind.WARRIOR_HALL: "the Hall of the Fallen",
-        StratumKind.ANCESTOR_HALL: "the House of the Ancestors",
+        StratumKind.PARADISE: "the paradise",
+        StratumKind.PLAIN: "the middle realm",
+        StratumKind.TORMENT: "the torment",
+        StratumKind.OBLIVION: "the oblivion",
+        StratumKind.WARRIOR_HALL: "the rest of warriors",
+        StratumKind.ANCESTOR_HALL: "the rest of ancestors",
     }
 )
 

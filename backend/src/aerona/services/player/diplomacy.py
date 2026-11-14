@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.player import FEDERATION_MIN_MEMBERS
 from aerona.core.errors import ConflictError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository
@@ -250,7 +251,7 @@ async def discovery_round(scope: PlayerScope, command: DiscoveryRound) -> Effect
     world = await guards.world(scope.session, command.world_id)
     ctx = await scope.context("discovery_round")
     found = await planet_exploration(ctx, world.id)
-    result = f"{len(found)} new lands found" if found else "this time nobody found a new land"
+    result = f"{several(len(found), 'new land', 'new lands')} found" if found else "this time nobody found a new land"
     creator = await scope.creator()
     message = await hand(ctx, creator, DISCOVERY_ROUND, world_id=world.id, kind=ChronicleKind.EXPLORATION, world=world.name, result=result)
     return Effect(message, world.id, created_ids=tuple(item.land.id for item in found))

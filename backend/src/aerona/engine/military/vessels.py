@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.vehicles import FRAMES, SEA_LADDER, FrameSpec
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -199,7 +200,7 @@ async def weather_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow
         row.renown += table.renown_per_storm
     await ctx.chronicle(
         ChronicleKind.DISASTER,
-        f"{vessel.name} rode out a storm; the hull took {damage} damage and {lost} crew were lost.",
+        f"{vessel.name} rode out a storm; the hull took {damage} damage and {several(lost, 'crew member was', 'crew were')} lost.",
         template_key="seafaring.storm",
         entity_ids=(vessel.id,),
         feed_category=FeedCategory.VOYAGE,

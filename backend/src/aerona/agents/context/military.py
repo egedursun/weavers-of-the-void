@@ -146,7 +146,7 @@ async def intrigue_sheet(session: AsyncSession, community_id: int) -> list[str]:
     owned = select(SpyNetworkRow).where(or_(SpyNetworkRow.owner_entity_id == community_id, SpyNetworkRow.side_entity_id == community_id))
     for network in await session.scalars(owned):
         target = await session.get(EntityRow, network.target_entity_id)
-        revealed = f", {len(network.revealed_aims)} enemy aims known" if network.revealed_aims else ""
+        revealed = f", {several(len(network.revealed_aims), 'enemy aim', 'enemy aims')} known" if network.revealed_aims else ""
         lines.append(f"spies in {target.name if target else 'a rival'} (depth {network.depth}, intel {network.intel}{revealed})")
     for feud in await session.scalars(
         select(FeudRow).where(or_(FeudRow.first_entity_id == community_id, FeudRow.second_entity_id == community_id), FeudRow.status == FeudStatus.ACTIVE)

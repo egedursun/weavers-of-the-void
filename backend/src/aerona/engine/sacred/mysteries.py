@@ -3,16 +3,19 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import HolyOrderProfileRow
 from aerona.db.tables.faith import CultDoctrineRow, CultOfficeRow, CultTenetRow
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.db.tables.sacred import MillenarianRow, MysticRow, TheodicyCrisisRow, VisionRow
+from aerona.db.tables.sacred import FaithClimateRow, MillenarianRow, MysticRow, TheodicyCrisisRow, VisionRow
+from aerona.db.tables.storyteller import StorytellerRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger
-from aerona.domain.enums.culture import ProphecyState
+from aerona.domain.enums.culture import ProphecyState, Technique
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
@@ -21,11 +24,13 @@ from aerona.domain.enums.mind import ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.sacred import MillenarianStage, MysticState, TheodicyCause, TheodicyResolution, VisionKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import CultStats
+from aerona.engine.body.conditions import gain_condition
 from aerona.engine.collective.crowds import begin_movement
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import psi_of
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.faith.zealotry import record_heresy
+from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.thoughts import think
 from aerona.engine.notes import note
@@ -96,6 +101,7 @@ async def see_vision(ctx: TickContext, row: MysticRow, mortal: EntityRow, sender
         row.followers += round_half_up(table.followers_per_vision * stat_or(mortal, "charisma", MIDDLING) / MIDDLING)
     row.last_vision_epoch = ctx.epoch
     tally.visions += 1
+    await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.GOD if sender is not None else HarmCause.RITUAL, source_node_id=sender, announce=False)
     await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.TOUCHED_BY_A_GOD, ctx.epoch, subject_id=sender)
     await ctx.session.flush()
     return vision
@@ -123,6 +129,23 @@ async def open_to_visions(ctx: TickContext, mortal: EntityRow) -> bool:
     return values.get(ValueAxis.PIETY, 0) >= table.piety_floor
 
 
+async def contemplative(ctx: TickContext, mortal: EntityRow) -> bool:
+    town = await town_of(ctx.session, mortal)
+    if town is None:
+        return False
+    if await has_technique(ctx.session, town.id, Technique.MONASTICISM):
+        return True
+    cult = await church_of(ctx.session, town)
+    tenet = (
+        await ctx.session.scalar(
+            select(CultTenetRow.cult_entity_id).where(CultTenetRow.cult_entity_id == cult.id, CultTenetRow.tenet == TenetKind.MONASTIC_LEARNING).limit(1)
+        )
+        if cult is not None
+        else None
+    )
+    return tenet is not None
+
+
 async def answering_god(ctx: TickContext, mortal: EntityRow, key: str) -> int | None:
     god = await patron_of(ctx, mortal.id)
     if god is None or held(god) or not ctx.rng(key).chance(ctx.rules.mysticism.answer_chance):
@@ -143,7 +166,8 @@ async def seize_new(ctx: TickContext, tally: MysteryTally) -> None:
             return
         if held(mortal.id) or stat_or(mortal, "wisdom", 0) < table.wisdom_floor:
             continue
-        if not ctx.rng(f"mystic.{mortal.id}").chance(table.vision_chance) or not await open_to_visions(ctx, mortal):
+        chance = table.vision_chance * (1 + table.contemplative_pct / PERCENT if await contemplative(ctx, mortal) else 1)
+        if not ctx.rng(f"mystic.{mortal.id}").chance(chance) or not await open_to_visions(ctx, mortal):
             continue
         await become_mystic(ctx, mortal, await answering_god(ctx, mortal, f"mystic.answer.{mortal.id}"), tally)
 
@@ -237,8 +261,13 @@ async def end_prophecy(ctx: TickContext, town: EntityRow) -> ProphecyConditionRo
 
 
 async def pressure_on(ctx: TickContext, town: EntityRow, omens: set[int]) -> tuple[int, ProphecyConditionRow | None]:
+    table = ctx.rules.millenarianism
     prophecy = await end_prophecy(ctx, town)
-    pressure = (1 if await psi_of(ctx.session, town.id) >= ctx.rules.millenarianism.psi_floor else 0) + (1 if town.world_id in omens else 0)
+    pressure = (1 if await psi_of(ctx.session, town.id) >= table.psi_floor else 0) + (1 if town.world_id in omens else 0)
+    cosmos = await CosmosRepository(ctx.session).get()
+    storyteller = await ctx.session.get(StorytellerRow, town.world_id) if town.world_id is not None else None
+    pressure += 1 if cosmos is not None and cosmos.doom_clock >= table.doom_at else 0
+    pressure += 1 if storyteller is not None and storyteller.tension >= table.tension_at else 0
     return pressure + (1 if prophecy is not None else 0), prophecy
 
 
@@ -474,8 +503,12 @@ async def seek_another_way(ctx: TickContext, row: TheodicyCrisisRow, town: Entit
         tally.argued += 1
     elif rng.chance(table.doctrine_chance):
         outcome = TheodicyResolution.NEW_DOCTRINE
-        if await ctx.session.get(CultTenetRow, (cult.id, TenetKind.SACRED_SUFFERING)) is None:
-            ctx.session.add(CultTenetRow(cult_entity_id=cult.id, tenet=TenetKind.SACRED_SUFFERING, since_epoch=ctx.epoch))
+        climate = await ctx.session.get(FaithClimateRow, town.id)
+        silent = climate is not None and climate.silent_epochs >= table.silent_hidden
+        trial = await ctx.session.get(CultTenetRow, (cult.id, TenetKind.SACRED_SUFFERING))
+        tenet = TenetKind.HIDDEN_GOD if silent or trial is not None else TenetKind.SACRED_SUFFERING
+        if await ctx.session.get(CultTenetRow, (cult.id, tenet)) is None:
+            ctx.session.add(CultTenetRow(cult_entity_id=cult.id, tenet=tenet, since_epoch=ctx.epoch))
         tally.doctrines += 1
     elif rng.chance(table.conversion_chance) and row.god_node_id is not None:
         outcome = TheodicyResolution.CONVERSION

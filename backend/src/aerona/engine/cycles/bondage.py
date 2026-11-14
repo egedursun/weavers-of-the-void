@@ -312,7 +312,12 @@ async def serve_terms(ctx: TickContext, tally: BondageTally) -> None:
         tally.released += row.count
         await ctx.session.delete(row)
         if town is not None:
-            await note(ctx, f"{row.count} bound labourers of {town.name} served out their bond and went free.", key="indenture.released", ids=[town.id])
+            await note(
+                ctx,
+                f"{several(row.count, 'bound labourer', 'bound labourers')} of {town.name} served out their bond and went free.",
+                key="indenture.released",
+                ids=[town.id],
+            )
 
 
 async def slavery_lawful(ctx: TickContext, town: EntityRow) -> bool:

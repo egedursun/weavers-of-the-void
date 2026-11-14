@@ -51,6 +51,7 @@ export const TENETS: Record<string, Named> = {
   pacifism: { label: 'Pacifism', icon: Bird, tone: 'success' },
   holy_war: { label: 'Holy war', icon: Swords, tone: 'danger' },
   asceticism: { label: 'Asceticism', icon: Leaf, tone: 'muted' },
+  hidden_god: { label: 'Hidden god', icon: EyeOff, tone: 'muted' },
   sacred_suffering: {
     label: 'Sacred suffering',
     icon: HeartCrack,

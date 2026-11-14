@@ -270,5 +270,5 @@ async def missing_cosmos_prompts(runtime: AgentRuntime, ids: Sequence[int] | Non
                 row.image_prompt = text
                 written += 1
     if written:
-        runtime.note(f"{written} cosmic bodies got an image prompt.")
+        runtime.note(f"{several(written, 'cosmic body', 'cosmic bodies')} got an image prompt.")
     return written

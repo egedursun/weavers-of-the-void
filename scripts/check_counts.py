@@ -11,7 +11,11 @@ COUNT_NAMES = frozenset({"count", "total", "made", "closed", "n", "found", "clea
 IRREGULAR = frozenset({"people", "children", "men", "women", "were", "are"})
 NOT_PLURAL = frozenset({"its", "this", "was", "has", "is", "as", "us", "yes", "plus", "always", "perhaps", "less", "unless", "across", "towards", "thus"})
 WORD = re.compile(r"^ ([a-z][a-z-]*)")
+SECOND_WORD = re.compile(r"^ ([a-z][a-z-]*) ([a-z][a-z-]*)")
+LINKS = frozenset({"in", "of", "for", "to", "at", "on", "by", "from", "with", "per", "into", "than", "and", "or", "out"})
+INT_CALLS = frozenset({"len", "sum", "round", "int", "min", "max", "round_half_up", "clamp_int"})
 TEMPLATE = re.compile(r"\{(count|total|n)\} ([a-z][a-z-]*)")
+JINJA_SAME = re.compile(r"\{\{ ([a-z_]+) \}\}((?: [a-z-]+)?) \1\b")
 SPEC = re.compile(r"\{\w+:[a-z -]+\|[a-z -]+\}")
 TESTS = ROOT / "backend" / "tests"
 SCREEN = re.compile(r"\$\{([^{}`]+)\} ([a-z][a-z-]*)")
@@ -34,11 +38,44 @@ def plural(word: str) -> bool:
     return len(word) > 3 and word.endswith("s") and not word.endswith("ss") and word not in NOT_PLURAL
 
 
+def int_returning(tree: ast.Module) -> frozenset[str]:
+    return frozenset(
+        node.name
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and isinstance(node.returns, ast.Name) and node.returns.id == "int"
+    )
+
+
+def yields_int(node: ast.expr, ints: frozenset[str]) -> bool:
+    inner = node.value if isinstance(node, ast.Await) else node
+    if isinstance(inner, ast.Constant):
+        return isinstance(inner.value, int) and not isinstance(inner.value, bool)
+    if isinstance(inner, ast.Call):
+        called = inner.func.id if isinstance(inner.func, ast.Name) else inner.func.attr if isinstance(inner.func, ast.Attribute) else None
+        return called in INT_CALLS or called in ints
+    return False
+
+
+def counted_names(function: ast.AST, ints: frozenset[str]) -> frozenset[str]:
+    names: set[str] = set()
+    for node in ast.walk(function):
+        if isinstance(node, ast.Assign) and yields_int(node.value, ints):
+            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AugAssign) and isinstance(node.target, ast.Name) and isinstance(node.op, ast.Add):
+            names.add(node.target.id)
+        elif isinstance(node, ast.arg) and isinstance(node.annotation, ast.Name) and node.annotation.id == "int":
+            names.add(node.arg)
+    return frozenset(names)
+
+
+SCOPE: dict[str, frozenset[str]] = {"names": frozenset()}
+
+
 def counting(node: ast.expr) -> bool:
     if isinstance(node, ast.Call):
         return isinstance(node.func, ast.Name) and node.func.id == "len"
     if isinstance(node, ast.Name):
-        return node.id in COUNT_NAMES or node.id.endswith("_count")
+        return node.id in COUNT_NAMES or node.id.endswith("_count") or node.id in SCOPE["names"]
     if isinstance(node, ast.Attribute):
         base = node.value
         tallied = isinstance(base, ast.Name) and base.id == "tally"
@@ -64,6 +101,10 @@ def in_joined(node: ast.JoinedStr) -> list[str]:
         match = WORD.match(after.value)
         if match and plural(match.group(1)) and (counting(part.value) or named_alike(part.value, match.group(1))):
             found.append(f"{{{ast.unparse(part.value)}}} {match.group(1)}")
+            continue
+        pair = SECOND_WORD.match(after.value)
+        if pair and not plural(pair.group(1)) and pair.group(1) not in IRREGULAR | LINKS and plural(pair.group(2)) and counting(part.value):
+            found.append(f"{{{ast.unparse(part.value)}}} {pair.group(1)} {pair.group(2)}")
     return found
 
 
@@ -85,16 +126,22 @@ def verbs_after(node: ast.JoinedStr) -> list[str]:
 def in_template(node: ast.Constant) -> list[str]:
     if not isinstance(node.value, str):
         return []
-    return [f"{{{name}}} {word}" for name, word in TEMPLATE.findall(node.value) if plural(word)]
+    found = [f"{{{name}}} {word}" for name, word in TEMPLATE.findall(node.value) if plural(word)]
+    return found + [f"{{{{ {name} }}}}{between} {name}" for name, between in JINJA_SAME.findall(node.value) if plural(name)]
 
 
 def counts(files: dict[Path, str]) -> list[Count]:
     found: list[Count] = []
     for path, text in files.items():
         tree = ast.parse(text)
+        ints = int_returning(tree)
         joined_parts = {id(value) for node in ast.walk(tree) if isinstance(node, ast.JoinedStr) for value in node.values}
+        scopes = [node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
+        owner = {id(inner): scope for scope in scopes for inner in ast.walk(scope)}
         for node in ast.walk(tree):
             if isinstance(node, ast.JoinedStr):
+                scope = owner.get(id(node))
+                SCOPE["names"] = counted_names(scope, ints) if scope is not None else frozenset()
                 found.extend(Count(path, node.lineno, item) for item in in_joined(node) + verbs_after(node))
             elif isinstance(node, ast.Constant) and id(node) not in joined_parts:
                 found.extend(Count(path, node.lineno, item) for item in in_template(node))

@@ -91,7 +91,7 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     ):
         found.append(f"{an(mandate.kind.value.replace('_', ' '))} mandate stands until epoch {mandate.until_epoch}")
     for seat in await session.scalars(select(CouncilSeatRow).where(CouncilSeatRow.polity_entity_id == realm).order_by(CouncilSeatRow.seats.desc())):
-        found.append(f"{await name_of(session, seat.holder_node_id)} holds {seat.seats} council seats")
+        found.append(f"{await name_of(session, seat.holder_node_id)} holds {several(seat.seats, 'council seat', 'council seats')}")
     court = await session.get(CourtRow, realm)
     if court is not None:
         found.append(f"your court shines at grandeur {court.grandeur} with {several(court.courtiers, 'courtier', 'courtiers')}")

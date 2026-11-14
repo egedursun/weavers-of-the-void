@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.dangers import HAZARDS, HazardSpec
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyProfileRow
@@ -176,7 +177,7 @@ async def strike(
     season_name = season.name if season is not None else "a hard season"
     write = await ctx.chronicle(
         ChronicleKind.DISASTER,
-        spec.line.format(region=region.name, season=season_name.lower(), deaths=dead) + (f"; {injured} were hurt" if injured else "") + ".",
+        spec.line.format(region=region.name, season=season_name.lower(), deaths=dead) + (f"; {several(injured, 'was', 'were')} hurt" if injured else "") + ".",
         template_key=f"hazard.{hazard.value}",
         entity_ids=[region.id, *hurt_ids],
         world_id=region.world_id,
