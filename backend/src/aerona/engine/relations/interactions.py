@@ -96,7 +96,6 @@ class SocialTally:
     brawls: int = 0
     gifts: int = 0
     lessons: int = 0
-    persuaded: int = 0
     breaches: int = 0
     by_kind: dict[str, int] = field(default_factory=lambda: defaultdict(int))
 

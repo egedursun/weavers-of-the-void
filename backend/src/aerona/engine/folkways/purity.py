@@ -28,7 +28,7 @@ from aerona.engine.mind.book import values_for
 from aerona.engine.mortal.kin import close_kin_of, parents_of
 from aerona.engine.primitives.folk import folk_among
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import has_flag
 
 BEAST_WORK = frozenset({Profession.HUNTER, Profession.RIDER})
@@ -41,6 +41,7 @@ class PurityTally:
     defiled: int = 0
     purified: int = 0
     ranked: int = 0
+    reformed: int = 0
 
 
 async def sources_of(ctx: TickContext, people_id: int) -> dict[ImpuritySource, ImpuritySourceRow]:
@@ -221,7 +222,9 @@ async def purity_of(ctx: TickContext, mortal_id: int) -> PurityRow:
     return row
 
 
-async def place_in_rank(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, row: PurityRow, ranks: list[PurityRankRow]) -> None:
+async def place_in_rank(
+    ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, row: PurityRow, ranks: list[PurityRankRow], *, tally: PurityTally
+) -> None:
     if not ranks or "rank_id" in row.locked:
         return
     known = {rank.id for rank in ranks}
@@ -230,14 +233,17 @@ async def place_in_rank(ctx: TickContext, mortal: EntityRow, profile: MortalProf
         rise = ctx.rules.purity
         if profile.wealth >= rise.rise_wealth and rank is not ranks[0] and ctx.rng(seed_of("purity.rise", mortal.id, ctx.epoch)).chance(rise.rise_chance):
             row.rank_id = ranks[ranks.index(rank) - 1].id
+            tally.ranked += 1
         return
     for parent in await parents_of(ctx.session, mortal.id):
         inherited = await ctx.session.get(PurityRow, parent)
         if inherited is not None and inherited.rank_id in known:
             row.rank_id = inherited.rank_id
+            tally.ranked += 1
             return
     job = profile.profession.value if profile.profession is not None else None
     row.rank_id = next((rank.id for rank in ranks if job in rank.professions), ranks[len(ranks) // 2].id)
+    tally.ranked += 1
 
 
 async def purify(ctx: TickContext, mortal: EntityRow, row: PurityRow, methods: list[PurificationRow], tally: PurityTally) -> None:
@@ -271,6 +277,22 @@ async def defile(ctx: TickContext, row: PurityRow, source: ImpuritySourceRow, me
     tally.defiled += 1
 
 
+async def reform(ctx: TickContext, people: EntityRow, sources: dict[ImpuritySource, ImpuritySourceRow], tally: PurityTally) -> None:
+    table = ctx.rules.purity
+    value = (await values_for(ctx.session, people.id)).get(ValueAxis.PURITY, 0)
+    span = max(1, PERCENT - table.culture_from)
+    target = 0 if value < table.culture_from else table.weight_low + (value - table.culture_from) * (table.weight_high - table.weight_low) // span
+    for source, row in list(sources.items()):
+        if "weight" in row.locked:
+            continue
+        step = round_half_up((target - row.weight) * table.reform_pct / PERCENT) or (target > row.weight) - (target < row.weight)
+        row.weight = clamp_int(row.weight + step, 0, PERCENT)
+        if row.weight <= 0 and target <= 0:
+            await ctx.session.delete(row)
+            del sources[source]
+            tally.reformed += 1
+
+
 async def keep_purity(ctx: TickContext, tally: PurityTally) -> None:
     peoples = list(
         await ctx.session.scalars(
@@ -282,6 +304,8 @@ async def keep_purity(ctx: TickContext, tally: PurityTally) -> None:
             await seed_culture(ctx, people, tally)
     for people in peoples:
         sources = await sources_of(ctx, people.id)
+        if not held(people.id):
+            await reform(ctx, people, sources, tally)
         if not sources:
             continue
         methods = await methods_of(ctx, people.id)
@@ -295,7 +319,7 @@ async def keep_purity(ctx: TickContext, tally: PurityTally) -> None:
             if profile is None or held(mortal.id):
                 continue
             row = await purity_of(ctx, mortal.id)
-            await place_in_rank(ctx, mortal, profile, row, ranks)
+            await place_in_rank(ctx, mortal, profile, row, ranks, tally=tally)
             await purify(ctx, mortal, row, methods, tally)
             rng = ctx.rng(seed_of("purity.touch", mortal.id, ctx.epoch))
             touch = Touch(ctx, mortal, profile, people.id)

@@ -450,9 +450,11 @@ export function PurityPanel({
         }
       >
         <Muted variant='caption'>
-          {data.purity
-            ? `It is ${PURITY_STATES[data.purity.state].label.toLowerCase()}.`
-            : 'Its purity has not been read.'}
+          {!mortal
+            ? NOT_A_MORTAL
+            : data.purity
+              ? `It is ${PURITY_STATES[data.purity.state].label.toLowerCase()}.`
+              : 'Its purity has not been read.'}
         </Muted>
       </ForgeCard>
       <ForgeCard

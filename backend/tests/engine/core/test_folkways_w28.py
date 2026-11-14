@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.folkways_lines import mortal_folkways_lines, son_folkways_lines
 from aerona.agents.context.scope import load_scope
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.agrarian import FamineLoreRow
 from aerona.db.tables.culture import CastingRow, ItemEnchantmentRow, ItemProfileRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
@@ -25,6 +26,7 @@ from aerona.db.tables.folkways import (
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.mind import CultureValueRow, FacetRow, IdeaRow, PressureRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import OfficeRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass, RiteEffectKind
 from aerona.domain.enums.economy import CommodityKind
@@ -45,10 +47,12 @@ from aerona.domain.enums.folkways import (
 from aerona.domain.enums.justice import Verdict
 from aerona.domain.enums.mind import Attribute, Facet, IdeaKind, IdeaSource, IdeaState, PressureKind, Profession, ValueAxis
 from aerona.domain.enums.mortal import CrimeKind, LifeStage
+from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.entity_stats import ItemStats, RiteStats
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import may_wed
-from aerona.engine.folkways.biases import BiasTally, keep_biases, lean
+from aerona.engine.folkways.biases import BiasTally, keep_biases, lean, lean_community
+from aerona.engine.folkways.control import start_hunt
 from aerona.engine.folkways.mishaps import MishapTally, keep_mishaps
 from aerona.engine.folkways.nutrition import NutritionTally, keep_nutrition
 from aerona.engine.folkways.purity import PurityTally, barred_professions, keep_purity, unclean
@@ -288,3 +292,69 @@ async def test_mortals_and_gods_read_their_folkways_and_integrity_mends_dangling
     town.status, town.end_epoch = EntityStatus.DESTROYED, 4
     await session.flush()
     assert await mend_folkways_links(session, 4) >= 1
+
+
+async def test_a_ruling_council_leans_together_and_stores_against_hunger_keep_food_in_the_diet(session: AsyncSession, world: CoreWorld) -> None:
+    town, folk = await home(session, world, "Twinseat")
+    first = await mortal(session, "Ama", world, town.id)
+    second = await mortal(session, "Bel", world, town.id)
+    for ruler, weight in ((first, 100), (second, 0)):
+        session.add(profile(ruler.id))
+        session.add(BiasWeightRow(holder_node_id=ruler.id, bias=DecisionBias.RISK_SEEKING, weight=weight, last_shift=0, locked=[]))
+    await bond(session, first.id, town.id, BondKind.RULES)
+    session.add(OfficeRow(polity_entity_id=town.id, kind=OfficeKind.CHANCELLOR, holder_entity_id=second.id))
+    session.add(FamineLoreRow(people_entity_id=folk.id, memory=80, famine_foods=True, storage=100, locked=[]))
+    session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.GRAIN, quantity=50))
+    await session.flush()
+    ctx = await at(session, 3, biases={"council_pct": 50, "push_pct": 100}, nutrition={"stores_pct": 40})
+    alone = await lean(ctx, first.id, BiasedDecision.RAID)
+    together = await lean_community(ctx, town.id, BiasedDecision.RAID)
+    assert alone > together > 1.0 - 0.01
+    await keep_nutrition(ctx, NutritionTally())
+    diet = await session.get(DietRow, town.id)
+    assert diet is not None and diet.preserved == 40
+
+
+async def test_purity_rules_fade_when_the_culture_stops_valuing_purity(session: AsyncSession, world: CoreWorld) -> None:
+    _, folk = await home(session, world, "Lapsed Well", purity=-50)
+    session.add(ImpuritySourceRow(people_entity_id=folk.id, source=ImpuritySource.FOOD, weight=1, lasts=1, locked=[]))
+    session.add(ImpuritySourceRow(people_entity_id=folk.id, source=ImpuritySource.BIRTH, weight=80, lasts=1, locked=["weight"]))
+    await session.flush()
+    tally = PurityTally()
+    await keep_purity(await at(session, 3, purity={"reform_pct": 50}), tally)
+    left = {row.source for row in await session.scalars(select(ImpuritySourceRow).where(ImpuritySourceRow.people_entity_id == folk.id))}
+    assert left == {ImpuritySource.BIRTH} and tally.reformed == 1
+
+
+async def test_one_who_decides_without_a_read_character_leans_by_its_culture(session: AsyncSession, world: CoreWorld) -> None:
+    town, _ = await home(session, world, "Plainseat", martial=80, tradition=80)
+    ruler = await mortal(session, "Unread", world, town.id)
+    session.add(profile(ruler.id))
+    await bond(session, ruler.id, town.id, BondKind.RULES)
+    await session.flush()
+    tally = BiasTally()
+    await keep_biases(await at(session, 3), tally)
+    rows = list(await session.scalars(select(BiasWeightRow).where(BiasWeightRow.holder_node_id == ruler.id)))
+    assert len(rows) == len(DecisionBias) and tally.derived >= len(DecisionBias)
+
+
+async def test_a_hunt_started_by_hand_still_burns_out(session: AsyncSession, world: CoreWorld) -> None:
+    town, _ = await home(session, world, "Embersby")
+    hunt = await start_hunt(await at(session, 3), town.id, 20)
+    assert hunt.locked == []
+    await keep_witchcraft(await at(session, 4, witchcraft={"hunt_fade": 15, "hunt_accusations": 0}), WitchTally())
+    await keep_witchcraft(await at(session, 5, witchcraft={"hunt_fade": 15, "hunt_accusations": 0}), WitchTally())
+    assert hunt.fervour == 0 and hunt.ended_epoch == 5
+
+
+async def test_a_life_outside_any_town_is_fed_as_its_people_is(session: AsyncSession, world: CoreWorld) -> None:
+    town, folk = await home(session, world, "Hearthless")
+    session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.GRAIN, quantity=50))
+    wanderer = await mortal(session, "Kesh", world, world.regions[1].id)
+    wanderer.affiliated_entity_id = folk.id
+    session.add(profile(wanderer.id))
+    await session.flush()
+    await keep_nutrition(await at(session, 3), NutritionTally())
+    fed = await session.get(NutritionScoreRow, wanderer.id)
+    people = await session.get(NutritionScoreRow, folk.id)
+    assert people is not None and fed is not None and fed.updated_epoch == 3 and fed.energy == people.energy

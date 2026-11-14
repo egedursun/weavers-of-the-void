@@ -41,6 +41,8 @@ FOLKWAYS_MECHANICS = (
             Coupling(S.SOCIAL, "the elite eat better than their town and the lowest worse", E.MODIFIER, "nutrition.elite_bonus"),
             Coupling(S.ENVIRONMENT, "a long winter or eternal night starves peoples who live from light", E.MODIFIER, "nutrition.night_light"),
             Coupling(S.MAGIC, "the magic of a community feeds peoples who live from essence", E.FLOW, "nutrition.essence_per_magic"),
+            Coupling(S.COSMOS, "a long journey without fresh or preserved food leaves its travellers deficient", E.MODIFIER, "nutrition.voyage_deficiency"),
+            Coupling(S.SOCIAL, "a people's stores against hunger keep preserved food in its diet", E.FLOW, "nutrition.stores_pct"),
         ),
     ),
     Mechanic(
@@ -60,6 +62,7 @@ FOLKWAYS_MECHANICS = (
             Coupling(S.MIND, "facets and stress set each bias", E.MODIFIER, "biases.stress_pct"),
             Coupling(S.WAR, "overconfidence and sunk cost keep rulers in wars they should end", E.MODIFIER, "biases.push_pct"),
             Coupling(S.KNOWLEDGE, "strategy and tactics dampen every bias", E.MODIFIER, "biases.skill_damp_pct"),
+            Coupling(S.POLITY, "a ruling council's biases are combined with its first ruler's", E.MODIFIER, "biases.council_pct"),
         ),
     ),
     Mechanic(
@@ -81,6 +84,7 @@ FOLKWAYS_MECHANICS = (
             Coupling(S.HOUSEHOLD, "the impure and those of other ranks may not wed", E.TRIGGER, "purity.defiled_from"),
             Coupling(S.ECONOMY, "purification costs coin", E.FLOW, "purity.highest_cost"),
             Coupling(S.SOCIAL, "wealth lets a mortal rise a rank", E.TRIGGER, "purity.rise_wealth"),
+            Coupling(S.CULTURE, "purity rules strengthen or fade as the culture's values change", E.MODIFIER, "purity.reform_pct"),
         ),
     ),
     Mechanic(

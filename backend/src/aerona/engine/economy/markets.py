@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from sqlalchemy import select
 
@@ -52,7 +52,6 @@ class MarketTally:
     districts: int = 0
     priced: int = 0
     noted: int = 0
-    quotes: dict[int, dict[CommodityKind, Quote]] = field(default_factory=dict)
 
 
 def market_nodes(book: EconomyBook) -> list[EntityRow]:

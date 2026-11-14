@@ -42,6 +42,7 @@ from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.vessels import owned_vessels
 from aerona.engine.cosmos.world_types import hidden_route_method, mechanics_of, river_reaches
 from aerona.engine.economy.materials import light_fabric, rig_of
+from aerona.engine.folkways.fed import KEEPING_FOODS
 from aerona.engine.gods.economy import spend_cosmic_resource
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.knowledge import branch_level, knows
@@ -611,12 +612,23 @@ async def provision(ctx: TickContext, journey: JourneyRow, traveller: EntityRow)
         .order_by(CommunityStockRow.quantity.desc(), CommunityStockRow.id)
     )
     left = need
+    kept = 0
     for stock in stocks:
         if left <= 0:
             break
         taken = min(left, stock.quantity)
         stock.quantity -= taken
         left -= taken
+        kept += taken if stock.commodity in KEEPING_FOODS or stock.preserved > 0 else 0
+    if (
+        "passengers" not in journey.locked
+        and need > 0
+        and journey.epochs_left >= ctx.rules.nutrition.voyage_epochs
+        and kept * PERCENT < need * ctx.rules.nutrition.fresh_share
+    ):
+        loss = ctx.rules.nutrition.voyage_deficiency
+        journey.passengers = [line.model_copy(update={"condition": clamp_int(line.condition - loss, 0, PERCENT)}) for line in journey.passengers]
+        add_event(journey, ctx.epoch, JourneyEventKind.PROVISIONS, "they set out with no fresh or preserved food for so long a way")
     if left <= 0 or "passengers" in journey.locked:
         return
     journey.passengers = [line.model_copy(update={"condition": clamp_int(line.condition - table.short_condition, 0, PERCENT)}) for line in journey.passengers]

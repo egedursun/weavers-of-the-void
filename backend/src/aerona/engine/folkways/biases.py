@@ -9,6 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import BiasWeightRow
 from aerona.db.tables.mind import FACET_MAX, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -16,8 +17,9 @@ from aerona.domain.enums.folkways import BiasedDecision, DecisionBias
 from aerona.domain.enums.mind import Facet, SkillKind
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import living_gods
+from aerona.engine.mind.book import load_holder
 from aerona.engine.mind.drives import rulers_of
-from aerona.engine.mind.split import facets_of
+from aerona.engine.mind.split import culture_mean, facets_of, has_facets
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 
 MIDDLE = 50
@@ -111,7 +113,6 @@ DECIDING = frozenset({BondKind.RULES, BondKind.COMMANDS})
 @dataclass
 class BiasTally:
     derived: int = 0
-    leaned: int = 0
 
 
 def derived_weight(facets: Mapping[Facet, int], bias: DecisionBias, stress: int, stress_pct: int) -> int:
@@ -134,6 +135,9 @@ async def derive(ctx: TickContext, node_id: int, tally: BiasTally) -> dict[Decis
     table = ctx.rules.biases
     found = await weights_of(ctx, node_id)
     facets = await facets_of(ctx.session, node_id)
+    if not facets:
+        holder = await load_holder(ctx.session, node_id)
+        facets = await culture_mean(ctx.session, ctx.rules, holder) if holder is not None and has_facets(holder) else {}
     if not facets:
         return found
     profile = await ctx.session.get(MortalProfileRow, node_id)
@@ -175,9 +179,27 @@ async def lean(ctx: TickContext, node_id: int | None, decision: BiasedDecision) 
     return max(0.0, 1 + total / PERCENT)
 
 
+async def council_of(ctx: TickContext, community_id: int, ruler_id: int) -> list[int]:
+    realm = community_id if await ctx.session.scalar(select(OfficeRow.id).where(OfficeRow.polity_entity_id == community_id).limit(1)) else None
+    realm = realm or await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id).limit(1))
+    if realm is None:
+        return []
+    holders = await ctx.session.scalars(
+        select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == realm, OfficeRow.holder_entity_id.is_not(None)).order_by(OfficeRow.id)
+    )
+    return sorted({int(holder) for holder in holders if holder is not None and holder != ruler_id})
+
+
 async def lean_community(ctx: TickContext, community_id: int, decision: BiasedDecision) -> float:
     rulers = await rulers_of(ctx.session, community_id)
-    return await lean(ctx, rulers[0].id if rulers else None, decision)
+    if not rulers:
+        return 1.0
+    first = await lean(ctx, rulers[0].id, decision)
+    council = [await lean(ctx, member, decision) for member in await council_of(ctx, community_id, rulers[0].id)]
+    if not council:
+        return first
+    share = ctx.rules.biases.council_pct / PERCENT
+    return first * (1 - share) + sum(council) / len(council) * share
 
 
 async def deciders(ctx: TickContext) -> list[int]:

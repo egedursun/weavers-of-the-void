@@ -7,11 +7,13 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import CharmRow, LuckBeliefRow, NutritionScoreRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.folkways import CharmPower, LuckReach
 from aerona.engine.body.customs import people_of
 from aerona.rules.registry import Rules
 
 SCORE_TABLES = frozenset({NutritionScoreRow.__tablename__})
+KEEPING_FOODS = frozenset({CommodityKind.FRUIT, CommodityKind.HERBS, CommodityKind.CHEESE})
 CHARM_TABLES = frozenset({CharmRow.__tablename__, BondRow.__tablename__})
 
 

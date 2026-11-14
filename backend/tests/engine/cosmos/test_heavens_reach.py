@@ -291,9 +291,35 @@ async def test_a_journey_takes_food_for_the_way_and_tells_what_it_crossed(ctx: T
         scope=RouteScope.INTERGALACTIC,
     )
     await provision(ctx, journey, traveller)
-    assert [event.kind for event in journey.events] == [JourneyEventKind.PROVISIONS]
+    assert [event.kind for event in journey.events] == [JourneyEventKind.PROVISIONS, JourneyEventKind.PROVISIONS]
+    assert any("no fresh or preserved food" in event.text for event in journey.events)
     assert journey.passengers[0].condition < 100
     assert "crossing" in await crossing_text(ctx, journey)
+
+
+async def test_a_long_journey_with_fresh_stores_keeps_its_travellers_whole(ctx: TickContext, cosmos: Cosmos) -> None:
+    await ensure_ladder(ctx.session, ctx.rules)
+    traveller = await make_entity(ctx.session, "Orchard Folk", EntityType.PEOPLE, PeopleStats(population=100), world_id=cosmos.home.id)
+    ctx.session.add(CommunityStockRow(community_entity_id=traveller.id, commodity=CommodityKind.FRUIT, quantity=100000))
+    other = await make_world(ctx.session, "Green Reach")
+    route = await make_route(ctx.session, cosmos.home.id, other.id)
+    await ctx.session.flush()
+    journey = JourneyRow(
+        traveller_entity_id=traveller.id,
+        route_id=route.id,
+        origin_world_id=cosmos.home.id,
+        destination_world_id=other.id,
+        intent=JourneyIntent.COLONY,
+        population=100,
+        epochs_left=5,
+        start_epoch=ctx.epoch,
+        events=[],
+        passengers=[PassengerLine(community_entity_id=traveller.id, social_class=SocialClass.FARMER, count=100)],
+        locked=[],
+        scope=RouteScope.INTERGALACTIC,
+    )
+    await provision(ctx, journey, traveller)
+    assert journey.events == [] and journey.passengers[0].condition == 100
 
 
 async def test_a_void_ark_needs_high_sky_lore_and_a_filament_lane_needs_a_filament(ctx: TickContext, cosmos: Cosmos) -> None:

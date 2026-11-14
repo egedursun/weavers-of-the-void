@@ -29,6 +29,9 @@ class NutritionRules:
     childhood_mean: int = rule(60, 0, 100, P, "Childhood nutrition at which an adult grows to the stature of its kind")
     stature_pct: int = rule(25, 0, 100, P, "Strength and toughness an adult gains or loses for each point of childhood nutrition above or below the mean (%)")
     deficiency_health: int = rule(3, 0, 100, P, "Health a mortal loses each epoch to a deficient diet")
+    voyage_epochs: int = rule(3, 1, 100, P, "Epochs of a journey from which food without fresh or preserved stores leaves its travellers deficient")
+    voyage_deficiency: int = rule(15, 0, 100, P, "Condition travellers lose to a long journey without fresh or preserved food")
+    stores_pct: int = rule(50, 0, 100, P, "Share of a people's food stores against hunger that counts as preserved food in its towns' diets (%)")
     fertility_pct: int = rule(
         50, 0, 100, P, "Share of the chance of a birth lost for each point of the bearer's nutrition below being well fed, in hundredths (%)"
     )
@@ -39,6 +42,7 @@ class BiasRules:
     push_pct: int = rule(30, 0, 100, M, "Most a single bias at its strongest shifts the chance of a decision (%)")
     drift_pct: int = rule(25, 0, 100, M, "Share of the gap to the weight its character implies that a bias closes each epoch (%)")
     stress_pct: int = rule(20, 0, 100, M, "Bias weight added by each point of stress, in hundredths (%)")
+    council_pct: int = rule(50, 0, 100, M, "Weight of the rest of a ruling council against its first ruler when their biases are combined (%)")
     skill_damp_pct: int = rule(8, 0, 100, M, "Share of every bias that each level of strategy or tactics takes off (%)")
 
 
@@ -58,6 +62,13 @@ class PurityRules:
     impure_professions: int = rule(3, 0, 25, R, "Professions a culture without castes counts as impure")
     food_chance: int = rule(10, 0, 100, R, "Chance each epoch that a mortal eats a food its culture counts as impure (%)")
     rise_wealth: int = rule(70, 0, 100, R, "Wealth from which a mortal may rise a caste rank")
+    reform_pct: int = rule(
+        10,
+        0,
+        100,
+        R,
+        "Share of the gap to what its culture now values that each source of impurity closes each epoch; sources a culture no longer keeps fade away (%)",
+    )
     rise_chance: int = rule(5, 0, 100, R, "Chance each epoch that a mortal with that wealth rises a caste rank (%)")
 
 

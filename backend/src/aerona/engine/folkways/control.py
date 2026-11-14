@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.entities import EntityRow
@@ -100,6 +101,8 @@ async def read_biases(ctx: TickContext, holder_id: int) -> int:
     await node_exists(ctx, holder_id, "holder")
     tally = BiasTally()
     rows = await derive(ctx, holder_id, tally)
+    if not rows:
+        raise ValidationFailedError("It has no character to read biases from; only mortals and gods decide.")
     await ctx.session.flush()
     return len(rows)
 
@@ -215,10 +218,7 @@ async def start_hunt(ctx: TickContext, town_id: int, fervour: int) -> WitchHuntR
     town = await of_type(ctx, town_id, TOWNS, "a town")
     if await ctx.session.scalar(select(WitchHuntRow.id).where(WitchHuntRow.settlement_entity_id == town.id, WitchHuntRow.ended_epoch.is_(None))) is not None:
         raise ValidationFailedError(f"A witch hunt already burns in {town.name}.")
-    row = await saved(ctx, WitchHuntRow(settlement_entity_id=town.id, started_epoch=ctx.epoch, locked=[]))
-    apply(row, {"fervour": fervour}, [])
-    await ctx.session.flush()
-    return row
+    return await saved(ctx, WitchHuntRow(settlement_entity_id=town.id, fervour=max(0, min(PERCENT, fervour)), started_epoch=ctx.epoch, locked=[]))
 
 
 EDITABLE: dict[str, tuple[type[Base], tuple[str, ...], str]] = {

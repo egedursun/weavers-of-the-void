@@ -33,7 +33,6 @@ class RoomTally:
     furnished: int = 0
     rooms: int = 0
     holders: int = 0
-    delves: int = 0
     cleared: int = 0
 
 

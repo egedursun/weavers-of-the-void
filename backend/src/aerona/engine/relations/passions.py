@@ -37,7 +37,6 @@ class PassionTally:
     kindled: int = 0
     faded: int = 0
     stirred: int = 0
-    broke: int = 0
 
 
 async def passions_of(session: AsyncSession, holder_id: int) -> list[PassionRow]:

@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ages import IrregularSeasonRow
+from aerona.db.tables.agrarian import FamineLoreRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
@@ -101,7 +102,9 @@ async def derive_diet(ctx: TickContext, town: EntityRow, row: DietRow) -> None:
         if share not in row.locked:
             setattr(row, share, clamp_int(shares.get(share, 0), 0, PERCENT))
     if "preserved" not in row.locked:
-        row.preserved = clamp_int(round_half_up(preserved * PERCENT / food) if food else 0, 0, PERCENT)
+        lore = await ctx.session.get(FamineLoreRow, town.affiliated_entity_id) if town.affiliated_entity_id is not None else None
+        stored = lore.storage * ctx.rules.nutrition.stores_pct // PERCENT if lore is not None else 0
+        row.preserved = clamp_int(max(round_half_up(preserved * PERCENT / food) if food else 0, stored), 0, PERCENT)
     if "special" not in row.locked:
         row.special = clamp_int(round_half_up(sum(goods.get(kind, 0) for kind in SPECIAL) * PERCENT / food) if food else 0, 0, PERCENT)
     if "energy" not in row.locked:
@@ -244,4 +247,34 @@ async def keep_nutrition(ctx: TickContext, tally: NutritionTally) -> None:
             if name not in row.locked:
                 setattr(row, name, round_half_up(sum(getattr(item, name) for item in rows) / len(rows)))
         row.updated_epoch = ctx.epoch
+    await feed_the_unhoused(ctx, tally)
     await ctx.session.flush()
+
+
+async def feed_the_unhoused(ctx: TickContext, tally: NutritionTally) -> None:
+    peoples = list(
+        await ctx.session.scalars(
+            select(EntityRow).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+        )
+    )
+    for people in peoples:
+        if not held(people.id):
+            await needs_of(ctx, people)
+    await ctx.session.flush()
+    fed = select(NutritionScoreRow.holder_node_id).where(NutritionScoreRow.updated_epoch == ctx.epoch)
+    for mortal in list(
+        await ctx.session.scalars(
+            select(EntityRow)
+            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(fed))
+            .order_by(EntityRow.id)
+        )
+    ):
+        if held(mortal.id):
+            continue
+        folk = await people_of(ctx.session, mortal)
+        if folk is None and mortal.affiliated_entity_id is not None:
+            kin = await ctx.session.get(EntityRow, mortal.affiliated_entity_id)
+            folk = kin if kin is not None and kin.entity_type is EntityType.PEOPLE else None
+        source = await ctx.session.get(NutritionScoreRow, folk.id) if folk is not None else None
+        if source is not None and source.updated_epoch == ctx.epoch:
+            await feed_mortal(ctx, mortal, source, tally)

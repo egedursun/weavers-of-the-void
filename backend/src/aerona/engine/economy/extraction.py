@@ -73,7 +73,6 @@ class ExtractionTally:
     output: int = 0
     hazards: int = 0
     sealed: int = 0
-    exhausted: int = 0
     gated: int = 0
 
 

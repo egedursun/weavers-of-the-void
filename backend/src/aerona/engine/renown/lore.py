@@ -32,7 +32,6 @@ SEEKERS = frozenset({EntityType.FACTION, EntityType.CULT, EntityType.BEAST, Enti
 @dataclass
 class LoreTally:
     trades: int = 0
-    confided: int = 0
     value: int = 0
 
 
