@@ -91,6 +91,10 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "biochemistry": "What its life is built on: {{ biochemistries | join(', ') }}; it lives only on worlds that bear that kind of life, though void and spirit life live anywhere",
         "growth_cycle": "For a plant or fungus, how it grows: {{ growth_cycles | join(', ') }}",
         "plant_yields": "For a plant or fungus, what its harvest gives: {{ plant_yields | join(', ') }}",
+        "dormancy": "Whether it sleeps through a season: {{ dormancies | join(', ') }}; a sleeping kind neither raids nor feeds hunters then",
+        "thermoregulation": "Its blood: {{ thermoregulations | join(', ') }}; cold-blooded kinds slow in the cold, warm-blooded ones eat more in it",
+        "plant_defence": "For a plant or fungus, how it defends itself: {{ plant_defences | join(', ') }}",
+        "defence_potency": "For a plant or fungus with a defence, how strong it is, 0 to 100",
     },
     EntityType.BEAST: {
         "species_id": "The kind it is the greatest of (species id), if any; it takes that kind's body, yields and lifespan",

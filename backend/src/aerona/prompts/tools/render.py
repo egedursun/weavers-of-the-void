@@ -64,6 +64,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmourType, Formation, ShieldType
 from aerona.domain.enums.mind import Emotion
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, ServitorRole
+from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
 from aerona.domain.enums.operations import EchelonOrder, QuirkKind
 from aerona.domain.enums.place import PlaceKind, SecretKind
 from aerona.domain.enums.polity import LawKind
@@ -219,6 +220,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "biochemistries": [kind.value for kind in Biochemistry],
         "growth_cycles": [kind.value for kind in GrowthCycle],
         "plant_yields": [kind.value for kind in PlantYield],
+        "dormancies": [kind.value for kind in Dormancy],
+        "thermoregulations": [kind.value for kind in Thermoregulation],
+        "plant_defences": [kind.value for kind in PlantDefence],
         "breath_kinds": [kind.value for kind in BreathKind],
         "gaze_kinds": [kind.value for kind in GazeKind],
         "temperaments": [kind.value for kind in Temperament],

@@ -43,6 +43,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import VesselArmament
 from aerona.domain.enums.mind import ActKind, TraitKind
 from aerona.domain.enums.mortal import MortalSex
+from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
@@ -120,6 +121,10 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "biochemistry": (Biochemistry | None, None),
             "growth_cycle": (GrowthCycle | None, None),
             "plant_yields": (list[PlantYield] | None, None),
+            "dormancy": (Dormancy | None, None),
+            "thermoregulation": (Thermoregulation | None, None),
+            "plant_defence": (PlantDefence | None, None),
+            "defence_potency": (Annotated[int, Field(ge=0, le=100)] | None, None),
         },
         EntityType.BEAST: {
             "species_id": (int | None, None),

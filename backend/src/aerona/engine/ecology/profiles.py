@@ -33,6 +33,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag
 from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
@@ -104,6 +105,10 @@ PEST_HUNTERS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE})
 LAYERS = frozenset({P.AVIAN, P.SERPENTINE, P.AQUATIC, P.INSECTOID})
 
 
+COLD_PLANS = frozenset({BodyPlan.SERPENTINE, BodyPlan.INSECTOID, BodyPlan.AQUATIC})
+SLEEPERS = frozenset({SizeClass.TINY, SizeClass.SMALL, SizeClass.MEDIUM})
+
+
 @dataclass(frozen=True)
 class SpeciesSpec:
     body_plan: BodyPlan | None = None
@@ -117,6 +122,10 @@ class SpeciesSpec:
     biochemistry: Biochemistry | None = None
     growth_cycle: GrowthCycle | None = None
     plant_yields: tuple[PlantYield, ...] = ()
+    dormancy: Dormancy | None = None
+    thermoregulation: Thermoregulation | None = None
+    plant_defence: PlantDefence | None = None
+    defence_potency: int | None = None
 
 
 @dataclass(frozen=True)
@@ -333,6 +342,10 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
         habitat |= {kind.value: ctx.rules.habitat.water_fit for kind in WATER}
     temperature = land.temperature if land is not None else table.default_temperature
     elevation = land.elevation_mean if land is not None else 0
+    seasonal = land is not None and land.seasonality >= ctx.rules.dormancy.seasonal_at and size in SLEEPERS and not nature.migratory
+    sleep = Dormancy.NONE
+    if seasonal and nature.species_class not in GROWN:
+        sleep = Dormancy.HIBERNATION if temperature < ctx.rules.environment.temperate_below else Dormancy.AESTIVATION
     row = SpeciesProfileRow(
         species_entity_id=species.id,
         species_class=nature.species_class,
@@ -353,6 +366,8 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
         altitude_max=elevation + table.altitude_band,
         nocturnal=nature.nocturnal,
         migratory=nature.migratory,
+        dormancy=chosen.dormancy or sleep,
+        thermoregulation=chosen.thermoregulation or (Thermoregulation.ECTOTHERM if nature.plan in COLD_PLANS else Thermoregulation.ENDOTHERM),
         migration_path=[],
         aggression=clamp_int(danger, 0, PERCENT),
         territoriality=clamp_int(danger // 2 + table.territory_base, 0, PERCENT),
@@ -369,7 +384,10 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
     ctx.session.add(row)
     if nature.species_class in GROWN:
         cycle = cycle_of(chosen, nature, row.lifespan_years)
-        add_plant_profile(ctx, species.id, cycle)
+        plant = add_plant_profile(ctx, species.id, cycle)
+        if chosen.plant_defence is not None:
+            plant.defence = chosen.plant_defence
+            plant.defence_potency = chosen.defence_potency if chosen.defence_potency is not None else ctx.rules.plant_defences.default_potency
         products = plant_products(nature, cycle, chosen.plant_yields)
         kept = plant_uses(might, table.mighty)
     else:

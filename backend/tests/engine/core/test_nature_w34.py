@@ -11,6 +11,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.nature import FermentCultureRow, SenseProfileRow, SoilMicrobiotaRow, SpeciesRelationRow
+from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.ecology import Diet, SizeClass, SpeciesClass
@@ -20,6 +21,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.nature import Dormancy, FermentKind, PlantDefence, SenseKind, SymbiosisKind, Thermoregulation
 from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.nature.cover import defence_cover, grazing, passage, smothered
 from aerona.engine.nature.islands import IslandTally, drifted_size, keep_islands, spared_kinds
 from aerona.engine.nature.microbes import MicrobeTally, culture_lift, keep_microbes, microbe_factor
@@ -178,3 +180,24 @@ async def test_a_mortal_reads_its_people_s_senses_and_its_town_s_cultures(sessio
     await session.flush()
     lines = await mortal_nature_lines(await load_scope(session, tuned_rules()), me)
     assert any("hearing 80" in line for line in lines) and any("yeast culture" in line for line in lines)
+
+
+async def test_a_new_kind_takes_its_sleep_blood_and_defence_from_its_maker_or_its_home(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    region = world.regions[0].id
+    ground = await land(session, region)
+    ground.seasonality = 90
+    ground.temperature = 10
+    await session.flush()
+    serpent = await entity(session, "Fen Adder", EntityType.SPECIES, SpeciesStats(hp=20, intelligence=10), world_id=world.world.id, location_id=region)
+    profile = await profile_of(ctx, serpent, SpeciesSpec(body_plan=BodyPlan.SERPENTINE, size_class=SizeClass.SMALL, diet=Diet.CARNIVORE))
+    assert profile.thermoregulation is Thermoregulation.ECTOTHERM and profile.dormancy is Dormancy.HIBERNATION
+    thorn = await entity(session, "Hook Thorn", EntityType.SPECIES, SpeciesStats(hp=5, intelligence=0), world_id=world.world.id, location_id=region)
+    spec = SpeciesSpec(
+        body_plan=BodyPlan.ARBOREAL, size_class=SizeClass.MEDIUM, diet=Diet.PHOTOSYNTHETIC, species_class=SpeciesClass.PLANT, plant_defence=PlantDefence.THORNS
+    )
+    grown = await profile_of(ctx, thorn, spec)
+    await session.flush()
+    plant = await session.get(PlantProfileRow, thorn.id)
+    assert grown.dormancy is Dormancy.NONE and plant is not None and plant.defence is PlantDefence.THORNS
+    assert plant.defence_potency == ctx.rules.plant_defences.default_potency

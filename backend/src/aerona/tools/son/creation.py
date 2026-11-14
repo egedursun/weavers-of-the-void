@@ -296,6 +296,10 @@ def species_spec(args: CreationInput) -> SpeciesSpec:
         biochemistry=args.option("biochemistry"),
         growth_cycle=args.option("growth_cycle"),
         plant_yields=tuple(dict.fromkeys(args.option("plant_yields") or [])),
+        dormancy=args.option("dormancy"),
+        thermoregulation=args.option("thermoregulation"),
+        plant_defence=args.option("plant_defence"),
+        defence_potency=args.option("defence_potency"),
     )
 
 

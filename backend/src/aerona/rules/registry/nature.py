@@ -50,6 +50,7 @@ class SymbiosisRules:
 @dataclass(frozen=True)
 class DormancyRules:
     disturb_chance: int = rule(10, 0, 100, C, "Chance a sleeping aggressive kind is woken by the folk of a crowded land in an epoch (%)")
+    seasonal_at: int = rule(20, 0, 100, C, "Seasonality of its home land from which a small kind that stays put sleeps through its harshest season")
     disturb_aggression: int = rule(50, 0, 100, C, "Aggression from which a sleeping kind wakes hungry when disturbed")
     disturb_population: int = rule(3000, 0, 1000000, C, "Folk a land holds before its hunters and woodcutters disturb the sleepers there")
     woken_raid_pct: int = rule(200, 100, 500, C, "Chance of raiding a woken kind has, against its usual chance (%)")
@@ -82,6 +83,7 @@ class SenseRules:
 
 @dataclass(frozen=True)
 class PlantDefenceRules:
+    default_potency: int = rule(50, 0, 100, E, "Potency a plant's defence takes when its maker names the defence but not its strength")
     thorn_passage_pct: int = rule(30, 0, 100, E, "Share of a land's passage thorns take where they cover all of it, at full potency (%)")
     thorn_grazing_pct: int = rule(40, 0, 100, E, "Share of grazing thorns spoil where they cover all of a land, at full potency (%)")
     toxin_forage_pct: int = rule(30, 0, 100, E, "Share of what foragers take that toxic plants spoil where they cover all of a land, at full potency (%)")
