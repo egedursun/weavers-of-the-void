@@ -1,6 +1,6 @@
-# 16 — Made Minds, Innate Powers, Living Craft, the Depth Pass, Typed Kinds, the Record of Events and Every Facet of Life (W44–W50)
+# 16 — Made Minds, Innate Powers, Living Craft, the Depth Pass, Typed Kinds, the Record of Events, Every Facet of Life and the Orders of Economy and State (W44–W51)
 
-This spec adds seven waves to the lore engine:
+This spec adds eight waves to the lore engine:
 
 - **W44 Made minds and the information age.** Minds that live in made things or in no body at all; copies, saves, transfers and merges of minds; augmented bodies; networks, intrusion, surveillance and information conflict; corporations and private power; self-making machines; abundance; and the collapse of high making into relics and salvage.
 - **W45 Innate powers, power sources and concealment.** Powers that belong to a being rather than to a learned rite (the psionic class and every other inborn, awakened, granted or bonded power); an open model of power sources that any world can author; magic systems as typed world structures; and hidden truths kept from the public (the masquerade class), with breach, revelation and forgetting.
@@ -9,6 +9,7 @@ This spec adds seven waves to the lore engine:
 - **W48 Typed kinds.** Every concept a world can define in its own terms: a neutral category enum plus authored kinds with typed properties for goods, food, drink, dress, colour, scent, household goods, tools, instruments, games, substances, money, professions, ranks, titles, clergy, organisations, kinship, traditions, art, tenets, fears, goals and the cosmos; a property catalogue for every content enum; one taxonomy per concept; every value that carries an image or a gender renamed; and guards for all of it.
 - **W49 The record of events.** Every happening of every kind kept and told in full: incident kinds with typed roles and facts, the steps of every process, every change of every value with its before, after and terms, in-world moments and exact places, true causes, witnesses and rumours told from the record, the past of any record at any moment, and nothing ever folded away or cut.
 - **W50 Every facet of life at depth.** A closed audit against the 689 world-content subcategories of the Outline of Cultural Materials, the 572 registered mechanics and the depth metric. It adds thirteen families of life no section carried at depth (population policy, recorded and mass media, commerce practice, public works and state enterprise, daily life and time, kin duties and kin groups, folk knowledge, intimacy norms and the course of reproduction, childhood and socialization, endowments, youth, death work, humour and public speech). It gives behaviour to 100 facets that had kinds only, couples every isolated mechanic and brings every node type to its depth target.
+- **W51 Orders of the economy, institutions of states, and the gaps found by search.** An open search over 1,197 concept patterns, the 693 Dewey sections, human universals, other genres' core mechanics and the lifecycle, scale and actor axes found 30 gaps the fixed lists of W50 could not name. W51 closes them in 27 sections: economic orders and their transitions, the inner life of organisations, market structure, organised labour, monetary authorities, securities, leagues of polities, city rules and services, protected nature, leaving office, referendums, reckoning after a regime, cults of living leaders, restoration of fallen polities, occupation regimes, weapons of mass harm and war remnants, war and migration between worlds, family dynamics, the spread of feeling, interpretation, grave goods, conditions without an agent, fertility control, honours, sea waves, creature societies and conceptions of the divine.
 
 Every wave is written to be integrated completely, under the completion contract of spec 13 J.19 and the standing rules of `CLAUDE.md`. Nothing here is label-only, optional or deferred.
 
@@ -26,10 +27,10 @@ Spec 13 and the waves through W43 built a deep pre-modern, magical and cosmic wo
 
 ### 0.2 Numbering and placement
 
-- **Waves.** W1–W41 are planned in spec 13 Part J; W42 (breadth across settings, 10.18) and W43 (genesis from the seed, 10.19) were added later and are done. The waves of this spec are **W44**, **W45**, **W46**, **W47**, **W48**, **W49** and **W50**.
+- **Waves.** W1–W41 are planned in spec 13 Part J; W42 (breadth across settings, 10.18) and W43 (genesis from the seed, 10.19) were added later and are done. The waves of this spec are **W44**, **W45**, **W46**, **W47**, **W48**, **W49**, **W50** and **W51**.
 - **Identifiers continue spec 13's series** so that no identifier is shared:
   - shared foundations **F50–F56** (spec 13 ends at F49);
-  - wave sections **44.1…**, **45.1…**, **46.1…**, **47.0…**, **48.0…**, **49.0…**, **50.0…**, and the foundations **F57** and **F58**;
+  - wave sections **44.1…**, **45.1…**, **46.1…**, **47.0…**, **48.0…**, **49.0…**, **50.0…**, **51.0…**, and the foundations **F57** and **F58**;
   - reference lanes **R43–R53** (spec 13 ends at R42);
   - couplings **C10…** (spec 13 ends at C9);
   - feedback loops **L79…** (spec 13 ends at L78);
@@ -49,6 +50,7 @@ Spec 13 and the waves through W43 built a deep pre-modern, magical and cosmic wo
 8. **Flexibility, never bias.** These waves widen what a world can become. They must not pull every world toward their own images (0.5).
 9. **W49** (decided the same day) keeps every happening of every kind in full: typed facts, roles, steps, every change before and after with its terms, exact moments and places, causes, witnesses and the past at any moment, all kept for ever (Part 9, K.42).
 10. **W50** (decided the same day) closes the granularity left inside existing mechanics by a closed audit on fixed lists (Part 10, K.46).
+11. **W51** (decided the same day) closes every gap found by the open search of 51.0, each built on what exists and on what spec 13 plans, so nothing is built twice (Part 11, K.50–K.53).
 
 ### 0.4 Ground rules carried into every section
 
@@ -133,6 +135,10 @@ Some pieces of spec 13 that these waves touch are still planned. The rule is: **
 | Fossil beds and their readings | spec 13 6.2 reference pass 7 (planned) | whichever wave runs first builds it fully | W50 50.27 adds preservation, richness, fossil fuels and revival |
 | Flares and auroras | spec 13 10.1 reference pass | whichever wave runs first builds it fully | W50 50.22 makes the flare one space weather kind and adds fields, shielding, storms, outages and compass error |
 | Climate oscillations and their prediction | spec 13 10.7 reference pass 5 | whichever wave runs first builds it fully | W50 50.28 types forecasting methods |
+| Economic systems per polity | spec 13 4.6 reference pass 6 (W35, planned) | whichever wave runs first builds it fully | W51 51.1 types the system as four axes per polity or sector; the five systems become rows of `economic_order_kinds` |
+| Exchange rates, money changers, bills of exchange | spec 13 6.4 reference pass 6 (W35, planned) | whichever wave runs first builds it fully | W50 50.3 keeps the rates on one table with spreads; W51 51.5 pegs and monetary authorities read them |
+| Named units and battle honours | spec 13 5.1 reference pass 6 (planned) | whichever wave runs first builds it fully | W51 51.24 honours conferred on persons share the conferral model; units hold battle honours as honours |
+| Performance troupes | spec 13 7.4 reference pass (faction kind `troupe`, planned) | built by spec 13 | W51 51.2 governance and 51.4 labour reach troupes as organisations |
 | Sympathy, material magic, emotion spirits | W30 (planned); sympathy and material affinity in 8.6 reference pass 5 | W45 builds the emotion source and the link modifier if absent | |
 | Identity layers and salience | F43 (W32, planned) | W44 adds the `made` and `augmented` identity facets, W45 the `gifted` facet, W46 the `designed` facet, each on F43's model if built, else as typed columns that F43 later absorbs through a fixup | |
 | Purity and castes | F41 (W28, planned) | W45 and W46 read purity only if F41 exists; their own stances are typed doctrine columns | |
@@ -2015,6 +2021,7 @@ The sweeps of 6.1–6.6 searched for what might be missing, so each new question
 | Facets of life (OCM subcategories) | 689 | — | 104 label-only, 77 absent, 241 partial | W50 (Part 10, Appendix 50.A, `check_ocm_coverage.py`) |
 | Registered mechanics | 572 | — | 102 with at most one coupling | W50 50.14, `check_mechanic_couplings.py` |
 | Node types at depth | 51 | — | 23 below target, 7 read by nothing | W50 50.15, `depth_metric.py check` |
+| Open search for what the fixed lists cannot name | 1,197 concept patterns, 693 Dewey sections, 103 human universals, genre mechanics, lifecycle, scale and actor axes | — | 30 gaps: one planned in spec 13, the rest absent | W51 (Part 11, 51.0) |
 
 **Model context.** F58.12 keeps every record. The model receives records through retrieval (paged reads and the `recall_event` tool), never through silent truncation, because no context holds an unbounded history.
 
@@ -3444,6 +3451,8 @@ Every family below follows the ground rules of 0.4 and 0.5: concepts by function
 
 ### 50.3 Commerce practice
 
+**Builds on.** Spec 13 6.4 reference pass 6 plans exchange rates between currencies that follow purity, trust, money supply and trade balance, money changers who profit on spreads, and bills of exchange (W35, planned). Whichever wave runs first builds them fully (0.7); `exchange_rates` below is that table, not a second copy.
+
 **Current.** Markets, prices, trade routes, credit, banking, insurance, speculation, brands and workshops exist. Goods move between producers and markets in one step, with no wholesale or retail tier, no shop, no promotion, no rent of things and no exchange between currencies.
 
 **State.**
@@ -4743,9 +4752,1491 @@ What is specific to each section follows.
 - AS62 **The Silted Port.** A river's sediment silts a trading port; the realm cannot pay for dredging; trade moves to a delta town; the old port's guilds decline.
 - AS63 **The Wrong Cure.** A people treats a bacterial sickness with rites, as its theory of disease holds; the sickness spreads; a neighbour's antimicrobial cures it; the theory falls and the faith's healers lose standing.
 
+## Part 11. W51 — Orders of the economy, institutions of states, and the gaps found by search
+
+### 51.0 Scope and the search behind it
+
+W50 closed every gap that three fixed lists could name (the OCM, the UNESCO nomenclature and the motif index). W51 closes what those lists could not name: a question about economic orders and the inner workings of companies showed that a facet can be present in a list's wording and still be missing as a mechanic. An open search followed on 2026-11-14. Every candidate concept was matched against every table, column, enum value, engine and catalogue module, agent tool and god lever, and against the text of spec 13 and this spec, with synonyms. Every candidate that matched nothing was searched again under other names before it was counted.
+
+**Lists and axes searched.**
+
+| Source | Size | What it checks |
+|---|---:|---|
+| Candidate lists of concepts from economics, politics, law, war, faith, society, body, nature and the cosmos | 1,197 patterns in 13 lists | each concept by name and synonyms |
+| The Dewey Decimal Classification | 693 sections | every field of knowledge a world can hold |
+| Human universals (the Brown list and its successors) | 103 items | every trait found in all known societies |
+| Core mechanics of other genres (grand strategy, city builders, management, colony sims, roguelikes, 4X) | one pass per genre | every mechanic a genre is known for |
+| Lifecycle axis | 43 entity kinds | founding, splitting, merging, changing hands, falling and reviving for each |
+| Scale axis | person, household, settlement, polity, world, system, galaxy, cosmos | the same mechanic at every scale |
+| Actor axis | mortals, organisations, polities, sons, foreign gods, the Creator, made minds, creatures, the dead | each verb for each actor |
+| Typologies | governments, organisations, institutions, offices | each kind against the enums |
+
+**Results.** Almost every candidate exists, under its own name or another (strikes are a collective act kind, companies have shares and dividends, interpreters are a rule set and a skill, game reserves and poaching are built, fire brigades and urban morphology are built, elections are built). Thirty gaps were found. While this part was written, each was checked again against spec 13:
+
+- **One is planned in spec 13 and is not a section here.** Performance troupes are spec 13 7.4 reference pass (faction kind `troupe`, still planned). They are built there.
+- **Three are joined into one section.** Zoning and building rules, municipal services and the merging of settlements share the city model of spec 13 4.2 reference pass 3 (built: districts, service coverage, `firehouse`, morphology, slums, suburbs), so they form 51.8.
+- **Several are narrowed to what is missing.** Each section opens with **Builds on**, which names what exists and what is planned, so nothing is built twice (rule 0.7).
+
+**Where each finding is closed.**
+
+| # | Finding | Closed by |
+|---:|---|---|
+| 1 | Economic orders and their transitions | 51.1 |
+| 2 | Inner life of organisations and companies | 51.2 |
+| 3 | Market structure and competition | 51.3 |
+| 4 | Organised labour | 51.4 |
+| 5 | Central banks and monetary policy | 51.5 |
+| 6 | Securities, exchanges, bubbles and crashes | 51.6 |
+| 7 | International organisations | 51.7 |
+| 8 | Urban planning and zoning | 51.8 |
+| 9 | Nature conservation | 51.9 |
+| 10 | Abdication and retirement from office | 51.10 |
+| 11 | Referendums | 51.11 |
+| 12 | Transitional justice | 51.12 |
+| 13 | Personality cults of living leaders | 51.13 |
+| 14 | Weapons of mass harm, deterrence and war remnants | 51.16 |
+| 15 | Family dynamics | 51.18 |
+| 16 | Emotional contagion | 51.19 |
+| 17 | Interpreters and mistranslation | 51.20 |
+| 18 | Grave goods and tomb robbing | 51.21 |
+| 19 | Non-communicable conditions | 51.22 |
+| 20 | Fertility control | 51.23 |
+| 21 | Tsunamis and storm surges | 51.25 |
+| 22 | Creature societies | 51.26 |
+| 23 | Conceptions of the divine | 51.27 |
+| 24 | Performance institutions | spec 13 7.4 reference pass (`troupe`), planned there; not built twice |
+| 25 | Honours and awards conferred on persons | 51.24 |
+| 26 | Municipal services | 51.8 |
+| 27 | Merging settlements into conurbations | 51.8 |
+| 28 | Restoration of fallen polities | 51.14 |
+| 29 | War between worlds and migration between worlds | 51.17 |
+| 30 | Occupation regimes: collaboration, measures, administration | 51.15 |
+
+The 27 sections below close the rest. A correction found by the same search is made in 50.3: exchange rates and money changers are planned in spec 13 6.4 reference pass 6 (W35), and 50.3 now builds on them.
+
+Every section follows the ground rules of 0.4 and 0.5: concepts by function, values from the seed and the world's canon, no imagery, no quotas, no gendered default, every era and every kind of world, and every kind of thing (rule 6). Each carries its thirteen elements in its own text (Appendix 16.L) and is wired end to end under its compliance row (51.30).
+
+### 51.1 Economic orders
+
+**Builds on.** Spec 13 4.6 reference pass 6 plans `economic_system` per polity with five systems (market, redistributive palace or temple, command, manorial, gift and tribal) and their crisis paths, in W35 (planned). Whichever wave runs first builds that column fully (0.7). 51.1 replaces the single value with four typed axes, so the five systems become rows of a catalogue of named orders and every other order a world can hold can be expressed. Also built on: `land_tenure`, `serfdom`, `slavery`, `labour_law` and `bondage` law kinds, households (47.8.21), markets and credit (6.4), state enterprise (50.4), abundance (44.17) and ideology (47.8.4).
+
+**Current.** Markets run everywhere. Who owns land, tools and works, how output is allocated, how labour is bound and how product is shared are scattered across laws and are not read together as one order. No polity can collectivise, nationalise, privatise or reform land as one act.
+
+**State.**
+
+- **`economic_orders`.** Per polity, or per sector of a polity (a good kind or a service), on four axes:
+  - `ownership` (`OwnershipRegime`): `household`, `kin_group`, `community`, `temple`, `ruler`, `state`, `private`, `cooperative`, `company`, `common`, `none`;
+  - `allocation` (`AllocationMode`): `market`, `redistribution`, `command`, `obligation` (dues and services), `gift`, `need`, `abundance` (44.17);
+  - `labour` (`LabourRegime`): `free`, `kin`, `corvee`, `serf`, `bound`, `enslaved`, `conscripted`, `cooperative`, `made` (constructs and made minds, F56, 44.6);
+  - `distribution` (`DistributionRule`): `by_holding`, `by_office`, `by_need`, `by_work`, `by_share`, `equal`, `by_prestige`.
+  - Also: `planning_capacity` (0–100, read from officials, records and information quality, F22), `since_epoch`, `locked`.
+- **`economic_order_kinds`.** Authored named orders (F57): a name in the world's language, the four axis values and the institutions they need. The five systems of spec 13 are its built-in rows; a world may author any other combination.
+- **`order_transitions`.** Polity, sector, from and to (each axis), `TransitionKind` (`collectivisation`, `nationalisation`, `privatisation`, `land_reform`, `enclosure`, `emancipation`, `decollectivisation`, `restoration_of_holdings`), stage, compensation (none, partial, full), resistance, start and end epochs.
+
+**Behaviour.**
+
+1. The order chooses which flows run each epoch. Market allocation runs prices and trade (6.4). Redistribution moves goods to central stores and out by office and need, where records and storage allow. Command allocates labour and output by plans, whose efficiency is `planning_capacity`. Obligation collects dues and services. Gift runs F38. Need and abundance divide by need. Each sector may run its own order.
+2. Ownership sets who receives output and rents, who may sell land and works, and who bears losses. Labour sets wages, dues or keep, flight and grievance. Distribution sets each class's share of product, and so living standards and inequality.
+3. Crises spread by order. A sacked centre stops redistribution. Information failure starves command (shortages and gluts by sector). Market crashes run through credit. A broken obligation chain stops a manorial economy.
+4. Transitions run in stages. They move holdings (land, works, shares, livestock) between holders, with or without compensation, and are resisted by the losers by values (F5), arms (revolts, 47.3.6) and flight. Each transfer of each holding is a recorded change (F58.5).
+5. Orders follow ideology, faith teaching, class power and the results of the order in place. Movements and parties carry demands for a new order (47.8.4). Agents propose transitions through their polities.
+
+**Tools and control.**
+
+- Mortal tool `set_economic_order` (`polity_id`, `sector`, `ownership`, `allocation`, `labour`, `distribution`, `reason`).
+- Mortal tool `begin_transition` (`polity_id`, `sector`, `kind`, `compensation`, `reason`).
+- Son tool `move_economic_order` (`polity_id`, `axis`, `value`, `reason`).
+- God levers `economic_order:create/edit/delete/hold`, `economic_order_kind:*`, `order_transition:create/edit/delete/hold/advance`.
+- An "Economic order" panel per polity with its four axes per sector, the transitions in course and the measured share of each class.
+- Context block `economic_order`.
+
+**Incidents.** `economy.order_set`, `economy.transition_begun`, `economy.transition_stage`, `economy.holding_transferred`, `economy.transition_resisted`, `economy.transition_done`, `economy.transition_failed`, `economy.centre_collapsed`, `economy.plan_shortfall`.
+
+**Rules namespace.** `economic_orders`:
+
+| Key | Default | Range |
+|---|---|---|
+| `economic_orders.redistribution_storage_loss_pct` | 10 | 0–100 |
+| `economic_orders.command_efficiency_floor` | 30 | 0–100 |
+| `economic_orders.planning_per_official` | 2 | 0–20 |
+| `economic_orders.transition_stage_epochs` | 1 | 1–20 |
+| `economic_orders.uncompensated_grievance` | 40 | 0–100 |
+| `economic_orders.flight_per_grievance_pct` | 10 | 0–100 |
+| `economic_orders.centre_collapse_spread_pct` | 60 | 0–100 |
+
+**Codex and book.** A designed "Economic order" section in polity entries: the four axes per sector with labels, the named order, the shares of each class and every transition with its stages and transfers. A table of orders in the Records.
+
+**Integrity.** Each sector is a good kind or service of the world; a transition's from-values equal the order in place when it began; holdings moved by a transition exist.
+
+**Legacy.** Each polity gets an order from its laws: `serfdom` gives `serf` labour, `slavery` gives `enslaved` for the sectors that hold slaves, temple and palace stores give `redistribution`, guild charters and markets give `market`. Polities with nothing to read get `household` ownership with `market` allocation.
+
+**Applies to.** Every polity, people and company in every era and every kind of world: bands that share game, temple economies, plantation colonies, command states, cooperatives of made minds and abundance worlds. The panel shows only on nodes that hold an order (polities and their sectors); peoples and companies read their polity's order.
+
+**Couplings.** Markets, prices, credit, households and living standards, labour and bondage, class and estates, revolts, ideology, parties, state enterprise, abundance, treasury, famine relief.
+
+### 51.2 The inner life of organisations
+
+**Builds on.** Companies are built (`company_profiles`, `company_shares`, `engine/factions/companies.py`): charter by a polity, shares held by any node, dividends, guards, defaulted loans, collapse that wipes shareholders, conquest and dominions. 44.15 adds charters, holdings, enclaves, private forces, capture and sovereignty. 50.4 adds privatisation of state enterprises. Factions have ranks (`FactionRank`), goals and actions. 51.2 adds how an organisation of any kind is governed inside, and the company acts that are missing.
+
+**Current.** An organisation acts as one will. No board, assembly or chapter decides; no executive answers to owners; members have no votes; leaders are not chosen by rule; no organisation splits from within, merges with another, buys another or researches. A failed company collapses at once, without creditors or proceedings.
+
+**State.**
+
+- **`org_governance`.** Per organisation (any faction kind, company, holy order, school, outlet, endowment, union, league): `decision_body` (`GoverningBody`: `founder`, `head`, `board`, `chapter`, `assembly_of_members`, `council_of_elders`, `shareholders_meeting`, `made_mind`, `none`), `head_selection` (`HeadSelection`: `appointed_by_owner`, `elected_by_body`, `elected_by_members`, `inherited`, `seniority`, `lot`, `divination`, `purchase`), term length, `vote_basis` (`one_member_one_vote`, `by_share`, `by_rank`, `by_seniority`), quorum, `strategy` (`OrgStrategy`: `grow`, `hold`, `specialise`, `diversify`, `expand_abroad`, `integrate_up`, `integrate_down`, `lobby`, `research`, `withdraw`).
+- **`org_seats`.** Organisation, member, seat on the body, since, vote weight.
+- **`org_cliques`.** Organisation, members, aim (a strategy, a head, a split, a merger), strength.
+- **`org_mergers`.** Acquirer, target, `MergerKind` (`merger`, `friendly_acquisition`, `hostile_takeover`, `buyout`, `absorption_by_polity`), price, share offer, stage, outcome.
+- **`org_research`.** Organisation, technique or design pursued (F24, made kinds), budget, staff, progress, secrecy.
+- **`insolvency_cases`.** Debtor organisation, creditors with claims (links to `loans`), `InsolvencyPath` (`liquidation`, `restructuring`, `rescue_by_owner`, `rescue_by_polity`, `seizure_by_creditor`), court, stage, recovered share.
+
+**Behaviour.**
+
+1. The decision body sets strategy and approves big acts (wars of a company, mergers, dividends, research budgets) by its vote basis and quorum. The head carries out decisions and may act against them at a cost in trust; the body may remove the head.
+2. Heads are chosen by the selection rule at term end, on death and on removal. Cliques gather votes; succession fights split the body.
+3. Cliques that lose may leave and found a rival organisation (a split), taking members and assets by share. Holy orders, guilds and parties split the same way.
+4. Mergers join members, assets and debts. Hostile takeovers buy shares on the market (51.6) or from holders, and the target's body may resist (poison terms, a friendly buyer, appeal to a polity). Polities may forbid mergers under competition law (51.3).
+5. Research spends budget and staff for progress on a technique or design; success gives the organisation a secret technique until it spreads, is stolen (spies, 5.10) or is licensed.
+6. An insolvent organisation goes to a court under its polity's debt law: creditors claim, assets are sold or restructured, and shareholders lose last. The existing collapse becomes the `liquidation` path.
+
+**Tools and control.**
+
+- Mortal tools:
+  - `cast_org_vote` (`org_id`, `motion`, `vote`);
+  - `seek_headship` (`org_id`);
+  - `split_org` (`org_id`, `clique_id`, `name_reason`);
+  - `bid_for_org` (`acquirer_id`, `target_id`, `kind`, `price`);
+  - `fund_research` (`org_id`, `target_technique_or_design`, `budget`);
+  - `file_insolvency` (`org_id`, `path`).
+- Son tool `sway_org` (`org_id`, `strategy`, `reason`).
+- God levers `org_governance:*`, `org_seat:*`, `org_clique:*`, `org_merger:create/edit/delete/hold/advance`, `org_research:*`, `insolvency_case:*`.
+- A "Governance" section in every organisation drawer (body, head, seats, cliques, strategy, research, cases), and merger and insolvency pages.
+- Context block `governance`.
+
+**Incidents.** `org.head_chosen`, `org.head_removed`, `org.vote_held`, `org.strategy_changed`, `org.split`, `org.merged`, `org.takeover_bid`, `org.takeover_resisted`, `org.research_done`, `org.research_stolen`, `org.insolvent`, `org.liquidated`, `org.restructured`.
+
+**Rules namespace.** `governance`:
+
+| Key | Default | Range |
+|---|---|---|
+| `governance.head_defiance_trust_loss` | 15 | 0–100 |
+| `governance.split_clique_threshold` | 35 | 0–100 |
+| `governance.takeover_premium_pct` | 30 | 0–300 |
+| `governance.research_progress_per_staff` | 2 | 0–50 |
+| `governance.secret_spread_per_epoch_pct` | 10 | 0–100 |
+| `governance.creditor_recovery_floor_pct` | 20 | 0–100 |
+| `governance.term_epochs` | 2 | 1–50 |
+
+**Codex and book.** Each organisation entry gains a designed "Governance" section: body, head and how chosen, seats, cliques, strategy, research, mergers and insolvency cases with their outcomes.
+
+**Integrity.** Seats belong to members; vote weights sum to 100 per body; a merger's parties exist until its end; creditor claims point at real loans.
+
+**Legacy.** Companies get a `shareholders_meeting` body with seats from `company_shares`; other factions get a `head` body with the leader as head and the selection rule their kind implies (holy orders `elected_by_body`, houses `inherited`). Existing collapses are recorded as `liquidation`.
+
+**Applies to.** Every organisation of every kind and era: clans' councils, temple chapters, merchant leagues, chartered companies, unions, parties, made-mind collectives and interworld federations. The section renders in every faction, company and order drawer; nodes that are not organisations show it as not applicable with that reason.
+
+**Couplings.** Companies, factions, holy orders, guilds, parties, credit and courts, espionage, techniques, competition (51.3), securities (51.6), labour (51.4), polities (capture, 44.15).
+
+### 51.3 Market structure and competition
+
+**Builds on.** Guild monopolies (faction goal `monopoly_on`, guild charter law with a monopoly), state monopolies (50.4), chartered monopolies abroad (spec 13 4.3 reference pass), cornering and dumping (spec 13 6.4 reference pass, built), and the keystone resource of a world (spec 13 6.4 reference pass 4). 51.3 measures each market's structure and adds collusion, price wars, barriers and competition law.
+
+**Current.** A monopoly is a flag on a guild. How many sellers a market has, their shares, collusion between them, price wars and the law that limits them are not modelled.
+
+**State.**
+
+- **`market_structures`.** Per market and good kind: sellers with shares (derived each epoch from output), concentration (0–100), `StructureKind` (`many_sellers`, `few_sellers`, `one_seller`, `one_buyer`, `few_buyers`, derived), entry barriers by kind (`capital`, `licence`, `guild_right`, `secret_technique`, `route_control`, `network_control`, `divine_favour`) with strength.
+- **`cartels`.** Members, good kinds and markets, aim (`price`, `quota`, `territory`, `bid_rigging`), agreed price or quota, secrecy, discipline.
+- **`price_wars`.** Aggressor, targets, market, good kind, cut (percent), losses so far, outcome.
+- **`competition_law`.** A `LawKind` value `competition_law` with typed clauses: `merger_review`, `cartel_ban`, `monopoly_break`, `price_cap`, `licence_limit`, each with a strength, and the office that enforces it.
+
+**Behaviour.**
+
+1. Prices rise with concentration and barriers, and with cartel discipline; buyers' power lowers them where buyers are few.
+2. Cartels hold while discipline holds; members cheat when the gain passes discipline, and cheating breaks the cartel. Exposure under a cartel ban brings fines, trials and trust loss.
+3. Price wars sell below cost to drive rivals out; the aggressor must outlast the targets on its purse and credit. Winners raise prices afterwards; losers go insolvent (51.2).
+4. Barriers fall with the spread of techniques, new routes and changes of law; they rise with guild rights, licences and control of networks.
+5. Competition law reviews mergers (51.2), breaks monopolies into new organisations and caps prices; capture of the enforcing office (44.15) weakens it.
+
+**Tools and control.**
+
+- Mortal tools `form_cartel` (`member_ids`, `goods_kind`, `market_id`, `aim`, `terms`), `start_price_war` (`market_id`, `goods_kind`, `cut`), `report_cartel` (`cartel_id`).
+- Son tool `break_market` (`market_id`, `goods_kind`, `reason`).
+- God levers `market_structure:edit/hold`, `cartel:*`, `price_war:*`, competition law through `law:*`.
+- A "Market structure" section in market screens (sellers, shares, barriers, cartels, wars).
+- Context block `market_structure`.
+
+**Incidents.** `market.cartel_formed`, `market.cartel_broken`, `market.cartel_exposed`, `market.price_war_begun`, `market.price_war_won`, `market.monopoly_broken`, `market.barrier_fell`.
+
+**Rules namespace.** `competition`:
+
+| Key | Default | Range |
+|---|---|---|
+| `competition.price_per_concentration_pct` | 30 | 0–300 |
+| `competition.cartel_discipline_decay` | 5 | 0–50 |
+| `competition.cheat_gain_threshold` | 20 | 0–100 |
+| `competition.price_war_floor_pct` | 50 | 0–100 |
+| `competition.cartel_fine_pct` | 20 | 0–100 |
+| `competition.barrier_decay_per_epoch` | 3 | 0–50 |
+
+**Codex and book.** Market sections in settlement and economy chapters with structure, sellers and shares; cartels and price wars in the entries of their members.
+
+**Integrity.** Shares in a market sum to 100; cartel members sell the good in that market; a price war's market exists.
+
+**Legacy.** Market structures are derived from existing output on the first epoch; guild monopolies become `one_seller` markets with a `guild_right` barrier.
+
+**Applies to.** Every market of every era and world, from a fair with three traders to an interworld exchange. Shown on markets and in organisation drawers that hold shares.
+
+**Couplings.** Prices, guilds, companies, mergers, insolvency, law and courts, smuggling, trust, living standards.
+
+### 51.4 Organised labour
+
+**Builds on.** Strikes exist as a collective act (`CollectiveActKind.STRIKE`) and a faction action (`faction.strike`, triggered by unpaid wages); W32 makes a strike raise the salience of the profession identity; `labour_law` is a law kind; craft guilds exist; indenture and bondage cycles exist; 44.15 lists `cooperative` among company charters. 51.4 adds the organisations of workers and the bargaining between them and those who hire them.
+
+**Current.** A strike is an outburst. No union holds members, dues and a fund; no contract sets wages and hours; no employer locks workers out; no worker cooperative owns its works.
+
+**State.**
+
+- **`worker_bodies`.** A faction kind `worker_body` with a `WorkerBodyForm` (`craft_union`, `industrial_union`, `general_union`, `journeyman_society`, `mutual_aid`, `worker_cooperative`, `made_mind_collective`), the trades and works it covers, members, dues, strike fund, standing in law (`banned`, `tolerated`, `recognised`, `compulsory`).
+- **`labour_contracts`.** Hirer (a node), worker body or worker, terms: wage, hours, conditions (typed axes: safety, rest, keep), term, `ContractStatus` (`proposed`, `bargaining`, `agreed`, `broken`, `expired`).
+- **`labour_disputes`.** Parties, demand, `DisputeAct` (`strike`, `go_slow`, `lockout`, `boycott`, `occupation_of_works`, `sabotage`), workers out, losses each side, mediator, outcome.
+
+**Behaviour.**
+
+1. Bargaining sets contract terms by each side's strength: the worker body's members, fund and solidarity against the hirer's reserves, substitutes (bound labour, made minds, constructs) and the law.
+2. Disputes stop output in the works they cover. Each side loses each epoch; the fund pays strikers until it runs out. Lockouts are the hirer's own act. Strikebreakers, police and arms may be used; violence is recorded with its injuries (F58).
+3. Law sets what is allowed: banned bodies act in secret and their members are prosecuted; recognised bodies bargain by right; compulsory bodies tie every worker of a trade.
+4. Cooperatives own their works and share product by work (51.1 `by_work`); they compete in markets (51.3) and may fail like any organisation (51.2).
+5. Wages and conditions enter living standards, class grievance and migration; won disputes spread to other trades by contact and media (50.2).
+
+**Tools and control.**
+
+- Mortal tools `found_worker_body` (`form`, `trades`, `settlement_id`), `bargain_contract` (`worker_body_id`, `hirer_id`, `demands`), `call_dispute` (`worker_body_id`, `act`, `demand`), `lock_out` (`hirer_id`, `worker_body_id`, `demand`).
+- Son tool `stir_labour` (`settlement_id`, `trade`, `reason`).
+- God levers `worker_body:*`, `labour_contract:*`, `labour_dispute:create/edit/delete/hold/end`.
+- A "Labour" section in settlement and organisation drawers; a dispute page.
+- Context block `labour`.
+
+**Incidents.** `labour.body_founded`, `labour.body_banned`, `labour.contract_agreed`, `labour.contract_broken`, `labour.strike_begun`, `labour.lockout_begun`, `labour.dispute_ended`, `labour.strikebreakers_used`.
+
+**Rules namespace.** `labour`:
+
+| Key | Default | Range |
+|---|---|---|
+| `labour.fund_per_member` | 2 | 0–50 |
+| `labour.strike_output_loss_pct` | 80 | 0–100 |
+| `labour.lockout_cost_pct` | 30 | 0–100 |
+| `labour.substitute_strength_pct` | 50 | 0–100 |
+| `labour.spread_chance_pct` | 10 | 0–100 |
+| `labour.banned_body_prosecution_pct` | 20 | 0–100 |
+
+**Codex and book.** Worker bodies in settlement and organisation entries; contracts and disputes with their terms and outcomes in the Records.
+
+**Integrity.** A contract's parties exist; a dispute's workers belong to the body or the works; fund never negative.
+
+**Legacy.** Craft guilds that struck become `journeyman_society` bodies where their members are not masters; existing strikes become disputes with act `strike` and their recorded end.
+
+**Applies to.** Every era and world with hired or bound work: temple workers who stop work, guild journeymen, factory unions, ship crews, made-mind collectives. Shown in settlements and organisation drawers.
+
+**Couplings.** Wages, living standards, production, class and identity salience (W32), law and police, cooperatives, economic orders (51.1), media, revolts.
+
+### 51.5 Monetary authorities
+
+**Builds on.** Money supply, reserves and coin trust are rules (`finance`: `supply_pct`, `supply_per_1000`, `reserve_per_1000`, `reserve_trust`); minting (`engine/economy/money.py`), debasement and forgery (48.5), credit with ratings, interest and bankruptcy states (spec 13 6.4 reference pass, built), and realm credit. 51.5 adds the authority that sets these on purpose.
+
+**Current.** Interest and coin trust follow from supply and reserves; no institution chooses them.
+
+**State.**
+
+- **`monetary_authorities`.** Issuer of a currency (`currencies`): holder (ruler, treasury office, temple, bank, company, council of polities 51.7), `independence` (0–100), mandate (`MonetaryAim`: `stable_value`, `cheap_credit`, `fund_the_state`, `peg`, `growth`, `none`), policy rate, reserve requirement on banks, peg target (another currency or a good), lender of last resort (yes or no).
+
+**Behaviour.**
+
+1. The policy rate sets lenders' base interest; lower rates raise borrowing and prices, higher rates the reverse, each with a lag of an epoch.
+2. Issuing to fund the state raises supply and lowers trust and the exchange rate (50.3, W35); a peg holds while reserves last, then breaks with a rate shock.
+3. As lender of last resort the authority saves failing banks at the cost of supply and moral hazard; without it bank runs spread.
+4. Low independence lets rulers bend policy before wars and elections; high independence resists them at a cost in favour.
+
+**Tools and control.**
+
+- Mortal tool `set_monetary_policy` (`authority_id`, `rate`, `aim`, `peg_target`).
+- Mortal tool `found_monetary_authority` (`currency_id`, `holder_id`, `independence`, `aim`).
+- Son tool `shake_coin` (`currency_id`, `trust_change`, `reason`).
+- God levers `monetary_authority:create/edit/delete/hold`.
+- A "Money" section in polity and currency drawers.
+- Context block `money_policy`.
+
+**Incidents.** `money.rate_set`, `money.peg_held`, `money.peg_broken`, `money.bank_rescued`, `money.bank_run`, `money.printed_for_state`.
+
+**Rules namespace.** `monetary`:
+
+| Key | Default | Range |
+|---|---|---|
+| `monetary.rate_to_interest_pct` | 100 | 0–300 |
+| `monetary.price_per_rate_point_pct` | 2 | 0–20 |
+| `monetary.state_issue_trust_loss` | 5 | 0–50 |
+| `monetary.peg_reserve_floor_pct` | 20 | 0–100 |
+| `monetary.run_spread_pct` | 30 | 0–100 |
+
+**Codex and book.** Authorities and their policies in polity and currency entries; rate history in the economy chapter.
+
+**Integrity.** An authority issues an existing currency; a peg target is another currency or a good kind.
+
+**Legacy.** Each currency's issuer becomes its authority with `fund_the_state` where the treasury debased it, else `stable_value`; independence 0 for rulers.
+
+**Applies to.** Every world with money, from temple grain receipts to interworld credit; worlds without money show the section as idle with that reason.
+
+**Couplings.** Credit, prices, exchange rates, banks, treasury, wars, elections, trust, securities.
+
+### 51.6 Securities and exchanges
+
+**Builds on.** `company_shares` held by nodes, `speculations` (hoarding and busts), loans and realm credit, insurance policies. 51.6 adds places where shares and debts are traded at a price, and the booms and crashes of those prices.
+
+**Current.** Shares change hands only by lever or founding; polity debt is a loan; no price moves with belief.
+
+**State.**
+
+- **`exchanges`.** Settlement or network (F51), owner (polity, guild, company), rules (listing, margin), members (brokers).
+- **`securities`.** Issuer (company, polity, settlement, endowment 50.10), `SecurityKind` (`share`, `bond`, `annuity`, `note`, `future`), face value, coupon, maturity, listed exchange.
+- **`security_holdings`.** Holder node, security, amount, bought price.
+- **`security_prices`.** Security, epoch, price, volume.
+
+**Behaviour.**
+
+1. Prices move by holders' beliefs (F22) of the issuer's results and risk, by rates (51.5) and by herding: rising prices draw buyers. Belief that runs ahead of results forms a bubble.
+2. A shock (a default, a lost war, a failed voyage, exposure of fraud) turns herding down; prices crash, margin calls force sales, and holders on credit go bankrupt, spreading to banks.
+3. Polities issue bonds to fund wars and works (50.4); defaults (the existing `default` credit state) crash their bonds and raise future rates.
+4. Takeovers buy shares on the exchange (51.2); insider knowledge (secrets, F20) gives gains and is a crime where the law says so.
+
+**Tools and control.**
+
+- Mortal tools `list_security` (`issuer_id`, `kind`, `amount`, `exchange_id`), `trade_security` (`security_id`, `amount`, `side`).
+- Son tool `stir_market_mood` (`exchange_id`, `direction`, `reason`).
+- God levers `exchange:*`, `security:*`, `security_holding:*`, `security_price:edit`.
+- An exchange drawer page with prices and charts; holdings in holder drawers.
+- Context block `securities`.
+
+**Incidents.** `securities.listed`, `securities.bubble_formed`, `securities.crash`, `securities.bond_defaulted`, `securities.insider_exposed`.
+
+**Rules namespace.** `securities`:
+
+| Key | Default | Range |
+|---|---|---|
+| `securities.herding_pct` | 20 | 0–100 |
+| `securities.bubble_threshold_pct` | 50 | 0–500 |
+| `securities.crash_drop_pct` | 40 | 0–100 |
+| `securities.margin_call_pct` | 30 | 0–100 |
+| `securities.default_rate_rise` | 5 | 0–50 |
+
+**Codex and book.** Exchanges in settlement entries; securities in issuers' entries; holdings in holders' entries; a prices table in the economy chapter.
+
+**Integrity.** Holdings of a security never exceed its amount; issuers exist; prices are per existing security.
+
+**Legacy.** Each company's shares become a `share` security of its amount; polity loans to lenders become `bond` securities.
+
+**Applies to.** Every world with tradeable claims; worlds without them show the section idle with that reason.
+
+**Couplings.** Companies, takeovers, credit, banks, rates, treasury, wars, works, secrets and law.
+
+### 51.7 Organisations of polities
+
+**Builds on.** Treaties with kinds (`TreatyKind`: alliances, coalition, guarantee, naval limit, interworld and others) and clauses; the `interworld_federation` faction kind; the `federation` government; summits as a gathering kind (F25); the council of gods (47.5.5). 51.7 adds standing bodies whose members are polities.
+
+**Current.** Polities bind by treaties between parties. No standing league, bloc or court has members, a charter, a seat, dues, organs and decisions that bind members.
+
+**State.**
+
+- **`polity_leagues`.** A new entity type `league` (a node, 51.28) with: charter (aims typed by `LeagueAim`: `defence`, `trade`, `customs_union`, `currency_union`, `law`, `faith`, `peace`, `research`, `migration`), seat, dues rule, `vote_basis` (`one_member_one_vote`, `by_population`, `by_dues`, `by_veto_holders`), organs (assembly, council, court, secretariat, force), founding epoch.
+- **`league_members`.** League, polity, standing (`founder`, `member`, `observer`, `suspended`, `expelled`), dues paid, veto.
+- **`league_decisions`.** League, organ, `LeagueDecisionKind` (`admit`, `expel`, `sanction`, `common_tariff`, `common_force`, `ruling`, `budget`, `mediation`), subject, votes, outcome.
+
+**Behaviour.**
+
+1. Members pay dues and gain the charter's goods: shared defence (an attack on one calls the others), a customs union (common tariffs, free trade inside), a currency union (one monetary authority, 51.5), a court whose rulings bind members on law and borders.
+2. Decisions follow the vote basis; vetoes block. Members obey by their interest and the league's strength; defiance brings sanctions and expulsion.
+3. Leagues grow by admission and break by exits, war between members and collapse of their leaders. A strong league may become a federation (polity formation reads league depth).
+4. Interworld leagues use networks and journeys between worlds (F51, 51.17) for their organs.
+
+**Tools and control.**
+
+- Mortal tools `found_league` (`polity_ids`, `aims`, `vote_basis`), `join_league` (`league_id`, `polity_id`), `table_league_motion` (`league_id`, `organ`, `kind`, `subject_id`).
+- Son tool `bind_league` (`league_id`, `strength_change`, `reason`).
+- God levers `polity_league:*`, `league_member:*`, `league_decision:*`.
+- A league drawer page (charter, members, organs, decisions), leagues on the atlas as a layer.
+- Context block `leagues`.
+
+**Incidents.** `league.founded`, `league.joined`, `league.left`, `league.expelled`, `league.sanction`, `league.ruling`, `league.dissolved`, `league.federated`.
+
+**Rules namespace.** `leagues`:
+
+| Key | Default | Range |
+|---|---|---|
+| `leagues.dues_pct` | 3 | 0–50 |
+| `leagues.obedience_base_pct` | 60 | 0–100 |
+| `leagues.sanction_trade_cut_pct` | 50 | 0–100 |
+| `leagues.federate_depth_threshold` | 80 | 0–100 |
+| `leagues.court_binding_pct` | 50 | 0–100 |
+
+**Codex and book.** League entries with charter, members, organs and every decision; membership in polity entries.
+
+**Integrity.** Members are polities; a currency union names one authority; decisions name existing organs.
+
+**Legacy.** Coalitions and interworld federations with three or more parties become leagues; their treaties stay as the founding charter.
+
+**Applies to.** Every world with more than one polity, in every era: leagues of city-states, tribal confederacies, faith councils of kings, customs unions, interworld federations. The league is an entity type, so it is a node and renders `ThingSections` like every other.
+
+**Couplings.** Treaties, war, trade, tariffs, money, courts and borders, migration, federation, interworld travel.
+
+### 51.8 City rules, municipal services and merging settlements
+
+**Builds on.** Spec 13 4.2 reference pass 3, built: districts by kind (`DistrictKind` with `suburb` and `slums`), desirability and land value, service coverage, housing evolution, slum clearance as a mandate, `firehouse` structures, urban morphology (organic, planned, concentric), turf; the city plan rules (`city_plan`); 50.4 adds sewers, aqueducts and drainage as works. 51.8 adds the rules a settlement makes for its own land, the services not yet modelled, and settlements that grow together.
+
+**Current.** Districts form where needs and growth put them. No settlement rules which uses may stand where or how buildings must be made; refuse and lighting are not services; two settlements that grow into each other stay two.
+
+**State.**
+
+- **`land_use_rules`.** Settlement, district or ring, `LandUseRule` (`allowed_uses` of district kinds, `banned_uses`, `height_limit`, `density_limit`, `build_material` requirement, `fire_spacing`, `frontage_rule`, `green_share`), maker (council, ruler, guild, faith), strength, enforcement.
+- **`municipal_services`.** Settlement, `MunicipalService` (`refuse`, `lighting`, `water_distribution`, `street_cleaning`, `night_watch`, `burial_ground`, `market_inspection`), provider (settlement, guild, company, endowment, made minds), coverage by district, cost, quality.
+- **`conurbations`.** Member settlements, core, joined epoch, governance (`one_council`, `federated_councils`, `ruled_by_core`).
+
+**Behaviour.**
+
+1. Land use rules shape which districts may grow where, lower fire spread (spacing, materials) and nuisance next to homes, and raise building costs. Evasion grows with weak enforcement and high land value.
+2. Services act through coverage: refuse lowers disease and vermin; lighting lowers night crime and lengthens trade and leisure; water distribution lowers thirst and disease; inspection lowers fraud in markets. Uncovered districts suffer each.
+3. Settlements whose districts touch and whose ties pass a threshold join into a conurbation. Members keep their names as quarters; governance follows the rule chosen; the core's laws spread. A conurbation may split again under conflict.
+4. Planned rebuilds (after fire, war or a founding plan) apply land use rules at once and change morphology to `planned`.
+
+**Tools and control.**
+
+- Mortal tools `set_land_use_rule` (`settlement_id`, `district_or_ring`, `rule`, `values`), `provide_service` (`settlement_id`, `service`, `provider_id`, `budget`), `join_settlements` (`settlement_ids`, `governance`).
+- Son tool `bless_city` (`settlement_id`, `service_or_rule`, `reason`).
+- God levers `land_use_rule:*`, `municipal_service:*`, `conurbation:create/edit/delete/hold/split`.
+- "City rules" and "Services" sections in the settlement drawer; conurbations on the atlas and in the city scene.
+- Context block `city_rules`.
+
+**Incidents.** `city.rule_set`, `city.rule_evaded`, `city.service_founded`, `city.service_failed`, `city.settlements_joined`, `city.conurbation_split`, `city.planned_rebuild`.
+
+**Rules namespace.** `city_rules`:
+
+| Key | Default | Range |
+|---|---|---|
+| `city_rules.fire_spread_cut_pct` | 30 | 0–100 |
+| `city_rules.build_cost_rise_pct` | 15 | 0–200 |
+| `city_rules.refuse_disease_cut_pct` | 20 | 0–100 |
+| `city_rules.lighting_crime_cut_pct` | 15 | 0–100 |
+| `city_rules.join_tie_threshold` | 70 | 0–100 |
+| `city_rules.evasion_per_land_value_pct` | 10 | 0–100 |
+
+**Codex and book.** City rules and services in settlement entries; conurbations with their members and history.
+
+**Integrity.** Rules name districts or rings of their settlement; a conurbation's members are distinct settlements of one world.
+
+**Legacy.** Settlements with `planned` morphology get the land use rules their plan implies; existing wells, watch posts and burial grounds become services of those kinds.
+
+**Applies to.** Every settlement of every size and era, every world, every biology that builds dwellings; settlements without dwellings show the sections idle with that reason.
+
+**Couplings.** Districts, fire, disease, crime, land value, housing, works, law, migration, polity control.
+
+### 51.9 Protected nature
+
+**Builds on.** Game reserves and poaching (`game_reserves`, `engine/agrarian/lands.py`), commons and enclosure (`commons`), closed seasons and protected waters (built in `engine/agrarian/lands.py` and mandates), `environment_law`, rewilding of empty land (`environment.rewild_rate`), extinction and invasive species (ecology, worldlife), sacred groves (genius loci). 51.9 adds protection of land, waters and species for their own sake, by law, faith or a movement.
+
+**Current.** Protection exists only as hunting rights for elites and catch closures. No polity, faith or movement protects a species, a landscape or a whole ecosystem; reintroduction of a lost species does not happen.
+
+**State.**
+
+- **`protected_areas`.** Region or site, protector (polity, faith, community, company, son), `ProtectionBasis` (`law`, `faith`, `custom`, `charter`, `divine_decree`), protected uses banned (`ProtectedUse`: `hunting`, `logging`, `farming`, `mining`, `settlement`, `entry`, `fishing`, `building`), wardens, strength.
+- **`species_protections`.** Species, holder, basis, measures (`hunting_ban`, `trade_ban`, `breeding_programme`, `reintroduction`, `habitat_guard`), since.
+- **`conservation_movements`.** A movement (W20) with aims typed by these measures, support share per cohort.
+
+**Behaviour.**
+
+1. Protected areas lower the banned uses by strength and wardens; ecology recovers there (species counts, forest, soil). Poaching and illegal use rise with scarcity and price.
+2. Species protection lowers kills and trade; breeding and reintroduction restore a species to regions it left, where habitat allows (living lines of W46 where the world has them).
+3. Movements grow from loss (extinctions, ruined land, famine after overuse), faith teaching and knowledge (50.7); they push laws and are opposed by those who use the land.
+4. Protection costs livelihoods; the displaced lose income and may resist.
+
+**Tools and control.**
+
+- Mortal tools `protect_area` (`region_or_site_id`, `basis`, `banned_uses`), `protect_species` (`species_id`, `measures`), `reintroduce` (`species_id`, `region_id`).
+- Son tool `hallow_wild` (`region_id`, `reason`).
+- God levers `protected_area:*`, `species_protection:*`, movements through existing levers.
+- Protected areas on the atlas; a "Protection" section in region and species drawers.
+- Context block `protected_nature`.
+
+**Incidents.** `nature.area_protected`, `nature.protection_lifted`, `nature.poached`, `nature.species_protected`, `nature.species_reintroduced`, `nature.species_recovered`.
+
+**Rules namespace.** `protected_nature`:
+
+| Key | Default | Range |
+|---|---|---|
+| `protected_nature.use_cut_per_strength_pct` | 80 | 0–100 |
+| `protected_nature.recovery_per_epoch` | 3 | 0–50 |
+| `protected_nature.poaching_per_price_pct` | 10 | 0–100 |
+| `protected_nature.reintroduction_success_pct` | 40 | 0–100 |
+| `protected_nature.displacement_grievance` | 20 | 0–100 |
+
+**Codex and book.** Protected areas in region entries; protections in species entries; movements in their own entries.
+
+**Integrity.** Areas lie in existing regions; reintroduction targets regions whose habitat the species can hold.
+
+**Legacy.** Game reserves become protected areas with basis `law` and banned use `hunting`; sacred groves become areas with basis `faith`.
+
+**Applies to.** Every world with life, in every era: sacred lands of a band, royal forests, park systems, protected moons. Region and species drawers; worlds without life show the section idle with that reason.
+
+**Couplings.** Ecology, extinction, poaching and crime, livelihoods, faith, law, movements, living craft.
+
+### 51.10 Leaving office
+
+**Builds on.** Succession rules, offices (`offices`), regency, term ends in elections (`engine/polity/elections.py`), pensions (`veteran_pension`), and a step-down forced by leverage (`HookDemand.STEP_DOWN`). 51.10 adds leaving office by one's own choice.
+
+**Current.** Office holders leave by death, removal, coups, elections or blackmail. No ruler abdicates, no official retires, and no holder chooses an heir by stepping aside.
+
+**State.**
+
+- **`departures`.** Office holder, office, `DepartureKind` (`abdication`, `retirement`, `resignation`, `withdrawal_to_religion`, `exile_by_choice`), in favour of (a node or the succession rule), conditions (keep title, keep lands, pension, safe conduct), epoch, the departed holder's later standing.
+
+**Behaviour.**
+
+1. Holders weigh leaving by age, health, failure, scandal, faith teaching, pressure and a chosen heir's readiness (mind, F5–F8).
+2. An abdication hands office by the conditions; the departed keeps influence by standing and may return, plot or be a rallying point.
+3. Retirement from lesser offices frees posts and pays pensions where the law gives them; customs may require retirement at an age or after a term.
+4. Resignation under scandal ends some pressures (unrest, a faction's hostility) and keeps others (trials).
+
+**Tools and control.**
+
+- Mortal tool `leave_office` (`office_id`, `kind`, `in_favour_of_id`, `conditions`).
+- Mortal tool `return_to_office` (`departure_id`).
+- Son tool `call_to_step_aside` (`holder_id`, `reason`).
+- God levers `departure:create/edit/delete/hold`.
+- Departures in office and holder drawers.
+- Context block `offices` gains departures.
+
+**Incidents.** `office.abdicated`, `office.retired`, `office.resigned`, `office.withdrew`, `office.returned`.
+
+**Rules namespace.** `departures`:
+
+| Key | Default | Range |
+|---|---|---|
+| `departures.age_weight` | 30 | 0–100 |
+| `departures.scandal_weight` | 40 | 0–100 |
+| `departures.return_chance_pct` | 5 | 0–100 |
+| `departures.retirement_age_share_pct` | 80 | 0–100 |
+
+**Codex and book.** Departures in holder and office entries.
+
+**Integrity.** The departed held the office at the epoch; the successor exists.
+
+**Legacy.** Step-downs forced by leverage become `resignation` departures.
+
+**Applies to.** Every office of every polity, faith, organisation and league, and every node that holds office: mortals, made minds and gods who rule peoples. Offices of sons over domains follow divine rules (47.5) and are shown as not applicable with that reason.
+
+**Couplings.** Succession, offices, regency, factions, scandal, faith, pensions, plots.
+
+### 51.11 Referendums
+
+**Builds on.** Elections (`elections`), the `franchise` law, `assembly` decision rule, parties and movements, public opinion (F21). 51.11 adds votes of the people on a question rather than a person.
+
+**Current.** The people choose persons; questions are decided by rulers, councils and assemblies.
+
+**State.**
+
+- **`referendums`.** Polity, settlement or league, question typed by subject (`law`, `constitution`, `independence`, `union`, `treaty`, `war`, `transition` of 51.1, `recall` of an office holder, `faith`), the franchise used, `binding` (yes or no), threshold, campaign sides with their spending, turnout, result.
+
+**Behaviour.**
+
+1. Called by those whose law allows it (ruler, assembly, a petition reaching a threshold, a league charter).
+2. Campaigns move opinion by media (50.2), speeches (50.13), money and fraud; turnout follows salience and access.
+3. Binding results change the law or state at once; others pressure rulers, who pay in legitimacy if they ignore them. Fraud found out discredits the result.
+
+**Tools and control.**
+
+- Mortal tools `call_referendum` (`polity_id`, `subject`, `question_target_id`, `binding`), `campaign_for_vote` (`referendum_id`, `side`, `means`).
+- Son tool `sway_vote` (`referendum_id`, `side`, `reason`).
+- God levers `referendum:create/edit/delete/hold/decide`.
+- Referendum pages; a "Votes" list in polity drawers.
+- Context block `votes`.
+
+**Incidents.** `vote.called`, `vote.held`, `vote.result`, `vote.ignored`, `vote.fraud_exposed`.
+
+**Rules namespace.** `referendums`:
+
+| Key | Default | Range |
+|---|---|---|
+| `referendums.petition_threshold_pct` | 10 | 0–100 |
+| `referendums.ignore_legitimacy_loss` | 20 | 0–100 |
+| `referendums.campaign_shift_pct` | 10 | 0–100 |
+| `referendums.fraud_detect_pct` | 20 | 0–100 |
+
+**Codex and book.** Referendums with question, sides, turnout and result in polity entries.
+
+**Integrity.** The franchise matches the polity's law; the subject exists.
+
+**Legacy.** None; referendums start empty.
+
+**Applies to.** Every polity, settlement and league where some body votes, in every era and world; polities without any franchise show the list idle with that reason.
+
+**Couplings.** Law, independence, treaties, elections, opinion, media, legitimacy.
+
+### 51.12 Reckoning after a fallen regime
+
+**Builds on.** Purges as an event collection kind, pardons (`engine/law/pardons.py`), appeals, outlawry, reparations as a peace clause, damnatio memoriae (F33), trials (47.3.3), war crimes as a crime kind where 47.3.1 lists them. 51.12 adds the reckoning a new order makes with the servants of the old one.
+
+**Current.** A new ruler or regime takes power and the old regime's servants keep their posts, or are killed in purges. No trials of the old regime, no truth seeking, no bars from office, no amnesty for confession, no repair to victims.
+
+**State.**
+
+- **`reckonings`.** Polity, the fallen regime (a ruler, a government kind, an occupation, 51.15).
+- **`reckoning_measures`.** Child rows of a reckoning, one per `ReckoningMeasure`: `tribunal`, `truth_inquiry`, `office_bar`, `amnesty`, `amnesty_for_confession`, `restitution`, `reparation_to_victims`, `memorial`, `record_opening` (opening the old regime's archives); each with scope, strength, stage.
+- **`reckoning_cases`.** Reckoning, the accused or the inquired, acts named (recorded incidents, F58), measure, outcome.
+
+**Behaviour.**
+
+1. A new regime chooses measures by its values, its strength, the old regime's remaining power and the victims' pressure.
+2. Tribunals try acts drawn from the record; verdicts punish, acquit or pardon. Truth inquiries open accounts that historiography reads (F33). Office bars empty posts and lower administration while they last.
+3. Amnesty lowers resistance and grievance among the old servants and raises it among victims; restitution returns holdings (51.1) and costs the treasury.
+4. Measures that are too weak keep old servants in power; too harsh ones drive them to revolt or flight.
+
+**Tools and control.**
+
+- Mortal tools `open_reckoning` (`polity_id`, `fallen_regime_id`, `measures`), `try_servant` (`reckoning_id`, `accused_id`, `incident_ids`).
+- Son tool `weigh_reckoning` (`reckoning_id`, `measure`, `reason`).
+- God levers `reckoning:*`, `reckoning_measure:*`, `reckoning_case:*`.
+- A reckoning page linked from the polity drawer.
+- Context block `reckoning`.
+
+**Incidents.** `reckoning.opened`, `reckoning.trial`, `reckoning.verdict`, `reckoning.amnesty`, `reckoning.inquiry_report`, `reckoning.restitution`, `reckoning.closed`.
+
+**Rules namespace.** `reckoning`:
+
+| Key | Default | Range |
+|---|---|---|
+| `reckoning.office_bar_admin_loss_pct` | 20 | 0–100 |
+| `reckoning.amnesty_grievance_shift` | 15 | 0–100 |
+| `reckoning.restitution_cost_pct` | 30 | 0–100 |
+| `reckoning.harsh_revolt_chance_pct` | 10 | 0–100 |
+
+**Codex and book.** Reckonings with measures, cases and outcomes in polity entries; accounts from inquiries in historiography.
+
+**Integrity.** Cases name recorded incidents; the fallen regime is earlier than the reckoning.
+
+**Legacy.** Recorded purges after coups become reckonings with measure `tribunal` and their victims as cases.
+
+**Applies to.** Every polity, faith and organisation that changes rule, in every era and world.
+
+**Couplings.** Trials, pardons, historiography, holdings, office, revolts, occupation, memory.
+
+### 51.13 Cults of living leaders
+
+**Builds on.** Prestige and renown, standing, apotheosis after death (`storyteller/arcs.py`), god-kings (`god_kingdom` government), media (50.2), speeches (50.13), monuments and depictions (spec 13 7.4 reference pass). 51.13 adds the organised veneration of a living, mortal leader by those under them.
+
+**Current.** A leader's renown grows by deeds; worship of a leader exists only for god-kings and after death.
+
+**State.**
+
+- **`leader_cults`.** Leader (a mortal or made mind; never a son, foreign god or the Creator, who are worshipped through faith), promoters (offices, outlets, a party), instruments (`CultInstrument`: `images_in_public`, `official_biography`, `holidays`, `oaths_of_loyalty`, `naming_of_places`, `teaching_in_schools`, `staged_gatherings`, `ban_on_criticism`), intensity (0–100), sincerity of the public (derived).
+
+**Behaviour.**
+
+1. Instruments raise the leader's legitimacy and obedience and lower open dissent, at a cost in treasury and in the public's sincerity, which falls when the cult runs ahead of results.
+2. Criticism under a ban is prosecuted; satire (W32) is its pressure valve.
+3. On the leader's death the cult passes to an heir, fades, turns into faith (apotheosis) or is torn down (51.12 memorials, damnatio).
+
+**Tools and control.**
+
+- Mortal tools `promote_cult` (`leader_id`, `instruments`), `tear_down_cult` (`cult_id`).
+- Son tool `sway_cult` (`cult_id`, `intensity_change`, `reason`).
+- God levers `leader_cult:create/edit/delete/hold`.
+- A "Cult" block in the leader's drawer.
+- Context block `leader_cult`.
+
+**Incidents.** `cult.begun`, `cult.instrument_added`, `cult.critic_punished`, `cult.passed_on`, `cult.torn_down`, `cult.became_faith`.
+
+**Rules namespace.** `leader_cults`:
+
+| Key | Default | Range |
+|---|---|---|
+| `leader_cults.legitimacy_per_intensity_pct` | 20 | 0–100 |
+| `leader_cults.sincerity_decay` | 5 | 0–50 |
+| `leader_cults.cost_per_instrument` | 3 | 0–50 |
+| `leader_cults.apotheosis_chance_pct` | 5 | 0–100 |
+
+**Codex and book.** The cult in the leader's entry with its instruments and fate.
+
+**Integrity.** The leader is mortal or a made mind; promoters exist.
+
+**Legacy.** None; cults start empty.
+
+**Applies to.** Every polity, faith, party and organisation in every era and world. The block shows on mortals and made minds; gods are worshipped through faith and show it as not applicable with that reason.
+
+**Couplings.** Legitimacy, dissent, censorship, satire, media, faith, succession, memory.
+
+### 51.14 Restoration of fallen polities
+
+**Builds on.** Dormant titles from fallen polities (`engine/polity/titles.py`), pretenders and their hosts (`engine/polity/offices.py`), claims (`claims`), irredentist accounts (W20 `accounts`), revolts and independence (47.3.6). 51.14 adds movements that raise a fallen polity again under its old name and rights.
+
+**Current.** A fallen polity leaves a dormant title; a claimant may press it inside another polity. No polity is founded again as the old one with its laws, symbols and claims.
+
+**State.**
+
+- **`restorations`.** Fallen polity (kept as a dead node), movement or claimant, territories sought, legitimacy sources (`RestorationBasis`: `bloodline`, `faith`, `law`, `memory`, `foreign_backing`), stage (`memory`, `movement`, `rising`, `restored`, `failed`), restored polity (when founded).
+
+**Behaviour.**
+
+1. Memory of a fallen polity lives in accounts, emblems and dormant titles; grievance under its successors turns memory into a movement.
+2. A rising founds a polity that takes the old name, emblems, laws and claims; continuity with the old polity is a link in the book and in claims.
+3. Restorations meet the successors' resistance and the gap between memory and the present (old laws that no longer fit lower stability).
+
+**Tools and control.**
+
+- Mortal tools `raise_restoration` (`fallen_polity_id`, `basis`, `territory_ids`), `restore_polity` (`restoration_id`).
+- Son tool `stir_memory` (`fallen_polity_id`, `reason`).
+- God levers `restoration:create/edit/delete/hold/advance`.
+- Restorations on the dead polity's page and the new polity's drawer.
+- Context block `restoration`.
+
+**Incidents.** `polity.restoration_begun`, `polity.restoration_rising`, `polity.restored`, `polity.restoration_failed`.
+
+**Rules namespace.** `restoration`:
+
+| Key | Default | Range |
+|---|---|---|
+| `restoration.memory_decay_per_epoch` | 3 | 0–50 |
+| `restoration.movement_grievance_threshold` | 50 | 0–100 |
+| `restoration.old_law_stability_loss` | 10 | 0–100 |
+
+**Codex and book.** Restorations in the entries of the fallen and the restored polity, linked as one line.
+
+**Integrity.** The fallen polity is dead; the restored polity names it as predecessor.
+
+**Legacy.** Pretenders who press a dormant title gain a restoration at stage `movement`.
+
+**Applies to.** Every polity, faith and organisation that can fall, in every era and world.
+
+**Couplings.** Titles, claims, accounts, revolts, independence, legitimacy, emblems.
+
+### 51.15 Occupation regimes
+
+**Builds on.** Occupations (`occupations`, `engine/military/occupation.py`): occupying after a march, resistance, partisans, occupation tax, the end of occupations, the `occupation` government kind. Defections and reprisals against defectors (`defections`, `engine/military/spy_depth.py`). 51.15 adds how an occupier governs, who serves it, how it answers resistance, and what follows liberation (51.12).
+
+**Current.** An occupied place pays tax and breeds partisans. No administration, no collaborators, no reprisals against the population, no hostages, no settlement of the occupier's people, no liberation reckoning.
+
+**State.**
+
+- **`occupation_regimes`.** Occupation, `OccupationRule` (`military`, `civil_by_occupier`, `local_puppet`, `annexation`, `protectorate`), administrators, laws imposed, extraction (tax, levies, labour, goods), settlement of occupiers' people (count).
+- **`collaborations`.** Collaborator node (mortal, faction, polity), occupation, `CollaborationKind` (`administration`, `police`, `informing`, `trade`, `militia`, `propaganda`), reward, exposure.
+- **`occupation_measures`.** Occupation, `OccupationMeasure` (`curfew`, `hostages`, `collective_punishment`, `deportation`, `requisition`, `ban_on_gathering`, `amnesty_offer`), strength, epoch.
+
+**Behaviour.**
+
+1. Rule kind sets extraction, order and the locals' grievance; collaborators lower the cost of rule and raise its intelligence on partisans.
+2. Measures answer resistance: they lower partisan activity now and raise grievance and recruitment later; atrocities are recorded and feed reckonings.
+3. Collaborators gain rewards and are hated; exposure brings partisan killings; liberation brings reckoning (51.12).
+4. Annexation and settlement change demography and claims; restoration movements (51.14) may follow.
+
+**Tools and control.**
+
+- Mortal tools `set_occupation_rule` (`occupation_id`, `rule`), `collaborate` (`occupation_id`, `kind`), `impose_measure` (`occupation_id`, `measure`, `strength`), `expose_collaborator` (`collaboration_id`).
+- Son tool `sway_occupation` (`occupation_id`, `rule_or_measure`, `reason`).
+- God levers `occupation_regime:*`, `collaboration:*`, `occupation_measure:*`.
+- An "Occupation" section in occupied settlements, regions and occupier polities.
+- Context block `occupation`.
+
+**Incidents.** `occupation.rule_set`, `occupation.collaborator_joined`, `occupation.collaborator_killed`, `occupation.measure_imposed`, `occupation.deportation`, `occupation.annexed`, `occupation.liberated`.
+
+**Rules namespace.** `occupation`:
+
+| Key | Default | Range |
+|---|---|---|
+| `occupation.collaborator_cost_cut_pct` | 20 | 0–100 |
+| `occupation.measure_partisan_cut_pct` | 30 | 0–100 |
+| `occupation.measure_grievance` | 20 | 0–100 |
+| `occupation.exposure_kill_pct` | 15 | 0–100 |
+| `occupation.extraction_cap_pct` | 50 | 0–100 |
+
+**Codex and book.** The regime, collaborators and measures in the occupied place's and the occupier's entries.
+
+**Integrity.** A regime belongs to an open occupation; collaborators are of the occupied place or its neighbours.
+
+**Legacy.** Each open occupation gets a `military` regime with its existing tax as extraction.
+
+**Applies to.** Every occupation in every era and world, including occupation across worlds (51.17).
+
+**Couplings.** War, partisans, grievance, intelligence, demography, claims, reckoning, restoration.
+
+### 51.16 Weapons of mass harm, deterrence and the remnants of war
+
+**Builds on.** The doom clock and cosmic ends (0.8 rule 5), designed disease (46.11), self-making machines (44.16), unit kinds and tactics including orbital bombardment and drop troops (`catalog/units.py`, `catalog/battle_depth.py`), pollution (F24), arms limits (`TreatyKind.NAVAL_LIMIT`), demilitarised zones as a peace clause (`engine/polity/treaties.py`, `engine/military/peace.py`), `weapons_law`. 51.16 adds weapons whose harm reaches a whole place or people, the deterrence they create, and what war leaves in the land.
+
+**Current.** Battles harm armies and sieges harm towns. No weapon threatens a whole region, no polity is held back by fear of one, and nothing a war leaves behind (buried charges, poisoned ground, wrecks in orbit) harms after the peace.
+
+**State.**
+
+- **`mass_weapons`.** Holder, `MassHarm` (`blast`, `fire`, `poison`, `disease`, `radiation`, `swarm`, `field` (powers, W45), `rite` (8.6), `divine_relic`), reach (settlement, region, world), count, readiness, delivery (units or carriers able to bring it), the technique and materials it needs (F24, F23), visible stage of the programme (0.8 rule 3).
+- **`deterrence_postures`.** Holder, toward whom, `Posture` (`none`, `declared`, `ambiguous`, `first_use`, `retaliation_only`, `shared_with_league`), credibility (0–100).
+- **`war_remnants`.** Region or orbit, `RemnantKind` (`buried_charges`, `poisoned_ground`, `fallout`, `wreck_field`, `unquiet_dead` (where the world's laws let the dead rise), `cursed_ground`, `abandoned_machines`), density, decay rate, origin war, clearance progress.
+
+**Behaviour.**
+
+1. Mass weapons pass through visible programme stages; rivals see them by spies and rumours and may strike, ally or build their own.
+2. A credible posture lowers the chance that a rival attacks the holder's core, raises the cost of escalation and draws arms races. Credibility falls with bluffs exposed and rises with tests.
+3. Use is an incident of its harm kind over its reach, through the systems it touches (body, disease, ecology, structures), recorded per victim group (F58), and adds to the doom clock by reach. World-ending effects stay with doom mechanics (0.8 rule 5).
+4. Remnants harm those who live, farm, travel or sail through them by density (47.10 mishaps), lower land value and yields, and decay or are cleared by work (50.4) and techniques.
+5. Treaties limit counts and tests; leagues (51.7) inspect; breaches are treaty breaches.
+
+**Tools and control.**
+
+- Mortal tools `begin_mass_weapon` (`holder_id`, `harm`, `reach`), `declare_posture` (`holder_id`, `toward_id`, `posture`), `use_mass_weapon` (`weapon_id`, `target_id`), `clear_remnants` (`region_id`, `budget`).
+- Son tool `still_weapon` (`weapon_id`, `reason`).
+- God levers `mass_weapon:*`, `deterrence_posture:*`, `war_remnant:*`.
+- An "Arsenal" section in polity drawers; remnants as an atlas layer and in region drawers.
+- Context block `mass_weapons`.
+
+**Incidents.** `war.mass_weapon_stage`, `war.mass_weapon_tested`, `war.mass_weapon_used`, `war.posture_declared`, `war.bluff_exposed`, `war.remnant_harm`, `war.remnants_cleared`.
+
+**Rules namespace.** `mass_weapons`:
+
+| Key | Default | Range |
+|---|---|---|
+| `mass_weapons.deterrence_attack_cut_pct` | 50 | 0–100 |
+| `mass_weapons.doom_per_reach` | 5 | 0–100 |
+| `mass_weapons.remnant_harm_per_density` | 2 | 0–50 |
+| `mass_weapons.remnant_decay_per_epoch` | 3 | 0–50 |
+| `mass_weapons.clearance_per_budget` | 1 | 0–20 |
+| `mass_weapons.stage_visibility_pct` | 30 | 0–100 |
+
+**Codex and book.** Arsenals and postures in polity entries; remnants in region entries with their origin war; uses in war entries.
+
+**Integrity.** A weapon's holder has the technique; remnants name an ended war.
+
+**Legacy.** None for weapons; ended wars with sieges and battles in a region leave `wreck_field` or `buried_charges` remnants only where their units used such arms.
+
+**Applies to.** Every era and world: poisoned wells and plague corpses thrown over walls, rites that blight a land, burning weapons, radiation, swarms of made machines. Polity drawers for arsenals; region and orbit drawers for remnants.
+
+**Couplings.** War, doom, disease, ecology, body, treaties, leagues, espionage, mishaps, land value, works.
+
+### 51.17 War between worlds and migration between worlds
+
+**Builds on.** Armies carry `world_id`; transport fleets, journeys (47.8.12), interworld routes, gates and rifts (47.8.13); colonies founded by expeditions; the `interworld` treaty kind and `interworld_federation` faction kind; drop troops and orbital bombardment as unit and tactic entries; spec 13 mentions migration pressure toward new worlds through journeys. 51.17 adds campaigns that cross worlds and mass movements of peoples between worlds.
+
+**Current.** Every military step works inside one world. No army is carried to another world to fight there, no polity holds the space around a world, and peoples move to other worlds only as small colonies.
+
+**State.**
+
+- **`interworld_campaigns`.** Attacker, defender, target world, `CampaignStage` (`gathering`, `transit`, `supremacy`, `landing`, `holding`, `withdrawn`), carriers and their capacity, the route or gate, transit length, supply line length and delay (signals 47.2.5, light lag where the world's physics has it).
+- **`orbital_control`.** World, holder, strength, contested by.
+- **`interworld_migrations`.** People or community, from world, to world, `MigrationCause` (`flight`, `land_hunger`, `faith_call`, `exile`, `labour_draw`, `world_dying`, `resettlement`), count per epoch, carriers, reception (welcome, quota, refusal).
+
+**Behaviour.**
+
+1. Campaigns gather carriers and troops, cross by route or gate, fight for control of the space around the target (vessel engagements, 49.3), then land under the control they hold. Landed forces are supplied along the line; long lines starve them.
+2. Orbital control lets the holder bombard (by tactic, with recorded harm), blockade trade and travel, and cut signals; it is lost to the defender's vessels and powers.
+3. Holding a world's land follows occupation (51.15) and its regimes; supply cut, the landed force withers or surrenders.
+4. Migrations move whole groups when push and pull pass thresholds and carriers allow; the receiving world's polities set reception, and migrants found settlements, enter districts or wait in camps. Disease spreads with them by the agent rules (50.24).
+
+**Tools and control.**
+
+- Mortal tools `launch_campaign` (`attacker_id`, `target_world_id`, `route_id`, `forces`), `contest_orbit` (`world_id`, `fleet_id`), `lead_migration` (`community_id`, `to_world_id`, `cause`).
+- Son tool `close_the_way` (`route_or_gate_id`, `epochs`, `reason`).
+- God levers `interworld_campaign:*`, `orbital_control:*`, `interworld_migration:*`.
+- Campaigns and migrations on the cosmography map; an "Orbit" block in world drawers.
+- Context block `interworld`.
+
+**Incidents.** `war.campaign_launched`, `war.transit_lost`, `war.orbit_won`, `war.orbit_lost`, `war.landing`, `war.bombardment`, `war.campaign_withdrawn`, `migration.interworld_began`, `migration.interworld_arrived`, `migration.interworld_refused`.
+
+**Rules namespace.** `interworld`:
+
+| Key | Default | Range |
+|---|---|---|
+| `interworld.transit_loss_pct` | 5 | 0–100 |
+| `interworld.supply_decay_per_hop` | 10 | 0–100 |
+| `interworld.landing_needs_control_pct` | 60 | 0–100 |
+| `interworld.bombard_harm_per_strength` | 2 | 0–50 |
+| `interworld.migration_push_threshold` | 60 | 0–100 |
+| `interworld.carrier_people_per_capacity` | 100 | 1–100000 |
+
+**Codex and book.** Campaigns in war and world entries; orbital control in world entries; migrations in people and world entries.
+
+**Integrity.** The route joins the two worlds; landed forces lie on the target world; migrants' destination exists.
+
+**Legacy.** None; campaigns and migrations start empty. Existing colonies keep their founding records.
+
+**Applies to.** Worlds joined by any carrier the world allows: vessels, gates, rifts, divine bridges, grown vessels, rite travel. Worlds with no way between them keep these idle and say so.
+
+**Couplings.** War, vessels, occupation, supply, signals, trade, disease, demography, leagues, treaties.
+
+### 51.18 Family dynamics
+
+**Builds on.** Households (47.8.21), kin roles and duties and kin groups (50.6), inheritance and succession laws, houses, legitimacy rules (50.8), relationships and bonds, feuds (47.8.10). 51.18 adds what happens between members of one family.
+
+**Current.** Relations between kin follow bonds of the same kind as between strangers; inheritance follows law alone. A parent's favour, siblings' rivalry, a disowned child, a family joined from two marriages and the power of a surviving elder are not modelled.
+
+**State.**
+
+- **`kin_dynamics`.** Per household or house, a parent row with five typed child tables:
+  - `kin_favours` (parent, child, strength);
+  - `kin_rivalries` (two members, cause `RivalryCause`: `inheritance`, `favour`, `office`, `love`, `standing`);
+  - `kin_disownings` (disowner, disowned, reason, reversible);
+  - `kin_blends` (members joined by a later union, standing of step kin by the culture);
+  - `elder_sway` (a surviving elder, such as a ruler's widowed spouse or the eldest kin by the culture's rule, whose sway over the household or house is held as a value 0–100).
+
+**Behaviour.**
+
+1. Favour shifts inheritance where law allows discretion, gifts and care, and feeds rivalry among the others.
+2. Rivalries run through the existing relation and feud mechanics and may split a house or start a succession war.
+3. Disowning removes a member from inheritance and the house by the culture's rules; the disowned may found a line of their own or seek revenge; reconciliation reverses it.
+4. Step kin have the standing the culture gives them; tensions and bonds form by the same rules as other kin.
+5. Elder power steers marriages, heirs and household budgets until death or overthrow by the heir.
+
+**Tools and control.**
+
+- Mortal tools `favour_child` (`child_id`), `disown` (`member_id`, `reason`), `reconcile_kin` (`member_id`).
+- Son tool `stir_kin` (`household_or_house_id`, `kind`, `reason`).
+- God levers `kin_dynamic:*`, `kin_favour:*`, `kin_rivalry:*`, `kin_disowning:*`, `kin_blend:*`, `elder_sway:*`.
+- A "Family" block in household, house and mortal drawers.
+- Context block `kin` gains family dynamics.
+
+**Incidents.** `kin.favoured`, `kin.rivalry_began`, `kin.disowned`, `kin.reconciled`, `kin.elder_steered`, `kin.house_split`.
+
+**Rules namespace.** `kin_dynamics`:
+
+| Key | Default | Range |
+|---|---|---|
+| `kin_dynamics.favour_inheritance_pct` | 20 | 0–100 |
+| `kin_dynamics.rivalry_from_favour_pct` | 15 | 0–100 |
+| `kin_dynamics.split_threshold` | 70 | 0–100 |
+| `kin_dynamics.reconcile_chance_pct` | 10 | 0–100 |
+
+**Codex and book.** Family dynamics in household, house and mortal entries.
+
+**Integrity.** Both sides of a dynamic belong to the household or house; elder power names a living member.
+
+**Legacy.** None; dynamics start empty and form from relations.
+
+**Applies to.** Every people and biology with kin, every era and world; biologies without kin (made minds without makers, hive members) show the block as not applicable with that reason. Sons and foreign gods with divine kin read it through divine kin roles.
+
+**Couplings.** Inheritance, succession, houses, feuds, relations, care, marriages.
+
+### 51.19 Spread of feeling between beings
+
+**Builds on.** Emotions (F5–F8), crowd moods and cascades (`crowd_moods`, `cascades`, F32), rout contagion in battle (`morale.rout_contagion`), emotion spirits and harvests (W25). 51.19 adds the spread of feeling along bonds and in shared places outside crowds and battles.
+
+**Current.** Feelings spread in crowds and routs. A grieving household, a frightened town or a joyful court does not pass its feeling on by contact.
+
+**State.**
+
+- **`feeling_spread`.** One row per settlement and per household: the dominant feelings (values of the emotion enum) with strength, and `locked`. A being's susceptibility is derived each epoch from traits and bonds and is not stored.
+
+**Behaviour.**
+
+1. Each epoch strong feelings pass along bonds (kin, friends, followers) and to those sharing a place, by susceptibility and bond strength, and fade over time.
+2. Shared feeling moves decisions (biases, 47.8.2), crowd thresholds (F32), worship (emotion-fed gods) and gatherings.
+3. Leaders and speakers with high charisma spread their feeling further (50.13).
+
+**Tools and control.**
+
+- Mortal tool `stir_feeling` (`place_or_household_id`, `feeling`), read by charisma and bonds.
+- Son tool `move_hearts` (`place_id`, `feeling`, `strength`, `reason`).
+- God levers `feeling_spread:edit/hold` per place.
+- A "Mood" block in settlement and household drawers.
+- Context block `mood`.
+
+**Incidents.** `mood.spread`, `mood.faded`.
+
+**Rules namespace.** `feeling_spread`:
+
+| Key | Default | Range |
+|---|---|---|
+| `feeling_spread.per_bond_pct` | 10 | 0–100 |
+| `feeling_spread.per_place_pct` | 5 | 0–100 |
+| `feeling_spread.fade_per_epoch` | 20 | 0–100 |
+
+**Codex and book.** Moods of places in settlement entries.
+
+**Integrity.** Feelings are values of the emotion enum; strength 0–100.
+
+**Legacy.** None; computed from existing emotions on the first epoch.
+
+**Applies to.** Every being that feels, in every world; made minds by their make (44.5); beings without feeling are skipped and the block says why.
+
+**Couplings.** Emotions, decisions, crowds, worship, gatherings, speech.
+
+### 51.20 Interpretation and mistranslation
+
+**Builds on.** Interpreters (`rules.interpreters`, `engine/lore/language.py`: shared lexicon, phonology similarity, an interpreter present by language skill), envoys and correspondence (F21), rumour fidelity. 51.20 adds interpreters as a role whose work can fail, and the errors that follow.
+
+**Current.** Two communities understand each other if they share enough language or an interpreter is present. An interpreter never errs, never lies and never shapes what is said.
+
+**State.**
+
+- **`interpretations`.** Event (a parley, a treaty, a trial, a trade, a sermon), interpreter, languages, fidelity (from skill, the languages' distance and the subject), `InterpretationFault` (`none`, `lost_meaning`, `wrong_term`, `softened`, `hardened`, `slanted`, `invented`), whether the fault was found.
+
+**Behaviour.**
+
+1. Every exchange between communities without a shared language runs through an interpretation; its fidelity sets what each side believes was said.
+2. Faults change outcomes: a treaty clause read two ways, an insult heard where none was meant, a confession misheard, a price misunderstood. Interpreters with loyalties slant on purpose.
+3. Found faults reopen agreements and raise grievance; loyal and skilled interpreters gain standing and offices.
+
+**Tools and control.**
+
+- Mortal tool `interpret` (`event_id`, `slant`).
+- Son tool `confuse_tongues` (`event_id`, `reason`).
+- God levers `interpretation:*`.
+- Interpretations on treaty, trial and incident pages.
+- Context block `interpretation`.
+
+**Incidents.** `tongue.mistranslated`, `tongue.slanted`, `tongue.fault_found`.
+
+**Rules namespace.** `interpreters` gains:
+
+| Key | Default | Range |
+|---|---|---|
+| `interpreters.fault_base_pct` | 10 | 0–100 |
+| `interpreters.fault_per_distance_pct` | 20 | 0–100 |
+| `interpreters.slant_loyalty_threshold` | 60 | 0–100 |
+
+**Codex and book.** Interpretations in the entries of the events they served, with fidelity and fault.
+
+**Integrity.** The interpreter speaks both languages.
+
+**Legacy.** None; recorded from the first epoch.
+
+**Applies to.** Every exchange between beings without a shared language, including mind links (W45) and made minds' protocols (W44).
+
+**Couplings.** Treaties, trials, trade, diplomacy, rumours, grievance.
+
+### 51.21 Grave goods and tomb robbing
+
+**Builds on.** Funeral customs (`FuneralCustom`, `funeral_rite`), death work (50.12), necropolis districts, items and artefacts, excavations and ruins (`excavations`), damnatio memoriae. 51.21 adds what is buried with the dead and those who take it.
+
+**Current.** The dead are buried, burned or otherwise treated, and their goods pass by inheritance. Nothing is placed with them and no tomb is robbed.
+
+**State.**
+
+- **`grave_goods`.** Grave (a tomb structure, a site or a burial in a necropolis), the dead, items and goods placed, the custom that required them, protections (`GraveGuard`: `none`, `hidden`, `sealed`, `guarded`, `trapped`, `cursed` where the world's laws allow, `warded`).
+
+**Behaviour.**
+
+1. Customs and rank set what goes with the dead; the goods leave inheritance and the economy.
+2. Robbers seek graves by value and lack of guard; robbery returns goods to markets, angers kin and faith, and may bring curses where the world's laws allow.
+3. Later finds of graves (excavation) yield goods and knowledge of the past (F33).
+
+**Tools and control.**
+
+- Mortal tools `place_grave_goods` (`grave_id`, `item_ids`), `rob_grave` (`grave_id`), `guard_grave` (`grave_id`, `guard`).
+- Son tool `keep_the_dead` (`grave_id`, `guard`, `reason`).
+- God levers `grave_good:*`.
+- Grave goods in tomb and site drawers.
+- Context block `the_dead` gains grave goods.
+
+**Incidents.** `dead.goods_placed`, `dead.grave_robbed`, `dead.robber_caught`, `dead.grave_found`.
+
+**Rules namespace.** `grave_goods`:
+
+| Key | Default | Range |
+|---|---|---|
+| `grave_goods.share_by_rank_pct` | 10 | 0–100 |
+| `grave_goods.rob_chance_per_value_pct` | 5 | 0–100 |
+| `grave_goods.guard_cut_pct` | 50 | 0–100 |
+
+**Codex and book.** Grave goods in the entries of the dead and their tombs.
+
+**Integrity.** Placed items exist and are held by the grave.
+
+**Legacy.** Notable dead buried in tombs gain grave goods by their culture's custom and rank.
+
+**Applies to.** Every people that keeps its dead in a place, in every era and world; peoples whose customs leave no place show it as not applicable with that reason.
+
+**Couplings.** Death work, inheritance, markets, crime, faith, excavation, memory.
+
+### 51.22 Conditions without an agent
+
+**Builds on.** Chronic illness as a condition with mobility, melee and fertility effects (`rules/registry/body.py`), diseases with a chronic rate, ageing, nutrition (47.8.1), pollution, body systems and sensitivities (50.25), madness. 51.22 adds conditions that arise without any infectious agent.
+
+**Current.** Long illness comes only from disease. Bodies do not wear out by organ, diet or exposure.
+
+**State.**
+
+- **`agentless_conditions`.** A catalogue of condition kinds (authored, F57), each typed by `ConditionCause` (`age`, `diet`, `exposure`, `heredity`, `injury_aftermath`, `strain`, `unknown`) and by the body system it affects (50.25), with onset, course (`stable`, `worsening`, `episodic`) and effects through the existing condition rows. The `conditions` table gains `cause` (`ConditionCause`) and `kind_id` (a row of this catalogue).
+
+**Behaviour.**
+
+1. Each epoch beings roll for conditions by age, diet, exposure (pollution, work, 47.10), heredity (F26) and strain, per body system.
+2. Conditions lower capacity and life span, cost care, and may be eased by the people's medicine tier and folk knowledge (50.7).
+3. Rates in a people follow its living standard and diet, so prosperity and want change the conditions that are common.
+
+**Tools and control.**
+
+- Mortal tool `seek_cure` (existing) gains `condition_id` for conditions of any cause.
+- Son tool `ease_body` (`being_id`, `condition_id`, `reason`).
+- God levers `agentless_condition:*` for the catalogue, and the existing condition levers with the new `cause` and `kind_id` fields.
+- Conditions in the body section of every being.
+- Context block `body` gains causes.
+
+**Incidents.** `body.condition_arose`, `body.condition_worsened`, `body.condition_eased`.
+
+**Rules namespace.** `agentless_conditions`:
+
+| Key | Default | Range |
+|---|---|---|
+| `agentless_conditions.age_rate_pct` | 3 | 0–100 |
+| `agentless_conditions.diet_rate_pct` | 2 | 0–100 |
+| `agentless_conditions.exposure_rate_pct` | 2 | 0–100 |
+| `agentless_conditions.heredity_weight_pct` | 30 | 0–100 |
+
+**Codex and book.** Conditions with their causes in body sections.
+
+**Integrity.** The body system exists for the biology.
+
+**Legacy.** Existing chronic illnesses with no recorded disease gain cause `unknown`.
+
+**Applies to.** Every biology with a body that wears; made seats wear by their own rules (F50); bodiless beings are skipped with that reason.
+
+**Couplings.** Body, life span, medicine, diet, pollution, work, heredity, care.
+
+### 51.23 Fertility control
+
+**Builds on.** The course of reproduction and intimacy norms (50.8), births and fertility (genetics fertility locus, F26), population policy instruments (50.1), medicine tiers (47.2.3), folk knowledge (50.7). 51.23 adds the means by which beings prevent, seek or end conception.
+
+**Current.** Fertility is a trait and a chance; no being or culture acts on it.
+
+**State.**
+
+- **`fertility_means`.** Per people and per biology: `FertilityMeans` (`prevention`, `remedy_for_barrenness`, `ending_pregnancy`, `assisted_conception`, `surrogacy`, `made_birth` (W46)), each with method source (folk, medicine tier, rite, power), reliability, risk, and the culture's stance (from 50.8 stances).
+
+**Behaviour.**
+
+1. Use of a means changes birth chances by reliability, read by births and population policy.
+2. Stances decide whether use is open, hidden or punished; hidden use carries the risk of exposure.
+3. Means spread with knowledge and trade and are targeted by population policy (bans, rewards).
+
+**Tools and control.**
+
+- Mortal tool `use_fertility_means` (`means`).
+- Son tool `move_fertility` (`community_id`, `means`, `reliability_change`, `reason`).
+- God levers `fertility_means:*`.
+- A block in the "Unions and birth" section of culture drawers.
+- Context block `unions_and_birth` gains means, plain and closed-door.
+
+**Incidents.** `birth.means_used`, `birth.means_exposed`, `birth.means_banned`.
+
+**Rules namespace.** `fertility_means`:
+
+| Key | Default | Range |
+|---|---|---|
+| `fertility_means.prevention_reliability_pct` | 50 | 0–100 |
+| `fertility_means.remedy_success_pct` | 20 | 0–100 |
+| `fertility_means.risk_pct` | 5 | 0–100 |
+
+**Codex and book.** Means per culture, described plainly.
+
+**Integrity.** Means read only the biology's reproductive system.
+
+**Legacy.** None; means come from genesis and the model's authoring.
+
+**Applies to.** Every biology that reproduces by conception, every era and world; other biologies show the block as not applicable with that reason. Narrated plainly and behind closed doors (K.47).
+
+**Couplings.** Births, population policy, norms, medicine, knowledge, law.
+
+### 51.24 Honours conferred on persons
+
+**Builds on.** Titles (48.6), heraldry, prestige and renown, holy and warrior orders (faction kinds), battle honours of named units (spec 13 5.1 reference pass 6, planned; built by whichever wave runs first, 0.7). 51.24 adds honours that a polity, faith or organisation confers on a person for service.
+
+**Current.** Renown grows by deeds; titles come with land and office. No order of merit, decoration or honorary rank is conferred.
+
+**State.**
+
+- **`honour_kinds`.** Authored per conferrer (F57): name in the world's language, rank among the conferrer's honours, privileges (`HonourPrivilege`: `precedence`, `pension`, `land`, `seat`, `immunity`, `title`, `none`), limit on holders.
+- **`honours_held`.** Holder (any node that can serve), honour kind, conferred by, deed (a recorded incident), epoch, revoked.
+
+**Behaviour.**
+
+1. Conferrers grant honours for deeds; holders gain prestige, loyalty to the conferrer and the privileges.
+2. Honours sold or given to favourites lose worth; revocation shames.
+3. Honours pass into heraldry, epitaphs and the book; some cultures make them hereditary.
+
+**Tools and control.**
+
+- Mortal tools `confer_honour` (`honour_kind_id`, `holder_id`, `deed_incident_id`), `revoke_honour` (`honour_id`), `found_honour` (`conferrer_id`, `name_reason`, `privileges`, `limit`).
+- Son tool `honour_servant` (`holder_id`, `reason`).
+- God levers `honour_kind:*`, `honour_held:*`.
+- An "Honours" block in `ThingSections` for every node that can hold one.
+- Context block `honours`.
+
+**Incidents.** `honour.conferred`, `honour.revoked`, `honour.sold`.
+
+**Rules namespace.** `honours`:
+
+| Key | Default | Range |
+|---|---|---|
+| `honours.prestige_per_rank` | 5 | 0–50 |
+| `honours.sale_worth_loss_pct` | 20 | 0–100 |
+| `honours.loyalty_gain` | 10 | 0–100 |
+
+**Codex and book.** Honours in holders' entries with the deed and conferrer; honour kinds in conferrers' entries.
+
+**Integrity.** The holder count stays within the limit; the deed is a recorded incident.
+
+**Legacy.** None; honours start empty.
+
+**Applies to.** Every node that can serve a conferrer: mortals, made minds, creatures in service, units (with battle honours), and sons honoured by a foreign pantheon where treaties allow. Worlds, stars and the Creator cannot serve a conferrer and show the block as not applicable with that reason.
+
+**Couplings.** Prestige, loyalty, titles, heraldry, pensions, memory.
+
+### 51.25 Sea waves from quakes, slides and storms
+
+**Builds on.** Disasters (`Disaster`: earthquake, flood, storm, eruption, volcanic quake), coasts and deltas (50.23), harbours, tides by moons (10.9). 51.25 adds the great waves that a quake, a slide or a storm drives onto a coast.
+
+**Current.** A quake shakes the region where it strikes; a storm harms its region. Nothing crosses a sea to strike another coast.
+
+**State.**
+
+- **`sea_waves`.** Origin (a quake, an eruption, a slide, a storm, an impact, a divine act), sea, coasts reached with height and arrival delay, warning given (50.28 observation methods).
+
+**Behaviour.**
+
+1. Quakes, eruptions and slides under or beside a sea, impacts and strong storms roll for waves by strength and depth.
+2. Waves strike every coast of the sea by distance and the coast's shape, harming harbours, districts and fields, salting land and drowning those not warned.
+3. Warnings from observation methods and customs lower deaths; coastal works (50.4) lower harm.
+
+**Tools and control.**
+
+- Mortal tool `warn_coast` (`region_id`, `method`), read by observation methods (50.28).
+- Son tool `raise_sea` (`sea_id`, `strength`, `reason`) under the existing disaster acts.
+- God levers `sea_wave:*`.
+- Waves on the atlas and in region entries.
+- Context block `disasters` gains waves.
+
+**Incidents.** `land.sea_wave`, `land.wave_warned`, `land.coast_salted`.
+
+**Rules namespace.** `sea_waves`:
+
+| Key | Default | Range |
+|---|---|---|
+| `sea_waves.quake_wave_chance_pct` | 20 | 0–100 |
+| `sea_waves.storm_surge_chance_pct` | 10 | 0–100 |
+| `sea_waves.harm_per_height` | 5 | 0–50 |
+| `sea_waves.warning_death_cut_pct` | 60 | 0–100 |
+
+**Codex and book.** Waves in the entries of every coast they struck.
+
+**Integrity.** Coasts reached lie on the wave's sea.
+
+**Legacy.** None.
+
+**Applies to.** Every world with seas of any liquid; worlds without seas show the layer idle with that reason.
+
+**Couplings.** Disasters, coasts, harbours, settlements, harvests, works, observation, faith.
+
+### 51.26 Creature societies
+
+**Builds on.** Fauna and creature traits (including `hive_minded`), beasts and monsters (`engine/ecology/beasts.py`, `monsters.py`), creature attacks (47.6.3), sacred animals, beast worship. 51.26 adds the social structure of creatures that live in groups but are not peoples.
+
+**Current.** Creatures are species counts and single beasts. A pack, herd, colony or hive has no leader, ranks, territory or succession.
+
+**State.**
+
+- **`creature_groups`.** Species, region or lair, `GroupForm` (`pack`, `herd`, `colony`, `hive`, `troop`, `flock`, `solitary_range`), size, leader, ranks, territory, rival groups.
+
+**Behaviour.**
+
+1. Groups hold territory, fight rival groups and raid settlements by hunger and pressure; leaders fall and are replaced by contests.
+2. Group size and form set danger to travellers and herds, and the yield of hunts.
+3. Groups move with seasons and are pushed by settlement and protected by 51.9.
+
+**Tools and control.**
+
+- Mortal tool `drive_off_group` (`group_id`, `means`), beside the existing hunting tools.
+- Son tool `lead_creatures` (`group_id`, `aim`, `reason`).
+- God levers `creature_group:*`.
+- Groups on the atlas and in region and species drawers.
+- Context block `wilds` gains groups.
+
+**Incidents.** `beasts.group_formed`, `beasts.leader_fell`, `beasts.territory_war`, `beasts.group_raid`, `beasts.group_moved`.
+
+**Rules namespace.** `creature_groups`:
+
+| Key | Default | Range |
+|---|---|---|
+| `creature_groups.raid_hunger_threshold` | 60 | 0–100 |
+| `creature_groups.contest_chance_pct` | 10 | 0–100 |
+| `creature_groups.territory_war_pct` | 5 | 0–100 |
+
+**Codex and book.** Groups in region and species entries.
+
+**Integrity.** Group members are of one species, unless the form allows mixed groups.
+
+**Legacy.** Species with large counts in a region get groups by their social traits.
+
+**Applies to.** Every world with fauna; species without social traits keep `solitary_range`.
+
+**Couplings.** Ecology, hunts, travel danger, raids, protected nature, faith.
+
+### 51.27 Conceptions of the divine
+
+**Builds on.** Faiths with tenets (`TenetKind`), doctrine and doctrinal drift, theologians, theodicy crises, pantheon structures of the gods (47.5.4), syncretism. 51.27 adds how a faith conceives the divine, separate from what the gods are.
+
+**Current.** A faith worships its gods and holds tenets. Whether it holds one god, many, one above many, the divine in all things, a distant maker, spirits in places, or none, is not typed; so conversions, syncretism and disputes cannot read it.
+
+**State.**
+
+- **`divine_conceptions`.** Per faith: `DivineCount` (`one`, `one_above_many`, `many`, `pairs`, `all_is_divine`, `none`), `DivineNearness` (`distant`, `present`, `within`), `DivinePersonhood` (`persons`, `forces`, `principle`, `mixed`), place of the Creator in it (acknowledged, unknown, denied, rival), and how the real gods of the world map onto it (each god as true, as servant, as demon, as unknown).
+
+**Behaviour.**
+
+1. Conceptions set which acts of gods a faith can accept (a faith that holds one god reads other gods' signs as false or as servants), which syncretisms are possible, and how theodicy crises run.
+2. Doctrinal drift and theologians move conceptions; heresies and schisms split on them.
+3. The gods' real acts (47.5) test conceptions; a faith whose conception denies an acting god faces crises when that god acts openly.
+
+**Tools and control.**
+
+- Son tool `reveal_nature` (`faith_id`, `axis`, `value`, `reason`).
+- Mortal tool `argue_doctrine` gains `conception_axis`.
+- God levers `divine_conception:*`.
+- A "Conception" block in faith drawers.
+- Context block `faith` gains the conception.
+
+**Incidents.** `faith.conception_changed`, `faith.conception_tested`, `faith.conception_split`.
+
+**Rules namespace.** `divine_conceptions`:
+
+| Key | Default | Range |
+|---|---|---|
+| `divine_conceptions.drift_per_epoch_pct` | 2 | 0–100 |
+| `divine_conceptions.denied_god_crisis_pct` | 30 | 0–100 |
+| `divine_conceptions.syncretism_fit_pct` | 50 | 0–100 |
+
+**Codex and book.** The conception in faith entries, with how each god is read.
+
+**Integrity.** Mapped gods exist in the world.
+
+**Legacy.** Faiths get conceptions from their tenets and the number of gods they worship.
+
+**Applies to.** Every faith in every world, including faiths of made minds and of creatures that worship.
+
+**Couplings.** Faith, conversion, syncretism, theodicy, schism, divine acts.
+
+### 51.28 Integration of every section
+
+The rules of 50.17a apply to 51.1–51.27 in full:
+
+- every era and every kind of world, with the section idle and saying why where the world lacks its subject;
+- every kind of thing through `ThingSections` where a section applies to every node, with the reason stated where it applies to some kinds only (each section's **Applies to**);
+- genesis through typed fields only, with no template default that carries images;
+- typed context blocks, tool texts that list every enum value and describe every field;
+- incidents under F58 with plain templates;
+- every number a rule key, with balance bands in `13-balance-bands.json`;
+- recorded fixups (each section's **Legacy**);
+- checks under 47.13 (each section's **Integrity**);
+- designed sections in the book and the Codex, never truncated;
+- the layers of 6.6 for every table: changes, moments, places, terms, history, search and control.
+
+New entity type: `league` (51.7). It is a node like every entity, renders `ThingSections`, has an atlas presence, a wiki page, a book and Codex entry and a create screen, and joins `check_wiring.py`'s list of node kinds.
+
+New faction kind: `worker_body` (51.4). New law kind: `competition_law` (51.3).
+
+### 51.29 Guards
+
+| Guard | Fails when |
+|---|---|
+| `tests/engine/core/test_economic_orders.py`, `test_governance.py`, `test_competition.py`, `test_labour.py`, `test_monetary.py`, `test_securities.py`, `test_leagues.py`, `test_city_rules.py`, `test_protected_nature.py`, `test_departures.py`, `test_referendums.py`, `test_reckoning.py`, `test_leader_cults.py`, `test_restoration.py`, `test_occupation_regimes.py`, `test_mass_weapons.py`, `test_interworld.py`, `test_kin_dynamics.py`, `test_feeling_spread.py`, `test_interpretation.py`, `test_grave_goods.py`, `test_agentless_conditions.py`, `test_fertility_means.py`, `test_honours.py`, `test_sea_waves.py`, `test_creature_groups.py`, `test_divine_conceptions.py` | a section's behaviour does not produce its effects on a seeded world |
+| `scripts/check_inventory.py` (5.10) | a table, enum, step, kind, tool, lever, screen or text file of W51 has no inventory row |
+| `scripts/check_spec_depth.py` (47.9) | a section of W51 lacks one of the thirteen elements |
+| `scripts/check_wiring.py` | the `league` entity type is missing from the book's owners or a drawer page does not render `ThingSections` |
+
+### 51.30 Compliance catalogue (W51)
+
+| Section | Tables | Phases | God levers | Screens | Tools and context | Codex and book | Integrity | Backfill |
+|---|---|---|---|---|---|---|---|---|
+| 51.1 economic orders | `economic_orders`, `economic_order_kinds`, `order_transitions` | economy, markets, households, treasury, revolts | `economic_order:*`, `economic_order_kind:*`, `order_transition:*` | "Economic order" panel | `set_economic_order`, `begin_transition`, `move_economic_order`; `economic_order` | polity entries; Records | sectors valid; holdings exist | from laws and stores |
+| 51.2 organisations | `org_governance`, `org_seats`, `org_cliques`, `org_mergers`, `org_research`, `insolvency_cases` | factions, companies, courts, research | `org_governance:*`, `org_seat:*`, `org_clique:*`, `org_merger:*`, `org_research:*`, `insolvency_case:*` | "Governance" section, merger and case pages | `cast_org_vote`, `seek_headship`, `split_org`, `bid_for_org`, `fund_research`, `file_insolvency`, `sway_org`; `governance` | organisation entries | weights sum to 100; claims real | from shares and leaders |
+| 51.3 competition | `market_structures`, `cartels`, `price_wars`; law kind `competition_law` | markets, law | `market_structure:*`, `cartel:*`, `price_war:*` | "Market structure" section | `form_cartel`, `start_price_war`, `report_cartel`, `break_market`; `market_structure` | market sections | shares sum to 100 | derived; guild monopolies |
+| 51.4 labour | `worker_bodies`, `labour_contracts`, `labour_disputes` | production, collective, law | `worker_body:*`, `labour_contract:*`, `labour_dispute:*` | "Labour" section, dispute page | `found_worker_body`, `bargain_contract`, `call_dispute`, `lock_out`, `stir_labour`; `labour` | settlement and organisation entries | parties exist | striking guilds, strikes |
+| 51.5 money | `monetary_authorities` | credit, prices, banks | `monetary_authority:*` | "Money" section | `set_monetary_policy`, `found_monetary_authority`, `shake_coin`; `money_policy` | polity and currency entries | currency exists | issuers |
+| 51.6 securities | `exchanges`, `securities`, `security_holdings`, `security_prices` | markets, credit, treasury | `exchange:*`, `security:*`, `security_holding:*`, `security_price:*` | exchange page | `list_security`, `trade_security`, `stir_market_mood`; `securities` | issuer and holder entries | holdings within amount | shares, polity loans |
+| 51.7 leagues | `polity_leagues`, `league_members`, `league_decisions` | diplomacy, war, trade, courts | `polity_league:*`, `league_member:*`, `league_decision:*` | league drawer, atlas layer | `found_league`, `join_league`, `table_league_motion`, `bind_league`; `leagues` | league entries | members are polities | coalitions, federations |
+| 51.8 city rules | `land_use_rules`, `municipal_services`, `conurbations` | settlement, fire, disease, crime | `land_use_rule:*`, `municipal_service:*`, `conurbation:*` | "City rules", "Services", city scene | `set_land_use_rule`, `provide_service`, `join_settlements`, `bless_city`; `city_rules` | settlement entries | districts of the settlement | planned morphology, wells, watch |
+| 51.9 protected nature | `protected_areas`, `species_protections` | ecology, crime, law | `protected_area:*`, `species_protection:*` | atlas layer, "Protection" section | `protect_area`, `protect_species`, `reintroduce`, `hallow_wild`; `protected_nature` | region and species entries | habitat fits | reserves, groves |
+| 51.10 departures | `departures` | offices, succession | `departure:*` | office and holder drawers | `leave_office`, `return_to_office`, `call_to_step_aside`; `offices` | holder entries | holder held office | step-downs |
+| 51.11 referendums | `referendums` | affairs, law, opinion | `referendum:*` | referendum pages | `call_referendum`, `campaign_for_vote`, `sway_vote`; `votes` | polity entries | franchise matches | none |
+| 51.12 reckoning | `reckonings`, `reckoning_measures`, `reckoning_cases` | justice, offices, historiography | `reckoning:*`, `reckoning_measure:*`, `reckoning_case:*` | reckoning page | `open_reckoning`, `try_servant`, `weigh_reckoning`; `reckoning` | polity entries | cases name incidents | purges after coups |
+| 51.13 leader cults | `leader_cults` | legitimacy, censorship | `leader_cult:*` | "Cult" block | `promote_cult`, `tear_down_cult`, `sway_cult`; `leader_cult` | leader entries | leader mortal or made | none |
+| 51.14 restoration | `restorations` | polity formation, revolts | `restoration:*` | dead polity page | `raise_restoration`, `restore_polity`, `stir_memory`; `restoration` | polity entries | predecessor is dead | pretenders |
+| 51.15 occupation | `occupation_regimes`, `collaborations`, `occupation_measures` | military, intrigue, demography | `occupation_regime:*`, `collaboration:*`, `occupation_measure:*` | "Occupation" section | `set_occupation_rule`, `collaborate`, `impose_measure`, `expose_collaborator`, `sway_occupation`; `occupation` | occupied and occupier entries | open occupation | open occupations |
+| 51.16 mass weapons | `mass_weapons`, `deterrence_postures`, `war_remnants` | war, doom, mishaps, works | `mass_weapon:*`, `deterrence_posture:*`, `war_remnant:*` | "Arsenal" section, atlas layer | `begin_mass_weapon`, `declare_posture`, `use_mass_weapon`, `clear_remnants`, `still_weapon`; `mass_weapons` | polity, region, war entries | technique held | remnants of past wars |
+| 51.17 interworld | `interworld_campaigns`, `orbital_control`, `interworld_migrations` | military, vessels, migration | `interworld_campaign:*`, `orbital_control:*`, `interworld_migration:*` | cosmography map, "Orbit" block | `launch_campaign`, `contest_orbit`, `lead_migration`, `close_the_way`; `interworld` | war, world, people entries | route joins worlds | none |
+| 51.18 family | `kin_dynamics`, `kin_favours`, `kin_rivalries`, `kin_disownings`, `kin_blends`, `elder_sway` | relations, inheritance, houses | `kin_dynamic:*`, `kin_favour:*`, `kin_rivalry:*`, `kin_disowning:*`, `kin_blend:*`, `elder_sway:*` | "Family" block | `favour_child`, `disown`, `reconcile_kin`, `stir_kin`; `kin` | household, house, mortal entries | members of the household | none |
+| 51.19 feeling | `feeling_spread` | mind, crowds, worship | `feeling_spread:*` | "Mood" block | `stir_feeling`, `move_hearts`; `mood` | settlement entries | values of the enum | computed |
+| 51.20 interpretation | `interpretations` | diplomacy, justice, trade | `interpretation:*` | event pages | `interpret`, `confuse_tongues`; `interpretation` | event entries | languages spoken | none |
+| 51.21 grave goods | `grave_goods` | death, crime, excavation | `grave_good:*` | tomb and site drawers | `place_grave_goods`, `rob_grave`, `guard_grave`, `keep_the_dead`; `the_dead` | entries of the dead | items held | notable tombs |
+| 51.22 conditions | `agentless_conditions`; `cause` and `kind_id` on `conditions` | body, health | `agentless_condition:*`, condition levers | body section | `seek_cure`, `ease_body`; `body` | body sections | system exists | chronic illness |
+| 51.23 fertility | `fertility_means` | births, population policy | `fertility_means:*` | "Unions and birth" block | `use_fertility_means`, `move_fertility`; `unions_and_birth` | culture entries | biology reproduces | none |
+| 51.24 honours | `honour_kinds`, `honours_held` | standing, loyalty | `honour_kind:*`, `honour_held:*` | "Honours" in `ThingSections` | `confer_honour`, `revoke_honour`, `found_honour`, `honour_servant`; `honours` | holder and conferrer entries | within limit | none |
+| 51.25 sea waves | `sea_waves` | disasters, coasts | `sea_wave:*` | atlas, region entries | `warn_coast`, `raise_sea`; `disasters` | coast entries | coasts on the sea | none |
+| 51.26 creature groups | `creature_groups` | ecology, wilds, raids | `creature_group:*` | atlas, species drawers | `drive_off_group`, `lead_creatures`; `wilds` | region and species entries | one species | from counts |
+| 51.27 conceptions | `divine_conceptions` | faith, conversion, theodicy | `divine_conception:*` | "Conception" block | `reveal_nature`, `argue_doctrine`; `faith` | faith entries | gods exist | from tenets |
+
+Every new agent tool has a case in `every_son_tool.py` or `every_mortal_tool.py`. Every lever runs with real values in `test_every_lever.py`. Every table reaches the book and the Codex through `services/books/typed.py` or a designed Records table. Every incident kind follows F58.
+
+### 51.31 Cross-cutting layers (W51)
+
+Each table of W51 fills the layers of 6.6: its changes are recorded with terms (F58.5, F58.7), its happenings carry moments and places (F58.6), its records can be read at any earlier moment (F58.11), nothing is folded away (F58.12), every record is searchable by its typed fields, and every record can be created, edited, held, deleted and reverted from the frontend.
+
+### 51.32 Couplings, loops, stories and decisions
+
+**Couplings.**
+
+- C70 Economic order → allocation, inequality and crisis paths.
+- C71 Governance → company and faction acts.
+- C72 Market structure → prices and insolvency.
+- C73 Labour disputes → output and grievance.
+- C74 Monetary policy → credit, prices and exchange rates.
+- C75 Securities → credit and crashes.
+- C76 Leagues → war, tariffs and money.
+- C77 Occupation regimes → partisans, reckoning and restoration.
+- C78 Mass weapons → deterrence, doom and remnants.
+- C79 Interworld campaigns → occupation and migration.
+
+**Loops.**
+
+- L121 (B) uncompensated collectivisation → flight and revolt → output falls → transition reversed.
+- L122 (R) bubble: rising prices → more buyers → higher prices (brake: shock and crash).
+- L123 (B) cartel profits → cheating → cartel breaks → prices fall.
+- L124 (R) occupation measures → grievance → partisans → harsher measures.
+- L125 (B) mass weapons on both sides → deterrence → fewer wars between them → arms limits.
+
+**Acceptance stories.**
+
+- AS64 **The Granary and the Plan.** A polity moves its grain from market to redistribution; records are thin; a district starves while another rots its surplus; the order is reversed after a revolt.
+- AS65 **The Takeover.** A company buys shares of a rival on an exchange; the rival's board seeks a friendly buyer; the court under competition law blocks the merger; the bidder's shares crash.
+- AS66 **The Lockout.** A union of dockworkers strikes; the owners lock out and bring bound labourers; the fund runs out; a league's court rules on the port's charter.
+- AS67 **The Collaborator's Ledger.** An occupier rules through a local council; partisans kill its members; liberation brings a reckoning; the council's archive opens and names informers.
+- AS68 **The Crossing.** A polity sends a fleet to another world; it wins the space around it, lands, and is starved when its supply line is cut by a gate closed by a son.
+
+**Decisions.**
+
+| Id | Question | Decision |
+|---|---|---|
+| K.50 | How is an economic order typed? | Four axes (ownership, allocation, labour, distribution) per polity or sector, with authored named orders; spec 13's five systems are rows. |
+| K.51 | Are leagues polities? | No. A league is its own entity type whose members are polities; a league may become a federation, which is a polity. |
+| K.52 | Who can hold mass weapons? | Any holder with the technique and materials; programmes pass visible stages; world-ending effects stay with the doom clock (0.8 rule 5). |
+| K.53 | May the search be called closed? | The search of 51.0 names its lists and axes; a later question that finds a gap adds its list to 51.0 and its section to W51 or a later wave. |
+
+### 51.33 Execution order
+
+1. The guards (51.29) and inventory rows.
+2. 51.2 organisations, then 51.1 economic orders, 51.3 competition, 51.4 labour, 51.5 money, 51.6 securities.
+3. 51.7 leagues (with the new entity type), 51.10 departures, 51.11 referendums, 51.12 reckoning, 51.13 leader cults, 51.14 restoration, 51.15 occupation.
+4. 51.16 mass weapons, 51.17 interworld.
+5. 51.8 city rules, 51.9 protected nature.
+6. 51.18 family, 51.19 feeling, 51.20 interpretation, 51.21 grave goods, 51.22 conditions, 51.23 fertility, 51.24 honours.
+7. 51.25 sea waves, 51.26 creature groups, 51.27 conceptions.
+8. Surfaces, fixups and the audit.
+
+The wave is gated once.
+
 ### Appendix 16.L — Section integration ledger
 
-The closed completeness audit of 2026-11-14 checked every mechanic section of W44–W50 (219 sections, F50–F58 included) for thirteen elements:
+The closed completeness audit of 2026-11-14 checked every mechanic section of W44–W50 (219 sections, F50–F58 included) for thirteen elements, and the 27 sections of W51 were written with all thirteen in their own text:
 
 1. typed state
 2. behaviour
@@ -4907,6 +6398,7 @@ Where a section was missing from its wave's catalogue, its row here also names l
 | 50.15 depth targets | every node type | none of its own | targets per type (attributes, mechanics, subsystem pairs) | none | guard `depth_metric.py check` | as the closing sections named in 50.15 |
 | 50.16 facets | every facet of Appendix 50.A marked 50.16, per 50.17a | the incidents of the method, profession or kind each facet reads: `production.run`, `production.failed`, `profession.joined`, `profession.left`, and the F57 kind incidents | `methods.output`, `methods.hands`, `methods.energy` per method row; `professions.prestige`, `professions.exposure` per profession row | existing production, profession and kind tools (`invent_kind`, `shape_kind`, `forge_model`, `draw_structure_type`) | kind, method and profession levers; library screens; context lists of local methods and professions; book chapters per people; integrity of kind references; legacy built-in rows | the readers named per facet in 50.16 |
 | 50.22–50.29 nature, cosmos, standing | per 50.30 | listed per section in 50.30 | listed per section in 50.30 with defaults and ranges | listed per section in 50.30 with fields | compliance rows of 50.18 | listed per section in 50.30 |
+| 51.1–51.27 orders of economy and state, and the found gaps | each section's **Applies to**, under 51.28 | each section's **Incidents** | each section's **Rules namespace** table with defaults and ranges | each section's **Tools and control** with fields | each section's **Tools and control**, **Codex and book**, **Integrity** and **Legacy**; compliance rows of 51.30 | each section's **Couplings**; C70–C79 |
 
 
 **Behaviour of sections written as models or catalogues.** Some sections state their behaviour inside a model or a catalogue rather than as a numbered list. For each of them, the behaviour is stated here in one sentence.
