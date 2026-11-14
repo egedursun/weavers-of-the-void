@@ -10,6 +10,7 @@ import {
   Unlink,
   UserCheck,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -644,7 +645,7 @@ export function CreatureCard({
       icon={last?.icon ?? Footprints}
       tone={last?.tone ?? 'verdigris'}
       title={<Ref node={creature.creature} empty='a vanished creature' />}
-      caption={`Creature of ${creature.god?.name ?? 'a god'} since epoch ${creature.since_epoch} · ${creature.deeds} deeds`}
+      caption={`Creature of ${creature.god?.name ?? 'a god'} since epoch ${creature.since_epoch} · ${plural(creature.deeds, 'deed', 'deeds')}`}
       aside={
         <Button
           size='sm'
@@ -764,7 +765,7 @@ export function MiracleCard({
       icon={misread ? Unlink : Gem}
       tone={misread ? 'warning' : 'gold'}
       title={miracle.kind.replaceAll('_', ' ')}
-      caption={`Epoch ${miracle.epoch} · ${miracle.witnesses} witnesses · belief ${miracle.belief}`}
+      caption={`Epoch ${miracle.epoch} · ${plural(miracle.witnesses, 'witness', 'witnesses')} · belief ${miracle.belief}`}
       aside={
         <Button
           size='sm'

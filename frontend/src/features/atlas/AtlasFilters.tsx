@@ -9,6 +9,7 @@ import {
   Star,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -217,7 +218,7 @@ export function AtlasFilters({
         </div>
       )}
       <Muted variant='caption' aria-live='polite'>
-        {`${formatInteger(matches)} records match`}
+        {`${plural(matches, 'record', 'records')} match`}
       </Muted>
     </div>
   )

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.ages import AgeEchoRow, AgeRow, ArcRow
 from aerona.db.tables.celestial import WorldRow
@@ -116,9 +117,11 @@ async def turn_age(ctx: TickContext, variant: ApocalypseVariant | None) -> AgeRo
     lore = await carry_lore(ctx, carried)
     lost = await lose_knowledge(ctx, world.id if world is not None else None, carried)
     echoes = await seed_echoes(ctx, ended, opened)
+    tales_counted = several(lore, "tale", "tales")
+    arts_counted = several(lost, "art", "arts")
     await note(
         ctx,
-        f"The age turned and age {opened.number} began. {lore} tales were half-remembered, {lost} arts were lost and {echoes} great lives will echo.",
+        f"The age turned and age {opened.number} began. {tales_counted} were half-remembered, {arts_counted} were lost and {echoes} great lives will echo.",
         key="ages.turned",
     )
     return opened

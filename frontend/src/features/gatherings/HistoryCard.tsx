@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState, LoadingBlock, PagedList } from '@/components/domain'
@@ -477,8 +478,10 @@ export function HistoryCard({
     >
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Chip icon={look.icon}>{look.label}</Chip>
-        <Chip>{`${collection.members} figures`}</Chip>
-        <Chip icon={MapPin}>{`${collection.places} places`}</Chip>
+        <Chip>{`${plural(collection.members, 'figure', 'figures')}`}</Chip>
+        <Chip
+          icon={MapPin}
+        >{`${plural(collection.places, 'place', 'places')}`}</Chip>
         {collection.end_epoch === null && (
           <Chip variant='warning'>Unfolding</Chip>
         )}

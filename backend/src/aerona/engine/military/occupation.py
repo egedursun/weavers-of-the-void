@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, OccupationRow
 from aerona.db.tables.mind import MemoryRow
@@ -121,7 +122,7 @@ async def seeks_peace(ctx: TickContext, war: WarRow, side: WarSideRow, *, humili
 
 async def announce_partisans(ctx: TickContext, lost: int) -> None:
     if lost:
-        text = f"Partisans in occupied lands struck at the occupiers; {lost} soldiers fell."
+        text = f"Partisans in occupied lands struck at the occupiers; {several(lost, 'soldier', 'soldiers')} fell."
         await ctx.chronicle(ChronicleKind.WAR, text, template_key="war.partisans", feed_category=FeedCategory.WAR)
 
 

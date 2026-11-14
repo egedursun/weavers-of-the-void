@@ -431,7 +431,7 @@ async def plan_edit(scope: PlayerScope, command: PlanEdit) -> Effect:
 @player_action("plan:advance", ActionKind.EDIT_RECORD)
 async def plan_advance(scope: PlayerScope, command: PlanAdvance) -> Effect:
     row = await control.advance_plan(await scope.context("plan_advance"), command.plan_id, command.steps)
-    return Effect(f"{row.name} stands at {row.progress} of {row.steps} steps.", row.holder_node_id, values={"progress": row.progress})
+    return Effect(f"{row.name} stands at {row.progress} of {several(row.steps, 'step', 'steps')}.", row.holder_node_id, values={"progress": row.progress})
 
 
 @player_action("plan:expose", ActionKind.EDIT_RECORD)

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Crown, Droplet, Droplets, Minus, Plus, Sparkles } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
@@ -117,7 +118,7 @@ function SourceCard({
       icon={spec.icon}
       tone={spec.tone}
       title={spec.label}
-      caption={`Chance ${row.weight}% on a touch · lasts ${row.lasts} epochs`}
+      caption={`Chance ${row.weight}% on a touch · lasts ${plural(row.lasts, 'epoch', 'epochs')}`}
       removeLabel='Strike the source'
       editTitle='Set the source'
       note='What the people counts impure. A mortal who touches it is made impure by its chance, defiled if it weighs heavily enough, for as long as it lasts.'
@@ -173,7 +174,7 @@ function MethodCard({
       icon={spec.icon}
       tone={spec.tone}
       title={spec.label}
-      caption={`${row.epochs} epochs · costs ${row.cost} · succeeds ${row.success}%`}
+      caption={`${plural(row.epochs, 'epoch', 'epochs')} · costs ${row.cost} · succeeds ${row.success}%`}
       removeLabel='Strike the purification'
       editTitle='Set the purification'
       note='A way the people purifies. The impure take the cheapest way open to them once their impurity has run its course; waiting does not cleanse the defiled.'

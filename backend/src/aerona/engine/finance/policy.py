@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.finance import ILLEGAL_GOODS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.core.random import SeededRandom
 from aerona.db.tables.economy import MarketPriceRow, ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -186,9 +187,10 @@ async def smuggle(
         tally.noted += 1
         gang_entity = book.entities.get(outlaw)
         target = book.entities.get(buyer)
+        loads_counted = several(moved, "load", "loads")
         await note(
             ctx,
-            f"{gang_entity.name if gang_entity else 'Smugglers'} slipped {moved} loads of forbidden goods into {target.name if target else 'the market'}.",
+            f"{gang_entity.name if gang_entity else 'Smugglers'} slipped {loads_counted} of forbidden goods into {target.name if target else 'the market'}.",
             key="trade_policy.smuggled",
             ids=[item for item in (outlaw, buyer) if item],
             kind=ChronicleKind.TRADE,

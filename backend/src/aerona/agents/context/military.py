@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.made_lines import kit_line
 from aerona.catalog.command import AREAS
 from aerona.catalog.war_terms import CASUS_BELLI_LABELS
+from aerona.core.grammar import several
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -43,8 +44,8 @@ async def army_sheet(session: AsyncSession, rules: Rules, army_id: int) -> str:
     )
     tail = "; sworn for pay" if hired is not None else ""
     return (
-        f"{army.name}: {stat(army, 'size') or 0} soldiers ({makeup}), morale {stat(army, 'morale') or 0}, cohesion {profile.cohesion}, "
-        f"{profile.supply_days} days of food, stance {words(profile.stance.value)}{order_line(stacks)}{tail}"
+        f"{army.name}: {several(stat(army, 'size') or 0, 'soldier', 'soldiers')} ({makeup}), morale {stat(army, 'morale') or 0}, cohesion {profile.cohesion}, "
+        f"{several(profile.supply_days, 'day', 'days')} of food, stance {words(profile.stance.value)}{order_line(stacks)}{tail}"
         f"{await works_line(session, rules, army_id, profile, stacks)}{await kit_line(session, army_id)}"
     )
 
@@ -65,7 +66,7 @@ async def works_line(session: AsyncSession, rules: Rules, army_id: int, profile:
     if region is not None and region.scars.get(ScarKind.BRIDGE_DOWN.value, 0) > 0:
         parts.append("the bridge here is down")
     if engineers(rules, stacks):
-        parts.append(f"{sappers(stacks)} sappers")
+        parts.append(f"{several(sappers(stacks), 'sapper', 'sappers')}")
     best = best_area(await command_areas(session, row.commander_entity_id if row is not None else None))
     if best is not None:
         parts.append(f"commander leads best at {AREAS[best].label.lower()}")
@@ -87,9 +88,9 @@ def order_line(stacks: list[ArmyUnitRow]) -> str:
     if shaken:
         parts.append(f"some stacks {', '.join(shaken)}")
     if volleys:
-        parts.append(f"{volleys} volleys in hand")
+        parts.append(f"{several(volleys, 'volley', 'volleys')} in hand")
     if missing:
-        parts.append(f"{missing} stragglers")
+        parts.append(f"{several(missing, 'straggler', 'stragglers')}")
     return ", " + ", ".join(parts)
 
 
@@ -104,8 +105,8 @@ async def war_sheet(session: AsyncSession, rules: Rules, war: WarRow, side_id: i
         works = ", ".join(words(key) for key, value in siege.works.items() if key != "famine" and int(value) >= 100)
         relief = " relief is coming" if siege.relief_army_id is not None else ""
         lines.append(
-            f"siege of {besieged.name if besieged else 'a city'}: {siege.supplies} days of food, {words(siege.starvation.value)}, "
-            f"{siege.breaches} breaches{', works: ' + works if works else ''}{relief}"
+            f"siege of {besieged.name if besieged else 'a city'}: {several(siege.supplies, 'day', 'days')} of food, {words(siege.starvation.value)}, "
+            f"{several(siege.breaches, 'breach', 'breaches')}{', works: ' + works if works else ''}{relief}"
         )
     last = await session.scalar(select(BattleRow).where(BattleRow.war_id == war.id).order_by(BattleRow.id.desc()).limit(1))
     if last is not None:
@@ -151,7 +152,9 @@ async def intrigue_sheet(session: AsyncSession, community_id: int) -> list[str]:
         select(FeudRow).where(or_(FeudRow.first_entity_id == community_id, FeudRow.second_entity_id == community_id), FeudRow.status == FeudStatus.ACTIVE)
     ):
         other = await session.get(EntityRow, feud.second_entity_id if feud.first_entity_id == community_id else feud.first_entity_id)
-        lines.append(f"blood feud with {other.name if other else 'a rival'} (intensity {feud.intensity}, {feud.generations} generations)")
+        lines.append(
+            f"blood feud with {other.name if other else 'a rival'} (intensity {feud.intensity}, {several(feud.generations, 'generation', 'generations')})"
+        )
     return lines
 
 

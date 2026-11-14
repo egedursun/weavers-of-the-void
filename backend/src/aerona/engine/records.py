@@ -1,4 +1,5 @@
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import HarmCause, StrikeStyle
 from aerona.domain.enums.bond import BondKind
@@ -49,7 +50,7 @@ async def sweep_bonds_of_the_dead(ctx: TickContext) -> SweepResult:
     ctx.count("bonds_closed", result.closed)
     ctx.count("bonds_inherited", result.transferred)
     if result.transferred:
-        await note(ctx, f"The dead's {result.transferred} properties and rulerships passed to their heirs.", key="records.inheritance")
+        await note(ctx, f"The dead's {several(result.transferred, 'property', 'properties')} and rulerships passed to their heirs.", key="records.inheritance")
     return result
 
 

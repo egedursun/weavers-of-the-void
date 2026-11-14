@@ -180,7 +180,7 @@ async def link_cause(scope: PlayerScope, command: LinkCause) -> Effect:
     incident = await _incident(scope, command.incident_id)
     cause = await _check_cause(scope, incident, command.cause_incident_id)
     incident.cause_incident_id = cause.id
-    span = f" across {incident.epoch - cause.epoch} epochs" if incident.epoch > cause.epoch else ""
+    span = f" across {several(incident.epoch - cause.epoch, 'epoch', 'epochs')}" if incident.epoch > cause.epoch else ""
     return Effect(f"The incident now follows from incident {cause.id}{span}.")
 
 

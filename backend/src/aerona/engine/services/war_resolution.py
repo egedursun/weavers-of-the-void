@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.catalog.structures import BOOK_HOUSES
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -302,7 +303,8 @@ async def _note_cap_closure(ctx: TickContext, item: OngoingWar, idle_since: int)
     names = (first.name if first else "one side", second.name if second else "the other")
     idle = ctx.epoch - idle_since
     if idle >= ctx.rules.diplomacy.cap_close_idle_epochs:
-        text = f"The war between {names[0]} and {names[1]}, with no sword drawn for {idle} epochs, burnt out in exhaustion; the two sides made a truce."
+        epochs_counted = several(idle, "epoch", "epochs")
+        text = f"The war between {names[0]} and {names[1]}, with no sword drawn for {epochs_counted}, burnt out in exhaustion; the two sides made a truce."
         key = "war.cap_closed_idle"
     else:
         text = f"The war between {names[0]} and {names[1]} burnt out in exhaustion as the fronts multiplied; the two sides made a truce."

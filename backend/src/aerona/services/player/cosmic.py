@@ -4,6 +4,7 @@ from sqlalchemy import delete, func, or_, select
 
 from aerona.constants.player import ORBIT_MOON_BASE, ORBIT_MOON_STEP, ORBIT_PLANET_BASE, ORBIT_PLANET_STEP, STAR_NAME_MIN_LENGTH
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository, normalize_name
@@ -438,7 +439,7 @@ async def set_orbit(scope: PlayerScope, command: Orbit) -> Effect:
         note = f"it now circles {star.name}"
     moons = await align_moons(scope.session)
     if moons:
-        note += f"; {moons} moons moved to the new orbit with it"
+        note += f"; {several(moons, 'moon', 'moons')} moved to the new orbit with it"
     (await scope.cosmos()).map_version += 1
     ctx = await scope.context("orbit")
     return Effect(await tell(ctx, WORLD_RESHAPED, world_id=world.id, world=world.name, notes=f": {note}"), world.id)
@@ -453,7 +454,7 @@ async def delete_star(scope: PlayerScope, command: StarTarget) -> Effect:
     )
     if planets:
         names = ", ".join(world.name for world in planets)
-        tail = f" (with {moons} moons)" if moons else ""
+        tail = f" (with {several(moons, 'moon', 'moons')})" if moons else ""
         pronoun = "them" if len(planets) > 1 else "it"
         raise ValidationFailedError(f"{star.name} cannot be removed: {names} orbit it{tail}. First move {pronoun} to another star; its moons go with it.")
     creator = await scope.creator()
@@ -535,7 +536,7 @@ async def command_climate(scope: PlayerScope, command: Climate) -> Effect:
         raise ValidationFailedError("A climate era must last at least 1 epoch.")
     if epochs > hand_rules.decree_climate_max_epochs:
         raise ValidationFailedError(
-            f"A climate era lasts at most {hand_rules.decree_climate_max_epochs} epochs (world rule god_hand.decree_climate_max_epochs)."
+            f"A climate era lasts at most {several(hand_rules.decree_climate_max_epochs, 'epoch', 'epochs')} (world rule god_hand.decree_climate_max_epochs)."
         )
     if command.world_id is not None:
         world = await guards.world(scope.session, command.world_id)

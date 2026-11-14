@@ -10,6 +10,7 @@ from aerona.catalog.lore import DESPERATE_SCHOOLS, DOMAIN_SCHOOLS, RITE_TEMPLATE
 from aerona.catalog.mythic import GEAS_ACTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
@@ -545,7 +546,7 @@ async def do_heal(ctx: TickContext, work: Working) -> str | None:
             wound.function_loss = max(0, wound.function_loss - restore)
     if not wounds:
         return None
-    return f"mended {min(len(wounds), work.magnitude)} wounds" + (f" and made {regrown} lost limbs whole" if regrown else "")
+    return f"mended {several(min(len(wounds), work.magnitude), 'wound', 'wounds')}" + (f" and made {regrown} lost limbs whole" if regrown else "")
 
 
 async def lasting(ctx: TickContext, casting: CastingRow) -> bool:
@@ -766,7 +767,7 @@ async def do_fertility(ctx: TickContext, work: Working) -> str | None:
         return None
     with flowing(FlowCategory.BIRTH):
         put_stat(ctx.rules, home, headcount_key(home), headcount(home) + born)
-    return f"quickened {born} births"
+    return f"quickened {several(born, 'birth', 'births')}"
 
 
 async def do_harvest(ctx: TickContext, work: Working) -> str | None:

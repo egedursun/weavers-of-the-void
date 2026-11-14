@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { type ActionBody, type EditValues } from '@/api/actions'
 import { actKindValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -97,7 +98,7 @@ function TaboosCard({
                     <Text weight='semibold'>{row.label}</Text>
                     <Muted variant='caption'>
                       {row.broken > 0
-                        ? `Broken ${row.broken} times, last in epoch ${row.last_broken_epoch ?? '?'}`
+                        ? `Broken ${plural(row.broken, 'time', 'times')}, last in epoch ${row.last_broken_epoch ?? '?'}`
                         : `Kept since epoch ${row.since_epoch}`}
                     </Muted>
                   </div>

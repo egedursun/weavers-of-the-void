@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.demography import PeopleCultureRow
@@ -509,7 +509,7 @@ async def found_settlement(
         RecordSpec(
             entity_type=EntityType.SETTLEMENT,
             name=name or f"{people.name} {'Village' if existing else 'Homeland'}",
-            body=f"{people.name} grew crowded; {migrants} people founded a new settlement in {region.name}.",
+            body=f"{people.name} grew crowded; {several(migrants, 'person', 'people')} founded a new settlement in {region.name}.",
             stats=SettlementStats(
                 population=migrants,
                 prosperity=life.village_prosperity,

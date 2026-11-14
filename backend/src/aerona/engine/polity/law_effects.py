@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import agree, several
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, VassalageRow
@@ -104,7 +105,7 @@ async def jubilee(ctx: TickContext, realm: Realm, laws: LawBook) -> int:
                 society.share_farmer = round(society.share_farmer + freed, 2)
     await note(
         ctx,
-        f"{realm.entity.name} proclaimed a jubilee: {forgiven} debts were struck from the ledgers.",
+        f"{realm.entity.name} proclaimed a jubilee: {several(forgiven, 'debt', 'debts')} {agree(forgiven, 'was', 'were')} struck from the ledgers.",
         key="polity.jubilee",
         ids=[realm.entity.id, row.law_entity_id],
     )

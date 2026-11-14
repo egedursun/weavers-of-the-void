@@ -655,7 +655,7 @@ export function TreatySection({
             {treaty.renewals > 0 && (
               <Tag
                 spec={{ label: 'Renewed', icon: RefreshCw, tone: 'info' }}
-                text={`Renewed ${treaty.renewals} times`}
+                text={`Renewed ${plural(treaty.renewals, 'time', 'times')}`}
               />
             )}
           </Hero>

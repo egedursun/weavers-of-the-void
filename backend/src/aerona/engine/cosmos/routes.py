@@ -11,6 +11,7 @@ from aerona.catalog.travel import METHOD_REACH, TRAVEL_METHODS, travel_method_pr
 from aerona.constants.cosmos import JOURNEY_EVENT_LIMIT, NUMBER_WORDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import agree, several
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -86,7 +87,7 @@ class SkyCalendar:
 
     @property
     def text(self) -> str:
-        cycle = f"The cycle aligns every {self.period} epochs."
+        cycle = f"The cycle aligns every {several(self.period, 'epoch', 'epochs')}."
         if self.aligned:
             forced = (
                 f" (planetary alignment, until the start of Epoch {self.alignment_until})"
@@ -96,7 +97,7 @@ class SkyCalendar:
             closing = f"; closes at the start of Epoch {self.closes_epoch}" if self.closes_epoch is not None else ""
             return f"Planets aligned: slingshot orbits open{forced}{closing}. {cycle}"
         wait = (self.opens_epoch or self.next_cycle) - self.epoch
-        return f"Slingshot orbits closed; they open at the start of Epoch {self.opens_epoch} (in {wait} epochs). {cycle}"
+        return f"Slingshot orbits closed; they open at the start of Epoch {self.opens_epoch} (in {several(wait, 'epoch', 'epochs')}). {cycle}"
 
 
 def sky_calendar(rules: Rules, epoch: int, alignment_until: int | None) -> SkyCalendar:
@@ -164,7 +165,7 @@ def _cycle_status(route: RouteRow, calendar: SkyCalendar, aligned: bool | None, 
         return RouteStatus(False, RouteState.MISALIGNED, reason, opens_epoch=calendar.opens_epoch, aligned=aligned, hidden=hidden)
     if route.window_every > 0 and (calendar.epoch + route.window_offset) % route.window_every != 0:
         opens = calendar.epoch + (route.window_every - (calendar.epoch + route.window_offset) % route.window_every)
-        reason = f"This route opens only once every {route.window_every} epochs; it opens again at the start of Epoch {opens}."
+        reason = f"This route opens only once every {several(route.window_every, 'epoch', 'epochs')}; it opens again at the start of Epoch {opens}."
         return RouteStatus(False, RouteState.MISALIGNED, reason, opens_epoch=opens, aligned=aligned, hidden=hidden)
     if route.method in WEARING_METHODS and route.wear >= calendar.wear_close:
         return RouteStatus(False, RouteState.WORN, "The way is worn out and stops working until it is mended.", aligned=aligned, hidden=hidden)
@@ -505,7 +506,7 @@ async def _gate_sacrifice(ctx: TickContext, spec: JourneySpec, carried: int) -> 
     spec.route.sacrifice_paid_epoch = ctx.epoch
     if carried > 0:
         lost = min(carried, round(carried * costs.gate_sacrifice_pct / PERCENT))
-        text = f"the gate would not open without its true name; {lost} travellers were given to it"
+        text = f"the gate would not open without its true name; {several(lost, 'traveller', 'travellers')} {agree(lost, 'was', 'were')} given to it"
         return carried - lost, JourneyEvent(epoch=ctx.epoch, kind=JourneyEventKind.SACRIFICE, text=text, loss=lost)
     if stat(spec.traveller, HP_KEY) is not None:
         if spec.traveller.entity_type is EntityType.MORTAL:
@@ -543,7 +544,7 @@ def vessel_fit(rules: Rules, vehicle: EntityRow | None, duration: int, carried: 
             notes.append(f"the long range of {vehicle.name} shortens the journey")
     if travel.vessel_passengers_per_crew and crew and carried > crew * travel.vessel_passengers_per_crew:
         carried = crew * travel.vessel_passengers_per_crew
-        notes.append(f"{vehicle.name} could carry only {carried} travellers")
+        notes.append(f"{vehicle.name} could carry only {several(carried, 'traveller', 'travellers')}")
     return VesselFit(carried, extra, tuple(notes))
 
 
@@ -684,7 +685,7 @@ async def recall_journey(ctx: TickContext, journey_id: int, by: str) -> str:
     journey.end_epoch = ctx.epoch
     target = await world_name(ctx.session, journey.destination_world_id)
     name = traveller.name if traveller is not None else "the travellers"
-    text = f"{by} recalled {name}'s expedition to {target}; {journey.population} souls returned home."
+    text = f"{by} recalled {name}'s expedition to {target}; {several(journey.population, 'soul', 'souls')} returned home."
     await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key="travel.journey_recalled", entity_ids=[journey.traveller_entity_id])
     return text
 
@@ -882,7 +883,7 @@ async def sever_route(
     hidden_word = "hidden " if was_hidden else ""
     text = f"{opener}{verb} the {hidden_word}route between {first} and {second}; it reopens at the start of Epoch {ctx.epoch + span}"
     if lost or waiting:
-        text += f"; of the {lost + waiting} expeditions under way, {lost} were lost, {waiting} survived and wait for it to reopen"
+        text += f"; of the {several(lost + waiting, 'expedition', 'expeditions')} under way, {lost} were lost, {waiting} survived and wait for it to reopen"
     text += "."
     if revealed:
         text += " As the route snapped, light leaking through the crack betrayed it: it is no longer hidden; it can be used again once the storm calms."

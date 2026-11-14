@@ -13,7 +13,7 @@ from aerona.constants.schema import (
     TITLE_MAX_LENGTH,
 )
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import normalize_name
@@ -443,7 +443,7 @@ async def add_map_note(scope: PlayerScope, command: AddMapNote) -> Effect:
     if not text:
         raise ValidationFailedError("A map note needs text.")
     if len(text) > MAP_NOTE_MAX_LENGTH:
-        raise ValidationFailedError(f"A map note is at most {MAP_NOTE_MAX_LENGTH} characters.")
+        raise ValidationFailedError(f"A map note is at most {several(MAP_NOTE_MAX_LENGTH, 'character', 'characters')}.")
     color = (command.color or "").strip() or None
     if color is not None and len(color) > MAP_NOTE_COLOR_MAX_LENGTH:
         raise ValidationFailedError("That colour is not valid.")
@@ -541,6 +541,6 @@ async def set_private_note(scope: PlayerScope, command: PrivateNote) -> Effect:
     record = await guards.entity(scope.session, command.entity_id)
     text = command.text.strip()
     if len(text) > PRIVATE_NOTE_MAX_LENGTH:
-        raise ValidationFailedError(f"A personal note is at most {PRIVATE_NOTE_MAX_LENGTH} characters.")
+        raise ValidationFailedError(f"A personal note is at most {several(PRIVATE_NOTE_MAX_LENGTH, 'character', 'characters')}.")
     record.private_note = text or None
     return Effect(f"The personal note on {record.name} was {'saved' if text else 'cleared'}.", record.id)

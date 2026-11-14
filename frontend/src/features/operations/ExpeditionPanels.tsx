@@ -16,6 +16,7 @@ import {
   UserPlus,
   Wrench,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile, PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
@@ -145,7 +146,9 @@ function LogCard({ row, blocked }: { row: Entry; blocked: string | null }) {
   )
   const event = EVENTS[row.event]
   const details = [
-    row.provisions_used > 0 ? `${row.provisions_used} provisions` : null,
+    row.provisions_used > 0
+      ? `${plural(row.provisions_used, 'provision', 'provisions')}`
+      : null,
     row.light_used > 0 ? `${row.light_used} light` : null,
     row.resolve ? RESOLVES[row.resolve].label.toLowerCase() : null,
     row.quirk ? QUIRK_LABELS[row.quirk].label.toLowerCase() : null,

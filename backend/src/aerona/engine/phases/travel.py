@@ -9,7 +9,7 @@ from aerona.catalog.travel import TRAVEL_METHODS
 from aerona.catalog.worlds import HARSH_ATMOSPHERES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an, several
+from aerona.core.grammar import agree, an, several
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -494,13 +494,14 @@ def swallow_chance(rules: Rules, kind: JourneyEventKind, vehicle: EntityRow | No
 
 async def _lost_caravan(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, target: str, how: str) -> EntityRow:
     travel = ctx.rules.travel
+    travellers_counted_2 = several(journey.population, "traveller", "travellers")
     legend = await open_record(
         ctx.session,
         ctx.epoch,
         RecordSpec(
             name=f"{traveller.name} Lost Journey",
             entity_type=EntityType.LEGEND,
-            body=f"{journey.population} travellers of {traveller.name} set out for {target}; {how}. Their names are spoken at home every year.",
+            body=f"{travellers_counted_2} of {traveller.name} set out for {target}; {how}. Their names are spoken at home every year.",
             stats=LegendStats(spread=travel.lost_caravan_legend_spread),
             power=travel.lost_caravan_legend_power,
             world_id=journey.origin_world_id,
@@ -536,7 +537,7 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
         ghost = await _ghost_ship(ctx, journey, traveller, vehicle) if vehicle is not None and vehicle.status is EntityStatus.CANON else None
         caravan = await _lost_caravan(ctx, journey, traveller, target, how) if ghost is None and journey.population > 0 else None
         suffix = f"; {vehicle.name} is now a ghost-ship legend" if ghost is not None and vehicle is not None else ""
-        travellers = f" ({journey.population} travellers)" if journey.population else ""
+        travellers = f" ({several(journey.population, 'traveller', 'travellers')})" if journey.population else ""
         await note(
             ctx,
             f"{traveller.name}'s expedition to {target} was lost on the way: {how}{travellers}{suffix}.",
@@ -561,7 +562,7 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
             ARMOR_KEY,
             stat_or(vehicle, ARMOR_KEY, travel.default_vessel_armor) - hull_wear(ctx.rules, rig.hull if rig else None, travel.vessel_armor_loss),
         )
-    tail = f"; {lost} people were lost" if lost else ""
+    tail = f"; {several(lost, 'person', 'people')} {agree(lost, 'was', 'were')} lost" if lost else ""
     await note(ctx, f"On {traveller.name}'s journey to {target} {ROAD_EVENT_TEXT[kind]}{tail}.", key=f"travel.road.{kind.value}", ids=[traveller.id])
     return True
 
@@ -634,7 +635,7 @@ async def ark_founding(ctx: TickContext, journey: JourneyRow, traveller: EntityR
     epochs = ctx.epoch - journey.start_epoch + 1
     await note(
         ctx,
-        f"{colony.name} was founded by the void ark of {traveller.name}, which crossed from {source} in {epochs} epochs.",
+        f"{colony.name} was founded by the void ark of {traveller.name}, which crossed from {source} in {several(epochs, 'epoch', 'epochs')}.",
         key="travel.ark_founding",
         ids=[colony.id, traveller.id],
         world_id=colony.world_id,
@@ -714,7 +715,7 @@ async def _forget_on_river(ctx: TickContext, arrival: Arrival) -> None:
         arrival.journey,
         ctx.epoch,
         JourneyEventKind.MEMORY_LOSS,
-        f"the living forgot on the river; {several(len(forgotten), 'kind', 'kinds')} of knowledge were lost",
+        f"the living forgot on the river; {several(len(forgotten), 'kind', 'kinds')} of knowledge {agree(len(forgotten), 'was', 'were')} lost",
     )
 
 
@@ -726,7 +727,7 @@ async def _dream_toll(ctx: TickContext, arrival: Arrival) -> bool:
     if arrival.journey.population > 0 and rng.chance(costs.dream_no_return_pct):
         lost = round(arrival.journey.population * costs.dream_no_return_share_pct / PERCENT)
         arrival.journey.population -= lost
-        add_event(arrival.journey, ctx.epoch, JourneyEventKind.DREAM_NOT_RETURNED, f"{lost} dreamers never woke", loss=lost)
+        add_event(arrival.journey, ctx.epoch, JourneyEventKind.DREAM_NOT_RETURNED, f"{several(lost, 'dreamer', 'dreamers')} never woke", loss=lost)
         return True
     if stat(arrival.traveller, POPULATION_KEY) is None and arrival.traveller.entity_type is EntityType.MORTAL and rng.chance(costs.dream_lone_no_return_pct):
         await retire(ctx.session, arrival.traveller, ctx.epoch, f"Epoch {ctx.epoch}: their soul never returned from the dream.")
@@ -760,13 +761,14 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
         return None
     derived = None if journey.memory_lost else await Namer(ctx.session, ctx.rules).from_speaker(traveller.id, seed_of("colony", journey.id), NameKind.PLACE)
     kind = "conquest outpost" if conquest else "colony"
+    travellers_counted = several(journey.population, "traveller", "travellers")
     colony = await open_record(
         ctx.session,
         ctx.epoch,
         RecordSpec(
             name=derived or f"{traveller.name} Colony",
             entity_type=EntityType.SETTLEMENT,
-            body=f"{journey.population} travellers of {traveller.name} reached {arrival.target.name} and founded {an(kind)} in {arrival.region.name}.",
+            body=f"{travellers_counted} of {traveller.name} reached {arrival.target.name} and founded {an(kind)} in {arrival.region.name}.",
             stats=SettlementStats(
                 population=journey.population,
                 prosperity=travel.colony_prosperity,

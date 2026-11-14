@@ -112,7 +112,8 @@ async def god_fate(session: AsyncSession, god: ForeignGodRow, names: dict[int, s
             verdict = "defeated" if won else "fell to"
             killer = other if not won else killer
         kind = "duel" if conflict.duel else "conflict"
-        lines.append(f"Epoch {conflict.epoch}: {kind}, {verdict} {names.get(other, '?')}")
+        own, theirs = (conflict.attacker_score, conflict.defender_score) if attacker else (conflict.defender_score, conflict.attacker_score)
+        lines.append(f"Epoch {conflict.epoch}: {kind}, {verdict} {names.get(other, '?')}, {own} to {theirs}")
     if god.death_epoch is not None:
         lines.append(f"Died in Epoch {god.death_epoch}" + (f", slain by {names[killer]}" if killer is not None and killer in names else ""))
     return lines

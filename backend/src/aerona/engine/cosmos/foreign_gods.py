@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.foreign_gods import FOREIGN_GOD_POWERS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.core.keyed_random import keyed_random
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -383,7 +384,7 @@ async def _son_loses(ctx: TickContext, son: SonRow, god: ForeignGodRow, diff: in
     son.status = SonStatus.ASLEEP
     reviving = await _son_has_power(ctx.session, son.id, PowerEffect.REVIVING)
     son.sleep_epochs_left = tools.reviving_sleep_epochs if reviving else tools.foreign_war_sleep_epochs
-    return True, f"{text} {son.name} collapsed and fell into a sleep of {son.sleep_epochs_left} epochs."
+    return True, f"{text} {son.name} collapsed and fell into a sleep of {several(son.sleep_epochs_left, 'epoch', 'epochs')}."
 
 
 async def resolve_god_war(

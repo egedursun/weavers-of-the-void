@@ -13,6 +13,7 @@ from aerona.agents.text import sanitize
 from aerona.catalog.bonds import BOND_KINDS, FATE_SUGGESTABLE_BOND_KINDS
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.constants.bond_texts import SYSTEM_RELATED_DESCRIPTIONS
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondReviewRow, BondRow
 from aerona.db.tables.entities import EntityRow, NetworkReviewRow
@@ -256,9 +257,9 @@ async def suggest_bonds(runtime: AgentRuntime, entity_ids: list[int]) -> RepairS
         summary.bonds = await apply_suggestions(session, rules, scope.epoch, records, output)
     summary.built = len(summary.bonds)
     text = (
-        f"Fate looked at {summary.looked} records and made {summary.built} reasoned bonds."
+        f"Fate looked at {several(summary.looked, 'record', 'records')} and made {summary.built} reasoned bonds."
         if summary.built
-        else f"Fate looked at {summary.looked} records; it found no bond with enough evidence."
+        else f"Fate looked at {several(summary.looked, 'record', 'records')}; it found no bond with enough evidence."
     )
     runtime.publish(EventKind.NETWORK_REPAIRED, {"type": "fate", "text": text, "bonds": summary.bonds})
     return summary

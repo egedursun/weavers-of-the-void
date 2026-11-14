@@ -11,6 +11,7 @@ import {
   Users,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { KpiTile, PagedList } from '@/components/domain'
@@ -257,7 +258,7 @@ export function MovementPanel({
             ? [
                 {
                   key: data.movement.faction.id,
-                  caption: `${data.movement.faction.name}: ${data.movement.patrons} patrons, ${data.movement.scandals} scandals`,
+                  caption: `${data.movement.faction.name}: ${plural(data.movement.patrons, 'patron', 'patrons')}, ${plural(data.movement.scandals, 'scandal', 'scandals')}`,
                   segments: [
                     { value: data.movement.patrons, fill: 'fill-success' },
                   ],
@@ -314,7 +315,7 @@ function ClubCard({ row, blocked }: { row: Club; blocked: string | null }) {
       icon={kind.icon}
       tone={row.bought_by ? 'warning' : kind.tone}
       title={row.faction.name}
-      caption={`${kind.label} · ${row.wins} wins, ${row.losses} losses · founded in epoch ${row.founded_epoch}`}
+      caption={`${kind.label} · ${plural(row.wins, 'win', 'wins')}, ${plural(row.losses, 'loss', 'losses')} · founded in epoch ${row.founded_epoch}`}
       removeLabel='Dissolve the club'
       editTitle='Set the club'
       note='A club plays the other clubs of its league each epoch; wins raise its rating and fandom and losses lower them, and the towns that back it wager their wealth. Where its fans split along class, district or faith they give it leverage: a lost match may then spark a riot, and a ruler low in legitimacy may buy its favour and borrow its standing.'
@@ -601,7 +602,7 @@ export function LeaguePanel({
         ]}
         rows={table_.map((row) => ({
           key: row.faction.id,
-          caption: `${row.faction.name}: ${row.wins} wins, ${row.losses} losses`,
+          caption: `${row.faction.name}: ${plural(row.wins, 'win', 'wins')}, ${plural(row.losses, 'loss', 'losses')}`,
           segments: [
             { value: row.wins, fill: 'fill-success' },
             { value: row.losses, fill: 'fill-destructive' },

@@ -19,7 +19,7 @@ from aerona.catalog.cosmography import (
 )
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import CelestialReadingRow, CosmicBeingProfileRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
@@ -111,7 +111,7 @@ async def body_lines(scope: Scope, world_id: int) -> list[str]:
             + f" at age {impact.due_epoch}"
         )
     for project in await scope.session.scalars(select(TerraformingRow).where(TerraformingRow.world_id == world_id).order_by(TerraformingRow.id)):
-        lines.append(f"a work to {AIM_LABELS[project.aim]}, {project.epochs_left} ages left")
+        lines.append(f"a work to {AIM_LABELS[project.aim]}, {several(project.epochs_left, 'age', 'ages')} left")
     root = scope.worlds.get(world_id)
     star_id = root.star_id if root is not None else None
     returning = select(CosmicFeatureRow).where(

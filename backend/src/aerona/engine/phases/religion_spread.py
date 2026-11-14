@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -108,7 +109,7 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
                 zeal=clamp_int(stat_or(cult, "zeal", 0) + settings.schism_zealotry_gain, 0, PERCENT),
                 influence=clamp_int(stat_or(cult, "influence", unknown) - settings.schism_influence_loss, 0, PERCENT),
             ),
-            body=f"A schism occurred within {cult.name}; {split} followers broke away and turned to {candidate.name}.",
+            body=f"A schism occurred within {cult.name}; {several(split, 'follower', 'followers')} broke away and turned to {candidate.name}.",
             power=max(ctx.rules.world_effects.split_min_power, cult.power_level - 1),
             world_id=cult.world_id,
             location_id=cult.location_id,
@@ -126,7 +127,7 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
         await sons.change_relation(old_patron, candidate.id, -settings.schism_patron_relation)
     await note(
         ctx,
-        f"{cult.name} split: {split} followers turned to {candidate.name}.",
+        f"{cult.name} split: {several(split, 'follower', 'followers')} turned to {candidate.name}.",
         key="religion.schism",
         ids=[cult.id, sect.id],
         son_id=candidate.id,

@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import Technique
@@ -299,7 +300,7 @@ async def vehicle_group_edit(scope: PlayerScope, command: RecordEdit) -> Effect:
 @player_action("vehicle_group:move", ActionKind.EDIT_RECORD)
 async def vehicle_group_move(scope: PlayerScope, command: GroupMove) -> Effect:
     moved = await vehicles.move_group(await scope.context("vehicle_group_move"), command.group_id, command.holder_id, command.count)
-    return Effect(f"{moved} vehicles change hands.", command.holder_id)
+    return Effect(f"{several(moved, 'vehicle', 'vehicles')} change hands.", command.holder_id)
 
 
 @player_action("vehicle_group:repair", ActionKind.EDIT_RECORD)

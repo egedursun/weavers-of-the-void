@@ -6,6 +6,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import several
 from aerona.rules.registry import Rules
 from aerona.services.player import (
     affairs,
@@ -573,7 +574,7 @@ COSMIC_ACTIONS = (
         Meta("awaken_peoples", "Awaken peoples", G.COSMOS),
         creation.awaken_peoples,
         creation.AwakenPeoples,
-        lambda rules: f"{rules.balance.awaken_peoples} essence per {rules.awakening.batch_cap} peoples",
+        lambda rules: f"{rules.balance.awaken_peoples} essence per {several(rules.awakening.batch_cap, 'people', 'peoples')}",
         ("ACT-005",),
     ),
     _sync(

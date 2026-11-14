@@ -8,6 +8,7 @@ import {
   Trash2,
   Unlock,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -892,7 +893,7 @@ function CarrierCard({
         <Chip variant={carrier.identified ? 'success' : 'warning'}>
           {carrier.identified ? 'Found by physicians' : 'Unseen'}
         </Chip>
-        <Chip>{`${carrier.seeded} outbreaks seeded`}</Chip>
+        <Chip>{`${plural(carrier.seeded, 'outbreak', 'outbreaks')} seeded`}</Chip>
       </div>
       <RecordEditor
         title='Reshape the carrier'
@@ -1190,7 +1191,7 @@ function ResearchCard({
         max={research.threshold}
         tone='success'
       />
-      <Chip>{`${research.specimens} specimens studied`}</Chip>
+      <Chip>{`${plural(research.specimens, 'specimen', 'specimens')} studied`}</Chip>
       <RecordEditor
         title='Reshape the search'
         note='At the threshold the cure is found and belongs to the institution’s community.'

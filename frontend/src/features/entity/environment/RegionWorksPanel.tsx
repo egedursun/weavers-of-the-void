@@ -15,6 +15,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components, weatherKindValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -393,7 +394,7 @@ function Summary({ works }: { works: Works }) {
         value={`+${works.irrigation_pct}%`}
         icon={Droplets}
         tone='success'
-        hint={`${works.irrigation} levels of works carry the river to the fields`}
+        hint={`${plural(works.irrigation, 'level', 'levels')} of works carry the river to the fields`}
       />
       <KpiTile
         label='Harbours'

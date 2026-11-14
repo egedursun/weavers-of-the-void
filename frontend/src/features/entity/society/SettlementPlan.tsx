@@ -43,6 +43,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -1056,13 +1057,13 @@ export function SettlementPlanSection({
               <MiniStat
                 icon={Utensils}
                 label='Food'
-                value={`${formatInteger(plan.siege_supplies)} days`}
+                value={`${plural(plan.siege_supplies, 'day', 'days')}`}
                 tone='success'
               />
               <MiniStat
                 icon={Droplets}
                 label='Water'
-                value={`${formatInteger(plan.siege_water)} days`}
+                value={`${plural(plan.siege_water, 'day', 'days')}`}
                 tone='info'
               />
               <MiniStat
@@ -1100,7 +1101,7 @@ export function SettlementPlanSection({
             hint='Each quarter of the city, its size and its repair'
             aside={
               <Badge size='sm' variant='secondary'>
-                {`${plan.districts.length} of ${plan.district_slots} plots`}
+                {`${plan.districts.length} of ${plural(plan.district_slots, 'plot', 'plots')}`}
               </Badge>
             }
           >

@@ -15,6 +15,7 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.rarities import RARITY_LABELS
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import agree, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
@@ -305,7 +306,9 @@ async def convene_council(runtime: AgentRuntime, topic: str | None = None, calle
         scope = await load_scope(session, rules)
         members = list(await session.scalars(select(SonRow).where(SonRow.status.in_(MEMBER_STATUSES)).order_by(SonRow.id).limit(rules.council.max_members)))
         if len(members) < rules.council.min_members:
-            raise ValidationFailedError(f"At least {rules.council.min_members} sons are needed for a council.")
+            raise ValidationFailedError(
+                f"At least {several(rules.council.min_members, 'son', 'sons')} {agree(rules.council.min_members, 'is', 'are')} needed for a council."
+            )
         god_asked = bool(topic and topic.strip())
         subject = topic.strip() if topic and god_asked else await agenda(scope)
         context = await session_context(scope, members, subject, god_asked)

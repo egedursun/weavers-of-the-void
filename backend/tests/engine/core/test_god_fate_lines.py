@@ -1,5 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.agents.context.chronicle_facts import contest_outcomes
+from aerona.agents.context.scope import load_scope
 from aerona.db.tables.foreign_gods import GodConflictRow
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.war import GodConflictOutcome
@@ -24,7 +26,9 @@ async def test_an_old_gods_fate_tells_its_fights_and_who_slew_it(session: AsyncS
     lines = await god_fate(session, god, {son.id: son.name})
     assert lines[0].startswith("Status: ") and f"Arose in Epoch {god.created_epoch}" in lines
     assert "Defeated in Epoch 4" in lines
-    assert f"Epoch 2: conflict, defeated {son.name}" in lines
-    assert f"Epoch 3: conflict, drew with {son.name}" in lines
-    assert f"Epoch 4: duel, fell to {son.name}" in lines
+    assert f"Epoch 2: conflict, defeated {son.name}, 9 to 3" in lines
+    assert f"Epoch 3: conflict, drew with {son.name}, 5 to 5" in lines
+    assert f"Epoch 4: duel, fell to {son.name}, 1 to 9" in lines
     assert lines[-1] == f"Died in Epoch 4, slain by {son.name}"
+    told = await contest_outcomes(await load_scope(session, RULES), 4)
+    assert [(item.winner, item.score) for item in told] == [(son.name, "9 to 1")]

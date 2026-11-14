@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDateTime, formatInteger } from '@/lib/format'
-import { plural } from '@/lib/units'
+import { agree, plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -183,7 +183,7 @@ function LedgerEntry({
         </div>
         {dependents > 0 && !entry.undone && (
           <Text variant='caption' tone='warning'>
-            {`${dependents === 1 ? 'The next page' : `The next ${dependents} pages`} touched what this one created: ${view.dependents.map((id) => `#${id}`).join(', ')}`}
+            {`${dependents === 1 ? 'The next page' : `The next ${plural(dependents, 'page', 'pages')}`} touched what this one created: ${view.dependents.map((id) => `#${id}`).join(', ')}`}
           </Text>
         )}
         {(result || (entry.undone && conflicts.length > 0)) && (
@@ -227,7 +227,7 @@ function LedgerEntry({
         title={`Undo page #${entry.id}?`}
         desc={
           dependents > 0
-            ? `${dependents === 1 ? 'The next page depends' : `The next ${dependents} pages depend`} on this one. Undoing it may leave conflicts, which are skipped and listed. Spent essence is refunded.`
+            ? `${dependents === 1 ? 'The next page depends' : `The next ${plural(dependents, 'page', 'pages')} depend`} on this one. Undoing it may leave conflicts, which are skipped and listed. Spent essence is refunded.`
             : 'Its changes are reverted and any essence it spent is refunded.'
         }
         confirmText={dependents > 0 ? 'Undo anyway' : 'Undo'}
@@ -313,7 +313,7 @@ export function ActionLedger() {
         page. Tear out a page and its changes are undone; spent essence is
         refunded.
         {retention !== null &&
-          ` Pages of the last ${retention} epochs are kept.`}
+          ` Pages of the last ${plural(retention, 'epoch', 'epochs')} ${agree(retention, 'is', 'are')} kept.`}
       </Muted>
       <div className='grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4'>
         <MiniStat
@@ -341,7 +341,7 @@ export function ActionLedger() {
           tone='info'
           hint={
             retention !== null
-              ? `The ledger keeps ${retention} epochs`
+              ? `The ledger keeps ${plural(retention, 'epoch', 'epochs')}`
               : undefined
           }
         />

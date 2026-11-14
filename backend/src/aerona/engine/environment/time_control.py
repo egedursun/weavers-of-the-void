@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -47,7 +48,7 @@ async def add_season(session: AsyncSession, world_id: int, name: str, values: di
     world = await _world(session, world_id)
     seasons = await _seasons(session, world_id)
     if len(seasons) >= SEASONS_MAX:
-        raise ValidationFailedError(f"A world keeps at most {SEASONS_MAX} seasons.")
+        raise ValidationFailedError(f"A world keeps at most {several(SEASONS_MAX, 'season', 'seasons')}.")
     numbers = {key: clamp_int(values.get(key, (low + high) // 2 if low >= 0 else 0), low, high) for key, (low, high) in SEASON_NUMBERS.items()}
     row = WorldSeasonRow(world_id=world_id, position=len(seasons) + SEASONS_MAX * 2, name=name.strip(), edited=True, **numbers)
     session.add(row)

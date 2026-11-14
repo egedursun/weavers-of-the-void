@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,7 +32,7 @@ function softness(age: GoldenAge): string {
   if (age.decadence > 0)
     return `Warriors and walls lose ${age.decadence} each age`
   if (age.decadence_epochs === 0) return 'This world never grows soft'
-  return `Turns soft after ${age.decadence_epochs} ages`
+  return `Turns soft after ${plural(age.decadence_epochs, 'age', 'ages')}`
 }
 
 function GoldenAgeControls({
@@ -178,7 +179,7 @@ export function GoldenAgeSection({ worldId }: { worldId: number }) {
               tone={view.data.active ? 'gold' : 'muted'}
               hint={
                 view.data.active
-                  ? `${view.data.epochs} ages of plenty`
+                  ? `${plural(view.data.epochs, 'age', 'ages')} of plenty`
                   : 'Not begun'
               }
             />
@@ -187,7 +188,7 @@ export function GoldenAgeSection({ worldId }: { worldId: number }) {
               value={view.data.active ? `+${view.data.prosperity_gain}` : '—'}
               icon={TrendingUp}
               tone='success'
-              hint={`Deepens every ${view.data.deepening_epochs} ages, ${view.data.deepening_steps} times at most`}
+              hint={`Deepens every ${plural(view.data.deepening_epochs, 'age', 'ages')}, ${plural(view.data.deepening_steps, 'time', 'times')} at most`}
             />
             <KpiTile
               label='Softness'

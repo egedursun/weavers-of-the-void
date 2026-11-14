@@ -78,7 +78,7 @@ export function DistrictPanel({
       icon={spec.icon}
       tone={spec.tone ?? 'muted'}
       title={`${spec.label} · ${zone.label}`}
-      caption={`Level ${district.level}, hex ${district.q}, ${district.r} · ${plural(district.cells.length, 'hex', 'hexes')} · ${district.residents} people in ${district.dwellings} homes (${HOUSING[district.housing].label.toLowerCase()})`}
+      caption={`Level ${district.level}, hex ${district.q}, ${district.r} · ${plural(district.cells.length, 'hex', 'hexes')} · ${plural(district.residents, 'person', 'people')} in ${plural(district.dwellings, 'home', 'homes')} (${HOUSING[district.housing].label.toLowerCase()})`}
       aside={
         <Button
           size='icon-sm'

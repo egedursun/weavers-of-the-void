@@ -10,6 +10,7 @@ from aerona.catalog.civilization import unlocked
 from aerona.constants.cosmos import SUMMARY_CHRONICLE_LINES, SUMMARY_INTUITION_LINES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.worlds import WorldRepository
@@ -370,7 +371,7 @@ async def pioneers(ctx: TickContext, explorer: EntityRow, land: EntityRow) -> En
         RecordSpec(
             name=derived or f"{explorer.name} Pioneers",
             entity_type=EntityType.SETTLEMENT,
-            body=f"{migrants} pioneers from {explorer.name} settled the newly found lands of {land.name}.",
+            body=f"{several(migrants, 'pioneer', 'pioneers')} from {explorer.name} settled the newly found lands of {land.name}.",
             stats=SettlementStats(
                 population=migrants,
                 prosperity=settings.pioneer_prosperity,
@@ -385,7 +386,7 @@ async def pioneers(ctx: TickContext, explorer: EntityRow, land: EntityRow) -> En
         ),
     )
     bonds = BondRepository(ctx.session)
-    await bonds.connect(BondDraft(explorer.id, settlement.id, BondKind.MIGRATED_TO, ctx.epoch, f"pioneers: {migrants} people"))
+    await bonds.connect(BondDraft(explorer.id, settlement.id, BondKind.MIGRATED_TO, ctx.epoch, f"pioneers: {several(migrants, 'person', 'people')}"))
     await bonds.connect(BondDraft(settlement.id, explorer.id, BondKind.DESCENDS_FROM, ctx.epoch, "pioneers"))
     await bind_language_and_faith(ctx, settlement, source=explorer)
     return settlement
@@ -504,7 +505,7 @@ async def search_route(ctx: TickContext, me: EntityRow, how: str, *, certain: bo
             ctx.epoch,
             RouteSpec(home.id, target.id, method, controller_id=me.id, vehicle_id=vehicle.id if vehicle else None, description=how),
         )
-        text = f"{me.name} found a route to the world {target.name}: {method.value.replace('_', ' ')} ({route.duration_epochs} epochs)."
+        text = f"{me.name} found a route to the world {target.name}: {method.value.replace('_', ' ')} ({several(route.duration_epochs, 'epoch', 'epochs')})."
         return RouteSearch(SearchStatus.ROUTE, method, route, target, vehicle, text)
     if roll >= tools.unknown_world_threshold and await can_birth_world(ctx):
         return RouteSearch(SearchStatus.INTUITION, method)

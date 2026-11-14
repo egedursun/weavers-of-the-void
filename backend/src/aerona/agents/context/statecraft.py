@@ -2,7 +2,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.intrigue import name_of
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.affairs import CouncilSeatRow, CourtPositionRow, CourtRow, MandateRow, NobleDemandRow, ResolutionRow, TaxPolicyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -65,7 +65,7 @@ async def statecraft_lines(session: AsyncSession, me: EntityRow) -> list[str]:
             found.append(f"your realm lies in the sphere of {await name_of(session, sphere.power_entity_id)}")
     diplomacy = await session.get(DiplomacyProfileRow, realm)
     if diplomacy is not None:
-        found.append(f"your realm keeps {diplomacy.relations} relations of a capacity of {diplomacy.capacity}")
+        found.append(f"your realm keeps {several(diplomacy.relations, 'relation', 'relations')} of a capacity of {diplomacy.capacity}")
     return found
 
 
@@ -94,7 +94,7 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
         found.append(f"{await name_of(session, seat.holder_node_id)} holds {seat.seats} council seats")
     court = await session.get(CourtRow, realm)
     if court is not None:
-        found.append(f"your court shines at grandeur {court.grandeur} with {court.courtiers} courtiers")
+        found.append(f"your court shines at grandeur {court.grandeur} with {several(court.courtiers, 'courtier', 'courtiers')}")
     for position in await session.scalars(
         select(CourtPositionRow).where(CourtPositionRow.polity_entity_id == realm, CourtPositionRow.holder_entity_id.is_not(None))
     ):

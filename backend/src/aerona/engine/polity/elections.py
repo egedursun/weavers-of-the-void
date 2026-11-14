@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import agree, several
 from aerona.db.tables.affairs import CouncilSeatRow, ElectionRow
 from aerona.db.tables.estates import EstateProfileRow, MovementProfileRow, MovementSupportRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -193,7 +193,8 @@ async def elect(ctx: TickContext, book: RealmBook, laws: LawBook, realm: Realm, 
     winner_name = book.entities[winner].name if winner is not None and winner in book.entities else "no one"
     await note(
         ctx,
-        f"{realm.entity.name} went to the polls; {winner_name} carried the most votes, and {several(seats, 'seat', 'seats')} were filled.",
+        f"{realm.entity.name} went to the polls; {winner_name} carried the most votes, "
+        f"and {several(seats, 'seat', 'seats')} {agree(seats, 'was', 'were')} filled.",
         key="affairs.election",
         ids=[realm.entity.id, *([winner] if winner is not None else [])],
         kind=ChronicleKind.CIVILIZATION,

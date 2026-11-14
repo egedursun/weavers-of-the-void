@@ -1,5 +1,6 @@
 import { Globe2, Library, Shapes, Star, UserRound } from 'lucide-react'
 import { formatCompact } from '@/lib/format'
+import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { MiniStat, Section } from '@/components/domain'
@@ -46,7 +47,7 @@ export function AtlasHome({ records, kinds, onSelect }: AtlasHomeProps) {
       </div>
       <Section
         title='Worlds'
-        description={`${formatCompact(souls)} souls live across the cosmos. Open a world to read its lore, peoples and chronicle.`}
+        description={`${formatCompact(souls)} ${agree(souls, 'soul', 'souls')} live across the cosmos. Open a world to read its lore, peoples and chronicle.`}
       >
         <ul className='grid min-w-0 grid-cols-1 gap-2 @sm/pane:grid-cols-2'>
           {worlds.map((item) => (
@@ -103,7 +104,7 @@ export function AtlasHome({ records, kinds, onSelect }: AtlasHomeProps) {
                     </Button>
                     <Muted variant='caption' truncate>
                       {circling > 0
-                        ? `${circling} worlds in its light`
+                        ? `${plural(circling, 'world', 'worlds')} in its light`
                         : 'Burns alone'}
                     </Muted>
                   </span>

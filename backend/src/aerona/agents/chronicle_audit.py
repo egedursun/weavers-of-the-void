@@ -11,6 +11,7 @@ from aerona.agents.context.scope import load_scope
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.text import sanitize, sentences
+from aerona.core.grammar import several
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.chronicle import HEAVY_AUDIT_KINDS, ChronicleAuditKind
 from aerona.domain.models.records import (
@@ -279,5 +280,7 @@ async def review(
     remaining = audit(facts, repaired, coverage, taken, rules)
     if first:
         corrected = ", the chronicler corrected them" if rewritten else ""
-        runtime.step(f"Chronicle audit: {first} findings{corrected}, {len(remaining)} remain; {changed} sentences repaired by rule.")
+        findings_counted = several(first, "finding", "findings")
+        sentences_counted = several(changed, "sentence", "sentences")
+        runtime.step(f"Chronicle audit: {findings_counted}{corrected}, {len(remaining)} remain; {sentences_counted} repaired by rule.")
     return repaired, ChronicleAuditReport(found=first, remaining=tuple(remaining), rewritten=rewritten, repaired_sentences=changed, coverage=coverage)

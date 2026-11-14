@@ -190,7 +190,8 @@ async def run_fate(runtime: AgentRuntime, epoch: int, engine_notes: Sequence[str
     verdicts: list[VerdictOutput] = []
     judged_epochs = dict(inputs.judged.epochs)
     if runtime.llm_enabled:
-        runtime.step(f"Fate is weighing {len(inputs.judged.ids) + len(inputs.overflow)} creations, naming {len(inputs.pending.ids)} unnamed records.")
+        creations_counted = several(len(inputs.judged.ids) + len(inputs.overflow), "creation", "creations")
+        runtime.step(f"Fate is weighing {creations_counted}, naming {len(inputs.pending.ids)} unnamed records.")
         started = time.monotonic()
         try:
             output = await judgment(runtime, rules, inputs, engine_notes)

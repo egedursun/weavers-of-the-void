@@ -5,7 +5,7 @@ from sqlalchemy import select
 from aerona.agents.context.dominion_lines import god_called, place_name, spoken
 from aerona.agents.context.scope import Scope
 from aerona.catalog.mythic import REALM_PHRASES, trial_at
-from aerona.core.grammar import several
+from aerona.core.grammar import agree, several
 from aerona.db.tables.arcana import LawUpkeepRow, LongevityRow, VisStockRow, WarpingRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -42,7 +42,9 @@ async def kept_lines(scope: Scope, son: SonRow) -> list[str]:
     for row in await session.scalars(select(LawUpkeepRow).where(LawUpkeepRow.caster_node_id == son.id).order_by(LawUpkeepRow.law_entity_id)):
         law = await session.get(EntityRow, row.law_entity_id)
         if law is not None and law.status is EntityStatus.CANON:
-            found.append(f"You keep {law.name} ({row.source.value}): {row.essence_upkeep} essence each epoch, unpaid for {row.unpaid_epochs} epochs")
+            found.append(
+                f"You keep {law.name} ({row.source.value}): {row.essence_upkeep} essence each epoch, unpaid for {several(row.unpaid_epochs, 'epoch', 'epochs')}"
+            )
     geasa = list(await session.scalars(select(GeasRow).where(GeasRow.layer_node_id == son.id)))
     if geasa:
         kept = sum(1 for row in geasa if row.state is GeasState.KEPT)
@@ -55,9 +57,11 @@ async def myth_lines(scope: Scope, son: SonRow) -> list[str]:
     found = []
     questing = list(await session.scalars(select(HeroquestRow).where(HeroquestRow.god_node_id == son.id, HeroquestRow.state == HeroquestState.QUESTING)))
     if questing:
-        found.append(f"{several(len(questing), 'mortal', 'mortals')} walk your myths in heroquests")
+        found.append(f"{several(len(questing), 'mortal', 'mortals')} {agree(len(questing), 'walks', 'walk')} your myths in heroquests")
     for row in await session.scalars(select(MantlingRow).where(MantlingRow.god_node_id == son.id, MantlingRow.state == MantlingState.WALKING)):
-        found.append(f"{await place_name(scope, row.mortal_entity_id)} #{row.mortal_entity_id} walks your path toward godhood ({row.progress}%)")
+        found.append(
+            f"{await place_name(scope, row.mortal_entity_id)} #{several(row.mortal_entity_id, 'walk', 'walks')} your path toward godhood ({row.progress}%)"
+        )
     return found
 
 

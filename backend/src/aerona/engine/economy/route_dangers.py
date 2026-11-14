@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.core.total import partial, total
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -275,9 +276,10 @@ async def feed_beast(ctx: TickContext, book: EconomyBook, route: EntityRow, comm
         hoard[commodity.value] = hoard.get(commodity.value, 0) + taken
         profile.hoard = hoard
     if units >= table.beast_note_units:
+        loads_counted = several(units, "load", "loads")
         await ctx.chronicle(
             ChronicleKind.DISASTER,
-            f"{beast.name} fell on the traffic of {route.name} and dragged {units} loads of {COMMODITIES[commodity].label.lower()} to its lair.",
+            f"{beast.name} fell on the traffic of {route.name} and dragged {loads_counted} of {COMMODITIES[commodity].label.lower()} to its lair.",
             template_key="trade_route.beast_raid",
             entity_ids=[route.id, beast.id],
         )
@@ -288,7 +290,7 @@ async def spoil(ctx: TickContext, route: EntityRow, commodity: CommodityKind, *,
         return
     await ctx.chronicle(
         ChronicleKind.DISASTER,
-        f"Foul weather on {route.name} ruined {units} loads of {COMMODITIES[commodity].label.lower()} carried by {mode.value}.",
+        f"Foul weather on {route.name} ruined {several(units, 'load', 'loads')} of {COMMODITIES[commodity].label.lower()} carried by {mode.value}.",
         template_key="trade_route.weather_loss",
         entity_ids=[route.id],
     )

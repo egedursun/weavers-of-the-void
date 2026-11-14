@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import CommonsRow, GameReserveRow, IntensificationRow, PerennialRow
 from aerona.db.tables.ecology import SpeciesRangeRow, SpeciesYieldRow
@@ -152,7 +153,7 @@ async def plant(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
         if plant_entity is not None and region is not None:
             await note(
                 ctx,
-                f"{owner.name} planted {plant_entity.name} in {region.name}; the {kind.value} will bear in {epochs} epochs.",
+                f"{owner.name} planted {plant_entity.name} in {region.name}; the {kind.value} will bear in {several(epochs, 'epoch', 'epochs')}.",
                 key="perennials.planted",
                 ids=[owner.id, region.id],
             )
@@ -192,9 +193,10 @@ async def replant(ctx: TickContext, row: PerennialRow) -> None:
     if "condition" not in row.locked:
         row.condition = PERCENT
     region = await ctx.session.get(EntityRow, row.region_entity_id)
+    epochs_counted = several(row.mature_epochs, "epoch", "epochs")
     await note(
         ctx,
-        f"The old {row.kind.value} of {region.name if region else 'the land'} was worn out and planted anew; it will bear again in {row.mature_epochs} epochs.",
+        f"The old {row.kind.value} of {region.name if region else 'the land'} was worn out and planted anew; it will bear again in {epochs_counted}.",
         key="perennials.replanted",
         ids=[row.region_entity_id],
     )
@@ -283,9 +285,10 @@ async def enclose(ctx: TickContext, lands: Holdings, row: CommonsRow, encloser: 
     put(row, "dispossessed", row.dispossessed + driven)
     region = await ctx.session.get(EntityRow, row.region_entity_id)
     went = f" and went to {city.name} for work" if city is not None else " and were left without homes"
+    cottagers_counted = several(driven, "cottager", "cottagers")
     await note(
         ctx,
-        f"{encloser.name} enclosed the common {row.kind.value} of {region.name if region else 'the land'}; {driven} cottagers lost their living{went}.",
+        f"{encloser.name} enclosed the common {row.kind.value} of {region.name if region else 'the land'}; {cottagers_counted} lost their living{went}.",
         key="commons.enclosed",
         ids=[encloser.id, *([city.id] if city is not None else []), *[town.id for town in towns]],
     )

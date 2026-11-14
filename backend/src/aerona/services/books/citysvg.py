@@ -162,12 +162,15 @@ async def city_plan(session: AsyncSession, rules: Rules, town: EntityRow) -> Pla
         counts[ZONE_OF_STRUCTURE[row.kind]][2] += 1
     homes = sum(homes_of(people.get(district.id, 0), rules.city_plan.household) for district in districts)
     facts = [
-        (f"{zone.value.capitalize()} zone", f"{districts_n} districts on {cells_n} hexes, {built} buildings")
+        (
+            f"{zone.value.capitalize()} zone",
+            f"{several(districts_n, 'district', 'districts')} on {several(cells_n, 'hex', 'hexes')}, {several(built, 'building', 'buildings')}",
+        )
         for zone, (districts_n, cells_n, built) in counts.items()
         if districts_n or built
     ]
-    facts.append(("Homes", f"{homes} homes for {round(stat_or(town, 'population', 0))} people"))
-    facts.append(("Walls", f"level {walls}, {layout.walls_radius} hexes out" if layout.walls_radius else "none"))
+    facts.append(("Homes", f"{several(homes, 'home', 'homes')} for {several(round(stat_or(town, 'population', 0)), 'person', 'people')}"))
+    facts.append(("Walls", f"level {walls}, {several(layout.walls_radius, 'hex', 'hexes')} out" if layout.walls_radius else "none"))
     facts.append(("Growth", morphology.value))
     caption = f"{town.name}: its districts by zone on their hexes, each building in its place, shaded by its state"
     return Plan(_frame(cells, body, f"Plan of {town.name}"), caption, facts)

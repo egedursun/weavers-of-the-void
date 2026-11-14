@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
@@ -165,7 +166,7 @@ async def edit_diplomacy(scope: PlayerScope, command: EditDiplomacy) -> Effect:
         raise ValidationFailedError("Set at least one value.")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"{found.name} keeps {row.relations} relations of a capacity of {row.capacity}.", target_node_id=found.id)
+    return Effect(f"{found.name} keeps {several(row.relations, 'relation', 'relations')} of a capacity of {row.capacity}.", target_node_id=found.id)
 
 
 @player_action("crisis:open", ActionKind.EDIT_RECORD)

@@ -25,6 +25,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatInteger } from '@/lib/format'
+import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1229,7 +1230,7 @@ export function StructureSection({
               </div>
               <Muted variant='caption'>{`Begun in epoch ${data.construction.started_epoch}${data.construction.finished_epoch !== null ? `, finished in epoch ${data.construction.finished_epoch}` : ', still rising'}.`}</Muted>
               {data.construction.generations > 0 && (
-                <Muted variant='caption'>{`${data.construction.generations} generations have worked on it.`}</Muted>
+                <Muted variant='caption'>{`${plural(data.construction.generations, 'generation', 'generations')} ${agree(data.construction.generations, 'has', 'have')} worked on it.`}</Muted>
               )}
             </Panel>
           )}

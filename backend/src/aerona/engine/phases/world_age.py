@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -112,7 +113,7 @@ async def end_golden_age_in(ctx: TickContext, world: WorldRow, communities: list
             began.append(society.golden_age_since_epoch)
             society.golden_age_since_epoch = None
     if ended:
-        span = f" It lasted {ctx.epoch - min(began)} epochs." if began and ctx.epoch > min(began) else ""
+        span = f" It lasted {several(ctx.epoch - min(began), 'epoch', 'epochs')}." if began and ctx.epoch > min(began) else ""
         await note(
             ctx,
             f"{world.name}'s golden age has ended.{span}",
@@ -186,9 +187,10 @@ async def world_age(ctx: TickContext, new_epoch: int) -> WorldAge:
     for verdict in reading.verdicts:
         world = verdict.world
         if verdict.old:
+            epochs_counted = several(verdict.age, "epoch", "epochs")
             await note(
                 ctx,
-                f"{world.name} is {verdict.age} epochs old: its mountains have worn down, its rivers have changed their beds; it is an old world now.",
+                f"{world.name} is {epochs_counted} old: its mountains have worn down, its rivers have changed their beds; it is an old world now.",
                 key="world_age.old_world",
                 kind=ChronicleKind.WORLD_AGE,
                 world_id=world.id,

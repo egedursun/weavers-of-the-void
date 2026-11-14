@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Ban, Gift, HandHeart, Repeat, Route, Scale, Undo2 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { table } from '@/features/arcana/labels'
@@ -412,7 +413,7 @@ export function CircuitCard({
       icon={Repeat}
       tone='verdigris'
       title={row.name}
-      caption={`${row.passes} passes since epoch ${row.started_epoch}`}
+      caption={`${plural(row.passes, 'pass', 'passes')} since epoch ${row.started_epoch}`}
       removeLabel='Stop the circuit'
       editTitle='Set the circuit'
       note='The treasure passes from each stop to the next every epoch, lending standing to its holder and binding the stops in regard.'

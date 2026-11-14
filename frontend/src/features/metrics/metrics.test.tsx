@@ -130,7 +130,7 @@ describe('model metrics panel', () => {
       .toBeInTheDocument()
     await expect.element(screen.getByText('2 · 1 retried')).toBeInTheDocument()
     await expect
-      .element(screen.getByText(/haiku · 1500 calls · average/))
+      .element(screen.getByText(/haiku · 1,500 calls · average/))
       .toBeInTheDocument()
     await expect
       .element(screen.getByText('Calls over 30 s count as slow.'))

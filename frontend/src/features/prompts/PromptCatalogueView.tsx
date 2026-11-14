@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { BookText, Crown, Search, Users } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -220,7 +221,7 @@ export function PromptCatalogueView() {
         <div className='grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-2'>
           <Section
             title='Prompts'
-            description={`${formatInteger(shown.length)} of ${formatInteger(catalogue.data.prompts.length)} prompts. Every prompt text lives in one catalogue.`}
+            description={`${formatInteger(shown.length)} of ${plural(catalogue.data.prompts.length, 'prompt', 'prompts')}. Every prompt text lives in one catalogue.`}
             surface='card'
             level={3}
             icon={BookText}

@@ -1,6 +1,7 @@
 import { Sunrise } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityLink, Section, StatBar, Paged } from '@/components/domain'
@@ -101,7 +102,7 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
                         {order.name}
                       </EntityLink>
                       <Muted as='span' variant='caption'>
-                        {`${order.followers} followers · devotion ${order.devotion}`}
+                        {`${plural(order.followers, 'follower', 'followers')} · devotion ${order.devotion}`}
                       </Muted>
                     </li>
                   )}

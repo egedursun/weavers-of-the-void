@@ -6,6 +6,7 @@ from aerona.catalog.lore import LEGEND_MORALS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -90,9 +91,9 @@ async def spirits_rest(ctx: TickContext) -> None:
             rested += 1
     parts = []
     if rested:
-        parts.append(f"{rested} spirits came to rest")
+        parts.append(f"{several(rested, 'spirit', 'spirits')} came to rest")
     if crossed and dead_world is not None:
-        parts.append(f"{crossed} spirits crossed to {dead_world.name}, the land of the dead")
+        parts.append(f"{several(crossed, 'spirit', 'spirits')} crossed to {dead_world.name}, the land of the dead")
     if parts:
         await note(ctx, "; ".join(parts) + ".", key="spirits.rest")
     ctx.count("rested", rested)

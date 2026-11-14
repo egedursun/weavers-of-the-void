@@ -2,6 +2,7 @@ from pydantic import Field
 
 from aerona.catalog.dangers import DANGERS, MEMORY_LABELS
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.region import DangerSource, RegionMemoryKind
@@ -167,5 +168,5 @@ async def redirect_river(scope: PlayerScope, command: RedirectRiver) -> Effect:
     moved = await region_control.redirect_river(scope.session, scope.rules, command.from_region_id, command.to_region_id, epoch=await scope.epoch())
     source, target = await _name(scope, command.from_region_id), await _name(scope, command.to_region_id)
     river = moved.river.value.replace("_", " ")
-    tail = f"; {moved.dried} places went dry and {moved.watered} found water" if moved.dried or moved.watered else ""
+    tail = f"; {several(moved.dried, 'place', 'places')} went dry and {moved.watered} found water" if moved.dried or moved.watered else ""
     return Effect(f"The {river} of {source} now runs through {target}{tail}.", target_node_id=command.to_region_id)

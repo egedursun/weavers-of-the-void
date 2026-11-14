@@ -84,7 +84,7 @@ export function CosmosTopBar({
             )}
             <EpochStarChip />
             {underway > 0 && (
-              <Badge variant='default'>{`${underway} voyages under way`}</Badge>
+              <Badge variant='default'>{`${plural(underway, 'voyage', 'voyages')} under way`}</Badge>
             )}
             {index.hasSlingshot && (
               <SkyCalendarChip

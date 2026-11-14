@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDecimal, formatNumber } from '@/lib/format'
+import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -104,7 +105,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
         <>
           <div className='flex min-w-0 flex-wrap gap-1.5'>
             <Badge variant='outline'>
-              {`${formatNumber(health.data.nodes)} nodes · ${formatNumber(health.data.edges)} links (${formatNumber(health.data.active_edges)} active, ${formatNumber(health.data.past_edges)} past)`}
+              {`${formatNumber(health.data.nodes)} ${agree(health.data.nodes, 'node', 'nodes')} · ${formatNumber(health.data.edges)} ${agree(health.data.edges, 'link', 'links')} (${formatNumber(health.data.active_edges)} active, ${formatNumber(health.data.past_edges)} past)`}
             </Badge>
             <Badge variant='outline'>
               {`avg. ${formatDecimal(health.data.mean_degree, 1)} links (median ${formatDecimal(health.data.median_degree, 1)})`}
@@ -116,7 +117,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
                   : 'warning'
               }
             >
-              {`main cluster ${formatNumber(health.data.largest_component)} nodes (${Math.round(health.data.largest_share_pct)}%) · ${formatNumber(health.data.components)} clusters`}
+              {`main cluster ${formatNumber(health.data.largest_component)} ${agree(health.data.largest_component, 'node', 'nodes')} (${Math.round(health.data.largest_share_pct)}%) · ${formatNumber(health.data.components)} ${agree(health.data.components, 'cluster', 'clusters')}`}
             </Badge>
             <Badge variant={health.data.isolated > 0 ? 'warning' : 'outline'}>
               {`${formatNumber(health.data.isolated)} isolated`}
@@ -168,7 +169,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
           )}
           {health.data.priority > 0 && (
             <Text variant='caption'>
-              {`${formatNumber(health.data.priority)} events, legends or traditions mentioned in the chronicle with unlinked participants are waiting for Fate.`}
+              {`${formatNumber(health.data.priority)} ${agree(health.data.priority, 'event', 'events')}, legends or traditions mentioned in the chronicle with unlinked participants are waiting for Fate.`}
             </Text>
           )}
         </>
@@ -242,7 +243,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
         <JobProgress job={running} title='Fate is looking at the network' />
       )}
       <Muted variant='caption'>
-        {`If Fate finds no evidence it creates no link: at most ${proposals} links per record per pass, each with a reason. It will not revisit a record for ${revisit} epochs.`}
+        {`If Fate finds no evidence it creates no link: at most ${plural(proposals, 'link', 'links')} per record per pass, each with a reason. It will not revisit a record for ${plural(revisit, 'epoch', 'epochs')}.`}
       </Muted>
       <div className='flex min-w-0 flex-col gap-1.5'>
         <Label variant='overline'>Recent repairs</Label>

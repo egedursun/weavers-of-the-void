@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Boxes, Gauge, Plus, Trash2, Users } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
 import type { components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -91,7 +92,7 @@ export function RouteFlowEditor({ route }: { route: RouteRecord }) {
           </div>
           <Muted variant='caption'>
             {route.window_every > 0
-              ? `Opens once every ${route.window_every} epochs, offset ${route.window_offset}.`
+              ? `Opens once every ${plural(route.window_every, 'epoch', 'epochs')}, offset ${route.window_offset}.`
               : 'Always open while its state allows.'}
           </Muted>
           <RecordEditor

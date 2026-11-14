@@ -131,7 +131,7 @@ export function CookingCard({
       icon={CookingPot}
       tone='gold'
       title={`${row.dish_name} in ${row.community.name}`}
-      caption={`Popularity ${row.popularity} · cooked ${row.cooked} times · since epoch ${row.since_epoch}`}
+      caption={`Popularity ${row.popularity} · cooked ${plural(row.cooked, 'time', 'times')} · since epoch ${row.since_epoch}`}
       removeLabel='Stop cooking it'
       editTitle='Set how it is cooked there'
       note='A popular dish is cooked from the town’s stores each epoch; it calms, nourishes or gives prestige by its kind, gains favour while cooked and loses it when the stores run short.'

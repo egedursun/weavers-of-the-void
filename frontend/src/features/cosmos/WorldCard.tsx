@@ -173,7 +173,7 @@ export function WorldCard({
   const arriving = index.arrivingAt(world.id)
   const gods = index.godsOf(world.id)
   const climate = world.climate_era
-    ? `${CLIMATE_LABEL[world.climate_era]}${world.climate_since_epoch !== null ? ` since epoch ${world.climate_since_epoch}` : ''}${world.climate_epochs_left ? ` (${world.climate_epochs_left} epochs left)` : ''}`
+    ? `${CLIMATE_LABEL[world.climate_era]}${world.climate_since_epoch !== null ? ` since epoch ${world.climate_since_epoch}` : ''}${world.climate_epochs_left ? ` (${plural(world.climate_epochs_left, 'epoch', 'epochs')} left)` : ''}`
     : 'Mild, uncertain'
   return (
     <article data-world-id={world.id} className='flex min-w-0 flex-col gap-6'>

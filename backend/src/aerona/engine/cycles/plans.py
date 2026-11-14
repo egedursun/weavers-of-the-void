@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.core.grammar import agree, several
 from aerona.db.tables.cycles import LongPlanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -114,7 +115,7 @@ async def disrupt(ctx: TickContext, plan: LongPlanRow, tally: PlanTally) -> bool
         return False
     plan.progress = max(0, plan.progress - table.disrupt_steps)
     tally.disrupted += 1
-    await note(ctx, f"Rivals set back {plan.name} by {table.disrupt_steps} steps.", key="plans.disrupted", ids=[plan.holder_node_id])
+    await note(ctx, f"Rivals set back {plan.name} by {several(table.disrupt_steps, 'step', 'steps')}.", key="plans.disrupted", ids=[plan.holder_node_id])
     return True
 
 
@@ -223,14 +224,16 @@ async def complete(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None
     ids = [plan.holder_node_id, *([plan.target_node_id] if plan.target_node_id is not None else [])]
     if plan.kind is LongPlanKind.ECOLOGICAL_TRANSFORMATION:
         changed = await transform_land(ctx, plan)
-        await note(ctx, f"{plan.name} was fulfilled: {changed} lands were remade.", key="plans.completed", ids=ids)
+        await note(
+            ctx, f"{plan.name} was fulfilled: {several(changed, 'land', 'lands')} {agree(changed, 'was', 'were')} remade.", key="plans.completed", ids=ids
+        )
     elif plan.kind is LongPlanKind.BLOODLINE:
         trait = await breed(ctx, plan)
         found = trait.value.replace("_", " ") if trait is not None else "richer in the gift" if await breed_people(ctx, plan) else "nothing new"
         await note(ctx, f"{plan.name} was fulfilled: the line was bred to be {found}.", key="plans.completed", ids=ids)
     elif plan.kind is LongPlanKind.CONVERSION:
         converted = await convert(ctx, plan, holder)
-        await note(ctx, f"{plan.name} was fulfilled: {converted} towns turned to a new worship.", key="plans.completed", ids=ids)
+        await note(ctx, f"{plan.name} was fulfilled: {several(converted, 'town', 'towns')} turned to a new worship.", key="plans.completed", ids=ids)
     elif plan.kind is LongPlanKind.FORECAST:
         lifted = await steer_forecast(ctx, plan.id)
         await note(ctx, f"{plan.name} was fulfilled: the realm's stress eased by {lifted}.", key="plans.completed", ids=ids)

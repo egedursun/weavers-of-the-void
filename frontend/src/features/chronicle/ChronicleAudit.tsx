@@ -8,7 +8,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
-import { plural } from '@/lib/units'
+import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -181,7 +181,7 @@ export function ChronicleAudit({
               ? 'This chronicle has not been checked against the facts.'
               : clean
                 ? 'Matches the facts of the epoch.'
-                : `${plural(remaining.length, 'contradiction', 'contradictions')} remain.`}
+                : `${plural(remaining.length, 'contradiction', 'contradictions')} ${agree(remaining.length, 'remains', 'remain')}.`}
           </Muted>
         </div>
         {audit && (
@@ -196,7 +196,7 @@ export function ChronicleAudit({
               <Badge
                 size='sm'
                 variant='success'
-              >{`${audit.repaired_sentences} sentences repaired`}</Badge>
+              >{`${plural(audit.repaired_sentences, 'sentence', 'sentences')} repaired`}</Badge>
             )}
           </div>
         )}

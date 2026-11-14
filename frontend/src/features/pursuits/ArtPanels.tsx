@@ -8,6 +8,7 @@ import {
   Palette,
   Stamp,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { table } from '@/features/arcana/labels'
@@ -403,7 +404,7 @@ export function ArtMarketPanel({
         ]}
         rows={data.prices.map((row) => ({
           key: row.artwork.id,
-          caption: `${row.artwork.name}: ${row.price}, ${row.provenance} sales, interest ${row.interest}`,
+          caption: `${row.artwork.name}: ${row.price}, ${plural(row.provenance, 'sale', 'sales')}, interest ${row.interest}`,
           segments: [{ value: row.price, fill: 'fill-warning' }],
           mark: row.interest,
         }))}

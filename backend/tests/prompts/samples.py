@@ -217,7 +217,7 @@ FACT_SHEET = chronicler.ChroniclerFactSheet(
     ],
     outcomes=[
         chronicler.FactOutcome(ref="war-1", kind=chronicler.ContestKind.WAR, contest="Salt War", winner_id=5, winner="Kael", loser_id=6, loser="Orrin"),
-        chronicler.FactOutcome(ref="conflict-2", kind=chronicler.ContestKind.DUEL, winner_id=2, winner="Vesaelon", loser_id=3, loser="Aeron"),
+        chronicler.FactOutcome(ref="conflict-2", kind=chronicler.ContestKind.DUEL, winner_id=2, winner="Vesaelon", loser_id=3, loser="Aeron", score="9 to 3"),
     ],
     draws=[chronicler.FactDraw(son="Aeron", text="drew essence from the tide well")],
     events=[chronicler.FactEvent(ref="event-9", category="disaster", world="Aerona", text="A flood drowned the lowlands", repeats=2)],

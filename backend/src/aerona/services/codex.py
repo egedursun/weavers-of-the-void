@@ -9,6 +9,7 @@ from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.travel import TRAVEL_METHODS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import several
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -260,7 +261,10 @@ def guide_markdown(guide: TravellerGuide) -> str:
         lines.append(
             "**Roads:** "
             + "; ".join(
-                f"{route.target} ({route.method}, {route.duration} epochs" + ("" if route.active else ", closed") + ("" if route.known else ", unknown") + ")"
+                f"{route.target} ({route.method}, {several(route.duration, 'epoch', 'epochs')}"
+                + ("" if route.active else ", closed")
+                + ("" if route.known else ", unknown")
+                + ")"
                 for route in guide.routes
             )
         )

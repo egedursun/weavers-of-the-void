@@ -2,6 +2,7 @@ from pydantic import Field
 
 from aerona.catalog.commodities import commodity_label
 from aerona.catalog.production import WORKSHOP_LABELS
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
@@ -183,7 +184,7 @@ async def edit_currency(scope: PlayerScope, command: EditCurrency) -> Effect:
     ctx = await scope.context("currency_edit")
     row = await control.edit_currency(ctx, command.currency_id, purity=command.purity, trust=command.trust, supply=command.supply)
     await control_depth.rename_currency(ctx, row, command.name, command.metal, command.hold)
-    return Effect(f"{row.name}: purity {row.purity}, trust {row.trust}, {row.supply} coins abroad.", row.item_entity_id)
+    return Effect(f"{row.name}: purity {row.purity}, trust {row.trust}, {several(row.supply, 'coin', 'coins')} abroad.", row.item_entity_id)
 
 
 @player_action("currency:debase", ActionKind.OTHER)
@@ -208,4 +209,4 @@ async def forgive_loan(scope: PlayerScope, command: LoanTarget) -> Effect:
 async def inject_hoard(scope: PlayerScope, command: InjectHoard) -> Effect:
     added = await control.hoard(await scope.context("hoard_inject"), command.community_id, command.metal, command.units, command.world_material_id)
     what = "a substance of this world" if command.world_material_id is not None else command.metal.value.replace("_", " ")
-    return Effect(f"A hoard of {added} loads of {what} flooded the market.", command.community_id, values={"added": added})
+    return Effect(f"A hoard of {several(added, 'load', 'loads')} of {what} flooded the market.", command.community_id, values={"added": added})

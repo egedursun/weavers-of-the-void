@@ -105,7 +105,7 @@ export function TerraformPanel({
                       {row.world.name}
                     </EntityLink>
                   )}
-                  {` · ${row.step} a step, ${row.epochs_left} epochs left${row.by ? ` · by ${row.by.name}` : ''}`}
+                  {` · ${row.step} a step, ${plural(row.epochs_left, 'epoch', 'epochs')} left${row.by ? ` · by ${row.by.name}` : ''}`}
                 </>
               }
               aside={

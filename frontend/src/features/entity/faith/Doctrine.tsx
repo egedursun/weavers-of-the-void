@@ -26,7 +26,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { tenetKindValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
-import { plural } from '@/lib/units'
+import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1007,7 +1007,7 @@ function DoctrineBody({
         />
         <Badge size='sm' variant='secondary'>
           <Users aria-hidden='true' />
-          {`${plural(doctrine.members.length, 'people', 'peoples')} keep it`}
+          {`${plural(doctrine.members.length, 'people', 'peoples')} ${agree(doctrine.members.length, 'keeps', 'keep')} it`}
         </Badge>
         {doctrine.fanaticism && (
           <Tag

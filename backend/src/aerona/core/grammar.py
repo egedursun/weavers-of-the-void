@@ -22,10 +22,14 @@ def an(noun: object, *, capital: bool = False) -> str:
     return f"{article.capitalize() if capital else article} {word}"
 
 
+def agree(count: int | None, one: str, many: str) -> str:
+    return one if count == 1 else many
+
+
 def several(count: int | None, one: str, many: str) -> str:
     if count is None:
         return f"an unknown number of {many}"
-    return f"{count} {one if count == 1 else many}"
+    return f"{count} {agree(count, one, many)}"
 
 
 class ArticleFormatter(Formatter):

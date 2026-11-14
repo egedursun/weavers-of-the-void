@@ -16,6 +16,7 @@ import {
   WholeWord,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -121,8 +122,8 @@ export function LanguagesScreen() {
         icon={ITEM.icon}
         meta={
           <>
-            <Badge variant='outline'>{`${formatInteger(shownLanguages.length)} languages`}</Badge>
-            <Badge variant='outline'>{`${formatInteger(words)} words`}</Badge>
+            <Badge variant='outline'>{`${plural(shownLanguages.length, 'language', 'languages')}`}</Badge>
+            <Badge variant='outline'>{`${plural(words, 'word', 'words')}`}</Badge>
             <Badge variant='outline'>{`${formatInteger(shownKnowledge.length)} known arts`}</Badge>
           </>
         }

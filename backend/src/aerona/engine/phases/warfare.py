@@ -7,6 +7,7 @@ from aerona.catalog.mind import COMMAND_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.core.grammar import agree, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository, caused_by
 from aerona.db.repositories.entities import EntityRepository
@@ -739,9 +740,11 @@ async def _record(ctx: TickContext, report: BattleReport, place: EntityRow | Non
     derived = await Namer(ctx.session, ctx.rules).from_speaker(named_after.id, seed_of(report.war.id, sequence, "battle"), NameKind.PLACE)
     root = derived or (place.name if place is not None else report.loser.name)
     winner_army, loser_army = armies[report.winner.id], armies[report.loser.id]
+    winner_soldiers = several(stat(winner_army, "size") or 0, "soldier", "soldiers")
+    loser_soldiers = several(stat(loser_army, "size") or 0, "soldier", "soldiers")
     body = (
-        f"Clash #{sequence} of {event.name}. {winner_army.name} ({stat(winner_army, 'size') or 0} soldiers, morale {stat(winner_army, 'morale') or 0}) "
-        f"against {loser_army.name} ({stat(loser_army, 'size') or 0} soldiers, morale {stat(loser_army, 'morale') or 0}). {report.summary}."
+        f"Clash #{sequence} of {event.name}. {winner_army.name} ({winner_soldiers}, morale {stat(winner_army, 'morale') or 0}) "
+        f"against {loser_army.name} ({loser_soldiers}, morale {stat(loser_army, 'morale') or 0}). {report.summary}."
     )
     record = await create_record(
         ctx,
@@ -813,7 +816,8 @@ async def duel(
         if winner_side is not None and loser_side is not None and winner_side != loser_side:
             await start_blood_feud(ctx, winner_side, loser_side, f"the blood of {loser.name}")
         await house_feud(ctx, winner.id, loser.id, f"the blood of {loser.name}")
-        return f" In a duel of {result.exchanges} exchanges {winner.name} killed {loser.name}; now there is a blood feud between the two sides."
+        exchanges_counted = several(result.exchanges, "exchange", "exchanges")
+        return f" In a duel of {exchanges_counted} {winner.name} killed {loser.name}; now there is a blood feud between the two sides."
     if stat(loser, "hp") is None:
         set_stats(loser, hp=campaigns.hero_default_hp)
     for target_id, hit in result.hits:
@@ -826,7 +830,7 @@ async def duel(
         await apply_hits(ctx, loser, crippling, lethal=False)
     ending = DUEL_ENDINGS[result.end].format(winner=winner.name, loser=loser.name)
     mercy = f" {winner.name} spared the fallen." if result.spared else ""
-    return f" {winner.name} and {loser.name} dueled for {result.exchanges} exchanges; {ending}.{mercy}"
+    return f" {winner.name} and {loser.name} dueled for {several(result.exchanges, 'exchange', 'exchanges')}; {ending}.{mercy}"
 
 
 async def injuries_of(ctx: TickContext, mortal_id: int) -> int:
@@ -1030,7 +1034,7 @@ async def _announce(
     ids = [*([report.record.id] if report.record is not None else []), war.event_entity_id, report.winner.id, report.loser.id, *report.ids]
     setting = ground.describe()
     lead = f"{event.name}, {setting}" if setting else event.name
-    captives = f" {taken} soldiers were led away captive." if taken else ""
+    captives = f" {several(taken, 'soldier', 'soldiers')} {agree(taken, 'was', 'were')} led away captive." if taken else ""
     text = f"{lead}: {report.summary}.{captives}{''.join(report.hero_texts)}"
     outbreak = await ChronicleRepository(ctx.session).prior_incident([war.event_entity_id], ("war.outbreak", "war.battle."))
     write = await ctx.chronicle(
@@ -1282,8 +1286,8 @@ async def check_war_end(
 async def _outbreak(ctx: TickContext, war: WarRow, attacker: EntityRow, defender: EntityRow, armies: dict[int, tuple[EntityRow, ArmyRow]]) -> None:
     first, second = armies[attacker.id][0], armies[defender.id][0]
     text = (
-        f"War broke out between {attacker.name} and {defender.name}: {first.name} ({stat(first, 'size') or 0} soldiers) "
-        f"faces {second.name} ({stat(second, 'size') or 0} soldiers)."
+        f"War broke out between {attacker.name} and {defender.name}: {first.name} ({several(stat(first, 'size') or 0, 'soldier', 'soldiers')}) "
+        f"faces {second.name} ({several(stat(second, 'size') or 0, 'soldier', 'soldiers')})."
     )
     ids = (war.event_entity_id, attacker.id, defender.id, first.id, second.id)
     cause = await war_cause_incident(ctx.session, war.cause, attacker.id, defender.id, ctx.epoch)
@@ -1392,7 +1396,9 @@ async def _manoeuvre(ctx: TickContext, theatre: Theatre, marches: list[March], i
 
 async def _sea_report(ctx: TickContext, fight: SeaFight) -> None:
     lost = fight.sunk.get(fight.loser.army.id, 0)
-    text = f"At sea the ships of {fight.winner.owner.name} beat those of {fight.loser.owner.name}, sank {lost} crews and closed its harbours."
+    text = (
+        f"At sea the ships of {fight.winner.owner.name} beat those of {fight.loser.owner.name}, sank {several(lost, 'crew', 'crews')} and closed its harbours."
+    )
     await ctx.chronicle(
         ChronicleKind.WAR,
         text,
@@ -1461,7 +1467,7 @@ async def _surrender(
     event = await war_event(ctx.session, war)
     hunger = "starving" if siege.starvation is not StarvationStage.NONE else "weary"
     text = (
-        f"{event.name}: {defender.name}, {hunger} after {siege.rounds} seasons of siege, opened its gates to {attacker.name}; "
+        f"{event.name}: {defender.name}, {hunger} after {several(siege.rounds, 'season', 'seasons')} of siege, opened its gates to {attacker.name}; "
         f"{dead} townsfolk died in the sack."
     )
     await ctx.chronicle(

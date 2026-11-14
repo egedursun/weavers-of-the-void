@@ -1,4 +1,5 @@
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 
 export type Phonology = components['schemas']['Phonology']
 export type LanguageTexture = components['schemas']['LanguageTexture']
@@ -20,8 +21,9 @@ export function soundList(sounds: readonly string[]): string {
 
 export function syllableText(phonology: Phonology): string {
   const { min_syllables: min, max_syllables: max } = phonology
-  if (min === max) return min === 1 ? '1 syllable' : `${min} syllables`
-  return `${min} to ${max} syllables`
+  if (min === max)
+    return min === 1 ? '1 syllable' : `${plural(min, 'syllable', 'syllables')}`
+  return `${min} to ${plural(max, 'syllable', 'syllables')}`
 }
 
 export function dialectSummary(phonology: Phonology): string {

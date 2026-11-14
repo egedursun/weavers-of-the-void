@@ -16,6 +16,7 @@ import {
   Users,
 } from 'lucide-react'
 import { type ActionBody, type EditValues } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -701,7 +702,7 @@ function AvatarsCard({
                 />
                 <div className='flex min-w-0 flex-1 flex-col gap-1'>
                   <NodeName item={row.avatar} />
-                  <Muted variant='caption'>{`Walking since epoch ${row.since_epoch}; ${row.deeds} deeds${row.locked.includes('deeds') ? ' (held)' : ''}`}</Muted>
+                  <Muted variant='caption'>{`Walking since epoch ${row.since_epoch}; ${plural(row.deeds, 'deed', 'deeds')}${row.locked.includes('deeds') ? ' (held)' : ''}`}</Muted>
                 </div>
                 <Button
                   size='sm'

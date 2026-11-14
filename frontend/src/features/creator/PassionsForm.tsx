@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Flame } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -124,7 +125,7 @@ export function PassionsForm({
                 (chosen.length === 0
                   ? 'Pick at least one passion.'
                   : overLimit
-                    ? `You can pick at most ${limit} passions.`
+                    ? `You can pick at most ${plural(limit, 'passion', 'passions')}.`
                     : null)
               }
               pending={declare.isPending}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Check, Lock, RotateCcw, Sprout, Undo2, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -508,7 +509,7 @@ function Ideas({ view }: { view: MindSplit }) {
         {preview && (
           <div className='flex min-w-0 flex-col gap-1'>
             <Muted variant='caption'>
-              {`Once taken to heart it brings: ${shifts(preview).join(', ')}. While it incubates it costs ${preview.distraction} focus.`}
+              {`Once taken to heart it brings: ${shifts(preview).join(', ')}. While it incubates it costs ${plural(preview.distraction, 'focu', 'focus')}.`}
             </Muted>
           </div>
         )}

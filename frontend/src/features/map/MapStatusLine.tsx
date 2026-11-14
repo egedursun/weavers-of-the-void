@@ -1,5 +1,6 @@
 import { Grid3x3, Map as MapIcon, MapPin } from 'lucide-react'
 import { formatNumber, formatPercent } from '@/lib/format'
+import { agree } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Muted } from '@/components/typography'
 
@@ -38,11 +39,11 @@ export function MapStatusLine(props: MapStatusLineProps) {
       </Badge>
       <Badge size='sm' variant='outline'>
         <MapIcon />
-        {`${formatNumber(props.regions)} regions`}
+        {`${formatNumber(props.regions)} ${agree(props.regions, 'region', 'regions')}`}
       </Badge>
       <Badge size='sm' variant='outline'>
         <MapPin />
-        {`${formatNumber(props.markers)} markers`}
+        {`${formatNumber(props.markers)} ${agree(props.markers, 'marker', 'markers')}`}
       </Badge>
       <Muted variant='caption' truncate>
         {hint}

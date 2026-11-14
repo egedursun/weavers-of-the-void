@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Beer, HandHeart, Home, Plus, Route, Users } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
@@ -42,7 +43,7 @@ function TavernCard({ row, blocked }: { row: Tavern; blocked: string | null }) {
       icon={Beer}
       tone='gold'
       title={row.structure.name}
-      caption={`${row.patrons} patrons · ${row.rumours} rumours · ${row.brawls} brawls · lodges ${row.lodging}`}
+      caption={`${plural(row.patrons, 'patron', 'patrons')} · ${plural(row.rumours, 'rumour', 'rumours')} · ${plural(row.brawls, 'brawl', 'brawls')} · lodges ${row.lodging}`}
       removeLabel='Strike the tavern'
       editTitle='Set the tavern'
       note='A tavern draws rumours to its town, and its keeper gains renown from the news that passes; drink breeds brawls, and an inn lodges travellers and brings trade.'
@@ -206,7 +207,7 @@ function CoopCard({
       icon={purpose.icon}
       tone={purpose.tone}
       title={`A cooperative for ${purpose.label.toLowerCase()}`}
-      caption={`${row.members} members · pool ${row.pool}`}
+      caption={`${plural(row.members, 'member', 'members')} · pool ${row.pool}`}
       removeLabel='Undo the cooperative'
       editTitle='Set the cooperative'
       note='Members pool their means: a mill, boats or irrigation raise the town, insurance, burial and credit ease its want.'
@@ -306,7 +307,7 @@ export function TownPanel({
         rows={[
           ...data.taverns.map((row) => ({
             key: `t${row.structure.id}`,
-            caption: `${row.structure.name}: ${row.patrons} patrons`,
+            caption: `${row.structure.name}: ${plural(row.patrons, 'patron', 'patrons')}`,
             segments: [
               { value: Math.min(SPAN, row.patrons), fill: 'fill-warning' },
             ],

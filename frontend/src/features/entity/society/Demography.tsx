@@ -958,7 +958,7 @@ function JobTile({ row }: { row: Labour }) {
             {spec.label}
           </Text>
           <Muted as='span' variant='caption' truncate>
-            {`${formatInteger(row.workers)} workers`}
+            {`${plural(row.workers, 'worker', 'workers')}`}
           </Muted>
         </div>
         <Stat value={`${row.output_pct}%`} />
@@ -1087,7 +1087,7 @@ function LifeCourse({
         preserveAspectRatio='none'
         className='h-meter-md w-full min-w-0'
         role='img'
-        aria-label={`Childhood ${biology.maturity_years} years, adulthood ${biology.adult_years}, old age ${biology.elder_years}`}
+        aria-label={`Childhood ${plural(biology.maturity_years, 'year', 'years')}, adulthood ${biology.adult_years}, old age ${biology.elder_years}`}
       >
         {stages.map((stage, index) => {
           const before = sum(stages.slice(0, index), (item) => item.years)
@@ -1109,7 +1109,7 @@ function LifeCourse({
             key={stage.key}
             icon={stage.spec.icon}
             label={stage.label}
-            value={`${formatInteger(stage.years)} years`}
+            value={`${plural(stage.years, 'year', 'years')}`}
             tone={stage.spec.tone}
           />
         ))}
@@ -1184,7 +1184,7 @@ export function PeopleProfileSection({
           {biology && (
             <KpiTile
               label='Lifespan'
-              value={`${formatInteger(biology.maturity_years + biology.adult_years + biology.elder_years)} years`}
+              value={`${plural(biology.maturity_years + biology.adult_years + biology.elder_years, 'year', 'years')}`}
               icon={Hourglass}
               tone='gold'
               hint={`Of age at ${biology.maturity_years}, old at ${biology.maturity_years + biology.adult_years}`}

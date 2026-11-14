@@ -176,9 +176,9 @@ function GrammarCard({
       {grammar && (
         <>
           <div className='flex min-w-0 flex-wrap gap-1.5'>
-            <Chip>{`${grammar.cases} cases`}</Chip>
+            <Chip>{`${plural(grammar.cases, 'case', 'cases')}`}</Chip>
             <Chip>{`${grammar.noun_classes} noun classes`}</Chip>
-            <Chip>{`${grammar.honorific_levels} levels of honour`}</Chip>
+            <Chip>{`${plural(grammar.honorific_levels, 'level', 'levels')} of honour`}</Chip>
             <Chip icon={NUMBERS[grammar.number_system].icon}>
               {NUMBERS[grammar.number_system].label}
             </Chip>
@@ -486,7 +486,7 @@ function ScriptCard({
           icon={SYSTEMS[script.system].icon}
           tone={SYSTEMS[script.system].tone}
           title={script.name}
-          caption={`${SYSTEMS[script.system].label} · ${script.signs} signs · ${SCRIPT_CAUSES[script.cause].label.toLowerCase()} in epoch ${script.epoch}`}
+          caption={`${SYSTEMS[script.system].label} · ${plural(script.signs, 'sign', 'signs')} · ${SCRIPT_CAUSES[script.cause].label.toLowerCase()} in epoch ${script.epoch}`}
           aside={
             <div className='flex shrink-0 flex-wrap items-center gap-1'>
               <Button
@@ -689,7 +689,7 @@ function DecipherCard({
           <div className='flex min-w-0 flex-wrap gap-1.5'>
             <Chip>{`${work.corpus} surviving texts`}</Chip>
             <Chip variant={work.errors ? 'warning' : undefined}>
-              {`${work.errors} misreadings`}
+              {`${plural(work.errors, 'misreading', 'misreadings')}`}
             </Chip>
             {work.bilingual && <Chip variant='success'>A bilingual text</Chip>}
           </div>

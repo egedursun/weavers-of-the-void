@@ -14,7 +14,11 @@ WORD = re.compile(r"^ ([a-z][a-z-]*)")
 TEMPLATE = re.compile(r"\{(count|total|n)\} ([a-z][a-z-]*)")
 SPEC = re.compile(r"\{\w+:[a-z -]+\|[a-z -]+\}")
 TESTS = ROOT / "backend" / "tests"
-SCREEN = re.compile(r"\$\{([A-Za-z_.()?]*(?:length|count|Count|total|Total))\} ([a-z][a-z-]*)")
+SCREEN = re.compile(r"\$\{([^{}`]+)\} ([a-z][a-z-]*)")
+COUNTED = re.compile(r"(length|count|Count|total|Total|size)$|^(formatNumber|formatInteger|formatCompact)\(|\.toLocaleString\(")
+PLURAL_VERB = re.compile(r"^((?: of [^{}]*?)? (?:were|are|have|remain))\b")
+SCREEN_VERB = re.compile(r"plural\((?:[^()]|\([^()]*\))*\)\}((?: of [^`$]*?)? (?:were|are|have|remain))\b")
+LAST_NAME = re.compile(r"(\w+)\s*$")
 
 
 @dataclass(frozen=True)
@@ -42,6 +46,14 @@ def counting(node: ast.expr) -> bool:
     return False
 
 
+def named_alike(node: ast.expr, word: str) -> bool:
+    if isinstance(node, ast.Name):
+        return node.id == word
+    if isinstance(node, ast.Attribute):
+        return node.attr == word
+    return False
+
+
 def in_joined(node: ast.JoinedStr) -> list[str]:
     found: list[str] = []
     parts = node.values
@@ -50,8 +62,23 @@ def in_joined(node: ast.JoinedStr) -> list[str]:
         if not isinstance(part, ast.FormattedValue) or not isinstance(after, ast.Constant) or not isinstance(after.value, str):
             continue
         match = WORD.match(after.value)
-        if match and counting(part.value) and plural(match.group(1)):
+        if match and plural(match.group(1)) and (counting(part.value) or named_alike(part.value, match.group(1))):
             found.append(f"{{{ast.unparse(part.value)}}} {match.group(1)}")
+    return found
+
+
+def counted_by(node: ast.expr) -> bool:
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "several"
+
+
+def verbs_after(node: ast.JoinedStr) -> list[str]:
+    found: list[str] = []
+    for index, part in enumerate(node.values[:-1]):
+        after = node.values[index + 1]
+        if isinstance(part, ast.FormattedValue) and counted_by(part.value) and isinstance(after, ast.Constant) and isinstance(after.value, str):
+            match = PLURAL_VERB.match(after.value)
+            if match:
+                found.append(f"{{{ast.unparse(part.value)}}}{match.group(1)}")
     return found
 
 
@@ -68,7 +95,7 @@ def counts(files: dict[Path, str]) -> list[Count]:
         joined_parts = {id(value) for node in ast.walk(tree) if isinstance(node, ast.JoinedStr) for value in node.values}
         for node in ast.walk(tree):
             if isinstance(node, ast.JoinedStr):
-                found.extend(Count(path, node.lineno, item) for item in in_joined(node))
+                found.extend(Count(path, node.lineno, item) for item in in_joined(node) + verbs_after(node))
             elif isinstance(node, ast.Constant) and id(node) not in joined_parts:
                 found.extend(Count(path, node.lineno, item) for item in in_template(node))
     return found
@@ -96,11 +123,18 @@ def formatted(files: dict[Path, str], names: set[str]) -> list[Count]:
     return found
 
 
+def counted_on_screen(expression: str, word: str) -> bool:
+    text = expression.strip()
+    last = LAST_NAME.search(text)
+    return bool(COUNTED.search(text)) or (last is not None and last.group(1) == word)
+
+
 def on_screen(files: dict[Path, str]) -> list[Count]:
     found: list[Count] = []
     for path, text in files.items():
         for number, line in enumerate(text.splitlines(), start=1):
-            found.extend(Count(path, number, f"${{{name}}} {word}") for name, word in SCREEN.findall(line) if plural(word))
+            found.extend(Count(path, number, f"${{{name}}} {word}") for name, word in SCREEN.findall(line) if plural(word) and counted_on_screen(name, word))
+            found.extend(Count(path, number, f"plural(…){verb}") for verb in SCREEN_VERB.findall(line))
     return found
 
 
@@ -117,7 +151,7 @@ def main() -> int:
     found = counts(source) + on_screen(screens())
     for item in found:
         where = f"{item.path.relative_to(ROOT)}:{item.line}"
-        print(f"{where}: '{item.text}' reads wrong for a count of one; count through several() from aerona.core.grammar, or plural() from @/lib/units")
+        print(f"{where}: '{item.text}' reads wrong for a count of one; count through several() and agree(), or plural() and agree() on screen")
     print(f"count words: {len(found) + len(misfilled)}")
     return 1 if found or misfilled else 0
 

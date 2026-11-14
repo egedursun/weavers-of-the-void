@@ -1,5 +1,5 @@
 import { CircleCheck, CircleX, Compass, Rocket } from 'lucide-react'
-import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, MiniStat, Section } from '@/components/domain'
 import { Text } from '@/components/typography'
@@ -69,7 +69,7 @@ export function VoyagesPanel({ index, rules, worldId }: VoyagesPanelProps) {
             title='No community has set out yet'
             description={
               openRoute
-                ? `Open routes exist: communities of at least ${population === undefined ? '…' : formatInteger(population)} souls may set out on their own (${ruleText(rules.get('expeditionBase'))}% per epoch, World rules › Cosmos and travel), or you can send one below.`
+                ? `Open routes exist: communities of at least ${population === undefined ? '…' : plural(population, 'soul', 'souls')} may set out on their own (${ruleText(rules.get('expeditionBase'))}% per epoch, World rules › Cosmos and travel), or you can send one below.`
                 : 'There is no open, known route between worlds. Open one in Command › Open a route, or reveal a hidden one from a world card.'
             }
           />

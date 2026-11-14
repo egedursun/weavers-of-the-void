@@ -26,6 +26,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -213,7 +214,7 @@ export function TravelPanel({ view }: { view: Disease }) {
       />
       <Muted variant='caption'>
         {view.incubation > 0
-          ? `It hides ${view.incubation} years before the sick show it, so travellers carry it off and quarantines close too late for ${view.unseen_pct}% of the first outbreak; part of its first toll falls an age later.`
+          ? `It hides ${plural(view.incubation, 'year', 'years')} before the sick show it, so travellers carry it off and quarantines close too late for ${view.unseen_pct}% of the first outbreak; part of its first toll falls an age later.`
           : 'It shows itself at once; quarantines catch it from the first day.'}
       </Muted>
       <div className='grid min-w-0 grid-cols-2 gap-2'>
@@ -284,7 +285,7 @@ export function HostsPanel({ view }: { view: Disease }) {
                   <StatBar
                     label={
                       host.lands > 0
-                        ? `Most abundant, in ${host.lands} lands`
+                        ? `Most abundant, in ${plural(host.lands, 'land', 'lands')}`
                         : 'Gone from every land'
                     }
                     value={host.abundance}

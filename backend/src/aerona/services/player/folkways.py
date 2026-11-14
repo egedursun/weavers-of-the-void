@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from aerona.core.grammar import several
+from aerona.core.grammar import agree, several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.folkways import CharmPower, DecisionBias, ImpuritySource, LuckReach, LuckSign, MishapKind, Nutrient, Purification
 from aerona.domain.enums.mind import Profession
@@ -240,7 +240,9 @@ async def nutrition_score_set(scope: PlayerScope, command: HolderValues) -> Effe
 @player_action("nutrition:feed", ActionKind.EDIT_RECORD)
 async def nutrition_feed(scope: PlayerScope, command: Feed) -> Effect:
     tally = await control.feed_now(await scope.context("nutrition_feed"))
-    return Effect(f"Diets were read in {several(tally.diets, 'town', 'towns')} and {several(tally.scored, 'life', 'lives')} were fed.")
+    return Effect(
+        f"Diets were read in {several(tally.diets, 'town', 'towns')} and {several(tally.scored, 'life', 'lives')} {agree(tally.scored, 'was', 'were')} fed."
+    )
 
 
 @player_action("bias_weight:set", ActionKind.EDIT_RECORD)
@@ -252,7 +254,7 @@ async def bias_weight_set(scope: PlayerScope, command: BiasDraft) -> Effect:
 @player_action("bias:read", ActionKind.EDIT_RECORD)
 async def bias_read(scope: PlayerScope, command: HolderTarget) -> Effect:
     count = await control.read_biases(await scope.context("bias_read"), command.holder_id)
-    return Effect(f"{several(count, 'bias', 'biases')} were read from its character.", command.holder_id)
+    return Effect(f"{several(count, 'bias', 'biases')} {agree(count, 'was', 'were')} read from its character.", command.holder_id)
 
 
 @player_action("purity:set", ActionKind.EDIT_RECORD)

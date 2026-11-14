@@ -1,6 +1,7 @@
 import { RotateCcw, Wrench } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { RARITY_LABEL } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -59,7 +60,7 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
               <Badge variant='secondary'>
                 {data.action_points_left === null
                   ? 'Not acting yet this epoch'
-                  : `${data.action_points_left} actions left`}
+                  : `${plural(data.action_points_left, 'action', 'actions')} left`}
               </Badge>
               <Badge variant='outline'>{`${data.available.length} usable`}</Badge>
             </div>

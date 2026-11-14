@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Send } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -162,7 +163,7 @@ export function SendVoyageForm({
             <SelectContent>
               {routes.map((route) => (
                 <SelectItem key={route.id} value={String(route.id)}>
-                  {`${index.worldName(otherEnd(route, origin))} · ${TRAVEL_METHOD_LABEL[route.method]} · ${route.duration_epochs} epochs · danger ${route.danger}`}
+                  {`${index.worldName(otherEnd(route, origin))} · ${TRAVEL_METHOD_LABEL[route.method]} · ${plural(route.duration_epochs, 'epoch', 'epochs')} · danger ${route.danger}`}
                 </SelectItem>
               ))}
             </SelectContent>

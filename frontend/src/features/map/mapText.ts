@@ -1,4 +1,5 @@
 import { formatNumber } from '@/lib/format'
+import { agree } from '@/lib/units'
 import { typeLabel } from '@/features/graph/families'
 import { type MapView } from './api'
 import { type LineKind } from './mapLines'
@@ -88,7 +89,7 @@ function populationLine(view: MapView, id: number): string | null {
   const population = view.population[String(id)]
   if (population === undefined) return null
   const previous = view.settlements[String(id)]?.previous_population
-  const souls = `${formatNumber(population)} souls`
+  const souls = `${formatNumber(population)} ${agree(population, 'soul', 'souls')}`
   if (!previous) return souls
   const change = percentChange(population, previous)
   const sign = change > 0 ? '+' : ''

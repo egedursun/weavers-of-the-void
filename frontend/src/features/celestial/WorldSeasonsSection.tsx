@@ -21,6 +21,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -129,7 +130,7 @@ function ClimateAge({
           </div>
           <Muted variant='caption'>
             {data.climate
-              ? `${data.climate.description} Since epoch ${data.climate.since_epoch ?? '—'}, ${data.climate.epochs_left ?? 0} epochs left.`
+              ? `${data.climate.description} Since epoch ${data.climate.since_epoch ?? '—'}, ${plural(data.climate.epochs_left ?? 0, 'epoch', 'epochs')} left.`
               : 'The first age begins with the next epoch.'}
           </Muted>
         </div>

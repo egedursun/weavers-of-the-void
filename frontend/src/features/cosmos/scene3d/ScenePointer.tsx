@@ -1,6 +1,7 @@
 import { type ReactNode, type RefObject, useRef, useState } from 'react'
 import { formatCompact } from '@/lib/format'
 import { TAP_SLOP } from '@/lib/sceneTap'
+import { agree, plural } from '@/lib/units'
 import { Text } from '@/components/typography'
 import { type CosmosIndex, isMisty, routeStateText } from '../model/cosmosModel'
 import {
@@ -58,7 +59,7 @@ function TipBody({
           {`${isMisty(item) ? 'Unknown world' : item.type_label}${parent ? ` · moon of ${parent.world.name}` : ''}${item.world.discovery === 'legend' ? ' · legend' : ''}`}
         </Text>
         <Text variant='caption' tone='inherit'>
-          {`${formatCompact(item.counts.population)} souls · ${item.counts.regions} regions · atmosphere ${ATMOSPHERE_LABEL[item.world.atmosphere].toLowerCase()} · leakage ${item.world.leakage}`}
+          {`${formatCompact(item.counts.population)} ${agree(item.counts.population, 'soul', 'souls')} · ${plural(item.counts.regions, 'region', 'regions')} · atmosphere ${ATMOSPHERE_LABEL[item.world.atmosphere].toLowerCase()} · leakage ${item.world.leakage}`}
         </Text>
         {god && (
           <Text variant='caption' tone='inherit'>{`Foreign god: ${god}`}</Text>
@@ -117,7 +118,7 @@ function TipBody({
           tone='inherit'
         >{`${index.worldName(route.world_a_id)} ↔ ${index.worldName(route.world_b_id)}`}</Text>
         <Text variant='caption' tone='inherit'>
-          {`${route.duration_epochs} epochs · danger ${route.danger}${controller ? ` · controlled by ${controller}` : ''}${route.known ? '' : ' · unknown route'} · ${routeStateText(route)}`}
+          {`${plural(route.duration_epochs, 'epoch', 'epochs')} · danger ${route.danger}${controller ? ` · controlled by ${controller}` : ''}${route.known ? '' : ' · unknown route'} · ${routeStateText(route)}`}
         </Text>
         {route.description && (
           <Text variant='caption' tone='inherit' truncate={3}>
@@ -135,11 +136,11 @@ function TipBody({
         {`${index.entityName(journey.traveller_entity_id) ?? 'Travellers'} → ${index.worldName(journey.destination_world_id)}`}
       </Text>
       <Text variant='caption' tone='inherit'>
-        {`${JOURNEY_INTENT_LABEL[journey.intent]}${journey.population > 0 ? ` · ${formatCompact(journey.population)} souls` : ''}`}
+        {`${JOURNEY_INTENT_LABEL[journey.intent]}${journey.population > 0 ? ` · ${formatCompact(journey.population)} ${agree(journey.population, 'soul', 'souls')}` : ''}`}
       </Text>
       <Text variant='caption' tone='inherit'>
         {journey.epochs_left > 0
-          ? `Arrives in ${journey.epochs_left} epochs`
+          ? `Arrives in ${plural(journey.epochs_left, 'epoch', 'epochs')}`
           : 'Arrives this epoch'}
         {journey.vehicle_entity_id !== null
           ? ` · ${index.entityName(journey.vehicle_entity_id) ?? 'a vessel'}`

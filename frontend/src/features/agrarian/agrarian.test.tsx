@@ -207,7 +207,7 @@ describe('land, harvest, readiness and staples', () => {
       .toBeVisible()
     await expect.element(screen.getByText('Held by Varo')).toBeVisible()
     await expect
-      .element(screen.getByText('Weekly market for 4000 buyers'))
+      .element(screen.getByText('Weekly market for 4,000 buyers'))
       .toBeVisible()
   })
 })

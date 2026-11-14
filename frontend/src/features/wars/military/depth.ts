@@ -40,6 +40,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { MATERIAL_LABEL } from '@/features/entity/economy/labels'
 import { CLASS_SPEC } from '@/features/entity/society/labels'
 import { type Named } from './labels'
@@ -386,7 +387,7 @@ export function aimParamText(
     case 'tribute':
     case 'loot':
       return typeof params.amount === 'number'
-        ? `${kind === 'loot' ? 'Plunder' : 'Tribute'} of ${params.amount} wealth${typeof params.epochs === 'number' && params.epochs > 0 ? ` for ${params.epochs} epochs` : ''}`
+        ? `${kind === 'loot' ? 'Plunder' : 'Tribute'} of ${params.amount} wealth${typeof params.epochs === 'number' && params.epochs > 0 ? ` for ${plural(params.epochs, 'epoch', 'epochs')}` : ''}`
         : null
     case 'convert':
       return named('god')
@@ -444,7 +445,7 @@ export function termParamText(
     (kind === 'reparations' || kind === 'tribute') &&
     typeof params.amount === 'number'
   ) {
-    return `${params.amount} wealth${typeof params.epochs === 'number' && params.epochs > 0 ? ` for ${params.epochs} epochs` : ''}`
+    return `${params.amount} wealth${typeof params.epochs === 'number' && params.epochs > 0 ? ` for ${plural(params.epochs, 'epoch', 'epochs')}` : ''}`
   }
   if ((kind === 'cession' || kind === 'demilitarised') && named('region'))
     return named('region')

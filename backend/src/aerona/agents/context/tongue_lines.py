@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import an
+from aerona.core.grammar import agree, an, several
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
@@ -23,7 +23,10 @@ async def son_tongue_lines(scope: Scope, son: SonRow) -> list[str]:
         await session.scalar(select(func.count()).select_from(SkillRow).where(SkillRow.skill == SkillKind.LANGUAGES, SkillRow.subject_node_id == language.id))
         or 0
     )
-    return [f"Your sacred tongue is {language.name} ({words} words); {knowers} mortals have learned it"]
+    return [
+        f"Your sacred tongue is {language.name} ({several(words, 'word', 'words')}); "
+        f"{several(knowers, 'mortal', 'mortals')} {agree(knowers, 'has', 'have')} learned it"
+    ]
 
 
 async def mortal_tongue_lines(scope: Scope, me: EntityRow) -> list[str]:
@@ -52,5 +55,5 @@ async def mortal_tongue_lines(scope: Scope, me: EntityRow) -> list[str]:
     for work in await session.scalars(select(DecipherWorkRow).where(DecipherWorkRow.scholar_entity_id == me.id)):
         language = await session.get(EntityRow, work.language_entity_id)
         if language is not None:
-            found.append(f"you work at the dead script of {language.name} ({work.progress} of 100, {work.errors} misreadings)")
+            found.append(f"you work at the dead script of {language.name} ({work.progress} of 100, {several(work.errors, 'misreading', 'misreadings')})")
     return found

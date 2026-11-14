@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from aerona.core.grammar import an
+from aerona.core.grammar import agree, an, several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.polity import (
     ClaimBasis,
@@ -166,7 +166,7 @@ async def depose(scope: PlayerScope, command: PolityTarget) -> Effect:
 @player_action("polity:split", ActionKind.OTHER)
 async def split(scope: PlayerScope, command: Split) -> Effect:
     moved = await control.split(await scope.context("polity_split"), command.polity_id, command.member_ids)
-    return Effect(f"{moved} lands broke from the realm and stand alone.", command.polity_id)
+    return Effect(f"{several(moved, 'land', 'lands')} broke from the realm and stand alone.", command.polity_id)
 
 
 @player_action("polity:merge", ActionKind.OTHER)
@@ -382,7 +382,7 @@ async def found_realm(scope: PlayerScope, command: FoundRealm) -> Effect:
 @player_action("polity:dissolve", ActionKind.DESTROY)
 async def dissolve_realm(scope: PlayerScope, command: PolityTarget) -> Effect:
     freed = await control.dissolve_realm(await scope.context("polity_dissolve"), command.polity_id)
-    return Effect(f"The realm is no more; {freed} lands stand alone.", command.polity_id)
+    return Effect(f"The realm is no more; {several(freed, 'land', 'lands')} {agree(freed, 'stands', 'stand')} alone.", command.polity_id)
 
 
 @player_action("polity:member", ActionKind.EDIT_RECORD)

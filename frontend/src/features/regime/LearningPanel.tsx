@@ -9,6 +9,7 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -69,7 +70,7 @@ function ExamCard({
     <Held
       icon={BookOpenCheck}
       tone='info'
-      title={`Examinations every ${row.interval} epochs`}
+      title={`Examinations every ${plural(row.interval, 'epoch', 'epochs')}`}
       caption={
         row.last_epoch === null
           ? 'Not yet held'

@@ -2,6 +2,7 @@ from typing import Any
 
 from pydantic import Field
 
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.faith import BindingKind, ClergyOffice, HoldingKind, SpiritAlignment, StratumKind, TenetKind
 from aerona.domain.models.faith import StratumCriteria
@@ -218,7 +219,7 @@ async def canonise(scope: PlayerScope, command: Canonise) -> Effect:
 @player_action("relic:edit", ActionKind.EDIT_RECORD)
 async def edit_relic(scope: PlayerScope, command: EditRelic) -> Effect:
     row = await control.edit_relic(await scope.context("relic_edit"), command.item_id, command.values, release=command.release)
-    return Effect(f"The relic is holy {row.sanctity} and draws {row.pilgrims} pilgrims.", command.item_id)
+    return Effect(f"The relic is holy {row.sanctity} and draws {several(row.pilgrims, 'pilgrim', 'pilgrims')}.", command.item_id)
 
 
 @player_action("relic:remove", ActionKind.OTHER)

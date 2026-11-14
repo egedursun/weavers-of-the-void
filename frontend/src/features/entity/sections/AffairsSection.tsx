@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2, Vote, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -215,7 +216,7 @@ function ElectionRow({ row, ctx }: { row: Election; ctx: Ctx }) {
       title={`The election of epoch ${row.epoch}`}
       meta={
         <>
-          {`Turnout ${row.turnout}%, ${row.seats} seats; carried by `}
+          {`Turnout ${row.turnout}%, ${plural(row.seats, 'seat', 'seats')}; carried by `}
           <Ref node={row.winner} empty='no one' />
         </>
       }
@@ -267,7 +268,7 @@ function SeatRow({ row, ctx }: { row: Seat; ctx: Ctx }) {
       icon={Vote}
       tone='info'
       title={<Ref node={row.holder} />}
-      meta={`${row.seats} seats, ${row.votes}% of the vote, since epoch ${row.since_epoch}`}
+      meta={`${plural(row.seats, 'seat', 'seats')}, ${row.votes}% of the vote, since epoch ${row.since_epoch}`}
       badges={row.locked ? <Badge variant='outline'>Held</Badge> : undefined}
       actions={
         <Button

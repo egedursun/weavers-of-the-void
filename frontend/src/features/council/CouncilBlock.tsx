@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label as FieldLabel } from '@/components/ui/label'
@@ -132,7 +133,7 @@ export function CouncilBlock({ showAll = false }: { showAll?: boolean }) {
             <Text as='span' weight='semibold'>
               Convene the council
             </Text>
-            <Label>{`${awake} sons would attend${minimum !== undefined ? ` · at least ${minimum} needed` : ''}`}</Label>
+            <Label>{`${plural(awake, 'son', 'sons')} would attend${minimum !== undefined ? ` · at least ${minimum} needed` : ''}`}</Label>
           </div>
           <PagedList
             items={attending}

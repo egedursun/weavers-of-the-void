@@ -3,6 +3,7 @@ import { Coins, HardHat, Lock, Network, TrendingUp } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -248,7 +249,7 @@ function LabourControls({
         />
         <Muted variant='caption'>
           {view.corvee?.work_name
-            ? `Labouring on ${view.corvee.work_name} for ${view.corvee.laboured_epochs} epochs; the town will remember it.`
+            ? `Labouring on ${view.corvee.work_name} for ${plural(view.corvee.laboured_epochs, 'epoch', 'epochs')}; the town will remember it.`
             : 'No great work is named; the farmhands labour on whatever the town raises.'}
         </Muted>
       </EditorGroup>

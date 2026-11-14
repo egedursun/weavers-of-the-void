@@ -64,7 +64,7 @@ async def record_dream(session: AsyncSession, dreamer_id: int, draft: DreamDraft
         kind=draft.kind,
         epoch=epoch,
         intensity=max(0, min(PERCENT, draft.intensity)),
-        content=list(draft.content),
+        content=list(dict.fromkeys(draft.content)),
         thought_id=draft.thought_id,
         sender_node_id=draft.sender_id,
         partner_node_id=draft.partner_id,

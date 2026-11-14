@@ -10,6 +10,7 @@ import {
   Wand2,
 } from 'lucide-react'
 import { naturalLawValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -634,7 +635,7 @@ function ChargeCard({
           icon={recharge.icon}
         >{`Recharges ${recharge.label.toLowerCase()}`}</Chip>
         {charge.overuse > 0 && (
-          <Chip variant='destructive'>{`Cracked by ${charge.overuse} overuses`}</Chip>
+          <Chip variant='destructive'>{`Cracked by ${plural(charge.overuse, 'overuse', 'overuses')}`}</Chip>
         )}
       </div>
       <RecordEditor

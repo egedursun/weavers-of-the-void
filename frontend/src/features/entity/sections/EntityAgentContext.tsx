@@ -1,4 +1,5 @@
 import { Bot } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { RARITY_LABEL } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -37,7 +38,7 @@ export function EntityAgentContext({
         data && (
           <div className='flex min-w-0 flex-col gap-4'>
             <div className='flex min-w-0 flex-wrap items-center gap-2'>
-              <Badge variant='secondary'>{`${data.action_points} actions`}</Badge>
+              <Badge variant='secondary'>{`${plural(data.action_points, 'action', 'actions')}`}</Badge>
               <Badge variant='outline'>{`${data.available.length} usable tools`}</Badge>
               <Paged items={data.counters}>
                 {(counter) => (

@@ -109,7 +109,7 @@ export function ImpactsPanel({
                   {row.deflected_by &&
                     ` · turned aside by ${row.deflected_by.name}`}
                   {row.outcome === 'pending'
-                    ? ` · strikes in ${Math.max(0, row.due_epoch - epoch)} epochs${row.warned_epoch !== null ? ', foreseen' : ''}`
+                    ? ` · strikes in ${plural(Math.max(0, row.due_epoch - epoch), 'epoch', 'epochs')}${row.warned_epoch !== null ? ', foreseen' : ''}`
                     : ` · ${IMPACT_OUTCOMES[row.outcome].label.toLowerCase()} at epoch ${row.due_epoch}`}
                 </>
               }
@@ -152,7 +152,7 @@ export function ImpactsPanel({
                   </Chip>
                 )}
                 {row.winter_epochs > 0 && (
-                  <Chip>{`Impact winter: ${row.winter_epochs} epochs`}</Chip>
+                  <Chip>{`Impact winter: ${plural(row.winter_epochs, 'epoch', 'epochs')}`}</Chip>
                 )}
               </div>
               {row.text !== '' && <Muted variant='caption'>{row.text}</Muted>}

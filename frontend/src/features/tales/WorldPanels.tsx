@@ -584,7 +584,7 @@ function TransformationCard({
       icon={Sprout}
       tone='success'
       title={row.plan_name}
-      caption={`${row.progress} of ${row.steps} steps · ${row.regions_changed} lands changed · worked in epoch ${row.last_epoch}`}
+      caption={`${row.progress} of ${plural(row.steps, 'step', 'steps')} · ${plural(row.regions_changed, 'land', 'lands')} changed · worked in epoch ${row.last_epoch}`}
       removeLabel='Stop it aiming the land'
       editTitle='Set the remaking of the land'
       note='Each epoch the plan moves the moisture, forest and soil of its lands a step toward its targets; a harsh climate takes part of each step back, and folk who live from the land as it is may sabotage it.'

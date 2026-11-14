@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -180,10 +181,12 @@ async def forgotten_prophecies(ctx: TickContext) -> None:
         age = ctx.epoch - prophecy.birth_epoch
         await fail_prophecy(ctx, row)
         await mock_prophecy(ctx, prophecy)
-        await retire(ctx.session, prophecy, ctx.epoch, f"Epoch {ctx.epoch}: waited {age} epochs and was forgotten unfulfilled.", close_bonds=True)
+        await retire(
+            ctx.session, prophecy, ctx.epoch, f"Epoch {ctx.epoch}: waited {several(age, 'epoch', 'epochs')} and was forgotten unfulfilled.", close_bonds=True
+        )
         await note(
             ctx,
-            f"{sentence_case(definite(prophecy.name))} prophecy went unfulfilled for {age} epochs; no one knows it by heart any more.",
+            f"{sentence_case(definite(prophecy.name))} prophecy went unfulfilled for {several(age, 'epoch', 'epochs')}; no one knows it by heart any more.",
             key="memory.prophecy_forgotten",
             ids=[prophecy.id],
         )

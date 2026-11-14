@@ -170,7 +170,7 @@ function EchelonCard({
             'Headquarters',
             <Ref key='hq' node={row.hq} empty='nowhere fixed' />,
           ],
-          ['Command range', `${row.command_range} lands`],
+          ['Command range', `${plural(row.command_range, 'land', 'lands')}`],
           [
             'Answers to',
             echelons.find((item) => item.id === row.parent_id)?.name ??

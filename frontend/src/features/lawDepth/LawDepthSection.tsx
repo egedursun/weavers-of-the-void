@@ -9,6 +9,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { postAction } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -1197,7 +1198,7 @@ function PrisonerCard({
         <>
           {'Held in '}
           <Ref node={row.prison} empty='a lost prison' />
-          {` since epoch ${row.since_epoch}, ${row.term} epochs left${row.case_id ? `, for case ${row.case_id}` : ''}`}
+          {` since epoch ${row.since_epoch}, ${plural(row.term, 'epoch', 'epochs')} left${row.case_id ? `, for case ${row.case_id}` : ''}`}
         </>
       }
       removeLabel='Free'
@@ -1581,7 +1582,7 @@ function DefectionCard({
           <Ref node={row.from_side} empty='nowhere' />
           {' to '}
           <Ref node={row.to_side} empty='nowhere' />
-          {` in epoch ${row.epoch} with ${row.secrets} secrets; ${spec.label.toLowerCase()}`}
+          {` in epoch ${row.epoch} with ${plural(row.secrets, 'secret', 'secrets')}; ${spec.label.toLowerCase()}`}
         </>
       }
       removeLabel='Strike from the record'

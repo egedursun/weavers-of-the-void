@@ -3,6 +3,7 @@ import { BrainCircuit, Check, SlidersHorizontal } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -215,10 +216,10 @@ export function EntityStats({ ctx, readOnlyReason }: EntityStatsProps) {
             {
               label: 'Life',
               value: life.immortal
-                ? `${formatInteger(life.age ?? 0)} years old · deathless`
+                ? `${plural(life.age ?? 0, 'year', 'years')} old · deathless`
                 : life.death_year !== null
                   ? `Died at ${formatInteger(life.age ?? 0)} (world year ${formatInteger(life.death_year)})`
-                  : `${formatInteger(life.age ?? 0)} years old · ${formatInteger(Math.max(0, life.lifespan - (life.age ?? 0)))} years left`,
+                  : `${plural(life.age ?? 0, 'year', 'years')} old · ${plural(Math.max(0, life.lifespan - (life.age ?? 0)), 'year', 'years')} left`,
             },
             {
               label: 'Lifespan',
@@ -265,7 +266,7 @@ export function EntityStats({ ctx, readOnlyReason }: EntityStatsProps) {
       )}
       {exploration && (
         <Muted variant='caption'>
-          {`Spontaneous exploration pressure ${formatInteger(exploration.pressure)} · the land holds ${formatInteger(exploration.regions)} regions, ${formatInteger(exploration.places)} places and ${formatInteger(exploration.communities)} communities${exploration.narrow ? '; it feels narrow' : ''}.`}
+          {`Spontaneous exploration pressure ${formatInteger(exploration.pressure)} · the land holds ${plural(exploration.regions, 'region', 'regions')}, ${plural(exploration.places, 'place', 'places')} and ${plural(exploration.communities, 'community', 'communities')}${exploration.narrow ? '; it feels narrow' : ''}.`}
         </Muted>
       )}
       {editable.length > 0 && (

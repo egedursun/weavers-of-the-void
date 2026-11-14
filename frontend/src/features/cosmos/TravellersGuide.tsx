@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { BookOpen, Compass, MapPinned, Mountain, Users } from 'lucide-react'
 import { formatCompact, formatDecimal } from '@/lib/format'
+import { agree, plural } from '@/lib/units'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,7 +68,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
   const world = data.world
   const index = cosmos.data ? indexCosmos(cosmos.data) : undefined
   const climate = data.climate
-    ? `${world.climate_era ? CLIMATE_LABEL[world.climate_era] : data.climate}${data.climate_epochs_left ? ` (${data.climate_epochs_left} epochs left)` : ''}`
+    ? `${world.climate_era ? CLIMATE_LABEL[world.climate_era] : data.climate}${data.climate_epochs_left ? ` (${plural(data.climate_epochs_left, 'epoch', 'epochs')} left)` : ''}`
     : 'Mild, uncertain'
   return (
     <div className='flex min-w-0 flex-col gap-6'>
@@ -194,7 +195,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
                 <Muted as='span' variant='caption'>
                   {[
                     humanize(people.entity_type),
-                    `${formatCompact(people.population)} souls`,
+                    `${formatCompact(people.population)} ${agree(people.population, 'soul', 'souls')}`,
                     people.language,
                     people.god ? `worships ${people.god}` : null,
                   ]
@@ -262,7 +263,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
               return (
                 <li className='flex min-w-0 flex-col gap-1'>
                   <Text weight='medium'>{`${line.method} → ${line.target}`}</Text>
-                  <Muted variant='caption'>{`${line.duration} epochs · danger ${line.danger}${line.known ? '' : ' · hidden'}`}</Muted>
+                  <Muted variant='caption'>{`${plural(line.duration, 'epoch', 'epochs')} · danger ${line.danger}${line.known ? '' : ' · hidden'}`}</Muted>
                   {live ? (
                     <RouteStatusChips route={live} rules={rules} />
                   ) : (

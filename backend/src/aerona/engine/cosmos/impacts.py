@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.ecology import SpeciesProfileRow
@@ -130,9 +130,10 @@ async def warn(ctx: TickContext, world: WorldRow, impact: ImpactEventRow, seers:
             shift_bounded(ctx.rules, community, PIETY_KEY, ctx.rules.impacts.prepare_piety)
             await hoard(ctx, community)
     await flee(ctx, world, impact)
+    epochs_counted = several(impact.due_epoch - ctx.epoch, "epoch", "epochs")
     await note(
         ctx,
-        f"The astronomers of {seers[0].name} foresaw a body that will strike {world.name} in {impact.due_epoch - ctx.epoch} epochs; its peoples prepare.",
+        f"The astronomers of {seers[0].name} foresaw a body that will strike {world.name} in {epochs_counted}; its peoples prepare.",
         key="impact.foreseen",
         ids=[seers[0].id],
         world_id=world.id,

@@ -379,7 +379,10 @@ class ImageQueue:
         finally:
             self.bulk.running = False
             self.bulk.finished = datetime.now(UTC)
-            self.log(LogLevel.INFO, f"Done: {self.bulk.done} images, {self.bulk.failed} errors, {self.bulk.skipped} skipped.")
+            self.log(
+                LogLevel.INFO,
+                f"Done: {several(self.bulk.done, 'image', 'images')}, {several(self.bulk.failed, 'error', 'errors')}, {self.bulk.skipped} skipped.",
+            )
             if tracked is not None and self._jobs is not None:
                 status = JobStatus.FAILED if failure else JobStatus.CANCELLED if self.bulk.stop_requested else JobStatus.SUCCEEDED
                 summary = {"total": self.bulk.total, "done": self.bulk.done, "failed": self.bulk.failed, "skipped": self.bulk.skipped}

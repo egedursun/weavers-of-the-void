@@ -6,6 +6,7 @@ from aerona.catalog import god_lines
 from aerona.catalog.interventions import DISASTERS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import agree, several
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -108,7 +109,7 @@ async def harvest_community(ctx: TickContext, creator: CreatorRow, community: En
     text = line.render(
         creator=creator.name,
         community=community.name,
-        victims=f": {victims} lives were sacrificed" if victims else "",
+        victims=f": {several(victims, 'life', 'lives')} {agree(victims, 'was', 'were')} sacrificed" if victims else "",
         faith=f", their faith dimmed by {faith_loss}" if faith_loss else "",
         gained=gained,
         grudge=f" {', '.join(grudging)} resented the reaping of their worshippers." if grudging else "",

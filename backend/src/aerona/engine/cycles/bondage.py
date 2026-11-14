@@ -85,7 +85,7 @@ async def remember_suffering(ctx: TickContext, town: EntityRow, row: CorveeRow, 
     tally.suffering += 1
     await note(
         ctx,
-        f"{town.name} remembers the {row.laboured_epochs} epochs of forced labour that raised {work.name}.",
+        f"{town.name} remembers the {several(row.laboured_epochs, 'epoch', 'epochs')} of forced labour that raised {work.name}.",
         key="corvee.suffering",
         ids=[town.id, work.id, *([row.polity_entity_id] if row.polity_entity_id else [])],
     )
@@ -148,7 +148,10 @@ async def lay_corvees(ctx: TickContext, tally: BondageTally) -> None:
         if laid:
             tally.corvee_laid += laid
             await note(
-                ctx, f"{polity.name} summoned {laid} towns to forced labour on {work.name if work else 'a great work'}.", key="corvee.laid", ids=[polity.id]
+                ctx,
+                f"{polity.name} summoned {several(laid, 'town', 'towns')} to forced labour on {work.name if work else 'a great work'}.",
+                key="corvee.laid",
+                ids=[polity.id],
             )
             await judged(ctx, polity.id, summoned[0], ActKind.FORCED_LABOUR, note=f"forced labour on {work.name if work else 'a great work'}")
 

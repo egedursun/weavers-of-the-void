@@ -18,6 +18,7 @@ from aerona.catalog.methods import (
     default_method,
 )
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyTenetRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
@@ -304,7 +305,7 @@ async def adopt(ctx: TickContext, book: EconomyBook, community: EntityRow, spec:
     await note(
         ctx,
         f"{community.name} turned from {before.label.lower()} to {spec.label.lower()} for {PROCESS_LABELS[spec.process].lower()}"
-        + (f"; {row.displaced} hands lost their work." if row.displaced else "."),
+        + (f"; {several(row.displaced, 'hand', 'hands')} lost their work." if row.displaced else "."),
         key="industry.method_changed",
         ids=[community.id],
         kind=ChronicleKind.PRODUCTION,

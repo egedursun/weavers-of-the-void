@@ -240,7 +240,7 @@ class BulkDeepening:
             elif naming is not None:
                 naming.cancel()
             verb = "Stopped" if self.state.stop_requested else "Done"
-            self.log(LogLevel.INFO, f"{verb}: {self.state.done} deepened, {self.state.failed} errors, {self.state.skipped} skipped.")
+            self.log(LogLevel.INFO, f"{verb}: {self.state.done} deepened, {several(self.state.failed, 'error', 'errors')}, {self.state.skipped} skipped.")
         except Exception as error:
             logger.exception("bulk deepening crashed")
             self.log(LogLevel.ERROR, f"The bulk job stopped unexpectedly: {error}")

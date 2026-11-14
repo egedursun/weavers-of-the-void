@@ -1,5 +1,6 @@
 from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH, style_label
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -26,7 +27,7 @@ def _set_image_style(cosmos: CosmosRow, command: WorldSettings) -> str:
     style = command.image_style or cosmos.image_style
     custom = (command.image_style_custom if command.image_style_custom is not None else cosmos.image_style_custom).strip()
     if len(custom) > CUSTOM_STYLE_MAX_LENGTH:
-        raise ValidationFailedError(f"The custom image style is limited to {CUSTOM_STYLE_MAX_LENGTH} characters.")
+        raise ValidationFailedError(f"The custom image style is limited to {several(CUSTOM_STYLE_MAX_LENGTH, 'character', 'characters')}.")
     if style is ImageStyle.CUSTOM and not custom:
         raise ValidationFailedError("Describe the custom image style.")
     cosmos.image_style = style
@@ -56,7 +57,7 @@ async def update_settings(scope: PlayerScope, command: WorldSettings) -> Effect:
         if command.council_every_epochs < 0:
             raise ValidationFailedError("The council interval cannot be negative (0 turns the automatic council off).")
         cosmos.council_every_epochs = command.council_every_epochs
-        fields.append(f"council every {command.council_every_epochs} epochs" if command.council_every_epochs else "no automatic council")
+        fields.append(f"council every {several(command.council_every_epochs, 'epoch', 'epochs')}" if command.council_every_epochs else "no automatic council")
     if command.mortal_agent_parallelism is not None:
         if command.mortal_agent_parallelism < MIN_PARALLELISM:
             raise ValidationFailedError("At least one mortal agent must be able to act at a time.")

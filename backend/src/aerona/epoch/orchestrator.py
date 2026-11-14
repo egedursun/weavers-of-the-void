@@ -6,6 +6,7 @@ from aerona.agents.metrics import metrics_epoch
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.son import SonTurnResult, run_son_turn
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.enums.job import JobKind
@@ -116,7 +117,7 @@ class EpochOrchestrator:
     async def run_epoch(self, ec: EpochContext, phase: int) -> EpochReport:
         if ec.resuming:
             ec.publish(EventKind.EPOCH_RESUMED, {"phase": phase})
-            self.runtime.note(f"Epoch {ec.epoch} was left half-done; everything after phase {phase} continues where it stopped.")
+            self.runtime.note(f"Epoch {ec.epoch} was left half-done; everything after phase {several(phase, 'continue', 'continues')} where it stopped.")
         try:
             await self.before_transition(ec)
         except EpochStoppedError as stopped:

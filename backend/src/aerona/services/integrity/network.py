@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.bond_texts import MENTIONED_IN_FATE as MENTIONED
 from aerona.constants.bond_texts import NAMES_IT as MENTIONS_IT
 from aerona.constants.bond_texts import SYSTEM_RELATED_DESCRIPTIONS
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -669,7 +670,7 @@ async def repair_dangling_ends(session: AsyncSession, rules: Rules, epoch: int, 
         f"{counters.total} dangling ends connected (inside {counters.inside}, struck place {counters.caused}, event {counters.event}, "
         f"narrative {counters.narrative}, prophecy {counters.prophecy}, ruin {counters.remnant}, destruction {counters.destruction}, "
         f"structure {counters.structure}, produced {counters.produced}, named {counters.mentioned}); "
-        f"{counters.related_converted} vague bonds converted to concrete types, {counters.cleaned} duplicates hidden."
+        f"{counters.related_converted} vague bonds converted to concrete types, {several(counters.cleaned, 'duplicate', 'duplicates')} hidden."
     )
     log.add(RepairLogEntry(datetime.now(UTC), "rule", text, repair.added), rules.link_graph.summary_list)
     if bus is not None:

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDecimal } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -185,7 +186,7 @@ export function ImageGenSettings() {
     >
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Badge variant='outline'>{`${width} × ${height} px`}</Badge>
-        <Badge variant='outline'>{`${steps} steps`}</Badge>
+        <Badge variant='outline'>{`${plural(steps, 'step', 'steps')}`}</Badge>
         <Badge variant={cost > 1 ? 'warning' : 'success'}>
           {cost === 1
             ? 'Default speed'

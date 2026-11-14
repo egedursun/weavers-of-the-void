@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { queryKeys } from '@/api/queryKeys'
+import { plural } from '@/lib/units'
 import { imageKeys, isImageMime, uploadImage } from './api'
 import { captionFromFileName } from './caption'
 
@@ -33,7 +34,11 @@ export function useImageUpload(nodeId: number) {
         setPending((current) => Math.max(0, current - 1))
       }
       if (saved > 0)
-        toast.success(saved === 1 ? 'Image added' : `${saved} images added`)
+        toast.success(
+          saved === 1
+            ? 'Image added'
+            : `${plural(saved, 'image', 'images')} added`
+        )
       void queryClient.invalidateQueries({ queryKey: imageKeys.all })
       void queryClient.invalidateQueries({ queryKey: queryKeys.world.all })
     },

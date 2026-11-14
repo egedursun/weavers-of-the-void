@@ -9,7 +9,7 @@ import {
   Users,
   WholeWord,
 } from 'lucide-react'
-import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -107,7 +107,7 @@ function IsolateCard({
           {node.language.name}
         </Text>
         <Muted as='span' variant='caption' truncate>
-          {`${formatInteger(node.words)} words · ${formatInteger(node.speakers)} speakers`}
+          {`${plural(node.words, 'word', 'words')} · ${plural(node.speakers, 'speaker', 'speakers')}`}
         </Muted>
       </span>
     </Button>
@@ -339,10 +339,10 @@ export function LanguageTree({
                         {`The ${family.node.language.name} family`}
                       </Text>
                       <Badge size='sm' variant='outline'>
-                        {`${familySize(family)} tongues`}
+                        {`${plural(familySize(family), 'tongue', 'tongues')}`}
                       </Badge>
                       <Badge size='sm' variant='outline'>
-                        {`${formatInteger(familyWords(family))} words`}
+                        {`${plural(familyWords(family), 'word', 'words')}`}
                       </Badge>
                     </div>
                     <FamilyChart

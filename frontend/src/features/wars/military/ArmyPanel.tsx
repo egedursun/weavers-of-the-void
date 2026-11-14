@@ -42,6 +42,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { unitKindValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -435,13 +436,13 @@ function StackCard({
         <TableTag table={TARGET_CLASS} value={stack.target_class} />
         {stack.volleys > 0 && (
           <Plain icon={Crosshair}>
-            {`${formatInteger(stack.ammunition)} volleys left`}
+            {`${plural(stack.ammunition, 'volley', 'volleys')} left`}
           </Plain>
         )}
         {stack.missing > 0 && (
           <Badge size='sm' variant='warning'>
             <UserMinus />
-            {`${formatInteger(stack.missing)} stragglers`}
+            {`${plural(stack.missing, 'straggler', 'stragglers')}`}
           </Badge>
         )}
       </div>
@@ -728,7 +729,9 @@ function Marches({ army }: { army: ArmyCard }) {
             >
               <div className='flex min-w-0 flex-wrap gap-1'>
                 <Tag item={stance} />
-                <Plain icon={Wheat}>{`${move.supply_days} days of food`}</Plain>
+                <Plain
+                  icon={Wheat}
+                >{`${plural(move.supply_days, 'day', 'days')} of food`}</Plain>
                 <Badge
                   size='sm'
                   variant={move.attrition > 0 ? 'destructive' : 'outline'}
@@ -843,7 +846,7 @@ export function ArmyPanel({
         <MiniStat
           icon={Wheat}
           label='Supplies'
-          value={`${army.supply_days} days`}
+          value={`${plural(army.supply_days, 'day', 'days')}`}
           tone={supplyTone}
           hint={
             army.supply_days >= SUPPLY_COMFORT

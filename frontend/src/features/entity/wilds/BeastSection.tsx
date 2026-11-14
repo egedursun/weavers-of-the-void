@@ -212,7 +212,7 @@ function BeastVitals({ card }: { card: BeastCard }) {
         value={card.age}
         icon={Hourglass}
         tone='muted'
-        hint={`Of ${card.lifespan} years; ${left} left`}
+        hint={`Of ${plural(card.lifespan, 'year', 'years')}; ${left} left`}
         meter={{
           value: card.age,
           max: Math.max(1, card.lifespan),

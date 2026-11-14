@@ -8,6 +8,7 @@ from aerona.catalog.equipment import FAMILIES
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.units import UNITS
 from aerona.catalog.vehicles import FRAMES
+from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cuisine import CommunityDishRow, DishIngredientRow, DishRow
@@ -299,7 +300,7 @@ class MadeBook:
                 facts(
                     ("Nourishment", row.nourishment),
                     ("Delight", row.delight),
-                    ("Keeps", f"{row.keeps} epochs"),
+                    ("Keeps", f"{several(row.keeps, 'epoch', 'epochs')}"),
                     ("Prestige", row.prestige),
                     ("Technique it needs", lower(row.technique) if row.technique else NONE),
                     ("First cooked in epoch", row.created_epoch),

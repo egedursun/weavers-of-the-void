@@ -8,6 +8,7 @@ import {
   Sun,
   Users,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { table } from '@/features/arcana/labels'
@@ -305,7 +306,7 @@ export function MysticsPanel({
         ]}
         rows={everyone.map((row) => ({
           key: row.mortal.id,
-          caption: `${row.mortal.name}: ${row.visions} visions, ${row.genuine_visions} real, ${row.followers} followers`,
+          caption: `${row.mortal.name}: ${plural(row.visions, 'vision', 'visions')}, ${row.genuine_visions} real, ${plural(row.followers, 'follower', 'followers')}`,
           segments: [
             { value: row.genuine_visions, fill: 'fill-primary' },
             {

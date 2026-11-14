@@ -13,7 +13,7 @@ import {
   Tag,
   TriangleAlert,
 } from 'lucide-react'
-import { formatBytes, formatDuration } from '@/lib/units'
+import { formatBytes, formatDuration, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -177,7 +177,7 @@ export function HealthPanel() {
                   <ChevronDown />
                   {errors.length === 1
                     ? 'Show the recent error'
-                    : `Show the last ${Math.min(errors.length, RECENT_ERRORS)} errors`}
+                    : `Show the last ${plural(Math.min(errors.length, RECENT_ERRORS), 'error', 'errors')}`}
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>

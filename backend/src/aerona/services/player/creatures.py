@@ -1,5 +1,5 @@
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import agree, several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.phases.creatures import (
@@ -98,7 +98,9 @@ async def spare(scope: PlayerScope, command: SpeciesTarget) -> Effect:
     closed = await spare_prey(scope.session, species.id, await scope.epoch())
     if not closed:
         raise ValidationFailedError(f"Nothing hunts {species.name}.")
-    return Effect(f"{several(closed, 'hunter', 'hunters')} of {species.name} were turned away.", species.id, values={"hunts_closed": closed})
+    return Effect(
+        f"{several(closed, 'hunter', 'hunters')} of {species.name} {agree(closed, 'was', 'were')} turned away.", species.id, values={"hunts_closed": closed}
+    )
 
 
 @player_action("species:introduce", ActionKind.INTRODUCE_SPECIES)

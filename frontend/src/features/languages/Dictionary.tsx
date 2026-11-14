@@ -11,6 +11,7 @@ import {
   WholeWord,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { agree, plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -411,7 +412,7 @@ function Lexicon({ current }: { current: LanguageView }) {
     <Section
       id='languages-lexicon'
       title='Lexicon'
-      description={`${formatInteger(current.word_total)} words, oldest first.`}
+      description={`${plural(current.word_total, 'word', 'words')}, oldest first.`}
       level={3}
       actions={
         <Input
@@ -476,7 +477,7 @@ function Lexicon({ current }: { current: LanguageView }) {
       )}
       {current.word_total > current.words.length && (
         <Muted variant='caption'>
-          {`The first ${formatInteger(current.words.length)} of ${formatInteger(current.word_total)} words are shown; the book holds them all.`}
+          {`The first ${formatInteger(current.words.length)} of ${plural(current.word_total, 'word', 'words')} ${agree(current.word_total, 'is', 'are')} shown; the book holds them all.`}
         </Muted>
       )}
     </Section>
@@ -520,7 +521,7 @@ function EveryTongueSearch({
       {needle && (
         <div className='flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3'>
           <Label variant='overline'>
-            {`${formatInteger(matches.length)} words found`}
+            {`${plural(matches.length, 'word', 'words')} found`}
           </Label>
           {matches.length === 0 ? (
             <Muted variant='caption'>No language has such a word yet.</Muted>

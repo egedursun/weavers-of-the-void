@@ -1,3 +1,5 @@
+import { plural } from '@/lib/units'
+
 export function councilFrequencyText(
   every: number | null | undefined,
   fallback: number | undefined
@@ -7,5 +9,5 @@ export function councilFrequencyText(
     return 'Sons debate an agenda and vote on a motion.'
   if (interval <= 0)
     return 'Sons debate an agenda and vote on a motion; it convenes only when you call it.'
-  return `Sons debate an agenda and vote on a motion; it convenes on its own every ${interval} epochs (change it in Settings, Game).`
+  return `Sons debate an agenda and vote on a motion; it convenes on its own every ${plural(interval, 'epoch', 'epochs')} (change it in Settings, Game).`
 }

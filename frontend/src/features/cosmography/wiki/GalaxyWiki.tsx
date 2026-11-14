@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react'
 import { type ActionBody, type EditValues } from '@/api/actions'
-import { plural } from '@/lib/units'
+import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -661,7 +661,7 @@ function StarsSection({
   return (
     <Section
       title='Stars and worlds'
-      description={`${plural(stars.length, 'star')} burn here and ${plural(worlds.length, 'world')} lie in their light or drift between them.`}
+      description={`${plural(stars.length, 'star')} burn here and ${plural(worlds.length, 'world')} ${agree(worlds.length, 'lies', 'lie')} in their light or drift between them.`}
       icon={Star}
       tone='gold'
     >

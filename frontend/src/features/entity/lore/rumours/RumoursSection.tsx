@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -161,8 +162,8 @@ function RumourCard({
       />
       <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'>
         <Muted variant='caption'>{`Happened in age ${rumour.happened_epoch}, heard in age ${rumour.heard_epoch}${rumour.lingered > 0 ? `, told for ${rumour.lingered} ${rumour.lingered === 1 ? 'age' : 'ages'}` : ''}`}</Muted>
-        <Muted variant='caption'>{`${rumour.hops} tellings away`}</Muted>
-        <Muted variant='caption'>{`${rumour.carriers} communities speak of it`}</Muted>
+        <Muted variant='caption'>{`${plural(rumour.hops, 'telling', 'tellings')} away`}</Muted>
+        <Muted variant='caption'>{`${plural(rumour.carriers, 'community', 'communities')} speak of it`}</Muted>
         {rumour.source && (
           <Muted variant='caption'>
             {'From '}

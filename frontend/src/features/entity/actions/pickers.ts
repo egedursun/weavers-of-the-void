@@ -1,3 +1,4 @@
+import { plural } from '@/lib/units'
 import { type ComboboxOption } from '@/components/domain/RecordCombobox'
 import {
   type CosmosView,
@@ -194,7 +195,7 @@ export function optionsFor(
             label: name(other),
             hint: joinHint(
               humanize(route.method),
-              `${route.duration_epochs} epochs`
+              `${plural(route.duration_epochs, 'epoch', 'epochs')}`
             ),
           }
         })

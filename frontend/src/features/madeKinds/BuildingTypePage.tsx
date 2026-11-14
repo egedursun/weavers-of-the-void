@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Building2, Plus, Ruler } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
 import { Preview } from '@/features/city/TypePages'
@@ -182,7 +183,9 @@ export function BuildingTypePage({
           <>
             <Chip icon={kind.icon}>{kind.label}</Chip>
             {form && <Chip icon={form.icon}>{form.label}</Chip>}
-            {row.storeys !== null && <Chip>{`${row.storeys} storeys`}</Chip>}
+            {row.storeys !== null && (
+              <Chip>{`${plural(row.storeys, 'storey', 'storeys')}`}</Chip>
+            )}
             {row.material && <Chip>{MATERIAL_LABEL[row.material]}</Chip>}
             <Chip icon={Building2}>{`${row.used_by} built`}</Chip>
           </>

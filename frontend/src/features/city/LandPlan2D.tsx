@@ -1,5 +1,5 @@
 import { type ReactNode, useId } from 'react'
-import { plural } from '@/lib/units'
+import { agree, plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { type LandPick } from './LandScene3D'
 import { type LandScene } from './api'
@@ -140,7 +140,7 @@ function marksOf(scene: LandScene): Mark[] {
       id: item.node.id,
       q: item.q,
       r: item.r,
-      text: `${item.node.name}: ${item.detail} people`,
+      text: `${item.node.name}: ${item.detail} ${agree(Number(item.detail), 'person', 'people')}`,
       name: item.node.name,
       size: 0.46,
       standing: true,

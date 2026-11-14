@@ -18,6 +18,7 @@ from aerona.agents.context.tongue_lines import son_tongue_lines
 from aerona.catalog.domain_effects import ACTIVITY_LABELS, DOMAIN_EFFECTS, HOOKS, SYNERGY_OF
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.divine import AvatarRow, CouncilRulingRow, DivineStandingRow, DivineWoundRow, DomainActivityRow, GodGoalRow, WorldAttentionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
@@ -79,7 +80,7 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
         if place is not None:
             lines.append(f"{place.name} regards you: awe {regard.awe}, love {regard.love}, fear {regard.fear}, neglect {regard.neglect}")
     for avatar in await session.scalars(select(AvatarRow).where(AvatarRow.god_node_id == son.id)):
-        lines.append(f"Your mortal form #{avatar.avatar_entity_id} walks the world")
+        lines.append(f"Your mortal form #{several(avatar.avatar_entity_id, 'walk', 'walks')} the world")
     attention = await session.get(WorldAttentionRow, son.current_world_id) if son.current_world_id is not None else None
     if attention is not None and attention.attention < scope.rules.creator.far_eye_below:
         lines.append("Your world is far from the Creator's eye")

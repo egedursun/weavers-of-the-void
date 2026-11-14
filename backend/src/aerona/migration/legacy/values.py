@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.core.grammar import several
 from aerona.migration.legacy.report import MigrationReport
 
 CLAMPED = "clamped value"
@@ -60,5 +61,5 @@ def required_bounded(report: MigrationReport, reference: str, label: str, value:
 def truncated(report: MigrationReport, reference: str, label: str, text: str | None, limit: int) -> str | None:
     if text is None or len(text) <= limit:
         return text
-    report.warn(TRUNCATED, reference, f"{label} cut from {len(text)} to {limit} characters")
+    report.warn(TRUNCATED, reference, f"{label} cut from {len(text)} to {several(limit, 'character', 'characters')}")
     return text[:limit]

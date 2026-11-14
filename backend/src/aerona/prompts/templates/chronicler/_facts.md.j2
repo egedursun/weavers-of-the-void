@@ -6,7 +6,7 @@ FACT SHEET (definite outcomes; the narrative may not contradict them: do not sho
 - {{ facts.creator.name }} (the creator, id {{ facts.creator.id }}) did not intervene this age.
 {% endif %}
 {% for outcome in facts.outcomes %}
-- OUTCOME ({% if outcome.kind == "duel" %}duel{% elif outcome.kind == "god_conflict" %}conflict of gods{% else %}war{% if outcome.contest %}: {{ outcome.contest }}{% endif %}{% endif %}, ref {{ outcome.ref }}): {{ outcome.winner }} (id {{ outcome.winner_id }}) WON, {{ outcome.loser }} (id {{ outcome.loser_id }}) LOST.
+- OUTCOME ({% if outcome.kind == "duel" %}duel{% elif outcome.kind == "god_conflict" %}conflict of gods{% else %}war{% if outcome.contest %}: {{ outcome.contest }}{% endif %}{% endif %}, ref {{ outcome.ref }}): {{ outcome.winner }} (id {{ outcome.winner_id }}) WON, {{ outcome.loser }} (id {{ outcome.loser_id }}) LOST{% if outcome.score %}, by {{ outcome.score }}{% endif %}.
 {% endfor %}
 {% for draw in facts.draws %}
 - {{ draw.son }} drew essence from their own source ({{ draw.text }}); this is a separate event from the creator drawing essence.

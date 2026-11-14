@@ -1,5 +1,6 @@
 import { Flame, Hourglass, Sparkles, Star } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Label, Muted, Text } from '@/components/typography'
@@ -50,7 +51,7 @@ function Track({ view }: { view: StarPhysicsView }) {
               {STAR_STAGES[span.stage]}
             </Text>
             <Muted as='span' variant='caption'>
-              {`${span.epochs} epochs`}
+              {`${plural(span.epochs, 'epoch', 'epochs')}`}
             </Muted>
           </li>
         )
@@ -90,7 +91,7 @@ export function StarEvolutionSection({ starId }: { starId: number }) {
           <div className='flex min-w-0 flex-wrap gap-1'>
             <Badge size='sm' variant='outline'>
               <Hourglass />
-              {`Age ${view.age_epochs} epochs`}
+              {`Age ${plural(view.age_epochs, 'epoch', 'epochs')}`}
             </Badge>
             {view.supernova && (
               <Badge size='sm' variant='destructive'>
@@ -111,7 +112,10 @@ export function StarEvolutionSection({ starId }: { starId: number }) {
               ['Mass', `${fixed(view.mass)} suns`],
               ['Metal', `${view.metallicity}/100`],
               ['Light', `${fixed(view.luminosity, 3)} suns`],
-              ['Main life', `${view.lifetime_epochs} epochs`],
+              [
+                'Main life',
+                `${plural(view.lifetime_epochs, 'epoch', 'epochs')}`,
+              ],
               [
                 'Temperate band',
                 `${fixed(view.band_inner)} to ${fixed(view.band_outer)} orbits`,

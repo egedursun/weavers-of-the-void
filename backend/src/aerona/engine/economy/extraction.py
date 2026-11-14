@@ -5,6 +5,7 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.production import EXTRACTION, EXTRACTION_OF
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.economy import ProductionRunRow, ResourceProfileRow, ResourceWorkerRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import HarmCause, InjuryKind, MaimedKind
@@ -311,12 +312,13 @@ async def strike_hazard(
         profile.sealed_until_epoch = ctx.epoch + table.seal_epochs
         if ctx.rng(f"cavern.roll.{resource.id}").chance(table.cavern_chance):
             cavern = await _open_cavern(ctx, resource)
+    woodcutters_counted = several(killed, "woodcutter", "woodcutters")
     words = {
         HazardKind.CAVE_IN: f"The galleries of {resource.name} caved in on the miners of {community.name}: {killed} died and {maimed} were maimed",
         HazardKind.FLOODED_SHAFT: f"Water broke into the shafts of {resource.name}: {killed} of {community.name} drowned",
-        HazardKind.FELLING_ACCIDENT: f"Falling trees at {resource.name} killed {killed} woodcutters of {community.name} and crippled {maimed}",
-        HazardKind.DROWNING: f"Rough water at {resource.name} took {killed} fishers of {community.name}",
-        HazardKind.GORING: f"The herds of {resource.name} gored {killed} herders of {community.name}",
+        HazardKind.FELLING_ACCIDENT: f"Falling trees at {resource.name} killed {woodcutters_counted} of {community.name} and crippled {maimed}",
+        HazardKind.DROWNING: f"Rough water at {resource.name} took {several(killed, 'fisher', 'fishers')} of {community.name}",
+        HazardKind.GORING: f"The herds of {resource.name} gored {several(killed, 'herder', 'herders')} of {community.name}",
     }[hazard]
     tail = f"; the collapse broke into a cavern and {cavern.name} came out of the dark" if cavern is not None else ""
     sealed = "; the mine is sealed" if hazard is HazardKind.CAVE_IN else ""

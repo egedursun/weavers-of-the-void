@@ -5,6 +5,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.core.grammar import several
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow, LabourRow
@@ -276,9 +277,9 @@ async def settlement_line(session: AsyncSession, settlement_id: int) -> Settleme
     infrastructure = (
         [
             f"walls level {works.walls_level} of {words(works.walls_material.value)} (condition {works.walls_condition})",
-            f"{works.gates} gates",
-            f"{works.towers} towers",
-            f"{works.roads} roads",
+            f"{several(works.gates, 'gate', 'gates')}",
+            f"{several(works.towers, 'tower', 'towers')}",
+            f"{several(works.roads, 'road', 'roads')}",
             f"water from {words(works.water.value)}",
             "sewers" if works.sewers else "no sewers",
             f"granary for {works.granary_capacity}",

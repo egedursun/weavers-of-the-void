@@ -1,5 +1,6 @@
 import { Bomb, Compass, HardHat, Route, Shovel, Wheat } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { EntityLink, MiniStat, StatBar } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
@@ -45,7 +46,7 @@ export function ArmyWorks({ army }: { army: ArmyCard }) {
           tone={works.eaten_out ? 'danger' : 'success'}
           hint={
             works.eaten_out
-              ? `${formatInteger(soldiers)} soldiers are more than it feeds; they starve away, plunder the land and sour its people`
+              ? `${plural(soldiers, 'soldier', 'soldiers')} ${agree(soldiers, 'is', 'are')} more than it feeds; they starve away, plunder the land and sour its people`
               : 'Soldiers its region feeds a season, from the leanest season to the richest'
           }
         />

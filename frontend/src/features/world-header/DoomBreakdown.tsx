@@ -150,7 +150,7 @@ export function DoomBreakdown({ open }: { open: boolean }) {
         </div>
         <Muted variant='caption'>
           {data.epochs_left !== null
-            ? `At this pace the threshold is about ${formatNumber(Math.ceil(data.epochs_left), 'integer')} epochs away.`
+            ? `At this pace the threshold is about ${plural(Math.ceil(data.epochs_left), 'epoch', 'epochs')} away.`
             : 'At this pace the clock does not move toward the threshold.'}
         </Muted>
       </div>

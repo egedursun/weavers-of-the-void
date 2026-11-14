@@ -276,7 +276,7 @@ export function WorldHeader() {
             icon={HandHelping}
             tone={prayers > 0 ? 'gold' : 'muted'}
             label='Prayers'
-            aria-label={`${prayers} prayers awaiting an answer`}
+            aria-label={`${plural(prayers, 'prayer', 'prayers')} awaiting an answer`}
             data-prayers-badge
           >
             {prayers > 0 ? (

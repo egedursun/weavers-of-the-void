@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import agree, several
 from aerona.db.tables.cosmic_state import AddictionImmunityRow
 from aerona.db.tables.society import AddictionRow
 from aerona.domain.enums.action import ActionKind
@@ -161,7 +162,10 @@ async def snapshot_now(scope: PlayerScope, command: Empty) -> Effect:
     del command
     epoch = await scope.epoch()
     worlds = await take_snapshot(scope.session, scope.rules, epoch)
-    return Effect(f"The maps of {worlds} worlds were recorded for epoch {epoch}.", values={"worlds": worlds, "epoch": epoch})
+    return Effect(
+        f"The maps of {several(worlds, 'world', 'worlds')} {agree(worlds, 'was', 'were')} recorded for epoch {epoch}.",
+        values={"worlds": worlds, "epoch": epoch},
+    )
 
 
 @player_action("addiction:set", ActionKind.OTHER)

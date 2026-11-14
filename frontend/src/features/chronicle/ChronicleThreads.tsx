@@ -7,6 +7,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -83,7 +84,7 @@ function ThreadCard({
         {open && (
           <Badge size='sm' variant='info'>
             <TrendingUp />
-            {`${formatInteger(thread.progress)} steps`}
+            {`${plural(thread.progress, 'step', 'steps')}`}
           </Badge>
         )}
       </div>

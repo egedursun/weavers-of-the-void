@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { EyeOff, GraduationCap, Save, Shapes, Unlock } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
 import { knowledgeBranchValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -82,7 +83,7 @@ export function LearningShaping({
           onPick={setBranch}
         />
         {current && (
-          <Muted variant='caption'>{`Level ${current.level} of a frontier at ${current.frontier}, ${current.progress}% toward the next, ${current.practitioners} practitioners.`}</Muted>
+          <Muted variant='caption'>{`Level ${current.level} of a frontier at ${current.frontier}, ${current.progress}% toward the next, ${plural(current.practitioners, 'practitioner', 'practitioners')}.`}</Muted>
         )}
         <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
           <div className='flex min-w-0 flex-col gap-1'>

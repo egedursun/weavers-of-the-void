@@ -161,7 +161,9 @@ async def exodus(scope: PlayerScope, command: Exodus) -> Effect:
 @player_action("community:contact", ActionKind.CULTURAL_CONTACT)
 async def contact(scope: PlayerScope, command: Contact) -> Effect:
     exchanged = await order_cultural_contact(await scope.context("cultural_contact"), command.source_id, command.target_id, first_contact=command.first_contact)
-    return Effect(f"The two communities exchanged {exchanged} customs, words and beliefs.", command.target_id, values={"exchanged": exchanged})
+    return Effect(
+        f"The two communities exchanged {several(exchanged, 'custom', 'customs')}, words and beliefs.", command.target_id, values={"exchanged": exchanged}
+    )
 
 
 @player_action("world:golden_age", ActionKind.GOLDEN_AGE)

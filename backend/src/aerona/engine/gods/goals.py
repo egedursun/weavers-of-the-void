@@ -120,7 +120,9 @@ async def _many_worlds(session: AsyncSession, rules: Rules) -> ScenarioProgress:
     statement = select(EntityRow.world_id).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON)
     inhabited = len(set(await session.scalars(statement)) & set(worlds))
     return ScenarioProgress(
-        _percent(inhabited / target * PERCENT), f"{inhabited}/{target} worlds inhabited ({several(len(worlds), 'world', 'worlds')})", done=inhabited >= target
+        _percent(inhabited / target * PERCENT),
+        f"{inhabited}/{several(target, 'world', 'worlds')} inhabited ({several(len(worlds), 'world', 'worlds')})",
+        done=inhabited >= target,
     )
 
 
@@ -140,7 +142,7 @@ async def _loyal_pantheon(session: AsyncSession, rules: Rules, row: ScenarioRow,
     loyal = sum(1 for value in loyalties if value > goals.loyal_min_loyalty)
     return ScenarioProgress(
         _percent(elapsed / goals.loyal_epochs * PERCENT),
-        f"{elapsed}/{goals.loyal_epochs} epochs without rebellion · {loyal}/{len(loyalties)} loyal",
+        f"{elapsed}/{several(goals.loyal_epochs, 'epoch', 'epochs')} without rebellion · {loyal}/{len(loyalties)} loyal",
         done=elapsed >= goals.loyal_epochs and loyal == len(loyalties),
     )
 
@@ -173,7 +175,9 @@ async def _doom_far(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch
         return ScenarioProgress(0, f"Doomsday clock reached {clock}/{threshold}.", failed=True)
     elapsed = epoch - row.start_epoch
     duration = rules.goals.keep_apocalypse_away_epochs
-    return ScenarioProgress(_percent(elapsed / duration * PERCENT), f"{elapsed}/{duration} epochs · clock {clock}/{threshold}", done=elapsed >= duration)
+    return ScenarioProgress(
+        _percent(elapsed / duration * PERCENT), f"{elapsed}/{several(duration, 'epoch', 'epochs')} · clock {clock}/{threshold}", done=elapsed >= duration
+    )
 
 
 async def _lost_star(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
@@ -188,7 +192,7 @@ async def _lost_star(session: AsyncSession, rules: Rules, row: ScenarioRow, epoc
 async def _long_peace(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
     wars = await ongoing_war_count(session)
     if wars:
-        return ScenarioProgress(0, f"{wars} wars ongoing; counter reset")
+        return ScenarioProgress(0, f"{several(wars, 'war', 'wars')} ongoing; counter reset")
     goal = rules.goals.peace_epochs
     return ScenarioProgress(_percent(row.counter / goal * PERCENT), f"{row.counter}/{goal} peace epochs", done=row.counter >= goal)
 

@@ -2,6 +2,7 @@ import { Shuffle } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { FormRow } from '@/components/domain'
 import { ActionButton } from './ActionButton'
@@ -42,7 +43,7 @@ export function DistributionControl() {
         label='Distribution of sons'
         description={
           mode === 'auto'
-            ? `Each epoch Fate sends sons to godless worlds; a son you send by hand is spared${protection !== undefined ? ` for ${protection} epochs` : ''}.`
+            ? `Each epoch Fate sends sons to godless worlds; a son you send by hand is spared${protection !== undefined ? ` for ${plural(protection, 'epoch', 'epochs')}` : ''}.`
             : 'Sons stay on the worlds you send them to.'
         }
       >

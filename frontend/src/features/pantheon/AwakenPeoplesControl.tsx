@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Users } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { agree, plural } from '@/lib/units'
 import { Input } from '@/components/ui/input'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Muted } from '@/components/typography'
@@ -77,7 +78,7 @@ export function AwakenPeoplesControl() {
         />
       </div>
       <Muted variant='caption'>
-        {`New peoples wake on empty lands, each with a language, settlement, resource, knowledge, tradition and faith.${batchCap ? ` Every ${batchCap} peoples are one batch, paid per batch.` : ''}`}
+        {`New peoples wake on empty lands, each with a language, settlement, resource, knowledge, tradition and faith.${batchCap ? ` Every ${plural(batchCap, 'people', 'peoples')} ${agree(batchCap, 'is', 'are')} one batch, paid per batch.` : ''}`}
       </Muted>
       <ActionJob
         jobId={awaken.jobId}

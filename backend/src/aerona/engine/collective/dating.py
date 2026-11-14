@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.grammar import several
 from aerona.db.tables.collective import DatingSystemRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
@@ -60,7 +61,7 @@ async def render_date(session: AsyncSession, holder_id: int | None, year: int) -
         cycle, within = divmod(max(0, year - row.anchor_year), span)
         return f"the {ordinal(within + 1)} year of the {ordinal(cycle + 1)} cycle"
     if count < 1:
-        return f"{1 - count} years before {label}"
+        return f"{several(1 - count, 'year', 'years')} before {label}"
     if row.kind is D.REGNAL:
         return f"the {ordinal(count)} year of the reign of {label}"
     if row.kind is D.FOUNDING:

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Paged, PagedList, StatBar } from '@/components/domain'
@@ -126,7 +127,7 @@ export function CourtCard({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
             icon={COURT_ICON}
             tone='verdigris'
           />
-          <Muted variant='caption'>{`${court.courtiers} courtiers attend the ruler.`}</Muted>
+          <Muted variant='caption'>{`${plural(court.courtiers, 'courtier', 'courtiers')} attend the ruler.`}</Muted>
           {parts.length > 0 && (
             <PagedList
               items={parts}

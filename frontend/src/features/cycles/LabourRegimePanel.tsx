@@ -8,6 +8,7 @@ import {
   Unlock,
   UserRoundCheck,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -62,7 +63,7 @@ function IndentureCard({
       title={`${row.count} bound in ${regime.label.toLowerCase()}`}
       caption={
         row.regime === 'indenture'
-          ? `${row.term_epochs} epochs left · since epoch ${row.since_epoch}`
+          ? `${plural(row.term_epochs, 'epoch', 'epochs')} left · since epoch ${row.since_epoch}`
           : `Until the debt is paid · since epoch ${row.since_epoch}`
       }
       removeLabel='Strike the bond'

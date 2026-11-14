@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
@@ -234,7 +235,7 @@ async def trade_contact(ctx: TickContext, tally: ContactTally) -> None:
     if tally.borrowed > borrowed_before:
         await note(
             ctx,
-            f"Along the trade roads {tally.borrowed - borrowed_before} words passed from one tongue to another.",
+            f"Along the trade roads {several(tally.borrowed - borrowed_before, 'word', 'words')} passed from one tongue to another.",
             key="language_contact.loans",
             kind=ChronicleKind.LANGUAGE,
         )

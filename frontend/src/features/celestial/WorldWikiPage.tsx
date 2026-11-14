@@ -23,7 +23,8 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import { formatCompact, formatDecimal, formatInteger } from '@/lib/format'
+import { formatCompact, formatDecimal } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -262,7 +263,7 @@ function WorldPeoples({ wiki }: { wiki: WorldWiki }) {
                   <EntityLink kind='entity' id={String(item.entity.id)}>
                     {item.entity.name}
                   </EntityLink>
-                  <Muted variant='caption'>{`${formatInteger(item.population)} souls`}</Muted>
+                  <Muted variant='caption'>{`${plural(item.population, 'soul', 'souls')}`}</Muted>
                 </span>
               </li>
             )}

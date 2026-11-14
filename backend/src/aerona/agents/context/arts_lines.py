@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import several
 from aerona.db.tables.arts import ArtPriceRow, ClubRow, CollectorRow, ForgeryRow
 from aerona.db.tables.constructs import ConstructRow, InstructionSetRow, RemadeRow
 from aerona.db.tables.contracts import MonsterContractRow
@@ -94,7 +95,9 @@ async def club_lines(scope: Scope, town: EntityRow) -> list[str]:
         .limit(LIST_LINES)
     ):
         line = f", its fans split by {words(club.line.value)}" if club.line.value != "none" else ""
-        found.append(f"{await named(scope, profile.faction_entity_id)} plays in your town: {club.wins} wins, {club.losses} losses, fandom {club.fandom}{line}")
+        wins_counted = several(club.wins, "win", "wins")
+        losses_counted = several(club.losses, "loss", "losses")
+        found.append(f"{await named(scope, profile.faction_entity_id)} plays in your town: {wins_counted}, {losses_counted}, fandom {club.fandom}{line}")
     return found
 
 
@@ -129,7 +132,7 @@ async def son_arts_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(MonsterContractRow.id)
         .limit(LIST_LINES)
     ):
-        found.append(f"a bounty of {row.bounty} stands on {beast.name} ({words(row.status.value)})")
+        found.append(f"a bounty of {several(row.bounty, 'stand', 'stands')} on {beast.name} ({words(row.status.value)})")
     hidden = list(
         await session.execute(
             select(ForgeryRow, EntityRow)

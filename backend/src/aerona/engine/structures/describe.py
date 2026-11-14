@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.grammar import agree, several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import ConstructionRow, StructureProfileRow, StructureStaffRow
@@ -50,7 +51,10 @@ async def structure_detail(session: AsyncSession, work: EntityRow) -> list[str]:
         select(ConstructionRow).where(ConstructionRow.structure_entity_id == work.id, ConstructionRow.status == ConstructionStatus.ACTIVE).limit(1)
     )
     if construction is not None:
-        lines.append(f"{construction.workers} builders work on it; {construction.progress} of {construction.cost} labour is done")
+        lines.append(
+            f"{several(construction.workers, 'builder', 'builders')} {agree(construction.workers, 'works', 'work')} on it; "
+            f"{construction.progress} of {construction.cost} labour is done"
+        )
     staff = await session.scalar(select(StructureStaffRow).where(StructureStaffRow.structure_entity_id == work.id).limit(1))
     if staff is not None:
         lines.append(f"it needs {staff.required} {words(staff.social_class.value)}s and has {staff.allocated}")

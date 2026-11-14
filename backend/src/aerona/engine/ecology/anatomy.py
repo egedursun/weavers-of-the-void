@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.creature_anatomy import EXOTIC_TISSUES, HOARDED, LIFE_SKIN, PLAN_LIMBS, PLAN_SKIN, TISSUES, TRAIT_BREATH, TRAIT_SKIN
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.body import BodyRow
@@ -294,9 +295,9 @@ async def anatomy_lines(session: AsyncSession, node_id: int) -> list[str]:
     row = await session.get(CreatureAnatomyRow, node_id)
     if row is None:
         return []
-    parts = [f"{row.limbs} limbs", f"{row.heads} {'head' if row.heads == 1 else 'heads'}"]
+    parts = [f"{several(row.limbs, 'limb', 'limbs')}", f"{row.heads} {'head' if row.heads == 1 else 'heads'}"]
     if row.wings:
-        parts.append(f"{row.wings} wings")
+        parts.append(f"{several(row.wings, 'wing', 'wings')}")
     if row.tails:
         parts.append("a tail")
     lines = [f"body: {', '.join(parts)}; skin of {words(row.skin.value)}, bones of {words(row.bone.value)}; lives in the {words(row.habitat.value)}"]

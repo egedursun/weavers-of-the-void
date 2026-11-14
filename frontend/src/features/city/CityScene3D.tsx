@@ -1,5 +1,6 @@
 import { type ReactNode, Suspense, useMemo, useState } from 'react'
 import { Html } from '@react-three/drei'
+import { plural } from '@/lib/units'
 import { Text } from '@/components/typography'
 import { tokenHex } from '@/features/cosmography/visual/palette'
 import { DISTRICT_SPEC } from '@/features/entity/society/labels'
@@ -86,7 +87,7 @@ function describeBuilding(building: CityBuilding): string {
 }
 
 function describeDistrict(district: CityDistrict): string {
-  return `${DISTRICT_SPEC[district.kind].label} · level ${district.level} · ${district.dwellings} homes · desirability ${district.desirability}`
+  return `${DISTRICT_SPEC[district.kind].label} · level ${district.level} · ${plural(district.dwellings, 'home', 'homes')} · desirability ${district.desirability}`
 }
 
 function footprint(scene: CityScene): { center: Cell; radius: number } {

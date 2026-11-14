@@ -202,7 +202,7 @@ function BorderCard({
     <Held
       icon={Shield}
       tone='warning'
-      title={`A border of ${row.delay} epochs' delay`}
+      title={`A border of ${plural(row.delay, 'epoch', 'epochs')}' delay`}
       caption={`Fee ${row.fee} · enforcement ${row.enforcement} · corruption ${row.corruption}`}
       removeLabel='Open the border'
       editTitle='Set the border'

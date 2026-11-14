@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -608,7 +609,7 @@ function ClimateCard({
         noun={['pull', 'pulls']}
         empty='Nothing moves its faith.'
       />
-      <Muted variant='caption'>{`The gods have been silent here for ${row.silent_epochs} epochs.`}</Muted>
+      <Muted variant='caption'>{`The gods have been silent here for ${plural(row.silent_epochs, 'epoch', 'epochs')}.`}</Muted>
     </Held>
   )
 }

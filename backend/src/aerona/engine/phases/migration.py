@@ -1,4 +1,5 @@
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -136,13 +137,14 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
         settlement = ruin
     else:
         name = await Namer(ctx.session, ctx.rules).from_speaker(source.id, seed_of(source.id, ctx.epoch, "migration"), NameKind.PLACE)
+        people_counted_3 = several(migrants, "person", "people")
         settlement = await open_record(
             ctx.session,
             ctx.epoch,
             RecordSpec(
                 entity_type=EntityType.SETTLEMENT,
                 name=name or f"{source.name} Migrants",
-                body=f"{migrants} people fleeing {reason} from {source.name} migrated to the lands of {target.name} and founded a new settlement.",
+                body=f"{people_counted_3} fleeing {reason} from {source.name} migrated to the lands of {target.name} and founded a new settlement.",
                 stats=SettlementStats(population=migrants, prosperity=effects.migrant_prosperity, defense=effects.migrant_defense, piety=effects.migrant_piety),
                 power=max(effects.split_min_power, source.power_level - 1),
                 location_id=target.id,
@@ -154,7 +156,7 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
         await connect(ctx.session, settlement.id, source.id, BondKind.DESCENDS_FROM, ctx.epoch, description="migrants")
         atlas.remember(settlement)
         await bind_language_and_faith(ctx, settlement, atlas, source)
-    await connect(ctx.session, source.id, settlement.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"{reason}: {migrants} people")
+    await connect(ctx.session, source.id, settlement.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"{reason}: {several(migrants, 'person', 'people')}")
     return settlement, ruin is not None
 
 
@@ -244,9 +246,11 @@ async def famine_migration(ctx: TickContext) -> None:
         settlement, rebuilt = await migrate(ctx, atlas, community, target, migrants=migrants, reason="famine")
         moved += 1
         if rebuilt:
-            text = f"Famine drove {migrants} people from {community.name} to the lands of {target.name}; they rebuilt the ruin of {settlement.name}."
+            people_counted_2 = several(migrants, "person", "people")
+            text = f"Famine drove {people_counted_2} from {community.name} to the lands of {target.name}; they rebuilt the ruin of {settlement.name}."
         else:
-            text = f"Famine drove {migrants} people from {community.name} to the lands of {target.name}; there they founded a new settlement."
+            people_counted = several(migrants, "person", "people")
+            text = f"Famine drove {people_counted} from {community.name} to the lands of {target.name}; there they founded a new settlement."
         await note(ctx, text, key="migration.famine", ids=[community.id, settlement.id, target.id])
 
 

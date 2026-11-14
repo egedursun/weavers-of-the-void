@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import { postAction } from '@/api/actions'
+import { agree, plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/typography'
@@ -108,7 +109,7 @@ export function TilePanel({
       icon={Mountain}
       tone='verdigris'
       title={`${GROUNDS[tile.ground]} · ${COVERS[tile.cover]}`}
-      caption={`Tile ${tile.q}, ${tile.r}${tile.river ? ' on the river' : ''}; one of ${alike} tiles of ${COVERS[tile.cover].toLowerCase()}. The tiles are drawn from the land's shares; change a share and the tiles follow.`}
+      caption={`Tile ${tile.q}, ${tile.r}${tile.river ? ' on the river' : ''}; one of ${plural(alike, 'tile', 'tiles')} of ${COVERS[tile.cover].toLowerCase()}. The tiles are drawn from the land's shares; change a share and the tiles follow.`}
       aside={
         <Button
           size='icon-sm'
@@ -334,7 +335,7 @@ export function PlacePanel({
       title={<Ref node={item.node} />}
       caption={
         kind === 'settlement'
-          ? `${item.detail} people; open it for its city and its controls`
+          ? `${item.detail} ${agree(Number(item.detail), 'person', 'people')}; open it for its city and its controls`
           : `${item.detail.replaceAll('_', ' ')}; open it for its controls`
       }
       aside={

@@ -15,6 +15,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -110,7 +111,7 @@ function ImpositionRow({
           {`${cause.label}: ${axis.label} ${signed(row.amount)}`}
         </Text>
         <Muted as='span' variant='caption'>
-          {`${row.epochs_left} epochs left`}
+          {`${plural(row.epochs_left, 'epoch', 'epochs')} left`}
         </Muted>
       </div>
       <Button
@@ -324,7 +325,7 @@ export function CultureDriftSection({
                       title={spec.label}
                       icon={spec.icon}
                       tone={spec.tone}
-                      hint={`${formatInteger(total)} points of change so far`}
+                      hint={`${plural(total, 'point', 'points')} of change so far`}
                     >
                       <div className='flex min-w-0 flex-wrap gap-1.5'>
                         {rows.length === 0 && (
@@ -763,7 +764,8 @@ export function MobilitySection({
             <Paged items={data.mobility} as='li'>
               {(row, index) => {
                 const spec = EVENT_SPEC[row.event]
-                const who = row.mortal || `${formatInteger(row.count)} people`
+                const who =
+                  row.mortal || `${plural(row.count, 'person', 'people')}`
                 return (
                   <TimelineItem
                     key={row.id}

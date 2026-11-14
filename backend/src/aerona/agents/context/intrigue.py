@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.communication import CONTENT_LABELS, STATE_LABELS, SUBJECT_LABELS
 from aerona.catalog.intrigue import FAVOUR_LABELS, IDENTITY_LABELS, PHASE_LABELS, SCHEMES, SECRETS, belief_label
 from aerona.catalog.titles import RANK_WORDS
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyShareRow, EstateProfileRow
@@ -49,7 +49,7 @@ async def intrigue_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> 
             select(SecretRow).where(SecretRow.holder_node_id == me.id, SecretRow.exposed_epoch.is_(None)).order_by(SecretRow.severity.desc())
         )
     ]
-    secrets = [f"{SECRETS[row.kind].label.lower()} (known to {len(row.known_by) - 1} others)" for row in own[:cap]]
+    secrets = [f"{SECRETS[row.kind].label.lower()} (known to {several(len(row.known_by) - 1, 'other', 'others')})" for row in own[:cap]]
     leverage: list[str] = []
     for hook in await session.scalars(select(HookRow).where(HookRow.holder_node_id == me.id, HookRow.used_epoch.is_(None)).order_by(HookRow.id).limit(cap)):
         leverage.append(f"{an(hook.strength.value)} hook on {await name_of(session, hook.target_node_id)}")

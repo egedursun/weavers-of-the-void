@@ -4,6 +4,7 @@ import { Brush, Palette, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { queryKeys } from '@/api/queryKeys'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -148,13 +149,13 @@ export function ImageStyleSettings() {
             onClick={() => setConfirming(true)}
           >
             <Brush />
-            {`Repaint ${formatInteger(offStyle)} images in this style`}
+            {`Repaint ${plural(offStyle, 'image', 'images')} in this style`}
           </Button>
         </div>
         <ConfirmDialog
           open={confirming}
           onOpenChange={setConfirming}
-          title={`Repaint ${formatInteger(offStyle)} images?`}
+          title={`Repaint ${plural(offStyle, 'image', 'images')}?`}
           desc='The worker paints one image at a time; your own requests still go first. You can stop at any time from Image generation below.'
           confirmText='Repaint'
           isLoading={restyle.isPending}

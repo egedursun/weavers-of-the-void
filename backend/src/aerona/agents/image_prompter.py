@@ -10,6 +10,7 @@ from aerona.catalog.cosmography import CLUSTER_KINDS, DIMENSION_KINDS, GALAXY_TY
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
 from aerona.catalog.worlds import WORLD_TYPES
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -101,7 +102,7 @@ async def missing_image_prompts(runtime: AgentRuntime, limit: int | None = None,
             entity.image_prompt = fix_image_prompt(text, subject.entity_type, subject.megafauna, rules.content.cosmic_image_prompt_max_chars)
             written += 1
     if written:
-        runtime.note(f"{written} entities got an image prompt.")
+        runtime.note(f"{several(written, 'entity', 'entities')} got an image prompt.")
     return written
 
 

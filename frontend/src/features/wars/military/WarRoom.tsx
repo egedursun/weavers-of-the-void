@@ -32,6 +32,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -1153,7 +1154,7 @@ function BattleField({ battle }: { battle: BattleReport }) {
       key: 'reserves',
       node: (
         <Plain icon={Layers}>
-          {`${formatInteger(battle.reserves_committed)} reserves committed`}
+          {`${plural(battle.reserves_committed, 'reserve', 'reserves')} committed`}
         </Plain>
       ),
     })
@@ -1201,7 +1202,7 @@ function BattleField({ battle }: { battle: BattleReport }) {
       key: 'salvage',
       node: (
         <Plain icon={Hammer}>
-          {`${formatInteger(battle.salvaged)} arms salvaged`}
+          {`${plural(battle.salvaged, 'arm', 'arms')} salvaged`}
         </Plain>
       ),
     })

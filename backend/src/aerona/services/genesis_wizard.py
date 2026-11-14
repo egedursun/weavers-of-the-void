@@ -26,6 +26,7 @@ from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH
 from aerona.catalog.rarities import DEFAULT_FIRST_SONS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import ConflictError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.db.tables.celestial import WorldRow
@@ -344,7 +345,7 @@ class GenesisWizard:
             raise ValidationFailedError("Creator name and world seed are required.")
         resolve_first_sons(self._rules, command.first_sons)
         if len(command.image_style_custom.strip()) > CUSTOM_STYLE_MAX_LENGTH:
-            raise ValidationFailedError(f"The custom image style is limited to {CUSTOM_STYLE_MAX_LENGTH} characters.")
+            raise ValidationFailedError(f"The custom image style is limited to {several(CUSTOM_STYLE_MAX_LENGTH, 'character', 'characters')}.")
         if command.image_style is ImageStyle.CUSTOM and not command.image_style_custom.strip():
             raise ValidationFailedError("Describe the custom image style.")
         if self._ports.genesis is None:

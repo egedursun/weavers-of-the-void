@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.structures import HOLY_HOUSES
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
@@ -111,7 +112,7 @@ async def abandon_declining(ctx: TickContext, history: PopulationHistory, atlas:
             low, high = headcount_bounds(ctx.rules, target)
             set_stats(target, population=clamp_int((stat(target, "population") or 0) + migrants, low, high))
             await connect(ctx.session, settlement.id, target.id, BondKind.MIGRATED_TO, ctx.epoch, description="migration from the ruin")
-            moved = f"; its last {migrants} people moved to {target.name}"
+            moved = f"; its last {several(migrants, 'person', 'people')} moved to {target.name}"
         left = f" Left behind: {', '.join(item.name for item in remains)}." if remains else ""
         ids = [settlement.id, *([target.id] if target is not None else []), *(item.id for item in remains)]
         await note(ctx, f"{settlement.name} dwindled and emptied, and fell to ruin{moved}.{left}", key="life_cycles.abandoned", ids=ids)
@@ -175,7 +176,9 @@ async def collapses(ctx: TickContext, history: PopulationHistory) -> int:
             continue
         if not rng.chance(cycles.collapse_chance):
             continue
-        await collapse(ctx, community, f"in {cycles.decline_epochs} epochs its people fell from {before} to {now} and its stores ran empty")
+        await collapse(
+            ctx, community, f"in {several(cycles.decline_epochs, 'epoch', 'epochs')} its people fell from {before} to {now} and its stores ran empty"
+        )
         collapsed += 1
     ctx.count("collapsed", collapsed)
     return collapsed

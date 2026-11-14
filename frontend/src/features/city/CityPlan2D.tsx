@@ -122,7 +122,7 @@ export function CityPlan2D({
           strokeWidth={0.12}
           onClick={() => onPick({ kind: 'district', id: district.id })}
         >
-          <title>{`${district.kind.replaceAll('_', ' ')}: level ${district.level}, ${district.dwellings} homes`}</title>
+          <title>{`${district.kind.replaceAll('_', ' ')}: level ${district.level}, ${plural(district.dwellings, 'home', 'homes')}`}</title>
         </polygon>
       ))}
       {scene.buildings.map((building) => {

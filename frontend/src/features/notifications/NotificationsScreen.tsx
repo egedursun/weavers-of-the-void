@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 import { queryKeys } from '@/api/queryKeys'
 import { fetchJob } from '@/api/system'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -447,7 +448,7 @@ export function NotificationsScreen() {
                   {
                     onSuccess: (result) =>
                       toast.success(
-                        `${formatInteger(result.changed)} errors marked read`
+                        `${plural(result.changed, 'error', 'errors')} marked read`
                       ),
                     onError: (error) => toast.error(error.message),
                   }
@@ -593,7 +594,14 @@ export function NotificationsScreen() {
                     {key === 'none' ? 'Outside the epochs' : `Epoch ${key}`}
                   </Text>
                   <Muted as='span' variant='caption'>
-                    {`${formatInteger(groups.reduce((sum, group) => sum + group.items.length, 0))} notices`}
+                    {`${plural(
+                      groups.reduce(
+                        (sum, group) => sum + group.items.length,
+                        0
+                      ),
+                      'notice',
+                      'notices'
+                    )}`}
                   </Muted>
                 </div>
                 <ol className='flex min-w-0 flex-col gap-2'>

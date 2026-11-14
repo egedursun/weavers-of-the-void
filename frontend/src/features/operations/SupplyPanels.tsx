@@ -9,6 +9,7 @@ import {
   Warehouse,
   Wrench,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { KpiTile, PagedList } from '@/components/domain'
@@ -159,7 +160,7 @@ function OperationCard({
       <Facts
         items={[
           ['Seasons on the offensive', String(row.offensive_seasons)],
-          ['Foresight', `${row.foresight} seasons`],
+          ['Foresight', `${plural(row.foresight, 'season', 'seasons')}`],
           ['Supply needed', String(row.need)],
           ['Supply delivered', String(row.delivered)],
         ]}

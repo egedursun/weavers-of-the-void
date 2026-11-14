@@ -1,5 +1,6 @@
 import { ChevronDown, Lock, Trophy } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -85,7 +86,7 @@ export function AchievementsGrid({
             <SectionTitle>Achievements</SectionTitle>
             <Stat
               value={earned.length}
-              unit={`/ ${achievements.length} earned · ${points} points`}
+              unit={`/ ${achievements.length} earned · ${plural(points, 'point', 'points')}`}
             />
           </div>
           <Progress

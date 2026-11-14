@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind
@@ -138,7 +139,7 @@ async def impose_drift(scope: PlayerScope, command: ImposeDrift) -> Effect:
         await scope.context("drift_impose"), command.community_id, command.cause, command.axis, amount=command.amount, epochs=command.epochs
     )
     return Effect(
-        f"For {row.epochs_left} epochs, {words(command.cause.value)} will push their {words(command.axis.value)} by {row.amount}.",
+        f"For {several(row.epochs_left, 'epoch', 'epochs')}, {words(command.cause.value)} will push their {words(command.axis.value)} by {row.amount}.",
         command.community_id,
         values={"imposition_id": row.id},
     )
@@ -149,7 +150,9 @@ async def edit_drift(scope: PlayerScope, command: EditDrift) -> Effect:
     row = await control.edit_drift(
         await scope.context("drift_edit"), command.imposition_id, amount=command.amount, epochs=command.epochs, cause=command.cause, axis=command.axis
     )
-    return Effect(f"The pressure now pushes {words(row.axis.value)} by {row.amount} for {row.epochs_left} epochs.", row.community_entity_id)
+    return Effect(
+        f"The pressure now pushes {words(row.axis.value)} by {row.amount} for {several(row.epochs_left, 'epoch', 'epochs')}.", row.community_entity_id
+    )
 
 
 @player_action("drift:cancel", ActionKind.EDIT_RECORD)

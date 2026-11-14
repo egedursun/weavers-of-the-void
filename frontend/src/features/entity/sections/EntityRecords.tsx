@@ -1,5 +1,6 @@
 import { ArrowDown } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -83,7 +84,7 @@ function LexiconTable({
     <Section
       id='section-lexicon'
       title='Lexicon'
-      description={`${formatInteger(view.word_total)} words · spoken by ${view.speakers.map((item) => item.name).join(', ') || 'nobody yet'}`}
+      description={`${plural(view.word_total, 'word', 'words')} · spoken by ${view.speakers.map((item) => item.name).join(', ') || 'nobody yet'}`}
     >
       {words.length === 0 ? (
         <Muted>No word has been recorded yet.</Muted>

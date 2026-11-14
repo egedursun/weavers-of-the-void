@@ -31,6 +31,7 @@ export const SPACING_TOKENS = [
   'portrait-md',
   'portrait-lg',
   'portrait-xl',
+  'portrait-2xl',
   'topbar',
   'label-track',
   'drawer',

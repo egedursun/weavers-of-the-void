@@ -4,6 +4,7 @@ import painting from '@/assets/image-styles/painting.jpg'
 import photoreal from '@/assets/image-styles/photoreal.jpg'
 import watercolor from '@/assets/image-styles/watercolor.jpg'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 
 export type ImageStyle = components['schemas']['ImageStyle']
 
@@ -68,6 +69,6 @@ export function imageStyleProblem(
   if (style !== 'custom') return null
   if (custom.trim() === '') return 'Describe the custom image style.'
   if (custom.length > CUSTOM_STYLE_MAX)
-    return `The custom image style is limited to ${CUSTOM_STYLE_MAX} characters.`
+    return `The custom image style is limited to ${plural(CUSTOM_STYLE_MAX, 'character', 'characters')}.`
   return null
 }

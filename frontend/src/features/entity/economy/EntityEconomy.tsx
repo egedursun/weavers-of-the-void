@@ -23,6 +23,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -1019,7 +1020,7 @@ function WorkshopCard({
           <IconStat
             icon={Ship}
             label='Ships in its fleet'
-            value={`${row.fleet} ships`}
+            value={`${plural(row.fleet, 'ship', 'ships')}`}
             tone='info'
           />
         )}

@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
@@ -103,9 +104,14 @@ async def flee(
         set_stats(origin, population=max(floor, population - refugees))
         host_floor, host_cap = headcount_bounds(ctx.rules, host)
         set_stats(host, population=min(host_cap, max(host_floor, (stat(host, "population") or 0) + refugees)))
-        await connect(ctx.session, origin.id, host.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"refugees ({cause}): {refugees} people")
+        await connect(
+            ctx.session, origin.id, host.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"refugees ({cause}): {several(refugees, 'person', 'people')}"
+        )
         await note(
-            ctx, f"{refugees} refugees fleeing {cause} from {origin.name} took shelter in {host.name}.", key="refugees.sheltered", ids=[origin.id, host.id]
+            ctx,
+            f"{several(refugees, 'refugee', 'refugees')} fleeing {cause} from {origin.name} took shelter in {host.name}.",
+            key="refugees.sheltered",
+            ids=[origin.id, host.id],
         )
         return Exodus(origin, refugees, host, False)
     region_id = atlas.top_region(origin.id)
@@ -117,10 +123,12 @@ async def flee(
         if ruin is None:
             continue
         set_stats(origin, population=max(floor, min(cap, population - refugees)))
-        await connect(ctx.session, origin.id, ruin.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"refugees ({cause}): {refugees} people")
+        await connect(
+            ctx.session, origin.id, ruin.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"refugees ({cause}): {several(refugees, 'person', 'people')}"
+        )
         await note(
             ctx,
-            f"{refugees} refugees fleeing {cause} from {origin.name} settled the ruin of {ruin.name} and rebuilt it.",
+            f"{several(refugees, 'refugee', 'refugees')} fleeing {cause} from {origin.name} settled the ruin of {ruin.name} and rebuilt it.",
             key="refugees.ruin",
             ids=[origin.id, ruin.id],
         )

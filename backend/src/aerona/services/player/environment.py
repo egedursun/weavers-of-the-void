@@ -199,7 +199,7 @@ async def set_world_calendar(scope: PlayerScope, command: SetWorldCalendar) -> E
         await write_seasons(await scope.context("seasons:calendar"), world)
     seasons = several(world.season_count, "season", "seasons")
     return Effect(
-        f"{world.name} turns with an axial tilt of {world.axial_tilt}, {world.year_length_days} days a year and {seasons}.",
+        f"{world.name} turns with an axial tilt of {world.axial_tilt}, {several(world.year_length_days, 'day', 'days')} a year and {seasons}.",
         target_node_id=world.id,
     )
 
@@ -250,7 +250,10 @@ async def sever_ley_line(scope: PlayerScope, command: SeverLey) -> Effect:
     epoch = await scope.epoch()
     epochs = command.epochs or scope.rules.environment.sever_ley_epochs
     line = await control.sever_ley(scope.session, command.line_id, until_epoch=epoch + epochs - 1)
-    return Effect(f"{(await _line_name(scope, line.region_a_id, line.region_b_id)).capitalize()} is cut for {epochs} epochs.", target_node_id=line.region_a_id)
+    return Effect(
+        f"{(await _line_name(scope, line.region_a_id, line.region_b_id)).capitalize()} is cut for {several(epochs, 'epoch', 'epochs')}.",
+        target_node_id=line.region_a_id,
+    )
 
 
 @player_action("ley:restore", ActionKind.OTHER)
@@ -300,7 +303,7 @@ async def force_weather(scope: PlayerScope, command: ForceWeather) -> Effect:
     )
     when = f"season {row.season_position + 1}" if row.season_position is not None else "every season"
     label = WEATHER[row.kind].label.lower()
-    return Effect(f"{label.capitalize()} will hold over {region.name} in {when} for {command.epochs} epochs.", target_node_id=region.id)
+    return Effect(f"{label.capitalize()} will hold over {region.name} in {when} for {several(command.epochs, 'epoch', 'epochs')}.", target_node_id=region.id)
 
 
 @player_action("weather:release", ActionKind.OTHER)

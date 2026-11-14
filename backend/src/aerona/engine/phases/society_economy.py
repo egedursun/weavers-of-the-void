@@ -8,6 +8,7 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT, TENTHS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -883,7 +884,9 @@ async def order_forge(ctx: TickContext, entity_id: int) -> EntityRow:
     entity = await require_society_entity(ctx.session, entity_id)
     society = await society_of(ctx.session, ctx.rules, entity_id)
     if await holding(ctx.session, entity.id, CommodityKind.WEAPONS) < ctx.rules.refining.weapon_batch_threshold:
-        raise ValidationFailedError(f"There are fewer than {ctx.rules.refining.weapon_batch_threshold} weapons in the stores to forge a named batch from.")
+        raise ValidationFailedError(
+            f"There are fewer than {several(ctx.rules.refining.weapon_batch_threshold, 'weapon', 'weapons')} in the stores to forge a named batch from."
+        )
     weapon = await forge_weapons(ctx, entity, society)
     await save_society(ctx.session, entity_id, society, stocks=False)
     return weapon

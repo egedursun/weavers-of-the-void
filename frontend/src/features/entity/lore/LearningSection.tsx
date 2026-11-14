@@ -18,6 +18,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { knowledgeBranchValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -490,7 +491,7 @@ function Body({
           icon={deepest ? branchOf(deepest.branch).icon : GraduationCap}
           hint={
             deepest
-              ? `${branchOf(deepest.branch).label}, of ${MAX_LEVEL} levels`
+              ? `${branchOf(deepest.branch).label}, of ${plural(MAX_LEVEL, 'level', 'levels')}`
               : 'They have learned nothing yet'
           }
           meter={{

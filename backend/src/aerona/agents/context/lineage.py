@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.genetics import DWELLINGS, GIFT_STANCE_LABELS, HOUSEHOLD_ROLE_LABELS
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow
 from aerona.db.tables.households import HouseholdMemberRow
@@ -41,8 +41,9 @@ async def lineage_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> L
         if household is not None and role is not None
         else ""
     )
+    rooms_counted = several(dwelling.rooms, "room", "rooms") if dwelling is not None else ""
     dwelling_text = (
-        f"{an(DWELLINGS[dwelling.kind].label.lower())} of {dwelling.rooms} rooms, quality {quality}, your class expects {expectation(household.social_class)}"
+        f"{an(DWELLINGS[dwelling.kind].label.lower())} of {rooms_counted}, quality {quality}, your class expects {expectation(household.social_class)}"
         if dwelling is not None and household is not None
         else ""
     )

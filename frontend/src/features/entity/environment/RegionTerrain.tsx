@@ -27,6 +27,7 @@ import {
   dangerSourceValues,
   regionMemoryKindValues,
 } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -877,7 +878,7 @@ function HazardCard({ view }: { view: Terrain }) {
                 <Tile
                   key={item.id}
                   spec={named(HAZARD, item.hazard)}
-                  caption={`Epoch ${item.epoch}${item.year != null ? `, year ${item.year}` : ''}${item.season_name ? `, ${item.season_name}` : ''}: ${item.deaths} died, ${item.injured} hurt${item.soldiers_lost ? `, ${item.soldiers_lost} soldiers lost` : ''}`}
+                  caption={`Epoch ${item.epoch}${item.year != null ? `, year ${item.year}` : ''}${item.season_name ? `, ${item.season_name}` : ''}: ${item.deaths} died, ${item.injured} hurt${item.soldiers_lost ? `, ${plural(item.soldiers_lost, 'soldier', 'soldiers')} lost` : ''}`}
                 />
               )}
             </Paged>

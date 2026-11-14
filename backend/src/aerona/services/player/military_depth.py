@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import Field
 
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import DuelContext, PeaceTermKind, VesselArmament, WarAimKind
@@ -229,7 +229,7 @@ async def vessel_refit(scope: PlayerScope, command: VesselRefit) -> Effect:
 @player_action("vessel:repair", ActionKind.EDIT_RECORD)
 async def vessel_repair(scope: PlayerScope, command: VesselTarget) -> Effect:
     gain = await orders.repair_vessel(await scope.context("vessel_repair"), command.vessel_id)
-    return Effect(f"The shipwrights restored {gain} points of the hull.", command.vessel_id)
+    return Effect(f"The shipwrights restored {several(gain, 'point', 'points')} of the hull.", command.vessel_id)
 
 
 @player_action("captive:take", ActionKind.EDIT_RECORD)

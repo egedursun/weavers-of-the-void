@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow, PeopleCultureRow
 from aerona.db.tables.economy import LoanRow
@@ -120,7 +121,7 @@ async def desertion(ctx: TickContext) -> int:
         deserted += leaving
         await note(
             ctx,
-            f"{leaving} soldiers of {army.name} slipped away home; the warriors of {owner.name} had nothing left to fight for.",
+            f"{several(leaving, 'soldier', 'soldiers')} of {army.name} slipped away home; the warriors of {owner.name} had nothing left to fight for.",
             key="society.desertion",
             ids=[army.id, owner.id],
             kind=ChronicleKind.WORLD,

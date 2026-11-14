@@ -13,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -353,7 +354,7 @@ function InstitutionTile({
           <Muted variant='caption'>
             {row.embraced
               ? `Embraced since epoch ${row.since_epoch}; it quickens their research.`
-              : `Known since epoch ${row.since_epoch} but refused for ${row.refused_epochs} epochs; their research falls behind.`}
+              : `Known since epoch ${row.since_epoch} but refused for ${plural(row.refused_epochs, 'epoch', 'epochs')}; their research falls behind.`}
           </Muted>
         </div>
       </div>

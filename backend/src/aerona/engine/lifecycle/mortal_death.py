@@ -8,7 +8,7 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.schema import SINGLETON_ID
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import agree, several
 from aerona.db.repositories.chronicle import CAUSE_SCOPE
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -202,7 +202,10 @@ async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
         text = f"{several(len(items), 'item', 'items')} of {mortal.name} passed to {', '.join(heir.name for heir in heirs)}."
         ids = [mortal.id, *item_ids, *(heir.id for heir in heirs)]
     else:
-        text = f"{several(len(items), 'item', 'items')} of {mortal.name} were left ownerless; they wait in the grave or on the battlefield."
+        text = (
+            f"{several(len(items), 'item', 'items')} of {mortal.name} {agree(len(items), 'was', 'were')} left ownerless; "
+            f"{agree(len(items), 'it waits', 'they wait')} in the grave or on the battlefield."
+        )
         ids = [mortal.id, *item_ids]
     await note(ctx, text, key="mortal.inheritance", ids=ids)
 

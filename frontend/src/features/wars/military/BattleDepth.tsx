@@ -10,6 +10,7 @@ import {
   UserX,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import {
   EntityLink,
@@ -46,7 +47,7 @@ const CASUALTY_PARTS = [
 const TACTIC_SIDES = new Set(['attacker', 'defender'])
 const SIDE_FACTORS: Record<string, (value: number) => string> = {
   luck: (value) => `fortune ×${value.toFixed(2)}`,
-  span: (value) => `${formatInteger(value)} stacks on the front`,
+  span: (value) => `${plural(value, 'stack', 'stacks')} on the front`,
   concealment: (value) => `concealment ${formatInteger(value)}`,
   square_reserve: (value) =>
     `${formatInteger(value)} in reserve loosed their volleys (square law)`,
@@ -242,7 +243,7 @@ export function BattleDepthPanel({
                     )}
                     {stack.ammunition_spent > 0 && (
                       <Plain icon={Crosshair}>
-                        {`${stack.ammunition_spent} volleys loosed`}
+                        {`${plural(stack.ammunition_spent, 'volley', 'volleys')} loosed`}
                       </Plain>
                     )}
                   </div>

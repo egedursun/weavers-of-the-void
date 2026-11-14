@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import { Layers, X, ZoomIn } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -120,7 +121,7 @@ export function MapStackOverlay({
             <Input
               id={searchId}
               aria-label='Filter the records here'
-              placeholder={`Filter ${total.toLocaleString('en-US')} records…`}
+              placeholder={`Filter ${plural(total, 'record', 'records')}…`}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               className='min-w-0 flex-1'

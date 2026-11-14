@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.mind import CAREER_SKILLS
 from aerona.catalog.structures import RESEARCH_HOUSES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.culture import IdeologyAdherentRow
 from aerona.db.tables.cycles import PolityStressRow
 from aerona.db.tables.entities import EntityRow
@@ -141,7 +142,12 @@ async def hold_sitting(ctx: TickContext, book: RealmBook, realm: Realm, row: Exa
         await grant(ctx, mortal, CredentialKind.EXAMINATION, granter_id=realm.entity.id, skill=skill, tally=tally)
     tally.sittings += 1
     tally.graduates += passed
-    await note(ctx, f"{realm.entity.name} held its examinations: {passed} of {candidates} candidates passed.", key="examinations.held", ids=[realm.entity.id])
+    await note(
+        ctx,
+        f"{realm.entity.name} held its examinations: {passed} of {several(candidates, 'candidate', 'candidates')} passed.",
+        key="examinations.held",
+        ids=[realm.entity.id],
+    )
     await ctx.session.flush()
     return sitting
 

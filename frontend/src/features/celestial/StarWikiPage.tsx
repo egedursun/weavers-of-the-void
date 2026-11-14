@@ -9,7 +9,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatCompact } from '@/lib/format'
-import { plural } from '@/lib/units'
+import { agree, plural } from '@/lib/units'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -92,7 +92,7 @@ function OrbitingWorlds({ wiki }: { wiki: StarWiki }) {
       title='Worlds in its light'
       description={
         wiki.worlds.length > 0
-          ? `${plural(wiki.worlds.length, 'world', 'worlds')} circle it, home to ${formatCompact(souls)} souls.`
+          ? `${plural(wiki.worlds.length, 'world', 'worlds')} circle it, home to ${formatCompact(souls)} ${agree(souls, 'soul', 'souls')}.`
           : undefined
       }
     >

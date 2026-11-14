@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Blocks, FileText, ToggleRight, X } from 'lucide-react'
-import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -249,7 +249,7 @@ function RenderedBlock({
   return (
     <CodeBlock
       label='Rendered block'
-      meta={`${formatInteger(block.data.characters)} characters, about ${formatInteger(block.data.token_estimate)} tokens`}
+      meta={`${plural(block.data.characters, 'character', 'characters')}, about ${plural(block.data.token_estimate, 'token', 'tokens')}`}
       text={block.data.text}
       empty='This block is empty for the current world.'
     />

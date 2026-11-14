@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import delete, select
 
 from aerona.core.errors import ConflictError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.base import Repository
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
@@ -53,7 +54,7 @@ def ordered_pair(first: int, second: int) -> tuple[int, int]:
 class SonRepository(Repository):
     async def create(self, draft: SonDraft) -> SonRow:
         if len(draft.powers) > POWER_SLOTS:
-            raise ValidationFailedError(f"A son has at most {POWER_SLOTS} powers.")
+            raise ValidationFailedError(f"A son has at most {several(POWER_SLOTS, 'power', 'powers')}.")
         names = NameRepository(self.session)
         if await names.is_taken(draft.name):
             raise ConflictError(f"The name {draft.name} is already taken.")

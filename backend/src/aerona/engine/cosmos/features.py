@@ -3,6 +3,7 @@ import math
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.celestial import SkyEventRow, WorldRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
@@ -194,7 +195,7 @@ async def slingshot(ctx: TickContext, journey: JourneyRow, route: RouteRow, trav
         set_stats(traveller, age=max(0, age - years))
     await note(
         ctx,
-        f"{traveller.name} passed the well of a black hole and arrived {years} years younger than their kin.",
+        f"{traveller.name} passed the well of a black hole and arrived {several(years, 'year', 'years')} younger than their kin.",
         key="feature.slingshot",
         ids=[traveller.id],
         world_id=journey.destination_world_id,

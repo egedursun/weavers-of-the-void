@@ -1,4 +1,5 @@
 import { type LucideIcon } from 'lucide-react'
+import { plural } from '@/lib/units'
 import {
   type DrawerEntry,
   type DrawerKind,
@@ -169,7 +170,7 @@ function buildingTypes(
       key: dwellingTypeKey(worldId, row.housing),
       label: HOUSING[row.housing].label,
       kind: 'dwelling-type' as const,
-      hint: `${row.dwellings} homes`,
+      hint: `${plural(row.dwellings, 'home', 'homes')}`,
       icon: DWELLING_ICON,
       children: [],
     }))

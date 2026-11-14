@@ -30,6 +30,7 @@ from aerona.catalog.scenarios import SCENARIOS
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.stats import PASSIONS, STATS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -614,7 +615,7 @@ class BookBuilder:
                 Labelled("Brightness", str(star.brightness)),
                 Labelled("Kindled", f"Epoch {star.created_epoch}"),
                 Labelled("Age", STAR_AGE_LABELS[star.age_stage]),
-                Labelled("Next age in", f"{star.lifecycle_clock} epochs" if star.lifecycle_clock is not None else "unknown"),
+                Labelled("Next age in", f"{several(star.lifecycle_clock, 'epoch', 'epochs')}" if star.lifecycle_clock is not None else "unknown"),
                 Labelled("Steadiness", f"{star.stability}/100"),
                 Labelled("Radiation", f"{star.radiation}/100"),
                 Labelled("Sacredness", f"{star.sacredness}/100"),
@@ -758,7 +759,7 @@ class BookBuilder:
                 Labelled("Worshipped by", ", ".join(worship.get(dimension.id, [])) or "no people"),
                 Labelled(
                     "Afterlife strata here",
-                    ", ".join(f"{row.name} ({row.population} souls)" for row in strata if row.dimension_id == dimension.id) or "none",
+                    ", ".join(f"{row.name} ({several(row.population, 'soul', 'souls')})" for row in strata if row.dimension_id == dimension.id) or "none",
                 ),
                 Labelled("Held by the god", ", ".join(dimension.locked) or "nothing"),
             ]

@@ -3,7 +3,7 @@ from sqlalchemy import func, select
 from aerona.agents.context.scope import Scope
 from aerona.catalog.collective import ACT_TEXT
 from aerona.catalog.storylets import STORYLETS
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.collective import (
     AccountRow,
     ArmsRow,
@@ -91,7 +91,9 @@ async def own_lines(scope: Scope, me: EntityRow) -> list[str]:
         .order_by(StoryletRunRow.id)
     ):
         options = "; ".join(f"{index}: {text}" for index, text in enumerate(await choice_texts(session, run)))
-        found.append(f"storylet {run.id} waits for your choice by epoch {run.due_epoch}: {await situation(session, run)} Choices: {options}")
+        found.append(
+            f"storylet {several(run.id, 'wait', 'waits')} for your choice by epoch {run.due_epoch}: {await situation(session, run)} Choices: {options}"
+        )
     ruler = await session.scalar(select(OfficeRow.id).where(OfficeRow.holder_entity_id == me.id, OfficeRow.kind == OfficeKind.RULER).limit(1))
     if ruler is not None:
         found.append("as ruler you may commission your realm's account of an event or strike a figure from its records")

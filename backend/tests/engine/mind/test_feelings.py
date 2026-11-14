@@ -123,6 +123,8 @@ async def test_nightmares_recur_into_a_condition_and_god_messages_become_visitat
         row = await dream(context(realm.session, rules, epoch=epoch), haunted)
         nightmares += 1 if row is not None and row.kind is DreamKind.NIGHTMARE else 0
     assert nightmares >= 2
+    haunting = await realm.session.scalar(select(DreamRow).where(DreamRow.dreamer_node_id == haunted.id, DreamRow.kind == DreamKind.NIGHTMARE).limit(1))
+    assert haunting is not None and haunting.content == [foe.id]
     assert await realm.session.scalar(select(ConditionRow.id).where(ConditionRow.bearer_node_id == haunted.id, ConditionRow.kind == ConditionKind.NIGHTMARES))
     profile = await realm.session.get(MortalProfileRow, haunted.id)
     assert profile is not None and profile.stress > 0

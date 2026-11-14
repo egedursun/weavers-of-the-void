@@ -83,6 +83,25 @@ async def filled(services: Any, path: str) -> str:
     return PARAM.sub(lambda match: str(values[match.group(1)]), path)
 
 
+def repeated_refs(value: Any, where: str = "") -> list[str]:
+    found: list[str] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            found.extend(repeated_refs(item, f"{where}.{key}"))
+    elif isinstance(value, list):
+        refs = [(item["kind"], item["id"]) for item in value if isinstance(item, dict) and set(item) == {"kind", "id", "name"}]
+        if len(refs) == len(value) and len(set(refs)) < len(refs):
+            found.append(where)
+        for item in value:
+            found.extend(repeated_refs(item, where))
+    return found
+
+
+def test_a_list_naming_one_node_twice_is_caught() -> None:
+    ref = {"kind": "entity", "id": 7, "name": "Vel"}
+    assert repeated_refs({"dreams": [{"content": [ref, ref]}], "fine": [ref]}) == [".dreams.content"]
+
+
 async def test_every_read_endpoint_answers_without_a_server_error(served: tuple[AsyncClient, Any]) -> None:
     http, services = served
     broken: list[str] = []
@@ -91,5 +110,7 @@ async def test_every_read_endpoint_answers_without_a_server_error(served: tuple[
         response = await http.get(url)
         if response.status_code >= 500:
             broken.append(f"{url}: {response.status_code} {response.text[:300]}")
+        elif response.status_code == 200 and response.headers.get("content-type", "").startswith("application/json"):
+            broken.extend(f"{url}: names one node twice in {where}" for where in repeated_refs(response.json()))
     assert broken == []
     assert len(GET_PATHS) > 200

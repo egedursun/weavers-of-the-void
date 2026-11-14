@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Castle, Flag, Map as MapIcon, Swords, Users } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -612,7 +613,7 @@ export function WarMap({ room }: { room: WarRoom }) {
               const offset = (index % 3) - 1
               return (
                 <g key={`army.${army.army?.id ?? index}`}>
-                  <title>{`${army.army?.name ?? 'An army'}: ${army.size} soldiers`}</title>
+                  <title>{`${army.army?.name ?? 'An army'}: ${plural(army.size, 'soldier', 'soldiers')}`}</title>
                   <circle
                     cx={spot.x + offset * unit * 10}
                     cy={spot.y + unit * 14}

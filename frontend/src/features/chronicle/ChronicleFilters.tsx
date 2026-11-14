@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Filter, FolderOpen, Search, X } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -130,7 +131,7 @@ export function ChronicleFilters({
           Open every epoch
         </Button>
         <Muted as='span' variant='caption' aria-live='polite'>
-          {`${formatInteger(shown)} records shown · ${formatInteger(loaded)} of ${formatInteger(epochs)} epochs read`}
+          {`${plural(shown, 'record', 'records')} shown · ${formatInteger(loaded)} of ${plural(epochs, 'epoch', 'epochs')} read`}
         </Muted>
       </div>
     </div>

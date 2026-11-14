@@ -13,6 +13,7 @@ import {
   Star,
   TrendingUp,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Progress, type ProgressTone } from '@/components/ui/progress'
 import {
@@ -195,7 +196,7 @@ export function CompareSons() {
   return (
     <Section
       title='Compare cards'
-      description={`Pick ${COMPARE_MIN} to ${COMPARE_MAX} sons: power, passions, reputation and relationships side by side.`}
+      description={`Pick ${COMPARE_MIN} to ${plural(COMPARE_MAX, 'son', 'sons')}: power, passions, reputation and relationships side by side.`}
     >
       <PagedList
         items={all}
@@ -224,7 +225,7 @@ export function CompareSons() {
         }}
       </PagedList>
       {full && (
-        <Muted variant='caption'>{`At most ${COMPARE_MAX} sons.`}</Muted>
+        <Muted variant='caption'>{`At most ${plural(COMPARE_MAX, 'son', 'sons')}.`}</Muted>
       )}
       {chosen.length < COMPARE_MIN ? (
         <Muted>

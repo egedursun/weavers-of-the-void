@@ -1,5 +1,6 @@
 import { Globe2, Snowflake, Sun, Thermometer, Waves } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/domain'
 import { Label } from '@/components/typography'
@@ -189,13 +190,13 @@ function Derived({
           [
             'Year',
             view.year_length_days !== null
-              ? `${view.year_length_days} days`
+              ? `${plural(view.year_length_days, 'day', 'days')}`
               : 'Unknown',
           ],
           [
             'Day',
             view.day_length_hours !== null
-              ? `${view.day_length_hours} hours`
+              ? `${plural(view.day_length_hours, 'hour', 'hours')}`
               : 'Unknown',
           ],
           [
@@ -222,7 +223,7 @@ function Derived({
           [
             'Eclipses',
             physics.eclipse_years > 0
-              ? `Every ${physics.eclipse_years} years`
+              ? `Every ${plural(physics.eclipse_years, 'year', 'years')}`
               : 'None',
           ],
           ['Auroras', `${physics.aurora}/100`],

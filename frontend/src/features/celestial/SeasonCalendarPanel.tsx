@@ -16,6 +16,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -173,7 +174,7 @@ function DayAndNight({ view }: { view: CalendarView }) {
         label='Hours a day'
         value={view.day_length_hours ?? '—'}
         tone='info'
-        hint={`From ${view.long_day_hours} hours folk rest at noon or keep vigil at night`}
+        hint={`From ${plural(view.long_day_hours, 'hour', 'hours')} folk rest at noon or keep vigil at night`}
       />
       <KpiTile
         label='Long days'

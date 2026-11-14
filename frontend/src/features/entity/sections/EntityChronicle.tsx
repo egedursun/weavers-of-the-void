@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ScrollText } from 'lucide-react'
-import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, Section, Paged } from '@/components/domain'
 import { PageControls } from '@/components/domain/PageControls'
@@ -30,7 +30,7 @@ export function EntityChronicle({
     <Section
       id='section-chronicle'
       title='In the chronicle'
-      description={`${formatInteger(shownTotal)} records mention it.`}
+      description={`${plural(shownTotal, 'record', 'records')} mention it.`}
     >
       {page.isPending && <Skeleton className='h-textarea w-full' />}
       {page.isError && <Text tone='destructive'>{page.error.message}</Text>}

@@ -249,7 +249,7 @@ function DomainKey({
       </Row>
       {palette.contested.size > 0 && (
         <Row icon={<HatchSwatch />}>
-          <Muted variant='caption'>{`Contested: no ruler holds it firmly (${palette.contested.size} regions)`}</Muted>
+          <Muted variant='caption'>{`Contested: no ruler holds it firmly (${plural(palette.contested.size, 'region', 'regions')})`}</Muted>
         </Row>
       )}
       {palette.rulers.size > 0 && (

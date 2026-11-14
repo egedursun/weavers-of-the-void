@@ -21,6 +21,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -712,7 +713,11 @@ function Summary({
           value={formatInteger(profile.last_output)}
           icon={Users}
           tone='info'
-          hint={`${profile.workers.reduce((sum, row) => sum + row.workers, 0)} hands at work`}
+          hint={`${plural(
+            profile.workers.reduce((sum, row) => sum + row.workers, 0),
+            'hand',
+            'hands'
+          )} at work`}
         />
         <KpiTile
           label='Regrowth'
@@ -776,7 +781,7 @@ function Summary({
                 <IconStat
                   icon={Users}
                   label='Workers'
-                  value={`${formatInteger(row.workers)} workers`}
+                  value={`${plural(row.workers, 'worker', 'workers')}`}
                   tone='info'
                 />
                 <HeldBadge held={row.held} />
@@ -853,7 +858,7 @@ function Workings({
             <Badge size='sm' variant='outline'>
               {param.epochs === null
                 ? 'Default pace'
-                : `Every ${param.epochs} epochs`}
+                : `Every ${plural(param.epochs, 'epoch', 'epochs')}`}
             </Badge>
             <RowAction
               path='/api/actions/resource:mechanic'

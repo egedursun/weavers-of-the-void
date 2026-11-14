@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import BeastProfileRow
@@ -168,7 +169,9 @@ async def _reward_weapon(ctx: TickContext, hero: EntityRow, monster: EntityRow) 
     victories = len(await active_bonds(ctx.session, VICTORY_KINDS, sources=[weapon.id]))
     if victories >= hunt.legendary_weapon_victories and await add_flag(ctx.session, weapon.id, EntityFlag.LEGENDARY, ctx.epoch):
         weapon.power_level = min(hunt.power_cap, weapon.power_level + 1)
-        await note(ctx, f"{weapon.name} became legendary after {victories} victories.", key="heroism.legendary_weapon", ids=[weapon.id, hero.id])
+        await note(
+            ctx, f"{weapon.name} became legendary after {several(victories, 'victory', 'victories')}.", key="heroism.legendary_weapon", ids=[weapon.id, hero.id]
+        )
 
 
 async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patron: SonRow | None, context: str) -> EncounterResult:

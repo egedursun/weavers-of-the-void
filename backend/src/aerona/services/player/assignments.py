@@ -9,7 +9,7 @@ from aerona.catalog.stats import max_essence, max_hp
 from aerona.constants.player import PERSONALITY_FIELD_MAX_LENGTH, SON_NAME_MAX_LENGTH, SON_PLAN_MAX_LENGTH
 from aerona.constants.schema import TITLE_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository, normalize_name
@@ -320,7 +320,7 @@ class DistributeSons(Command):
 async def distribute_now(scope: PlayerScope, command: DistributeSons) -> Effect:
     ctx = await scope.context("distribute_sons")
     moved = await distribute_sons(scope, ctx)
-    return Effect(f"{moved} sons turned to godless worlds.", values={"moved": moved})
+    return Effect(f"{several(moved, 'son', 'sons')} turned to godless worlds.", values={"moved": moved})
 
 
 async def _descendants(scope: PlayerScope, root_id: int) -> list[EntityRow]:
@@ -651,7 +651,7 @@ async def add_star(scope: PlayerScope, command: SonTarget) -> Effect:
     level, fame, cost = requirement.level, requirement.fame, requirement.essence
     if son.level < level or son.fame < fame:
         raise ValidationFailedError(
-            f"Star {target} needs level {level} and fame {fame}; {son.name} has level {son.level} and fame {son.fame} "
+            f"Star {several(target, 'need', 'needs')} level {level} and fame {fame}; {son.name} has level {son.level} and fame {son.fame} "
             "(world rules core_rules.star_level_step and core_rules.star_renown_step)."
         )
     creator = await scope.creator()
@@ -674,8 +674,8 @@ async def ascend(scope: PlayerScope, command: SonTarget) -> Effect:
         raise ValidationFailedError(f"{son.name} is already in the highest class.")
     if son.stars < MAX_STARS or son.level < rules.ascension.level or son.fame < rules.ascension.renown:
         raise ValidationFailedError(
-            f"Ascension needs {MAX_STARS} stars, level {rules.ascension.level} and fame {rules.ascension.renown}; "
-            f"{son.name} has {son.stars} stars, level {son.level} and fame {son.fame} (world rules ascension.level and ascension.renown)."
+            f"Ascension needs {several(MAX_STARS, 'star', 'stars')}, level {rules.ascension.level} and fame {rules.ascension.renown}; "
+            f"{son.name} has {several(son.stars, 'star', 'stars')}, level {son.level} and fame {son.fame} (world rules ascension.level and ascension.renown)."
         )
     creator = await scope.creator()
     spent = guards.charge(creator, rules.ascension.essence_cost, "ascension.essence_cost")

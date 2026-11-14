@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from aerona.core.grammar import agree, several
 from aerona.domain.enums.meta import AchievementKey
 from aerona.rules.registry import Rules
 
@@ -38,13 +39,13 @@ ACHIEVEMENTS: dict[AchievementKey, AchievementSpec] = {
         AchievementSpec(
             AchievementKey.SECOND_SKY,
             lambda rules: f"{ordinal_word(rules.goals.ach_worlds)} sky",
-            lambda rules: f"There are {rules.goals.ach_worlds} worlds in the cosmos.",
+            lambda rules: f"There are {several(rules.goals.ach_worlds, 'world', 'worlds')} in the cosmos.",
             lambda rules: rules.goals.ach_worlds_points,
         ),
         AchievementSpec(
             AchievementKey.CONSTELLATION,
             _fixed("Constellation"),
-            lambda rules: f"A cosmos of {rules.goals.ach_stars} stars.",
+            lambda rules: f"A cosmos of {several(rules.goals.ach_stars, 'star', 'stars')}.",
             lambda rules: rules.goals.ach_stars_points,
         ),
         AchievementSpec(
@@ -62,7 +63,7 @@ ACHIEVEMENTS: dict[AchievementKey, AchievementSpec] = {
         AchievementSpec(
             AchievementKey.BABEL,
             _fixed("Babel"),
-            lambda rules: f"{rules.goals.ach_languages} languages are spoken.",
+            lambda rules: f"{several(rules.goals.ach_languages, 'language', 'languages')} {agree(rules.goals.ach_languages, 'is', 'are')} spoken.",
             lambda rules: rules.goals.ach_languages_points,
         ),
         AchievementSpec(
@@ -80,7 +81,7 @@ ACHIEVEMENTS: dict[AchievementKey, AchievementSpec] = {
         AchievementSpec(
             AchievementKey.CREATORS_CULT,
             _fixed("The creator's cult"),
-            lambda rules: f"{rules.goals.ach_cult} communities worship you directly.",
+            lambda rules: f"{several(rules.goals.ach_cult, 'community', 'communities')} worship you directly.",
             lambda rules: rules.goals.ach_cult_points,
         ),
         AchievementSpec(
@@ -97,20 +98,20 @@ ACHIEVEMENTS: dict[AchievementKey, AchievementSpec] = {
         ),
         AchievementSpec(
             AchievementKey.GOD_OF_EPOCHS,
-            lambda rules: f"God of {rules.goals.ach_epochs} epochs",
-            lambda rules: f"The world left {rules.goals.ach_epochs} epochs behind.",
+            lambda rules: f"God of {several(rules.goals.ach_epochs, 'epoch', 'epochs')}",
+            lambda rules: f"The world left {several(rules.goals.ach_epochs, 'epoch', 'epochs')} behind.",
             lambda rules: rules.goals.ach_epochs_points,
         ),
         AchievementSpec(
             AchievementKey.ANCIENT,
             _fixed("Ancient"),
-            lambda rules: f"The world left {rules.goals.ach_ancient_epochs} epochs behind.",
+            lambda rules: f"The world left {several(rules.goals.ach_ancient_epochs, 'epoch', 'epochs')} behind.",
             lambda rules: rules.goals.ach_ancient_points,
         ),
         AchievementSpec(
             AchievementKey.CROWDED_PANTHEON,
             _fixed("Crowded pantheon"),
-            lambda rules: f"{rules.goals.ach_sons} sons live at once.",
+            lambda rules: f"{several(rules.goals.ach_sons, 'son', 'sons')} {agree(rules.goals.ach_sons, 'lives', 'live')} at once.",
             lambda rules: rules.goals.ach_sons_points,
         ),
         AchievementSpec(
@@ -128,7 +129,7 @@ ACHIEVEMENTS: dict[AchievementKey, AchievementSpec] = {
         AchievementSpec(
             AchievementKey.WEAPONS_SILENT,
             _fixed("The weapons fell silent"),
-            lambda rules: f"An epoch ended without any war (with at least {rules.goals.ach_peace_min_peoples} peoples).",
+            lambda rules: f"An epoch ended without any war (with at least {several(rules.goals.ach_peace_min_peoples, 'people', 'peoples')}).",
             lambda rules: rules.goals.ach_peace_points,
         ),
     )

@@ -9,7 +9,7 @@ import {
   WandSparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatMilliseconds } from '@/lib/units'
+import { formatMilliseconds, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -99,7 +99,7 @@ export function BulkDeepenPanel() {
           const estimate =
             averageMs === null
               ? 'No deepening has been measured yet, so there is no time estimate.'
-              : `About ${formatMilliseconds(averageMs * waiting)} for ${waiting} records.`
+              : `About ${formatMilliseconds(averageMs * waiting)} for ${plural(waiting, 'record', 'records')}.`
           const blocked = !llm
             ? 'Deepening needs the language model, which is turned off'
             : readOnly
@@ -169,7 +169,7 @@ export function BulkDeepenPanel() {
                     onClick={() => setConfirming(true)}
                   >
                     <WandSparkles />
-                    {`Deepen ${waiting} records`}
+                    {`Deepen ${plural(waiting, 'record', 'records')}`}
                   </Button>
                 )}
                 {unnamed > 0 && (
@@ -230,7 +230,7 @@ export function BulkDeepenPanel() {
               <ConfirmDialog
                 open={confirming}
                 onOpenChange={setConfirming}
-                title={`Deepen ${waiting} records?`}
+                title={`Deepen ${plural(waiting, 'record', 'records')}?`}
                 desc={`Each record is one model call on your subscription. ${estimate}`}
                 confirmText='Start deepening'
                 isLoading={start.isPending}

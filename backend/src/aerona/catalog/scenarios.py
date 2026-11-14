@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.domain.enums.meta import ScenarioKey
 from aerona.rules.registry import Rules
 
@@ -25,14 +25,16 @@ SCENARIOS: dict[ScenarioKey, ScenarioSpec] = {
     for spec in (
         ScenarioSpec(
             ScenarioKey.DOOM_FAR,
-            lambda rules: f"Keep doomsday away for {rules.goals.keep_apocalypse_away_epochs} epochs",
-            lambda rules: f"The doomsday clock must never reach {doom_limit(rules)} for {rules.goals.keep_apocalypse_away_epochs} epochs.",
+            lambda rules: f"Keep doomsday away for {several(rules.goals.keep_apocalypse_away_epochs, 'epoch', 'epochs')}",
+            lambda rules: f"The doomsday clock must never reach {doom_limit(rules)} for {several(rules.goals.keep_apocalypse_away_epochs, 'epoch', 'epochs')}.",
             lambda rules: rules.goals.keep_apocalypse_away_points,
         ),
         ScenarioSpec(
             ScenarioKey.ONE_FAITH,
             lambda rules: "Unite all peoples in one faith",
-            lambda rules: f"Every people in the world worships the same god (a son or you); at least {rules.goals.one_faith_min_peoples} peoples.",
+            lambda rules: (
+                f"Every people in the world worships the same god (a son or you); at least {several(rules.goals.one_faith_min_peoples, 'people', 'peoples')}."
+            ),
             lambda rules: rules.goals.one_faith_points,
         ),
         ScenarioSpec(
@@ -44,12 +46,12 @@ SCENARIOS: dict[ScenarioKey, ScenarioSpec] = {
         ScenarioSpec(
             ScenarioKey.MANY_WORLDS,
             lambda rules: f"{an(rules.goals.inhabited_worlds, capital=True)}-world cosmos",
-            lambda rules: f"At least {rules.goals.inhabited_worlds} worlds in the cosmos, each with a living people.",
+            lambda rules: f"At least {several(rules.goals.inhabited_worlds, 'world', 'worlds')} in the cosmos, each with a living people.",
             lambda rules: rules.goals.multiworld_points,
         ),
         ScenarioSpec(
             ScenarioKey.LONG_PEACE,
-            lambda rules: f"{rules.goals.peace_epochs} epochs of peace",
+            lambda rules: f"{several(rules.goals.peace_epochs, 'epoch', 'epochs')} of peace",
             lambda rules: f"No war stays open for {rules.goals.peace_epochs} consecutive epochs.",
             lambda rules: rules.goals.peace_points,
         ),
@@ -62,14 +64,17 @@ SCENARIOS: dict[ScenarioKey, ScenarioSpec] = {
         ScenarioSpec(
             ScenarioKey.LOYAL_PANTHEON,
             lambda rules: "A loyal pantheon",
-            lambda rules: f"No son rebels for {rules.goals.loyal_epochs} epochs; at the end every son's loyalty is above {rules.goals.loyal_min_loyalty}.",
+            lambda rules: (
+                f"No son rebels for {several(rules.goals.loyal_epochs, 'epoch', 'epochs')}; "
+                f"at the end every son's loyalty is above {rules.goals.loyal_min_loyalty}."
+            ),
             lambda rules: rules.goals.loyal_points,
         ),
         ScenarioSpec(
             ScenarioKey.NEW_HORIZONS,
             lambda rules: f"{rules.goals.horizon_lands} new lands",
             lambda rules: (
-                f"{rules.goals.horizon_lands} new lands enter the map (at least {rules.goals.horizon_regions} regions): "
+                f"{rules.goals.horizon_lands} new lands enter the map (at least {several(rules.goals.horizon_regions, 'region', 'regions')}): "
                 "by mortal discovery, by the sons or by your hand."
             ),
             lambda rules: rules.goals.horizon_points,

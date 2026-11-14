@@ -584,7 +584,7 @@ function DigCard({ dig, blocked }: { dig: DigView; blocked: string | null }) {
       icon={Shovel}
       tone={status.tone}
       title={`Dig of epoch ${dig.started_epoch}`}
-      caption={`${status.label} · at the ${stage.label.toLowerCase()}${dig.ended_epoch !== null ? ` · ended in epoch ${dig.ended_epoch}` : ''}${dig.idle_epochs > 0 ? ` · idle ${dig.idle_epochs} epochs` : ''}`}
+      caption={`${status.label} · at the ${stage.label.toLowerCase()}${dig.ended_epoch !== null ? ` · ended in epoch ${dig.ended_epoch}` : ''}${dig.idle_epochs > 0 ? ` · idle ${plural(dig.idle_epochs, 'epoch', 'epochs')}` : ''}`}
       aside={
         <div className='flex shrink-0 flex-wrap items-center gap-1'>
           <Button
@@ -621,7 +621,7 @@ function DigCard({ dig, blocked }: { dig: DigView; blocked: string | null }) {
           ['Leader', <Ref key='leader' node={dig.leader} />],
           ['Sponsor', <Ref key='sponsor' node={dig.sponsor} empty='none' />],
           ['History', dig.collection_name ?? 'Not yet told'],
-          ['Idle', `${dig.idle_epochs} epochs`],
+          ['Idle', `${plural(dig.idle_epochs, 'epoch', 'epochs')}`],
         ]}
       />
       {dig.note && <Muted variant='caption'>{dig.note}</Muted>}

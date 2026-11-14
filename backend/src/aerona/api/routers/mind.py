@@ -482,7 +482,7 @@ async def feelings_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Fee
                     label=DREAM_LABELS[row.kind],
                     epoch=row.epoch,
                     intensity=row.intensity,
-                    content=[refs[node] for node in row.content if node in refs],
+                    content=[refs[node] for node in dict.fromkeys(row.content) if node in refs],
                     sender=refs.get(row.sender_node_id) if row.sender_node_id is not None else None,
                     partner=refs.get(row.partner_node_id) if row.partner_node_id is not None else None,
                     world=refs.get(row.world_id) if row.world_id is not None else None,

@@ -10,6 +10,7 @@ import {
   Truck,
   Users,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -856,7 +857,7 @@ function ConvoyCard({
     >
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Chip icon={Truck}>{`${row.capacity} capacity`}</Chip>
-        <Chip>{`${row.animals} animals, ${row.vehicles} wagons or boats, ${row.guards} guards`}</Chip>
+        <Chip>{`${plural(row.animals, 'animal', 'animals')}, ${plural(row.vehicles, 'wagon', 'wagons')} or boats, ${plural(row.guards, 'guard', 'guards')}`}</Chip>
         <Chip icon={PRESERVATION[row.preservation].icon}>
           {PRESERVATION[row.preservation].label}
         </Chip>
@@ -895,7 +896,7 @@ function FleetCard({
         <>
           {'Of '}
           <Ref node={row.owner} empty='no one' />
-          {` · ${row.age} epochs old`}
+          {` · ${plural(row.age, 'epoch', 'epochs')} old`}
         </>
       }
       removeLabel='Take away'

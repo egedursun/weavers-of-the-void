@@ -76,7 +76,7 @@ function ScorePanel({ data }: { data: GoalsData }) {
           label='Score'
           icon={Trophy}
           value={total}
-          hint={`${completed} goals completed · ${earned}/${plural(data.achievements.length, 'achievement', 'achievements')}`}
+          hint={`${plural(completed, 'goal', 'goals')} completed · ${earned}/${plural(data.achievements.length, 'achievement', 'achievements')}`}
         />
         <div className='flex min-w-0 flex-col gap-2 rounded-xl border bg-background p-4 lg:col-span-2'>
           <Label variant='overline'>Score over the epochs</Label>

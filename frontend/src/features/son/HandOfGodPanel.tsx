@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { RARITY_LABEL } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -713,7 +714,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           title='World'
           note={
             distribution === 'auto'
-              ? `Distribution is automatic; a son you send by hand is protected from it${protectEpochs !== undefined ? ` for ${protectEpochs} epochs` : ''}.`
+              ? `Distribution is automatic; a son you send by hand is protected from it${protectEpochs !== undefined ? ` for ${plural(protectEpochs, 'epoch', 'epochs')}` : ''}.`
               : 'Distribution is manual; sons stay where you send them.'
           }
         >

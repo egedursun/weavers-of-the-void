@@ -7,6 +7,7 @@ from sqlalchemy import or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
@@ -172,7 +173,7 @@ async def join_cult(ctx: TickContext, cult: EntityRow, into: EntityRow, *, recon
     sentence = f"made peace with {into.name} and returned to it" if reconciled else f"merged with {into.name}"
     await end_record(ctx, cult, EntityFlag.MERGED, sentence)
     text = (
-        f"{cult.name} made peace with {into.name}, which it had split from; {joining} followers returned to their old congregation."
+        f"{cult.name} made peace with {into.name}, which it had split from; {several(joining, 'follower', 'followers')} returned to their old congregation."
         if reconciled
         else f"{cult.name} merged with {into.name}, which worships the same god; its followers are now theirs."
     )

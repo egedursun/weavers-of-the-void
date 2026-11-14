@@ -16,6 +16,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -143,7 +144,7 @@ export function VoyageCard({ journey, index }: VoyageCardProps) {
         {journey.population > 0 && (
           <Badge size='sm' variant='outline'>
             <Users />
-            {`${formatInteger(journey.population)} souls`}
+            {`${plural(journey.population, 'soul', 'souls')}`}
           </Badge>
         )}
         {journey.vehicle_entity_id !== null && (
@@ -182,7 +183,7 @@ export function VoyageCard({ journey, index }: VoyageCardProps) {
         <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
           <Muted variant='caption'>
             {journey.epochs_left > 0
-              ? `Arrives in ${journey.epochs_left} epochs`
+              ? `Arrives in ${plural(journey.epochs_left, 'epoch', 'epochs')}`
               : 'Arrives this epoch'}
           </Muted>
           <div className='flex shrink-0 items-center gap-1'>

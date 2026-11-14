@@ -1,4 +1,5 @@
 import { type KeyboardEvent } from 'react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { mediaUrl } from '@/features/pantheon/media'
 import { type Family } from './languageFamilies'
@@ -74,7 +75,7 @@ export function FamilyChart({
               role='button'
               tabIndex={0}
               aria-pressed={active}
-              aria-label={`${placed.node.language.name}, ${placed.node.words} words`}
+              aria-label={`${placed.node.language.name}, ${plural(placed.node.words, 'word', 'words')}`}
               className='cursor-pointer'
               onClick={() => onSelect(id)}
               onKeyDown={(event) => activate(event, () => onSelect(id))}
@@ -160,7 +161,7 @@ export function FamilyChart({
                 fontSize={11}
                 className='fill-muted-foreground'
               >
-                {`${placed.node.words} words · ${placed.node.speakers} speakers`}
+                {`${plural(placed.node.words, 'word', 'words')} · ${plural(placed.node.speakers, 'speaker', 'speakers')}`}
               </text>
             </g>
           )

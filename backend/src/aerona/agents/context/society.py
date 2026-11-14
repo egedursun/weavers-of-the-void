@@ -6,6 +6,7 @@ from aerona.agents.context.military import army_sheet, fleet_sheet, grievance_sh
 from aerona.agents.context.realm import statecraft
 from aerona.agents.context.society_depth import depth_lines
 from aerona.agents.context.wilds import crop_lines, pet_lines, wild_lines
+from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseProfileRow, EndemicDiseaseRow, OutbreakRow
@@ -141,7 +142,7 @@ async def disease_traits(session: AsyncSession, profile: DiseaseProfileRow | Non
         return ""
     parts = [f"spread by {profile.vector.value}", f"strikes {', '.join(words(item) for item in profile.target_functions)}"]
     if profile.incubation:
-        parts.append(f"hides {profile.incubation} years before it shows")
+        parts.append(f"hides {several(profile.incubation, 'year', 'years')} before it shows")
     host = await session.get(EntityRow, profile.host_species_id) if profile.host_species_id is not None else None
     if host is not None:
         parts.append(f"carried by {host.name}")
@@ -173,7 +174,7 @@ async def folk_lines(session: AsyncSession, biology: PeopleBiologyRow | None, cu
         return lines
     wins, losses = record_of(culture, culture.martial_style.value)
     lines += [
-        f"fights as {words(culture.martial_style.value)} ({wins} victories, {losses} defeats)",
+        f"fights as {words(culture.martial_style.value)} ({several(wins, 'victory', 'victories')}, {several(losses, 'defeat', 'defeats')})",
         f"{words(culture.marriage.value)}, {'marrying only their own' if culture.endogamous else 'marrying outside their people'}",
         f"inheritance by {words(culture.inheritance.value)}",
         f"{words(culture.aesthetic.value)} art",

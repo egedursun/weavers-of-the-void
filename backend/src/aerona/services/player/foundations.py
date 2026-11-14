@@ -4,6 +4,7 @@ from pydantic import Field
 from sqlalchemy import or_, select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -137,7 +138,9 @@ async def set_golden_age_date(scope: PlayerScope, command: GoldenAgeDate) -> Eff
     dated = await date_golden_age(scope.session, command.world_id, command.since_epoch)
     await set_held(scope.session, command.world_id, GOLDEN_AGE_KEY, epoch, command.hold)
     held = "; the engine will keep it so" if command.hold else ""
-    return Effect(f"The golden age of {dated} communities now dates from age {command.since_epoch}{held}.", values={"communities": dated})
+    return Effect(
+        f"The golden age of {several(dated, 'community', 'communities')} now dates from age {command.since_epoch}{held}.", values={"communities": dated}
+    )
 
 
 @player_action("structure:dedicate", ActionKind.OTHER)

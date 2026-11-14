@@ -20,6 +20,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { commanderTraitValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -392,7 +393,7 @@ function Overview({
             label={data.armies.length === 1 ? 'Army' : 'Armies'}
             value={formatInteger(data.armies.length)}
             tone='danger'
-            hint={`${formatInteger(soldiers)} soldiers under arms`}
+            hint={`${plural(soldiers, 'soldier', 'soldiers')} under arms`}
           />
           <MiniStat
             icon={Lock}

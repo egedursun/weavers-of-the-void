@@ -9,6 +9,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -271,7 +272,7 @@ function Registers({ atlas }: { atlas: Atlas }) {
               tone={spec.tone}
               label={spec.label}
               value={rows.length}
-              hint={`${tongues.size} tongues · ${spec.hint ?? ''}`}
+              hint={`${plural(tongues.size, 'tongue', 'tongues')} · ${spec.hint ?? ''}`}
             />
           )
         })}

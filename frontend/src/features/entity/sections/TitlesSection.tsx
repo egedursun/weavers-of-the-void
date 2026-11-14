@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -68,7 +69,7 @@ function SummaryRow({ item }: { item: TitleSummary }) {
       title={<Ref node={item.title} />}
       meta={
         <>
-          {`${item.rank_label}, ${item.lands} lands by right, `}
+          {`${item.rank_label}, ${plural(item.lands, 'land', 'lands')} by right, `}
           {item.holder ? (
             <>
               {'held by '}
@@ -519,7 +520,7 @@ function LandsCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
           <Label variant='overline'>Drifting in</Label>
           {detail.drift.map((entry) => (
             <Muted key={entry.land?.id} variant='caption'>
-              {`${entry.land?.name ?? 'A land'}: ${entry.epochs} epochs under this title`}
+              {`${entry.land?.name ?? 'A land'}: ${plural(entry.epochs, 'epoch', 'epochs')} under this title`}
             </Muted>
           ))}
         </div>

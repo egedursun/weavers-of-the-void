@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { ArrowRight, SearchX } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, Section } from '@/components/domain'
@@ -41,7 +42,7 @@ export function ChronicleSearchResults({
     <Section
       id='chronicle-search'
       title='Across the whole chronicle'
-      description={`${formatInteger(total)} matches found by the scribes · ${formatInteger(localMatches)} in the epochs open below`}
+      description={`${plural(total, 'match', 'matches')} found by the scribes · ${formatInteger(localMatches)} in the epochs open below`}
       level={3}
     >
       {search.isPending && <Skeleton className='h-textarea w-full' />}

@@ -197,7 +197,7 @@ function MemberRow({ member }: { member: Member }) {
         <Muted variant='caption'>
           {member.epoch === null
             ? 'Has made nothing yet'
-            : `${member.workshops} workshops, last worked in epoch ${member.epoch}`}
+            : `${plural(member.workshops, 'workshop', 'workshops')}, last worked in epoch ${member.epoch}`}
         </Muted>
       </div>
       <Badge variant='outline' className='gap-1.5'>

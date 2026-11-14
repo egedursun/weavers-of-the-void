@@ -573,7 +573,7 @@ function ProposalRow({ row, ctx }: { row: Proposal; ctx: Ctx }) {
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
         <Muted variant='caption'>
           {debating
-            ? `Stalled ${row.stalled_epochs} of ${row.stall_limit} epochs before it fails; ${plural(row.stances.length, 'voice', 'voices')} weigh in.`
+            ? `Stalled ${row.stalled_epochs} of ${plural(row.stall_limit, 'epoch', 'epochs')} before it fails; ${plural(row.stances.length, 'voice', 'voices')} weigh in.`
             : `Resolved in epoch ${row.resolved_epoch ?? row.proposed_epoch}.`}
         </Muted>
         <Button

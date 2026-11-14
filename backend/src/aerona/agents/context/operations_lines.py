@@ -73,7 +73,7 @@ async def command_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(head)
         operation = await session.get(ArmyOperationRow, army_row.entity_id)
         if operation is not None and operation.need > 0:
-            state = "its offensive has culminated" if operation.culminated else f"{operation.offensive_seasons} seasons on the offensive"
+            state = "its offensive has culminated" if operation.culminated else f"{several(operation.offensive_seasons, 'season', 'seasons')} on the offensive"
             found.append(f"it needs {operation.need} supply a season and received {operation.delivered}; {state}")
     for row in await session.scalars(select(EchelonRow).where(EchelonRow.commander_entity_id == me.id).order_by(EchelonRow.id).limit(LIST_LINES)):
         found.append(f"you command {row.name} (formation {row.id}), {an(words(row.level.value))} on {row.order.value} orders")
@@ -93,11 +93,13 @@ async def realm_lines(scope: Scope, me: EntityRow) -> list[str]:
             )
         depots = list(await session.scalars(select(DepotRow).where(DepotRow.owner_entity_id == realm)))
         if depots:
-            found.append(f"your realm keeps {several(len(depots), 'depot', 'depots')} holding {sum(row.supplies for row in depots)} supplies")
+            found.append(
+                f"your realm keeps {several(len(depots), 'depot', 'depots')} holding {several(sum(row.supplies for row in depots), 'supply', 'supplies')}"
+            )
         admiralty = await session.get(AdmiraltyRow, realm)
         if admiralty is not None:
             cap = f" under a treaty limit of {admiralty.limit_tonnage}" if admiralty.limit_tonnage is not None else ""
-            found.append(f"its admiralty holds {admiralty.budget_share}% of the war budget and a fleet of {admiralty.tonnage} tons{cap}")
+            found.append(f"its admiralty holds {admiralty.budget_share}% of the war budget and a fleet of {several(admiralty.tonnage, 'ton', 'tons')}{cap}")
     return found
 
 
@@ -165,5 +167,5 @@ async def son_operations_lines(scope: Scope, son: SonRow) -> list[str]:
         .limit(LIST_LINES)
     ):
         cap = f", bound to {admiralty.limit_tonnage}" if admiralty.limit_tonnage is not None else ""
-        found.append(f"{polity.name} (polity {polity.id}) keeps a fleet of {admiralty.tonnage} tons{cap}")
+        found.append(f"{polity.name} (polity {polity.id}) keeps a fleet of {several(admiralty.tonnage, 'ton', 'tons')}{cap}")
     return found

@@ -4,6 +4,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ConflictError
+from aerona.core.grammar import several
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.foreign_gods import GodConflictRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
@@ -72,7 +73,7 @@ async def son_duel(ctx: TickContext, challenger: SonRow, defender: SonRow, stat:
         loser.status = SonStatus.ASLEEP
         reviving = await _power(ctx.session, loser.id, PowerEffect.REVIVING)
         loser.sleep_epochs_left = tools.reviving_sleep_epochs if reviving else tools.challenge_sleep_epochs
-        text += f" {loser.name} collapsed and fell into a sleep that will last {loser.sleep_epochs_left} epochs."
+        text += f" {loser.name} collapsed and fell into a sleep that will last {several(loser.sleep_epochs_left, 'epoch', 'epochs')}."
     outcome = GodConflictOutcome.ATTACKER_WON if winner.id == challenger.id else GodConflictOutcome.DEFENDER_WON
     ctx.session.add(
         GodConflictRow(

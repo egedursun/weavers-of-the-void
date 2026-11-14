@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Feather, Plus, RefreshCcw } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
@@ -253,7 +254,7 @@ function NamingCard({
       icon={Feather}
       tone='gold'
       title={PATTERNS[row.pattern].label}
-      caption={`${row.secret_names ? 'secret names' : 'no secret names'} · names of the dead unspoken for ${row.taboo_epochs} epochs`}
+      caption={`${row.secret_names ? 'secret names' : 'no secret names'} · names of the dead unspoken for ${plural(row.taboo_epochs, 'epoch', 'epochs')}`}
       removeLabel='Strike the custom'
       editTitle='Set how the people name'
       note='A secret name is the true name; the names of the dead go unspoken and cannot be learned while the taboo lasts; folk are renamed at initiation, marriage or a vow where the people do so.'
@@ -317,7 +318,7 @@ function AgeSetCard({ row, blocked }: { row: AgeSet; blocked: string | null }) {
       icon={grade.icon}
       tone={grade.tone}
       title={row.name}
-      caption={`${grade.label} · ${row.members} members · initiated from epoch ${row.initiated_from}${row.initiated_to !== null ? ` to ${row.initiated_to}` : ', still open'}`}
+      caption={`${grade.label} · ${plural(row.members, 'member', 'members')} · initiated from epoch ${row.initiated_from}${row.initiated_to !== null ? ` to ${row.initiated_to}` : ', still open'}`}
       removeLabel='Strike the age-set'
       editTitle='Set the age-set'
       note='Those initiated together move through the grades together; youths may not wed, warriors swell the levy, and a set waits while the set ahead holds its grade.'

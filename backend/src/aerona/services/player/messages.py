@@ -1,5 +1,6 @@
 from aerona.catalog.stats import max_essence
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import MessageRow
@@ -52,7 +53,7 @@ async def send_dream(scope: PlayerScope, command: SendDream) -> Effect:
     text = command.text.strip()
     if not council.dream_min_chars <= len(text) <= council.dream_max_chars:
         raise ValidationFailedError(
-            f"A dream is between {council.dream_min_chars} and {council.dream_max_chars} characters "
+            f"A dream is between {council.dream_min_chars} and {several(council.dream_max_chars, 'character', 'characters')} "
             "(world rules council.dream_min_chars and council.dream_max_chars)."
         )
     creator = await scope.creator()

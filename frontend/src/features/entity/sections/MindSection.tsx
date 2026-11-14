@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lock, Plus, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -255,7 +256,7 @@ function Temperament({
     <MindCard
       title='Temperament'
       icon={TRAIT_ICONS.brave.icon}
-      hint={`${mind.traits.length} of at most ${mind.max_traits} traits`}
+      hint={`${mind.traits.length} of at most ${plural(mind.max_traits, 'trait', 'traits')}`}
     >
       {mind.traits.length === 0 ? (
         <Muted variant='caption'>No marked traits yet.</Muted>

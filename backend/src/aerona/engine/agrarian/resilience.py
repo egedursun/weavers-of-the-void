@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import PreparednessRow, ReconstructionRow, ReliefAidRow
 from aerona.db.tables.bonds import BondRow
@@ -338,7 +339,7 @@ async def seize(ctx: TickContext, row: ReconstructionRow, town: EntityRow, profi
     tally.seized += 1
     await note(
         ctx,
-        f"{elite.name} seized the burned land of {town.name}; {row.seized} people lost their homes to it.",
+        f"{elite.name} seized the burned land of {town.name}; {several(row.seized, 'person', 'people')} lost their homes to it.",
         key="reconstruction.seized",
         ids=[elite.id, town.id],
     )

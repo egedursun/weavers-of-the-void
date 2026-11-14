@@ -241,7 +241,7 @@ export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
       {error && <Text tone='destructive'>{error.message}</Text>}
       {summary && (
         <div className='flex min-w-0 flex-wrap gap-1.5'>
-          <Badge variant='outline'>{`${summary.regions} regions`}</Badge>
+          <Badge variant='outline'>{`${plural(summary.regions, 'region', 'regions')}`}</Badge>
           <Badge variant='outline'>{`${plural(summary.places, 'place')}`}</Badge>
           <Badge
             variant='outline'

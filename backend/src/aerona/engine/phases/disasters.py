@@ -9,7 +9,7 @@ from aerona.cartography.model import ElevationClass
 from aerona.catalog.interventions import DISASTERS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
@@ -331,7 +331,7 @@ async def record_disaster_event(ctx: TickContext, target: EntityRow, disaster: D
     if impact is not None:
         for entity_id, loss in impact.losses.items():
             if entity_id != target.id:
-                await bonds.connect(BondDraft(event.id, entity_id, BondKind.CAUSED, ctx.epoch, f"{loss} lives lost" if loss else "struck"))
+                await bonds.connect(BondDraft(event.id, entity_id, BondKind.CAUSED, ctx.epoch, f"{several(loss, 'life', 'lives')} lost" if loss else "struck"))
         for mortal in impact.dead:
             mortal.death_event_entity_id = event.id
             await bonds.connect(BondDraft(event.id, mortal.id, BondKind.CAUSED, ctx.epoch, "died there"))

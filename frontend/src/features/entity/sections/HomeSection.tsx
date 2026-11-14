@@ -219,7 +219,7 @@ function DwellingCard({
           <ItemRow
             icon={look.icon}
             tone={look.tone}
-            title={`${dwelling.kind_label} of ${dwelling.rooms} rooms`}
+            title={`${dwelling.kind_label} of ${plural(dwelling.rooms, 'room', 'rooms')}`}
             meta={
               dwelling.district_label
                 ? `In the ${dwelling.district_label.toLowerCase()} district`
@@ -550,8 +550,8 @@ function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
             {household.social_class.replaceAll('_', ' ')}
           </Badge>
         )}
-        <Badge variant='outline'>{`${household.servants} servants`}</Badge>
-        <Badge variant='outline'>{`${household.dependents} dependents`}</Badge>
+        <Badge variant='outline'>{`${plural(household.servants, 'servant', 'servants')}`}</Badge>
+        <Badge variant='outline'>{`${plural(household.dependents, 'dependent', 'dependents')}`}</Badge>
         <Badge variant='outline'>{`Formed in epoch ${household.formed_epoch}`}</Badge>
         {household.last_decision_label && (
           <Badge variant='secondary'>

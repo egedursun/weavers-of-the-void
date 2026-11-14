@@ -11,7 +11,12 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import { formatCompact, formatDecimal } from '@/lib/format'
-import { formatDuration, formatMilliseconds, formatUsd } from '@/lib/units'
+import {
+  formatDuration,
+  formatMilliseconds,
+  formatUsd,
+  plural,
+} from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -246,7 +251,7 @@ function MetricsBody({ data }: { data: ModelMetricsView }) {
         {(model) => (
           <Chip
             key={model.model}
-            label={`· ${model.calls} calls · average ${formatMilliseconds(model.average_ms)}`}
+            label={`· ${plural(model.calls, 'call', 'calls')} · average ${formatMilliseconds(model.average_ms)}`}
             value={model.model}
           />
         )}
@@ -324,7 +329,7 @@ function EpochEta() {
       tone={running ? 'gold' : 'info'}
       hint={
         timing.averageSeconds !== null
-          ? `Average of ${timing.samples} epochs`
+          ? `Average of ${plural(timing.samples, 'epoch', 'epochs')}`
           : undefined
       }
     />
@@ -353,7 +358,7 @@ export function ModelMetrics() {
             <SelectItem value={DEFAULT_WINDOW}>Default window</SelectItem>
             {WINDOWS.map((size) => (
               <SelectItem key={size} value={String(size)}>
-                {`Last ${size} epochs`}
+                {`Last ${plural(size, 'epoch', 'epochs')}`}
               </SelectItem>
             ))}
           </SelectContent>

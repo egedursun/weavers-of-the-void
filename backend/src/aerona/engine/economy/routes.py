@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import (
@@ -424,7 +425,7 @@ async def _shipwreck(ctx: TickContext, route: Route, seller: EntityRow, tally: R
     tally.shipwrecks += 1
     await ctx.chronicle(
         ChronicleKind.DISASTER,
-        f"A storm broke the ships of {seller.name} on {route.entity.name}; {crew} sailors drowned with their cargo.",
+        f"A storm broke the ships of {seller.name} on {route.entity.name}; {several(crew, 'sailor', 'sailors')} drowned with their cargo.",
         template_key="trade_route.shipwreck",
         entity_ids=[route.entity.id, seller.id],
     )

@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.law_depth import MOTIVE_LOYALTY
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.law_depth import DefectionRow, RegistryRow, SpyCellRow
@@ -205,7 +206,7 @@ async def defect(ctx: TickContext, defector: EntityRow, from_id: int | None, to_
     side = await ctx.session.get(EntityRow, to_id)
     await note(
         ctx,
-        f"{defector.name} defected to {side.name if side else 'another side'}, carrying {carried} secrets.",
+        f"{defector.name} defected to {side.name if side else 'another side'}, carrying {several(carried, 'secret', 'secrets')}.",
         key="espionage.defected",
         ids=[defector.id, to_id],
         kind=ChronicleKind.WAR,

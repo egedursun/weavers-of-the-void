@@ -905,14 +905,14 @@ export function DiseaseSection({
               <MiniStat
                 icon={Thermometer}
                 label='Incubation'
-                value={`${data.incubation} years`}
+                value={`${plural(data.incubation, 'year', 'years')}`}
                 tone='warning'
                 hint='Years before the sick show it'
               />
               <MiniStat
                 icon={ShieldCheck}
                 label='Immunity lasts'
-                value={`${formatInteger(data.immunity_epochs)} epochs`}
+                value={`${plural(data.immunity_epochs, 'epoch', 'epochs')}`}
                 tone='info'
                 hint='How long survivors resist it'
               />

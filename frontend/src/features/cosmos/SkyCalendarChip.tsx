@@ -1,4 +1,5 @@
 import { CalendarClock } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
@@ -35,7 +36,7 @@ export function SkyCalendarChip({
         </Badge>
       </TooltipTrigger>
       <TooltipContent>
-        {`The planets align every ${calendar.period} epochs; next cycle at epoch ${calendar.nextCycle}${calendar.forced ? ', and a sky event holds them aligned now' : ''}. The period is a World rule: Cosmos and travel › Planetary alignment.`}
+        {`The planets align every ${plural(calendar.period, 'epoch', 'epochs')}; next cycle at epoch ${calendar.nextCycle}${calendar.forced ? ', and a sky event holds them aligned now' : ''}. The period is a World rule: Cosmos and travel › Planetary alignment.`}
       </TooltipContent>
     </Tooltip>
   )

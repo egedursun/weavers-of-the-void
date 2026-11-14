@@ -3,6 +3,7 @@ import { Lock, Plus, Trash2, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -287,7 +288,7 @@ function CapacityCard({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
           />
           <Muted variant='caption'>
             {diplomacy.strain > 0
-              ? `${diplomacy.strain} relations beyond its capacity of ${diplomacy.capacity} are souring.`
+              ? `${plural(diplomacy.strain, 'relation', 'relations')} beyond its capacity of ${diplomacy.capacity} are souring.`
               : `Within its capacity of ${diplomacy.capacity}.`}
           </Muted>
           {diplomacy.locked.length > 0 && <Badge variant='outline'>Held</Badge>}
@@ -665,7 +666,7 @@ function CrisisRow({ row, ctx }: { row: Crisis; ctx: Ctx }) {
       editor={<CrisisEditor row={row} ctx={ctx} />}
     >
       <StatBar
-        label={`Escalation (war after ${row.steps} steps)`}
+        label={`Escalation (war after ${plural(row.steps, 'step', 'steps')})`}
         value={row.escalation}
         max={row.steps}
         icon={CRISIS_ICON}

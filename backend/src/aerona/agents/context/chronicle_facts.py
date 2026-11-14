@@ -228,9 +228,21 @@ async def contest_outcomes(scope: Scope, epoch: int) -> list[FactOutcome]:
         defender = await scope.session.get(NodeRow, conflict.defender_node_id)
         if attacker is None or defender is None:
             continue
-        victor, beaten = (attacker, defender) if conflict.outcome is GodConflictOutcome.ATTACKER_WON else (defender, attacker)
+        won = conflict.outcome is GodConflictOutcome.ATTACKER_WON
+        victor, beaten = (attacker, defender) if won else (defender, attacker)
+        high, low = (conflict.attacker_score, conflict.defender_score) if won else (conflict.defender_score, conflict.attacker_score)
         kind = ContestKind.DUEL if conflict.duel else ContestKind.GOD_CONFLICT
-        found.append(FactOutcome(ref=conflict_ref(conflict.id), kind=kind, winner_id=victor.id, winner=victor.name, loser_id=beaten.id, loser=beaten.name))
+        found.append(
+            FactOutcome(
+                ref=conflict_ref(conflict.id),
+                kind=kind,
+                winner_id=victor.id,
+                winner=victor.name,
+                loser_id=beaten.id,
+                loser=beaten.name,
+                score=f"{high} to {low}",
+            )
+        )
     return found
 
 

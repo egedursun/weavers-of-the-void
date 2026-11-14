@@ -732,7 +732,7 @@ function Dominion({ realm }: { realm: Realm }) {
                     {member.name}
                   </EntityLink>
                   <Muted variant='caption' truncate>
-                    {`${spec.label} · ${formatInteger(member.population)} souls`}
+                    {`${spec.label} · ${plural(member.population, 'soul', 'souls')}`}
                   </Muted>
                 </div>
                 <Badge

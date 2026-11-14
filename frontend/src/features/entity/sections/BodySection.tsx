@@ -24,6 +24,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -452,7 +453,9 @@ function Digits({ body, blocked }: { body: Body; blocked: string | null }) {
             : `Leads with the ${body.handedness} hand`}
         </Badge>
         <Badge size='sm' variant={lost > 0 ? 'destructive' : 'success'}>
-          {lost > 0 ? `${lost} digits lost` : 'Every digit whole'}
+          {lost > 0
+            ? `${plural(lost, 'digit', 'digits')} lost`
+            : 'Every digit whole'}
         </Badge>
         <Badge size='sm' variant='secondary'>
           {`${body.teeth} of 32 teeth`}

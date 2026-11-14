@@ -3,6 +3,7 @@ import { Archive, Church, Link2, RotateCcw, Ship } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -234,7 +235,7 @@ function SuggestBonds({
   return (
     <FormRow
       label='Bonds'
-      description={`It has ${formatInteger(ctx.detail.bond_total)} bonds; Fate adds none without evidence.`}
+      description={`It has ${plural(ctx.detail.bond_total, 'bond', 'bonds')}; Fate adds none without evidence.`}
     >
       {() => (
         <div className='flex w-full min-w-0 flex-col gap-2'>
@@ -302,7 +303,7 @@ function Voyage({
               className='size-icon-sm text-muted-foreground'
             />
             <Text as='span' className='min-w-0 flex-1'>
-              {`On the road to ${worldName(journey.destination_world_id)} · ${humanize(journey.intent)} · ${journey.epochs_left > 0 ? `arrives in ${journey.epochs_left} epochs` : 'arrives this epoch'}`}
+              {`On the road to ${worldName(journey.destination_world_id)} · ${humanize(journey.intent)} · ${journey.epochs_left > 0 ? `arrives in ${plural(journey.epochs_left, 'epoch', 'epochs')}` : 'arrives this epoch'}`}
             </Text>
             <Button
               variant='ghost'

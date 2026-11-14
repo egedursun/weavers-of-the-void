@@ -1,6 +1,6 @@
 import { Hourglass, LoaderCircle, Play } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatDuration } from '@/lib/units'
+import { agree, formatDuration, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -63,13 +63,13 @@ export function CompleteEpochButton({
   const averageSeconds = estimate.data?.average_epoch_seconds ?? null
   const lines = [
     half
-      ? `Epoch ${half.epoch} was interrupted; everything after phase ${half.phase} resumes where it stopped.`
+      ? `Epoch ${half.epoch} was interrupted; everything after phase ${plural(half.phase, 'resume', 'resumes')} where it stopped.`
       : waiting > 0
-        ? `${waiting} sons are waiting to act.`
+        ? `${plural(waiting, 'son', 'sons')} ${agree(waiting, 'is', 'are')} waiting to act.`
         : 'Every son has acted this epoch.',
     epochScopeText(waiting, world.mortal_agents_per_epoch),
     averageSeconds !== null
-      ? `Estimated time ${formatDuration(averageSeconds)} (average of the last ${estimate.data?.samples ?? 0} epochs).`
+      ? `Estimated time ${formatDuration(averageSeconds)} (average of the last ${plural(estimate.data?.samples ?? 0, 'epoch', 'epochs')}).`
       : 'No epoch has been measured yet, so there is no time estimate.',
     last
       ? `The last epoch took ${formatDuration(last.durationSeconds)}.`

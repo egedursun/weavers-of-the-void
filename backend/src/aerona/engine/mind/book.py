@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import SKILLS, TRAITS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.fast_session import rows_by_prefix
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -83,7 +84,7 @@ async def mind_of(session: AsyncSession, node_id: int) -> MindRow | None:
 async def ensure_mind_row(session: AsyncSession, node: Holder, epoch: int) -> tuple[MindRow, bool]:
     kind = holder_kind(node)
     if kind is None:
-        raise ValueError(f"node {node.id} holds no mind")
+        raise ValueError(f"node {several(node.id, 'hold', 'holds')} no mind")
     row = await session.get(MindRow, node.id)
     if row is not None:
         return row, False

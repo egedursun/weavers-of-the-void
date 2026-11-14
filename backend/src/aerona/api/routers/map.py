@@ -40,6 +40,7 @@ from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.generator import generate_map
 from aerona.cartography.model import MARKER_TYPES, WorldMap
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.agrarian import CentralPlaceRow, LandRingRow, SoilNutrientRow
 from aerona.db.tables.bonds import BondRow
@@ -422,7 +423,7 @@ async def lore_marks(session: AsyncSession, world_id: int, positions: dict[int, 
                     place_id=holder,
                     x=positions[holder][0],
                     y=positions[holder][1],
-                    detail=f"{branches} branches known, the deepest at level {level}",
+                    detail=f"{several(branches, 'branch', 'branches')} known, the deepest at level {level}",
                 )
             )
     return found

@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an, several
+from aerona.core.grammar import agree, an, several
 from aerona.db.tables.affairs import (
     RATE_MAX,
     CouncilSeatRow,
@@ -178,7 +178,9 @@ async def call_election(scope: PlayerScope, command: CallElection) -> Effect:
     tally = ElectionTally()
     await elect(ctx, book, await LawBook.load(scope.session), target, tally, force=True)
     await scope.session.flush()
-    return Effect(f"{found.name} went to the polls; {several(tally.seats, 'seat', 'seats')} were filled.", target_node_id=found.id)
+    return Effect(
+        f"{found.name} went to the polls; {several(tally.seats, 'seat', 'seats')} {agree(tally.seats, 'was', 'were')} filled.", target_node_id=found.id
+    )
 
 
 @player_action("election:delete", ActionKind.EDIT_RECORD)

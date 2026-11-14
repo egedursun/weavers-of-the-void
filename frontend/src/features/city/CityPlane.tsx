@@ -319,7 +319,7 @@ function CityBody({
           />
         </div>
         <Text variant='caption' tone='muted'>
-          {`A ${scene.tier.replaceAll('_', ' ')}, ${MORPHOLOGIES[scene.morphology].label.toLowerCase()}; walls of level ${scene.walls_level}${scene.walls_radius ? ` ${scene.walls_radius} hexes out` : ''}; roads of level ${scene.roads}; water from ${scene.water.replaceAll('_', ' ')}. Each house drawn stands for ${scene.scale} homes, each tent for ${scene.scale} homeless households.`}
+          {`A ${scene.tier.replaceAll('_', ' ')}, ${MORPHOLOGIES[scene.morphology].label.toLowerCase()}; walls of level ${scene.walls_level}${scene.walls_radius ? ` ${plural(scene.walls_radius, 'hex', 'hexes')} out` : ''}; roads of level ${scene.roads}; water from ${scene.water.replaceAll('_', ' ')}. Each house drawn stands for ${plural(scene.scale, 'home', 'homes')}, each tent for ${scene.scale} homeless households.`}
         </Text>
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList aria-label='City panel' className='w-full'>
@@ -350,7 +350,7 @@ function CityBody({
                     icon={spec.icon}
                     tone={spec.tone ?? 'muted'}
                     title={`${spec.label} · level ${row.level}`}
-                    caption={`${ZONES[row.zone].label} · ${plural(row.cells.length, 'hex', 'hexes')} · ${row.dwellings} homes · desirability ${row.desirability}`}
+                    caption={`${ZONES[row.zone].label} · ${plural(row.cells.length, 'hex', 'hexes')} · ${plural(row.dwellings, 'home', 'homes')} · desirability ${row.desirability}`}
                     aside={
                       <Button
                         size='sm'

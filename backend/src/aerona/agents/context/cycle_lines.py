@@ -1,7 +1,7 @@
 from sqlalchemy import or_, select
 
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.cycles import (
     AsabiyyaRow,
     CampRow,
@@ -117,7 +117,7 @@ async def town_lines(scope: Scope, me: EntityRow) -> list[str]:
     if stress is not None:
         found.append(
             f"your realm is in {words(stress.phase.value)}: stress {stress.psi}, the poor's misery {stress.immiseration}, "
-            f"{stress.aspirants} aspirants for {stress.positions} posts, fiscal strain {stress.fiscal_distress}"
+            f"{several(stress.aspirants, 'aspirant', 'aspirants')} for {several(stress.positions, 'post', 'posts')}, fiscal strain {stress.fiscal_distress}"
         )
     return found
 
@@ -133,7 +133,8 @@ async def plan_lines(scope: Scope, me: EntityRow) -> list[str]:
         .where(or_(LongPlanRow.holder_node_id.in_(holders), LongPlanRow.carrier_node_id == me.id), LongPlanRow.status == LongPlanStatus.ACTIVE)
         .limit(PLAN_LINES)
     ):
-        found.append(f"plan {plan.id}, {plan.name}, {an(words(plan.kind.value))}: {plan.progress} of {plan.steps} steps{', exposed' if plan.exposed else ''}")
+        steps_counted = several(plan.steps, "step", "steps")
+        found.append(f"plan {plan.id}, {plan.name}, {an(words(plan.kind.value))}: {plan.progress} of {steps_counted}{', exposed' if plan.exposed else ''}")
     return found
 
 
@@ -152,7 +153,7 @@ async def son_cycle_lines(scope: Scope, son: SonRow) -> list[str]:
     for plan in await scope.session.scalars(
         select(LongPlanRow).where(LongPlanRow.holder_node_id == son.id, LongPlanRow.status == LongPlanStatus.ACTIVE).limit(PLAN_LINES)
     ):
-        found.append(f"your plan {plan.id}, {plan.name}: {plan.progress} of {plan.steps} steps{', exposed' if plan.exposed else ''}")
+        found.append(f"your plan {plan.id}, {plan.name}: {plan.progress} of {several(plan.steps, 'step', 'steps')}{', exposed' if plan.exposed else ''}")
     return [*found, *await realm_lines(scope, son)]
 
 
@@ -169,6 +170,6 @@ async def realm_lines(scope: Scope, son: SonRow) -> list[str]:
     ):
         found.append(
             f"realm {realm.name} (polity {realm.id}) is in {words(stress.phase.value)}: stress {stress.psi}, "
-            f"{stress.aspirants} aspirants for {stress.positions} posts, fiscal strain {stress.fiscal_distress}"
+            f"{several(stress.aspirants, 'aspirant', 'aspirants')} for {several(stress.positions, 'post', 'posts')}, fiscal strain {stress.fiscal_distress}"
         )
     return found

@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -433,7 +434,7 @@ async def lair_cycle(ctx: TickContext, atlas: RegionAtlas, beast: EntityRow, row
         row.temper = BeastTemper.ENRAGED
     if row.temper not in ACTIVE or not near:
         await dread(ctx, beast, near, quiet=True)
-        return f"tribute from {paid} towns" if paid else None
+        return f"tribute from {several(paid, 'town', 'towns')}" if paid else None
     if is_abductor(anatomy):
         taken = await carry_off(ctx, beast, row, near)
         await dread(ctx, beast, near, quiet=taken is None)

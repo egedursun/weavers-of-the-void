@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronsRight, Eye, EyeOff, Route, Undo2 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
@@ -106,7 +107,7 @@ export function PlanCard({
       }
     >
       <Meter
-        label={`${row.progress} of ${row.steps} steps`}
+        label={`${row.progress} of ${plural(row.steps, 'step', 'steps')}`}
         value={row.progress}
         max={Math.max(1, row.steps)}
         tone='info'

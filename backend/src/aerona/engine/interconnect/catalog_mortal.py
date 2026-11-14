@@ -673,12 +673,12 @@ STANDING_MECHANICS: tuple[Mechanic, ...] = (
     Mechanic(
         key="mortal_equipment",
         spec_item="S3.1",
-        title="Equipment slots: main and off hand, body armour, helm, mount and magic focus shape blows, armour, mobility and spellcraft",
+        title="Equipment slots: main and off hand, body armour, helm, padding, cloak, mount and magic focus shape blows, armour, mobility and spellcraft",
         subsystem=S.WAR,
         phases=("mortal_survey", "mortal_standing"),
         surface=Surface(drawer=GEAR),
         backfill="mortal_survey: each mortal is fitted from what they own",
-        fields=("wielded_main_id", "wielded_off_id", "armour_body_id", "armour_head_id", "mount_id", "focus_id"),
+        fields=("wielded_main_id", "wielded_off_id", "armour_body_id", "armour_head_id", "armour_under_id", "armour_cover_id", "mount_id", "focus_id"),
         tables=(MortalEquipmentRow.__tablename__,),
     ),
 )

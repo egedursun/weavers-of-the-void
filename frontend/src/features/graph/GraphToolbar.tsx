@@ -10,6 +10,7 @@ import {
   Square,
   Waypoints,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -251,7 +252,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
                   <RotateCcw />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{`Back to the world rule: ${props.ruleCap.toLocaleString('en-US')} records (World rules › Interface › Graph)`}</TooltipContent>
+              <TooltipContent>{`Back to the world rule: ${plural(props.ruleCap, 'record', 'records')} (World rules › Interface › Graph)`}</TooltipContent>
             </Tooltip>
           )}
         </div>
@@ -261,7 +262,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
           <TooltipTrigger asChild>
             <Badge variant='warning'>
               <Settings2 aria-hidden='true' />
-              {`${props.radius} steps would pass ${props.cap.toLocaleString('en-US')}; showing ${props.shownRadius}`}
+              {`${plural(props.radius, 'step', 'steps')} would pass ${props.cap.toLocaleString('en-US')}; showing ${props.shownRadius}`}
             </Badge>
           </TooltipTrigger>
           <TooltipContent>

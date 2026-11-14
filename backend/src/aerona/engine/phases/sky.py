@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.worlds import SKY_EVENT_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
@@ -479,7 +479,7 @@ def time_difference(rules: Rules, traveller: str, origin: WorldRow | None, targe
         tail = "had passed extra in the world they left behind; those they knew had died, their children had grown old"
     else:
         tail = "had passed less; when they return they will have stayed young enough that nobody recognises them"
-    return f"When {traveller}'s travellers reached {target.name}, {years} years {tail}."
+    return f"When {traveller}'s travellers reached {target.name}, {several(years, 'year', 'years')} {tail}."
 
 
 async def drift_worlds(ctx: TickContext) -> None:

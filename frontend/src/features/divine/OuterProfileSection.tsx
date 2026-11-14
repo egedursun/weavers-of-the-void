@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
 import { outerHungerValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -113,8 +114,8 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
             hint={`Warding against it costs ${view.data.oppose_cost} essence`}
           >
             <div className='flex min-w-0 flex-wrap gap-2'>
-              <Badge variant='destructive'>{`Reaches ${view.data.reach} lands`}</Badge>
-              <Badge variant='secondary'>{`Fed ${view.data.fed} times`}</Badge>
+              <Badge variant='destructive'>{`Reaches ${plural(view.data.reach, 'land', 'lands')}`}</Badge>
+              <Badge variant='secondary'>{`Fed ${plural(view.data.fed, 'time', 'times')}`}</Badge>
               {view.data.drafted && (
                 <Badge variant='outline'>
                   Not yet set by the world; what you set holds at once

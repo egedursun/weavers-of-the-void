@@ -203,7 +203,7 @@ async def age_cycle(scope: PlayerScope, command: CycleChoice) -> Effect:
 @player_action("age:turn", ActionKind.EDIT_RECORD)
 async def age_turn(scope: PlayerScope, command: AgeTurn) -> Effect:
     row = await control.turn_now(await scope.context("age_turn"))
-    return Effect(f"The age turns; age {row.number} begins.", values={"age_id": row.id})
+    return Effect(f"The age turns; age {several(row.number, 'begin', 'begins')}.", values={"age_id": row.id})
 
 
 @player_action("age_echo:create", ActionKind.EDIT_RECORD)

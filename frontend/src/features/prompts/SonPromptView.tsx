@@ -11,6 +11,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -151,7 +152,7 @@ function Budget({ preview }: { preview: SonPromptPreview }) {
               >
                 <Label truncate>{sectionLabel(section.section)}</Label>
                 <Text variant='caption'>
-                  {`${formatInteger(section.characters)} characters, no cap`}
+                  {`${plural(section.characters, 'character', 'characters')}, no cap`}
                 </Text>
               </div>
             )
@@ -221,12 +222,12 @@ export function SonPromptView({ initialSon }: SonPromptViewProps) {
           >
             <CodeBlock
               label='System prompt'
-              meta={`${formatInteger(preview.data.system_characters)} characters`}
+              meta={`${plural(preview.data.system_characters, 'character', 'characters')}`}
               text={preview.data.system_prompt}
             />
             <CodeBlock
               label='User prompt'
-              meta={`${formatInteger(preview.data.user_characters)} characters`}
+              meta={`${plural(preview.data.user_characters, 'character', 'characters')}`}
               text={preview.data.user_prompt}
             />
           </Section>

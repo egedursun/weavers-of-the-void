@@ -6,6 +6,7 @@ import {
   Users,
   UsersRound,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Progress } from '@/components/ui/progress'
 import { MiniStat } from '@/components/domain'
 import { Label, Muted, Stat } from '@/components/typography'
@@ -52,7 +53,7 @@ export function WorldPulse({ worldId }: { worldId: number }) {
           value={data.sons}
           hint={
             data.son_share !== null
-              ? `Its fair share is ${data.son_share} sons`
+              ? `Its fair share is ${plural(data.son_share, 'son', 'sons')}`
               : undefined
           }
         />
@@ -80,7 +81,7 @@ export function WorldPulse({ worldId }: { worldId: number }) {
           aria-label='Record quota this epoch'
         />
         <Muted variant='caption'>
-          {`${data.engine_records} records born over the last ${data.window} epochs, ${data.per_epoch} an epoch on average`}
+          {`${plural(data.engine_records, 'record', 'records')} born over the last ${plural(data.window, 'epoch', 'epochs')}, ${data.per_epoch} an epoch on average`}
         </Muted>
       </div>
     </div>

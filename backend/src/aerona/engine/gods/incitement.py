@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -85,7 +86,7 @@ async def answer_incitement(ctx: TickContext, war: WarRow, victor_id: int | None
     outcome = f" {loser.name} will not forget who set it upon them." if toll.grieved and loser is not None else ""
     await note(
         ctx,
-        f"{son.name} reaped the war they had stirred: {name} ended after {war.battles} battles.{outcome}",
+        f"{son.name} reaped the war they had stirred: {name} ended after {several(war.battles, 'battle', 'battles')}.{outcome}",
         key="war.incitement_reaped",
         ids=[entity.id for entity in (event, loser) if entity is not None],
         son_id=son.id,

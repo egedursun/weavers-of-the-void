@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BookMarked, CheckCircle2 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -77,7 +78,9 @@ export function ThreadCard({ thread }: { thread: ThreadRecord }) {
   const header = [
     `Story #${thread.id}`,
     `Epoch ${thread.epoch}`,
-    thread.progress > 0 ? `advanced ${thread.progress} times` : null,
+    thread.progress > 0
+      ? `advanced ${plural(thread.progress, 'time', 'times')}`
+      : null,
     thread.closed_epoch !== null
       ? `closed in Epoch ${thread.closed_epoch}`
       : null,

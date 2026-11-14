@@ -1,5 +1,6 @@
 import { type ReactNode, Suspense, useState } from 'react'
 import { Html } from '@react-three/drei'
+import { agree } from '@/lib/units'
 import { tokenHex } from '@/features/cosmography/visual/palette'
 import { RIVER } from '@/features/entity/environment/labels'
 import { Model } from './Model'
@@ -152,7 +153,7 @@ export default function LandScene3D({
                 setHover({
                   x,
                   z,
-                  text: `${town.node.name} · ${town.detail} people`,
+                  text: `${town.node.name} · ${town.detail} ${agree(Number(town.detail), 'person', 'people')}`,
                 })
               }
               onPointerOut={() => setHover(null)}

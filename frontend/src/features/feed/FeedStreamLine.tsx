@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, Eye } from 'lucide-react'
-import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { STREAM_COLLAPSE_CHARS } from '@/constants/ui'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,7 +67,7 @@ function toolStatus(line: FeedLine): string {
     case 'preparing':
       return 'Preparing the call'
     case 'writing':
-      return `Writing the call · ${formatInteger(stream.chars)} characters`
+      return `Writing the call · ${plural(stream.chars, 'character', 'characters')}`
     case 'called':
       return stream.readOnly ? 'Reading' : 'Called, waiting for the result'
     case 'result':
@@ -132,7 +132,7 @@ export function StreamLineView({
         )}
         {isWrite && (
           <>
-            <Label>{`${formatInteger(stream.chars)} characters`}</Label>
+            <Label>{`${plural(stream.chars, 'character', 'characters')}`}</Label>
             {stream.phase === 'writing' && (
               <Progress size='sm' indeterminate aria-label='Writing' />
             )}

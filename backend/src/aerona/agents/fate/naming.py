@@ -154,7 +154,7 @@ async def name_pending_records(runtime: AgentRuntime) -> NamingReport:
     async with runtime.database.write() as session:
         caught = await requeue_engine_drafts(session)
     if caught:
-        runtime.note(f"{caught} records still carrying the world engine's draft text were put back in line to be written.")
+        runtime.note(f"{several(caught, 'record', 'records')} still carrying the world engine's draft text were put back in line to be written.")
     while True:
         batches = await next_batches(runtime, max_tries)
         if not batches:

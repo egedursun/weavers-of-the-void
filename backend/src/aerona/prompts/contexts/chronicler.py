@@ -59,6 +59,7 @@ class FactOutcome(ContextItem):
     winner: str
     loser_id: int
     loser: str
+    score: str | None = None
 
 
 class FactDraw(ContextItem):

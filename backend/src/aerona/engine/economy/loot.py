@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.catalog.materials import LUXURY_MATERIALS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import MaterialSlot
@@ -43,7 +44,7 @@ async def loot_temple(ctx: TickContext, temple: EntityRow, looter: EntityRow, *,
     await sync_aggregates(ctx.session, ctx.rules, looter)
     await ctx.chronicle(
         ChronicleKind.TRADE,
-        f"{looter.name} carried the treasure of {temple.name} home: {added} loads of {metal.value.replace('_', ' ')} flooded its market.",
+        f"{looter.name} carried the treasure of {temple.name} home: {several(added, 'load', 'loads')} of {metal.value.replace('_', ' ')} flooded its market.",
         template_key="money.temple_loot",
         entity_ids=[looter.id, temple.id],
     )

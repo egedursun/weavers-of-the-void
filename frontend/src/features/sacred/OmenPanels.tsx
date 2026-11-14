@@ -619,7 +619,7 @@ function ModelCard({ row, blocked }: { row: Model; blocked: string | null }) {
       icon={FlaskConical}
       tone={row.disruption > 0 ? 'warning' : 'info'}
       title={`${row.order.name} forecasts ${row.subject?.name ?? 'a realm'}`}
-      caption={`Built in epoch ${row.built_epoch} · looks ${row.horizon} epochs ahead${row.plan_id !== null ? ' · steering it by a long plan' : ''}`}
+      caption={`Built in epoch ${row.built_epoch} · looks ${plural(row.horizon, 'epoch', 'epochs')} ahead${row.plan_id !== null ? ' · steering it by a long plan' : ''}`}
       removeLabel='Set the model aside'
       editTitle='Set the forecast model'
       note='A learned order with census and an archive forecasts its realm’s political stress. Close forecasts sharpen the model; accurate enough, the order steers the realm by a long plan that eases its stress, undone in part by great interventions such as miracles.'

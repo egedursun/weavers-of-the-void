@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { plural } from '@/lib/units'
 import {
   type ThemeColorName,
   type ThemeColors,
@@ -471,7 +472,7 @@ function labelFor(
       (item) => item.god_id === id
     )
     return rule
-      ? `${rule.name}${rule.rivals > 0 ? `, against ${rule.rivals} rivals` : ''}`
+      ? `${rule.name}${rule.rivals > 0 ? `, against ${plural(rule.rivals, 'rival', 'rivals')}` : ''}`
       : `God ${id}`
   }
   if (kind === 'realm') {

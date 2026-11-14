@@ -1,6 +1,7 @@
 import { VISION_MANIFESTO, VISION_TITLE, VISION_VOWS } from '@/config/about'
 import { Telescope } from 'lucide-react'
-import { formatCompact, formatInteger } from '@/lib/format'
+import { formatCompact } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { type Rarity } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
@@ -106,10 +107,10 @@ export function AboutVision() {
           totals ? (
             <div className='flex flex-wrap gap-2'>
               <Badge className='gap-1.5 border-brand-gold/50 bg-brand-gold/15 text-brand-gold'>
-                {`${formatInteger(totals.records)} records woven`}
+                {`${plural(totals.records, 'record', 'records')} woven`}
               </Badge>
               <Badge className='gap-1.5 border-brand-violet/50 bg-brand-violet/15 text-foreground'>
-                {`${formatInteger(totals.bonds)} threads binding them`}
+                {`${plural(totals.bonds, 'thread', 'threads')} binding them`}
               </Badge>
             </div>
           ) : undefined

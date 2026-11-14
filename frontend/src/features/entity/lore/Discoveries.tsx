@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
 import { greatFieldValues } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -135,8 +136,8 @@ function FieldMeter({
       <Progress value={share} size='sm' aria-label={`${look.label} points`} />
       <Muted variant='caption'>
         {threshold > 0
-          ? `${points} of ${threshold} points toward the next one`
-          : `${points} points gathered`}
+          ? `${points} of ${plural(threshold, 'point', 'points')} toward the next one`
+          : `${plural(points, 'point', 'points')} gathered`}
       </Muted>
       <RowEditor
         label='Points'

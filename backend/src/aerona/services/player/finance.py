@@ -4,7 +4,7 @@ from sqlalchemy import select
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.finance import CREDIT_LABELS, POLICY_LABELS, SPECULATION_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
 from aerona.db.tables.node import NodeRow
@@ -228,7 +228,10 @@ async def edit_speculation(scope: PlayerScope, command: EditSpeculation) -> Effe
         row.settled_epoch = await scope.epoch()
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"The hoard is now {SPECULATION_LABELS[row.status].lower()}: {row.units} units bought at {row.price}.", target_node_id=row.merchant_node_id)
+    return Effect(
+        f"The hoard is now {SPECULATION_LABELS[row.status].lower()}: {several(row.units, 'unit', 'units')} bought at {row.price}.",
+        target_node_id=row.merchant_node_id,
+    )
 
 
 @player_action("speculation:remove", ActionKind.EDIT_RECORD)

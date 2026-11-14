@@ -9,6 +9,7 @@ import {
   Star,
   Store,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import {
   EmptyState,
   KpiTile,
@@ -164,7 +165,7 @@ export function CosmosAgrarianSection() {
                   icon={RANKS[item.rank].icon}
                   tone={RANKS[item.rank].tone}
                   title={<Ref node={item.settlement} />}
-                  caption={`${RANKS[item.rank].label} for ${item.catchment} buyers${item.served_by ? `, served by ${item.served_by.name}` : ''}`}
+                  caption={`${RANKS[item.rank].label} for ${plural(item.catchment, 'buyer', 'buyers')}${item.served_by ? `, served by ${item.served_by.name}` : ''}`}
                 >
                   <Meter
                     label='Centrality'

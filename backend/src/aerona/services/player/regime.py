@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.regime import ClientRole, CredentialKind, LeadershipMode, SegmentLevel, SelectorateKind
@@ -376,7 +377,7 @@ async def examination_set(scope: PlayerScope, command: ExamDraft) -> Effect:
 @player_action("examination:sit", ActionKind.EDIT_RECORD)
 async def examination_sit(scope: PlayerScope, command: PolityTarget) -> Effect:
     row = await control.sit_now(await scope.context("examination_sit"), command.polity_id)
-    return Effect(f"{row.passed} of {row.candidates} candidates passed.", command.polity_id, values={"sitting_id": row.id})
+    return Effect(f"{row.passed} of {several(row.candidates, 'candidate', 'candidates')} passed.", command.polity_id, values={"sitting_id": row.id})
 
 
 @player_action("examination:edit", ActionKind.EDIT_RECORD)

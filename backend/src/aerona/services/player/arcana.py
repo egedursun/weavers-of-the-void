@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.culture import RiteEffectKind
@@ -197,4 +198,4 @@ async def dispel_enchantment(scope: PlayerScope, command: LawTarget) -> Effect:
 @player_action("item_charge:edit", ActionKind.EDIT_RECORD)
 async def edit_charges(scope: PlayerScope, command: ChargeEdit) -> Effect:
     row = await control.edit_charges(await scope.context("item_charge_edit"), command.item_id, command.effect, command.values)
-    return Effect(f"The enchantment holds {row.charges} of {row.capacity} charges.", command.item_id)
+    return Effect(f"The enchantment holds {row.charges} of {several(row.capacity, 'charge', 'charges')}.", command.item_id)

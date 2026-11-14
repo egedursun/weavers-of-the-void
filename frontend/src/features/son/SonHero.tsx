@@ -16,6 +16,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { formatDecimal } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -107,7 +108,7 @@ export function SonHero({
             <Badge
               size='sm'
               variant='destructive'
-            >{`Being forgotten · fades in ${left} epochs`}</Badge>
+            >{`Being forgotten · fades in ${plural(left, 'epoch', 'epochs')}`}</Badge>
           )}
         </div>
         <LevelMeter level={son.level} xp={son.xp} needed={needed} />

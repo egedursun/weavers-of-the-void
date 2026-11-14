@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.stats import max_essence
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
@@ -140,7 +141,9 @@ async def creator_essence(ctx: TickContext) -> None:
         await overflow_to_land(ctx.session, rules, overflow - to_sons)
         if overflow >= rules.world_epoch_transition.essence_overflow_note:
             await note(
-                ctx, f"{overflow} units of the Creator's overflowing essence seeped into the world; the most barren lands grew fertile.", key="essence.overflow"
+                ctx,
+                f"{several(overflow, 'unit', 'units')} of the Creator's overflowing essence seeped into the world; the most barren lands grew fertile.",
+                key="essence.overflow",
             )
 
 
@@ -172,7 +175,7 @@ async def pour_essence(ctx: TickContext, amount: int) -> Overflow:
     result = await overflow_to_land(ctx.session, ctx.rules, amount)
     await note(
         ctx,
-        f"The Creator poured {amount} essence into the land; {result.given} measures of fertility rose in the most barren regions.",
+        f"The Creator poured {amount} essence into the land; {several(result.given, 'measure', 'measures')} of fertility rose in the most barren regions.",
         key="essence.poured",
         ids=list(result.regions),
     )

@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -360,7 +361,7 @@ function GatheringCard({
                 : `Season ${gathering.season + 1}`),
           ],
           ['Cost', `${gathering.cost} coin`],
-          ['Food served', `${gathering.food} units`],
+          ['Food served', `${plural(gathering.food, 'unit', 'units')}`],
           ['Prestige', String(gathering.prestige)],
         ]}
       />

@@ -10,6 +10,7 @@ import {
   Users,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -103,7 +104,7 @@ function BranchTile({
             {summary.key === UNSORTED ? 'Unsorted' : humanize(summary.key)}
           </Text>
           <Muted as='span' variant='caption' truncate>
-            {`${formatInteger(summary.items.length)} arts · tier ${tierNumeral(summary.top)}`}
+            {`${plural(summary.items.length, 'art', 'arts')} · tier ${tierNumeral(summary.top)}`}
           </Muted>
         </span>
         {cosmic && (
@@ -437,10 +438,10 @@ export function KnowledgeTree({ knowledge }: { knowledge: KnowledgeView[] }) {
                 : `The ${humanize(current.key)} tree`}
             </Text>
             <Badge size='sm' variant='outline'>
-              {`${formatInteger(current.items.length)} arts`}
+              {`${plural(current.items.length, 'art', 'arts')}`}
             </Badge>
             <Badge size='sm' variant='outline'>
-              {`${formatInteger(current.keepers)} keepings`}
+              {`${plural(current.keepers, 'keeping', 'keepings')}`}
             </Badge>
             <Muted as='span' variant='caption'>
               Lines lead from what is needed to what it opens; dashed arts are

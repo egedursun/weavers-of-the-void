@@ -6,7 +6,7 @@ from aerona.catalog.ethics import ACT_LABELS
 from aerona.catalog.mind import MELEE_SKILLS, MEMORIES, TRAITS
 from aerona.catalog.mind_split import IDEAS, derived_axes
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -1230,7 +1230,12 @@ async def famine_aid(ctx: TickContext) -> None:
         await change_relation(
             ctx, community.id, donor.id, table.famine_aid_relation, MemoryKind.FAMINE_AID, note="grain in the hungry year", reverse=MemoryKind.GOODWILL
         )
-        await note(ctx, f"{donor.name} sent {sent} loads of grain to starving {community.name}.", key="mind.famine_aid", ids=[donor.id, community.id])
+        await note(
+            ctx,
+            f"{donor.name} sent {several(sent, 'load', 'loads')} of grain to starving {community.name}.",
+            key="mind.famine_aid",
+            ids=[donor.id, community.id],
+        )
         given += 1
     ctx.count("famine_aid", given)
 

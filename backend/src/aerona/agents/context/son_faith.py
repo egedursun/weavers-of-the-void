@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import HeresyRow
 from aerona.db.tables.sons import SonRow
@@ -34,7 +35,7 @@ async def church_line(scope: Scope, church: Church) -> str:
     if liturgy is not None:
         parts.append(f"liturgy in {liturgy.name}")
     if heresies:
-        parts.append(f"{heresies} heresies split from it")
+        parts.append(f"{several(heresies, 'heresy', 'heresies')} split from it")
     if doctrine.fanaticism is not None:
         parts.append(f"lately turned to {words(doctrine.fanaticism.value)}")
     return f"- {cult.name} (#{cult.id}): {'; '.join(parts)}; tenets: {tenets}"

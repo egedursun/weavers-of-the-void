@@ -110,7 +110,7 @@ class EditNetwork(Command):
 @player_action("army:edit", ActionKind.EDIT_RECORD)
 async def edit_army(scope: PlayerScope, command: EditArmy) -> Effect:
     profile = await control.edit_army(await scope.context("army_edit"), command.army_id, command.values, release=command.release)
-    return Effect(f"The army now stands at {profile.stance.value} with {profile.supply_days} days of food.", command.army_id)
+    return Effect(f"The army now stands at {profile.stance.value} with {several(profile.supply_days, 'day', 'days')} of food.", command.army_id)
 
 
 @player_action("army:command", ActionKind.EDIT_RECORD)
@@ -147,7 +147,7 @@ async def remove_stack(scope: PlayerScope, command: StackTarget) -> Effect:
 @player_action("siege:edit", ActionKind.EDIT_RECORD)
 async def edit_siege(scope: PlayerScope, command: EditSiege) -> Effect:
     row = await control.edit_siege(await scope.context("siege_edit"), command.siege_id, command.values)
-    return Effect(f"The siege stands {row.status.value}: {row.supplies} days of food, {row.water} of water inside.", row.besieged_entity_id)
+    return Effect(f"The siege stands {row.status.value}: {several(row.supplies, 'day', 'days')} of food, {row.water} of water inside.", row.besieged_entity_id)
 
 
 @player_action("war:aim", ActionKind.EDIT_RECORD)
@@ -173,7 +173,7 @@ async def impose_peace(scope: PlayerScope, command: ImposePeace) -> Effect:
 @player_action("war:call_allies", ActionKind.OTHER)
 async def call_allies(scope: PlayerScope, command: CallAllies) -> Effect:
     joined = await control.call_allies(await scope.context("war_allies"), command.war_id, command.side_id)
-    return Effect(f"{joined} allies answered the call to arms.", command.side_id)
+    return Effect(f"{several(joined, 'ally', 'allies')} answered the call to arms.", command.side_id)
 
 
 @player_action("war:weariness", ActionKind.EDIT_RECORD)
@@ -219,5 +219,5 @@ async def commander_trait(scope: PlayerScope, command: CommanderTraitOrder) -> E
 @player_action("spy:edit_network", ActionKind.EDIT_RECORD)
 async def edit_network(scope: PlayerScope, command: EditNetwork) -> Effect:
     row = await control.edit_network(await scope.context("spy_network"), command.network_id, command.values, dismantle=command.dismantle)
-    text = "The network is rolled up." if row is None else f"The network runs {row.agents} agents at depth {row.depth}."
+    text = "The network is rolled up." if row is None else f"The network runs {several(row.agents, 'agent', 'agents')} at depth {row.depth}."
     return Effect(text, row.owner_entity_id if row is not None else None)

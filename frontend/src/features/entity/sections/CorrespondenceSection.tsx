@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -617,7 +618,7 @@ function CipherRowView({
           </>
         )
       }
-      meta={`In use since epoch ${row.since_epoch}; ${row.broken_by.length > 0 ? `read by ${row.broken_by.map((node) => node.name).join(', ')}` : 'unbroken'}, after ${row.attempts} attempts`}
+      meta={`In use since epoch ${row.since_epoch}; ${row.broken_by.length > 0 ? `read by ${row.broken_by.map((node) => node.name).join(', ')}` : 'unbroken'}, after ${plural(row.attempts, 'attempt', 'attempts')}`}
       badges={
         <>
           {row.break_known && <Badge variant='secondary'>Break noticed</Badge>}

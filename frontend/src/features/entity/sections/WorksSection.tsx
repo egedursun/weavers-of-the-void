@@ -202,7 +202,7 @@ function MethodRow({
       title={`${row.process_label}: ${row.label}`}
       meta={
         row.chosen
-          ? `${row.summary} · since epoch ${row.adopted_epoch ?? 0}${row.displaced ? ` · ${row.displaced} hands put out of work` : ''}`
+          ? `${row.summary} · since epoch ${row.adopted_epoch ?? 0}${row.displaced ? ` · ${plural(row.displaced, 'hand', 'hands')} put out of work` : ''}`
           : `${row.summary} · the oldest way, until the place chooses`
       }
       badges={

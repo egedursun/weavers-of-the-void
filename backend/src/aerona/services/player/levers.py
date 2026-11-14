@@ -2,6 +2,7 @@ from pydantic import Field
 from sqlalchemy import delete
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow, ModifierRow
 from aerona.db.tables.node import NodeRow
@@ -84,7 +85,7 @@ async def pin_field(scope: PlayerScope, command: PinField) -> Effect:
     await _clear(scope, node.id, command.key, ModifierSource.PIN)
     draft = ModifierDraft(node.id, command.key, ModifierOp.ADD, 0, ModifierSource.PIN, PIN_REASON, start_epoch=epoch, end_epoch=_end(epoch, command.epochs))
     await add_modifier(scope.session, draft)
-    span = f" for {command.epochs} epochs" if command.epochs else ""
+    span = f" for {several(command.epochs, 'epoch', 'epochs')}" if command.epochs else ""
     return Effect(f"{node.name}'s {command.key} is pinned{span}: no mechanic can change it.", target_node_id=node.id)
 
 
@@ -106,7 +107,7 @@ async def suppress_mechanic(scope: PlayerScope, command: SuppressMechanic) -> Ef
         node.id, key, ModifierOp.ADD, 0, ModifierSource.SUPPRESSION, SUPPRESSION_REASON, start_epoch=epoch, end_epoch=_end(epoch, command.epochs)
     )
     await add_modifier(scope.session, draft)
-    return Effect(f"{command.mechanic} is suppressed on {node.name} for {command.epochs} epochs.", target_node_id=node.id)
+    return Effect(f"{command.mechanic} is suppressed on {node.name} for {several(command.epochs, 'epoch', 'epochs')}.", target_node_id=node.id)
 
 
 @player_action("lever:unsuppress", ActionKind.OTHER)

@@ -47,7 +47,7 @@ function TurnEpoch({
       <CollapsibleTrigger asChild>
         <Button variant='ghost' size='sm' className='self-start'>
           <ChevronsUpDown />
-          {`Epoch ${epoch} · ${plural(list.length, 'action', 'actions')} · ${changes} changes`}
+          {`Epoch ${epoch} · ${plural(list.length, 'action', 'actions')} · ${plural(changes, 'change', 'changes')}`}
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className='flex min-w-0 flex-col gap-3'>

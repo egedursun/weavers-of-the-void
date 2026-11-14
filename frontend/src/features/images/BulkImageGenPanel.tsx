@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner'
 import { queryKeys } from '@/api/queryKeys'
 import { formatDateTime, formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -156,7 +157,7 @@ export function BulkImageGenPanel() {
                 </Badge>
                 {!offReason && (
                   <Muted variant='caption'>
-                    {`${queue.width} × ${queue.height} · ${queue.steps} steps`}
+                    {`${queue.width} × ${queue.height} · ${plural(queue.steps, 'step', 'steps')}`}
                   </Muted>
                 )}
               </div>
@@ -282,7 +283,7 @@ export function BulkImageGenPanel() {
               <ConfirmDialog
                 open={confirming}
                 onOpenChange={setConfirming}
-                title={`Generate ${formatInteger(missing)} images?`}
+                title={`Generate ${plural(missing, 'image', 'images')}?`}
                 desc='The worker paints one image at a time; your own requests still go first. You can stop at any time.'
                 confirmText='Start'
                 isLoading={start.isPending}

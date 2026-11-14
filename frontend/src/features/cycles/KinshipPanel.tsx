@@ -7,6 +7,7 @@ import {
   ScrollText,
   Users,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -235,7 +236,7 @@ function AllianceCard({
       icon={HeartHandshake}
       tone='success'
       title={`${row.giver.name} gives spouses to ${row.taker.name}`}
-      caption={`${row.marriages} marriages since epoch ${row.since_epoch}, the last in epoch ${row.last_epoch}`}
+      caption={`${plural(row.marriages, 'marriage', 'marriages')} since epoch ${row.since_epoch}, the last in epoch ${row.last_epoch}`}
       removeLabel='Strike the alliance'
       editTitle='Set the alliance'
       note='Each marriage between the lines builds regard; enough of them bind their realms in a marriage pact, and the line that gives more spouses than it takes ranks apart.'

@@ -1,6 +1,6 @@
 import { type ServerEvent } from '@/realtime'
 import { type components } from '@/api/generated/schema'
-import { formatDuration } from '@/lib/units'
+import { formatDuration, plural } from '@/lib/units'
 import { JOB_KIND_LABEL, isJobKind } from '@/constants/jobs'
 import { type TimelineTone } from '@/components/domain'
 import { type DrawerEntry } from '@/components/layout/drawer/drawerEntries'
@@ -201,7 +201,7 @@ function describe(event: ServerEvent): Draft | null {
         'world',
         'engine',
         event.payload.notes > 0
-          ? `The world engine wrote ${event.payload.notes} notes`
+          ? `The world engine wrote ${plural(event.payload.notes, 'note', 'notes')}`
           : 'A quiet epoch: the world engine wrote nothing',
         { tone: 'success' }
       )
@@ -271,7 +271,7 @@ function describe(event: ServerEvent): Draft | null {
       return draft(
         'system',
         'epoch',
-        `The epoch closed; epoch ${event.payload.new_epoch} begins`,
+        `The epoch closed; epoch ${plural(event.payload.new_epoch, 'begin', 'begins')}`,
         {
           tone: 'success',
           detail: `It took ${formatDuration(event.payload.duration_s)}.`,
@@ -459,8 +459,8 @@ function describe(event: ServerEvent): Draft | null {
         {
           detail:
             event.payload.conflicts > 0
-              ? `${event.payload.applied} changes reverted, ${event.payload.conflicts} conflicts skipped.`
-              : `${event.payload.applied} changes reverted.`,
+              ? `${plural(event.payload.applied, 'change', 'changes')} reverted, ${plural(event.payload.conflicts, 'conflict', 'conflicts')} skipped.`
+              : `${plural(event.payload.applied, 'change', 'changes')} reverted.`,
         }
       )
     case 'image.queued':

@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sacred import (
@@ -34,7 +35,7 @@ async def mystic_lines(scope: Scope, me: EntityRow) -> list[str]:
     if row is None:
         return []
     return [
-        f"visions seize you ({words(row.state.value)} mystic): {row.visions} visions, {row.followers} followers; "
+        f"visions seize you ({words(row.state.value)} mystic): {several(row.visions, 'vision', 'visions')}, {several(row.followers, 'follower', 'followers')}; "
         f"reverence {row.reverence}, persecution {row.persecution}"
     ]
 
@@ -155,7 +156,9 @@ async def son_sacred_lines(scope: Scope, son: SonRow) -> list[str]:
             .order_by(MysticRow.followers.desc())
             .limit(LIST_LINES)
         ):
-            found.append(f"{mortal.name} (mortal {mortal.id}) is a mystic: {mystic.visions} visions, {mystic.followers} followers, {words(mystic.state.value)}")
+            visions_counted = several(mystic.visions, "vision", "visions")
+            followers_counted = several(mystic.followers, "follower", "followers")
+            found.append(f"{mortal.name} (mortal {mortal.id}) is a mystic: {visions_counted}, {followers_counted}, {words(mystic.state.value)}")
         for crisis, town in await session.execute(
             select(TheodicyCrisisRow, EntityRow)
             .join(EntityRow, EntityRow.id == TheodicyCrisisRow.community_entity_id)
@@ -168,11 +171,11 @@ async def son_sacred_lines(scope: Scope, son: SonRow) -> list[str]:
     for row in await session.scalars(
         select(DoctrineAfterlifeRow).where(DoctrineAfterlifeRow.cult_entity_id.in_(churches)).order_by(DoctrineAfterlifeRow.cult_entity_id).limit(LIST_LINES)
     ):
-        aligned = "you made it so" if row.aligned else f"{row.shocks} souls found otherwise, doubt {row.doubt}"
+        aligned = "you made it so" if row.aligned else f"{several(row.shocks, 'soul', 'souls')} found otherwise, doubt {row.doubt}"
         found.append(f"{await named(scope, row.cult_entity_id)} teaches the {words(row.model.value)}; {aligned}")
     seen = await session.scalar(
         select(func.count()).select_from(ForesightRow).where(ForesightRow.seer_node_id == son.id, ForesightRow.status == ForesightStatus.PENDING)
     )
     if seen:
-        found.append(f"you hold {seen} foresights yet to come true or fail")
+        found.append(f"you hold {several(seen, 'foresight', 'foresights')} yet to come true or fail")
     return found

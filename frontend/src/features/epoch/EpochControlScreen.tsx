@@ -10,7 +10,7 @@ import {
   Sunrise,
   Timer,
 } from 'lucide-react'
-import { formatDuration } from '@/lib/units'
+import { agree, formatDuration, plural } from '@/lib/units'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -83,7 +83,7 @@ function CurrentRun({ state }: { state: WorldState }) {
           value={state.world?.epoch ?? 0}
           icon={Hourglass}
           tone='gold'
-          hint={`The world map has been redrawn ${state.world?.map_version ?? 1} times`}
+          hint={`The world map has been redrawn ${plural(state.world?.map_version ?? 1, 'time', 'times')}`}
         />
         <KpiTile
           label='Sons still to act'
@@ -93,7 +93,7 @@ function CurrentRun({ state }: { state: WorldState }) {
           meter={{
             value: sons - waiting,
             max: Math.max(1, sons),
-            label: `${sons - waiting} of ${sons} sons have acted`,
+            label: `${sons - waiting} of ${plural(sons, 'son', 'sons')} ${agree(sons, 'has', 'have')} acted`,
           }}
         />
         <KpiTile
@@ -107,7 +107,7 @@ function CurrentRun({ state }: { state: WorldState }) {
           tone='verdigris'
           hint={
             timing.averageSeconds !== null
-              ? `Over ${timing.samples} epochs`
+              ? `Over ${plural(timing.samples, 'epoch', 'epochs')}`
               : 'Measured after the first run'
           }
         />

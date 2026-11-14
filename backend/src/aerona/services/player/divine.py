@@ -42,7 +42,9 @@ class FirstFaith(Command):
 @player_action("essence:pour", ActionKind.POUR_ESSENCE)
 async def pour(scope: PlayerScope, command: Pour) -> Effect:
     result = await pour_essence(await scope.context("pour_essence"), command.amount)
-    return Effect(f"{result.given} measures of fertility rose in the barren lands.", essence_spent=command.amount, values={"given": result.given})
+    return Effect(
+        f"{several(result.given, 'measure', 'measures')} of fertility rose in the barren lands.", essence_spent=command.amount, values={"given": result.given}
+    )
 
 
 @player_action("creator:sign", ActionKind.CREATOR_SIGN)

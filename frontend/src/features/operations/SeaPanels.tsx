@@ -14,6 +14,7 @@ import {
   Users,
   Wind,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { KpiTile, PagedList } from '@/components/domain'
@@ -543,7 +544,7 @@ function AdmiraltyCard({
       icon={Landmark}
       tone={over ? 'danger' : 'info'}
       title={`Admiralty of ${row.polity.name}`}
-      caption={`${row.commissioned} ships laid down · read in epoch ${row.updated_epoch}`}
+      caption={`${plural(row.commissioned, 'ship', 'ships')} laid down · read in epoch ${row.updated_epoch}`}
       removeLabel='Draw the admiralty anew'
       editTitle='Set the admiralty'
       note='The admiralty asks the council for a share of the war budget and contends with the marshal for it, winning by its admiral’s skill; its share pays for new ships. A naval treaty caps the fleet’s tonnage: an admiralty past its limit stops building, or, if its admiral scorns the law, hides ships in secret until the other side finds them out and the treaty breaks.'

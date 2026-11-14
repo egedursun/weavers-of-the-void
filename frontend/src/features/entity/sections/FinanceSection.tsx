@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowDownRight, ArrowUpRight, Eraser, Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -169,7 +170,7 @@ function CreditCard({ view, blocked, hold }: Props) {
               {credit.state_label}
             </Badge>
             <Badge variant='outline'>{`Reserves ${credit.reserves}`}</Badge>
-            <Badge variant='outline'>{`${credit.defaults} defaults`}</Badge>
+            <Badge variant='outline'>{`${plural(credit.defaults, 'default', 'defaults')}`}</Badge>
             {credit.restructured_until !== null && (
               <Badge variant='secondary'>{`Restructuring until epoch ${credit.restructured_until}`}</Badge>
             )}
@@ -795,7 +796,7 @@ function AccessCard({ view, hold }: Props) {
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Badge
             variant={(view.black_market ?? 0) > 0 ? 'destructive' : 'outline'}
-          >{`${view.black_market ?? 0} loads smuggled in`}</Badge>
+          >{`${plural(view.black_market ?? 0, 'load', 'loads')} smuggled in`}</Badge>
         </div>
       </div>
       <ItemRow

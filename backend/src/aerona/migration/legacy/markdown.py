@@ -1,6 +1,7 @@
 from collections import Counter, defaultdict
 
 from aerona.constants.migration import REPORT_SAMPLE_LIMIT, REPORT_TOP_TAGS
+from aerona.core.grammar import several
 from aerona.migration.legacy.report import MigrationReport, ReportItem
 
 PIPE = "|"
@@ -97,7 +98,7 @@ def render_markdown(report: MigrationReport) -> str:
         *_grouped(report.warnings),
         "## Tags",
         "",
-        f"Free descriptive tags kept: {sum(report.free_tags.values())} uses of {len(report.free_tags)} distinct words.",
+        f"Free descriptive tags kept: {several(sum(report.free_tags.values()), 'use', 'uses')} of {len(report.free_tags)} distinct words.",
         "",
         "### Not understood",
         "",

@@ -51,6 +51,18 @@ export function formatUsd(amount: number): string {
   return `$${formatDecimal(amount, 2)}`
 }
 
-export function plural(count: number, singular: string, many = `${singular}s`): string {
-  return `${count.toLocaleString('en-US')} ${count === 1 ? singular : many}`
+export function agree(
+  count: number,
+  singular: string,
+  many = `${singular}s`
+): string {
+  return count === 1 ? singular : many
+}
+
+export function plural(
+  count: number,
+  singular: string,
+  many = `${singular}s`
+): string {
+  return `${count.toLocaleString('en-US')} ${agree(count, singular, many)}`
 }

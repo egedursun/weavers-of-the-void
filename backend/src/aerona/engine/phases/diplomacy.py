@@ -4,6 +4,7 @@ from sqlalchemy import and_, or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -141,7 +142,7 @@ async def _fade_grudges(ctx: TickContext, candidates: list[tuple[int, int, int]]
             await _note(ctx, text, "diplomacy.grudge_faded", (first_id, second_id))
         else:
             text = (
-                f"The grudge between {first.name} and {second.name} lasted {age} epochs without a sword drawn and was forgotten; "
+                f"The grudge between {first.name} and {second.name} lasted {several(age, 'epoch', 'epochs')} without a sword drawn and was forgotten; "
                 "only the elders remember the enmity."
             )
             await _note(ctx, text, "diplomacy.grudge_forgotten", (first_id, second_id))
@@ -362,7 +363,7 @@ async def _neighbour_pair(
     ):
         await settle_peace(ctx, first.id, second.id, WarEnding.PEACE, "peace")
         counters.peaces += 1
-        how = f"worn out by {duration} epochs of war the two sides made a truce" if tired else "envoys swore a peace oath"
+        how = f"worn out by {several(duration, 'epoch', 'epochs')} of war the two sides made a truce" if tired else "envoys swore a peace oath"
         await _note(ctx, f"{first.name} and {second.name} laid down arms; {how}.", "diplomacy.peace", (first.id, second.id))
     elif (
         not enemy

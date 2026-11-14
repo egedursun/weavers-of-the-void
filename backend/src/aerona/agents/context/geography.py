@@ -7,6 +7,7 @@ from aerona.cartography.model import RegionRecord
 from aerona.catalog.dangers import DANGERS, MEMORY_LABELS
 from aerona.constants.agents import LARGE_REGION_RATIO, SMALL_REGION_RATIO
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -100,7 +101,7 @@ def place_words(place: EntityRow, profile: PlaceProfileRow, known: list[PlaceSec
     if profile.sacredness >= rules.places.pilgrimage_threshold:
         parts.append(f"sacred {profile.sacredness}")
     if profile.pilgrims:
-        parts.append(f"{profile.pilgrims} pilgrims")
+        parts.append(f"{several(profile.pilgrims, 'pilgrim', 'pilgrims')}")
     for secret in known:
         state = ", still sealed" if secret.sealed else ""
         parts.append(f"found {words(secret.kind.value)}{state}")
@@ -164,7 +165,7 @@ async def long_day_words(scope: Scope, world_id: int) -> str | None:
     world = await scope.session.get(WorldRow, world_id)
     if not long_days(scope.rules.seasonal.long_day_hours, world) or world is None:
         return None
-    return f"A day lasts {world.day_length_hours} hours: folk rest at noon in the heat or keep vigil through the long night."
+    return f"A day lasts {several(world.day_length_hours, 'hour', 'hours')}: folk rest at noon in the heat or keep vigil through the long night."
 
 
 async def terrain_facts(scope: Scope, region_ids: set[int], grounds: dict[int, RegionEnvironmentRow]) -> dict[int, dict[str, Any]]:

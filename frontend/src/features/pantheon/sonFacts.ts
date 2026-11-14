@@ -1,3 +1,4 @@
+import { plural } from '@/lib/units'
 import { type SonPublic, type SonRecord, type StatKey } from './api'
 import { type BadgeVariant } from './badgeVariant'
 import { REPUTATION_LABEL, isReputationLabel } from './labels'
@@ -49,7 +50,7 @@ export function statusChips(
   if (son.status === 'asleep')
     chips.push({
       key: 'asleep',
-      label: `Asleep · ${son.sleep_epochs_left} epochs`,
+      label: `Asleep · ${plural(son.sleep_epochs_left, 'epoch', 'epochs')}`,
       variant: 'secondary',
     })
   if (son.status === 'exiled')
@@ -73,7 +74,7 @@ export function statusChips(
   if (left !== null)
     chips.push({
       key: 'fading',
-      label: `Being forgotten · fades in ${left} epochs`,
+      label: `Being forgotten · fades in ${plural(left, 'epoch', 'epochs')}`,
       variant: 'destructive',
       hint: `Existence ${son.existence}. Worship, fame and a living anchor keep them remembered.`,
     })

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.gates import Gate, passes_gate
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -289,7 +290,8 @@ async def _loss_streak(ctx: TickContext, first: SonRow, second: SonRow) -> None:
     winner_id = winners.pop()
     loser, winner = (second, first) if winner_id == first.id else (first, second)
     await SonRepository(ctx.session).change_relation(first.id, second.id, pantheon.rival_withdraw_relation)
-    text = f"{loser.name}, beaten {pantheon.rival_defeat_streak} times in a row by {winner.name}, withdrew; the feud between them calmed for a while."
+    times_counted = several(pantheon.rival_defeat_streak, "time", "times")
+    text = f"{loser.name}, beaten {times_counted} in a row by {winner.name}, withdrew; the feud between them calmed for a while."
     await ctx.chronicle(ChronicleKind.CHALLENGE, text, template_key="pantheon.rival_withdrew", son_id=loser.id)
 
 

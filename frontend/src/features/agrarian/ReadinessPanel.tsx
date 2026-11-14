@@ -7,6 +7,7 @@ import {
   Shield,
   ShieldCheck,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
 import { table } from '@/features/arcana/labels'
@@ -52,7 +53,7 @@ function WorkCard({ row, blocked }: { row: Work; blocked: string | null }) {
       icon={kind.icon}
       tone={kind.tone}
       title={`${kind.label} of ${row.settlement.name}, level ${row.level}`}
-      caption={`Raised in epoch ${row.built_epoch} · held ${row.averted} times`}
+      caption={`Raised in epoch ${row.built_epoch} · held ${plural(row.averted, 'time', 'times')}`}
       removeLabel='Tear it down'
       editTitle='Set the work'
       note='Each level of a fitting work lowers the losses of its disaster: levees and seawalls against floods, seawalls against storms, drills against quakes and eruptions, stockpiles against drought and failed harvests, firebreaks against great fires; watchtowers help a little against all. Works wear down and must be raised again; towns pay from their investment, and a realm can order a town to prepare by mandate.'

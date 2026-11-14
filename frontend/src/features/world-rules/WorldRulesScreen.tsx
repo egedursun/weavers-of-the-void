@@ -186,7 +186,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
     }
     save.mutate(changes, {
       onSuccess: () => {
-        toast.success(`${drafts.size} rules updated`)
+        toast.success(`${plural(drafts.size, 'rule', 'rules')} updated`)
         setDrafts(new Map())
         setServerErrors(new Map())
         setGeneralError(null)
@@ -304,7 +304,9 @@ function RulesEditor({ rules }: RulesEditorProps) {
             }
           >
             <Save />
-            {drafts.size > 0 ? `Save ${drafts.size} changes` : 'Save changes'}
+            {drafts.size > 0
+              ? `Save ${plural(drafts.size, 'change', 'changes')}`
+              : 'Save changes'}
           </Button>
         </div>
       </div>

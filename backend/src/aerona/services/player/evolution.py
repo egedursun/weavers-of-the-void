@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import agree, several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, PlagueResponse
@@ -147,7 +148,7 @@ async def edit_trait(scope: PlayerScope, command: TraitEdit) -> Effect:
 @player_action("species_trait:delete", ActionKind.EDIT_RECORD)
 async def delete_traits(scope: PlayerScope, command: TraitTarget) -> Effect:
     removed = await control.delete_traits(await scope.context("species_trait_delete"), command.species_id, command.region_id, command.trait)
-    return Effect(f"{removed} traits of that stock are drawn anew from its kind.", command.species_id)
+    return Effect(f"{several(removed, 'trait', 'traits')} of that stock {agree(removed, 'is', 'are')} drawn anew from its kind.", command.species_id)
 
 
 @player_action("lineage:mark", ActionKind.EDIT_RECORD)

@@ -1,4 +1,5 @@
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -77,7 +78,7 @@ export function CosmicChronicleGrid({ enabled }: { enabled: boolean }) {
                           </Muted>
                         ) : (
                           <div className='flex min-w-0 flex-col gap-1'>
-                            <Label>{`${formatInteger(cell.event_count)} events`}</Label>
+                            <Label>{`${plural(cell.event_count, 'event', 'events')}`}</Label>
                             {cell.headlines
                               .slice(0, HEADLINES_SHOWN)
                               .map((headline, index) => (

@@ -18,6 +18,7 @@ import {
   User,
   Users,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -251,7 +252,7 @@ export function PrayersScreen() {
         meta={
           <>
             {awaiting > 0 && (
-              <Badge variant='warning'>{`${awaiting} prayers await an answer`}</Badge>
+              <Badge variant='warning'>{`${plural(awaiting, 'prayer', 'prayers')} await an answer`}</Badge>
             )}
             {selectedWorld && (
               <Badge variant='outline'>{`Showing ${selectedWorld.name}`}</Badge>

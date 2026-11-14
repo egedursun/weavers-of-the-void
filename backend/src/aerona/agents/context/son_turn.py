@@ -15,6 +15,7 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.rarities import RARITY_LABELS
 from aerona.catalog.scenarios import SCENARIOS
 from aerona.catalog.stats import EXISTENCE_BAND_LABELS, EXISTENCE_MODES, STATS, existence_band, existence_band_effect, max_essence, max_hp
+from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.meta import ScenarioRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
@@ -63,7 +64,11 @@ async def incitement_lines(scope: Scope, son: SonRow) -> list[str]:
     for war in await incited_wars(scope.session, son.id):
         event = await scope.session.get(EntityRow, war.event_entity_id)
         name = event.name if event is not None else f"war #{war.id}"
-        state = f"ended in age {war.ended_epoch} ({war.ending.value.replace('_', ' ')})" if war.ending is not None else f"still burning, {war.battles} battles"
+        state = (
+            f"ended in age {war.ended_epoch} ({war.ending.value.replace('_', ' ')})"
+            if war.ending is not None
+            else f"still burning, {several(war.battles, 'battle', 'battles')}"
+        )
         lines.append(f"{name}, begun in age {war.started_epoch}, {state}")
     return lines
 

@@ -12,7 +12,9 @@ def told(tally, rows, count):
     third = f"{count} were freed."
     fourth = f"{several(count, 'town', 'towns')} were read."
     fifth = f"The age {count} of its line."
-    return first, second, third, fourth, fifth
+    sixth = f"{several(count, 'town', 'towns')} of the land were read."
+    seventh = f"{several(count, 'town', 'towns')} {agree(count, 'was', 'were')} read."
+    return first, second, third, fourth, fifth, sixth, seventh
 
 
 LINE = "{count} people set out"
@@ -35,13 +37,26 @@ def test_a_count_written_before_a_plural_word_is_flagged() -> None:
         (3, "{tally.towns} towns"),
         (4, "{len(rows)} records"),
         (5, "{count} were"),
-        (11, "{count} people"),
+        (6, "{several(count, 'town', 'towns')} were"),
+        (8, "{several(count, 'town', 'towns')} of the land were"),
+        (13, "{count} people"),
     ]
 
 
 def test_a_screen_count_written_before_a_plural_word_is_flagged() -> None:
-    screen = "const a = `${rows.length} records`\nconst b = `${plural(rows.length, 'record', 'records')}`\nconst c = `${row.total} of them`\n"
-    assert [(item.line, item.text) for item in checker().on_screen({Path("Panel.tsx"): screen})] == [(1, "${rows.length} records")]
+    screen = (
+        "const a = `${rows.length} records`\n"
+        "const b = `${plural(rows.length, 'record', 'records')}`\n"
+        "const c = `${row.total} of them`\n"
+        "const d = `${row.marriages} marriages`\n"
+        "const e = `${formatNumber(nodes)} nodes`\n"
+        "const f = `${traveller} turns back`\n"
+        "const g = `${fixed(row.mass)} suns`\n"
+        "const h = `${plural(sons, 'son', 'sons')} are waiting`\n"
+        "const i = `${plural(sons, 'son', 'sons')} ${agree(sons, 'is', 'are')} waiting`\n"
+    )
+    found = [(item.line, item.text) for item in checker().on_screen({Path("Panel.tsx"): screen})]
+    assert found == [(1, "${rows.length} records"), (4, "${row.marriages} marriages"), (5, "${formatNumber(nodes)} nodes"), (8, "plural(…) are")]
 
 
 def test_every_screen_counts_in_the_singular_and_plural() -> None:

@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { FolderSync, Save, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -62,7 +63,7 @@ function TargetEditor({
         <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
           <FieldLabel htmlFor={inputId}>A second copy elsewhere</FieldLabel>
           <Muted variant='caption'>
-            {`Each backup is also copied to this folder, for example a synced or external drive. The last ${target.keep} copies are kept there.`}
+            {`Each backup is also copied to this folder, for example a synced or external drive. The last ${plural(target.keep, 'copy', 'copies')} ${agree(target.keep, 'is', 'are')} kept there.`}
           </Muted>
         </div>
         <Badge size='sm' variant={target.directory ? 'success' : 'outline'}>

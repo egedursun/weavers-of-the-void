@@ -8,7 +8,7 @@ import {
   Trees,
   Wheat,
 } from 'lucide-react'
-import { plural } from '@/lib/units'
+import { agree, plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -336,7 +336,7 @@ function LandBody({
                   icon={Sprout}
                   tone='info'
                   title={<Ref node={row.node} />}
-                  caption={`${row.detail} people`}
+                  caption={`${row.detail} ${agree(Number(row.detail), 'person', 'people')}`}
                   aside={
                     <Button
                       size='sm'

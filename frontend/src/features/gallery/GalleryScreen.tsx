@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -141,7 +142,7 @@ export function GalleryScreen() {
         description={ITEM.description}
         icon={ITEM.icon}
         meta={
-          <Badge variant='outline'>{`${formatInteger(all.length)} images`}</Badge>
+          <Badge variant='outline'>{`${plural(all.length, 'image', 'images')}`}</Badge>
         }
         actions={
           <Button
@@ -216,8 +217,8 @@ export function GalleryScreen() {
             title='Every likeness'
             description={
               filtering
-                ? `${formatInteger(filtered.length)} of ${formatInteger(all.length)} images match.`
-                : `${formatInteger(all.length)} images.`
+                ? `${formatInteger(filtered.length)} of ${plural(all.length, 'image', 'images')} match.`
+                : `${plural(all.length, 'image', 'images')}.`
             }
             level={3}
           >

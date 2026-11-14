@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.climate import ClimateProfile, climate_profile, climate_weights
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -222,7 +223,7 @@ async def impose_climate(ctx: TickContext, world_id: int, era: ClimateEra, epoch
     profile = climate_profile(ctx.rules, era)
     await note(
         ctx,
-        f"By divine order the {profile.label.lower()} fell upon {world.name} for {epochs} epochs. {profile.description}",
+        f"By divine order the {profile.label.lower()} fell upon {world.name} for {several(epochs, 'epoch', 'epochs')}. {profile.description}",
         key="climate.imposed",
         world_id=world.id,
         son_id=son_id,
