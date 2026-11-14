@@ -8,6 +8,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.ages import (
     AgeEchoRow,
     AgeRow,
+    ArcBeatRow,
     ArcFigureRow,
     ArcRow,
     EcoTransformationRow,
@@ -22,13 +23,15 @@ from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.cycles import LongPlanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.physics import ImpactEventRow
 from aerona.db.tables.sacred import ForesightRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.domain.enums.ages import AgeCycle, ArcOutcome, ArcRole, ArcStage, ArcTemplate, PayoffKind, SeasonCause, SeasonSpell, SetupKind
+from aerona.domain.enums.ages import AgeCycle, ArcOutcome, ArcRole, ArcStage, ArcTemplate, FormationZone, PayoffKind, SeasonCause, SeasonSpell, SetupKind
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.collective import StoryletId
 from aerona.domain.enums.culture import ProphecyPredicate
 from aerona.domain.enums.cycles import LongPlanKind
 from aerona.domain.enums.economy import GoodsFlow
@@ -40,15 +43,17 @@ from aerona.domain.models.entity_stats import KnowledgeStats, LegendStats, Peopl
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.formation import FormationTally, form_worlds
 from aerona.engine.cosmos.orbits import infer
-from aerona.engine.cycles.ecology import EcologyTally, keep_transformations, remake
-from aerona.engine.environment.long_seasons import SeasonTally, keep_seasons
+from aerona.engine.cycles.ecology import EcologyTally, keep_transformations, remake, set_back
+from aerona.engine.environment.long_seasons import SeasonTally, keep_seasons, winter_share
 from aerona.engine.notes import note
+from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import connect, has_flag
 from aerona.engine.primitives.society import shift_stock, stock
+from aerona.engine.storyteller import control as tales
 from aerona.engine.storyteller.ages import AgeTally, keep_ages, turn_age
 from aerona.engine.storyteller.arcs import ArcTally, detect, keep_arcs, open_arc
-from aerona.engine.storyteller.drama import DramaTally, keep_drama, pressed, pressing_foe
+from aerona.engine.storyteller.drama import DramaTally, keep_drama, pay_setups, pressed, pressing_foe, world_drama
 from aerona.prompts import PromptId
 from aerona.prompts.catalog import render
 from aerona.prompts.contexts.narrative import VoicesContext
@@ -337,3 +342,112 @@ async def test_mortals_and_gods_read_their_tales_and_seasons_in_context(session:
     assert any("your part is rival" in line for line in await mortal_ages_lines(scope, rival))
     world.son.current_world_id = world.world.id
     assert any("tale" in line for line in await son_ages_lines(scope, world.son))
+
+
+async def test_a_quest_runs_through_the_stages_of_the_heros_journey_and_keeps_each_beat_whole(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Wayford", world, world.regions[0])
+    hero = await mortal(session, "Selk", world, town.id)
+    guide = await mortal(session, "Orla", world, town.id)
+    ctx = await at(session, 2)
+    arc = await open_arc(ctx, hero.id, ArcTemplate.QUEST, ((guide.id, ArcRole.MENTOR),))
+    assert arc.stage is ArcStage.CALL
+    long_line = "Selk and Orla crossed the high pass together. " * 20
+    await note(await at(session, 3), long_line, key="test.crossing", ids=[hero.id, guide.id])
+    await keep_arcs(await at(session, 3), ArcTally())
+    assert arc.stage is ArcStage.REFUSAL
+    beat = await session.scalar(select(ArcBeatRow).where(ArcBeatRow.arc_id == arc.id, ArcBeatRow.stage == ArcStage.REFUSAL))
+    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "test.crossing"))
+    assert beat is not None and told is not None and beat.text == told and len(beat.text) > 480
+    feud = await open_arc(ctx, guide.id, ArcTemplate.REVENGE, ((hero.id, ArcRole.FOE),))
+    assert feud.stage is ArcStage.INCITING
+
+
+async def test_a_gods_portent_presses_the_tale_of_its_subject_and_is_paid_by_its_next_beat(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Omenmere", world, world.regions[0])
+    marked = await mortal(session, "Ysa", world, town.id)
+    other = await mortal(session, "Brann", world, town.id)
+    ctx = await at(session, 2)
+    arc = await open_arc(ctx, marked.id, ArcTemplate.RIVALRY, ((other.id, ArcRole.RIVAL),))
+    setup = await tales.add_setup(ctx, SetupKind.PORTENT, world.son.id, marked.id)
+    await keep_drama(await at(session, 3, arcs={"setup_pull": 25, "stall_epochs": 50}), [], DramaTally())
+    assert arc.drama == 25 and setup.payoff is PayoffKind.OPEN
+    await note(await at(session, 4), "Ysa and Brann met at the market.", key="test.market", ids=[marked.id, other.id])
+    await keep_arcs(await at(session, 4), ArcTally())
+    tally = DramaTally()
+    await pay_setups(await at(session, 5), tally)
+    assert setup.payoff is PayoffKind.FULFILLED and setup.payoff_text == "Ysa and Brann met at the market." and tally.fulfilled == 1
+
+
+async def test_a_stalled_tale_presses_only_the_storylets_that_would_bring_its_next_beat(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Lovers Leap", world, world.regions[0])
+    lover = await mortal(session, "Arin", world, town.id)
+    beloved = await mortal(session, "Ilse", world, town.id)
+    ctx = await at(session, 2)
+    arc = await open_arc(ctx, lover.id, ArcTemplate.FORBIDDEN_LOVE, ((beloved.id, ArcRole.BELOVED),))
+    arc.drama = 80
+    await session.flush()
+    assert await world_drama(ctx, world.world.id, StoryletId.WEDDING_CHALLENGE) == 80
+    assert await world_drama(ctx, world.world.id, StoryletId.HOARDED_STORE) == 0
+
+
+async def test_a_long_winter_cuts_the_harvest_of_its_world_by_its_severity(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await at(session, 3, long_seasons={"winter_harvest_pct": 60})
+    season = IrregularSeasonRow(world_id=world.world.id, cause=SeasonCause.ORBIT, spell=SeasonSpell.SUMMER, severity=50, spell_length=3, locked=[])
+    session.add(season)
+    await session.flush()
+    assert await winter_share(ctx, world.world.id) == 100
+    season.spell = SeasonSpell.WINTER
+    assert await winter_share(ctx, world.world.id) == 70
+
+
+async def test_a_turning_age_remakes_every_world_fades_its_lore_and_counts_rightly(session: AsyncSession, world: CoreWorld) -> None:
+    far, _ = await add_empty_world(session, "Farrow")
+    folk = await entity(session, "Farfolk", EntityType.PEOPLE, PeopleStats(population=300), world_id=world.world.id)
+    tale = await entity(session, "The Only Tale", EntityType.LEGEND, LegendStats(spread=80), world_id=world.world.id)
+    tale.affiliated_entity_id = folk.id
+    craft = await entity(session, "Far Craft", EntityType.KNOWLEDGE, KnowledgeStats(level=2, spread=30), world_id=far.id)
+    await session.flush()
+    await turn_age(await at(session, 3, ages={"carry_pct": 30}), None)
+    assert tale.stats.model_dump().get("spread") == 24
+    ruins = await session.scalar(select(EntityRow.id).where(EntityRow.world_id == far.id, EntityRow.subtype == "ruin of the previous creation"))
+    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "ages.turned"))
+    assert told is not None and "1 tale was half-remembered" in told
+    await turn_age(await at(session, 4, ages={"carry_pct": 0}), None)
+    assert await has_flag(session, craft.id, EntityFlag.LOST)
+    assert ruins is not None
+
+
+async def test_a_moon_forms_where_its_planet_circles_its_star(session: AsyncSession, world: CoreWorld) -> None:
+    planet, _ = await add_empty_world(session, "Glacis")
+    moon, _ = await add_empty_world(session, "Shard")
+    planet.orbit, moon.orbit, moon.parent_world_id = 40.0, 0.05, planet.id
+    await session.flush()
+    await form_worlds(await at(session, 3), FormationTally())
+    history = await session.get(FormationHistoryRow, moon.id)
+    assert history is not None and history.zone is FormationZone.OUTER
+
+
+async def test_a_sabotage_takes_the_land_back_a_step_away_from_the_plans_aim(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await at(session, 3, eco_transformations={"step": 10, "sabotage_loss": 1})
+    plan = LongPlanRow(
+        holder_node_id=world.son.id,
+        target_node_id=world.regions[0].id,
+        kind=LongPlanKind.ECOLOGICAL_TRANSFORMATION,
+        name="The Drowning",
+        steps=10,
+        progress=5,
+        step_cost=0,
+        locked=[],
+    )
+    session.add(plan)
+    await session.flush()
+    work = EcoTransformationRow(plan_id=plan.id, target_moisture=90, target_forest=10, target_fertility=60, locked=[])
+    session.add(work)
+    await environment_survey(ctx)
+    land = await session.get(RegionEnvironmentRow, world.regions[0].id)
+    assert land is not None
+    land.moisture, land.forest_cover, land.soil_fertility = 50, 40, 60
+    await session.flush()
+    await set_back(ctx, plan, work)
+    assert (land.moisture, land.forest_cover, land.soil_fertility) == (40, 50, 60)
+    assert plan.progress == 4 and work.sabotage == 1

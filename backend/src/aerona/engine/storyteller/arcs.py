@@ -26,6 +26,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 
 STAGES = (ArcStage.INCITING, ArcStage.RISING, ArcStage.CRISIS, ArcStage.CLIMAX, ArcStage.RESOLUTION)
+MONOMYTH = (ArcStage.CALL, ArcStage.REFUSAL, ArcStage.MENTOR, ArcStage.THRESHOLD, ArcStage.ORDEAL, ArcStage.RETURN, ArcStage.RESOLUTION)
 YOUNG = frozenset({LifeStage.CHILD, LifeStage.YOUTH})
 FLAWS = (TraitKind.WRATHFUL, TraitKind.PROUD, TraitKind.PARANOID, TraitKind.CRUEL)
 KIN = (BondKind.PARENT_OF, BondKind.SPOUSE_OF, BondKind.SWORN_KIN)
@@ -36,6 +37,10 @@ RECENT = 3
 ENDS_IN_DEATH = frozenset({ArcTemplate.TRAGEDY, ArcTemplate.FALL_OF_A_HOUSE, ArcTemplate.RISE_AND_FALL})
 
 Figure = tuple[int, ArcRole]
+
+
+def stages_of(template: ArcTemplate) -> tuple[ArcStage, ...]:
+    return MONOMYTH if template is ArcTemplate.QUEST else STAGES
 
 
 @dataclass(frozen=True)
@@ -239,13 +244,14 @@ async def open_arcs_of(ctx: TickContext, subject_id: int) -> list[ArcRow]:
 
 
 async def open_arc(ctx: TickContext, subject_id: int, template: ArcTemplate, figures: tuple[Figure, ...] = (), *, echo_id: int | None = None) -> ArcRow:
-    row = ArcRow(subject_node_id=subject_id, template=template, echo_id=echo_id, started_epoch=ctx.epoch, last_beat_epoch=ctx.epoch, locked=[])
+    first = stages_of(template)[0]
+    row = ArcRow(subject_node_id=subject_id, template=template, stage=first, echo_id=echo_id, started_epoch=ctx.epoch, last_beat_epoch=ctx.epoch, locked=[])
     ctx.session.add(row)
     await ctx.session.flush()
     for node_id, role in figures:
         if node_id != subject_id and await ctx.session.get(ArcFigureRow, (row.id, node_id)) is None:
             ctx.session.add(ArcFigureRow(arc_id=row.id, node_id=node_id, role=role, locked=[]))
-    ctx.session.add(ArcBeatRow(arc_id=row.id, stage=ArcStage.INCITING, text=template.value.replace("_", " "), epoch=ctx.epoch, locked=[]))
+    ctx.session.add(ArcBeatRow(arc_id=row.id, stage=first, text=template.value.replace("_", " "), epoch=ctx.epoch, locked=[]))
     await ctx.session.flush()
     return row
 
@@ -332,15 +338,16 @@ async def advance(ctx: TickContext, arc: ArcRow, tally: ArcTally) -> bool:
     incident = await shared_incident(ctx, arc.subject_node_id, [row.node_id for row in figures], arc.last_beat_epoch)
     if incident is None or "stage" in arc.locked:
         return False
-    position = STAGES.index(arc.stage)
-    if position + 1 >= len(STAGES) - 1:
+    stages = stages_of(arc.template)
+    position = stages.index(arc.stage) if arc.stage in stages else 0
+    if position + 1 >= len(stages) - 1:
         if "outcome" not in arc.locked:
             await close(ctx, arc, ArcOutcome.TWISTED if arc.drama >= PERCENT else ArcOutcome.FULFILLED, tally)
         return True
-    arc.stage = STAGES[position + 1]
+    arc.stage = stages[position + 1]
     arc.beats += 1
     arc.last_beat_epoch = ctx.epoch
-    ctx.session.add(ArcBeatRow(arc_id=arc.id, stage=arc.stage, text=incident.text[:400], epoch=ctx.epoch, locked=[]))
+    ctx.session.add(ArcBeatRow(arc_id=arc.id, stage=arc.stage, text=incident.text, epoch=ctx.epoch, locked=[]))
     tally.beats += 1
     return True
 

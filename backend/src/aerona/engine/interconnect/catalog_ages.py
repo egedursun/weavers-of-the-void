@@ -51,6 +51,7 @@ AGES_MECHANICS = (
         targets=("world", "people", "settlement", "mortal"),
         couplings=(
             Coupling(S.ECONOMY, "a long winter eats the food of every town", E.FLOW, "long_seasons.winter_loss_pct"),
+            Coupling(S.ENVIRONMENT, "a long winter cuts the harvest of its world by its severity", E.MODIFIER, "long_seasons.winter_harvest_pct"),
             Coupling(S.KNOWLEDGE, "scholars of the sky forecast the turn of a long season", E.TRIGGER, "long_seasons.scholar_skill"),
             Coupling(S.SOCIAL, "a people that heeds its scholars stores food against the winter", E.MODIFIER, "long_seasons.prepared_share"),
             Coupling(S.COSMOS, "a chaotic orbit makes the seasons irregular", E.RULE_SWITCH, "long_seasons.chaos_eccentricity"),
@@ -75,6 +76,7 @@ AGES_MECHANICS = (
             Coupling(S.ENVIRONMENT, "moisture, forest and soil move toward the plan's targets", E.FLOW, "eco_transformations.step"),
             Coupling(S.ENVIRONMENT, "a harsh climate takes back part of each step", E.MODIFIER, "eco_transformations.resistance_pct"),
             Coupling(S.SOCIAL, "folk who live from the old land sabotage the work", E.TRIGGER, "eco_transformations.sabotage_chance"),
+            Coupling(S.ENVIRONMENT, "a sabotage takes the land back a step", E.FLOW, "eco_transformations.sabotage_loss"),
         ),
     ),
     Mechanic(
@@ -131,7 +133,8 @@ AGES_MECHANICS = (
         targets=("mortal", "settlement", "polity"),
         couplings=(
             Coupling(S.INTRIGUE, "a stalled revenge or rivalry presses its subject to scheme against the foe", E.MODIFIER, "arcs.drama_boost"),
-            Coupling(S.SOCIAL, "the drama of a world raises the odds of its storylets", E.MODIFIER, "arcs.drama_step"),
+            Coupling(S.SOCIAL, "a stalled tale raises the odds of the storylets that would bring its next beat", E.MODIFIER, "arcs.drama_step"),
+            Coupling(S.FAITH, "a setup waiting about a subject presses its tales toward a payoff", E.MODIFIER, "arcs.setup_pull"),
             Coupling(S.CULTURE, "a counterpart's beat presses the other tale", E.FLOW, "arcs.counterpoint"),
             Coupling(S.FAITH, "prophecies, omens and foresights are paid off or lapse", E.TRIGGER, "arcs.lapse_epochs"),
         ),

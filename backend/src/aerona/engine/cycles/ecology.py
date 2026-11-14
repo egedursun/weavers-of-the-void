@@ -97,14 +97,33 @@ async def dependents(ctx: TickContext, region_ids: list[int], plan: LongPlanRow)
     return [town for town in rows if plan.holder_node_id not in (town.affiliated_entity_id, town.id) and not held(town.id)]
 
 
+def step_away(current: int, target: int, step: int) -> int:
+    if current < target:
+        return clamp_int(current - step, 0, PERCENT)
+    if current > target:
+        return clamp_int(current + step, 0, PERCENT)
+    return current
+
+
+async def set_back(ctx: TickContext, plan: LongPlanRow, row: EcoTransformationRow) -> None:
+    table = ctx.rules.eco_transformations
+    plan.progress = max(0, plan.progress - table.sabotage_loss)
+    if "sabotage" not in row.locked:
+        row.sabotage += 1
+    for region in await regions_of(ctx, plan.target_node_id):
+        if held(region.entity_id):
+            continue
+        for column, aim in AIMS:
+            if column not in region.locked:
+                setattr(region, column, step_away(getattr(region, column), getattr(row, aim), table.step))
+
+
 async def sabotage(ctx: TickContext, plan: LongPlanRow, row: EcoTransformationRow, region_ids: list[int], tally: EcologyTally) -> None:
     table = ctx.rules.eco_transformations
     towns = await dependents(ctx, region_ids, plan)
     if not towns or "progress" in plan.locked or not ctx.rng(f"eco.sabotage.{plan.id}.{ctx.epoch}").chance(table.sabotage_chance):
         return
-    plan.progress = max(0, plan.progress - table.sabotage_loss)
-    if "sabotage" not in row.locked:
-        row.sabotage += 1
+    await set_back(ctx, plan, row)
     tally.sabotaged += 1
     await note(
         ctx,

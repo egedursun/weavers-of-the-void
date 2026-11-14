@@ -976,7 +976,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {},
     ),
     T.SABOTAGE_REMAKING: ToolText(
-        "You set back a plan that remakes the land you live from. 1 action.",
+        "You set back a plan that remakes the land you live from: its progress falls back and the land it touches goes back a step. 1 action.",
         {"plan_id": "The plan"},
     ),
     T.SWEAR_VENGEANCE: ToolText(

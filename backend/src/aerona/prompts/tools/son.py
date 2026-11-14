@@ -1675,7 +1675,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"arc_id": "The tale", "reason": "Why you press it"},
     ),
     T.FORESHADOW: ToolText(
-        "You set something up about a subject in your reach for the tale of the world to pay off later; the chroniclers tell its payoff as such. 1 action.",
+        "You set a portent about a subject in your reach: while it waits, the tales of that subject are pressed toward their next turn, and it "
+        "is paid off when one of them turns or the subject's life ends; the chroniclers tell its payoff as such. Unpaid, it lapses. 1 action.",
         {"subject_id": "Whom or what it is about", "reason": "What you set up"},
     ),
     T.ECHO_LIFE: ToolText(

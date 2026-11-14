@@ -119,7 +119,7 @@ async def foreshadow(call: SonCall, args: ForeshadowInput) -> str:
     await ensure_in_reach(call, subject)
     if held(subject.id):
         fail(SonResult.FORESHADOW_REFUSED, why="a stronger hand holds it")
-    row = await control.add_setup(call.tick, SetupKind.OMEN, call.son.id, subject.id)
+    row = await control.add_setup(call.tick, SetupKind.PORTENT, call.son.id, subject.id)
     call.target(subject.id)
     await call.chronicle(ChronicleKind.DIVINE_SIGN, lines.FORESHADOW, entity_ids=[subject.id], son=call.son.name, subject=subject.name, reason=args.reason)
     return result(SonResult.FORESHADOWED, subject=subject.name, lapse=row.opened_epoch + call.tick.rules.arcs.lapse_epochs)

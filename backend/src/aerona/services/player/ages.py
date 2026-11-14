@@ -141,7 +141,7 @@ class BeatEdit(Edited):
 
 
 class SetupDraft(Command):
-    kind: SetupKind = SetupKind.OMEN
+    kind: SetupKind = SetupKind.PORTENT
     source_id: int = Field(default=0, ge=0)
     subject_id: int | None = None
 

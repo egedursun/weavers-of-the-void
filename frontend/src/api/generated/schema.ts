@@ -37017,7 +37017,18 @@ export interface components {
     }
     ArcRole:
       'rival' | 'mentor' | 'beloved' | 'betrayer' | 'heir' | 'foe' | 'ally'
-    ArcStage: 'inciting' | 'rising' | 'crisis' | 'climax' | 'resolution'
+    ArcStage:
+      | 'inciting'
+      | 'rising'
+      | 'crisis'
+      | 'climax'
+      | 'call'
+      | 'refusal'
+      | 'mentor'
+      | 'threshold'
+      | 'ordeal'
+      | 'return'
+      | 'resolution'
     ArcTemplate:
       | 'rise_and_fall'
       | 'rags_to_riches'
@@ -60380,7 +60391,8 @@ export interface components {
       release?: string[]
       setup_id: number
     }
-    SetupKind: 'prophecy' | 'omen' | 'dream' | 'foresight' | 'thread'
+    SetupKind:
+      'prophecy' | 'omen' | 'dream' | 'foresight' | 'thread' | 'portent'
     SetupView: {
       id: number
       kind: components['schemas']['SetupKind']
@@ -137376,7 +137388,19 @@ export const arcRoleValues: ReadonlyArray<
 > = ['rival', 'mentor', 'beloved', 'betrayer', 'heir', 'foe', 'ally']
 export const arcStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArcStage']
-> = ['inciting', 'rising', 'crisis', 'climax', 'resolution']
+> = [
+  'inciting',
+  'rising',
+  'crisis',
+  'climax',
+  'call',
+  'refusal',
+  'mentor',
+  'threshold',
+  'ordeal',
+  'return',
+  'resolution',
+]
 export const arcTemplateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArcTemplate']
 > = [
@@ -143801,7 +143825,7 @@ export const settlementTierValues: ReadonlyArray<
 > = ['capital', 'village', 'town', 'city', 'great_city']
 export const setupKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SetupKind']
-> = ['prophecy', 'omen', 'dream', 'foresight', 'thread']
+> = ['prophecy', 'omen', 'dream', 'foresight', 'thread', 'portent']
 export const sexValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Sex']
 > = ['female', 'male']

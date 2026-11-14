@@ -82,6 +82,18 @@ def counted_moons(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, moons
     return [*moons, *[Moon(physics.mass * HELD_MOON_SHARE, orbit, HELD_MOON_TILT)] * (held - len(moons))]
 
 
+async def planet_of(session: AsyncSession, world: WorldRow) -> WorldRow:
+    planet = world
+    seen = {world.id}
+    while planet.parent_world_id is not None and planet.parent_world_id not in seen:
+        parent = await session.get(WorldRow, planet.parent_world_id)
+        if parent is None:
+            break
+        seen.add(parent.id)
+        planet = parent
+    return planet
+
+
 def root_of(worlds: dict[int, WorldRow], world: WorldRow) -> WorldRow:
     seen: set[int] = set()
     while world.parent_world_id is not None and world.id not in seen and world.parent_world_id in worlds:
@@ -277,10 +289,10 @@ def match_kind(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, star: St
             take(physics, column.key, getattr(fresh, column.key))
 
 
-def calibrate(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, star: StarRow | None, sky: Sky, parent: WorldPhysicsRow | None) -> None:
+def calibrate(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, star: StarRow | None, sky: Sky, parent: WorldPhysicsRow | None, orbit: float) -> None:
     if not sky.lights or world.world_type in SKYLESS_WORLDS:
         return
-    target = star_heat(rules, star) + band_heat(rules, world, star)
+    target = star_heat(rules, star) + band_heat(rules, world, star, orbit)
     best = min(range(0, 96), key=lambda albedo: abs(heat_of(rules, temperature_with(rules, world, physics, sky=sky, parent=parent, albedo=albedo)) - target))
     physics.albedo = best
 
@@ -339,7 +351,7 @@ def lose_air(rules: Rules, physics: WorldPhysicsRow) -> bool:
     return True
 
 
-def apply_to_world(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, sky: Sky, moons: list[Moon]) -> list[str]:
+def apply_to_world(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, sky: Sky, moons: list[Moon], *, orbit: float) -> list[str]:
     changed: list[str] = []
     if "gravity" not in world.locked and world.gravity is not gravity_band(rules, physics.gravity_g):
         world.gravity = gravity_band(rules, physics.gravity_g)
@@ -349,7 +361,7 @@ def apply_to_world(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, sky:
         changed.append("atmosphere")
     calendar = set(world.calendar_locked)
     if sky.lights and "year_length_days" not in calendar:
-        root_year = year_days(rules, world.orbit, sky.central_mass)
+        root_year = year_days(rules, orbit, sky.central_mass)
         if world.year_length_days != root_year:
             world.year_length_days = root_year
             changed.append("year_length_days")

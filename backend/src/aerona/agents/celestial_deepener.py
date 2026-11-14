@@ -127,7 +127,11 @@ async def _star_lines(scope: Scope, star: StarRow) -> tuple[list[str], list[str]
     ]
     if star.description:
         details.append(f"Description: {star.description}")
-    worlds = list(await scope.session.scalars(select(WorldRow).where(WorldRow.star_id == star.id).order_by(WorldRow.orbit)))
+    worlds = list(
+        await scope.session.scalars(
+            select(WorldRow).where(WorldRow.star_id == star.id).order_by(WorldRow.parent_world_id.is_not(None), WorldRow.orbit, WorldRow.id)
+        )
+    )
     neighbours = [f"{world.name} ({WORLD_TYPES[world.world_type].label})" for world in worlds]
     return details, neighbours
 

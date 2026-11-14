@@ -161,7 +161,7 @@ async def add_figure(ctx: TickContext, arc_id: int, node_id: int, role: ArcRole)
 
 async def add_beat(ctx: TickContext, arc_id: int, stage: ArcStage, text: str) -> ArcBeatRow:
     arc = await found(ctx, ArcRow, arc_id, "arc")
-    row = await saved(ctx, ArcBeatRow(arc_id=arc.id, stage=stage, text=text[:400], epoch=ctx.epoch, locked=[]))
+    row = await saved(ctx, ArcBeatRow(arc_id=arc.id, stage=stage, text=text, epoch=ctx.epoch, locked=[]))
     if "stage" not in arc.locked:
         arc.stage = stage
         arc.beats += 1

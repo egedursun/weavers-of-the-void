@@ -2,7 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.core.grammar import several
+from aerona.constants.units import PERCENT
+from aerona.core.grammar import agree, several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.ages import AgeEchoRow, AgeRow, ArcRow
 from aerona.db.tables.celestial import WorldRow
@@ -19,6 +20,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.phases.civilization import reveal_previous_creation
 from aerona.engine.primitives.queries import add_flag, connect
+from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.storyteller.arcs import open_arc
 
 CARRIED_KINDS = (EntityType.LEGEND, EntityType.PROPHECY)
@@ -47,6 +49,10 @@ async def ensure_age(ctx: TickContext, tally: AgeTally) -> AgeRow:
     return row
 
 
+def faded(value: int | None, carried: int) -> int:
+    return (value or 0) * carried // PERCENT
+
+
 async def carry_lore(ctx: TickContext, carried: int) -> int:
     count = 0
     lore = await ctx.session.scalars(
@@ -63,15 +69,19 @@ async def carry_lore(ctx: TickContext, carried: int) -> int:
                 holder_entity_id=holder, kind=AccountKind.FOLK_MEMORY, subject_node_id=item.id, fidelity=carried, credence=carried, epoch=ctx.epoch, locked=[]
             )
         )
+        if item.entity_type is EntityType.LEGEND:
+            set_stats(item, spread=faded(stat(item, "spread"), carried))
+        else:
+            set_stats(item, certainty=faded(stat(item, "certainty"), carried))
         count += 1
     return count
 
 
-async def lose_knowledge(ctx: TickContext, world_id: int | None, carried: int) -> int:
+async def lose_knowledge(ctx: TickContext, world_ids: list[int], carried: int) -> int:
     lost = 0
     knowledge = await ctx.session.scalars(
         select(EntityRow)
-        .where(EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON, EntityRow.world_id == world_id)
+        .where(EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON, EntityRow.world_id.in_(world_ids))
         .order_by(EntityRow.id)
     )
     for item in list(knowledge):
@@ -110,20 +120,17 @@ async def turn_age(ctx: TickContext, variant: ApocalypseVariant | None) -> AgeRo
     opened = AgeRow(number=ended.number + 1, began_epoch=ctx.epoch, locked=[])
     ctx.session.add(opened)
     await ctx.session.flush()
-    cosmos = await CosmosRepository(ctx.session).require_cosmos()
-    world = await ctx.session.get(WorldRow, cosmos.primary_world_id) if cosmos.primary_world_id is not None else None
-    if world is not None and not held(world.id):
+    worlds = [world for world in await ctx.session.scalars(select(WorldRow).order_by(WorldRow.id)) if not held(world.id)]
+    for world in worlds:
         await reveal_previous_creation(ctx, world)
     lore = await carry_lore(ctx, carried)
-    lost = await lose_knowledge(ctx, world.id if world is not None else None, carried)
+    lost = await lose_knowledge(ctx, [world.id for world in worlds], carried)
     echoes = await seed_echoes(ctx, ended, opened)
-    tales_counted = several(lore, "tale", "tales")
-    arts_counted = several(lost, "art", "arts")
+    remembered = f"{several(lore, 'tale', 'tales')} {agree(lore, 'was', 'were')} half-remembered"
+    forgotten = f"{several(lost, 'art', 'arts')} {agree(lost, 'was', 'were')} lost"
     await note(
         ctx,
-        f"The age turned and age {opened.number} began. {tales_counted} were half-remembered, {arts_counted} were lost and "
-        + several(echoes, "great life", "great lives")
-        + " will echo.",
+        f"The age turned and age {opened.number} began. {remembered}, {forgotten} and {several(echoes, 'great life', 'great lives')} will echo.",
         key="ages.turned",
     )
     return opened

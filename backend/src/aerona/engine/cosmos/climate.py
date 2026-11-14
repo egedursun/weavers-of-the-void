@@ -43,14 +43,15 @@ def band_of(rules: Rules, star: StarRow | None) -> tuple[float, float] | None:
     return star.brightness * table.band_inner_pct / PERCENT, star.brightness * table.band_outer_pct / PERCENT
 
 
-def band_heat(rules: Rules, world: WorldRow, star: StarRow | None) -> int:
+def band_heat(rules: Rules, world: WorldRow, star: StarRow | None, orbit: float | None = None) -> int:
     band = band_of(rules, star)
-    if band is None or world.parent_world_id is not None:
+    if band is None or (orbit is None and world.parent_world_id is not None):
         return 0
     inner, outer = band
-    if world.orbit < inner:
+    distance = world.orbit if orbit is None else orbit
+    if distance < inner:
         return rules.star_life.band_heat
-    if world.orbit > outer:
+    if distance > outer:
         return -rules.star_life.band_heat
     return 0
 

@@ -1,10 +1,12 @@
 import {
   Ban,
+  Bell,
   BookOpen,
   CircleCheck,
   CircleDot,
   CircleX,
   Crown,
+  DoorOpen,
   Droplets,
   Eye,
   Flag,
@@ -40,6 +42,7 @@ import {
   Telescope,
   TrendingDown,
   TrendingUp,
+  Undo2,
   Zap,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
@@ -122,6 +125,16 @@ export const STAGES: Record<Schema['ArcStage'], Named> = {
   rising: { label: 'Rising', icon: TrendingUp, tone: 'info' },
   crisis: { label: 'Crisis', icon: Zap, tone: 'danger' },
   climax: { label: 'Climax', icon: Mountain, tone: 'gold' },
+  call: { label: 'The call', icon: Bell, tone: 'warning' },
+  refusal: { label: 'The refusal', icon: Ban, tone: 'muted' },
+  mentor: {
+    label: 'Meeting the mentor',
+    icon: GraduationCap,
+    tone: 'verdigris',
+  },
+  threshold: { label: 'The threshold', icon: DoorOpen, tone: 'info' },
+  ordeal: { label: 'The ordeal', icon: Swords, tone: 'danger' },
+  return: { label: 'The return', icon: Undo2, tone: 'gold' },
   resolution: { label: 'Resolution', icon: CircleCheck, tone: 'success' },
 }
 
@@ -148,6 +161,7 @@ export const SETUP_KINDS: Record<Schema['SetupKind'], Named> = {
   omen: { label: 'Omen', icon: Eye, tone: 'info' },
   dream: { label: 'Dream', icon: Moon, tone: 'verdigris' },
   foresight: { label: 'Foresight', icon: Telescope, tone: 'info' },
+  portent: { label: 'Portent of a god', icon: Sparkles, tone: 'gold' },
   thread: { label: 'Open story', icon: ScrollText, tone: 'muted' },
 }
 

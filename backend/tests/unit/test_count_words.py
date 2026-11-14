@@ -103,3 +103,14 @@ def test_a_jinja_count_before_its_own_plural_noun_is_flagged() -> None:
     )
     found = checker().counts({Path("module.py"): source})
     assert [item.text for item in found] == ["{{ followers }} followers"]
+
+
+def test_a_name_counted_by_several_before_a_plural_verb_is_flagged() -> None:
+    source = (
+        "def told(lore: int) -> str:\n"
+        "    tales = several(lore, 'tale', 'tales')\n"
+        "    kept = several(lore, 'tale', 'tales')\n"
+        '    return f\'{tales} were half-remembered and {kept} {agree(lore, "was", "were")} kept\'\n'
+    )
+    found = checker().counts({Path("module.py"): source})
+    assert [item.text for item in found] == ["{tales} were"]

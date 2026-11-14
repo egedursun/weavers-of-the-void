@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import agree, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
@@ -449,7 +449,10 @@ async def wave_of_silence(ctx: TickContext, world: WorldRow) -> str:
             await ctx.session.execute(delete(LexemeRow).where(LexemeRow.id.in_(lost)))
             forgotten += len(lost)
     words_counted = several(forgotten, "word", "words")
-    return f"A wave of silence passed through {world.name}: {words_counted} were forgotten; people looked at things and could not remember their names."
+    return (
+        f"A wave of silence passed through {world.name}: {words_counted} {agree(forgotten, 'was', 'were')} forgotten; "
+        "people looked at things and could not remember their names."
+    )
 
 
 async def reverse_rain(ctx: TickContext, world: WorldRow) -> str:

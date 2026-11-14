@@ -5,10 +5,23 @@ from aerona.agents.context.scope import Scope
 from aerona.db.tables.ages import ArcFigureRow, ArcRow, IrregularSeasonRow, SetupRow, WinterForecastRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.ages import ArcOutcome, PayoffKind, SeasonSpell
+from aerona.domain.enums.ages import ArcOutcome, ArcStage, PayoffKind, SeasonSpell
 from aerona.engine.sacred.places import town_of
 
 LIST_LINES = 3
+STAGE_WORDS = {
+    ArcStage.INCITING: "its beginning",
+    ArcStage.RISING: "its rising",
+    ArcStage.CRISIS: "its crisis",
+    ArcStage.CLIMAX: "its climax",
+    ArcStage.CALL: "the call",
+    ArcStage.REFUSAL: "the refusal of the call",
+    ArcStage.MENTOR: "the meeting with a mentor",
+    ArcStage.THRESHOLD: "the crossing of the threshold",
+    ArcStage.ORDEAL: "the ordeal",
+    ArcStage.RETURN: "the return",
+    ArcStage.RESOLUTION: "its end",
+}
 
 
 async def tale_lines(scope: Scope, node_id: int) -> list[str]:
@@ -20,7 +33,7 @@ async def tale_lines(scope: Scope, node_id: int) -> list[str]:
         figures = list(await session.scalars(select(ArcFigureRow).where(ArcFigureRow.arc_id == arc.id).order_by(ArcFigureRow.node_id)))
         parts = [f"{await named(scope, figure.node_id)} as your {figure.role.value}" for figure in figures]
         cast = f", with {', '.join(parts)}" if parts else ""
-        found.append(f"your life follows a tale of {words(arc.template.value)}, now at its {arc.stage.value}{cast}")
+        found.append(f"your life follows a tale of {words(arc.template.value)}, now at {STAGE_WORDS[arc.stage]}{cast}")
     for figure, arc in await session.execute(
         select(ArcFigureRow, ArcRow)
         .join(ArcRow, ArcRow.id == ArcFigureRow.arc_id)
@@ -70,7 +83,7 @@ async def son_ages_lines(scope: Scope, son: SonRow) -> list[str]:
         select(ArcRow).where(ArcRow.subject_node_id.in_(subjects), ArcRow.outcome == ArcOutcome.OPEN).order_by(ArcRow.drama.desc(), ArcRow.id).limit(LIST_LINES)
     ):
         subject = await named(scope, arc.subject_node_id)
-        found.append(f"tale {arc.id}: {subject} follows a tale of {words(arc.template.value)} at its {arc.stage.value}, drama {arc.drama}")
+        found.append(f"tale {arc.id}: {subject} follows a tale of {words(arc.template.value)} at {STAGE_WORDS[arc.stage]}, drama {arc.drama}")
     for setup in await session.scalars(
         select(SetupRow).where(SetupRow.subject_node_id.in_(subjects), SetupRow.payoff == PayoffKind.OPEN).order_by(SetupRow.id).limit(LIST_LINES)
     ):

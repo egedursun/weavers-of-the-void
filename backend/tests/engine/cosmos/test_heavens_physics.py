@@ -4,24 +4,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.worlds import StarDraft, WorldRepository
-from aerona.db.tables.celestial import SkyEventRow, WorldRow
+from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.environment import NotableYearRow
+from aerona.db.tables.integrity import MegastructureRow
 from aerona.db.tables.physics import CosmicFeatureRow, ImpactEventRow, StarPhysicsRow, StarSystemRow, TerraformingRow, WorldPhysicsRow
 from aerona.db.tables.routes import JourneyRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cosmography import WorldAge
 from aerona.domain.enums.ecology import Biochemistry
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.physics import AirNeed, CosmicFeatureKind, ImpactBody, ImpactOutcome, LifeComplexity, SurveyLevel, TerraformAim
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
 from aerona.domain.enums.world import Atmosphere, Gravity, SkyEventKind, StarType, WorldType
 from aerona.domain.models.entity_stats import CelestialStats, PeopleStats, SettlementStats, SpeciesStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos import physics_control
+from aerona.engine.cosmos.climate import band_heat
 from aerona.engine.cosmos.features import adopt_comets, return_comets
 from aerona.engine.cosmos.impacts import call_impact, deflect_impact, forecast, resolve, warn
 from aerona.engine.cosmos.lifeforms import habitability, life_of, may_arise, world_fit
@@ -33,12 +37,14 @@ from aerona.engine.cosmos.terraform import begin, terraform_cycle, wanted_aim
 from aerona.engine.demography.peoples import biology_for, ensure_profiles
 from aerona.engine.environment.control import set_world_calendar
 from aerona.engine.environment.time_control import add_season, set_moons
-from aerona.engine.phases.environment import ensure_world_calendar
+from aerona.engine.phases.environment import ensure_world_calendar, environment_survey
 from aerona.engine.phases.physics import settle_heavens, world_physics
 from aerona.engine.phases.sky import calendar_signs
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import stat
+from aerona.engine.structures.megastructures import MegaTally
+from aerona.engine.structures.megastructures import engine as move_world
 from aerona.rules.registry import Rules
 from aerona.services.books.typed import TypedIndex
 from aerona.services.player.scope import PlayerScope
@@ -153,7 +159,7 @@ async def test_a_known_route_tells_a_people_of_the_world_at_its_end(session: Asy
 async def test_the_calendar_survey_keeps_the_tides_the_heavens_derive(session: AsyncSession, ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
     await settle_heavens(session, rules)
     cosmos.home.tidal_strength = 77
-    await ensure_world_calendar(ctx, cosmos.home, 0)
+    await ensure_world_calendar(ctx, cosmos.home, 0, cosmos.home.orbit)
     assert cosmos.home.tidal_strength == 77
 
 
@@ -340,3 +346,26 @@ async def test_moons_the_god_holds_darken_the_sky(session: AsyncSession, cosmos:
     set_moons(cosmos.home, rules, moon_count=2, tidal_strength=None)
     await world_physics(tick(session, rules))
     assert physics.eclipse_years > 0 and "tidal_strength" in cosmos.home.calendar_locked
+
+
+async def test_a_moon_keeps_the_year_of_its_planet_and_shares_its_band_of_warmth(session: AsyncSession, ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
+    moon = await make_world(session, "Pale")
+    moon.parent_world_id, moon.orbit = cosmos.home.id, 0.02
+    cosmos.home.year_length_days = moon.year_length_days = None
+    await session.flush()
+    await environment_survey(ctx)
+    assert moon.year_length_days == cosmos.home.year_length_days
+    star = await session.get(StarRow, cosmos.home.star_id) if cosmos.home.star_id is not None else None
+    assert band_heat(rules, moon, star, cosmos.home.orbit) == band_heat(rules, cosmos.home, star)
+
+
+async def test_a_planetary_engine_raised_on_a_moon_moves_the_planet_it_circles(session: AsyncSession, ctx: TickContext, cosmos: Cosmos) -> None:
+    moon = await make_world(session, "Tether")
+    moon.parent_world_id, moon.orbit = cosmos.home.id, 0.02
+    cosmos.home.orbit = 1.0
+    town = await make_entity(session, "Anchorage", EntityType.SETTLEMENT, SettlementStats(), world_id=moon.id)
+    profile = StructureProfileRow(structure_entity_id=town.id, kind=StructureKind.PLANETARY_ENGINE, host_entity_id=town.id)
+    state = MegastructureRow(structure_entity_id=town.id, target_orbit=3.0, locked=[])
+    tally = MegaTally()
+    await move_world(ctx, profile, 1.0, state, tally)
+    assert moon.orbit == 0.02 and cosmos.home.orbit > 1.0 and tally.moved == 1

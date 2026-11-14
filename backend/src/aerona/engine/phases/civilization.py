@@ -212,8 +212,8 @@ async def reveal_previous_creation(ctx: TickContext, world: WorldRow) -> EntityR
             name=f"Ruins beneath {region.name}",
             entity_type=EntityType.PLACE,
             body=(
-                f"Beneath {region.name} were found the ruins of a civilization that {maker} created and forgot before this cosmos. "
-                "The writing on the stones resembles no language; but the creator's name is written there in another form."
+                f"Beneath {region.name} were found the remains of a civilization that {maker} created and forgot before this cosmos. "
+                "Its writing resembles no language of this age, but the creator's name is written there in another form."
             ),
             stats=PlaceStats(
                 danger=clamp_percent(civ.relic_site_danger + rng.die(civ.relic_site_danger_die)),

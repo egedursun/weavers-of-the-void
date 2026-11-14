@@ -13,7 +13,7 @@ from aerona.domain.enums.cosmography import WorldAge
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.orbits import GAS_WORLDS
+from aerona.engine.cosmos.orbits import GAS_WORLDS, planet_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 
@@ -71,8 +71,9 @@ def water_of(ctx: TickContext, zone: FormationZone, migration: GiantMigration) -
 async def history_of(ctx: TickContext, world: WorldRow, physics: WorldPhysicsRow | None, *, fresh: bool) -> FormationHistoryRow:
     table = ctx.rules.formation
     rng = ctx.rng(f"formation.{world.id}")
-    zone = zone_for(ctx, world.orbit, await snow_line(ctx, world))
-    migration = migration_for(ctx, world)
+    host = await planet_of(ctx.session, world)
+    zone = zone_for(ctx, host.orbit, await snow_line(ctx, host))
+    migration = migration_for(ctx, host)
     bombardment = clamp_int(AGE_BOMBARDMENT.get(world.age_stage, 40) + rng.integer(-10, 10), 0, PERCENT)
     row = FormationHistoryRow(
         world_id=world.id,

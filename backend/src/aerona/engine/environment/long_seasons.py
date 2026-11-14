@@ -90,6 +90,13 @@ async def turn(ctx: TickContext, world: WorldRow, row: IrregularSeasonRow, tally
         await note(ctx, f"The long winter of {world.name} broke.", key="seasons.summer", world_id=world.id)
 
 
+async def winter_share(ctx: TickContext, world_id: int) -> int:
+    row = await ctx.session.get(IrregularSeasonRow, world_id)
+    if row is None or row.spell is not SeasonSpell.WINTER:
+        return PERCENT
+    return PERCENT - row.severity * ctx.rules.long_seasons.winter_harvest_pct // PERCENT
+
+
 async def scholar_of(ctx: TickContext, people_id: int) -> tuple[EntityRow, int] | None:
     found = await ctx.session.execute(
         select(EntityRow, SkillRow.level)

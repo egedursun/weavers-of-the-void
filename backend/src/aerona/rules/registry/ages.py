@@ -37,6 +37,7 @@ class LongSeasonRules:
     scholar_error: int = rule(8, 0, 50, E, "Epochs a forecast can miss by, before the scholar's skill")
     heed_base: int = rule(30, 0, 100, E, "Chance a people heeds its scholar's forecast before the scholar's skill (%)")
     heed_per_level: int = rule(8, 0, 100, E, "Chance of heeding a forecast added by each level of the scholar's skill")
+    winter_harvest_pct: int = rule(60, 0, 100, E, "Share of a world's harvest a long winter of full severity takes (%)")
 
 
 @dataclass(frozen=True)
@@ -44,7 +45,7 @@ class EcoTransformationRules:
     step: int = rule(5, 0, 100, E, "Points each region moves toward the plan's target each epoch")
     resistance_pct: int = rule(50, 0, 100, E, "Share of the step the world's climate takes back where it pulls against the target (%)")
     sabotage_chance: int = rule(20, 0, 100, E, "Chance each epoch that folk who live from the old land sabotage the work (%)")
-    sabotage_loss: int = rule(1, 0, 100, E, "Steps of progress a sabotage undoes")
+    sabotage_loss: int = rule(1, 0, 100, E, "Steps of progress a sabotage undoes; the land it touches also goes back one step")
 
 
 @dataclass(frozen=True)
@@ -66,3 +67,4 @@ class ArcRules:
     drama_boost: int = rule(50, 0, 500, F, "Share by which full drama raises the chance of the scheme or tale that would bring the next beat (%)")
     counterpoint: int = rule(15, 0, 100, F, "Drama a counterpart's arc gains when its counterpart's arc takes a beat")
     lapse_epochs: int = rule(10, 1, 100, F, "Epochs after which an unpaid setup lapses")
+    setup_pull: int = rule(10, 0, 100, F, "Drama an open arc gains each epoch while a setup about its subject waits to be paid off")

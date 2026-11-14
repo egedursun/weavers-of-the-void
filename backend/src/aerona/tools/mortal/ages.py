@@ -14,6 +14,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cycles import LongPlanStatus
 from aerona.domain.enums.mind import SkillKind
+from aerona.engine.cycles.ecology import set_back
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.sacred.places import region_of, town_of
 from aerona.engine.storyteller import control
@@ -64,9 +65,7 @@ async def sabotage_remaking(call: MortalCall, args: SabotageRemakingInput) -> st
         fail(MortalResult.SABOTAGE_DECLINED, why="it does not touch your land")
     if held(plan.holder_node_id) or "progress" in plan.locked:
         fail(MortalResult.SABOTAGE_DECLINED, why="a stronger hand holds it")
-    plan.progress = max(0, plan.progress - call.tick.rules.eco_transformations.sabotage_loss)
-    if "sabotage" not in work.locked:
-        work.sabotage += 1
+    await set_back(call.tick, plan, work)
     call.target(call.me.id)
     await call.chronicle(ChronicleKind.WORLD, lines.SABOTAGE_REMAKING, entity_ids=[call.me.id], me=call.me.name, plan=plan.name)
     return result(MortalResult.REMAKING_SABOTAGED, plan=plan.name, progress=plan.progress)

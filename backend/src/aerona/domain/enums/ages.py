@@ -52,6 +52,12 @@ class ArcStage(StrEnum):
     RISING = "rising"
     CRISIS = "crisis"
     CLIMAX = "climax"
+    CALL = "call"
+    REFUSAL = "refusal"
+    MENTOR = "mentor"
+    THRESHOLD = "threshold"
+    ORDEAL = "ordeal"
+    RETURN = "return"
     RESOLUTION = "resolution"
 
 
@@ -79,6 +85,7 @@ class SetupKind(StrEnum):
     DREAM = "dream"
     FORESIGHT = "foresight"
     THREAD = "thread"
+    PORTENT = "portent"
 
 
 class PayoffKind(StrEnum):

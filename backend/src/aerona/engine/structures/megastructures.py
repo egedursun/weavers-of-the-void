@@ -17,6 +17,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.structure import STANDING_STATES, StructureKind
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.orbits import planet_of
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -129,14 +130,17 @@ async def ring(ctx: TickContext, profile: StructureProfileRow, strength: float, 
 
 async def engine(ctx: TickContext, profile: StructureProfileRow, strength: float, state: MegastructureRow, tally: MegaTally) -> None:
     world = await host_world(ctx.session, profile)
-    if world is None or state.target_orbit is None or held(world.id) or "orbit" in (world.locked or []):
+    if world is None or state.target_orbit is None:
         return
-    gap = state.target_orbit - world.orbit
+    planet = await planet_of(ctx.session, world)
+    if held(planet.id) or "orbit" in (planet.locked or []):
+        return
+    gap = state.target_orbit - planet.orbit
     step = ctx.rules.megastructures.engine_step_pct / PERCENT * strength
     moved = max(-step, min(step, gap))
     if abs(moved) <= 0:
         return
-    world.orbit = max(0.01, world.orbit + moved)
+    planet.orbit = max(0.01, planet.orbit + moved)
     if "output" not in state.locked:
         state.output = round_half_up(abs(moved) * PERCENT)
     tally.moved += 1
@@ -171,8 +175,9 @@ async def run_megastructures(ctx: TickContext) -> MegaTally:
 async def catastrophe(ctx: TickContext, work: EntityRow, profile: StructureProfileRow) -> list[str]:
     world = await host_world(ctx.session, profile)
     found = ["control core failed"]
-    if profile.kind is K.PLANETARY_ENGINE and world is not None and not held(world.id) and "orbit" not in (world.locked or []):
-        world.orbit = max(0.01, world.orbit * (1 + ctx.rules.megastructures.engine_shock_pct / PERCENT))
+    planet = await planet_of(ctx.session, world) if world is not None else None
+    if profile.kind is K.PLANETARY_ENGINE and planet is not None and not held(planet.id) and "orbit" not in (planet.locked or []):
+        planet.orbit = max(0.01, planet.orbit * (1 + ctx.rules.megastructures.engine_shock_pct / PERCENT))
         found.append("orbit thrown")
     if profile.kind is K.STAR_COLLECTOR and world is not None and world.star_id is not None:
         star = await ctx.session.get(StarRow, world.star_id)

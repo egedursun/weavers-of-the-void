@@ -60,7 +60,8 @@ async def physics_rows(
         star = stars.get(root.star_id) if root.star_id is not None else None
         row = infer(ctx.rules, world, star)
         parent = rows.get(world.parent_world_id) if world.parent_world_id is not None else None
-        calibrate(ctx.rules, world, row, star=star, sky=sky_of(ctx.rules, root, row, stars=stars, star_physics=star_physics, systems=systems), parent=parent)
+        sky = sky_of(ctx.rules, root, row, stars=stars, star_physics=star_physics, systems=systems)
+        calibrate(ctx.rules, world, row, star=star, sky=sky, parent=parent, orbit=root.orbit)
         row.sea_level = sea_level_of(ctx.rules, row)
         ctx.session.add(row)
         rows[world.id] = row
@@ -125,7 +126,7 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
         derive(ctx.rules, world, row, sky=sky, moons=circling, parent=parent, rogue=rogue, orbit=root.orbit, shards=world.id in shards)
         if not quiet and lose_air(ctx.rules, row):
             ctx.count("air_lost")
-        changed = apply_to_world(ctx.rules, world, row, sky, circling)
+        changed = apply_to_world(ctx.rules, world, row, sky, circling, orbit=root.orbit)
         if "season_count" in changed:
             await write_seasons(ctx, world)
         if not quiet and world_id in known and row.tidally_locked and not was_locked:

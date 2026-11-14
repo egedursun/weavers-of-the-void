@@ -42,7 +42,7 @@ from aerona.engine.climes.shifts import clime_shifts
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import current_heat, world_heat
 from aerona.engine.cosmos.cycles import cycles_by_world, soil_swing
-from aerona.engine.cosmos.orbits import SKYLESS_WORLDS, rogue_worlds
+from aerona.engine.cosmos.orbits import SKYLESS_WORLDS, rogue_worlds, root_of
 from aerona.engine.cosmos.phenomena import phenomenon_passability
 from aerona.engine.cosmos.star_types import star_heat
 from aerona.engine.cosmos.worldlife import cosmic_disease
@@ -55,6 +55,7 @@ from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.geomorph import course_of, desert_rainfall, desert_terrain, shapes_by_region
 from aerona.engine.environment.ley import LeyWeb, candidate_lines, cut_by_land, pair
 from aerona.engine.environment.ley_works import backfill_attunement, empower_works
+from aerona.engine.environment.long_seasons import winter_share
 from aerona.engine.environment.notable import backfill_notable_years
 from aerona.engine.environment.place_backfill import ensure_profiles
 from aerona.engine.environment.places import place_kind_of
@@ -343,11 +344,11 @@ async def moons_by_world(ctx: TickContext) -> Counter[int]:
     return Counter({parent: count for parent, count in rows if parent is not None})
 
 
-async def ensure_world_calendar(ctx: TickContext, world: WorldRow, moons: int) -> bool:
+async def ensure_world_calendar(ctx: TickContext, world: WorldRow, moons: int, orbit: float) -> bool:
     rules = ctx.rules
     created = False
     if world.axial_tilt is None or world.season_count is None or world.year_length_days is None or world.day_length_hours is None:
-        calendar = world_calendar(rules, ctx.environment.rng(f"calendar.{world.id}"), world.world_type, world.orbit)
+        calendar = world_calendar(rules, ctx.environment.rng(f"calendar.{world.id}"), world.world_type, orbit)
         world.axial_tilt = calendar.axial_tilt if world.axial_tilt is None else world.axial_tilt
         world.year_length_days = calendar.year_length_days if world.year_length_days is None else world.year_length_days
         world.day_length_hours = calendar.day_length_hours if world.day_length_hours is None else world.day_length_hours
@@ -526,8 +527,9 @@ async def environment_survey(ctx: TickContext) -> None:
     moons = await moons_by_world(ctx)
     worlds = list(await ctx.session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)))
     calendars = 0
+    by_id = {world.id: world for world in worlds}
     for world in worlds:
-        calendars += int(await ensure_world_calendar(ctx, world, moons[world.id]))
+        calendars += int(await ensure_world_calendar(ctx, world, moons[world.id], root_of(by_id, world).orbit))
     records = {record.id: record for world_records in (await stored_regions(ctx.session)).values() for record in world_records}
     book = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
     regions = unheld(await canon(ctx.session, [EntityType.REGION]))
@@ -1022,6 +1024,7 @@ async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeaso
         laws, table = await ctx.laws(), ctx.rules.natural_laws
         dark = table.night_harvest_pct if laws.has_at(NaturalLaw.ETERNAL_NIGHT, world.id, env.entity_id) else PERCENT
         upturned = table.reversed_harvest_pct if laws.has_at(NaturalLaw.SEASONS_REVERSED, world.id, env.entity_id) else PERCENT
+        wintered = await winter_share(ctx, world.id)
         worked = PERCENT + season.productivity.get(env.entity_id, 0) * ctx.rules.dominion.harvest_per_step_pct
         pollinated = pollination(ctx.rules, season.services.get(env.entity_id))
         env.harvest_pct = round_half_up(
@@ -1030,6 +1033,8 @@ async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeaso
             * dark
             / PERCENT
             * upturned
+            / PERCENT
+            * wintered
             / PERCENT
             * worked
             / PERCENT
@@ -1114,6 +1119,7 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.god_scales",
     "table.holder_levels",
     "table.intensification",
+    "table.irregular_seasons",
     "table.natural_law_profiles",
     "table.place_environment",
     "table.plant_profiles",

@@ -109,7 +109,11 @@ async def world_wiki(services: ServicesDep, world_id: int = Path(ge=1)) -> World
 async def star_wiki(services: ServicesDep, star_id: int = Path(ge=1)) -> StarWiki:
     async with reader(services) as session:
         star = await require_star(session, star_id)
-        worlds = list(await session.scalars(select(WorldRow).where(WorldRow.star_id == star.id).order_by(WorldRow.orbit)))
+        worlds = list(
+            await session.scalars(
+                select(WorldRow).where(WorldRow.star_id == star.id).order_by(WorldRow.parent_world_id.is_not(None), WorldRow.orbit, WorldRow.id)
+            )
+        )
         covers = await covers_of(session, [world.id for world in worlds])
         lines = list(
             await session.scalars(

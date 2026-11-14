@@ -68,7 +68,17 @@ def counted_names(function: ast.AST, ints: frozenset[str]) -> frozenset[str]:
     return frozenset(names)
 
 
-SCOPE: dict[str, frozenset[str]] = {"names": frozenset()}
+SCOPE: dict[str, frozenset[str]] = {"names": frozenset(), "several": frozenset()}
+
+
+def several_names(function: ast.AST) -> frozenset[str]:
+    return frozenset(
+        target.id
+        for node in ast.walk(function)
+        if isinstance(node, ast.Assign) and counted_by(node.value)
+        for target in node.targets
+        if isinstance(target, ast.Name)
+    )
 
 
 def counting(node: ast.expr) -> bool:
@@ -109,6 +119,8 @@ def in_joined(node: ast.JoinedStr) -> list[str]:
 
 
 def counted_by(node: ast.expr) -> bool:
+    if isinstance(node, ast.Name):
+        return node.id in SCOPE["several"]
     return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "several"
 
 
@@ -142,6 +154,7 @@ def counts(files: dict[Path, str]) -> list[Count]:
             if isinstance(node, ast.JoinedStr):
                 scope = owner.get(id(node))
                 SCOPE["names"] = counted_names(scope, ints) if scope is not None else frozenset()
+                SCOPE["several"] = several_names(scope) if scope is not None else frozenset()
                 found.extend(Count(path, node.lineno, item) for item in in_joined(node) + verbs_after(node))
             elif isinstance(node, ast.Constant) and id(node) not in joined_parts:
                 found.extend(Count(path, node.lineno, item) for item in in_template(node))

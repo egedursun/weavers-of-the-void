@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.ages import ArcFigureRow, ArcRow, SetupRow
+from aerona.db.tables.ages import ArcBeatRow, ArcFigureRow, ArcRow, SetupRow
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
@@ -12,6 +12,7 @@ from aerona.db.tables.sacred import DivinationRow, ForesightRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import ArcOutcome, ArcRole, ArcTemplate, PayoffKind, SetupKind
 from aerona.domain.enums.chronicle import ThreadStatus
+from aerona.domain.enums.collective import StoryletId
 from aerona.domain.enums.culture import ProphecyState
 from aerona.domain.enums.mind import DreamReading
 from aerona.domain.enums.sacred import ForesightStatus
@@ -21,6 +22,17 @@ from aerona.engine.primitives.numbers import clamp_int
 
 CONFRONTING = frozenset({ArcTemplate.REVENGE, ArcTemplate.RIVALRY})
 OPPOSED = (ArcRole.FOE, ArcRole.RIVAL)
+T = ArcTemplate
+ADVANCED_BY: dict[StoryletId, frozenset[ArcTemplate]] = {
+    StoryletId.LOST_HEIR: frozenset({T.EXILE_AND_RETURN, T.RAGS_TO_RICHES, T.COMING_OF_AGE}),
+    StoryletId.HOARDED_STORE: frozenset({T.CORRUPTION, T.REDEMPTION}),
+    StoryletId.BEAST_DEMAND: frozenset({T.QUEST, T.REVENGE, T.APOTHEOSIS}),
+    StoryletId.FORBIDDEN_TEXT: frozenset({T.CORRUPTION, T.MENTOR_AND_HEIR, T.APOTHEOSIS}),
+    StoryletId.DEFILED_SITE: frozenset({T.REDEMPTION, T.TRAGEDY, T.CORRUPTION}),
+    StoryletId.WEDDING_CHALLENGE: frozenset({T.FORBIDDEN_LOVE, T.RIVALRY, T.FOUNDING}),
+    StoryletId.DYING_RULER: frozenset({T.RISE_AND_FALL, T.TRAGEDY, T.FALL_OF_A_HOUSE, T.MENTOR_AND_HEIR}),
+    StoryletId.INSULTED_ENVOY: frozenset({T.RIVALRY, T.REVENGE, T.EXILE_AND_RETURN}),
+}
 
 
 @dataclass
@@ -35,10 +47,15 @@ class DramaTally:
 
 async def press_stalled(ctx: TickContext, tally: DramaTally) -> None:
     table = ctx.rules.arcs
+    awaited = set(await ctx.session.scalars(select(SetupRow.subject_node_id).where(SetupRow.payoff == PayoffKind.OPEN, SetupRow.subject_node_id.is_not(None))))
     for arc in await ctx.session.scalars(select(ArcRow).where(ArcRow.outcome == ArcOutcome.OPEN).order_by(ArcRow.id)):
-        if held(arc.subject_node_id) or "drama" in arc.locked or ctx.epoch - arc.last_beat_epoch < table.stall_epochs:
+        if held(arc.subject_node_id) or "drama" in arc.locked:
             continue
-        arc.drama = clamp_int(arc.drama + table.drama_step, 0, PERCENT)
+        stalled = ctx.epoch - arc.last_beat_epoch >= table.stall_epochs
+        gain = (table.drama_step if stalled else 0) + (table.setup_pull if arc.subject_node_id in awaited else 0)
+        if not gain:
+            continue
+        arc.drama = clamp_int(arc.drama + gain, 0, PERCENT)
         tally.pressed += 1
 
 
@@ -57,9 +74,13 @@ async def counter(ctx: TickContext, moved: list[ArcRow], tally: DramaTally) -> N
             arc.drama = 0
 
 
-async def world_drama(ctx: TickContext, world_id: int) -> int:
+async def world_drama(ctx: TickContext, world_id: int, storylet: StoryletId) -> int:
     subjects = select(EntityRow.id).where(EntityRow.world_id == world_id)
-    found = await ctx.session.scalar(select(func.max(ArcRow.drama)).where(ArcRow.subject_node_id.in_(subjects), ArcRow.outcome == ArcOutcome.OPEN))
+    found = await ctx.session.scalar(
+        select(func.max(ArcRow.drama)).where(
+            ArcRow.subject_node_id.in_(subjects), ArcRow.outcome == ArcOutcome.OPEN, ArcRow.template.in_(sorted(ADVANCED_BY[storylet]))
+        )
+    )
     return int(found or 0)
 
 
@@ -119,7 +140,8 @@ async def log_setups(ctx: TickContext, tally: DramaTally) -> None:
 Resolution = tuple[PayoffKind, str] | None
 
 
-async def foresight_paid(ctx: TickContext, source_id: int) -> Resolution:
+async def foresight_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
+    source_id = setup.source_id
     foresight = await ctx.session.get(ForesightRow, source_id)
     if foresight is None or foresight.status is ForesightStatus.PENDING:
         return None
@@ -128,7 +150,8 @@ async def foresight_paid(ctx: TickContext, source_id: int) -> Resolution:
     return PayoffKind.SUBVERTED, "what was foreseen did not come"
 
 
-async def prophecy_paid(ctx: TickContext, source_id: int) -> Resolution:
+async def prophecy_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
+    source_id = setup.source_id
     prophecy = await ctx.session.get(ProphecyConditionRow, source_id)
     if prophecy is None or prophecy.state is ProphecyState.PENDING:
         return None
@@ -137,14 +160,16 @@ async def prophecy_paid(ctx: TickContext, source_id: int) -> Resolution:
     return PayoffKind.SUBVERTED, "the prophecy came to nothing"
 
 
-async def thread_paid(ctx: TickContext, source_id: int) -> Resolution:
+async def thread_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
+    source_id = setup.source_id
     thread = await ctx.session.get(ThreadRow, source_id)
     if thread is None or thread.status is not ThreadStatus.CLOSED:
         return None
-    return PayoffKind.FULFILLED, (thread.closing_text or "the story was closed")[:400]
+    return PayoffKind.FULFILLED, thread.closing_text or "the story was closed"
 
 
-async def dream_paid(ctx: TickContext, source_id: int) -> Resolution:
+async def dream_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
+    source_id = setup.source_id
     dream = await ctx.session.get(DreamRow, source_id)
     if dream is None or dream.reading_true is None:
         return None
@@ -153,7 +178,8 @@ async def dream_paid(ctx: TickContext, source_id: int) -> Resolution:
     return PayoffKind.SUBVERTED, "the dream was read falsely"
 
 
-async def omen_paid(ctx: TickContext, source_id: int) -> Resolution:
+async def omen_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
+    source_id = setup.source_id
     reading = await ctx.session.get(DivinationRow, source_id)
     if reading is None or reading.epoch >= ctx.epoch:
         return None
@@ -162,17 +188,36 @@ async def omen_paid(ctx: TickContext, source_id: int) -> Resolution:
     return PayoffKind.SUBVERTED, "the omen read false"
 
 
+async def portent_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
+    if setup.subject_node_id is None:
+        return None
+    subject = await ctx.session.get(EntityRow, setup.subject_node_id)
+    if subject is not None and subject.end_epoch is not None and subject.end_epoch > setup.opened_epoch:
+        return PayoffKind.FULFILLED, f"what was foretold came upon {subject.name} at the end"
+    beat = await ctx.session.scalar(
+        select(ArcBeatRow.text)
+        .join(ArcRow, ArcRow.id == ArcBeatRow.arc_id)
+        .where(ArcRow.subject_node_id == setup.subject_node_id, ArcBeatRow.epoch > setup.opened_epoch)
+        .order_by(ArcBeatRow.id)
+        .limit(1)
+    )
+    if beat is None:
+        return None
+    return PayoffKind.FULFILLED, beat
+
+
 PAYERS = {
     SetupKind.FORESIGHT: foresight_paid,
     SetupKind.PROPHECY: prophecy_paid,
     SetupKind.THREAD: thread_paid,
     SetupKind.DREAM: dream_paid,
     SetupKind.OMEN: omen_paid,
+    SetupKind.PORTENT: portent_paid,
 }
 
 
 async def resolution_of(ctx: TickContext, row: SetupRow) -> Resolution:
-    found = await PAYERS[row.kind](ctx, row.source_id)
+    found = await PAYERS[row.kind](ctx, row)
     if found is not None:
         return found
     if ctx.epoch - row.opened_epoch >= ctx.rules.arcs.lapse_epochs:

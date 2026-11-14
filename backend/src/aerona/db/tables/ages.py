@@ -1,7 +1,6 @@
-from sqlalchemy import JSON, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import JSON, ForeignKey, Index, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.ages import (
@@ -175,7 +174,7 @@ class ArcBeatRow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     arc_id: Mapped[int] = mapped_column(ForeignKey("arcs.id", ondelete="CASCADE"))
     stage: Mapped[ArcStage] = mapped_column(enum_type(ArcStage, "stage"))
-    text: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH * 4), default="")
+    text: Mapped[str] = mapped_column(Text, default="")
     epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -191,5 +190,5 @@ class SetupRow(Base):
     payoff: Mapped[PayoffKind] = mapped_column(enum_type(PayoffKind, "payoff"), default=PayoffKind.OPEN)
     opened_epoch: Mapped[int] = mapped_column(default=0)
     paid_epoch: Mapped[int | None]
-    payoff_text: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH * 4), default="")
+    payoff_text: Mapped[str] = mapped_column(Text, default="")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
