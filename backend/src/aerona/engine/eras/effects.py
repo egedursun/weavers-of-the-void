@@ -7,14 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.eras import ERA_EFFECTS, ERA_MARKERS, POWDER
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
+from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.eras import EraChannel, ProgrammeStage
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import TechnologyEra
+from aerona.engine.belonging.values import own_people
 from aerona.engine.primitives.knowledge import LawBook
 from aerona.rules.registry import Rules
 
@@ -24,21 +28,45 @@ async def held_by(session: AsyncSession, holder_id: int) -> frozenset[Technique]
     return frozenset(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == holder_id)))
 
 
-async def era_holders(session: AsyncSession, node_id: int | None) -> list[int]:
+COMMUNITIES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
+CHAIN_DEPTH = 8
+
+
+async def home_community(session: AsyncSession, entity: EntityRow) -> EntityRow | None:
+    current: EntityRow | None = entity
+    for _ in range(CHAIN_DEPTH):
+        if current is None:
+            break
+        if current.entity_type in COMMUNITIES:
+            return current
+        current = await session.get(EntityRow, current.location_id) if current.location_id is not None else None
+    folk = await own_people(session, entity) if entity.entity_type is EntityType.MORTAL else None
+    return await session.get(EntityRow, folk) if folk is not None else None
+
+
+async def capital_of_member(session: AsyncSession, member_id: int) -> int | None:
+    polity = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == member_id).limit(1))
+    profile = await session.get(PolityProfileRow, polity) if polity is not None else None
+    return profile.capital_entity_id if profile is not None else None
+
+
+@memoized(EntityRow, "entities.other", BondRow, PolityMemberRow, PolityProfileRow)
+async def era_holders(session: AsyncSession, node_id: int | None) -> tuple[int, ...]:
     if node_id is None:
-        return []
+        return ()
     entity = await session.get(EntityRow, node_id)
     if entity is None:
-        return []
-    found = [entity.id, *(item for item in (entity.location_id, entity.affiliated_entity_id) if item is not None)]
+        return ()
+    home = await home_community(session, entity)
+    found = [entity.id, *(item for item in (home.id if home is not None else None, entity.location_id, entity.affiliated_entity_id) if item is not None)]
     realm = await session.get(PolityProfileRow, entity.id)
     if realm is not None:
         found += [item for item in (realm.capital_entity_id, realm.core_entity_id) if item is not None]
-    polity = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == entity.id).limit(1))
-    if polity is not None:
-        profile = await session.get(PolityProfileRow, polity)
-        found += [item for item in ((profile.capital_entity_id if profile is not None else None),) if item is not None]
-    return list(dict.fromkeys(found))
+    for member in dict.fromkeys(item for item in (entity.id, home.id if home is not None else None) if item is not None):
+        capital = await capital_of_member(session, member)
+        if capital is not None:
+            found.append(capital)
+    return tuple(dict.fromkeys(found))
 
 
 async def era_techniques(session: AsyncSession, node_id: int | None) -> frozenset[Technique]:
@@ -83,11 +111,18 @@ async def channel_by_holder(session: AsyncSession, rules: Rules, channel: EraCha
     return {holder: channel_value(rules, known, channel) for holder, known in held.items()}
 
 
-def era_of(known: Iterable[Technique]) -> TechnologyEra:
+async def world_start(session: AsyncSession) -> TechnologyEra:
+    cosmos = await CosmosRepository(session).get()
+    settings = cosmos.genesis_settings if cosmos is not None else None
+    return settings.technology if settings is not None else TechnologyEra.IRON
+
+
+def era_of(known: Iterable[Technique], floor: TechnologyEra = TechnologyEra.STONE) -> TechnologyEra:
     held = set(known)
-    reached = TechnologyEra.STONE
+    reached = floor
+    order = list(TechnologyEra)
     for era, marker in ERA_MARKERS:
-        if marker in held:
+        if marker in held and order.index(era) > order.index(reached):
             reached = era
     return reached
 

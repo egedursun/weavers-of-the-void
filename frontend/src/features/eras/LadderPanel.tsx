@@ -105,7 +105,9 @@ function TechniqueTile({
       <div className='mt-auto flex min-w-0'>
         <Button
           size='sm'
-          variant={row.kept ? 'outline' : 'default'}
+          variant={
+            row.kept ? 'outline' : missing.length ? 'secondary' : 'default'
+          }
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
           onClick={() => setting.mutate(!row.kept)}

@@ -60,31 +60,39 @@ story#{{ thread.id }} (Age {{ thread.age }}{% if thread.worlds %}, {{ thread.wor
 {% macro economy_block(e) -%}
 {% if e.settlement %}{% set s = e.settlement %}
 Settlement: {{ s.tier | an }}; treasury {{ s.treasury }}, tax {{ s.tax_rate }}%, order {{ s.order }}, crime {{ s.crime }}, unrest {{ s.unrest }}, sanitation {{ s.sanitation }}, fire risk {{ s.fire_risk }}, prestige {{ s.prestige }}, militia {{ s.militia }}{% if s.free_city %}, a free city{% endif %}{% if s.rationing %}, rationing bread{% endif %}
+
 {% if s.districts %}Districts: {{ s.districts | join("; ") }}
 {% endif %}{% if s.infrastructure %}Works: {{ s.infrastructure | join(", ") }}
 {% endif %}{% endif %}
 {% if e.commodities %}Stores and market (quantity, average quality; price against the usual 100, supply, need, bought in, sold out):
 {% for c in e.commodities %}- {{ c.label }}: {{ c.quantity }} held{% if c.quantity %}, quality {{ c.quality }}{% endif %}{% if c.lots %} [{{ c.lots | join("; ") }}]{% endif %}{% if c.price is not none %}; price {{ c.price }}, supply {{ c.supply }}, need {{ c.demand }}, in {{ c.imported }}, out {{ c.exported }}{% endif %}
+
 {% endfor %}{% endif %}
 {% if e.currency %}{% set m = e.currency %}Coin: {{ m.name }} (currency {{ m.id }}) of {{ m.metal }} struck by {{ m.issuer }}; purity {{ m.purity }}, trust {{ m.trust }}, {{ m.supply }} coins abroad{% if m.debased %}, debased{% endif %}
+
 {% endif %}
 {% if e.loans %}Loans:
 {% for l in e.loans %}- loan {{ l.id }} {{ l.role }} {{ l.other }}: {{ l.principal }} at {{ l.interest_pct }}%, {{ l.owed }} still owed, due age {{ l.due_epoch }}, {{ l.status }}{% if l.currency %}, in {{ l.currency }}{% endif %}{% if l.purpose %} ({{ l.purpose }}){% endif %}
+
 {% endfor %}{% endif %}
 {% if e.debts %}Debts:
 {% for d in e.debts %}- debt {{ d.id }}: {{ d.role }} {{ d.other }} {{ d.amount }} {{ d.what }}{% if d.currency %} in {{ d.currency }}{% endif %}{% if d.due_epoch is not none %}, due age {{ d.due_epoch }}{% endif %}, {{ d.status }}
 {% endfor %}{% endif %}
 {% if e.routes %}Trade routes:
 {% for r in e.routes %}- route {{ r.id }} {{ r.name }} ({{ r.mode }}, {{ r.status }}) with {{ r.partner }}: {{ r.length }} lands, capacity {{ r.capacity }}, danger {{ r.danger }} (bandits {{ r.bandits }}, beasts {{ r.beasts }}, weather {{ r.weather }}, sea {{ r.sea }}), worst season keeps {{ r.season_pct }}% of the cargo moving, renown {{ r.renown }}{% if r.controller %}; kept by {{ r.controller }}{% endif %}{% if r.blockaded_by %}; BLOCKADED by {{ r.blockaded_by }}{% endif %}{% if r.chokepoint %}; a chokepoint for strategic goods{% endif %}{% if r.closed_by_player %}; CLOSED by the Creator{% endif %}{% if r.held %}; held by the Creator: {{ r.held | join(", ") }}{% endif %}{% if r.tolls %}; tolls: {% for t in r.tolls %}{{ t.region }} {{ t.rate_pct }}% to {{ t.controller }}{% if t.treasury and t.treasury != t.controller %} (a share to the treasury of {{ t.treasury }}){% endif %}{% if t.held %} (held){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}{% if r.losses %}; losses: {{ r.losses | join("; ") }}{% endif %}
+
 {% endfor %}{% endif %}
 {% if e.pacts %}Pacts with sentient resources:
 {% for p in e.pacts %}- {{ p }}
 {% endfor %}{% endif %}
 {% if e.labour %}Work: {% for j in e.labour %}{{ j.job }} {{ j.workers }} hands at {{ j.output_pct }}%{% if not loop.last %}, {% endif %}{% endfor %}
+
 {% endif %}
 {% if e.cohorts %}People by age, sex, class and state: {% for c in e.cohorts %}{{ c.count }} {{ c.age_band }} {{ c.sex }} {{ c.social_class }}{% if c.condition != "none" %} ({{ c.condition }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
+
 {% endif %}
 {% if e.outbreaks %}Sickness in the land: {% for o in e.outbreaks %}{{ o.disease }} in {{ o.region }} ({{ o.status }}, severity {{ o.severity }}, {{ o.infected }} sick, {{ o.dead }} dead, came by {{ o.path }}{% if o.quarantined %}, quarantined{% endif %}){% if not loop.last %}; {% endif %}{% endfor %}
+
 {% endif %}
 {% if e.endemic %}Endemic: {% for n in e.endemic %}{{ n.disease }} in {{ n.region }} (load {{ n.load }}){% if not loop.last %}; {% endif %}{% endfor %}
 {% endif %}

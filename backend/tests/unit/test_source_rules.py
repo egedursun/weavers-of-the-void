@@ -36,3 +36,10 @@ def test_build_caches_of_every_dev_server_are_not_source() -> None:
     module = load_rules()
     for cache in (".vite-cache", "node_modules", "dist"):
         assert cache in module.SKIPPED_DIRS
+
+
+def test_a_naive_singular_is_caught() -> None:
+    rules = load_rules()
+    naive = "label = words(target).lower().rstrip(" + repr("s") + ")"
+    assert rules.NAIVE_SINGULAR.search(naive)
+    assert not rules.NAIVE_SINGULAR.search("label = singular(words(target).lower())")

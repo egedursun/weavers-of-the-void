@@ -22,6 +22,39 @@ def an(noun: object, *, capital: bool = False) -> str:
     return f"{article.capitalize() if capital else article} {word}"
 
 
+UNCHANGED_PLURALS = frozenset({"species", "series", "news", "means", "remains", "arms", "goods", "thanks", "data", "kin", "folk", "cosmos", "chaos"})
+IRREGULAR_ENDINGS = (
+    ("lives", "life"),
+    ("wives", "wife"),
+    ("knives", "knife"),
+    ("wolves", "wolf"),
+    ("halves", "half"),
+    ("selves", "self"),
+    ("crises", "crisis"),
+    ("theses", "thesis"),
+    ("oases", "oasis"),
+    ("analyses", "analysis"),
+    ("prostheses", "prosthesis"),
+    ("biases", "bias"),
+    ("statuses", "status"),
+    ("viruses", "virus"),
+    ("bonuses", "bonus"),
+    ("censuses", "census"),
+)
+PLURAL_ENDINGS = (("ies", "y"), ("sses", "ss"), ("shes", "sh"), ("ches", "ch"), ("xes", "x"), ("zzes", "zz"), ("oes", "o"))
+
+
+def singular(plural: str) -> str:
+    head, _, last = plural.rpartition(" ")
+    lead = f"{head} " if head else ""
+    if last in UNCHANGED_PLURALS or last.endswith(("ss", "us", "is")):
+        return plural
+    for ending, replacement in (*IRREGULAR_ENDINGS, *PLURAL_ENDINGS):
+        if last.endswith(ending):
+            return lead + last.removesuffix(ending) + replacement
+    return lead + last.removesuffix("s")
+
+
 def agree(count: int | None, one: str, many: str) -> str:
     return one if count == 1 else many
 

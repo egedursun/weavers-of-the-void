@@ -7,6 +7,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.eras import EraChannel, ProgrammeStage
@@ -19,7 +20,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_of, era_techniques, tech_bonus, tech_factor, tech_relief
 from aerona.engine.eras.progress import EraTally, era_doom, keep_floors, keep_programmes
 from aerona.engine.primitives.manual import manual_context
-from tests.engine.core.factories import CoreWorld, entity, settlement, tuned_rules
+from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 
 async def at(session: AsyncSession, epoch: int, **rules: dict[str, int]) -> TickContext:
@@ -141,3 +142,14 @@ async def test_the_starting_era_gives_fresh_towns_their_floor_of_knowledge(sessi
     await keep_floors(await at(session, 1), tally)
     levels = {row.branch: row.level for row in await session.scalars(select(HolderLevelRow).where(HolderLevelRow.holder_entity_id == town.id))}
     assert levels[KnowledgeBranch.METALLURGY] == 6 and tally.floored >= 1
+    known = await era_techniques(session, town.id)
+    assert {Technique.BRONZE, Technique.IRON, Technique.STEEL, Technique.PRINTING_PRESS, Technique.STEAM_POWER} <= known
+    assert era_of(known) is TechnologyEra.STEAM
+
+
+async def test_a_wandering_mortal_reads_the_era_of_its_people_never_below_the_starting_era(session: AsyncSession, world: CoreWorld) -> None:
+    wanderer = await mortal(session, "Tamsin", world, world.regions[0].id)
+    await bond(session, wanderer.id, world.people.id, BondKind.DESCENDS_FROM)
+    assert era_of(await era_techniques(session, wanderer.id), TechnologyEra.IRON) is TechnologyEra.IRON
+    await knows(session, world.people, Technique.ELECTRICITY)
+    assert era_of(await era_techniques(session, wanderer.id), TechnologyEra.IRON) is TechnologyEra.ELECTRICAL

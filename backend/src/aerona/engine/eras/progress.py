@@ -2,10 +2,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.eras import ERA_FLOORS, POWDER
+from aerona.catalog.eras import ERA_FLOORS, ERA_MARKERS, POWDER
 from aerona.catalog.techniques import BRANCH_GRAPH, PROGRAMMES, TECHNIQUES, TechniqueSpec
 from aerona.constants.units import PERCENT
-from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
@@ -26,7 +25,7 @@ from aerona.domain.enums.world import TechnologyEra
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import RouteSpec, open_route
 from aerona.engine.economy.purse import coin_of, take_coin
-from aerona.engine.eras.effects import channel_value, era_techniques, held_by
+from aerona.engine.eras.effects import channel_value, era_techniques, held_by, world_start
 from aerona.engine.lore.research import gate_open
 from aerona.engine.primitives.folk import folk_among
 from aerona.engine.primitives.naming import seed_of
@@ -63,15 +62,12 @@ async def powder_barred(ctx: TickContext, holder_id: int, technique: Technique) 
     return holder is not None and (await ctx.laws()).has(NaturalLaw.NO_GUNPOWDER, holder.world_id)
 
 
-async def starting_era(ctx: TickContext) -> TechnologyEra:
-    cosmos = await CosmosRepository(ctx.session).get()
-    settings = cosmos.genesis_settings if cosmos is not None else None
-    return settings.technology if settings is not None else TechnologyEra.IRON
-
-
 async def keep_floors(ctx: TickContext, tally: EraTally) -> None:
-    floors = ERA_FLOORS[await starting_era(ctx)]
-    if not floors:
+    start = await world_start(ctx.session)
+    floors = ERA_FLOORS[start]
+    order = list(TechnologyEra)
+    markers = [marker for era, marker in ERA_MARKERS if order.index(era) <= order.index(start)]
+    if not floors and not markers:
         return
     seasoned = set(await ctx.session.scalars(select(HolderLevelRow.holder_entity_id)))
     fresh = await ctx.session.scalars(
@@ -82,6 +78,10 @@ async def keep_floors(ctx: TickContext, tally: EraTally) -> None:
             continue
         for branch, level in floors.items():
             ctx.session.add(HolderLevelRow(holder_entity_id=holder, branch=branch, level=level, practitioners=0, progress=0))
+        known = await held_by(ctx.session, holder)
+        for marker in markers:
+            if marker not in known:
+                ctx.session.add(HolderTechniqueRow(holder_entity_id=holder, technique=marker, since_epoch=ctx.epoch, secret=False))
         tally.floored += 1
     await ctx.session.flush()
 

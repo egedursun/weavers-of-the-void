@@ -8,7 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.sons import SonRow
 from aerona.engine.cycles.book import realm_of
-from aerona.engine.eras.effects import era_of, era_techniques
+from aerona.engine.eras.effects import era_of, era_techniques, world_start
 from aerona.engine.eras.progress import LIVE
 
 LIST_LINES = 3
@@ -22,7 +22,8 @@ def programme_line(row: TechProgrammeRow, realm: str) -> str:
 async def mortal_era_lines(scope: Scope, me: EntityRow) -> list[str]:
     session = scope.session
     home = me.location_id
-    found = [f"your people live in the {TECHNOLOGY_LABELS[era_of(await era_techniques(session, home))].lower()}"] if home is not None else []
+    era = era_of(await era_techniques(session, me.id), await world_start(session))
+    found = [f"the technology of your people: {TECHNOLOGY_LABELS[era].lower()}"]
     realm = await realm_of(session, home) if home is not None else None
     if realm is not None:
         for row in await session.scalars(

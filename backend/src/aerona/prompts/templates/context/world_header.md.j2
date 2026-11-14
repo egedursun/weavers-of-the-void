@@ -35,6 +35,7 @@ CLIMATE: {{ climate.name }} (since Age {{ climate.since_age }}; {{ climate.descr
 {% endif %}
 {% if not short and seasons %}
 SEASONS ({% if year_days %}{{ year_days }} days a year; {% endif %}in order): {% for season in seasons %}{{ season.position }}: {{ season.name }} (growth {{ season.growth }}, war {{ season.campaign }}){% if not loop.last %} · {% endif %}{% endfor %}
+
 {% endif %}
 {% if age_star %}
 STAR OF THE AGE{% if age_star.sky_world %} ({{ age_star.sky_world }} sky){% endif %}: #{{ age_star.id }} {{ age_star.name }}; creations in the {{ age_star.domain if age_star.domain else "its" }} domain are {{ rules.son_tools.star_domain_cost_pct | percent_complement }}% cheaper this age.

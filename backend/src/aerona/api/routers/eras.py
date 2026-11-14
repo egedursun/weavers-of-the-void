@@ -10,7 +10,6 @@ from aerona.api.views.common import node_refs
 from aerona.catalog.eras import ERA_EFFECTS, TECHNIQUE_ERAS
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.core.errors import NotFoundError
-from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.polity import PolityProfileRow
@@ -18,9 +17,8 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import NaturalLaw
-from aerona.domain.enums.world import TechnologyEra
 from aerona.engine.cycles.book import realm_of
-from aerona.engine.eras.effects import channel_value, era_holders, era_of, era_techniques, held_by
+from aerona.engine.eras.effects import channel_value, era_holders, era_of, era_techniques, held_by, world_start
 from aerona.engine.primitives.knowledge import LawBook
 
 router = APIRouter(tags=["eras"])
@@ -54,8 +52,7 @@ async def node_eras(services: ServicesDep, node_id: NodeId) -> ErasNodeView:
             if realm is not None
             else []
         )
-        cosmos = await CosmosRepository(session).get()
-        settings = cosmos.genesis_settings if cosmos is not None else None
+        start = await world_start(session)
         barred = entity is not None and (await LawBook.load(session)).has(NaturalLaw.NO_GUNPOWDER, entity.world_id)
         refs = await node_refs(
             session,
@@ -67,8 +64,8 @@ async def node_eras(services: ServicesDep, node_id: NodeId) -> ErasNodeView:
         node=ref(refs, node_id),
         realm=refs.get(realm) if realm is not None else None,
         keeper=refs.get(keeper) if keeper is not None else None,
-        era=era_of(known),
-        starting_era=settings.technology if settings is not None else TechnologyEra.IRON,
+        era=era_of(known, start),
+        starting_era=start,
         no_gunpowder=barred,
         channels=[EraEffectView(channel=channel, value=value) for channel in EraChannel if (value := channel_value(rules, known, channel))],
         techniques=[

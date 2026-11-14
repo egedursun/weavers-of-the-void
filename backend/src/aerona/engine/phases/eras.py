@@ -6,7 +6,7 @@ from aerona.engine.phases.dominion import count
 
 
 @reads("table.cosmos", "table.holder_levels", "table.holder_techniques", "table.polity_profiles", "table.tech_programmes")
-@writes("table.holder_levels")
+@writes("table.holder_levels", "table.holder_techniques")
 async def tech_eras(ctx: TickContext) -> None:
     tally = EraTally()
     await keep_eras(ctx, tally)

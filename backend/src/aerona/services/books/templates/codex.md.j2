@@ -74,6 +74,7 @@
 {% macro sayings(items) -%}
 {% for saying in items %}
 > *{{ saying.text }}*{% if saying.form %}
+
 > — {{ saying.form }}{% endif %}
 
 {% endfor %}
@@ -748,6 +749,7 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 ### {{ label }} · {{ articles | length }}
 
 {% for article in articles %}{{ codex_entity(article) }}{% endfor %}
+
 {% endfor %}
 {% endfor %}
 {% if book.knowledge %}
@@ -858,7 +860,10 @@ Score **{{ book.scores[-1].total }}** · Achievements **{{ book.achievements | l
 
 {% for entry in book.ledger %}
 - **Epoch {{ entry.epoch }}.** {{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone)*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary | plain }}{% endif %}
-{% for change in book.ledger_changes.get(entry.id, []) %}  - **{{ change.verb }}** {{ change.target }}{% if change.details %} — {{ change.details | join(" · ") }}{% endif %}
+
+{% for change in book.ledger_changes.get(entry.id, []) %}
+  - **{{ change.verb }}** {{ change.target }}{% if change.details %} — {{ change.details | join(" · ") }}{% endif %}
+
 {% endfor %}
 {% endfor %}
 {% endif %}

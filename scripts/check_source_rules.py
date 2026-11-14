@@ -58,6 +58,9 @@ class Violation:
         return f"{self.path}:{self.line}: {self.rule}"
 
 
+NAIVE_SINGULAR = re.compile(r"""\.rstrip\(\s*['\"]s['\"]\s*\)""")
+
+
 def iter_files() -> list[Path]:
     files: list[Path] = []
     for root_name in SCANNED_ROOTS:
@@ -117,6 +120,9 @@ def python_violations(path: Path, text: str) -> list[Violation]:
             found.append(Violation(relative, token.start[0], "comment"))
         if relative.is_relative_to(ARTICLE_HOME) and fixed_article(tokens, index):
             found.append(Violation(relative, token.start[0], "fixed article before a placeholder; use an(), {name:an} or | an"))
+    for number, raw in enumerate(text.splitlines(), start=1):
+        if NAIVE_SINGULAR.search(raw):
+            found.append(Violation(relative, number, "rstrip('s') strips every trailing s and leaves 'entrie' for 'entries'; use singular() from aerona.core.grammar"))
     tree = ast.parse(text)
     for line, name in shadowed_guards(tree, guard_imports(tree)):
         found.append(Violation(relative, line, f"{name} is bound here and hides the hold guard of the same name; give it a name of its own"))

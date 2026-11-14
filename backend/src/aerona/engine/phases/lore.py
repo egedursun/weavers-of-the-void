@@ -675,6 +675,7 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.cult_tenets",
     "table.culture_values",
     "table.epoch_year_cursors",
+    "table.holder_techniques",
     "table.ideology_adherents",
     "table.ideology_profiles",
     "table.ideology_tenets",

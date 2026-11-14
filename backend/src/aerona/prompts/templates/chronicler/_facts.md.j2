@@ -38,6 +38,7 @@ Major events:
 Tales under way in lives this age (tell their events as parts of these tales):
 {% for tale in facts.tales %}
 - {{ tale.subject }}: a tale of {{ tale.template }}, now at its {{ tale.stage }}{% if tale.outcome != "open" %}, ended {{ tale.outcome }}{% endif %}
+
 {% endfor %}
 {% endif %}
 {% if facts.payoffs %}

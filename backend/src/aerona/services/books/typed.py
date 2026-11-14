@@ -14,6 +14,7 @@ from sqlalchemy.orm import Mapper
 from sqlalchemy.sql.elements import ColumnElement, KeyedColumnElement
 
 from aerona.cartography.biomes import Biome
+from aerona.core.grammar import singular
 from aerona.db.base import Base
 from aerona.db.profile_guard import LOCK_COLUMN, shape_of_table, table_name
 from aerona.db.tables.ledger import LedgerChangeRow
@@ -311,7 +312,7 @@ class TypedIndex:
         target = next((foreign.column.table.name for foreign in column.foreign_keys), None)
         if target is None or target in NAMED_TABLES:
             return self.names.get(value, f"#{value}")
-        return self.references.get(target, {}).get(value) or words(target).lower().rstrip("s") + f" {value}"
+        return self.references.get(target, {}).get(value) or singular(words(target).lower()) + f" {value}"
 
     @classmethod
     async def load(cls, session: AsyncSession, names: dict[int, str]) -> "TypedIndex":
