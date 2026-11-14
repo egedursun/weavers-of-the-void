@@ -38,6 +38,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
 from aerona.engine.mind.memories import remember
+from aerona.engine.nature.sleepers import lair_factor
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -327,7 +328,7 @@ async def encounter(ctx: TickContext, hero: EntityRow, monster: EntityRow, conte
     rng = ctx.rng(seed_of("encounter", hero.id, monster.id))
     patron = await living_patron(ctx.session, hero)
     hero_total = await hero_power(ctx, hero, patron, rng.die(ctx.rules.world_hunt.die)) * await holy_strike(ctx.session, ctx.rules, hero.id, monster)
-    monster_total = await monster_power(ctx, monster, rng.die(ctx.rules.world_hunt.die))
+    monster_total = await monster_power(ctx, monster, rng.die(ctx.rules.world_hunt.die)) * await lair_factor(ctx.session, ctx.rules, ctx.epoch, monster)
     if hero_total >= monster_total:
         return await _hero_wins(ctx, hero, monster, patron, context)
     return await _hero_loses(ctx, hero, monster, patron, context)

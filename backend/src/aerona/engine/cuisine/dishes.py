@@ -21,6 +21,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.collective.embodied import embody
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.nature.microbes import culture_lift
 from aerona.engine.notes import note
 from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -229,7 +230,7 @@ async def cook_one(ctx: TickContext, town: EntityRow, row: CommunityDishRow, dis
 async def savour(ctx: TickContext, town: EntityRow, dish: DishRow) -> None:
     table = ctx.rules.cuisine
     profile = await ctx.session.get(SettlementProfileRow, town.id)
-    lift = round_half_up(dish.delight * table.delight_pct / PERCENT)
+    lift = round_half_up(dish.delight * table.delight_pct / PERCENT * await culture_lift(ctx.session, ctx.rules, town.id, dish.method, dish.course))
     if profile is not None and dish.course in {D.STAPLE, D.SIDE, D.DRINK, D.FESTIVE} and "unrest" not in profile.locked:
         profile.unrest = clamp_int(profile.unrest - lift, 0, PERCENT)
     if profile is not None and dish.course in {D.DELICACY, D.FESTIVE} and "prestige" not in profile.locked:

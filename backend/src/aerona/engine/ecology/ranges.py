@@ -18,6 +18,7 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.ecology import GRAZERS, HUNTERS, SIZE_ORDER, Biochemistry, DomesticationStage, HerdTraining, RangeTrend, Sociality
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
+from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.society import CreatureTrait
@@ -29,6 +30,11 @@ from aerona.engine.ecology.evolution import cold_reach, escape, evolved_traits, 
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.faith.book import FaithBook
+from aerona.engine.nature.islands import spared_kinds
+from aerona.engine.nature.seasons import activity, asleep, chilled, season_bands
+from aerona.engine.nature.senses import TRACKING, sense_score
+from aerona.engine.nature.sleepers import awake_now
+from aerona.engine.nature.symbiosis import SymbiosisBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.physics import flight_capacity_pct
@@ -59,6 +65,17 @@ class Wilds:
     lift: dict[int, float] = field(default_factory=dict)
     evolved: dict[tuple[int, int], dict[EvolvedTrait, int]] = field(default_factory=dict)
     reserves: dict[tuple[int, int | None], tuple[int, int]] = field(default_factory=dict)
+    symbiosis: SymbiosisBook = field(default_factory=SymbiosisBook)
+    bands: dict[int, TemperatureBand] = field(default_factory=dict)
+    spared: frozenset[tuple[int, int]] = frozenset()
+    tracking: dict[int, float] = field(default_factory=dict)
+    epoch: int = 0
+    presence: dict[int, dict[int, int]] = field(default_factory=dict)
+
+    def present(self, region_id: int) -> dict[int, int]:
+        if region_id not in self.presence:
+            self.presence[region_id] = {species_id: row.abundance for species_id, row in self.in_region(region_id).items()}
+        return self.presence[region_id]
 
     def allowed(self, land: RegionEnvironmentRow | None) -> tuple[Biochemistry, ...] | None:
         return self.life.get(land.world_id) if land is not None and land.world_id is not None else None
@@ -94,6 +111,13 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
     table = ctx.rules.husbandry
     wilds.hunt_bonus = {key: 1 + table.hunt_pct / PERCENT * min(1.0, value / table.trained_full_head) for key, value in trained.items()}
     wilds.evolved = await evolved_traits(ctx.session)
+    wilds.symbiosis = await SymbiosisBook.load(ctx.session)
+    wilds.bands = await season_bands(ctx.session, ctx.rules, ctx.epoch)
+    wilds.spared = await spared_kinds(ctx.session, ctx.rules.island_rule.revered_value)
+    wilds.epoch = ctx.epoch
+    for region, communities in wilds.hunters.items():
+        keen = [await sense_score(ctx.session, community.id, TRACKING) for community in communities]
+        wilds.tracking[region] = 1 + sum(keen) / len(keen) * ctx.rules.senses.tracking_pct / PERCENT if keen else 1.0
     await sacred_and_sick(ctx, wilds)
     return wilds
 
@@ -244,8 +268,10 @@ def predation(rules: Rules, wilds: Wilds, prey_id: int, region: int, hunters_of:
         hunter = wilds.ranges.get(hunter_id, {}).get(region)
         if hunter is None:
             continue
-        bite = ecology.predation + hunter.abundance / ecology.predation_divisor
         hunter_profile = wilds.profiles.get(hunter_id)
+        bite = (ecology.predation + hunter.abundance / ecology.predation_divisor) * (
+            activity(rules, hunter_profile.thermoregulation, wilds.bands.get(region)) if hunter_profile is not None else 1.0
+        )
         if T.PACK_HUNTER in wilds.traits.get(hunter_id, set()) or (hunter_profile is not None and hunter_profile.sociality is Sociality.PACK):
             bite *= 1 + rules.habitat.pack_pct / PERCENT
         loss += bite
@@ -255,9 +281,10 @@ def predation(rules: Rules, wilds: Wilds, prey_id: int, region: int, hunters_of:
 def human_hunting(rules: Rules, wilds: Wilds, species: EntityRow, region: int, *, protected: bool, megafauna: bool) -> float:
     ecology = rules.ecology
     traits = wilds.traits.get(species.id, set())
-    if protected or megafauna or traits & UNHUNTED or region in wilds.sacred.get(species.id, set()) or (stat(species, "danger") or 0) >= ecology.hunting_danger:
+    spared = protected or (species.id, region) in wilds.spared or region in wilds.sacred.get(species.id, set())
+    if spared or megafauna or traits & UNHUNTED or (stat(species, "danger") or 0) >= ecology.hunting_danger:
         return 0.0
-    pressure: float = min(ecology.hunting_cap, wilds.population[region] // max(1, ecology.hunting_population))
+    pressure: float = min(ecology.hunting_cap, wilds.population[region] // max(1, ecology.hunting_population)) * wilds.tracking.get(region, 1.0)
     pressure *= reserve_factor(rules, wilds.reserves, species.id, region)
     if T.REGENERATING in traits:
         pressure *= 1 - rules.habitat.regeneration_pct / PERCENT
@@ -303,7 +330,13 @@ def plan(
     )
     if T.FLYING in traits and land is not None:
         capacity *= wilds.lift.get(land.world_id, 1.0)
-    delta = (capacity - row.abundance) * growth_rate(rules, profile, land, traits) * fecund(rules, evolved)
+    present = wilds.present(region)
+    band = wilds.bands.get(region)
+    capacity *= wilds.symbiosis.room(rules, species.id, present) / (
+        rules.thermoregulation.endotherm_cold_food_pct / PERCENT if chilled(profile.thermoregulation, band) else 1
+    )
+    delta = (capacity - row.abundance) * growth_rate(rules, profile, land, traits) * fecund(rules, evolved) * activity(rules, profile.thermoregulation, band)
+    delta -= wilds.symbiosis.drain(rules, species.id, present)
     delta -= predation(rules, wilds, species.id, region, hunters_of) * escape(rules, evolved)
     if profile.diet in HUNTERS and prey and sum(prey) / len(prey) < rules.ecology.hunger_threshold:
         delta -= rules.ecology.hunger * profile.metabolism / rules.habitat.metabolism_mean
@@ -311,7 +344,10 @@ def plan(
         human_hunting(rules, wilds, species, region, protected=species.id in marks.protected, megafauna=megafauna)
         * wary(rules, evolved)
         * marks.traps.get((species.id, region), 1.0)
+        * wilds.symbiosis.shield(rules, species.id, present)
     )
+    if asleep(profile.dormancy, band) and not awake_now(profile, wilds.epoch):
+        hunted = 0.0
     delta -= hunted
     if region in wilds.sick.get(species.id, set()):
         delta -= rules.habitat.disease_loss * (1 - rules.habitat.regeneration_pct / PERCENT if T.REGENERATING in traits else 1)

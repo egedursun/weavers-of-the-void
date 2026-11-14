@@ -528,6 +528,13 @@ class EnginePhasesRules:
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fugitives in sanctuary, asylum and the pursuers who wait, bargain, besiege or break in"
     )
     satire: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: court jesters and satires of rulers, tolerated or punished")
+    living_nature: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: the life of soils, ferment cultures, bonds between kinds, sleeping kinds, senses, plant defences and island kinds",
+    )
     tech_eras: int = rule(
         1,
         0,

@@ -51,6 +51,8 @@ from aerona.engine.military.spycraft import (
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mind.drives import deceit_drive
 from aerona.engine.mind.opinion import mortal_rulers
+from aerona.engine.nature.effects import sensed
+from aerona.engine.nature.senses import AGENTS
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.phases.society_support.knowledge import teach
@@ -311,10 +313,12 @@ async def perform_operation(ctx: TickContext, spymaster: EntityRow, target: Enti
     text = await OPERATIONS[operation](ctx, spymaster, target, network)
     if text is None and operation is not SpyOperation.INTEL:
         text = await gather(ctx, spymaster, target, network)
+    found = 1 + await sensed(ctx.session, ctx.rules, target.id, AGENTS, ctx.rules.senses.agents_pct)
+    gain = round_half_up(cover_exposure(network, ctx.rules.espionage.exposure_per_operation) * found)
     if "exposure" not in network.locked:
-        network.exposure = clamp_int(network.exposure + cover_exposure(network, ctx.rules.espionage.exposure_per_operation), 0, PERCENT)
+        network.exposure = clamp_int(network.exposure + gain, 0, PERCENT)
     for agent in await agents_of(ctx, network):
-        agent.exposure = clamp_int(agent.exposure + cover_exposure(network, ctx.rules.espionage.exposure_per_operation), 0, PERCENT)
+        agent.exposure = clamp_int(agent.exposure + gain, 0, PERCENT)
     network.last_operation, network.last_epoch = operation.value, ctx.epoch
     return text or ""
 

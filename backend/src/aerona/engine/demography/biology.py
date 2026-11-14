@@ -25,6 +25,7 @@ from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainK
 from aerona.domain.enums.military import UnitKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.demography.rites import contagion, raises_dead
+from aerona.engine.nature.seasons import chilled
 from aerona.rules.registry import Rules
 
 FED = 100
@@ -52,12 +53,14 @@ def edible(diet: FolkDiet) -> frozenset[CommodityKind]:
     return DIETS[diet].edible
 
 
-def food_need(rules: Rules, biology: PeopleBiologyRow | None) -> float:
+def food_need(rules: Rules, biology: PeopleBiologyRow | None, band: TemperatureBand | None = None) -> float:
     if biology is None:
         return 1.0
     table = rules.biology
     traits = natures(biology)
     factor = KIN[biology.body_plan].food_pct / PERCENT * SIZES[biology.size_class].food_pct / PERCENT
+    if chilled(biology.thermoregulation, band):
+        factor *= rules.thermoregulation.endotherm_cold_food_pct / PERCENT
     if NaturalTrait.COLD_BLOODED in traits:
         factor *= table.cold_blooded_food_pct / PERCENT
     if NaturalTrait.REGENERATING in traits:
@@ -118,11 +121,19 @@ def nourishment(rules: Rules, diet: FolkDiet, region: RegionEnvironmentRow | Non
     return from_food + special_food(rules, diet, region, magic_level)
 
 
-def hunger_level(rules: Rules, biology: PeopleBiologyRow | None, region: RegionEnvironmentRow | None, index: int | None, magic_level: int = 0) -> float:
+def hunger_level(
+    rules: Rules,
+    biology: PeopleBiologyRow | None,
+    region: RegionEnvironmentRow | None,
+    index: int | None,
+    magic_level: int = 0,
+    *,
+    band: TemperatureBand | None = None,
+) -> float:
     if biology is None:
         return 0.0 if index is None else max(0.0, min(1.0, 1 - index / FED))
     fed = nourishment(rules, biology.diet, region, index, magic_level)
-    return max(0.0, min(1.0, 1 - fed / food_need(rules, biology)))
+    return max(0.0, min(1.0, 1 - fed / food_need(rules, biology, band)))
 
 
 def staple_for(rules: Rules, diet: FolkDiet, region: RegionEnvironmentRow | None) -> CommodityKind:

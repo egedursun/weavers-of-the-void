@@ -62,6 +62,8 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research_depth import capable_among
 from aerona.engine.lore.truth import theory_factor
 from aerona.engine.mind.drives import greed_drive
+from aerona.engine.nature.effects import sensed
+from aerona.engine.nature.senses import NAVIGATION
 from aerona.engine.notes import note
 from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.law_effects import toll_rate
@@ -618,7 +620,9 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
         ctx.session.add(
             TradeRouteLossRow(route_entity_id=route.entity.id, epoch=ctx.epoch, commodity=lane.commodity, cause=cause, units=units, culprit_entity_id=culprit)
         )
-        calm = await ctx.hook_easing(lane.seller_id, DomainHook.SEA_CALM)
+        calm = await ctx.hook_easing(lane.seller_id, DomainHook.SEA_CALM) * (
+            1 - await sensed(ctx.session, ctx.rules, lane.seller_id, NAVIGATION, ctx.rules.senses.navigation_pct)
+        )
         if cause is TradeLoss.SEA and ctx.rng(f"wreck.{route.entity.id}.{lane.commodity.value}.{ctx.epoch}").chance(lanes.shipwreck_chance * calm):
             await _shipwreck(ctx, route, book.entities[lane.seller_id], tally)
         elif cause is TradeLoss.BANDITS:

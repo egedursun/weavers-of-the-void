@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.db.tables.dominion import DominionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SecretRow
@@ -12,6 +13,8 @@ from aerona.domain.enums.mythic import ServitorRole
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.lore.rites import countered
+from aerona.engine.nature.effects import sensed
+from aerona.engine.nature.senses import SPIRITS
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
@@ -43,7 +46,8 @@ async def veiled(ctx: TickContext, god_id: int, place_id: int, stream: str) -> b
     region = (await RegionAtlas.load(ctx.session)).top_region(place_id)
     warded = region is not None and await countered(ctx, region, None, 0) is not None
     blocked = await guarded(ctx, god_id, place_id) or warded or (region is not None and await outshone(ctx, god_id, region))
-    return blocked and ctx.rng(stream).chance(ctx.rules.divine_spies.ward_pct)
+    seen = await sensed(ctx.session, ctx.rules, place_id, SPIRITS, ctx.rules.senses.spirits_pct)
+    return (blocked and ctx.rng(stream).chance(ctx.rules.divine_spies.ward_pct)) or ctx.rng(f"{stream}.seen").chance(round(seen * PERCENT))
 
 
 async def secrets_at(ctx: TickContext, place_id: int) -> list[SecretRow]:

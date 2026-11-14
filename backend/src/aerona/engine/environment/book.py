@@ -10,8 +10,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherEffect
+from aerona.domain.enums.nature import PlantDefence
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.environment.weather import Weather, WeatherInputs, weather_at, weather_of
+from aerona.engine.nature.cover import defence_cover, passage
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import shift_stat
@@ -58,6 +60,7 @@ class EnvironmentBook:
     stars: dict[int, StarRow] = field(default_factory=dict)
     forced: dict[int, list[ForcedWeatherRow]] = field(default_factory=dict)
     living_places: frozenset[int] = frozenset()
+    thorns: dict[int, float] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int, atlas: RegionAtlas | None = None) -> "EnvironmentBook":
@@ -82,6 +85,7 @@ class EnvironmentBook:
             living_places=frozenset(
                 await session.scalars(select(EntityRow.id).where(EntityRow.entity_type == EntityType.PLACE, EntityRow.status == EntityStatus.CANON))
             ),
+            thorns={region: cover.get(PlantDefence.THORNS, 0.0) for region, cover in (await defence_cover(session)).items()},
         )
 
     def star_of(self, world: WorldRow) -> StarRow | None:
@@ -138,7 +142,7 @@ class EnvironmentBook:
         return max(seasons, key=lambda season: (season.travel, -season.position)) if seasons else None
 
     def footed(self, world_seed: int, epoch: int, region: RegionEnvironmentRow, mode: str, *, season: WorldSeasonRow | None, slot: str) -> int:
-        base = region.passability.get(mode, PERCENT)
+        base = region.passability.get(mode, PERCENT) * passage(self.rules, self.thorns.get(region.entity_id, 0.0))
         weather = self.weather(world_seed, epoch, region, season, slot)
         footing = sail_factor(self.rules, weather.effect(WeatherEffect.WIND)) if mode == MovementMode.BOAT.value else weather.factor(WeatherEffect.FOOTING)
         travel = season.travel / PERCENT if season is not None else 1.0

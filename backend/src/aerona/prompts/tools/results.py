@@ -557,6 +557,10 @@ class SonResult(StrEnum):
     IDENTITY_STIRRED = "In {{ place }} the {{ layer }} identity is {{ told }}; it now matters {{ salience }} out of 100."
     IDENTITY_REFUSED = "You cannot stir that identity: {{ why }}."
     PROGRAMME_HINDERED = "The programme of {{ realm }} toward {{ technique }} falls back to {{ progress }} out of 100."
+    SPECIES_BOUND = "{{ first }} and {{ second }} are now bound by {{ kind }}."
+    SPECIES_UNBOUND = "You cannot bind those kinds: {{ why }}."
+    SENSE_SHARPENED = "The {{ sense }} of {{ holder }} now stands at {{ acuity }} out of 100."
+    SENSE_UNSHARPENED = "You cannot sharpen that sense: {{ why }}."
     PROGRAMME_UNTOUCHED = "You cannot hinder that programme: {{ why }}."
 
 
@@ -1016,4 +1020,6 @@ class MortalResult(StrEnum):
     SATIRE_TOLD = "Your mockery bites at {{ bite }} out of 100{% if not tolerated %}, and the court does not forgive it{% endif %}."
     SATIRE_DECLINED = "You cannot mock the ruler: {{ why }}."
     PROGRAMME_JOINED = "You work on the programme toward {{ technique }}; it stands at {{ progress }} out of 100."
+    CULTURE_TENDED = "The {{ kind }} culture of {{ town }} now stands at {{ quality }} out of 100."
+    CULTURE_REFUSED = "You cannot tend a culture: {{ why }}."
     PROGRAMME_REFUSED = "You cannot work on that programme: {{ why }}."

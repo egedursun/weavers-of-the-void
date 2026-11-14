@@ -1751,4 +1751,23 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You set back a realm's programme toward a dangerous technique on the world you stand on; programmes are named in your context. 1 action.",
         {"programme_id": "The programme", "reason": "Why you hinder it"},
     ),
+    T.BIND_SPECIES: ToolText(
+        "You bind two kinds of creature or plant on the world you stand on so that each changes the other where they share a land: mutualism helps both,"
+        " commensalism helps the first and leaves the second be, parasitism lets the first feed on the second, and mimicry lets the first pass for the"
+        " second so hunters spare it. 1 action.",
+        {
+            "first_species_id": "The first kind",
+            "second_species_id": "The second kind",
+            "kind": "The bond: mutualism, commensalism, parasitism or mimicry",
+            "reason": "Why you bind them",
+        },
+    ),
+    T.SHARPEN_SENSE: ToolText(
+        "You sharpen one sense of a kind of creature or of a people on the world you stand on, so it finds, tracks, sees or steers better. 1 action.",
+        {
+            "holder_id": "The kind or the people",
+            "sense": "The sense: sight, night_vision, smell, hearing, echolocation, vibration, magnetic, spirit_sight or heat",
+            "reason": "Why you sharpen it",
+        },
+    ),
 }

@@ -166,6 +166,7 @@ async def markets(ctx: TickContext) -> None:
     "table.region_pollution",
     "table.resource_profiles",
     "table.resource_workers",
+    "table.sense_profiles",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.skills",

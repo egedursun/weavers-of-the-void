@@ -41,6 +41,7 @@ from aerona.engine.industry.methods import feed, method_for, outdated, process_o
 from aerona.engine.industry.pollution import fish_factor
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.nature.effects import cold_work
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -236,7 +237,7 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
     site = book.workshop(community.id, spec.workshop) if spec.workshop is not None else None
     works = (1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT) * await workshop_output(ctx.session, ctx.rules, site)
     raw = base * skill * knowledge * season * difficulty * works * await tools_factor(ctx, community.id, workers) * await labour_factor(ctx, community)
-    raw *= await clock_output(ctx.session, ctx.rules, community.id)
+    raw *= await clock_output(ctx.session, ctx.rules, community.id) * await cold_work(ctx, community)
     raw *= craft_factor(ctx, book, community.id, resource.id, kind) * gate * await method_factor(ctx, book, community.id, kind, workers)
     if kind is ExtractionKind.FISHING:
         raw *= fish_factor(ctx.rules, book.pollution.get(region_key(book, resource.id))) * await catch_factor(ctx.session, ctx.rules, resource.id)

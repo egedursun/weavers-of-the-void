@@ -244,6 +244,8 @@ class SonToolId(StrEnum):
     TURN_WIND = "turn_wind"
     STIR_IDENTITY = "stir_identity"
     SABOTAGE_PROGRAMME = "sabotage_programme"
+    BIND_SPECIES = "bind_species"
+    SHARPEN_SENSE = "sharpen_sense"
 
 
 class MortalToolId(StrEnum):
@@ -409,6 +411,7 @@ class MortalToolId(StrEnum):
     SEEK_SANCTUARY = "seek_sanctuary"
     MOCK_THE_RULER = "mock_the_ruler"
     JOIN_PROGRAMME = "join_programme"
+    TEND_CULTURE = "tend_culture"
 
 
 ToolId = SonToolId | MortalToolId

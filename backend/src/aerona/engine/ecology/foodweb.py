@@ -16,6 +16,7 @@ from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.domestication import guarded
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import GoodsLedger
+from aerona.engine.nature.sleepers import raid_factor
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -130,4 +131,5 @@ async def raid_chance(ctx: TickContext, monster: EntityRow, hunger: dict[int, fl
     profile = await ctx.session.get(SpeciesProfileRow, monster.id)
     aggression = profile.aggression if profile is not None else stat(monster, "danger") or 0
     bold = 1 - profile.fear_of_people / PERCENT * ctx.rules.food_web.fear_pct / PERCENT if profile is not None else 1.0
-    return aggression * hunger.get(monster.id, 1.0) * bold / ctx.rules.world_engine.raid_danger_divisor
+    seasonal = await raid_factor(ctx.session, ctx.rules, ctx.epoch, monster)
+    return aggression * hunger.get(monster.id, 1.0) * bold * seasonal / ctx.rules.world_engine.raid_danger_divisor

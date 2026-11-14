@@ -100,6 +100,7 @@ from aerona.engine.phases import (
     mortals,
     mythic,
     native_faith,
+    nature,
     operations,
     pantheon,
     places,
@@ -225,6 +226,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + folkways.PHASES
     + belonging.PHASES
     + eras.PHASES
+    + nature.PHASES
     + climes.PHASES
     + crafts.PHASES
     + customs.PHASES
@@ -388,6 +390,7 @@ SUB_ENGINE_STAGE = stage(
     "lineages",
     "biome_succession",
     "flora_cycles",
+    "living_nature",
     "beast_cycles",
     "pet_cycles",
     "necromancy_cycles",

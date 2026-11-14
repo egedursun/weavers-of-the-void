@@ -16,6 +16,7 @@ import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
 import { LawDepthSection } from '@/features/lawDepth/LawDepthSection'
 import { MadeKindsSection } from '@/features/madeKinds/MadeKindsSection'
+import { NatureSection } from '@/features/nature/NatureSection'
 import { OperationsSection } from '@/features/operations/OperationsSection'
 import { PursuitsSection } from '@/features/pursuits/PursuitsSection'
 import { RegimeSection } from '@/features/regime/RegimeSection'
@@ -129,6 +130,7 @@ export function ThingSections({
       <ClimesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <BelongingSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <TechErasSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <NatureSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>

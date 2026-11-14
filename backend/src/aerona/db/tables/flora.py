@@ -6,15 +6,18 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.ecology import Biochemistry, Cultivation, GrowthCycle
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.nature import PlantDefence
 
 
 class PlantProfileRow(Base):
     __tablename__ = "plant_profiles"
-    __table_args__ = (between("soil_need", PERCENT_MIN, PERCENT_MAX), at_least("growing_seasons", 1))
+    __table_args__ = (between("soil_need", PERCENT_MIN, PERCENT_MAX), between("defence_potency", PERCENT_MIN, PERCENT_MAX), at_least("growing_seasons", 1))
 
     species_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     growth_cycle: Mapped[GrowthCycle] = mapped_column(enum_type(GrowthCycle, "growth_cycle"), default=GrowthCycle.ANNUAL)
     growing_seasons: Mapped[int] = mapped_column(default=1)
+    defence: Mapped[PlantDefence] = mapped_column(enum_type(PlantDefence, "defence"), default=PlantDefence.NONE)
+    defence_potency: Mapped[int] = mapped_column(default=0)
     soil_need: Mapped[int] = mapped_column(default=30)
     cultivation: Mapped[Cultivation] = mapped_column(enum_type(Cultivation, "cultivation"), default=Cultivation.WILD)
     cultivar_of_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

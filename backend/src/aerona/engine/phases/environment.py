@@ -30,6 +30,7 @@ from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
 from aerona.domain.enums.evolution import KeystoneRole
+from aerona.domain.enums.nature import PlantDefence
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.structure import StructureKind
@@ -87,6 +88,7 @@ from aerona.engine.environment.years import SampledYear, world_years
 from aerona.engine.industry.pollution import disease_extra, fertility_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.calendar_rites import backfill_holy_days, hallow_holy_days
+from aerona.engine.nature.cover import cover_of, poisoned_forage, smothered
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import LAND_COMMUNITY_TYPES, CapacityModel, RegionKey, RegionLoad
 from aerona.engine.primitives.distance import RegionAtlas
@@ -1033,8 +1035,13 @@ async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeaso
             / PERCENT
             * pollinated
             * harvest_lift(ctx.rules, season.lifts.get(env.entity_id))
+            * smothered(ctx.rules, await cover_of(ctx.session, env.entity_id, PlantDefence.ALLELOPATHY))
         )
+        grown = env.harvest_pct
         env.harvest_pct, foraged = cushioned(ctx.rules, env.harvest_pct, season.cushions.get(env.entity_id))
+        if foraged:
+            spoiled = poisoned_forage(ctx.rules, await cover_of(ctx.session, env.entity_id, PlantDefence.TOXINS))
+            env.harvest_pct = round_half_up(env.harvest_pct - (env.harvest_pct - grown) * spoiled)
         if foraged and "disease_load" not in env.locked:
             env.disease_load = clamp_int(env.disease_load + ctx.rules.famine_foods.health_cost, 0, PERCENT)
     region = await ctx.session.get(EntityRow, env.entity_id)

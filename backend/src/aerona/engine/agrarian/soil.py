@@ -24,6 +24,7 @@ from aerona.domain.enums.industry import MethodKind, ProcessKind
 from aerona.engine.agrarian.rings import put
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.nature.microbes import microbe_factor, soil_lives
 from aerona.engine.notes import note
 from aerona.engine.primitives.capacity import LAND_COMMUNITY_TYPES, CapacityModel
 from aerona.engine.primitives.distance import RegionAtlas
@@ -140,12 +141,12 @@ async def field_work(ctx: TickContext, atlas: RegionAtlas) -> FieldWork:
     return FieldWork(rotating, terraced, dict(irrigated), drained, fodder, roots)
 
 
-def nutrient_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: NutrientKind, stock: int, work: FieldWork) -> float:
+def nutrient_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: NutrientKind, stock: int, work: FieldWork, *, life: float = 1.0) -> float:
     table = ctx.rules.nutrients
     region = land.entity_id
     farmed, grazed = land.farmed / PERCENT, land.grazed / PERCENT
     fallow = max(0, land.cleared - land.farmed - land.grazed) / PERCENT
-    natural = (land.soil_base - stock) / table.recovery_divisor
+    natural = (land.soil_base - stock) / table.recovery_divisor * life
     if nutrient is N.FIXED:
         return (
             natural
@@ -166,8 +167,7 @@ def nutrient_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: Nutr
             natural
             - farmed * table.organic_draw
             - land.erosion / PERCENT * table.erosion_pct
-            + grazed * table.manure_pct
-            + land.forest_cover / PERCENT * table.litter_pct
+            + (grazed * table.manure_pct + land.forest_cover / PERCENT * table.litter_pct) * life
         )
     irrigation = work.irrigated.get(region, 0)
     if irrigation > 0 and region not in work.drained:
@@ -177,6 +177,7 @@ def nutrient_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: Nutr
 
 async def feed_soils(ctx: TickContext, atlas: RegionAtlas, tally: SoilTally) -> None:
     work = await field_work(ctx, atlas)
+    lives = await soil_lives(ctx.session)
     found: dict[int, dict[NutrientKind, SoilNutrientRow]] = defaultdict(dict)
     for row in await ctx.session.scalars(select(SoilNutrientRow)):
         found[row.region_entity_id][row.nutrient] = row
@@ -199,7 +200,9 @@ async def feed_soils(ctx: TickContext, atlas: RegionAtlas, tally: SoilTally) -> 
             row = known
             before = row.stock
             if "stock" not in row.locked:
-                row.stock = clamp_int(row.stock + nutrient_change(ctx, land, nutrient, row.stock, work), 0, PERCENT)
+                row.stock = clamp_int(
+                    row.stock + nutrient_change(ctx, land, nutrient, row.stock, work, life=microbe_factor(ctx.rules, lives.get(land.entity_id))), 0, PERCENT
+                )
             put(row, "trend", clamp_int(row.stock - before, -PERCENT, PERCENT))
             row.updated_epoch = ctx.epoch
             if nutrient is N.SALINITY and before < ctx.rules.nutrients.noted_salinity <= row.stock:

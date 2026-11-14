@@ -1031,4 +1031,9 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "If you are skilled in science, engineering or computing, you work on your realm's programme toward a technique and speed it on. 1 action.",
         {"programme_id": "The programme"},
     ),
+    T.TEND_CULTURE: ToolText(
+        "You tend a ferment culture of your town, or start one if it has none of that kind; a kept culture makes the town's baked, cured, fermented,"
+        " pickled and brewed food better. 1 action.",
+        {"kind": "The culture: yeast, starter, mould, lactic or vinegar"},
+    ),
 }

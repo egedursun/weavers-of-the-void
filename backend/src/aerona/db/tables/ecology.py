@@ -22,6 +22,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.evolution import KeystoneRole
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.nature import Dormancy, Thermoregulation
 
 
 class SpeciesProfileRow(Base):
@@ -38,6 +39,8 @@ class SpeciesProfileRow(Base):
         at_least("maturity_years", 0),
         at_least("litter_size", 1),
         at_least("breeding_seasons", 0),
+        at_least("island_epochs", 0),
+        at_least("range_peak", 0),
     )
 
     species_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
@@ -73,6 +76,13 @@ class SpeciesProfileRow(Base):
     updated_epoch: Mapped[int] = mapped_column(default=0)
     keystone: Mapped[KeystoneRole | None] = mapped_column(enum_type(KeystoneRole, "keystone"))
     feral_epoch: Mapped[int | None]
+    dormancy: Mapped[Dormancy] = mapped_column(enum_type(Dormancy, "dormancy"), default=Dormancy.NONE)
+    thermoregulation: Mapped[Thermoregulation] = mapped_column(enum_type(Thermoregulation, "thermoregulation"), default=Thermoregulation.ENDOTHERM)
+    woken_epoch: Mapped[int | None]
+    endemic: Mapped[bool] = mapped_column(default=False)
+    relict: Mapped[bool] = mapped_column(default=False)
+    island_epochs: Mapped[int] = mapped_column(default=0)
+    range_peak: Mapped[int] = mapped_column(default=0)
     pinned_prey: Mapped[list[int]] = mapped_column(JSON, default=list)
     barred_prey: Mapped[list[int]] = mapped_column(JSON, default=list)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

@@ -24,6 +24,7 @@ from aerona.agents.context.language_lines import language_lines
 from aerona.agents.context.law_lines import mortal_law_lines
 from aerona.agents.context.lineage import lineage_lines
 from aerona.agents.context.mythic_lines import mortal_magic_lines
+from aerona.agents.context.nature_lines import mortal_nature_lines
 from aerona.agents.context.operations_lines import mortal_operations_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
 from aerona.agents.context.regime_lines import mortal_regime_lines
@@ -216,6 +217,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "climes": await mortal_climes_lines(scope, me),
             "belonging": await mortal_belonging_lines(scope, me),
             "eras": await mortal_era_lines(scope, me),
+            "nature": await mortal_nature_lines(scope, me),
         }
     )
 

@@ -3999,3 +3999,38 @@ LEVERS.update(
     }
 )
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in ERA_EDITS.items()})
+
+SOIL_UP = ("soil_microbiota:set", {"region_id": Pick(EntityType.REGION), "life": 40, "sterile_epochs": 0})
+CULTURE_UP = ("ferment_culture:create", {"holder_entity_id": Pick(TOWN), "kind": "yeast", "quality": 30})
+BOND_UP = (
+    "species_relation:create",
+    {"first_species_id": Pick(EntityType.SPECIES), "second_species_id": Pick(EntityType.SPECIES, 1), "kind": "mutualism", "strength": 40},
+)
+SENSE_UP = ("sense:set", {"holder_id": Pick(EntityType.PEOPLE), "sense": "smell", "acuity": 60})
+NATURE_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "soil_microbiota:edit": {"life": 30, "sterile_epochs": 1},
+    "ferment_culture:edit": {"holder_entity_id": Pick(TOWN), "kind": "mould", "quality": 50, "lost_epoch": None},
+    "species_relation:edit": {
+        "first_species_id": Pick(EntityType.SPECIES),
+        "second_species_id": Pick(EntityType.SPECIES, 1),
+        "kind": "parasitism",
+        "strength": 60,
+    },
+    "sense:edit": {"acuity": 80},
+}
+EDITS = {**EDITS, **NATURE_EDITS}
+LEVERS.update(
+    {
+        "soil_microbiota:set": given(**SOIL_UP[1]),
+        **{name: after(SOIL_UP, region_id=Pick(EntityType.REGION)) for name in ("soil_microbiota:edit", "soil_microbiota:delete")},
+        "ferment_culture:create": given(**CULTURE_UP[1]),
+        **{name: after(CULTURE_UP, record_id=Newest("ferment_culture")) for name in ("ferment_culture:edit", "ferment_culture:delete")},
+        "species_relation:create": given(**BOND_UP[1]),
+        **{name: after(BOND_UP, record_id=Newest("species_relation")) for name in ("species_relation:edit", "species_relation:delete")},
+        "sense:set": given(**SENSE_UP[1]),
+        **{name: after(SENSE_UP, holder_id=Pick(EntityType.PEOPLE), sense="smell") for name in ("sense:edit", "sense:delete")},
+    }
+)
+LEVERS.update(
+    {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in NATURE_EDITS.items()}
+)

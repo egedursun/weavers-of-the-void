@@ -99,6 +99,7 @@ from aerona.services.player import (
     mortals,
     mythic,
     native_faith,
+    nature,
     operations,
     pantheon,
     peoples,
@@ -3886,6 +3887,40 @@ ERAS_ACTIONS = (
     _sync(Meta("eras:run", "Read every era and programme now", G.SOCIETY), eras.eras_run, eras.RunNow, free, ("F44",)),
 )
 
+NATURE_ACTIONS = (
+    _sync(Meta("soil_microbiota:set", "Set the life of a soil", G.CREATURES), nature.soil_microbiota_set, nature.SoilMicrobiotaDraft, free, ("S3.2/RP6",)),
+    _sync(Meta("soil_microbiota:edit", "Edit the life of a soil", G.CREATURES), nature.soil_microbiota_edit, nature.SoilMicrobiotaEdit, free, ("S3.2/RP6",)),
+    _sync(
+        Meta("soil_microbiota:delete", "Leave a soil to itself", G.CREATURES), nature.soil_microbiota_delete, nature.SoilMicrobiotaTarget, free, ("S3.2/RP6",)
+    ),
+    _sync(Meta("ferment_culture:create", "Give a ferment culture", G.SOCIETY), nature.ferment_culture_create, nature.FermentCultureDraft, free, ("S3.2/RP6",)),
+    _sync(Meta("ferment_culture:edit", "Edit a ferment culture", G.SOCIETY), nature.ferment_culture_edit, nature.FermentCultureEdit, free, ("S3.2/RP6",)),
+    _sync(
+        Meta("ferment_culture:delete", "Strike a ferment culture", G.SOCIETY), nature.ferment_culture_delete, nature.FermentCultureTarget, free, ("S3.2/RP6",)
+    ),
+    _sync(Meta("species_relation:create", "Bind two kinds", G.CREATURES), nature.species_relation_create, nature.SpeciesRelationDraft, free, ("S3.2/RP6",)),
+    _sync(
+        Meta("species_relation:edit", "Edit a bond between kinds", G.CREATURES), nature.species_relation_edit, nature.SpeciesRelationEdit, free, ("S3.2/RP6",)
+    ),
+    _sync(
+        Meta("species_relation:delete", "Strike a bond between kinds", G.CREATURES),
+        nature.species_relation_delete,
+        nature.SpeciesRelationTarget,
+        free,
+        ("S3.2/RP6",),
+    ),
+    _sync(Meta("sense:set", "Give a sense", G.CREATURES), nature.sense_set, nature.SenseDraft, free, ("S3.2/RP6", "S4.1/RP6")),
+    _sync(Meta("sense:edit", "Edit a sense", G.CREATURES), nature.sense_edit, nature.SenseEdit, free, ("S3.2/RP6", "S4.1/RP6")),
+    _sync(Meta("sense:delete", "Take a sense away", G.CREATURES), nature.sense_delete, nature.SenseTarget, free, ("S3.2/RP6", "S4.1/RP6")),
+    _sync(
+        Meta("nature:run", "Read every soil, culture, bond, sleeper and island kind now", G.CREATURES),
+        nature.nature_run,
+        nature.RunNow,
+        free,
+        ("S3.2/RP6", "S4.1/RP6"),
+    ),
+)
+
 BELONGING_ACTIONS = (
     _sync(Meta("held_identity:set", "Set an identity", G.SOCIETY), belonging.held_identity_set, belonging.HeldIdentityDraft, free, ("F43",)),
     _sync(Meta("held_identity:edit", "Edit an identity", G.SOCIETY), belonging.held_identity_edit, belonging.HeldIdentityEdit, free, ("F43",)),
@@ -4901,6 +4936,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *AGES_ACTIONS,
     *FOLKWAYS_ACTIONS,
     *BELONGING_ACTIONS,
+    *NATURE_ACTIONS,
     *ERAS_ACTIONS,
     *CLIMES_ACTIONS,
     *CRAFTS_ACTIONS,

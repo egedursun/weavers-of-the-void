@@ -14,12 +14,14 @@ from aerona.domain.enums.cycles import MobilityMode
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.nature import PlantDefence
 from aerona.domain.enums.settlement import SizeTier
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import population_of, shift
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.asabiyya import asabiyya_row
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
+from aerona.engine.nature.cover import cover_of, grazing
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
@@ -54,10 +56,11 @@ async def herding_share(ctx: TickContext, town_id: int) -> int:
     return round_half_up(herders * PERCENT / total) if total else 0
 
 
-def pasture(region: RegionEnvironmentRow | None) -> int:
+async def pasture(ctx: TickContext, region: RegionEnvironmentRow | None) -> int:
     if region is None:
         return 0
-    return clamp_int((region.moisture + region.soil_fertility) / 2 - region.grazed / 2, 0, PERCENT)
+    spoiled = grazing(ctx.rules, await cover_of(ctx.session, region.entity_id, PlantDefence.THORNS))
+    return clamp_int(((region.moisture + region.soil_fertility) / 2 - region.grazed / 2) * spoiled, 0, PERCENT)
 
 
 def water_of(region: RegionEnvironmentRow | None) -> int:
@@ -71,7 +74,8 @@ async def circuit_for(ctx: TickContext, atlas: RegionAtlas, region_id: int, mode
     length = table.circuit_stops + min(table.circuit_stops, herd // max(1, table.herd_scale)) if mode is MobilityMode.NOMADIC else TRANSHUMANT_STOPS
     scored = []
     for near in atlas.neighbours(region_id):
-        scored.append((pasture(await ctx.session.get(RegionEnvironmentRow, near)) + water_of(await ctx.session.get(RegionEnvironmentRow, near)), near))
+        land = await ctx.session.get(RegionEnvironmentRow, near)
+        scored.append((await pasture(ctx, land) + water_of(land), near))
     best = [near for _, near in sorted(scored, key=lambda item: (-item[0], item[1]))]
     return [region_id, *best[: max(0, length - 1)]]
 
@@ -100,7 +104,7 @@ async def found_camps(ctx: TickContext, atlas: RegionAtlas, tally: NomadTally) -
                 circuit=await circuit_for(ctx, atlas, region, mode, round_half_up(population_of(town) * table.herd_per_dweller / PERCENT)),
                 season_index=0,
                 herd=round_half_up(population_of(town) * table.herd_per_dweller / PERCENT),
-                grazing=pasture(ground),
+                grazing=await pasture(ctx, ground),
                 water=water_of(ground),
                 last_moved_epoch=None,
                 locked=[],
@@ -113,7 +117,7 @@ async def found_camps(ctx: TickContext, atlas: RegionAtlas, tally: NomadTally) -
 async def graze(ctx: TickContext, camp: CampRow, region: RegionEnvironmentRow | None) -> None:
     table = ctx.rules.nomadism
     if "grazing" not in camp.locked:
-        camp.grazing = pasture(region)
+        camp.grazing = await pasture(ctx, region)
     if "water" not in camp.locked:
         camp.water = water_of(region)
     if "herd" not in camp.locked:

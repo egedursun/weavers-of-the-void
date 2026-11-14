@@ -203,6 +203,7 @@ class HomeLine(ContextItem):
     climes: list[str] = Field(default_factory=list)
     belonging: list[str] = Field(default_factory=list)
     eras: list[str] = Field(default_factory=list)
+    nature: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

@@ -70,6 +70,7 @@ from tests.tools.every_setup_arts import art_work, built_construct, forged_work,
 from tests.tools.every_setup_crafts import material_resource
 from tests.tools.every_setup_eras import realm_programme
 from tests.tools.every_setup_folkways import owned_item
+from tests.tools.every_setup_nature import first_kind, second_kind, two_kinds
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
 
@@ -433,6 +434,11 @@ SON_CASES: dict[str, Case] = {
     "lay_affinity": Case(plain(resource_id=resource, school="earth", mode="worn", reason=REASON), material_resource),
     "stir_monsoon": Case(plain(world_id=world, strong=False, reason=REASON)),
     "turn_wind": Case(plain(region_id=region, wind_from=4, reason=REASON)),
+    "bind_species": Case(
+        plain(first_species_id=first_kind, second_species_id=second_kind, kind="mutualism", reason=REASON),
+        two_kinds,
+    ),
+    "sharpen_sense": Case(plain(holder_id=people, sense="smell", reason=REASON)),
     "sabotage_programme": Case(plain(programme_id=lambda _realm, ids: ids["programme"], reason=REASON), realm_programme),
     "stir_identity": Case(plain(community_id=people, layer="faith", reason=REASON)),
 }

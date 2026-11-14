@@ -418,6 +418,16 @@ from aerona.rules.registry.mythic import (
 from aerona.rules.registry.naming import NamingRules
 from aerona.rules.registry.narrative import NarrativeRules
 from aerona.rules.registry.native_faith import NativeFaithRules
+from aerona.rules.registry.nature import (
+    DormancyRules,
+    FermentationRules,
+    IslandRules,
+    MicrobeRules,
+    PlantDefenceRules,
+    SenseRules,
+    SymbiosisRules,
+    ThermoregulationRules,
+)
 from aerona.rules.registry.notifications import NotificationsRules
 from aerona.rules.registry.operations import (
     AdmiraltyRules,
@@ -657,6 +667,14 @@ class Rules:
     satire: SatireRules = field(default_factory=SatireRules)
     eras: EraRules = field(default_factory=EraRules)
     programmes: ProgrammeRules = field(default_factory=ProgrammeRules)
+    microbes: MicrobeRules = field(default_factory=MicrobeRules)
+    fermentation: FermentationRules = field(default_factory=FermentationRules)
+    symbiosis: SymbiosisRules = field(default_factory=SymbiosisRules)
+    dormancy: DormancyRules = field(default_factory=DormancyRules)
+    thermoregulation: ThermoregulationRules = field(default_factory=ThermoregulationRules)
+    senses: SenseRules = field(default_factory=SenseRules)
+    plant_defences: PlantDefenceRules = field(default_factory=PlantDefenceRules)
+    island_rule: IslandRules = field(default_factory=IslandRules)
     body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)

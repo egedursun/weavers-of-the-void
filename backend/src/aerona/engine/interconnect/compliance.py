@@ -350,6 +350,7 @@ from aerona.db.tables.military import (
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, HeroquestMemberRow, HeroquestRow, MantlingRow, ServitorRow
+from aerona.db.tables.nature import FermentCultureRow, SenseProfileRow, SoilMicrobiotaRow, SpeciesRelationRow
 from aerona.db.tables.operations import (
     AdmiraltyRow,
     ArmyOperationRow,
@@ -489,6 +490,59 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "S3.2/RP6",
+        (SoilMicrobiotaRow.__tablename__, FermentCultureRow.__tablename__, SpeciesRelationRow.__tablename__),
+        ("living_nature",),
+        (
+            "soil_microbiota:set",
+            "soil_microbiota:edit",
+            "soil_microbiota:delete",
+            "ferment_culture:create",
+            "ferment_culture:edit",
+            "ferment_culture:delete",
+            "species_relation:create",
+            "species_relation:edit",
+            "species_relation:delete",
+            "species:edit",
+            "plant:edit",
+            "nature:run",
+        ),
+        (
+            "NatureSection",
+            "section-nature",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("bind_species", "tend_culture"),
+        (),
+        ("9f77bcb27682",),
+    ),
+    ComplianceRow(
+        "S4.1/RP6",
+        (SenseProfileRow.__tablename__,),
+        ("living_nature",),
+        (
+            "sense:set",
+            "sense:edit",
+            "sense:delete",
+            "people:edit",
+            "nature:run",
+        ),
+        (
+            "NatureSection",
+            "section-nature",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("sharpen_sense",),
+        (),
+        ("9f77bcb27682",),
+    ),
     ComplianceRow(
         "F44",
         (TechProgrammeRow.__tablename__,),

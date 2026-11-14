@@ -58,6 +58,8 @@ from aerona.engine.military.command import command_areas
 from aerona.engine.military.units import design_spec, muster, profile_of, sync
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.mind.split import MIDPOINT, attribute
+from aerona.engine.nature.effects import cold_war, sensed
+from aerona.engine.nature.senses import AMBUSH, NIGHT, sense_score
 from aerona.engine.operations.command import command_edge
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -260,8 +262,12 @@ async def side_of(
     biology, culture = await profiles_of(ctx.session, community)
     ordered = await command_edge(ctx, army.id) * (1 + await battle_omen(ctx, community))
     kin = battle_edge(ctx.rules, biology, culture, terrain=ground.terrain, weather=ground.weather, night=ground.night, river=ground.river, defending=defending)
+    kin *= await cold_war(ctx, community, army.location_id)
+    if ground.night:
+        kin *= 1 + await sensed(ctx.session, ctx.rules, community.id, NIGHT, ctx.rules.senses.night_pct)
     return Side(
         firepower_pct=await tech_bonus(ctx.session, ctx.rules, community.id, EraChannel.FIREPOWER),
+        keen=await sense_score(ctx.session, community.id, AMBUSH),
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
         leadership=sum(parts.values()),
         entity=community,

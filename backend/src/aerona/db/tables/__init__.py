@@ -447,6 +447,7 @@ from aerona.db.tables.mind import (
 from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, HeroquestMemberRow, HeroquestRow, MantlingRow, ServitorRow
+from aerona.db.tables.nature import FermentCultureRow, SenseProfileRow, SoilMicrobiotaRow, SpeciesRelationRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.db.tables.operations import (
     AdmiraltyRow,
@@ -830,6 +831,7 @@ __all__ = [
     "FamineLoreRow",
     "FateRewardRow",
     "FavourRow",
+    "FermentCultureRow",
     "FeudRow",
     "FleetRow",
     "FolkBeliefRow",
@@ -1118,6 +1120,7 @@ __all__ = [
     "ScoreRow",
     "ScriptRow",
     "SecretRow",
+    "SenseProfileRow",
     "SentenceRow",
     "ServitorRow",
     "SettlementHistoryRow",
@@ -1138,6 +1141,7 @@ __all__ = [
     "SlaveMarketRow",
     "SocialCircleRow",
     "SocialNormRow",
+    "SoilMicrobiotaRow",
     "SoilNutrientRow",
     "SonPowerRow",
     "SonRelationRow",
@@ -1150,6 +1154,7 @@ __all__ = [
     "SpeciesHostRow",
     "SpeciesProfileRow",
     "SpeciesRangeRow",
+    "SpeciesRelationRow",
     "SpeciesTraitRow",
     "SpeciesUseKindRow",
     "SpeciesUseRow",

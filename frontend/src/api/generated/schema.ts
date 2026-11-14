@@ -5183,6 +5183,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/nature/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_nature_api_nature_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -13177,6 +13193,214 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_satire_run_api_actions_satire_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/soil_microbiota:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_soil_microbiota_set_api_actions_soil_microbiota_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/soil_microbiota:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_soil_microbiota_edit_api_actions_soil_microbiota_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/soil_microbiota:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_soil_microbiota_delete_api_actions_soil_microbiota_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ferment_culture:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ferment_culture_create_api_actions_ferment_culture_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ferment_culture:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ferment_culture_edit_api_actions_ferment_culture_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ferment_culture:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ferment_culture_delete_api_actions_ferment_culture_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/species_relation:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_species_relation_create_api_actions_species_relation_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/species_relation:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_species_relation_edit_api_actions_species_relation_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/species_relation:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_species_relation_delete_api_actions_species_relation_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sense:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sense_set_api_actions_sense_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sense:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sense_edit_api_actions_sense_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sense:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sense_delete_api_actions_sense_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/nature:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_nature_run_api_actions_nature_run_post']
     delete?: never
     options?: never
     head?: never
@@ -42355,6 +42579,10 @@ export interface components {
       epoch: number
       locked: string[]
     }
+    DefenceCoverView: {
+      defence: components['schemas']['PlantDefence']
+      cover_pct: number
+    }
     DefenceView: {
       wall_pct: number
       tower_pct: number
@@ -43685,6 +43913,7 @@ export interface components {
       label: string
       value: number
     }
+    Dormancy: 'none' | 'hibernation' | 'aestivation'
     DreamEditInput: {
       dream_id: number
       kind?: components['schemas']['DreamKind'] | null
@@ -46120,6 +46349,31 @@ export interface components {
       readings: components['schemas']['LabelView'][]
       long_term_threshold: number
     }
+    FermentCultureCreateInput: {
+      holder_entity_id: number
+      kind: components['schemas']['FermentKind']
+      quality: number
+    }
+    FermentCultureDeleteInput: {
+      record_id: number
+    }
+    FermentCultureEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    FermentCultureView: {
+      id: number
+      holder: components['schemas']['NodeRef']
+      kind: components['schemas']['FermentKind']
+      quality: number
+      since_epoch: number
+      lost_epoch: number | null
+      locked: string[]
+    }
+    FermentKind: 'yeast' | 'starter' | 'mould' | 'lactic' | 'vinegar'
     FeudParty: 'house' | 'community'
     FeudStatus: 'active' | 'mediated' | 'faded' | 'ended'
     FeudView: {
@@ -46293,6 +46547,11 @@ export interface components {
       | 'lithovore'
       | 'essence_feeder'
       | 'phototroph'
+    FolkNatureView: {
+      thermoregulation: components['schemas']['Thermoregulation']
+      activity_pct: number
+      locked: string[]
+    }
     FolkView: {
       people_id: number
       people_name: string
@@ -50057,6 +50316,15 @@ export interface components {
       value: number
       held: boolean
     }
+    KindBondView: {
+      id: number
+      first: components['schemas']['NodeRef']
+      second: components['schemas']['NodeRef']
+      kind: components['schemas']['SymbiosisKind']
+      strength: number
+      since_epoch: number
+      locked: string[]
+    }
     KindCreateInput: {
       catalog: components['schemas']['CustomCatalog']
       base: string
@@ -50097,6 +50365,18 @@ export interface components {
       }
     }
     KindFamily: 'trait' | 'skill' | 'condition'
+    KindNatureView: {
+      dormancy: components['schemas']['Dormancy']
+      thermoregulation: components['schemas']['Thermoregulation']
+      woken_epoch: number | null
+      endemic: boolean
+      relict: boolean
+      island_epochs: number
+      range_peak: number
+      asleep_now: boolean
+      activity_pct: number
+      locked: string[]
+    }
     KindOptionView: {
       kind: components['schemas']['StructureKind']
       group: components['schemas']['StructureGroup']
@@ -53694,6 +53974,7 @@ export interface components {
       | 'seek_sanctuary'
       | 'mock_the_ruler'
       | 'join_programme'
+      | 'tend_culture'
     MortalTurnFinishedEvent: {
       id: number
       kind: 'mortal.turn_finished'
@@ -54036,6 +54317,20 @@ export interface components {
       | 'service'
       | 'purchase'
       | 'grant'
+    NatureNodeView: {
+      node: components['schemas']['NodeRef']
+      region: components['schemas']['NodeRef'] | null
+      season_band: components['schemas']['TemperatureBand'] | null
+      kind_profile: components['schemas']['KindNatureView'] | null
+      folk_profile: components['schemas']['FolkNatureView'] | null
+      plant: components['schemas']['PlantNatureView'] | null
+      sense_holder: components['schemas']['NodeRef'] | null
+      senses: components['schemas']['SenseView'][]
+      bonds: components['schemas']['KindBondView'][]
+      soil: components['schemas']['SoilLifeView'] | null
+      defences: components['schemas']['DefenceCoverView'][]
+      cultures: components['schemas']['FermentCultureView'][]
+    }
     NeedGroup: 'body' | 'social' | 'spirit' | 'action'
     NeedKind:
       | 'sustenance'
@@ -55978,12 +56273,18 @@ export interface components {
       finished_epoch: number | null
       locked: string[]
     }
+    PlantDefence: 'none' | 'thorns' | 'toxins' | 'allelopathy' | 'carnivorous'
     PlantEditInput: {
       species_id: number
       values?: {
         [key: string]: number | string | boolean | null
       }
       release?: string[]
+    }
+    PlantNatureView: {
+      defence: components['schemas']['PlantDefence']
+      defence_potency: number
+      locked: string[]
     }
     PlantView: {
       growth_cycle: components['schemas']['GrowthCycle']
@@ -59811,6 +60112,33 @@ export interface components {
       | 'party'
       | 'shareholders'
       | 'algorithm'
+    SenseDeleteInput: {
+      holder_id: number
+      sense: components['schemas']['SenseKind']
+    }
+    SenseEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      holder_id: number
+      sense: components['schemas']['SenseKind']
+    }
+    SenseKind:
+      | 'sight'
+      | 'night_vision'
+      | 'smell'
+      | 'hearing'
+      | 'echolocation'
+      | 'vibration'
+      | 'magnetic'
+      | 'spirit_sight'
+      | 'heat'
+    SenseSetInput: {
+      holder_id: number
+      sense: components['schemas']['SenseKind']
+      acuity: number
+    }
     SenseShift:
       | 'broadened'
       | 'narrowed'
@@ -59818,6 +60146,11 @@ export interface components {
       | 'ameliorative'
       | 'euphemism'
       | 'restored'
+    SenseView: {
+      sense: components['schemas']['SenseKind']
+      acuity: number
+      locked: string[]
+    }
     SensedStepView: {
       id: number
       intuition_id: number | null
@@ -60614,6 +60947,28 @@ export interface components {
       | 'ash'
       | 'crystal'
       | 'bone'
+    SoilLifeView: {
+      life: number
+      sterile_epochs: number
+      updated_epoch: number
+      recycling_pct: number
+      locked: string[]
+    }
+    SoilMicrobiotaDeleteInput: {
+      region_id: number
+    }
+    SoilMicrobiotaEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      region_id: number
+    }
+    SoilMicrobiotaSetInput: {
+      region_id: number
+      life: number
+      sterile_epochs: number
+    }
     SoilNutrientDeleteInput: {
       region_id: number
       nutrient: components['schemas']['NutrientKind']
@@ -61180,6 +61535,8 @@ export interface components {
       | 'turn_wind'
       | 'stir_identity'
       | 'sabotage_programme'
+      | 'bind_species'
+      | 'sharpen_sense'
     SonToolsView: {
       son_id: number
       rarity: components['schemas']['Rarity']
@@ -61581,6 +61938,22 @@ export interface components {
       world_id: number | null
       peak: number
       cells: components['schemas']['RangeCell'][]
+    }
+    SpeciesRelationCreateInput: {
+      first_species_id: number
+      second_species_id: number
+      kind: components['schemas']['SymbiosisKind']
+      strength: number
+    }
+    SpeciesRelationDeleteInput: {
+      record_id: number
+    }
+    SpeciesRelationEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
     }
     SpeciesSacredInput: {
       species_id: number
@@ -62971,6 +63344,7 @@ export interface components {
       world_id: number
       level: components['schemas']['SurveyLevel']
     }
+    SymbiosisKind: 'mutualism' | 'commensalism' | 'parasitism' | 'mimicry'
     SympatheticLinkCreateInput: {
       holder_node_id: number
       target_node_id: number
@@ -63555,6 +63929,7 @@ export interface components {
       adherents?: number | null
       explanatory?: number | null
     }
+    Thermoregulation: 'endotherm' | 'ectotherm'
     ThingKindsView: {
       node: components['schemas']['NodeRef']
       world_id: number | null
@@ -77446,6 +77821,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ErasNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_nature_api_nature_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NatureNodeView']
         }
       }
       default: {
@@ -92665,6 +93069,405 @@ export interface operations {
     }
   }
   action_satire_run_api_actions_satire_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_soil_microbiota_set_api_actions_soil_microbiota_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoilMicrobiotaSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_soil_microbiota_edit_api_actions_soil_microbiota_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoilMicrobiotaEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_soil_microbiota_delete_api_actions_soil_microbiota_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoilMicrobiotaDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_ferment_culture_create_api_actions_ferment_culture_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FermentCultureCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_ferment_culture_edit_api_actions_ferment_culture_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FermentCultureEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_ferment_culture_delete_api_actions_ferment_culture_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FermentCultureDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_species_relation_create_api_actions_species_relation_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpeciesRelationCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_species_relation_edit_api_actions_species_relation_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpeciesRelationEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_species_relation_delete_api_actions_species_relation_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpeciesRelationDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sense_set_api_actions_sense_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SenseSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sense_edit_api_actions_sense_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SenseEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sense_delete_api_actions_sense_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SenseDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_nature_run_api_actions_nature_run_post: {
     parameters: {
       query?: never
       header?: never
@@ -138372,6 +139175,9 @@ export const domainHookValues: ReadonlyArray<
 export const domesticationStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DomesticationStage']
 > = ['wild', 'tamed', 'herded', 'domesticated', 'breed']
+export const dormancyValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Dormancy']
+> = ['none', 'hibernation', 'aestivation']
 export const dreamKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DreamKind']
 > = ['ordinary', 'nightmare', 'longing', 'prophetic', 'visitation', 'shared']
@@ -139251,6 +140057,9 @@ export const feedCategoryValues: ReadonlyArray<
   'civilization',
   'world',
 ]
+export const fermentKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['FermentKind']
+> = ['yeast', 'starter', 'mould', 'lactic', 'vinegar']
 export const feudPartyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FeudParty']
 > = ['house', 'community']
@@ -141446,6 +142255,7 @@ export const mortalToolIdValues: ReadonlyArray<
   'seek_sanctuary',
   'mock_the_ruler',
   'join_programme',
+  'tend_culture',
 ]
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalTurnFinishedEvent']['kind']
@@ -142054,6 +142864,9 @@ export const plagueResponseValues: ReadonlyArray<
   'prayer',
   'seek_cure',
 ]
+export const plantDefenceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PlantDefence']
+> = ['none', 'thorns', 'toxins', 'allelopathy', 'carnivorous']
 export const plantYieldValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlantYield']
 > = [
@@ -142947,6 +143760,19 @@ export const selectorateKindValues: ReadonlyArray<
   'shareholders',
   'algorithm',
 ]
+export const senseKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SenseKind']
+> = [
+  'sight',
+  'night_vision',
+  'smell',
+  'hearing',
+  'echolocation',
+  'vibration',
+  'magnetic',
+  'spirit_sight',
+  'heat',
+]
 export const senseShiftValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SenseShift']
 > = [
@@ -143457,6 +144283,8 @@ export const sonToolIdValues: ReadonlyArray<
   'turn_wind',
   'stir_identity',
   'sabotage_programme',
+  'bind_species',
+  'sharpen_sense',
 ]
 export const sonTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnFinishedEvent']['kind']
@@ -143979,6 +144807,9 @@ export const supporterPoseValues: ReadonlyArray<
 export const surveyLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SurveyLevel']
 > = ['unknown', 'rumoured', 'detected', 'observed', 'surveyed', 'mapped']
+export const symbiosisKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SymbiosisKind']
+> = ['mutualism', 'commensalism', 'parasitism', 'mimicry']
 export const systemErrorEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SystemErrorEvent']['kind']
 > = ['system.error']
@@ -144249,6 +145080,9 @@ export const theoryDomainValues: ReadonlyArray<
 export const theoryStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TheoryStats']['kind']
 > = ['theory']
+export const thermoregulationValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Thermoregulation']
+> = ['endotherm', 'ectotherm']
 export const thoughtKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ThoughtKind']
 > = [

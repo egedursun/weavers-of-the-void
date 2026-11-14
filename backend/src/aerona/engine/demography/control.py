@@ -29,6 +29,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.domain.enums.nature import Thermoregulation
 from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import PeopleStats
@@ -59,6 +60,7 @@ BIOLOGY_CHOICES: dict[str, type[StrEnum]] = {
     "diet": FolkDiet,
     "biochemistry": Biochemistry,
     "air": AirNeed,
+    "thermoregulation": Thermoregulation,
 }
 BIOLOGY_GRAVITY = ("gravity_low", "gravity_high")
 GRAVITY_HUNDREDTHS = (1, 10000)

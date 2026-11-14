@@ -69,6 +69,7 @@ async def spatial_economy(ctx: TickContext) -> None:
     "table.region_crops",
     "table.region_environment",
     "table.settlement_infrastructure",
+    "table.soil_microbiota",
     "table.soil_nutrients",
     "table.species_ranges",
     "table.species_yields",

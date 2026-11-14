@@ -150,6 +150,7 @@ class Side:
     tactic: Tactic = Tactic.HOLD_LINE
     tactic_factor: float = 1.0
     surprise: float = 1.0
+    keen: float = 0.0
     pursuit_lost: int = 0
     captives: int = 0
     willpower: int = 0
@@ -1064,7 +1065,7 @@ def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
         else:
             lead.defending, other.defending = True, False
             if ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night:
-                lead.surprise = rules.weather_battle_effects.fog_ambush_pct / PERCENT
+                lead.surprise = dulled(rules, rules.weather_battle_effects.fog_ambush_pct / PERCENT, other.keen)
     summary = f"{lead.entity.name} saw further" + (" and refused battle" if refused else " and chose the ground")
     phases = [PhaseLog(BattlePhase.SCOUTING, 0, 0, summary, {"margin": round(margin), "ground": lead.entity.name, **seen})]
     if refused:
@@ -1087,6 +1088,10 @@ def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
     summary = f"{attacker.tactic.value.replace('_', ' ')} against {defender.tactic.value.replace('_', ' ')}"
     phases.append(PhaseLog(BattlePhase.PLAN, 0, 0, summary, details))
     return None, phases
+
+
+def dulled(rules: Rules, surprise: float, keen: float) -> float:
+    return 1 + (surprise - 1) * (1 - keen * rules.senses.ambush_pct / PERCENT)
 
 
 def night_fire(rules: Rules, side: Side) -> None:
@@ -1118,9 +1123,9 @@ def fighting(rules: Rules, streams: Streams, attacker: Side, defender: Side, gro
     pinned: dict[str, int | str] = {"fog": ", ".join(fog), "pinned": sum(1 for stack in (*attacker.stacks, *defender.stacks) if stack.suppressed)}
     phases.append(PhaseLog(BattlePhase.MISSILE, to_a, to_d, "the volleys flew" + (" into a called fog" if fog else ""), pinned))
     attacker.surprise = defender.surprise = 1.0
-    for striker in (attacker, defender):
+    for striker, target in ((attacker, defender), (defender, attacker)):
         if striker.tactic in STRIKE_TACTICS:
-            striker.surprise = rules.tactics.strike_surprise_pct / PERCENT
+            striker.surprise = dulled(rules, rules.tactics.strike_surprise_pct / PERCENT, target.keen)
     flank = outflank(rules, attacker, defender, ground, streams)
     if flank is not None:
         phases.append(flank)
