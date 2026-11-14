@@ -17,6 +17,7 @@ from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import Atmosphere, WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography
+from aerona.engine.eras.effects import programme_pressure
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
@@ -188,6 +189,8 @@ async def regional_leak(ctx: TickContext) -> int:
     )
     for region_id, intensity in await ctx.session.execute(wounds.where(PhenomenonProfileRow.kind == PhenomenonKind.LEAK_WOUND)):
         pressure[region_id] += intensity * ctx.rules.rifts.leak_pct // PERCENT
+    for region_id, amount in (await programme_pressure(ctx.session, ctx.rules)).items():
+        pressure[region_id] += amount
     gated = set()
     for route in await ctx.session.scalars(select(RouteRow).where(RouteRow.active.is_(True), RouteRow.method.in_(list(GATE_METHODS)))):
         gated |= {route.world_a_id, route.world_b_id}

@@ -248,6 +248,7 @@ LAY_AFFINITY = Line("tools.son.lay_affinity", "{son} laid an affinity for {schoo
 STIR_MONSOON = Line("tools.son.stir_monsoon", "{son} brought {told} over {world}: {reason}")
 TURN_WIND = Line("tools.son.turn_wind", "{son} turned the wind of {region} to blow from the {direction}: {reason}")
 STIR_IDENTITY = Line("tools.son.stir_identity", "{son} {told} the {layer} identity of {place}: {reason}")
+SABOTAGE_PROGRAMME = Line("tools.son.sabotage_programme", "{son} set back the programme of {realm} toward {technique}: {reason}")
 STIR_WITCH_HUNT = Line("tools.son.stir_witch_hunt", "{son} stirred a witch hunt in {town}: {reason}")
 LENGTHEN_WINTER = Line("tools.son.lengthen_winter", "{son} lengthened the long winter of {world}: {reason}")
 PRESS_TALE = Line("tools.son.press_tale", "{son} pressed the tale of {tale} of {subject}: {reason}")

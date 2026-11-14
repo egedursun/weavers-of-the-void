@@ -1,5 +1,6 @@
 import {
   Anchor,
+  Atom,
   MoveRight,
   RefreshCcw,
   AudioLines,
@@ -10,6 +11,7 @@ import {
   CloudMoon,
   Cloudy,
   Cog,
+  Cpu,
   Crown,
   Droplets,
   Flame,
@@ -50,6 +52,7 @@ import {
   TreePine,
   TrendingUp,
   Users,
+  Zap,
 } from 'lucide-react'
 import {
   type ClimateEra,
@@ -99,6 +102,9 @@ export const TEMPLATE_ICON: Record<WizardTemplate['key'], LucideIcon> = {
   dreaming_world: CloudMoon,
   generation_ship: Rocket,
   without_magic: CircleOff,
+  electric_age: Zap,
+  information_age: Cpu,
+  advanced_age: Atom,
 }
 
 export const SHAPE_ICON: Record<CosmosShape, LucideIcon> = {
@@ -129,15 +135,21 @@ export const TECHNOLOGY_ICON: Record<TechnologyEra, LucideIcon> = {
   medieval: Castle,
   renaissance: Palette,
   steam: Cog,
+  electrical: Zap,
+  information: Cpu,
+  advanced: Rocket,
 }
 
 export const TECHNOLOGY_HINT: Record<TechnologyEra, string> = {
-  stone: 'Flint, fire and first words',
-  bronze: 'The first cities and their kings',
-  iron: 'Hard blades, wide empires',
-  medieval: 'Castles, guilds and crowns',
-  renaissance: 'Ink, lenses and new ideas',
-  steam: 'Engines and smoke',
+  stone: 'Before metal is worked',
+  bronze: 'Bronze is worked',
+  iron: 'Iron is worked',
+  medieval: 'Steel and written law',
+  renaissance: 'Printing and natural philosophy',
+  steam: 'Steam power and gunpowder',
+  electrical: 'Electricity and messages by wire',
+  information: 'Computation and mass media',
+  advanced: 'Split matter, rockets and machines that think',
 }
 
 export const LANGUAGE_ICON: Record<LanguageTexture, LucideIcon> = {

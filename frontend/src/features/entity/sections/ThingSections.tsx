@@ -9,6 +9,7 @@ import { CraftsSection } from '@/features/crafts/CraftsSection'
 import { CustomsSection } from '@/features/customs/CustomsSection'
 import { CyclesSection } from '@/features/cycles/CyclesSection'
 import { DominionSection } from '@/features/dominion/DominionSection'
+import { TechErasSection } from '@/features/eras/TechErasSection'
 import { EvolutionSection } from '@/features/evolution/EvolutionSection'
 import { FolkwaysSection } from '@/features/folkways/FolkwaysSection'
 import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
@@ -127,6 +128,7 @@ export function ThingSections({
       <CraftsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <ClimesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <BelongingSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <TechErasSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>

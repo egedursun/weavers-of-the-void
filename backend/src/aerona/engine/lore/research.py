@@ -19,12 +19,14 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.agrarian.book import farming_boost
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.reckoning import notation_boost
+from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.lore.eras import era_factor
 from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.lore.learning import institution_factor, patron_factor
@@ -161,7 +163,8 @@ async def thought_factor(ctx: TickContext, community_id: int, branch: KnowledgeB
     known = await techniques_of(ctx.session, community_id)
     natural = table.philosophy_pct if branch in NATURAL_BRANCHES and Technique.NATURAL_PHILOSOPHY in known else 0
     tried = table.empiricism_pct if Technique.EMPIRICISM in known else 0
-    return 1 + (natural + tried) / PERCENT
+    machines = await tech_bonus(ctx.session, ctx.rules, community_id, EraChannel.RESEARCH)
+    return (1 + (natural + tried + machines) / PERCENT) * ctx.rules.eras.research_speed_pct / PERCENT
 
 
 async def raise_holder(ctx: TickContext, holder_id: int, branch: KnowledgeBranch, cap: int) -> int | None:

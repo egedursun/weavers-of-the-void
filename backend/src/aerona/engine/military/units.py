@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.battle_depth import BASE_DISCIPLINE, WeaponProfile, formation_for
+from aerona.catalog.eras import POWDER
 from aerona.catalog.techniques import UNIT_TECHNIQUES
 from aerona.catalog.units import FAMILY_WEAPONS, KIND_WEAPONS, STYLE_UNITS, UNITS, UnitSpec
 from aerona.constants.units import PERCENT
@@ -20,7 +21,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.environment import CoastKind, ScarKind
 from aerona.domain.enums.military import ArmourType, MoraleState, ShieldType, Stance, UnitKind
-from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.makers import makers_of
 from aerona.engine.context import TickContext
@@ -66,6 +67,13 @@ SUCCESSORS = {
 }
 
 
+async def fieldable(ctx: TickContext, community: EntityRow) -> set[Technique]:
+    known = set(await techniques_of(ctx.session, community.id))
+    if known & POWDER and (await ctx.laws()).has(NaturalLaw.NO_GUNPOWDER, community.world_id):
+        known -= POWDER
+    return known
+
+
 def allowed(spec: UnitSpec, community_id: int, knowledge: KnowledgeMap, techniques: set[Technique] | None = None) -> bool:
     if spec.branch is not None and knowledge.level(community_id, spec.branch) < spec.level:
         return False
@@ -97,7 +105,7 @@ async def extras(ctx: TickContext, community: EntityRow, knowledge: KnowledgeMap
     table = ctx.rules.military_units
     plan: dict[UnitKind, float] = {}
     cid = community.id
-    techniques = await techniques_of(ctx.session, cid)
+    techniques = await fieldable(ctx, community)
     land = await land_of(ctx, community)
     if society is not None and society.share(SocialClass.NOBLE) > 0:
         add(plan, best((UnitKind.HEAVY_CAVALRY,), cid, knowledge, techniques), society.share(SocialClass.NOBLE) / PERCENT * table.noble_share_pct / PERCENT)
@@ -149,7 +157,7 @@ async def composition(ctx: TickContext, community: EntityRow, size: int, knowled
     style = await doctrine_of(ctx.session, community)
     society = await ctx.session.get(CommunitySocietyRow, community.id)
     plan: dict[UnitKind, float] = {}
-    techniques = await techniques_of(ctx.session, community.id)
+    techniques = await fieldable(ctx, community)
     styled = [kind for kind in STYLE_UNITS.get(style, STYLE_UNITS["shieldwall"]) if allowed(UNITS[kind], community.id, knowledge, techniques)]
     for index, kind in enumerate(styled):
         plan[kind] = plan.get(kind, 0.0) + table.style_share_pct / PERCENT / (index + 1) / sum(1 / (i + 1) for i in range(len(styled)))

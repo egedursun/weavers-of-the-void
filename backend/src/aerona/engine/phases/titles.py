@@ -15,6 +15,7 @@ from aerona.engine.polity.titles import TitleTally, tend_titles
     "table.law_jurisdictions",
     "table.name_registry",
     "table.offices",
+    "table.polity_map_knowledge",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",

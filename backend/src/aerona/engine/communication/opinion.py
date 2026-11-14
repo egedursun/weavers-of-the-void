@@ -17,11 +17,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.communication import OpinionSubject
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EngineKind, EntityStatus
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.belonging.mockery import sting
 from aerona.engine.context import TickContext
+from aerona.engine.eras.effects import tech_factor
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import values_for
 from aerona.engine.polity.laws import LawBook, discord
@@ -168,7 +170,8 @@ async def tend_community(ctx: TickContext, community: EntityRow, laws: LawBook, 
         if APPROVAL in (row.locked or []):
             continue
         row.subject, row.epoch = subject, ctx.epoch
-        row.approval = clamp_int(row.approval + round_half_up((aim - row.approval) * table.opinion_drift_pct / PERCENT), APPROVAL_MIN, APPROVAL_MAX)
+        drift = table.opinion_drift_pct * await tech_factor(ctx.session, ctx.rules, community.id, EraChannel.OPINION)
+        row.approval = clamp_int(row.approval + round_half_up((aim - row.approval) * min(PERCENT, drift) / PERCENT), APPROVAL_MIN, APPROVAL_MAX)
         tally.formed += 1
         law = laws.in_force(realm_id, LawKind.CENSORSHIP) if realm_id is not None else None
         noticed = ctx.rng(f"opinion.censored.{community.id}.{ctx.epoch}").chance(table.censorship_found_pct)

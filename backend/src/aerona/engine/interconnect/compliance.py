@@ -248,6 +248,7 @@ from aerona.db.tables.economy import (
 )
 from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, NotableYearRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.epochs import DeferredStepRow
+from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.estates import (
     CompanyProfileRow,
     CompanyShareRow,
@@ -488,6 +489,29 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "F44",
+        (TechProgrammeRow.__tablename__,),
+        ("tech_eras",),
+        (
+            "tech_programme:create",
+            "tech_programme:edit",
+            "tech_programme:delete",
+            "research:technique",
+            "eras:run",
+        ),
+        (
+            "TechErasSection",
+            "section-tech-eras",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("sabotage_programme", "join_programme"),
+        ("programmes.building", "programmes.testing", "programmes.complete"),
+        ("b3b8a89e6218",),
+    ),
     ComplianceRow(
         "F43",
         (HeldIdentityRow.__tablename__,),

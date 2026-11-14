@@ -528,6 +528,13 @@ class EnginePhasesRules:
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fugitives in sanctuary, asylum and the pursuers who wait, bargain, besiege or break in"
     )
     satire: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: court jesters and satires of rulers, tolerated or punished")
+    tech_eras: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: the starting era of new peoples and towns, the doom of dangerous techniques, and the programmes realms run to reach them",
+    )
     arcs: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: arcs read in lives, their beats and outcomes, setups and payoffs, and the drama manager"
     )

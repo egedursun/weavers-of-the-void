@@ -46,6 +46,7 @@ from aerona.engine.interconnect.catalog_cycles import CYCLE_MECHANICS
 from aerona.engine.interconnect.catalog_divine import DIVINE_MECHANICS
 from aerona.engine.interconnect.catalog_dominion import DOMINION_MECHANICS
 from aerona.engine.interconnect.catalog_economy import ECONOMY_DEPTH_MECHANICS
+from aerona.engine.interconnect.catalog_eras import ERAS_MECHANICS
 from aerona.engine.interconnect.catalog_estates import ESTATE_MECHANICS
 from aerona.engine.interconnect.catalog_evolution import EVOLUTION_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
@@ -1029,6 +1030,7 @@ BUILT_IN = (
     *CRAFTS_MECHANICS,
     *CLIMES_MECHANICS,
     *BELONGING_MECHANICS,
+    *ERAS_MECHANICS,
     *CUSTOMS_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,

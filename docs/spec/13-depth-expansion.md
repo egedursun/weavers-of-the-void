@@ -7291,6 +7291,9 @@ Biosphere activity (3.2 trophic flows, land use) closes the cycles. Large distur
 | Dreaming world | `dreaming_world` | drifting, shifting, half-remembered | 80 | 40 | Medieval | long | 3 | Single world | One sun | Cyclic | Dream realm | seed | seed | A world made of dream, where what is believed takes shape. |
 | Generation ship | `generation_ship` | close, enduring, far from home | 15 | 45 | Medieval | hard | 3 | Single world | One sun | Cyclic | Generation ship | seed | Mature | A vessel the size of a world travelling between the stars, whose peoples have lived aboard so long that they no longer know it is a ship. |
 | Without magic | `without_magic` | grounded, earthly, plain | 0 | 40 | Iron age | free | 4 | Single world | One sun | Steady | seed | seed | seed | A world without magic, where the peoples have only their own skill, their wits and one another. |
+| Electric age | `electric_age` | brisk, expanding, changing fast | 30 | 40 | Electric age | free | 4 | Single world | One sun | Rising | seed | seed | seed | A world whose peoples have learned to make current and carry it, so that a message crosses a land in an instant. |
+| Information age | `information_age` | crowded, quick, loud with opinion | 25 | 40 | Information age | free | 4 | Single world | One sun | Cyclic | seed | seed | seed | A world whose peoples compute, broadcast and hear one another faster than any age before them. |
+| Advanced age | `advanced_age` | powerful, precarious, reaching outward | 20 | 55 | Advanced age | free | 4 | Small cosmos | One sun | Cyclic | seed | seed | seed | A world whose peoples have split matter, built minds that think and begun to leave their world for others. |
 
 #### Behaviours
 

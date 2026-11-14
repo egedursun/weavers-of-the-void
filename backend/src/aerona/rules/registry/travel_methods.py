@@ -12,6 +12,8 @@ class TravelMethodsRules:
     space_fold_danger: int = rule(30, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Space folding: danger")
     light_sail_duration: int = rule(3, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Light sail: journey duration (epochs)")
     light_sail_danger: int = rule(20, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Light sail: danger")
+    rocketry_duration: int = rule(2, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Rocketry: journey duration (epochs)")
+    rocketry_danger: int = rule(25, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Rocketry: danger")
     cosmic_mount_duration: int = rule(2, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Cosmic mount: journey duration (epochs)")
     cosmic_mount_danger: int = rule(35, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Cosmic mount: danger")
     dream_journey_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Dream journey: journey duration (epochs)")

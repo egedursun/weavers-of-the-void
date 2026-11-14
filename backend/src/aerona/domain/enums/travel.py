@@ -17,6 +17,7 @@ class TravelMethod(StrEnum):
     FILAMENT_LANE = "filament_lane"
     DIMENSIONAL_RIFT = "dimensional_rift"
     PLANAR_DOOR = "planar_door"
+    ROCKETRY = "rocketry"
 
 
 class VehicleKind(StrEnum):

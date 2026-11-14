@@ -5167,6 +5167,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/eras/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_eras_api_eras_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -13161,6 +13177,70 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_satire_run_api_actions_satire_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/tech_programme:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_tech_programme_create_api_actions_tech_programme_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/tech_programme:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_tech_programme_edit_api_actions_tech_programme_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/tech_programme:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_tech_programme_delete_api_actions_tech_programme_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/eras:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_eras_run_api_actions_eras_run_post']
     delete?: never
     options?: never
     head?: never
@@ -44886,6 +44966,24 @@ export interface components {
       model_id: number
       count: number
     }
+    EraChannel:
+      | 'farming'
+      | 'mining'
+      | 'industry'
+      | 'disease'
+      | 'messages'
+      | 'march'
+      | 'sea_routes'
+      | 'world_routes'
+      | 'fortification'
+      | 'pollution'
+      | 'opinion'
+      | 'research'
+      | 'secularisation'
+      | 'firepower'
+      | 'rites'
+      | 'spoilage'
+      | 'doom'
     EraDeed:
       | 'first_technique'
       | 'first_institution'
@@ -44901,6 +44999,32 @@ export interface components {
       points: number
       epoch: number
       subject: components['schemas']['NodeRef'] | null
+    }
+    EraEffectView: {
+      channel: components['schemas']['EraChannel']
+      value: number
+    }
+    EraTechniqueView: {
+      technique: components['schemas']['Technique']
+      label: string
+      effect: string
+      era: components['schemas']['TechnologyEra']
+      held: boolean
+      kept: boolean
+      programme: boolean
+      requires: components['schemas']['Technique'][]
+      effects: components['schemas']['EraEffectView'][]
+    }
+    ErasNodeView: {
+      node: components['schemas']['NodeRef']
+      realm: components['schemas']['NodeRef'] | null
+      keeper: components['schemas']['NodeRef'] | null
+      era: components['schemas']['TechnologyEra']
+      starting_era: components['schemas']['TechnologyEra']
+      no_gunpowder: boolean
+      channels: components['schemas']['EraEffectView'][]
+      techniques: components['schemas']['EraTechniqueView'][]
+      programmes: components['schemas']['TechProgrammeView'][]
     }
     ErrorCode:
       | 'invalid'
@@ -47146,6 +47270,9 @@ export interface components {
       | 'dreaming_world'
       | 'generation_ship'
       | 'without_magic'
+      | 'electric_age'
+      | 'information_age'
+      | 'advanced_age'
     GeniusLocusCreateInput: {
       place_id: number
       kind?: components['schemas']['GeniusLocusKind'] | null
@@ -53566,6 +53693,7 @@ export interface components {
       | 'join_road_folk'
       | 'seek_sanctuary'
       | 'mock_the_ruler'
+      | 'join_programme'
     MortalTurnFinishedEvent: {
       id: number
       kind: 'mortal.turn_finished'
@@ -53868,6 +53996,7 @@ export interface components {
       | 'oaths_bind'
       | 'the_dead_speak'
       | 'metal_rusts_fast'
+      | 'no_gunpowder'
     NaturalLawProfileView: {
       law: components['schemas']['NodeRef']
       effect: components['schemas']['NaturalLaw']
@@ -56666,6 +56795,8 @@ export interface components {
       lockable: boolean
       columns: components['schemas']['ProfileColumnRecord'][]
     }
+    ProgrammeStage:
+      'planning' | 'building' | 'testing' | 'complete' | 'abandoned'
     PromptArea:
       | 'shared'
       | 'context'
@@ -61048,6 +61179,7 @@ export interface components {
       | 'stir_monsoon'
       | 'turn_wind'
       | 'stir_identity'
+      | 'sabotage_programme'
     SonToolsView: {
       son_id: number
       rarity: components['schemas']['Rarity']
@@ -63013,6 +63145,36 @@ export interface components {
       triggers: components['schemas']['TriggerSpecView'][]
       capabilities: components['schemas']['CapabilitySpecView'][]
     }
+    TechProgrammeCreateInput: {
+      polity_id: number
+      technique: components['schemas']['Technique']
+      progress: number
+      stage: components['schemas']['ProgrammeStage']
+      visibility: number
+    }
+    TechProgrammeDeleteInput: {
+      record_id: number
+    }
+    TechProgrammeEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    TechProgrammeView: {
+      id: number
+      polity: components['schemas']['NodeRef']
+      technique: components['schemas']['Technique']
+      label: string
+      progress: number
+      stage: components['schemas']['ProgrammeStage']
+      visibility: number
+      sabotaged: number
+      started_epoch: number
+      finished_epoch: number | null
+      locked: string[]
+    }
     Technique:
       | 'phalanx_drill'
       | 'horse_archery'
@@ -63080,6 +63242,37 @@ export interface components {
       | 'humanist_ideals'
       | 'examinations'
       | 'drainage'
+      | 'gunpowder'
+      | 'firearms'
+      | 'cannon'
+      | 'star_forts'
+      | 'volley_drill'
+      | 'steam_power'
+      | 'coke_smelting'
+      | 'machine_tools'
+      | 'railways'
+      | 'steamships'
+      | 'factory_production'
+      | 'industrial_chemistry'
+      | 'canned_food'
+      | 'vaccines'
+      | 'electricity'
+      | 'telegraph'
+      | 'telephone'
+      | 'electric_light'
+      | 'refrigeration'
+      | 'combustion_engine'
+      | 'aviation'
+      | 'computation'
+      | 'radio'
+      | 'mass_media'
+      | 'antibiotics'
+      | 'green_revolution'
+      | 'nuclear_power'
+      | 'nuclear_weapons'
+      | 'rocketry'
+      | 'genetic_engineering'
+      | 'artificial_minds'
     TechniqueSpecView: {
       technique: components['schemas']['Technique']
       branch: components['schemas']['KnowledgeBranch']
@@ -63103,7 +63296,15 @@ export interface components {
       progress: number
     }
     TechnologyEra:
-      'stone' | 'bronze' | 'iron' | 'medieval' | 'renaissance' | 'steam'
+      | 'stone'
+      | 'bronze'
+      | 'iron'
+      | 'medieval'
+      | 'renaissance'
+      | 'steam'
+      | 'electrical'
+      | 'information'
+      | 'advanced'
     Temperament:
       'placid' | 'skittish' | 'curious' | 'fierce' | 'cunning' | 'abductor'
     TemperatureBand:
@@ -64421,6 +64622,7 @@ export interface components {
       | 'filament_lane'
       | 'dimensional_rift'
       | 'planar_door'
+      | 'rocketry'
     TravelResource: {
       name: string
       description: string
@@ -77215,6 +77417,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BelongingNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_eras_api_eras_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErasNodeView']
         }
       }
       default: {
@@ -92434,6 +92665,126 @@ export interface operations {
     }
   }
   action_satire_run_api_actions_satire_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_tech_programme_create_api_actions_tech_programme_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TechProgrammeCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_tech_programme_edit_api_actions_tech_programme_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TechProgrammeEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_tech_programme_delete_api_actions_tech_programme_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TechProgrammeDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_eras_run_api_actions_eras_run_post: {
     parameters: {
       query?: never
       header?: never
@@ -138527,6 +138878,27 @@ export const equipmentSlotValues: ReadonlyArray<
   'mount',
   'focus',
 ]
+export const eraChannelValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EraChannel']
+> = [
+  'farming',
+  'mining',
+  'industry',
+  'disease',
+  'messages',
+  'march',
+  'sea_routes',
+  'world_routes',
+  'fortification',
+  'pollution',
+  'opinion',
+  'research',
+  'secularisation',
+  'firepower',
+  'rites',
+  'spoilage',
+  'doom',
+]
 export const eraDeedValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EraDeed']
 > = [
@@ -139207,6 +139579,9 @@ export const genesisTemplateValues: ReadonlyArray<
   'dreaming_world',
   'generation_ship',
   'without_magic',
+  'electric_age',
+  'information_age',
+  'advanced_age',
 ]
 export const geniusLocusKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GeniusLocusKind']
@@ -141070,6 +141445,7 @@ export const mortalToolIdValues: ReadonlyArray<
   'join_road_folk',
   'seek_sanctuary',
   'mock_the_ruler',
+  'join_programme',
 ]
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalTurnFinishedEvent']['kind']
@@ -141152,6 +141528,7 @@ export const naturalLawValues: ReadonlyArray<
   'oaths_bind',
   'the_dead_speak',
   'metal_rusts_fast',
+  'no_gunpowder',
 ]
 export const naturalLawStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NaturalLawStats']['kind']
@@ -141848,6 +142225,9 @@ export const professionValues: ReadonlyArray<
   'administrator',
   'spacer',
 ]
+export const programmeStageValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ProgrammeStage']
+> = ['planning', 'building', 'testing', 'complete', 'abandoned']
 export const promptAreaValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PromptArea']
 > = [
@@ -143076,6 +143456,7 @@ export const sonToolIdValues: ReadonlyArray<
   'stir_monsoon',
   'turn_wind',
   'stir_identity',
+  'sabotage_programme',
 ]
 export const sonTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnFinishedEvent']['kind']
@@ -143712,10 +144093,51 @@ export const techniqueValues: ReadonlyArray<
   'humanist_ideals',
   'examinations',
   'drainage',
+  'gunpowder',
+  'firearms',
+  'cannon',
+  'star_forts',
+  'volley_drill',
+  'steam_power',
+  'coke_smelting',
+  'machine_tools',
+  'railways',
+  'steamships',
+  'factory_production',
+  'industrial_chemistry',
+  'canned_food',
+  'vaccines',
+  'electricity',
+  'telegraph',
+  'telephone',
+  'electric_light',
+  'refrigeration',
+  'combustion_engine',
+  'aviation',
+  'computation',
+  'radio',
+  'mass_media',
+  'antibiotics',
+  'green_revolution',
+  'nuclear_power',
+  'nuclear_weapons',
+  'rocketry',
+  'genetic_engineering',
+  'artificial_minds',
 ]
 export const technologyEraValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TechnologyEra']
-> = ['stone', 'bronze', 'iron', 'medieval', 'renaissance', 'steam']
+> = [
+  'stone',
+  'bronze',
+  'iron',
+  'medieval',
+  'renaissance',
+  'steam',
+  'electrical',
+  'information',
+  'advanced',
+]
 export const temperamentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Temperament']
 > = ['placid', 'skittish', 'curious', 'fierce', 'cunning', 'abductor']
@@ -144215,6 +144637,7 @@ export const travelMethodValues: ReadonlyArray<
   'filament_lane',
   'dimensional_rift',
   'planar_door',
+  'rocketry',
 ]
 export const treasuryEntryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TreasuryEntry']

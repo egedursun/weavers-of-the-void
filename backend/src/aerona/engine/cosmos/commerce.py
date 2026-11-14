@@ -9,11 +9,13 @@ from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import RouteScope
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.routes import current_calendar, forgotten_world_ids, route_status
 from aerona.engine.economy.purse import receive_coin
+from aerona.engine.eras.effects import tech_factor
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon
@@ -71,7 +73,7 @@ async def carry(ctx: TickContext, route: RouteRow, scope: RouteScope, first: Ent
     moved = delivered_total = 0
     cost = trade_cost_pct(ctx.rules, scope) / PERCENT
     stolen = route.piracy * table.piracy_loss_pct / PERCENT / PERCENT
-    room = route.capacity
+    room = round(route.capacity * await tech_factor(ctx.session, ctx.rules, first.id, EraChannel.WORLD_ROUTES))
     for wanted, key, source, target, buyer in sorted(gaps, key=lambda gap: (-gap[0], str(gap[1])))[: table.trade_lines]:
         amount = min(wanted, room)
         if amount <= 0 or (target is not None and target.held):

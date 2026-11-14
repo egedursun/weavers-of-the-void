@@ -1027,4 +1027,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "ruler less; where it does not, you may be imprisoned. 1 action.",
         {},
     ),
+    T.JOIN_PROGRAMME: ToolText(
+        "If you are skilled in science, engineering or computing, you work on your realm's programme toward a technique and speed it on. 1 action.",
+        {"programme_id": "The programme"},
+    ),
 }

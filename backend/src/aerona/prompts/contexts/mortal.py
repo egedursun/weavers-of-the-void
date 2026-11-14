@@ -202,6 +202,7 @@ class HomeLine(ContextItem):
     crafts: list[str] = Field(default_factory=list)
     climes: list[str] = Field(default_factory=list)
     belonging: list[str] = Field(default_factory=list)
+    eras: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

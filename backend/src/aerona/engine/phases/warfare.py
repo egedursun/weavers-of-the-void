@@ -29,6 +29,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.military import CasualtyFate, CommandArea, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance, StarvationStage
 from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueAxis
@@ -57,6 +58,7 @@ from aerona.engine.environment.battleground import (
 )
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
+from aerona.engine.eras.effects import tech_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.causes import war_cause_incident
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -1070,6 +1072,7 @@ async def _powers(
         town = await ctx.session.get(SettlementProfileRow, besieged.id)
         rings = siege_of(ctx.rules, town.morphology) if town is not None else 0
         defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker), walls, rings) * await warded(ctx, besieged.id)
+        defender_power *= await tech_factor(ctx.session, ctx.rules, besieged.id, EraChannel.FORTIFICATION)
     return attacker_power, defender_power
 
 

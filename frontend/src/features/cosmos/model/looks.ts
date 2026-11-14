@@ -191,6 +191,7 @@ export const METHOD_LOOK: Record<TravelMethod, MethodLook> = {
       endRings: true,
     }
   ),
+  rocketry: method('--cosmos-route-rocketry', [2, 6], 1.3, 0.1, 1, 1, 3, 1),
 }
 
 export const CLOSED_ROUTE_DASH: readonly number[] = [2, 6]

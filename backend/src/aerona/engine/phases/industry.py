@@ -153,6 +153,7 @@ async def tell_shortfalls(ctx: TickContext, book: EconomyBook) -> int:
     "table.plague_responses",
     "table.plant_profiles",
     "table.polity_members",
+    "table.polity_profiles",
     "table.production_runs",
     "table.region_crops",
     "table.region_environment",

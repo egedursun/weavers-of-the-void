@@ -1747,4 +1747,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you do it",
         },
     ),
+    T.SABOTAGE_PROGRAMME: ToolText(
+        "You set back a realm's programme toward a dangerous technique on the world you stand on; programmes are named in your context. 1 action.",
+        {"programme_id": "The programme", "reason": "Why you hinder it"},
+    ),
 }

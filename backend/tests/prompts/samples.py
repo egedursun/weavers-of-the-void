@@ -5,7 +5,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import ReputationLabel
-from aerona.domain.enums.world import CosmosSize, LanguageTexture, LoreLanguage, TechnologyEra
+from aerona.domain.enums.world import LoreLanguage
 from aerona.prompts.contexts import (
     agent,
     blocks,
@@ -901,9 +901,9 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
         template_name="Dark fantasy",
         magic=60,
         danger=85,
-        technology=TechnologyEra.IRON,
-        language=LanguageTexture.GUTTURAL,
-        cosmos=CosmosSize.SMALL,
+        technology_label="iron age",
+        language_label="guttural, deep (h, gh, q, kh)",
+        cosmos_label="a small cosmos (3 worlds)",
         shape_line="the further worlds lie in a second layer of the cosmos",
         layer_label="Astral plane",
         world_type_label="Ocean world",

@@ -53,7 +53,7 @@ async def test_hunger_turns_to_famine_and_famine_to_surrender(session: AsyncSess
     await starve(ctx, siege, city, rationing=False)
     assert siege.starvation is StarvationStage.FAMINE
     assert await action_for(ctx, siege, march, 0.0) is SiegeAction.NEGOTIATE
-    assert surrenders(ctx, siege, SiegeAction.BLOCKADE)
+    assert await surrenders(ctx, siege, SiegeAction.BLOCKADE)
     siege.locked = ["starvation"]
     siege.starvation = StarvationStage.NONE
     await starve(ctx, siege, city, rationing=True)

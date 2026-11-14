@@ -14,11 +14,13 @@ from aerona.db.tables.sacred import DoctrineAfterlifeRow, DoctrineSacramentRow, 
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faith import AfterlifeState, JudgementDoctrine, TenetKind
 from aerona.domain.enums.mind import DreamKind
 from aerona.domain.enums.sacred import AfterlifeModel, SacramentKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.eras.effects import tech_factor
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, has_flag, living_entity, remove_flag
@@ -278,7 +280,8 @@ async def weigh_town(ctx: TickContext, town: EntityRow, signs: tuple[dict[int, i
     put(row, "dominion_push", round_half_up((await dominion_over(ctx, region.id) if region is not None else 0) * table.dominion_pct / PERCENT))
     pulls = (row.literacy_pull, row.science_pull, row.prosperity_pull, row.city_pull, row.silence_pull)
     pushes = (row.disaster_push, row.miracle_push, row.war_push, row.dominion_push)
-    put(row, "piety_drift", round_half_up((sum(pulls) + sum(pushes)) * table.drift_pct / PERCENT))
+    hastened = await tech_factor(ctx.session, ctx.rules, town.id, EraChannel.SECULARISATION)
+    put(row, "piety_drift", round_half_up((sum(pulls) * hastened + sum(pushes)) * table.drift_pct / PERCENT))
     row.updated_epoch = ctx.epoch
     return row
 

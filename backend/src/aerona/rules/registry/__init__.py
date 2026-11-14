@@ -237,6 +237,7 @@ from aerona.rules.registry.environment import (
 )
 from aerona.rules.registry.epidemiology import EpidemiologyRules
 from aerona.rules.registry.epoch_flow import EpochFlowRules
+from aerona.rules.registry.eras import EraRules, ProgrammeRules
 from aerona.rules.registry.espionage import EspionageRules
 from aerona.rules.registry.essence import EssenceRules
 from aerona.rules.registry.estates import CompanyRules, EstateRules, GuildRules, MovementRules, OrderRules
@@ -654,6 +655,8 @@ class Rules:
     peer_groups: PeerRules = field(default_factory=PeerRules)
     sanctuary: SanctuaryRules = field(default_factory=SanctuaryRules)
     satire: SatireRules = field(default_factory=SatireRules)
+    eras: EraRules = field(default_factory=EraRules)
+    programmes: ProgrammeRules = field(default_factory=ProgrammeRules)
     body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)

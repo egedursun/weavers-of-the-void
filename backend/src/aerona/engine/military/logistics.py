@@ -18,6 +18,7 @@ from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherKind
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.military import RESTING, CommandArea, MoraleState, MutinyOutcome, Stance
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.agrarian.book import fell_plantings
@@ -25,6 +26,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.environment.book import EnvironmentBook, add_scar
 from aerona.engine.environment.perils import Wandering, danger_toll, navigate
+from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
 from aerona.engine.military.campaign import (
@@ -106,6 +108,7 @@ def step_towards(
     *,
     charted: bool = False,
     supplied: bool = False,
+    motorised: int = 0,
     weather: WeatherKind | None = None,
     season: WorldSeasonRow | None = None,
     pontoon: bool = False,
@@ -119,7 +122,12 @@ def step_towards(
     if march.goal is None or profile.region_entity_id is None or profile.region_entity_id == march.goal:
         return 0
     path = atlas.region_path(profile.region_entity_id, march.goal) or []
-    reach = rules.logistics.march_regions + (rules.maps.march_regions if charted else 0) + (rules.technique_effects.logistics_regions if supplied else 0)
+    reach = (
+        rules.logistics.march_regions
+        + (rules.maps.march_regions if charted else 0)
+        + (rules.technique_effects.logistics_regions if supplied else 0)
+        + motorised
+    )
     if profile.forced_march:
         reach = round_half_up(reach * rules.logistics.forced_march_pct / PERCENT)
     reach = max(1, round_half_up(reach * pace / PERCENT))
@@ -416,6 +424,7 @@ async def advance(
             march,
             charted=charted,
             supplied=supplied,
+            motorised=await tech_bonus(ctx.session, ctx.rules, march.owner.id, EraChannel.MARCH),
             weather=weather,
             season=season_row,
             pontoon=pontoon,

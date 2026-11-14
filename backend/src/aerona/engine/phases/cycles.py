@@ -253,6 +253,7 @@ async def reciprocity(ctx: TickContext) -> None:
     "mortal.age",
     "table.bonds",
     "table.community_relations",
+    "table.held_identities",
     "table.house_members",
     "table.house_profiles",
     "table.kinship_systems",

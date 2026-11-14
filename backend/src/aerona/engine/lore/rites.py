@@ -51,6 +51,7 @@ from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect, WeatherKind
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment, TenetKind
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis
@@ -87,6 +88,7 @@ from aerona.engine.ecology.control import spawn_beast
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.environment.control import force_weather
 from aerona.engine.environment.local import weather_here
+from aerona.engine.eras.effects import tech_relief
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
 from aerona.engine.genetics.genome import aptitude, gift_factors
@@ -1071,7 +1073,7 @@ async def cast(
     strength *= await rite_factor(ctx.session, ctx.rules.divine_tongues.rite_pct, caster.id, patron)
     strength *= await name_power(ctx, caster.id, target)
     strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
-    strength *= await magic_factor(ctx, caster)
+    strength *= await magic_factor(ctx, caster) * await tech_relief(ctx.session, ctx.rules, caster.id, EraChannel.RITES)
     strength *= await site_factor(ctx, caster, row)
     strength *= await divine_power(ctx, patron, caster.id, ctx.rules.dominion.rite_power_pct)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)

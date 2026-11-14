@@ -16,6 +16,7 @@ from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, HazardKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.environment import TerrainKind
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -34,6 +35,7 @@ from aerona.engine.ecology.domestication import draught
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.environment.years import world_years
+from aerona.engine.eras.effects import channel_value
 from aerona.engine.industry.energy import scale_by_energy
 from aerona.engine.industry.methods import feed, method_for, outdated, process_of_kind
 from aerona.engine.industry.pollution import fish_factor
@@ -188,6 +190,9 @@ def craft_factor(ctx: TickContext, book: EconomyBook, community_id: int, resourc
             lift += table.irrigation_pct / PERCENT * max(0, PERCENT - land.moisture) / PERCENT
         if land is not None and Technique.TERRACING in held and land.dominant_terrain in HILLY:
             lift += table.terracing_pct / PERCENT
+        lift += channel_value(ctx.rules, held, EraChannel.FARMING) / PERCENT
+    if kind in ARTISAN_KINDS:
+        lift += channel_value(ctx.rules, held, EraChannel.MINING) / PERCENT
     return 1 + lift
 
 

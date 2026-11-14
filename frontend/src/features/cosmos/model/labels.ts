@@ -98,6 +98,7 @@ export const TRAVEL_METHOD_LABEL: Record<TravelMethod, string> = {
   filament_lane: 'Filament lane',
   dimensional_rift: 'Dimensional rift',
   planar_door: 'Planar door',
+  rocketry: 'Rocketry',
 }
 
 export const SKY_EVENT_LABEL: Record<SkyEventKind, string> = {

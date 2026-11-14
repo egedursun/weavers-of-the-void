@@ -11,12 +11,14 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.industry import EnergyKind, Pollutant
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.environment.book import add_scar
+from aerona.engine.eras.effects import tech_factor
 from aerona.engine.industry.energy import draw
 from aerona.engine.industry.methods import reveres_nature
 from aerona.engine.notes import note
@@ -95,6 +97,7 @@ async def foul_from_runs(ctx: TickContext, book: EconomyBook, tally: PollutionTa
         row = pollution_row(ctx, book, region_id)
         strict = await law_param(ctx.session, run.community_entity_id, LawKind.ENVIRONMENT_LAW, "strictness")
         kept = 1 - (int(strict) if isinstance(strict, int) else 0) * ctx.rules.pollution.law_cut_pct / PERCENT / PERCENT
+        kept *= await tech_factor(ctx.session, ctx.rules, run.community_entity_id, EraChannel.POLLUTION)
         for pollutant in Pollutant:
             amount = spec.pollution(pollutant) * run.quantity * rate / PERCENT / TENTH * kept
             if amount:

@@ -169,6 +169,15 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
             lambda rules: rules.travel_methods.planar_door_duration,
             lambda rules: rules.travel_methods.planar_door_danger,
         ),
+        TravelMethodSpec(
+            M.ROCKETRY,
+            "Rocketry",
+            KnowledgeBranch.SKY_NAVIGATION,
+            VehicleKind.SHIP,
+            "Rockets built by a realm's programme; they leave only when the worlds come round to each other.",
+            lambda rules: rules.travel_methods.rocketry_duration,
+            lambda rules: rules.travel_methods.rocketry_danger,
+        ),
     )
 }
 
@@ -188,6 +197,7 @@ METHOD_REACH: dict[TravelMethod, RouteScope] = {
     M.FILAMENT_LANE: RouteScope.INTERCLUSTER,
     M.DIMENSIONAL_RIFT: RouteScope.INTERDIMENSIONAL,
     M.PLANAR_DOOR: RouteScope.INTERDIMENSIONAL,
+    M.ROCKETRY: RouteScope.STELLAR,
 }
 
 JOURNEY_INTENT_LABELS: dict[JourneyIntent, str] = {

@@ -41,6 +41,7 @@ class DoomItem(StrEnum):
     HOT_REGIONS = "regions at their leak peak"
     COLLAPSED_LIFE = "collapsed biospheres"
     UNMAKERS = "unmaking beings"
+    DANGEROUS_TECH = "dangerous techniques"
     SPEED = "apocalypse speed (world rules)"
     RESET = "post-apocalypse reset"
 

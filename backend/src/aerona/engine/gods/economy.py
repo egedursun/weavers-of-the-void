@@ -43,7 +43,7 @@ from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import top_region
 from aerona.engine.primitives.stats import headcount
 
-PIRATE_METHODS = frozenset({TravelMethod.LIGHT_SAIL, TravelMethod.SLINGSHOT_ORBIT, TravelMethod.COSMIC_MOUNT})
+PIRATE_METHODS = frozenset({TravelMethod.LIGHT_SAIL, TravelMethod.SLINGSHOT_ORBIT, TravelMethod.COSMIC_MOUNT, TravelMethod.ROCKETRY})
 WITHDRAWAL_TRAITS = (Trait.PROSPERITY, Trait.DEFENSE, Trait.STRENGTH, Trait.PIETY)
 MARKET_TARGET_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 MULTI_WORLD_MINIMUM = 2

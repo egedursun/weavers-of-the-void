@@ -1,7 +1,6 @@
 from pydantic import Field
 
 from aerona.domain.enums.rarity import Rarity
-from aerona.domain.enums.world import CosmosSize, LanguageTexture, TechnologyEra
 from aerona.prompts.contexts.base import ContextItem, LoreContext, LoreRulesContext, RulesContext
 from aerona.prompts.contexts.common import SonBrief, WorldItem
 
@@ -20,9 +19,9 @@ class GenesisWizardContext(RulesContext):
     template_name: str | None = None
     magic: int
     danger: int
-    technology: TechnologyEra
-    language: LanguageTexture
-    cosmos: CosmosSize
+    technology_label: str
+    language_label: str
+    cosmos_label: str
     shape_line: str | None = None
     layer_label: str | None = None
     world_type_label: str | None = None

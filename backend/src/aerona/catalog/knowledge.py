@@ -72,6 +72,7 @@ NATURAL_LAWS: dict[NaturalLaw, KeyedText[NaturalLaw]] = {
             "Spirits take turns in the world: they speak, send word, foretell and pray, and tell the legends of the places they dwell in.",
         ),
         KeyedText(NaturalLaw.METAL_RUSTS_FAST, "Metal rusts fast", "Metal weapons and tools wear out far faster."),
+        KeyedText(NaturalLaw.NO_GUNPOWDER, "No gunpowder", "Powder will not burn: no gunpowder, firearms or cannon can be made."),
     )
 }
 

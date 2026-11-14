@@ -63,6 +63,8 @@ CORRUPT_FROM = PERCENT // 2
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_members",
+    "table.polity_profiles",
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",

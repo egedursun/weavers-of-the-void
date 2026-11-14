@@ -12,7 +12,9 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.communication import DispatchContent, DispatchState, Medium, SignalState
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.eras import EraChannel
 from aerona.engine.context import TickContext
+from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import spoken_language
@@ -79,6 +81,8 @@ async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_
     speed = int(getattr(table, SPEED_RULES[medium]))
     if medium is Medium.LETTER and await posted(ctx, owner_id):
         speed += ctx.rules.technique_effects.postal_hops
+    if medium is Medium.LETTER:
+        speed += await tech_bonus(ctx.session, ctx.rules, owner_id, EraChannel.MESSAGES)
     epochs = -(-hops // speed)
     if medium in OVERLAND and await winter(ctx, origin.world_id):
         epochs = -(-epochs * (PERCENT + table.winter_delay_pct) // PERCENT)

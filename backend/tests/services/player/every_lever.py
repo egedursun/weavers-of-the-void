@@ -3986,3 +3986,16 @@ LEVERS.update(
 LEVERS.update(
     {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in BELONGING_EDITS.items()}
 )
+
+PROGRAMME_UP = ("tech_programme:create", {"polity_id": Pick(REALM), "technique": "rocketry", "progress": 20, "stage": "planning", "visibility": 10})
+ERA_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "tech_programme:edit": {"technique": "nuclear_power", "progress": 75, "stage": "testing", "visibility": 60, "sabotaged": 1, "finished_epoch": None},
+}
+EDITS = {**EDITS, **ERA_EDITS}
+LEVERS.update(
+    {
+        "tech_programme:create": given(**PROGRAMME_UP[1]),
+        **{name: after(PROGRAMME_UP, record_id=Newest("tech_programme")) for name in ("tech_programme:edit", "tech_programme:delete")},
+    }
+)
+LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in ERA_EDITS.items()})

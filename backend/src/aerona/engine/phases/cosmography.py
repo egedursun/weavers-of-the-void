@@ -58,8 +58,10 @@ async def influence(ctx: TickContext) -> None:
     "table.cosmos",
     "table.dimensional_events",
     "table.galactic_structures",
+    "table.holder_techniques",
     "table.law_jurisdictions",
     "table.polity_members",
+    "table.polity_profiles",
     "table.routes",
 )
 @writes("table.community_stocks", "table.routes")

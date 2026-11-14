@@ -29,6 +29,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.kinds import BEING_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography
+from aerona.engine.eras.progress import era_doom
 from aerona.engine.gods.worship import cult_effect
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import mean_spread
@@ -109,12 +110,13 @@ async def doom_items(ctx: TickContext, age: WorldAge) -> dict[DoomItem, float]:
         DoomItem.WORLD_AGE: -age.relief,
         DoomItem.CREATOR_CULT: -cult.doom_pushback,
         DoomItem.ENLIGHTENMENT: -min(rules.research.enlightenment_cap, await mean_spread(ctx.session) * rules.research.enlightenment_relief_pct / PERCENT),
+        DoomItem.DANGEROUS_TECH: await era_doom(ctx),
         **await cosmic_items(ctx),
     }
 
 
 VARIANT_ITEMS: dict[ApocalypseVariant, frozenset[DoomItem]] = {
-    ApocalypseVariant.WORLD_WAR: frozenset({DoomItem.WARS}),
+    ApocalypseVariant.WORLD_WAR: frozenset({DoomItem.WARS, DoomItem.DANGEROUS_TECH}),
     ApocalypseVariant.TWILIGHT_OF_GODS: frozenset({DoomItem.GODLESS, DoomItem.REBEL_SONS}),
     ApocalypseVariant.OUTER_DESCENT: frozenset({DoomItem.CURSED, DoomItem.RESTLESS_SPIRITS, DoomItem.LEAK_WOUNDS, DoomItem.HOT_REGIONS}),
     ApocalypseVariant.DIMENSIONAL_COLLAPSE: frozenset({DoomItem.OPEN_RIFTS, DoomItem.INCURSIONS, DoomItem.CONVERGENCES, DoomItem.UNMAKERS}),
@@ -268,9 +270,12 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.galactic_events",
+    "table.holder_techniques",
     "table.modifiers",
     "table.nodes",
     "table.phenomenon_profiles",
+    "table.polity_members",
+    "table.polity_profiles",
     "table.region_environment",
     "table.rifts",
     "table.war_sides",

@@ -141,6 +141,8 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
             factor *= 2 - truth_factor(book.rules, book.medicine[community.id])
         if community.id in book.tended:
             factor *= resisted(book.rules, profile, 1 - book.rules.technique_effects.hospitals_pct / PERCENT)
+        if community.id in book.era_cures:
+            factor *= resisted(book.rules, profile, 1 - min(book.rules.eras.disease_cap_pct, book.era_cures[community.id]) / PERCENT)
         weight += people * factor
         total += people
     blended = weight / total if total else 1.0

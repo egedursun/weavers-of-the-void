@@ -99,6 +99,7 @@ REVEAL_BRANCH: dict[TravelMethod, KnowledgeBranch] = {
     M.SPACE_FOLD: KnowledgeBranch.PATHFINDING,
     M.DREAM_JOURNEY: KnowledgeBranch.MAGIC,
     M.WORMHOLE: KnowledgeBranch.ASTRONOMY,
+    M.ROCKETRY: KnowledgeBranch.SKY_NAVIGATION,
 }
 ROAD_EVENT_TEXT: dict[JourneyEventKind, str] = {
     JourneyEventKind.PIRATES: "void pirates attacked",

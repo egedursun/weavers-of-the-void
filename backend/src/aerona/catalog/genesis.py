@@ -16,6 +16,9 @@ TECHNOLOGY_LABELS: MappingProxyType[TechnologyEra, str] = MappingProxyType(
         TechnologyEra.MEDIEVAL: "Medieval",
         TechnologyEra.RENAISSANCE: "Renaissance",
         TechnologyEra.STEAM: "Steam and gunpowder",
+        TechnologyEra.ELECTRICAL: "Electric age",
+        TechnologyEra.INFORMATION: "Information age",
+        TechnologyEra.ADVANCED: "Advanced age",
     }
 )
 TEXTURE_LABELS: MappingProxyType[LanguageTexture, str] = MappingProxyType(
@@ -334,6 +337,43 @@ TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
                 CosmosSize.SINGLE,
                 "A world without magic, where the peoples have only their own skill, their wits and one another.",
                 storyteller=StorytellerProfile.STEADY,
+            ),
+            WizardTemplate(
+                T.ELECTRIC_AGE,
+                "Electric age",
+                "brisk, expanding, changing fast",
+                30,
+                40,
+                TechnologyEra.ELECTRICAL,
+                LanguageTexture.FREE,
+                4,
+                CosmosSize.SINGLE,
+                "A world whose peoples have learned to make current and carry it, so that a message crosses a land in an instant.",
+                storyteller=StorytellerProfile.RISING,
+            ),
+            WizardTemplate(
+                T.INFORMATION_AGE,
+                "Information age",
+                "crowded, quick, loud with opinion",
+                25,
+                40,
+                TechnologyEra.INFORMATION,
+                LanguageTexture.FREE,
+                4,
+                CosmosSize.SINGLE,
+                "A world whose peoples compute, broadcast and hear one another faster than any age before them.",
+            ),
+            WizardTemplate(
+                T.ADVANCED_AGE,
+                "Advanced age",
+                "powerful, precarious, reaching outward",
+                20,
+                55,
+                TechnologyEra.ADVANCED,
+                LanguageTexture.FREE,
+                4,
+                CosmosSize.SMALL,
+                "A world whose peoples have split matter, built minds that think and begun to leave their world for others.",
             ),
         )
     }

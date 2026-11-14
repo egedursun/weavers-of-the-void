@@ -47,7 +47,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 markers = ["tool_failure_expected: the test makes a tool crash on purpose"]
-filterwarnings = ["error::sqlalchemy.exc.SADeprecationWarning", "error:fully NULL primary key identity:sqlalchemy.exc.SAWarning", "error::DeprecationWarning:aerona", "error::DeprecationWarning:tests"]
+filterwarnings = ["error::sqlalchemy.exc.SADeprecationWarning", "error:fully NULL primary key identity:sqlalchemy.exc.SAWarning", "error::DeprecationWarning:aerona", "error::DeprecationWarning:tests", "error:coroutine .* was never awaited:RuntimeWarning", "error::pytest.PytestUnraisableExceptionWarning"]
 
 [tool.ruff]
 line-length = 160

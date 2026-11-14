@@ -26,6 +26,7 @@ from aerona.engine.polity.subjects import SubjectTally, tend_subjects
     "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.geasa",
+    "table.held_identities",
     "table.holder_levels",
     "table.memories",
     "table.minds",

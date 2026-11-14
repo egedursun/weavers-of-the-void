@@ -556,6 +556,8 @@ class SonResult(StrEnum):
     WIND_REFUSED = "You cannot turn that wind: {{ why }}."
     IDENTITY_STIRRED = "In {{ place }} the {{ layer }} identity is {{ told }}; it now matters {{ salience }} out of 100."
     IDENTITY_REFUSED = "You cannot stir that identity: {{ why }}."
+    PROGRAMME_HINDERED = "The programme of {{ realm }} toward {{ technique }} falls back to {{ progress }} out of 100."
+    PROGRAMME_UNTOUCHED = "You cannot hinder that programme: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -1013,3 +1015,5 @@ class MortalResult(StrEnum):
     SANCTUARY_DENIED = "You cannot claim sanctuary: {{ why }}."
     SATIRE_TOLD = "Your mockery bites at {{ bite }} out of 100{% if not tolerated %}, and the court does not forgive it{% endif %}."
     SATIRE_DECLINED = "You cannot mock the ruler: {{ why }}."
+    PROGRAMME_JOINED = "You work on the programme toward {{ technique }}; it stands at {{ progress }} out of 100."
+    PROGRAMME_REFUSED = "You cannot work on that programme: {{ why }}."

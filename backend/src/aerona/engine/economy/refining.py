@@ -12,6 +12,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.engine.context import TickContext
@@ -19,6 +20,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.materials import alloy_inputs, workable
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
 from aerona.engine.economy.workshop_designs import capacity_scale, output_scale, quality_bonus
+from aerona.engine.eras.effects import tech_factor
 from aerona.engine.factions.guilds import guild_standard
 from aerona.engine.industry.energy import scale_by_energy
 from aerona.engine.industry.methods import feed, method_for, process_of_step
@@ -194,6 +196,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
     workshop = book.workshop(community.id, step.workshop) if step.workshop is not None else None
     design = book.design_of(workshop)
     room = round_half_up(capacity(ctx, step, workshop, design) * await workshop_output(ctx.session, ctx.rules, workshop) * lit(ctx, book, community.id))
+    room = round_half_up(room * await tech_factor(ctx.session, ctx.rules, community.id, EraChannel.INDUSTRY))
     if room <= 0 or (step.branch is not None and book.level(community.id, step.branch) < step.level):
         return 0
     wanted = target_units(ctx, community, step.output) - await holding(ctx.session, community.id, step.output)

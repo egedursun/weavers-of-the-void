@@ -705,6 +705,8 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_members",
+    "table.polity_profiles",
     "table.preferences",
     "table.prostheses",
     "table.region_crops",

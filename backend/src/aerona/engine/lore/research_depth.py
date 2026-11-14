@@ -39,6 +39,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import wealth_points
 from aerona.engine.economy.stocks import holding
+from aerona.engine.eras.progress import powder_barred, researchable
 from aerona.engine.faith.book import patron_node
 from aerona.engine.gods.queries import community_of
 from aerona.engine.lore.learning import court_scholar, realm_of
@@ -252,6 +253,8 @@ async def open_techniques(session: AsyncSession, holder_id: int, levels: dict[Kn
         if technique in known or levels.get(spec.branch, 0) < spec.level or not gate_open(spec.gate, levels):
             continue
         if spec.level > 1 and not gate_open(BRANCH_GRAPH[spec.branch], levels):
+            continue
+        if not researchable(spec, known):
             continue
         found.append(technique)
     return found
@@ -608,6 +611,8 @@ async def adopt_techniques(ctx: TickContext) -> int:
             if technique in known or levels[holder_id].get(spec.branch, 0) < spec.level or not gate_open(spec.gate, levels[holder_id]):
                 continue
             if not gate_open(BRANCH_GRAPH[spec.branch], levels[holder_id]) and spec.level > 1:
+                continue
+            if not researchable(spec, known) or await powder_barred(ctx, holder_id, technique):
                 continue
             rng = ctx.rng(f"technique.{holder_id}.{technique.value}.{ctx.epoch}")
             if not await advanced(ctx, atlas, holder_id, technique):

@@ -26,6 +26,8 @@ class TechniqueSpec:
     effect: str
     gate: Gate = Gate()
     institution: bool = False
+    requires: tuple[Technique, ...] = ()
+    programme: bool = False
 
 
 BRANCH_GRAPH = MappingProxyType(
@@ -133,9 +135,159 @@ TECHNIQUES = MappingProxyType(
             TechniqueSpec(T.NATURAL_PHILOSOPHY, B.CIVICS, 2, "Natural philosophy", "The workings of the world are reasoned out."),
             TechniqueSpec(T.EMPIRICISM, B.CIVICS, 3, "Empiricism", "What is claimed is tried and observed.", Gate(all_of=((B.ASTRONOMY, 1),))),
             TechniqueSpec(T.HUMANIST_IDEALS, B.CIVICS, 4, "Humanist ideals", "The worth of each person is honoured.", Gate(all_of=((B.WRITING, 3),))),
+            TechniqueSpec(T.GUNPOWDER, B.WARFARE, 5, "Gunpowder", "A burning powder throws shot and breaks rock.", Gate(all_of=((B.METALLURGY, 3),))),
+            TechniqueSpec(
+                T.FIREARMS, B.WARFARE, 6, "Firearms", "Soldiers carry guns that pierce armour.", Gate(all_of=((B.METALLURGY, 4),)), requires=(T.GUNPOWDER,)
+            ),
+            TechniqueSpec(T.CANNON, B.WARFARE, 6, "Cannon", "Great guns batter walls and ranks.", Gate(all_of=((B.METALLURGY, 5),)), requires=(T.GUNPOWDER,)),
+            TechniqueSpec(
+                T.STAR_FORTS, B.ARCHITECTURE, 6, "Star forts", "Low angled walls turn cannon shot.", Gate(all_of=((B.WARFARE, 5),)), requires=(T.CANNON,)
+            ),
+            TechniqueSpec(T.VOLLEY_DRILL, B.WARFARE, 7, "Volley drill", "Ranks load and fire by command.", Gate(), requires=(T.FIREARMS,)),
+            TechniqueSpec(T.STEAM_POWER, B.METALLURGY, 6, "Steam power", "Boiling water drives engines.", Gate(all_of=((B.ARCHITECTURE, 4),))),
+            TechniqueSpec(T.COKE_SMELTING, B.METALLURGY, 6, "Coke smelting", "Coal burned to coke smelts iron in great furnaces.", Gate()),
+            TechniqueSpec(T.MACHINE_TOOLS, B.METALLURGY, 7, "Machine tools", "Machines cut parts to one measure.", Gate(), requires=(T.STEAM_POWER,)),
+            TechniqueSpec(
+                T.RAILWAYS, B.ARCHITECTURE, 7, "Railways", "Engines haul loads along iron rails.", Gate(all_of=((B.METALLURGY, 7),)), requires=(T.STEAM_POWER,)
+            ),
+            TechniqueSpec(
+                T.STEAMSHIPS,
+                B.SHIPBUILDING,
+                6,
+                "Steamships",
+                "Ships sail against wind and current under steam.",
+                Gate(all_of=((B.METALLURGY, 6),)),
+                requires=(T.STEAM_POWER,),
+            ),
+            TechniqueSpec(
+                T.FACTORY_PRODUCTION,
+                B.TRADE,
+                6,
+                "Factory production",
+                "Many hands and machines work under one roof.",
+                Gate(all_of=((B.METALLURGY, 6),)),
+                requires=(T.STEAM_POWER,),
+            ),
+            TechniqueSpec(
+                T.INDUSTRIAL_CHEMISTRY,
+                B.AGRICULTURE,
+                6,
+                "Industrial chemistry",
+                "Acids, alkalis and fertilisers are made in bulk.",
+                Gate(all_of=((B.METALLURGY, 6),)),
+            ),
+            TechniqueSpec(T.CANNED_FOOD, B.AGRICULTURE, 6, "Canned food", "Food sealed in tins keeps for years.", Gate(all_of=((B.METALLURGY, 5),))),
+            TechniqueSpec(T.VACCINES, B.MEDICINE, 6, "Vaccines", "A mild exposure guards against a deadly sickness.", Gate(), requires=(T.INOCULATION,)),
+            TechniqueSpec(
+                T.ELECTRICITY,
+                B.METALLURGY,
+                8,
+                "Electricity",
+                "Current is made and carried along wires.",
+                Gate(all_of=((B.ASTRONOMY, 5),)),
+                requires=(T.STEAM_POWER,),
+            ),
+            TechniqueSpec(
+                T.TELEGRAPH, B.WRITING, 7, "Telegraph", "Messages run along wires in an instant.", Gate(all_of=((B.METALLURGY, 8),)), requires=(T.ELECTRICITY,)
+            ),
+            TechniqueSpec(
+                T.TELEPHONE, B.WRITING, 8, "Telephone", "Voices are carried along wires.", Gate(all_of=((B.METALLURGY, 8),)), requires=(T.TELEGRAPH,)
+            ),
+            TechniqueSpec(
+                T.ELECTRIC_LIGHT,
+                B.ARCHITECTURE,
+                8,
+                "Electric light",
+                "Lamps burn without flame through the night.",
+                Gate(all_of=((B.METALLURGY, 8),)),
+                requires=(T.ELECTRICITY,),
+            ),
+            TechniqueSpec(
+                T.REFRIGERATION, B.AGRICULTURE, 7, "Refrigeration", "Machines keep food cold.", Gate(all_of=((B.METALLURGY, 8),)), requires=(T.ELECTRICITY,)
+            ),
+            TechniqueSpec(
+                T.COMBUSTION_ENGINE, B.METALLURGY, 8, "Combustion engine", "A burning fuel drives small engines.", Gate(), requires=(T.MACHINE_TOOLS,)
+            ),
+            TechniqueSpec(
+                T.AVIATION, B.SKY_NAVIGATION, 5, "Aviation", "Winged machines fly.", Gate(all_of=((B.METALLURGY, 9),)), requires=(T.COMBUSTION_ENGINE,)
+            ),
+            TechniqueSpec(
+                T.COMPUTATION,
+                B.WRITING,
+                9,
+                "Computation",
+                "Machines reckon faster than any clerk.",
+                Gate(all_of=((B.ASTRONOMY, 7),)),
+                requires=(T.ELECTRICITY,),
+            ),
+            TechniqueSpec(T.RADIO, B.WRITING, 8, "Radio", "Voices and signals cross the air.", Gate(all_of=((B.METALLURGY, 8),)), requires=(T.ELECTRICITY,)),
+            TechniqueSpec(
+                T.MASS_MEDIA, B.CIVICS, 8, "Mass media", "Papers and broadcasts reach every household.", Gate(all_of=((B.WRITING, 8),)), requires=(T.RADIO,)
+            ),
+            TechniqueSpec(T.ANTIBIOTICS, B.MEDICINE, 8, "Antibiotics", "Remedies kill the seeds of sickness.", Gate(), requires=(T.VACCINES,)),
+            TechniqueSpec(
+                T.GREEN_REVOLUTION,
+                B.AGRICULTURE,
+                9,
+                "Bred and fed harvests",
+                "New seed, fertiliser and water multiply harvests.",
+                Gate(),
+                requires=(T.INDUSTRIAL_CHEMISTRY,),
+            ),
+            TechniqueSpec(
+                T.NUCLEAR_POWER,
+                B.METALLURGY,
+                10,
+                "Nuclear power",
+                "Split matter drives great engines.",
+                Gate(all_of=((B.ASTRONOMY, 8),)),
+                requires=(T.ELECTRICITY,),
+                programme=True,
+            ),
+            TechniqueSpec(
+                T.NUCLEAR_WEAPONS,
+                B.WARFARE,
+                10,
+                "Nuclear weapons",
+                "Weapons of split matter that can burn a land.",
+                Gate(all_of=((B.METALLURGY, 10),)),
+                requires=(T.NUCLEAR_POWER,),
+                programme=True,
+            ),
+            TechniqueSpec(
+                T.ROCKETRY,
+                B.SKY_NAVIGATION,
+                8,
+                "Rocketry",
+                "Rockets carry craft between worlds without magic.",
+                Gate(all_of=((B.METALLURGY, 9),)),
+                requires=(T.COMBUSTION_ENGINE,),
+                programme=True,
+            ),
+            TechniqueSpec(
+                T.GENETIC_ENGINEERING,
+                B.MEDICINE,
+                10,
+                "Genetic engineering",
+                "The inheritance of living things is rewritten.",
+                Gate(all_of=((B.AGRICULTURE, 8),)),
+                requires=(T.ANTIBIOTICS,),
+                programme=True,
+            ),
+            TechniqueSpec(
+                T.ARTIFICIAL_MINDS,
+                B.WRITING,
+                10,
+                "Artificial minds",
+                "Machines learn to think.",
+                Gate(all_of=((B.ASTRONOMY, 8),)),
+                requires=(T.COMPUTATION,),
+                programme=True,
+            ),
         )
     }
 )
+PROGRAMMES = frozenset(technique for technique, spec in TECHNIQUES.items() if spec.programme)
 INSTITUTIONS = frozenset(technique for technique, spec in TECHNIQUES.items() if spec.institution) | {T.BANKING}
 
 UNIT_TECHNIQUES = MappingProxyType(
@@ -152,6 +304,14 @@ UNIT_TECHNIQUES = MappingProxyType(
         UnitKind.CONSTRUCTS: T.ALCHEMY,
         UnitKind.CROSSBOW_INFANTRY: T.IRON,
         UnitKind.HEAVY_CAVALRY: T.IRON,
+        UnitKind.GUNNERS: T.FIREARMS,
+        UnitKind.MOUNTED_GUNNERS: T.FIREARMS,
+        UnitKind.GRENADIERS: T.GUNPOWDER,
+        UnitKind.ARTILLERY_CREW: T.CANNON,
+        UnitKind.MECHANISED_INFANTRY: T.COMBUSTION_ENGINE,
+        UnitKind.PILOTS: T.AVIATION,
+        UnitKind.DRONE_OPERATORS: T.COMPUTATION,
+        UnitKind.SIGNALS_TROOPS: T.RADIO,
     }
 )
 

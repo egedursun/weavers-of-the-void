@@ -10,6 +10,7 @@ from aerona.agents.context.crafts_lines import son_crafts_lines
 from aerona.agents.context.customs_lines import son_customs_lines
 from aerona.agents.context.cycle_lines import son_cycle_lines
 from aerona.agents.context.dominion_lines import dominion_lines
+from aerona.agents.context.era_lines import son_era_lines
 from aerona.agents.context.evolution_lines import son_evolution_lines
 from aerona.agents.context.folkways_lines import son_folkways_lines
 from aerona.agents.context.mythic_lines import mythic_lines
@@ -107,4 +108,5 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     lines.extend(await son_crafts_lines(scope, son))
     lines.extend(await son_climes_lines(scope, son))
     lines.extend(await son_belonging_lines(scope, son))
+    lines.extend(await son_era_lines(scope, son))
     return lines

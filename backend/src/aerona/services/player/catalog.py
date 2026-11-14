@@ -53,6 +53,7 @@ from aerona.services.player import (
     economy_depth,
     engine_control,
     environment,
+    eras,
     estates,
     evolution,
     factions,
@@ -3878,6 +3879,13 @@ AGES_ACTIONS = (
     _sync(Meta("setup:delete", "Strike a setup from the record", G.FATE), ages.setup_delete, ages.SetupTarget, free, ("F36",)),
 )
 
+ERAS_ACTIONS = (
+    _sync(Meta("tech_programme:create", "Begin a programme", G.SOCIETY), eras.tech_programme_create, eras.TechProgrammeDraft, free, ("F44",)),
+    _sync(Meta("tech_programme:edit", "Edit a programme", G.SOCIETY), eras.tech_programme_edit, eras.TechProgrammeEdit, free, ("F44",)),
+    _sync(Meta("tech_programme:delete", "End a programme", G.SOCIETY), eras.tech_programme_delete, eras.TechProgrammeTarget, free, ("F44",)),
+    _sync(Meta("eras:run", "Read every era and programme now", G.SOCIETY), eras.eras_run, eras.RunNow, free, ("F44",)),
+)
+
 BELONGING_ACTIONS = (
     _sync(Meta("held_identity:set", "Set an identity", G.SOCIETY), belonging.held_identity_set, belonging.HeldIdentityDraft, free, ("F43",)),
     _sync(Meta("held_identity:edit", "Edit an identity", G.SOCIETY), belonging.held_identity_edit, belonging.HeldIdentityEdit, free, ("F43",)),
@@ -4893,6 +4901,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *AGES_ACTIONS,
     *FOLKWAYS_ACTIONS,
     *BELONGING_ACTIONS,
+    *ERAS_ACTIONS,
     *CLIMES_ACTIONS,
     *CRAFTS_ACTIONS,
     *CUSTOMS_ACTIONS,

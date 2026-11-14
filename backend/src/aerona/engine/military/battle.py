@@ -188,6 +188,7 @@ class Side:
     divine_struck: int = 0
     square_reserve: int = 0
     linear_cap: float = 0.0
+    firepower_pct: int = 0
 
     @property
     def start(self) -> int:
@@ -699,6 +700,7 @@ def missiles(rules: Rules, streams: Streams, shooter: Side, target: Side, ground
             * shot
             * fortune(rules, streams, "missile", stack)
         )
+    damage *= 1 + shooter.firepower_pct / PERCENT
     if shooter.tactic is Tactic.ARTILLERY_BARRAGE:
         damage *= rules.tactics.barrage_pct / PERCENT
     elif shooter.tactic is Tactic.ORBITAL_BOMBARDMENT:

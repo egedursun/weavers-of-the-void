@@ -84,6 +84,7 @@ from tests.tools.every_setup_belonging import hunted_by_a_temple, mocked_court
 from tests.tools.every_setup_climes import road_culture
 from tests.tools.every_setup_crafts import people_home, town_insurer
 from tests.tools.every_setup_customs import long_foreigner, town_pool
+from tests.tools.every_setup_eras import skilled_for_programme
 from tests.tools.every_setup_folkways import impure_mortal, neighbour, owned_item
 from tests.tools.every_son_tool import faction, knowledge, language, mortal, people, plain, region, resource, route, settlement, species
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
@@ -296,5 +297,6 @@ MORTAL_CASES: dict[str, Case] = {
     "invent_game": named(plain(kind="board"), people_home),
     "join_road_folk": named(plain(culture_id=created("culture")), road_culture),
     "seek_sanctuary": named(plain(), hunted_by_a_temple),
+    "join_programme": named(plain(programme_id=lambda _realm, ids: ids["programme"]), skilled_for_programme),
     "mock_the_ruler": named(plain(), mocked_court),
 }

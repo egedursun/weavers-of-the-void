@@ -162,6 +162,9 @@ class TechnologyEra(StrEnum):
     MEDIEVAL = "medieval"
     RENAISSANCE = "renaissance"
     STEAM = "steam"
+    ELECTRICAL = "electrical"
+    INFORMATION = "information"
+    ADVANCED = "advanced"
 
 
 class LanguageTexture(StrEnum):
@@ -193,6 +196,9 @@ class GenesisTemplate(StrEnum):
     DREAMING_WORLD = "dreaming_world"
     GENERATION_SHIP = "generation_ship"
     WITHOUT_MAGIC = "without_magic"
+    ELECTRIC_AGE = "electric_age"
+    INFORMATION_AGE = "information_age"
+    ADVANCED_AGE = "advanced_age"
 
 
 class ImageStyle(StrEnum):

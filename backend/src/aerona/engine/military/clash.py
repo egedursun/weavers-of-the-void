@@ -26,6 +26,7 @@ from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmyRole, CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily, UnitKind
@@ -42,6 +43,7 @@ from aerona.engine.ecology.beasts import beast_dread, mounted_edge
 from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.economy.sanctity import holy_strike
 from aerona.engine.equipment.field import acclaim_models, capture, carried_by_units, drop_to_losses, field_specs, wear_after_battle
+from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import ancestral_site, guardians_of
 from aerona.engine.folkways.fed import battle_luck
@@ -259,6 +261,7 @@ async def side_of(
     ordered = await command_edge(ctx, army.id) * (1 + await battle_omen(ctx, community))
     kin = battle_edge(ctx.rules, biology, culture, terrain=ground.terrain, weather=ground.weather, night=ground.night, river=ground.river, defending=defending)
     return Side(
+        firepower_pct=await tech_bonus(ctx.session, ctx.rules, community.id, EraChannel.FIREPOWER),
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
         leadership=sum(parts.values()),
         entity=community,

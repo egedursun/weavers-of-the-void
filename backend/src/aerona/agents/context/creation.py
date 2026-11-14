@@ -1,12 +1,20 @@
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.cosmography import DIMENSION_KINDS, WORLD_AGE_LABELS
-from aerona.catalog.genesis import SHAPE_LINES, TEMPLATES
+from aerona.catalog.genesis import COSMOS_LABELS, SHAPE_LINES, TECHNOLOGY_LABELS, TEMPLATES, TEXTURE_LABELS
 from aerona.catalog.worlds import WORLD_TYPES
+from aerona.core.grammar import an, several
 from aerona.domain.enums.world import CosmosSize
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.genesis import GenesisWizardContext
 from aerona.rules.registry import Rules
+
+
+def cosmos_label(rules: Rules, size: CosmosSize) -> str:
+    worlds = {CosmosSize.SMALL: rules.setup_wizard.small_cosmos_worlds, CosmosSize.LARGE: rules.setup_wizard.large_cosmos_worlds}
+    if size not in worlds:
+        return "a single world"
+    return f"{an(COSMOS_LABELS[size].lower())} ({several(1 + worlds[size], 'world', 'worlds')})"
 
 
 def shape_line(settings: GenesisSettings) -> str | None:
@@ -22,9 +30,9 @@ def creation_text(rules: Rules, settings: GenesisSettings, *, for_genesis: bool)
         template_name=TEMPLATES[settings.template].name if settings.template is not None else None,
         magic=settings.magic,
         danger=settings.danger,
-        technology=settings.technology,
-        language=settings.language_texture,
-        cosmos=settings.cosmos_size,
+        technology_label=TECHNOLOGY_LABELS[settings.technology].lower(),
+        language_label=TEXTURE_LABELS[settings.language_texture].lower(),
+        cosmos_label=cosmos_label(rules, settings.cosmos_size),
         shape_line=shape_line(settings),
         layer_label=DIMENSION_KINDS[settings.layer_kind].label if settings.layer_kind is not None else None,
         world_type_label=WORLD_TYPES[settings.world_type].label if settings.world_type is not None else None,

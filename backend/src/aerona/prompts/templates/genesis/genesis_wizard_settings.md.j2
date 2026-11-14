@@ -1,14 +1,11 @@
-{% set technology_labels = {"stone": "stone age", "bronze": "bronze age", "iron": "iron age", "medieval": "middle ages", "renaissance": "renaissance", "steam": "steam and gunpowder"} %}
-{% set language_labels = {"flowing": "flowing, vowel-rich, soft (l, m, n, y)", "hard": "hard-consonanted, short-syllabled (k, t, g, r)", "guttural": "guttural, from deep in the throat (h, gh, q, kh)", "sibilant": "hissing, fricative (s, sh, z, ch)", "long": "long, agglutinative, many-syllabled", "free": "free"} %}
-{% set cosmos_labels = {"single": "a single world", "small": "a small cosmos (" ~ (1 + rules.setup_wizard.small_cosmos_worlds) ~ " worlds)", "large": "a large cosmos (" ~ (1 + rules.setup_wizard.large_cosmos_worlds) ~ " worlds)"} %}
 CREATION SETTINGS{% if template_name %} (template: {{ template_name }}){% endif %}:
 - Magic density {{ magic }}/100: the world is {{ magic | degree("magical") }}.{% if for_genesis %} The regions' magic values should be close to this.{% endif %}
 
 - Danger {{ danger }}/100: the world is {{ danger | degree("dangerous") }}.{% if for_genesis %} The regions' danger values should be close to this.{% endif %}
 
-- Technology age: {{ technology_labels[technology] }}. The peoples' tools, weapons and buildings are at this level.
-- Language structure: {{ language_labels[language] }}. The naming rule and all names have this sound texture.
-- Cosmos: {{ cosmos_labels[cosmos] }}{% if shape_line %}; {{ shape_line }}{% endif %}.
+- Technology age: {{ technology_label }}. The peoples' tools, weapons and buildings are at this level.
+- Language structure: {{ language_label }}. The naming rule and all names have this sound texture.
+- Cosmos: {{ cosmos_label }}{% if shape_line %}; {{ shape_line }}{% endif %}.
 {% if world_type_label %}
 - Kind of the first world: {{ world_type_label }} ({{ world_type_key }}).
 {% endif %}

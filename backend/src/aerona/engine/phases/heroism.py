@@ -418,6 +418,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
 
 
 @reads(
+    "cult.zeal",
     "item.damage",
     "item.might",
     "item.protection",
@@ -443,12 +444,15 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.creator_taboos",
     "table.creature_anatomy",
     "table.crime_cases",
+    "table.cult_doctrines",
+    "table.cult_offices",
     "table.culture_ethics",
     "table.culture_values",
     "table.deed_claims",
     "table.deeds",
     "table.designated_heirs",
     "table.divine_wounds",
+    "table.doctrine_sacraments",
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
@@ -459,6 +463,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.house_members",
     "table.incident_participants",
+    "table.incorporeal_rights",
     "table.injuries",
     "table.language_profiles",
     "table.law_jurisdictions",
@@ -515,6 +520,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.mortal_profiles",
     "table.name_registry",
     "table.reputations",
+    "table.sacraments",
     "table.sons",
     "table.spirit_profiles",
 )

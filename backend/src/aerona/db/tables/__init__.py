@@ -315,6 +315,7 @@ from aerona.db.tables.epochs import (
     EpochWorldNarrativeRow,
 )
 from aerona.db.tables.equipment import ArmyUnitEquipmentRow, EquipmentModelRow, EquipmentStoreRow, UnitDesignEquipmentRow, UnitDesignTechniqueRow
+from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.estates import (
     CompanyProfileRow,
     CompanyShareRow,
@@ -1176,6 +1177,7 @@ __all__ = [
     "SympatheticLinkRow",
     "TavernRow",
     "TaxPolicyRow",
+    "TechProgrammeRow",
     "TensionRecordRow",
     "TerraformingRow",
     "TheatreRow",

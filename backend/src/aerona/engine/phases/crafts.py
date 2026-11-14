@@ -15,18 +15,31 @@ from aerona.engine.phases.dominion import count
 
 
 @reads(
+    "settlement.wealth",
+    "table.bonds",
     "table.catch_grounds",
     "table.chemical_works",
     "table.cooperatives",
+    "table.epoch_year_cursors",
     "table.holder_techniques",
     "table.house_members",
     "table.incorporeal_rights",
+    "table.insurance_policies",
     "table.insurers",
     "table.public_clocks",
     "table.resource_profiles",
     "table.species_ranges",
 )
-@writes("table.incorporeal_rights")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.incorporeal_rights",
+    "table.insurance_policies",
+    "table.insurers",
+)
 async def trades(ctx: TickContext) -> None:
     grounds, chemistry, insurance, rights, clocks = GroundTally(), ChemistryTally(), InsuranceTally(), RightsTally(), ClockTally()
     await keep_grounds(ctx, grounds)

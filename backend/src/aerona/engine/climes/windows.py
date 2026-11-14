@@ -4,7 +4,7 @@ from aerona.db.tables.climes import LaunchWindowRow
 from aerona.domain.enums.travel import TravelMethod
 from aerona.rules.registry import Rules
 
-PHYSICAL = frozenset({TravelMethod.LIGHT_SAIL, TravelMethod.SLINGSHOT_ORBIT, TravelMethod.COSMIC_MOUNT, TravelMethod.VOID_ARK})
+PHYSICAL = frozenset({TravelMethod.LIGHT_SAIL, TravelMethod.SLINGSHOT_ORBIT, TravelMethod.COSMIC_MOUNT, TravelMethod.VOID_ARK, TravelMethod.ROCKETRY})
 
 
 def pair(first: int, second: int) -> tuple[int, int]:

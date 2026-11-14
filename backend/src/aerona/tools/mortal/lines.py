@@ -247,4 +247,5 @@ INVENT_GAME = Line("tools.mortal.invent_game", "{me} made up a game for the {peo
 JOIN_ROAD_FOLK = Line("tools.mortal.join_road_folk", "{me} brought their town into {culture}.")
 SEEK_SANCTUARY = Line("tools.mortal.seek_sanctuary", "{me} claimed sanctuary in {host}.")
 MOCK_THE_RULER = Line("tools.mortal.mock_the_ruler", "{me} mocked the ruler in public.")
+JOIN_PROGRAMME = Line("tools.mortal.join_programme", "{me} worked on the realm's programme toward {technique}.")
 MAKE_CHARM = Line("tools.mortal.make_charm", "{me} made {item} a charm.")

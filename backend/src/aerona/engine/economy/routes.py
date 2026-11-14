@@ -31,6 +31,7 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass
+from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.settlement import TreasuryEntry
@@ -55,6 +56,7 @@ from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, DANGER_KEYS, Da
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.economy.toll_polities import Realms, fund_polity
 from aerona.engine.environment.profile import Works
+from aerona.engine.eras.effects import channel_value, tech_relief
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, Terms, smuggle
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research_depth import capable_among
@@ -234,6 +236,7 @@ async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, wor
         capacity *= (
             1 + (table.navigation_pct * (Technique.NAVIGATION_STARS in held) + table.instruments_pct * (Technique.ASTRONOMY_INSTRUMENTS in held)) / PERCENT
         )
+        capacity *= 1 + channel_value(ctx.rules, held, EraChannel.SEA_ROUTES) / PERCENT
     return clamp_int(round_half_up(capacity), 0, ctx.rules.trade_routes.capacity_cap)
 
 
@@ -524,6 +527,7 @@ async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = Fa
     )
     sent = sum(lot.quantity for lot in taken)
     spoiled = spoilage(ctx.rules, lane.commodity, route.profile.mode, await kept_by(ctx, route))
+    spoiled *= await tech_relief(ctx.session, ctx.rules, lane.seller_id, EraChannel.SPOILAGE)
     keep = sent - min(sent, round_half_up(lane.volume * ctx.rules.trade_routes.danger_loss_pct / PERCENT * danger / PERCENT + sent * spoiled))
     delivered = 0
     for lot in taken:

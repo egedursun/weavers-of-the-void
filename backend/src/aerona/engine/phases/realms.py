@@ -288,6 +288,7 @@ async def polity_cycles(ctx: TickContext) -> None:
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.marriages",
+    "table.membership_categories",
     "table.memberships",
     "table.memories",
     "table.mortal_profiles",

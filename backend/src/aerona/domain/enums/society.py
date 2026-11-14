@@ -72,6 +72,7 @@ class NaturalLaw(StrEnum):
     OATHS_BIND = "oaths_bind"
     THE_DEAD_SPEAK = "the_dead_speak"
     METAL_RUSTS_FAST = "metal_rusts_fast"
+    NO_GUNPOWDER = "no_gunpowder"
 
 
 class ResourceMechanic(StrEnum):

@@ -55,6 +55,7 @@ from aerona.engine.phases import (
     ecology,
     environment,
     epidemics,
+    eras,
     espionage,
     estates,
     evolution,
@@ -223,6 +224,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + ages.PHASES
     + folkways.PHASES
     + belonging.PHASES
+    + eras.PHASES
     + climes.PHASES
     + crafts.PHASES
     + customs.PHASES
@@ -397,6 +399,7 @@ SUB_ENGINE_STAGE = stage(
     "death_engine",
     "civilization",
     "world_balance",
+    "tech_eras",
     "polity_cycles",
     "regimes",
     "patronage",
