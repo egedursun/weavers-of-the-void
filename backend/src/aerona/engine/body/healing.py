@@ -237,7 +237,7 @@ class HealingWorld:
             raw = level * rules.skills.healer_scale_pct / PERCENT
             ward = 1 + hospitals.get(region, 0.0) * (rules.epidemiology.hospital_healer_pct / PERCENT - 1) if region is not None else 1.0
             healers[region].append(Healer(mortal, clamp_int(raw * hands * ward, 0, PERCENT), region))
-        disease = dict((await DiseaseLoads.load(session)).regions)
+        disease = dict((await DiseaseLoads.load(session, rules)).regions)
         return cls(rules=rules, atlas=atlas, knowledge=knowledge, healers=healers, disease=disease, artisans=artisans, hospitals=hospitals)
 
     def best_healer(self, bearer: EntityRow) -> Healer | None:

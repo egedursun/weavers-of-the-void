@@ -17,6 +17,7 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.statecraft import CouncilTask
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.reckoning import reckoned
 from aerona.engine.intrigue.schemes import OPEN
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
@@ -121,6 +122,7 @@ async def collect_taxes(ctx: TickContext, book: RealmBook, work: Work) -> None:
     standard = await ctx.session.get(MeasureStandardRow, work.realm.entity.id)
     if standard is not None and standard.standard:
         gathered = round_half_up(gathered * (1 + ctx.rules.measures.tax_pct / PERCENT))
+    gathered = round_half_up(gathered * await reckoned(ctx.session, work.realm.entity.id, ctx.rules.numeracy.tax_pct))
     if gathered > 0 and "treasury" not in work.realm.profile.locked:
         spend(ctx, work.realm, gathered, TreasuryEntry.TAX, "gathered by the treasurer")
 

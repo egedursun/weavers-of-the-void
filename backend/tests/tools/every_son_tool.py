@@ -67,6 +67,7 @@ from tests.tools.every_setup import (
 )
 from tests.tools.every_setup_ages import long_winter, open_tale, turning_cosmos
 from tests.tools.every_setup_arts import art_work, built_construct, forged_work, two_clubs, wild_beast
+from tests.tools.every_setup_crafts import material_resource
 from tests.tools.every_setup_folkways import owned_item
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
@@ -427,4 +428,6 @@ SON_CASES: dict[str, Case] = {
     "stir_witch_hunt": Case(plain(town_id=settlement, reason=REASON)),
     "stir_revival": Case(plain(people_id=people, goal="revive_language", reason=REASON)),
     "proclaim_right": Case(plain(realm_id=created("polity"), category="resident_foreigner", right="arms", granted=True, reason=REASON), ruled_realm),
+    "wake_spirit": Case(plain(region_id=region, emotion="awe", reason=REASON)),
+    "lay_affinity": Case(plain(resource_id=resource, school="earth", mode="worn", reason=REASON), material_resource),
 }

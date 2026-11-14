@@ -2,6 +2,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.economy import ExtractionKind
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.catch import regrowth_scale
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import ExtractionTally, extract, extraction_kind, reconcile, regrow
 from aerona.engine.economy.stocks import sync_aggregates
@@ -124,6 +125,7 @@ async def resource_economy(ctx: TickContext) -> None:
     "table.army_profiles",
     "table.bonds",
     "table.calendars",
+    "table.catch_grounds",
     "table.community_industry",
     "table.community_labour",
     "table.community_methods",
@@ -160,7 +162,7 @@ async def resource_regeneration(ctx: TickContext) -> None:
         if profile is None:
             continue
         reconcile(resource, profile)
-        regrown += regrow(ctx.rules, resource, profile)
+        regrown += regrow(ctx.rules, resource, profile, scale=await regrowth_scale(ctx.session, ctx.rules, resource.id))
     ctx.count("regrown", regrown)
 
 

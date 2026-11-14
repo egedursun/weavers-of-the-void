@@ -147,6 +147,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.natural_law_profiles",
     "table.node_materials",
     "table.nodes",
+    "table.number_systems",
     "table.offices",
     "table.outbreaks",
     "table.people_culture",

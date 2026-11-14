@@ -3776,3 +3776,98 @@ LEVERS.update(
 LEVERS.update(
     {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in CUSTOMS_EDITS.items()}
 )
+
+
+RESOURCE = EntityType.RESOURCE
+GROUND_UP = (
+    "catch_ground:set",
+    {"source_id": Pick(RESOURCE), "region_id": Pick(EntityType.REGION), "ground": "fishery", "gear": "nets", "right": "commons", "effort": 50},
+)
+WORKS_UP = ("chemical_works:set", {"settlement_id": Pick(TOWN), "product": "soap", "output": 20, "hazard": 5, "pollution": 5})
+INSURER_UP = ("insurer:set", {"insurer_id": Pick(FACTION), "pool": 30, "risk_belief": 20, "premium_pct": 5})
+POLICY_UP = (
+    "insurance_policy:create",
+    {"insurer_entity_id": Pick(FACTION), "holder_node_id": Pick(MORTAL), "cover": "life", "premium": 1, "sum_insured": 20},
+)
+RIGHT_UP = (
+    "incorporeal_right:create",
+    {"holder_node_id": Pick(MORTAL), "kind": "song", "subject_node_id": None, "name": "The Long Air", "acquired": "granted"},
+)
+AID_UP = ("assistive_aid:set", {"holder_id": Pick(MORTAL), "kind": "spectacles", "quality": 60})
+CLOCK_UP = ("public_clock:set", {"settlement_id": Pick(TOWN), "kind": "water_clock", "precision": 35})
+GAME_UP = ("game:create", {"name": "Fourfold", "kind": "board", "rule": "strategy", "origin_entity_id": Pick(PEOPLE)})
+FOLLOW_UP = ("game_following:set", {"people_id": Pick(PEOPLE), "game_id": Newest("game"), "popularity": 30})
+NUMBERS_UP = ("number_system:set", {"people_id": Pick(PEOPLE), "base": 12, "notation": "additive", "zero": False, "numeracy": 20})
+MATERIAL_UP = ("material:edit", {"world_id": Pick("world"), "material": "iron", "values": {"hardness": 60}})
+AFFINITY_UP = ("material_affinity:set", {"material_id": Newest("world_material"), "school": "earth", "mode": "worn", "power": 30})
+LINK_UP = ("sympathetic_link:create", {"holder_node_id": Pick(MORTAL), "target_node_id": Pick(MORTAL, 1), "token": "hair", "strength": 50})
+SPIRIT_UP = ("emotion_spirit:create", {"region_entity_id": Pick(EntityType.REGION), "emotion": "joy", "strength": 30, "lifetime": 3, "bound_by_node_id": None})
+CRAFTS_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "catch_ground:edit": {
+        "ground": "trapping",
+        "gear": "traps",
+        "right": "owned",
+        "owner_node_id": Pick(TOWN),
+        "effort": 70,
+        "collapse_at": 25,
+        "collapsed": False,
+        "last_catch": 4,
+    },
+    "chemical_works:edit": {"output": 60, "hazard": 15, "pollution": 20, "accidents": 1},
+    "insurer:edit": {"pool": 50, "risk_belief": 30, "premium_pct": 8, "ruined": False, "claims_seen": 2},
+    "insurance_policy:edit": {"insurer_entity_id": Pick(FACTION), "cover": "house", "premium": 2, "sum_insured": 30, "active": True, "claims": 1},
+    "incorporeal_right:edit": {
+        "holder_node_id": Pick(MORTAL),
+        "kind": "design",
+        "subject_node_id": None,
+        "name": "The Knotted Border",
+        "acquired": "bought",
+        "licensed_to_node_id": Pick(MORTAL, 1),
+    },
+    "assistive_aid:edit": {"quality": 80},
+    "public_clock:edit": {"kind": "mechanical", "precision": 70, "built_epoch": 1},
+    "game:edit": {"name": "Fivefold", "kind": "cards", "rule": "chance", "origin_entity_id": Pick(PEOPLE)},
+    "game_following:edit": {"popularity": 60, "adopted_epoch": 1},
+    "number_system:edit": {"base": 20, "notation": "positional", "zero": True, "numeracy": 40},
+    "material_affinity:edit": {"mode": "consumed", "power": 60},
+    "sympathetic_link:edit": {"token": "blood", "strength": 70, "obtained_epoch": 1},
+    "emotion_spirit:edit": {"emotion": "grief", "strength": 50, "lifetime": 4, "bound_by_node_id": Pick(MORTAL)},
+}
+EDITS = {**EDITS, **CRAFTS_EDITS}
+LEVERS.update(
+    {
+        "catch_ground:set": given(**GROUND_UP[1]),
+        **{name: after(GROUND_UP, source_id=Pick(RESOURCE), region_id=Pick(EntityType.REGION)) for name in ("catch_ground:edit", "catch_ground:delete")},
+        "chemical_works:set": given(**WORKS_UP[1]),
+        **{name: after(WORKS_UP, settlement_id=Pick(TOWN), product="soap") for name in ("chemical_works:edit", "chemical_works:delete")},
+        "insurer:set": given(**INSURER_UP[1]),
+        **{name: after(INSURER_UP, insurer_id=Pick(FACTION)) for name in ("insurer:edit", "insurer:delete")},
+        "insurance_policy:create": given(**POLICY_UP[1]),
+        **{name: after(POLICY_UP, record_id=Newest("insurance_policy")) for name in ("insurance_policy:edit", "insurance_policy:delete")},
+        "incorporeal_right:create": given(**RIGHT_UP[1]),
+        **{name: after(RIGHT_UP, record_id=Newest("incorporeal_right")) for name in ("incorporeal_right:edit", "incorporeal_right:delete")},
+        "assistive_aid:set": given(**AID_UP[1]),
+        **{name: after(AID_UP, holder_id=Pick(MORTAL), kind="spectacles") for name in ("assistive_aid:edit", "assistive_aid:delete")},
+        "public_clock:set": given(**CLOCK_UP[1]),
+        **{name: after(CLOCK_UP, settlement_id=Pick(TOWN)) for name in ("public_clock:edit", "public_clock:delete")},
+        "game:create": given(**GAME_UP[1]),
+        **{name: after(GAME_UP, record_id=Newest("game")) for name in ("game:edit", "game:delete")},
+        "game_following:set": after(GAME_UP, **FOLLOW_UP[1]),
+        **{name: after(GAME_UP, FOLLOW_UP, people_id=Pick(PEOPLE), game_id=Newest("game")) for name in ("game_following:edit", "game_following:delete")},
+        "number_system:set": given(**NUMBERS_UP[1]),
+        **{name: after(NUMBERS_UP, people_id=Pick(PEOPLE)) for name in ("number_system:edit", "number_system:delete")},
+        "material_affinity:set": after(MATERIAL_UP, **AFFINITY_UP[1]),
+        **{
+            name: after(MATERIAL_UP, AFFINITY_UP, material_id=Newest("world_material"), school="earth")
+            for name in ("material_affinity:edit", "material_affinity:delete")
+        },
+        "sympathetic_link:create": given(**LINK_UP[1]),
+        **{name: after(LINK_UP, record_id=Newest("sympathetic_link")) for name in ("sympathetic_link:edit", "sympathetic_link:delete")},
+        "emotion_spirit:create": given(**SPIRIT_UP[1]),
+        **{name: after(SPIRIT_UP, record_id=Newest("emotion_spirit")) for name in ("emotion_spirit:edit", "emotion_spirit:delete")},
+    }
+)
+
+LEVERS.update(
+    {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in CRAFTS_EDITS.items()}
+)

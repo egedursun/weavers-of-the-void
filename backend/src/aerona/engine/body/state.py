@@ -8,6 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.domain.enums.body import BodyFunction, Capacity, ConditionKind, Consciousness, InjuryKind
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.crafts import AssistiveAid
 from aerona.engine.body.book import (
     Bearer,
     Reading,
@@ -25,6 +26,7 @@ from aerona.engine.body.book import (
 )
 from aerona.engine.body.capacities import BodyState, function_percents, pain_of
 from aerona.engine.body.customs import customs_of, presence_pct
+from aerona.engine.crafts.aiding import aid_quality
 from aerona.engine.gods.queries import community_of
 from aerona.engine.mortal.equipment import mount_pct
 from aerona.engine.mortal.variants import strength, variants_by_id
@@ -36,7 +38,9 @@ PAIN = "pain"
 
 
 async def has_reader(session: AsyncSession, bearer: Bearer) -> bool:
-    return bool(await active_bonds(session, [BondKind.APPRENTICE_OF], targets=[bearer.id]))
+    return (
+        bool(await active_bonds(session, [BondKind.APPRENTICE_OF], targets=[bearer.id])) or await aid_quality(session, bearer.id, AssistiveAid.SPECTACLES) > 0
+    )
 
 
 async def reading_of(session: AsyncSession, rules: Rules, bearer: Bearer) -> Reading:
@@ -56,7 +60,14 @@ async def reading_of(session: AsyncSession, rules: Rules, bearer: Bearer) -> Rea
         patron_id=patron.id if patron is not None else None,
         beauty=genome.beauty if genome is not None else None,
     )
-    return Reading(pct, await has_reader(session, bearer))
+    table = rules.aids
+    return Reading(
+        pct,
+        await has_reader(session, bearer),
+        await aid_quality(session, bearer.id, AssistiveAid.HEARING_HORN) * table.hearing_restore_pct / PERCENT / PERCENT,
+        await aid_quality(session, bearer.id, AssistiveAid.CANE) * table.cane_aid_pct / PERCENT / PERCENT,
+        await aid_quality(session, bearer.id, AssistiveAid.MAGNIFIER) * table.magnifier_craft_pct / PERCENT / PERCENT,
+    )
 
 
 async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: int) -> BodyRow:

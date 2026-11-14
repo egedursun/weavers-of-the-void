@@ -28,6 +28,7 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.structure import BuildScale, ConstructionState, ConstructionStatus, StructureKind
 from aerona.domain.models.entity_stats import LegendStats, StructureStats
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.reckoning import reckoned
 from aerona.engine.economy.materials import sanctity_splendour
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lore.blueprints import design_factor
@@ -250,7 +251,8 @@ async def engineering(ctx: TickContext, site_id: int, profile: StructureProfileR
         )
         architect = int(row or 0)
     level = knowledge.level(site_id, KnowledgeBranch.ARCHITECTURE)
-    return 1 + level * table.engineering_pct_per_level / PERCENT + architect * table.architect_pct_per_level / PERCENT
+    plain = 1 + level * table.engineering_pct_per_level / PERCENT + architect * table.architect_pct_per_level / PERCENT
+    return plain * await reckoned(ctx.session, site_id, ctx.rules.numeracy.build_pct)
 
 
 async def advance(ctx: TickContext, construction: ConstructionRow, *, active: int, knowledge: KnowledgeMap) -> int:

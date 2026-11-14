@@ -193,7 +193,7 @@ async def population_growth(ctx: TickContext) -> None:
     laws = await ctx.laws()
     growing = await canon(ctx.session, GROWING_TYPES)
     loads = model.build_loads(growing)
-    diseases = await DiseaseLoads.load(ctx.session)
+    diseases = await DiseaseLoads.load(ctx.session, ctx.rules)
     grown = 0
     to_cults = 0
     for community in growing:

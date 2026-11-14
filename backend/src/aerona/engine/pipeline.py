@@ -35,6 +35,7 @@ from aerona.engine.phases import (
     cosmic_economy,
     cosmography,
     cosmos_upkeep,
+    crafts,
     creator_mood,
     creatures,
     culture_exchange,
@@ -219,6 +220,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + arts.PHASES
     + ages.PHASES
     + folkways.PHASES
+    + crafts.PHASES
     + customs.PHASES
     + made_kinds.PHASES
     + exploration.PHASES
@@ -629,6 +631,9 @@ MIND_STAGE = stage(
     "customs",
     "town_life",
     "civics",
+    "trades",
+    "learning_aids",
+    "sympathies",
     "gatherings",
     "reciprocity",
     "relations_circles",

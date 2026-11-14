@@ -189,6 +189,7 @@ async def attraction(ctx: TickContext) -> None:
     "mortal.lifespan",
     "mortal.strength",
     "mortal.willpower",
+    "table.assistive_aids",
     "table.bodies",
     "table.body_customs",
     "table.bonds",

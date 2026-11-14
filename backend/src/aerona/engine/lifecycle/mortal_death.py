@@ -17,6 +17,7 @@ from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
@@ -26,6 +27,8 @@ from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.cover import claim
+from aerona.engine.crafts.heirs import pass_rights
 from aerona.engine.demography.rites import mourning_factor, rite_of, spirit_factor
 from aerona.engine.demography.rites import restless as restless_by_rite
 from aerona.engine.divine.wounds import avatar_slain
@@ -119,6 +122,9 @@ async def die(
     heir = await pass_rule(ctx, mortal)
     if heir is not None:
         await inherit_memories(session, ctx.rules, mortal, [heir.id], ctx.epoch)
+        ctx.count("rights_inherited", await pass_rights(session, mortal.id, heir.id, ctx.epoch))
+    if await claim(session, mortal.id, InsuranceCover.LIFE, ctx.rules.insurance.life_payout):
+        ctx.count("lives_insured_paid")
     if natural:
         tail = "; an heir took their place" if heir is not None else ". Their name now lives only in the tales"
         text = f"{mortal.name} died at age {age_text}{tail}."

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import or_, select
@@ -23,6 +24,7 @@ from aerona.db.tables.urban import ConvoyRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.culture import Capability, Technique
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.divine import DomainHook
@@ -37,6 +39,9 @@ from aerona.domain.enums.urban import Preservation
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats, TradeRouteStats
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.cover import cargo_holders, claim
+from aerona.engine.crafts.reckoning import price_gaps
+from aerona.engine.crafts.timekeeping import clock_navigation
 from aerona.engine.customs.rights import crossing
 from aerona.engine.demography.tongues import trade_barrier
 from aerona.engine.economy.book import EconomyBook
@@ -465,6 +470,8 @@ def lane_for(
     *,
     trust: int | None = None,
     policies: PolicyBook | None = None,
+    covered: frozenset[int] = frozenset(),
+    gaps: Mapping[int, float] | None = None,
 ) -> Lane | None:
     table = ctx.rules.markets
     flow = ctx.rules.market
@@ -474,14 +481,14 @@ def lane_for(
     terms = policies.terms(seller_id, buyer_id, left.commodity) if policies is not None else Terms()
     if terms.blocked:
         return None
-    danger = stat(route.entity, "danger") or 0
+    danger = (stat(route.entity, "danger") or 0) * ((PERCENT - ctx.rules.insurance.moral_hazard_pct) / PERCENT if seller_id in covered else 1)
     carriage = (
         1
         + table.transport_cost_pct_per_hop * route.profile.length / PERCENT * carriage_factor(ctx.rules, left.commodity, route.profile.mode)
         + table.danger_cost_pct * danger / PERCENT / PERCENT
     )
     landed = cheap.price * carriage * (1 + toll_total(route) / PERCENT) * (1 + terms.tariff_pct / PERCENT) * (1 - terms.subsidy_pct / PERCENT)
-    if dear.price * PERCENT < landed * flow.flow_price_gap_pct:
+    if dear.price * PERCENT < landed * flow.flow_price_gap_pct * (gaps or {}).get(seller_id, 1.0):
         return None
     surplus = max(0, cheap.supply - max(cheap.demand, flow.flow_reserve))
     shortfall = max(0, dear.demand - dear.supply)
@@ -509,6 +516,8 @@ async def kept_by(ctx: TickContext, route: Route) -> Preservation:
 async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = False) -> Haul:
     ledger = goods_of(ctx.session, ctx.epoch)
     danger = (stat(route.entity, "danger") or 0) * ((PERCENT - ctx.rules.technique_effects.insurance_pct) / PERCENT if insured else 1)
+    if route.profile.mode is TradeMode.SEA:
+        danger *= await clock_navigation(ctx.session, ctx.rules, route.ends)
     taken = await ledger.take(
         lane.seller_id, lane.commodity, lane.volume, GoodsFlow.TRADE, exclude=lane.terms.banned.kinds, exclude_worlds=lane.terms.banned.worlds
     )
@@ -598,6 +607,7 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
     lanes = ctx.rules.trade_routes
     dangers = tally.dangers.get(route.entity.id) or Dangers(**{cause.value: getattr(route.profile, key) for cause, key in DANGER_KEYS.items()})
     shares = split(lost, dangers.parts(), route.profile.mode)
+    await claim(ctx.session, lane.seller_id, InsuranceCover.CARGO, round_half_up(lane.landed * lost / PERCENT * ctx.rules.insurance.cargo_payout_pct / PERCENT))
     for cause, units in sorted(shares.items(), key=lambda item: item[0].value):
         culprit = dangers.culprit(cause)
         ctx.session.add(
@@ -649,10 +659,12 @@ async def carry(
     capacity = round_half_up(capacity * factor)
     season = season_factor(route)
     trust = await coin_trust(ctx, book, route.ends)
+    covered = await cargo_holders(ctx.session)
+    gaps = await price_gaps(ctx.session, ctx.rules, route.ends)
     moved = 0
     for commodity in COMMODITIES:
         pair = (left_quotes[commodity], right_quotes[commodity])
-        lane = lane_for(ctx, route, pair, capacity - moved, season, trust=trust, policies=policies)
+        lane = lane_for(ctx, route, pair, capacity - moved, season, trust=trust, policies=policies, covered=covered, gaps=gaps)
         if policies is not None:
             moved += await run_banned_lots(ctx, book, route, pair, policies, tally=tally)
         if lane is None:

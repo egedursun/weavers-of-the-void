@@ -45,6 +45,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "mortal.willpower",
     "mortal.wisdom",
     "table.army_officers",
+    "table.assistive_aids",
     "table.beliefs",
     "table.bodies",
     "table.body_customs",

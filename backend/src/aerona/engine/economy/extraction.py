@@ -24,6 +24,10 @@ from aerona.engine.body.cohorts import cohort, labour_factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import cosmography_of
+from aerona.engine.crafts.catch import catch_factor
+from aerona.engine.crafts.linking import affinity_value
+from aerona.engine.crafts.timekeeping import clock_output
+from aerona.engine.crafts.works import blasted, fertilised
 from aerona.engine.customs.relief import commute_share
 from aerona.engine.dominion.effects import step_here
 from aerona.engine.ecology.domestication import draught
@@ -227,14 +231,16 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
     site = book.workshop(community.id, spec.workshop) if spec.workshop is not None else None
     works = (1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT) * await workshop_output(ctx.session, ctx.rules, site)
     raw = base * skill * knowledge * season * difficulty * works * await tools_factor(ctx, community.id, workers) * await labour_factor(ctx, community)
+    raw *= await clock_output(ctx.session, ctx.rules, community.id)
     raw *= craft_factor(ctx, book, community.id, resource.id, kind) * gate * await method_factor(ctx, book, community.id, kind, workers)
     if kind is ExtractionKind.FISHING:
-        raw *= fish_factor(ctx.rules, book.pollution.get(region_key(book, resource.id)))
+        raw *= fish_factor(ctx.rules, book.pollution.get(region_key(book, resource.id))) * await catch_factor(ctx.session, ctx.rules, resource.id)
     if kind is ExtractionKind.FARMING:
-        raw *= await draught(ctx, community.id)
+        raw *= await draught(ctx, community.id) * await fertilised(ctx.session, ctx.rules, community.id)
     else:
         raw *= await step_here(ctx, community.id, DivineScale.PRODUCTIVITY, ctx.rules.dominion.output_per_step_pct)
     if kind is ExtractionKind.MINING:
+        raw *= await blasted(ctx.session, ctx.rules, community.id)
         ladder = await cosmography_of(ctx.session)
         raw *= ladder.pull(ctx.rules, ladder.place_world_id(resource.world_id)).ore
     return max(0, min(profile.reserve, round_half_up(raw)))
@@ -434,7 +440,9 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
             quality=profile.quality,
         )
         await byproduct(ctx, book, resource, profile, community=community, output=output)
-        await _pay_owner(ctx, owner, output * material_value(profile) // PERCENT)
+        await _pay_owner(
+            ctx, owner, round_half_up(output * material_value(profile) / PERCENT * await affinity_value(ctx.session, ctx.rules, profile.world_material_id))
+        )
         ctx.session.add(
             ProductionRunRow(
                 epoch=ctx.epoch,
@@ -461,9 +469,9 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
     return produced
 
 
-def regrow(rules: Rules, resource: EntityRow, profile: ResourceProfileRow) -> int:
+def regrow(rules: Rules, resource: EntityRow, profile: ResourceProfileRow, *, scale: float = 1.0) -> int:
     if profile.held or profile.regeneration <= 0 or profile.reserve >= profile.initial_reserve:
         return 0
-    gain = min(profile.regeneration, profile.initial_reserve - profile.reserve)
+    gain = min(round_half_up(profile.regeneration * scale), profile.initial_reserve - profile.reserve)
     write_reserve(resource, profile, profile.reserve + gain)
     return gain

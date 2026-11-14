@@ -384,6 +384,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "species.danger",
     "species.strength",
     "table.afterlife_strata",
+    "table.assistive_aids",
     "table.avatars",
     "table.bodies",
     "table.body_customs",

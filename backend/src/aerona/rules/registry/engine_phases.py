@@ -514,6 +514,11 @@ class EnginePhasesRules:
     )
     town_life: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: taverns and inns, houses of welfare, the way to work and cooperatives")
     civics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: evidence, citizenship, borders, poor relief and standard measures")
+    trades: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fishing and hunting grounds, chemical works, insurance, incorporeal rights and public clocks"
+    )
+    learning_aids: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: assistive aids, games and number systems")
+    sympathies: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: material affinities, sympathetic links and emotion spirits")
     arcs: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: arcs read in lives, their beats and outcomes, setups and payoffs, and the drama manager"
     )

@@ -5119,6 +5119,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/crafts/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_crafts_api_crafts_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -12777,6 +12793,678 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_witch_hunt_delete_api_actions_witch_hunt_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/catch_ground:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_catch_ground_set_api_actions_catch_ground_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/catch_ground:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_catch_ground_edit_api_actions_catch_ground_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/catch_ground:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_catch_ground_delete_api_actions_catch_ground_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/chemical_works:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_chemical_works_set_api_actions_chemical_works_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/chemical_works:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_chemical_works_edit_api_actions_chemical_works_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/chemical_works:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_chemical_works_delete_api_actions_chemical_works_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/insurer:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_insurer_set_api_actions_insurer_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/insurer:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_insurer_edit_api_actions_insurer_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/insurer:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_insurer_delete_api_actions_insurer_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/insurance_policy:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_insurance_policy_create_api_actions_insurance_policy_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/insurance_policy:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_insurance_policy_edit_api_actions_insurance_policy_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/insurance_policy:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_insurance_policy_delete_api_actions_insurance_policy_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incorporeal_right:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incorporeal_right_create_api_actions_incorporeal_right_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incorporeal_right:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incorporeal_right_edit_api_actions_incorporeal_right_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incorporeal_right:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incorporeal_right_delete_api_actions_incorporeal_right_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/assistive_aid:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_assistive_aid_set_api_actions_assistive_aid_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/assistive_aid:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_assistive_aid_edit_api_actions_assistive_aid_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/assistive_aid:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_assistive_aid_delete_api_actions_assistive_aid_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/public_clock:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_public_clock_set_api_actions_public_clock_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/public_clock:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_public_clock_edit_api_actions_public_clock_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/public_clock:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_public_clock_delete_api_actions_public_clock_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/game:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_game_create_api_actions_game_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/game:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_game_edit_api_actions_game_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/game:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_game_delete_api_actions_game_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/game_following:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_game_following_set_api_actions_game_following_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/game_following:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_game_following_edit_api_actions_game_following_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/game_following:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_game_following_delete_api_actions_game_following_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/number_system:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_number_system_set_api_actions_number_system_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/number_system:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_number_system_edit_api_actions_number_system_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/number_system:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_number_system_delete_api_actions_number_system_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/material_affinity:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_material_affinity_set_api_actions_material_affinity_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/material_affinity:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_material_affinity_edit_api_actions_material_affinity_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/material_affinity:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_material_affinity_delete_api_actions_material_affinity_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sympathetic_link:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sympathetic_link_create_api_actions_sympathetic_link_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sympathetic_link:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sympathetic_link_edit_api_actions_sympathetic_link_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sympathetic_link:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sympathetic_link_delete_api_actions_sympathetic_link_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/emotion_spirit:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_emotion_spirit_create_api_actions_emotion_spirit_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/emotion_spirit:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_emotion_spirit_edit_api_actions_emotion_spirit_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/emotion_spirit:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_emotion_spirit_delete_api_actions_emotion_spirit_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/trades:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_trades_run_api_actions_trades_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/learning_aids:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_learning_aids_run_api_actions_learning_aids_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sympathies:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sympathies_run_api_actions_sympathies_run_post']
     delete?: never
     options?: never
     head?: never
@@ -34794,6 +35482,19 @@ export interface components {
       court: components['schemas']['CourtView'] | null
       positions: components['schemas']['PositionView'][]
     }
+    AffinityMaterialChoice: {
+      id: number
+      name: string
+    }
+    AffinityMode: 'consumed' | 'worn' | 'inscribed' | 'ground'
+    AffinityView: {
+      material_id: number
+      material: string
+      school: components['schemas']['MagicSchool']
+      mode: components['schemas']['AffinityMode']
+      power: number
+      locked: string[]
+    }
     AfflictionCureInput: {
       affliction_id: number
       how?: components['schemas']['CureKind'] | null
@@ -35032,6 +35733,12 @@ export interface components {
       workshops: components['schemas']['UnbrandedWorkshopView'][]
     }
     AidKind: 'goods' | 'healers' | 'labour'
+    AidView: {
+      kind: components['schemas']['AssistiveAid']
+      quality: number
+      since_epoch: number
+      locked: string[]
+    }
     AimOrder: {
       kind: components['schemas']['WarAimKind']
       params?: {
@@ -35922,6 +36629,25 @@ export interface components {
       fear_kinds: components['schemas']['LabelView'][]
       focuses: components['schemas']['LabelView'][]
       inspiration_kinds: components['schemas']['LabelView'][]
+    }
+    AssistiveAid:
+      'spectacles' | 'magnifier' | 'telescope' | 'hearing_horn' | 'cane'
+    AssistiveAidDeleteInput: {
+      holder_id: number
+      kind: components['schemas']['AssistiveAid']
+    }
+    AssistiveAidEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      holder_id: number
+      kind: components['schemas']['AssistiveAid']
+    }
+    AssistiveAidSetInput: {
+      holder_id: number
+      kind: components['schemas']['AssistiveAid']
+      quality: number
     }
     AstronomyRecordView: {
       id: number
@@ -37645,6 +38371,29 @@ export interface components {
       creature_traits: components['schemas']['Labelled'][]
       passions: components['schemas']['Labelled'][]
     }
+    CatchGround: 'fishery' | 'trapping' | 'fowling' | 'marine_hunt'
+    CatchGroundDeleteInput: {
+      source_id: number
+      region_id: number
+    }
+    CatchGroundEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      source_id: number
+      region_id: number
+    }
+    CatchGroundSetInput: {
+      source_id: number
+      region_id: number
+      ground: components['schemas']['CatchGround']
+      gear: components['schemas']['Gear']
+      right: components['schemas']['CatchRight']
+      owner_node_id?: number | null
+      effort: number
+    }
+    CatchRight: 'commons' | 'owned'
     CategoryCount: {
       category: components['schemas']['NotificationCategory']
       total: number
@@ -37867,6 +38616,44 @@ export interface components {
     }
     ChatRequest: {
       text: string
+    }
+    ChemicalProduct:
+      | 'dye'
+      | 'soap'
+      | 'mordant'
+      | 'tanning'
+      | 'fertiliser'
+      | 'medicine'
+      | 'incendiary'
+      | 'explosive'
+    ChemicalWorksDeleteInput: {
+      settlement_id: number
+      product: components['schemas']['ChemicalProduct']
+    }
+    ChemicalWorksEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      settlement_id: number
+      product: components['schemas']['ChemicalProduct']
+    }
+    ChemicalWorksSetInput: {
+      settlement_id: number
+      product: components['schemas']['ChemicalProduct']
+      output: number
+      hazard: number
+      pollution: number
+    }
+    ChemicalWorksView: {
+      settlement: components['schemas']['NodeRef']
+      product: components['schemas']['ChemicalProduct']
+      output: number
+      hazard: number
+      pollution: number
+      accidents: number
+      founded_epoch: number
+      locked: string[]
     }
     ChronicleAuditFinding: {
       kind: components['schemas']['ChronicleAuditKind']
@@ -38336,6 +39123,19 @@ export interface components {
       share_pct: number
     }
     ClimateTurn: 'warmer' | 'colder' | 'wetter' | 'drier'
+    ClockKind:
+      | 'sundial'
+      | 'water_clock'
+      | 'sand_glass'
+      | 'candle_clock'
+      | 'mechanical'
+      | 'astronomical'
+    ClockView: {
+      kind: components['schemas']['ClockKind']
+      precision: number
+      built_epoch: number
+      locked: string[]
+    }
     ClubCreateInput: {
       town_id: number
       kind?: components['schemas']['ClubKind'] | null
@@ -39672,6 +40472,25 @@ export interface components {
       coverage: number
       epoch: number
       locked: string[]
+    }
+    CraftsNodeView: {
+      node: components['schemas']['NodeRef']
+      people: components['schemas']['NodeRef'] | null
+      region: components['schemas']['NodeRef'] | null
+      grounds: components['schemas']['GroundView'][]
+      works: components['schemas']['ChemicalWorksView'][]
+      insurer: components['schemas']['InsurerView'] | null
+      policies: components['schemas']['InsurancePolicyView'][]
+      rights: components['schemas']['HeldRightView'][]
+      aids: components['schemas']['AidView'][]
+      clock: components['schemas']['ClockView'] | null
+      followings: components['schemas']['FollowingView'][]
+      numbers: components['schemas']['NumbersView'] | null
+      affinities: components['schemas']['AffinityView'][]
+      links: components['schemas']['LinkView'][]
+      spirits: components['schemas']['SpiritView'][]
+      materials: components['schemas']['AffinityMaterialChoice'][]
+      games: components['schemas']['GameChoice'][]
     }
     CravingImmunityView: {
       community: components['schemas']['NodeRef']
@@ -42285,6 +43104,23 @@ export interface components {
       label: string
       valence: number
     }
+    EmotionSpiritCreateInput: {
+      region_entity_id: number
+      emotion: components['schemas']['Emotion']
+      strength: number
+      lifetime: number
+      bound_by_node_id?: number | null
+    }
+    EmotionSpiritDeleteInput: {
+      record_id: number
+    }
+    EmotionSpiritEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
     EmotionTotalView: {
       emotion: components['schemas']['Emotion']
       label: string
@@ -44563,6 +45399,12 @@ export interface components {
       accusations: components['schemas']['AccusationView'][]
       hunts: components['schemas']['HuntView'][]
     }
+    FollowingView: {
+      game: components['schemas']['GameView']
+      popularity: number
+      adopted_epoch: number
+      locked: string[]
+    }
     FoodLink: 'pinned' | 'barred' | 'derived'
     FoodWeb: {
       region_id: number
@@ -45194,6 +46036,44 @@ export interface components {
       | 'hollow'
       | 'ember'
       | 'veiled'
+    GameChoice: {
+      id: number
+      name: string
+    }
+    GameCreateInput: {
+      name: string
+      kind: components['schemas']['GameKind']
+      rule: components['schemas']['GameRule']
+      origin_entity_id?: number | null
+    }
+    GameDeleteInput: {
+      record_id: number
+    }
+    GameEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    GameFollowingDeleteInput: {
+      people_id: number
+      game_id: number
+    }
+    GameFollowingEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      people_id: number
+      game_id: number
+    }
+    GameFollowingSetInput: {
+      people_id: number
+      game_id: number
+      popularity: number
+    }
+    GameKind: 'board' | 'dice' | 'cards' | 'ball' | 'wrestling'
     GameReserveDeclareInput: {
       region_id: number
       holder_id: number
@@ -45219,6 +46099,16 @@ export interface components {
       poaching: number
       resentment: number
       since_epoch: number
+      locked: string[]
+    }
+    GameRule: 'strategy' | 'chance' | 'physical'
+    GameView: {
+      id: number
+      name: string
+      kind: components['schemas']['GameKind']
+      rule: components['schemas']['GameRule']
+      origin: components['schemas']['NodeRef'] | null
+      created_epoch: number
       locked: string[]
     }
     GateNeed: {
@@ -45314,6 +46204,7 @@ export interface components {
       guests: components['schemas']['GuestView'][]
     }
     GazeKind: 'terror' | 'petrify' | 'sleep' | 'madness'
+    Gear: 'lines' | 'nets' | 'weirs' | 'traps' | 'snares' | 'harpoons'
     GeasBreakInput: {
       geas_id: number
     }
@@ -45928,6 +46819,19 @@ export interface components {
       stage_epoch: number
       length_epochs: number
     }
+    GroundView: {
+      source: components['schemas']['NodeRef']
+      region: components['schemas']['NodeRef']
+      ground: components['schemas']['CatchGround']
+      gear: components['schemas']['Gear']
+      right: components['schemas']['CatchRight']
+      owner: components['schemas']['NodeRef'] | null
+      effort: number
+      collapse_at: number
+      collapsed: boolean
+      last_catch: number
+      locked: string[]
+    }
     GroupKind: 'household' | 'court' | 'circle' | 'warband' | 'crew'
     GroupSectionView: {
       section: components['schemas']['VehicleSection']
@@ -46088,6 +46992,17 @@ export interface components {
       entity_id: number | null
       name: string | null
       strength: number
+    }
+    HeldRightView: {
+      id: number
+      holder: components['schemas']['NodeRef']
+      kind: components['schemas']['RightKind']
+      subject: components['schemas']['NodeRef'] | null
+      name: string
+      acquired: components['schemas']['RightAcquired']
+      licensed_to: components['schemas']['NodeRef'] | null
+      since_epoch: number
+      locked: string[]
     }
     HeraldicCharge:
       | 'none'
@@ -47201,6 +48116,24 @@ export interface components {
       battles: number
       held: boolean
     }
+    IncorporealRightCreateInput: {
+      holder_node_id: number
+      kind: components['schemas']['RightKind']
+      subject_node_id?: number | null
+      name: string
+      acquired: components['schemas']['RightAcquired']
+      licensed_to_node_id?: number | null
+    }
+    IncorporealRightDeleteInput: {
+      record_id: number
+    }
+    IncorporealRightEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
     IndentureCreateInput: {
       community_id: number
       regime: components['schemas']['LabourRegime']
@@ -47444,6 +48377,61 @@ export interface components {
       kill_token: components['schemas']['NodeRef'] | null
       literalness: number
       orders: components['schemas']['InstructionOrderView'][]
+      locked: string[]
+    }
+    InsuranceCover: 'cargo' | 'house' | 'life'
+    InsurancePolicyCreateInput: {
+      insurer_entity_id: number
+      holder_node_id: number
+      cover: components['schemas']['InsuranceCover']
+      premium: number
+      sum_insured: number
+    }
+    InsurancePolicyDeleteInput: {
+      record_id: number
+    }
+    InsurancePolicyEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    InsurancePolicyView: {
+      id: number
+      insurer: components['schemas']['NodeRef']
+      holder: components['schemas']['NodeRef']
+      cover: components['schemas']['InsuranceCover']
+      premium: number
+      sum_insured: number
+      active: boolean
+      since_epoch: number
+      claims: number
+      locked: string[]
+    }
+    InsurerDeleteInput: {
+      insurer_id: number
+    }
+    InsurerEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      insurer_id: number
+    }
+    InsurerSetInput: {
+      insurer_id: number
+      pool: number
+      risk_belief: number
+      premium_pct: number
+    }
+    InsurerView: {
+      insurer: components['schemas']['NodeRef']
+      pool: number
+      risk_belief: number
+      premium_pct: number
+      ruined: boolean
+      claims_seen: number
       locked: string[]
     }
     IntegrityResult: {
@@ -49243,6 +50231,16 @@ export interface components {
       label: string
       kinds: string[]
     }
+    LinkToken: 'hair' | 'blood' | 'name' | 'portrait' | 'fragment'
+    LinkView: {
+      id: number
+      holder: components['schemas']['NodeRef']
+      target: components['schemas']['NodeRef']
+      token: components['schemas']['LinkToken']
+      strength: number
+      obtained_epoch: number
+      locked: string[]
+    }
     LinkedRecord: {
       id: number
       name: string
@@ -50179,6 +51177,24 @@ export interface components {
       riot: boolean
       epoch: number
       locked: string[]
+    }
+    MaterialAffinityDeleteInput: {
+      material_id: number
+      school: components['schemas']['MagicSchool']
+    }
+    MaterialAffinityEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      material_id: number
+      school: components['schemas']['MagicSchool']
+    }
+    MaterialAffinitySetInput: {
+      material_id: number
+      school: components['schemas']['MagicSchool']
+      mode: components['schemas']['AffinityMode']
+      power: number
     }
     MaterialChoice: {
       id: number
@@ -51653,6 +52669,8 @@ export interface components {
       | 'make_charm'
       | 'join_cooperative'
       | 'seek_citizenship'
+      | 'buy_insurance'
+      | 'invent_game'
     MortalTurnFinishedEvent: {
       id: number
       kind: 'mortal.turn_finished'
@@ -52289,6 +53307,7 @@ export interface components {
       region_id: number | null
       legend_id?: number | null
     }
+    Notation: 'additive' | 'positional'
     NoteRequest: {
       title: string
       body?: string | null
@@ -52361,6 +53380,30 @@ export interface components {
       entity_ids?: number[]
     }
     NumberSystem: 'none' | 'singular_plural' | 'dual' | 'trial' | 'paucal'
+    NumberSystemDeleteInput: {
+      people_id: number
+    }
+    NumberSystemEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      people_id: number
+    }
+    NumberSystemSetInput: {
+      people_id: number
+      base: number
+      notation: components['schemas']['Notation']
+      zero: boolean
+      numeracy: number
+    }
+    NumbersView: {
+      base: number
+      notation: components['schemas']['Notation']
+      zero: boolean
+      numeracy: number
+      locked: string[]
+    }
     Nutrient:
       | 'energy'
       | 'protein'
@@ -54944,6 +55987,21 @@ export interface components {
       epoch: number
       world_material_id?: number | null
     }
+    PublicClockDeleteInput: {
+      settlement_id: number
+    }
+    PublicClockEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      settlement_id: number
+    }
+    PublicClockSetInput: {
+      settlement_id: number
+      kind: components['schemas']['ClockKind']
+      precision: number
+    }
     PublicOpinionView: {
       community: components['schemas']['NodeRef'] | null
       subject: components['schemas']['NodeRef'] | null
@@ -56606,6 +57664,18 @@ export interface components {
       rift_id: number
     }
     RiftState: 'opening' | 'open' | 'closing' | 'sealed' | 'collapsed'
+    RightAcquired:
+      'created' | 'inherited' | 'bought' | 'licensed' | 'stolen' | 'granted'
+    RightKind:
+      | 'song'
+      | 'dance'
+      | 'story'
+      | 'rite'
+      | 'design'
+      | 'name'
+      | 'title'
+      | 'trademark'
+      | 'market_privilege'
     RiteCard: {
       school: components['schemas']['MagicSchool']
       source: components['schemas']['MagicSource']
@@ -58860,6 +59930,8 @@ export interface components {
       | 'stir_witch_hunt'
       | 'stir_revival'
       | 'proclaim_right'
+      | 'wake_spirit'
+      | 'lay_affinity'
     SonToolsView: {
       son_id: number
       rarity: components['schemas']['Rarity']
@@ -59433,6 +60505,16 @@ export interface components {
       kind: 'spirit'
       strength?: number | null
       unrest?: number | null
+    }
+    SpiritView: {
+      id: number
+      region: components['schemas']['NodeRef']
+      emotion: components['schemas']['Emotion']
+      strength: number
+      born_epoch: number
+      lifetime: number
+      bound_by: components['schemas']['NodeRef'] | null
+      locked: string[]
     }
     SpokenIntent:
       | 'friendship'
@@ -60640,6 +61722,22 @@ export interface components {
       observer_id: number
       world_id: number
       level: components['schemas']['SurveyLevel']
+    }
+    SympatheticLinkCreateInput: {
+      holder_node_id: number
+      target_node_id: number
+      token: components['schemas']['LinkToken']
+      strength: number
+    }
+    SympatheticLinkDeleteInput: {
+      record_id: number
+    }
+    SympatheticLinkEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
     }
     SystemErrorEvent: {
       id: number
@@ -74914,6 +76012,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['FolkwaysNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_crafts_api_crafts_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CraftsNodeView']
         }
       }
       default: {
@@ -89501,6 +90628,1296 @@ export interface operations {
         'application/json': components['schemas']['WitchHuntDeleteInput']
       }
     }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_catch_ground_set_api_actions_catch_ground_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatchGroundSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_catch_ground_edit_api_actions_catch_ground_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatchGroundEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_catch_ground_delete_api_actions_catch_ground_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatchGroundDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_chemical_works_set_api_actions_chemical_works_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChemicalWorksSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_chemical_works_edit_api_actions_chemical_works_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChemicalWorksEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_chemical_works_delete_api_actions_chemical_works_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChemicalWorksDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_insurer_set_api_actions_insurer_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InsurerSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_insurer_edit_api_actions_insurer_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InsurerEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_insurer_delete_api_actions_insurer_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InsurerDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_insurance_policy_create_api_actions_insurance_policy_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InsurancePolicyCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_insurance_policy_edit_api_actions_insurance_policy_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InsurancePolicyEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_insurance_policy_delete_api_actions_insurance_policy_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InsurancePolicyDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incorporeal_right_create_api_actions_incorporeal_right_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncorporealRightCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incorporeal_right_edit_api_actions_incorporeal_right_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncorporealRightEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incorporeal_right_delete_api_actions_incorporeal_right_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncorporealRightDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_assistive_aid_set_api_actions_assistive_aid_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssistiveAidSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_assistive_aid_edit_api_actions_assistive_aid_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssistiveAidEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_assistive_aid_delete_api_actions_assistive_aid_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssistiveAidDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_public_clock_set_api_actions_public_clock_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PublicClockSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_public_clock_edit_api_actions_public_clock_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PublicClockEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_public_clock_delete_api_actions_public_clock_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PublicClockDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_game_create_api_actions_game_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GameCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_game_edit_api_actions_game_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GameEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_game_delete_api_actions_game_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GameDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_game_following_set_api_actions_game_following_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GameFollowingSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_game_following_edit_api_actions_game_following_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GameFollowingEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_game_following_delete_api_actions_game_following_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GameFollowingDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_number_system_set_api_actions_number_system_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NumberSystemSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_number_system_edit_api_actions_number_system_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NumberSystemEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_number_system_delete_api_actions_number_system_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NumberSystemDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_material_affinity_set_api_actions_material_affinity_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MaterialAffinitySetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_material_affinity_edit_api_actions_material_affinity_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MaterialAffinityEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_material_affinity_delete_api_actions_material_affinity_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MaterialAffinityDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sympathetic_link_create_api_actions_sympathetic_link_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SympatheticLinkCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sympathetic_link_edit_api_actions_sympathetic_link_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SympatheticLinkEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sympathetic_link_delete_api_actions_sympathetic_link_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SympatheticLinkDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_emotion_spirit_create_api_actions_emotion_spirit_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EmotionSpiritCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_emotion_spirit_edit_api_actions_emotion_spirit_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EmotionSpiritEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_emotion_spirit_delete_api_actions_emotion_spirit_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EmotionSpiritDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_trades_run_api_actions_trades_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_learning_aids_run_api_actions_learning_aids_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sympathies_run_api_actions_sympathies_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
     responses: {
       200: {
         headers: {
@@ -131261,6 +133678,9 @@ export const actorKindValues: ReadonlyArray<
 export const aestheticValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Aesthetic']
 > = ['austere', 'ornate', 'geometric', 'natural', 'macabre', 'celestial']
+export const affinityModeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AffinityMode']
+> = ['consumed', 'worn', 'inscribed', 'ground']
 export const afterlifeModelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AfterlifeModel']
 > = [
@@ -131462,6 +133882,9 @@ export const artMediumValues: ReadonlyArray<
 export const artworkStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArtworkStats']['kind']
 > = ['artwork']
+export const assistiveAidValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AssistiveAid']
+> = ['spectacles', 'magnifier', 'telescope', 'hearing_horn', 'cane']
 export const atmosphereValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Atmosphere']
 > = ['none', 'thin', 'normal', 'dense', 'toxic']
@@ -131967,6 +134390,12 @@ export const casusBelliKindValues: ReadonlyArray<
   'resource_need',
   'conquest',
 ]
+export const catchGroundValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CatchGround']
+> = ['fishery', 'trapping', 'fowling', 'marine_hunt']
+export const catchRightValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CatchRight']
+> = ['commons', 'owned']
 export const causalityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Causality']
 > = ['strict', 'loose', 'broken']
@@ -131999,6 +134428,18 @@ export const charmPowerValues: ReadonlyArray<
 export const chatAttitudeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChatAttitude']
 > = ['loyal', 'distant', 'rebellious', 'afraid', 'grateful', 'mocking']
+export const chemicalProductValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ChemicalProduct']
+> = [
+  'dye',
+  'soap',
+  'mordant',
+  'tanning',
+  'fertiliser',
+  'medicine',
+  'incendiary',
+  'explosive',
+]
 export const chronicleAuditKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChronicleAuditKind']
 > = [
@@ -132148,6 +134589,16 @@ export const climateEraValues: ReadonlyArray<
 export const climateTurnValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClimateTurn']
 > = ['warmer', 'colder', 'wetter', 'drier']
+export const clockKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ClockKind']
+> = [
+  'sundial',
+  'water_clock',
+  'sand_glass',
+  'candle_clock',
+  'mechanical',
+  'astronomical',
+]
 export const clubKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClubKind']
 > = ['team_game', 'racing', 'combat', 'athletics']
@@ -134213,6 +136664,12 @@ export const galaxyTypeValues: ReadonlyArray<
   'ember',
   'veiled',
 ]
+export const gameKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GameKind']
+> = ['board', 'dice', 'cards', 'ball', 'wrestling']
+export const gameRuleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GameRule']
+> = ['strategy', 'chance', 'physical']
 export const gatheringKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GatheringKind']
 > = [
@@ -134251,6 +136708,9 @@ export const gatheringStatusValues: ReadonlyArray<
 export const gazeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GazeKind']
 > = ['terror', 'petrify', 'sleep', 'madness']
+export const gearValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Gear']
+> = ['lines', 'nets', 'weirs', 'traps', 'snares', 'harpoons']
 export const geasLayerValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GeasLayer']
 > = ['seer', 'god', 'rite']
@@ -134899,6 +137359,9 @@ export const inspirationStateValues: ReadonlyArray<
 export const instructionBindingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InstructionBinding']
 > = ['none', 'order', 'oath', 'geas', 'seal', 'ownership', 'lease', 'symbiosis']
+export const insuranceCoverValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['InsuranceCover']
+> = ['cargo', 'house', 'life']
 export const integrityTaskValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IntegrityTask']
 > = ['dead_bonds', 'checkpoint']
@@ -135375,6 +137838,9 @@ export const linkGroupValues: ReadonlyArray<
   'lineage',
   'knowledge',
 ]
+export const linkTokenValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LinkToken']
+> = ['hair', 'blood', 'name', 'portrait', 'fragment']
 export const llmCallKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LlmCallKind']
 > = ['agent', 'structured']
@@ -136121,6 +138587,8 @@ export const mortalToolIdValues: ReadonlyArray<
   'make_charm',
   'join_cooperative',
   'seek_citizenship',
+  'buy_insurance',
+  'invent_game',
 ]
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalTurnFinishedEvent']['kind']
@@ -136321,6 +138789,9 @@ export const normSituationValues: ReadonlyArray<
 export const notableYearKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NotableYearKind']
 > = ['hunger', 'plenty', 'weather', 'pestilence']
+export const notationValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Notation']
+> = ['additive', 'positional']
 export const notificationCategoryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NotificationCategory']
 > = [
@@ -137327,6 +139798,22 @@ export const riftCauseValues: ReadonlyArray<
 export const riftStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiftState']
 > = ['opening', 'open', 'closing', 'sealed', 'collapsed']
+export const rightAcquiredValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RightAcquired']
+> = ['created', 'inherited', 'bought', 'licensed', 'stolen', 'granted']
+export const rightKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RightKind']
+> = [
+  'song',
+  'dance',
+  'story',
+  'rite',
+  'design',
+  'name',
+  'title',
+  'trademark',
+  'market_privilege',
+]
 export const riteEffectKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteEffectKind']
 > = [
@@ -138074,6 +140561,8 @@ export const sonToolIdValues: ReadonlyArray<
   'stir_witch_hunt',
   'stir_revival',
   'proclaim_right',
+  'wake_spirit',
+  'lay_affinity',
 ]
 export const sonTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnFinishedEvent']['kind']

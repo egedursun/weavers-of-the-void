@@ -29,6 +29,7 @@ from aerona.engine.body.book import effective
 from aerona.engine.body.customs import people_of
 from aerona.engine.communication.post import herald_war
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.timekeeping import clock_muster
 from aerona.engine.customs.grades import warriors_ready
 from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
@@ -458,6 +459,7 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     folk = await people_of(ctx.session, community)
     if await warriors_ready(ctx.session, folk.id if folk is not None else None):
         share *= 1 + ctx.rules.age_sets.warrior_levy_pct / PERCENT
+    share *= await clock_muster(ctx.session, ctx.rules, community.id)
     wanted = clamp_int(soldier_count(ctx.rules, strength, community) * share, campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)
     adults = await fighting_age(ctx.session, community.id, ctx.rules)
     if adults is not None:

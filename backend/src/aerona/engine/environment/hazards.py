@@ -12,11 +12,13 @@ from aerona.db.tables.region import RegionHazardRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind, WeatherEffect
 from aerona.domain.enums.region import HazardSeason, TerrainHazard
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.cover import claim
 from aerona.engine.environment.book import EnvironmentBook, add_scar
 from aerona.engine.environment.succession import burn_back
 from aerona.engine.environment.years import grant_sub_steps, sampled_years
@@ -130,6 +132,7 @@ async def strike(
             with flowing(FlowCategory.DISASTER):
                 set_stats(community, population=population - lost)
             dead += lost
+            await claim(ctx.session, community.id, InsuranceCover.HOUSE, rules.insurance.house_payout)
         mortals = list(
             await ctx.session.scalars(
                 select(EntityRow)

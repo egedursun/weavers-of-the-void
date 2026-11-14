@@ -287,6 +287,9 @@ def open_severity(injuries: list[InjuryRow]) -> int:
 class Reading:
     presence_pct: int = PERCENT
     reader: bool = False
+    hearing_aid: float = 0.0
+    cane: float = 0.0
+    magnifier: float = 0.0
 
 
 async def metallurgy_of(session: AsyncSession, bearer_id: int, community_id: int | None) -> int:
@@ -393,9 +396,11 @@ def factors_of(
         afflicted_parts(rules, conditions),
         body.consciousness,
         body.exertion,
-        aid_of(rules, anatomy, injuries),
+        max(aid_of(rules, anatomy, injuries), reading.cane),
         tuple(body.lost_digits),
         body.handedness,
+        reading.hearing_aid,
+        reading.magnifier,
     )
     actual = capacities(rules, stats, state)
     whole = capacities(rules, replace(stats, age=None), BodyState(anatomy, (), FULL_COUNTS, 0))

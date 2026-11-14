@@ -8,6 +8,7 @@ from aerona.db.tables.sacred import EmotionHarvestRow, GodFeedingRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.mind import Emotion
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.haunting import spirit_feelings
 from aerona.engine.divine.book import DivineBook
 
 PERCENT_SCALE = 100
@@ -47,6 +48,13 @@ async def felt_by_god(ctx: TickContext, book: DivineBook) -> dict[int, dict[Emot
         gods, _ = await book.faithful_of(ctx.session, holder)
         for god_id in gods:
             felt[god_id][emotion] += float(intensity)
+    for towns, feeling, amount in await spirit_feelings(ctx.session, ctx.rules):
+        fed: set[int] = set()
+        for town in towns:
+            gods, _ = await book.faithful_of(ctx.session, town)
+            fed |= set(gods)
+        for god_id in fed:
+            felt[god_id][feeling] += amount
     return felt
 
 

@@ -1005,4 +1005,12 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "As a foreigner in your realm, you pay to become its citizen and gain the rights citizens hold. 1 action.",
         {},
     ),
+    T.BUY_INSURANCE: ToolText(
+        "You insure your life with an insurer of your town: you pay a premium each epoch, and when you die it pays your household. 1 action.",
+        {"insurer_id": "The insurer"},
+    ),
+    T.INVENT_GAME: ToolText(
+        "You make up a game for your people and name it in their tongue; it may spread to their neighbours. 1 action.",
+        {"kind": "What sort of game it is"},
+    ),
 }

@@ -24,6 +24,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.agrarian.book import farming_boost
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.reckoning import notation_boost
 from aerona.engine.lore.eras import era_factor
 from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.lore.learning import institution_factor, patron_factor
@@ -151,6 +152,7 @@ async def research_factor(ctx: TickContext, community: EntityRow, branch: Knowle
         * await freedom_factor(ctx.session, ctx.rules, community.id)
         * await school_factor(ctx.session, ctx.rules, community.id)
         * (await farming_boost(ctx.session, community) if branch is KnowledgeBranch.AGRICULTURE else 1.0)
+        * await notation_boost(ctx.session, ctx.rules, community.id, branch)
     )
 
 

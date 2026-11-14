@@ -238,6 +238,8 @@ class SonToolId(StrEnum):
     STIR_WITCH_HUNT = "stir_witch_hunt"
     STIR_REVIVAL = "stir_revival"
     PROCLAIM_RIGHT = "proclaim_right"
+    WAKE_SPIRIT = "wake_spirit"
+    LAY_AFFINITY = "lay_affinity"
 
 
 class MortalToolId(StrEnum):
@@ -397,6 +399,8 @@ class MortalToolId(StrEnum):
     MAKE_CHARM = "make_charm"
     JOIN_COOPERATIVE = "join_cooperative"
     SEEK_CITIZENSHIP = "seek_citizenship"
+    BUY_INSURANCE = "buy_insurance"
+    INVENT_GAME = "invent_game"
 
 
 ToolId = SonToolId | MortalToolId

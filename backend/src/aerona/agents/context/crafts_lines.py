@@ -1,0 +1,94 @@
+from sqlalchemy import select
+
+from aerona.agents.context.cycle_lines import named, words
+from aerona.agents.context.scope import Scope
+from aerona.core.grammar import an
+from aerona.db.tables.crafts import (
+    AssistiveAidRow,
+    ChemicalWorksRow,
+    EmotionSpiritRow,
+    GameFollowingRow,
+    GameRow,
+    IncorporealRightRow,
+    InsurancePolicyRow,
+    NumberSystemRow,
+    PublicClockRow,
+    SympatheticLinkRow,
+)
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.crafts import Notation
+from aerona.engine.body.customs import people_of
+from aerona.engine.primitives.distance import RegionAtlas
+
+LIST_LINES = 3
+
+
+async def people_lines(scope: Scope, folk_id: int) -> list[str]:
+    session = scope.session
+    found: list[str] = []
+    games = await session.execute(
+        select(GameRow, GameFollowingRow.popularity)
+        .join(GameFollowingRow, GameFollowingRow.game_id == GameRow.id)
+        .where(GameFollowingRow.people_entity_id == folk_id)
+        .order_by(GameFollowingRow.popularity.desc(), GameRow.id)
+        .limit(LIST_LINES)
+    )
+    found += [f"your people play {game.name}, {an(words(game.kind.value))} game of {words(game.rule.value)}" for game, _ in games]
+    system = await session.get(NumberSystemRow, folk_id)
+    if system is not None:
+        marks = [*(["with a zero"] if system.zero else []), *(["written by place"] if system.notation is Notation.POSITIONAL else [])]
+        found.append(f"your people count in base {system.base}{(', ' + ' and '.join(marks)) if marks else ''}; numeracy {system.numeracy} of 100")
+    return found
+
+
+async def mortal_crafts_lines(scope: Scope, me: EntityRow) -> list[str]:
+    session = scope.session
+    found: list[str] = []
+    for aid in await session.scalars(select(AssistiveAidRow).where(AssistiveAidRow.holder_node_id == me.id).order_by(AssistiveAidRow.kind)):
+        found.append(f"you have {words(aid.kind.value)}")
+    for right in await session.scalars(
+        select(IncorporealRightRow).where(IncorporealRightRow.holder_node_id == me.id).order_by(IncorporealRightRow.id).limit(LIST_LINES)
+    ):
+        found.append(f"you hold the right to {right.name} ({words(right.kind.value)})")
+    for policy in await session.scalars(
+        select(InsurancePolicyRow).where(InsurancePolicyRow.holder_node_id == me.id, InsurancePolicyRow.active.is_(True)).order_by(InsurancePolicyRow.id)
+    ):
+        found.append(f"your {words(policy.cover.value)} is insured with {await named(scope, policy.insurer_entity_id)}")
+    for link in await session.scalars(
+        select(SympatheticLinkRow).where(SympatheticLinkRow.holder_node_id == me.id).order_by(SympatheticLinkRow.id).limit(LIST_LINES)
+    ):
+        found.append(f"you hold {words(link.token.value)} that links you to {await named(scope, link.target_node_id)}")
+    folk = await people_of(session, me)
+    if folk is not None:
+        found += await people_lines(scope, folk.id)
+    if me.location_id is not None:
+        clock = await session.get(PublicClockRow, me.location_id)
+        if clock is not None:
+            found.append(f"your town keeps its hours by {an('public ' + words(clock.kind.value))}")
+        for works in await session.scalars(
+            select(ChemicalWorksRow).where(ChemicalWorksRow.settlement_entity_id == me.location_id).order_by(ChemicalWorksRow.product)
+        ):
+            found.append(f"your town has works for {words(works.product.value)}")
+    region = (await RegionAtlas.load(session)).top_region(me.id)
+    if region is not None:
+        for spirit in await session.scalars(
+            select(EmotionSpiritRow).where(EmotionSpiritRow.region_entity_id == region).order_by(EmotionSpiritRow.id).limit(LIST_LINES)
+        ):
+            found.append(f"a spirit of {words(spirit.emotion.value)} haunts your land")
+    return found
+
+
+async def son_crafts_lines(scope: Scope, son: SonRow) -> list[str]:
+    if son.current_world_id is None:
+        return []
+    lands = select(EntityRow.id).where(EntityRow.world_id == son.current_world_id)
+    found: list[str] = []
+    for spirit in await scope.session.scalars(
+        select(EmotionSpiritRow)
+        .where(EmotionSpiritRow.region_entity_id.in_(lands))
+        .order_by(EmotionSpiritRow.strength.desc(), EmotionSpiritRow.id)
+        .limit(LIST_LINES)
+    ):
+        found.append(f"a spirit of {words(spirit.emotion.value)} in {await named(scope, spirit.region_entity_id)} (strength {spirit.strength})")
+    return found

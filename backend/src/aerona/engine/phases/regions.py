@@ -140,6 +140,7 @@ async def danger_harm(ctx: TickContext) -> None:
     "settlement.population",
     "table.army_profiles",
     "table.army_units",
+    "table.assistive_aids",
     "table.avatars",
     "table.bodies",
     "table.body_customs",

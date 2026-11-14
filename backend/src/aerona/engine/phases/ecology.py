@@ -14,6 +14,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.catch import trap_factors
 from aerona.engine.ecology.domestication import domestic_head
 from aerona.engine.ecology.extinction import cascade
 from aerona.engine.ecology.foodweb import appetites
@@ -161,7 +162,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     web = await food_web(ctx, species)
     prey_of = {key: [item.id for item in rows] for key, rows in web.prey_of.items()}
     hunters_of = {key: [item.id for item in rows] for key, rows in web.hunters_of.items()}
-    range_marks = RangeMarks(marks.megafauna, marks.protected, marks.invasive)
+    range_marks = RangeMarks(marks.megafauna, marks.protected, marks.invasive, await trap_factors(ctx.session, ctx.rules))
     planned = [
         (row, plan(ctx, wilds, item, row, hunters_of=hunters_of, prey_of=prey_of, marks=range_marks))
         for item in species
@@ -197,6 +198,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "species.strength",
     "spirit.unrest",
     "table.bonds",
+    "table.catch_grounds",
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.entity_flags",

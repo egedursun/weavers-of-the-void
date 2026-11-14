@@ -1,0 +1,309 @@
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.body import ConditionRow
+from aerona.db.tables.crafts import (
+    AssistiveAidRow,
+    CatchGroundRow,
+    ChemicalWorksRow,
+    EmotionSpiritRow,
+    GameFollowingRow,
+    GameRow,
+    IncorporealRightRow,
+    InsurancePolicyRow,
+    InsurerRow,
+    MaterialAffinityRow,
+    NumberSystemRow,
+    PublicClockRow,
+    SympatheticLinkRow,
+)
+from aerona.db.tables.culture import ArtworkProfileRow, HolderTechniqueRow
+from aerona.db.tables.customs import EvidenceRow
+from aerona.db.tables.economy import CommunityStockRow, ResourceProfileRow, WorldMaterialRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.folkways import AccusationRow
+from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
+from aerona.db.tables.justice import CrimeCaseRow
+from aerona.db.tables.mind import SkillRow, ThoughtRow
+from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.domain.enums.body import ConditionKind, HarmCause
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.crafts import (
+    AffinityMode,
+    AssistiveAid,
+    CatchGround,
+    ChemicalProduct,
+    ClockKind,
+    GameKind,
+    GameRule,
+    Gear,
+    InsuranceCover,
+    LinkToken,
+    RightAcquired,
+    RightKind,
+)
+from aerona.domain.enums.culture import ArtMedium, MagicSchool, Technique
+from aerona.domain.enums.customs import EvidenceKind
+from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.genetics import HouseholdRole
+from aerona.domain.enums.justice import CaseStage
+from aerona.domain.enums.mind import Emotion, SkillKind, ThoughtKind
+from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.settlement import SizeTier
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.models.entity_stats import ArtworkStats, ResourceStats
+from aerona.engine.body.state import has_reader, reading_of
+from aerona.engine.context import TickContext
+from aerona.engine.crafts.aids import AidTally, keep_aids
+from aerona.engine.crafts.catch import catch_factor, regrowth_scale, trap_factors
+from aerona.engine.crafts.chemistry import ChemistryTally, keep_chemistry
+from aerona.engine.crafts.clocks import ClockTally, keep_clocks
+from aerona.engine.crafts.cover import cargo_holders, claim
+from aerona.engine.crafts.games import GameTally, keep_games
+from aerona.engine.crafts.grounds import GroundTally, keep_grounds
+from aerona.engine.crafts.haunting import bind_spirit, spirit_feelings
+from aerona.engine.crafts.heirs import pass_rights
+from aerona.engine.crafts.insurance import InsuranceTally, keep_insurance
+from aerona.engine.crafts.linking import affinity_value, link_boost, link_strength
+from aerona.engine.crafts.numbers import NumberTally, keep_numbers
+from aerona.engine.crafts.reckoning import notation_boost, reckoned
+from aerona.engine.crafts.rights import RightsTally, keep_rights
+from aerona.engine.crafts.spirits import SpiritTally, keep_spirits
+from aerona.engine.crafts.sympathy import SympathyTally, keep_sympathy
+from aerona.engine.crafts.timekeeping import clock_muster, clock_output
+from aerona.engine.crafts.works import blasted, fertilised, soap_relief
+from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.queries import has_flag
+from aerona.engine.primitives.stats import set_stats, stat
+from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
+
+
+async def at(session: AsyncSession, epoch: int, **rules: dict[str, int]) -> TickContext:
+    cosmos = await CosmosRepository(session).require_cosmos()
+    cosmos.epoch = epoch
+    await session.flush()
+    return await manual_context(session, "crafts", rules=tuned_rules(**rules))
+
+
+async def home(session: AsyncSession, world: CoreWorld, name: str, *techniques: Technique) -> EntityRow:
+    town = await settlement(session, name, world, world.regions[0])
+    town.affiliated_entity_id = world.people.id
+    await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
+    session.add(SettlementProfileRow(settlement_entity_id=town.id, size_tier=SizeTier.TOWN))
+    session.add_all([HolderTechniqueRow(holder_entity_id=town.id, technique=technique) for technique in techniques])
+    await session.flush()
+    return town
+
+
+async def test_a_fishing_ground_takes_its_catch_from_gear_and_collapses_when_worked_out(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules()
+    water = await entity(session, "Cold Shoals", EntityType.RESOURCE, ResourceStats(abundance=60), world_id=world.world.id, location_id=world.regions[0].id)
+    profile = ResourceProfileRow(
+        resource_entity_id=water.id, commodity=CommodityKind.FISH, reserve=100, initial_reserve=100, richness=50, extraction_difficulty=10, quality=50
+    )
+    session.add(profile)
+    await session.flush()
+    await keep_grounds(await at(session, 3, grounds={"marine_hunt_chance": 0, "owned_chance": 0}), GroundTally())
+    ground = await session.scalar(select(CatchGroundRow).where(CatchGroundRow.source_entity_id == water.id))
+    assert ground is not None and ground.ground is CatchGround.FISHERY and ground.gear in {Gear.LINES, Gear.NETS, Gear.WEIRS}
+    pct = {Gear.LINES: rules.grounds.lines_pct, Gear.NETS: rules.grounds.nets_pct, Gear.WEIRS: rules.grounds.weirs_pct}[ground.gear]
+    assert await catch_factor(session, rules, water.id) == pct / 100
+    profile.reserve = 10
+    tally = GroundTally()
+    await keep_grounds(await at(session, 4), tally)
+    assert ground.collapsed and tally.collapsed == 1 and await catch_factor(session, rules, water.id) == 0
+    assert await regrowth_scale(session, rules, water.id) == rules.grounds.collapsed_regrowth_pct / 100
+    profile.reserve = 60
+    await keep_grounds(await at(session, 5), tally)
+    assert not ground.collapsed and tally.recovered == 1
+
+
+async def test_a_trapped_range_is_hunted_by_its_gear_and_effort(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules()
+    session.add(
+        CatchGroundRow(
+            source_entity_id=world.people.id, region_entity_id=world.regions[0].id, ground=CatchGround.TRAPPING, gear=Gear.TRAPS, effort=100, locked=[]
+        )
+    )
+    await session.flush()
+    factors = await trap_factors(session, rules)
+    assert factors[(world.people.id, world.regions[0].id)] == rules.grounds.traps_pct / 100 * (0.5 + rules.grounds.effort_pct / 100)
+
+
+async def test_chemical_works_turn_raw_goods_into_their_product_and_their_products_reach_the_town(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules()
+    town = await home(session, world, "Vatham", Technique.HERBALISM)
+    session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.HERBS, quantity=50))
+    await session.flush()
+    tally = ChemistryTally()
+    await keep_chemistry(await at(session, 3, chemistry={"found_chance": 100}), tally)
+    works = await session.get(ChemicalWorksRow, (town.id, ChemicalProduct.DYE))
+    assert works is not None and tally.founded == 1
+    works.output, works.hazard = 50, 0
+    await keep_chemistry(await at(session, 4, chemistry={"found_chance": 0}), tally)
+    dye = await session.scalar(
+        select(func.coalesce(func.sum(CommunityStockRow.quantity), 0)).where(
+            CommunityStockRow.community_entity_id == town.id, CommunityStockRow.commodity == CommodityKind.DYE
+        )
+    )
+    assert works.output == 55 and int(dye or 0) >= 5
+    session.add_all(
+        [
+            ChemicalWorksRow(settlement_entity_id=town.id, product=ChemicalProduct.SOAP, output=100, locked=[]),
+            ChemicalWorksRow(settlement_entity_id=town.id, product=ChemicalProduct.FERTILISER, output=100, locked=[]),
+            ChemicalWorksRow(settlement_entity_id=town.id, product=ChemicalProduct.EXPLOSIVE, output=100, locked=[]),
+        ]
+    )
+    await session.flush()
+    assert (await soap_relief(session, rules))[world.regions[0].id] == rules.chemistry.soap_disease
+    assert await fertilised(session, rules, town.id) > 1 and await blasted(session, rules, town.id) > 1
+
+
+async def test_an_insurer_pays_a_life_from_its_pool_and_a_pool_run_dry_ruins_it(session: AsyncSession, world: CoreWorld) -> None:
+    town = await home(session, world, "Surety")
+    insured = await mortal(session, "Brin", world, town.id)
+    house = HouseholdRow(name="Brin's hearth", settlement_node_id=town.id, locked=[])
+    session.add(house)
+    await session.flush()
+    session.add(HouseholdMemberRow(member_node_id=insured.id, household_id=house.id, role=HouseholdRole.HEAD))
+    session.add(InsurerRow(insurer_entity_id=town.id, pool=2, locked=[]))
+    session.add(InsurancePolicyRow(insurer_entity_id=town.id, holder_node_id=insured.id, cover=InsuranceCover.LIFE, sum_insured=20, locked=[]))
+    session.add(InsurancePolicyRow(insurer_entity_id=town.id, holder_node_id=town.id, cover=InsuranceCover.CARGO, sum_insured=20, locked=[]))
+    await session.flush()
+    assert town.id in await cargo_holders(session)
+    assert await claim(session, insured.id, InsuranceCover.LIFE, 5) == 5 and house.wealth == 5
+    tally = InsuranceTally()
+    await keep_insurance(await at(session, 3, insurance={"found_chance": 0}), tally)
+    insurer = await session.get(InsurerRow, town.id)
+    assert insurer is not None and insurer.ruined and tally.ruined == 1 and insurer.claims_seen == 1
+
+
+async def test_a_work_becomes_its_makers_right_passes_to_the_heir_and_is_taken_with_insult(session: AsyncSession, world: CoreWorld) -> None:
+    town = await home(session, world, "Lyrebury")
+    maker = await mortal(session, "Sael", world, town.id)
+    heir = await mortal(session, "Sael the Younger", world, town.id)
+    await mortal(session, "Tamm", world, town.id)
+    song = await entity(session, "The Long Air", EntityType.ARTWORK, ArtworkStats(renown=40), world_id=world.world.id, location_id=town.id)
+    session.add(ArtworkProfileRow(artwork_entity_id=song.id, medium=ArtMedium.SONG, author_entity_id=maker.id))
+    await session.flush()
+    tally = RightsTally()
+    await keep_rights(await at(session, 3, incorporeal={"infringe_chance": 0}), tally)
+    right = await session.scalar(select(IncorporealRightRow).where(IncorporealRightRow.subject_node_id == song.id))
+    assert right is not None and right.kind is RightKind.SONG and right.holder_node_id == maker.id and tally.claimed >= 1
+    assert await pass_rights(session, maker.id, heir.id, 4) >= 1 and right.holder_node_id == heir.id and right.acquired is RightAcquired.INHERITED
+    heir.location_id = town.id
+    await keep_rights(await at(session, 5, incorporeal={"infringe_chance": 100}), tally)
+    assert tally.infringed >= 1
+
+
+async def test_spectacles_let_the_weak_sighted_read_and_a_cane_restores_walking(session: AsyncSession, world: CoreWorld) -> None:
+    town = await home(session, world, "Glasswick", Technique.ASTRONOMY_INSTRUMENTS)
+    elder = await mortal(session, "Oma", world, town.id, age=68)
+    session.add(ConditionRow(bearer_node_id=elder.id, kind=ConditionKind.AGE_BLINDNESS, severity=3, source=HarmCause.AGE, since_epoch=1))
+    await session.flush()
+    assert not await has_reader(session, elder)
+    tally = AidTally()
+    await keep_aids(await at(session, 3, aids={"fit_chance": 100}), tally)
+    assert await session.get(AssistiveAidRow, (elder.id, AssistiveAid.SPECTACLES)) is not None and tally.fitted == 1
+    assert await has_reader(session, elder)
+    session.add(AssistiveAidRow(holder_node_id=elder.id, kind=AssistiveAid.CANE, quality=100, locked=[]))
+    await session.flush()
+    reading = await reading_of(session, tuned_rules(), elder)
+    assert reading.reader and reading.cane == tuned_rules().aids.cane_aid_pct / 100
+
+
+async def test_a_town_that_keeps_time_sets_up_a_clock_that_raises_output_and_unrest(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules()
+    town = await home(session, world, "Bellhour", Technique.CALENDAR)
+    profile = await session.get(SettlementProfileRow, town.id)
+    assert profile is not None
+    before = profile.unrest
+    tally = ClockTally()
+    await keep_clocks(await at(session, 3, clocks={"build_chance": 100}), tally)
+    clock = await session.get(PublicClockRow, town.id)
+    assert clock is not None and clock.kind is ClockKind.SUNDIAL and tally.built == 1
+    assert await clock_output(session, rules, town.id) > 1 and await clock_muster(session, rules, town.id) > 1 and profile.unrest > before
+
+
+async def test_games_shape_their_followers_by_their_rule(session: AsyncSession, world: CoreWorld) -> None:
+    town = await home(session, world, "Boardham")
+    noble = await mortal(session, "Lord Cass", world, town.id)
+    noble.social_class = SocialClass.NOBLE
+    strategy = GameRow(name="Fourfold", kind=GameKind.BOARD, rule=GameRule.STRATEGY, origin_entity_id=world.people.id, locked=[])
+    chance = GameRow(name="Knucklebones", kind=GameKind.DICE, rule=GameRule.CHANCE, origin_entity_id=world.people.id, locked=[])
+    session.add_all([strategy, chance])
+    await session.flush()
+    session.add_all(
+        [
+            GameFollowingRow(people_entity_id=world.people.id, game_id=strategy.id, popularity=100, locked=[]),
+            GameFollowingRow(people_entity_id=world.people.id, game_id=chance.id, popularity=100, locked=[]),
+        ]
+    )
+    profile = await session.get(SettlementProfileRow, town.id)
+    assert profile is not None
+    crime = profile.crime
+    await session.flush()
+    tally = GameTally()
+    await keep_games(await at(session, 3, games={"invent_chance": 0, "spread_chance": 0, "strategy_xp": 50}), tally)
+    trained = await session.scalar(select(SkillRow).where(SkillRow.holder_node_id == noble.id, SkillRow.skill == SkillKind.TACTICS))
+    assert trained is not None and tally.trained >= 1 and tally.gambled >= 1 and profile.crime > crime
+
+
+async def test_a_people_that_knows_logic_finds_the_zero_and_reckons_sharper(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules()
+    town = await home(session, world, "Countwell")
+    session.add(HolderTechniqueRow(holder_entity_id=world.people.id, technique=Technique.LOGIC))
+    await session.flush()
+    tally = NumberTally()
+    await keep_numbers(await at(session, 3, numeracy={"milestone_chance": 100}), tally)
+    system = await session.get(NumberSystemRow, world.people.id)
+    assert system is not None and system.zero and tally.milestones == 1 and system.base in {10, 12, 20, 60}
+    assert await reckoned(session, town.id, rules.numeracy.tax_pct) > 1
+    assert await notation_boost(session, rules, town.id, KnowledgeBranch.ASTRONOMY) > 1
+    assert await notation_boost(session, rules, town.id, KnowledgeBranch.WARFARE) == 1
+
+
+async def test_links_and_affinities_strengthen_magic_and_a_link_is_evidence_against_the_accused(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules()
+    town = await home(session, world, "Hexmere")
+    caster = await mortal(session, "Wren", world, town.id)
+    target = await mortal(session, "Ash", world, town.id)
+    session.add(SympatheticLinkRow(holder_node_id=caster.id, target_node_id=target.id, token=LinkToken.HAIR, strength=100, locked=[]))
+    case = CrimeCaseRow(settlement_entity_id=town.id, crime=CrimeKind.THEFT, accused_entity_id=caster.id, stage=CaseStage.TRIAL, opened_epoch=3, locked=[])
+    session.add(case)
+    await session.flush()
+    session.add(AccusationRow(accused_node_id=caster.id, case_id=case.id, settlement_entity_id=town.id, locked=[]))
+    await session.flush()
+    assert await link_strength(session, caster.id, target.id) == 100 and await link_boost(session, rules, caster.id, target.id) > 1
+    material = await session.scalar(select(WorldMaterialRow).order_by(WorldMaterialRow.id).limit(1))
+    if material is not None:
+        session.add(MaterialAffinityRow(material_id=material.id, school=MagicSchool.EARTH, mode=AffinityMode.WORN, power=100, locked=[]))
+        await session.flush()
+        assert await affinity_value(session, rules, material.id) == 1 + rules.affinities.mining_pct / 100
+    tally = SympathyTally()
+    await keep_sympathy(await at(session, 3, sympathy={"take_chance": 0, "decay": 0}), tally)
+    laid = await session.scalar(select(EvidenceRow).where(EvidenceRow.case_id == case.id, EvidenceRow.kind == EvidenceKind.MAGIC))
+    assert laid is not None and laid.points_to_node_id == caster.id and tally.evidence == 1
+
+
+async def test_shared_feeling_in_a_land_of_magic_takes_shape_feeds_and_can_be_bound(session: AsyncSession, world: CoreWorld) -> None:
+    region = world.regions[0]
+    set_stats(region, magic=90)
+    town = await home(session, world, "Glee")
+    revellers = [await mortal(session, f"Reveller {index}", world, town.id) for index in range(3)]
+    session.add_all(
+        [ThoughtRow(holder_node_id=item.id, kind=ThoughtKind.MARRIED, emotion=Emotion.JOY, intensity=40, epoch=3, decay_pct=10) for item in revellers]
+    )
+    await session.flush()
+    tally = SpiritTally()
+    await keep_spirits(await at(session, 3, emotion_spirits={"spawn_from": 100, "spawn_density": 50}), tally)
+    spirit = await session.scalar(select(EmotionSpiritRow).where(EmotionSpiritRow.region_entity_id == region.id))
+    assert spirit is not None and spirit.emotion is Emotion.JOY and tally.born == 1
+    assert await has_flag(session, region.id, EntityFlag.OMEN)
+    feelings = await spirit_feelings(session, tuned_rules())
+    assert any(town.id in towns and feeling is Emotion.JOY for towns, feeling, _ in feelings)
+    assert await bind_spirit(session, revellers[0].id, region.id) and spirit.bound_by_node_id == revellers[0].id
+    await keep_spirits(await at(session, 4), tally)
+    assert tally.reagents > 0 and (stat(region, "magic") or 0) == 90

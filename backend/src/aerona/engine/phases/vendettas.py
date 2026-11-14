@@ -235,6 +235,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "mortal.willpower",
     "table.applied_fixups",
     "table.army_officers",
+    "table.assistive_aids",
     "table.avatars",
     "table.beast_profiles",
     "table.bodies",

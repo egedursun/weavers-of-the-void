@@ -104,6 +104,7 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
+    "table.incorporeal_rights",
     "table.injuries",
     "table.kinship_systems",
     "table.language_profiles",

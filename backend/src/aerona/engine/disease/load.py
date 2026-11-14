@@ -8,6 +8,7 @@ from aerona.db.tables.disease import EndemicDiseaseRow, ImmunityRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.disease import OutbreakStatus
+from aerona.engine.crafts.works import soap_relief
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.rules.registry import Rules
 
@@ -18,14 +19,16 @@ class DiseaseLoads:
     regions: dict[int, int]
 
     @classmethod
-    async def load(cls, session: AsyncSession) -> "DiseaseLoads":
+    async def load(cls, session: AsyncSession, rules: Rules) -> "DiseaseLoads":
         atlas = await RegionAtlas.load(session)
         regions = {row.entity_id: row.disease_load for row in await session.scalars(select(RegionEnvironmentRow))}
         for row in await session.scalars(select(EndemicDiseaseRow)):
             regions[row.region_entity_id] = regions.get(row.region_entity_id, 0) + row.load
         for outbreak in await session.scalars(select(OutbreakRow).where(OutbreakRow.status != OutbreakStatus.ENDED)):
             regions[outbreak.region_entity_id] = regions.get(outbreak.region_entity_id, 0) + outbreak.severity // 2
-        return cls(atlas, {region: min(PERCENT, value) for region, value in regions.items()})
+        for region, relief in (await soap_relief(session, rules)).items():
+            regions[region] = regions.get(region, 0) - relief
+        return cls(atlas, {region: max(0, min(PERCENT, value)) for region, value in regions.items()})
 
     def of_region(self, region_id: int | None) -> int:
         return self.regions.get(region_id, 0) if region_id is not None else 0

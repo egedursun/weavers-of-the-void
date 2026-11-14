@@ -119,6 +119,19 @@ from aerona.rules.registry.cosmography_kinds import (
 )
 from aerona.rules.registry.costs import CostsRules
 from aerona.rules.registry.council import CouncilRules
+from aerona.rules.registry.crafts import (
+    AffinityRules,
+    AidRules,
+    ChemistryRules,
+    ClockRules,
+    EmotionSpiritRules,
+    GameRules,
+    GroundRules,
+    InsuranceRules,
+    NumeracyRules,
+    RightsRules,
+    SympathyRules,
+)
 from aerona.rules.registry.creation_base_cost import CreationBaseCostRules
 from aerona.rules.registry.creator import CreatorRules
 from aerona.rules.registry.creature_traits import CreatureTraitsRules
@@ -611,6 +624,17 @@ class Rules:
     borders: BorderRules = field(default_factory=BorderRules)
     poor_relief: PoorReliefRules = field(default_factory=PoorReliefRules)
     measures: MeasureRules = field(default_factory=MeasureRules)
+    grounds: GroundRules = field(default_factory=GroundRules)
+    chemistry: ChemistryRules = field(default_factory=ChemistryRules)
+    insurance: InsuranceRules = field(default_factory=InsuranceRules)
+    incorporeal: RightsRules = field(default_factory=RightsRules)
+    aids: AidRules = field(default_factory=AidRules)
+    clocks: ClockRules = field(default_factory=ClockRules)
+    games: GameRules = field(default_factory=GameRules)
+    numeracy: NumeracyRules = field(default_factory=NumeracyRules)
+    affinities: AffinityRules = field(default_factory=AffinityRules)
+    sympathy: SympathyRules = field(default_factory=SympathyRules)
+    emotion_spirits: EmotionSpiritRules = field(default_factory=EmotionSpiritRules)
     body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)

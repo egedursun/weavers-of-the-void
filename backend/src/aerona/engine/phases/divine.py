@@ -18,6 +18,7 @@ from aerona.engine.phase import Phase
     "table.castings",
     "table.divine_wounds",
     "table.dreams",
+    "table.emotion_spirits",
     "table.entities",
     "table.foreign_gods",
     "table.god_feedings",

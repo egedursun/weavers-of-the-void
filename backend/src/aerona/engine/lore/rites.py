@@ -76,6 +76,8 @@ from aerona.engine.cosmos.omens import celestial_rite_pct
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.rifts import seal_near, tear_toward
 from aerona.engine.cosmos.sanity import shift_sanity
+from aerona.engine.crafts.haunting import bind_spirit
+from aerona.engine.crafts.linking import affinity_boost, link_boost, link_strength
 from aerona.engine.divine.decrees import outlawed_schools
 from aerona.engine.divine.laws import binds
 from aerona.engine.dominion.book import DominionBook
@@ -87,7 +89,7 @@ from aerona.engine.environment.control import force_weather
 from aerona.engine.environment.local import weather_here
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
-from aerona.engine.genetics.genome import gift_factors
+from aerona.engine.genetics.genome import aptitude, gift_factors
 from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.industry.pollution import void_scar
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -1017,6 +1019,14 @@ async def magic_factor(ctx: TickContext, caster: EntityRow) -> float:
     return max(0.0, 1 + (magic - PERCENT // 2) / PERCENT * ctx.rules.rites.magic_strength_pct / PERCENT)
 
 
+async def drawn_power(
+    ctx: TickContext, atlas: RegionAtlas, caster: EntityRow, target: EntityRow | None, *, row: RiteProfileRow, genome: GenomeRow | None
+) -> float:
+    gift = aptitude(ctx.rules, genome.genes, row.school) / PERCENT if genome is not None else 0.0
+    linked = await link_boost(ctx.session, ctx.rules, caster.id, target.id if target is not None else None)
+    return linked * await affinity_boost(ctx.session, ctx.rules, atlas.top_region(caster.id), row.school, gift)
+
+
 async def cast(
     ctx: TickContext,
     caster: EntityRow,
@@ -1046,9 +1056,13 @@ async def cast(
     patron = await patron_of(ctx, caster)
     shield = await warded(ctx, target.location_id or target.id) if target is not None else 1.0
     shaping = await shape_casting(ctx, caster, target, row, effects=[item.effect for item in effects], mastery=mastery, caster_god=patron, warded=shield)
-    if not forced and not reaches(await RegionAtlas.load(ctx.session), shaping.grammar, caster, target):
+    atlas = await RegionAtlas.load(ctx.session)
+    linked = await link_strength(ctx.session, caster.id, target.id if target is not None else None)
+    if not forced and not linked and not reaches(atlas, shaping.grammar, caster, target):
         return None
-    steadiness, strength = gift_factors(ctx.rules, await ctx.session.get(GenomeRow, caster.id), row.school)
+    genome = await ctx.session.get(GenomeRow, caster.id)
+    steadiness, strength = gift_factors(ctx.rules, genome, row.school)
+    strength *= await drawn_power(ctx, atlas, caster, target, row=row, genome=genome)
     strength *= shaping.strength * await office_power(ctx, patron, shaping.grammar.form)
     strength *= await rite_factor(ctx.session, ctx.rules.divine_tongues.rite_pct, caster.id, patron)
     strength *= await name_power(ctx, caster.id, target)
@@ -1079,6 +1093,8 @@ async def cast(
     await hidden_rites(ctx, caster, rite, row)
     if row.school is MagicSchool.VOID:
         await void_scar(ctx, target.id if target is not None else caster.id)
+    if row.school is MagicSchool.BINDING and casting.succeeded:
+        await bind_spirit(ctx.session, caster.id, atlas.top_region(caster.id))
     set_stats(rite, castings=(stat(rite, "castings") or 0) + 1)
     ctx.session.add(casting)
     await ctx.session.flush()

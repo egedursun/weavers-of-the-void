@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -273,6 +274,7 @@ class RangeMarks:
     megafauna: set[int]
     protected: set[int]
     invasive: set[int]
+    traps: Mapping[tuple[int, int], float] = field(default_factory=dict)
 
 
 def plan(
@@ -305,7 +307,11 @@ def plan(
     delta -= predation(rules, wilds, species.id, region, hunters_of) * escape(rules, evolved)
     if profile.diet in HUNTERS and prey and sum(prey) / len(prey) < rules.ecology.hunger_threshold:
         delta -= rules.ecology.hunger * profile.metabolism / rules.habitat.metabolism_mean
-    hunted = human_hunting(rules, wilds, species, region, protected=species.id in marks.protected, megafauna=megafauna) * wary(rules, evolved)
+    hunted = (
+        human_hunting(rules, wilds, species, region, protected=species.id in marks.protected, megafauna=megafauna)
+        * wary(rules, evolved)
+        * marks.traps.get((species.id, region), 1.0)
+    )
     delta -= hunted
     if region in wilds.sick.get(species.id, set()):
         delta -= rules.habitat.disease_loss * (1 - rules.habitat.regeneration_pct / PERCENT if T.REGENERATING in traits else 1)

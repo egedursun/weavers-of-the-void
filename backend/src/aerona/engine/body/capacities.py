@@ -39,6 +39,8 @@ class BodyState:
     aid: float = 0.0
     lost_digits: tuple[str, ...] = ()
     handedness: Handedness = Handedness.RIGHT
+    hearing_aid: float = 0.0
+    magnifier: float = 0.0
 
 
 def blend(level: float, weight: int) -> float:
@@ -98,6 +100,7 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
     horn = levels[F.HORN] if state.anatomy.with_function(F.HORN) else 1.0
     tail = levels[F.TAIL] if state.anatomy.with_function(F.TAIL) else 1.0
     reading = max(levels[F.SIGHT], table.reader_restore_pct / PERCENT) if state.reader else levels[F.SIGHT]
+    levels[F.HEARING] = max(levels[F.HEARING], state.hearing_aid)
     values: dict[Capacity, float] = {
         C.MELEE: stats.strength
         * blend(grip, table.melee_grasp)
@@ -122,7 +125,8 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
         * blend(levels[F.FINE_MANIPULATION], table.craft_fine)
         * blend(levels[F.SIGHT], table.craft_sight)
         * blend(levels[F.COGNITION], table.craft_cognition)
-        * hurt,
+        * hurt
+        * (1 + state.magnifier),
         C.SCHOLARSHIP: stats.intellect * blend(reading, table.scholarship_sight) * blend(levels[F.COGNITION], table.scholarship_cognition),
         C.PRESENCE: stats.charisma
         * blend(levels[F.PRESENCE], table.presence_face)

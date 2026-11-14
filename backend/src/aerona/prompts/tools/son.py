@@ -1717,4 +1717,14 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "or the bound) holds or loses a right: office, marriage, arms or the courts. 1 action.",
         {"realm_id": "The realm", "category": "Whose right", "right": "The right", "granted": "Whether they hold it", "reason": "Why"},
     ),
+    T.WAKE_SPIRIT: ToolText(
+        "You give a feeling shape as a spirit in a land within your reach: while it lasts it deepens that feeling in the folk of the land, feeds "
+        "the gods they worship and is read as an omen, and binding rites can hold it. 1 action.",
+        {"region_id": "The land", "emotion": "The feeling it embodies", "reason": "Why you wake it"},
+    ),
+    T.LAY_AFFINITY: ToolText(
+        "You lay a magical affinity into the material of a resource within your reach: rites of that school worked near it grow stronger, "
+        "mining it is worth more, and when it is consumed the gifted draw on it more. 1 action.",
+        {"resource_id": "The resource", "school": "The school of magic", "mode": "How the material is used", "reason": "Why you lay it"},
+    ),
 }

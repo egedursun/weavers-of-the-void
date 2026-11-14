@@ -31,6 +31,7 @@ from aerona.services.player import (
     cosmic,
     cosmic_orders,
     cosmography,
+    crafts,
     creation,
     creator,
     creatures,
@@ -3875,6 +3876,97 @@ AGES_ACTIONS = (
     _sync(Meta("setup:delete", "Strike a setup from the record", G.FATE), ages.setup_delete, ages.SetupTarget, free, ("F36",)),
 )
 
+CRAFTS_ACTIONS = (
+    _sync(Meta("catch_ground:set", "Set a fishing or hunting ground", G.SOCIETY), crafts.catch_ground_set, crafts.CatchGroundDraft, free, ("S6.1/RP5",)),
+    _sync(Meta("catch_ground:edit", "Edit a fishing or hunting ground", G.SOCIETY), crafts.catch_ground_edit, crafts.CatchGroundEdit, free, ("S6.1/RP5",)),
+    _sync(
+        Meta("catch_ground:delete", "Strike a fishing or hunting ground", G.SOCIETY), crafts.catch_ground_delete, crafts.CatchGroundTarget, free, ("S6.1/RP5",)
+    ),
+    _sync(Meta("chemical_works:set", "Set a chemical works", G.SOCIETY), crafts.chemical_works_set, crafts.ChemicalWorksDraft, free, ("S6.3/RP5",)),
+    _sync(Meta("chemical_works:edit", "Edit a chemical works", G.SOCIETY), crafts.chemical_works_edit, crafts.ChemicalWorksEdit, free, ("S6.3/RP5",)),
+    _sync(Meta("chemical_works:delete", "Strike a chemical works", G.SOCIETY), crafts.chemical_works_delete, crafts.ChemicalWorksTarget, free, ("S6.3/RP5",)),
+    _sync(Meta("insurer:set", "Set an insurer", G.SOCIETY), crafts.insurer_set, crafts.InsurerDraft, free, ("S6.4/RP5",)),
+    _sync(Meta("insurer:edit", "Edit an insurer", G.SOCIETY), crafts.insurer_edit, crafts.InsurerEdit, free, ("S6.4/RP5",)),
+    _sync(Meta("insurer:delete", "Strike an insurer", G.SOCIETY), crafts.insurer_delete, crafts.InsurerTarget, free, ("S6.4/RP5",)),
+    _sync(
+        Meta("insurance_policy:create", "Make an insurance policy", G.SOCIETY), crafts.insurance_policy_create, crafts.InsurancePolicyDraft, free, ("S6.4/RP5",)
+    ),
+    _sync(Meta("insurance_policy:edit", "Edit an insurance policy", G.SOCIETY), crafts.insurance_policy_edit, crafts.InsurancePolicyEdit, free, ("S6.4/RP5",)),
+    _sync(
+        Meta("insurance_policy:delete", "Strike an insurance policy", G.SOCIETY),
+        crafts.insurance_policy_delete,
+        crafts.InsurancePolicyTarget,
+        free,
+        ("S6.4/RP5",),
+    ),
+    _sync(Meta("incorporeal_right:create", "Make a held right", G.SOCIETY), crafts.incorporeal_right_create, crafts.IncorporealRightDraft, free, ("S6.4/RP5",)),
+    _sync(Meta("incorporeal_right:edit", "Edit a held right", G.SOCIETY), crafts.incorporeal_right_edit, crafts.IncorporealRightEdit, free, ("S6.4/RP5",)),
+    _sync(
+        Meta("incorporeal_right:delete", "Strike a held right", G.SOCIETY), crafts.incorporeal_right_delete, crafts.IncorporealRightTarget, free, ("S6.4/RP5",)
+    ),
+    _sync(Meta("assistive_aid:set", "Set an aid", G.SOCIETY), crafts.assistive_aid_set, crafts.AssistiveAidDraft, free, ("S7.1/RP5",)),
+    _sync(Meta("assistive_aid:edit", "Edit an aid", G.SOCIETY), crafts.assistive_aid_edit, crafts.AssistiveAidEdit, free, ("S7.1/RP5",)),
+    _sync(Meta("assistive_aid:delete", "Strike an aid", G.SOCIETY), crafts.assistive_aid_delete, crafts.AssistiveAidTarget, free, ("S7.1/RP5",)),
+    _sync(Meta("public_clock:set", "Set a public clock", G.SOCIETY), crafts.public_clock_set, crafts.PublicClockDraft, free, ("S7.1/RP5",)),
+    _sync(Meta("public_clock:edit", "Edit a public clock", G.SOCIETY), crafts.public_clock_edit, crafts.PublicClockEdit, free, ("S7.1/RP5",)),
+    _sync(Meta("public_clock:delete", "Strike a public clock", G.SOCIETY), crafts.public_clock_delete, crafts.PublicClockTarget, free, ("S7.1/RP5",)),
+    _sync(Meta("game:create", "Make a game", G.SOCIETY), crafts.game_create, crafts.GameDraft, free, ("S7.4/RP5",)),
+    _sync(Meta("game:edit", "Edit a game", G.SOCIETY), crafts.game_edit, crafts.GameEdit, free, ("S7.4/RP5",)),
+    _sync(Meta("game:delete", "Strike a game", G.SOCIETY), crafts.game_delete, crafts.GameTarget, free, ("S7.4/RP5",)),
+    _sync(Meta("game_following:set", "Set a following of a game", G.SOCIETY), crafts.game_following_set, crafts.GameFollowingDraft, free, ("S7.4/RP5",)),
+    _sync(Meta("game_following:edit", "Edit a following of a game", G.SOCIETY), crafts.game_following_edit, crafts.GameFollowingEdit, free, ("S7.4/RP5",)),
+    _sync(
+        Meta("game_following:delete", "Strike a following of a game", G.SOCIETY), crafts.game_following_delete, crafts.GameFollowingTarget, free, ("S7.4/RP5",)
+    ),
+    _sync(Meta("number_system:set", "Set a number system", G.SOCIETY), crafts.number_system_set, crafts.NumberSystemDraft, free, ("S8.4/RP5",)),
+    _sync(Meta("number_system:edit", "Edit a number system", G.SOCIETY), crafts.number_system_edit, crafts.NumberSystemEdit, free, ("S8.4/RP5",)),
+    _sync(Meta("number_system:delete", "Strike a number system", G.SOCIETY), crafts.number_system_delete, crafts.NumberSystemTarget, free, ("S8.4/RP5",)),
+    _sync(Meta("material_affinity:set", "Set a magical affinity", G.BEYOND), crafts.material_affinity_set, crafts.MaterialAffinityDraft, free, ("S8.6/RP5",)),
+    _sync(Meta("material_affinity:edit", "Edit a magical affinity", G.BEYOND), crafts.material_affinity_edit, crafts.MaterialAffinityEdit, free, ("S8.6/RP5",)),
+    _sync(
+        Meta("material_affinity:delete", "Strike a magical affinity", G.BEYOND),
+        crafts.material_affinity_delete,
+        crafts.MaterialAffinityTarget,
+        free,
+        ("S8.6/RP5",),
+    ),
+    _sync(
+        Meta("sympathetic_link:create", "Make a sympathetic link", G.BEYOND), crafts.sympathetic_link_create, crafts.SympatheticLinkDraft, free, ("S8.6/RP5",)
+    ),
+    _sync(Meta("sympathetic_link:edit", "Edit a sympathetic link", G.BEYOND), crafts.sympathetic_link_edit, crafts.SympatheticLinkEdit, free, ("S8.6/RP5",)),
+    _sync(
+        Meta("sympathetic_link:delete", "Strike a sympathetic link", G.BEYOND),
+        crafts.sympathetic_link_delete,
+        crafts.SympatheticLinkTarget,
+        free,
+        ("S8.6/RP5",),
+    ),
+    _sync(Meta("emotion_spirit:create", "Make an emotion spirit", G.BEYOND), crafts.emotion_spirit_create, crafts.EmotionSpiritDraft, free, ("S3.3/RP5",)),
+    _sync(Meta("emotion_spirit:edit", "Edit an emotion spirit", G.BEYOND), crafts.emotion_spirit_edit, crafts.EmotionSpiritEdit, free, ("S3.3/RP5",)),
+    _sync(Meta("emotion_spirit:delete", "Strike an emotion spirit", G.BEYOND), crafts.emotion_spirit_delete, crafts.EmotionSpiritTarget, free, ("S3.3/RP5",)),
+    _sync(
+        Meta("trades:run", "Work every ground, chemical works, insurer, held right and public clock now", G.SOCIETY),
+        crafts.trades_run,
+        crafts.RunNow,
+        free,
+        ("S6.1/RP5", "S6.3/RP5", "S6.4/RP5", "S7.1/RP5"),
+    ),
+    _sync(
+        Meta("learning_aids:run", "Give aids, spread games and read number systems now", G.SOCIETY),
+        crafts.learning_aids_run,
+        crafts.RunNow,
+        free,
+        ("S7.1/RP5", "S7.4/RP5", "S8.4/RP5"),
+    ),
+    _sync(
+        Meta("sympathies:run", "Read material affinities, sympathetic links and emotion spirits now", G.BEYOND),
+        crafts.sympathies_run,
+        crafts.RunNow,
+        free,
+        ("S8.6/RP5", "S3.3/RP5"),
+    ),
+)
+
 CUSTOMS_ACTIONS = (
     _sync(Meta("revival:create", "Make a movement", G.SOCIETY), customs.revival_create, customs.RevivalDraft, free, ("S4.1/RP5",)),
     _sync(Meta("revival:edit", "Edit a movement", G.SOCIETY), customs.revival_edit, customs.RevivalEdit, free, ("S4.1/RP5",)),
@@ -4684,6 +4776,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *ARTS_ACTIONS,
     *AGES_ACTIONS,
     *FOLKWAYS_ACTIONS,
+    *CRAFTS_ACTIONS,
     *CUSTOMS_ACTIONS,
     *ROUTE_ACTIONS,
     *STRUCTURE_ACTIONS,

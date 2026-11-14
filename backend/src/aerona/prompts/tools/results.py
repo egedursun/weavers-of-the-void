@@ -546,6 +546,10 @@ class SonResult(StrEnum):
     REVIVAL_REFUSED = "You cannot stir that movement: {{ why }}."
     RIGHT_PROCLAIMED = "{{ realm }} {% if granted %}now grants{% else %}no longer grants{% endif %} the right of {{ right }}."
     RIGHT_REFUSED = "You cannot proclaim that right: {{ why }}."
+    SPIRIT_WOKEN = "A spirit of {{ emotion }} takes shape in {{ region }}."
+    SPIRIT_REFUSED = "You cannot wake that spirit: {{ why }}."
+    AFFINITY_LAID = "The material of {{ resource }} now carries an affinity for {{ school }} when {{ mode }}."
+    AFFINITY_REFUSED = "You cannot lay that affinity: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -993,3 +997,7 @@ class MortalResult(StrEnum):
     COOPERATIVE_DECLINED = "You cannot join that cooperative: {{ why }}."
     CITIZENSHIP_GRANTED = "You are a citizen of {{ realm }} now."
     CITIZENSHIP_DECLINED = "You cannot become a citizen: {{ why }}."
+    INSURANCE_BOUGHT = "{{ insurer }} insures your life for a premium of {{ premium }} each epoch."
+    INSURANCE_DECLINED = "You cannot insure your life: {{ why }}."
+    GAME_INVENTED = "The {{ people }} have a new game of {{ rule }}, {{ game }}."
+    GAME_DECLINED = "You cannot make up that game: {{ why }}."

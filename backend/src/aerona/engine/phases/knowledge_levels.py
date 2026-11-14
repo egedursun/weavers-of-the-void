@@ -168,7 +168,7 @@ async def progressed(ctx: TickContext, holder_id: int, branch: KnowledgeBranch, 
 async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     table = ctx.rules.knowledge
     deepened = 0
-    loads = await DiseaseLoads.load(ctx.session)
+    loads = await DiseaseLoads.load(ctx.session, ctx.rules)
     sick = await endemic_regions(ctx.session)
     levels = await holder_levels(ctx.session)
     for community in unheld(scene.communities):
@@ -345,6 +345,7 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     "table.lexemes",
     "table.name_registry",
     "table.nodes",
+    "table.number_systems",
     "table.offices",
     "table.outbreaks",
     "table.people_culture",
