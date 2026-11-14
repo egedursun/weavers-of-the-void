@@ -41,6 +41,7 @@ run zero_ids "$PYTHON" scripts/check_zero_ids.py
 run record_cuts "$PYTHON" scripts/check_record_cuts.py
 run canned_lines "$PYTHON" scripts/check_canned_lines.py
 run moon_orbits "$PYTHON" scripts/check_moon_orbits.py
+run goods_ledger "$PYTHON" scripts/check_goods_ledger.py
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check
 
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then

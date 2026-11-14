@@ -120,9 +120,5 @@ async def keep_marks(ctx: TickContext, tally: MarkTally) -> None:
             for meaning, kind in sorted(customs.items(), key=lambda item: item[0].value):
                 if meaning is not MarkMeaning.AGE_SET and await happened(ctx, mortal, meaning):
                     await place(ctx, mortal, kind, meaning, tally)
-    for brand in list(await ctx.session.scalars(select(BodyMarkRow).where(BodyMarkRow.meaning == MarkMeaning.CRIME, BodyMarkRow.placed_epoch == ctx.epoch))):
-        branded = await ctx.session.get(EntityRow, brand.holder_node_id)
-        if branded is not None and not held(branded.id):
-            await read_mark(ctx, branded, MarkMeaning.CRIME)
     await calm_marked(ctx)
     await ctx.session.flush()

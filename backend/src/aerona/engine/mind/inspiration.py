@@ -8,6 +8,7 @@ from aerona.db.tables.mind import InspirationRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.culture import ItemClass
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import InspirationKind, InspirationState, MoodState, PreferenceKind, SkillFamily, ThoughtKind
@@ -15,7 +16,7 @@ from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
-from aerona.engine.economy.stocks import lots_of
+from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.gods.queries import community_of
 from aerona.engine.lore.items import profile_of
 from aerona.engine.mind.preferences import favourite
@@ -79,7 +80,8 @@ async def make_masterwork(ctx: TickContext, mortal: EntityRow, row: InspirationR
     lots = [lot for lot in await lots_of(ctx.session, community.id) if lot.material is not None and lot.material.value == row.material and lot.quantity > 0]
     if not lots:
         return False
-    lots[0].quantity -= 1
+    if not await goods_of(ctx.session, ctx.epoch).shift_lot(lots[0], -1, GoodsFlow.INPUT):
+        return False
     item = await create_record(
         ctx,
         RecordSpec(

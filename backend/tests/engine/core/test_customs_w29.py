@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.customs_lines import mortal_customs_lines, son_customs_lines
 from aerona.agents.context.scope import load_scope
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.customs import (
     AgeSetMemberRow,
     AgeSetRow,
@@ -25,17 +26,18 @@ from aerona.db.tables.customs import (
     WelfareRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.intrigue import TrueNameRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow
-from aerona.db.tables.mind import CultureValueRow, PressureRow
+from aerona.db.tables.mind import CultureValueRow, GriefRow, PressureRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.db.tables.society_depth import DriftCauseRow
+from aerona.db.tables.society_depth import CorveeRow, DriftCauseRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.affliction import PackageKind
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.customs import (
     AgeGrade,
     CoopPurpose,
@@ -52,9 +54,10 @@ from aerona.domain.enums.customs import (
     RevivalStage,
 )
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.gathering import GatheringKind
 from aerona.domain.enums.justice import CaseStage, Deposition
-from aerona.domain.enums.mind import PressureKind, Profession, ValueAxis
-from aerona.domain.enums.mortal import CrimeKind, LifeStage
+from aerona.domain.enums.mind import GriefStage, PressureKind, Profession, ValueAxis
+from aerona.domain.enums.mortal import CrimeKind, LifeStage, PunishmentKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
@@ -73,8 +76,10 @@ from aerona.engine.customs.relief import commute_share, poverty_relief
 from aerona.engine.customs.revival import RevivalTally, keep_revivals
 from aerona.engine.customs.rights import crossing, has_right, unarmed, unwed_by_law
 from aerona.engine.customs.taboo import name_tabooed
-from aerona.engine.customs.time_budgets import TimeTally, keep_time_budgets
+from aerona.engine.customs.time_budgets import TimeTally, keep_time_budgets, leisure_odds, rested_fertility
 from aerona.engine.customs.town_life import TownLifeTally, keep_town_life
+from aerona.engine.mortal.justice import sentence
+from aerona.engine.primitives.faith import patron_node
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import stat
 from aerona.services.integrity.customs_links import mend_customs_links
@@ -142,10 +147,10 @@ async def test_a_deed_is_marked_and_read_as_renown_and_a_brand_shames(session: A
     session.add_all([profile(hero.id, renown=10), profile(foe.id, honour=50)])
     session.add(MarkCustomRow(people_entity_id=folk.id, kind=MarkKind.TATTOO, meaning=MarkMeaning.DEED, locked=[]))
     await bond(session, hero.id, foe.id, BondKind.KILLED, epoch=3)
-    session.add(BodyMarkRow(holder_node_id=foe.id, kind=MarkKind.BRAND, meaning=MarkMeaning.CRIME, placed_epoch=3, locked=[]))
     await session.flush()
     tally = MarkTally()
     await keep_marks(await at(session, 3), tally)
+    await sentence(await at(session, 4), foe, CrimeKind.THEFT, PunishmentKind.BRANDING)
     marks = list(await session.scalars(select(BodyMarkRow).where(BodyMarkRow.holder_node_id == hero.id)))
     hero_profile = await session.get(MortalProfileRow, hero.id)
     foe_profile = await session.get(MortalProfileRow, foe.id)
@@ -208,6 +213,8 @@ async def test_youths_form_an_age_set_that_may_not_wed_and_rises_to_warriors(ses
     await keep_age_sets(await at(session, 6, age_sets={"span_epochs": 1, "grade_epochs": 1}), tally)
     found = await session.get(AgeSetRow, member.age_set_id)
     assert found is not None and found.grade is AgeGrade.WARRIORS and await warriors_ready(session, folk.id)
+    ceremony = await session.scalar(select(GatheringRow).where(GatheringRow.host_node_id == folk.id, GatheringRow.kind == GatheringKind.MILESTONE))
+    assert ceremony is not None
 
 
 async def test_town_life_eases_poverty_loses_labour_on_the_way_and_pools_means(session: AsyncSession, world: CoreWorld) -> None:
@@ -218,7 +225,7 @@ async def test_town_life_eases_poverty_loses_labour_on_the_way_and_pools_means(s
     session.add_all([DistrictRow(settlement_entity_id=town.id, kind=kind, built_epoch=1) for kind in list(DistrictKind)[:4]])
     session.add(PressureRow(entity_id=town.id, pressure=PressureKind.POVERTY, value=80))
     await session.flush()
-    await keep_town_life(await at(session, 3, cooperatives={"found_from": 50}), TownLifeTally())
+    await keep_town_life(await at(session, 3, cooperatives={"found_from": 50}, welfare={"upkeep_per_inmate": 0}), TownLifeTally())
     assert await session.get(WelfareRow, house.id) is not None and await poverty_relief(session, tuned_rules(), town.id) > 0
     commute = await session.get(CommuteRow, town.id)
     assert commute is not None and commute.labour_lost > 0 and await commute_share(session, town.id) < 1
@@ -229,8 +236,9 @@ async def test_town_life_eases_poverty_loses_labour_on_the_way_and_pools_means(s
     await session.flush()
     empty = await poverty_relief(session, tuned_rules(), town.id)
     member = await mortal(session, "Net-Mender", world, town.id)
+    session.add(profile(member.id, wealth=60))
     await bond(session, member.id, guild.id, BondKind.MEMBER_OF)
-    await keep_town_life(await at(session, 4), TownLifeTally())
+    await keep_town_life(await at(session, 4, welfare={"upkeep_per_inmate": 0}), TownLifeTally())
     assert pool.members == 1 and await poverty_relief(session, tuned_rules(), town.id) > empty
 
 
@@ -315,3 +323,113 @@ async def test_customs_reach_minds_and_integrity_ends_movements_of_vanished_peop
     folk.status, folk.end_epoch = EntityStatus.DESTROYED, 4
     await session.flush()
     assert await mend_customs_links(session, 4) >= 1
+
+
+async def test_a_movement_restores_the_old_god_or_is_put_down_by_the_realm_that_presses_on_it(session: AsyncSession, world: CoreWorld) -> None:
+    town, folk = await home(session, world, "Oldshrine", tradition=60)
+    realm = await realm_of(session, world, "The Pressing Crown", town.id)
+    await bond(session, folk.id, world.son.id, BondKind.WORSHIPS, epoch=1)
+    old = await session.scalar(select(BondRow).where(BondRow.source_node_id == folk.id, BondRow.kind == BondKind.WORSHIPS))
+    assert old is not None
+    old.state = BondState.PAST
+    await session.flush()
+    row = RevivalRow(
+        people_entity_id=folk.id,
+        aim=RevivalAim.RESTORE,
+        stage=RevivalStage.REVITALISATION,
+        goal=RevivalGoal.RESTORE_GOD,
+        strength=0,
+        started_epoch=2,
+        locked=[],
+    )
+    session.add(row)
+    await session.flush()
+    await keep_revivals(await at(session, 3, revivals={"restore_chance": 100, "suppress_chance": 0, "stage_gain": 0}), RevivalTally())
+    assert await patron_node(session, folk) == world.son.id
+    row.dominant_entity_id = realm.id
+    await session.flush()
+    tally = RevivalTally()
+    await keep_revivals(await at(session, 4, revivals={"suppress_chance": 100}), tally)
+    assert row.stage is RevivalStage.SUPPRESSED and row.ended_epoch == 4 and tally.suppressed == 1
+
+
+async def test_forbidden_drink_shames_its_takers_and_drink_in_mourning_and_brew_ease_the_town(session: AsyncSession, world: CoreWorld) -> None:
+    town, folk = await home(session, world, "Drywell")
+    taker = await mortal(session, "Lusk", world, town.id)
+    mourner = await mortal(session, "Hale", world, town.id)
+    session.add_all([profile(taker.id, infamy=0), profile(mourner.id, stress=50)])
+    session.add(IntoxicantCustomRow(people_entity_id=folk.id, intoxicant=Intoxicant.LEAF, use=IntoxicantUse.FORBIDDEN, acceptance=100, locked=[]))
+    session.add(IntoxicantCustomRow(people_entity_id=folk.id, intoxicant=Intoxicant.BREW, use=IntoxicantUse.MOURNING, acceptance=100, locked=[]))
+    session.add(
+        GriefRow(mourner_node_id=mourner.id, deceased_node_id=taker.id, stage=GriefStage.MOURNING, strength=50, started_epoch=2, stage_epoch=2, length_epochs=5)
+    )
+    await session.flush()
+    rules = {"habit_chance": 100, "forbidden_pct": 100, "forbidden_infamy": 7, "mourning_calm": 10}
+    await keep_intoxication(await at(session, 3, intoxication=rules), IntoxicationTally())
+    shamed = await session.get(MortalProfileRow, taker.id)
+    eased = await session.get(MortalProfileRow, mourner.id)
+    assert shamed is not None and shamed.infamy == 7 and eased is not None and eased.stress == 40
+
+
+async def test_a_corvee_turns_work_into_service_rest_breeds_children_and_youths_bear_no_arms(session: AsyncSession, world: CoreWorld) -> None:
+    town, folk = await home(session, world, "Levyham")
+    shares = {f"share_{item.value}": 0.0 for item in SocialClass}
+    shares["share_farmer"] = 100.0
+    session.add(
+        CommunitySocietyRow(
+            entity_id=town.id,
+            **shares,
+            **{f"satisfaction_{item.value}": 50 for item in SocialClass},
+            stock_food=0,
+            stock_ore=0,
+            stock_goods=0,
+            price_food=100,
+            price_ore=100,
+            price_goods=100,
+        )
+    )
+    session.add(
+        TimeBudgetRow(people_entity_id=folk.id, social_class=SocialClass.FARMER, work=55, rest=40, worship=0, leisure=5, travel=0, service=0, locked=[])
+    )
+    session.add(CorveeRow(community_entity_id=town.id, share_pct=100))
+    await session.flush()
+    before = stat(town, "defense") or 0
+    await keep_time_budgets(await at(session, 3, time_budgets={"service_defense": 10, "usual_service": 0}), TimeTally())
+    assert (stat(town, "defense") or 0) > before
+    farmer = await mortal(session, "Tamsin", world, town.id)
+    farmer.social_class = SocialClass.FARMER
+    await session.flush()
+    assert await rested_fertility(session, tuned_rules(time_budgets={"rest_fertility_pct": 50}), farmer) == 2.0
+    assert await leisure_odds(session, tuned_rules(time_budgets={"leisure_attendance": 10}), farmer) == -5
+    youth = await mortal(session, "Pell", world, town.id)
+    session.add(profile(youth.id, life_stage=LifeStage.YOUTH))
+    young_set = AgeSetRow(people_entity_id=folk.id, name="The Young Set", initiated_from=3, grade=AgeGrade.YOUTHS, promoted_epoch=3, locked=[])
+    session.add(young_set)
+    await session.flush()
+    session.add(AgeSetMemberRow(mortal_entity_id=youth.id, age_set_id=young_set.id, locked=[]))
+    await session.flush()
+    assert Profession.SOLDIER.value in await unarmed(session, youth.id)
+    young_set.grade = AgeGrade.WARRIORS
+    await session.flush()
+    assert await unarmed(session, youth.id) == frozenset()
+
+
+async def test_a_house_of_welfare_unpaid_turns_its_poor_away_and_cooperative_dues_come_from_members(session: AsyncSession, world: CoreWorld) -> None:
+    town, _ = await home(session, world, "Bareby")
+    house = await entity(session, "The Last Door", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+    patron = await mortal(session, "Penniless", world, town.id)
+    session.add(profile(patron.id, wealth=0))
+    session.add(StructureProfileRow(structure_entity_id=house.id, kind=StructureKind.ALMSHOUSE, host_entity_id=town.id, builder_entity_id=patron.id))
+    session.add(PressureRow(entity_id=town.id, pressure=PressureKind.POVERTY, value=80))
+    guild = await entity(session, "The Pooled", EntityType.FACTION, FactionStats(), world_id=world.world.id, location_id=town.id)
+    session.add(CooperativeRow(faction_entity_id=guild.id, purpose=CoopPurpose.CREDIT, locked=["purpose"]))
+    member = await mortal(session, "Saver", world, town.id)
+    session.add(profile(member.id, wealth=50))
+    await bond(session, member.id, guild.id, BondKind.MEMBER_OF)
+    await session.flush()
+    await keep_town_life(await at(session, 3), TownLifeTally())
+    welfare = await session.get(WelfareRow, house.id)
+    pool = await session.get(CooperativeRow, guild.id)
+    paid = await session.get(MortalProfileRow, member.id)
+    assert welfare is not None and welfare.inmates == 0
+    assert pool is not None and pool.pool > 0 and paid is not None and paid.wealth < 50

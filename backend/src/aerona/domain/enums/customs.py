@@ -13,6 +13,7 @@ class RevivalStage(StrEnum):
     DISTORTION = "distortion"
     REVITALISATION = "revitalisation"
     NEW_STEADY = "new_steady"
+    SUPPRESSED = "suppressed"
 
 
 class RevivalGoal(StrEnum):

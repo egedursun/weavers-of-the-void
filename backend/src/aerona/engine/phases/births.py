@@ -28,6 +28,7 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.body.healing import HealingWorld, tier_index
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
+from aerona.engine.customs.time_budgets import rested_fertility
 from aerona.engine.cycles.breeding import assign_caste, bearer_among, born_sex
 from aerona.engine.cycles.lineage import breeds, system_of
 from aerona.engine.demography.urban import founding_factor
@@ -894,6 +895,7 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
         chance *= scaled_by(await effect_of(ctx.session, parent.id, TraitEffect.FERTILITY, rules.traits.effect_scale_pct))
         chance *= fertility_factor(rules, await ctx.session.get(GenomeRow, parent.id))
         chance *= await fed_fertility(ctx.session, rules, parent.id)
+        chance *= await rested_fertility(ctx.session, rules, parent)
     culture = await culture_of(ctx.session, first.location_id) if first.location_id is not None else {}
     chance *= max(0.0, 1 + culture.get(ValueAxis.KINSHIP, 0) * table.kinship_pct / PERCENT / PERCENT)
     return chance if await breeds(ctx.session, first, second) else 0.0
@@ -1009,6 +1011,7 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.people_culture",
     "table.people_reproduction",
     "table.pressures",
+    "table.time_budgets",
     "table.traits",
 )
 @writes(

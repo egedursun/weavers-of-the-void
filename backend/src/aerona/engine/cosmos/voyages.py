@@ -1,15 +1,12 @@
-from sqlalchemy import select
-
 from aerona.catalog.cosmography import SCOPE_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
-from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import RouteScope
 from aerona.domain.enums.disease import SpreadPath
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.travel import JourneyEventKind
 from aerona.domain.models.records import CargoLine
 from aerona.engine.context import TickContext
@@ -19,6 +16,7 @@ from aerona.engine.cosmos.routes import add_event
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import disease_for, open_outbreak
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.rules.registry import Rules
@@ -86,20 +84,7 @@ async def unload(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) ->
     market = await market_of(ctx, journey.destination_world_id, {})
     if market is not None and journey.cargo and not held(market.id):
         for line in journey.cargo:
-            stock = await ctx.session.scalar(
-                select(CommunityStockRow).where(
-                    CommunityStockRow.community_entity_id == market.id,
-                    CommunityStockRow.commodity == line.commodity,
-                    CommunityStockRow.material == line.material,
-                )
-            )
-            if stock is None:
-                stock = CommunityStockRow(
-                    community_entity_id=market.id, commodity=line.commodity, material=line.material, quantity=0, quality=PERCENT // 2, preserved=0
-                )
-                ctx.session.add(stock)
-            if not stock.held:
-                stock.quantity += line.amount
+            await goods_of(ctx.session, ctx.epoch).add(market.id, line.commodity, line.amount, GoodsFlow.TRADE, material=line.material)
         await note(ctx, f"{traveller.name}'s convoy brought its goods to {market.name}.", key="travel.cargo_delivered", ids=[traveller.id, market.id])
         journey.cargo = []
     if any(line.sick for line in journey.passengers) and ctx.rng(f"voyage_sickness.{journey.id}").chance(table.sick_spread_chance):

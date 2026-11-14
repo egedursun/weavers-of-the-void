@@ -19,6 +19,8 @@ from aerona.domain.enums.mind import PressureKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.customs.relief import RELIEVING
+from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mortal.standing import add_renown
@@ -110,7 +112,11 @@ async def keep_welfare(ctx: TickContext, tally: TownLifeTally) -> None:
         if "upkeep" not in row.locked:
             row.upkeep = round_half_up(row.inmates * table.upkeep_per_inmate / PERCENT)
         patron = await ctx.session.get(EntityRow, row.patron_node_id) if row.patron_node_id is not None else None
-        if patron is not None and patron.entity_type is EntityType.MORTAL and patron.status is EntityStatus.CANON and not held(patron.id):
+        living = patron is not None and patron.status is EntityStatus.CANON and not held(patron.id)
+        payer = patron if living and patron is not None else town
+        if not await take_coin(ctx.session, ctx.rules, payer, row.upkeep) and "inmates" not in row.locked:
+            row.inmates = 0
+        if living and patron is not None and patron.entity_type is EntityType.MORTAL and row.inmates:
             await add_renown(ctx.session, patron.id, table.patron_renown, ctx.epoch, rules=ctx.rules)
         tally.houses += 1
 
@@ -156,6 +162,37 @@ async def purpose_for(ctx: TickContext, town: EntityRow) -> CoopPurpose:
     return ctx.rng(seed_of("cooperative", town.id)).pick([CoopPurpose.INSURANCE, CoopPurpose.BURIAL, CoopPurpose.CREDIT, CoopPurpose.IRRIGATION])
 
 
+async def members_of(ctx: TickContext, faction: EntityRow) -> list[EntityRow]:
+    found: list[EntityRow] = []
+    for member_id in await ctx.session.scalars(
+        select(BondRow.source_node_id)
+        .where(BondRow.target_node_id == faction.id, BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE)
+        .order_by(BondRow.source_node_id)
+    ):
+        member = await ctx.session.get(EntityRow, member_id)
+        if member is not None and member.status is EntityStatus.CANON and not held(member.id):
+            found.append(member)
+    return found
+
+
+async def collect_dues(ctx: TickContext, members: list[EntityRow], dues: int) -> int:
+    paid = 0
+    for member in members:
+        if await take_coin(ctx.session, ctx.rules, member, dues):
+            paid += dues
+    return paid
+
+
+async def pay_out(ctx: TickContext, members: list[EntityRow], pool: int, each: int) -> int:
+    spent = 0
+    for member in members:
+        if pool - spent < each or each <= 0:
+            break
+        await give_coin(ctx.session, ctx.rules, member, each)
+        spent += each
+    return spent
+
+
 async def keep_cooperatives(ctx: TickContext, tally: TownLifeTally) -> None:
     table = ctx.rules.cooperatives
     pooled = set(await ctx.session.scalars(select(CooperativeRow.faction_entity_id)))
@@ -194,7 +231,10 @@ async def keep_cooperatives(ctx: TickContext, tally: TownLifeTally) -> None:
         if "members" not in row.locked:
             row.members = members
         if "pool" not in row.locked:
-            row.pool += row.members * table.dues
+            paying = await members_of(ctx, faction)
+            if row.purpose in RELIEVING:
+                row.pool -= await pay_out(ctx, paying, row.pool, table.payout)
+            row.pool += await collect_dues(ctx, paying, table.dues)
         home = await ctx.session.get(EntityRow, faction.location_id) if faction.location_id is not None else None
         if home is not None and row.purpose in WORKING and row.members > 0 and not held(home.id):
             shift_stat(home, "prosperity", table.relief / 10, low=0, high=PERCENT)

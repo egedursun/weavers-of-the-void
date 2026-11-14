@@ -131,9 +131,7 @@ async def spoil(ctx: TickContext, book: EconomyBook, community: EntityRow, row: 
         lost = min(lot.quantity - lot.preserved, round_half_up((lot.quantity - lot.preserved) * rate))
         if lost <= 0:
             continue
-        lot.quantity -= lost
-        lost_total += lost
-        await ledger.record(community.id, lot.commodity, GoodsFlow.DECAY, -lost)
+        lost_total -= await ledger.shift_lot(lot, -lost, GoodsFlow.DECAY)
     if "spoiled" not in row.locked:
         row.spoiled += lost_total
     tally.spoiled += lost_total

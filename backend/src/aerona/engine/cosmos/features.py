@@ -5,7 +5,6 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.db.tables.celestial import SkyEventRow, WorldRow
-from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import CosmicFeatureRow, StarPhysicsRow, WorldPhysicsRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
@@ -13,7 +12,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import TraditionKind
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.physics import PERIODIC_BODIES, CosmicFeatureKind
@@ -24,6 +23,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.catastrophe import scorch_world
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.vessels import owned_vessels
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lore.traditions import profile_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
@@ -55,16 +55,7 @@ async def live_features(ctx: TickContext, kind: CosmicFeatureKind | None = None)
 
 
 async def add_stock(ctx: TickContext, community: EntityRow, commodity: CommodityKind, amount: int, material: MaterialKind | None = None) -> None:
-    stock = await ctx.session.scalar(
-        select(CommunityStockRow).where(
-            CommunityStockRow.community_entity_id == community.id, CommunityStockRow.commodity == commodity, CommunityStockRow.material == material
-        )
-    )
-    if stock is None:
-        stock = CommunityStockRow(community_entity_id=community.id, commodity=commodity, material=material, quantity=0, quality=PERCENT // 2, preserved=0)
-        ctx.session.add(stock)
-    if not stock.held:
-        stock.quantity += amount
+    await goods_of(ctx.session, ctx.epoch).add(community.id, commodity, amount, GoodsFlow.EXTRACTION, material=material)
 
 
 async def mine_fields(ctx: TickContext, cosmography: Cosmography) -> int:

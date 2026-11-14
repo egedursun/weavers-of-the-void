@@ -31,6 +31,7 @@ from aerona.domain.enums.polity import OfficeKind, TreatyKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.customs.time_budgets import leisure_odds
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.folkways.purity import apart_at_table, unclean
@@ -198,6 +199,7 @@ async def attend(ctx: TickContext, holding: Holding, atlas: RegionAtlas) -> None
         if guest.reason in (AttendanceReason.KIN, AttendanceReason.OBLIGATION) or guest.role is not GuestRole.GUEST:
             odds += table.attend_obligation_pct
         odds -= atlas.distance(guest.node_id, place) * table.attend_hop_pct if node.location_id is not None else 0
+        odds += await leisure_odds(ctx.session, ctx.rules, node)
         guest.attended = rng(ctx, row, f"attend.{guest.node_id}").chance(clamp_int(odds, 0, PERCENT))
         if guest.attended:
             holding.attendees.append(guest.node_id)

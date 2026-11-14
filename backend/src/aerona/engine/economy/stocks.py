@@ -224,6 +224,14 @@ class GoodsLedger:
         await self.record(community_id, commodity, flow, -(quantity - left))
         return taken
 
+    async def shift_lot(self, row: CommunityStockRow, delta: int, flow: GoodsFlow) -> int:
+        if delta == 0 or row.held or held(row.community_entity_id):
+            return 0
+        applied = max(delta, -row.quantity)
+        row.quantity += applied
+        await self.record(row.community_entity_id, row.commodity, flow, applied)
+        return applied
+
     async def take_units(self, community_id: int, commodity: CommodityKind, quantity: int, flow: GoodsFlow) -> int:
         return sum(lot.quantity for lot in await self.take(community_id, commodity, quantity, flow))
 

@@ -7,6 +7,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.mind import Profession
+from aerona.engine.customs.grades import UNWED_GRADES, grade_of
 from aerona.rules.registry import Rules
 
 ARMED = frozenset({Profession.SOLDIER.value, Profession.COMMANDER.value, Profession.RIDER.value})
@@ -25,6 +26,8 @@ async def unwed_by_law(session: AsyncSession, first: EntityRow, second: EntityRo
 
 
 async def unarmed(session: AsyncSession, mortal_id: int) -> frozenset[str]:
+    if await grade_of(session, mortal_id) in UNWED_GRADES:
+        return ARMED
     return frozenset() if await has_right(session, mortal_id, MemberRight.ARMS) else ARMED
 
 

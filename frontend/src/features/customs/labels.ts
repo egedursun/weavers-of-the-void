@@ -72,6 +72,7 @@ export const STAGES: Record<Schema['RevivalStage'], Named> = {
   distortion: { label: 'Distortion', icon: Wind, tone: 'danger' },
   revitalisation: { label: 'Revival', icon: Sprout, tone: 'success' },
   new_steady: { label: 'A new steady way', icon: Star, tone: 'gold' },
+  suppressed: { label: 'Put down', icon: Shield, tone: 'danger' },
 }
 
 export const GOALS: Record<Schema['RevivalGoal'], Named> = {

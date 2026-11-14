@@ -18,6 +18,7 @@ from aerona.engine.belonging.refuge import sheltered
 from aerona.engine.body.hits import Harm
 from aerona.engine.constructs.remaking import may_remake, remake
 from aerona.engine.context import TickContext
+from aerona.engine.customs.marks import read_mark
 from aerona.engine.factions.estates import immune
 from aerona.engine.law.prisons import imprison
 from aerona.engine.lifecycle.mortal_death import die
@@ -161,6 +162,7 @@ async def sentence(
         )
         await add_infamy(ctx.session, culprit.id, table.branding_infamy, ctx.epoch, rules=ctx.rules)
         ctx.session.add(BodyMarkRow(holder_node_id=culprit.id, kind=MarkKind.BRAND, meaning=MarkMeaning.CRIME, placed_epoch=ctx.epoch, locked=[]))
+        await read_mark(ctx, culprit, MarkMeaning.CRIME)
     elif punishment in MUTILATIONS:
         for part in MUTILATIONS[punishment]:
             harm = Harm(

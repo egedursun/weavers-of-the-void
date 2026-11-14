@@ -9,11 +9,14 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.customs import AgeGrade, MarkMeaning
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole, Milestone
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.mortal import LifeStage
 from aerona.engine.context import TickContext
 from aerona.engine.customs.marks import MarkTally, customs_of, place
 from aerona.engine.customs.naming import NamingTally, initiate_name
+from aerona.engine.gatherings.hold import plan
+from aerona.engine.gatherings.occasions import Guest, Occasion
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
@@ -93,6 +96,20 @@ async def bond_mates(ctx: TickContext, row: AgeSetRow) -> None:
         shift_relation(ctx.rules, relation, ctx.epoch, friendship=ctx.rules.age_sets.mates_bond, familiarity=ctx.rules.age_sets.mates_bond)
 
 
+async def hold_promotion(ctx: TickContext, people: EntityRow, row: AgeSetRow) -> None:
+    town = await ctx.session.scalar(
+        select(EntityRow.id)
+        .where(EntityRow.affiliated_entity_id == people.id, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    mates = await ctx.session.scalars(
+        select(AgeSetMemberRow.mortal_entity_id).where(AgeSetMemberRow.age_set_id == row.id).order_by(AgeSetMemberRow.mortal_entity_id)
+    )
+    guests = [Guest(mate, GuestRole.HONOURED, AttendanceReason.OBLIGATION) for mate in mates]
+    await plan(ctx, Occasion(GatheringKind.MILESTONE, people.id, people.world_id, place_id=town, milestone=Milestone.COMING_OF_AGE, guests=guests))
+
+
 async def promote(ctx: TickContext, people: EntityRow, sets: list[AgeSetRow], tally: AgeSetTally) -> None:
     for row in sets:
         if row.initiated_to is None or "grade" in row.locked or ctx.epoch - row.promoted_epoch < ctx.rules.age_sets.grade_epochs:
@@ -107,6 +124,7 @@ async def promote(ctx: TickContext, people: EntityRow, sets: list[AgeSetRow], ta
         row.grade, row.promoted_epoch = nxt, ctx.epoch
         tally.promoted += 1
         await bond_mates(ctx, row)
+        await hold_promotion(ctx, people, row)
         await note(ctx, f"The {row.name} of the {people.name} rose to the grade of {nxt.value.replace('_', ' ')}.", key="age_sets.promoted", ids=[people.id])
 
 

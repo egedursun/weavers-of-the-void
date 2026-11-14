@@ -8,6 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import RouteScope
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.polity import LawKind
@@ -15,6 +16,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.routes import current_calendar, forgotten_world_ids, route_status
 from aerona.engine.economy.purse import receive_coin
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.eras.effects import tech_factor
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_percent
@@ -74,29 +76,19 @@ async def carry(ctx: TickContext, route: RouteRow, scope: RouteScope, first: Ent
     cost = trade_cost_pct(ctx.rules, scope) / PERCENT
     stolen = route.piracy * table.piracy_loss_pct / PERCENT / PERCENT
     room = round(route.capacity * await tech_factor(ctx.session, ctx.rules, first.id, EraChannel.WORLD_ROUTES))
-    for wanted, key, source, target, buyer in sorted(gaps, key=lambda gap: (-gap[0], str(gap[1])))[: table.trade_lines]:
+    for wanted, _key, source, target, buyer in sorted(gaps, key=lambda gap: (-gap[0], str(gap[1])))[: table.trade_lines]:
         amount = min(wanted, room)
         if amount <= 0 or (target is not None and target.held):
             continue
         room -= amount
-        delivered = max(0, round(amount * (1 - cost) * (1 - min(1.0, stolen))))
-        source.quantity -= amount
-        receiver = target
-        if receiver is None:
-            commodity, material, world_material = key
-            receiver = CommunityStockRow(
-                community_entity_id=buyer.id,
-                commodity=commodity,
-                material=material,
-                world_material_id=world_material,
-                quantity=0,
-                quality=source.quality,
-                preserved=0,
-            )
-            ctx.session.add(receiver)
-        receiver.quantity += delivered
-        moved += amount
-        delivered_total += delivered
+        ledger = goods_of(ctx.session, ctx.epoch)
+        sent = -await ledger.shift_lot(source, -amount, GoodsFlow.TRADE)
+        arrived = round(sent * (1 - cost) * (1 - min(1.0, stolen)))
+        arrived = await ledger.add(
+            buyer.id, source.commodity, arrived, GoodsFlow.TRADE, material=source.material, world_material_id=source.world_material_id, quality=source.quality
+        )
+        moved += sent
+        delivered_total += arrived
     return moved, delivered_total
 
 

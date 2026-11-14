@@ -94,6 +94,7 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
   - `scripts/check_record_cuts.py` on every commit (rules 7 and 8). It fails when a reader of the chronicle in the book, the Codex, search, the player services or the API filters lines by visibility or drops engine-folded lines. Use `shown_lines()` or `kept_lines()` from `db/repositories/chronicle.py`, or `feed_lines()` for the feed that shows a fold in their place.
   - `scripts/check_canned_lines.py` on every commit (rule 2). It fails on a pool of canned sentences (a module constant or a random pick over two or more prose lines or `Line`s). Tell a happening once, plainly, from its typed fields.
   - `scripts/check_moon_orbits.py` on every commit (rule 8). It fails when engine, agent, service or API code reads a world's `orbit` without telling a moon from a planet, since a moon's orbit is around its planet. Read the planet's through `root_of` or `planet_of`, or check `parent_world_id`.
+  - `scripts/check_goods_ledger.py` on every commit (rule 8). It fails when code outside the goods ledger changes a stock's quantity by hand, since the flow then goes unlogged and a held lot can be touched. Move goods through `goods_of(...).add`, `take`, `move` or `shift_lot`.
   - `scripts/spec_coverage.py check` on every commit. Every done row must name test files, tests, frontend tests and modules that exist.
   - The proving gate on every backend change (rule 8):
     - `tests/tools/test_every_tool.py`: every son and mortal tool runs to success.

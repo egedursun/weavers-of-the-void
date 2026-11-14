@@ -20,6 +20,8 @@ class RevivalRules:
     language_gain: int = rule(5, 0, 100, C, "Standing a movement to revive its language gives the language each epoch")
     value_pull_pct: int = rule(10, 0, 100, C, "Share of the gap to the old or the pressed values that a movement closes each epoch (%)")
     expel_opinion: int = rule(5, 0, 100, C, "Opinion a movement to expel foreigners takes from its people of those who press on it")
+    restore_chance: int = rule(20, 0, 100, C, "Chance each epoch that a movement to restore its old god brings its people back to that god (%)")
+    suppress_chance: int = rule(10, 0, 100, C, "Chance each epoch that the realm pressing on a people puts down its movement before it settles (%)")
 
 
 @dataclass(frozen=True)
@@ -30,6 +32,10 @@ class IntoxicationRules:
     brawl_damage: int = rule(8, 0, 100, C, "Harm a brawl at a gathering deals the one hurt")
     vision_chance: int = rule(10, 0, 100, C, "Chance a mystic of a people that takes an intoxicant in rites has a vision (%)")
     brew_per_100: int = rule(2, 0, 100, C, "Brew base a town of a people that drinks daily or at feasts consumes for each hundred folk")
+    brew_cheer: int = rule(3, 0, 100, C, "Satisfaction every class of a town gains each epoch when it has all the brew it drinks")
+    mourning_calm: int = rule(6, 0, 100, C, "Stress a mourner of a people that drinks in mourning loses each epoch")
+    forbidden_pct: int = rule(30, 0, 100, C, "Share of the usual chance of a habit that a forbidden intoxicant still breeds in secret (%)")
+    forbidden_infamy: int = rule(5, 0, 100, C, "Infamy one who forms a habit of a forbidden intoxicant gains")
 
 
 @dataclass(frozen=True)
@@ -49,9 +55,18 @@ class TimeBudgetRules:
     usual_leisure: int = rule(10, 0, 100, S, "Share of a year that is the usual share of leisure")
     usual_rest: int = rule(20, 0, 100, S, "Share of a year that is the usual share of rest")
     rest_calm: int = rule(1, 0, 100, S, "Unrest a town loses each epoch for each ten points of rest above the usual")
-    travel_trade: int = rule(1, 0, 100, S, "Prosperity a town gains each epoch for each ten points of travel its folk make, in tenths")
-    service_defense: int = rule(1, 0, 100, S, "Defence a town gains each epoch for each ten points of service its folk give, in tenths")
-    worship_piety: int = rule(2, 0, 100, S, "Piety a town gains each epoch for each ten points of worship its folk give")
+    travel_trade: int = rule(
+        1, 0, 100, S, "Prosperity a town gains or loses each epoch for each ten points of travel its folk make above or below the usual, in tenths"
+    )
+    service_defense: int = rule(
+        1, 0, 100, S, "Defence a town gains or loses each epoch for each ten points of service its folk give above or below the usual, in tenths"
+    )
+    worship_piety: int = rule(2, 0, 100, S, "Piety a town gains or loses each epoch for each ten points of worship its folk give above or below the usual")
+    usual_worship: int = rule(10, 0, 100, S, "Share of a year that is the usual share of worship")
+    usual_travel: int = rule(3, 0, 100, S, "Share of a year that is the usual share of travel")
+    usual_service: int = rule(2, 0, 100, S, "Share of a year that is the usual share of service")
+    rest_fertility_pct: int = rule(20, 0, 100, S, "Share by which each ten points of rest above or below the usual raise or lower the chance of children (%)")
+    leisure_attendance: int = rule(2, 0, 100, S, "Chance of joining a gathering gained or lost for each ten points of leisure above or below the usual")
 
 
 @dataclass(frozen=True)
@@ -83,7 +98,13 @@ class TavernRules:
 class WelfareRules:
     inmates_per_house: int = rule(30, 0, 1000, S, "Poor, orphans and maimed a house of welfare takes in")
     poverty_relief: int = rule(5, 0, 100, S, "Poverty pressure each house of welfare takes off its town each epoch")
-    upkeep_per_inmate: int = rule(50, 0, 1000, S, "Upkeep a house of welfare needs for each hundred it takes in")
+    upkeep_per_inmate: int = rule(
+        50,
+        0,
+        1000,
+        S,
+        "Upkeep in coin a house of welfare needs for each hundred it takes in, paid by its patron or else its town; unpaid, it turns its poor away",
+    )
     patron_renown: int = rule(1, 0, 100, S, "Renown the patron of a house of welfare gains each epoch")
     beggars_insecurity: int = rule(10, 0, 100, S, "Insecurity beggars in the streets add to a poor town with no house of welfare")
     beggars_from: int = rule(50, 0, 100, S, "Poverty in a town with no house of welfare from which beggars fill its streets and its insecurity rises")
@@ -100,8 +121,9 @@ class CommuteRules:
 @dataclass(frozen=True)
 class CooperativeRules:
     found_from: int = rule(40, 0, 100, S, "Poverty in a town from which its folk pool their means in a cooperative")
-    dues: int = rule(1, 0, 100, S, "Wealth each member pools each epoch")
-    relief: int = rule(3, 0, 100, S, "Poverty pressure a cooperative takes off its town each epoch")
+    dues: int = rule(1, 0, 100, S, "Coin each member pays into the pool each epoch")
+    relief: int = rule(3, 0, 100, S, "Poverty pressure a cooperative takes off its town each epoch while its pool holds")
+    payout: int = rule(1, 0, 100, S, "Coin a cooperative that relieves its members pays each member out of its pool each epoch while the pool lasts")
 
 
 @dataclass(frozen=True)

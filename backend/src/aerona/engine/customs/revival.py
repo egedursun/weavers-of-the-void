@@ -3,12 +3,14 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import LanguageStandingRow
 from aerona.db.tables.customs import RevivalRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.society_depth import DriftCauseRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.customs import RevivalAim, RevivalGoal, RevivalStage
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
@@ -18,6 +20,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lore.names import tongue_of
 from aerona.engine.mind.book import clamp_value, stored_values, write_values
 from aerona.engine.notes import note
+from aerona.engine.primitives.faith import change_religion, is_living_god, patron_node
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
@@ -34,6 +37,7 @@ class RevivalTally:
     begun: int = 0
     turned: int = 0
     settled: int = 0
+    suppressed: int = 0
 
 
 async def towns_of(ctx: TickContext, people_id: int) -> list[int]:
@@ -145,12 +149,56 @@ async def pursue(ctx: TickContext, row: RevivalRow, people: EntityRow) -> None:
             standing.prestige = clamp_int(standing.prestige + table.language_gain, 0, PERCENT)
     elif row.goal is RevivalGoal.EXPEL_FOREIGNERS and row.dominant_entity_id is not None:
         await change_relation(ctx, people.id, row.dominant_entity_id, -table.expel_opinion, MemoryKind.ILL_WILL, note="pressed its ways on us")
+    elif row.goal is RevivalGoal.RESTORE_GOD:
+        await restore_god(ctx, row, people)
     await pull_values(ctx, row)
+
+
+async def old_god_of(ctx: TickContext, people: EntityRow) -> int | None:
+    current = await patron_node(ctx.session, people)
+    for god in await ctx.session.scalars(
+        select(BondRow.target_node_id)
+        .where(BondRow.source_node_id == people.id, BondRow.kind == BondKind.WORSHIPS, BondRow.state != BondState.ACTIVE)
+        .order_by(BondRow.id.desc())
+    ):
+        if god != current and await is_living_god(ctx.session, god):
+            return int(god)
+    return None
+
+
+async def restore_god(ctx: TickContext, row: RevivalRow, people: EntityRow) -> None:
+    old = await old_god_of(ctx, people)
+    if old is None or not ctx.rng(seed_of("revival.restore", row.id, ctx.epoch)).chance(ctx.rules.revivals.restore_chance):
+        return
+    if await change_religion(ctx.session, people, old, ctx.epoch, "a movement brought it back to the god of its ancestors"):
+        await note(ctx, f"The movement of the {people.name} brought them back to their old god.", key="revivals.restored", ids=[people.id])
+
+
+async def put_down(ctx: TickContext, row: RevivalRow, people: EntityRow, tally: RevivalTally) -> bool:
+    if row.dominant_entity_id is None or row.stage not in (RevivalStage.DISTORTION, RevivalStage.REVITALISATION) or "stage" in row.locked:
+        return False
+    if held(row.dominant_entity_id) or not ctx.rng(seed_of("revival.suppress", row.id, ctx.epoch)).chance(ctx.rules.revivals.suppress_chance):
+        return False
+    row.stage = RevivalStage.SUPPRESSED
+    if "ended_epoch" not in row.locked:
+        row.ended_epoch = ctx.epoch
+    tally.suppressed += 1
+    await change_relation(ctx, people.id, row.dominant_entity_id, -2 * ctx.rules.revivals.expel_opinion, MemoryKind.ILL_WILL, note="put down our movement")
+    realm = await ctx.session.get(EntityRow, row.dominant_entity_id)
+    await note(
+        ctx,
+        f"The movement of the {people.name} was put down by {realm.name if realm is not None else 'those who pressed on them'}.",
+        key="revivals.suppressed",
+        ids=[people.id, row.dominant_entity_id],
+    )
+    return True
 
 
 async def advance(ctx: TickContext, row: RevivalRow, tally: RevivalTally) -> None:
     people = await ctx.session.get(EntityRow, row.people_entity_id)
     if people is None or people.status is not EntityStatus.CANON or held(people.id):
+        return
+    if await put_down(ctx, row, people, tally):
         return
     if row.stage is RevivalStage.REVITALISATION:
         await pursue(ctx, row, people)

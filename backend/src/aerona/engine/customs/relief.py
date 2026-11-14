@@ -15,7 +15,9 @@ RELIEVING = frozenset({CoopPurpose.INSURANCE, CoopPurpose.BURIAL, CoopPurpose.CR
 
 async def houses_in(session: AsyncSession, town_id: int) -> int:
     hosted = select(StructureProfileRow.structure_entity_id).where(StructureProfileRow.host_entity_id == town_id)
-    return int(await session.scalar(select(func.count()).select_from(WelfareRow).where(WelfareRow.structure_entity_id.in_(hosted))) or 0)
+    return int(
+        await session.scalar(select(func.count()).select_from(WelfareRow).where(WelfareRow.structure_entity_id.in_(hosted), WelfareRow.inmates > 0)) or 0
+    )
 
 
 async def realm_relief(session: AsyncSession, rules: Rules, town_id: int) -> int:
@@ -27,7 +29,9 @@ async def realm_relief(session: AsyncSession, rules: Rules, town_id: int) -> int
 async def poverty_relief(session: AsyncSession, rules: Rules, town_id: int) -> int:
     welfare = await houses_in(session, town_id) * rules.welfare.poverty_relief
     located = select(EntityRow.id).where(EntityRow.location_id == town_id)
-    pools = await session.scalars(select(CooperativeRow.purpose).where(CooperativeRow.faction_entity_id.in_(located), CooperativeRow.members > 0))
+    pools = await session.scalars(
+        select(CooperativeRow.purpose).where(CooperativeRow.faction_entity_id.in_(located), CooperativeRow.members > 0, CooperativeRow.pool > 0)
+    )
     cooperative = sum(rules.cooperatives.relief for purpose in pools if purpose in RELIEVING)
     return welfare + cooperative + await realm_relief(session, rules, town_id)
 

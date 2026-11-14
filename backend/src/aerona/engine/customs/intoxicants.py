@@ -5,26 +5,32 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.customs import IntoxicantCustomRow
-from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
+from aerona.db.tables.mind import GriefRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sacred import MysticRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.customs import Intoxicant, IntoxicantUse
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import stored_values
+from aerona.engine.mind.grief import OPEN_STAGES
+from aerona.engine.mortal.profile import is_held
 from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
 
 PACKAGES: Mapping[Intoxicant, PackageKind] = {
@@ -72,17 +78,44 @@ async def seed_customs(ctx: TickContext, people: EntityRow, tally: IntoxicationT
 
 
 async def habits(ctx: TickContext, people: EntityRow, row: IntoxicantCustomRow, tally: IntoxicationTally) -> None:
+    table = ctx.rules.intoxication
     folk = await ctx.session.scalars(
         select(EntityRow)
         .where(await present_among(ctx.session, [people.id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
-    chance = ctx.rules.intoxication.habit_chance * row.acceptance / PERCENT
+    forbidden = row.use is IntoxicantUse.FORBIDDEN
+    chance = table.habit_chance * row.acceptance / PERCENT * (table.forbidden_pct / PERCENT if forbidden else 1)
     for mortal in list(folk):
         if held(mortal.id) or not ctx.rng(seed_of("habit", mortal.id, row.intoxicant.value, ctx.epoch)).chance(chance):
             continue
-        if await afflict(ctx, mortal, PACKAGES[row.intoxicant], Transmission.INGESTION) is not None:
-            tally.habits += 1
+        if await afflict(ctx, mortal, PACKAGES[row.intoxicant], Transmission.INGESTION) is None:
+            continue
+        tally.habits += 1
+        profile = await ctx.session.get(MortalProfileRow, mortal.id)
+        if forbidden and profile is not None and not is_held(profile, "infamy"):
+            profile.infamy = clamp_int(profile.infamy + table.forbidden_infamy, 0, PERCENT)
+
+
+async def mourn(ctx: TickContext, people: EntityRow) -> None:
+    mourners = await ctx.session.scalars(
+        select(GriefRow.mourner_node_id)
+        .join(EntityRow, EntityRow.id == GriefRow.mourner_node_id)
+        .where(await present_among(ctx.session, [people.id]), GriefRow.stage.in_(list(OPEN_STAGES)))
+    )
+    for mourner in sorted(set(mourners)):
+        profile = await ctx.session.get(MortalProfileRow, mourner)
+        if profile is not None and not held(mourner) and not is_held(profile, "stress"):
+            profile.stress = clamp_int(profile.stress - ctx.rules.intoxication.mourning_calm, 0, PERCENT)
+
+
+async def cheer(ctx: TickContext, town: EntityRow, amount: int) -> None:
+    society = await ctx.session.get(CommunitySocietyRow, town.id)
+    if society is None or amount <= 0:
+        return
+    for social_class in SocialClass:
+        key = f"satisfaction_{social_class.value}"
+        setattr(society, key, clamp_int(int(getattr(society, key)) + amount, 0, PERCENT))
 
 
 async def brawls(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) -> None:
@@ -141,15 +174,10 @@ async def brew(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) ->
         if held(town.id):
             continue
         want = round_half_up(stat_or(town, "population", 0) / HUNDRED * ctx.rules.intoxication.brew_per_100)
-        lot = await ctx.session.scalar(
-            select(CommunityStockRow)
-            .where(CommunityStockRow.community_entity_id == town.id, CommunityStockRow.commodity == CommodityKind.BREW_BASE, CommunityStockRow.held.is_(False))
-            .limit(1)
-        )
-        taken = min(want, lot.quantity) if lot is not None else 0
-        if lot is not None and taken > 0:
-            lot.quantity -= taken
-            tally.brewed += taken
+        taken = await goods_of(ctx.session, ctx.epoch).take_units(town.id, CommodityKind.BREW_BASE, want, GoodsFlow.CONSUMPTION)
+        tally.brewed += taken
+        if taken and want:
+            await cheer(ctx, town, ctx.rules.intoxication.brew_cheer * taken // want)
 
 
 async def keep_intoxication(ctx: TickContext, tally: IntoxicationTally) -> None:
@@ -163,8 +191,10 @@ async def keep_intoxication(ctx: TickContext, tally: IntoxicationTally) -> None:
         rows = await seed_customs(ctx, people, tally)
         uses = {row.use for row in rows}
         for row in rows:
-            if row.use is IntoxicantUse.DAILY:
+            if row.use in (IntoxicantUse.DAILY, IntoxicantUse.FORBIDDEN):
                 await habits(ctx, people, row, tally)
+        if IntoxicantUse.MOURNING in uses:
+            await mourn(ctx, people)
         if IntoxicantUse.FEAST in uses and any(row.intoxicant in DRINKS for row in rows):
             await brawls(ctx, people, tally)
         if IntoxicantUse.RITE in uses:

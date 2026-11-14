@@ -59033,7 +59033,12 @@ export interface components {
     RevivalGoal:
       'revive_language' | 'restore_god' | 'expel_foreigners' | 'adopt_ways'
     RevivalStage:
-      'steady' | 'stress' | 'distortion' | 'revitalisation' | 'new_steady'
+      | 'steady'
+      | 'stress'
+      | 'distortion'
+      | 'revitalisation'
+      | 'new_steady'
+      | 'suppressed'
     RevivalView: {
       id: number
       dominant: components['schemas']['NodeRef'] | null
@@ -143498,7 +143503,14 @@ export const revivalGoalValues: ReadonlyArray<
 > = ['revive_language', 'restore_god', 'expel_foreigners', 'adopt_ways']
 export const revivalStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RevivalStage']
-> = ['steady', 'stress', 'distortion', 'revitalisation', 'new_steady']
+> = [
+  'steady',
+  'stress',
+  'distortion',
+  'revitalisation',
+  'new_steady',
+  'suppressed',
+]
 export const riftCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiftCause']
 > = [

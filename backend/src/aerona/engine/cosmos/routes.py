@@ -29,6 +29,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.cosmography import ClusterKind, RouteScope
 from aerona.domain.enums.ecology import BeastTemper, Habitat, SizeClass
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -44,6 +45,7 @@ from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.vessels import owned_vessels
 from aerona.engine.cosmos.world_types import hidden_route_method, mechanics_of, river_reaches
 from aerona.engine.economy.materials import light_fabric, rig_of
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.folkways.fed import KEEPING_FOODS
 from aerona.engine.gods.economy import spend_cosmic_resource
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -619,8 +621,7 @@ async def provision(ctx: TickContext, journey: JourneyRow, traveller: EntityRow)
     for stock in stocks:
         if left <= 0:
             break
-        taken = min(left, stock.quantity)
-        stock.quantity -= taken
+        taken = -await goods_of(ctx.session, ctx.epoch).shift_lot(stock, -min(left, stock.quantity), GoodsFlow.CONSUMPTION)
         left -= taken
         kept += taken if stock.commodity in KEEPING_FOODS or stock.preserved > 0 else 0
     if (
@@ -666,10 +667,9 @@ async def load_voyage(ctx: TickContext, journey: JourneyRow, traveller: EntityRo
         for stock in stocks:
             if room <= 0:
                 break
-            taken = min(room, stock.quantity // 2)
+            taken = -await goods_of(ctx.session, ctx.epoch).shift_lot(stock, -min(room, stock.quantity // 2), GoodsFlow.TRADE)
             if taken <= 0:
                 continue
-            stock.quantity -= taken
             room -= taken
             cargo.append(CargoLine(commodity=stock.commodity, material=stock.material, amount=taken))
         journey.cargo = cargo
