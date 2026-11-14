@@ -1,12 +1,13 @@
-# 16 — Made Minds, Innate Powers, Living Craft, the Depth Pass and Typed Kinds (W44–W48)
+# 16 — Made Minds, Innate Powers, Living Craft, the Depth Pass, Typed Kinds and the Record of Events (W44–W49)
 
-This spec adds five waves to the lore engine:
+This spec adds six waves to the lore engine:
 
 - **W44 Made minds and the information age.** Minds that live in made things or in no body at all; copies, saves, transfers and merges of minds; augmented bodies; networks, intrusion, surveillance and information conflict; corporations and private power; self-making machines; abundance; and the collapse of high making into relics and salvage.
 - **W45 Innate powers, power sources and concealment.** Powers that belong to a being rather than to a learned rite (the psionic class and every other inborn, awakened, granted or bonded power); an open model of power sources that any world can author; magic systems as typed world structures; and hidden truths kept from the public (the masquerade class), with breach, revelation and forgetting.
 - **W46 Living craft.** Technology made by growing, breeding, shaping and engineering living things: designed crops and herds, grown structures, living vessels, living arms, grown bodies and organs, cloning, symbionts and parasites, living medicine and designed disease, living production, living links and living computation, world-shaping ecologies and designed sapience.
 - **W47 The depth pass.** Every existing or planned mechanic brought to full breadth and depth: structures that act in their own right, eras and customs at full breadth, the god layer, typed models in place of fixed lists that carry images, every enum value read, every thin spec section completed, and guards that keep each of these from coming back.
 - **W48 Typed kinds.** Every concept a world can define in its own terms: a neutral category enum plus authored kinds with typed properties for goods, food, drink, dress, colour, scent, household goods, tools, instruments, games, substances, money, professions, ranks, titles, clergy, organisations, kinship, traditions, art, tenets, fears, goals and the cosmos; a property catalogue for every content enum; one taxonomy per concept; every value that carries an image or a gender renamed; and guards for all of it.
+- **W49 The record of events.** Every happening of every kind kept and told in full: incident kinds with typed roles and facts, the steps of every process, every change of every value with its before, after and terms, in-world moments and exact places, true causes, witnesses and rumours told from the record, the past of any record at any moment, and nothing ever folded away or cut.
 
 Every wave is written to be integrated completely, under the completion contract of spec 13 J.19 and the standing rules of `CLAUDE.md`. Nothing here is label-only, optional or deferred.
 
@@ -24,10 +25,10 @@ Spec 13 and the waves through W43 built a deep pre-modern, magical and cosmic wo
 
 ### 0.2 Numbering and placement
 
-- **Waves.** W1–W41 are planned in spec 13 Part J; W42 (breadth across settings, 10.18) and W43 (genesis from the seed, 10.19) were added later and are done. The waves of this spec are **W44**, **W45**, **W46**, **W47** and **W48**.
+- **Waves.** W1–W41 are planned in spec 13 Part J; W42 (breadth across settings, 10.18) and W43 (genesis from the seed, 10.19) were added later and are done. The waves of this spec are **W44**, **W45**, **W46**, **W47**, **W48** and **W49**.
 - **Identifiers continue spec 13's series** so that no identifier is shared:
   - shared foundations **F50–F56** (spec 13 ends at F49);
-  - wave sections **44.1…**, **45.1…**, **46.1…**, **47.0…**, **48.0…**, and the foundation **F57**;
+  - wave sections **44.1…**, **45.1…**, **46.1…**, **47.0…**, **48.0…**, **49.0…**, and the foundations **F57** and **F58**;
   - reference lanes **R43–R53** (spec 13 ends at R42);
   - couplings **C10…** (spec 13 ends at C9);
   - feedback loops **L79…** (spec 13 ends at L78);
@@ -45,6 +46,7 @@ Spec 13 and the waves through W43 built a deep pre-modern, magical and cosmic wo
 6. **W47** (decided the same day) brings every existing and planned mechanic found narrow or shallow by measurement to full breadth and depth (Part 7).
 7. **W48** (decided the same day) gives every world-content concept the two-layer model of typed kinds (Part 8).
 8. **Flexibility, never bias.** These waves widen what a world can become. They must not pull every world toward their own images (0.5).
+9. **W49** (decided the same day) keeps every happening of every kind in full: typed facts, roles, steps, every change before and after with its terms, exact moments and places, causes, witnesses and the past at any moment, all kept for ever (Part 9, K.42).
 
 ### 0.4 Ground rules carried into every section
 
@@ -1734,6 +1736,8 @@ Per CLAUDE.md rule 1, each step runs the static gates and the tests that cover i
 
 **W48:** `catalog/concepts.py` and both guards first (they list every gap) → F57 machinery → 48.1 goods → 48.2 food, cuisine, drink → 48.3 dress, colour, scent, emblems → 48.4 household goods, tools, instruments, games, substances → 48.5 money, materials, preservation, species products, production methods → 48.6 society → 48.7 culture → 48.8 nature and cosmos → 48.9 unification → 48.10 property catalogues for all 250 → genesis, Kinds library, Ways of life, Codex, book, prompts → fixups → audit with both guards at zero.
 
+**W49:** see 49.10 (guards and the kinds catalogue first, then kinds, roles, facts and steps → change capture → moments, places, terms and causes → every process group of Appendix 49.A with engagements and duels → witnesses, rumours, rendering and folding as a view → the past at any moment → surfaces, fixups and bands → audit).
+
 Each wave follows the build-all-then-gate-once working rule: the whole wave is written, then gated and committed once.
 
 ### 5.12 Decisions
@@ -1954,6 +1958,32 @@ W48 (Part 8) does the same for typed breadth: every concept a world can describe
 - A branching chronicle, alternate timelines and time travel (0.3.1).
 
 ---
+
+### 6.6 Cross-cutting layers
+
+The sweeps above went through concepts, genres and mechanic families. This sweep goes through the layers that cross every mechanic, so that what each mechanic does is also kept, dated, placed, explained, told and controlled. It was added on 2026-11-14 after the record of events (W49) was found shallow although every mechanic beneath it was deep. Each row says where the layer lives and where it is completed.
+
+| Layer | What it must give every thing and every happening | Built | Completed by |
+|---|---|---|---|
+| Record of what happened | typed kind, roles, facts, steps, outcome | incidents, collections, life logs (spec 13 F10) | W49 F58.1–F58.4 |
+| What changed | every value before and after, by whom | actor tool calls only (`db/ledger_capture.py`) | W49 F58.5 |
+| When | in-world moment by the world's calendar, ordered by cause | year in phase write order | W49 F58.6 |
+| Where | the most precise place, origin and destination | 31 write sites | W49 F58.6 |
+| Why | the true cause and the terms of every number | modifier stacks, battle factors; causes guessed | W49 F58.7–F58.8 |
+| Who knows | witnesses, rumours with typed distortions, memories, hidden truths | F7, F11 (done), F53 (W45) | W49 F58.9 |
+| How it is told | rendered from fields, plain, re-renderable in any language, three tiers | English lines, decision 71 | W49 F58.10 |
+| What it was | any record, node or map at any earlier moment | none | W49 F58.11 |
+| What is kept | everything, for ever; no folding away, sampling or cutting | folding hid and capped records | W49 F58.12, K.42 |
+| Names | a name for every made, born and notable thing and happening, from the world's languages | naming prompts, collection titles | W49 F58.10 (happenings), W48 (kinds) |
+| Look | visual direction from typed fields, style at render time | image prompt templates, 0.5 rule 8 | 0.5, 5.5 |
+| Control | create, edit, hold, delete every record; revert any change | god levers, `check_control.py` | W49 49.5 (records and reverts) |
+| Reach | every feature for every kind of node | `ThingSections`, `check_wiring.py` | W49 History section |
+| Books | every record in the lore book and the Codex, never cut | rule 7, `services/books/typed.py` | W49 49.5, `check_record_cuts.py` |
+| Search | every record queryable by its typed fields | `services/search.py` (text) | W49 49.5 |
+| Integrity and legacy | checks and recorded fixups for every new value | `services/integrity`, fixups | each wave's compliance catalogue |
+| Speed | measured bands for every added cost | 5.12a | W49 49.8 |
+
+Every future wave fills this table for what it adds, beside its compliance catalogue.
 
 ## Part 7. W47 — The depth pass: every existing and planned mechanic at full breadth and depth
 
@@ -2859,6 +2889,372 @@ Every content enum gets a **property catalogue**: a `total()` table in `catalog/
 | K.41 | Are kinship and union options with gendered meanings removed? | No: they stay as culture data under neutral, side-based names; no gender is ever a default. |
 
 
+## Part 9. W49 — The record of events: every happening kept and told in full
+
+### 49.0 Scope and the measurement behind it
+
+W49 makes the record of what happens as deep as the engine that makes it happen. Every happening of every kind (not only fights) is kept with what happened, who took part in which role, with what, how much, where and when exactly, why (its cause and the terms behind each number), how (its steps), what it changed (every value before and after) and who saw it. Its text is told from those fields, and all of it is kept for ever in every world.
+
+**Measurement (2026-11-14, by script over `backend/src/aerona`).**
+
+| Finding | Where | Measure |
+|---|---|---|
+| One write path | `engine/context.py` `TickContext.chronicle`, `engine/notes.py` `note`, `db/repositories/chronicle.py` `ChronicleRepository.append` | each happening writes one English line (`chronicle`) and one `incidents` row (kind = template key, participants, place, cause, magnitude) |
+| Write sites and kinds | engine and services | 834 `note` calls, about 190 direct `chronicle` calls; 935 template keys found literally in 252 families (70 of them built from an enum value at run time), more passed through variables |
+| No typed fields | `IncidentRow`, `ChronicleRow` | the only content is the rendered sentence; what, how much, with what, before and after are not stored, so nothing can be re-told, translated or queried |
+| Thin lines | 754 literal `note` texts | 73 carry a quantity, 55 a reason; "A child of X and Y was born." names neither the child nor the place; "X bought Y from Z on credit." has no price; "A champion was named in the league." names no one |
+| Roles mostly lost | `catalog/incident_roles.py` `INCIDENT_ROLES` | 40 of the keys have a role map; every other participant is stored as `subject`, so doer and done-to are not told apart |
+| Causes mostly guessed | `cause_incident_id=` at 8 sites, `caused_by` in `phases/warfare.py`, `killing_incident` in `lifecycle/mortal_death.py` | every other cause is guessed by `ChronicleRepository.cause_of` (an earlier incident of the same epoch sharing a participant) |
+| Place rarely set | `place_entity_id=` | 31 sites |
+| Time is write order | `_stamp_year`, `chronicle_year`, `EpochYearCursorRow` | a year rolled forward in phase order inside the epoch window; no season, day or hour; a sickness written in a late phase is always "after" a war written early, whatever happened first |
+| Changes only counted | `ctx.count` | 817 sites count a change and keep no record of what changed, by how much or why |
+| Before and after only for actors | `db/ledger_capture.py`, `ledger_changes` | the full row before and after is captured for creator, son, mortal and Fate tool calls, never for engine steps |
+| Detail computed then dropped | `military/duels.py` `Bout.log`; `vehicles/sections.py` `StrikeResult.events` (never filled); `operations/sail.py` broadsides, sections, fire and flooding per round; `military/battle.py` phase lines; `body/treatment.py` steps | the duel log is built and discarded; sea fights reach the chronicle as "X met Y at sea and beat it"; the battle phase line is one sentence ("the volleys flew") |
+| Records hidden and cut | `engine/notes.py` `fold_tick_lines` | when `chronicle_fold_threshold` (3) lines share a key in an epoch, every original is rewritten to kind `engine_raw` and hidden, a summary "…; N more events of the same kind happened this epoch." replaces them, and the summary links at most `folded_chronicle_ids_cap` (40) entities; the Codex (`services/codex.py`), node entries (`services/books/model.py` `entry_chronicle`) and search (`services/search.py`) read only visible or non-raw lines, so the folded happenings vanish from them |
+| Narrow histories | 19 tables (`item_history`, `office_history`, `settlement_history`, `trait_history`, `sound_changes`, `expedition_logs`, `formation_histories`, …) | each keeps one subject in its own shape |
+| Teller sees one line | `prompts/templates/chronicler/_facts.md.j2` | the chronicler receives the one-line texts, so detail is either missing or made up |
+| No past state | engine, API, frontend | no node, map or value can be shown as it was at an earlier moment |
+| Specs | spec 13 F10, F10 reference pass, decision 71; 5.16 here | incidents, collections, life logs, causality graph and template families are specified; a home for typed fields, steps, changes, terms, witnesses, moments, tiers and past states is not |
+
+W49 closes every row. The existing incident table, collections, causality graph, chronicle feed, ledger capture and history tables are kept and built on (0.6); nothing they hold is lost.
+
+### 49.1 F58. The record of events
+
+#### F58.1 Incident kinds (`catalog/incident_kinds.py`)
+
+Every template key becomes an **incident kind**: a `total()` catalogue entry, declared once, that every write is checked against.
+
+| Field | Content |
+|---|---|
+| `key` | the template key (`family.name`); keys built from an enum declare their prefix and the enum, and the catalogue expands one entry per value |
+| `family` | the family (Appendix 49.A) and its process group (49.2) |
+| `roles` | the ordered typed roles of its participants (`IncidentRole`, F58.2), each with the node kinds it accepts and whether it is required |
+| `facts` | its fact schema (F58.3): each field's key, value type, unit, enum and whether it is required |
+| `steps` | the step actions (F58.4) a happening of this kind may record, or none |
+| `template` | the English template that tells it from its roles and facts, plain, with no images and no tone (rule 2) |
+| `place` | `required`, `when_known` or `none`, and the most precise place kind expected |
+| `clock` | the process clock that dates it (F58.6) |
+| `terms` | whether its numbers carry terms (F58.7) |
+| `collection` | the collection kind it joins (F10 reference pass), replacing the prefix guess of `engine/history/collections.py` `kind_of_key` |
+| `feed`, `chronicle_kind`, `magnitude` | the feed category, chronicle kind and magnitude rule that `note` callers pass today |
+
+`incidents.kind` holds a catalogue key; a write with an unknown key, a missing required role or fact, or a fact of the wrong type raises `ValidationFailedError`.
+
+#### F58.2 Roles
+
+`IncidentRole` widens from `subject`, `actor`, `target`, `witness`, `place` to every role a happening can give:
+
+`subject`, `actor`, `co_actor`, `target`, `victim`, `beneficiary`, `opponent`, `ally`, `leader`, `member`, `giver`, `receiver`, `buyer`, `seller`, `lender`, `borrower`, `maker`, `owner`, `heir`, `predecessor`, `successor`, `accuser`, `accused`, `judge`, `advocate`, `teacher`, `learner`, `healer`, `patient`, `parent`, `child`, `spouse`, `officiant`, `host`, `guest`, `envoy`, `mediator`, `authority` (who allowed or ordered it), `patron` (a god or power that helped), `instrument` (a thing, beast, vessel, structure or work used), `product` (what it made), `origin`, `destination`, `place`, `witness`, `teller` (who spread an account of it).
+
+Every kind declares its roles, so every participant of every happening is stored with its true role.
+
+#### F58.3 Facts (`incident_facts`)
+
+Typed fields of a happening, one row per value: `incident_id`, `key` (declared by the kind), `position` (for lists), and exactly one value: `node_id`, `number` with `unit`, `enum_name` with `enum_value` (two text columns validated against the declared enum, never a JSON column claiming enums), or `name` (only for a name the world itself produced).
+
+`FactUnit`: `count`, `people`, `coin` (treasury units, through `engine/economy/purse.py`), `wealth_points`, `percent`, `hp`, `severity`, `years`, `seasons`, `days`, `hours`, `distance`, `area`, `mass`, `volume`, `tons`, `essence`, `renown`, `standing`, `knowledge`, `strength`, `speed`, `temperature`, `energy`, `none`.
+
+Each kind's schema says what it holds. The kind lists its minimum fields; the rule is that every value the engine computed for the happening (amounts, prices, counts, scores, rolls with their thresholds, chosen options, qualities, durations, distances) is a fact.
+
+#### F58.4 Steps (`incident_steps`, `incident_step_states`)
+
+How a happening unfolded, one row per step:
+
+| Column | Content |
+|---|---|
+| `incident_id`, `position`, `round`, `parent_step_id` | order; rounds for contests; nesting (a boarding inside a vessel engagement, a duel inside a battle, a rite inside a festival) |
+| `moment` | the in-world moment of the step (F58.6) |
+| `actor_node_id`, `target_node_id` | who acted on whom |
+| `action` | `StepAction` (below) |
+| `instrument_kind`, `instrument_node_id`, `instrument_key` | `InstrumentKind`: `item`, `equipment_model`, `vehicle_weapon`, `vehicle`, `structure`, `creature`, `power`, `rite`, `tool_kind`, `substance`, `text`, `network`, `body` (an unarmed blow, a bite), `none`; the node, or the key of a model or kind |
+| `locus_kind`, `locus_key`, `locus_node_id` | `StepLocus`: `body_part` (`BodyPart`), `vehicle_section` (`VehicleSection`), `structure_section`, `room`, `district`, `settlement`, `region`, `route`, `sea`, `sky`, `orbit`, `realm`, `network_node`, `none` |
+| `damage_type` | `DamageType` when harm is done |
+| `amount`, `unit` | how much (a count, an amount of coin, hp, a distance) |
+| `outcome` | `StepOutcome` (below) |
+| `record_table`, `record_key` | the record the step made or changed (an injury, a section state, an item history row, a bond, a captive) |
+
+`incident_step_states`: `step_id`, `node_id`, `state` (`StepState`): `prone`, `risen`, `disarmed`, `stunned`, `unconscious`, `bleeding`, `burning`, `blinded`, `restrained`, `fleeing`, `yielded`, `captured`, `freed`, `hidden`, `revealed`, `exhausted`, `possessed`, `flooding`, `breached`, `depressurised`, `adrift`, `disabled`, `aground`, `grounded`, `shielded`, `unshielded`, `cut_off`, `encircled`, `routed`, `rallied`.
+
+**`StepAction`** (a process enum, 48.C; every value is read by the renderer and by the steps that produce it):
+
+- **Contest of bodies:** `close`, `strike`, `thrust`, `cut`, `shoot`, `throw`, `cast`, `feint`, `block`, `parry`, `dodge`, `grapple`, `throw_down`, `choke`, `lock`, `bite`, `disarm`, `charge`, `trample`, `fall`, `rise`, `flee`, `pursue`, `yield`, `spare`, `finish`, `rescue`, `carry_off`.
+- **Bodies in groups:** `deploy`, `advance`, `hold`, `volley`, `wheel`, `flank`, `rout`, `rally`, `reinforce`, `withdraw`, `encircle`, `breach`, `storm`, `undermine`, `bombard`, `sortie`, `surrender`, `pillage`, `take_captives`.
+- **Vessels in every domain:** `manoeuvre`, `take_position`, `fire`, `ram`, `board`, `repel`, `ignite`, `extinguish`, `flood`, `pump`, `repair_underway`, `jettison`, `launch_craft`, `raise_shield`, `lose_shield`, `vent`, `lose_power`, `crash`, `explode`, `sink`, `strike_colours`, `escape`, `drift`.
+- **Body and health:** `fall_ill`, `worsen`, `ease`, `recover`, `examine`, `treat`, `operate`, `set_bone`, `stitch`, `amputate`, `fit_prosthesis`, `go_into_labour`, `give_birth`, `lose_child`, `name_child`, `age`, `die`, `return_to_life`.
+- **Making:** `gather`, `prepare`, `shape`, `assemble`, `temper`, `inscribe`, `enchant`, `test`, `flaw`, `finish_work`, `sign_work`, `repair`, `break`, `copy`, `forge` (a false copy), `lay_foundation`, `raise`, `complete`, `collapse`.
+- **Exchange and work:** `offer`, `bargain`, `agree`, `pay`, `deliver`, `default`, `seize_goods`, `smuggle`, `levy`, `toll`, `lend`, `repay`, `give`, `return_gift`, `hire`, `work`, `strike_work`, `dismiss`, `buy_freedom`.
+- **Speech, law and rule:** `accuse`, `investigate`, `find_evidence`, `testify`, `plead`, `judge`, `sentence`, `punish`, `pardon`, `appeal`, `decree`, `proclaim`, `vote`, `count_votes`, `appoint`, `swear`, `break_oath`, `negotiate`, `propose`, `counter`, `sign`, `refuse`, `threaten`, `insult`, `apologise`, `persuade`, `convert`, `teach`, `learn`, `write`, `read`, `translate`, `forge_record`, `reveal`, `conceal`, `deceive`, `discover`, `spread_word`.
+- **Faith and powers:** `pray`, `offer`, `sacrifice`, `perform_rite`, `invoke`, `answer`, `deny`, `manifest`, `possess`, `exorcise`, `curse`, `bless`, `foresee`, `draw_power`, `use_power`, `backlash`, `bind`, `release`.
+- **Movement and settling:** `depart`, `travel`, `rest`, `lose_way`, `meet_danger`, `cross`, `enter`, `leave`, `arrive`, `settle`, `found`, `abandon`, `return`.
+- **Social and family life:** `meet`, `court`, `marry`, `separate`, `adopt`, `foster`, `inherit`, `succeed`, `crown`, `depose`, `betray`, `reconcile`, `befriend`, `quarrel`, `feud`, `avenge`, `mourn`, `celebrate`, `host`, `serve_food`, `compete`, `score`, `win`, `lose`, `perform`, `honour`, `shame`.
+- **Nature and cosmos:** `begin`, `spread`, `peak`, `wane`, `end`, `erupt`, `quake`, `flood_land`, `burn_land`, `blow`, `freeze`, `dry`, `bloom`, `migrate`, `die_out`, `appear`, `collide`, `ignite`, `collapse_body`, `open`, `close`.
+- **Minds and networks (W44, W45):** `connect`, `intrude`, `copy_mind`, `save_mind`, `restore_mind`, `transfer_mind`, `merge_minds`, `awaken`, `link_minds`, `unlink`.
+
+A new mechanic adds the actions it needs to `StepAction` in the same change; there is no `other`.
+
+**`StepOutcome`:** `success`, `partial`, `failure`, `missed`, `blocked`, `parried`, `dodged`, `glanced`, `absorbed`, `wounded`, `broken`, `severed`, `downed`, `killed`, `damaged`, `disabled`, `destroyed`, `captured`, `escaped`, `yielded`, `accepted`, `refused`, `delayed`, `interrupted`, `reversed`, `no_effect`.
+
+#### F58.5 Changes (`state_changes`, `state_change_terms`)
+
+Every value the engine, a god, a son, a mortal or Fate changes is recorded at flush by the capture of `db/ledger_capture.py`, widened from actor tool calls to every write:
+
+| Column | Content |
+|---|---|
+| `id`, `epoch`, `moment` | when |
+| `table_name`, `row_key`, `node_id` | which record and whose |
+| `operation` | `LedgerOperation` (insert, update, delete) |
+| `field` | the column (one row per changed column; an insert or delete keeps every column) |
+| `before_number`, `after_number`, `before_text`, `after_text`, `before_node_id`, `after_node_id` | the values, typed |
+| `actor_kind`, `actor_node_id` | `ActorKind` and the doer |
+| `phase`, `incident_id`, `step_id` | where in the epoch and which happening caused it (F58.8) |
+
+`state_change_terms`: `change_id`, `position`, `term` (a rules key, modifier source, factor name or catalogue key), `source_node_id`, `source_incident_id`, `op` (`ModifierOp`), `amount` (F58.7).
+
+Every table except `BOOKKEEPING_TABLES` and the record tables themselves is captured. Tables the engine rebuilds wholesale are derived from recorded state; each rebuild records one change per row whose values differ from the last build, so no value is unrecorded. `ledger_changes` stays as the undo store of actor calls (bookkeeping); both are written by the same capture pass.
+
+#### F58.6 Moments and places
+
+- **Moment.** Every incident, step and change carries an in-world moment: `year`, `season`, `day` and `hour` (part of the day) from the calendar of its world (spec 13 F2.2, `catalog/worlds.py`). Worlds without days use their own units, and moments in realms with their own time ratio (44.10a) are converted, keeping one timeline (K.21).
+- **Clocks.** Each kind names the process clock that dates its happenings inside the epoch: a march counts days on its route, a voyage its legs, a sickness its course, a building its months, a contest its rounds, a season its weeks. Moments come from the happening's own clock, never from the phase order of the write.
+- **Order.** An incident's moment is never earlier than its cause's moment; a step's moment is never earlier than the step before it. `chronicle.year` is the incident moment's year; `EpochYearCursorRow` and the random roll of `chronicle_year` are retired.
+- **Place.** Every incident stores its most precise place (room, structure, district, settlement, region, sea, sky, orbit, realm, network node), plus `origin` and `destination` for movement. A kind with `place: required` cannot be written without one.
+
+#### F58.7 Terms: why every number is what it is
+
+Every number a happening computes (a power, a price, a loss, a quality, a chance against its roll) is stored with its terms: the named factors that made it, each with its source and amount. The sources already exist as values: modifier stacks (`engine/primitives/modifiers.py`), the factor functions of battle (`modifier`, `BattleResult.factors`), duels (`swing`, `wound`), markets, harvests, health, standing and every rules key. A `terms` context collects them where they are computed, and the record stores them as `incident_terms` (same shape as `state_change_terms`) and on each change.
+
+The record answers questions like "why did the prosperity of X fall from 60 to 40": a blockade took 12 (that incident), a levy took 8 (that incident). A numeric change with no terms is valid only when its kind marks it `direct` (a value set outright by a lever, a birth's starting value).
+
+#### F58.8 Causes
+
+- Every engine step that acts runs inside `recording(...)`, a widened `caused_by`: it opens or names the incident its writes belong to. Steps receive the incident that triggered them (the battle that wounded, the famine that moved people) and pass it on.
+- Writes no happening explains (yearly ageing, prices settling, growth) belong to one incident per phase, world and epoch of kind `phase.<phase>`. Its changes are still recorded one by one with their terms, so nothing is unattributed.
+- `ChronicleRepository.cause_of` is no longer used to guess a cause; it remains only to suggest links for old records (49.6).
+
+#### F58.9 Witnesses, tellings and memory
+
+- **Witnesses.** Participants with role `witness` are chosen by presence at the place and moment (`present_among`, `folk_among` in `engine/primitives/folk.py`), within the rules radius. Each has a `WitnessMode` (`saw`, `heard`, `took_part`, `was_told`) and a fidelity.
+- **Rumours** (spec 13 F11) take their content from facts and steps and keep `incident_id`. Their distortions are typed (`RumourDistortion`: `doer_swapped`, `target_swapped`, `amount_changed`, `outcome_changed`, `cause_changed`, `place_changed`, `moment_changed`, `step_added`, `step_dropped`, `role_changed`), each naming the fact or step it changes.
+- **Memories** (spec 13 F7) point at the incident and the step they remember.
+- **Tellers.** Bards, chroniclers, the model and gods that spread an account are stored with role `teller`.
+
+#### F58.10 Telling, tiers and names
+
+- **Rendering.** The line is rendered from the kind's template, roles and facts (`render_incident`). The text written at the moment of the happening is kept as `chronicle.text`. Readers in another language re-render from the fields, and decision 71's localisation runs once per template family instead of once per line.
+- **Tiers.** Every happening has three tiers:
+  - the **line** (the feed);
+  - the **account**: roles, facts, place, moment, cause, terms and witnesses;
+  - the **steps**: every step and state change.
+
+  Each surface reads the tier it needs; the book and the Codex render all three.
+- **Folding becomes a view.** `fold_tick_lines` no longer hides, rewrites or cuts records. The feed may group lines of one kind in one epoch as a view ("N happenings of this kind", expandable to every one), and no entity link is capped. Records keep their own `ChronicleKind`; `engine_raw` is used only for raw engine notes. `folded_chronicle_ids_cap` is retired and `chronicle_fold_threshold` only shapes the feed view.
+- **Names.** Happenings above the rules magnitude get a name from the model, from the world's languages and the typed fields (rule 2), as collections already do.
+
+#### F58.11 The past at any moment
+
+From the changes, any record, node, region, map layer or value can be reconstructed as it was at any earlier moment (`state_at(table, key, moment)`). Reconstructing walks the changes back from the present state; checkpoints every rules number of epochs keep this fast. It powers:
+
+- the timeline scrubber on every drawer;
+- the atlas at any moment: borders, settlements, routes, armies, fleets, networks;
+- "then and now" lines in the book and the Codex;
+- a god's revert lever (49.5).
+
+#### F58.12 Retention
+
+Everything is kept, for ever, in every world (K.42): every incident, fact, step, state, change, term, witness and telling. Nothing is sampled, compacted, folded away or cut, in storage, the API, the book, the Codex or the model's context (memory: the book is never truncated). Volume is met by:
+
+- bulk inserts at flush;
+- integer keys and indexes on `node_id`, `incident_id`, `epoch` and `moment`;
+- checkpoints for F58.11;
+- streamed reads for the book and the Codex;
+- paged screens.
+
+The rows per epoch and the epoch time are measured as balance bands (49.8).
+
+### 49.2 Every process records its account and its steps
+
+Every family of Appendix 49.A belongs to one process group. The group gives the minimum facts and the steps of its kinds. Each kind lists its own, and the rule of F58.3 (every computed value is a fact) applies on top.
+
+| # | Process group | Facts every kind of the group records | Steps |
+|---|---|---|---|
+| 1 | Single combat and violence to persons: duels, champions, trials by combat, god duels, vendettas, grudges, brawls, assaults, killings, executions, hunts of and by beasts and monsters, monster contracts, witch hunts, captives' fates | context (`DuelContext` or the kind), stakes, ground (terrain, weather, light), each side's arms and armour by model, skills used, number of exchanges, end (`DuelEnd`), who was spared and why (the mercy and honour readings) | every exchange as in spec 13 5.6 reference pass 2: initiative and distance (`close`), the chosen action with its target part, the defence (`block`, `parry`, `dodge`) and whether it met the attack, wrestling (`grapple`, `throw_down`, `choke`, `lock`, `bite`), each hit with instrument, part, damage type and outcome linked to its `injuries` row, falls and rising, disarming, the mount as a target, yielding, sparing, finishing |
+| 2 | Battles, sieges and war: battles, phases, sieges and siege works, sorties, assaults, pursuits, occupations, purges, theatres, supply, spies and mole hunts, war declarations, war aims, war finance, peace | sides and armies, every stack with its kind, start, losses by fate (killed, wounded, captured, missing, deserted), tactics chosen and countered, ground and weather, scouting, plan, outcome class and gap, score, spoils, standard taken, commanders fallen | each phase's stack actions (`deploy`, `volley`, `charge`, `advance`, `flank`, `rout`, `rally`, `reinforce`, `withdraw`, `encircle`, `pursue`) with target stack, losses, morale and formation change; every named person's moments (a commander struck down, a hero's deed, a standard taken) as nested steps; siege works, breaches, mines, bombardments, sorties, storms and surrenders round by round |
+| 3 | Vessels and fleets in every domain: sea, underwater, air, space, gas giant, planar, underground (49.3) | vessels, their frames, designs, crews by station, weapons by model, wind or position, shot or weapon kind each round, hits per section, crew losses, prize money, salvage | every round: `manoeuvre`, `take_position`, `fire` (weapon, target section, damage type, outcome), section states, chains (fire spreading, flooding, breach, venting, power loss, magazine or core explosion), `board` as a nested contest of group 1, `strike_colours`, `sink`, `escape` |
+| 4 | Body, birth, health and death: births, stillbirths, injuries, afflictions, conditions, illness courses, epidemics, treatment, healing, ageing, deaths, returns from death, cohorts, stress, reproduction, lineages and breeding | the child's name and parents, place, attendants, complications, twins and births of more; the illness, strain, stage and symptoms; the healer, method, `TreatmentStep`s and their success; the cause of death with its chain, last place, last words when recorded by the model; age; inherited traits | labour and birth steps; illness stages (`fall_ill`, `worsen`, `ease`, `recover`); each treatment step; the last moments before death; each injury's healing stages (`InjuryState`) |
+| 5 | Making, building and things: items, masterworks, forgeries, constructs, designs, enchantments, structures and their stages, megastructures, wonders, ruins, workshops, refining, chemistry, clocks, mining and extraction, heraldry | maker, workshop, materials by kind and amount, technique, tools, quality and its terms, flaws, time taken, cost, owner, signs and marks, every stage of a building with its workers and materials | gathering, preparing, shaping, assembling, tempering, inscribing, enchanting, testing, flaws, finishing and signing; laying foundations, raising, completing; damage, repair, breaking and collapse |
+| 6 | Exchange, money and labour: markets, trades, routes, convoys, credit, banking, money, tolls, taxes, levies, loot, insurance, speculation, contraband, companies, slave markets, bondage, indenture, corvée, manumission, gifts and circuits, wages and strikes | goods by kind and quantity, price, currency and treasury units, parties, place and route, terms (rate, length, security), what was paid and what is owed, the ruling prices it moved | offering, bargaining, agreeing, paying, delivering, defaulting, seizing, smuggling, levying; for labour: hiring, working, striking, dismissing, buying freedom |
+| 7 | Law, rule and offices: crimes, investigations, trials, verdicts, sentences, appeals, pardons, prisons, outlawry, registries, laws and decrees, councils and votes, elections, coalitions, crises, offices, titles, houses, successions, coups, loyalty, patronage, venality, schemes and secrets, estates and orders | the act and the law it broke, evidence, charges, court, judge, verdict, sentence and its execution; for decisions: the proposal, its clauses, votes by member and bloc, the rule of decision; for successions: the claimants, claims, rule of succession, outcome | the act; investigation steps (`investigate`, `find_evidence`); trial steps (`accuse`, `testify`, `plead`, `judge`, `sentence`); votes and their count; appointments; successions; schemes stage by stage |
+| 8 | Diplomacy and plans: treaties and clauses, alliances, peace, tribute, marriages of state, envoys, great plans | parties, envoys, each offer and counteroffer, clauses with their typed terms, guarantees, what was given, breaches and penalties | `negotiate`, `propose`, `counter`, `threaten`, `persuade`, `agree`, `refuse`, `sign`; breaches and their answers |
+| 9 | Faith, rites, powers and the uncanny: rites and their grammar, magic and its backlash, prayers and answers, miracles, sacraments, spirits and their offices, possession and exorcism, curses and blessings, divination and foresight, afterlife and returns, native faiths, the spread of faiths, taboos, prophecy, mage orders, dreams, horrors and outer beings | caster or officiant, rite or power, source, components and their amounts, the grammar (technique, form, range, target), essence or other cost, resistance and its terms, outcome, backlash, the god or spirit that answered | `pray`, `offer`, `sacrifice`, `perform_rite`, `invoke`, `draw_power`, `use_power`, `answer`, `deny`, `manifest`, `possess`, `exorcise`, `curse`, `bless`, `foresee`, `backlash`, `bind`, `release` |
+| 10 | Movement and settling: journeys, voyages, pilgrimages, migrations, refugees, expeditions, exploration, routes found, settlements founded, nomad circuits, journeys beyond the world | travellers and their number, origin, destination, route and method, distance and days per leg, supplies, dangers met, losses, arrivals | `depart`, `travel` per leg, `rest`, `lose_way`, `meet_danger` (nesting the happening that followed), `cross`, `enter`, `leave`, `arrive`, `settle`, `found`, `abandon`, `return`; existing `expedition_logs` rows become steps |
+| 11 | Social, family and cultural life: courtship, marriages, separations, adoptions, inheritance, households, gatherings, feasts, festivals, weddings, funerals, contests, games and sport, performances, art movements and markets, customs and revivals, age sets, intoxication, cooperatives, cuisine, pets, affairs, circles, friendships and quarrels, legacies, names, careers, standing, needs, aspirations, skills, ideas | who took part and in which role, the custom or rite followed, what was given (dowry, gifts, prizes), what was served (dish and drink kinds), the scores and rounds of contests, the work performed, the honour or shame that followed | `meet`, `court`, `marry`, `separate`, `adopt`, `inherit`, `host`, `serve_food`, `celebrate`, `mourn`, `compete`, `score`, `win`, `lose`, `perform`, `honour`, `shame`, `quarrel`, `reconcile`, `betray`, `avenge` |
+| 12 | Knowledge, language and minds: discoveries, research, theories, inventions, schools and examinations, writing and printing, translation, records and accounts of the past, tongues, scripts, dialects, contact and death of languages, rumours, ciphers, memory, values, ethics, minds | who found or taught what, the subject and its level before and after, the path (study, experiment, contact, insight, revelation), the work written and its copies, the language and its changes, the account and what it contradicts | `investigate`, `discover`, `teach`, `learn`, `write`, `copy`, `read`, `translate`, `forge_record`, `reveal`, `conceal`, `spread_word` |
+| 13 | Nature, land and seasons: ecology and its niches, creatures and beasts, domestication, extinction, flora, climate, seasons and long seasons, weather extremes, disasters and hazards, the succession of land, commons, soil and harvests, famine, relief and rebuilding, living stats | the area and places touched, intensity, duration, the species and their numbers before and after, harvests by crop and amount, people affected, deaths by settlement, structures damaged by section, losses in goods | `begin`, `spread`, `peak`, `wane`, `end`, and the kind's own (`erupt`, `quake`, `flood_land`, `burn_land`, `blow`, `freeze`, `dry`, `bloom`, `migrate`, `die_out`) with the settlement or region each step reached |
+| 14 | Cosmos and the great scales: stars, galaxies, worlds, features, impacts, rifts, dimensions, phenomena, omens in the sky, terraforming, cosmic beings and their wounds, the world's age and balance, doom, the passing of ages, dark ages | the bodies, their measured values before and after (mass, light, orbit, age stage), energy, the path of an impact and its site, the regions and peoples affected | `appear`, `ignite`, `collide`, `collapse_body`, `open`, `close`, `spread`, `end` with the bodies or regions reached |
+| 15 | Gods, sons and Fate: deeds of the Creator, sons and foreign gods, pantheon affairs, divine battles and duels, rulings, councils of gods, dominion, mythic offices and servitors, outer powers, Fate's verdicts | the god, the power or domain used, essence spent, targets, the request or prayer answered, the ruling and its terms, the verdict and its reason | each act with its target and outcome; divine battles round by round as in groups 1 and 2; rulings as group 7 |
+| 16 | Peoples, societies and history: civilisations, peoples and ethnogenesis, societies and classes, factions and movements, institutions, asabiyya, regimes, collectives and crowds, storylets, story arcs and ages, accounts of history, records, excavations and sites, life cycles | the peoples and polities, counts before and after, the measures that crossed a threshold with their terms, the leaders, the choices made, the finds of a dig by room and layer | the stages of the process (`begin`, `spread`, `peak`, `wane`, `end`); crowd actions; storylet choices; excavation rooms and finds |
+
+The incident families planned in 5.16 and every wave after W49 follow F58 from the start.
+
+### 49.3 Engagements of vessels in every domain
+
+Measurement: the round-by-round engagement (`military/vessels.py` `sea_fight`, `operations/sail.py` `engage`) runs only for `VehicleKind.SHIP`. Airships, spacecraft, submersibles and every other frame fight only as unit stacks. `VesselArmament` has four values (`rams`, `missiles`, `siege_engines`, `rites`), while the equipment models in `engine/equipment/models.py` already mount beam cannons, torpedoes, missile launchers, focus arrays, mine layers and harpoons. Weapon kinds choose the section they hit only for the four age-of-sail shot kinds.
+
+1. **One engagement for every domain.** `engage` runs for every vessel domain (`VehicleDomain`), with position read from the domain: wind for sail, current underwater, altitude and lift in the sky, orbit and relative velocity in space, the domain's own medium elsewhere.
+2. **Armament from mounted models.** `VesselArmament` is replaced by the weapon models actually mounted on the design (`MountKind`: `bow`, `stern`, `broadside`, `deck`, `turret`, `spinal`, `hardpoint`, `wing`, `crew_station`, `rider`, `ram`, `bay`, `ward_node`; `engine/equipment/models.py` `MOUNT_FAMILIES`), each read for its damage type, rate, range and the sections it can reach.
+3. **Weapon to section.** A rules table maps each damage type and delivery to the sections it reaches and the chains it starts:
+   - kinetic shot reaches hulls and decks;
+   - fire reaches sails, envelopes and wooden decks;
+   - energy reaches shields first (`ward`), then armour plating;
+   - torpedoes and rams reach hulls below the waterline or the drive;
+   - explosive delivery reaches crew stations;
+   - powers and rites reach what their grammar targets.
+4. **Chains for every section.** Each section has a typed chain when destroyed:
+   - `magazine` and `power_core`: explosion;
+   - `life_support` and `airlock`: venting and crew loss;
+   - `drive` and `engine`: power loss and drift;
+   - `envelope` and `rotor`: falling;
+   - `hull` and `keel`: flooding or breach by domain;
+   - `ward`: the shield falls.
+5. **Boarding** is a nested group-1 contest between marines, with named officers.
+6. **Every step recorded** (49.2 group 3); `StrikeResult.events` is replaced by steps.
+
+Tables: `design_mounts` already hold the mounted models (`MountKind`); the rules namespace `engagement` holds the weapon-to-section table, chains and domain position rules. Levers: the existing vessel and design levers edit mounts; `engagement:force` lets a god start one.
+
+### 49.4 Duels at full depth
+
+Spec 13 5.6 reference pass 2 (planned) is the duel model. Whichever wave builds first builds it fully (0.7), and W49 requires its exchanges as steps: `military/duels.py` `bout` records each exchange's action, defence, part, instrument and outcome. Each hit goes through `engine/body/hits.py` with its part chosen in the exchange instead of after the bout, and the `injuries` row stores the step. `Bout.log` is removed.
+
+### 49.5 Surfaces
+
+- **API.**
+  - `GET /incidents/{id}` serves the line, account, steps, states, changes, terms, witnesses, rumours and the cause chain both ways.
+  - `GET /nodes/{id}/history` serves every incident, step and change of a node with role and kind filters, paged.
+  - `GET /state-at` reconstructs past state (F58.11).
+  - Search reads facts: every death by an instrument kind, every trade of a good, every rite of a source.
+  - Every field served is read by a screen (`test_frontend_reads_every_field.py`).
+- **Frontend.**
+  - An **Event page** (drawer for an incident, built from the design system) shows the line, the account (roles with medallions, facts with labelled values and units, place, moment, cause and effects), a steps timeline (rounds, nested steps, states, linked injuries and sections), a changes table with before, after and terms, witnesses and the rumours told from it.
+  - A **History** section in `ThingSections` (every kind of node: the Creator, sons, foreign gods, worlds, stars, every entity type) with filters and show-more paging.
+  - A **timeline scrubber** on every drawer and on the atlas (F58.11).
+  - Battle reports and engagement reports gain step timelines.
+  - The causality graph (`features/entity/mechanics/CausalityGraph.tsx`) shows steps and changes.
+  - The chronicle feed groups by view (F58.10) with every line reachable.
+  - Loading, empty, error and disabled states, light and dark themes, phone width.
+- **God control (rule 6).**
+  - `IncidentForge` widens: `incident:create/edit/delete`, `incident_fact:create/edit/delete`, `incident_step:create/edit/delete`, `incident_witness:create/edit/delete`, so a god can write a happening into history or rewrite how it is told, with every field editable.
+  - `incident:hold` locks a record against engine re-rendering.
+  - `state_change:revert` writes the before value back as a new change by that god, so history stays true and the reversal is itself recorded.
+  - `state_change:delete` removes a change record (erasing it from history is a god's power).
+  - Every lever is registered in the action catalog, reached from the Event page and the History section, and proven in `test_every_lever.py` with real values.
+- **Codex and book (rule 7).**
+  - Every node's entry renders its History through `services/books/typed.py` (accounts and steps, in full).
+  - The Records of the Cosmos appendix gains designed tables of incidents by age with their accounts, steps and changes.
+  - Battle and engagement reports get their own layouts.
+  - "Then and now" lines come from F58.11.
+  - Nothing is truncated; the Codex and entries read every record, folded or not.
+- **Agents.**
+  - Mortal context carries the mortal's own recent steps, changes and the accounts they witnessed.
+  - Son context carries the accounts of happenings in its domains.
+  - Tools:
+    - son `recall_event` reads an account;
+    - son `retell_event` spreads a version (a rumour with typed distortions);
+    - mortal `recount` tells what the mortal saw.
+
+    Each tool has a case in `every_son_tool.py` or `every_mortal_tool.py`, and its fields are described in `test_catalogue.py`.
+  - Every agent action writes its happening through F58.
+- **Prompts.**
+  - The chronicler's fact sheet carries the accounts and steps of the age's happenings as definite outcomes it may not contradict.
+  - Templates are plain words from typed fields with no images and no tone. Every existing line is rewritten through its template, read in full (rule 2). The found tone-setting line in `engine/lore/rites.py` ("worked dark magic, and all who heard of it shuddered") is the first one rewritten.
+
+### 49.6 Legacy
+
+- Existing `incidents` keep their rows. Recorded fixups fill facts where the old key's catalogue schema can take them from linked entities, give participants their roles from `INCIDENT_ROLES` and the kind's role order, set moments from `chronicle.year`, and mark the record `tier = line` (account and steps unknown). Nothing is invented.
+- Folded originals are restored to their kinds and made visible to every reader; folded summary lines become feed views.
+- `ledger_changes` stays as the undo store; engine history starts with W49, and checkpoints (F58.11) are taken at the upgrade.
+- The 19 history tables stay as typed views. Each write to them also writes its incident and changes, and their rows link `incident_id`.
+
+### 49.7 Guards
+
+| Guard | Fails when |
+|---|---|
+| `scripts/check_incident_kinds.py` | a key written by the code has no catalogue entry, an entry is never written, a write passes a pre-rendered f-string instead of facts, or a kind lacks roles, schema, template, place rule or clock |
+| runtime validation in tests | a write misses a required role or fact, gives a fact the wrong type or unit, or uses a step action its kind does not declare |
+| `scripts/check_dropped_records.py` | engine code collects narrative or step lists (`log`, `lines`, `events`, `steps`) that never reach the record API, or declares such a field that is never filled |
+| `tests/engine/core/test_every_change_recorded.py` | on the rich cosmos of `test_god_control.py`, any write by any engine step leaves no `state_changes` row, or a row with no incident |
+| `tests/engine/core/test_moments.py` | an incident is earlier than its cause, or a step earlier than the one before it |
+| `tests/engine/core/test_terms.py` | a numeric change in an engine step has no terms and its kind is not `direct` |
+| `tests/unit/test_every_incident_kind.py` | a kind cannot be rendered from sample facts, or a `StepAction`, `StepOutcome`, `StepState`, `InstrumentKind`, `StepLocus`, `FactUnit`, `WitnessMode` or `RumourDistortion` value is never produced and read |
+| `scripts/check_wiring.py` | a record table is missing from the book or the Codex typed sections |
+| `scripts/check_record_cuts.py` | any reader of records (book, Codex, API, search, prompts) slices, limits or filters out records by visibility or kind, except paged screens with show-more |
+
+### 49.8 Rules, balance and performance
+
+- Rules namespace `records`: witness radius, fidelity by mode, rumour distortion per hop, moment spreading per clock, naming magnitude, checkpoint interval.
+- Balance bands (5.12a, `13-balance-bands.json`):
+  - record rows per epoch per thousand mortals;
+  - the share of numeric changes with terms (100%);
+  - the share of incidents with a place where the kind requires one (100%);
+  - the epoch time added by recording, held within a band measured before the wave and kept by batching.
+
+### 49.9 Couplings, loops, stories and decisions
+
+**Couplings.**
+
+- C54 Records → rumours, memories, renown and the chronicler read facts and steps.
+- C55 Changes → the past at any moment and god reverts.
+- C56 Terms → every screen that explains a value.
+
+**Loops.**
+
+- L111 (R) a told deed → witnesses retell it → renown rises → more tellers (brake: fidelity falls per hop, rumour distortion).
+- L112 (B) a distorted account spreads → a witness or record contradicts it → the account is corrected, or an `information.*` incident follows (44.14).
+
+**Acceptance stories.**
+
+- AS53 **The Arm and the Mace.** A duel records each exchange. An exchange breaks the loser's arm with a named mace (the injury row stores the instrument and step). The loser falls and is struck while rising. A witness's rumour swaps the weapon. The book shows the steps and the rumour's distortion.
+- AS54 **Why the Town Went Hungry.** A blockade incident's terms appear in the town's prosperity change. The scrubber shows the town before and after. A god reverts the change, and the revert is itself recorded.
+- AS55 **The Lost Shield.** Two spacecraft engage. A beam weapon takes down the target's shield, then breaches life support. Venting kills crew by station, and the ship drifts. Each step appears in the engagement report and the Codex.
+- AS56 **Every Birth Told.** A birth records its place, attendants, complication and the child's name. A later epoch's folding view groups many births without hiding one of them from the Codex.
+
+**Decisions.**
+
+| Id | Question | Decision |
+|---|---|---|
+| K.42 | What is kept? | Everything, for ever, in every world (user decision 2026-11-14): every incident, fact, step, state, change, term, witness and telling; nothing is sampled, compacted, folded away or cut. |
+| K.43 | Is the stored text or the fields the truth? | The fields. The text written at the moment is kept as the record of how it was first told; every reader can re-render from the fields. |
+| K.44 | Can history be rewritten? | A god may revert a change (recorded as a new change), rewrite how a happening is told, or delete a record; the engine never edits a past record. |
+| K.45 | Who witnesses by default? | Those present at the place and moment within the rules radius, plus participants; the Creator and sons see what their domains and attention reach. |
+
+### 49.10 Execution order and compliance catalogue
+
+**Execution order.**
+
+1. The guards and `catalog/incident_kinds.py` come first, generated from the code so they list every key.
+2. F58.1–F58.4: kinds, roles, facts and steps.
+3. F58.5: change capture.
+4. F58.6–F58.8: moments, places, terms and causes, with the recording scope through every engine step.
+5. Each process group of 49.2 in Appendix 49.A order, with 49.3 engagements and 49.4 duels.
+6. F58.9–F58.10: witnesses, rumours, rendering and folding as a view.
+7. F58.11: the past at any moment.
+8. Surfaces (49.5), fixups (49.6) and bands (49.8).
+9. An audit by the guards against Appendix 49.A.
+
+The wave is gated once.
+
+| Section | Tables | Phases | God levers | Screens | Tools and context | Codex and book | Integrity | Backfill |
+|---|---|---|---|---|---|---|---|---|
+| F58.1–F58.3 kinds, roles, facts | `incident_facts`; `incidents.kind` from the catalogue | every phase that writes | `incident:*`, `incident_fact:*` | Event page | `recall_event`; accounts in context | account in entries and Records | kind exists; required roles and facts; types and units | facts and roles from links |
+| F58.4 steps | `incident_steps`, `incident_step_states` | every process of 49.2 | `incident_step:*` | steps timeline | steps in mortal context | steps in entries and reports | order; parents exist; actions declared | none (start with W49) |
+| F58.5 changes and terms | `state_changes`, `state_change_terms`, `incident_terms` | every write, at flush | `state_change:revert`, `state_change:delete` | changes table, value explanations | changes in mortal context | changes with terms | every write recorded; terms or `direct` | checkpoint at upgrade |
+| F58.6 moments and places | moment columns on incidents, steps and changes | every phase, by clock | `incident:edit` | moments everywhere | moments in context | dates by world calendar | order by cause | moments from years |
+| F58.8 causes | `incidents.cause_incident_id` through `recording` | every engine step | `incident:edit` | cause chain | chains in chronicler facts | cause lines | no write outside a scope | old guesses kept, marked |
+| F58.9 witnesses and tellings | `incident_participants` (witness, teller), rumour distortions | rumours, memory | `incident_witness:*` | witnesses, rumours on the Event page | `retell_event`, `recount` | witnesses and tellings | witnesses present | none |
+| F58.10 telling and folding | chronicle rendered; fold as view | epoch end | `incident:hold` | feed groups | chronicler fact sheet | every record shown | no reader cuts | folded lines restored |
+| F58.11 past at any moment | checkpoints | checkpoint step | `state_change:revert` | timeline scrubber, atlas at a moment | — | then and now | reconstruction equals stored state at checkpoints | first checkpoint |
+| 49.3 engagements | `design_mounts` read, rules `engagement` | seafaring and every domain | `engagement:force`, mount levers | engagement report | captain context | engagement reports | sections exist | `VesselArmament` mapped to models |
+| 49.4 duels | `injuries` with `step_id` and instrument | duels, trials, champions | as spec 13 5.6 | duel timeline | duel accounts | duel reports | hits linked to steps | none |
+
 ### Appendix 48.A — The 300 enums without an authored layer
 
 Generated from the enum classification of 48.0. "Catalogue" marks the enums that need a property catalogue (48.10).
@@ -3461,3 +3857,262 @@ These hold states, stages, outcomes, sources, roles in events, scales, levels an
 | vehicles | `VehicleFamily`, `VehicleStatus` |
 | war | `BattleOutcome`, `CaptiveStatus`, `DebtStatus`, `GodConflictOutcome`, `HeroQuestStatus`, `SiegeStatus`, `TributeStatus`, `WarSide`, `WarStatus` |
 | world | `FateMode` |
+
+### Appendix 49.A — Every incident family and its process group
+
+Generated on 2026-11-14 from every template key written literally in `backend/src/aerona/engine` and `services` (935 keys in 252 families; keys with `{…}` are built from an enum value and expand to one kind per value). Keys passed through variables are found by `check_incident_kinds.py` at build time, which lists every key the code can write and fails on any without a kind. The group number refers to 49.2. Every key listed becomes an incident kind under F58.1.
+
+| Family | Process group | Count | Keys | Written by |
+|---|---|---|---|---|
+| `beasts.*` | 1 (single combat and violence to persons) | 4 | `deed`, `fallen`, `risen`, `worshipped` | `ecology/beasts`, `phases/wilds` |
+| `captives.*` | 1 (single combat and violence to persons) | 1 | `fates` | `military/captivity` |
+| `casualties.*` | 1 (single combat and violence to persons) | 4 | `commander_risen`, `disaster_dead`, `fate_shielded`, `veterans` | `phases/casualties` |
+| `challenge.*` | 1 (single combat and violence to persons) | 3 | `civic`, `collapse`, `response` | `cycles/challenge` |
+| `contract.*` | 1 (single combat and violence to persons) | 4 | `failed`, `posted`, `slain`, `taken` | `ecology/contracts` |
+| `duel.*` | 1 (single combat and violence to persons) | 1 | `honour` | `phases/vendettas` |
+| `grudges.*` | 1 (single combat and violence to persons) | 1 | `holy_war` | `phases/grudges` |
+| `heroes.*` | 1 (single combat and violence to persons) | 6 | `apprentice`, `birth`, `companions`, `quest_start`, `quest_{quest.kind.value}`, `recalled` | `phases/heroes` |
+| `heroism.*` | 1 (single combat and violence to persons) | 6 | `age_change`, `armor_save`, `defeat`, `legendary_weapon`, `rewind`, `victory` | `phases/heroism` |
+| `justice.*` | 1 (single combat and violence to persons) | 1 | `{punishment.value}` | `mortal/justice` |
+| `monsters.*` | 1 (single combat and violence to persons) | 4 | `emerged`, `herd_raid`, `raid`, `void_roamed` | `ecology/monsters`, `phases/monsters` |
+| `vendetta.*` | 1 (single combat and violence to persons) | 1 | `faded` | `phases/vendettas` |
+| `witchcraft.*` | 1 (single combat and violence to persons) | 3 | `accused`, `hunt`, `hunt_over` | `folkways/witchcraft` |
+| `battlefield.*` | 2 (battles, sieges and war) | 1 | `haunted` | `sites/digs` |
+| `espionage.*` | 2 (battles, sieges and war) | 2 | `defected`, `mole_{outcome.value}` | `military/mole_hunts`, `military/spy_depth` |
+| `logistics.*` | 2 (battles, sieges and war) | 4 | `collapsed`, `culminated`, `depot_founded`, `field_depot` | `operations/control`, `operations/supply` |
+| `occupation.*` | 2 (battles, sieges and war) | 1 | `{row.region_entity_id}` | `history/collections` |
+| `purge.*` | 2 (battles, sieges and war) | 1 | `{realm}` | `history/collections` |
+| `scheme.*` | 2 (battles, sieges and war) | 1 | `{scheme.id}` | `history/collections` |
+| `theatres.*` | 2 (battles, sieges and war) | 1 | `misjudged` | `operations/theatres` |
+| `unit_types.*` | 2 (battles, sieges and war) | 1 | `drawn` | `military/unit_types` |
+| `war.*` | 2 (battles, sieges and war) | 25 | `battle.refused`, `battle.{report.outcome.value}`, `call_betrayed`, `debasement`, `duel_decree`, `ended_white_peace`, `ended_{settlement.ending.value}`, `fought_on`, `god_duel`, `incitement_reaped`, `loan`, `mercenaries_hired`, `mercenaries_turned`, `mutiny.{outcome.value}`, `outbreak`, `partisans`, `sack.{choice.value}`, `sea_battle`, `separate_peace`, `siege.relieved`, `siege.surrender`, `terror`, `trial_by_combat`, `uprising_redirected`, `weary_peace` | `gods/incitement`, `military/alliance`, `military/campaign`, `military/finance`, `military/occupation`, `military/siege`, `military/siege_depth`, `military/terms`, `military/upkeep`, `phases/warfare` |
+| `warfare.*` | 2 (battles, sieges and war) | 1 | `army_stood_down` | `phases/warfare` |
+| `admiralty.*` | 3 (vessels and fleets) | 2 | `commissioned`, `fleet_exposed` | `operations/admiralty` |
+| `seafaring.*` | 3 (vessels and fleets) | 5 | `ghost_ship`, `prize_taken`, `sea_fight`, `storm`, `wreck` | `military/vessels` |
+| `affliction.*` | 4 (body, birth, health and death) | 2 | `cured`, `{package.value}` | `body/afflictions` |
+| `births.*` | 4 (body, birth, health and death) | 9 | `child`, `ethnogenesis`, `notable`, `ruler`, `sapience`, `stillborn`, `twins`, `village`, `village_ruin` | `phases/births` |
+| `body.*` | 4 (body, birth, health and death) | 3 | `maimed_cult`, `reader_taken`, `ruler_set_aside` | `phases/body` |
+| `breeding.*` | 4 (body, birth, health and death) | 2 | `begun`, `love` | `regime/control`, `regime/lineages` |
+| `cohort.*` | 4 (body, birth, health and death) | 1 | `scar_festival` | `body/cohorts` |
+| `condition.*` | 4 (body, birth, health and death) | 1 | `{verb}.{kind.value}` | `body/conditions` |
+| `disease.*` | 4 (body, birth, health and death) | 14 | `army_carried`, `carrier_found`, `carrier_seeded`, `cure_found`, `cure_sold`, `endemic`, `expelled`, `hospital`, `immune_escape`, `plague_response`, `quarantine_riot`, `spillover`, `strain`, `tradition` | `disease/carriers`, `disease/course`, `disease/evolution`, `disease/research`, `disease/responses`, `disease/spillover`, `disease/stigma` |
+| `genetics.*` | 4 (body, birth, health and death) | 2 | `order_recruits`, `resemblance` | `genetics/lineage` |
+| `healing.*` | 4 (body, birth, health and death) | 3 | `amputated`, `prosthesis`, `reattached` | `body/healing` |
+| `injury.*` | 4 (body, birth, health and death) | 1 | `{row.kind.value}` | `lifecycle/wounds` |
+| `life.*` | 4 (body, birth, health and death) | 3 | `native_people`, `native_species`, `{stage.value}` | `mortal/course`, `phases/life_seed` |
+| `mortal.*` | 4 (body, birth, health and death) | 4 | `death_prestige`, `inheritance`, `mourning`, `spirit` | `lifecycle/mortal_death`, `mortal/death` |
+| `mortals.*` | 4 (body, birth, health and death) | 1 | `ghost` | `phases/mortals` |
+| `necromancy.*` | 4 (body, birth, health and death) | 3 | `host`, `siege`, `tower` | `ecology/necromancy` |
+| `reproduction.*` | 4 (body, birth, health and death) | 2 | `budded`, `changed` | `cycles/reproduction` |
+| `stress.*` | 4 (body, birth, health and death) | 4 | `counter_elites`, `crisis`, `elites_fell`, `{kind.value}` | `cycles/stress`, `mortal/acts`, `phases/cycles` |
+| `arcana.*` | 5 (making, building and things) | 2 | `enchantment_laid`, `enchantment_lapsed` | `arcana/enchantments` |
+| `art.*` | 5 (making, building and things) | 4 | `canonised`, `commissioned`, `forgotten`, `translated` | `lore/art` |
+| `art_forms.*` | 5 (making, building and things) | 3 | `fused`, `invented`, `lost` | `lore/art_forms` |
+| `chemistry.*` | 5 (making, building and things) | 1 | `founded` | `crafts/chemistry` |
+| `clocks.*` | 5 (making, building and things) | 1 | `built` | `crafts/clocks` |
+| `construct.*` | 5 (making, building and things) | 7 | `ended`, `freed`, `made`, `risen`, `seal_lost`, `seized`, `will` | `constructs/making`, `constructs/orders`, `constructs/wards` |
+| `designs.*` | 5 (making, building and things) | 2 | `failure_{part.value}`, `refit` | `collective/designs` |
+| `extraction.*` | 5 (making, building and things) | 1 | `deposit_found` | `phases/production` |
+| `grounds.*` | 5 (making, building and things) | 2 | `collapsed`, `recovered` | `crafts/grounds` |
+| `heraldry.*` | 5 (making, building and things) | 2 | `cadet`, `quartered` | `collective/heraldry` |
+| `industry.*` | 5 (making, building and things) | 3 | `blight`, `energy_short`, `method_changed` | `industry/methods`, `industry/pollution`, `phases/industry` |
+| `item.*` | 5 (making, building and things) | 6 | `broken`, `masterwork`, `reforge_quest`, `reforged`, `regalia_seized`, `transferred` | `lore/items`, `lore/made_control` |
+| `material.*` | 5 (making, building and things) | 3 | `crumbled`, `substance_{origin.value}`, `weapons_forged` | `economy/deposits`, `phases/production`, `phases/society_economy` |
+| `megastructures.*` | 5 (making, building and things) | 1 | `catastrophe` | `structures/megastructures` |
+| `mining.*` | 5 (making, building and things) | 1 | `{hazard.value}` | `economy/extraction` |
+| `refining.*` | 5 (making, building and things) | 2 | `bottleneck`, `workshop_built` | `economy/refining` |
+| `ruins.*` | 5 (making, building and things) | 2 | `abandoned`, `sheltered` | `phases/ruins` |
+| `structures.*` | 5 (making, building and things) | 9 | `abandoned`, `begun`, `burned`, `damaged`, `duel`, `finished`, `generation`, `repaired`, `ruined` | `structures/construction`, `structures/control`, `structures/damage`, `structures/functions`, `structures/settlement`, `structures/upkeep` |
+| `wonders.*` | 5 (making, building and things) | 2 | `envy_war`, `promoted` | `phases/wonders` |
+| `banking.*` | 6 (exchange, money and labour) | 7 | `collapse`, `default`, `jubilee`, `realm_jubilee`, `realm_loan`, `realm_{outcome}`, `war_loan` | `economy/money`, `economy/realm_credit` |
+| `circuits.*` | 6 (exchange, money and labour) | 2 | `guest_killing`, `passed` | `cycles/gifts`, `lore/taboos` |
+| `companies.*` | 6 (exchange, money and labour) | 3 | `collapsed`, `conquest`, `dominion` | `factions/companies` |
+| `consumption.*` | 6 (exchange, money and labour) | 3 | `cold_deaths`, `herd_loss`, `sickness` | `demography/basket` |
+| `contraband.*` | 6 (exchange, money and labour) | 2 | `books`, `slaves` | `finance/contraband` |
+| `corvee.*` | 6 (exchange, money and labour) | 3 | `laid`, `refused`, `suffering` | `cycles/bondage` |
+| `gifts.*` | 6 (exchange, money and labour) | 2 | `lapsed`, `refused` | `cycles/gifts` |
+| `indenture.*` | 6 (exchange, money and labour) | 3 | `bound`, `contracted`, `released` | `cycles/bondage`, `cycles/control` |
+| `insurance.*` | 6 (exchange, money and labour) | 2 | `founded`, `ruined` | `crafts/insurance` |
+| `labour.*` | 6 (exchange, money and labour) | 2 | `corvee`, `corvee_lifted` | `demography/society_control` |
+| `manumission.*` | 6 (exchange, money and labour) | 3 | `equal`, `freed`, `revolt` | `cycles/bondage`, `cycles/control` |
+| `market.*` | 6 (exchange, money and labour) | 10 | `credit`, `credit_note`, `depleting`, `exhausted`, `exhausted_note`, `famine_grain`, `refilled`, `written_off`, `{key}`, `{key}_note` | `economy/credit`, `economy/routes`, `phases/market` |
+| `markets.*` | 6 (exchange, money and labour) | 1 | `district` | `economy/markets` |
+| `money.*` | 6 (exchange, money and labour) | 5 | `adopted`, `debased`, `hoard`, `minted`, `temple_loot` | `economy/loot`, `economy/money` |
+| `numbers.*` | 6 (exchange, money and labour) | 1 | `milestone` | `crafts/numbers` |
+| `potlatch.*` | 6 (exchange, money and labour) | 1 | `claimed` | `cycles/gifts` |
+| `rights.*` | 6 (exchange, money and labour) | 1 | `infringed` | `crafts/rights` |
+| `slave_markets.*` | 6 (exchange, money and labour) | 2 | `opened`, `sold` | `cycles/bondage` |
+| `speculation.*` | 6 (exchange, money and labour) | 1 | `bust` | `finance/speculation` |
+| `tolls.*` | 6 (exchange, money and labour) | 1 | `diverted` | `economy/routes` |
+| `trade.*` | 6 (exchange, money and labour) | 7 | `barter`, `convoy_lost`, `convoy_raided`, `decree`, `market_play`, `seize_resource`, `trading_post` | `economy/convoys`, `economy/manipulation`, `factions/trading_posts`, `phases/trade` |
+| `trade_policy.*` | 6 (exchange, money and labour) | 1 | `smuggled` | `finance/policy` |
+| `trade_route.*` | 6 (exchange, money and labour) | 8 | `beast_raid`, `blockade`, `chokepoint_war`, `formed`, `legend`, `orphaned`, `shipwreck`, `weather_loss` | `economy/route_dangers`, `economy/routes` |
+| `affairs.*` | 7 (law, rule and offices) | 5 | `court_talent`, `election`, `leak`, `mandate_failed`, `revolution` | `polity/council`, `polity/court`, `polity/elections`, `polity/mandates`, `polity/policy` |
+| `claim.*` | 7 (law, rule and offices) | 1 | `exposed` | `renown/deeds` |
+| `crime.*` | 7 (law, rule and offices) | 2 | `informer_killed`, `turf_war` | `factions/crime`, `urban/turf` |
+| `enactment.*` | 7 (law, rule and offices) | 2 | `failed`, `{event.value}` | `polity/enactment` |
+| `estates.*` | 7 (law, rule and offices) | 2 | `granted`, `revoked` | `factions/estates` |
+| `houses.*` | 7 (law, rule and offices) | 7 | `branch`, `dispute_split`, `divine_line_ended`, `extinct`, `fabricated_claim`, `relic_quest`, `trait` | `polity/houses` |
+| `intrigue.*` | 7 (law, rule and offices) | 4 | `exposed`, `scheme_done`, `scheme_exposed`, `true_name_changed` | `intrigue/names`, `intrigue/schemes`, `intrigue/secrets` |
+| `law.*` | 7 (law, rule and offices) | 10 | `amnesty`, `appeal_upheld`, `bounty_claimed`, `jurisdiction_crushed`, `land_dispute`, `outlawed`, `pardon`, `remade`, `remade_rose`, `settled` | `constructs/remaking`, `law/appeals`, `law/jurisdictions`, `law/outlawry`, `law/pardons`, `law/registries` |
+| `loyalty.*` | 7 (law, rule and offices) | 1 | `wavering` | `polity/loyalty` |
+| `oaths.*` | 7 (law, rule and offices) | 2 | `broken`, `wrath` | `polity/oaths` |
+| `orders.*` | 7 (law, rule and offices) | 2 | `holy_war`, `vows` | `factions/orders` |
+| `polity.*` | 7 (law, rule and offices) | 14 | `coup`, `cult_law`, `debt_default`, `founded`, `jubilee`, `law_enacted`, `law_proposed`, `law_rejected`, `secession`, `succession_war`, `tier_fell`, `tier_rose`, `usurper_accepted`, `works` | `polity/enactment`, `polity/formation`, `polity/governance`, `polity/law_effects`, `polity/offices`, `polity/standing` |
+| `power_bases.*` | 7 (law, rule and offices) | 4 | `extorted`, `married`, `purged`, `split` | `regime/patronage` |
+| `prison.*` | 7 (law, rule and offices) | 2 | `escaped`, `released` | `law/prisons` |
+| `regime.*` | 7 (law, rule and offices) | 9 | `chiefdom`, `crisis`, `dynasty`, `fragmented`, `institution`, `proofed`, `purged`, `rival_claim`, `schism` | `regime/rule` |
+| `ruler.*` | 7 (law, rule and offices) | 1 | `silenced` | `renown/currencies` |
+| `statecraft.*` | 7 (law, rule and offices) | 6 | `coalition`, `crisis`, `crisis_{state.value}`, `sphere`, `summit`, `terms` | `polity/coalitions`, `polity/crises`, `polity/crisis_outcomes`, `polity/spheres`, `polity/subjects` |
+| `titles.*` | 7 (law, rule and offices) | 5 | `created`, `partition`, `restored`, `seat_founded`, `usurped` | `polity/seats`, `polity/titles` |
+| `trials.*` | 7 (law, rule and offices) | 1 | `{verdict}` | `polity/trials` |
+| `venality.*` | 7 (law, rule and offices) | 2 | `sinecure`, `sold` | `regime/patronage` |
+| `plans.*` | 8 (diplomacy and plans) | 7 | `abandoned`, `begun`, `carried`, `completed`, `disrupted`, `eco_sabotage`, `exposed` | `cycles/control`, `cycles/ecology`, `cycles/plans` |
+| `treaty.*` | 8 (diplomacy and plans) | 3 | `broken`, `champions`, `misread_breach` | `polity/treaties`, `polity/wars` |
+| `afterlife.*` | 9 (faith, rites, powers and the uncanny) | 3 | `exorcism`, `possession`, `reborn` | `faith/exorcism`, `phases/faith` |
+| `curses.*` | 9 (faith, rites, powers and the uncanny) | 2 | `lifted`, `spread` | `phases/curses` |
+| `dream.*` | 9 (faith, rites, powers and the uncanny) | 2 | `reading`, `recurring` | `mind/dreams` |
+| `horror.*` | 9 (faith, rites, powers and the uncanny) | 10 | `clouding`, `madness_epidemic`, `outer_entered`, `route_cooled`, `route_resealed`, `route_stitched`, `son_clouded`, `son_mad`, `whisperers`, `{kind.value}` | `phases/horror` |
+| `inspiration.*` | 9 (faith, rites, powers and the uncanny) | 1 | `masterwork` | `mind/inspiration` |
+| `lore.*` | 9 (faith, rites, powers and the uncanny) | 17 | `commemoration`, `commemoration_miracle`, `commemoration_year`, `creed_founded`, `festival_absorbed`, `godless_miracle`, `godless_persecuted`, `guest_killing`, `infanticide`, `legend_consequence`, `legend_drift`, `legend_memory`, `propaganda`, `prophecy_fulfilled`, `prophecy_pressure`, `revolution`, `taboo_broken` | `lore/ideology`, `lore/prophecy`, `lore/taboos`, `phases/lore`, `phases/made_things`, `phases/religion_spread` |
+| `magic.*` | 9 (faith, rites, powers and the uncanny) | 6 | `dark_rite`, `eternal_storm`, `rite`, `storm`, `war_mages`, `wizard` | `lore/rites`, `phases/magic` |
+| `native_faith.*` | 9 (faith, rites, powers and the uncanny) | 5 | `returned`, `returned_note`, `syncretized`, `turned`, `turned_note` | `phases/native_faith` |
+| `order.*` | 9 (faith, rites, powers and the uncanny) | 3 | `feud`, `outlawed`, `tribunal` | `factions/mage_orders` |
+| `religion.*` | 9 (faith, rites, powers and the uncanny) | 2 | `godless`, `schism` | `phases/religion_spread` |
+| `sacred.*` | 9 (faith, rites, powers and the uncanny) | 11 | `divination`, `forecast`, `godless`, `millenarian`, `mystic`, `mystic_founded`, `office_rogue`, `redated`, `spirit_bound`, `theodicy`, `theodicy_resolved` | `sacred/bureau`, `sacred/foresight`, `sacred/mysteries`, `sacred/rites`, `sacred/spirits` |
+| `sign.*` | 9 (faith, rites, powers and the uncanny) | 1 | `fostered` | `sacred/astrology` |
+| `spirits.*` | 9 (faith, rites, powers and the uncanny) | 5 | `born`, `ghost_legend`, `haunting`, `laid_to_rest`, `rest` | `crafts/spirits`, `phases/spirits` |
+| `beyond.*` | 10 (movement and settling) | 20 | `archive_appeared`, `archive_burned`, `archive_burned_note`, `archive_read`, `cosmic_court`, `cosmic_plague`, `fate_quest`, `immortal`, `mirror_birth`, `pardon`, `planet_acts`, `planet_worship`, `quest_abandoned`, `quest_completed`, `quest_failed`, `quest_invalid`, `quest_opened`, `soul_bound`, `soul_harvest`, `void_storm` | `cosmos/quests`, `phases/afterlife` |
+| `diaspora.*` | 10 (movement and settling) | 2 | `assimilated`, `quarter` | `collective/demography` |
+| `expedition.*` | 10 (movement and settling) | 3 | `lost`, `returned`, `set_out` | `operations/expeditions` |
+| `exploration.*` | 10 (movement and settling) | 3 | `land_found`, `route_search.{result.status.value}`, `sensed_world_born` | `phases/exploration` |
+| `geography.*` | 10 (movement and settling) | 1 | `place_seeded` | `phases/geography` |
+| `migration.*` | 10 (movement and settling) | 1 | `famine` | `phases/migration` |
+| `nomads.*` | 10 (movement and settling) | 8 | `camp`, `confederation`, `fragmented`, `raid`, `rerouted`, `settled`, `trade`, `tribute` | `cycles/control`, `cycles/nomads` |
+| `refugees.*` | 10 (movement and settling) | 2 | `ruin`, `sheltered` | `phases/refugees` |
+| `settlement.*` | 10 (movement and settling) | 5 | `abandoned`, `district_{harm.value}`, `fire_wind`, `homeless_mob`, `tier` | `phases/settlement_life`, `settlement/districts`, `settlement/life`, `urban/housing` |
+| `settlements.*` | 10 (movement and settling) | 1 | `resettled` | `phases/settlements` |
+| `settling.*` | 10 (movement and settling) | 3 | `creator_faith`, `primitive_language`, `seeking_god` | `primitives/first_bonds` |
+| `travel.*` | 10 (movement and settling) | 23 | `ark_founding`, `arrival`, `bridge_collapsed`, `cargo_delivered`, `colony_failed`, `colony_unfit`, `expedition_ordered`, `expedition_sent`, `herds_lost`, `hidden_revealed`, `journey_recalled`, `journey_vanished`, `no_land`, `pilgrimage_site`, `road.{kind.value}`, `route_knowledge`, `route_revealed_by_hand`, `route_severed`, `route_stitched`, `sick_arrival`, `stowaway`, `vanished`, `waiting` | `cosmos/pilgrimage`, `cosmos/routes`, `cosmos/voyages`, `phases/travel` |
+| `affair.*` | 11 (social, family and cultural life) | 1 | `discovered` | `relations/affairs` |
+| `age_sets.*` | 11 (social, family and cultural life) | 1 | `promoted` | `customs/age_sets` |
+| `arts.*` | 11 (social, family and cultural life) | 8 | `canonised`, `exposed`, `forged`, `lured`, `movement`, `orthodox`, `scandal`, `sold` | `arts/forgery`, `arts/market`, `arts/movements` |
+| `aspiration.*` | 11 (social, family and cultural life) | 1 | `journey` | `mind/aspirations` |
+| `career.*` | 11 (social, family and cultural life) | 1 | `{best.value}` | `mortal/acts` |
+| `circle.*` | 11 (social, family and cultural life) | 1 | `founded` | `relations/circles` |
+| `collective.*` | 11 (social, family and cultural life) | 5 | `lynching`, `mob_{by.value}`, `movement_armed`, `movement_faded`, `{act.value}` | `collective/crowds`, `phases/collective` |
+| `contest.*` | 11 (social, family and cultural life) | 2 | `famous`, `won` | `relations/contests` |
+| `cooperatives.*` | 11 (social, family and cultural life) | 1 | `founded` | `customs/town_life` |
+| `cuisine.*` | 11 (social, family and cultural life) | 1 | `invented` | `cuisine/dishes` |
+| `dating.*` | 11 (social, family and cultural life) | 1 | `reform` | `collective/dating` |
+| `ethics.*` | 11 (social, family and cultural life) | 1 | `schism` | `phases/mind` |
+| `event.*` | 11 (social, family and cultural life) | 3 | `phase.{event.engine_kind.value}.{step}`, `{draft.kind.value}`, `{happening.kind.value}` | `happenings/control`, `happenings/profile`, `happenings/progression` |
+| `game.*` | 11 (social, family and cultural life) | 2 | `poachers_punished`, `reserved` | `agrarian/control`, `agrarian/lands` |
+| `games.*` | 11 (social, family and cultural life) | 1 | `invented` | `crafts/games` |
+| `gathering.*` | 11 (social, family and cultural life) | 3 | `massacre`, `{row.id}`, `{row.kind.value}` | `gatherings/hold` |
+| `generations.*` | 11 (social, family and cultural life) | 2 | `came_of_age`, `passed` | `collective/generations` |
+| `households.*` | 11 (social, family and cultural life) | 2 | `abandon`, `{decision.value}` | `households/life` |
+| `idea.*` | 11 (social, family and cultural life) | 2 | `internalised`, `rejected` | `phases/mind` |
+| `intoxication.*` | 11 (social, family and cultural life) | 1 | `brawl` | `customs/intoxicants` |
+| `kin.*` | 11 (social, family and cultural life) | 6 | `annulment`, `betrothal`, `divorce`, `fostered`, `marriage`, `sworn` | `gatherings/hold`, `mortal/course` |
+| `kinship.*` | 11 (social, family and cultural life) | 2 | `pact`, `{custom}` | `cycles/kinship` |
+| `legacy.*` | 11 (social, family and cultural life) | 1 | `kept` | `cycles/legacy` |
+| `names.*` | 11 (social, family and cultural life) | 1 | `epithet` | `lore/names` |
+| `need.*` | 11 (social, family and cultural life) | 1 | `despair` | `mind/needs` |
+| `perk.*` | 11 (social, family and cultural life) | 1 | `{perk.value}` | `mind/aspirations` |
+| `pets.*` | 11 (social, family and cultural life) | 1 | `taken` | `ecology/pets` |
+| `relations.*` | 11 (social, family and cultural life) | 1 | `ethnic_strife` | `phases/mortal_life` |
+| `remembrance.*` | 11 (social, family and cultural life) | 6 | `disaster`, `hero`, `plague_clung`, `plague_estranged`, `plague_turned`, `war` | `phases/remembrance` |
+| `revivals.*` | 11 (social, family and cultural life) | 2 | `begun`, `settled` | `customs/revival` |
+| `roles.*` | 11 (social, family and cultural life) | 1 | `opened` | `collective/roles` |
+| `skill.*` | 11 (social, family and cultural life) | 2 | `career_beggar`, `career_{move.reason.value}` | `phases/mind` |
+| `sport.*` | 11 (social, family and cultural life) | 4 | `bought`, `champion`, `club`, `league` | `arts/sport` |
+| `standing.*` | 11 (social, family and cultural life) | 2 | `bribe`, `patronage` | `mortal/acts`, `mortal/course` |
+| `storylet.*` | 11 (social, family and cultural life) | 3 | `{run.storylet.value}`, `{run.storylet.value}.{by}`, `{storylet.value}` | `collective/storylets` |
+| `communication.*` | 12 (knowledge, language and minds) | 1 | `cipher_broken` | `communication/ciphers` |
+| `culture.*` | 12 (knowledge, language and minds) | 4 | `contact`, `knowledge_diffusion`, `language_spread`, `shift` | `mind/values`, `phases/culture_exchange` |
+| `dialects.*` | 12 (knowledge, language and minds) | 1 | `split` | `phases/dialects` |
+| `discovery.*` | 12 (knowledge, language and minds) | 10 | `age_{age.value}`, `breakthrough`, `design_drawn`, `great_person`, `incident_{kind.value}`, `refitted`, `reverse_engineered`, `smuggled`, `work_banned`, `world_era` | `lore/blueprints`, `lore/dangers`, `lore/eras`, `lore/great_people`, `lore/obsolescence`, `lore/printing`, `lore/reverse`, `lore/smuggling` |
+| `examinations.*` | 12 (knowledge, language and minds) | 1 | `held` | `regime/learning` |
+| `history.*` | 12 (knowledge, language and minds) | 6 | `anniversary`, `irredentism`, `myth_debunked`, `scandal`, `struck`, `true_line` | `collective/accounts` |
+| `knowledge.*` | 12 (knowledge, language and minds) | 4 | `creator_{verb}`, `declined`, `deepened`, `discovered` | `phases/knowledge_levels` |
+| `language_contact.*` | 12 (knowledge, language and minds) | 3 | `creator_creole`, `loans`, `{key}` | `phases/language_contact` |
+| `languages.*` | 12 (knowledge, language and minds) | 3 | `died`, `liturgical`, `revived` | `phases/language_death` |
+| `learning.*` | 12 (knowledge, language and minds) | 1 | `migrated` | `regime/learning` |
+| `memory.*` | 12 (knowledge, language and minds) | 9 | `fairy_tale`, `gratitude`, `legend_revived`, `legendification`, `manifestation`, `prophecy_forgotten`, `tradition_forgotten`, `vengeance`, `year_legend` | `mortal/acts`, `phases/belief_memory`, `phases/mind` |
+| `mind.*` | 12 (knowledge, language and minds) | 6 | `conversion`, `disillusioned`, `facet_trait`, `famine_aid`, `plot`, `plot_uncovered` | `mind/ethics`, `mortal/acts`, `phases/mind` |
+| `research.*` | 12 (knowledge, language and minds) | 3 | `boosted`, `institution_born`, `institution_embraced` | `lore/research_depth` |
+| `rumour.*` | 12 (knowledge, language and minds) | 2 | `alarm`, `legend` | `lore/rumours` |
+| `schools.*` | 12 (knowledge, language and minds) | 1 | `founded` | `regime/control`, `regime/learning` |
+| `theories.*` | 12 (knowledge, language and minds) | 2 | `founded`, `paradigm_shift` | `lore/theories` |
+| `tongues.*` | 12 (knowledge, language and minds) | 11 | `creolised`, `deciphered`, `misread`, `official`, `pidgin`, `place_renamed`, `revealed`, `revived`, `script_borrowed`, `script_evolved`, `taboo` | `tongues/decipher`, `tongues/divine`, `tongues/meaning`, `tongues/pidgins`, `tongues/policy`, `tongues/scripts`, `tongues/sounds` |
+| `writing.*` | 12 (knowledge, language and minds) | 1 | `script` | `phases/writing` |
+| `boserup.*` | 13 (nature, land and seasons) | 1 | `intensified` | `agrarian/soil` |
+| `brands.*` | 13 (nature, land and seasons) | 1 | `earned` | `agrarian/control`, `agrarian/staples` |
+| `climate.*` | 13 (nature, land and seasons) | 8 | `cold_snap`, `era`, `imposed`, `region_turned`, `seas_fell`, `seas_rose`, `town_moved`, `water_cycle` | `cosmos/climate`, `cosmos/cycles`, `cosmos/planetary`, `phases/climate` |
+| `commons.*` | 13 (nature, land and seasons) | 2 | `council`, `enclosed` | `agrarian/lands` |
+| `creatures.*` | 13 (nature, land and seasons) | 15 | `chimera_escaped`, `chimera_woven`, `hybrid`, `megafauna`, `megafauna_trail`, `migration`, `mutation`, `people_mutation`, `predation`, `prey_extinct`, `rebellion`, `soul_eaten`, `soul_spared`, `speciation`, `starving` | `phases/creatures` |
+| `danger.*` | 13 (nature, land and seasons) | 1 | `{source.source.value}` | `environment/perils` |
+| `disasters.*` | 13 (nature, land and seasons) | 4 | `city_plague`, `manual_{disaster.value}`, `plague_spread`, `{disaster.value}` | `phases/disasters` |
+| `ecology.*` | 13 (nature, land and seasons) | 16 | `abundance_set`, `animal_god`, `craft_lost`, `domestication`, `endangered`, `extinct`, `feral_breed`, `herd_feral`, `keystone_lost`, `lineage_blessed`, `lineage_cursed`, `lineage_tainted`, `niche_excluded`, `niche_radiation`, `rewound`, `sacred_lost` | `ecology/domestication`, `ecology/extinction`, `ecology/feral`, `ecology/keystones`, `ecology/lineages`, `ecology/niches`, `ecology/totems`, `phases/ecology` |
+| `environment.*` | 13 (nature, land and seasons) | 2 | `ley_line_formed`, `nexus_formed` | `phases/environment` |
+| `famine.*` | 13 (nature, land and seasons) | 1 | `foods_learned` | `agrarian/soil` |
+| `flora.*` | 13 (nature, land and seasons) | 2 | `cultivar`, `sown` | `ecology/flora` |
+| `hazard.*` | 13 (nature, land and seasons) | 1 | `{hazard.value}` | `environment/hazards` |
+| `keystone.*` | 13 (nature, land and seasons) | 1 | `designated` | `agrarian/control`, `agrarian/staples` |
+| `land.*` | 13 (nature, land and seasons) | 1 | `forest_fire` | `environment/succession` |
+| `living_stats.*` | 13 (nature, land and seasons) | 4 | `mocked`, `mystery_knowledge`, `pilgrims`, `work_knowledge` | `phases/living_stats`, `structures/functions` |
+| `nutrients.*` | 13 (nature, land and seasons) | 2 | `recovered`, `salted` | `agrarian/soil` |
+| `perennials.*` | 13 (nature, land and seasons) | 3 | `felled`, `planted`, `replanted` | `agrarian/book`, `agrarian/control`, `agrarian/lands` |
+| `place.*` | 13 (nature, land and seasons) | 4 | `became_battlefield`, `secret_opened`, `secret_released`, `secret_{secret.kind.value}` | `environment/secrets`, `phases/places` |
+| `reconstruction.*` | 13 (nature, land and seasons) | 2 | `seized`, `{row.plan.value}` | `agrarian/resilience` |
+| `relief.*` | 13 (nature, land and seasons) | 2 | `refused`, `sent` | `agrarian/resilience` |
+| `resilience.*` | 13 (nature, land and seasons) | 2 | `built`, `held` | `agrarian/book`, `agrarian/control`, `agrarian/resilience` |
+| `season.*` | 13 (nature, land and seasons) | 1 | `calendar_adopted` | `phases/environment` |
+| `seasons.*` | 13 (nature, land and seasons) | 4 | `irregular`, `settled`, `summer`, `winter` | `environment/long_seasons` |
+| `thunen.*` | 13 (nature, land and seasons) | 1 | `ring_moved` | `agrarian/rings` |
+| `year.*` | 13 (nature, land and seasons) | 1 | `{notable.kind.value}` | `phases/environment` |
+| `being.*` | 14 (cosmos and the great scales) | 11 | `arrived.{kind.value}`, `banished`, `bound`, `cult_founded`, `echo_befriended`, `echo_replaced`, `incursion`, `incursion_answered`, `manifest`, `took_rule`, `traded` | `cosmos/beings` |
+| `celestial.*` | 14 (cosmos and the great scales) | 1 | `returned` | `cosmos/omens` |
+| `cosmic_wounds.*` | 14 (cosmos and the great scales) | 1 | `slain` | `cosmos/being_wounds` |
+| `cosmos.*` | 14 (cosmos and the great scales) | 8 | `gate_sealed`, `holy_world`, `leak_cleansed`, `old_god`, `outer_bargain`, `world_born`, `world_discovered`, `world_forgotten` | `cosmos/actions`, `cosmos/birth`, `cosmos/discovery`, `cosmos/worlds` |
+| `dark_ages.*` | 14 (cosmos and the great scales) | 3 | `forgotten`, `lost`, `rediscovered` | `phases/dark_ages` |
+| `dimension.*` | 14 (cosmos and the great scales) | 2 | `cult_risen`, `{kind.value}` | `cosmos/dimensions` |
+| `doom.*` | 14 (cosmos and the great scales) | 7 | `apocalypse`, `calling`, `dimensional_collapse`, `galactic_death`, `omen_{warning}`, `outer_descent`, `twilight` | `phases/doom`, `transition` |
+| `essence.*` | 14 (cosmos and the great scales) | 2 | `overflow`, `poured` | `transition` |
+| `feature.*` | 14 (cosmos and the great scales) | 4 | `comet_returned`, `rogue_arrived`, `slingshot`, `wormhole_window` | `cosmos/features` |
+| `formation.*` | 14 (cosmos and the great scales) | 1 | `shaped` | `cosmos/formation` |
+| `galaxy.*` | 14 (cosmos and the great scales) | 5 | `aged`, `arm_broken`, `cult_risen`, `star_born`, `{kind.value}` | `cosmos/galaxies` |
+| `impact.*` | 14 (cosmos and the great scales) | 6 | `called`, `deflected`, `fled`, `foreseen`, `missed`, `struck` | `cosmos/impacts` |
+| `phenomenon.*` | 14 (cosmos and the great scales) | 3 | `contained`, `faded`, `formed.{kind.value}` | `cosmos/phenomena` |
+| `rift.*` | 14 (cosmos and the great scales) | 4 | `closed`, `collapsed`, `opened.{cause.value}`, `sealed` | `cosmos/rifts` |
+| `sky.*` | 14 (cosmos and the great scales) | 10 | `echo_prophecy`, `spontaneous.{result.kind.value}`, `star_extinguished`, `star_hung`, `star_rekindled`, `supernova`, `time_traveller`, `two_timed`, `world_drift`, `{kind.value}` | `cosmos/starlife`, `cosmos/stars`, `phases/sky` |
+| `star.*` | 14 (cosmos and the great scales) | 7 | `binary_born`, `crisis_of_faith`, `cult_risen`, `died`, `divine_lapsed`, `stage.{following.value}`, `swelled` | `cosmos/galaxies`, `cosmos/starlife` |
+| `terraform.*` | 14 (cosmos and the great scales) | 2 | `begun`, `finished` | `cosmos/terraform` |
+| `transition.*` | 14 (cosmos and the great scales) | 1 | `epoch_began` | `transition` |
+| `world.*` | 14 (cosmos and the great scales) | 9 | `aged.{aged.value}`, `biosphere_collapse`, `consciousness_closed`, `consciousness_opened`, `life_grew`, `mood_quake`, `ring_formed`, `scorched`, `tidally_locked` | `cosmos/catastrophe`, `cosmos/lifeforms`, `cosmos/physics_control`, `cosmos/worldlife`, `phases/physics` |
+| `world_age.*` | 14 (cosmos and the great scales) | 4 | `epoch_turning`, `golden_age`, `golden_age_ended`, `old_world` | `phases/world_age` |
+| `world_balance.*` | 14 (cosmos and the great scales) | 4 | `cult`, `faction`, `son_moved`, `tradition` | `phases/world_balance` |
+| `council.*` | 15 (gods, sons and Fate) | 1 | `engine_held` | `divine/rulings` |
+| `divine.*` | 15 (gods, sons and Fate) | 14 | `ascended`, `avatar_converts`, `avatar_manifest`, `battle_contest`, `battle_hand`, `goal_set`, `goal_{state.value}`, `law_unmade`, `league`, `pact`, `ruling_lapsed`, `spy_secret`, `wound_healed`, `wound_{kind.value}` | `divine/avatars`, `divine/battles`, `divine/foreign`, `divine/goals`, `divine/laws`, `divine/rulings`, `divine/wounds`, `mythic/divine_spies` |
+| `dominion.*` | 15 (gods, sons and Fate) | 5 | `creature_{deed.value}`, `image_turned`, `magic_site_found`, `ruled`, `throne_passed` | `dominion/core`, `dominion/creatures`, `dominion/image`, `dominion/sites` |
+| `mechanics.*` | 15 (gods, sons and Fate) | 2 | `law`, `resource` | `phases/mechanics_assignment` |
+| `mythic.*` | 15 (gods, sons and Fate) | 10 | `geas_broken`, `hero_cult`, `heroquest_begun`, `heroquest_lost`, `heroquest_won`, `mantled`, `office_conquered`, `replaced`, `servitor_fell`, `servitor_guarded` | `mythic/geasa`, `mythic/heroquests`, `mythic/mantling`, `mythic/offices`, `mythic/servitors`, `phases/life_cycles` |
+| `outer.*` | 15 (gods, sons and Fate) | 1 | `fed_{row.hunger.value}` | `divine/outer` |
+| `pantheon.*` | 15 (gods, sons and Fate) | 15 | `attracted`, `defeated_woke`, `duel`, `first_contact`, `god_war`, `hostile`, `local_god_born`, `noticed`, `outer_gnaw`, `rival_clash`, `rival_withdrew`, `sleeper_woke`, `spontaneous_god_war`, `temple_destroyed`, `worshipper_stolen` | `cosmos/duels`, `cosmos/foreign_gods`, `phases/pantheon` |
+| `sons.*` | 15 (gods, sons and Fate) | 3 | `existence`, `rebel_theft`, `woke` | `phases/sons` |
+| `ages.*` | 16 (peoples, societies and history) | 2 | `echo`, `turned` | `storyteller/ages` |
+| `arcs.*` | 16 (peoples, societies and history) | 3 | `begun`, `ended`, `payoff` | `storyteller/arcs`, `storyteller/drama` |
+| `asabiyya.*` | 16 (peoples, societies and history) | 2 | `softened`, `surge` | `cycles/asabiyya` |
+| `civilization.*` | 16 (peoples, societies and history) | 18 | `adoption`, `adoption_note`, `barter`, `barter_note`, `debt_late`, `debt_paid`, `declined`, `federation`, `federation_note`, `independence`, `independence_note`, `loan`, `loan_note`, `previous_creation`, `rose`, `tier`, `treaty`, `treaty_note` | `phases/civilization` |
+| `dig.*` | 16 (peoples, societies and history) | 1 | `{dig.id}` | `sites/digs` |
+| `excavation.*` | 16 (peoples, societies and history) | 2 | `begun`, `{stage.stage.value}` | `sites/digs` |
+| `faction.*` | 16 (peoples, societies and history) | 9 | `exposed`, `hired`, `raid`, `riot`, `schism`, `strike`, `suppressed`, `turncoat`, `turned_bandit` | `factions/agenda`, `factions/outlaws` |
+| `institutions.*` | 16 (peoples, societies and history) | 7 | `cult_disbanded`, `cult_merged`, `item_lost`, `people_union`, `place_swallowed`, `repealed`, `work_forgotten` | `phases/institutions` |
+| `life_cycles.*` | 16 (peoples, societies and history) | 7 | `abandoned`, `collapse`, `desolate`, `looted`, `razed_by_hand`, `resettled`, `siege_razed` | `phases/life_cycles` |
+| `movements.*` | 16 (peoples, societies and history) | 1 | `revolt` | `factions/movements` |
+| `peoples.*` | 16 (peoples, societies and history) | 2 | `funeral_rite`, `martial_style` | `phases/demography` |
+| `records.*` | 16 (peoples, societies and history) | 1 | `inheritance` | `records` |
+| `site.*` | 16 (peoples, societies and history) | 1 | `delved` | `sites/rooms` |
+| `society.*` | 16 (peoples, societies and history) | 11 | `bankruptcy`, `class_uprising`, `desertion`, `ennobled`, `enslaved`, `famine`, `freed`, `love`, `plenty`, `poverty_uprising`, `ruined` | `demography/events`, `demography/mobility`, `phases/society`, `phases/society_economy` |
+| `storyteller.*` | 16 (peoples, societies and history) | 1 | `recovery` | `phases/gatherings` |
