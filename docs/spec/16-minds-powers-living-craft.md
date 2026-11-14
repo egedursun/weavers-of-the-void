@@ -1,6 +1,6 @@
-# 16 — Made Minds, Innate Powers, Living Craft, the Depth Pass, Typed Kinds and the Record of Events (W44–W49)
+# 16 — Made Minds, Innate Powers, Living Craft, the Depth Pass, Typed Kinds, the Record of Events and Every Facet of Life (W44–W50)
 
-This spec adds six waves to the lore engine:
+This spec adds seven waves to the lore engine:
 
 - **W44 Made minds and the information age.** Minds that live in made things or in no body at all; copies, saves, transfers and merges of minds; augmented bodies; networks, intrusion, surveillance and information conflict; corporations and private power; self-making machines; abundance; and the collapse of high making into relics and salvage.
 - **W45 Innate powers, power sources and concealment.** Powers that belong to a being rather than to a learned rite (the psionic class and every other inborn, awakened, granted or bonded power); an open model of power sources that any world can author; magic systems as typed world structures; and hidden truths kept from the public (the masquerade class), with breach, revelation and forgetting.
@@ -8,6 +8,7 @@ This spec adds six waves to the lore engine:
 - **W47 The depth pass.** Every existing or planned mechanic brought to full breadth and depth: structures that act in their own right, eras and customs at full breadth, the god layer, typed models in place of fixed lists that carry images, every enum value read, every thin spec section completed, and guards that keep each of these from coming back.
 - **W48 Typed kinds.** Every concept a world can define in its own terms: a neutral category enum plus authored kinds with typed properties for goods, food, drink, dress, colour, scent, household goods, tools, instruments, games, substances, money, professions, ranks, titles, clergy, organisations, kinship, traditions, art, tenets, fears, goals and the cosmos; a property catalogue for every content enum; one taxonomy per concept; every value that carries an image or a gender renamed; and guards for all of it.
 - **W49 The record of events.** Every happening of every kind kept and told in full: incident kinds with typed roles and facts, the steps of every process, every change of every value with its before, after and terms, in-world moments and exact places, true causes, witnesses and rumours told from the record, the past of any record at any moment, and nothing ever folded away or cut.
+- **W50 Every facet of life at depth.** A closed audit against the 689 world-content subcategories of the Outline of Cultural Materials, the 572 registered mechanics and the depth metric. It adds thirteen families of life no section carried at depth (population policy, recorded and mass media, commerce practice, public works and state enterprise, daily life and time, kin duties and kin groups, folk knowledge, intimacy norms and the course of reproduction, childhood and socialization, endowments, youth, death work, humour and public speech). It gives behaviour to 100 facets that had kinds only, couples every isolated mechanic and brings every node type to its depth target.
 
 Every wave is written to be integrated completely, under the completion contract of spec 13 J.19 and the standing rules of `CLAUDE.md`. Nothing here is label-only, optional or deferred.
 
@@ -25,10 +26,10 @@ Spec 13 and the waves through W43 built a deep pre-modern, magical and cosmic wo
 
 ### 0.2 Numbering and placement
 
-- **Waves.** W1–W41 are planned in spec 13 Part J; W42 (breadth across settings, 10.18) and W43 (genesis from the seed, 10.19) were added later and are done. The waves of this spec are **W44**, **W45**, **W46**, **W47**, **W48** and **W49**.
+- **Waves.** W1–W41 are planned in spec 13 Part J; W42 (breadth across settings, 10.18) and W43 (genesis from the seed, 10.19) were added later and are done. The waves of this spec are **W44**, **W45**, **W46**, **W47**, **W48**, **W49** and **W50**.
 - **Identifiers continue spec 13's series** so that no identifier is shared:
   - shared foundations **F50–F56** (spec 13 ends at F49);
-  - wave sections **44.1…**, **45.1…**, **46.1…**, **47.0…**, **48.0…**, **49.0…**, and the foundations **F57** and **F58**;
+  - wave sections **44.1…**, **45.1…**, **46.1…**, **47.0…**, **48.0…**, **49.0…**, **50.0…**, and the foundations **F57** and **F58**;
   - reference lanes **R43–R53** (spec 13 ends at R42);
   - couplings **C10…** (spec 13 ends at C9);
   - feedback loops **L79…** (spec 13 ends at L78);
@@ -47,6 +48,7 @@ Spec 13 and the waves through W43 built a deep pre-modern, magical and cosmic wo
 7. **W48** (decided the same day) gives every world-content concept the two-layer model of typed kinds (Part 8).
 8. **Flexibility, never bias.** These waves widen what a world can become. They must not pull every world toward their own images (0.5).
 9. **W49** (decided the same day) keeps every happening of every kind in full: typed facts, roles, steps, every change before and after with its terms, exact moments and places, causes, witnesses and the past at any moment, all kept for ever (Part 9, K.42).
+10. **W50** (decided the same day) closes the granularity left inside existing mechanics by a closed audit on fixed lists (Part 10, K.46).
 
 ### 0.4 Ground rules carried into every section
 
@@ -1739,6 +1741,8 @@ Per CLAUDE.md rule 1, each step runs the static gates and the tests that cover i
 
 **W49:** see 49.10 (guards and the kinds catalogue first, then kinds, roles, facts and steps → change capture → moments, places, terms and causes → every process group of Appendix 49.A with engagements and duels → witnesses, rumours, rendering and folding as a view → the past at any moment → surfaces, fixups and bands → audit).
 
+**W50:** see 50.20.
+
 Each wave follows the build-all-then-gate-once working rule: the whole wave is written, then gated and committed once.
 
 ### 5.12 Decisions
@@ -2004,6 +2008,9 @@ The sweeps of 6.1–6.6 searched for what might be missing, so each new question
 | Spec 13 items | 843 (537 done, 1 in progress, 305 planned) | `spec_coverage.py check` | depth of planned sections | W47 47.8 and `check_spec_depth.py` |
 | Spec 16 items | six waves | — | coverage matrix | 5.10 step 0 |
 | The inventory itself | — | — | nothing failed when a new countable thing appeared without being judged | 5.10 step 0: `scripts/check_inventory.py` |
+| Facets of life (OCM subcategories) | 689 | — | 104 label-only, 77 absent, 241 partial | W50 (Part 10, Appendix 50.A, `check_ocm_coverage.py`) |
+| Registered mechanics | 572 | — | 102 with at most one coupling | W50 50.14, `check_mechanic_couplings.py` |
+| Node types at depth | 51 | — | 23 below target, 7 read by nothing | W50 50.15, `depth_metric.py check` |
 
 **Model context.** F58.12 keeps every record. The model receives records through retrieval (paged reads and the `recall_event` tool), never through silent truncation, because no context holds an unbounded history.
 
@@ -3326,6 +3333,620 @@ The wave is gated once.
 | 49.3 engagements | `design_mounts` read, rules `engagement` | seafaring and every domain | `engagement:force`, mount levers | engagement report | captain context | engagement reports | sections exist | `VesselArmament` mapped to models |
 | 49.4 duels | `injuries` with `step_id` and instrument | duels, trials, champions | as spec 13 5.6 | duel timeline | duel accounts | duel reports | hits linked to steps | none |
 
+## Part 10. W50 — Every facet of life at depth
+
+### 50.0 Scope and the measurement behind it
+
+The sweeps of spec 13 (1R.18) checked the Outline of Cultural Materials (OCM) at the level of its 76 major categories and found none missing. They noted that what remained was "granularity inside existing mechanics": thin sub-areas carried by one enum value or one flag. W50 closes that granularity by a closed audit on three fixed lists, so that a further question cannot find a thin facet that is not listed here.
+
+**Lists and method (2026-11-14, by script).**
+
+1. **OCM subcategories.** The OCM 2025 edition published by HRAF lists 736 codes. 689 describe world content; the 47 left out are orientation, bibliography, research method, archaeological analysis and source texts. Each of the 689 was matched against every table, column, enum value, engine and catalogue module, agent tool and god lever, and against spec 13 and this spec, with synonyms where the code names a facet differently ("fowling" is a catch ground, "proxemics" a norm). A second pass checked every doubtful match by its tables and modules.
+2. **Registered mechanics.** The 572 mechanics of the interconnection registry (`engine/interconnect/catalog*.py`) were scored by their couplings to other subsystems.
+3. **Node types.** The depth metric (`scripts/depth_metric.py`, spec 13 J.7) was re-run over every node type.
+
+**Results.**
+
+| List | Measure | Result |
+|---|---|---|
+| OCM subcategories (689) | own typed state and engine behaviour | 267 |
+| | some typed state, behaviour partial | 241 |
+| | a label only (one enum value or flag, no behaviour of its own) | 104 |
+| | absent from code | 77 |
+| Registered mechanics (572) | no coupling | 22 |
+| | one coupling | 80 |
+| Node types (51) | below a spec 13 depth target | 23 (17 of them on attributes read, 21 on mechanics acting) |
+| | no attribute read and no mechanic acting | 7: `title`, `phenomenon`, `vehicle_type`, `unit_type`, `equipment_model`, `dish`, `building_type` |
+
+The 181 label-only and absent subcategories fall into two groups:
+
+- **Thirteen families of life** that no section of spec 13 or this spec carries at depth (50.1–50.13).
+- **100 facets** that existing waves give kinds but not behaviour (50.16).
+
+Appendix 50.A lists all 689 subcategories with their measured status and the section that closes each. Appendix 50.B lists the 102 weakly coupled mechanics.
+
+Every family below follows the ground rules of 0.4 and 0.5: concepts by function, values from the seed and the world's canon, no imagery, no quotas, no gendered default, every era and every kind of world, and every kind of thing (rule 6). Each is wired end to end under its compliance row (50.18).
+
+### 50.1 Population policy
+
+**Current.** Fertility, migration and mortality follow from needs, health and events. No polity, faith or people acts on its own numbers.
+
+**State.** `population_policies`:
+
+- `holder_node_id` (polity, faith, people, company, son);
+- `aim` (`PopulationAim`: `grow`, `hold`, `shrink`, `rebalance_age`, `rebalance_class`, `settle_land`, `empty_land`, `keep_kind`, `mix_kinds`, `none`);
+- `instruments`, as child rows (`PopulationInstrument`): `birth_reward`, `birth_tax`, `union_law`, `child_limit`, `child_support`, `inheritance_rule`, `settlement_grant`, `migration_permit`, `migration_ban`, `expulsion`, `resettlement`, `recruitment_abroad`, `health_campaign`, `faith_teaching`, `made_birth` (W46 grown bodies and W44 made minds where they exist);
+- `strength`, `enforcement`, `since_epoch`, `locked`.
+
+**Behaviour.**
+
+1. Each instrument shifts the typed driver it touches: fertility (`births`), migration pull and push (`migration`, `refugees`), mortality through care (`health`), the class and age mix (`demography`). Every shift is recorded with its terms (W49 F58.7).
+2. Enforcement costs treasury and officials and meets resistance by values (F5) and faith teaching. Harsh instruments (`expulsion`, `child_limit`) raise grievance and flight.
+3. Policies are chosen by holders whose aims read their numbers (labour shortage, land pressure, a ruling kind's share). Agents propose and repeal them.
+4. Outcomes feed later policy: a shrinking people under `grow` raises the policy's strength; overshoot reverses it.
+
+**Tools and control.**
+
+- Mortal tool `set_population_policy`; son tool `move_population_policy`.
+- God levers `population_policy:create/edit/delete/hold`, `population_instrument:*`.
+- A "Numbers" section in polity, faith, people and company drawers.
+- Context block `population_policy`.
+
+**Codex and book.** Policies and their measured effects in holder entries; a table in Records.
+
+**Integrity.** Instruments belong to their policy; enforcement stays within 0–100.
+
+**Legacy.** None; policies start empty.
+
+**Rules namespace.** `population_policy`.
+
+### 50.2 Recorded and mass media
+
+**Current.** Writing, printing, archives, the press as leverage, broadcast towers (W42) and signal chains exist. Images, sound and moving images cannot be recorded. No medium reaches a mass audience with its own reach, bias and trust.
+
+**State.**
+
+- **`record_media`.** Every recorded medium as an authored kind over `RecordForm`: `written`, `printed`, `image`, `sound`, `moving_image`, `signal`, `network` (W44), `living` (W46 memory organisms), `crafted` (carved, woven, knotted), `mental` (powers, W45). Each kind has fidelity, durability, copy cost, reach, the technique that opens it (F24) and the material it needs (F23).
+- **`media_outlets`.** Owner, medium, audience (communities and reach 0–100), stance (typed value axes), trust (0–100), censorship exposure, revenue (sales, patronage, advertising, 50.3; state funding), staff.
+- **`media_items`.** Outlet, kind (`MediaItemKind`: `news`, `opinion`, `record_of_event`, `entertainment`, `instruction`, `promotion`, `devotion`, `official`), subject incident or node, slant, accuracy against the incident's facts (W49), reach, epoch.
+
+**Behaviour.**
+
+1. Items are made from incidents (W49), deeds and holders' aims. Their accuracy is measured against the record's facts; distortions are typed as in F58.9.
+2. Reach and trust move opinion (F7, F21), legitimacy, unrest and prices. Several outlets with opposed stances split opinion; a single trusted outlet aligns it.
+3. Recorded images and sounds become evidence in trials (W27 `evidence`), historiography sources and art (`recorded` art mode, 48.7). They decay by durability and survive in archives.
+4. Censorship, licensing and seizure of outlets follow law (47.3) and the surveillance state (44.13). Exposure of a false item lowers the outlet's trust.
+5. Entertainment media form commercial entertainment: production, stars with renown, audiences, and illegal circuits where the law bans a form.
+
+**Tools and control.**
+
+- Mortal tools `found_outlet`, `publish_item`, `censor_outlet`; son tool `sway_outlet`.
+- God levers `record_medium:*`, `media_outlet:create/edit/delete/hold`, `media_item:*`.
+- An outlet drawer page; a "Media" section in settlements and polities.
+- Context block `media`.
+
+**Codex and book.** Outlets with their stance and trust; items linked to the incidents they tell, with their accuracy.
+
+**Integrity.** An item's subject exists; reach is no greater than its outlet's.
+
+**Legacy.**
+
+- Broadcast towers become outlets of medium `signal`.
+- Printing presses get a printed medium.
+- Existing press leverage rows link to an outlet.
+
+**Rules namespace.** `media`.
+
+### 50.3 Commerce practice
+
+**Current.** Markets, prices, trade routes, credit, banking, insurance, speculation, brands and workshops exist. Goods move between producers and markets in one step, with no wholesale or retail tier, no shop, no promotion, no rent of things and no exchange between currencies.
+
+**State.**
+
+- **`shops`.** Structure or mobile, keeper, goods kinds carried, `ShopForm` (`stall`, `shop`, `house_trade`, `peddler`, `market_hall`, `warehouse_outlet`, `order_house`, `network_store`), margin, stock, credit to customers.
+- **`supply_tiers`.** Per good kind and market: `producer`, `wholesale`, `retail`, each tier with holders and margin.
+- **`promotions`.** Holder, good kind or brand, medium (50.2 or `crier`, `sign`, `display`, `patronage`, `gift`), reach, cost, claim accuracy.
+- **`leases`.** Owner, lessee, thing (land, dwelling, structure, vessel, vehicle, item, made mind under 44.6, animal), rent, term, upkeep duty, default terms.
+- **`exchange_rates`.** Between currency pairs, per market, with money changers as holders, a spread, and a convertibility source (48.5).
+
+**Behaviour.**
+
+1. Goods pass through the tiers that exist in a settlement's size and economy. Each tier adds its margin and can corner, hoard or fail (existing manipulation and cornering read tiers).
+2. Promotion moves demand and brand loyalty by reach and claim accuracy. False claims found out cost trust and may break law (consumer protection is a typed law kind, 47.3).
+3. Leases pay rent each epoch, transfer use and upkeep, and end, renew or default. Defaults go to courts (W27) and debt (credit).
+4. Exchange rates follow each currency's trust, backing, debasement and trade balance. Changers profit from spreads, and rate shocks hit importers and debtors in foreign coin.
+5. Retail access enters living standards (basket): a settlement without shops pays more for less.
+
+**Tools and control.**
+
+- Mortal tools `open_shop`, `promote`, `lease_out`, `change_money`.
+- God levers `shop:*`, `supply_tier:*`, `promotion:*`, `lease:*`, `exchange_rate:*`.
+- "Commerce" sections in settlement and market screens; leases in owner drawers.
+- Context block `commerce`.
+
+**Codex and book.** Shops and tiers in settlement entries; leases in owners' entries; exchange rates in the economy chapter.
+
+**Integrity.** A lease's owner holds the thing; a rate pair is two existing currencies.
+
+**Legacy.**
+
+- Markets get a single retail tier.
+- Workshops with sales become shops.
+- Existing loans stay credit.
+
+**Rules namespace.** `commerce`.
+
+### 50.4 State enterprise and public works
+
+**Current.** Polities tax, spend, build some structures and keep infrastructure levels. Roads, bridges, canals, rail lines and aqueducts are not built as programmes with labour, materials, schedule and upkeep, and no polity runs an enterprise or monopoly.
+
+**State.**
+
+- **`public_works`.** Polity or authority, kind (`WorksKind`: `road`, `bridge`, `canal`, `rail_line`, `aqueduct`, `dam`, `drainage`, `harbour_works`, `walls`, `granary_system`, `sewer`, `power_line`, `network_line`, `terraforming_stage`, `megastructure_stage`, `grown_works` (W46)). Also: route or region, stages, labour (paid, corvée, bound, made minds, constructs), materials, budget, schedule, progress, quality, upkeep and decay.
+- **`state_enterprises`.** Polity, sector (good kind or service), form (`monopoly`, `royal_works`, `state_company`, `licence_holder`, `arsenal`, `mint`), management (official, company, made mind), output, revenue, corruption exposure.
+
+**Behaviour.**
+
+1. Works advance stage by stage with labour and materials. Shortfalls delay them; poor quality raises collapse and flood risk. Finished works change route speed and capacity (47.2), farm output (drainage, irrigation), health (sewers) and war (walls, roads).
+2. Upkeep is owed each epoch; neglect decays works and recorded failures follow (W49).
+3. Enterprises produce and sell under their form. Monopolies set prices and starve rivals; corruption skims revenue; privatisation hands them to companies (44.15).
+4. Labour regimes carry their ethics and unrest: corvée and bound labour raise grievance, paid labour costs treasury.
+
+**Tools and control.**
+
+- Mortal tools `begin_works`, `fund_works`, `found_enterprise`; son tool `bless_works`.
+- God levers `public_works:create/edit/delete/hold/advance`, `state_enterprise:*`.
+- A "Works" panel per polity; works on the atlas; enterprises in polity drawers.
+- Context block `works`.
+
+**Codex and book.** Works with their stages, builders and results; enterprises and their output.
+
+**Integrity.** Works lie on routes and regions of their polity or of a treaty partner.
+
+**Legacy.**
+
+- Infrastructure levels become finished works.
+- Existing road and route upgrades become `road` works.
+
+**Rules namespace.** `public_works`.
+
+### 50.5 Daily life, time and personal care
+
+**Current.** Needs, living standards, households and taverns exist. How beings spend their time, sleep, keep clean, groom, do housework and serve in others' houses, and what they do with free time, is not modelled. Norms of personal space and posture do not exist.
+
+**State.**
+
+- **`time_budgets`.** Per culture, class and life stage: shares of time for work, housework, care, rest, sleep, worship, learning, leisure, travel and service. Read per species biology, since some beings do not sleep or eat.
+- **`care_customs`.** Per culture: washing (frequency, place: home, bath house, river, by rite), grooming (hair, body marking under 48.3, scent), cleanliness standards, waste handling (feeds sanitation).
+- **`housework`.** Per household: duties (`HouseDuty`: `food`, `water`, `fuel`, `cleaning`, `textiles`, `childcare`, `eldercare`, `animals`, `repairs`), who does them (household members by role, servants, made minds, constructs), load.
+- **`domestic_service`.** Servant, household, terms (wage, board, bound under 48.6), duties.
+- **`leisure_pursuits`.** Per culture and person: pursuit kinds (`LeisureKind`: `conversation`, `games` (48.4), `sport`, `music`, `crafts`, `collecting`, `reading`, `excursion`, `tourism`, `drinking`, `worship_extra`, `rest`, `media` (50.2)), share and venue.
+- **`space_norms`.** Per culture: personal distance, touch norms, seating and posture forms, read by etiquette and diplomacy.
+
+**Behaviour.**
+
+1. Time budgets bound labour supply, learning, worship attendance and leisure demand. Long work hours raise stress and unrest; leisure raises happiness and fills venues (taverns, arenas, baths, parks).
+2. Care customs drive disease exposure (water and touch routes), sanitation load and social standing (norm breaches of cleanliness or grooming).
+3. Housework load falls on the household roles each culture assigns (culture data, no default by sex). Servants and made minds lift it, freeing time for paid work or learning. Load rises with children, the old and the sick.
+4. Tourism and excursions move wealth to destinations (wonders, sacred sites, baths, famous places) and spread news and disease.
+5. Breaches of space and posture norms enter etiquette and diplomacy outcomes (insult, trust).
+
+**Tools and control.**
+
+- Mortal tools `hire_servant`, `take_leisure`, `set_house_duties`.
+- God levers `time_budget:*`, `care_custom:*`, `housework:*`, `domestic_service:*`, `leisure_pursuit:*`, `space_norm:*`.
+- "Daily life" sections in culture, household and mortal drawers.
+- Context block `daily_life`.
+
+**Codex and book.** A "Daily life" chapter per people; household duties in house entries.
+
+**Integrity.** Shares sum to 100 per budget; a servant belongs to one household.
+
+**Legacy.** Budgets derived from class and culture work and leisure readings; washing from existing purification and bath houses.
+
+**Rules namespace.** `daily_life`.
+
+### 50.6 Kin roles, households and kin groups
+
+**Current.** Kin bonds, kinship systems (descent, residence, levirate and sororate), houses, households, adoption and fosterage exist. The duties between particular kin (grandparents, the siblings of parents, in-laws, cousins) and kin groups beyond lineage, clan, moiety and house do not.
+
+**State.**
+
+- **`kin_role_duties`.** Per culture: kin role (`KinRole`: `parent`, `child`, `sibling`, `grandparent`, `grandchild`, `parent_sibling_first_line`, `parent_sibling_second_line`, `sibling_child`, `cousin_parallel`, `cousin_cross`, `parent_in_law`, `child_in_law`, `sibling_in_law`, `co_spouse`, `chosen_kin`, `godparent`, `sworn_kin`). Each role has duties (`KinDuty`: `support`, `raise`, `teach`, `protect`, `avenge`, `marry_to`, `inherit_from`, `mourn`, `host`, `obey`, `joke_with`, `avoid`) with strengths.
+- **`kin_groups`.** Authored kinds over `KinGroupForm`: `lineage`, `clan`, `phratry`, `moiety`, `kindred`, `ramage`, `house`, `localized_group`, `age_linked_group`. Each kind has membership rule (descent rule, residence, choice), corporate holdings (land, titles, shrines), head, council and exogamy.
+- **`households`** gain `form` (48.6 household forms) and member roles.
+
+**Behaviour.**
+
+1. Kin duties drive help in need (food, coin, care), fostering, vengeance (feuds), marriage choices, inheritance shares and mourning. A breached duty records shame and memory.
+2. Kin groups hold land and shrines corporately, choose heads, regulate marriage (exogamy) and act together in feuds, councils and migrations. Localized groups form villages and quarters.
+3. Joking and avoidance relations shape interactions between particular kin, read by social interactions (F18).
+4. Household form and size follow economy, inheritance and residence rules, and shape care load (50.5) and labour.
+
+**Tools and control.**
+
+- Mortal tools `call_on_kin`, `convene_kin_group`.
+- God levers `kin_role_duty:*`, `kin_group:create/edit/delete/hold`, `kin_group_member:*`.
+- A "Kin" section in mortal drawers; a kin group drawer page.
+- Context block `kin`.
+
+**Codex and book.** Kin duties in culture chapters; kin groups with members and holdings.
+
+**Integrity.** Members follow the group's rule or are marked as adopted; one head per group.
+
+**Legacy.** Clans, moieties and houses become kin groups; duties are derived from kinship systems.
+
+**Rules namespace.** `kin`.
+
+### 50.7 Folk knowledge systems
+
+**Current.** Knowledge branches, techniques, theories (true or false) and folk beliefs exist. How a people classifies weather, matter, land, plants, animals, the body, the mind and society, and how accurate that knowledge is, is not modelled. Number systems are planned (spec 13 8.4 reference pass 5), but numerology and the reach of counting are not.
+
+**State.**
+
+- **`folk_knowledge`.** People, domain (`FolkDomain`: `weather`, `sky`, `matter`, `land`, `waters`, `plants`, `animals`, `body`, `illness`, `mind`, `society`, `number`, `time`), classification depth (0–100), accuracy against the world's typed truth (0–100), holders (elders, specialists, everyone), transmission (oral, written, apprenticeship, rite).
+- **`folk_classes`.** Named classes a people uses in a domain, linked to the typed world kinds they group, with misclassifications recorded.
+- Number system rows (spec 13) gain `numerology` (the readings a culture gives numbers).
+
+**Behaviour.**
+
+1. Accuracy in a domain sets success in the work it serves: plants for gathering and herbal treatment, animals for hunting and herding, weather for farming and sailing, body and illness for care, land and waters for travel and siting, mind and society for persuasion and rule.
+2. Folk knowledge competes with formal theories (`theories`). Contact, schooling and failure move accuracy up or down, and a people can lose knowledge with its holders.
+3. Misclassifications have typed consequences (a poisonous plant classed as food, a sickness classed as a curse) and surface as incidents.
+4. Numerology enters omen reading, naming and calendar rites.
+
+**Tools and control.**
+
+- Mortal tools `teach_lore`, `test_lore`.
+- God levers `folk_knowledge:*`, `folk_class:*`.
+- A "What they know" section in people drawers.
+- Context block `folk_knowledge`.
+
+**Codex and book.** Per people, each domain with its classes, depth and accuracy.
+
+**Integrity.** Classes point at existing world kinds.
+
+**Legacy.** Derived from knowledge levels, techniques and folk beliefs.
+
+**Rules namespace.** `folk_knowledge`.
+
+### 50.8 Intimacy, sexual norms and the course of reproduction
+
+**Current.** Attraction, affairs, marriages, reproductive systems per biology, births with twins and stillbirths, and act kinds (adultery, incest, infanticide) exist. Norms about relations before, outside and within unions, between beings of any sexes, about restraint and vows, and the course of pregnancy, birth and the time after it are labels or absent.
+
+All of this is narrated plainly and behind closed doors (G9). No norm is a default; each culture authors its own; no world is required to have any of them.
+
+**State.**
+
+- **`intimacy_norms`.** Per culture: for each `RelationContext` (`before_union`, `within_union`, `outside_union`, `between_any_sexes` (read on the biology's sexes), `with_kin` (the scope of forbidden kin from the kin roles of 50.6), `with_made_minds` (W44), `with_other_kinds` (other peoples or species)): a stance (`forbidden`, `discouraged`, `tolerated`, `accepted`, `honoured`), sanctions and who enforces them (kin, faith, law).
+- **`restraint_customs`.** Celibacy and restraint vows by role (clergy, ascetics, warriors before battle), seasons and rites.
+- **`reproductive_course`.** Per biology: cycle (with its customs: seclusion, purity rules, none), gestation or incubation length, complications by kind (`BirthComplication`: `position`, `bleeding`, `fever`, `early`, `late`, `multiple`, `none`), care during and after (`PostnatalCustom`: `rest_period`, `seclusion`, `kin_care`, `specialist_care`, `rite`, `none`), attendants, birth places.
+- **`legitimacy_rules`.** Per culture: a child's standing by the parents' union, and the paths to change it (recognition, adoption, payment, rite).
+
+**Behaviour.**
+
+1. Norms set the outcome of relations the engine already produces (attraction, affairs, unions): scandal, sanction, feud, divorce, standing, secrets (F20), and the political use of them (leverage).
+2. Changes of norm follow values, faith, contact and movements (W20). Persecution under a `forbidden` stance raises flight and secrecy.
+3. Pregnancy runs its course with typed complications whose chances read medicine, attendants and the bearer's health. Postnatal customs set the bearer's recovery and the child's early care (50.9). Every step is recorded (W49 group 4).
+4. Legitimacy rules decide inheritance, office eligibility and claims (succession, houses).
+
+**Tools and control.**
+
+- Mortal tools `seek_recognition`, `take_restraint_vow`.
+- God levers `intimacy_norm:*`, `restraint_custom:*`, `reproductive_course:*`, `legitimacy_rule:*`.
+- A "Unions and birth" section in culture drawers.
+- Context block `unions_and_birth`, plain and closed-door.
+
+**Codex and book.** Norms and courses described plainly per culture, never explicit.
+
+**Integrity.** Contexts read only sexes the biology declares.
+
+**Legacy.**
+
+- Existing act kinds map to norms with a `forbidden` stance only where the culture's laws already ban them.
+- Everything else is `tolerated`, until genesis or the model authors the norm.
+
+**Rules namespace.** `unions_and_birth`.
+
+### 50.9 Infancy, childhood and socialization
+
+**Current.** Children are born, fostered, apprenticed and schooled. Upbringing is one passion source, and childhood stages are planned in spec 13 (3.1 reference pass). How infants are fed and cared for, what standing children have, and how each culture shapes them into adults are labels or absent.
+
+**State.**
+
+- **`infant_care`.** Per culture and biology: feeding (`InfantFeeding`: `by_birth_parent`, `by_other_nurse`, `animal_milk`, `prepared_food`, `made_food`, `none_needed`), weaning age, carrying and sleeping arrangements, carers (kin roles, specialists, community, made minds).
+- **`child_standing`.** Per culture: the age of naming, of personhood, of work, of responsibility before law, of marriage; child labour share; protections.
+- **`socialization`.** Per culture: technique weights (`SocializationTechnique`: `example`, `instruction`, `praise`, `shame`, `punishment`, `ritual_ordeal`, `storytelling`, `play`, `apprenticeship`, `schooling`, `peer_group`, `age_set`). It also holds aims weighted over value axes (F5) and skills: independence, obedience, aggression and restraint, cooperation, piety, craft.
+- **`pedagogy`.** Per school or tradition: theory (`PedagogyTheory`: `rote`, `dialectic`, `apprenticeship`, `discovery`, `ritual_transmission`, `examination`, `network_learning` (W44), `mind_transfer` (W44)), its effect on learning speed and on depth against breadth.
+
+**Behaviour.**
+
+1. Infant care sets infant survival, weaning illness exposure and the birth parent's return to work (50.5).
+2. Socialization shapes each child's starting values, traits and skills through the culture's techniques and aims, varied by household and class. Harsh techniques raise later stress and conformity; play and peer groups raise cooperation.
+3. Child standing decides child labour (feeds production, lowers schooling), early marriage, and legal treatment (W27).
+4. Pedagogy sets how fast knowledge and skills pass between generations, and which kind of scholar a tradition produces.
+
+**Tools and control.**
+
+- Mortal tools `raise_child`, `found_school_method`.
+- God levers `infant_care:*`, `child_standing:*`, `socialization:*`, `pedagogy:*`.
+- "Childhood" sections in culture and household drawers.
+- Context block `childhood`.
+
+**Codex and book.** A childhood chapter per people.
+
+**Integrity.** Ages are increasing in order; technique weights sum to 100.
+
+**Legacy.** Derived from culture values, education levels and existing fosterage.
+
+**Rules namespace.** `childhood`.
+
+### 50.10 Philanthropy and endowments
+
+**Current.** Poor relief, alms, welfare houses and patrons exist. Endowments that fund an institution for ever, and private foundations with their own aims and capture, do not.
+
+**State.**
+
+- **`endowments`.** Founder, beneficiary (a structure, an office, a school, a temple, a route, a people, a cause), capital (land, coin, shares, rents), income, trustees, purpose (`EndowmentPurpose`: `relief`, `learning`, `worship`, `health`, `works`, `art`, `kin`, `memory`, `research`), terms (perpetual, for a term, conditional), the law that shelters it.
+
+**Behaviour.**
+
+1. Income funds the beneficiary each epoch, raising its output and the founder's renown and memory (remembrance).
+2. Trustees may serve the purpose, skim, or be captured by a faction or the state. Laws can confiscate endowments or shelter them from tax.
+3. Endowed institutions outlive dynasties and keep knowledge and worship through collapses (dark ages).
+
+**Tools and control.**
+
+- Mortal tools `endow`, `audit_endowment`.
+- God levers `endowment:create/edit/delete/hold`.
+- Endowments in founder and beneficiary drawers.
+- Context block `endowments`.
+
+**Codex and book.** Endowments with founders, income and history.
+
+**Integrity.** The beneficiary exists; capital is held by the endowment.
+
+**Legacy.** Welfare houses with patrons gain an endowment where the patron funds them.
+
+**Rules namespace.** `endowments`.
+
+### 50.11 Youth, adolescence and delinquency
+
+**Current.** Life stages, age sets and coming of age exist. The standing of youths, their groups and activities, and youth crime are not modelled.
+
+**State.**
+
+- **`youth_standing`.** Per culture: the years of youth, freedoms and duties, places (`youth_house`, `household`, `school`, `service`, `apprenticeship`, `wandering`).
+- **`youth_groups`.** Settlement, members, purpose (`YouthPurpose`: `sport`, `service`, `courtship`, `defence`, `faith`, `mischief`, `crime`, `politics`), leader, standing.
+
+**Behaviour.**
+
+1. Youth groups train skills and loyalties, keep watch and festivals, court, compete and, where opportunity, poverty and weak social control meet, turn to delinquency. Crime and gangs (W27) recruit from them.
+2. Movements and revolts draw on youth groups; rulers co-opt them by service and schools.
+3. Coming of age moves members into adult standing and dissolves the group's hold.
+
+**Tools and control.**
+
+- Mortal tools `lead_youth`, `reform_youth`.
+- God levers `youth_standing:*`, `youth_group:*`.
+- A "Youth" section in settlement drawers.
+- Context block `youth`.
+
+**Codex and book.** Youth customs per people; groups in settlement entries.
+
+**Integrity.** Members are within youth years.
+
+**Legacy.** Age set rows for youths become youth groups.
+
+**Rules namespace.** `youth`.
+
+### 50.12 Death work and the handling of the dead
+
+**Current.** Deaths, funerals, funeral customs, mourning, ancestor cults and afterlives exist. The people who handle the dead and the forms beyond the listed customs are labels.
+
+**State.**
+
+- **`death_work`.** Per culture: roles (`DeathRole`: `washer`, `preparer`, `keeper_of_remains`, `officiant`, `mourner`, `record_keeper`, `carrier`), their standing (honoured, avoided, purity rank under F41), fees and guild.
+- Funeral customs (47.3, 48.7) gain forms by what is done with remains (`RemainsTreatment`: `burial`, `cremation`, `exposure`, `preservation`, `water`, `consumption` (only as a culture's own custom), `storage`, `return_to_maker` (made bodies), `release` (spirits), `none_needed`), with costs, places and health effects.
+
+**Behaviour.**
+
+1. Death work is a profession (48.6) whose standing shapes recruitment and marriage. Its absence in a plague leaves remains untended, raising disease and unrest.
+2. Remains treatment sets the land and structures used (graves, towers, ossuaries, pyres), the health exposure, the relic supply (faith) and what necromancy and spirits can reach.
+3. Readjustment after a death (widowhood, inheritance, household reform) reads kin duties (50.6) and is recorded step by step (W49).
+
+**Tools and control.**
+
+- God levers `death_work:*`, and remains treatment through the funeral custom levers.
+- A "The dead" section in culture drawers.
+- Context block `the_dead`.
+
+**Codex and book.** The treatment of the dead per people, plainly.
+
+**Integrity.** Each death refers to a treatment its culture allows, or is recorded as an exception.
+
+**Legacy.** Funeral customs map to treatments.
+
+**Rules namespace.** `death_work`.
+
+### 50.13 Humour, conversation and public speech
+
+**Current.** Jokes and gossip are interaction kinds, sermons a collective trigger, and humour a facet. Humour as a cultural style, satire as a political force, and oratory and lectures as venues of persuasion are not modelled.
+
+**State.**
+
+- **`humour_styles`.** Per culture: forms (`HumourForm`: `wordplay`, `teasing`, `satire`, `absurd`, `bodily`, `irony`, `storytelling`, `ritual_clowning`), targets allowed and forbidden (rulers, gods, kin roles from 50.6, strangers), and the offence threshold.
+- **`speeches`.** Speaker, venue (`SpeechVenue`: `assembly`, `court`, `temple`, `square`, `school`, `camp`, `outlet` (50.2)), aim (`persuade`, `teach`, `mock`, `mourn`, `rally`, `defend`, `accuse`), skill, audience reach, effect.
+
+**Behaviour.**
+
+1. Humour eases tension in interactions within the allowed targets and offends outside them. Satire of rulers lowers legitimacy where tolerated and brings punishment where not, and spreads by media.
+2. Speeches move assemblies (votes), courts (verdicts), crowds (riots) and congregations by skill, aim and the audience's values. Great speeches become recorded works and legends.
+3. Conversation norms (turn-taking, silence, directness) enter diplomacy and trust.
+
+**Tools and control.**
+
+- Mortal tools `give_speech`, `satirise`.
+- God levers `humour_style:*`, `speech:*`.
+- Speeches in incident pages; humour in culture drawers.
+- Context block `speech`.
+
+**Codex and book.** Humour per people; notable speeches with their effects.
+
+**Integrity.** A speech's venue exists in its settlement or polity.
+
+**Legacy.** Derived from facets and interaction histories.
+
+**Rules namespace.** `speech`.
+
+### 50.14 Every mechanic coupled
+
+The 102 registered mechanics with at most one coupling (Appendix 50.B) act on their own subsystem only, so their outcomes do not reach the rest of the world. Each gains couplings to at least two other subsystems that its outcome plausibly drives, chosen from its own fields. Two examples:
+
+- `mortal_births` reaches household load (50.5), kin duties (50.6) and population policy (50.1).
+- `planetary_climate` reaches harvests, migration and faith.
+
+The couplings are registered in the interconnection registry with their edge kinds and rule keys, and each has an acceptance check.
+
+**Guard.** `scripts/check_mechanic_couplings.py` fails when a registered mechanic has fewer than two couplings to other subsystems, unless its entry states why it can drive nothing else (bookkeeping mechanics only).
+
+### 50.15 Every node type at its depth target
+
+The depth metric's shortfalls are closed section by section. The seven types read by nothing gain targets and readers.
+
+| Node type | Short on | Closed by |
+|---|---|---|
+| `structure` | mechanics acting (42 / 70) | W47 47.1 own effects for every structure kind |
+| `language` | attributes read, mechanics (62 / 110, 64 / 90) | 50.2 media and 50.13 speech read languages; spec 13 8.x planned items |
+| `celestial` | mechanics (3 / 12) | W47 47.6.1 typed sky events; 50.7 folk knowledge of the sky |
+| `vessel` | attributes, mechanics (20 / 80, 13 / 65) | W49 49.3 engagements in every domain; 50.3 leases; 50.4 harbour works |
+| `outer_being` | mechanics (16 / 20) | W45 45.15 patrons; W47 47.5 outer being plans |
+| `natural_law` | attributes, mechanics (6 / 10, 4 / 30) | W47 natural laws (fortune law K.37 and the law grammar of 47.5) |
+| `title` | everything (0 / 25) | W48 48.6 title tiers as typed nodes read by succession, legitimacy, courts and kin groups (50.6) |
+| `beast` | attributes, mechanics (79 / 150, 64 / 90) | W48 48.5 species roles; 50.7 folk knowledge of animals |
+| `theory` | attributes (8 / 15) | 50.7 folk knowledge against theories |
+| `art_form` | attributes, mechanics (8 / 20, 1 / 20) | W48 48.7 art modes; 50.2 recorded art; 50.13 |
+| `phenomenon` | everything (0 / 20) | W48 48.8 typed phenomenon model read by regions, travel and faith |
+| `cosmic_being`, `vehicle_type`, `unit_type`, `equipment_model`, `dish`, `building_type` | no target, nothing read | targets set here (attributes 15, mechanics 15, subsystem pairs 15 each); readers through W48 F57 authored kinds and their typed properties |
+| `son` | attributes, mechanics (246 / 350, 117 / 320) | W47 47.5 god layer |
+| `creator` | attributes, mechanics (25 / 35, 13 / 40) | W47 47.5 |
+| `foreign_god` | attributes, mechanics (104 / 200, 33 / 140) | W47 47.5 |
+| `world` | attributes, mechanics (139 / 195, 61 / 135) | W47 47.2 and 47.6; 50.4 terraforming works |
+| `star` | attributes, mechanics (17 / 35, 3 / 30) | W47 47.6.1; 50.7 |
+| `route` | attributes, mechanics (26 / 45, 3 / 30) | 50.3 tiers on routes; 50.4 works; W49 49.3 |
+
+**Guard.** After W50, `scripts/depth_metric.py check` fails when any node type is below its target.
+
+### 50.16 Facets with kinds but no behaviour
+
+The 100 subcategories that existing waves give kinds but not behaviour are marked **50.16** in Appendix 50.A. Each one follows the same rule: its kind table (W47, W48) carries typed properties that an engine step reads, so the facet changes something in the world.
+
+| Group | Subcategories (OCM codes) | Behaviour each one gains |
+|---|---|---|
+| Food industries | 228, 237, 242, 247, 253, 257, 266, 272, 274, 277 | each industry is a production method row (48.5) with inputs, outputs, hands, energy and technique; its output enters diets, trade and health; its workers are a profession (48.6) with exposures (47.10) |
+| Fibre, leather and paper | 282, 283, 284, 287, 289, 290, 291, 294 | production methods for each; garments (48.3) are made from them; dress norms read garments and enter standing and etiquette |
+| Crafts and building trades | 301, 306, 322, 323, 324, 333, 334, 335, 337, 338, 354, 355, 365, 367, 368 | each trade is a profession with skill, tools (48.4), guild and output quality; structures (47.1) need the trades their form uses; missing trades block or slow building |
+| Energy, chemicals and machines | 377, 378, 383, 384, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 397, 399, 400, 403, 404, 406, 408, 414, 416, 417 | each is a method or tool kind under the per-family technology levels (47.2); outputs feed production, war and households; hazards follow the mishap model (47.10) |
+| Transport and navigation | 496, 502, 506, 507, 508 | carriers and vehicle families (47.2) with routes, terminals (50.4 works) and navigation accuracy (folk knowledge and instruments, 50.7) |
+| Music and spectacle | 533, 534, 541 | music traditions and instruments (48.4) are played at gatherings and rites, move mood and renown, and pass by teaching; spectacles draw crowds, wealth and unrest |
+| Gender and unions | 462, 562, 583, 585, 589, 595, 890 | culture data on roles, union payments, nuptials, restraint and plural unions (47.3.4, 50.8) read by marriage choice, inheritance and household labour, with `any` as the default role rule |
+| Kin groups and rule | 614, 616, 642 | kin groups (50.6); government forms read their typed rule axes (47.3) |
+| Offences | 683, 684, 685, 687 | crime kinds (W27, 47.3) with detection, trial and sanction, and the norms of 50.8 for union offences |
+| War kinds | 711, 713, 715, 717, 718 | unit families and equipment models (W42, W48) with their own battle factors, logistics and costs |
+| Care, death and faith | 755, 756, 759, 762, 763, 769, 785 | healing roles and methods (spec 13 7.2) with success by knowledge; suicide as an incident with typed causes (despair, honour, ritual, protest) read from values, standing and need, recorded with care (G9); dying with its last acts (wills, confessions, successions); ancestor cults and asceticism as practices with costs and effects |
+| Learning | 811, 812, 813, 814, 874, 875 | branches of knowledge with research paths (8.4), schools and teachers with lineages, apprenticeships that pass skills with quality |
+| Life stages and prehistory | 172, 880, 884 | spec 13 F48 prehistory (planned); life stage rules per biology with their standing (50.9, 50.11) |
+
+**Guard.** `scripts/check_ocm_coverage.py` reads `docs/spec/ocm-coverage.md` (Appendix 50.A as data). It fails when a subcategory has no closing section, or when its closing section names a table or engine step that does not exist once its wave is marked done.
+
+### 50.17 Guards
+
+| Guard | Fails when |
+|---|---|
+| `scripts/check_ocm_coverage.py` | an OCM subcategory has no closing section, or a done closure names a missing table or step |
+| `scripts/check_mechanic_couplings.py` | a registered mechanic has fewer than two couplings to other subsystems without a stated reason |
+| `scripts/depth_metric.py check` | a node type is below its target after W50 |
+| `scripts/check_inventory.py` (5.10) | a table, enum, step, kind, tool, lever, screen or text file of W50 has no inventory row |
+| `tests/engine/core/test_daily_life.py`, `test_kin_duties.py`, `test_media.py`, `test_commerce.py`, `test_public_works.py`, `test_population_policy.py`, `test_folk_knowledge.py`, `test_unions_and_birth.py`, `test_childhood.py`, `test_endowments.py`, `test_youth.py`, `test_death_work.py`, `test_speech.py` | a family's behaviour does not produce its effects on a seeded world |
+
+### 50.18 Compliance catalogue (W50)
+
+| Section | Tables | Phases | God levers | Screens | Tools and context | Codex and book | Integrity | Backfill |
+|---|---|---|---|---|---|---|---|---|
+| 50.1 population policy | `population_policies`, `population_instruments` | demography, migration, births | `population_policy:*`, `population_instrument:*` | "Numbers" section | `set_population_policy`, `move_population_policy`; `population_policy` | holder entries; Records | instruments owned | none |
+| 50.2 media | `record_media`, `media_outlets`, `media_items` | communication, opinion, justice, historiography | `record_medium:*`, `media_outlet:*`, `media_item:*` | outlet drawer, "Media" section | `found_outlet`, `publish_item`, `censor_outlet`, `sway_outlet`; `media` | outlets and items | subjects exist | towers, presses, press leverage |
+| 50.3 commerce | `shops`, `supply_tiers`, `promotions`, `leases`, `exchange_rates` | markets, trade, credit, basket | `shop:*`, `supply_tier:*`, `promotion:*`, `lease:*`, `exchange_rate:*` | "Commerce" sections | `open_shop`, `promote`, `lease_out`, `change_money`; `commerce` | settlement and owner entries | lease holders; currency pairs | retail tier, shops from workshops |
+| 50.4 works and enterprise | `public_works`, `public_work_stages`, `state_enterprises` | construction, routes, treasury | `public_works:*`, `state_enterprise:*` | "Works" panel, atlas layer | `begin_works`, `fund_works`, `found_enterprise`, `bless_works`; `works` | works and enterprises | location in polity | infrastructure levels |
+| 50.5 daily life | `time_budgets`, `care_customs`, `housework`, `domestic_service`, `leisure_pursuits`, `space_norms` | households, labour, health, leisure | levers per table | "Daily life" sections | `hire_servant`, `take_leisure`, `set_house_duties`; `daily_life` | daily life chapter | shares sum to 100 | from class, culture and baths |
+| 50.6 kin | `kin_role_duties`, `kin_groups`, `kin_group_members` | kinship, feuds, inheritance, households | `kin_role_duty:*`, `kin_group:*`, `kin_group_member:*` | "Kin" section, kin group drawer | `call_on_kin`, `convene_kin_group`; `kin` | kin duties and groups | membership rule | clans, moieties, houses |
+| 50.7 folk knowledge | `folk_knowledge`, `folk_classes` | knowledge, theories, work success | `folk_knowledge:*`, `folk_class:*` | "What they know" | `teach_lore`, `test_lore`; `folk_knowledge` | per people per domain | classes point at kinds | from knowledge and beliefs |
+| 50.8 unions and birth | `intimacy_norms`, `restraint_customs`, `reproductive_courses`, `legitimacy_rules` | relations, births, succession, justice | levers per table | "Unions and birth" | `seek_recognition`, `take_restraint_vow`; `unions_and_birth` | plain per culture | sexes from biology | from act kinds and laws |
+| 50.9 childhood | `infant_care`, `child_standing`, `socialization`, `pedagogy` | births, life course, schools | levers per table | "Childhood" sections | `raise_child`, `found_school_method`; `childhood` | childhood chapter | ages ordered | from values and education |
+| 50.10 endowments | `endowments` | treasury, welfare, remembrance | `endowment:*` | founder and beneficiary drawers | `endow`, `audit_endowment`; `endowments` | endowment entries | beneficiary exists | patrons of welfare houses |
+| 50.11 youth | `youth_standing`, `youth_groups` | life course, crime, movements | `youth_standing:*`, `youth_group:*` | "Youth" section | `lead_youth`, `reform_youth`; `youth` | youth customs and groups | ages | age sets of youths |
+| 50.12 death work | `death_work`; funeral custom treatment | death, health, faith, necromancy | `death_work:*` | "The dead" section | `the_dead` | plain per people | allowed treatment | funeral customs |
+| 50.13 speech | `humour_styles`, `speeches` | relations, assemblies, courts, crowds | `humour_style:*`, `speech:*` | incident pages, culture drawers | `give_speech`, `satirise`; `speech` | humour and speeches | venue exists | facets and histories |
+| 50.14–50.16 | registry couplings, depth targets, `ocm-coverage.md` | — | — | — | — | — | the guards of 50.17 | — |
+
+Every new agent tool has a case in `every_son_tool.py` or `every_mortal_tool.py`. Every lever runs with real values in `test_every_lever.py`. Every table reaches the book and the Codex through `services/books/typed.py`, and every incident kind of W50 follows F58.
+
+### 50.19 Couplings, loops, stories and decisions
+
+**Couplings.**
+
+- C57 Daily life → labour, health, leisure demand.
+- C58 Kin duties → feuds, inheritance, care.
+- C59 Media → opinion, legitimacy, prices, evidence.
+- C60 Works → routes, harvests, health, war.
+- C61 Folk knowledge → success of work.
+- C62 Socialization → adult values and skills.
+
+**Loops.**
+
+- L113 (R) works raise trade → treasury → more works (brake: upkeep, labour).
+- L114 (B) harsh population instruments → flight and grievance → repeal.
+- L115 (R) trusted outlet → aligned opinion → more audience (brake: exposure of false items).
+- L116 (B) heavy housework → less schooling → lower skill → poorer households → heavier housework, broken by servants, made minds or works.
+- L117 (R) endowed schools → scholars → founders' renown → more endowments.
+
+**Acceptance stories.**
+
+- AS57 **The Canal and the Levy.** A polity begins a canal with levy labour; grievance rises; a youth group joins a revolt; the canal finishes late but doubles trade.
+- AS58 **The Paper and the Trial.** An outlet prints a slanted account of a killing; a recorded image in an archive contradicts it in court; the outlet's trust falls.
+- AS59 **The Grandparent's Duty.** A parent dies; kin duties send the child to a grandparent; the household's load rises; the child's schooling stops; the child's adult skills differ.
+- AS60 **The Wrong Plant.** A people's folk knowledge classes a plant as food; a famine forces its use; illness follows; contact with a neighbour's lore corrects the class.
+
+**Decisions.**
+
+| Id | Question | Decision |
+|---|---|---|
+| K.46 | Which taxonomy closes "granularity"? | The 689 world-content subcategories of the OCM 2025 edition, kept as data in `docs/spec/ocm-coverage.md`, plus the registry and the depth metric. |
+| K.47 | How are intimacy and reproduction told? | Plainly and behind closed doors, as typed norms a culture authors; no default, no quota, no explicit content. |
+| K.48 | May a mechanic stay isolated? | Only a bookkeeping mechanic, with its reason stated in the registry. |
+
+### 50.20 Execution order
+
+1. The guards (50.17) and `docs/spec/ocm-coverage.md` come first, so they list every gap.
+2. 50.5 daily life.
+3. 50.6 kin.
+4. 50.9 childhood.
+5. 50.8 unions and birth.
+6. 50.11 youth.
+7. 50.1 population policy.
+8. 50.3 commerce.
+9. 50.4 works and enterprise.
+10. 50.2 media.
+11. 50.13 speech.
+12. 50.7 folk knowledge.
+13. 50.10 endowments.
+14. 50.12 death work.
+15. 50.16 facets.
+16. 50.14 couplings.
+17. 50.15 depth targets.
+18. Surfaces, fixups and the audit.
+
+The wave is gated once.
+
 ### Appendix 48.A — The 300 enums without an authored layer
 
 Generated from the enum classification of 48.0. "Catalogue" marks the enums that need a property catalogue (48.10).
@@ -4187,3 +4808,808 @@ Generated on 2026-11-14 from every template key written literally in `backend/sr
 | `site.*` | 16 (peoples, societies and history) | 1 | `delved` | `sites/rooms` |
 | `society.*` | 16 (peoples, societies and history) | 11 | `bankruptcy`, `class_uprising`, `desertion`, `ennobled`, `enslaved`, `famine`, `freed`, `love`, `plenty`, `poverty_uprising`, `ruined` | `demography/events`, `demography/mobility`, `phases/society`, `phases/society_economy` |
 | `storyteller.*` | 16 (peoples, societies and history) | 1 | `recovery` | `phases/gatherings` |
+
+### Appendix 50.A — Every OCM subcategory, its status and its closure
+
+Generated on 2026-11-14 from the OCM 2025 edition (HRAF, `ocm-2025.pdf`): 689 world-content subcategories, matched against the code and both specs as described in 50.0. "Own state and behaviour" means a table or typed columns with an engine module and god or agent control; "some typed state" means typed columns or a module without full behaviour; "a label only" means one enum value or flag. W44 step 0 copies this table to `docs/spec/ocm-coverage.md` for `scripts/check_ocm_coverage.py`.
+
+| OCM | Subcategory | Measured status | Closed by |
+|---|---|---|---|
+| 130 | Geography | own state and behaviour in code | code (environment, ecology); spec 13 F2, 10.x; W48 48.8 |
+| 131 | Location | some typed state in code | code (environment, ecology); spec 13 F2, 10.x; W48 48.8 |
+| 132 | Climate | own state and behaviour in code | code (environment, ecology); spec 13 F2, 10.x; W48 48.8 |
+| 133 | Topography And Geology | own state and behaviour in code | code (environment, ecology); spec 13 F2, 10.x; W48 48.8 |
+| 134 | Soil | own state and behaviour in code | code (environment, ecology); spec 13 F2, 10.x; W48 48.8 |
+| 135 | Mineral Resources | own state and behaviour in code | code (environment, ecology); spec 13 F2, 10.x; W48 48.8 |
+| 136 | Fauna | own state and behaviour in code | code (environment, ecology); spec 13 F2, 10.x; W48 48.8 |
+| 137 | Flora | own state and behaviour in code | code (environment, ecology); spec 13 F2, 10.x; W48 48.8 |
+| 140 | Human Biology | own state and behaviour in code | code (body, genetics, nutrition); spec 13 F4, F39; W46 |
+| 141 | Anthropometry | some typed state in code | code (body, genetics, nutrition); spec 13 F4, F39; W46 |
+| 142 | Descriptive Somatology | own state and behaviour in code | code (body, genetics, nutrition); spec 13 F4, F39; W46 |
+| 143 | Genetics | own state and behaviour in code | code (body, genetics, nutrition); spec 13 F4, F39; W46 |
+| 145 | Ontogenetic Data | some typed state in code | code (body, genetics, nutrition); spec 13 F4, F39; W46 |
+| 146 | Nutrition | own state and behaviour in code | code (body, genetics, nutrition); spec 13 F4, F39; W46 |
+| 147 | Physiological Data | some typed state in code | code (body, genetics, nutrition); spec 13 F4, F39; W46 |
+| 150 | Behavior Processes And Personality | own state and behaviour in code | code (mind, conditions); spec 13 F5–F7 |
+| 151 | Sensation And Perception | own state and behaviour in code | code (mind, conditions); spec 13 F5–F7 |
+| 152 | Drives And Emotions | own state and behaviour in code | code (mind, conditions); spec 13 F5–F7 |
+| 153 | Modication Of Behavior | own state and behaviour in code | code (mind, conditions); spec 13 F5–F7 |
+| 154 | Adjustment Processes | own state and behaviour in code | code (mind, conditions); spec 13 F5–F7 |
+| 155 | Personality Development | a label only (enum value or flag) | **50.9** |
+| 156 | Social Personality | own state and behaviour in code | **50.9**; also code (mind, conditions); spec 13 F5–F7 |
+| 157 | Personality Traits | own state and behaviour in code | code (mind, conditions); spec 13 F5–F7 |
+| 158 | Personality Disorders | some typed state in code | code (mind, conditions); spec 13 F5–F7 |
+| 160 | Demography | own state and behaviour in code | code (demography); spec 13 Part 3 |
+| 161 | Population | own state and behaviour in code | code (demography); spec 13 Part 3 |
+| 162 | Composition Of Population | own state and behaviour in code | code (demography); spec 13 Part 3 |
+| 163 | Birth Statistics | own state and behaviour in code | code (demography); spec 13 Part 3 |
+| 164 | Morbidity | own state and behaviour in code | code (demography); spec 13 Part 3 |
+| 165 | Mortality | some typed state in code | code (demography); spec 13 Part 3 |
+| 166 | Internal Migration | own state and behaviour in code | code (demography); spec 13 Part 3 |
+| 167 | External Migration | some typed state in code | code (demography); spec 13 Part 3 |
+| 168 | Population Policy | absent from code | **50.1** |
+| 170 | History And Culture Change | own state and behaviour in code | code (historiography, innovation, contact, plans); spec 13 F48, 8.4 |
+| 172 | Prehistory | absent from code | code (historiography, innovation, contact, plans); spec 13 F48, 8.4; deepened by **50.16** |
+| 173 | Traditional History | own state and behaviour in code | code (historiography, innovation, contact, plans); spec 13 F48, 8.4 |
+| 175 | History | own state and behaviour in code | code (historiography, innovation, contact, plans); spec 13 F48, 8.4 |
+| 176 | Innovation | own state and behaviour in code | code (historiography, innovation, contact, plans); spec 13 F48, 8.4 |
+| 177 | Acculturation And Culture Contact | own state and behaviour in code | code (historiography, innovation, contact, plans); spec 13 F48, 8.4 |
+| 178 | Sociocultural Trends | own state and behaviour in code | code (historiography, innovation, contact, plans); spec 13 F48, 8.4 |
+| 179 | Economic Planning And Development | own state and behaviour in code | code (historiography, innovation, contact, plans); spec 13 F48, 8.4 |
+| 181 | Ethos | own state and behaviour in code | code (values, norms, goals, identity); spec 13 F5, W20 |
+| 183 | Norms | own state and behaviour in code | code (values, norms, goals, identity); spec 13 F5, W20 |
+| 184 | Cultural Participation | own state and behaviour in code | code (values, norms, goals, identity); spec 13 F5, W20 |
+| 185 | Cultural Goals | own state and behaviour in code | code (values, norms, goals, identity); spec 13 F5, W20 |
+| 186 | Cultural Identity And Pride | own state and behaviour in code | code (values, norms, goals, identity); spec 13 F5, W20 |
+| 190 | Language | own state and behaviour in code | code (tongues); spec 13 8.x |
+| 191 | Speech | some typed state in code | code (tongues); spec 13 8.x |
+| 192 | Vocabulary | own state and behaviour in code | code (tongues); spec 13 8.x |
+| 193 | Grammar | own state and behaviour in code | code (tongues); spec 13 8.x |
+| 194 | Phonology | own state and behaviour in code | code (tongues); spec 13 8.x |
+| 195 | Sociolinguistics | own state and behaviour in code | code (tongues); spec 13 8.x |
+| 196 | Semantics | own state and behaviour in code | code (tongues); spec 13 8.x |
+| 198 | Special Languages | own state and behaviour in code | code (tongues); spec 13 8.x |
+| 200 | Communication | some typed state in code | code (post, signals, rumour); spec 13 F21, F11 |
+| 201 | Gestures And Signs | some typed state in code | code (post, signals, rumour); spec 13 F21, F11 |
+| 202 | Transmission Of Messages | own state and behaviour in code | code (post, signals, rumour); spec 13 F21, F11 |
+| 203 | Dissemination Of News And Information | own state and behaviour in code | code (post, signals, rumour); spec 13 F21, F11 |
+| 204 | Press | own state and behaviour in code | **50.2**; also code (post, signals, rumour); spec 13 F21, F11 |
+| 205 | Mail | some typed state in code | code (post, signals, rumour); spec 13 F21, F11 |
+| 206 | Telephone And Telegraph | absent from code | **50.2** |
+| 207 | Radio And Television | a label only (enum value or flag) | **50.2** |
+| 208 | Public Opinion | some typed state in code | code (post, signals, rumour); spec 13 F21, F11 |
+| 209 | Proxemics | some typed state in code | **50.5** |
+| 210 | Records | own state and behaviour in code | code (writing, printing, archives); spec 13 8.x, W35 |
+| 211 | Mnemonic Devices | own state and behaviour in code | code (writing, printing, archives); spec 13 8.x, W35 |
+| 212 | Writing | own state and behaviour in code | code (writing, printing, archives); spec 13 8.x, W35 |
+| 213 | Printing | some typed state in code | code (writing, printing, archives); spec 13 8.x, W35 |
+| 214 | Publishing | own state and behaviour in code | code (writing, printing, archives); spec 13 8.x, W35 |
+| 215 | Photography | absent from code | **50.2** |
+| 216 | Audiovisual Records And Equipment | absent from code | **50.2** |
+| 217 | Archives | own state and behaviour in code | code (writing, printing, archives); spec 13 8.x, W35 |
+| 218 | Writing And Printing Supplies | own state and behaviour in code | code (writing, printing, archives); spec 13 8.x, W35 |
+| 220 | Food Quest | some typed state in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 221 | Annual Cycle | own state and behaviour in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 222 | Collecting | own state and behaviour in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 223 | Fowling | some typed state in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 224 | Hunting And Trapping | own state and behaviour in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 225 | Marine Hunting | own state and behaviour in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 226 | Fishing | some typed state in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 227 | Fishing Gear | own state and behaviour in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 228 | Marine Industries | absent from code | code (grounds, herds, ecology); W48 48.5 species products and roles; deepened by **50.16** |
+| 230 | Animal Husbandry | own state and behaviour in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 231 | Domesticated Animals | some typed state in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 232 | Applied Animal Science | own state and behaviour in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 233 | Pastoral Activities | some typed state in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 234 | Dairying | some typed state in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 235 | Poultry Raising | some typed state in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 236 | Wool Production | some typed state in code | code (grounds, herds, ecology); W48 48.5 species products and roles |
+| 237 | Animal By-products | a label only (enum value or flag) | code (grounds, herds, ecology); W48 48.5 species products and roles; deepened by **50.16** |
+| 240 | Agriculture | own state and behaviour in code | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5 |
+| 241 | Tillage | some typed state in code | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5 |
+| 242 | Agricultural Science | absent from code | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5; deepened by **50.16** |
+| 243 | Cereal Agriculture | some typed state in code | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5 |
+| 244 | Vegetable Production | some typed state in code | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5 |
+| 245 | Arboriculture | some typed state in code | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5 |
+| 246 | Forage Crops | some typed state in code | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5 |
+| 247 | Floriculture | a label only (enum value or flag) | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5; deepened by **50.16** |
+| 248 | Textile Agriculture | some typed state in code | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5 |
+| 249 | Special Crops | some typed state in code | code (agrarian); spec 13 6.x, F24 techniques; W46 46.2; W48 48.5 |
+| 250 | Food Processing | some typed state in code | W48 48.2 cuisine, 48.5 production methods and preservation |
+| 251 | Preservation And Storage Of Food | own state and behaviour in code | W48 48.2 cuisine, 48.5 production methods and preservation |
+| 252 | Food Preparation | own state and behaviour in code | W48 48.2 cuisine, 48.5 production methods and preservation |
+| 253 | Meat Packing Industry | a label only (enum value or flag) | W48 48.2 cuisine, 48.5 production methods and preservation; deepened by **50.16** |
+| 254 | Refrigeration Industry | own state and behaviour in code | W48 48.2 cuisine, 48.5 production methods and preservation |
+| 255 | Canning Industry | some typed state in code | W48 48.2 cuisine, 48.5 production methods and preservation |
+| 256 | Cereal Industry | some typed state in code | W48 48.2 cuisine, 48.5 production methods and preservation |
+| 257 | Confectionery Industries | absent from code | W48 48.2 cuisine, 48.5 production methods and preservation; deepened by **50.16** |
+| 258 | Other Food Processing Industries | some typed state in code | W48 48.2 cuisine, 48.5 production methods and preservation |
+| 260 | Food Consumption | some typed state in code | code (basket, cuisine); W48 48.2; W47 customs |
+| 261 | Gratication And Control Of Hunger | own state and behaviour in code | code (basket, cuisine); W48 48.2; W47 customs |
+| 262 | Diet | own state and behaviour in code | code (basket, cuisine); W48 48.2; W47 customs |
+| 263 | Condiments | some typed state in code | code (basket, cuisine); W48 48.2; W47 customs |
+| 264 | Eating | some typed state in code | code (basket, cuisine); W48 48.2; W47 customs |
+| 265 | Food Service Industries | own state and behaviour in code | code (basket, cuisine); W48 48.2; W47 customs |
+| 266 | Cannibalism | a label only (enum value or flag) | code (basket, cuisine); W48 48.2; W47 customs; deepened by **50.16** |
+| 270 | Drink And Drugs | some typed state in code | W48 48.2 drink, 48.4 substances; code (intoxicants, medicine) |
+| 271 | Water And Thirst | some typed state in code | W48 48.2 drink, 48.4 substances; code (intoxicants, medicine) |
+| 272 | Nonalcoholic Beverages | absent from code | W48 48.2 drink, 48.4 substances; code (intoxicants, medicine); deepened by **50.16** |
+| 273 | Alcoholic Beverages | own state and behaviour in code | W48 48.2 drink, 48.4 substances; code (intoxicants, medicine) |
+| 274 | Beverage Industries | a label only (enum value or flag) | W48 48.2 drink, 48.4 substances; code (intoxicants, medicine); deepened by **50.16** |
+| 275 | Drinking Establishments | some typed state in code | W48 48.2 drink, 48.4 substances; code (intoxicants, medicine) |
+| 276 | Recreational And Non-therapeutic Drugs | own state and behaviour in code | W48 48.2 drink, 48.4 substances; code (intoxicants, medicine) |
+| 277 | Tobacco Industry | a label only (enum value or flag) | W48 48.2 drink, 48.4 substances; code (intoxicants, medicine); deepened by **50.16** |
+| 278 | Pharmaceuticals | some typed state in code | W48 48.2 drink, 48.4 substances; code (intoxicants, medicine) |
+| 280 | Leather, Textiles, And Fabrics | some typed state in code | W48 48.3 dress, 48.5 production methods |
+| 281 | Work In Skins | some typed state in code | W48 48.3 dress, 48.5 production methods |
+| 282 | Leather Industry | a label only (enum value or flag) | W48 48.3 dress, 48.5 production methods; deepened by **50.16** |
+| 283 | Cordage | a label only (enum value or flag) | W48 48.3 dress, 48.5 production methods; deepened by **50.16** |
+| 284 | Knots And Lashings | a label only (enum value or flag) | W48 48.3 dress, 48.5 production methods; deepened by **50.16** |
+| 285 | Mats And Basketry | own state and behaviour in code | W48 48.3 dress, 48.5 production methods |
+| 286 | Woven And Other Interworked Fabrics | some typed state in code | W48 48.3 dress, 48.5 production methods |
+| 287 | Felted And Other Non-interworked Fabrics | a label only (enum value or flag) | W48 48.3 dress, 48.5 production methods; deepened by **50.16** |
+| 288 | Textile Industries | some typed state in code | W48 48.3 dress, 48.5 production methods |
+| 289 | Paper Industry | a label only (enum value or flag) | W48 48.3 dress, 48.5 production methods; deepened by **50.16** |
+| 290 | Clothing | a label only (enum value or flag) | W48 48.3 garments; deepened by **50.16** |
+| 291 | Normal Garb | absent from code | W48 48.3 garments; deepened by **50.16** |
+| 292 | Special Garments | some typed state in code | W48 48.3 garments |
+| 293 | Paraphernalia | some typed state in code | W48 48.3 garments |
+| 294 | Clothing Manufacture | absent from code | W48 48.3 garments; deepened by **50.16** |
+| 295 | Special Clothing Industries | some typed state in code | W48 48.3 garments |
+| 296 | Garment Care | a label only (enum value or flag) | **50.5** |
+| 300 | Adornment | some typed state in code | W48 48.3 adornment and emblems; code (body customs) |
+| 301 | Ornament | a label only (enum value or flag) | W48 48.3 adornment and emblems; code (body customs); deepened by **50.16** |
+| 302 | Personal Grooming | a label only (enum value or flag) | **50.5** |
+| 303 | Making Of Grooming Accessories | a label only (enum value or flag) | **50.5** |
+| 304 | Body Alterations | own state and behaviour in code | W48 48.3 adornment and emblems; code (body customs) |
+| 305 | Beauty Specialists | some typed state in code | W48 48.3 adornment and emblems; code (body customs) |
+| 306 | Jewelry Manufacture | a label only (enum value or flag) | W48 48.3 adornment and emblems; code (body customs); deepened by **50.16** |
+| 310 | Exploitative Activities | own state and behaviour in code | code (extraction, ecology); W47 47.2 |
+| 311 | Land Use | own state and behaviour in code | code (extraction, ecology); W47 47.2 |
+| 312 | Water Supply | own state and behaviour in code | code (extraction, ecology); W47 47.2 |
+| 313 | Lumbering | some typed state in code | code (extraction, ecology); W47 47.2 |
+| 314 | Forest Products | some typed state in code | code (extraction, ecology); W47 47.2 |
+| 315 | Oil And Gas Wells | own state and behaviour in code | code (extraction, ecology); W47 47.2 |
+| 316 | Mining And Quarrying | own state and behaviour in code | code (extraction, ecology); W47 47.2 |
+| 317 | Special Deposits | some typed state in code | code (extraction, ecology); W47 47.2 |
+| 318 | Human Eects On Environment | own state and behaviour in code | code (extraction, ecology); W47 47.2 |
+| 320 | Processing Of Basic Materials | own state and behaviour in code | code (materials F23); W48 48.5 methods |
+| 321 | Bone, Horn, And Shell Technology | some typed state in code | code (materials F23); W48 48.5 methods |
+| 322 | Woodworking | a label only (enum value or flag) | code (materials F23); W48 48.5 methods; deepened by **50.16** |
+| 323 | Ceramic Technology | a label only (enum value or flag) | code (materials F23); W48 48.5 methods; deepened by **50.16** |
+| 324 | Lithic Industries | a label only (enum value or flag) | code (materials F23); W48 48.5 methods; deepened by **50.16** |
+| 325 | Metallurgy | some typed state in code | code (materials F23); W48 48.5 methods |
+| 326 | Smiths And Their Crafts | own state and behaviour in code | code (materials F23); W48 48.5 methods |
+| 327 | Iron And Steel Industry | own state and behaviour in code | code (materials F23); W48 48.5 methods |
+| 328 | Nonferrous Metal Industries | own state and behaviour in code | code (materials F23); W48 48.5 methods |
+| 330 | Building And Construction | own state and behaviour in code | code (construction); W47 47.1; W48 48.6 professions |
+| 331 | Construction | own state and behaviour in code | code (construction); W47 47.1; W48 48.6 professions |
+| 332 | Earth Moving | own state and behaviour in code | code (construction); W47 47.1; W48 48.6 professions |
+| 333 | Masonry | a label only (enum value or flag) | code (construction); W47 47.1; W48 48.6 professions; deepened by **50.16** |
+| 334 | Structural Steel Work | a label only (enum value or flag) | code (construction); W47 47.1; W48 48.6 professions; deepened by **50.16** |
+| 335 | Carpentry | a label only (enum value or flag) | code (construction); W47 47.1; W48 48.6 professions; deepened by **50.16** |
+| 336 | Plumbing | some typed state in code | code (construction); W47 47.1; W48 48.6 professions |
+| 337 | Electrical Installation | a label only (enum value or flag) | code (construction); W47 47.1; W48 48.6 professions; deepened by **50.16** |
+| 338 | Miscellaneous Building Trades | absent from code | code (construction); W47 47.1; W48 48.6 professions; deepened by **50.16** |
+| 339 | Building Supplies Industries | some typed state in code | code (construction); W47 47.1; W48 48.6 professions |
+| 340 | Structures | own state and behaviour in code | code (structures); W47 47.1 |
+| 341 | Architecture | some typed state in code | code (structures); W47 47.1 |
+| 342 | Dwellings | own state and behaviour in code | code (structures); W47 47.1 |
+| 343 | Outbuildings | some typed state in code | code (structures); W47 47.1 |
+| 344 | Public Structures | some typed state in code | code (structures); W47 47.1 |
+| 345 | Recreational Structures | own state and behaviour in code | code (structures); W47 47.1 |
+| 346 | Religious And Educational Structures | own state and behaviour in code | code (structures); W47 47.1 |
+| 347 | Business Structures | own state and behaviour in code | code (structures); W47 47.1 |
+| 348 | Industrial Structures | own state and behaviour in code | code (structures); W47 47.1 |
+| 349 | Miscellaneous Structures | own state and behaviour in code | code (structures); W47 47.1 |
+| 350 | Equipment And Maintenance Of Buildings | some typed state in code | W48 48.4 furnishing |
+| 351 | Grounds | some typed state in code | W48 48.4 furnishing |
+| 352 | Furniture | some typed state in code | W48 48.4 furnishing |
+| 353 | Building Interiors And Arrangement | own state and behaviour in code | W48 48.4 furnishing |
+| 354 | Heating And Lighting Equipment | a label only (enum value or flag) | W48 48.4 furnishing; deepened by **50.16** |
+| 355 | Miscellaneous Building Equipment | a label only (enum value or flag) | W48 48.4 furnishing; deepened by **50.16** |
+| 356 | Housekeeping | absent from code | **50.5** |
+| 357 | Domestic Service | some typed state in code | **50.5** |
+| 358 | Maintenance Of Non-domestic Buildings | own state and behaviour in code | code (upkeep, wear) |
+| 360 | Settlements | own state and behaviour in code | code (settlements, urban) |
+| 361 | Settlement Patterns | some typed state in code | code (settlements, urban) |
+| 362 | Housing | own state and behaviour in code | code (settlements, urban) |
+| 363 | Streets And Trac | own state and behaviour in code | code (settlements, urban) |
+| 364 | Refuse Disposal And Sanitary Facilities | own state and behaviour in code | code (settlements, urban) |
+| 365 | Public Utilities | a label only (enum value or flag) | code (settlements, urban); deepened by **50.16** |
+| 366 | Commercial Facilities | own state and behaviour in code | code (settlements, urban) |
+| 367 | Parks | a label only (enum value or flag) | code (settlements, urban); deepened by **50.16** |
+| 368 | Miscellaneous Facilities | a label only (enum value or flag) | code (settlements, urban); deepened by **50.16** |
+| 369 | Urban And Rural Life | own state and behaviour in code | code (settlements, urban) |
+| 370 | Energy And Power | own state and behaviour in code | W47 47.2 energy |
+| 371 | Power Development | some typed state in code | W47 47.2 energy |
+| 372 | Fire | some typed state in code | W47 47.2 energy |
+| 373 | Light | some typed state in code | W47 47.2 energy |
+| 374 | Heat | own state and behaviour in code | W47 47.2 energy |
+| 375 | Thermal Power | some typed state in code | W47 47.2 energy |
+| 376 | Water Power | some typed state in code | W47 47.2 energy |
+| 377 | Electric Power | a label only (enum value or flag) | W47 47.2 energy; deepened by **50.16** |
+| 378 | Atomic Energy | absent from code | W47 47.2 energy; deepened by **50.16** |
+| 379 | Miscellaneous Power Production | some typed state in code | W47 47.2 energy |
+| 380 | Chemical Industries | some typed state in code | code (chemistry); W48 48.5 |
+| 381 | Chemical Engineering | own state and behaviour in code | code (chemistry); W48 48.5 |
+| 382 | Petroleum And Coal Products Industries | own state and behaviour in code | code (chemistry); W48 48.5 |
+| 383 | Rubber Industry | absent from code | code (chemistry); W48 48.5; deepened by **50.16** |
+| 384 | Synthetics Industry | a label only (enum value or flag) | code (chemistry); W48 48.5; deepened by **50.16** |
+| 385 | Industrial Chemicals | some typed state in code | code (chemistry); W48 48.5 |
+| 386 | Paint And Dye Manufacture | a label only (enum value or flag) | code (chemistry); W48 48.5; deepened by **50.16** |
+| 387 | Fertilizer Industry | a label only (enum value or flag) | code (chemistry); W48 48.5; deepened by **50.16** |
+| 388 | Soap And Allied Products | a label only (enum value or flag) | code (chemistry); W48 48.5; deepened by **50.16** |
+| 389 | Manufacture Of Explosives | a label only (enum value or flag) | code (chemistry); W48 48.5; deepened by **50.16** |
+| 390 | Capital Goods Industries | absent from code | W48 48.5 methods; code (vehicles, shipyards); deepened by **50.16** |
+| 391 | Hardware Manufacture | absent from code | W48 48.5 methods; code (vehicles, shipyards); deepened by **50.16** |
+| 392 | Machine Industries | a label only (enum value or flag) | W48 48.5 methods; code (vehicles, shipyards); deepened by **50.16** |
+| 393 | Electrical Supplies Industry | a label only (enum value or flag) | W48 48.5 methods; code (vehicles, shipyards); deepened by **50.16** |
+| 394 | Making Of Heating, Lighting Equipment | a label only (enum value or flag) | W48 48.5 methods; code (vehicles, shipyards); deepened by **50.16** |
+| 395 | Making Of Optical And Photo Equipment | a label only (enum value or flag) | W48 48.5 methods; code (vehicles, shipyards); deepened by **50.16** |
+| 396 | Shipbuilding | some typed state in code | W48 48.5 methods; code (vehicles, shipyards) |
+| 397 | Railway Equipment Industry | a label only (enum value or flag) | W48 48.5 methods; code (vehicles, shipyards); deepened by **50.16** |
+| 398 | Manufacture Of Vehicles | own state and behaviour in code | W48 48.5 methods; code (vehicles, shipyards) |
+| 399 | Aircraft Industry | a label only (enum value or flag) | W48 48.5 methods; code (vehicles, shipyards); deepened by **50.16** |
+| 400 | Machines | a label only (enum value or flag) | W48 48.4 tools; W47 per-family technology; deepened by **50.16** |
+| 401 | Mechanics | own state and behaviour in code | W48 48.4 tools; W47 per-family technology |
+| 402 | Industrial Machinery | own state and behaviour in code | W48 48.4 tools; W47 per-family technology |
+| 403 | Electrical Machines And Appliances | absent from code | W48 48.4 tools; W47 per-family technology; deepened by **50.16** |
+| 404 | Household Machines And Appliances | absent from code | W48 48.4 tools; W47 per-family technology; deepened by **50.16** |
+| 405 | Measuring And Recording Devices | own state and behaviour in code | W48 48.4 tools; W47 per-family technology |
+| 406 | Weight-moving Machinery | a label only (enum value or flag) | W48 48.4 tools; W47 per-family technology; deepened by **50.16** |
+| 407 | Agricultural Machinery | some typed state in code | W48 48.4 tools; W47 per-family technology |
+| 408 | Computer Technology | a label only (enum value or flag) | W48 48.4 tools; W47 per-family technology; deepened by **50.16** |
+| 410 | Tools And Appliances | some typed state in code | W48 48.4 tools; W47 per-family technology |
+| 411 | Weapons | some typed state in code | W48 48.4 tools; W47 per-family technology |
+| 412 | General Tools | some typed state in code | W48 48.4 tools; W47 per-family technology |
+| 413 | Special Tools | some typed state in code | W48 48.4 tools; W47 per-family technology |
+| 414 | Miscellaneous Hardware | absent from code | W48 48.4 tools; W47 per-family technology; deepened by **50.16** |
+| 415 | Utensils | some typed state in code | W48 48.4 tools; W47 per-family technology |
+| 416 | Appliances | absent from code | W48 48.4 tools; W47 per-family technology; deepened by **50.16** |
+| 417 | Apparatus | a label only (enum value or flag) | W48 48.4 tools; W47 per-family technology; deepened by **50.16** |
+| 420 | Property | some typed state in code | code (property, incorporeal rights, inheritance, lands) |
+| 421 | Property System | some typed state in code | code (property, incorporeal rights, inheritance, lands) |
+| 422 | Property In Movables | some typed state in code | code (property, incorporeal rights, inheritance, lands) |
+| 423 | Real Property | own state and behaviour in code | code (property, incorporeal rights, inheritance, lands) |
+| 424 | Incorporeal Property | own state and behaviour in code | code (property, incorporeal rights, inheritance, lands) |
+| 425 | Changes In Property Rights | some typed state in code | code (property, incorporeal rights, inheritance, lands) |
+| 426 | Borrowing And Lending | own state and behaviour in code | code (property, incorporeal rights, inheritance, lands) |
+| 427 | Renting And Leasing | own state and behaviour in code | **50.3**; also code (property, incorporeal rights, inheritance, lands) |
+| 428 | Inheritance | some typed state in code | code (property, incorporeal rights, inheritance, lands) |
+| 429 | Administration | some typed state in code | code (property, incorporeal rights, inheritance, lands) |
+| 430 | Exchange And Transfers | some typed state in code | code (markets, trade, money) |
+| 431 | Gift Giving | own state and behaviour in code | code (markets, trade, money) |
+| 432 | Buying And Selling | own state and behaviour in code | code (markets, trade, money) |
+| 433 | Production And Supply | own state and behaviour in code | code (markets, trade, money) |
+| 434 | Income And Demand | own state and behaviour in code | code (markets, trade, money) |
+| 435 | Price And Value | own state and behaviour in code | code (markets, trade, money) |
+| 436 | Medium Of Exchange | own state and behaviour in code | code (markets, trade, money) |
+| 437 | Exchange Transactions | some typed state in code | code (markets, trade, money) |
+| 438 | Internal Trade | own state and behaviour in code | code (markets, trade, money) |
+| 439 | External Trade | own state and behaviour in code | code (markets, trade, money) |
+| 440 | Marketing | own state and behaviour in code | code (markets, trade, money) |
+| 441 | Mercantile Business | some typed state in code | code (markets, trade, money) |
+| 442 | Wholesale Marketing | absent from code | **50.3** |
+| 443 | Retail Marketing | absent from code | **50.3** |
+| 444 | Retail Businesses | own state and behaviour in code | **50.3** |
+| 445 | Service Industries | own state and behaviour in code | **50.3** |
+| 446 | Sales Promotion | some typed state in code | **50.3** |
+| 447 | Advertising | absent from code | **50.3** |
+| 450 | Finance | some typed state in code | code (finance, credit, banking, insurance, speculation) |
+| 451 | Accounting | own state and behaviour in code | code (finance, credit, banking, insurance, speculation) |
+| 452 | Credit | own state and behaviour in code | code (finance, credit, banking, insurance, speculation) |
+| 453 | Banking | some typed state in code | code (finance, credit, banking, insurance, speculation) |
+| 454 | Saving And Investment | some typed state in code | code (finance, credit, banking, insurance, speculation) |
+| 455 | Speculation | some typed state in code | code (finance, credit, banking, insurance, speculation) |
+| 456 | Insurance | own state and behaviour in code | code (finance, credit, banking, insurance, speculation) |
+| 457 | Foreign Exchange | absent from code | **50.3** |
+| 458 | Business Cycles | own state and behaviour in code | code (finance, credit, banking, insurance, speculation) |
+| 460 | Labor | own state and behaviour in code | code (labour, guilds, wages); W48 48.6 |
+| 461 | Labor And Leisure | some typed state in code | code (labour, guilds, wages); W48 48.6 |
+| 462 | Division Of Labor By Gender | absent from code | code (labour, guilds, wages); W48 48.6; deepened by **50.16** |
+| 463 | Occupational Specialization | own state and behaviour in code | code (labour, guilds, wages); W48 48.6 |
+| 464 | Labor Supply And Employment | some typed state in code | code (labour, guilds, wages); W48 48.6 |
+| 465 | Wages And Salaries | own state and behaviour in code | code (labour, guilds, wages); W48 48.6 |
+| 466 | Labor Relations | some typed state in code | code (labour, guilds, wages); W48 48.6 |
+| 467 | Labor Organization | own state and behaviour in code | code (labour, guilds, wages); W48 48.6 |
+| 468 | Collective Bargaining | own state and behaviour in code | code (labour, guilds, wages); W48 48.6 |
+| 470 | Business And Industrial Organization | some typed state in code | code (companies 44.15, cooperatives) |
+| 471 | Ownership And Control Of Capital | own state and behaviour in code | code (companies 44.15, cooperatives) |
+| 472 | Individual Enterprise | some typed state in code | code (companies 44.15, cooperatives) |
+| 473 | Corporate Organization | own state and behaviour in code | code (companies 44.15, cooperatives) |
+| 474 | Cooperative Organization | some typed state in code | code (companies 44.15, cooperatives) |
+| 475 | State Enterprise | absent from code | **50.4** |
+| 476 | Mutual Aid | some typed state in code | code (companies 44.15, cooperatives) |
+| 477 | Competition | some typed state in code | code (companies 44.15, cooperatives) |
+| 480 | Travel And Transportation | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 481 | Locomotion | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 482 | Burden Carrying | some typed state in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 483 | Weight Moving | some typed state in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 484 | Travel | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 485 | Travel Services | some typed state in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 486 | Regulation Of Travel | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 487 | Routes | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 488 | Warehousing | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 489 | Transportation | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 490 | Land Transport | some typed state in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 491 | Highways And Bridges | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 492 | Animal Transport | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 493 | Vehicles | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 494 | Highway Transport | absent from code | **50.4** |
+| 495 | Auxiliary Highway Services | some typed state in code | **50.4**; also code (vehicles, routes, travel); W47 47.2 carriers |
+| 496 | Railways | a label only (enum value or flag) | code (vehicles, routes, travel); W47 47.2 carriers; deepened by **50.16** |
+| 497 | Rail Transport | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 498 | Terminal Facilities | some typed state in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 499 | Highway And Railway Construction | absent from code | **50.4** |
+| 500 | Water, Air, And Space Transport | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 501 | Boats | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 502 | Navigation | a label only (enum value or flag) | code (vehicles, routes, travel); W47 47.2 carriers; deepened by **50.16** |
+| 503 | Waterways Improvements | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 504 | Port Facilities | own state and behaviour in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 505 | Water Transport | some typed state in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 506 | Aircraft | a label only (enum value or flag) | code (vehicles, routes, travel); W47 47.2 carriers; deepened by **50.16** |
+| 507 | Aviation | a label only (enum value or flag) | code (vehicles, routes, travel); W47 47.2 carriers; deepened by **50.16** |
+| 508 | Airport Facilities | a label only (enum value or flag) | code (vehicles, routes, travel); W47 47.2 carriers; deepened by **50.16** |
+| 509 | Air Transport | some typed state in code | code (vehicles, routes, travel); W47 47.2 carriers |
+| 510 | Living Standards And Routines | some typed state in code | code (living standard, basket) |
+| 511 | Standard Of Living | some typed state in code | code (living standard, basket) |
+| 512 | Daily Routine | absent from code | **50.5** |
+| 513 | Sleeping | some typed state in code | **50.5** |
+| 514 | Elimination | some typed state in code | **50.5** |
+| 515 | Personal Hygiene | a label only (enum value or flag) | **50.5** |
+| 516 | Postures | some typed state in code | **50.5** |
+| 517 | Leisure Time Activities | some typed state in code | **50.5** |
+| 520 | Recreation | some typed state in code | code (games, sports, leagues W26); W48 48.4 |
+| 521 | Conversation | a label only (enum value or flag) | **50.13** |
+| 522 | Humor | a label only (enum value or flag) | **50.13** |
+| 523 | Hobbies | some typed state in code | **50.5**; also code (games, sports, leagues W26); W48 48.4 |
+| 524 | Games | own state and behaviour in code | code (games, sports, leagues W26); W48 48.4 |
+| 525 | Gambling | some typed state in code | code (games, sports, leagues W26); W48 48.4 |
+| 526 | Athletic Sports | own state and behaviour in code | code (games, sports, leagues W26); W48 48.4 |
+| 527 | Rest Days And Holidays | some typed state in code | code (games, sports, leagues W26); W48 48.4 |
+| 528 | Vacations | absent from code | **50.5** |
+| 529 | Recreational Facilities | some typed state in code | code (games, sports, leagues W26); W48 48.4 |
+| 530 | Art | own state and behaviour in code | code (arts); W48 48.7 |
+| 531 | Decorative Art | some typed state in code | code (arts); W48 48.7 |
+| 532 | Representative Art | some typed state in code | code (arts); W48 48.7 |
+| 533 | Music | a label only (enum value or flag) | code (arts); W48 48.7; deepened by **50.16** |
+| 534 | Musical Instruments | a label only (enum value or flag) | code (arts); W48 48.7; deepened by **50.16** |
+| 535 | Dance | some typed state in code | code (arts); W48 48.7 |
+| 536 | Drama | own state and behaviour in code | code (arts); W48 48.7 |
+| 537 | Oratory | some typed state in code | **50.13**; also code (arts); W48 48.7 |
+| 538 | Literature | own state and behaviour in code | code (arts); W48 48.7 |
+| 539 | Literary Texts | own state and behaviour in code | code (arts); W48 48.7 |
+| 540 | Commercialized Entertainment | a label only (enum value or flag) | **50.2** |
+| 541 | Spectacles | a label only (enum value or flag) | code (circus, leagues W26); deepened by **50.16** |
+| 542 | Commercialized Sports | own state and behaviour in code | code (circus, leagues W26) |
+| 543 | Exhibitions | own state and behaviour in code | code (circus, leagues W26) |
+| 544 | Public Lectures | a label only (enum value or flag) | **50.13** |
+| 545 | Musical And Theatrical Productions | own state and behaviour in code | code (circus, leagues W26) |
+| 546 | Motion Picture Industry | absent from code | **50.2** |
+| 547 | Night Clubs And Cabarets | some typed state in code | **50.2** |
+| 548 | Illegal Entertainment | a label only (enum value or flag) | **50.2** |
+| 549 | Art And Recreational Supplies Industries | absent from code | **50.2** |
+| 550 | Naming, Prestige And Status Mobility | own state and behaviour in code | code (names, renown, mobility) |
+| 551 | Personal Names | own state and behaviour in code | code (names, renown, mobility) |
+| 552 | Names Of Animals And Things | own state and behaviour in code | code (names, renown, mobility) |
+| 553 | Naming | own state and behaviour in code | code (names, renown, mobility) |
+| 554 | Status, Role, And Prestige | own state and behaviour in code | code (names, renown, mobility) |
+| 555 | Talent Mobility | own state and behaviour in code | code (names, renown, mobility) |
+| 556 | Accumulation Of Wealth | own state and behaviour in code | code (names, renown, mobility) |
+| 557 | Manipulative Mobility | some typed state in code | code (names, renown, mobility) |
+| 558 | Downward Mobility | some typed state in code | code (names, renown, mobility) |
+| 560 | Social Stratication | own state and behaviour in code | code (classes, castes F41, slavery, serfdom); W47 identities |
+| 561 | Age Stratication | own state and behaviour in code | code (classes, castes F41, slavery, serfdom); W47 identities |
+| 562 | Gender Status | a label only (enum value or flag) | code (classes, castes F41, slavery, serfdom); W47 identities; deepened by **50.16** |
+| 563 | Ethnic Stratication | some typed state in code | code (classes, castes F41, slavery, serfdom); W47 identities |
+| 564 | Castes | own state and behaviour in code | code (classes, castes F41, slavery, serfdom); W47 identities |
+| 565 | Classes | own state and behaviour in code | code (classes, castes F41, slavery, serfdom); W47 identities |
+| 566 | Serfdom And Peonage | own state and behaviour in code | code (classes, castes F41, slavery, serfdom); W47 identities |
+| 567 | Slavery | own state and behaviour in code | code (classes, castes F41, slavery, serfdom); W47 identities |
+| 570 | Interpersonal Relations | own state and behaviour in code | code (relations, circles, feuds, riots); W47 customs |
+| 571 | Social Relationships And Groups | own state and behaviour in code | code (relations, circles, feuds, riots); W47 customs |
+| 572 | Friendships | some typed state in code | code (relations, circles, feuds, riots); W47 customs |
+| 573 | Cliques | some typed state in code | code (relations, circles, feuds, riots); W47 customs |
+| 574 | Visiting And Hospitality | some typed state in code | code (relations, circles, feuds, riots); W47 customs |
+| 575 | Sodalities | own state and behaviour in code | code (relations, circles, feuds, riots); W47 customs |
+| 576 | Etiquette | some typed state in code | code (relations, circles, feuds, riots); W47 customs |
+| 577 | Ethics | some typed state in code | code (relations, circles, feuds, riots); W47 customs |
+| 578 | Ingroup Antagonisms | own state and behaviour in code | code (relations, circles, feuds, riots); W47 customs |
+| 579 | Brawls, Riots, And Banditry | some typed state in code | code (relations, circles, feuds, riots); W47 customs |
+| 580 | Marriage | own state and behaviour in code | code (kinship, unions); W47 47.3.4 |
+| 581 | Basis Of Marriage | own state and behaviour in code | code (kinship, unions); W47 47.3.4 |
+| 582 | Regulation Of Marriage | some typed state in code | code (kinship, unions); W47 47.3.4 |
+| 583 | Mode Of Marriage | a label only (enum value or flag) | code (kinship, unions); W47 47.3.4; deepened by **50.16** |
+| 584 | Arranging A Marriage | own state and behaviour in code | code (kinship, unions); W47 47.3.4 |
+| 585 | Nuptials | a label only (enum value or flag) | code (kinship, unions); W47 47.3.4; deepened by **50.16** |
+| 586 | Termination Of Marriage | some typed state in code | code (kinship, unions); W47 47.3.4 |
+| 587 | Secondary Marriages | some typed state in code | code (kinship, unions); W47 47.3.4 |
+| 588 | Special Unions And Marriages | some typed state in code | **50.6**; also code (kinship, unions); W47 47.3.4 |
+| 589 | Celibacy | a label only (enum value or flag) | code (kinship, unions); W47 47.3.4; deepened by **50.16** |
+| 590 | Family | some typed state in code | code (households, adoption) |
+| 591 | Residence | some typed state in code | code (households, adoption) |
+| 592 | Household | own state and behaviour in code | code (households, adoption) |
+| 593 | Family Relationships | own state and behaviour in code | **50.6**; also code (households, adoption) |
+| 594 | Nuclear Family | absent from code | **50.6** |
+| 595 | Polygamy | a label only (enum value or flag) | code (households, adoption); deepened by **50.16** |
+| 596 | Extended Families | absent from code | **50.6** |
+| 597 | Adoption | own state and behaviour in code | code (households, adoption) |
+| 600 | Kinship | some typed state in code | code (kinship); W48 48.6 kin terms |
+| 601 | Kinship Terminology | absent from code | **50.6** |
+| 602 | Kin Relationships | own state and behaviour in code | **50.6**; also code (kinship); W48 48.6 kin terms |
+| 603 | Grandparents And Grandchildren | absent from code | **50.6** |
+| 604 | Avuncular And Nepotic Relatives | some typed state in code | **50.6**; also code (kinship); W48 48.6 kin terms |
+| 605 | Cousins | some typed state in code | **50.6**; also code (kinship); W48 48.6 kin terms |
+| 606 | Parents-in-law And Children-in-law | absent from code | **50.6** |
+| 607 | Siblings-in-law | absent from code | **50.6** |
+| 608 | Articial Kin Relationships | some typed state in code | **50.6**; also code (kinship); W48 48.6 kin terms |
+| 609 | Behavior Toward Non-relatives | some typed state in code | **50.6**; also code (kinship); W48 48.6 kin terms |
+| 610 | Kin Groups | absent from code | **50.6** |
+| 611 | Rules Of Descent | some typed state in code | code (kinship); W48 48.6 kin terms |
+| 612 | Kindreds And Ramages | absent from code | **50.6** |
+| 613 | Lineages | own state and behaviour in code | code (kinship); W48 48.6 kin terms |
+| 614 | Clans | a label only (enum value or flag) | code (kinship); W48 48.6 kin terms; deepened by **50.16** |
+| 615 | Phratries | absent from code | **50.6** |
+| 616 | Moieties | a label only (enum value or flag) | code (kinship); W48 48.6 kin terms; deepened by **50.16** |
+| 617 | Bilineal Kin Groups | a label only (enum value or flag) | **50.6** |
+| 618 | Localized Kin Groups | absent from code | **50.6** |
+| 619 | Tribe And Nation | own state and behaviour in code | code (kinship); W48 48.6 kin terms |
+| 620 | Community | own state and behaviour in code | code (polity, settlements, territory) |
+| 621 | Community Structure | own state and behaviour in code | code (polity, settlements, territory) |
+| 622 | Community Heads | some typed state in code | code (polity, settlements, territory) |
+| 623 | Community Councils | own state and behaviour in code | code (polity, settlements, territory) |
+| 624 | Local Ocials | own state and behaviour in code | code (polity, settlements, territory) |
+| 625 | Police | some typed state in code | code (polity, settlements, territory) |
+| 626 | Social Control | some typed state in code | code (polity, settlements, territory) |
+| 627 | Informal In-group Justice | some typed state in code | code (polity, settlements, territory) |
+| 628 | Inter-community Relations | own state and behaviour in code | code (polity, settlements, territory) |
+| 629 | Multi-ethnic Community Relations | some typed state in code | code (polity, settlements, territory) |
+| 630 | Territorial Organization | own state and behaviour in code | code (polity, settlements, territory) |
+| 631 | Territorial Hierarchy | own state and behaviour in code | code (polity, settlements, territory) |
+| 632 | Towns | some typed state in code | code (polity, settlements, territory) |
+| 633 | Cities | own state and behaviour in code | code (polity, settlements, territory) |
+| 634 | Districts | own state and behaviour in code | code (polity, settlements, territory) |
+| 635 | Provinces | some typed state in code | code (polity, settlements, territory) |
+| 636 | Dependencies | own state and behaviour in code | code (polity, settlements, territory) |
+| 640 | Government Institutions | some typed state in code | code (polity, offices, councils, taxes, laws) |
+| 641 | Citizenship | own state and behaviour in code | code (polity, offices, councils, taxes, laws) |
+| 642 | Form And Rules Of Government | a label only (enum value or flag) | code (polity, offices, councils, taxes, laws); deepened by **50.16** |
+| 643 | Chief Executive | own state and behaviour in code | code (polity, offices, councils, taxes, laws) |
+| 644 | Executive Household | own state and behaviour in code | code (polity, offices, councils, taxes, laws) |
+| 645 | Advisers To The Chief Executive | own state and behaviour in code | code (polity, offices, councils, taxes, laws) |
+| 646 | Deliberative Councils | own state and behaviour in code | code (polity, offices, councils, taxes, laws) |
+| 647 | Administrative Agencies | some typed state in code | code (polity, offices, councils, taxes, laws) |
+| 648 | External Relations | some typed state in code | code (polity, offices, councils, taxes, laws) |
+| 650 | Government Activities | some typed state in code | code (polity, offices, councils, taxes, laws) |
+| 651 | Taxation And Public Income | own state and behaviour in code | code (polity, offices, councils, taxes, laws) |
+| 652 | Public Finance | some typed state in code | code (polity, offices, councils, taxes, laws) |
+| 653 | Public Works | some typed state in code | **50.4**; also code (polity, offices, councils, taxes, laws) |
+| 654 | Research And Development | own state and behaviour in code | code (polity, offices, councils, taxes, laws) |
+| 655 | Government Enterprises | absent from code | **50.4** |
+| 656 | Government Regulation | some typed state in code | code (polity, offices, councils, taxes, laws) |
+| 657 | Public Welfare | some typed state in code | code (polity, offices, councils, taxes, laws) |
+| 658 | Public Education | own state and behaviour in code | code (polity, offices, councils, taxes, laws) |
+| 659 | Miscellaneous Government Activities | some typed state in code | code (polity, offices, councils, taxes, laws) |
+| 660 | Political Behavior | some typed state in code | code (factions, elections, intrigue, revolts) |
+| 661 | Exploitation | some typed state in code | code (factions, elections, intrigue, revolts) |
+| 662 | Political Intrigue | some typed state in code | code (factions, elections, intrigue, revolts) |
+| 663 | Public Service | own state and behaviour in code | code (factions, elections, intrigue, revolts) |
+| 664 | Pressure Politics | own state and behaviour in code | code (factions, elections, intrigue, revolts) |
+| 665 | Political Parties | own state and behaviour in code | code (factions, elections, intrigue, revolts) |
+| 666 | Elections | some typed state in code | code (factions, elections, intrigue, revolts) |
+| 667 | Political Machines | some typed state in code | code (factions, elections, intrigue, revolts) |
+| 668 | Political Movements | own state and behaviour in code | code (factions, elections, intrigue, revolts) |
+| 669 | Revolution | some typed state in code | code (factions, elections, intrigue, revolts) |
+| 670 | Law | own state and behaviour in code | code (law, crime, justice W27) |
+| 671 | Legal Norms | own state and behaviour in code | code (law, crime, justice W27) |
+| 672 | Liability | some typed state in code | code (law, crime, justice W27) |
+| 673 | Wrongs | own state and behaviour in code | code (law, crime, justice W27) |
+| 674 | Crime | own state and behaviour in code | code (law, crime, justice W27) |
+| 675 | Contracts | own state and behaviour in code | code (law, crime, justice W27) |
+| 676 | Agency | own state and behaviour in code | code (law, crime, justice W27) |
+| 677 | Organized Crime | some typed state in code | code (law, crime, justice W27) |
+| 680 | Oenses And Sanctions | some typed state in code | code (law, crime, justice W27) |
+| 681 | Sanctions | some typed state in code | code (law, crime, justice W27) |
+| 682 | Oenses Against Life | some typed state in code | code (law, crime, justice W27) |
+| 683 | Oenses Against The Person | a label only (enum value or flag) | code (law, crime, justice W27); deepened by **50.16** |
+| 684 | Sex And Marital Oenses | a label only (enum value or flag) | code (law, crime, justice W27); deepened by **50.16** |
+| 685 | Property Oenses | a label only (enum value or flag) | code (law, crime, justice W27); deepened by **50.16** |
+| 686 | Nonfulllment Of Obligations | some typed state in code | code (law, crime, justice W27) |
+| 687 | Oenses Against The State | a label only (enum value or flag) | code (law, crime, justice W27); deepened by **50.16** |
+| 688 | Religious Oenses | own state and behaviour in code | code (law, crime, justice W27) |
+| 689 | Social Oenses | some typed state in code | code (law, crime, justice W27) |
+| 690 | Justice | some typed state in code | code (law, crime, justice W27) |
+| 691 | Litigation | some typed state in code | code (law, crime, justice W27) |
+| 692 | Judicial Authority | own state and behaviour in code | code (law, crime, justice W27) |
+| 693 | Legal And Judicial Personnel | some typed state in code | code (law, crime, justice W27) |
+| 694 | Initiation Of Judicial Proceedings | own state and behaviour in code | code (law, crime, justice W27) |
+| 695 | Trial Procedure | some typed state in code | code (law, crime, justice W27) |
+| 696 | Execution Of Justice | own state and behaviour in code | code (law, crime, justice W27) |
+| 697 | Prisons And Jails | own state and behaviour in code | code (law, crime, justice W27) |
+| 698 | Special Courts | some typed state in code | code (law, crime, justice W27) |
+| 700 | Armed Forces | own state and behaviour in code | code (military) |
+| 701 | Military Organization | own state and behaviour in code | code (military) |
+| 702 | Recruitment And Training | own state and behaviour in code | code (military) |
+| 703 | Discipline And Morale | some typed state in code | code (military) |
+| 704 | Ground Combat Forces | some typed state in code | code (military) |
+| 705 | Supply And Commissariat | own state and behaviour in code | code (military) |
+| 706 | Navy | some typed state in code | code (military) |
+| 707 | Air Forces | some typed state in code | code (military) |
+| 708 | Auxiliary Corps | some typed state in code | code (military) |
+| 710 | Military Technology | some typed state in code | code (military) |
+| 711 | Military Engineering | a label only (enum value or flag) | code (military); deepened by **50.16** |
+| 712 | Military Installations | own state and behaviour in code | code (military) |
+| 713 | Ordnance | a label only (enum value or flag) | code (military); deepened by **50.16** |
+| 714 | Uniform And Accouterment | own state and behaviour in code | code (military) |
+| 715 | Military Vehicles | a label only (enum value or flag) | code (military); deepened by **50.16** |
+| 716 | Naval Vessels | some typed state in code | code (military) |
+| 717 | Military Aircraft | a label only (enum value or flag) | code (military); deepened by **50.16** |
+| 718 | Special Military Equipment | a label only (enum value or flag) | code (military); deepened by **50.16** |
+| 719 | Munitions Industries | some typed state in code | code (military) |
+| 720 | War | own state and behaviour in code | code (military) |
+| 721 | Instigation Of War | own state and behaviour in code | code (military) |
+| 722 | Wartime Adjustments | some typed state in code | code (military) |
+| 723 | Strategy | some typed state in code | code (military) |
+| 724 | Logistics | some typed state in code | code (military) |
+| 725 | Tactics | some typed state in code | code (military) |
+| 726 | Warfare | own state and behaviour in code | code (military) |
+| 727 | Aftermath Of Combat | some typed state in code | code (military) |
+| 728 | Peacemaking | some typed state in code | code (military) |
+| 729 | War Veterans | some typed state in code | code (military) |
+| 730 | Social Problems | some typed state in code | code (disasters, maimed cohorts, addiction, poor relief) |
+| 731 | Disasters | some typed state in code | code (disasters, maimed cohorts, addiction, poor relief) |
+| 732 | Disabilities | some typed state in code | code (disasters, maimed cohorts, addiction, poor relief) |
+| 733 | Alcoholism And Drug Addiction | own state and behaviour in code | code (disasters, maimed cohorts, addiction, poor relief) |
+| 734 | Invalidism | some typed state in code | code (disasters, maimed cohorts, addiction, poor relief) |
+| 735 | Poverty | some typed state in code | code (disasters, maimed cohorts, addiction, poor relief) |
+| 736 | Dependency | some typed state in code | code (disasters, maimed cohorts, addiction, poor relief) |
+| 737 | Old Age Dependency | some typed state in code | code (disasters, maimed cohorts, addiction, poor relief) |
+| 738 | Delinquency | absent from code | **50.11** |
+| 740 | Health And Welfare | own state and behaviour in code | code (welfare, insurance) |
+| 741 | Philanthropic Foundations | some typed state in code | **50.10**; also code (welfare, insurance) |
+| 742 | Medical Research | some typed state in code | code (welfare, insurance) |
+| 743 | Hospitals And Clinics | some typed state in code | code (welfare, insurance) |
+| 744 | Public Health And Sanitation | own state and behaviour in code | code (welfare, insurance) |
+| 745 | Social Insurance | own state and behaviour in code | code (welfare, insurance) |
+| 746 | Public Assistance | own state and behaviour in code | code (welfare, insurance) |
+| 747 | Private Welfare Agencies | some typed state in code | **50.10**; also code (welfare, insurance) |
+| 748 | Social Work | some typed state in code | code (welfare, insurance) |
+| 750 | Sickness | own state and behaviour in code | code (disease, body, treatment) |
+| 751 | Preventive Medicine | own state and behaviour in code | code (disease, body, treatment) |
+| 752 | Bodily Injuries | own state and behaviour in code | code (disease, body, treatment) |
+| 753 | Theory Of Disease | some typed state in code | code (disease, body, treatment) |
+| 754 | Sorcery | some typed state in code | code (disease, body, treatment) |
+| 755 | Magical And Mental Therapy | absent from code | code (disease, body, treatment); deepened by **50.16** |
+| 756 | Shamans And Psychotherapists | a label only (enum value or flag) | code (disease, body, treatment); deepened by **50.16** |
+| 757 | Medical Therapy | some typed state in code | code (disease, body, treatment) |
+| 758 | Medical Care | some typed state in code | code (disease, body, treatment) |
+| 759 | Medical Personnel | a label only (enum value or flag) | code (disease, body, treatment); deepened by **50.16** |
+| 760 | Death | own state and behaviour in code | code (death, funerals, mourning, ancestors, afterlife) |
+| 761 | Life And Death | some typed state in code | code (death, funerals, mourning, ancestors, afterlife) |
+| 762 | Suicide | a label only (enum value or flag) | code (death, funerals, mourning, ancestors, afterlife); deepened by **50.16** |
+| 763 | Dying | a label only (enum value or flag) | code (death, funerals, mourning, ancestors, afterlife); deepened by **50.16** |
+| 764 | Burial Practices And Funerals | some typed state in code | code (death, funerals, mourning, ancestors, afterlife) |
+| 765 | Mourning | some typed state in code | code (death, funerals, mourning, ancestors, afterlife) |
+| 766 | Special Burial Practices And Funerals | a label only (enum value or flag) | **50.12** |
+| 767 | Mortuary Specialists | absent from code | **50.12** |
+| 768 | Social Readjustments To Death | some typed state in code | **50.12**; also code (death, funerals, mourning, ancestors, afterlife) |
+| 769 | Cult Of The Dead | a label only (enum value or flag) | code (death, funerals, mourning, ancestors, afterlife); deepened by **50.16** |
+| 770 | Religious Beliefs | own state and behaviour in code | code (faith, sacred W25) |
+| 771 | General Character Of Religion | some typed state in code | code (faith, sacred W25) |
+| 772 | Cosmology | some typed state in code | code (faith, sacred W25) |
+| 773 | Mythology | own state and behaviour in code | code (faith, sacred W25) |
+| 774 | Animism | own state and behaviour in code | code (faith, sacred W25) |
+| 775 | Eschatology | some typed state in code | code (faith, sacred W25) |
+| 776 | Spirits And Gods | own state and behaviour in code | code (faith, sacred W25) |
+| 777 | Luck And Chance | own state and behaviour in code | code (faith, sacred W25) |
+| 778 | Sacred Objects And Places | own state and behaviour in code | code (faith, sacred W25) |
+| 779 | Theological Systems | own state and behaviour in code | code (faith, sacred W25) |
+| 780 | Religious Practices | some typed state in code | code (faith, sacred W25) |
+| 781 | Religious Experience | own state and behaviour in code | code (faith, sacred W25) |
+| 782 | Prayers And Sacrices | own state and behaviour in code | code (faith, sacred W25) |
+| 783 | Purication And Atonement | some typed state in code | code (faith, sacred W25) |
+| 784 | Avoidance And Taboo | own state and behaviour in code | code (faith, sacred W25) |
+| 785 | Asceticism | a label only (enum value or flag) | code (faith, sacred W25); deepened by **50.16** |
+| 786 | Ecstatic Religious Practices | some typed state in code | code (faith, sacred W25) |
+| 787 | Revelation And Divination | own state and behaviour in code | code (faith, sacred W25) |
+| 788 | Ritual | own state and behaviour in code | code (faith, sacred W25) |
+| 789 | Magic | own state and behaviour in code | code (faith, sacred W25) |
+| 790 | Ecclesiastical Organization | own state and behaviour in code | code (faith, sacred W25) |
+| 791 | Magicians And Diviners | own state and behaviour in code | code (faith, sacred W25) |
+| 792 | Prophets And Ascetics | own state and behaviour in code | code (faith, sacred W25) |
+| 793 | Priesthood | some typed state in code | code (faith, sacred W25) |
+| 794 | Congregations | some typed state in code | code (faith, sacred W25) |
+| 795 | Religious Denominations | own state and behaviour in code | code (faith, sacred W25) |
+| 796 | Organized Ceremonial | some typed state in code | code (faith, sacred W25) |
+| 797 | Missions | own state and behaviour in code | code (faith, sacred W25) |
+| 798 | Religious Intolerance And Martyrs | some typed state in code | code (faith, sacred W25) |
+| 800 | Numbers And Measures | own state and behaviour in code | spec 13 8.4 RP5 number systems; code (calendars) |
+| 801 | Numerology | absent from code | **50.7** |
+| 802 | Numeration | absent from code | **50.7** |
+| 803 | Mathematics | absent from code | **50.7** |
+| 804 | Weights And Measures | own state and behaviour in code | spec 13 8.4 RP5 number systems; code (calendars) |
+| 805 | Ordering Of Time | own state and behaviour in code | spec 13 8.4 RP5 number systems; code (calendars) |
+| 810 | Sciences And Humanities | some typed state in code | code (knowledge, theories) |
+| 811 | Logic | a label only (enum value or flag) | code (knowledge, theories); deepened by **50.16** |
+| 812 | Philosophy | a label only (enum value or flag) | code (knowledge, theories); deepened by **50.16** |
+| 813 | Scientic Method | a label only (enum value or flag) | code (knowledge, theories); deepened by **50.16** |
+| 814 | Humanistic Studies | absent from code | code (knowledge, theories); deepened by **50.16** |
+| 815 | Science | some typed state in code | code (knowledge, theories) |
+| 816 | Applied Science | own state and behaviour in code | code (knowledge, theories) |
+| 820 | Ideas About Nature And People | own state and behaviour in code | **50.7** |
+| 821 | Ethnometeorology | own state and behaviour in code | **50.7** |
+| 822 | Ethnophysics | absent from code | **50.7** |
+| 823 | Ethnogeography | absent from code | **50.7** |
+| 824 | Ethnobotany | a label only (enum value or flag) | **50.7** |
+| 825 | Ethnozoology | absent from code | **50.7** |
+| 826 | Ethnoanatomy | absent from code | **50.7** |
+| 827 | Ethnophysiology | a label only (enum value or flag) | **50.7** |
+| 828 | Ethnopsychology | absent from code | **50.7** |
+| 829 | Ethnosociology | absent from code | **50.7** |
+| 830 | Sex | own state and behaviour in code | **50.8** |
+| 831 | Sexuality | absent from code | **50.8** |
+| 832 | Sexual Stimulation | some typed state in code | **50.8** |
+| 833 | Sexual Intercourse | a label only (enum value or flag) | **50.8** |
+| 834 | General Sex Restrictions | absent from code | **50.8** |
+| 835 | Kinship Regulation Of Sex | a label only (enum value or flag) | **50.8** |
+| 836 | Premarital Sex Relations | absent from code | **50.8** |
+| 837 | Extramarital Sex Relations | own state and behaviour in code | **50.8** |
+| 838 | Homosexuality | absent from code | **50.8** |
+| 839 | Miscellaneous Sex Behavior | absent from code | **50.8** |
+| 840 | Reproduction | some typed state in code | **50.8** |
+| 841 | Menstruation | absent from code | **50.8** |
+| 842 | Conception | some typed state in code | **50.8** |
+| 843 | Pregnancy | absent from code | **50.8** |
+| 844 | Childbirth | own state and behaviour in code | **50.8** |
+| 845 | Dicult And Unusual Births | absent from code | **50.8** |
+| 846 | Postnatal Care | absent from code | **50.8** |
+| 847 | Abortion And Infanticide | a label only (enum value or flag) | **50.8** |
+| 848 | Illegitimacy | a label only (enum value or flag) | **50.8** |
+| 850 | Infancy And Childhood | some typed state in code | **50.9** |
+| 851 | Social Placement | absent from code | **50.9** |
+| 852 | Ceremonial During Infancy And Childhood | own state and behaviour in code | **50.9** |
+| 853 | Infant Feeding | absent from code | **50.9** |
+| 854 | Infant Care | absent from code | **50.9** |
+| 855 | Child Care | a label only (enum value or flag) | **50.9** |
+| 856 | Development And Maturation | some typed state in code | **50.9** |
+| 857 | Childhood Activities | own state and behaviour in code | **50.9** |
+| 858 | Status Of Children | absent from code | **50.9** |
+| 860 | Socialization | some typed state in code | **50.9** |
+| 861 | Techniques Of Socialization | a label only (enum value or flag) | **50.9** |
+| 862 | Weaning And Food Training | absent from code | **50.9** |
+| 863 | Cleanliness Training | absent from code | **50.9** |
+| 864 | Sex Training | absent from code | **50.9** |
+| 865 | Aggression Training | absent from code | **50.9** |
+| 866 | Independence Training | a label only (enum value or flag) | **50.9** |
+| 867 | Transmission Of Cultural Norms | own state and behaviour in code | **50.9** |
+| 868 | Transmission Of Skills | own state and behaviour in code | **50.9** |
+| 869 | Transmission Of Beliefs | absent from code | **50.9** |
+| 870 | Education | own state and behaviour in code | code (schools, learning) |
+| 871 | Education System | own state and behaviour in code | code (schools, learning) |
+| 872 | Elementary Education | some typed state in code | code (schools, learning) |
+| 873 | Liberal Arts Education | some typed state in code | code (schools, learning) |
+| 874 | Vocational Education | a label only (enum value or flag) | code (schools, learning); deepened by **50.16** |
+| 875 | Teachers | a label only (enum value or flag) | code (schools, learning); deepened by **50.16** |
+| 876 | Educational Theory And Methods | absent from code | **50.9** |
+| 877 | Students | some typed state in code | code (schools) |
+| 880 | Adolescence, Adulthood, And Old Age | a label only (enum value or flag) | code (age sets, life course); spec 13 3.1 RP; deepened by **50.16** |
+| 881 | Puberty And Initiation | some typed state in code | code (age sets, life course); spec 13 3.1 RP |
+| 882 | Status Of Adolescents | absent from code | **50.11** |
+| 883 | Adolescent Activities | a label only (enum value or flag) | **50.11** |
+| 884 | Majority | a label only (enum value or flag) | code (age sets, life course); spec 13 3.1 RP; deepened by **50.16** |
+| 885 | Adulthood | some typed state in code | code (age sets, life course); spec 13 3.1 RP |
+| 886 | Senescence | some typed state in code | code (age sets, life course); spec 13 3.1 RP |
+| 887 | Activities Of The Aged | own state and behaviour in code | code (age sets, life course); spec 13 3.1 RP |
+| 888 | Status And Treatment Of The Aged | some typed state in code | code (age sets, life course); spec 13 3.1 RP |
+| 890 | Gender Roles And Issues | a label only (enum value or flag) | culture data (GenderRule, any by default); W48 48.6; deepened by **50.16** |
+| 920 | Diaspora-homeland Relations | some typed state in code | code (diaspora) |
+
+### Appendix 50.B — Registered mechanics with at most one coupling
+
+Generated on 2026-11-14 from the interconnection registry (572 mechanics). Each gains couplings under 50.14.
+
+| Mechanic | Subsystem | Couplings | Title |
+|---|---|---|---|
+| `anatomy` | body | 1 | Body plans |
+| `body_functions` | body | 1 | Vital, wits, hearing, sight, horn, tail and venom levels feed wound deaths, festering, sanity, perception, scouting, goring and venomous bites |
+| `cognitive_decline` | body | 1 | Cognitive decline: the old may lose their memory by degrees, forgetting skills, teaching less and losing office |
+| `wounded_and_learning` | body | 1 | Wounded treated by medicine go home to recover; victories teach tactics; named casualties are recorded |
+| `incidents` | core | 1 | Causality log |
+| `apocalypse_variants` | cosmos | 0 | The end takes the shape of the cause that drove the doom clock most, from a world war to a dimensional collapse or a galactic death |
+| `clusters` | cosmos | 1 | Clusters hold galaxies; their hot medium strips star formation and their drift lengthens the roads between them |
+| `cosmic_beings` | cosmos | 1 | Cosmic beings roam their scale, cross where veils are thin, show themselves and act on their aims until bound or banished |
+| `cosmic_features` | cosmos | 0 | Asteroid fields feed miners and pirates, wormholes open and close, black holes swallow near worlds and slow time for those who pass, rogue worlds stir orbits, and comets and wandering stars return as omens |
+| `cosmic_influence` | cosmos | 0 | Where a region lies in the cosmos, the phenomena over it and the rifts in it change its magic and fertility |
+| `impacts` | cosmos | 0 | Bodies from fields, comets and rogue worlds strike or pass by; warned peoples pray, hoard and flee, and a strike leaves a crater, ruin, a winter, a remembered year, star metal and a legend |
+| `natural_law_fertility` | cosmos | 1 | Natural laws multiply fertility |
+| `regional_leak` | cosmos | 1 | Leak gathers in regions near outer beings, gates, rifts and leak wounds; horror chooses those regions first |
+| `rifts` | cosmos | 1 | Rifts tear regions open into other dimensions, grow or shrink, open passages between worlds and leave leak wounds |
+| `star_systems` | cosmos | 0 | Stars gather into systems with a primary and companions; worlds circle one star or both, and the system's light sets its temperate band |
+| `stellar_evolution` | cosmos | 1 | Stars live by their mass, swell into giants or end in supernovae, and stars made by sons live outside these laws while their makers pay |
+| `voyages` | cosmos | 1 | Journeys carry cargo, passengers with their condition, convoys and escorts, and meet derelicts, tolls and touches from outside |
+| `ghost_legends` | culture | 1 | Hauntings become ghost legends of high credence, which keep people out of haunted places |
+| `legacy_traits` | culture | 1 | Legacy traits: successor peoples keep martial styles, aesthetics, rites, beliefs and values of their predecessors, named in their founding myth |
+| `legend_memories` | culture | 0 | Legends swell what their tellers remember and plant memories of what never happened |
+| `route_renown` | culture | 0 | Famous roads, carried culture and legends |
+| `human_sacrifice_deaths` | demography | 1 | Human-sacrificing communities give their own people to the god; every other people of the world is appalled |
+| `rebirth_paths` | demography | 1 | A reborn soul comes back to its people, its house or by merit, as its doctrine teaches; a god may open the gate by its own hand |
+| `hunting_grounds` | ecology | 1 | Hides, chitin, ivory and dragonbone from living species |
+| `life_classes` | ecology | 0 | Each world's life has a complexity and the places it lives; creatures and peoples arise only where life is complex enough, life grows more complex on temperate worlds, and each people's body fits the world it arose on |
+| `species_goods` | ecology | 1 | Wild herds, fish and silk are worked as grounds of their own |
+| `arms_and_wear` | economy | 1 | Weapon mix, material and condition drawn from stocks, read in combat and worn by battle and campaign |
+| `deposits` | economy | 1 | Hidden deposits and prospecting |
+| `divine_materials` | economy | 1 | Gods forge new materials with every property they name |
+| `economic_indicators` | economy | 0 | Each realm and world keeps output, prices, trade balance, treasury, debt, idleness and living by class every epoch |
+| `economy_holds` | economy | 0 | Held stores, workshops, resources and workers stay as the Creator set them |
+| `food_chain` | economy | 1 | Grain is milled, livestock butchered, milk made into cheese and fruit pressed into wine, each step a method, the raw stage spoiling |
+| `markets` | economy | 1 | Market prices from supply, need and coin |
+| `mercenaries_and_debt` | economy | 1 | Mercenaries raised by contract and paid each season; war loans and debased coin when the chest runs dry |
+| `mine_support` | economy | 1 | Deeper galleries cave in more, hard rock holds them up, pumps keep water out and fire-setting weakens them |
+| `patrols` | economy | 1 | Garrisoned and entrenched armies patrol their region and take bandit danger off the routes through it |
+| `polity_production` | economy | 1 | A realm's production chain: every member's workshops, runs and bottlenecks gathered into one |
+| `regrowth` | economy | 0 | Renewable and finite reserves |
+| `route_holds` | economy | 1 | Closed and held routes: a way closed by the Creator or a god is never founded again until it is opened, and held values stay as set |
+| `salvage` | economy | 1 | The victor strips the field: arms mend its stacks, its worst-armed gain quality and routed siege engines change hands |
+| `substitution` | economy | 1 | People eat and burn the cheapest and best-liked goods of a family first |
+| `temple_loot` | economy | 1 | Sacked temples flood the victor's market with treasure |
+| `tool_wear` | economy | 1 | Work wears out tools by method, so a blockade on iron reaches the fields through broken ploughs |
+| `typed_resource_mechanics` | economy | 1 | Typed parameters of decaying, addictive, sentient and sacred resources |
+| `workshop_designs` | economy | 1 | Workshop designs drawn on a base kind change capacity, output, quality and storage |
+| `environment_layers` | environment | 0 | Rainfall, danger, scar and sacred layers on the map, kept with every epoch's snapshot so the past shows the land as it was |
+| `planetary_climate` | environment | 0 | Ice brightens a cooling world, volcanoes and burning thicken its air, the seas rise and fall with the ice, and ice ages and scorching ages follow from them |
+| `regional_climate` | environment | 1 | Region temperature and rainfall shift toward what coast, height, climate age and cleared neighbours ask; gods can turn them |
+| `terraforming` | environment | 0 | Gods and powers that span worlds reshape a world's air toward what its makers breathe, its warmth, water and face over epochs, and native life of another chemistry suffers |
+| `weather_exposure` | environment | 1 | Travellers and soldiers in frozen or searing lands suffer frostbite and heat |
+| `world_physics` | environment | 1 | Each world's orbit, body and air set its year, day, seasons, light, warmth, gravity, tides, rings, eclipses and auroras, and the warmth of its regions follows; great eclipses and transits fall on the calendar its orbits set |
+| `celestial_omens` | faith | 1 | Peoples read celestial bodies as omens, returns move piety and doom, and the epoch star lifts cults, prophecies and rites |
+| `faith_backfill` | faith | 1 | Old spirits gain soul records, old strata their typed entry rules and counts, dead saints their relics, as if it had always been so |
+| `faith_incidents` | faith | 1 | Temples, saints, crusades, inquisitions and iconoclasm are distinct incidents; the inquisition hunts the members of suppressed heresies first |
+| `heresies` | faith | 1 | Doctrinal drift, heresies, suppression and tolerance |
+| `missions_journeys` | faith | 1 | Missionaries travel with journeys between worlds as well as the trade roads |
+| `saint_bones` | faith | 1 | A saint's bones become a holy relic item owned by the church |
+| `strata_routing` | faith | 1 | Strata admit souls by typed entry rules over deeds, rite, tenets and god; a stratum can be closed or given to one god or church |
+| `avatars` | gods | 1 | A god walks the world in a mortal form that raises awe and love and wins peoples; its death shatters the god's manifestation |
+| `mortal_births` | household | 0 | Children born of fertility, stress, sustenance and kinship; childbirth deaths, twins, stillbirths, inherited abilities and bloodline marks |
+| `mortal_death_record` | household | 0 | Typed manner and place of death; widowing, grief and the house's prestige by the manner of death |
+| `mortal_kin` | household | 0 | Typed kin: parents, spouses, the promised, concubines, wards and sworn kin; marriages, betrothals, divorce, fostering and widowing |
+| `mortal_life_course` | household | 0 | Abilities, sex, life stages from the people's lifespan curve, growth and elder decline, health, fertility, schooling and old-age death |
+| `spy_agents` | intrigue | 1 | Typed spy networks owned by realms, factions and cults, run by named agents under cover |
+| `knowledge_gated_extraction` | knowledge | 1 | A resource yields only to a people that knows its branch to the level it needs |
+| `reverse_engineering` | knowledge | 1 | Scholars take apart the made things their people own and learn the techniques behind them |
+| `specialised_scholars` | knowledge | 1 | Scholars skilled in a branch's own craft push that branch more than learned generalists |
+| `world_surveys` | knowledge | 0 | Every people and realm knows each world only so far, from rumour to a full map, and learns of it by its settlements' journeys; journeys, colonies and conquests need it to know enough |
+| `mortal_justice` | law | 0 | Sentences under the penal code: fines, flogging, exile, branding, the loss of a hand, the tongue or the eyes, and death |
+| `pardons` | law | 1 | Pardons and amnesties: rulers free friends at a cost in corruption, the wrongly condemned to renown, and all at a new reign |
+| `precedents` | law | 1 | Case law: rulings bind later courts by their authority, grow when followed, fade, and are set aside by judges who disagree |
+| `research_agreements` | law | 1 | Trade pacts between realms that keep court scholars grow a research agreement; the one behind learns from the one ahead |
+| `ley_attunement` | magic | 1 | Works that channel the ley gain function on a line and more at a nexus |
+| `conviction` | mind | 1 | Acting in character builds conviction that steadies the mind, slows changes of belief and is spent for heroic efforts |
+| `drink_need` | mind | 1 | Brewed drink is a need for peoples who love a drink and a pleasure for the rest |
+| `grief` | mind | 1 | A death leaves kin, spouses and companions in shock, then mourning stretched by mourning rites, then acceptance or a grief that will not heal |
+| `mortal_loyalty` | mind | 1 | Loyalty to liege, people and god from shared values, regard and fear; low loyalty breeds plots, flight and conversion |
+| `mortal_stress` | mind | 1 | Stress from wounds, unmet needs, war, grief and torn loyalties; past the threshold a mind breaks |
+| `quirks` | mind | 1 | Quirks: minor traits places and events leave on a mortal, kept after return and changing how they fare and how often they set out |
+| `army_command` | polity | 1 | Commanders and sub-commanders as army offices; the marshal's and ruler's traits choose strategy |
+| `church_and_crown` | polity | 1 | A god-king's faith fuses the high priesthood with the crown; otherwise the clergy's sway drives investiture quarrels as typed incidents |
+| `ethnic_relations` | polity | 1 | Peoples under one crown draw closer in harmony or clash in strife that stirs unrest and costs the realm stability |
+| `tolls` | polity | 1 | Tolls and diverted traffic |
+| `war_causes_and_peace` | polity | 1 | Typed war causes with aims that carry parameters; every ending maps to a treaty with its clauses |
+| `ancestral_guardians` | social | 1 | Guardian ancestors bring their house luck and lend morale only where their people fight on ancestral ground |
+| `attraction` | social | 1 | Attraction: whom each mortal is drawn to and how strongly, settled from the rules of its world and gating courtship and bonds |
+| `captive_depth` | social | 1 | Mass captives from sacks; ransom by rank and house prestige from treasuries; wards' loyalty; captive marriage; captive tongues |
+| `feuds` | social | 1 | Feuds between houses and communities: honour times grievance, peace-tenet mediation, marriage and common-enemy brakes, fading |
+| `mortal_acts` | social | 0 | Gratitude repays benefactors with protection and gifts; careers are chosen among many paths |
+| `mortal_standing` | social | 1 | Personal wealth, fading renown, honour, infamy and legitimacy in office; patrons fund works and the ambitious buy favour |
+| `peace_movement` | social | 1 | Where war support sinks a peace movement rises, protests, and if it rises up forces its realm's wars toward an end |
+| `pecking_orders` | social | 1 | Households, courts, circles, warbands and crews hold pecking orders by strength, office, renown and assertiveness, challenged from below |
+| `popular_movements` | social | 1 | Movements: lasting cascades that grow with grievance, fade without it and take up arms as rebels or a religious movement |
+| `abductors` | war | 1 | Abductors carry people off from the towns in their reach to their lairs; slaying the creature frees its captives |
+| `battle_ground_record` | war | 1 | Every recorded battle carries its year, season, weather and ground |
+| `duel_ordeals` | war | 1 | Footing, pain and an injury in every exchange; trials by combat and duels of gods' champions |
+| `engine_designs` | war | 1 | War machine designs: siege engines built to a realm's design, whose frame, counterweight and arms strengthen its batteries |
+| `levies` | war | 1 | Levies and demobilisation |
+| `lost_lands` | war | 1 | Irredentism: memories of lands lost in war that fade, are kept alive by anniversaries and raise a claim when strong |
+| `mortal_equipment` | war | 0 | Equipment slots: main and off hand, body armour, helm, padding, cloak, mount and magic focus shape blows, armour, mobility and spellcraft |
+| `phased_battle_decides` | war | 1 | The phased battle alone decides: no flat patron bonus, no die; allies fight with their own stacks |
+| `resource_conflict` | war | 1 | Wars to seize strategic resources |
