@@ -1,6 +1,6 @@
 # 15. DLC ideas
 
-Status: **idea, not a plan.** This document splits the whole of spec 13 (depth expansion) into 85 themed expansions plus The Loom, the foundation they all stand on, as if each were sold separately, and gives each one the copy printed on the back of its box. The split is non-redundant: every mechanic of spec 13 belongs to exactly one expansion. The **Covers** line under each expansion names the spec 13 sections it holds. Integration still follows the waves of spec 13 Part J; this split does not change them. Expansion 86 reaches past spec 13: it has no spec counterpart yet, so its **Covers** line reads TBD until its spec is written. Expansions 87–94 split spec 16 (made minds, innate powers, concealment, living craft and typed kinds) the same way; spec 16's depth pass (W47) and the rest of its typed kinds (W48) deepen existing expansions instead of adding new ones. Expansions 95–97 split spec 16's record of events (W49) and its closure of every facet of life (W50); the parts of W50 that fall inside existing expansions deepen them instead (13, 14, 15, 18, 19, 22, 82), as do W49's single combat (53) and engagements in every domain (52, 78). W50's couplings, depth targets and the behaviour it gives to facets that had kinds only are engine work that every expansion stands on, like The Loom.
+Status: **idea, not a plan.** This document splits the whole of spec 13 (depth expansion) into 85 themed expansions plus The Loom, the foundation they all stand on, as if each were sold separately, and gives each one the copy printed on the back of its box. The split is non-redundant: every mechanic of spec 13 belongs to exactly one expansion. The **Covers** line under each expansion names the spec 13 sections it holds. Integration still follows the waves of spec 13 Part J; this split does not change them. Expansion 86 reaches past spec 13: it has no spec counterpart yet, so its **Covers** line reads TBD until its spec is written. Expansions 87–94 split spec 16 (made minds, innate powers, concealment, living craft and typed kinds) the same way; spec 16's depth pass (W47) and the rest of its typed kinds (W48) deepen existing expansions instead of adding new ones. Expansions 95–97 split spec 16's record of events (W49) and its closure of every facet of life (W50); the parts of W50 that fall inside existing expansions deepen them instead (13, 14, 15, 18, 19, 22, 82), as do W49's single combat (53) and engagements in every domain (52, 78). W50's couplings, depth targets and the behaviour it gives to facets that had kinds only are engine work that every expansion stands on, like The Loom. Expansions 98 and 99 come from W50's sweep of nature and the cosmos (50.22–50.29); the rest of that sweep deepens expansions 3, 6, 9, 10 and 17.
 
 ---
 
@@ -75,10 +75,11 @@ Beneath every region lies a column of stone you can read layer by layer: clay, l
 - **When the Mine Comes Down**: depth against the rock's strength and the miners' engineering sets the risk of collapse each year. A cave-in crushes miners, seals the shaft and sometimes breaks open a cavern, letting its beasts climb out.
 - **Seal the Deep**: seal gates, collapsed tunnels, plug walls, warding rites and divine acts hold back what you woke. Every seal weakens with time, beasts and miners test it, and opening one again is a scheme waiting for a schemer.
 - **Bones of Ages Past**: fossil beds hold extinct beasts, earlier creations and lost peoples. Floods, quakes and digs bring them up, and each culture reads them its own way: dragon bones for the bards, giants' relics for the priests, deep time for heretic scholars.
+- **Silt and Shore**: rivers and winds carry sediment that builds deltas and marshes, silts harbours and canals and buries towns and finds, while coasts grow or wear away over generations. Fossil beds keep their preservation and richness, organic beds become coal and oil, and well-kept remains let living craft revive extinct species.
 
 **In your world:** The miners of a mountain town chased a silver vein through the granite until the floor gave way into a cavern. Something came up the shaft. Their seal gate held for three generations, until a rival house paid to have it opened.
 
-**Covers:** 6.1 RP (geology, strata, hydrology, tectonics), 6.1 RP8 (sealing), 6.3 RP (cave-ins), 6.2 RP7 (fossils).
+**Covers:** 6.1 RP (geology, strata, hydrology, tectonics), 6.1 RP8 (sealing), 6.3 RP (cave-ins), 6.2 RP7 (fossils), spec 16 50.23 (sediment, coasts), 50.27.
 
 ### 4. Winds of the World
 
@@ -129,10 +130,11 @@ Species leave the bestiary and take up residence in your land. Each one lives re
 - **Pests and Blights**: crop pests thin the harvest, iron eaters gnaw the ore, plague bearers spread sickness, and vermin spoil the granary until a cat-like hunter is tamed for the work.
 - **Flora Alive**: crops, herbs, dyes, timber, brews, reagents and poisons are living plants with seasons, soils and pests. Annual, perennial or tree, wild or cultivated into new cultivars, each crop is weighed against the year it grows in.
 - **Companions and Champions**: a hound at the hearth eases loneliness, and its death leaves real grief. Falcons and war dogs sharpen the hunt. Among the largest, deadliest species, one beast may rise as a region's named terror or guardian.
+- **Root, Bark and Seed**: every plant has a body of roots, stems, wood, bark, leaves, flowers, fruit, seeds and sap, and its products come from those parts. Its growth form sets the years to first harvest and its damage from storm and fire.
 
 **In your world:** A king's hunters killed the last of the sacred white stags. The stag's cult fell into a crisis of doctrine, the wolves that had fed on the herd turned on the flocks, and the shepherds drove far fewer sheep to the winter market.
 
-**Covers:** 3.2 (base), 3.2 RP (flora, vermin), 3.3a RP (pets).
+**Covers:** 3.2 (base), 3.2 RP (flora, vermin), 3.3a RP (pets), spec 16 50.26.
 
 ### 7. Tooth and Claw
 
@@ -183,10 +185,11 @@ Plague is no longer a stroke of bad luck. It is a named enemy with a vector, a h
 - **Where Plague Begins**: clearing forests, hunting bushmeat and herding beside wild hosts let a creature's disease leap to people. Insects follow the warm seasons, birds carry fevers along their migrations, and exterminating a host is a cure with an ecological price.
 - **Hard Choices**: close the ports, quarantine the poor quarter, burn the dead, expel the sick or ring the bells, and pay in trade, riots, funeral quarrels or a crowd that spreads it. Purity-minded peoples found leper colonies; merciful ones build hospitals.
 - **The Cure Race**: hospitals, universities and monasteries race against one disease, faster with scholars, true theories and fresh cases nearby. The winner holds a cure it can sell. Variolation trades a small risk for immunity, until the herd is safe.
+- **What Makes It Sick**: every disease has an agent (virus, bacterium, fungus, parasite, prion, toxin, deficiency, spirit, curse or a made one), and cures work only by class. Agents evolve at their own rates, survive in water, soil or objects by kind, and hide in reservoir species between outbreaks.
 
 **In your world:** A merchant who never felt ill carried the marsh fever upriver to the capital. The queen closed the ports, the guilds rioted in the empty markets, and a monastery won the race to a cure. It sold the cure city by city, and every city paid its price.
 
-**Covers:** 3.4, 3.4 RP, 3.4 RP3, F4.6.
+**Covers:** 3.4, 3.4 RP, 3.4 RP3, F4.6, spec 16 50.24.
 
 ---
 
@@ -205,10 +208,11 @@ A duel at the river ford ends in a single stroke. The king lives, but his sword 
 - **The Silver Hand**: prostheses of wood, glass, silver and star metal restore part of what was lost, by material and craftsmanship. A legendary one becomes a relic that passes down the line and carries legitimacy with it.
 - **What the Body Can Still Do**: melee, missile, command, craft, scholarship, presence, mobility and fertility are all read from the body. A blind scholar needs a reader. A people without helmets fills its halls with one-eyed veterans.
 - **Scars Read by Culture**: honour cultures prize battle scars, purity cultures bar the maimed from the throne, and cults that sanctify suffering recruit them. Generations after a great war, a people still calls itself a people of one-armed grandfathers.
+- **Systems and Sensitivities**: breath, circulation, digestion, regulation and nerves run each body, and a failing system has its own effects. Some beings react to a food, a plant, an animal, a material, a substance or a power, and peoples learn what to avoid.
 
 **In your world:** A duel took the king's sword hand. His people required a whole body on the throne, so his legitimacy collapsed and a rival claimant rose. The victors of the civil war blamed the healer who failed him, his guild lost its standing, and medicine spread more slowly through the kingdom.
 
-**Covers:** F4.1–F4.5, F23, 3.1 (body attributes).
+**Covers:** F4.1–F4.5, F23, 3.1 (body attributes), spec 16 50.25 (systems, sensitivities).
 
 ### 11. Curse of the Full Moon
 
@@ -338,10 +342,11 @@ A guest is killed at a feast. In one hall it is the unthinkable crime, and the h
 - **Rules of the Room**: thirteen situations, from funeral, feast and court to mourning, sacred days and meeting a stranger, each with its own rules on speech, dress, gifts, laughter, weapons and food.
 - **Will Against Custom**: every choice weighs desire, the bond with the other person and the norms of the room. Breaking a norm costs reputation, unless you are a rebel who enjoys it. Every custom keeps the history of where it came from.
 - **Purity and Pollution**: corpses, birth, blood, forbidden foods, outsiders and trades such as tanning bar a person from temples and marriage until purified. Hereditary castes decide who works which trade, who lives in which district and who handles the dead.
+- **What They Say, What They Do**: every judged act is weighed against the values its doer professes. A wide gap, once seen, costs trust, legitimacy and followers, and hands leverage to whoever knows.
 
 **In your world:** A plague reached a city where touching the dead made a person impure. The avoidance slowed the contagion, but the sick were left without carers, and the low-caste gravediggers, who could not refuse the work, died first and in the greatest numbers.
 
-**Covers:** F16, F16 RP4, F35, F41.
+**Covers:** F16, F16 RP4, F35, F41, spec 16 50.29.
 
 ### 18. Ties of Blood
 
@@ -1811,4 +1816,38 @@ Realms and the rich now build for the long term. Polities raise roads, bridges, 
 **In your world:** A realm dug a canal with levied labour. The levy's anger fed a revolt among the young, and the canal finished three seasons late. Within a generation it had doubled the realm's trade, and the founder of the school beside its locks was remembered longer than the king.
 
 **Covers:** spec 16 50.3, 50.4, 50.10.
+
+## XV. Skies and Rains
+
+### 98. Under Every Sky
+
+*Some worlds are kind to bodies. Most are not.*
+
+Every world now presses on the bodies that live under it. Stars have cycles of flares and particle storms, worlds have magnetic fields that shield them, weaken and reverse, and every biology has limits of gravity, air, cold, heat and radiation. Settling a new world means meeting those limits, or paying to go beyond them.
+
+- **Fields and Storms**: magnetic fields that guard a world, waver and flip over epochs; flares, particle storms and cosmic ray bursts on the cycle of each star.
+- **When the Sky Breaks Through**: radiation reaches those outside shelter and in orbit, signals and networks fail, and compasses err. Auroras spread toward the equator, and every faith reads them its own way.
+- **What a Body Can Bear**: each biology has its own tolerances of gravity, air, pressure, cold, heat and radiation, so the same world weighs differently on different peoples.
+- **The Price of Settling**: beyond a body's limits it needs shelter, gear, augments or grown organs. Long voyages and light worlds wear on it, and some peoples adapt over generations.
+- **Shields of the Gods**: gods and powers that span worlds can strengthen a world's field or strip it away.
+
+**In your world:** A field reversal weakened a world's shield for a generation. Auroras hung over the equator, the signal towers fell silent, and a fleet trusting its compasses was lost at sea. The world's seers said the sky had opened, and a new faith grew around the lights.
+
+**Covers:** spec 16 50.22, 50.25 (tolerances).
+
+### 99. The Rainmakers
+
+*Who owns the rain?*
+
+The weather is no longer only nature's. Your peoples call rain, drive off storms, divert rivers and move ice, by rite, by power, by seeding, by structures and by living craft. Every success falls somewhere else as a loss. Forecasts decide when to sow, sail and march, and an accurate forecast that nobody believes still fails.
+
+- **Working the Weather**: rain, dry, calm, cold or warm, by rite, power, seeding, diversion, made structures or living craft, each with its cost and strength.
+- **Downwind**: your rain is a neighbour's drought. Neighbours read weather works as acts with intent, treaties ban them, and banned rainmakers work in secret.
+- **Whose Forecast**: sight, lore, almanac, instrument, a network of observers or a model, each with its accuracy. Sowing dates, voyages and campaigns follow the forecast that is believed.
+- **Water from the Mountain**: snowpack feeds the summer rivers, so a poor snow year upstream is a dry harvest downstream, and the upper valley holds the lower one's fate.
+- **Weather of Its Own**: valleys, lakes and cities make their own climate and change where people settle, what they grow and what makes them ill.
+
+**In your world:** In a drought year a realm's rainmakers brought rain to its uplands. The crops of the neighbour downwind withered, and the neighbour called it an act of war. The peace that followed banned weather work by treaty, and a generation later the rainmakers worked by night.
+
+**Covers:** spec 16 50.28, 50.23 (ice, snowpack, local climate).
 
