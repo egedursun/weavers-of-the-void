@@ -224,6 +224,14 @@ async def test_town_life_eases_poverty_loses_labour_on_the_way_and_pools_means(s
     assert commute is not None and commute.labour_lost > 0 and await commute_share(session, town.id) < 1
     pool = await session.get(CooperativeRow, guild.id)
     assert pool is not None and pool.purpose in tuple(CoopPurpose)
+    pool.purpose = CoopPurpose.CREDIT
+    pool.locked = ["purpose"]
+    await session.flush()
+    empty = await poverty_relief(session, tuned_rules(), town.id)
+    member = await mortal(session, "Net-Mender", world, town.id)
+    await bond(session, member.id, guild.id, BondKind.MEMBER_OF)
+    await keep_town_life(await at(session, 4), TownLifeTally())
+    assert pool.members == 1 and await poverty_relief(session, tuned_rules(), town.id) > empty
 
 
 async def test_evidence_weighs_a_case_and_fades_as_it_waits(session: AsyncSession, world: CoreWorld) -> None:

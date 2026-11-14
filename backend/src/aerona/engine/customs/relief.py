@@ -27,7 +27,7 @@ async def realm_relief(session: AsyncSession, rules: Rules, town_id: int) -> int
 async def poverty_relief(session: AsyncSession, rules: Rules, town_id: int) -> int:
     welfare = await houses_in(session, town_id) * rules.welfare.poverty_relief
     located = select(EntityRow.id).where(EntityRow.location_id == town_id)
-    pools = await session.scalars(select(CooperativeRow.purpose).where(CooperativeRow.faction_entity_id.in_(located)))
+    pools = await session.scalars(select(CooperativeRow.purpose).where(CooperativeRow.faction_entity_id.in_(located), CooperativeRow.members > 0))
     cooperative = sum(rules.cooperatives.relief for purpose in pools if purpose in RELIEVING)
     return welfare + cooperative + await realm_relief(session, rules, town_id)
 

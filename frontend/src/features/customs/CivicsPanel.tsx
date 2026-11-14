@@ -9,8 +9,9 @@ import { Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
 import { YES_NO } from '@/features/cycles/labels'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
+import { useJustice } from '@/features/entity/justice/api'
+import { CRIMES } from '@/features/entity/justice/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
-import { NumberField } from '@/features/entity/realm/parts'
 import { Ref } from '@/features/gatherings/parts'
 import { Bars } from '@/features/sacred/parts'
 import { type CustomsNodeView, useCustomsAction } from './api'
@@ -31,9 +32,11 @@ const NOT_A_REALM =
 
 function EvidenceCard({
   row,
+  caseName,
   blocked,
 }: {
   row: Evidence
+  caseName: string | null
   blocked: string | null
 }) {
   const action = useCustomsRow(
@@ -48,7 +51,7 @@ function EvidenceCard({
       icon={kind.icon}
       tone={row.forged ? 'danger' : kind.tone}
       title={`${kind.label}${row.forged ? ', forged' : ''}`}
-      caption={`Before case ${row.case_id} · found in epoch ${row.found_epoch} · reliability ${row.reliability}`}
+      caption={`Before ${caseName ? `the case of ${caseName}` : 'a case'} · found in epoch ${row.found_epoch} · reliability ${row.reliability}`}
       removeLabel='Strike the evidence'
       editTitle='Set the evidence'
       note='Evidence weighs a case before its trial and fades as the case waits; only what points at the accused weighs against them.'
@@ -336,6 +339,18 @@ export function CivicsPanel({
 }) {
   const realm = kind === 'polity'
   const [caseId, setCaseId] = useState('')
+  const justice = useJustice(nodeId)
+  const cases = justice.data?.cases ?? []
+  const nameCase = (row: (typeof cases)[number], lower: boolean) => {
+    const crime = CRIMES[row.crime]?.label ?? row.crime
+    return `${lower ? crime.toLowerCase() : crime}${row.accused ? ` against ${row.accused.name}` : ''}`
+  }
+  const caseNames: Record<string, string> = Object.fromEntries(
+    cases.map((row) => [String(row.id), nameCase(row, false)])
+  )
+  const caseCaptions: Record<string, string> = Object.fromEntries(
+    cases.map((row) => [String(row.id), nameCase(row, true)])
+  )
   const [evidenceKind, setEvidenceKind] = useState('trace')
   const [category, setCategory] = useState('subject')
   const [relief, setRelief] = useState('alms')
@@ -385,7 +400,12 @@ export function CivicsPanel({
     'Civic life is read'
   )
   const evidenceBusy = why(
-    blocked ?? (!caseId ? 'Give the number of a case' : null),
+    blocked ??
+      (!cases.length
+        ? 'No case touches this'
+        : !caseId
+          ? 'Choose a case'
+          : null),
     laying.isPending
   )
   return (
@@ -418,7 +438,13 @@ export function CivicsPanel({
         noun={['piece of evidence', 'pieces of evidence']}
         itemKey={(item) => item.id}
       >
-        {(item) => <EvidenceCard row={item} blocked={blocked} />}
+        {(item) => (
+          <EvidenceCard
+            row={item}
+            caseName={caseCaptions[String(item.case_id)] ?? null}
+            blocked={blocked}
+          />
+        )}
       </Listed>
       <Listed
         title='Categories of folk'
@@ -456,13 +482,13 @@ export function CivicsPanel({
           </Button>
         }
       >
-        <NumberField
-          label='Case number'
+        <MindPicker
+          label='Case'
           value={caseId}
-          min={1}
-          max={MANY}
+          table={caseNames}
+          placeholder={cases.length ? 'Choose' : 'No case touches this'}
           blocked={blocked}
-          onChange={setCaseId}
+          onPick={setCaseId}
         />
         <MindPicker
           label='Evidence'

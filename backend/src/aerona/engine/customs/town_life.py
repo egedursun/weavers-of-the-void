@@ -196,7 +196,7 @@ async def keep_cooperatives(ctx: TickContext, tally: TownLifeTally) -> None:
         if "pool" not in row.locked:
             row.pool += row.members * table.dues
         home = await ctx.session.get(EntityRow, faction.location_id) if faction.location_id is not None else None
-        if home is not None and row.purpose in WORKING and not held(home.id):
+        if home is not None and row.purpose in WORKING and row.members > 0 and not held(home.id):
             shift_stat(home, "prosperity", table.relief / 10, low=0, high=PERCENT)
         tally.cooperatives += 1
 

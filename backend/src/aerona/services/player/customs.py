@@ -1,3 +1,4 @@
+from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.customs import (
     AgeGrade,
@@ -738,16 +739,18 @@ async def membership_category_right(scope: PlayerScope, command: RightGrant) -> 
 @player_action("town_life:run", ActionKind.EDIT_RECORD)
 async def town_life_run(scope: PlayerScope, command: RunNow) -> Effect:
     tally = await control.run_town_life(await scope.context("town_life_run"))
-    return Effect(f"{tally.taverns} taverns, {tally.houses} houses of welfare and {tally.cooperatives} cooperatives were tended.")
+    houses = several(tally.houses, "house of welfare", "houses of welfare")
+    return Effect(f"Tended {several(tally.taverns, 'tavern', 'taverns')}, {houses} and {several(tally.cooperatives, 'cooperative', 'cooperatives')}.")
 
 
 @player_action("civics:run", ActionKind.EDIT_RECORD)
 async def civics_run(scope: PlayerScope, command: RunNow) -> Effect:
     tally = await control.run_civics(await scope.context("civics_run"))
-    return Effect(f"{tally.evidence} pieces of evidence were found and {tally.naturalised} foreigners naturalised.")
+    found = several(tally.evidence, "piece of evidence", "pieces of evidence")
+    return Effect(f"Found {found} and naturalised {several(tally.naturalised, 'foreigner', 'foreigners')}.")
 
 
 @player_action("age_set:run", ActionKind.EDIT_RECORD)
 async def age_set_run(scope: PlayerScope, command: RunNow) -> Effect:
     tally = await control.run_age_sets(await scope.context("age_set_run"))
-    return Effect(f"{tally.initiated} were initiated and {tally.promoted} age-sets promoted.")
+    return Effect(f"Initiated {several(tally.initiated, 'youth', 'youths')} and promoted {several(tally.promoted, 'age-set', 'age-sets')}.")

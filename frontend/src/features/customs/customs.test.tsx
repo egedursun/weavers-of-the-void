@@ -129,4 +129,38 @@ describe('customs, town life and civics', () => {
       .element(screen.getByRole('button', { name: 'Mark it' }))
       .toBeDisabled()
   })
+
+  it('names the case evidence stands before and offers the cases to lay it in', async () => {
+    serveBase()
+    onApi('GET', '/api/customs/of/32', {
+      ...EMPTY,
+      node: MORTAL,
+      evidence: [
+        {
+          id: 1,
+          case_id: 2,
+          kind: 'trace',
+          points_to: MORTAL,
+          reliability: 60,
+          forged: false,
+          found_epoch: 5,
+          locked: [],
+        },
+      ],
+    })
+    onApi('GET', '/api/justice/32', {
+      node_id: 32,
+      is_realm: false,
+      is_city: false,
+      is_mortal: true,
+      home: TOWN,
+      proposals: [],
+      cases: [{ id: 2, crime: 'theft', accused: MORTAL }],
+    })
+    const { screen } = await renderApp(<CustomsSection nodeId={32} />)
+    await screen.getByRole('tab', { name: /Civics/ }).click()
+    await expect
+      .element(screen.getByText(/Before the case of theft against Orla/))
+      .toBeVisible()
+  })
 })
