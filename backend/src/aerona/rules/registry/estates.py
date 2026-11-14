@@ -63,7 +63,7 @@ class OrderRules:
 
 @dataclass(frozen=True)
 class GuildRules:
-    journeyman_at: int = rule(30, 0, 100, F, "Craft skill from which a guild member is a journeyman")
+    fellow_at: int = rule(30, 0, 100, F, "Craft skill from which a guild member is a fellow of the craft")
     master_at: int = rule(60, 0, 100, F, "Craft skill from which a guild member is a master")
     grandmaster_at: int = rule(85, 0, 100, F, "Craft skill from which a guild member is the grandmaster")
     secret_pct: int = rule(25, 0, 100, F, "Chance each epoch a guild makes one of its craft's techniques a secret of its town (%)")

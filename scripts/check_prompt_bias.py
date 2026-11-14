@@ -55,7 +55,9 @@ PATTERNS = (
         "gendered default",
         re.compile(
             r"\b(he|him|his|himself|father|fathers|fatherly|brother|brothers|brotherly)\b|"
-            r"(?<![A-Za-z])(brotherhoods?|brethren|fraternal|fraternity|sisterhoods?)(?![A-Za-z])",
+            r"(?<![A-Za-z])(brotherhoods?|brethren|fraternal|fraternity|sisterhoods?)(?![A-Za-z])|"
+            r"\b(?![a-z]*(?:human|woman|women|omen|specimen|roman|amen|stamen|abdomen|semen|acumen|regimen|ramen|shaman|caiman|cayman|dolmen|"
+            r"talisman|ottoman|german|hymen|cyclamen|dusman)s?\b)(?-i:[A-Za-z][a-z]*m[ae]n)\b",
             re.IGNORECASE,
         ),
     ),
@@ -153,7 +155,8 @@ PATTERNS = (
         re.compile(
             r"placeholder=['\"](?:[^'\":]*:\s*)?(?:(?!(?:a|an|the|its|their|your|one)\b)[a-z][\w'-]*(?: [\w'-]+)?, )+"
             r"(?!(?:a|an|the|its|their|your|one)\b)[a-z][\w'-]*(?: [\w'-]+)?…['\"]|"
-            r"(?-i:placeholder=['\"][A-Z][\w'-]* (?:the|of) [A-Z][\w'-]*…['\"])",
+            r"(?-i:placeholder=['\"][A-Z][\w'-]* (?:the|of) [A-Z][\w'-]*…['\"])|"
+            r"(?-i:placeholder=\{?['\"][a-z][^'\"]*['\"])",
             re.IGNORECASE,
         ),
     ),

@@ -27,12 +27,12 @@ class GuildTally:
     secrets: int = 0
 
 
-def rank_for(rules_master: int, rules_journeyman: int, rules_grand: int, skill: int) -> FactionRank:
+def rank_for(rules_master: int, rules_fellow: int, rules_grand: int, skill: int) -> FactionRank:
     if skill >= rules_grand:
         return FactionRank.LEADER
     if skill >= rules_master:
         return FactionRank.OFFICER
-    if skill >= rules_journeyman:
+    if skill >= rules_fellow:
         return FactionRank.MEMBER
     return FactionRank.NOVICE
 
@@ -53,7 +53,7 @@ async def rank_members(ctx: TickContext, guild: EntityRow, tally: GuildTally) ->
         if RANK in (member.locked or []) or held(member.mortal_entity_id):
             continue
         skill = await best_skill(ctx.session, member.mortal_entity_id, CRAFT_SKILLS)
-        rank = rank_for(table.master_at, table.journeyman_at, table.grandmaster_at, skill)
+        rank = rank_for(table.master_at, table.fellow_at, table.grandmaster_at, skill)
         if rank is not member.rank:
             member.rank = rank
             tally.promoted += 1

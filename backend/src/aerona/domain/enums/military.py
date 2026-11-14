@@ -28,7 +28,7 @@ class UnitKind(StrEnum):
     MARINES = "marines"
     SLINGERS = "slingers"
     ARCHERS = "archers"
-    CROSSBOWMEN = "crossbowmen"
+    CROSSBOW_INFANTRY = "crossbow_infantry"
     JAVELINEERS = "javelineers"
     GUNNERS = "gunners"
     GRENADIERS = "grenadiers"

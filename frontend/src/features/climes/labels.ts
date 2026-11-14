@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
+import { COMPASS } from '@/features/operations/labels'
 
 type Schema = components['schemas']
 
@@ -47,16 +48,9 @@ export const PHASES: Record<Schema['OscillationPhase'], Named> = {
   cold: { label: 'Cold swing', icon: Snowflake, tone: 'info' },
 }
 
-export const DIRECTIONS = [
-  'North',
-  'North-east',
-  'East',
-  'South-east',
-  'South',
-  'South-west',
-  'West',
-  'North-west',
-] as const
+export const DIRECTIONS = COMPASS.map(
+  (point) => point.charAt(0).toUpperCase() + point.slice(1)
+)
 
 export const DIRECTION_TABLE: Record<string, string> = Object.fromEntries(
   DIRECTIONS.map((label, index) => [String(index), label])

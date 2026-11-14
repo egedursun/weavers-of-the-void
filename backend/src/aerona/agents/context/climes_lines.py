@@ -13,6 +13,7 @@ from aerona.db.tables.climes import (
     RegionWindRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.climes import DIRECTIONS, OscillationPhase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -63,17 +64,26 @@ async def mortal_climes_lines(scope: Scope, me: EntityRow) -> list[str]:
         found += await wind_line(scope, region)
     if me.world_id is not None:
         found += await world_lines(scope, me.world_id)
-    if me.location_id is not None:
-        cultures = await session.execute(
-            select(CosmopolitanCultureRow, CosmopolitanMemberRow.share)
-            .join(CosmopolitanMemberRow, CosmopolitanMemberRow.culture_id == CosmopolitanCultureRow.id)
-            .where(CosmopolitanMemberRow.community_entity_id.in_([me.location_id, me.id]))
-            .order_by(CosmopolitanCultureRow.id)
-            .limit(LIST_LINES)
-        )
-        for culture, share in cultures:
-            tongue = f", speaking {await named(scope, culture.lingua_franca_entity_id)}" if culture.lingua_franca_entity_id is not None else ""
-            found.append(f"you belong to {culture.name}, the culture of a road between worlds ({share}% of your ways){tongue}")
+    homes = [item for item in (me.location_id, me.id) if item is not None]
+    joined: set[int] = set()
+    cultures = await session.execute(
+        select(CosmopolitanCultureRow, CosmopolitanMemberRow.share)
+        .join(CosmopolitanMemberRow, CosmopolitanMemberRow.culture_id == CosmopolitanCultureRow.id)
+        .where(CosmopolitanMemberRow.community_entity_id.in_(homes))
+        .order_by(CosmopolitanCultureRow.id)
+        .limit(LIST_LINES)
+    )
+    for culture, share in cultures:
+        joined.add(culture.id)
+        tongue = f", speaking {await named(scope, culture.lingua_franca_entity_id)}" if culture.lingua_franca_entity_id is not None else ""
+        found.append(f"you belong to {culture.name} (#{culture.id}), the culture of a road between worlds ({share}% of your ways){tongue}")
+    if me.world_id is not None:
+        roads = select(RouteRow.id).where(or_(RouteRow.world_a_id == me.world_id, RouteRow.world_b_id == me.world_id))
+        for culture in await session.scalars(
+            select(CosmopolitanCultureRow).where(CosmopolitanCultureRow.route_id.in_(roads)).order_by(CosmopolitanCultureRow.id).limit(LIST_LINES)
+        ):
+            if culture.id not in joined:
+                found.append(f"{culture.name} (#{culture.id}) is the culture of a road between worlds that reaches your world")
     return found
 
 

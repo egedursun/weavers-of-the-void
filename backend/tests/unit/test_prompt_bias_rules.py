@@ -210,3 +210,19 @@ def test_image_directions_carry_no_example_lists_body_defaults_styles_or_forced_
     ):
         assert rules_hit(module, images, text) == set(), text
     assert "image example list" not in rules_hit(module, PROMPT, "Each prompt: subject, materials, setting, lighting, mood, composition.")
+
+
+def test_gendered_compounds_are_caught_and_neutral_words_are_not() -> None:
+    module = checker()
+    for text in ("Named mortals (king, seer, craftsman, hero, bandit)", "Crossbowmen", "topmen work the sails", "Kinsmen of the slain", "a journeyman"):
+        assert "gendered default" in rules_hit(module, PROMPT, text), text
+    for text in ("a human crowd", "women and children", "an omen", "a specimen", "a shaman", "a talisman", "const [men, setMen] = useState"):
+        assert "gendered default" not in rules_hit(module, PROMPT, text), text
+
+
+def test_a_lowercase_example_placeholder_is_caught() -> None:
+    module = checker()
+    form = REPOSITORY_ROOT / "frontend/src/features/sample.tsx"
+    assert "example placeholder" in rules_hit(module, form, "placeholder='a kinsman slain at the ford'")
+    assert "example placeholder" in rules_hit(module, form, "placeholder='luxuries'")
+    assert "example placeholder" not in rules_hit(module, form, "placeholder='What began the feud'")

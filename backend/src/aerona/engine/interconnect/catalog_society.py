@@ -795,7 +795,7 @@ BEHAVIOURS = (
         ("freed",),
         Subsystem.LAW,
         "mobility.manumission_chance",
-        "freedmen",
+        "the freed",
     ),
     (
         "ruined_merchants",

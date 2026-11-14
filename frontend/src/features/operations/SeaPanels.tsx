@@ -364,7 +364,7 @@ function CrewCard({
       caption={`${row.count} at the station`}
       removeLabel='Man the station anew'
       editTitle='Set the station'
-      note='Gunners set the rate of fire by their skill and how many still serve the guns; officers keep the guns loading under fire; topmen work the sails and the pumps; marines board; rowers drive a galley against the wind.'
+      note='Gunners set the rate of fire by their skill and how many still serve the guns; officers keep the guns loading under fire; riggers work the sails and the pumps; marines board; rowers drive a galley against the wind.'
       fields={[
         {
           key: 'count',

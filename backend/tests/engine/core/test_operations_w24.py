@@ -404,7 +404,7 @@ async def test_each_event_of_an_expedition_is_logged_on_the_leg_it_happened_and_
     _, town = await realm_with_town(session, world)
     vessel, profile = await ship(session, world, town, "Gull", 0)
     await set_crew(ctx, vessel.id, CrewStation.GUNNERS, {"count": 24})
-    await set_crew(ctx, vessel.id, CrewStation.TOPMEN, {"count": 6})
+    await set_crew(ctx, vessel.id, CrewStation.RIGGERS, {"count": 6})
     assert profile.crew == 30
 
 

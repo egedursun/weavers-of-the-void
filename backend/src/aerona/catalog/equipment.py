@@ -361,7 +361,7 @@ ROLE_ARMS: MappingProxyType[UnitKind, MappingProxyType[ArmamentSlot, tuple[Equip
         ),
         U.GRENADIERS: arms(hand=(E.BLADE, E.DAGGER), missile=(E.GRENADE, E.ASSAULT_RIFLE, E.MUSKET, E.RIFLE), armour=MEDIUM_GUARD, helmet=MEDIUM_HELMS),
         U.ARCHERS: arms(hand=SIDEARMS, missile=(E.LONGBOW, E.COMPOSITE_BOW, E.BOW)),
-        U.CROSSBOWMEN: arms(hand=SIDEARMS, missile=(E.REPEATING_CROSSBOW, E.CROSSBOW), armour=MEDIUM_GUARD, shield=WALL_SHIELDS, helmet=MEDIUM_HELMS),
+        U.CROSSBOW_INFANTRY: arms(hand=SIDEARMS, missile=(E.REPEATING_CROSSBOW, E.CROSSBOW), armour=MEDIUM_GUARD, shield=WALL_SHIELDS, helmet=MEDIUM_HELMS),
         U.SLINGERS: arms(hand=(E.CLUB, E.DAGGER), missile=(E.SLING,)),
         U.JAVELINEERS: arms(hand=(E.SPEAR, E.BLADE, E.AXE), missile=(E.JAVELIN, E.THROWING_WEAPON)),
         U.GUNNERS: arms(

@@ -205,11 +205,6 @@ function CultureCard({
       blocked={action.busy}
       onEdit={action.onEdit}
       onRemove={action.onRemove}
-      extra={row.values.map((item) => (
-        <Badge key={item.axis} size='sm' variant='secondary'>
-          {`${VALUE_ICONS[item.axis]?.label ?? item.axis} ${item.value}`}
-        </Badge>
-      ))}
     >
       <Facts
         items={[
@@ -226,6 +221,27 @@ function CultureCard({
         tone='success'
         icon={Route}
       />
+      <Listed
+        title='Values'
+        items={[...row.values].sort(
+          (left, right) => Math.abs(right.value) - Math.abs(left.value)
+        )}
+        empty='The culture holds no values of its own yet.'
+        noun={['value', 'values']}
+        itemKey={(item) => item.axis}
+      >
+        {(item) => {
+          const named = VALUE_ICONS[item.axis]
+          return (
+            <Meter
+              label={`${named?.label ?? item.axis} (${item.value > 0 ? '+' : ''}${item.value})`}
+              value={Math.abs(item.value)}
+              tone={item.value < 0 ? 'warning' : 'success'}
+              icon={named?.icon}
+            />
+          )
+        }}
+      </Listed>
       <Listed
         title='Members'
         items={row.members}

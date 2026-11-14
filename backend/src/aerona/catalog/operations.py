@@ -57,7 +57,7 @@ RAKED_SECTIONS: tuple[VehicleSection, ...] = (V.BOW, V.STERN, V.RUDDER, V.STEERI
 
 STATION_SHARES: dict[CrewStation, int] = {
     CrewStation.GUNNERS: 40,
-    CrewStation.TOPMEN: 25,
+    CrewStation.RIGGERS: 25,
     CrewStation.MARINES: 20,
     CrewStation.OFFICERS: 5,
     CrewStation.ROWERS: 10,

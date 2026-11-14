@@ -3082,7 +3082,7 @@ LEVERS.update(
         **{name: after(WAR, THEATRE, theatre_id=Newest("theatre")) for name in ("theatre:edit", "theatre:delete")},
         "ship_state:set": given(vessel_id=VESSEL, shot="grape", point_of_sail="close_hauled"),
         **{name: after(SHIP, vessel_id=VESSEL) for name in ("ship_state:edit", "ship_state:delete")},
-        "ship_crew:set": given(vessel_id=VESSEL, station="topmen", count=12, skill=50),
+        "ship_crew:set": given(vessel_id=VESSEL, station="riggers", count=12, skill=50),
         **{name: after(CREW, vessel_id=VESSEL, station="gunners") for name in ("ship_crew:edit", "ship_crew:delete")},
         "admiralty:set": given(polity_id=Pick(REALM), budget_share=35),
         **{name: after(ADMIRALTY, polity_id=Pick(REALM)) for name in ("admiralty:edit", "admiralty:delete")},

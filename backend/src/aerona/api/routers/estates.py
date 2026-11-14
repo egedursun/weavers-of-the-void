@@ -39,7 +39,7 @@ from aerona.domain.enums.faction import FactionKind, FactionRank
 
 router = APIRouter(tags=["estates"])
 NO_NODE = "Nothing lives there."
-GUILD_RANKS = {FactionRank.NOVICE: "Apprentice", FactionRank.MEMBER: "Journeyman", FactionRank.OFFICER: "Master", FactionRank.LEADER: "Grandmaster"}
+GUILD_RANKS = {FactionRank.NOVICE: "Apprentice", FactionRank.MEMBER: "Fellow", FactionRank.OFFICER: "Master", FactionRank.LEADER: "Grandmaster"}
 GUILDS = (FactionKind.CRAFT_GUILD, FactionKind.MERCHANT_GUILD)
 REASON = (
     "Estates and movements belong to realms and their communities; companies, holy orders and guilds are factions. This kind holds none, but may hold shares."

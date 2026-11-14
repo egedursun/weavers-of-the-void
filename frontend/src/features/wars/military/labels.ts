@@ -247,7 +247,7 @@ export const UNIT_ICON: Record<Schemas['UnitKind'], LucideIcon> = {
   marines: Anchor,
   slingers: Disc3,
   archers: BowArrow,
-  crossbowmen: Crosshair,
+  crossbow_infantry: Crosshair,
   javelineers: Slash,
   gunners: Target,
   grenadiers: Bomb,

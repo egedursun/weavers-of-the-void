@@ -95,7 +95,7 @@ export const POINTS_OF_SAIL: Record<Schema['PointOfSail'], Named> = {
 
 export const STATIONS: Record<Schema['CrewStation'], Named> = {
   gunners: { label: 'Gunners', icon: Target, tone: 'danger' },
-  topmen: { label: 'Topmen', icon: Sailboat, tone: 'info' },
+  riggers: { label: 'Riggers', icon: Sailboat, tone: 'info' },
   marines: { label: 'Marines', icon: Swords, tone: 'warning' },
   officers: { label: 'Officers', icon: Compass, tone: 'gold' },
   rowers: { label: 'Rowers', icon: Repeat, tone: 'muted' },

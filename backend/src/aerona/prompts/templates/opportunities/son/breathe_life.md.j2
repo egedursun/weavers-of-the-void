@@ -2,7 +2,7 @@
 {% set free = rules.son_tools.free_living_creation > 0 %}
 {% set living = offered(available_tools, [("create_people", "create_people"), ("create_mortal", "create_mortal"), ("found_settlement", "found_settlement"), ("create_species", "create_species"), ("found_cult", "found_cult"), ("found_faction", "found_faction")]) %}
 {% if line.lifeless %}
-BREATHE LIFE: {{ vitality }}{% if free %} This age your first living creation{% if living %} ({{ living | join(", ") }}){% endif %} does NOT spend an action;{% endif %} you must create something living.{% if line.empty_regions %} Regions where no one lives: {% for region in line.empty_regions[:rules.opportunities.list_short] %}#{{ region.id }} {{ region.name }}{% if not loop.last %}, {% endif %}{% endfor %}.{% endif %}{% if line.few_mortals %} Named mortals (king, seer, craftsman, hero, bandit) give the world a face.{% endif %}
+BREATHE LIFE: {{ vitality }}{% if free %} This age your first living creation{% if living %} ({{ living | join(", ") }}){% endif %} does NOT spend an action;{% endif %} Nothing living stands in it yet.{% if line.empty_regions %} Regions where no one lives: {% for region in line.empty_regions[:rules.opportunities.list_short] %}#{{ region.id }} {{ region.name }}{% if not loop.last %}, {% endif %}{% endfor %}.{% endif %}{% if line.few_mortals %} Few named mortals live in it yet.{% endif %}
 {% else %}
 {{ vitality }}{% if free %} Each age your first living creation does not spend an action.{% endif %}
 {% endif %}

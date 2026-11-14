@@ -172,7 +172,7 @@ OPERATIONS_MECHANICS = (
     Mechanic(
         key="gunnery",
         spec_item="S5.5/RP4",
-        title="Crew stations and gunnery: gunners, topmen, marines, officers and rowers; the rate of fire from gunners' skill, losses and command",
+        title="Crew stations and gunnery: gunners, riggers, marines, officers and rowers; the rate of fire from gunners' skill, losses and command",
         subsystem=S.WAR,
         phases=("seafaring",),
         surface=Surface(drawer=DRAWER, chart=SHIP),

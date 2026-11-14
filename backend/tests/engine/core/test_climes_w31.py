@@ -1,6 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.agents.context.climes_lines import mortal_climes_lines
+from aerona.agents.context.scope import load_scope
 from aerona.cartography.biomes import Biome
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.climes import ClimateOscillationRow, CosmopolitanCultureRow, CosmopolitanMemberRow, LaunchWindowRow, MonsoonSeasonRow, RegionWindRow
@@ -196,3 +198,21 @@ async def test_travellers_of_a_busy_road_grow_a_culture_that_pulls_their_values_
     assert value is not None and value.value > 40
     native = await session.get(SpeakerCohortRow, (first.id, world.language.id, SpeakerKind.SECOND))
     assert native is not None and native.share == 100 and rules.cosmopolitan.lingua_share <= 100
+
+
+async def test_a_mortal_sees_the_number_of_each_road_culture_it_can_join(session: AsyncSession, world: CoreWorld) -> None:
+    other, _ = await add_empty_world(session)
+    town = await settlement(session, "Brinehold", world, world.regions[0])
+    me = await mortal(session, "Orla", world, town.id)
+    route = RouteRow(world_a_id=world.world.id, world_b_id=other.id, method=TravelMethod.LIGHT_SAIL, duration_epochs=2, danger=10, created_epoch=1)
+    session.add(route)
+    await session.flush()
+    culture = CosmopolitanCultureRow(route_id=route.id, name="Velmar", values={}, formed_epoch=1, locked=[])
+    session.add(culture)
+    await session.flush()
+    lines = " ".join(await mortal_climes_lines(await load_scope(session, tuned_rules()), me))
+    assert f"Velmar (#{culture.id}) is the culture of a road" in lines
+    session.add(CosmopolitanMemberRow(culture_id=culture.id, community_entity_id=town.id, share=30, joined_epoch=1, locked=[]))
+    await session.flush()
+    lines = " ".join(await mortal_climes_lines(await load_scope(session, tuned_rules()), me))
+    assert f"you belong to Velmar (#{culture.id})" in lines and "reaches your world" not in lines

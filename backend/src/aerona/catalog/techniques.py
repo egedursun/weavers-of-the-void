@@ -56,7 +56,7 @@ TECHNIQUES = MappingProxyType(
     {
         spec.technique: spec
         for spec in (
-            TechniqueSpec(T.PHALANX_DRILL, B.WARFARE, 1, "Phalanx drill", "Pikemen and shield walls hold their line."),
+            TechniqueSpec(T.PHALANX_DRILL, B.WARFARE, 1, "Phalanx drill", "Pike lines and shield walls hold their ground."),
             TechniqueSpec(T.HORSE_ARCHERY, B.WARFARE, 2, "Horse archery", "Riders shoot from the saddle.", Gate(all_of=((B.AGRICULTURE, 1),))),
             TechniqueSpec(T.SIEGECRAFT, B.WARFARE, 2, "Siegecraft", "Sappers and engines take walls.", Gate(all_of=((B.ARCHITECTURE, 1),))),
             TechniqueSpec(T.FORTIFICATION, B.ARCHITECTURE, 2, "Fortification", "Walls rise higher and hold longer."),
@@ -150,7 +150,7 @@ UNIT_TECHNIQUES = MappingProxyType(
         UnitKind.SUMMONERS: T.SUMMONING,
         UnitKind.ENGINEERS: T.FORTIFICATION,
         UnitKind.CONSTRUCTS: T.ALCHEMY,
-        UnitKind.CROSSBOWMEN: T.IRON,
+        UnitKind.CROSSBOW_INFANTRY: T.IRON,
         UnitKind.HEAVY_CAVALRY: T.IRON,
     }
 )

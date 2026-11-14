@@ -41165,7 +41165,7 @@ export interface components {
       tenet: components['schemas']['IdeologyTenet']
       held: boolean
     }
-    CrewStation: 'gunners' | 'topmen' | 'marines' | 'officers' | 'rowers'
+    CrewStation: 'gunners' | 'riggers' | 'marines' | 'officers' | 'rowers'
     CrewView: {
       station: components['schemas']['CrewStation']
       count: number
@@ -64215,7 +64215,7 @@ export interface components {
       | 'marines'
       | 'slingers'
       | 'archers'
-      | 'crossbowmen'
+      | 'crossbow_infantry'
       | 'javelineers'
       | 'gunners'
       | 'grenadiers'
@@ -136301,7 +136301,7 @@ export const creditStateValues: ReadonlyArray<
 > = ['normal', 'strained', 'default', 'restructuring']
 export const crewStationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrewStation']
-> = ['gunners', 'topmen', 'marines', 'officers', 'rowers']
+> = ['gunners', 'riggers', 'marines', 'officers', 'rowers']
 export const crimeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrimeKind']
 > = ['theft', 'blasphemy', 'treason', 'murder', 'desertion', 'witchcraft']
@@ -143070,7 +143070,7 @@ export const unitKindValues: ReadonlyArray<
   'marines',
   'slingers',
   'archers',
-  'crossbowmen',
+  'crossbow_infantry',
   'javelineers',
   'gunners',
   'grenadiers',

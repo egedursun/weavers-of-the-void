@@ -19,6 +19,7 @@ from aerona.db.profile_guard import LOCK_COLUMN, shape_of_table, table_name
 from aerona.db.tables.ledger import LedgerChangeRow
 from aerona.db.tables.lore import MessageRow
 from aerona.domain.enums.agent import MessageIntent
+from aerona.domain.enums.climes import DIRECTIONS
 from aerona.domain.enums.meta import LedgerOperation
 
 KEY_TEXT = re.compile(r"[a-z0-9]+(?:[_.:][a-z0-9]+)*")
@@ -122,6 +123,7 @@ def _mix(value: dict[str, Any]) -> str:
 
 
 COLUMN_FORMATS: dict[str, Callable[[dict[str, Any]], str]] = {"genes": _pairs, "frequencies": _shares, "debts": _debts, "composition": _mix}
+NAMED_NUMBERS: dict[str, tuple[str, ...]] = {"wind_from": DIRECTIONS, "heading": DIRECTIONS}
 ORDER_COLUMNS = ("epoch", "since_epoch", "started_epoch", "slot", "position", "rank", "id")
 
 
@@ -370,6 +372,9 @@ class TypedIndex:
             return ""
         if isinstance(value, int) and not isinstance(value, bool) and (column.foreign_keys or column.key.endswith(NODE_SUFFIXES)):
             return self.reference(column, value)
+        named = NAMED_NUMBERS.get(column.key)
+        if named is not None and isinstance(value, int) and not isinstance(value, bool):
+            return named[value % len(named)]
         plain = next((format_value(value) for kind, format_value in FORMATS if isinstance(value, kind)), None)
         if plain is not None:
             return plain

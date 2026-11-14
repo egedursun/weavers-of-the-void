@@ -65,7 +65,7 @@ export const BODY_SPEC: Record<BodyPlan, Spec> = {
     label: 'Four-legged folk',
     icon: PawPrint,
     tone: 'warning',
-    hint: 'Their own mounts; herders and ploughmen',
+    hint: 'Their own mounts; herders and those who plough',
   },
   avian: {
     label: 'Winged folk',

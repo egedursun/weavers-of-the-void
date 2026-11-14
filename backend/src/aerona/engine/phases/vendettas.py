@@ -119,7 +119,7 @@ async def raid(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str | 
         await apply_hits(ctx, victim, harm, lethal=False)
     shift_stat(enemy, "prosperity", -hp // 5)
     walked = await walk_raided(ctx, avenger, enemy)
-    return f"Kinsmen of {avenger.name} raided {enemy.name} to avenge their dead{walked}."
+    return f"Kin of {avenger.name} raided {enemy.name} to avenge their dead{walked}."
 
 
 async def walk_raided(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str:

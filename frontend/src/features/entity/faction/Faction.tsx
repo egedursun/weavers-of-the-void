@@ -690,7 +690,7 @@ function Levers({
           <Label>Monopoly over</Label>
           <Input
             value={monopoly}
-            placeholder='luxuries'
+            placeholder='The goods it holds alone'
             disabled={busy !== null}
             onChange={(event) => setMonopoly(event.target.value)}
           />

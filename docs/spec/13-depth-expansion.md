@@ -860,7 +860,7 @@ Beyond the leaders: the cycles here are not fitted curves but emergent from coho
 |---|---|---|---|---|
 | 1 | Per-ship damage locations: hull, sails, rigging, rudder, guns, crew | — | ◐ components | 5.5 RP4 |
 | 2 | Sailing by wind angle (points of sail), tacking, being in irons | — | ◐ weather gauge | 5.5 RP4 |
-| 3 | Crew stations and skills (gunners, topmen, marines); a gunnery rate of fire | — | ◐ | 5.5 RP4 |
+| 3 | Crew stations and skills (gunners, riggers, marines); a gunnery rate of fire | — | ◐ | 5.5 RP4 |
 | 4 | Leaks, fires and magazine explosions | — | — | 5.5 RP4 |
 | 5 | Prizes taken and prize crews; prize money | — | — | 5.5 RP4 |
 | 6 | Naval budgets, admiralty politics and naval treaties limiting fleets | — | ◐ | 5.5 RP4 |
@@ -3309,7 +3309,7 @@ The first-pass "personality value vector" is the beliefs layer of F13.
 
 **Pregnancy and birth** (R7): pregnancy is a state with a duration from people biology (`fertility.gestation_years`, often 0.75). It carries complications: hunger and disease raise the risk, and medicine and healers lower it. Miscarriage is a grief thought. The birth outcome includes twins, the bearer's health and a newborn condition. Divine or cursed conception is an effect package (F30).
 
-**Careers as ladders** (R7, R6): each profession has ranks (apprentice, journeyman, master, grandmaster for crafts; soldier, sergeant, captain, marshal for arms; acolyte, priest, high priest for clergy). Promotion depends on skill, performance (the outputs and victories credited, an incident count), relationships with superiors and openings. The rank sets income (household, F29), status needs and reputation. Being demoted or dismissed gives a shame thought.
+**Careers as ladders** (R7, R6): each profession has ranks (apprentice, fellow, master, grandmaster for crafts; soldier, sergeant, captain, marshal for arms; acolyte, priest, high priest for clergy). Promotion depends on skill, performance (the outputs and victories credited, an incident count), relationships with superiors and openings. The rank sets income (household, F29), status needs and reputation. Being demoted or dismissed gives a shame thought.
 
 **Death causes catalogue:** death causes are typed and recorded:
 
@@ -4639,7 +4639,7 @@ Succession, war (casus belli from claims to titles), houses, regalia, legends, c
 | Family | Units |
 |---|---|
 | Infantry | levy, spearmen, heavy_infantry, shield_wall, pikemen, skirmishers, berserkers, temple_guard |
-| Missile | slingers, archers, crossbowmen, horse_archers, javelineers |
+| Missile | slingers, archers, crossbow infantry, horse_archers, javelineers |
 | Mounted | light_cavalry, heavy_cavalry, camel_or_beast_riders, chariots |
 | Beasts | war_beasts (from domesticated species with the `war` use), bound_beasts (named beasts), sky_mounts (flying species) |
 | Engineers | sappers, siege_engines (ram, tower, catapult, trebuchet; material-gated) |
@@ -4899,7 +4899,7 @@ The effectiveness coefficients come from all the second-pass factors: quality, d
 
 **Age-of-sail and galley detail** (for sea and sky fleets):
 
-- **Damage locations per ship:** hull (leaks: pumps and crew work against water intake), sails and rigging (speed, manoeuvre), rudder (steering), guns or engines (fire rate), crew by station (gunners, topmen, marines, officers). Each hit is assigned by the shot type (round shot to hull, chain shot to rigging, grapeshot to crew, fire pots to sails) and the angle (a raking fire along the length).
+- **Damage locations per ship:** hull (leaks: pumps and crew work against water intake), sails and rigging (speed, manoeuvre), rudder (steering), guns or engines (fire rate), crew by station (gunners, riggers, marines, officers). Each hit is assigned by the shot type (round shot to hull, chain shot to rigging, grapeshot to crew, fire pots to sails) and the angle (a raking fire along the length).
 - **Points of sail:** speed by the angle to the wind (the weather draw's wind direction): close-hauled, reaching, running; tacking manoeuvres; being caught in irons. Galleys ignore the wind with oars at a fatigue cost to rowers. Sky-ships use wind and lift.
 - **Crew stations and gunnery:** the rate of fire per gun deck from gunners' skill, training (discipline) and casualties. Officers' command (F4.5) affects reloading under fire.
 - **Fires and magazine explosions:** fire spreads by deck material (F23), and a magazine explosion destroys the ship. Fire ships exploit this.
@@ -5130,7 +5130,7 @@ A **unit type** is a made kind like a species or an art form: it has one Atlas e
 | Family | Roles |
 |---|---|
 | Infantry | levy, line_infantry, heavy_infantry, shield_infantry, pike_infantry, light_infantry, shock_infantry, guard_infantry, marines |
-| Missile | slingers, archers, crossbowmen, javelineers, gunners, grenadiers |
+| Missile | slingers, archers, crossbow infantry, javelineers, gunners, grenadiers |
 | Mounted | light_cavalry, heavy_cavalry, mounted_archers, mounted_gunners, beast_riders, sky_riders |
 | Vehicle | chariots, vehicle_crew, siege_crew, artillery_crew, naval_crew, sky_crew, void_crew |
 | Beast | war_beasts, bound_beasts |
@@ -5156,7 +5156,7 @@ Legacy values map once: spearmen → line_infantry, shield_wall → shield_infan
 
 #### Behaviours
 
-1. **Peoples draw their own types.** A realm's marshal (5.1 reference pass 2) draws a unit type when its template asks for a role it has no type for, and every holder of an army (its realm, or else its people, or else itself) draws one for each role its stacks field; on the first epoch after the upgrade every such role is drawn at once, later ones by `unit_types.draw_pct`. The type is named through the namer from the people's language. Its loadout follows its role (`ROLE_ARMS`, one kit for every role: pike infantry carry pikes or polearms, crossbowmen crossbows, slingers slings, heavy cavalry lances and heavy barding…); among the families of a slot its makers know, each holder keeps its own taste among those near the best, so peoples of the same knowledge field different weapons. Its doctrine is its people's way of war, or the way of its role when the people has none.
+1. **Peoples draw their own types.** A realm's marshal (5.1 reference pass 2) draws a unit type when its template asks for a role it has no type for, and every holder of an army (its realm, or else its people, or else itself) draws one for each role its stacks field; on the first epoch after the upgrade every such role is drawn at once, later ones by `unit_types.draw_pct`. The type is named through the namer from the people's language. Its loadout follows its role (`ROLE_ARMS`, one kit for every role: pike infantry carry pikes or polearms, crossbow infantry crossbows, slingers slings, heavy cavalry lances and heavy barding…); among the families of a slot its makers know, each holder keeps its own taste among those near the best, so peoples of the same knowledge field different weapons. Its doctrine is its people's way of war, or the way of its role when the people has none.
 1a. **Stacks fight as their kinds.** Every stack of an army is linked to the kind of soldier of its role held by the army's owner, realm or people; muster links new stacks and the engine links bare ones each epoch.
 2. **Types change.** New techniques or models refit a type into a successor (a lineage); retired types stay in the Atlas with their history.
 3. **Types spread.** Mercenaries, conquest and alliances teach a type to another people (a copy with a new origin).

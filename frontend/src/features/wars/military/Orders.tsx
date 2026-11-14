@@ -517,7 +517,7 @@ export function RaiseArmy({
           icon={Flag}
           value={name}
           onChange={setName}
-          placeholder='named for its people if left empty'
+          placeholder='Named for its people if left empty'
         />
       </FieldGrid>
       <ActionButton
@@ -585,7 +585,7 @@ export function DeclareWar({
           icon={ScrollText}
           value={reason}
           onChange={setReason}
-          placeholder='for the honour of our ancestors'
+          placeholder='What the proclamation says'
         />
       </FieldGrid>
       <Muted variant='caption'>Aims</Muted>

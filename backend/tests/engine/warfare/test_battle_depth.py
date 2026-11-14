@@ -87,7 +87,7 @@ def test_flyers_ignore_terrain_and_engines_stay_out_of_mountains() -> None:
 
 
 def test_rain_spoils_bows_more_than_crossbows_and_burrowers_thrive_underground() -> None:
-    archers = side("Bows", [unit(UnitKind.ARCHERS, 100, ident=1), unit(UnitKind.CROSSBOWMEN, 100, ident=2)])
+    archers = side("Bows", [unit(UnitKind.ARCHERS, 100, ident=1), unit(UnitKind.CROSSBOW_INFANTRY, 100, ident=2)])
     bows, crossbows = archers.stacks
     assert weather_factor(RULES, bows, WeatherKind.RAIN) < weather_factor(RULES, crossbows, WeatherKind.RAIN)
     diggers = side("Diggers", [unit(UnitKind.SAPPERS, 100, ident=3)])

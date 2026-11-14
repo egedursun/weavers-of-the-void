@@ -228,7 +228,7 @@ NOTABLE_ROLES: dict[SocialClass, tuple[NotableRole, ...]] = {
         NotableRole("lord", "Lord", "landholder", MortalRole.RULER, {"charisma": lambda r: r.deep_life.role_noble_lord_charisma}),
         NotableRole("knight", "Knight", "knight", MortalRole.KNIGHT, {"strength": lambda r: r.deep_life.role_noble_knight_strength}),
     ),
-    SocialClass.SERF_OR_SLAVE: (NotableRole("bondsman", "Bondsman", "bondsman", MortalRole.COMMONER, {"strength": lambda r: r.deep_life.role_serf_strength}),),
+    SocialClass.SERF_OR_SLAVE: (NotableRole("bonded", "Bonded", "bonded", MortalRole.COMMONER, {"strength": lambda r: r.deep_life.role_serf_strength}),),
     SocialClass.OUTCAST: (
         NotableRole("beggar", "Beggar", "beggar", MortalRole.COMMONER, {"charisma": lambda r: r.deep_life.role_outcast_charisma}),
         NotableRole("outlaw", "Outlaw", "outlaw", MortalRole.BANDIT, {"agility": lambda r: r.deep_life.role_outcast_outlaw_agility}),

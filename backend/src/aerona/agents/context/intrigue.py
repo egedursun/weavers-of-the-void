@@ -23,7 +23,7 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.intrigue.schemes import OPEN
 from aerona.rules.registry import Rules
 
-GUILD_RANK_WORDS = {FactionRank.NOVICE: "apprentice", FactionRank.MEMBER: "journeyman", FactionRank.OFFICER: "master", FactionRank.LEADER: "grandmaster"}
+GUILD_RANK_WORDS = {FactionRank.NOVICE: "apprentice", FactionRank.MEMBER: "fellow", FactionRank.OFFICER: "master", FactionRank.LEADER: "grandmaster"}
 
 
 @dataclass(frozen=True)

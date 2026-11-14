@@ -299,7 +299,7 @@ FAITH_MECHANICS = (
     Mechanic(
         key="zeal_omens_vices",
         spec_item="S4.4",
-        title="Doom omens stir zeal; a clergyman's vice brought to light is a scandal; persecution is remembered and stirs the persecuted",
+        title="Doom omens stir zeal; a cleric's vice brought to light is a scandal; persecution is remembered and stirs the persecuted",
         subsystem=Subsystem.MIND,
         phases=FAITH,
         surface=Surface(drawer=DOCTRINE),

@@ -43,7 +43,7 @@ class PointOfSail(StrEnum):
 
 class CrewStation(StrEnum):
     GUNNERS = "gunners"
-    TOPMEN = "topmen"
+    RIGGERS = "riggers"
     MARINES = "marines"
     OFFICERS = "officers"
     ROWERS = "rowers"

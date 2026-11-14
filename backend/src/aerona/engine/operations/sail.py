@@ -213,8 +213,8 @@ async def fire_broadside(ctx: TickContext, shooter: Broadside, target: Broadside
 async def damage_control(ctx: TickContext, side: Broadside) -> None:
     table = ctx.rules.age_of_sail
     crews = await crews_of(ctx, side.vessel.id, side.row)
-    topmen = crews.get(S.TOPMEN)
-    pumps = table.pumping * (1 + (topmen.count if topmen is not None else 0) // max(1, FRAMES[side.row.frame].crew // 4))
+    riggers = crews.get(S.RIGGERS)
+    pumps = table.pumping * (1 + (riggers.count if riggers is not None else 0) // max(1, FRAMES[side.row.frame].crew // 4))
     keep(side.state, "leak", clamp_int(side.state.leak - pumps, 0, PERCENT))
     keep(side.state, "fire", clamp_int(side.state.fire - table.fire_fought, 0, PERCENT))
 

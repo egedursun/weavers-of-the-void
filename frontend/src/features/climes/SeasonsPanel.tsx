@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { CloudRain, Plus, Waves } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
 import { Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
@@ -236,10 +235,8 @@ export function SeasonsPanel({
         noun={['swing', 'swings']}
         empty='The seas of this world do not swing.'
       />
-      {data.oscillation && worldId !== null ? (
+      {data.oscillation && worldId !== null && (
         <SwingCard row={data.oscillation} worldId={worldId} blocked={blocked} />
-      ) : (
-        <Muted variant='caption'>The seas of this world do not swing.</Muted>
       )}
       <ForgeCard
         icon={CloudRain}

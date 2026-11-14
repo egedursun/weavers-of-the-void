@@ -152,7 +152,7 @@ def test_cover_and_night_hide_stacks_that_spring_as_a_trap() -> None:
 def test_hard_targets_shrug_off_blows_that_cannot_pierce() -> None:
     plate = side("Plate", [unit(UnitKind.HEAVY_INFANTRY, 100, ident=1, armour=ArmourType.PLATE)]).stacks[0]
     levy = side("Levy", [unit(UnitKind.LEVY, 100, ident=2)], ident=2)
-    crossbows = side("Bolts", [unit(UnitKind.CROSSBOWMEN, 100, ident=3)], ident=3)
+    crossbows = side("Bolts", [unit(UnitKind.CROSSBOW_INFANTRY, 100, ident=3)], ident=3)
     assert target_class(RULES, plate) is TargetClass.HARD
     assert hard_guard(RULES, plate, crossbows.stacks) > hard_guard(RULES, plate, levy.stacks)
 

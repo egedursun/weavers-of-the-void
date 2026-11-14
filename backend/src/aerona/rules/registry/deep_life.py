@@ -35,7 +35,7 @@ class DeepLifeRules:
     role_warrior_guard_charisma: int = rule(5, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born guard: charisma tendency")
     role_noble_lord_charisma: int = rule(20, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born lord: charisma tendency")
     role_noble_knight_strength: int = rule(20, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born knight: strength tendency")
-    role_serf_strength: int = rule(10, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born bondsman: strength tendency")
+    role_serf_strength: int = rule(10, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born bonded: strength tendency")
     role_outcast_charisma: int = rule(10, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born beggar: charisma tendency")
     role_outcast_outlaw_agility: int = rule(20, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born outlaw: agility tendency")
     role_monastic_intellect: int = rule(25, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Born monk: intellect tendency")

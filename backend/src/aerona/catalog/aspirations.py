@@ -48,7 +48,7 @@ GOALS: MappingProxyType[LifeGoal, GoalSpec] = MappingProxyType(
             "Master a craft",
             {"craftsmanship": 50},
             {"thoroughness": 40, "perseverance": 30},
-            ("Learn the craft", "Become a journeyman", "Become a master"),
+            ("Learn the craft", "Become a fellow of the craft", "Become a master"),
             physical=True,
         ),
         G.CREATE_A_MASTERWORK: goal(
