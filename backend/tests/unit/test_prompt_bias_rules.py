@@ -170,3 +170,29 @@ def test_the_wizard_and_its_templates_are_held_to_the_model_rules() -> None:
     assert "forced strangeness" in fed_rules(module, WIZARD_SCREEN, "One idea, as strange as you like.")
     assert "forced strangeness" in fed_rules(module, TEMPLATE_CATALOG, "warm, strange, wise")
     assert not fed_rules(module, REPOSITORY_ROOT / "frontend/src/features/entity/sample.tsx", "a stranger arrives")
+
+
+def test_image_directions_carry_no_example_lists_body_defaults_styles_or_forced_strangeness() -> None:
+    module = checker()
+    images = REPOSITORY_ROOT / "backend/src/aerona/prompts/data/images.py"
+    old = {
+        "the cult gathered at its rite: robed members, sacred objects, the place of worship, faces lit by its particular light": {
+            "image example list",
+            "assumed body",
+        },
+        "the artwork itself (song performed, statue, fresco, book) in the place it is kept or performed": {"image example list"},
+        "a full-length character portrait in their environment; face, garments, posture that reveal their role": {"assumed body"},
+        "a museum-grade still life of the object on a surface that fits its origin, raking light": {"hardcoded image medium"},
+        "a sweeping landscape of the region, atmospheric perspective, characteristic weather": {"hardcoded image medium"},
+        "a translucent presence half-visible in a place of this world, uncanny but restrained": {"forced strangeness"},
+    }
+    for text, rules in old.items():
+        assert rules <= rules_hit(module, images, text), text
+    for text in (
+        "the cult as its account gives it, its faithful in the place where they worship",
+        "the work itself where it is kept or performed, with those who keep or hear it",
+        "a full portrait of them in their surroundings that shows their role",
+        "the object itself, whole, on a surface that fits its origin",
+    ):
+        assert rules_hit(module, images, text) == set(), text
+    assert "image example list" not in rules_hit(module, PROMPT, "Each prompt: subject, materials, setting, lighting, mood, composition.")

@@ -1354,57 +1354,47 @@ rendered "as of that age": epoch/year set to that age, no climate, no age star, 
 
 | type | direction |
 |---|---|
-| language | an object that shows this language: a carved tablet, manuscript page, inscription or glyph-covered artifact |
-| knowledge | people practicing this technique or knowledge, with its tools, materials and workplace |
-| tradition | the ritual or festival being performed by the community |
-| legend | a painterly-yet-photoreal scene illustrating the legend |
-| natural_law | a cosmic visual metaphor of this natural law at work in the world |
-| prophecy | a visionary scene of the prophecy, as a seer would see it |
-| event | the event as it happens, documentary style |
-| celestial | the celestial body in the night sky above the landscape |
-| people | a group portrait of these people in their daily life: clothing, tools, faces, dwellings behind them |
-| settlement | an establishing shot of the settlement from a nearby rise, people and smoke for life and scale |
-| mortal | a full-length character portrait in their environment; face, garments, posture that reveal their role |
-| army | the army on the march or arrayed for battle, banners and equipment, dust and weather |
-| monument | the monument or work in its setting, with people for scale |
-| item | a museum-grade still life of the object on a surface that fits its origin, raking light |
+| language | this language in use as its speakers make it seen, heard or felt, among those who use it |
+| knowledge | those who practise this knowledge at work, with what they use for it and where they do it |
+| tradition | the tradition as its keepers practise it, among the community that keeps it |
+| legend | a scene illustrating the legend at its turning point |
+| natural_law | this natural law at work in the world, shown by what it does to the things it governs |
+| prophecy | the prophecy as its seer beholds it |
+| event | the event as it happens, caught in the moment |
+| celestial | the body of the sky as it is seen from the world beneath it |
+| people | these people together in their daily life, as their account gives them |
+| settlement | the settlement seen whole from nearby, its inhabitants in view for life and scale |
+| mortal | a full portrait of them in their surroundings that shows their role |
+| army | the army on the move or drawn up, as its makers field it |
+| monument | the work in its setting, with those who use it in view for scale |
+| item | the object itself, whole, on a surface that fits its origin |
 | resource | the resource where it is found or harvested, with the workers or creatures who gather it |
-| spirit | a translucent presence half-visible in a real place, long exposure, uncanny but restrained |
-| region | a sweeping landscape of the region, atmospheric perspective, characteristic weather |
-| place | the place itself in its surroundings, characteristic light and weather |
-| species | the creature in its habitat, wildlife photography |
+| spirit | the spirit as its account gives it, in a place of this world |
+| region | the region seen whole, its land and weather as its account gives them |
+| place | the place itself in its surroundings |
+| species | the kind in the place where it lives |
 | vehicle | the vehicle or conveyance in use, with its crew or riders |
-| outer_being | an Outer Being: NEVER show it fully — only a fragment, a silhouette, a reflection, or its effect on the world |
-| cult | the cult gathered at its rite: robed members, sacred objects, the place of worship, faces lit by its particular light |
-| faction | members of the faction in their meeting place, their insignia, colors and tools of their trade, a sense of hierarchy |
-| work | the artwork itself (song performed, statue, fresco, book) in the place it is kept or performed, with its audience or keeper |
-| law | the law being proclaimed or carved: a stele, scroll or assembly, the people who live under it watching |
+| outer_being | an Outer Being: only part of it in view, or its effect on the world, its whole shape never shown |
+| cult | the cult as its account gives it, its faithful in the place where they worship |
+| faction | members of the faction where they meet, as its account gives them |
+| work | the work itself where it is kept or performed, with those who keep or hear it |
+| law | the law as it is made known to those who live under it |
 | (default) | the subject in its setting |
 
 `image_direction(entity)` (old `promptYonu`):
-1. vehicles: match subtype+name (word-start regex) — gate/portal/passage → "a gate or portal between worlds: the
-   frame, the impossible view through it, travelers dwarfed before it"; ship/vessel/boat/raft → "a ship between
-   worlds: hull, sails or engines, crew on deck, the void or alien sky around it"; mount/wing/dragon/horse → "a mount
-   carrying its rider across the sky or between worlds, motion and scale"; bridge → "a bridge spanning the gap between
-   worlds, travelers crossing, vertiginous depth". (LANGUAGE-SPECIFIC: the old regexes mixed Turkish and English
-   stems; for English keep the English words.)
-2. species tagged `megafauna` → "a colossal megafauna in its habitat with tiny human figures for scale; wildlife
-   photography from a distance".
+1. vehicles by kind: gate → "a gate between worlds with what shows through it and travellers before it for scale"; ship → "a vessel between worlds with what moves it and its crew on the way it crosses"; mount → "a mount carrying its rider between worlds, in motion, at a scale that shows its size"; bridge → "a bridge spanning the gap between worlds, travellers crossing it".
+2. species tagged `megafauna` → "a colossal megafauna in its habitat with small figures of the folk who live there for scale, seen from a distance".
 3. else the table.
 
 `world_ambience(world_type)` (old `dunyaOrtami`): empty for the ordinary type; else `World type: {type label}
 (terrain such as {first 5 biomes}). Let its palette and atmosphere show.`
 
-`COSMOS_DIRECTION`: world "the whole world seen from orbit or high above its sky, its unique physics visible (rings,
-seas, ice, glow), then a hint of its surface"; star "the star itself in deep space with its planets as small discs
-nearby, astrophotography, its color and character exaggerated just enough"; foreign "a foreign god as its worshippers
-imagine it: a monumental idol or vision in its home world, never a cartoon".
+`COSMOS_DIRECTION`: world "the whole world seen from high above its sky with its own physics in view, then a hint of its surface"; star "the star itself in deep space with its planets as small discs nearby, as its type and account give it"; foreign "a foreign god as its worshippers imagine it, in its home world". Directions carry no medium, style or look: the world's chosen image style is applied at render time, and every look comes from the subject's own account.
 
 `fix_image_prompt(entity, prompt)` (old `promptDuzelt`): trim; outer beings without any of
 `partial|partially|fragment|silhouette|glimpse|glimpsed|obscured|hidden|reflection|never (fully) seen/visible/shown`
-get the tail `, shown only partially — a fragment glimpsed through fog, glare or a reflection, its full shape never
-visible.`; megafauna without `scale|tiny (human) figure(s)|dwarf(ed/s/ing)|colossal|towering over` get
-`, with tiny human figures for scale.`. Max length 1200 (`PROMPT_EN` — hard-coded in the old code; make it the
+get the tail `, shown only in part, its whole shape never in view.`; megafauna without `scale|tiny (human) figure(s)|dwarf(ed/s/ing)|colossal|towering over` get
+`, with small figures of the folk who live there for scale.`. Max length 1200 (`PROMPT_EN` — hard-coded in the old code; make it the
 `content.prompt_max` tunable); the tail is never cut (the body is cut to make room).
 
 ---

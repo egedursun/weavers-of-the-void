@@ -269,11 +269,7 @@ export function MovementPanel({
         noun={['movement', 'movements']}
         empty='This is no art movement.'
       />
-      {data.movement ? (
-        <MovementCard row={data.movement} blocked={blocked} />
-      ) : (
-        <Muted variant='caption'>This is no art movement.</Muted>
-      )}
+      {data.movement && <MovementCard row={data.movement} blocked={blocked} />}
       <ForgeCard
         icon={MOVEMENT_ICON}
         tone='verdigris'
@@ -583,7 +579,12 @@ export function LeaguePanel({
     'The realm gains a league'
   )
   const busy = why(
-    blocked ?? (realm === null ? 'Choose a realm' : null),
+    blocked ??
+      (realm === null
+        ? 'Choose a realm'
+        : data.league && data.league.polity?.id === realm
+          ? 'That realm already has a league'
+          : null),
     founding.isPending
   )
   const table_ = [...data.clubs].sort(

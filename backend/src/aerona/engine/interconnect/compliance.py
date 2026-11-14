@@ -585,6 +585,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
             "construct.freed",
             "construct.ended",
             "construct.seal_lost",
+            "construct.risen",
             "contract.posted",
             "contract.taken",
             "contract.slain",

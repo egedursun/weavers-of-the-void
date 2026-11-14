@@ -18,6 +18,7 @@ CREATION_TEXT = (
     PROMPTS / "templates/genesis",
     PROMPTS / "templates/world_birth",
 )
+IMAGE_TEXT = (PROMPTS / "data/images.py",)
 STYLE_HOMES = (
     BACKEND / "catalog/image_styles.py",
     BACKEND / "domain/enums/world.py",
@@ -46,6 +47,7 @@ class Pattern:
     prompts_only: bool = False
     prose_only: bool = False
     creation_only: bool = False
+    image_only: bool = False
 
 
 PATTERNS = (
@@ -67,7 +69,7 @@ PATTERNS = (
     ),
     Pattern(
         "forced strangeness",
-        re.compile(r"\b(strange|stranger|strangest|strangeness)\b", re.IGNORECASE),
+        re.compile(r"\b(strange|stranger|strangest|strangeness|uncanny|eerie|otherworldly)\b", re.IGNORECASE),
         prompts_only=True,
     ),
     Pattern(
@@ -147,9 +149,22 @@ PATTERNS = (
         ),
     ),
     Pattern(
+        "image example list",
+        re.compile(r":\s*(?:[\w'-]+(?: [\w'-]+){0,3}, ){2,}(?:or |and )?[\w'-]+|\((?:[^()]*?, ){2,}[^()]*\)"),
+        prose_only=True,
+        image_only=True,
+    ),
+    Pattern(
+        "assumed body",
+        re.compile(r"\b(faces?|garments?|garb|clothing|robed|dress)\b", re.IGNORECASE),
+        prose_only=True,
+        image_only=True,
+    ),
+    Pattern(
         MEDIUM_RULE,
         re.compile(
-            r"\b(photo-?realistic|photoreal|camera and lens|never a cartoon|wildlife photography|documentary style|astrophotography)\b",
+            r"\b(photo-?realistic|photoreal|camera and lens|never a cartoon|wildlife photography|documentary style|astrophotography|"
+            r"museum-grade|raking light|atmospheric perspective|establishing shot|still life)\b",
             re.IGNORECASE,
         ),
     ),
@@ -217,11 +232,13 @@ def matches(path: Path, line: int, value: str, in_prompts: bool, creation: bool 
     if MORTAL_KINSHIP.search(value):
         return []
     creating = under(path, CREATION_TEXT) if creation is None else creation
+    imaging = under(path, IMAGE_TEXT)
     return [
         Finding(path, line, pattern.rule, match.group(0))
         for pattern in PATTERNS
         if (in_prompts or not pattern.prompts_only)
         and (creating or not pattern.creation_only)
+        and (imaging or not pattern.image_only)
         and not (pattern.rule == MEDIUM_RULE and path in STYLE_HOMES)
         for match in [pattern.regex.search(prose(path, value) if pattern.prose_only else value)]
         if match

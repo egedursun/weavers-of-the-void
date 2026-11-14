@@ -264,10 +264,12 @@ function CollectorCard({
 function MarketForge({
   nodeId,
   kind,
+  collector,
   blocked,
 }: {
   nodeId: number
   kind: string | null
+  collector: number | null
   blocked: string | null
 }) {
   const isWork = kind === 'artwork'
@@ -304,6 +306,8 @@ function MarketForge({
   )
   const noWork = work === null ? 'Choose a work' : null
   const noBuyer = buyer === null ? 'Choose a buyer or collector' : null
+  const collects =
+    noBuyer ?? (buyer === collector ? 'They already collect works' : null)
   return (
     <ForgeCard
       icon={Gem}
@@ -327,9 +331,9 @@ function MarketForge({
           />
           <Button
             size='sm'
-            disabled={why(blocked ?? noBuyer, collecting.isPending) !== null}
+            disabled={why(blocked ?? collects, collecting.isPending) !== null}
             disabledReason={
-              why(blocked ?? noBuyer, collecting.isPending) ?? undefined
+              why(blocked ?? collects, collecting.isPending) ?? undefined
             }
             onClick={() => collecting.mutate()}
           >
@@ -427,7 +431,12 @@ export function ArtMarketPanel({
       >
         {(item) => <SaleCard row={item} blocked={blocked} />}
       </Listed>
-      <MarketForge nodeId={nodeId} kind={kind} blocked={blocked} />
+      <MarketForge
+        nodeId={nodeId}
+        kind={kind}
+        collector={data.collector?.holder.id ?? null}
+        blocked={blocked}
+      />
     </div>
   )
 }
@@ -707,10 +716,12 @@ function CanonCard({ row, blocked }: { row: Canon; blocked: string | null }) {
 function CanonForge({
   nodeId,
   kind,
+  canon,
   blocked,
 }: {
   nodeId: number
   kind: string | null
+  canon: Canon[]
   blocked: string | null
 }) {
   const [people, setPeople] = useState<number | null>(
@@ -735,7 +746,11 @@ function CanonForge({
         ? 'Choose a people'
         : work === null
           ? 'Choose a work'
-          : null),
+          : canon.some(
+                (row) => row.people.id === people && row.artwork.id === work
+              )
+            ? 'That work is already in the canon of that people'
+            : null),
     placing.isPending
   )
   return (
@@ -826,7 +841,12 @@ export function CanonPanel({
       >
         {(item) => <CanonCard row={item} blocked={blocked} />}
       </Listed>
-      <CanonForge nodeId={nodeId} kind={kind} blocked={blocked} />
+      <CanonForge
+        nodeId={nodeId}
+        kind={kind}
+        canon={data.canon}
+        blocked={blocked}
+      />
     </div>
   )
 }

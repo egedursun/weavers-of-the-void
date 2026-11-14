@@ -1057,7 +1057,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.SANCTIFY_REGION: ToolText(
-        "You sanctify a region: its ground becomes holy, drawing pilgrims who bring wealth and piety, warding off hauntings and uncanny phenomena. "
+        "You sanctify a region: its ground becomes holy, drawing pilgrims who bring wealth and piety, warding off hauntings and the phenomena that would hold it. "
         "{{ rules.terrain.sanctify_essence }} essence, 1 action.",
         {"region_id": "The region's id", "sacredness": "How holy, 0-100 (leave out for the usual sanctification)", "reason": "Why you hallow it"},
     ),

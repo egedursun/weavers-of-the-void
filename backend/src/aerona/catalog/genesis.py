@@ -268,7 +268,7 @@ TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
             WizardTemplate(
                 T.LAYERED_REALMS,
                 "Layered realms",
-                "uncanny, layered, full of thresholds",
+                "layered, full of thresholds between its realms",
                 65,
                 50,
                 TechnologyEra.MEDIEVAL,

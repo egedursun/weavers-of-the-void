@@ -6,7 +6,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.arts import BetRow, ClubRow, LeagueRow, MatchRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
@@ -21,6 +21,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.notes import note
 from aerona.engine.phases.factions import found_faction
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -59,7 +60,37 @@ async def found_club(ctx: TickContext, town: EntityRow, kind: ClubKind | None) -
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await sign_athletes(ctx, row, town)
     return row
+
+
+async def sign_athletes(ctx: TickContext, club: ClubRow, town: EntityRow) -> int:
+    clubs = select(ClubRow.faction_entity_id)
+    signed = select(FactionMembershipRow.mortal_entity_id).where(FactionMembershipRow.faction_entity_id.in_(clubs))
+    found = await ctx.session.scalars(
+        select(EntityRow).where(
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            await present_among(ctx.session, [town.id]),
+            EntityRow.id.not_in(signed),
+        )
+    )
+    athletes = sorted(found, key=lambda mortal: (-(stat_or(mortal, "strength", 0) + stat_or(mortal, "agility", 0)), mortal.id))
+    chosen = [mortal for mortal in athletes if not held(mortal.id)][: ctx.rules.sports.athletes]
+    for mortal in chosen:
+        ctx.session.add(FactionMembershipRow(faction_entity_id=club.faction_entity_id, mortal_entity_id=mortal.id, joined_epoch=ctx.epoch, locked=[]))
+    await ctx.session.flush()
+    return len(chosen)
+
+
+async def prowess(ctx: TickContext, club: ClubRow) -> int:
+    members = await ctx.session.scalars(
+        select(EntityRow)
+        .join(FactionMembershipRow, FactionMembershipRow.mortal_entity_id == EntityRow.id)
+        .where(FactionMembershipRow.faction_entity_id == club.faction_entity_id, EntityRow.status == EntityStatus.CANON)
+    )
+    scores = [(stat_or(mortal, "strength", 0) + stat_or(mortal, "agility", 0)) // 2 for mortal in members]
+    return sum(scores) // len(scores) if scores else 0
 
 
 async def found_clubs(ctx: TickContext, tally: SportTally) -> None:
@@ -152,7 +183,9 @@ async def settle_bets(ctx: TickContext, match: MatchRow) -> None:
 async def play(ctx: TickContext, league_id: int | None, home: ClubRow, away: ClubRow, tally: SportTally, *, fixed: int | None = None) -> MatchRow:
     table = ctx.rules.sports
     rng = ctx.rng(f"match.{home.faction_entity_id}.{away.faction_entity_id}.{ctx.epoch}")
-    home_wins = rng.integer(0, home.rating + away.rating) < home.rating + rng.integer(0, MIDDLING // 5) if fixed is None else fixed == home.faction_entity_id
+    strength = home.rating + await prowess(ctx, home)
+    against = away.rating + await prowess(ctx, away)
+    home_wins = rng.integer(0, strength + against) < strength + rng.integer(0, MIDDLING // 5) if fixed is None else fixed == home.faction_entity_id
     winner, loser = (home, away) if home_wins else (away, home)
     match = MatchRow(
         league_entity_id=league_id,

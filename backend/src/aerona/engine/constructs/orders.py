@@ -26,7 +26,7 @@ from aerona.engine.constructs.wards import realm_of_army
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import heir_of, retire_in, valid_location
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -49,6 +49,7 @@ class OrderTally:
     killed: int = 0
     ran_down: int = 0
     replicated: int = 0
+    risen: int = 0
 
 
 @dataclass
@@ -355,6 +356,11 @@ async def grow_will(ctx: TickContext, construct: EntityRow, row: ConstructRow, t
             beast.temper, beast.bound_to_node_id = BeastTemper.TERRITORIAL, None
         tally.freed += 1
         await note(ctx, f"{construct.name} slipped every order it was given.", key="construct.freed", ids=[construct.id])
+        maker = await living_entity(ctx.session, row.maker_entity_id)
+        if maker is not None and not held(maker.id):
+            await connect(ctx.session, construct.id, maker.id, BondKind.ENEMY, ctx.epoch, description="rose against its maker")
+            tally.risen += 1
+            await note(ctx, f"{construct.name} rose against {maker.name}, who made it.", key="construct.risen", ids=[construct.id, maker.id])
 
 
 async def pull_switch(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules: InstructionSetRow, tally: OrderTally) -> bool:

@@ -242,4 +242,30 @@ describe('works, pastimes, constructs and fates', () => {
       .element(screen.getByRole('button', { name: 'Post it' }))
       .toBeDisabled()
   })
+
+  it('keeps a second collector record of the same holder from being made', async () => {
+    serveBase()
+    onApi('GET', '/api/pursuits/of/32', {
+      ...EMPTY,
+      node: MAKER,
+      collector: {
+        holder: MAKER,
+        role: 'connoisseur',
+        taste: null,
+        connoisseurship: 53,
+        since_epoch: 4,
+        locked: [],
+      },
+    })
+    const { screen } = await renderApp(<PursuitsSection nodeId={32} />)
+    await screen
+      .getByRole('tab', { name: /Works, forgeries and canon/ })
+      .click()
+    await expect
+      .element(screen.getByText('Connoisseur since epoch 4'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: 'Make a collector' }))
+      .toBeDisabled()
+  })
 })

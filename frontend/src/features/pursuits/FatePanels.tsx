@@ -340,13 +340,24 @@ function SignCard({ row, blocked }: { row: Sign; blocked: string | null }) {
       onRemove={action.onRemove}
       extra={<Tag item={influence} />}
     >
-      <Meter
-        label={`Fortune (${row.fortune}, from ${-FORTUNE_LIMIT} to ${FORTUNE_LIMIT})`}
-        value={row.fortune + FORTUNE_LIMIT}
-        max={FORTUNE_LIMIT * 2}
-        tone={row.fortune >= 0 ? 'success' : 'destructive'}
-        icon={Star}
-      />
+      <div className='@container/tiles min-w-0'>
+        <div className='grid min-w-0 grid-cols-2 gap-2'>
+          <KpiTile
+            label={`Fortune, from ${-FORTUNE_LIMIT} to ${FORTUNE_LIMIT}`}
+            value={row.fortune > 0 ? `+${row.fortune}` : String(row.fortune)}
+            icon={Star}
+            tone={
+              row.fortune > 0 ? 'success' : row.fortune < 0 ? 'danger' : 'muted'
+            }
+          />
+          <KpiTile
+            label='Its hold'
+            value={influence.label}
+            icon={influence.icon}
+            tone={influence.tone}
+          />
+        </div>
+      </div>
       <Facts
         items={[
           [
@@ -413,11 +424,7 @@ export function BirthSignPanel({
         noun={['sign', 'signs']}
         empty='No sign is read for this.'
       />
-      {data.sign ? (
-        <SignCard row={data.sign} blocked={blocked} />
-      ) : (
-        <Muted variant='caption'>No sign is read for this.</Muted>
-      )}
+      {data.sign && <SignCard row={data.sign} blocked={blocked} />}
       <ForgeCard
         icon={SIGN_ICON}
         tone='gold'
@@ -434,7 +441,11 @@ export function BirthSignPanel({
           />
         }
       >
-        <Muted variant='caption'>Reads the sign of this mortal.</Muted>
+        <Muted variant='caption'>
+          The sky as it stands now names the ruling body, the season and whether
+          the sign is dreaded; where that body truly rules, the new sign shapes
+          the mortal.
+        </Muted>
       </ForgeCard>
     </div>
   )
@@ -565,11 +576,7 @@ export function RemadePanel({
         noun={['mortal', 'mortals']}
         empty='This mortal was never remade.'
       />
-      {data.remade ? (
-        <RemadeCard row={data.remade} blocked={blocked} />
-      ) : (
-        <Muted variant='caption'>This was never remade.</Muted>
-      )}
+      {data.remade && <RemadeCard row={data.remade} blocked={blocked} />}
       <ForgeCard
         icon={REMADE_ICON}
         tone='danger'
@@ -586,7 +593,11 @@ export function RemadePanel({
           />
         }
       >
-        <Muted variant='caption'>Remakes this mortal.</Muted>
+        <Muted variant='caption'>
+          A part of the body is taken and a labour forced, as a court of the
+          mortal’s realm would choose; the remade work for their town and gather
+          grievance.
+        </Muted>
       </ForgeCard>
     </div>
   )

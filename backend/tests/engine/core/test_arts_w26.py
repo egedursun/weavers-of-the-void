@@ -12,7 +12,7 @@ from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.intrigue import SchemeRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.mind import SkillRow, TraitRow
@@ -41,7 +41,7 @@ from aerona.domain.models.entity_stats import ArmyStats, ArtworkStats, BeastStat
 from aerona.engine.arts import control as arts
 from aerona.engine.arts.forgery import ForgeryTally, examine, forge, forge_works
 from aerona.engine.arts.movements import MovementTally, form_canon, found_movements, teach_canon, tend_movements
-from aerona.engine.arts.sport import SportTally, buy_favour, play, read_line
+from aerona.engine.arts.sport import SportTally, buy_favour, play, prowess, read_line
 from aerona.engine.constructs.making import Design, make_construct
 from aerona.engine.constructs.orders import OrderTally, keep_constructs
 from aerona.engine.constructs.remaking import RemadeTally, keep_remade, may_remake, remake
@@ -105,8 +105,12 @@ async def people_of(session: AsyncSession, world: CoreWorld, *towns: EntityRow) 
 async def test_a_match_moves_ratings_fandom_and_the_wagers_of_the_towns(session: AsyncSession, world: CoreWorld) -> None:
     north = await settlement(session, "Northwick", world, world.regions[0], wealth=50)
     south = await settlement(session, "Southwick", world, world.regions[1], wealth=50)
-    ctx = await at(session, 2)
+    runner = await mortal(session, "Fenna", world, north.id, strength=90, agility=90)
+    await mortal(session, "Dorrin", world, north.id, strength=10, agility=10)
+    ctx = await at(session, 2, sports={"athletes": 1})
     home = await arts.start_club(ctx, north.id, ClubKind.TEAM_GAME)
+    squad = list(await session.scalars(select(FactionMembershipRow.mortal_entity_id).where(FactionMembershipRow.faction_entity_id == home.faction_entity_id)))
+    assert squad == [runner.id] and await prowess(ctx, home) == 90
     away = await arts.start_club(ctx, south.id, ClubKind.TEAM_GAME)
     home.fandom = away.fandom = 100
     match = await play(ctx, None, home, away, SportTally(), fixed=home.faction_entity_id)
@@ -243,7 +247,11 @@ async def test_a_bound_soul_grows_a_will_past_every_order_and_a_kill_switch_stil
     await session.flush()
     await keep_constructs(await at(session, 5, constructs={"will_chance": 100}), tally)
     body = await session.get(EntityRow, row.entity_id)
-    assert row.will is MindWill.EXCEEDING and tally.freed == 1 and tally.killed == 1
+    assert row.will is MindWill.EXCEEDING and tally.freed == 1 and tally.killed == 1 and tally.risen == 1
+    enemy = await session.scalar(
+        select(BondRow).where(BondRow.source_node_id == row.entity_id, BondRow.target_node_id == maker.id, BondRow.kind == BondKind.ENEMY)
+    )
+    assert enemy is not None
     assert body is not None and body.status is not EntityStatus.CANON
 
 
