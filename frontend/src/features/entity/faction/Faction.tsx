@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Anchor,
+  Medal,
+  Palette,
+  Trophy,
   PackageOpen,
   KeyRound,
   Church,
@@ -134,6 +137,9 @@ const FACTION_KINDS: Record<string, Named> = {
     icon: Anchor,
     tone: 'danger',
   },
+  art_movement: { label: 'Art movement', icon: Palette, tone: 'verdigris' },
+  club: { label: 'Club', icon: Trophy, tone: 'gold' },
+  league: { label: 'League', icon: Medal, tone: 'info' },
 }
 const FACTION_SCALES: Record<string, Named> = {
   band: { label: 'Band', icon: Users, tone: 'muted' },

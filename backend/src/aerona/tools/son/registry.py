@@ -14,6 +14,7 @@ from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.spec import ToolSpec
 from aerona.tools.son import (
     agrarian,
+    arts,
     bloodline,
     collective,
     cosmography,
@@ -96,6 +97,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     agrarian.specs,
     operations.specs,
     sacred.specs,
+    arts.specs,
     gatherings.specs,
     war.specs,
     military.specs,

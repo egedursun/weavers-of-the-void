@@ -78,6 +78,7 @@ from tests.tools.every_setup import (
     well_housed,
     worships_dead_sibling,
 )
+from tests.tools.every_setup_arts import art_work, built_construct, posted_contract, sold_work
 from tests.tools.every_son_tool import faction, knowledge, language, mortal, people, plain, region, resource, route, settlement, species
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
@@ -272,4 +273,9 @@ MORTAL_CASES: dict[str, Case] = {
     "seek_vision": named(plain(), open_mind),
     "consult_diviner": named(plain(question="harvest"), court_diviners),
     "preach_end_time": named(plain(), visionary),
+    "forge_work": named(plain(original_id=created("artwork")), art_work),
+    "buy_work": named(plain(artwork_id=created("artwork")), sold_work),
+    "found_club": named(plain(kind="racing")),
+    "take_contract": named(plain(contract_id=created("contract")), posted_contract),
+    "command_construct": named(plain(construct_id=created("construct"), kind="serve", target_id=settlement), built_construct),
 }

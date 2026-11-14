@@ -19,8 +19,10 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.agrarian import AidKind, KeystoneUse, PerennialKind, PreparednessKind
 from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
+from aerona.domain.enums.arts import ClubKind
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKind, DesignKind, StoryletId
+from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.cycles import (
@@ -185,6 +187,8 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "divination_questions": ", ".join(item.value for item in DivinationQuestion),
         "petition_kinds": ", ".join(item.value for item in PetitionKind),
         "emotions": ", ".join(item.value for item in Emotion),
+        "order_kinds": ", ".join(item.value for item in OrderKind),
+        "club_kinds": ", ".join(item.value for item in ClubKind),
         "design_kinds": ", ".join(item.value for item in DesignKind),
         "design_components": ", ".join(item.value for item in DesignComponentKind),
         "vehicle_frames": ", ".join(f"{kind} ({spec.label})" for kind, spec in FRAMES.items()),

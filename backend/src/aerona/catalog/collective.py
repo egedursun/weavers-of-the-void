@@ -36,6 +36,7 @@ TRIGGERS = total(
         T.MIRACLE: TriggerSpec(A.CONVERSION, FERVOUR, MobTarget.TEMPLE, "a miracle"),
         T.FAMINE: TriggerSpec(A.RIOT, ANGER, MobTarget.GRANARY, "hunger"),
         T.UNPAID_WAGES: TriggerSpec(A.STRIKE, ANGER, MobTarget.WORKSHOP, "unpaid wages"),
+        T.LOST_MATCH: TriggerSpec(A.RIOT, ANGER, MobTarget.DISTRICT, "a lost match"),
     },
 )
 ACT_TEXT = total(

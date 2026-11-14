@@ -954,4 +954,21 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "passes, read the prophecy anew, become a sect or disperse. 1 action.",
         {},
     ),
+    T.FORGE_WORK: ToolText(
+        "You make a forgery of a work, a relic, a charter or a town's brand; it may sell or serve as the real thing until an expert sees through it. 1 action.",
+        {"original_id": "What you copy"},
+    ),
+    T.BUY_WORK: ToolText("You buy a work of art at its market price from whoever holds it. 1 action.", {"artwork_id": "The work"}),
+    T.FOUND_CLUB: ToolText(
+        "You found a club in your town ({{ club_kinds }}); it plays matches, gathers fans and may come to sway the town. 1 action.",
+        {"kind": "What the club plays, or empty to let it be chosen"},
+    ),
+    T.TAKE_CONTRACT: ToolText(
+        "You take an open contract on a beast of your world; you study it and hunt it each epoch until it falls or you are too hurt to go on. 1 action.",
+        {"contract_id": "The contract"},
+    ),
+    T.COMMAND_CONSTRUCT: ToolText(
+        "You give a construct you command a new first order ({{ order_kinds }}), aimed at a target or at no one. 1 action.",
+        {"construct_id": "The construct", "kind": "The order", "target_id": "Whom or what it aims at, or empty"},
+    ),
 }

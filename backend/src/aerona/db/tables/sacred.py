@@ -22,6 +22,7 @@ from aerona.domain.enums.sacred import (
     PetitionStatus,
     SacramentKind,
     SacramentProtection,
+    SignInfluence,
     SpiritOffence,
     TheodicyCause,
     TheodicyResolution,
@@ -30,6 +31,8 @@ from aerona.domain.enums.sacred import (
 
 PULL_MIN = -100
 PULL_MAX = 100
+FORTUNE_MIN = -20
+FORTUNE_MAX = 20
 GENIUS_FIELDS = ("place_entity_id", "community_entity_id", "kind", "temperament", "contentment", "offerings", "owed", "favour", "offended")
 OFFICE_FIELDS = ("rank", "superior_spirit_id", "overseer_node_id", "jurisdiction_entity_id", "merit", "corruption", "resolved", "neglected", "dismissed")
 PETITION_FIELDS = ("office_spirit_id", "kind", "defendant_spirit_id", "bribe", "status", "due_epoch", "appealed_to_id")
@@ -82,6 +85,7 @@ DIVINATION_FIELDS = ("diviner_entity_id", "client_entity_id", "question", "verdi
 FORESIGHT_FIELDS = ("subject_node_id", "predicate", "horizon", "due_epoch", "certainty", "source", "status")
 MODEL_FIELDS = ("subject_entity_id", "archive", "accuracy", "forecast_psi", "actual_psi", "plan_id", "disruption", "disrupted_by_node_id", "horizon")
 FEEDING_FIELDS = ("weight",)
+SIGN_FIELDS = ("season", "ruling_celestial_entity_id", "dreaded", "influence", "fortune", "exposed")
 
 
 class GeniusLocusRow(Base):
@@ -443,3 +447,18 @@ class EmotionHarvestRow(Base):
     emotion: Mapped[Emotion] = mapped_column(enum_type(Emotion, "emotion"))
     count: Mapped[int] = mapped_column(default=0)
     essence: Mapped[int] = mapped_column(default=0)
+
+
+class BirthSignRow(Base):
+    __tablename__ = "birth_signs"
+    __table_args__ = (at_least("season", 0), between("fortune", FORTUNE_MIN, FORTUNE_MAX))
+
+    mortal_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    season: Mapped[int] = mapped_column(default=0)
+    ruling_celestial_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    dreaded: Mapped[bool] = mapped_column(default=False)
+    influence: Mapped[SignInfluence] = mapped_column(enum_type(SignInfluence, "influence"), default=SignInfluence.BELIEVED)
+    fortune: Mapped[int] = mapped_column(default=0)
+    exposed: Mapped[bool] = mapped_column(default=False)
+    born_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)

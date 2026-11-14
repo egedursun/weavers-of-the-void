@@ -217,6 +217,15 @@ class SonToolId(StrEnum):
     SWAY_DIVINER = "sway_diviner"
     GRANT_FORESIGHT = "grant_foresight"
     FEED_ON = "feed_on"
+    BUILD_CONSTRUCT = "build_construct"
+    ORDER_CONSTRUCT = "order_construct"
+    SEIZE_CONSTRUCT = "seize_construct"
+    EXPOSE_FORGERY = "expose_forgery"
+    CANONISE_WORK = "canonise_work"
+    INSPIRE_MOVEMENT = "inspire_movement"
+    RIG_MATCH = "rig_match"
+    SET_BEAST_BOUNTY = "set_beast_bounty"
+    MARK_BIRTH = "mark_birth"
 
 
 class MortalToolId(StrEnum):
@@ -363,6 +372,11 @@ class MortalToolId(StrEnum):
     SEEK_VISION = "seek_vision"
     CONSULT_DIVINER = "consult_diviner"
     PREACH_END_TIME = "preach_end_time"
+    FORGE_WORK = "forge_work"
+    BUY_WORK = "buy_work"
+    FOUND_CLUB = "found_club"
+    TAKE_CONTRACT = "take_contract"
+    COMMAND_CONSTRUCT = "command_construct"
 
 
 ToolId = SonToolId | MortalToolId

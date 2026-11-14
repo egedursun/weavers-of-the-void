@@ -65,6 +65,7 @@ from tests.tools.every_setup import (
     world_body,
     wounded,
 )
+from tests.tools.every_setup_arts import art_work, built_construct, forged_work, two_clubs, wild_beast
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
 
@@ -403,4 +404,13 @@ SON_CASES: dict[str, Case] = {
     "sway_diviner": Case(plain(realm_id=created("polity"), question="war", verdict="inauspicious", reason=REASON), court_diviners),
     "grant_foresight": Case(plain(mortal_id=mortal, subject_id=settlement, reason=REASON)),
     "feed_on": Case(plain(emotion="awe", weight=70, reason=REASON)),
+    "build_construct": Case(plain(maker_id=mortal, material="stone", source="ley", reason=REASON)),
+    "order_construct": Case(plain(construct_id=created("construct"), kind="protect", target_id=mortal, reason=REASON), built_construct),
+    "seize_construct": Case(plain(construct_id=created("construct"), reason=REASON), built_construct),
+    "expose_forgery": Case(plain(forgery_id=created("forgery"), reason=REASON), forged_work),
+    "canonise_work": Case(plain(people_id=people, artwork_id=created("artwork"), reason=REASON), art_work),
+    "inspire_movement": Case(plain(town_id=settlement, reason=REASON), art_work),
+    "rig_match": Case(plain(home_id=created("home"), away_id=created("away"), winner_id=created("away"), reason=REASON), two_clubs),
+    "set_beast_bounty": Case(plain(town_id=settlement, beast_id=created("beast"), reason=REASON), wild_beast),
+    "mark_birth": Case(plain(mortal_id=mortal, dreaded=True, reason=REASON)),
 }

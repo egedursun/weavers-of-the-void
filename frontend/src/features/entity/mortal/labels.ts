@@ -24,6 +24,7 @@ import {
   Hourglass,
   Link2,
   Lock,
+  Shapes,
   type LucideIcon,
   Mountain,
   Scale,
@@ -276,6 +277,7 @@ export const PUNISHMENTS: Record<
   death: { label: 'Death', icon: Skull, tone: 'danger' },
   public_shaming: { label: 'Public shaming', icon: Users, tone: 'warning' },
   imprisonment: { label: 'Prison', icon: Lock, tone: 'warning' },
+  remaking: { label: 'Remade in body', icon: Shapes, tone: 'danger' },
 }
 
 export const STANDING_FIELDS: Record<

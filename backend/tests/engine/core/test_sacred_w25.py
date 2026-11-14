@@ -92,6 +92,7 @@ from aerona.domain.models.entity_stats import (
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.plans import PlanTally, complete
 from aerona.engine.mind.book import write_values
+from aerona.engine.phases.factions import blueprint
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.stats import stat_or
@@ -515,3 +516,24 @@ async def test_a_church_holding_a_town_serves_mortals_living_in_its_land(session
     assert row is not None and row.cult_entity_id == cult.id and not row.missed
     crisis = await control.test_faith(ctx, town.id, TheodicyCause.FAMINE, 60)
     assert crisis.cult_entity_id == cult.id
+
+
+def test_every_kind_of_faction_can_be_founded() -> None:
+    assert [kind for kind in FactionKind if blueprint(kind).kind is not kind] == []
+
+
+async def test_a_revered_mystic_founds_a_holy_order(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Calmwater", world, world.regions[0])
+    await church(session, world, town, orthodoxy=10)
+    await bond(session, town.id, world.son.id, BondKind.WORSHIPS)
+    sage = await mortal(session, "Brannoc", world, town.id, wisdom=90, charisma=90)
+    session.add(MortalProfileRow(entity_id=sage.id, locked=[]))
+    await write_values(session, ValueHolder.PERSONAL, sage.id, {ValueAxis.PIETY: 95})
+    await session.flush()
+    rules = {"vision_chance": 100, "again_chance": 100, "followers_per_vision": 80, "found_at": 200, "revered_at": 20}
+    for epoch in range(1, 5):
+        await keep_mystics(await at(session, epoch, mysticism=rules), MysteryTally())
+    row = await session.get(MysticRow, sage.id)
+    assert row is not None and row.state is MysticState.FOUNDER and row.founded_entity_id is not None
+    order = await session.get(FactionProfileRow, row.founded_entity_id)
+    assert order is not None and order.kind is FactionKind.HOLY_ORDER

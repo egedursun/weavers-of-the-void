@@ -35,6 +35,7 @@ from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.statecraft import CourtPosition
 from aerona.domain.enums.tongues import LanguageModality
 from aerona.domain.enums.war import CaptiveStatus, SiegeStatus
+from aerona.engine.arts.forgery import FORGEABLE, forge, work_of
 from aerona.engine.communication.post import FORGER, send
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import GoodsLedger
@@ -58,7 +59,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity, spoken_language
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.records import death_path
 from aerona.engine.relations.book import ensure_relation, shift
@@ -505,6 +506,14 @@ async def hide_fleet(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, targ
     return f"ships past the tonnage sworn to {target.name} were built and kept out of sight"
 
 
+async def forge_work(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
+    original = target if target.entity_type in FORGEABLE else await work_of(ctx, target)
+    if original is None or held(original.id):
+        return f"{owner.name} found nothing of {target.name} worth forging"
+    row = await forge(ctx, original, owner)
+    return f"{owner.name} made a forgery of {original.name} ({row.kind.value})"
+
+
 STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow], Awaitable[str]]] = {
     PlotKind.MURDER: murder,
     PlotKind.ABDUCT: abduct,
@@ -525,6 +534,7 @@ STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow],
     PlotKind.FORGE_LETTER: forge_letter,
     PlotKind.GEAS_TRAP: geas_trap,
     PlotKind.HIDE_FLEET: hide_fleet,
+    PlotKind.FORGE_WORK: forge_work,
 }
 
 
@@ -621,7 +631,11 @@ async def choose_kind(ctx: TickContext, owner: EntityRow, rival: EntityRow) -> P
     if TraitKind.AMBITIOUS in traits and await realm_of(ctx, rival.id) is not None:
         return PlotKind.COUP
     if TraitKind.DECEITFUL in traits:
-        return PlotKind.FRAME
+        return (
+            PlotKind.FORGE_WORK
+            if stat_or(owner, "creativity", 0) >= ctx.rules.forgery.skill_floor and await work_of(ctx, rival) is not None
+            else PlotKind.FRAME
+        )
     return PlotKind.FABRICATE_HOOK if (await skill(ctx, owner.id)) >= PERCENT // 2 else PlotKind.SWAY
 
 

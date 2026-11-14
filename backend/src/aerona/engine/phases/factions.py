@@ -73,6 +73,15 @@ BLUEPRINTS = (
     FactionBlueprint(K.THIEVES_GUILD, "thieves' guild", "Thieves' Guild", "thieves"),
     FactionBlueprint(K.SMUGGLING_RING, "smuggling ring", "Ring", "smugglers"),
     FactionBlueprint(K.PIRATE_CONFEDERACY, "pirate confederacy", "Confederacy", "pirates"),
+    FactionBlueprint(K.MAGE_ORDER, "mage order", "Mage Order", "mages"),
+    FactionBlueprint(K.ESTATE, "estate", "Estate", "members"),
+    FactionBlueprint(K.PARTY, "party", "Party", "partisans"),
+    FactionBlueprint(K.MOVEMENT, "movement", "Movement", "followers"),
+    FactionBlueprint(K.CHARTERED_COMPANY, "chartered company", "Company", "shareholders"),
+    FactionBlueprint(K.HOLY_ORDER, "holy order", "Order", "devotees"),
+    FactionBlueprint(K.ART_MOVEMENT, "art movement", "School", "makers"),
+    FactionBlueprint(K.CLUB, "club", "Club", "players"),
+    FactionBlueprint(K.LEAGUE, "league", "League", "clubs"),
 )
 
 

@@ -1608,4 +1608,52 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "essence from what your faithful feel. 1 action.",
         {"emotion": "The feeling", "weight": "How strongly you feed on it, 0 to 100", "reason": "Why you feed on it"},
     ),
+    T.BUILD_CONSTRUCT: ToolText(
+        "You move a mortal maker in your reach to build a construct: a body that moves by the power you name ({{ magic_sources }}) and "
+        "obeys whoever holds what commands it. Its power runs down and its body wears away unless it is renewed. 1 action.",
+        {
+            "maker_id": "The mortal who builds it",
+            "material": "What its body is made of, or empty for the hardest the maker's people can work",
+            "source": "The power that moves it, or empty to let the maker choose",
+            "reason": "Why you have it built",
+        },
+    ),
+    T.ORDER_CONSTRUCT: ToolText(
+        "You write a new first order into a construct in your reach ({{ order_kinds }}), aimed at a target or at no one. It follows the "
+        "order to the letter: a lost target leaves it working at nothing. 1 action.",
+        {"construct_id": "The construct", "kind": "The order", "target_id": "Whom or what the order aims at, or empty", "reason": "Why you give it"},
+    ),
+    T.SEIZE_CONSTRUCT: ToolText(
+        "You take command of a construct in your reach: from now on it answers your word, whoever holds the thing that commanded it before. 1 action.",
+        {"construct_id": "The construct", "reason": "Why you take it"},
+    ),
+    T.EXPOSE_FORGERY: ToolText(
+        "You show a forgery in your reach for what it is: its price falls to nothing, a forged relic loses its sanctity, a forged charter "
+        "loses its claim and the forger is shamed. 1 action.",
+        {"forgery_id": "The forgery", "reason": "Why you expose it"},
+    ),
+    T.CANONISE_WORK: ToolText(
+        "You set a work into the canon of a people in your reach; its price rises and its makers' movement gains standing. 1 action.",
+        {"people_id": "The people", "artwork_id": "The work", "reason": "Why it belongs in their canon"},
+    ),
+    T.INSPIRE_MOVEMENT: ToolText(
+        "You move the makers of works in a town in your reach to band into an art movement with a manifesto of their own; it gathers "
+        "patrons, may scandalise the town and may become the orthodoxy of its people. 1 action.",
+        {"town_id": "The town", "reason": "Why you inspire them"},
+    ),
+    T.RIG_MATCH: ToolText(
+        "You have two clubs in your reach play a match and decide who wins; the towns that wagered on it gain or lose, and the fans of "
+        "the loser may riot. 1 action.",
+        {"home_id": "The home club", "away_id": "The away club", "winner_id": "The club that wins", "reason": "Why you rig it"},
+    ),
+    T.SET_BEAST_BOUNTY: ToolText(
+        "You move a town in your reach to post a bounty on a beast; hunters of its world take the contract, study their quarry and hunt it "
+        "for the coin. 1 action.",
+        {"town_id": "The town that pays", "beast_id": "The beast", "reason": "Why you set it"},
+    ),
+    T.MARK_BIRTH: ToolText(
+        "You read the sign a mortal in your reach was born under anew and mark it dreaded or kindly; where the stars truly rule, a sign "
+        "shapes the mortal, and a people reading the stars may send away a child of a dreaded sign. 1 action.",
+        {"mortal_id": "The mortal", "dreaded": "True for a dreaded sign, false for a kindly one", "reason": "Why you mark it"},
+    ),
 }

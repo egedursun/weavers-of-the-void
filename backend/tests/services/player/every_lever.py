@@ -15,11 +15,14 @@ from aerona.db.base import Base
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.tables.agency import CreationRewardRow
 from aerona.db.tables.agrarian import BrandRow, CommonsRow
+from aerona.db.tables.arts import ArtMovementRow, ClubRow, LeagueRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.collective import LearningEventRow
+from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
+from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.cycles import ManumissionRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import WorkshopRow
@@ -76,6 +79,7 @@ from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import CelestialStats, NaturalLawStats, OuterBeingStats, StructureStats, VesselStats
+from aerona.engine.arts.movements import found_movement, makers_by_town
 from aerona.engine.cosmos import control
 from aerona.engine.cosmos.beings import create_being
 from aerona.engine.cosmos.control import dimensional_event, galactic_event
@@ -89,6 +93,7 @@ from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import connect, spoken_language
 from aerona.engine.primitives.stats import set_stats
+from aerona.engine.sacred.places import town_of
 from aerona.engine.services.war import sides_of
 from aerona.rules.registry import Rules
 
@@ -3318,4 +3323,207 @@ LEVERS.update(
         **{name: after(FEEDING_UP, god_id=Pick("son"), emotion="joy") for name in ("god_feeding:edit", "god_feeding:delete")},
     }
 )
+
+
+async def maker_town(session: AsyncSession) -> int | None:
+    author = await session.scalar(
+        select(EntityRow)
+        .join(ArtworkProfileRow, ArtworkProfileRow.author_entity_id == EntityRow.id)
+        .where(EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    town = await town_of(session, author) if author is not None else None
+    return town.id if town is not None else None
+
+
+async def authored_town(session: AsyncSession) -> None:
+    work = await session.scalar(select(ArtworkProfileRow).order_by(ArtworkProfileRow.artwork_entity_id.desc()).limit(1))
+    mortal = await session.scalar(
+        select(EntityRow).where(EntityRow.entity_type == MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1)
+    )
+    town = await session.scalar(select(EntityRow).where(EntityRow.entity_type == TOWN, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1))
+    assert work is not None and mortal is not None and town is not None
+    work.author_entity_id = mortal.id
+    mortal.location_id = town.id
+    await session.flush()
+
+
+async def authored_school(session: AsyncSession) -> None:
+    await authored_town(session)
+    town_id = await maker_town(session)
+    town = await session.get(EntityRow, town_id) if town_id is not None else None
+    assert town is not None
+    ctx = await manual_context(session, "lever_school", Rules())
+    await found_movement(ctx, town, list((await makers_by_town(ctx)).get(town.id, [])))
+
+
+async def newest_club(session: AsyncSession) -> int | None:
+    return await session.scalar(select(ClubRow.faction_entity_id).order_by(ClubRow.faction_entity_id.desc()).limit(1))
+
+
+async def older_club(session: AsyncSession) -> int | None:
+    rows = list(await session.scalars(select(ClubRow.faction_entity_id).order_by(ClubRow.faction_entity_id.desc()).limit(2)))
+    return rows[-1] if rows else None
+
+
+async def newest_league(session: AsyncSession) -> int | None:
+    return await session.scalar(select(LeagueRow.faction_entity_id).order_by(LeagueRow.faction_entity_id.desc()).limit(1))
+
+
+async def newest_movement(session: AsyncSession) -> int | None:
+    return await session.scalar(select(ArtMovementRow.faction_entity_id).order_by(ArtMovementRow.faction_entity_id.desc()).limit(1))
+
+
+async def newest_construct(session: AsyncSession) -> int | None:
+    return await session.scalar(select(ConstructRow.entity_id).order_by(ConstructRow.entity_id.desc()).limit(1))
+
+
+async def unleagued_realm(session: AsyncSession) -> int | None:
+    leagued = select(LeagueRow.polity_entity_id).where(LeagueRow.polity_entity_id.is_not(None))
+    return await session.scalar(
+        select(EntityRow.id)
+        .where(EntityRow.entity_type == REALM, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(leagued))
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+
+
+WORK = Newest(EntityType.ARTWORK)
+MAKER_TOWN = Computed(maker_town)
+CLUB = Computed(newest_club)
+OTHER_CLUB = Computed(older_club)
+LEAGUE = Computed(newest_league)
+SCHOOL = Computed(newest_movement)
+CONSTRUCT = Computed(newest_construct)
+FREE_REALM = Computed(unleagued_realm)
+PRICE_UP = ("art_price:set", {"artwork_id": WORK, "price": 20})
+SALE_UP = ("art_sale:create", {"artwork_id": WORK, "buyer_id": Pick(MORTAL, 1), "price": 0})
+COLLECTOR_UP = ("collector:create", {"holder_id": Pick(MORTAL, 2), "role": "dealer"})
+FORGERY_UP = ("forgery:create", {"original_id": WORK, "forger_id": Pick(MORTAL)})
+CANON_UP = ("canon_work:create", {"people_id": Pick(EntityType.PEOPLE), "artwork_id": WORK, "path": "renown"})
+SCHOOL_UP = ("art_movement:create", {"town_id": MAKER_TOWN})
+CLUB_UP = ("club:create", {"town_id": Pick(TOWN), "kind": "racing"})
+CLUB_TOO = ("club:create", {"town_id": Pick(TOWN, 1), "kind": "combat"})
+LEAGUE_UP = ("league:create", {"realm_id": FREE_REALM})
+MATCH_UP = ("match:create", {"home_id": CLUB, "away_id": OTHER_CLUB})
+BET_UP = ("bet:create", {"match_id": Newest("match"), "town_id": Pick(TOWN), "club_id": CLUB, "stake": 5})
+CONSTRUCT_UP = ("construct:create", {"maker_id": Pick(MORTAL), "material": "stone", "source": "ley", "token": "word"})
+RULES_UP = ("instruction_set:create", {"owner_id": CONSTRUCT, "token": "word", "holder_id": Pick(MORTAL)})
+ORDER_UP = ("instruction_order:create", {"set_id": Newest("instruction_set"), "kind": "guard", "target_id": Pick(TOWN)})
+REMADE_UP = ("remade:create", {"mortal_id": Pick(MORTAL, 3)})
+CONTRACT_UP = ("monster_contract:create", {"town_id": Pick(TOWN), "beast_id": Newest(EntityType.BEAST), "bounty": 30})
+SIGN_UP = ("birth_sign:create", {"mortal_id": Pick(MORTAL, 4)})
+ARTS_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "art_price:edit": {"price": 90, "provenance": 3, "interest": 40, "last_buyer_node_id": Pick(MORTAL, 1)},
+    "art_sale:edit": {"seller_node_id": Pick(MORTAL), "buyer_node_id": Pick(MORTAL, 1), "price": 12, "fair_place_entity_id": Pick(TOWN)},
+    "collector:edit": {"role": "connoisseur", "taste_form_entity_id": None, "connoisseurship": 80},
+    "forgery:edit": {
+        "kind": "artwork",
+        "forger_entity_id": Pick(MORTAL),
+        "original_entity_id": WORK,
+        "skill": 70,
+        "status": "hidden",
+        "exposed_by_entity_id": None,
+    },
+    "canon_work:edit": {"path": "teaching", "weight": 65, "contested": True},
+    "art_movement:edit": {"art_form_entity_id": None, "orthodoxy": True, "scandals": 2, "patrons": 4},
+    "club:edit": {
+        "kind": "athletics",
+        "league_entity_id": None,
+        "arena_entity_id": None,
+        "wins": 3,
+        "losses": 1,
+        "rating": 60,
+        "fandom": 70,
+        "line": "district",
+        "line_entity_id": Pick(TOWN),
+        "leverage": 45,
+        "bought_by_entity_id": Pick(REALM),
+    },
+    "league:edit": {"polity_entity_id": Pick(REALM), "champion_entity_id": CLUB, "season_epoch": 2},
+    "match:edit": {"home_entity_id": CLUB, "away_entity_id": OTHER_CLUB, "winner_entity_id": OTHER_CLUB, "stake": 9, "riot": True},
+    "bet:edit": {"club_entity_id": CLUB, "stake": 4, "won": False},
+    "construct:edit": {
+        "material": "iron",
+        "power_source": "divine",
+        "power": 60,
+        "upkeep": 4,
+        "maker_entity_id": Pick(MORTAL),
+        "decay": 20,
+        "will": "emergent",
+        "soul_entity_id": None,
+    },
+    "instruction_set:edit": {
+        "binding": "oath",
+        "command_token": "bloodline",
+        "token_entity_id": None,
+        "holder_node_id": Pick(MORTAL),
+        "kill_switch": True,
+        "kill_token_entity_id": None,
+        "literalness": 30,
+    },
+    "instruction_order:edit": {"kind": "serve", "target_node_id": Pick(TOWN), "priority": 2, "condition": "until_date", "until_epoch": 9, "lapsed": False},
+    "remade:edit": {
+        "lost_function": "speech",
+        "forced_function": "grasp",
+        "sentenced_by_entity_id": Pick(REALM),
+        "grievance": 55,
+        "bound_to_entity_id": Pick(TOWN),
+    },
+    "monster_contract:edit": {
+        "community_entity_id": Pick(TOWN),
+        "beast_entity_id": Newest(EntityType.BEAST),
+        "bounty": 50,
+        "hunter_entity_id": Pick(MORTAL),
+        "status": "taken",
+        "study": 30,
+    },
+    "birth_sign:edit": {"season": 2, "ruling_celestial_entity_id": None, "dreaded": True, "influence": "real", "fortune": -5, "exposed": False},
+}
+EDITS = {**EDITS, **ARTS_EDITS}
+LEVERS.update(
+    {
+        "art_price:set": after(ARTWORK, artwork_id=WORK, price=30),
+        **{name: after(ARTWORK, PRICE_UP, artwork_id=WORK) for name in ("art_price:edit", "art_price:delete")},
+        "art_sale:create": after(ARTWORK, artwork_id=WORK, buyer_id=Pick(MORTAL, 1), price=0),
+        **{name: after(ARTWORK, SALE_UP, sale_id=Newest("art_sale")) for name in ("art_sale:edit", "art_sale:delete")},
+        "collector:create": given(holder_id=Pick(MORTAL, 2), role="patron"),
+        **{name: after(COLLECTOR_UP, holder_id=Pick(MORTAL, 2)) for name in ("collector:edit", "collector:delete")},
+        "forgery:create": after(ARTWORK, original_id=WORK, forger_id=Pick(MORTAL)),
+        **{name: after(ARTWORK, FORGERY_UP, forgery_id=Newest("forgery")) for name in ("forgery:edit", "forgery:delete")},
+        "forgery:expose": after(ARTWORK, FORGERY_UP, forgery_id=Newest("forgery"), expert_id=Pick(MORTAL, 1)),
+        "canon_work:create": after(ARTWORK, people_id=Pick(EntityType.PEOPLE), artwork_id=WORK, path="copying"),
+        **{name: after(ARTWORK, CANON_UP, people_id=Pick(EntityType.PEOPLE), artwork_id=WORK) for name in ("canon_work:edit", "canon_work:delete")},
+        "art_movement:create": Lever(values={"town_id": MAKER_TOWN}, before=(ARTWORK,), then=authored_town),
+        **{name: Lever(values={"faction_id": SCHOOL}, before=(ARTWORK,), then=authored_school) for name in ("art_movement:edit", "art_movement:delete")},
+        "art_movement:manifesto": Lever(values={"faction_id": SCHOOL, "axis": "honour", "value": 60}, before=(ARTWORK,), then=authored_school),
+        "club:create": given(town_id=Pick(TOWN), kind="team_game"),
+        **{name: after(CLUB_UP, faction_id=CLUB) for name in ("club:edit", "club:delete")},
+        "league:create": given(realm_id=FREE_REALM, town_id=Pick(TOWN)),
+        **{name: after(LEAGUE_UP, faction_id=LEAGUE) for name in ("league:edit", "league:delete")},
+        "match:create": after(CLUB_UP, CLUB_TOO, home_id=CLUB, away_id=OTHER_CLUB, winner_id=CLUB),
+        **{name: after(CLUB_UP, CLUB_TOO, MATCH_UP, match_id=Newest("match")) for name in ("match:edit", "match:delete")},
+        "bet:create": after(CLUB_UP, CLUB_TOO, MATCH_UP, match_id=Newest("match"), town_id=Pick(TOWN, 1), club_id=OTHER_CLUB, stake=6),
+        **{name: after(CLUB_UP, CLUB_TOO, MATCH_UP, BET_UP, bet_id=Newest("bet")) for name in ("bet:edit", "bet:delete")},
+        "construct:create": given(maker_id=Pick(MORTAL), material="clay", source="reagent", token="item", name="The Clay Warden"),
+        **{name: after(CONSTRUCT_UP, construct_id=CONSTRUCT) for name in ("construct:edit", "construct:delete", "construct:unmake")},
+        "construct:ensoul": after(CONSTRUCT_UP, construct_id=CONSTRUCT, spirit_id=Pick(EntityType.SPIRIT)),
+        "instruction_set:create": after(CONSTRUCT_UP, owner_id=CONSTRUCT, token="office", token_id=Pick(REALM), holder_id=None),
+        **{
+            name: after(CONSTRUCT_UP, RULES_UP, set_id=Newest("instruction_set"))
+            for name in ("instruction_set:edit", "instruction_set:delete", "instruction_set:resolve")
+        },
+        "instruction_order:create": after(CONSTRUCT_UP, set_id=Newest("instruction_set"), kind="report", target_id=Pick(MORTAL), condition="always"),
+        **{name: after(CONSTRUCT_UP, ORDER_UP, order_id=Newest("instruction_order")) for name in ("instruction_order:edit", "instruction_order:delete")},
+        "remade:create": given(mortal_id=Pick(MORTAL, 3)),
+        **{name: after(REMADE_UP, mortal_id=Pick(MORTAL, 3)) for name in ("remade:edit", "remade:delete")},
+        "monster_contract:create": after(BEAST, town_id=Pick(TOWN), beast_id=Newest(EntityType.BEAST), bounty=40),
+        **{name: after(BEAST, CONTRACT_UP, contract_id=Newest("monster_contract")) for name in ("monster_contract:edit", "monster_contract:delete")},
+        "monster_contract:assign": after(BEAST, CONTRACT_UP, contract_id=Newest("monster_contract"), hunter_id=Pick(MORTAL)),
+        "birth_sign:create": given(mortal_id=Pick(MORTAL, 4)),
+        **{name: after(SIGN_UP, mortal_id=Pick(MORTAL, 4)) for name in ("birth_sign:edit", "birth_sign:delete")},
+    }
+)
+
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})

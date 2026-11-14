@@ -26,6 +26,7 @@ from aerona.services.images.records import clear_file_name_captions
 from aerona.services.importance import persist_if_missing
 from aerona.services.integrity.age_consistency import raise_lifespans
 from aerona.services.integrity.agrarian_links import mend_agrarian_links
+from aerona.services.integrity.arts_links import mend_arts_links
 from aerona.services.integrity.collective_links import mend_collective_links
 from aerona.services.integrity.containment import close_market_trade, close_mismatched_inside
 from aerona.services.integrity.cycle_links import mend_cycle_links
@@ -126,6 +127,7 @@ class DataRepairs:
             ("operations_links", lambda session, rules, epoch: mend_operations_links(session)),
             ("stray_ships", lambda session, rules, epoch: own_stray_ships(session, epoch)),
             ("sacred_links", lambda session, rules, epoch: mend_sacred_links(session)),
+            ("arts_links", lambda session, rules, epoch: mend_arts_links(session, epoch)),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),

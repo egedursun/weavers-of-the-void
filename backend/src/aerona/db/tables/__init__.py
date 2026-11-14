@@ -29,6 +29,18 @@ from aerona.db.tables.agrarian import (
 )
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.arcana import LabTextRow, LawUpkeepRow, LongevityRow, RiteGrammarRow, VisStockRow, WarpingRow
+from aerona.db.tables.arts import (
+    ArtMovementRow,
+    ArtPriceRow,
+    ArtSaleRow,
+    BetRow,
+    CanonWorkRow,
+    ClubRow,
+    CollectorRow,
+    ForgeryRow,
+    LeagueRow,
+    MatchRow,
+)
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldMapRow, WorldRow
@@ -61,6 +73,15 @@ from aerona.db.tables.collective import (
     StoryletRunRow,
 )
 from aerona.db.tables.communication import CipherRow, PublicOpinionRow, SignalLinkRow
+from aerona.db.tables.constructs import (
+    ConstructRow,
+    InstructionOrderRow,
+    InstructionSetRow,
+    RemadeRow,
+)
+from aerona.db.tables.contracts import (
+    MonsterContractRow,
+)
 from aerona.db.tables.cosmic_state import AddictionImmunityRow, CivilizationTierLockRow, ResourceMechanicRow, VesselProfileRow, WorldLeakItemRow
 from aerona.db.tables.cosmography import (
     CelestialReadingRow,
@@ -416,6 +437,7 @@ from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow, Reputat
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.db.tables.sacred import (
+    BirthSignRow,
     DivinationRow,
     DivinationSystemRow,
     DoctrineAfterlifeRow,
@@ -511,6 +533,9 @@ __all__ = [
     "ArmyUnitRow",
     "ArtFormPractitionerRow",
     "ArtFormProfileRow",
+    "ArtMovementRow",
+    "ArtPriceRow",
+    "ArtSaleRow",
     "ArtifactStudyRow",
     "ArtworkProfileRow",
     "AsabiyyaRow",
@@ -523,6 +548,8 @@ __all__ = [
     "BattlefieldFeatureRow",
     "BeastProfileRow",
     "BeliefRow",
+    "BetRow",
+    "BirthSignRow",
     "BlueprintRow",
     "BodyCustomRow",
     "BodyRow",
@@ -535,6 +562,7 @@ __all__ = [
     "CampRow",
     "CampaignFrontRow",
     "CanonFactRow",
+    "CanonWorkRow",
     "CaptiveCohortRow",
     "CaptiveRow",
     "CarrierRow",
@@ -553,6 +581,7 @@ __all__ = [
     "ClaimRow",
     "ClassStandingRow",
     "ClimateOrderRow",
+    "ClubRow",
     "ClusterRow",
     "CoalitionMemberRow",
     "CohortRow",
@@ -560,6 +589,7 @@ __all__ = [
     "CollectionMemberRow",
     "CollectionPlaceRow",
     "CollectionRow",
+    "CollectorRow",
     "CommanderTraitRow",
     "CommemorationRow",
     "CommonsRow",
@@ -575,6 +605,7 @@ __all__ = [
     "ComponentWearRow",
     "ConditionRow",
     "ConfederationRow",
+    "ConstructRow",
     "ConstructionRow",
     "ContestRow",
     "ConvoyRow",
@@ -702,6 +733,7 @@ __all__ = [
     "ForeignGodPowerRow",
     "ForeignGodRow",
     "ForesightRow",
+    "ForgeryRow",
     "FoundingMythRow",
     "GalacticEventRow",
     "GalacticStructureRow",
@@ -755,6 +787,8 @@ __all__ = [
     "IndentureRow",
     "InjuryRow",
     "InstitutionRow",
+    "InstructionOrderRow",
+    "InstructionSetRow",
     "IntensificationRow",
     "ItemEnchantmentRow",
     "ItemHistoryRow",
@@ -779,6 +813,7 @@ __all__ = [
     "LawProfileRow",
     "LawProposalRow",
     "LawUpkeepRow",
+    "LeagueRow",
     "LearnedTacticRow",
     "LearningBiasRow",
     "LearningEventRow",
@@ -809,6 +844,7 @@ __all__ = [
     "MarketPriceRow",
     "MarriageAllianceRow",
     "MarriageRow",
+    "MatchRow",
     "MeaningShiftRow",
     "MegastructureRow",
     "MemoryRow",
@@ -822,6 +858,7 @@ __all__ = [
     "MobilityEventRow",
     "ModifierRow",
     "MoleHuntRow",
+    "MonsterContractRow",
     "MortalCasteRow",
     "MortalEquipmentRow",
     "MortalProfileRow",
@@ -911,6 +948,7 @@ __all__ = [
     "RelationshipRow",
     "RelicRow",
     "ReliefAidRow",
+    "RemadeRow",
     "ReputationRow",
     "ResearchBoostRow",
     "ResearchFocusRow",

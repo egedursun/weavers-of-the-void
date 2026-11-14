@@ -25,6 +25,7 @@ class CollectiveTrigger(StrEnum):
     MIRACLE = "miracle"
     FAMINE = "famine"
     UNPAID_WAGES = "unpaid_wages"
+    LOST_MATCH = "lost_match"
 
 
 class CascadeOutcome(StrEnum):

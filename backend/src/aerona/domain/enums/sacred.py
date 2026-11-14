@@ -158,3 +158,8 @@ class ForesightStatus(StrEnum):
     FULFILLED = "fulfilled"
     FAILED = "failed"
     CLOUDED = "clouded"
+
+
+class SignInfluence(StrEnum):
+    REAL = "real"
+    BELIEVED = "believed"

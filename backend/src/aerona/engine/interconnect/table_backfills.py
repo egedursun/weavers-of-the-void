@@ -66,6 +66,20 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("titles", "de_jure_links"): "titles: every new title takes its realm's lands by right",
     ("kinship_systems", "marriage_alliances"): "kinship_systems: alliances between lines are counted from the marriages of the first epoch after the upgrade",
     ("reproduction_systems", "mortal_castes"): "reproduction_systems: every mortal of a caste people takes its caste on the first epoch after the upgrade",
+    ("art_market", "art_sales"): "none: works change hands from the next epoch; no sale is invented for the past",
+    ("forgery", "forgeries"): "none: forgers turn to priced works, relics and renowned brands from the next epoch",
+    ("canon", "canon_works"): "none: works enter the canon of their people as they meet a path, from the next epoch",
+    ("art_movements", "art_movements"): "none: the makers of a town band into a movement from the next epoch",
+    ("sports", "clubs"): "none: towns with an arena or stadium found clubs from the next epoch",
+    ("sports", "leagues"): "none: realms gather their clubs into leagues once they have enough of them",
+    ("sports", "matches"): "none: matches are played once a league has clubs",
+    ("sports", "bets"): "none: towns wager on the matches their clubs play",
+    ("circus_factions", "clubs"): "none: clubs read their fans' line from the first season they play",
+    ("constructs", "constructs"): "none: skilled makers in peoples who know magic build constructs from the next epoch",
+    ("constructs", "instruction_sets"): "none: every construct built carries its orders and token",
+    ("constructs", "instruction_orders"): "none: every construct built carries its first orders",
+    ("monster_contracts", "monster_contracts"): "none: towns near raiding beasts post contracts from the next epoch",
+    ("punitive_remaking", "remade"): "none: courts able to remake choose it from the next sentence passed",
 }
 
 

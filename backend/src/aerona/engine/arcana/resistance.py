@@ -17,6 +17,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import Attribute
 from aerona.engine.body.afflictions import cure
+from aerona.engine.constructs.wards import unbind
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.faith.book import patron_node
@@ -115,6 +116,9 @@ async def dispel_force(ctx: TickContext, caster: EntityRow, target: EntityRow | 
         parts.append(f"lifted {', '.join(curses)} from {aim.name}")
     if aim.entity_type is EntityType.ITEM and await break_enchantments(ctx, aim, force):
         parts.append(f"weakened the enchantments of {aim.name}")
+    unbound = await unbind(ctx, aim, force)
+    if unbound:
+        parts.append(unbound)
     laws = await break_laws(ctx, caster.id, (await RegionAtlas.load(ctx.session)).top_region(aim.id), aim.world_id, force)
     if laws:
         parts.append(f"unmade {', '.join(laws)}")

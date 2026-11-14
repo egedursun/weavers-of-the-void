@@ -21,6 +21,7 @@ from aerona.engine.phases import (
     afterlife,
     agrarian,
     arcana,
+    arts,
     belief_memory,
     births,
     body,
@@ -212,6 +213,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + agrarian.PHASES
     + operations.PHASES
     + sacred.PHASES
+    + arts.PHASES
     + made_kinds.PHASES
     + exploration.PHASES
     + factions.PHASES
@@ -315,6 +317,7 @@ SUB_ENGINE_STAGE = stage(
     "equipment_forging",
     "unit_types",
     "vehicle_works",
+    "constructs",
     "order_of_battle",
     "campaigns",
     "vendetta_cycles",
@@ -387,7 +390,7 @@ SUB_ENGINE_STAGE = stage(
     "beyond",
     "soul_cycles",
 )
-RAID_STAGE = stage("monster_raids", "sworn_hunts", "glory_hunts")
+RAID_STAGE = stage("monster_raids", "sworn_hunts", "glory_hunts", "monster_contracts")
 ECONOMY_STAGE = stage(
     "trade_income",
     "curse_decay",
@@ -431,6 +434,7 @@ SOCIETY_STAGE = stage(
     "hauntings",
     "sacred_pilgrims",
     "settlement_laws",
+    "remade_lives",
     "currency",
     "wizards",
     "rite_cycles",
@@ -438,6 +442,7 @@ SOCIETY_STAGE = stage(
     "godlessness",
     "speciation",
     "couple_births",
+    "birth_signs",
     "house_cycles",
     "bloodlines",
     "love_and_rivalry",
@@ -454,6 +459,9 @@ SOCIETY_STAGE = stage(
     "language_policy",
     "price_of_magic",
     "architecture",
+    "art_market",
+    "art_movements",
+    "pastimes",
 )
 SOCIETY_ENGINE_STAGE = stage(
     "people_customs",

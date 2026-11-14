@@ -78,6 +78,7 @@ class PlotKind(StrEnum):
     FORGE_LETTER = "forge_letter"
     GEAS_TRAP = "geas_trap"
     HIDE_FLEET = "hide_fleet"
+    FORGE_WORK = "forge_work"
 
 
 class SchemePhase(StrEnum):

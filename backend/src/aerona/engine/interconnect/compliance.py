@@ -29,6 +29,7 @@ from aerona.db.tables.agrarian import (
 )
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.arcana import LabTextRow, LawUpkeepRow, LongevityRow, RiteGrammarRow, VisStockRow, WarpingRow
+from aerona.db.tables.arts import ArtMovementRow, ArtPriceRow, ArtSaleRow, BetRow, CanonWorkRow, ClubRow, CollectorRow, ForgeryRow, LeagueRow, MatchRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.collective import (
@@ -59,6 +60,8 @@ from aerona.db.tables.collective import (
     StoryletRunRow,
 )
 from aerona.db.tables.communication import CipherRow, PublicOpinionRow, SignalLinkRow
+from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow, RemadeRow
+from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmography import (
     CelestialReadingRow,
@@ -340,6 +343,7 @@ from aerona.db.tables.regime import (
 from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sacred import (
+    BirthSignRow,
     DivinationRow,
     DivinationSystemRow,
     DoctrineAfterlifeRow,
@@ -412,6 +416,227 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "S7.4/RP4",
+        (
+            ArtPriceRow.__tablename__,
+            ArtSaleRow.__tablename__,
+            CollectorRow.__tablename__,
+            ForgeryRow.__tablename__,
+            CanonWorkRow.__tablename__,
+        ),
+        (
+            "art_market",
+            "art_movements",
+        ),
+        (
+            "art_price:set",
+            "art_price:edit",
+            "art_price:delete",
+            "art_sale:create",
+            "art_sale:edit",
+            "art_sale:delete",
+            "collector:create",
+            "collector:edit",
+            "collector:delete",
+            "forgery:create",
+            "forgery:expose",
+            "forgery:edit",
+            "forgery:delete",
+            "canon_work:create",
+            "canon_work:edit",
+            "canon_work:delete",
+        ),
+        (
+            "ArtMarketPanel",
+            "ForgeryPanel",
+            "CanonPanel",
+            "section-pursuits",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        (
+            "buy_work",
+            "forge_work",
+            "expose_forgery",
+            "canonise_work",
+        ),
+        (
+            "arts.sold",
+            "arts.lured",
+            "arts.forged",
+            "arts.exposed",
+            "arts.canonised",
+        ),
+        ("0f1d26d58e9d",),
+    ),
+    ComplianceRow(
+        "S4.3/RP4",
+        (
+            ArtMovementRow.__tablename__,
+            ClubRow.__tablename__,
+            LeagueRow.__tablename__,
+            MatchRow.__tablename__,
+            BetRow.__tablename__,
+        ),
+        (
+            "art_movements",
+            "pastimes",
+        ),
+        (
+            "art_movement:create",
+            "art_movement:edit",
+            "art_movement:manifesto",
+            "art_movement:delete",
+            "club:create",
+            "club:edit",
+            "club:delete",
+            "league:create",
+            "league:edit",
+            "league:delete",
+            "match:create",
+            "match:edit",
+            "match:delete",
+            "bet:create",
+            "bet:edit",
+            "bet:delete",
+        ),
+        (
+            "MovementPanel",
+            "ClubPanel",
+            "LeaguePanel",
+            "MatchPanel",
+            "section-pursuits",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        (
+            "inspire_movement",
+            "found_club",
+            "rig_match",
+        ),
+        (
+            "arts.movement",
+            "arts.scandal",
+            "arts.orthodox",
+            "sport.club",
+            "sport.league",
+            "sport.champion",
+            "sport.bought",
+        ),
+        ("0f1d26d58e9d",),
+    ),
+    ComplianceRow(
+        "S3.3a/RP4",
+        (
+            ConstructRow.__tablename__,
+            InstructionSetRow.__tablename__,
+            InstructionOrderRow.__tablename__,
+            MonsterContractRow.__tablename__,
+        ),
+        (
+            "constructs",
+            "monster_contracts",
+        ),
+        (
+            "construct:create",
+            "construct:ensoul",
+            "construct:unmake",
+            "construct:edit",
+            "construct:delete",
+            "instruction_set:create",
+            "instruction_set:resolve",
+            "instruction_set:edit",
+            "instruction_set:delete",
+            "instruction_order:create",
+            "instruction_order:edit",
+            "instruction_order:delete",
+            "monster_contract:create",
+            "monster_contract:assign",
+            "monster_contract:edit",
+            "monster_contract:delete",
+        ),
+        (
+            "ConstructPanel",
+            "OrdersPanel",
+            "ContractPanel",
+            "section-pursuits",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        (
+            "build_construct",
+            "order_construct",
+            "seize_construct",
+            "command_construct",
+            "set_beast_bounty",
+            "take_contract",
+        ),
+        (
+            "construct.made",
+            "construct.seized",
+            "construct.will",
+            "construct.freed",
+            "construct.ended",
+            "construct.seal_lost",
+            "contract.posted",
+            "contract.taken",
+            "contract.slain",
+            "contract.failed",
+        ),
+        ("0f1d26d58e9d",),
+    ),
+    ComplianceRow(
+        "S3.1/RP4",
+        (BirthSignRow.__tablename__,),
+        ("birth_signs",),
+        (
+            "birth_sign:create",
+            "birth_sign:edit",
+            "birth_sign:delete",
+        ),
+        (
+            "BirthSignPanel",
+            "section-pursuits",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("mark_birth",),
+        ("sign.fostered",),
+        ("0f1d26d58e9d",),
+    ),
+    ComplianceRow(
+        "S4.5/RP4",
+        (RemadeRow.__tablename__,),
+        ("remade_lives",),
+        (
+            "remade:create",
+            "remade:edit",
+            "remade:delete",
+        ),
+        (
+            "RemadePanel",
+            "section-pursuits",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        (),
+        (
+            "law.remade",
+            "law.remade_rose",
+        ),
+        ("0f1d26d58e9d",),
+    ),
     ComplianceRow(
         "S3.3/RP4",
         (

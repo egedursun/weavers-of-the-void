@@ -93,6 +93,7 @@ export const TRIGGERS: Record<Schema['CollectiveTrigger'], Named> = {
   miracle: { label: 'A miracle', icon: Sparkles, tone: 'gold' },
   famine: { label: 'Hunger', icon: Wheat, tone: 'warning' },
   unpaid_wages: { label: 'Unpaid wages', icon: HandCoins, tone: 'warning' },
+  lost_match: { label: 'A lost match', icon: Trophy, tone: 'danger' },
 }
 
 export const OUTCOMES: Record<Schema['CascadeOutcome'], Named> = {

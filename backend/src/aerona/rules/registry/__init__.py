@@ -32,6 +32,18 @@ from aerona.rules.registry.arcana import (
 )
 from aerona.rules.registry.archive import ArchiveRules
 from aerona.rules.registry.army_depth import ArmyDepthRules
+from aerona.rules.registry.arts import (
+    ArtMarketRules,
+    ArtMovementRules,
+    AstrologyRules,
+    CanonRules,
+    CircusFactionRules,
+    ConstructRules,
+    ForgeryRules,
+    MonsterContractRules,
+    PunitiveRemakingRules,
+    SportRules,
+)
 from aerona.rules.registry.ascension import AscensionRules
 from aerona.rules.registry.awakening import AwakeningRules
 from aerona.rules.registry.backup import BackupRules
@@ -780,6 +792,16 @@ class Rules:
     prescience: PrescienceRules = field(default_factory=PrescienceRules)
     psychohistory: PsychohistoryRules = field(default_factory=PsychohistoryRules)
     emotion_feeding: EmotionFeedingRules = field(default_factory=EmotionFeedingRules)
+    art_markets: ArtMarketRules = field(default_factory=ArtMarketRules)
+    forgery: ForgeryRules = field(default_factory=ForgeryRules)
+    canon: CanonRules = field(default_factory=CanonRules)
+    art_movements: ArtMovementRules = field(default_factory=ArtMovementRules)
+    sports: SportRules = field(default_factory=SportRules)
+    circus_factions: CircusFactionRules = field(default_factory=CircusFactionRules)
+    constructs: ConstructRules = field(default_factory=ConstructRules)
+    monster_contracts: MonsterContractRules = field(default_factory=MonsterContractRules)
+    astrology: AstrologyRules = field(default_factory=AstrologyRules)
+    punitive_remaking: PunitiveRemakingRules = field(default_factory=PunitiveRemakingRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     theories: TheoriesRules = field(default_factory=TheoriesRules)

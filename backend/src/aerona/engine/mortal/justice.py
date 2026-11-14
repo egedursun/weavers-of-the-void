@@ -13,6 +13,7 @@ from aerona.domain.enums.mind import ActKind, ThoughtKind
 from aerona.domain.enums.mortal import CrimeKind, DeathCause, PunishmentKind
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.body.hits import Harm
+from aerona.engine.constructs.remaking import may_remake, remake
 from aerona.engine.context import TickContext
 from aerona.engine.factions.estates import immune
 from aerona.engine.law.prisons import imprison
@@ -38,6 +39,7 @@ CODE_PUNISHMENTS: dict[str, PunishmentKind] = {
     "tongue": PunishmentKind.TONGUE,
     "exile": PunishmentKind.EXILE,
     "death": PunishmentKind.DEATH,
+    "remaking": PunishmentKind.REMAKING,
 }
 MUTILATIONS: dict[PunishmentKind, tuple[BodyPart, ...]] = {
     PunishmentKind.HAND: (BodyPart.RIGHT_HAND,),
@@ -62,6 +64,7 @@ SENTENCE_TEXT = total(
         PunishmentKind.EYES: "was blinded by the law",
         PunishmentKind.DEATH: "was put to death",
         PunishmentKind.IMPRISONMENT: "was sent to prison",
+        PunishmentKind.REMAKING: "was remade in body by the law",
     },
 )
 CRIME_TEXT = total(
@@ -101,6 +104,9 @@ async def code_punishment(ctx: TickContext, community_id: int | None, crime: Cri
         return PunishmentKind.EXILE
     if chosen is PunishmentKind.DEATH and crime is CrimeKind.BLASPHEMY and not table.death_for_blasphemy:
         return PunishmentKind.TONGUE
+    cruel = chosen in MUTILATIONS or chosen is PunishmentKind.DEATH
+    if cruel and await may_remake(ctx, community_id) and ctx.rng(f"remake.{community_id}.{crime.value}").chance(ctx.rules.punitive_remaking.remake_chance):
+        return PunishmentKind.REMAKING
     return chosen
 
 
@@ -115,6 +121,8 @@ async def shame_publicly(ctx: TickContext, culprit: EntityRow, judge: EntityRow 
 async def jailed_or_fined(ctx: TickContext, culprit: EntityRow, punishment: PunishmentKind, case_id: int | None) -> PunishmentKind:
     if punishment is PunishmentKind.IMPRISONMENT and await imprison(ctx, culprit, case_id=case_id) is None:
         return PunishmentKind.FINE
+    if punishment is PunishmentKind.REMAKING:
+        await remake(ctx, culprit, case_id)
     return punishment
 
 

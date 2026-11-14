@@ -31,6 +31,7 @@ from aerona.engine.interconnect.catalog_affairs import AFFAIRS_MECHANICS
 from aerona.engine.interconnect.catalog_agrarian import AGRARIAN_MECHANICS
 from aerona.engine.interconnect.catalog_arcana import ARCANA_MECHANICS, MYTHIC_MECHANICS
 from aerona.engine.interconnect.catalog_army_depth import ARMY_DEPTH_MECHANICS
+from aerona.engine.interconnect.catalog_arts import ARTS_MECHANICS
 from aerona.engine.interconnect.catalog_battle_depth import BATTLE_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_collective import COLLECTIVE_MECHANICS
 from aerona.engine.interconnect.catalog_communication import COMMUNICATION_MECHANICS
@@ -1016,6 +1017,7 @@ BUILT_IN = (
     *AGRARIAN_MECHANICS,
     *OPERATIONS_MECHANICS,
     *SACRED_MECHANICS,
+    *ARTS_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,

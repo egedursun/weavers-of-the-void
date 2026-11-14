@@ -29,6 +29,9 @@ class FactionKind(StrEnum):
     THIEVES_GUILD = "thieves_guild"
     SMUGGLING_RING = "smuggling_ring"
     PIRATE_CONFEDERACY = "pirate_confederacy"
+    ART_MOVEMENT = "art_movement"
+    CLUB = "club"
+    LEAGUE = "league"
 
 
 class FoundableFaction(StrEnum):

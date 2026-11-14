@@ -487,6 +487,17 @@ class EnginePhasesRules:
     foresight: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: divination systems and their readings, seers and their foresights, and forecast models"
     )
+    art_market: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: collectors, prices and sales of works, courts drawing artists, forgeries and their exposure"
+    )
+    art_movements: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: art movements, their patrons and scandals, and the canon of each people")
+    pastimes: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: clubs and leagues, matches and betting, and clubs turning into political factions"
+    )
+    constructs: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: constructs, their power and decay, their orders and will")
+    monster_contracts: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: contracts posted on beasts and the hunters who take them")
+    birth_signs: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the signs mortals are born under and what is done about dreaded ones")
+    remade_lives: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the lives of the remade, their labour, grievance and revolts")
     equipment_forging: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: forging weapons, armour and engines into the models of each realm")
     unit_types: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: realms drawing, refitting and sharing their own kinds of soldier")
     vehicle_works: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: yards building vehicles, and the fuel and upkeep of every vehicle group")
