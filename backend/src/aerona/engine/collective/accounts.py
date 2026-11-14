@@ -22,6 +22,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus
 from aerona.domain.enums.war import CasusBelliKind
+from aerona.engine.belonging.effects import GROUP_LAYERS, identities_of, same_value
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import realm_of_town, ruler_id, shift
 from aerona.engine.collective.crowds import begin_movement
@@ -32,6 +33,7 @@ from aerona.engine.mind.ethics import holder_kind
 from aerona.engine.notes import note
 from aerona.engine.polity.control import grant_claim
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import stat_or
 
@@ -270,6 +272,28 @@ async def artwork_of(ctx: TickContext, realm_id: int, subjects: list[int]) -> in
     )
 
 
+async def identity_accounts(ctx: TickContext, collection: CollectionRow, members: Members, places: list[int], tally: HistoryTally) -> None:
+    for place in places:
+        rows = await identities_of(ctx.session, place)
+        keepers = [
+            row for row in rows.values() if row.layer in GROUP_LAYERS and row.value_node_id is not None and row.salience >= ctx.rules.identities.memory_at
+        ]
+        if not keepers:
+            continue
+        keeper = max(keepers, key=lambda row: (row.salience, row.layer.value))
+        group = await living_entity(ctx.session, keeper.value_node_id)
+        if group is None:
+            continue
+        stances = {}
+        for node, _role in members:
+            mine = (await identities_of(ctx.session, node)).get(keeper.layer)
+            stances[node] = AccountStance.GLORIFY if mine is not None and same_value(mine, keeper) else AccountStance.NEUTRAL
+        written = await record(
+            ctx, group, AccountKind.FOLK_MEMORY, fidelity=ctx.rules.historiography.folk_fidelity, stances=stances, collection_id=collection.id
+        )
+        tally.accounts += written is not None
+
+
 async def chronicle_collection(ctx: TickContext, collection: CollectionRow, tally: HistoryTally) -> None:
     query = select(CollectionMemberRow.node_id, CollectionMemberRow.role).where(CollectionMemberRow.collection_id == collection.id)
     members: Members = [(node, role) for node, role in await ctx.session.execute(query)]
@@ -277,6 +301,7 @@ async def chronicle_collection(ctx: TickContext, collection: CollectionRow, tall
     await realm_accounts(ctx, collection, members, places, tally)
     await folk_accounts(ctx, collection, members, places, tally)
     await gospels(ctx, collection, members, tally)
+    await identity_accounts(ctx, collection, members, places, tally)
 
 
 async def write_accounts(ctx: TickContext, tally: HistoryTally) -> None:

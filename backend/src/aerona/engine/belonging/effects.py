@@ -9,6 +9,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
 FAULT_LAYERS = (IdentityLayer.PEOPLE, IdentityLayer.FAITH, IdentityLayer.LOCALITY)
+GROUP_LAYERS = frozenset({IdentityLayer.HOUSE, IdentityLayer.PROFESSION, IdentityLayer.CIRCLE, IdentityLayer.LOCALITY})
 
 
 @memoized(HeldIdentityRow)

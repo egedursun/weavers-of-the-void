@@ -6,6 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.belonging import SanctuaryLawRow, SanctuaryRow
 from aerona.db.tables.collective import SocialNormRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import DefectionRow, OutlawRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -22,7 +23,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import ruler_id
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import realm_of
-from aerona.engine.economy.purse import give_coin, take_coin
+from aerona.engine.economy.purse import give_coin, receive_coin, take_coin
 from aerona.engine.law.prisons import imprison
 from aerona.engine.mind.hooks import desecrated
 from aerona.engine.mortal.standing import add_infamy
@@ -30,6 +31,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.services.community_relations import change_relation
 
 HOLY = (StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MONASTERY)
@@ -172,14 +174,26 @@ async def violate(ctx: TickContext, row: SanctuaryRow, host: EntityRow, pursuer:
     await note(ctx, f"{pursuer.name} broke the sanctuary of {host.name}.", key="sanctuary.violated", ids=[pursuer.id, host.id])
 
 
+async def pay_host(ctx: TickContext, host: EntityRow, amount: int) -> None:
+    keeper = await ctx.session.scalar(select(CultHoldingRow.cult_entity_id).where(CultHoldingRow.holding_entity_id == host.id).limit(1))
+    doctrine = await ctx.session.get(CultDoctrineRow, keeper) if keeper is not None else None
+    if doctrine is None or "treasury" in doctrine.locked:
+        await give_coin(ctx.session, ctx.rules, host, amount)
+        return
+    doctrine.treasury += amount
+    cult = await ctx.session.get(EntityRow, keeper)
+    if cult is not None and not held(cult.id):
+        shift_stat(cult, "influence", ctx.rules.sanctuary.cult_influence, default=0)
+
+
 async def split_fee(ctx: TickContext, row: SanctuaryRow, host: EntityRow) -> None:
     realm = await realm_of(ctx.session, host.location_id or host.id)
     law = await ctx.session.get(SanctuaryLawRow, realm) if realm is not None else None
     levy = round_half_up(row.fee * law.fee_pct / PERCENT) if law is not None else 0
     polity = await ctx.session.get(EntityRow, realm) if levy and realm is not None else None
     if polity is not None:
-        await give_coin(ctx.session, ctx.rules, polity, levy)
-    await give_coin(ctx.session, ctx.rules, host, row.fee - (levy if polity is not None else 0))
+        await receive_coin(ctx.session, ctx.rules, polity, levy)
+    await pay_host(ctx, host, row.fee - (levy if polity is not None else 0))
 
 
 async def pursue(ctx: TickContext, row: SanctuaryRow, tally: SanctuaryTally) -> None:
@@ -197,7 +211,7 @@ async def pursue(ctx: TickContext, row: SanctuaryRow, tally: SanctuaryTally) -> 
         return
     if row.state is SanctuaryState.NEGOTIATING:
         if await take_coin(ctx.session, ctx.rules, pursuer, table.ransom):
-            await give_coin(ctx.session, ctx.rules, host, table.ransom)
+            await pay_host(ctx, host, table.ransom)
             await hand_over(ctx, row, SanctuaryState.ENDED)
             tally.bargained += 1
         return

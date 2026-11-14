@@ -25,6 +25,7 @@ class IdentityRules:
     separatism: int = rule(20, 0, 100, P, "Loyalty a realm member loses when a fully salient people or locality differs from its ruler's")
     mobilisation_pct: int = rule(20, 0, 100, P, "Share more or less levy a realm raises as realm salience stands above or below the resting salience (%)")
     fault_at: int = rule(55, 0, 100, M, "Salience from which a layer becomes the line along which a realm divides")
+    memory_at: int = rule(50, 0, 100, M, "Salience from which the identity group of a place keeps its own account of what happened there")
 
 
 @dataclass(frozen=True)
@@ -45,6 +46,7 @@ class PeerRules:
 class SanctuaryRules:
     seek_chance: int = rule(40, 0, 100, R, "Chance a hunted mortal seeks sanctuary in an epoch (%)")
     fee: int = rule(2, 0, 1000, R, "Coin a sheltered fugitive pays its host each epoch")
+    cult_influence: int = rule(1, 0, 20, R, "Influence a cult gains each epoch a temple it holds is paid for sanctuary")
     negotiate_chance: int = rule(30, 0, 100, P, "Chance a pursuer bargains for the fugitive in an epoch (%)")
     besiege_chance: int = rule(25, 0, 100, P, "Chance a pursuer surrounds the refuge in an epoch (%)")
     violate_chance: int = rule(10, 0, 100, P, "Chance a pursuer breaks the sanctuary in an epoch (%)")

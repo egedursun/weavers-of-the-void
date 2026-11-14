@@ -20,10 +20,12 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.enums.mind import Facet, SkillKind
 from aerona.domain.enums.mortal import LifeStage
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.skills import practise
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
@@ -57,6 +59,9 @@ CLASS_PLAY = {
 }
 
 
+LABOURING = frozenset({SocialClass.FARMER, SocialClass.SERF_OR_SLAVE, SocialClass.WORKER, SocialClass.UNEMPLOYED, SocialClass.OUTCAST, SocialClass.ARTISAN})
+
+
 @dataclass
 class PeerTally:
     groups: int = 0
@@ -82,6 +87,10 @@ async def shift_facet(ctx: TickContext, node_id: int, facet: Facet, amount: int)
         ctx.session.add(FacetRow(node_id=node_id, facet=facet, value=clamp_int(amount, FACET_MIN, FACET_MAX)))
     else:
         row.value = clamp_int(row.value + amount, FACET_MIN, FACET_MAX)
+
+
+async def put_to_work(ctx: TickContext, town_id: int, social_class: SocialClass) -> bool:
+    return social_class in LABOURING and await law_param(ctx.session, town_id, LawKind.LABOUR_LAW, "child_labour") is True
 
 
 async def troubled_lands(ctx: TickContext) -> set[int]:
@@ -209,7 +218,8 @@ async def keep_peers(ctx: TickContext, tally: PeerTally) -> None:
             )
             ctx.session.add(group)
             await ctx.session.flush()
-        await keep_group(ctx, group, children, atlas.top_region(town_id) in troubled, tally)
+        kept_from_play = atlas.top_region(town_id) in troubled or await put_to_work(ctx, town_id, social_class)
+        await keep_group(ctx, group, children, kept_from_play, tally)
         tally.groups += 1
     await ctx.session.flush()
 

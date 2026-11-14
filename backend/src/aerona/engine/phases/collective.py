@@ -133,6 +133,7 @@ async def social_norms(ctx: TickContext) -> None:
     "table.collection_places",
     "table.culture_values",
     "table.epoch_year_cursors",
+    "table.held_identities",
     "table.house_members",
     "table.incident_collections",
     "table.memory_strikes",

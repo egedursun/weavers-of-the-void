@@ -3,11 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import has_stat, shift_stat, stat
 from aerona.rules.registry import Rules
 
 TREASURY_LOCK = "treasury"
@@ -72,9 +73,27 @@ async def take_coin(session: AsyncSession, rules: Rules, payer: EntityRow, amoun
     return True
 
 
+def holds_wealth(holder: EntityRow) -> bool:
+    return holder.entity_type is EntityType.MORTAL or has_stat(holder, "wealth")
+
+
 async def give_coin(session: AsyncSession, rules: Rules, payee: EntityRow, amount: int) -> None:
-    if amount > 0:
+    if amount <= 0:
+        return
+    if holds_wealth(payee):
         await shift_points(session, payee, wealth_points(rules, amount))
+        return
+    doctrine = await session.get(CultDoctrineRow, payee.id)
+    if doctrine is not None and TREASURY_LOCK not in doctrine.locked:
+        doctrine.treasury += amount
+        return
+    realm = await realm_purse(session, payee)
+    if realm is not None and TREASURY_LOCK not in realm.locked:
+        realm.treasury += amount
+        return
+    place = await session.get(EntityRow, payee.location_id) if payee.location_id is not None else None
+    if place is not None:
+        await give_coin(session, rules, place, amount)
 
 
 async def receive_coin(session: AsyncSession, rules: Rules, payee: EntityRow, amount: int) -> None:

@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind
-from aerona.domain.models.entity_stats import FactionStats, MortalStats, PolityStats
+from aerona.domain.models.entity_stats import CultStats, FactionStats, MortalStats, PolityStats, StructureStats
 from aerona.engine.economy.purse import coin_of, give_coin, take_coin, wealth_points
 from aerona.engine.lore.great_people import monopoly
 from aerona.engine.primitives.manual import manual_context
@@ -74,3 +75,30 @@ async def test_a_mortal_whose_wealth_is_held_neither_pays_nor_is_paid(session: A
     assert not await take_coin(session, ctx.rules, mortal, rate)
     profile = await session.get(MortalProfileRow, mortal.id)
     assert profile is not None and profile.wealth == 10
+
+
+async def test_coin_given_to_a_holder_without_a_purse_reaches_its_keeper(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "test")
+    rate = ctx.rules.taxation.wealth_per_treasury
+    town = await settlement(session, "Brookhold", world, world.regions[0])
+    set_stats(town, wealth=10)
+    temple = await entity(session, "Hall of Rest", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+    await give_coin(session, ctx.rules, temple, 2 * rate)
+    assert stat(town, "wealth") == 12
+    polity = await entity(session, "Kingdom of Vale", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    realm = PolityProfileRow(
+        polity_entity_id=polity.id,
+        government=next(iter(GovernmentKind)),
+        decision_rule=next(iter(DecisionRule)),
+        treasury=0,
+        emblem={},
+        legitimacy_parts={},
+        locked=[],
+    )
+    cult = await entity(session, "The Open Door", EntityType.CULT, CultStats(followers=10), world_id=world.world.id)
+    doctrine = CultDoctrineRow(cult_entity_id=cult.id, locked=[])
+    session.add_all([realm, doctrine])
+    await session.flush()
+    await give_coin(session, ctx.rules, polity, 30)
+    await give_coin(session, ctx.rules, cult, 20)
+    assert realm.treasury == 30 and doctrine.treasury == 20

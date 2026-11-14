@@ -11,7 +11,7 @@ BELONGING_MECHANICS = (
         spec_item="F43",
         title="Identity layers and salience: holy war, hunger, invasion, strikes, preaching, segregation and mixed marriages set which identity matters",
         subsystem=S.SOCIAL,
-        phases=("belonging", "polity_cycles", "labour_allocation"),
+        phases=("belonging", "polity_cycles", "labour_allocation", "historiography"),
         surface=Surface(drawer=DRAWER, chart="chart-identities"),
         backfill="belonging: every town, people and named mortal reads its identities from the next epoch",
         templates=(),
@@ -28,6 +28,7 @@ BELONGING_MECHANICS = (
             Coupling(S.POLITY, "a salient bond with the realm holds a member loyal", E.MODIFIER, "identities.cohesion"),
             Coupling(S.POLITY, "a member that differs from its ruler along the realm's fault line drifts away", E.MODIFIER, "identities.separatism"),
             Coupling(S.WAR, "a salient realm identity raises the levy", E.MODIFIER, "identities.mobilisation_pct"),
+            Coupling(S.CULTURE, "the identity group of a place keeps its own account of what happened there", E.FLOW, "identities.memory_at"),
         ),
     ),
     Mechanic(
@@ -46,6 +47,7 @@ BELONGING_MECHANICS = (
             Coupling(S.MIND, "play teaches a skill", E.FLOW, "peer_groups.play_skill"),
             Coupling(S.SOCIAL, "children of a group become friends or rivals", E.TRIGGER, "peer_groups.friend_chance"),
             Coupling(S.MIND, "a childhood without play leaves stress in the grown", E.MODIFIER, "peer_groups.deprived_stress"),
+            Coupling(S.LAW, "a law that puts children to work keeps labouring children from play", E.RULE_SWITCH, "peer_groups.deprived_cheer"),
             Coupling(S.POLITY, "a ruler's childhood companions are favoured for the council", E.MODIFIER, "peer_groups.companion_weight"),
         ),
     ),
@@ -65,6 +67,7 @@ BELONGING_MECHANICS = (
         couplings=(
             Coupling(S.LAW, "a sheltered fugitive cannot be seized or punished", E.RULE_SWITCH, "sanctuary.seek_chance"),
             Coupling(S.FAITH, "a temple earns a fee from those it shelters", E.FLOW, "sanctuary.fee"),
+            Coupling(S.FAITH, "a cult gains influence from the sanctuary its temples give", E.FLOW, "sanctuary.cult_influence"),
             Coupling(S.POLITY, "breaking sanctuary brings infamy and the god's curse", E.TRIGGER, "sanctuary.infamy"),
             Coupling(S.POLITY, "asylum sours the realm the fugitive fled", E.FLOW, "sanctuary.asylum_relation"),
         ),

@@ -5,34 +5,37 @@ from aerona.agents.context.belonging_lines import mortal_belonging_lines
 from aerona.agents.context.scope import load_scope
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryLawRow, SanctuaryRow, SatireRow
-from aerona.db.tables.collective import SocialNormRow
+from aerona.db.tables.collective import AccountRow, AccountStanceRow, SocialNormRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import BiasWeightRow
+from aerona.db.tables.gatherings import CollectionMemberRow, CollectionPlaceRow, CollectionRow
 from aerona.db.tables.law_depth import DefectionRow, OutlawRow
 from aerona.db.tables.mind import FacetRow, SkillRow
 from aerona.db.tables.mortal import MarriageRow, MortalProfileRow
-from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.belonging import FugitiveKind, IdentityLayer, PlayKind, SalienceDriver, SanctuaryKind, SanctuaryState, SatireSource
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.collective import NormBehaviour, NormSituation
+from aerona.domain.enums.collective import AccountStance, NormBehaviour, NormSituation
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.folkways import DecisionBias
+from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.mind import EthicalStance, Facet
 from aerona.domain.enums.mortal import LifeStage
-from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
+from aerona.domain.enums.polity import DecisionRule, GovernmentKind, Jurisdiction, LawArea, LawKind, OfficeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LoyaltyPart
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import WarCause, WarSide
-from aerona.domain.models.entity_stats import EventStats, PeopleStats, PolityStats, StructureStats
+from aerona.domain.models.entity_stats import EventStats, HouseStats, LawStats, PeopleStats, PolityStats, StructureStats
 from aerona.engine.belonging.effects import identity_levy, shared_identity
 from aerona.engine.belonging.identities import IdentityTally, keep_identities
 from aerona.engine.belonging.mockery import sting, vent
 from aerona.engine.belonging.peers import PeerTally, companions_of, keep_peers
 from aerona.engine.belonging.sanctuary import SanctuaryTally, keep_sanctuaries
 from aerona.engine.belonging.satire import SatireTally, keep_satire
+from aerona.engine.collective.accounts import HistoryTally, chronicle_collection
 from aerona.engine.context import TickContext
 from aerona.engine.law.prisons import imprison
 from aerona.engine.polity.book import Realm
@@ -279,3 +282,45 @@ async def test_a_mortal_reads_its_identities_and_refuge_in_its_context(session: 
     await session.flush()
     lines = " ".join(await mortal_belonging_lines(await load_scope(session, tuned_rules()), me))
     assert "your locality (Velmor) matters 70 out of 100 to you" in lines and "you shelter in Velmor" in lines
+
+
+async def test_the_salient_identity_group_of_a_place_keeps_its_own_account(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Velmor", world, world.regions[0])
+    house = await entity(session, "House Arvel", EntityType.HOUSE, HouseStats(), world_id=world.world.id)
+    kin, stranger = await mortal(session, "Iri", world, town.id), await mortal(session, "Oss", world, town.id)
+    session.add_all(
+        [
+            HeldIdentityRow(holder_entity_id=town.id, layer=IdentityLayer.HOUSE, value_node_id=house.id, salience=80, locked=[]),
+            HeldIdentityRow(holder_entity_id=kin.id, layer=IdentityLayer.HOUSE, value_node_id=house.id, salience=60, locked=[]),
+        ]
+    )
+    battle = CollectionRow(kind=CollectionKind.WAR, name="The siege", world_id=world.world.id, start_epoch=3, locked=[])
+    session.add(battle)
+    await session.flush()
+    session.add_all(
+        [
+            CollectionMemberRow(collection_id=battle.id, node_id=kin.id, role=CollectionRole.WINNER, since_epoch=0),
+            CollectionMemberRow(collection_id=battle.id, node_id=stranger.id, role=CollectionRole.WINNER, since_epoch=0),
+            CollectionPlaceRow(collection_id=battle.id, place_entity_id=town.id),
+        ]
+    )
+    await session.flush()
+    await chronicle_collection(await at(session, 3), battle, HistoryTally())
+    told = await session.scalar(select(AccountRow).where(AccountRow.holder_entity_id == house.id, AccountRow.collection_id == battle.id))
+    assert told is not None
+    stances = {row.node_id: row.stance for row in await session.scalars(select(AccountStanceRow).where(AccountStanceRow.account_id == told.id))}
+    assert stances == {kin.id: AccountStance.GLORIFY, stranger.id: AccountStance.NEUTRAL}
+
+
+async def test_a_law_that_puts_children_to_work_keeps_labouring_children_from_play(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Velmor", world, world.regions[0])
+    await youngster(session, world, "Iri", town)
+    await youngster(session, world, "Oss", town)
+    law = await entity(session, "Law of the mills", EntityType.LAW, LawStats(), world_id=world.world.id)
+    session.add(LawProfileRow(law_entity_id=law.id, kind=LawKind.LABOUR_LAW, area=LawArea.SOCIAL, params={"child_labour": True}, enforcement=80))
+    session.add(LawJurisdictionRow(law_entity_id=law.id, node_entity_id=town.id, jurisdiction=Jurisdiction.POLITY))
+    await session.flush()
+    tally = PeerTally()
+    await keep_peers(await at(session, 3), tally)
+    group = await session.scalar(select(PeerGroupRow).where(PeerGroupRow.settlement_entity_id == town.id))
+    assert group is not None and group.deprived and tally.deprived == 2

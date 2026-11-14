@@ -87,7 +87,7 @@ function GroupCard({ row, blocked }: { row: Group; blocked: string | null }) {
     <Held
       icon={play.icon}
       tone={row.deprived ? 'warning' : play.tone}
-      title={`${rank.label} children of ${row.settlement.name}`}
+      title={`Children of the ${rank.label.toLowerCase()} of ${row.settlement.name}`}
       caption={`${play.label} · ${plural(row.children, 'child', 'children')} · cohesion ${row.cohesion} · formed in epoch ${row.formed_epoch}${row.dissolved_epoch !== null ? ` · grown up by epoch ${row.dissolved_epoch}` : ''}`}
       removeLabel='Break up the group'
       editTitle='Set the group'
@@ -223,7 +223,7 @@ export function PeersPanel({
         ]}
         rows={data.peer_groups.map((row) => ({
           key: String(row.id),
-          caption: `${CLASS_SPEC[row.social_class].label} of ${row.settlement.name}: ${plural(row.members.length, 'named child', 'named children')}, cohesion ${row.cohesion}`,
+          caption: `Children of the ${CLASS_SPEC[row.social_class].label.toLowerCase()} of ${row.settlement.name}: ${plural(row.members.length, 'named child', 'named children')}, cohesion ${row.cohesion}`,
           segments: [
             {
               value: row.cohesion,
@@ -303,7 +303,7 @@ export function PeersPanel({
           table={Object.fromEntries(
             data.peer_groups.map((row) => [
               String(row.id),
-              `${CLASS_SPEC[row.social_class].label} of ${row.settlement.name}`,
+              `Children of the ${CLASS_SPEC[row.social_class].label.toLowerCase()} of ${row.settlement.name}`,
             ])
           )}
           placeholder='Choose'

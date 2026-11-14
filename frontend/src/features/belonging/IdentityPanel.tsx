@@ -27,7 +27,7 @@ type Identity = View['identities'][number]
 const HOLDERS = ['mortal', 'settlement', 'people']
 
 function valueName(row: Identity): string {
-  return row.value?.name ?? row.value_label ?? 'none yet'
+  return row.value?.name ?? row.value_label ?? 'no single value'
 }
 
 function IdentityCard({
@@ -101,7 +101,7 @@ function IdentityCard({
           [
             'Held with',
             row.value ? (
-              <Ref key='value' node={row.value} empty='none yet' />
+              <Ref key='value' node={row.value} empty='no single value' />
             ) : (
               valueName(row)
             ),
