@@ -44,6 +44,14 @@ from aerona.db.tables.arcana import LabTextRow, LawUpkeepRow, LongevityRow, Rite
 from aerona.db.tables.arts import ArtMovementRow, ArtPriceRow, ArtSaleRow, BetRow, CanonWorkRow, ClubRow, CollectorRow, ForgeryRow, LeagueRow, MatchRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.climes import (
+    ClimateOscillationRow,
+    CosmopolitanCultureRow,
+    CosmopolitanMemberRow,
+    LaunchWindowRow,
+    MonsoonSeasonRow,
+    RegionWindRow,
+)
 from aerona.db.tables.collective import (
     AccountRow,
     AccountStanceRow,
@@ -479,6 +487,64 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "S10.7/RP5",
+        (RegionWindRow.__tablename__, MonsoonSeasonRow.__tablename__, ClimateOscillationRow.__tablename__),
+        ("climes",),
+        (
+            "region_wind:set",
+            "region_wind:edit",
+            "region_wind:delete",
+            "monsoon_season:set",
+            "monsoon_season:edit",
+            "monsoon_season:delete",
+            "climate_oscillation:set",
+            "climate_oscillation:edit",
+            "climate_oscillation:delete",
+            "climes:run",
+        ),
+        (
+            "WindsPanel",
+            "SeasonsPanel",
+            "section-climes",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("turn_wind", "stir_monsoon"),
+        ("monsoons.failed", "oscillations.turned"),
+        ("b4d8cd9d30e3",),
+    ),
+    ComplianceRow(
+        "S10.4/RP5",
+        (LaunchWindowRow.__tablename__, CosmopolitanCultureRow.__tablename__, CosmopolitanMemberRow.__tablename__),
+        ("crossings",),
+        (
+            "launch_window:set",
+            "launch_window:edit",
+            "launch_window:delete",
+            "cosmopolitan_culture:create",
+            "cosmopolitan_culture:edit",
+            "cosmopolitan_culture:delete",
+            "cosmopolitan_culture:value",
+            "cosmopolitan_member:set",
+            "cosmopolitan_member:edit",
+            "cosmopolitan_member:delete",
+            "crossings:run",
+        ),
+        (
+            "CrossingsPanel",
+            "section-climes",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("join_road_folk",),
+        ("cosmopolitan.formed",),
+        ("b4d8cd9d30e3",),
+    ),
     ComplianceRow(
         "S6.1/RP5",
         (CatchGroundRow.__tablename__,),

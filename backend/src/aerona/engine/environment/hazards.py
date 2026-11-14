@@ -17,6 +17,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind, WeatherEffect
 from aerona.domain.enums.region import HazardSeason, TerrainHazard
 from aerona.engine.body.hits import Harm
+from aerona.engine.climes.shifts import fire_wind
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.cover import claim
 from aerona.engine.environment.book import EnvironmentBook, add_scar
@@ -226,7 +227,8 @@ async def roll_hazards(ctx: TickContext) -> HazardTally:
                     return tally
                 weather = book.weather(ctx.environment.world_seed, ctx.epoch, ground, season, f"hazard.{hazard.value}.{year.year}")
                 power = strength_of(rules, hazard, spec, dict(weather.effects))
-                if power and ctx.rng(f"hazard.{region_id}.{hazard.value}.{year.year}").chance(chance_of(rules, hazard) * power / PERCENT):
+                fanned = await fire_wind(ctx.session, rules, region_id) if hazard is TerrainHazard.WILDFIRE else 1.0
+                if power and ctx.rng(f"hazard.{region_id}.{hazard.value}.{year.year}").chance(chance_of(rules, hazard) * power / PERCENT * fanned):
                     await strike(ctx, atlas, ground, hazard, season=season, year=year.year, tally=tally)
                     break
     await ctx.session.flush()

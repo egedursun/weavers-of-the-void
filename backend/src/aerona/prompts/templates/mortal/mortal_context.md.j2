@@ -85,6 +85,7 @@ YOUR WORK: {{ stores.job }}{% endif %}{% endif %}
 {% endif %}{% if home and home.folkways %}BODY, PURITY, LUCK AND MISFORTUNE: {{ home.folkways | join('; ') }}
 {% endif %}{% if home and home.folk_customs %}MARKS, NAMES, AGE-SET, BELONGING AND CUSTOMS: {{ home.folk_customs | join('; ') }}
 {% endif %}{% if home and home.crafts %}TRADES, AIDS, GAMES AND SPIRITS: {{ home.crafts | join('; ') }}
+{% endif %}{% if home and home.climes %}WINDS, SEASONS, CROSSINGS AND ROADS: {{ home.climes | join('; ') }}
 {% endif %}{% if home and (home.needs or home.wealth or home.loyalty or home.labour) %}YOUR LOT{% if home.needs %}: your class goes short of {{ home.needs | join(', ') }}{% endif %}{% if home.wealth %}; {{ home.wealth }}{% endif %}{% if home.loyalty %}; {{ home.loyalty }}{% endif %}{% if home.labour %}; the work of your home: {{ home.labour | join(', ') }}{% endif %}{% endif %}
 
 {% endset %}

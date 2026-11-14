@@ -27,6 +27,7 @@ from aerona.domain.enums.sacred import DivinationKind, DivinationQuestion, Divin
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import ProphecyStats
+from aerona.engine.climes.shifts import oscillation_sight
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.control import new_plan
 from aerona.engine.divine.laws import binds
@@ -353,7 +354,8 @@ async def foresee(
             return None
         chosen = max(futures, key=lambda item: (item[2], -item[1]))
     predicate, subject, chance = chosen
-    certainty = clamp_int((chance + sight) // 2 - table.rival_cloud * await rivals_near(ctx, seer_id, world_id), 0, PERCENT)
+    clouded = table.rival_cloud * await rivals_near(ctx, seer_id, world_id)
+    certainty = clamp_int((chance + sight) // 2 - clouded + await oscillation_sight(ctx.session, ctx.rules, seer_id, world_id), 0, PERCENT)
     epochs = horizon_epochs(ctx)
     row = ForesightRow(
         seer_node_id=seer_id,

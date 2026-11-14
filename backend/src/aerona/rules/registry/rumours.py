@@ -19,6 +19,7 @@ class RumoursRules:
     pilgrimage_chance: int = rule(30, 0, 100, C, "Word passes between pilgrims of one faith in an epoch (%)")
     journey_chance: int = rule(50, 0, 100, C, "Travellers carry word to where they arrive (%)")
     spy_chance: int = rule(80, 0, 100, C, "Spies report what is said in the land they watch (%)")
+    current_chance: int = rule(15, 0, 100, C, "Wrecks and castaways an ocean current carries bring word to the next coast it reaches (%)")
     spy_bonus: int = rule(15, 0, 100, C, "Fidelity spies keep in what they report")
     linger_decay: int = rule(2, 0, 100, C, "Fidelity an old rumour loses each epoch it lingers")
     atrocity_hatred: int = rule(20, 0, 100, C, "Ill will a community holds for the doer of an atrocity it heard of, at full fidelity")

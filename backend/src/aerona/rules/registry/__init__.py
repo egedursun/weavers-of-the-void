@@ -73,6 +73,14 @@ from aerona.rules.registry.city_plan import CityPlanRules
 from aerona.rules.registry.civilization import CivilizationRules
 from aerona.rules.registry.climate_effects import ClimateEffectsRules
 from aerona.rules.registry.climate_world_type import ClimateWorldTypeRules
+from aerona.rules.registry.climes import (
+    CosmopolitanRules,
+    CurrentRules,
+    LaunchWindowRules,
+    MonsoonRules,
+    OscillationRules,
+    WindRules,
+)
 from aerona.rules.registry.collective import (
     CollectiveBehaviourRules,
     DatingRules,
@@ -635,6 +643,12 @@ class Rules:
     affinities: AffinityRules = field(default_factory=AffinityRules)
     sympathy: SympathyRules = field(default_factory=SympathyRules)
     emotion_spirits: EmotionSpiritRules = field(default_factory=EmotionSpiritRules)
+    winds: WindRules = field(default_factory=WindRules)
+    monsoons: MonsoonRules = field(default_factory=MonsoonRules)
+    oscillations: OscillationRules = field(default_factory=OscillationRules)
+    currents: CurrentRules = field(default_factory=CurrentRules)
+    launch_windows: LaunchWindowRules = field(default_factory=LaunchWindowRules)
+    cosmopolitan: CosmopolitanRules = field(default_factory=CosmopolitanRules)
     body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)

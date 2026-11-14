@@ -25,6 +25,7 @@ from aerona.services.player import (
     celestial_depth,
     cheats,
     civilization,
+    climes,
     collective,
     communication,
     constructs,
@@ -3876,6 +3877,92 @@ AGES_ACTIONS = (
     _sync(Meta("setup:delete", "Strike a setup from the record", G.FATE), ages.setup_delete, ages.SetupTarget, free, ("F36",)),
 )
 
+CLIMES_ACTIONS = (
+    _sync(Meta("region_wind:set", "Set a prevailing wind", G.WORLDS), climes.region_wind_set, climes.RegionWindDraft, free, ("S10.7/RP5",)),
+    _sync(Meta("region_wind:edit", "Edit a prevailing wind", G.WORLDS), climes.region_wind_edit, climes.RegionWindEdit, free, ("S10.7/RP5",)),
+    _sync(Meta("region_wind:delete", "Strike a prevailing wind", G.WORLDS), climes.region_wind_delete, climes.RegionWindTarget, free, ("S10.7/RP5",)),
+    _sync(Meta("monsoon_season:set", "Set a monsoon of a year", G.WORLDS), climes.monsoon_season_set, climes.MonsoonSeasonDraft, free, ("S10.7/RP5",)),
+    _sync(Meta("monsoon_season:edit", "Edit a monsoon of a year", G.WORLDS), climes.monsoon_season_edit, climes.MonsoonSeasonEdit, free, ("S10.7/RP5",)),
+    _sync(
+        Meta("monsoon_season:delete", "Strike a monsoon of a year", G.WORLDS), climes.monsoon_season_delete, climes.MonsoonSeasonTarget, free, ("S10.7/RP5",)
+    ),
+    _sync(
+        Meta("climate_oscillation:set", "Set a climate oscillation", G.WORLDS),
+        climes.climate_oscillation_set,
+        climes.ClimateOscillationDraft,
+        free,
+        ("S10.7/RP5",),
+    ),
+    _sync(
+        Meta("climate_oscillation:edit", "Edit a climate oscillation", G.WORLDS),
+        climes.climate_oscillation_edit,
+        climes.ClimateOscillationEdit,
+        free,
+        ("S10.7/RP5",),
+    ),
+    _sync(
+        Meta("climate_oscillation:delete", "Strike a climate oscillation", G.WORLDS),
+        climes.climate_oscillation_delete,
+        climes.ClimateOscillationTarget,
+        free,
+        ("S10.7/RP5",),
+    ),
+    _sync(Meta("launch_window:set", "Set a launch window", G.COSMOS), climes.launch_window_set, climes.LaunchWindowDraft, free, ("S10.4/RP5",)),
+    _sync(Meta("launch_window:edit", "Edit a launch window", G.COSMOS), climes.launch_window_edit, climes.LaunchWindowEdit, free, ("S10.4/RP5",)),
+    _sync(Meta("launch_window:delete", "Strike a launch window", G.COSMOS), climes.launch_window_delete, climes.LaunchWindowTarget, free, ("S10.4/RP5",)),
+    _sync(
+        Meta("cosmopolitan_culture:create", "Make a culture of a road", G.COSMOS),
+        climes.cosmopolitan_culture_create,
+        climes.CosmopolitanCultureDraft,
+        free,
+        ("S10.4/RP5",),
+    ),
+    _sync(
+        Meta("cosmopolitan_culture:edit", "Edit a culture of a road", G.COSMOS),
+        climes.cosmopolitan_culture_edit,
+        climes.CosmopolitanCultureEdit,
+        free,
+        ("S10.4/RP5",),
+    ),
+    _sync(
+        Meta("cosmopolitan_culture:delete", "Strike a culture of a road", G.COSMOS),
+        climes.cosmopolitan_culture_delete,
+        climes.CosmopolitanCultureTarget,
+        free,
+        ("S10.4/RP5",),
+    ),
+    _sync(
+        Meta("cosmopolitan_member:set", "Set a member of a culture of a road", G.COSMOS),
+        climes.cosmopolitan_member_set,
+        climes.CosmopolitanMemberDraft,
+        free,
+        ("S10.4/RP5",),
+    ),
+    _sync(
+        Meta("cosmopolitan_member:edit", "Edit a member of a culture of a road", G.COSMOS),
+        climes.cosmopolitan_member_edit,
+        climes.CosmopolitanMemberEdit,
+        free,
+        ("S10.4/RP5",),
+    ),
+    _sync(
+        Meta("cosmopolitan_member:delete", "Strike a member of a culture of a road", G.COSMOS),
+        climes.cosmopolitan_member_delete,
+        climes.CosmopolitanMemberTarget,
+        free,
+        ("S10.4/RP5",),
+    ),
+    _sync(
+        Meta("cosmopolitan_culture:value", "Set a value a culture of a road holds", G.COSMOS),
+        climes.cosmopolitan_culture_value,
+        climes.CultureValue,
+        free,
+        ("S10.4/RP5",),
+    ),
+    _sync(Meta("climes:run", "Read every wind, monsoon and oscillation now", G.WORLDS), climes.climes_run, climes.RunNow, free, ("S10.7/RP5",)),
+    _sync(Meta("crossings:run", "Read every launch window and culture of a road now", G.COSMOS), climes.crossings_run, climes.RunNow, free, ("S10.4/RP5",)),
+)
+
 CRAFTS_ACTIONS = (
     _sync(Meta("catch_ground:set", "Set a fishing or hunting ground", G.SOCIETY), crafts.catch_ground_set, crafts.CatchGroundDraft, free, ("S6.1/RP5",)),
     _sync(Meta("catch_ground:edit", "Edit a fishing or hunting ground", G.SOCIETY), crafts.catch_ground_edit, crafts.CatchGroundEdit, free, ("S6.1/RP5",)),
@@ -4776,6 +4863,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *ARTS_ACTIONS,
     *AGES_ACTIONS,
     *FOLKWAYS_ACTIONS,
+    *CLIMES_ACTIONS,
     *CRAFTS_ACTIONS,
     *CUSTOMS_ACTIONS,
     *ROUTE_ACTIONS,

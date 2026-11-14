@@ -29,6 +29,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.models.entity_stats import LegendStats
+from aerona.engine.climes.shifts import current_coasts
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.commerce import news_delay
 from aerona.engine.customs.relief import tavern_of
@@ -63,6 +64,7 @@ class Links:
     pilgrims: dict[int, set[int]] = field(default_factory=lambda: defaultdict(set))
     journeys: dict[int, set[int]] = field(default_factory=lambda: defaultdict(set))
     spies: dict[int, set[int]] = field(default_factory=lambda: defaultdict(set))
+    currents: dict[int, set[int]] = field(default_factory=lambda: defaultdict(set))
 
     def of(self, carrier: int) -> list[tuple[int, RumourChannel]]:
         found: dict[int, RumourChannel] = {}
@@ -71,6 +73,7 @@ class Links:
             (RumourChannel.ROUTE, self.routes),
             (RumourChannel.JOURNEY, self.journeys),
             (RumourChannel.PILGRIMAGE, self.pilgrims),
+            (RumourChannel.CURRENT, self.currents),
         ):
             for target in sorted(table.get(carrier, set())):
                 found.setdefault(target, channel)
@@ -195,6 +198,8 @@ async def links(ctx: TickContext) -> Links:
         if home is not None and journey.result_entity_id is not None and journey.result_entity_id != home:
             found.journeys[home].add(journey.result_entity_id)
             found.journeys[journey.result_entity_id].add(home)
+    for coast, downstream in await current_coasts(ctx.session):
+        found.currents[coast].add(downstream)
     return found
 
 
@@ -249,6 +254,7 @@ CHANCES = {
     RumourChannel.PILGRIMAGE: "pilgrimage_chance",
     RumourChannel.JOURNEY: "journey_chance",
     RumourChannel.SPY: "spy_chance",
+    RumourChannel.CURRENT: "current_chance",
 }
 
 

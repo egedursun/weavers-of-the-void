@@ -5,6 +5,7 @@ import {
   Mountain,
   Ship,
   Sparkles,
+  Waves,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -24,6 +25,7 @@ export const CHANNELS: Record<Channel, LoreNamed> = {
     tone: 'verdigris',
   },
   spy: { label: 'Reported by spies', icon: MapIcon, tone: 'warning' },
+  current: { label: 'Washed ashore by the current', icon: Waves, tone: 'info' },
   planted: { label: 'Whispered by your hand', icon: Sparkles, tone: 'gold' },
 }
 

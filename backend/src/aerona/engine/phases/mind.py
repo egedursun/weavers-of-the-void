@@ -475,6 +475,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "mortal.strength",
     "mortal.willpower",
     "mortal.wisdom",
+    "table.assistive_aids",
     "table.bodies",
     "table.body_customs",
     "table.bonds",

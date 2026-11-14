@@ -306,6 +306,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "table.region_environment",
     "table.reputations",
     "table.routes",
+    "table.ruler_currencies",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.skills",

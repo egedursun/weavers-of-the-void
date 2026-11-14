@@ -37,6 +37,7 @@ from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.agrarian.book import Cushion, cushioned, famine_cushions, harvest_lift, intensities, nutrient_shift, nutrient_stocks, ring_shares, rings_of
+from aerona.engine.climes.shifts import clime_shifts
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import current_heat, world_heat
 from aerona.engine.cosmos.cycles import cycles_by_world, soil_swing
@@ -177,6 +178,8 @@ class RegionContext:
     sky_heat: int | None = None
     dominion_heat: int = 0
     make: Make = field(default_factory=Make)
+    clime_rain: int = 0
+    clime_heat: int = 0
 
     def surroundings(self, rules: Rules, env: RegionEnvironmentRow) -> Surroundings:
         return Surroundings(
@@ -189,8 +192,8 @@ class RegionContext:
             star_heat=star_heat(rules, self.star) if self.sky_heat is None else self.sky_heat,
             works=self.works,
             cleared=env.cleared,
-            shift_heat=self.world_heat + self.dominion_heat + env.temperature_shift + current_heat(rules, env.current),
-            shift_rain=env.rainfall_shift,
+            shift_heat=self.world_heat + self.dominion_heat + env.temperature_shift + current_heat(rules, env.current) + self.clime_heat,
+            shift_rain=env.rainfall_shift + self.clime_rain,
             pass_shift=self.pass_shift,
         )
 
@@ -416,6 +419,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     skies = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
     rogue = await rogue_worlds(ctx.session)
     dominion = await DominionBook.load(ctx.session)
+    shifts = await clime_shifts(ctx.session, ctx.rules, ctx.epoch)
     for region in regions:
         world = book.worlds.get(region.world_id)
         if world is None:
@@ -434,6 +438,8 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
             sky_heat=sky_heat,
             make=make_of(ctx.rules, physics),
             dominion_heat=dominion.scale_at(ctx.rules, region.id, DivineScale.HEAT) * ctx.rules.dominion.heat_per_step,
+            clime_rain=shifts.get(region.id, (0, 0))[0],
+            clime_heat=shifts.get(region.id, (0, 0))[1],
         )
     return contexts
 
@@ -474,6 +480,7 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.battles",
     "table.beast_profiles",
     "table.calendars",
+    "table.climate_oscillations",
     "table.cosmic_features",
     "table.cosmos",
     "table.dimensional_events",
@@ -486,12 +493,14 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.god_scales",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.monsoon_seasons",
     "table.notable_years",
     "table.place_environment",
     "table.place_profiles",
     "table.region_dominion",
     "table.region_environment",
     "table.region_geomorphology",
+    "table.region_winds",
     "table.settlement_infrastructure",
     "table.sky_events",
     "table.world_maps",
@@ -629,6 +638,7 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "region.magic",
     "settlement.population",
     "table.calendars",
+    "table.climate_oscillations",
     "table.cosmic_features",
     "table.cosmos",
     "table.dimensional_events",
@@ -641,11 +651,13 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "table.god_designs",
     "table.god_scales",
     "table.holder_levels",
+    "table.monsoon_seasons",
     "table.place_environment",
     "table.region_dominion",
     "table.region_environment",
     "table.region_geomorphology",
     "table.region_pollution",
+    "table.region_winds",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.sky_events",

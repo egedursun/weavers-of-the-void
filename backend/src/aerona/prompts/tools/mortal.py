@@ -1013,4 +1013,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You make up a game for your people and name it in their tongue; it may spread to their neighbours. 1 action.",
         {"kind": "What sort of game it is"},
     ),
+    T.JOIN_ROAD_FOLK: ToolText(
+        "You bring your town into the culture of a busy road between worlds: it comes to share that culture's ways and speech. 1 action.",
+        {"culture_id": "The culture of the road"},
+    ),
 }

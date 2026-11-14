@@ -14,6 +14,7 @@ from aerona.domain.enums.economy import MaterialFamily
 from aerona.domain.enums.military import VesselArmament
 from aerona.domain.enums.operations import CrewStation, PointOfSail, ShotKind
 from aerona.domain.enums.vehicles import VehicleFrame, VehicleSection
+from aerona.engine.climes.shifts import prevailing
 from aerona.engine.context import TickContext
 from aerona.engine.military.battle import stack_material
 from aerona.engine.operations.fields import keep
@@ -126,7 +127,8 @@ async def set_sail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, r
         return state
     table = ctx.rules.age_of_sail
     rng = ctx.rng(f"sail.{vessel.id}.{region_id}.{ctx.epoch}")
-    keep(state, "wind_from", rng.below(OCTANTS))
+    steady = await prevailing(ctx.session, region_id)
+    keep(state, "wind_from", steady if steady is not None and rng.chance(ctx.rules.winds.sail_steady_pct) else rng.below(OCTANTS))
     keep(state, "heading", rng.below(OCTANTS))
     gap = angle(state.heading, state.wind_from)
     crews = await crews_of(ctx, vessel.id, row)

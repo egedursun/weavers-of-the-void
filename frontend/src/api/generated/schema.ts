@@ -5135,6 +5135,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/climes/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_climes_api_climes_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -12793,6 +12809,342 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_witch_hunt_delete_api_actions_witch_hunt_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region_wind:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_wind_set_api_actions_region_wind_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region_wind:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_wind_edit_api_actions_region_wind_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region_wind:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_wind_delete_api_actions_region_wind_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/monsoon_season:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_monsoon_season_set_api_actions_monsoon_season_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/monsoon_season:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_monsoon_season_edit_api_actions_monsoon_season_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/monsoon_season:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_monsoon_season_delete_api_actions_monsoon_season_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/climate_oscillation:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_climate_oscillation_set_api_actions_climate_oscillation_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/climate_oscillation:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_climate_oscillation_edit_api_actions_climate_oscillation_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/climate_oscillation:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_climate_oscillation_delete_api_actions_climate_oscillation_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/launch_window:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_launch_window_set_api_actions_launch_window_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/launch_window:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_launch_window_edit_api_actions_launch_window_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/launch_window:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_launch_window_delete_api_actions_launch_window_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmopolitan_culture:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmopolitan_culture_create_api_actions_cosmopolitan_culture_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmopolitan_culture:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmopolitan_culture_edit_api_actions_cosmopolitan_culture_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmopolitan_culture:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmopolitan_culture_delete_api_actions_cosmopolitan_culture_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmopolitan_member:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmopolitan_member_set_api_actions_cosmopolitan_member_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmopolitan_member:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmopolitan_member_edit_api_actions_cosmopolitan_member_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmopolitan_member:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmopolitan_member_delete_api_actions_cosmopolitan_member_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmopolitan_culture:value': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmopolitan_culture_value_api_actions_cosmopolitan_culture_value_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/climes:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_climes_run_api_actions_climes_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/crossings:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_crossings_run_api_actions_crossings_run_post']
     delete?: never
     options?: never
     head?: never
@@ -38903,6 +39255,8 @@ export interface components {
       started_epoch: number
       locked: string[]
     }
+    CirculationBand:
+      'trade' | 'westerly' | 'polar' | 'single_cell' | 'terminator' | 'still'
     CityBuildingView: {
       node: components['schemas']['NodeRef']
       kind: components['schemas']['StructureKind']
@@ -39117,12 +39471,40 @@ export interface components {
       label: string
       description: string
     }
+    ClimateOscillationDeleteInput: {
+      world_id: number
+    }
+    ClimateOscillationEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      world_id: number
+    }
+    ClimateOscillationSetInput: {
+      world_id: number
+      phase: components['schemas']['OscillationPhase']
+      period: number
+      strength: number
+    }
     ClimateShare: {
       biome: components['schemas']['Biome']
       name: string
       share_pct: number
     }
     ClimateTurn: 'warmer' | 'colder' | 'wetter' | 'drier'
+    ClimesNodeView: {
+      node: components['schemas']['NodeRef']
+      world: components['schemas']['NodeRef'] | null
+      region: components['schemas']['NodeRef'] | null
+      epoch: number
+      winds: components['schemas']['RegionWindView'][]
+      monsoons: components['schemas']['MonsoonSeasonView'][]
+      oscillation: components['schemas']['OscillationView'] | null
+      windows: components['schemas']['LaunchWindowView'][]
+      cultures: components['schemas']['CosmopolitanCultureView'][]
+      routes: components['schemas']['RoadRouteChoice'][]
+    }
     ClockKind:
       | 'sundial'
       | 'water_clock'
@@ -40260,6 +40642,55 @@ export interface components {
       stars: components['schemas']['StarRecord'][]
       apocalypse_variant: components['schemas']['ApocalypseVariant'] | null
       likely_variant: components['schemas']['ApocalypseVariant']
+    }
+    CosmopolitanCultureCreateInput: {
+      route_id?: number | null
+      name: string
+      lingua_franca_entity_id?: number | null
+      strength: number
+    }
+    CosmopolitanCultureDeleteInput: {
+      record_id: number
+    }
+    CosmopolitanCultureEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    CosmopolitanCultureValueInput: {
+      culture_id: number
+      axis: components['schemas']['ValueAxis']
+      value: number
+    }
+    CosmopolitanCultureView: {
+      id: number
+      route: components['schemas']['RoadRouteChoice'] | null
+      name: string
+      lingua_franca: components['schemas']['NodeRef'] | null
+      strength: number
+      values: components['schemas']['RoadValueView'][]
+      formed_epoch: number
+      members: components['schemas']['RoadMemberView'][]
+      locked: string[]
+    }
+    CosmopolitanMemberDeleteInput: {
+      culture_id: number
+      community_id: number
+    }
+    CosmopolitanMemberEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      culture_id: number
+      community_id: number
+    }
+    CosmopolitanMemberSetInput: {
+      culture_id: number
+      community_id: number
+      share: number
     }
     CosmosAgrarianView: {
       rings: components['schemas']['LandRingView'][]
@@ -49611,6 +50042,33 @@ export interface components {
       words: components['schemas']['Lexeme'][]
       word_total: number
     }
+    LaunchWindowDeleteInput: {
+      from_world_id: number
+      to_world_id: number
+    }
+    LaunchWindowEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      from_world_id: number
+      to_world_id: number
+    }
+    LaunchWindowSetInput: {
+      from_world_id: number
+      to_world_id: number
+      synodic: number
+      offset: number
+      open: boolean
+    }
+    LaunchWindowView: {
+      from_world: components['schemas']['NodeRef']
+      to_world: components['schemas']['NodeRef']
+      synodic: number
+      offset: number
+      open: boolean
+      locked: string[]
+    }
     LawArea:
       | 'succession'
       | 'property'
@@ -52266,6 +52724,30 @@ export interface components {
       outcome: components['schemas']['MoleHuntOutcome']
       epoch: number
     }
+    MonsoonSeasonDeleteInput: {
+      world_id: number
+      epoch: number
+    }
+    MonsoonSeasonEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      world_id: number
+      epoch: number
+    }
+    MonsoonSeasonSetInput: {
+      world_id: number
+      epoch: number
+      strength: number
+      failed: boolean
+    }
+    MonsoonSeasonView: {
+      epoch: number
+      strength: number
+      failed: boolean
+      locked: string[]
+    }
     MonsterContractAssignInput: {
       contract_id: number
       hunter_id: number
@@ -52672,6 +53154,7 @@ export interface components {
       | 'seek_citizenship'
       | 'buy_insurance'
       | 'invent_game'
+      | 'join_road_folk'
     MortalTurnFinishedEvent: {
       id: number
       kind: 'mortal.turn_finished'
@@ -53759,6 +54242,14 @@ export interface components {
     }
     OrderLawView: {
       law: components['schemas']['OrderLaw']
+      strength: number
+      locked: string[]
+    }
+    OscillationPhase: 'neutral' | 'warm' | 'cold'
+    OscillationView: {
+      phase: components['schemas']['OscillationPhase']
+      period: number
+      step: number
       strength: number
       locked: string[]
     }
@@ -56989,6 +57480,38 @@ export interface components {
       prestige: number
       lingua_franca: boolean
     }
+    RegionWindDeleteInput: {
+      region_id: number
+    }
+    RegionWindEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      region_id: number
+    }
+    RegionWindSetInput: {
+      region_id: number
+      band: components['schemas']['CirculationBand']
+      wind_from: number
+      strength: number
+      windward: boolean
+      shadow: number
+      monsoon: number
+      upwelling: boolean
+    }
+    RegionWindView: {
+      region: components['schemas']['NodeRef']
+      band: components['schemas']['CirculationBand']
+      wind_from: number
+      strength: number
+      windward: boolean
+      shadow: number
+      monsoon: number
+      upwelling: boolean
+      read_epoch: number
+      locked: string[]
+    }
     RegionWorksView: {
       region_id: number
       roads: number
@@ -57795,6 +58318,20 @@ export interface components {
       cause: components['schemas']['RiverShiftCause']
     }
     RoadKind: 'road' | 'trade'
+    RoadMemberView: {
+      community: components['schemas']['NodeRef']
+      share: number
+      joined_epoch: number
+      locked: string[]
+    }
+    RoadRouteChoice: {
+      id: number
+      name: string
+    }
+    RoadValueView: {
+      axis: components['schemas']['ValueAxis']
+      value: number
+    }
     RoleEligibility:
       | 'any'
       | 'female_only'
@@ -58032,7 +58569,13 @@ export interface components {
       rumours: components['schemas']['RumourView'][]
     }
     RumourChannel:
-      'witness' | 'route' | 'pilgrimage' | 'journey' | 'spy' | 'planted'
+      | 'witness'
+      | 'route'
+      | 'pilgrimage'
+      | 'journey'
+      | 'spy'
+      | 'current'
+      | 'planted'
     RumourEditInput: {
       rumour_id: number
       fidelity?: number | null
@@ -59933,6 +60476,8 @@ export interface components {
       | 'proclaim_right'
       | 'wake_spirit'
       | 'lay_affinity'
+      | 'stir_monsoon'
+      | 'turn_wind'
     SonToolsView: {
       son_id: number
       rarity: components['schemas']['Rarity']
@@ -76054,6 +76599,35 @@ export interface operations {
       }
     }
   }
+  node_climes_api_climes_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClimesNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   node_customs_api_customs_of__node_id__get: {
     parameters: {
       query?: never
@@ -90629,6 +91203,649 @@ export interface operations {
         'application/json': components['schemas']['WitchHuntDeleteInput']
       }
     }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_region_wind_set_api_actions_region_wind_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionWindSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_region_wind_edit_api_actions_region_wind_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionWindEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_region_wind_delete_api_actions_region_wind_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionWindDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_monsoon_season_set_api_actions_monsoon_season_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MonsoonSeasonSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_monsoon_season_edit_api_actions_monsoon_season_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MonsoonSeasonEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_monsoon_season_delete_api_actions_monsoon_season_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MonsoonSeasonDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_climate_oscillation_set_api_actions_climate_oscillation_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ClimateOscillationSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_climate_oscillation_edit_api_actions_climate_oscillation_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ClimateOscillationEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_climate_oscillation_delete_api_actions_climate_oscillation_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ClimateOscillationDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_launch_window_set_api_actions_launch_window_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LaunchWindowSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_launch_window_edit_api_actions_launch_window_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LaunchWindowEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_launch_window_delete_api_actions_launch_window_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LaunchWindowDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmopolitan_culture_create_api_actions_cosmopolitan_culture_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmopolitanCultureCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmopolitan_culture_edit_api_actions_cosmopolitan_culture_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmopolitanCultureEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmopolitan_culture_delete_api_actions_cosmopolitan_culture_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmopolitanCultureDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmopolitan_member_set_api_actions_cosmopolitan_member_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmopolitanMemberSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmopolitan_member_edit_api_actions_cosmopolitan_member_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmopolitanMemberEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmopolitan_member_delete_api_actions_cosmopolitan_member_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmopolitanMemberDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmopolitan_culture_value_api_actions_cosmopolitan_culture_value_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmopolitanCultureValueInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_climes_run_api_actions_climes_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_crossings_run_api_actions_crossings_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
     responses: {
       200: {
         headers: {
@@ -134539,6 +135756,9 @@ export const circleKindValues: ReadonlyArray<
   'music_circle',
   'craft_circle',
 ]
+export const circulationBandValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CirculationBand']
+> = ['trade', 'westerly', 'polar', 'single_cell', 'terminator', 'still']
 export const civicServiceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CivicService']
 > = ['education', 'health', 'sports', 'culture', 'social']
@@ -138590,6 +139810,7 @@ export const mortalToolIdValues: ReadonlyArray<
   'seek_citizenship',
   'buy_insurance',
   'invent_game',
+  'join_road_folk',
 ]
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalTurnFinishedEvent']['kind']
@@ -138921,6 +140142,9 @@ export const orderKindValues: ReadonlyArray<
 export const orderLawValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OrderLaw']
 > = ['spare_members', 'no_outer_dealings', 'share_discoveries', 'keep_secrecy']
+export const oscillationPhaseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['OscillationPhase']
+> = ['neutral', 'warm', 'cold']
 export const outbreakStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OutbreakStatus']
 > = ['active', 'waning', 'ended']
@@ -139904,7 +141128,7 @@ export const rulesChangedEventKindValues: ReadonlyArray<
 > = ['rules.changed']
 export const rumourChannelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RumourChannel']
-> = ['witness', 'route', 'pilgrimage', 'journey', 'spy', 'planted']
+> = ['witness', 'route', 'pilgrimage', 'journey', 'spy', 'current', 'planted']
 export const sacramentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SacramentKind']
 > = ['birth_blessing', 'initiation', 'marriage', 'last_rites']
@@ -140564,6 +141788,8 @@ export const sonToolIdValues: ReadonlyArray<
   'proclaim_right',
   'wake_spirit',
   'lay_affinity',
+  'stir_monsoon',
+  'turn_wind',
 ]
 export const sonTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnFinishedEvent']['kind']

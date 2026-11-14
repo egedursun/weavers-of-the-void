@@ -191,6 +191,7 @@ async def rites_of_passage(ctx: TickContext) -> None:
     "mortal.wisdom",
     "table.archive_holdings",
     "table.bonds",
+    "table.climate_oscillations",
     "table.community_society",
     "table.divination_systems",
     "table.divinations",

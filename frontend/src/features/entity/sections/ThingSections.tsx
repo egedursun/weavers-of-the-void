@@ -2,6 +2,7 @@ import { Muted } from '@/components/typography'
 import { AgrarianSection } from '@/features/agrarian/AgrarianSection'
 import { ArcanaSection } from '@/features/arcana/ArcanaSection'
 import { MythicSection } from '@/features/arcana/MythicSection'
+import { ClimesSection } from '@/features/climes/ClimesSection'
 import { CollectiveSection } from '@/features/collective/CollectiveSection'
 import { CraftsSection } from '@/features/crafts/CraftsSection'
 import { CustomsSection } from '@/features/customs/CustomsSection'
@@ -123,6 +124,7 @@ export function ThingSections({
       <FolkwaysSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <CustomsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <CraftsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <ClimesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>

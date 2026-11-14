@@ -57,6 +57,14 @@ from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRo
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldMapRow, WorldRow
 from aerona.db.tables.climate import ClimateOrderRow
+from aerona.db.tables.climes import (
+    ClimateOscillationRow,
+    CosmopolitanCultureRow,
+    CosmopolitanMemberRow,
+    LaunchWindowRow,
+    MonsoonSeasonRow,
+    RegionWindRow,
+)
 from aerona.db.tables.collective import (
     AccountRow,
     AccountStanceRow,
@@ -659,6 +667,7 @@ __all__ = [
     "ClaimRow",
     "ClassStandingRow",
     "ClimateOrderRow",
+    "ClimateOscillationRow",
     "ClubRow",
     "ClusterRow",
     "CoalitionMemberRow",
@@ -693,6 +702,8 @@ __all__ = [
     "CosmicBeingProfileRow",
     "CosmicFeatureRow",
     "CosmicOfficeRow",
+    "CosmopolitanCultureRow",
+    "CosmopolitanMemberRow",
     "CosmosRow",
     "CouncilRow",
     "CouncilRulingRow",
@@ -902,6 +913,7 @@ __all__ = [
     "LanguagePolicyRow",
     "LanguageProfileRow",
     "LanguageStandingRow",
+    "LaunchWindowRow",
     "LawJurisdictionRow",
     "LawProfileRow",
     "LawProposalRow",
@@ -958,6 +970,7 @@ __all__ = [
     "MobilityEventRow",
     "ModifierRow",
     "MoleHuntRow",
+    "MonsoonSeasonRow",
     "MonsterContractRow",
     "MortalCasteRow",
     "MortalEquipmentRow",
@@ -1053,6 +1066,7 @@ __all__ = [
     "RegionHazardRow",
     "RegionMemoryRow",
     "RegionPollutionRow",
+    "RegionWindRow",
     "RegistryRow",
     "ReincarnationRow",
     "RelationshipRow",

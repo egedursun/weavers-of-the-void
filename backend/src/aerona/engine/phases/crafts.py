@@ -19,12 +19,14 @@ from aerona.engine.phases.dominion import count
     "table.chemical_works",
     "table.cooperatives",
     "table.holder_techniques",
+    "table.house_members",
     "table.incorporeal_rights",
     "table.insurers",
     "table.public_clocks",
     "table.resource_profiles",
     "table.species_ranges",
 )
+@writes("table.incorporeal_rights")
 async def trades(ctx: TickContext) -> None:
     grounds, chemistry, insurance, rights, clocks = GroundTally(), ChemistryTally(), InsuranceTally(), RightsTally(), ClockTally()
     await keep_grounds(ctx, grounds)

@@ -29,6 +29,7 @@ from aerona.engine.phases import (
     casualties,
     civilization,
     climate,
+    climes,
     collective,
     commerce,
     communication,
@@ -220,6 +221,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + arts.PHASES
     + ages.PHASES
     + folkways.PHASES
+    + climes.PHASES
     + crafts.PHASES
     + customs.PHASES
     + made_kinds.PHASES
@@ -297,6 +299,7 @@ CLEANUP_STAGE = stage(
     "stellar_systems",
     "formation_history",
     "cosmic_influence",
+    "climes",
     "environment_survey",
     "environment_modifiers",
     "region_survey",
@@ -335,6 +338,7 @@ SUB_ENGINE_STAGE = stage(
     "vendetta_cycles",
     "prisoners",
     "war_casualties",
+    "crossings",
     "travel",
     "cosmic_trade",
     "seafaring",

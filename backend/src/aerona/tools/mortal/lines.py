@@ -244,4 +244,5 @@ JOIN_COOPERATIVE = Line("tools.mortal.join_cooperative", "{me} pooled their mean
 SEEK_CITIZENSHIP = Line("tools.mortal.seek_citizenship", "{me} became a citizen.")
 BUY_INSURANCE = Line("tools.mortal.buy_insurance", "{me} insured their life with {insurer}.")
 INVENT_GAME = Line("tools.mortal.invent_game", "{me} made up a game for the {people}: {game}.")
+JOIN_ROAD_FOLK = Line("tools.mortal.join_road_folk", "{me} brought their town into {culture}.")
 MAKE_CHARM = Line("tools.mortal.make_charm", "{me} made {item} a charm.")

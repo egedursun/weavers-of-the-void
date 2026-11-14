@@ -38,6 +38,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.urban import Preservation
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats, TradeRouteStats
+from aerona.engine.climes.shifts import sea_navigation
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.cover import cargo_holders, claim
 from aerona.engine.crafts.reckoning import price_gaps
@@ -517,7 +518,7 @@ async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = Fa
     ledger = goods_of(ctx.session, ctx.epoch)
     danger = (stat(route.entity, "danger") or 0) * ((PERCENT - ctx.rules.technique_effects.insurance_pct) / PERCENT if insured else 1)
     if route.profile.mode is TradeMode.SEA:
-        danger *= await clock_navigation(ctx.session, ctx.rules, route.ends)
+        danger *= await clock_navigation(ctx.session, ctx.rules, route.ends) * await sea_navigation(ctx.session, ctx.rules, route.ends, ctx.epoch)
     taken = await ledger.take(
         lane.seller_id, lane.commodity, lane.volume, GoodsFlow.TRADE, exclude=lane.terms.banned.kinds, exclude_worlds=lane.terms.banned.worlds
     )

@@ -550,6 +550,10 @@ class SonResult(StrEnum):
     SPIRIT_REFUSED = "You cannot wake that spirit: {{ why }}."
     AFFINITY_LAID = "The material of {{ resource }} now carries an affinity for {{ school }} when {{ mode }}."
     AFFINITY_REFUSED = "You cannot lay that affinity: {{ why }}."
+    MONSOON_STIRRED = "{% if strong %}A strong monsoon comes{% else %}The monsoon fails{% endif %} over {{ world }} this year."
+    MONSOON_REFUSED = "You cannot stir the monsoon: {{ why }}."
+    WIND_TURNED = "The wind of {{ region }} now blows from the {{ direction }}."
+    WIND_REFUSED = "You cannot turn that wind: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -1001,3 +1005,5 @@ class MortalResult(StrEnum):
     INSURANCE_DECLINED = "You cannot insure your life: {{ why }}."
     GAME_INVENTED = "The {{ people }} have a new game of {{ rule }}, {{ game }}."
     GAME_DECLINED = "You cannot make up that game: {{ why }}."
+    ROAD_FOLK_JOINED = "Your town belongs to {{ culture }} now."
+    ROAD_FOLK_DECLINED = "You cannot bring your town into that culture: {{ why }}."

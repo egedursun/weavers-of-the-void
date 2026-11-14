@@ -340,6 +340,7 @@ class RumourChannel(StrEnum):
     PILGRIMAGE = "pilgrimage"
     JOURNEY = "journey"
     SPY = "spy"
+    CURRENT = "current"
     PLANTED = "planted"
 
 

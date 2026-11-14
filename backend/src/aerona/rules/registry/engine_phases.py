@@ -519,6 +519,10 @@ class EnginePhasesRules:
     )
     learning_aids: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: assistive aids, games and number systems")
     sympathies: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: material affinities, sympathetic links and emotion spirits")
+    climes: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: prevailing winds, rain shadows, monsoons, ocean currents and climate oscillations"
+    )
+    crossings: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: launch windows between worlds and the cosmopolitan cultures of busy roads")
     arcs: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: arcs read in lives, their beats and outcomes, setups and payoffs, and the drama manager"
     )

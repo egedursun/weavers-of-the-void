@@ -3872,3 +3872,45 @@ LEVERS.update(
 LEVERS.update(
     {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in CRAFTS_EDITS.items()}
 )
+
+
+REGION = EntityType.REGION
+WIND_UP = ("region_wind:set", {"region_id": Pick(REGION), "band": "westerly", "wind_from": 6, "strength": 50})
+MONSOON_UP = ("monsoon_season:set", {"world_id": Pick("world"), "epoch": 1, "strength": 120, "failed": False})
+SWING_UP = ("climate_oscillation:set", {"world_id": Pick("world"), "phase": "warm", "period": 6, "strength": 10})
+WINDOW_UP = ("launch_window:set", {"from_world_id": Pick("world", 1), "to_world_id": Pick("world"), "synodic": 4, "offset": 1, "open": False})
+ROAD_UP = ("cosmopolitan_culture:create", {"route_id": Pick("route"), "name": "The Folk of the Long Road", "lingua_franca_entity_id": None, "strength": 20})
+ROAD_MEMBER_UP = ("cosmopolitan_member:set", {"culture_id": Newest("cosmopolitan_culture"), "community_id": Pick(TOWN), "share": 30})
+CLIMES_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "region_wind:edit": {"band": "polar", "wind_from": 2, "strength": 40, "windward": True, "shadow": 10, "monsoon": 20, "upwelling": True},
+    "monsoon_season:edit": {"strength": 40, "failed": True},
+    "climate_oscillation:edit": {"phase": "cold", "period": 8, "step": 2, "strength": 15},
+    "launch_window:edit": {"synodic": 6, "offset": 2, "open": True},
+    "cosmopolitan_culture:edit": {"name": "The Folk of the Far Crossing", "lingua_franca_entity_id": Pick(EntityType.LANGUAGE), "strength": 40},
+    "cosmopolitan_member:edit": {"share": 60},
+}
+EDITS = {**EDITS, **CLIMES_EDITS}
+LEVERS.update(
+    {
+        "region_wind:set": given(**WIND_UP[1]),
+        **{name: after(WIND_UP, region_id=Pick(REGION)) for name in ("region_wind:edit", "region_wind:delete")},
+        "monsoon_season:set": given(**MONSOON_UP[1]),
+        **{name: after(MONSOON_UP, world_id=Pick("world"), epoch=1) for name in ("monsoon_season:edit", "monsoon_season:delete")},
+        "climate_oscillation:set": given(**SWING_UP[1]),
+        **{name: after(SWING_UP, world_id=Pick("world")) for name in ("climate_oscillation:edit", "climate_oscillation:delete")},
+        "launch_window:set": given(**WINDOW_UP[1]),
+        **{name: after(WINDOW_UP, from_world_id=Pick("world"), to_world_id=Pick("world", 1)) for name in ("launch_window:edit", "launch_window:delete")},
+        "cosmopolitan_culture:create": given(**ROAD_UP[1]),
+        **{name: after(ROAD_UP, record_id=Newest("cosmopolitan_culture")) for name in ("cosmopolitan_culture:edit", "cosmopolitan_culture:delete")},
+        "cosmopolitan_culture:value": after(ROAD_UP, culture_id=Newest("cosmopolitan_culture"), axis="tradition", value=30),
+        "cosmopolitan_member:set": after(ROAD_UP, **ROAD_MEMBER_UP[1]),
+        **{
+            name: after(ROAD_UP, ROAD_MEMBER_UP, culture_id=Newest("cosmopolitan_culture"), community_id=Pick(TOWN))
+            for name in ("cosmopolitan_member:edit", "cosmopolitan_member:delete")
+        },
+    }
+)
+
+LEVERS.update(
+    {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in CLIMES_EDITS.items()}
+)

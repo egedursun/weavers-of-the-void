@@ -36,6 +36,7 @@ from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyS
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.records import CargoLine, JourneyEvent, PassengerLine
 from aerona.engine.body.hits import Harm
+from aerona.engine.climes.windows import window_delay
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography, cosmography_of, within_reach
 from aerona.engine.cosmos.resources import cosmic_access
@@ -571,7 +572,8 @@ async def start_journey(ctx: TickContext, spec: JourneySpec) -> JourneyRow:
     shortened = 1 if speed >= rules.travel.fast_vessel_speed or (rig is not None and light_fabric(rules, rig.fabric)) else 0
     fit = vessel_fit(rules, spec.vehicle, route.duration_epochs, carried)
     carried = min(fit.carried, rules.cosmography.ark_capacity) if route.method is TravelMethod.VOID_ARK else fit.carried
-    remaining = max(1, 1 if folding else route.duration_epochs - shortened + fit.extra_epochs)
+    waiting = await window_delay(session, rules, route.method, (origin, destination), ctx.epoch)
+    remaining = max(1, 1 if folding else route.duration_epochs - shortened + fit.extra_epochs + waiting)
     leaving = carried
     carried, sacrifice = await _gate_sacrifice(ctx, spec, carried)
     if available is not None and leaving > 0:

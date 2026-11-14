@@ -1727,4 +1727,14 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "mining it is worth more, and when it is consumed the gifted draw on it more. 1 action.",
         {"resource_id": "The resource", "school": "The school of magic", "mode": "How the material is used", "reason": "Why you lay it"},
     ),
+    T.STIR_MONSOON: ToolText(
+        "You bring a strong monsoon to the coasts of the world you stand on this year, or let it fail; a failed monsoon is a hungry year on "
+        "its coasts. 1 action.",
+        {"world_id": "The world", "strong": "True for a strong monsoon, false to let it fail", "reason": "Why you stir it"},
+    ),
+    T.TURN_WIND: ToolText(
+        "You turn the prevailing wind of a land within your reach to blow from another direction (0 from the north, counting round by eighths "
+        "through the east to 7 from the north-west); the wind moves the rain, the ships and the foul air of the land. 1 action.",
+        {"region_id": "The land", "wind_from": "The direction the wind blows from, 0 to 7", "reason": "Why you turn it"},
+    ),
 }

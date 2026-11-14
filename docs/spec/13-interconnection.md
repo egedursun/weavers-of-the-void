@@ -8,33 +8,33 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | from ↓ / to → | core | body | mind | social | household | demography | economy | polity | law | intrigue | communication | war | faith | magic | knowledge | culture | language | ecology | environment | gods | cosmos |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | core | — | 132 | 125 | 137 | 69 | 130 | 142 | 128 | 102 | 112 | 93 | 128 | 120 | 112 | 123 | 139 | 119 | 75 | 136 | 131 | 120 |
-| body | 143 | — | 155 | 166 | 83 | 161 | 169 | 147 | 116 | 129 | 107 | 151 | 151 | 141 | 144 | 161 | 134 | 90 | 160 | 160 | 141 |
-| mind | 172 | 188 | — | 209 | 106 | 169 | 215 | 203 | 168 | 175 | 154 | 199 | 182 | 164 | 186 | 201 | 178 | 112 | 189 | 191 | 175 |
+| body | 143 | — | 155 | 166 | 83 | 161 | 169 | 147 | 116 | 129 | 107 | 151 | 151 | 141 | 144 | 161 | 134 | 90 | 162 | 160 | 141 |
+| mind | 172 | 188 | — | 209 | 106 | 169 | 215 | 203 | 168 | 175 | 154 | 199 | 182 | 164 | 186 | 201 | 178 | 112 | 190 | 191 | 175 |
 | social | 159 | 169 | 189 | — | 92 | 151 | 236 | 207 | 156 | 146 | 130 | 169 | 165 | 152 | 184 | 201 | 148 | 90 | 205 | 168 | 158 |
 | household | 56 | 62 | 64 | 65 | — | 60 | 69 | 59 | 50 | 56 | 45 | 59 | 54 | 47 | 55 | 60 | 52 | 49 | 60 | 58 | 60 |
-| demography | 136 | 150 | 137 | 146 | 79 | — | 160 | 137 | 103 | 120 | 97 | 141 | 140 | 127 | 128 | 150 | 124 | 82 | 141 | 149 | 129 |
-| economy | 207 | 258 | 300 | 339 | 120 | 254 | — | 322 | 214 | 191 | 167 | 303 | 259 | 201 | 270 | 314 | 215 | 162 | 325 | 256 | 231 |
-| polity | 154 | 154 | 193 | 219 | 87 | 147 | 246 | — | 183 | 157 | 146 | 193 | 169 | 151 | 193 | 194 | 163 | 88 | 196 | 164 | 161 |
-| law | 107 | 110 | 126 | 140 | 60 | 98 | 145 | 141 | — | 110 | 113 | 117 | 108 | 112 | 122 | 125 | 109 | 61 | 127 | 110 | 99 |
-| intrigue | 112 | 116 | 124 | 125 | 53 | 107 | 125 | 130 | 104 | — | 100 | 123 | 112 | 113 | 113 | 119 | 113 | 58 | 117 | 114 | 110 |
-| communication | 88 | 89 | 107 | 109 | 45 | 83 | 115 | 118 | 110 | 99 | — | 103 | 93 | 101 | 102 | 111 | 96 | 55 | 106 | 95 | 90 |
-| war | 162 | 169 | 180 | 183 | 90 | 159 | 207 | 185 | 144 | 153 | 128 | — | 163 | 148 | 166 | 180 | 161 | 99 | 178 | 168 | 162 |
-| faith | 124 | 143 | 143 | 148 | 69 | 137 | 168 | 149 | 112 | 121 | 101 | 137 | — | 134 | 139 | 158 | 124 | 77 | 137 | 164 | 132 |
-| magic | 118 | 135 | 131 | 142 | 57 | 124 | 153 | 141 | 119 | 118 | 108 | 123 | 131 | — | 136 | 142 | 113 | 65 | 140 | 141 | 122 |
-| knowledge | 143 | 142 | 156 | 181 | 72 | 136 | 196 | 185 | 141 | 130 | 122 | 153 | 147 | 142 | — | 172 | 149 | 79 | 173 | 146 | 147 |
-| culture | 169 | 174 | 197 | 224 | 96 | 172 | 235 | 203 | 153 | 155 | 138 | 187 | 189 | 167 | 186 | — | 173 | 111 | 204 | 187 | 159 |
+| demography | 136 | 150 | 137 | 146 | 79 | — | 160 | 137 | 103 | 120 | 97 | 141 | 140 | 127 | 128 | 150 | 124 | 82 | 142 | 149 | 129 |
+| economy | 207 | 259 | 301 | 339 | 121 | 254 | — | 322 | 214 | 191 | 167 | 304 | 259 | 201 | 271 | 315 | 215 | 163 | 329 | 257 | 232 |
+| polity | 154 | 155 | 193 | 220 | 87 | 147 | 246 | — | 183 | 157 | 146 | 193 | 169 | 151 | 193 | 194 | 163 | 88 | 198 | 164 | 161 |
+| law | 107 | 110 | 126 | 140 | 60 | 98 | 145 | 141 | — | 110 | 113 | 117 | 108 | 112 | 122 | 125 | 109 | 61 | 128 | 110 | 99 |
+| intrigue | 112 | 116 | 124 | 125 | 53 | 107 | 125 | 130 | 104 | — | 100 | 123 | 112 | 113 | 113 | 119 | 113 | 58 | 118 | 114 | 110 |
+| communication | 88 | 89 | 107 | 109 | 45 | 83 | 115 | 118 | 110 | 99 | — | 103 | 93 | 101 | 102 | 111 | 96 | 55 | 108 | 95 | 90 |
+| war | 162 | 169 | 180 | 183 | 90 | 159 | 207 | 185 | 144 | 153 | 128 | — | 163 | 148 | 166 | 180 | 161 | 99 | 180 | 168 | 162 |
+| faith | 124 | 143 | 143 | 148 | 69 | 137 | 168 | 149 | 112 | 121 | 101 | 137 | — | 134 | 139 | 158 | 124 | 77 | 143 | 164 | 132 |
+| magic | 118 | 135 | 131 | 142 | 57 | 124 | 153 | 141 | 119 | 118 | 108 | 123 | 131 | — | 136 | 142 | 113 | 65 | 142 | 141 | 122 |
+| knowledge | 143 | 143 | 157 | 181 | 73 | 136 | 197 | 185 | 141 | 130 | 122 | 154 | 147 | 142 | — | 173 | 149 | 80 | 179 | 147 | 148 |
+| culture | 169 | 174 | 197 | 225 | 96 | 172 | 235 | 203 | 153 | 155 | 138 | 187 | 189 | 167 | 186 | — | 174 | 111 | 204 | 187 | 159 |
 | language | 123 | 122 | 133 | 133 | 65 | 124 | 147 | 138 | 114 | 120 | 103 | 135 | 125 | 115 | 134 | 139 | — | 68 | 130 | 127 | 118 |
 | ecology | 76 | 82 | 81 | 91 | 52 | 70 | 115 | 73 | 59 | 58 | 54 | 87 | 69 | 61 | 75 | 88 | 68 | — | 95 | 80 | 83 |
-| environment | 172 | 180 | 182 | 224 | 94 | 176 | 249 | 197 | 149 | 141 | 129 | 184 | 201 | 163 | 199 | 205 | 161 | 119 | — | 180 | 177 |
-| gods | 163 | 179 | 182 | 175 | 100 | 173 | 204 | 167 | 131 | 143 | 124 | 176 | 197 | 160 | 158 | 188 | 155 | 113 | 181 | — | 169 |
+| environment | 172 | 180 | 183 | 225 | 94 | 176 | 259 | 199 | 149 | 141 | 131 | 190 | 209 | 163 | 206 | 209 | 162 | 123 | — | 184 | 181 |
+| gods | 163 | 179 | 182 | 175 | 100 | 173 | 204 | 167 | 131 | 143 | 124 | 176 | 197 | 160 | 158 | 188 | 155 | 113 | 183 | — | 169 |
 | cosmos | 142 | 144 | 154 | 157 | 77 | 140 | 182 | 159 | 114 | 125 | 106 | 155 | 146 | 135 | 158 | 156 | 138 | 106 | 176 | 160 | — |
 
 ## Edges by kind
 
-- modifier: 34860
-- rule_switch: 2421
-- flow: 22835431
-- trigger: 367
+- modifier: 34990
+- rule_switch: 2438
+- flow: 22987186
+- trigger: 368
 
 ## Feedback cycles between subsystems (length ≤ 3 listed)
 
@@ -2920,7 +2920,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | symbiosis: symbiosis types | extinction_cascade, food_web, game_laws, hunting_grounds, monster_contracts, species_ranges, trophic_flow, vermin |
 | ethology: ethology | beast_lives, biases, creature_migration, monster_contracts, monsters_of_the_deep, nomadism |
 | physiology: physiology and the senses | anatomy, body_functions, conditions, effect_packages, injuries |
-| biogeography: biogeography | battle_tables, biome_succession, boserup, crop_pests, danger_on_the_road, eco_transformations, environment_layers, field_works, flora_crops, food_web, frontage_and_reserves, keystones, land_use, lineages, niches, people_climate_immunity, pests, phenomena, place_kind_island, pollution, region_dangers, region_environment, regional_climate, river_course, species_ranges, terrain_hazards, trophic_flow, weather_exposure, world_physics |
+| biogeography: biogeography | battle_tables, biome_succession, boserup, crop_pests, danger_on_the_road, eco_transformations, environment_layers, field_works, flora_crops, food_web, frontage_and_reserves, keystones, land_use, lineages, monsoons, niches, people_climate_immunity, pests, phenomena, place_kind_island, pollution, region_dangers, region_environment, regional_climate, river_course, species_ranges, terrain_hazards, trophic_flow, weather_exposure, world_physics |
 
 ### S-F Technology (IPC)
 
@@ -2955,7 +2955,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | N: economic history | ghost_legends, legend_belief, legend_memories, remembrance, route_renown |
 | O: development, innovation and growth | central_places, city_tiers, disease_load_growth, faith_tenet_monastic, fixed_reserve, knowledge_gated_extraction, lore_book_diffusion, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, made_craft_knowledge, made_knowledge_passion, made_limb_regrowth, map_knowledge, quality_tiers, realm_tier, regrowth, research_holders, route_knowledge, school_lineages, wilds_seasons |
 | P: economic systems | cosmic_economy, economy_holds |
-| Q: agricultural, natural resource and environmental economics | addiction_hook, biome_succession, boserup, byproducts, camp_sickness, cession, chartered_companies, danger_on_the_road, debt_seizure, decaying_reserve, demilitarised, depleted_refill, depletion_doom, derived_environment, disease_choice, economy_holds, endemicity, energy, environment_layers, extraction, field_works, fixed_reserve, flooded_shafts, foraging, husbandry_methods, keystone_resource, labour_reasons, land_eaten_out, land_use, legal_conflict, line_length, lore_haunted_lands, lore_keep_harvest_rite, lore_rust, lore_technique_cartography, lore_technique_fortress, lore_working_harvest_blessing, made_enchanted_harvest, march_reach, material_worth, mobilisation, occupation_resistance, occupation_score, ore_quality, over_supply, people_climate_immunity, place_kind_island, place_secret_hidden_resource, pollution, quarantine, quarantine_law, ransom_cohorts, reconstruction, region_dangers, resource_value, sacred_wrath, sentient_leaving, site_ownership, supply_limit, thunen, tithes_and_devotion, typed_resource_mechanics, weary_occupied, weather_exposure, wilds_derived_hunts, wilds_diet_carnivore, wilds_foul_land, wilds_hosts, wilds_hunting, wilds_hunting_links, wilds_isolated_subspecies, wilds_overall, wilds_prey, wilds_spread, wilds_subspecies, wilds_temper_territorial, wilds_terrain_fit, wilds_thirst, wilds_totems, wilds_trait_burrowing, wilds_trait_crop_pest, wilds_wilds_recover, wilds_woken_by_war |
+| Q: agricultural, natural resource and environmental economics | addiction_hook, biome_succession, boserup, byproducts, camp_sickness, cession, chartered_companies, danger_on_the_road, debt_seizure, decaying_reserve, demilitarised, depleted_refill, depletion_doom, derived_environment, disease_choice, economy_holds, endemicity, energy, environment_layers, extraction, field_works, fixed_reserve, flooded_shafts, foraging, husbandry_methods, keystone_resource, labour_reasons, land_eaten_out, land_use, legal_conflict, line_length, lore_haunted_lands, lore_keep_harvest_rite, lore_rust, lore_technique_cartography, lore_technique_fortress, lore_working_harvest_blessing, made_enchanted_harvest, march_reach, material_worth, mobilisation, monsoons, occupation_resistance, occupation_score, ore_quality, over_supply, people_climate_immunity, place_kind_island, place_secret_hidden_resource, pollution, quarantine, quarantine_law, ransom_cohorts, reconstruction, region_dangers, resource_value, sacred_wrath, sentient_leaving, site_ownership, supply_limit, thunen, tithes_and_devotion, typed_resource_mechanics, weary_occupied, weather_exposure, wilds_derived_hunts, wilds_diet_carnivore, wilds_foul_land, wilds_hosts, wilds_hunting, wilds_hunting_links, wilds_isolated_subspecies, wilds_overall, wilds_prey, wilds_spread, wilds_subspecies, wilds_temper_territorial, wilds_terrain_fit, wilds_thirst, wilds_totems, wilds_trait_burrowing, wilds_trait_crop_pest, wilds_wilds_recover, wilds_woken_by_war |
 | R: urban, rural and regional economics | bitter_emigration, demography_depth, ethnogenesis_divergence, migration_pull, settlement_laws, town_tolls, wilds_migration |
 | Y: miscellaneous categories | advance_epoch, creator_essence, dead_bonds_closing, dead_bonds_opening, epoch_statistics, event_collections, events, god_relations, incidents, modifiers, storyteller, sub_clocks, yearly_variance |
 | Z: other special topics: cultural economics | art_forms, artwork_lives, season_traditions, tradition_keeping |
@@ -2983,7 +2983,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | S: unnatural cruelty | sacrifice_exchange |
 | T: sex | avatars, folk_customs |
 | U: the nature of life | not yet covered |
-| V: religion | cultural_exchange, culture_drift_causes, customs, dating_systems, divine_battle_hands, domain_hooks, emotion_feeding, people_profiles, realm_population, revealed_doctrine, route_diffusion, route_renown |
+| V: religion | cosmopolitan, cultural_exchange, culture_drift_causes, customs, dating_systems, divine_battle_hands, domain_hooks, emotion_feeding, people_profiles, realm_population, revealed_doctrine, route_diffusion, route_renown |
 | W: traits of character | divine_wounds, legacy_traits |
 | X: humour | contests, drama_manager, ghost_legends, legend_belief, legend_memories, narrative_arcs, route_renown |
 | Z: miscellaneous groups of motifs | ghost_legends, legend_belief, legend_memories, remembrance, route_renown |
@@ -3001,7 +3001,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | death: mourning and death practices | remembrance |
 | art: art, music and adornment | art_forms, art_market, artwork_lives, canon, forgery, season_traditions, tradition_keeping |
 | exchange: reciprocity, gifts and trade | chartered_companies, coin_trust, cosmic_trade, disease_vectors, economic_indicators, faith_missions, forced_march, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_register, lore_trade_words, market_access, market_districts, route_contagion, route_missions, route_volume_contagion, sea_seasons, structure_functions, toll_waiver, trade_rights, trade_routes, treaty_adoption, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk |
-| identity: self-image and in-group identity | culture_drift_causes, customs, honour, legacy_traits, mind_split, mortal_loyalty, people_profiles, route_diffusion, route_renown, social_norms, values |
+| identity: self-image and in-group identity | cosmopolitan, culture_drift_causes, customs, honour, legacy_traits, mind_split, mortal_loyalty, people_profiles, route_diffusion, route_renown, social_norms, values |
 | emotion: emotions and their display | conviction, dreams, drink_need, mind_split, mortal_stress, needs |
 | tools: tools, fire and shelter | blueprints, faith_tenet_monastic, guild_ranks, knowledge_gated_extraction, labour_reasons, lore_book_diffusion, lore_crafting, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, lore_technique_guilds, lore_technique_siegecraft, made_branch_masters, made_craft_knowledge, made_crafted_limbs, made_knowledge_passion, made_materials, made_spellcraft, map_knowledge, research_holders, route_knowledge, school_lineages, specialised_scholars, structure_construction, structure_functions, structure_profiles, structure_upkeep, wilds_craft_chitin, wilds_craft_dragonbone, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_magic_reagents, wilds_craft_silk, wilds_craft_venom |
 | worldview: worldview, time and cosmology | clusters, cosmic_features, epoch_stars, galaxy_cycles, impacts, megastructures, scale_ladder, star_lives, star_systems, stellar_evolution |
