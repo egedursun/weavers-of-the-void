@@ -1,6 +1,6 @@
 # 15. DLC ideas
 
-Status: **idea, not a plan.** This document splits the whole of spec 13 (depth expansion) into 85 themed expansions plus The Loom, the foundation they all stand on, as if each were sold separately, and gives each one the copy printed on the back of its box. The split is non-redundant: every mechanic of spec 13 belongs to exactly one expansion. The **Covers** line under each expansion names the spec 13 sections it holds. Integration still follows the waves of spec 13 Part J; this split does not change them. Expansion 86 reaches past spec 13: it has no spec counterpart yet, so its **Covers** line reads TBD until its spec is written. Expansions 87–94 split spec 16 (made minds, innate powers, concealment, living craft and typed kinds) the same way; spec 16's depth pass (W47) and the rest of its typed kinds (W48) deepen existing expansions instead of adding new ones.
+Status: **idea, not a plan.** This document splits the whole of spec 13 (depth expansion) into 85 themed expansions plus The Loom, the foundation they all stand on, as if each were sold separately, and gives each one the copy printed on the back of its box. The split is non-redundant: every mechanic of spec 13 belongs to exactly one expansion. The **Covers** line under each expansion names the spec 13 sections it holds. Integration still follows the waves of spec 13 Part J; this split does not change them. Expansion 86 reaches past spec 13: it has no spec counterpart yet, so its **Covers** line reads TBD until its spec is written. Expansions 87–94 split spec 16 (made minds, innate powers, concealment, living craft and typed kinds) the same way; spec 16's depth pass (W47) and the rest of its typed kinds (W48) deepen existing expansions instead of adding new ones. Expansions 95–97 split spec 16's record of events (W49) and its closure of every facet of life (W50); the parts of W50 that fall inside existing expansions deepen them instead (13, 14, 15, 18, 19, 22, 82), as do W49's single combat (53) and engagements in every domain (52, 78). W50's couplings, depth targets and the behaviour it gives to facets that had kinds only are engine work that every expansion stands on, like The Loom.
 
 ---
 
@@ -259,10 +259,11 @@ A girl grows up in a household that cannot quite feed her. She learns her letter
 - **Fifteen Life Dreams**: rule a realm, found a house, slay a beast, find love, know a truth. Each has milestones. A maimed would-be champion despairs unless he finds a new dream, and inspiration can strike as a masterwork fever.
 - **Conviction and Breaking Points**: living by one's beliefs earns conviction to spend on a heroic effort in a crisis. Stress past its limit breaks a mortal into rage, flight, despair, zeal, vice or a sudden vision.
 - **Twenty Ways to Die**: from bleeding, childbirth and drowning to execution, curse, void and heartbreak, each recorded with its place. The manner of death sets the house's prestige, the burial rite and the kind of ghost left behind.
+- **Raising the Young**: infant care and feeding, the ages of naming, work and responsibility, each culture's ways of shaping children into adults, schools of teaching, and youth groups that serve, court, compete or turn to crime.
 
 **In your world:** A queen died in childbirth and left an infant daughter, while the law demanded a grown male heir. A regency council formed, a rival house pressed its claim, and the regent's mounting stress made the civil war that followed all but certain.
 
-**Covers:** 3.1 (behaviours), 3.1 RP, 3.1 RP6, F6, F17, F17 RP3.
+**Covers:** 3.1 (behaviours), 3.1 RP, 3.1 RP6, F6, F17, F17 RP3, spec 16 50.9, 50.11.
 
 ### 14. Hearts and Hands
 
@@ -277,10 +278,11 @@ Two squires share a tent on campaign and come home comrades in arms. Years later
 - **The Art of Persuasion**: appeal to belief, to self-interest, to authority, to evidence or to fear. The speaker's oratory meets the listener's stubbornness, and the result sways councils, congregations and envoys.
 - **Pecking Orders and Circles**: households, courts, warbands and crews rank their members by strength, office and nerve. Drinking halls, poets' circles and hunting lodges breed friendships, conspiracies and ideologies.
 - **Duels of Wit**: riddle games, insult verse, disputations, song and storytelling contests fought round by round, for honour, a bride or a captive's freedom. The judges' tastes count, and a famous flyting becomes a heroic poem.
+- **Norms of Intimacy**: each culture's own stance on relations before, within and outside unions, on restraint and vows, on the course of pregnancy and the time after birth, and on a child's standing, all told plainly and behind closed doors.
 
 **In your world:** A squire's loyalty to his lord burned so fiercely that he invoked it at the ford and broke the enemy line. When the lord later betrayed him, grief struck at full force, and the squire took up a new life dream: vengeance.
 
-**Covers:** F7, F18, F18 RP3, F18 RP6.
+**Covers:** F7, F18, F18 RP3, F18 RP6, spec 16 50.8.
 
 ### 15. Hearth and Home
 
@@ -295,10 +297,11 @@ The veteran comes home from the war with one leg. In a poor household he is anot
 - **Taverns and Inns**: gossip runs through them, schemers and mercenary captains recruit in them, brawls break out in them, caravans sleep in them, and the innkeeper sells what he has overheard.
 - **Drink and Its Customs**: every people decides which substances are taken, by whom and on which nights. Brewing feeds the economy, sacred drink gives mystics their visions, dependence ruins lives and feasts end in brawls.
 - **Hours in a Year**: every class divides its year between work, rest, worship, leisure, travel and military service. Rest days and long festivals cost output and buy cohesion, and forced labour takes the hours back.
+- **The Shape of a Day**: time budgets by class and age, sleep, washing and grooming customs, housework and who does it, servants, leisure pursuits, tourism, and norms of personal space.
 
 **In your world:** Sailors on a long voyage ran out of fresh food and fell to a scurvy-like sickness. The survivors drank their story into the harbour tavern, the gossip spread through the port, and the next fleet would not sail without the techniques that kept its food fresh.
 
-**Covers:** F29, F39, 4.2 RP5 (cuisines, taverns), 4.1 RP5 (intoxication, time budgets).
+**Covers:** F29, F39, 4.2 RP5 (cuisines, taverns), 4.1 RP5 (intoxication, time budgets), spec 16 50.5.
 
 ### 16. Strange Flesh
 
@@ -353,10 +356,11 @@ Generations of cousin marriage have kept the crown in the family. They have also
 - **Marriage Alliances**: cross-cousin marriage, clan exogamy, bride price, dowry, bride service, levirate and sororate. Lineages that exchange brides build lasting alliances, and the wife-givers come to outrank the wife-takers.
 - **Other Ways to Be Born**: two sexes, sexes that change with age, sexes chosen in a fertile phase, hive castes of worker, soldier and breeder, or budding and fission. Succession, marriage and war all follow the system.
 - **The Gift in the Blood**: magical aptitude runs in the genome, recessive and rare. Mage orders test children for it, bloodlines are bred toward it, and cultures honour, fear, persecute or tax it, while persecution thins it out.
+- **Duties of Kin**: what grandparents, the siblings of parents, in-laws, cousins and sworn kin owe each other, and kin groups from kindreds to clans, phratries and moieties with land, heads and councils.
 
 **In your world:** To keep two claims in one house, the Varns married cousin to cousin. Their heirs came out sickly and touched with madness, rival houses contested every succession, and each challenge drove the Varns to marry closer still.
 
-**Covers:** F26, F26 RP8, 4.1 RP4 (kinship, marriage, reproduction).
+**Covers:** F26, F26 RP8, 4.1 RP4 (kinship, marriage, reproduction), spec 16 50.6.
 
 ### 19. The Teeming Millions
 
@@ -371,10 +375,11 @@ The war is over, and the valley counts its dead. Not as one number: as a missing
 - **The Long Transition**: towns, literacy, educated women and surviving children slowly lower birth rates. The people grows old: fewer levies, more elders, a different politics.
 - **Diasporas**: migrants follow their kin, and each wave pulls the next. Diasporas send money and news home, arrange marriages across the sea, build foreign quarters, and in time assimilate or become a new people.
 - **Roles by Culture**: who may hold office, own property, fight, preach or inherit is set by sex, age and class, so matriarchies, egalitarian clans and caste societies all grow from each culture's own rules, and drift after every war.
+- **Policies of Number**: rewards, taxes, limits, settlement grants, permits and expulsions by which realms, faiths and peoples try to grow, hold or reshape their numbers.
 
 **In your world:** A conquest left the defeated people a war generation that would not forget. Their children grew up on the stories, and when the last veteran of the conquest died, the movement the conquerors had suppressed for decades rose in the capital.
 
-**Covers:** F12, F12 RP3, 4.1 (demography, labour allocation), 4.1 RP3.
+**Covers:** F12, F12 RP3, 4.1 (demography, labour allocation), 4.1 RP3, spec 16 50.1.
 
 ### 20. Many Banners
 
@@ -424,10 +429,11 @@ Three houses sit at one wedding table. The bride's brother will leave the tourna
 - **Marked Bodies**: tattoos, scarification, piercings, cranial shaping, filed teeth and jewellery codes carry meaning: status, clan, deeds, marriage, mourning, protection. A warrior's tattoos count his kills; an exile's brand names his crime.
 - **Names with Power**: patronymics, clan names, deed names, a secret name behind the public one, new names at initiation, marriage or vows, and the names of the dead left unspoken for a time.
 - **Age-Sets**: those initiated together form a named set that rises together from warriors to senior elders, may marry only after the warrior grade and stays loyal across lineages. Delay the promotion feast and the young grow restless.
+- **Tending the Dead**: those who wash, prepare, carry and keep the dead, their standing, and every way a culture treats remains, with what each does to health, land and relics.
 
 **In your world:** A chieftain murdered his rival at a wedding feast. His own people's hospitality law made the deed unthinkable, so his infamy outran his victory, and the massacre became a yearly day of mourning that kept the grievance alive for generations.
 
-**Covers:** 8.3, 8.3 RP, F25, 4.1 RP5 (body modification, naming, age-sets).
+**Covers:** 8.3, 8.3 RP, F25, 4.1 RP5 (body modification, naming, age-sets), spec 16 50.12.
 
 ### 23. The Gift
 
@@ -970,10 +976,11 @@ The wind backs west and your squadron holds the gauge. You close on a reach, rak
 - **Twelve Hulls by Design**: rafts, longships and carracks to bone hulls, living ships and generation ships, built from hulls, sails, sky-sails or void-sails, holds, wards and mage stations. Designs evolve, old ships are refitted, and neglected masts snap in storms.
 - **Stars and Sea Clocks**: the compass works only where the world has a magnetic field, the astrolabe needs astronomy, and the sea clock gives longitude. Lost ships drift to unknown shores, and crews who run short of water mutiny.
 - **The Admiralty Board**: admirals fight generals for the treasury in council, and naval treaties cap tonnage by class. Cheating on them is a scheme of its own.
+- **Engagements in Every Domain**: ship against ship at sea, in the sky and in space, with weapons that choose the section they strike and chains of fire, flooding, venting and power loss.
 
 **In your world:** The admiralty hid two warships from the tonnage treaty. When war came they held the weather gauge, raked the enemy flagship with chain shot and took her as a prize. The prize money filled the captains' houses, and recruits crowded the docks.
 
-**Covers:** 5.5, 5.5 RP, 5.5 RP4, 7.3, 7.3 RP, 7.3 RP3, 7.3 RP6.
+**Covers:** 5.5, 5.5 RP, 5.5 RP4, 7.3, 7.3 RP, 7.3 RP3, 7.3 RP6, spec 16 49.3.
 
 ### 53. Blade and Honour
 
@@ -988,10 +995,11 @@ The spear reaches first. Your champion turns it on his shield, steps inside, and
 - **Wounds That Remain**: duels end by yield, disarm, crippling wound or death. The loser does not limp off "badly wounded". He loses an eye, a hand or a leg, and carries the loss for life.
 - **Five Reasons to Fight**: war duels, honour duels born of grievance, trials by combat, champions whose single fight ends a war, and duels between gods that leave divine wounds.
 - **Mercy on the Ground**: a downed fighter fights at a penalty. The victor's mercy decides whether he lives, honour decides whether a yield is accepted, and every exchange goes into a plain account for the battle report and the bard.
+- **Exchange by Exchange**: every duel recorded step by step, each blow with its weapon, its target and the injury it left.
 
 **In your world:** Two kings agreed that a champion would end their war. The challenger's spear held the first exchange. The defender closed, broke his elbow in a lock and, as his people's mercy required, let him yield. The bards sang of it, and the treaty held.
 
-**Covers:** 5.6, 5.6 RP.
+**Covers:** 5.6, 5.6 RP, spec 16 49.4.
 
 ### 54. Blood Feud
 
@@ -1445,10 +1453,11 @@ The worlds move, and the voyage moves with them. Sail when the orbits align and 
 - **The River That Forgets**: some crossings strip passengers of memory and knowledge. Colonists who travel the river of the dead arrive without their history, and new legends grow in the gap.
 - **Six Levels of Knowing**: every realm knows each world as unknown, rumoured, detected, observed, surveyed or mapped. Survey level gates journeys, colony plans and claims, and sky-sailing techniques raise it.
 - **Cultures of the Routes**: along busy routes merchants, crews and diasporas of several worlds share values, a common tongue, the art of the routes and a history of the system, a counterweight to every world's nativism.
+- **Battles Between the Stars**: spacecraft engage ship to ship with shields, beams, torpedoes and boarding.
 
 **In your world:** When the window opened, a fleet of refugees sailed from a plague-struck world. The sickness crossed the void with them, swept the port where they landed, and the port's realm closed the route, stranding the merchants who lived by it.
 
-**Covers:** 10.4, 10.4 RP5, 10.5, 10.2 RP (survey levels).
+**Covers:** 10.4, 10.4 RP5, 10.5, 10.2 RP (survey levels), spec 16 49.3.
 
 ### 79. Deep Time
 
@@ -1520,10 +1529,11 @@ Your physicians are certain that bleeding cures fever. They are wrong, and the p
 - **Examinations and Credentials**: realms recruit officials by examination in law, writing, lore and the canon. Merit replaces birth, until credentials outnumber offices and frustrated graduates become counter-elites.
 - **Free Minds and Fleeing Scholars**: academic freedom feeds research and debate. Suppress it and scholars migrate to freer patrons, taking their knowledge with them.
 - **Printing and Numbers**: printing makes books cheap and ideas fast, and censored books turn into contraband and heresy. Cultures count in base ten, twelve, twenty or sixty, and the zero sharpens accounts, engineering and star charts.
+- **What the Elders Know**: each people's own classification of weather, sky, matter, land, plants, animals, body, mind and society, how accurate it is, and what it makes possible or dangerous.
 
 **In your world:** A city's physicians bled their patients, and the plague that survived the treatment came back hardier. A rival university that held the contagion theory found the cure first, traded it for a treaty clause and earned a great person of its own.
 
-**Covers:** 8.4b, 8.4 RP4, 8.4 RP5, 8.4 RP (printing, censorship).
+**Covers:** 8.4b, 8.4 RP4, 8.4 RP5, 8.4 RP (printing, censorship), spec 16 50.7.
 
 ### 83. Steam and Lightning
 
@@ -1750,3 +1760,55 @@ Every people now lives in its own terms. Your peoples have their own goods and d
 **In your world:** Two peoples traded for a generation. One adopted the other's hospitality drink, brewed it from its own grain and drank it at every guesting. The boiled brew slowly ended a waterborne sickness in its towns, and nobody ever learned why.
 
 **Covers:** spec 16 F57, 48.1–48.5, 48.12.
+
+## XIV. The Record and the Common Life
+
+### 95. As It Happened
+
+*Every blow, every word, every price, kept.*
+
+The Loom keeps a cause for every change. This expansion keeps the whole happening. Each event in your world now records who acted and who was acted on, with what, how much, where and when to the hour of the world's own calendar, and every step along the way. A duel is told exchange by exchange, a broadside shot by shot, a birth from labour to naming, a trial from accusation to sentence. Every value that changed keeps its before and after, and the reasons behind each number.
+
+- **Step by Step**: duels with their feints, parries, falls and finishing blows; battles with every stack's charge and rout; sea, sky and space engagements with each hit on each section, fires, flooding, venting and boarding.
+- **The Account**: every happening has typed roles, facts and a plain account rendered from them, so the record can be retold in any language and searched by what happened.
+- **Witnesses and Versions**: those present saw, heard or took part. Rumours grow from the true steps with typed distortions, and memories point at the moment they keep.
+- **The World Then**: scrub any drawer or the atlas back to any moment and see a border, a town or a ruler as it was.
+- **The God's Pen**: write a happening into history, rewrite how it is told, or revert any change, and the reversal itself is recorded.
+- **Nothing Lost**: every record is kept for ever, in the book, the Codex and on every screen.
+
+**In your world:** A champion broke a rival's arm in the third exchange and struck again as the rival rose. A watcher told it with the wrong weapon, and that version spread through the markets. Ages later, a scholar set the two accounts side by side in the book.
+
+**Covers:** spec 16 F58, 49.0–49.2, 49.5–49.10.
+
+### 96. The Public Voice
+
+*What a people hears, it comes to believe.*
+
+Words and images now reach the many. Your peoples record what they see and hear, from carvings and knotted cords to print, image, sound, moving pictures, broadcast and networks. Outlets win audiences with their own stance and trust, and speakers move assemblies, courts and crowds.
+
+- **Media of Every Age**: every recorded form a world can hold, each with fidelity, durability, reach and the technique that opens it.
+- **Outlets and Audiences**: owners, stances, trust and revenue; items made from real happenings, with their accuracy measured against the record.
+- **Censorship and Exposure**: licences, seizures and bans by law; false items found out cost an outlet its trust.
+- **Records as Evidence**: a recorded image or sound can decide a trial or overturn an official history.
+- **Satire and Speech**: humour styles with their allowed targets, satire that wounds rulers where it is tolerated, and orators whose skill turns a vote or a crowd.
+
+**In your world:** A trusted outlet printed a slanted account of a killing, and the town believed it. A recorded image kept in an archive contradicted it before the court. The outlet lost its readers within a season.
+
+**Covers:** spec 16 50.2, 50.13.
+
+### 97. Builders and Benefactors
+
+*Roads outlive the realms that pay for them.*
+
+Realms and the rich now build for the long term. Polities raise roads, bridges, canals, rail lines, aqueducts and sewers stage by stage with paid, levied or bound labour, run monopolies and royal works, and keep them up or watch them decay. Founders endow schools, temples and relief that outlast their houses. Trade gains its everyday face: shops, wholesale and retail, promotion, leases and money changers.
+
+- **Public Works**: every works kind with stages, labour, materials, budget, quality and upkeep; finished works change speed, harvests, health and war.
+- **State Enterprise**: monopolies, mints, arsenals and state companies, with prices, revenue, skimming and privatisation.
+- **Endowments**: capital that pays a beneficiary for ever, with trustees who may serve it, skim it or be captured.
+- **Shops and Tiers**: producers, wholesalers and retailers, each with its margin, in every market large enough to hold them.
+- **Promotion, Leases and Exchange**: demand moved by claims that may be false; rent on land, houses, vessels and more; exchange rates and spreads between currencies.
+
+**In your world:** A realm dug a canal with levied labour. The levy's anger fed a revolt among the young, and the canal finished three seasons late. Within a generation it had doubled the realm's trade, and the founder of the school beside its locks was remembered longer than the king.
+
+**Covers:** spec 16 50.3, 50.4, 50.10.
+
