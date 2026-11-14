@@ -113,6 +113,15 @@ PATTERNS = (
         creation_only=True,
     ),
     Pattern(
+        "imposed reaction",
+        re.compile(
+            r"\b(?:all|everyone|every one) who (?:heard|saw|learned) (?:of )?(?:it|this|that)\b|"
+            r"\b(?:shudder(?:s|ed|ing)?|trembl(?:e|es|ed|ing)|gasp(?:s|ed)?|aghast)\b",
+            re.IGNORECASE,
+        ),
+        prose_only=True,
+    ),
+    Pattern(
         "borrowed imagery",
         re.compile(
             r"\b(wove|woven|weave|weaves|weaved|weaving (?:a|an|the|together|into|itself)|unthread\w*|stitch(?:es|ed|ing)?|re-?stitch\w*|"

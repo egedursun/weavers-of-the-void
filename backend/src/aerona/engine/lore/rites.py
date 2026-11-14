@@ -969,8 +969,12 @@ async def infamy(ctx: TickContext, caster: EntityRow, row: RiteProfileRow, targe
     victim = target.id if target is not None else caster.location_id
     if victim is not None and victim != caster.id:
         await judged(ctx, caster.id, victim, ActKind.HUMAN_SACRIFICE, note="a dark rite")
+    school, source = row.school.value.replace("_", " "), row.source.value.replace("_", " ")
     await note(
-        ctx, f"{caster.name} worked dark magic, and all who heard of it shuddered.", key="magic.dark_rite", ids=[caster.id, *([victim] if victim else [])]
+        ctx,
+        f"{caster.name} worked a rite of the {school} school drawing on {source}, and lost standing for it.",
+        key="magic.dark_rite",
+        ids=[caster.id, *([victim] if victim else [])],
     )
     return True
 

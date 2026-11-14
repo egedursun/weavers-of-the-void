@@ -21,7 +21,7 @@ from aerona.engine.gods.reputation import TraceKind, leave_trace
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, ordinal
 from aerona.engine.primitives.queries import living_sons
 
-DRAIN_KEYS = tuple(line.key for line in god_lines.DRAIN_SON)
+DRAIN_KEYS = (god_lines.DRAIN_SON.key,)
 
 
 @dataclass(frozen=True)
@@ -56,9 +56,8 @@ async def drained_recently(ctx: TickContext, son_id: int, spacing: int) -> bool:
 
 
 async def drain_text(ctx: TickContext, creator: CreatorRow, son: SonRow, drawn: int, gained: int, *, spontaneous: bool, siblings: bool) -> tuple[str, str]:
-    sequence, times = await _drain_counts(ctx, son.id)
-    index = sequence % len(god_lines.DRAIN_SON)
-    line = god_lines.DRAIN_SON[index]
+    _, times = await _drain_counts(ctx, son.id)
+    line = god_lines.DRAIN_SON
     text = line.render(
         creator=creator.name,
         anger=god_lines.DRAIN_ANGER if spontaneous else "",
@@ -66,7 +65,7 @@ async def drain_text(ctx: TickContext, creator: CreatorRow, son: SonRow, drawn: 
         son=son.name,
         drawn=drawn,
         gained=gained,
-        witness=god_lines.DRAIN_WITNESSES[index] if siblings else "",
+        witness=god_lines.DRAIN_WITNESS if siblings else "",
     )
     if times > 1:
         text = text.rstrip(".") + god_lines.DRAIN_REPEAT_SUFFIX.format(count=ordinal(times + 1))

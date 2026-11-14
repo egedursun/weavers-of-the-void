@@ -1,6 +1,6 @@
 from aerona.catalog.god_lines import Line
 
-LANGUAGE_BORN = Line("tools.mortal.language_born", "{me} gave birth to its own language: {name}. Its first words: {words}.")
+LANGUAGE_BORN = Line("tools.mortal.language_born", "{me} formed its own language: {name}. Its first words: {words}.")
 PET_TAKEN = Line("tools.mortal.pet_taken", "{me} took {name} as a companion.")
 HERD_TRAINED = Line("tools.mortal.herd_trained", "{me} trained the herd of {name} for {training}.")
 WORDS = Line("tools.mortal.words", "New words were born among {me} ({language}): {words}.")
@@ -27,9 +27,9 @@ HUNT = Line("tools.mortal.hunt", "{me} set out to hunt {species}: {goal}")
 SEIZED = Line("tools.mortal.seized", "{me} seized {item}{owner}: {goal}")
 SEIZE_FAILED = Line("tools.mortal.seize_failed", "{me} tried to seize {item} but was wounded and fled.")
 ROUTE_FOUND = Line("tools.mortal.route_found", "{me} found a way to the world {world}: {method} ({epochs} ages).")
-ROUTE_SENSED = Line("tools.mortal.route_sensed", "{me} sensed a world no one knew, somewhere beyond the sky ({how}).")
+ROUTE_SENSED = Line("tools.mortal.route_sensed", "{me} learned of a world no one knew ({how}).")
 ROUTE_NOT_FOUND = Line("tools.mortal.route_not_found", "{me} searched for the way to other worlds ({how}) but did not find it.")
-EXPLORE_FAILED = Line("tools.mortal.explore_failed", "{me} set out into unknown lands but the road turned them back empty-handed.")
+EXPLORE_FAILED = Line("tools.mortal.explore_failed", "{me} set out into unknown lands and found nothing.")
 EXPLORED = Line("tools.mortal.explored", "{me} set out into unknown lands and found {found}: {name}{pioneers}.")
 SHIP = Line("tools.mortal.ship", "{me} built an inter-world ship: {name}.")
 EXPEDITION = Line(
@@ -40,10 +40,10 @@ TAME_FAILED = Line("tools.mortal.tame_failed", "{me} tried to tame {species} but
 CHIMERA = Line("tools.mortal.chimera", "{me} merged {first} and {second} into a chimera: {chimera}.")
 RUIN_KNOWLEDGE = Line("tools.mortal.ruin_knowledge", "{me} rediscovered the forgotten knowledge {knowledge} in the ruins of {ruin}.")
 RUIN_ITEM = Line("tools.mortal.ruin_item", "{me} found and took {item} in the ruins of {ruin}.")
-RUIN_CURSE = Line("tools.mortal.ruin_curse", "{me} awakened something sleeping while digging the ruins of {ruin}; a curse settled upon it.")
-RUIN_NOTHING = Line("tools.mortal.ruin_nothing", "{me} searched the ruins of {ruin} but found nothing but dust, bone and whisper.")
+RUIN_CURSE = Line("tools.mortal.ruin_curse", "{me} dug the ruins of {ruin} and was cursed.")
+RUIN_NOTHING = Line("tools.mortal.ruin_nothing", "{me} searched the ruins of {ruin} and found nothing.")
 SABOTAGE_CAUGHT = Line("tools.mortal.sabotage_caught", "{me} plotted {kind} against {target} and was caught: {note}.")
-SABOTAGE_HIDDEN = Line("tools.mortal.sabotage_hidden", "A mysterious {kind} happened within {target}.")
+SABOTAGE_HIDDEN = Line("tools.mortal.sabotage_hidden", "{kind:An} happened within {target}; no one knows who did it.")
 PREACHED = Line("tools.mortal.preached", '{me} preached and {target} turned to {god}{lost}: "{sermon}"')
 PREACH_FAILED = Line("tools.mortal.preach_failed", "{me} preached among {target} but no one listened.")
 GODSLAYER = Line("tools.mortal.godslayer", "The mortal {me} killed the fading god {son} ({mine}-{theirs}): {reason}")
@@ -60,7 +60,7 @@ RESCUED = Line("tools.mortal.rescued", "{me} rescued {captive} from {captor}: {p
 RESCUE_FAILED = Line("tools.mortal.rescue_failed", "{me} tried to rescue {captive} but {captor} repelled the raid.")
 ARMY = Line("tools.mortal.army", "{me} called {count:person|people} to arms: {name}.")
 COMMANDER = Line("tools.mortal.commander", "{mortal} took command of {army}.")
-SPIES = Line("tools.mortal.spies", "Strange faces appeared among {target} ({cover}).")
+SPIES = Line("tools.mortal.spies", "Spies were placed among {target} ({cover}).")
 BARTER_REFUSED = Line("tools.mortal.barter_refused", "{me} asked {target} for {take} in exchange for {give}; {target} found the offer too little.")
 BARTERED = Line("tools.mortal.bartered", "{me} and {target} bartered: {give} for {take} ({terms}).")
 GIFTED = Line("tools.mortal.gifted", "{me} gave {give} to {target} as a gift ({terms}).")
@@ -114,7 +114,7 @@ INSOLENCE = "for its insolence"
 DEFIANCE_DEATH = "Age {epoch}: stood up to {son} and died."
 DENIAL_BOND = "denial: {reason}"
 THE_GODS = "the gods"
-PROPHECY_TEXT = '{me} said: "{saying}"{concerns} If it comes true {me}\'s word will pass from tongue to tongue; if it comes to nothing its name will be shaken.'
+PROPHECY_TEXT = '{me} said: "{saying}"{concerns} If it comes true {me}\'s standing will rise; if it comes to nothing it will fall.'
 PROPHECY_CONCERNS = " The saying concerns {names}."
 PROPHECY_BOND = "subject of the prophecy"
 RAID_BOND = "raid for {captive}"
@@ -135,12 +135,12 @@ DIPLOMACY_OUTCOMES = {
     "refused": "{target} refused",
     "peace": "peace was made",
     "no_peace": "the peace offer was turned down",
-    "laughed": "{target} laughed and became your enemy",
+    "laughed": "{target} refused with contempt and became your enemy",
     "tribute": "{target} agreed to pay tribute",
 }
 ARMY_ORIGINS = {
-    "population": "The soldiers were taken from {me}'s own people, from field and workbench.",
-    "followers": "Disciples fill the ranks; bound by oath before the sword.",
+    "population": "The soldiers were taken from {me}'s own people.",
+    "followers": "The soldiers are followers of {me}, bound by oath.",
     "mercenary": "The soldiers are mercenaries; {me} hired them with its wealth.",
 }
 ARMY_TEXT = "{me} raised an army of {count}{war}. {origin} {state}"

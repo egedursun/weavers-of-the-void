@@ -28,7 +28,7 @@ def _certain(rules: Rules, **changes: int) -> Rules:
     return replace(rules, god_power=replace(rules.god_power, **changes))
 
 
-async def test_drain_son_numbers_and_rotating_text(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
+async def test_drain_son_numbers_and_one_plain_line_that_counts_repeats(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
     son = await make_son(session, "Velkar", world.world.id, essence=100)
     sibling = await make_son(session, "Iolen", world.world.id, loyalty=50)
     ctx = make_context(session, rules, 2, "manual")
@@ -41,7 +41,7 @@ async def test_drain_son_numbers_and_rotating_text(session: AsyncSession, world:
     await drain_son(ctx, world.creator, son)
     await drain_son(ctx, world.creator, son)
     keys = await chronicle_keys(session)
-    assert keys[:3] == [line.key for line in god_lines.DRAIN_SON[:3]]
+    assert keys[:3] == [god_lines.DRAIN_SON.key] * 3
     last = await session.scalar(select(ChronicleRow.text).order_by(ChronicleRow.id.desc()).limit(1))
     assert last is not None and "3rd time this epoch" in last
 

@@ -84,7 +84,7 @@ async def wrath_sign(ctx: TickContext, creator: CreatorRow, target: EntityRow | 
     impact = await apply_disaster(ctx, place, kind, rules.wrath_disaster_severity / PERCENT)
     event = await record_disaster_event(ctx, place, kind, rules.wrath_event_severity_base + rng.die(rules.wrath_event_severity_die), impact)
     creator.mood_anger = clamp_percent(creator.mood_anger - rules.wrath_discharge)
-    line = rng.pick(god_lines.WRATH_SIGNS)
+    line = god_lines.WRATH_SIGN
     await ctx.chronicle(
         ChronicleKind.DIVINE_SIGN,
         line.render(creator=creator.name, place=place.name, disaster=disaster_phrase(kind)),
@@ -108,7 +108,7 @@ async def grace_sign(ctx: TickContext, creator: CreatorRow, target: EntityRow | 
     if target is None:
         return None
     await apply_abundance(ctx, target)
-    line = rng.pick(god_lines.GRACE_SIGNS)
+    line = god_lines.GRACE_SIGN
     await ctx.chronicle(ChronicleKind.DIVINE_SIGN, line.render(creator=creator.name, place=target.name), template_key=line.key, entity_ids=[target.id])
     ctx.count("grace_signs")
     return target
@@ -121,7 +121,7 @@ async def silence(ctx: TickContext, creator: CreatorRow, announce: bool) -> list
         son.loyalty = clamp_percent(son.loyalty - rules.indifferent_loyalty_loss)
         son.ambition = clamp_percent(son.ambition + rules.indifferent_ambition_gain)
     if announce:
-        line = ctx.rng("silence_sign").pick(god_lines.SILENCE_SIGNS)
+        line = god_lines.SILENCE_SIGN
         await ctx.chronicle(ChronicleKind.DIVINE_SIGN, line.render(creator=creator.name), template_key=line.key)
         ctx.count("silence_signs")
     await ctx.session.flush()
@@ -148,7 +148,7 @@ async def lonely_dream(ctx: TickContext, creator: CreatorRow, target: EntityRow 
         )
     )
     creator.mood_loneliness = clamp_percent(creator.mood_loneliness - rules.lonely_discharge)
-    line = rng.pick(god_lines.LONELINESS_SIGNS)
+    line = god_lines.LONELINESS_SIGN
     await ctx.chronicle(ChronicleKind.DIVINE_SIGN, line.render(creator=creator.name, mortal=target.name), template_key=line.key, entity_ids=[target.id])
     ctx.count("lonely_dreams")
     return target

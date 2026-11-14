@@ -82,7 +82,7 @@ async def curse_bloodline(ctx: TickContext, creator: CreatorRow, root: EntityRow
     line = god_lines.BLOODLINE_CURSE
     await ctx.chronicle(
         ChronicleKind.DIVINE_SIGN if reason else ChronicleKind.CREATOR_HAND,
-        line.render(creator=creator.name, reason=f"{reason}; " if reason else "", root=root.name, count=len(members)),
+        line.render(creator=creator.name, reason=f" ({reason})" if reason else "", root=root.name, count=len(members)),
         template_key=line.key,
         entity_ids=[member.id for member in members],
     )

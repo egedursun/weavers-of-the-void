@@ -182,9 +182,9 @@ async def _announce_hidden(ctx: TickContext, route: RouteRow, knower: bool, sage
     first, second = await world_name(ctx.session, route.world_a_id), await world_name(ctx.session, route.world_b_id)
     credit = ""
     if not knower and sage is not None:
-        credit = f" {sage.name} sensed it in a dream."
+        credit = f" {sage.name} came to know of it."
     elif not knower and son is not None:
-        credit = f" {son.name} heard the passage tremble."
+        credit = f" {son.name} perceived it."
     tail = " The route is severed for now; it will open again in time." if severed else ""
     await note(
         ctx,

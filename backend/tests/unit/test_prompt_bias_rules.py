@@ -37,6 +37,20 @@ def test_borrowed_textile_imagery_in_model_text_is_caught() -> None:
     assert "borrowed imagery" not in rules_hit(module, PROMPT, "You declare a bond between two existing things.")
 
 
+def test_a_reaction_our_text_imposes_is_caught() -> None:
+    module = checker()
+    engine_line = REPOSITORY_ROOT / "backend/src/aerona/engine/lore/sample.py"
+    for text in (
+        "{caster} worked a rite, and all who heard of it shuddered.",
+        "{son} heard the passage tremble.",
+        "Just as the command fell, the domain trembled and went still.",
+        "The crowd gasped at the sight.",
+    ):
+        assert "imposed reaction" in rules_hit(module, engine_line, text), text
+    assert "imposed reaction" not in rules_hit(module, engine_line, "Superstition a fulfilled omen adds to those who heard it")
+    assert "imposed reaction" not in rules_hit(module, engine_line, "{maker} raised a lament made by those who knew them.")
+
+
 def test_a_steering_example_list_is_caught_without_a_lead_in() -> None:
     module = checker()
     assert "steering example" in rules_hit(module, PROMPT, "ore vein, healing herb, sacred spring, bone bed…")

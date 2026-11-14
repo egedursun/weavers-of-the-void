@@ -39,6 +39,7 @@ run counts "$PYTHON" scripts/check_counts.py
 run theme_tokens "$PYTHON" scripts/check_theme_tokens.py
 run zero_ids "$PYTHON" scripts/check_zero_ids.py
 run record_cuts "$PYTHON" scripts/check_record_cuts.py
+run canned_lines "$PYTHON" scripts/check_canned_lines.py
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check
 
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then

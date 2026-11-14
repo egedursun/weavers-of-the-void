@@ -47,7 +47,7 @@ async def test_silence_costs_loyalty_and_feeds_ambition(session: AsyncSession, w
     assert [son.id for son in affected] == [active.id]
     assert active.loyalty == loyalty - rules.creator.indifferent_loyalty_loss
     assert active.ambition == ambition + rules.creator.indifferent_ambition_gain
-    assert any(key in {line.key for line in god_lines.SILENCE_SIGNS} for key in await chronicle_keys(session))
+    assert god_lines.SILENCE_SIGN.key in await chronicle_keys(session)
     quiet = await silence(make_context(session, rules, 4, "silence"), world.creator, announce=False)
     assert quiet
 

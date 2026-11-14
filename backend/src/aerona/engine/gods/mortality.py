@@ -154,7 +154,7 @@ def survival_story(rng: SeededRandom, victim: str, killer: str, creator: str, ch
         return god_lines.STORY_CHOSEN.format(victim=victim)
     if ProtectorKind.PROTECTED in by_kind:
         return god_lines.STORY_PROTECTED.format(victim=victim)
-    return rng.pick(god_lines.STORY_FATES).format(victim=victim, killer=killer)
+    return god_lines.STORY_CHANCE
 
 
 async def mortal_dies(ctx: TickContext, victim: EntityRow, reason: str, killer_node_id: int | None, *, harm: HarmCause = HarmCause.GOD) -> None:

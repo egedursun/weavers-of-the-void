@@ -12,10 +12,10 @@ REVEAL_TRUE_NAME = Line("tools.son.reveal_true_name", "{son} revealed the true n
 TEND_LAND = Line("tools.son.tend_land", "{son} {verb} the land of {region}: {reason}")
 SPREAD_WORD = Line("tools.son.spread_word", "{son} spread word of {subject} in {community}: {reason}")
 STIR_HEARTS = Line("tools.son.stir_hearts", "{son} stirred {stir} in {first} toward {second}: {reason}")
-TOUCH_MORTAL = Line("tools.son.touch_mortal", "The touch of {son} fell on {mortal} ({touch}): {reason}")
-WORDS = Line("tools.son.words", "{son} whispered new words into the {language} tongue: {words}.")
+TOUCH_MORTAL = Line("tools.son.touch_mortal", "{son} touched {mortal} ({touch}): {reason}")
+WORDS = Line("tools.son.words", "{son} added new words to {language}: {words}.")
 TENET = Line("tools.son.tenet", "{son} revealed a new tenet to {cult}: {tenet}.")
-REBORN = Line("tools.son.reborn", "{son} opened the gate of rebirth; the soul of {spirit} was born again as {child}.")
+REBORN = Line("tools.son.reborn", "{son} had the soul of {spirit} reborn as {child}.")
 MESSAGE = Line("tools.son.message", '{son} {phrase} to {sibling}: "{message}"')
 COVENANT = Line("tools.son.covenant", '{son} and {sibling} swore a covenant: "{terms}"')
 COVENANT_BROKEN = Line("tools.son.covenant_broken", "{son} thereby broke the covenant with {sibling}.")
@@ -28,11 +28,11 @@ CREATED = Line("tools.son.created", "{son}{partner} created {type:an}: {name}{su
 CROWDED_LAND = Line("tools.son.crowded_land", "{son} opened a new {type} for mortals squeezed into crowded lands: {name}.")
 FIRST_LIFE = Line(
     "tools.son.first_life",
-    "{son} created the first people of the {world} world: {name}. They will be remembered as the god who breathed life into an empty world.",
+    "{son} created the first people of the {world} world: {name}.",
 )
 HARVEST = Line("tools.son.harvest", "{son} drew {gain} essence from {resource}; the resource's abundance fell to {abundance}.")
 COSMIC_BED = Line("tools.son.cosmic_bed", "{son} opened {bed} in {region}: {reason}")
-AFFECT = Line("tools.son.affect", "{son} passed their hand over {entity}: {changes}. ({reason})")
+AFFECT = Line("tools.son.affect", "{son} changed {entity}: {changes}. ({reason})")
 CHOSEN = Line("tools.son.chosen", "{son} declared the mortal {mortal} their chosen one: {boon}")
 CURSE = Line("tools.son.curse", '{son} cursed {entity}: "{curse}" ({notes})')
 DREAM_TAKEN = Line("tools.son.dream_taken", '{son} sent {target} a dream and turned it to themselves{lost}. Dream: "{dream}"')
@@ -84,7 +84,7 @@ SHAPE_IMAGE = Line("tools.son.shape_image", "{son} chose to {stance} the image i
 LOOSE_DISEASE = Line("tools.son.loose_disease", "{son} loosed a sickness of its own making, {disease}, upon {target}: {reason}")
 SHAPE_FOLK = Line("tools.son.shape_folk", "{son} taught {people} new ways: {changes}. {reason}")
 FORGE_MATERIAL = Line("tools.son.forge_material", "{son} forged {name} into the world: {reason}")
-RESHAPE_LAND = Line("tools.son.reshape_land", "{son} laid a hand on {region} and {act}: {reason}")
+RESHAPE_LAND = Line("tools.son.reshape_land", "{son} reshaped {region} ({act}): {reason}")
 SANCTIFY_REGION = Line("tools.son.sanctify_region", "{son} sanctified {region}; its ground is holy now: {reason}.")
 CURSE_REGION = Line("tools.son.curse_region", "{son} loosed {danger} upon {region}: {reason}.")
 REDIRECT_RIVER = Line("tools.son.redirect_river", "{son} turned the {river} of {source} into {target}: {reason}.")
@@ -151,12 +151,12 @@ TREATY_LABELS = {"alliance": "an alliance", "trade": "trade"}
 TALK_OUTCOMES = {
     ("alliance", True): "{god} extended a hand",
     ("alliance", False): "{god} did not trust",
-    ("threat", True): "{god} withdrew but will hold a grudge",
-    ("threat", False): "{god} answered the threat with fury",
+    ("threat", True): "{god} withdrew",
+    ("threat", False): "{god} answered the threat with hostility",
     ("bargain", True): "you came to terms with {god}; you gained {gain} essence",
     ("bargain", False): "{god} refused the bargain",
 }
-OPEN_RIFT = Line("tools.son.open_rift", "{son} tore a rift in {place} into {dimension}: {reason}")
+OPEN_RIFT = Line("tools.son.open_rift", "{son} opened a rift in {place} into {dimension}: {reason}")
 SEAL_RIFT = Line("tools.son.seal_rift", "{son} sealed a rift: {reason}")
 CALL_BEING = Line("tools.son.call_being", "{son} called {being}: {reason}")
 BIND_BEING = Line("tools.son.bind_being", "{son} bound a cosmic being: {reason}")
