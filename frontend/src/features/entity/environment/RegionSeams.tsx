@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button'
 import { StatBar } from '@/components/domain'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { useWorldMaterials } from '../economy/api'
 import { MindPicker } from '../mind/parts'
 import { NumberField, SwitchField } from '../wilds/parts'
-import { BIOMES, WORLD_SEAM, useWorldMaterials } from './seams'
+import { BIOMES, WORLD_SEAM } from './seams'
 
 type RegionEnvironment = components['schemas']['RegionEnvironmentView']
 type MaterialKind = components['schemas']['MaterialKind']

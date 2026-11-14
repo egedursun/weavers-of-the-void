@@ -25,7 +25,7 @@ export function useDoctrine(id: number) {
     queryFn: () =>
       unwrap(
         api.GET('/api/entities/{entity_id}/doctrine', {
-          params: { path: { entity_id: id } },
+          params: { path: { entity_id: id ?? 0 } },
         })
       ),
   })
@@ -56,13 +56,14 @@ export function useSoul(id: number) {
   })
 }
 
-export function useAfterlife(id: number) {
+export function useAfterlife(id: number | null) {
   return useQuery({
-    queryKey: faithKeys.afterlife(id),
+    queryKey: faithKeys.afterlife(id ?? 0),
+    enabled: id !== null && id > 0,
     queryFn: () =>
       unwrap(
         api.GET('/api/entities/{entity_id}/afterlife', {
-          params: { path: { entity_id: id } },
+          params: { path: { entity_id: id ?? 0 } },
         })
       ),
   })

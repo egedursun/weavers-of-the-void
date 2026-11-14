@@ -46830,6 +46830,7 @@ export interface components {
       collapse_at: number
       collapsed: boolean
       last_catch: number
+      first_stock: number
       locked: string[]
     }
     GroupKind: 'household' | 'court' | 'circle' | 'warband' | 'crew'

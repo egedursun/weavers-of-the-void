@@ -184,6 +184,7 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
                 collapse_at=row.collapse_at,
                 collapsed=row.collapsed,
                 last_catch=row.last_catch,
+                first_stock=row.first_stock,
                 locked=row.locked,
             )
             for row in grounds

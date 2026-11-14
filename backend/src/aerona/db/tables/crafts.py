@@ -24,7 +24,7 @@ from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import Emotion
 
-GROUND_FIELDS = ("ground", "gear", "right", "owner_node_id", "effort", "collapse_at", "collapsed", "last_catch")
+GROUND_FIELDS = ("ground", "gear", "right", "owner_node_id", "effort", "collapse_at", "collapsed", "last_catch", "first_stock")
 WORKS_FIELDS = ("output", "hazard", "pollution", "accidents")
 INSURER_FIELDS = ("pool", "risk_belief", "premium_pct", "ruined", "claims_seen")
 POLICY_FIELDS = ("insurer_entity_id", "cover", "premium", "sum_insured", "active", "claims")
@@ -41,7 +41,12 @@ SPIRIT_FIELDS = ("emotion", "strength", "lifetime", "bound_by_node_id")
 
 class CatchGroundRow(Base):
     __tablename__ = "catch_grounds"
-    __table_args__ = (between("effort", PERCENT_MIN, PERCENT_MAX), between("collapse_at", PERCENT_MIN, PERCENT_MAX), at_least("last_catch", 0))
+    __table_args__ = (
+        between("effort", PERCENT_MIN, PERCENT_MAX),
+        between("collapse_at", PERCENT_MIN, PERCENT_MAX),
+        at_least("last_catch", 0),
+        at_least("first_stock", 1),
+    )
 
     source_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     region_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True, index=True)
@@ -53,6 +58,7 @@ class CatchGroundRow(Base):
     collapse_at: Mapped[int] = mapped_column(default=20)
     collapsed: Mapped[bool] = mapped_column(default=False)
     last_catch: Mapped[int] = mapped_column(default=0)
+    first_stock: Mapped[int] = mapped_column(default=100, server_default="100")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

@@ -20,6 +20,7 @@ from aerona.db.tables.crafts import (
 )
 from aerona.db.tables.culture import ArtworkProfileRow, HolderTechniqueRow
 from aerona.db.tables.customs import EvidenceRow
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import CommunityStockRow, ResourceProfileRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import AccusationRow
@@ -118,6 +119,21 @@ async def test_a_fishing_ground_takes_its_catch_from_gear_and_collapses_when_wor
     profile.reserve = 60
     await keep_grounds(await at(session, 5), tally)
     assert not ground.collapsed and tally.recovered == 1
+
+
+async def test_a_small_range_collapses_only_below_a_share_of_its_first_stock(session: AsyncSession, world: CoreWorld) -> None:
+    region = world.regions[0].id
+    session.add(SpeciesRangeRow(species_entity_id=world.people.id, region_entity_id=region, abundance=8, hunted=2, locked=[]))
+    await session.flush()
+    tally = GroundTally()
+    await keep_grounds(await at(session, 3), tally)
+    ground = await session.get(CatchGroundRow, (world.people.id, region))
+    assert ground is not None and ground.first_stock == 8 and not ground.collapsed
+    stock = await session.get(SpeciesRangeRow, (world.people.id, region))
+    assert stock is not None
+    stock.abundance = 1
+    await keep_grounds(await at(session, 4), tally)
+    assert ground.collapsed and tally.collapsed == 1
 
 
 async def test_a_trapped_range_is_hunted_by_its_gear_and_effort(session: AsyncSession, world: CoreWorld) -> None:

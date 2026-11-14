@@ -31,6 +31,7 @@ class GroundView(ApiModel):
     collapse_at: int
     collapsed: bool
     last_catch: int
+    first_stock: int
     locked: list[str]
 
 

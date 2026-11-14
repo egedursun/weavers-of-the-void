@@ -92,7 +92,7 @@ export function useTradeRoutes(worldId: number | null, enabled = true) {
 export function useWorldMaterials(worldId: number | null) {
   return useQuery({
     queryKey: economyKeys.materials(worldId ?? 0),
-    enabled: worldId !== null,
+    enabled: worldId !== null && worldId > 0,
     queryFn: () =>
       unwrap(
         api.GET('/api/worlds/{world_id}/materials', {

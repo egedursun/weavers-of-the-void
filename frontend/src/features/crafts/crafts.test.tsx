@@ -97,6 +97,7 @@ describe('trades, aids, games and magic', () => {
           collapse_at: 20,
           collapsed: true,
           last_catch: 1,
+          first_stock: 40,
           locked: [],
         },
       ],

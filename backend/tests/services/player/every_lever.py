@@ -3812,6 +3812,7 @@ CRAFTS_EDITS: Mapping[str, Mapping[str, Any]] = {
         "collapse_at": 25,
         "collapsed": False,
         "last_catch": 4,
+        "first_stock": 80,
     },
     "chemical_works:edit": {"output": 60, "hazard": 15, "pollution": 20, "accidents": 1},
     "insurer:edit": {"pool": 50, "risk_belief": 30, "premium_pct": 8, "ruined": False, "claims_seen": 2},

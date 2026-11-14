@@ -72,6 +72,7 @@ async def seed_fisheries(ctx: TickContext, atlas: RegionAtlas, tally: GroundTall
                 gear=Gear.HARPOONS if marine else rng.pick(list(FISH_GEAR)),
                 right=CatchRight.OWNED if owned else CatchRight.COMMONS,
                 owner_node_id=await owner_of(ctx, worker) if owned and worker is not None else None,
+                first_stock=max(1, profile.initial_reserve),
                 locked=[],
             )
         )
@@ -98,6 +99,7 @@ async def seed_land(ctx: TickContext, tally: GroundTally) -> None:
                 region_entity_id=row.region_entity_id,
                 ground=CatchGround.FOWLING if fowling else CatchGround.TRAPPING,
                 gear=Gear.SNARES if fowling else rng.pick(list(LAND_GEAR)),
+                first_stock=max(1, row.abundance),
                 locked=[],
             )
         )
@@ -105,18 +107,15 @@ async def seed_land(ctx: TickContext, tally: GroundTally) -> None:
     await ctx.session.flush()
 
 
-def abundance_pct(ctx: TickContext, row: CatchGroundRow, profile: ResourceProfileRow | None, range_row: SpeciesRangeRow | None) -> int | None:
-    if row.ground in LAND_GROUNDS:
-        return range_row.abundance if range_row is not None else None
-    if profile is None:
-        return None
-    return round(profile.reserve * PERCENT / max(1, profile.initial_reserve))
+def abundance_pct(row: CatchGroundRow, profile: ResourceProfileRow | None, range_row: SpeciesRangeRow | None) -> int | None:
+    stock = range_row.abundance if range_row is not None else profile.reserve if profile is not None else None
+    return None if stock is None else round(stock * PERCENT / max(1, row.first_stock))
 
 
 async def judge(ctx: TickContext, row: CatchGroundRow, tally: GroundTally) -> None:
     profile = await ctx.session.get(ResourceProfileRow, row.source_entity_id) if row.ground not in LAND_GROUNDS else None
     range_row = await ctx.session.get(SpeciesRangeRow, (row.source_entity_id, row.region_entity_id)) if row.ground in LAND_GROUNDS else None
-    left = abundance_pct(ctx, row, profile, range_row)
+    left = abundance_pct(row, profile, range_row)
     if "last_catch" not in row.locked:
         row.last_catch = (profile.last_output if profile is not None else range_row.hunted if range_row is not None else 0) or 0
     if left is None or "collapsed" in row.locked:

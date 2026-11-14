@@ -385,7 +385,7 @@ function SoulBody({
   soul: SoulCard
   blocked: string | null
 }) {
-  const realm = useAfterlife(soul.spirit?.id ?? 0)
+  const realm = useAfterlife(soul.spirit?.id ?? null)
   const alignment = named(ALIGNMENTS, soul.alignment)
   const imprint = Object.entries(soul.imprint)
   return (

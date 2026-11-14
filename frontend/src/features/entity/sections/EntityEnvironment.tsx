@@ -639,7 +639,7 @@ function RegionEnvironmentSection({ regionId }: { regionId: number }) {
     retry: false,
   })
   const ground = view.data
-  const seamNames = useSeamNames(ground?.world_id ?? 0)
+  const seamNames = useSeamNames(ground?.world_id ?? null)
   return (
     <Section
       id='section-environment'

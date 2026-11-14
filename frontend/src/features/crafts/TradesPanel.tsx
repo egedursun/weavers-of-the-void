@@ -37,10 +37,10 @@ function GroundCard({ row, blocked }: { row: Ground; blocked: string | null }) {
       icon={ground.icon}
       tone={row.collapsed ? 'danger' : ground.tone}
       title={`${ground.label}: ${row.source.name}`}
-      caption={`${GEAR[row.gear].label} · effort ${row.effort} · last catch ${row.last_catch}${row.collapsed ? ' · collapsed' : ''}`}
+      caption={`${GEAR[row.gear].label} · effort ${row.effort} · last catch ${row.last_catch} · first stock ${row.first_stock}${row.collapsed ? ' · collapsed' : ''}`}
       removeLabel='Strike the ground'
       editTitle='Set the ground'
-      note='Gear and effort set the catch; worked below its collapse mark a ground gives out and regrows slowly until it recovers. Others who work owned waters sour the owner, and sea beasts wound their hunters.'
+      note='Gear and effort set the catch; worked below its collapse mark, a share of its first stock, a ground gives out and regrows slowly until it recovers. Others who work owned waters sour the owner, and sea beasts wound their hunters.'
       fields={[
         { key: 'ground', label: 'Ground', kind: 'pick', table: table(GROUNDS) },
         { key: 'gear', label: 'Gear', kind: 'pick', table: table(GEAR) },
@@ -60,6 +60,13 @@ function GroundCard({ row, blocked }: { row: Ground; blocked: string | null }) {
           max: SPAN,
         },
         { key: 'collapsed', label: 'Collapsed', kind: 'pick', table: YES_NO },
+        {
+          key: 'first_stock',
+          label: 'First stock',
+          kind: 'number',
+          min: 1,
+          max: MANY,
+        },
         {
           key: 'last_catch',
           label: 'Last catch',

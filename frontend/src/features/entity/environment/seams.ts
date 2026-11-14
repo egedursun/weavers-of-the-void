@@ -1,7 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
-import { api } from '@/api/client'
-import { unwrap } from '@/api/errors'
-import { loreKeys } from '../api/keys'
+import { useWorldMaterials } from '../economy/api'
 import { MINERALS, plain } from './labels'
 
 export const WORLD_SEAM = 'world:'
@@ -19,18 +16,6 @@ export const BIOMES: string[] = [
   'Peaks',
 ]
 
-export function useWorldMaterials(worldId: number) {
-  return useQuery({
-    queryKey: [...loreKeys.cosmos, 'materials', worldId] as const,
-    queryFn: () =>
-      unwrap(
-        api.GET('/api/worlds/{world_id}/materials', {
-          params: { path: { world_id: worldId } },
-        })
-      ),
-  })
-}
-
 export function seamLabel(
   key: string,
   worldNames: Record<string, string>
@@ -40,7 +25,7 @@ export function seamLabel(
   return plain(MINERALS, key)
 }
 
-export function useSeamNames(worldId: number): Record<string, string> {
+export function useSeamNames(worldId: number | null): Record<string, string> {
   const materials = useWorldMaterials(worldId)
   return Object.fromEntries(
     (materials.data?.materials ?? [])
