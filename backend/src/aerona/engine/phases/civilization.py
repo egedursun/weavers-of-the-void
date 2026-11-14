@@ -631,6 +631,7 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.held_identities",
     "table.holder_levels",
     "table.item_profiles",
     "table.language_grammar",

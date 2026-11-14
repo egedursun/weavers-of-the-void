@@ -20,6 +20,7 @@ from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.agrarian import AidKind, KeystoneUse, PerennialKind, PreparednessKind
 from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.arts import ClubKind
+from aerona.domain.enums.belonging import IdentityLayer
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKind, DesignKind, StoryletId
 from aerona.domain.enums.constructs import OrderKind
@@ -212,6 +213,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "diets": [diet.value for diet in Diet],
         "socialities": [kind.value for kind in Sociality],
         "yield_products": [product.value for product in YieldProduct],
+        "identity_layers": [layer.value for layer in IdentityLayer],
         "beast_tempers": [temper.value for temper in BeastTemper],
         "species_classes": [kind.value for kind in SpeciesClass],
         "biochemistries": [kind.value for kind in Biochemistry],

@@ -15,6 +15,7 @@ from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState, StructureKind
+from aerona.engine.belonging.refuge import sheltered
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -68,7 +69,7 @@ async def ensure_prison(ctx: TickContext, structure_id: int) -> PrisonRow:
 
 
 async def imprison(ctx: TickContext, mortal: EntityRow, *, case_id: int | None = None, term: int | None = None) -> PrisonerRow | None:
-    if held(mortal.id) or await ctx.session.get(PrisonerRow, mortal.id) is not None:
+    if held(mortal.id) or await ctx.session.get(PrisonerRow, mortal.id) is not None or await sheltered(ctx.session, mortal.id):
         return None
     structure = await prison_in(ctx, mortal.location_id)
     if structure is None:

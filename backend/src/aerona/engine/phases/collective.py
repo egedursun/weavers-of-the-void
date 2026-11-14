@@ -55,6 +55,7 @@ class ArmedTally:
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_stress",
+    "table.satires",
     "table.settlement_profiles",
     "table.sky_events",
 )

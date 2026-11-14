@@ -12,6 +12,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.mortal import DeathCause
+from aerona.engine.belonging.refuge import sheltered
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.law.prisons import imprison
@@ -128,7 +129,7 @@ async def hunt_outlaws(ctx: TickContext, tally: OutlawTally) -> None:
         if outlaw is None:
             await ctx.session.delete(row)
             continue
-        if held(outlaw.id, row.polity_entity_id):
+        if held(outlaw.id, row.polity_entity_id) or await sheltered(ctx.session, outlaw.id):
             continue
         found = await hunter_for(ctx, row)
         chance = round_half_up(ctx.rules.outlaws.hunt_pct * found[1] / PERCENT) if found is not None else 0

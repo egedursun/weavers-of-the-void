@@ -52,6 +52,7 @@ from aerona.rules.registry.balance import BalanceRules
 from aerona.rules.registry.batch import BatchRules
 from aerona.rules.registry.battle_depth import BattleDepthRules
 from aerona.rules.registry.battle_tables import BattleTerrainRules, BattleWeatherRules, TacticMatchupRules
+from aerona.rules.registry.belonging import IdentityRules, PeerRules, SanctuaryRules, SatireRules
 from aerona.rules.registry.beyond import BeyondRules
 from aerona.rules.registry.body import (
     AnatomyRules,
@@ -649,6 +650,10 @@ class Rules:
     currents: CurrentRules = field(default_factory=CurrentRules)
     launch_windows: LaunchWindowRules = field(default_factory=LaunchWindowRules)
     cosmopolitan: CosmopolitanRules = field(default_factory=CosmopolitanRules)
+    identities: IdentityRules = field(default_factory=IdentityRules)
+    peer_groups: PeerRules = field(default_factory=PeerRules)
+    sanctuary: SanctuaryRules = field(default_factory=SanctuaryRules)
+    satire: SatireRules = field(default_factory=SatireRules)
     body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)

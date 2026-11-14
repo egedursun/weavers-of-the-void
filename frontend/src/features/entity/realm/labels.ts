@@ -12,6 +12,7 @@ import {
   CircleCheck,
   Coins,
   Crown,
+  Drama,
   Droplet,
   Eye,
   Feather,
@@ -156,6 +157,7 @@ export const OFFICES: Record<string, Named> = {
     icon: FlaskConical,
     tone: 'info',
   },
+  jester: { label: 'Court jester', icon: Drama, tone: 'gold' },
 }
 
 export const LAW_AREAS: Record<string, Named> = {

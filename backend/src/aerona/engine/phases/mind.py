@@ -236,6 +236,7 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.entity_tags",
     "table.epoch_year_cursors",
     "table.foreign_gods",
+    "table.held_identities",
     "table.holder_levels",
     "table.household_members",
     "table.households",
@@ -687,7 +688,16 @@ async def mind_needs(ctx: TickContext) -> None:
     ctx.count("needs", needy)
 
 
-@reads("table.bonds", "table.community_relations", "table.culture_values", "table.memories", "table.nodes", "table.personality_values", "table.traits")
+@reads(
+    "table.bonds",
+    "table.community_relations",
+    "table.culture_values",
+    "table.held_identities",
+    "table.memories",
+    "table.nodes",
+    "table.personality_values",
+    "table.traits",
+)
 @writes("table.community_relations")
 async def mind_opinion(ctx: TickContext) -> None:
     ctx.count("relations_refreshed", await refresh_relations(ctx.session, ctx.rules, ctx.epoch))
@@ -1175,6 +1185,7 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.epoch_year_cursors",
     "table.geasa",
     "table.goods_flows",
+    "table.held_identities",
     "table.incident_participants",
     "table.memories",
     "table.minds",

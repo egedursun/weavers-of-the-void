@@ -389,6 +389,7 @@ export const OPINION_COMPONENTS: Record<string, Named> = {
 
 export const OPINION_TERMS: Record<string, string> = {
   shared_god: 'Same god',
+  shared_identity: 'Shared identity',
   other_god: 'Different gods',
   shared_language: 'Same tongue',
   enemy: 'Open enmity',

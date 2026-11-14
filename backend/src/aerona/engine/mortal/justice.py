@@ -14,6 +14,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import ActKind, ThoughtKind
 from aerona.domain.enums.mortal import CrimeKind, DeathCause, PunishmentKind
 from aerona.domain.enums.polity import LawKind
+from aerona.engine.belonging.refuge import sheltered
 from aerona.engine.body.hits import Harm
 from aerona.engine.constructs.remaking import may_remake, remake
 from aerona.engine.context import TickContext
@@ -134,7 +135,7 @@ async def sentence(
 ) -> bool:
     table = ctx.rules.punishment
     reason = f"punished for {CRIME_TEXT[crime]}"
-    if await immune(ctx, culprit):
+    if await immune(ctx, culprit) or await sheltered(ctx.session, culprit.id):
         return False
     await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_PUNISHED, ctx.epoch, subject_id=judge.id if judge is not None else None)
     if crime in JUDGED_CRIMES:

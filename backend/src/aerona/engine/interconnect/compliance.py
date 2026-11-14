@@ -42,6 +42,7 @@ from aerona.db.tables.agrarian import (
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.arcana import LabTextRow, LawUpkeepRow, LongevityRow, RiteGrammarRow, VisStockRow, WarpingRow
 from aerona.db.tables.arts import ArtMovementRow, ArtPriceRow, ArtSaleRow, BetRow, CanonWorkRow, ClubRow, CollectorRow, ForgeryRow, LeagueRow, MatchRow
+from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryLawRow, SanctuaryRow, SatireRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.climes import (
@@ -487,6 +488,100 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "F43",
+        (HeldIdentityRow.__tablename__,),
+        ("belonging",),
+        (
+            "held_identity:set",
+            "held_identity:edit",
+            "held_identity:delete",
+            "belonging:run",
+        ),
+        (
+            "IdentityPanel",
+            "section-belonging",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("stir_identity",),
+        (),
+        ("0a3a6bd53c20",),
+    ),
+    ComplianceRow(
+        "S3.1/RP6",
+        (PeerGroupRow.__tablename__, PeerMemberRow.__tablename__),
+        ("belonging",),
+        (
+            "peer_group:create",
+            "peer_group:edit",
+            "peer_group:delete",
+            "peer_member:set",
+            "peer_member:edit",
+            "peer_member:delete",
+            "belonging:run",
+        ),
+        (
+            "PeersPanel",
+            "section-belonging",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        (),
+        (),
+        ("0a3a6bd53c20",),
+    ),
+    ComplianceRow(
+        "S4.4/RP6",
+        (SanctuaryRow.__tablename__, SanctuaryLawRow.__tablename__),
+        ("sanctuary",),
+        (
+            "sanctuary:create",
+            "sanctuary:edit",
+            "sanctuary:delete",
+            "sanctuary_law:set",
+            "sanctuary_law:edit",
+            "sanctuary_law:delete",
+            "sanctuary:run",
+        ),
+        (
+            "SanctuaryPanel",
+            "section-belonging",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("seek_sanctuary",),
+        ("sanctuary.claimed", "sanctuary.violated"),
+        ("0a3a6bd53c20",),
+    ),
+    ComplianceRow(
+        "S4.6/RP6",
+        (SatireRow.__tablename__,),
+        ("satire",),
+        (
+            "satire:create",
+            "satire:edit",
+            "satire:delete",
+            "satire:run",
+        ),
+        (
+            "SatirePanel",
+            "section-belonging",
+        ),
+        (
+            "mortal_context",
+            "son_turn_system",
+        ),
+        ("mock_the_ruler",),
+        ("satire.punished",),
+        ("0a3a6bd53c20",),
+    ),
     ComplianceRow(
         "S10.7/RP5",
         (RegionWindRow.__tablename__, MonsoonSeasonRow.__tablename__, ClimateOscillationRow.__tablename__),

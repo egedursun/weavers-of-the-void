@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.agents.context.ages_lines import son_ages_lines
 from aerona.agents.context.agrarian_lines import son_agrarian_lines
 from aerona.agents.context.arts_lines import son_arts_lines
+from aerona.agents.context.belonging_lines import son_belonging_lines
 from aerona.agents.context.climes_lines import son_climes_lines
 from aerona.agents.context.collective_lines import son_collective_lines
 from aerona.agents.context.crafts_lines import son_crafts_lines
@@ -105,4 +106,5 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     lines.extend(await son_customs_lines(scope, son))
     lines.extend(await son_crafts_lines(scope, son))
     lines.extend(await son_climes_lines(scope, son))
+    lines.extend(await son_belonging_lines(scope, son))
     return lines

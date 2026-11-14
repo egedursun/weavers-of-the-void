@@ -80,6 +80,7 @@ from tests.tools.every_setup import (
 )
 from tests.tools.every_setup_ages import remade_land, sky_scholar, slain_kin
 from tests.tools.every_setup_arts import art_work, built_construct, posted_contract, sold_work
+from tests.tools.every_setup_belonging import hunted_by_a_temple, mocked_court
 from tests.tools.every_setup_climes import road_culture
 from tests.tools.every_setup_crafts import people_home, town_insurer
 from tests.tools.every_setup_customs import long_foreigner, town_pool
@@ -294,4 +295,6 @@ MORTAL_CASES: dict[str, Case] = {
     "buy_insurance": named(plain(insurer_id=created("insurer")), town_insurer),
     "invent_game": named(plain(kind="board"), people_home),
     "join_road_folk": named(plain(culture_id=created("culture")), road_culture),
+    "seek_sanctuary": named(plain(), hunted_by_a_temple),
+    "mock_the_ruler": named(plain(), mocked_court),
 }

@@ -17,6 +17,7 @@ from aerona.services.player import (
     arts,
     aspirations,
     assignments,
+    belonging,
     beyond,
     body,
     bonds,
@@ -3877,6 +3878,34 @@ AGES_ACTIONS = (
     _sync(Meta("setup:delete", "Strike a setup from the record", G.FATE), ages.setup_delete, ages.SetupTarget, free, ("F36",)),
 )
 
+BELONGING_ACTIONS = (
+    _sync(Meta("held_identity:set", "Set an identity", G.SOCIETY), belonging.held_identity_set, belonging.HeldIdentityDraft, free, ("F43",)),
+    _sync(Meta("held_identity:edit", "Edit an identity", G.SOCIETY), belonging.held_identity_edit, belonging.HeldIdentityEdit, free, ("F43",)),
+    _sync(Meta("held_identity:delete", "Strike an identity", G.SOCIETY), belonging.held_identity_delete, belonging.HeldIdentityTarget, free, ("F43",)),
+    _sync(Meta("peer_group:create", "Make a peer group", G.SOCIETY), belonging.peer_group_create, belonging.PeerGroupDraft, free, ("S3.1/RP6",)),
+    _sync(Meta("peer_group:edit", "Edit a peer group", G.SOCIETY), belonging.peer_group_edit, belonging.PeerGroupEdit, free, ("S3.1/RP6",)),
+    _sync(Meta("peer_group:delete", "Strike a peer group", G.SOCIETY), belonging.peer_group_delete, belonging.PeerGroupTarget, free, ("S3.1/RP6",)),
+    _sync(Meta("peer_member:set", "Set a member of a peer group", G.SOCIETY), belonging.peer_member_set, belonging.PeerMemberDraft, free, ("S3.1/RP6",)),
+    _sync(Meta("peer_member:edit", "Edit a member of a peer group", G.SOCIETY), belonging.peer_member_edit, belonging.PeerMemberEdit, free, ("S3.1/RP6",)),
+    _sync(
+        Meta("peer_member:delete", "Strike a member of a peer group", G.SOCIETY), belonging.peer_member_delete, belonging.PeerMemberTarget, free, ("S3.1/RP6",)
+    ),
+    _sync(Meta("sanctuary:create", "Make a sanctuary", G.SOCIETY), belonging.sanctuary_create, belonging.SanctuaryDraft, free, ("S4.4/RP6",)),
+    _sync(Meta("sanctuary:edit", "Edit a sanctuary", G.SOCIETY), belonging.sanctuary_edit, belonging.SanctuaryEdit, free, ("S4.4/RP6",)),
+    _sync(Meta("sanctuary:delete", "Strike a sanctuary", G.SOCIETY), belonging.sanctuary_delete, belonging.SanctuaryTarget, free, ("S4.4/RP6",)),
+    _sync(Meta("sanctuary_law:set", "Set a law of sanctuary", G.SOCIETY), belonging.sanctuary_law_set, belonging.SanctuaryLawDraft, free, ("S4.4/RP6",)),
+    _sync(Meta("sanctuary_law:edit", "Edit a law of sanctuary", G.SOCIETY), belonging.sanctuary_law_edit, belonging.SanctuaryLawEdit, free, ("S4.4/RP6",)),
+    _sync(
+        Meta("sanctuary_law:delete", "Strike a law of sanctuary", G.SOCIETY), belonging.sanctuary_law_delete, belonging.SanctuaryLawTarget, free, ("S4.4/RP6",)
+    ),
+    _sync(Meta("satire:create", "Make a satire", G.SOCIETY), belonging.satire_create, belonging.SatireDraft, free, ("S4.6/RP6",)),
+    _sync(Meta("satire:edit", "Edit a satire", G.SOCIETY), belonging.satire_edit, belonging.SatireEdit, free, ("S4.6/RP6",)),
+    _sync(Meta("satire:delete", "Strike a satire", G.SOCIETY), belonging.satire_delete, belonging.SatireTarget, free, ("S4.6/RP6",)),
+    _sync(Meta("belonging:run", "Read every identity and peer group now", G.SOCIETY), belonging.belonging_run, belonging.RunNow, free, ("F43", "S3.1/RP6")),
+    _sync(Meta("sanctuary:run", "Read every sanctuary and pursuit now", G.SOCIETY), belonging.sanctuary_run, belonging.RunNow, free, ("S4.4/RP6",)),
+    _sync(Meta("satire:run", "Read every jest and satire now", G.SOCIETY), belonging.satire_run, belonging.RunNow, free, ("S4.6/RP6",)),
+)
+
 CLIMES_ACTIONS = (
     _sync(Meta("region_wind:set", "Set a prevailing wind", G.WORLDS), climes.region_wind_set, climes.RegionWindDraft, free, ("S10.7/RP5",)),
     _sync(Meta("region_wind:edit", "Edit a prevailing wind", G.WORLDS), climes.region_wind_edit, climes.RegionWindEdit, free, ("S10.7/RP5",)),
@@ -4863,6 +4892,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *ARTS_ACTIONS,
     *AGES_ACTIONS,
     *FOLKWAYS_ACTIONS,
+    *BELONGING_ACTIONS,
     *CLIMES_ACTIONS,
     *CRAFTS_ACTIONS,
     *CUSTOMS_ACTIONS,

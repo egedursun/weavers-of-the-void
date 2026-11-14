@@ -51,7 +51,7 @@ async def test_forget_and_remember_world(scope: PlayerScope, session: AsyncSessi
     assert other.discovery is Discovery.FORGOTTEN
     outcome = await world_edits.edit_world(scope, world_edits.EditWorld(world_id=other.id, discovery=Discovery.KNOWN))
     assert other.discovery is Discovery.KNOWN
-    assert "came out of the mist" in outcome.message
+    assert "was remembered again" in outcome.message
     with pytest.raises(ValidationFailedError):
         await world_edits.edit_world(scope, world_edits.EditWorld(world_id=world.world.id, discovery=Discovery.FORGOTTEN))
 

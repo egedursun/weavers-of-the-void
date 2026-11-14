@@ -32,6 +32,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
+from aerona.engine.belonging.peers import companions_of
 from aerona.engine.collective.roles import RANK_PREFERRED, freed_rank, role_rank
 from aerona.engine.context import TickContext
 from aerona.engine.customs.rights import has_right
@@ -84,6 +85,7 @@ OFFICE_SKILLS = partial(
         OfficeKind.ADMIRAL: ((S.NAVAL_COMBAT, S.NAVIGATION, S.STRATEGY), "wisdom"),
         OfficeKind.SPEAKER: ((S.ORATORY, S.LAW, S.NEGOTIATION), "charisma"),
         OfficeKind.CHIEF_SCIENTIST: ((S.SCIENCE, S.COMPUTING, S.ENGINEERING), "intellect"),
+        OfficeKind.JESTER: ((S.ORATORY, S.DECEPTION, S.ETIQUETTE), "charisma"),
     },
     without={OfficeKind.HEIR_DESIGNATE, OfficeKind.RULER},
 )
@@ -127,6 +129,7 @@ DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
         OfficeKind.ADMIRAL: (W.COMMAND,),
         OfficeKind.SPEAKER: (W.PROCLAIM,),
         OfficeKind.CHIEF_SCIENTIST: (W.RESEARCH,),
+        OfficeKind.JESTER: (W.JEST,),
     }
 )
 POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
@@ -143,6 +146,7 @@ POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
         W.PROCLAIM: OfficeKind.HERALD,
         W.PREACH: OfficeKind.CHAPLAIN,
         W.RESEARCH: OfficeKind.COURT_SCHOLAR,
+        W.JEST: OfficeKind.JESTER,
     }
 )
 POWER_VALUES = frozenset(item.value for item in OfficePower)
@@ -243,6 +247,8 @@ def wanted_offices(
     seat = towns.get(realm.profile.capital_entity_id or -1)
     seat_tier = TIER_ORDER.index(seat.size_tier) if seat is not None else 0
     wanted: list[tuple[OfficeKind, int | None, int | None]] = [(kind, None, None) for kind in COUNCIL if seat_tier >= office_tier(rules, kind)]
+    if seat_tier >= office_tier(rules, OfficeKind.JESTER):
+        wanted.append((OfficeKind.JESTER, None, None))
     if realm.profile.tier >= rules.realm_tiers.provinces:
         wanted.extend(
             (OfficeKind.GOVERNOR, region, None)
@@ -290,7 +296,9 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, occupied: set[i
         if not candidates:
             continue
         weights = await appointment_weights(ctx.session, ctx.rules, realm.entity.id, realm.ruler_id, [mortal.id for mortal in candidates])
-        scores = {mortal.id: await skill_score(ctx, mortal, kind) + weights[mortal.id] for mortal in candidates}
+        friends = await companions_of(ctx, realm.ruler_id)
+        bonus = ctx.rules.peer_groups.companion_weight
+        scores = {mortal.id: await skill_score(ctx, mortal, kind) + weights[mortal.id] + (bonus if mortal.id in friends else 0) for mortal in candidates}
         best = max(candidates, key=lambda mortal: (scores[mortal.id], -mortal.id))
         await appoint(ctx, realm, office, best, by_id=realm.ruler_id, reason="the seat was empty")
         occupied.add(best.id)

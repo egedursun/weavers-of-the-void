@@ -554,6 +554,8 @@ class SonResult(StrEnum):
     MONSOON_REFUSED = "You cannot stir the monsoon: {{ why }}."
     WIND_TURNED = "The wind of {{ region }} now blows from the {{ direction }}."
     WIND_REFUSED = "You cannot turn that wind: {{ why }}."
+    IDENTITY_STIRRED = "In {{ place }} the {{ layer }} identity is {{ told }}; it now matters {{ salience }} out of 100."
+    IDENTITY_REFUSED = "You cannot stir that identity: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -1007,3 +1009,7 @@ class MortalResult(StrEnum):
     GAME_DECLINED = "You cannot make up that game: {{ why }}."
     ROAD_FOLK_JOINED = "Your town belongs to {{ culture }} now."
     ROAD_FOLK_DECLINED = "You cannot bring your town into that culture: {{ why }}."
+    SANCTUARY_FOUND = "You are sheltered in {{ host }}."
+    SANCTUARY_DENIED = "You cannot claim sanctuary: {{ why }}."
+    SATIRE_TOLD = "Your mockery bites at {{ bite }} out of 100{% if not tolerated %}, and the court does not forgive it{% endif %}."
+    SATIRE_DECLINED = "You cannot mock the ruler: {{ why }}."

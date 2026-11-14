@@ -432,4 +432,5 @@ SON_CASES: dict[str, Case] = {
     "lay_affinity": Case(plain(resource_id=resource, school="earth", mode="worn", reason=REASON), material_resource),
     "stir_monsoon": Case(plain(world_id=world, strong=False, reason=REASON)),
     "turn_wind": Case(plain(region_id=region, wind_from=4, reason=REASON)),
+    "stir_identity": Case(plain(community_id=people, layer="faith", reason=REASON)),
 }

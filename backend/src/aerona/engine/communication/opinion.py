@@ -20,6 +20,7 @@ from aerona.domain.enums.entity import EngineKind, EntityStatus
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.war import WarStatus
+from aerona.engine.belonging.mockery import sting
 from aerona.engine.context import TickContext
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import values_for
@@ -118,7 +119,8 @@ async def ruler_target(ctx: TickContext, community: EntityRow, ruler_id: int, re
     herald = ctx.rules.communication.herald_approval if await has_office(ctx, realm_id, OfficeKind.HERALD) else 0
     realm = await ctx.session.get(PolityProfileRow, realm_id)
     graft = realm.corruption * ctx.rules.affairs.disapproval_pct / PERCENT if realm is not None else 0
-    return (prosperity - HALF) / 2 + (HALF - unrest) / 2 + fame + herald - graft
+    mocked = await sting(ctx.session, ctx.rules, ruler_id, ctx.epoch)
+    return (prosperity - HALF) / 2 + (HALF - unrest) / 2 + fame + herald - graft - mocked
 
 
 async def subjects_of(ctx: TickContext, community: EntityRow, realm_id: int | None, laws: LawBook) -> list[tuple[int, OpinionSubject, float]]:

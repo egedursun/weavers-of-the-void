@@ -3914,3 +3914,75 @@ LEVERS.update(
 LEVERS.update(
     {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in CLIMES_EDITS.items()}
 )
+
+
+IDENTITY_UP = ("held_identity:set", {"holder_id": Pick(TOWN), "layer": "faith", "salience": 60})
+PEER_UP = ("peer_group:create", {"settlement_entity_id": Pick(TOWN), "social_class": "farmer", "play": "games"})
+PEER_MEMBER_UP = ("peer_member:set", {"group_id": Newest("peer_group"), "mortal_id": Pick(MORTAL), "deprived_epochs": 0})
+SANCTUARY_UP = (
+    "sanctuary:create",
+    {
+        "fugitive_entity_id": Pick(MORTAL),
+        "host_entity_id": Pick(TOWN),
+        "kind": "hospitality",
+        "fugitive_kind": "accused",
+        "pursuer_entity_id": Pick(REALM),
+    },
+)
+LAW_UP = ("sanctuary_law:set", {"polity_id": Pick(REALM), "restricted": True, "fee_pct": 10})
+SATIRE_UP = ("satire:create", {"satirist_entity_id": Pick(MORTAL), "target_entity_id": Pick(MORTAL, 1), "polity_entity_id": Pick(REALM), "bite": 30})
+BELONGING_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "held_identity:edit": {"value_node_id": Pick(PEOPLE), "value_label": None, "strength": 70, "salience": 40, "driver": "rhetoric"},
+    "peer_group:edit": {
+        "settlement_entity_id": Pick(TOWN),
+        "social_class": "artisan",
+        "play": "songs",
+        "children": 4,
+        "cohesion": 50,
+        "deprived": False,
+        "dissolved_epoch": 2,
+    },
+    "peer_member:edit": {"deprived_epochs": 1},
+    "sanctuary:edit": {
+        "host_entity_id": Pick(TOWN),
+        "kind": "temple",
+        "fugitive_kind": "outlaw",
+        "pursuer_entity_id": Pick(REALM),
+        "state": "besieged",
+        "fee": 3,
+        "siege_epochs": 1,
+    },
+    "sanctuary_law:edit": {"restricted": False, "fee_pct": 20},
+    "satire:edit": {
+        "satirist_entity_id": Pick(MORTAL),
+        "target_entity_id": Pick(MORTAL, 1),
+        "polity_entity_id": Pick(REALM),
+        "work_entity_id": None,
+        "source": "artwork",
+        "bite": 40,
+        "tolerated": False,
+        "punished": True,
+        "judged": True,
+    },
+}
+EDITS = {**EDITS, **BELONGING_EDITS}
+LEVERS.update(
+    {
+        "held_identity:set": given(**IDENTITY_UP[1]),
+        **{name: after(IDENTITY_UP, holder_id=Pick(TOWN), layer="faith") for name in ("held_identity:edit", "held_identity:delete")},
+        "peer_group:create": given(**PEER_UP[1]),
+        **{name: after(PEER_UP, record_id=Newest("peer_group")) for name in ("peer_group:edit", "peer_group:delete")},
+        "peer_member:set": after(PEER_UP, **PEER_MEMBER_UP[1]),
+        **{name: after(PEER_UP, PEER_MEMBER_UP, group_id=Newest("peer_group"), mortal_id=Pick(MORTAL)) for name in ("peer_member:edit", "peer_member:delete")},
+        "sanctuary:create": given(**SANCTUARY_UP[1]),
+        **{name: after(SANCTUARY_UP, record_id=Newest("sanctuary")) for name in ("sanctuary:edit", "sanctuary:delete")},
+        "sanctuary_law:set": given(**LAW_UP[1]),
+        **{name: after(LAW_UP, polity_id=Pick(REALM)) for name in ("sanctuary_law:edit", "sanctuary_law:delete")},
+        "satire:create": given(**SATIRE_UP[1]),
+        **{name: after(SATIRE_UP, record_id=Newest("satire")) for name in ("satire:edit", "satire:delete")},
+    }
+)
+
+LEVERS.update(
+    {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in BELONGING_EDITS.items()}
+)

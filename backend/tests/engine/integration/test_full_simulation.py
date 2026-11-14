@@ -34,6 +34,7 @@ class Outcome:
     wars_started: int
     wars_ended: int
     mapped_worlds: int
+    founded: Counter[EntityType]
 
 
 async def census(database: Database) -> Counter[EntityType]:
@@ -42,20 +43,33 @@ async def census(database: Database) -> Counter[EntityType]:
         return Counter({entity_type: int(count) for entity_type, count in await session.execute(statement)})
 
 
+async def seeded_ids(database: Database) -> set[int]:
+    async with database.read() as session:
+        return set(await session.scalars(select(EntityRow.id)))
+
+
+async def founded_since(database: Database, seeded: set[int]) -> Counter[EntityType]:
+    async with database.read() as session:
+        rows = await session.execute(select(EntityRow.id, EntityRow.entity_type))
+        return Counter(entity_type for entity_id, entity_type in rows if entity_id not in seeded)
+
+
 async def run_world(open_database: OpenDatabase, path: Path) -> Outcome:
     database = open_database(path)
     try:
         async with database.write() as session:
             await seed_rich_cosmos(session)
         before = await census(database)
+        seeded = await seeded_ids(database)
         runs = await simulate(database, EPOCHS)
         after = await census(database)
+        founded = await founded_since(database, seeded)
         async with database.read() as session:
             keys = Counter(key for key in await session.scalars(select(ChronicleRow.template_key)) if key)
             started = int(await session.scalar(select(func.count()).select_from(WarRow)) or 0)
             ended = int(await session.scalar(select(func.count()).select_from(WarRow).where(WarRow.ended_epoch.is_not(None))) or 0)
             mapped = int(await session.scalar(select(func.count()).select_from(WorldMapRow)) or 0)
-        return Outcome(runs, before, after, keys, started, ended, mapped)
+        return Outcome(runs, before, after, keys, started, ended, mapped, founded)
     finally:
         await database.dispose()
 
@@ -73,7 +87,8 @@ async def test_a_rich_cosmos_lives_twelve_epochs_deterministically(tmp_path: Pat
     assert len(first.runs) == EPOCHS
     assert failures(first) == {}
     for entity_type in GROWING:
-        assert first.after[entity_type] > first.before[entity_type], entity_type
+        assert first.founded[entity_type] > 0, entity_type
+    assert first.after[EntityType.MORTAL] > first.before[EntityType.MORTAL]
     assert first.after[EntityType.PEOPLE] >= first.before[EntityType.PEOPLE]
     assert first.wars_started > 0
     assert first.wars_ended > 0

@@ -49,6 +49,7 @@ class OfficeKind(StrEnum):
     ADMIRAL = "admiral"
     SPEAKER = "speaker"
     CHIEF_SCIENTIST = "chief_scientist"
+    JESTER = "jester"
 
 
 class OfficePower(StrEnum):
@@ -64,6 +65,7 @@ class OfficePower(StrEnum):
     PROCLAIM = "proclaim"
     PREACH = "preach"
     RESEARCH = "research"
+    JEST = "jest"
 
 
 class RegionalStanding(StrEnum):

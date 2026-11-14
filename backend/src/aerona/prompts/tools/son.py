@@ -1737,4 +1737,14 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "through the east to 7 from the north-west); the wind moves the rain, the ships and the foul air of the land. 1 action.",
         {"region_id": "The land", "wind_from": "The direction the wind blows from, 0 to 7", "reason": "Why you turn it"},
     ),
+    T.STIR_IDENTITY: ToolText(
+        "You make one of the identities of a town or people within your reach matter more to it, or quiet it. The identity that matters most "
+        "decides whom its folk trust, how loyal they stay to their realm and along which line it divides. Layers: {{ identity_layers | join(', ') }}. 1 action.",
+        {
+            "community_id": "The town or people",
+            "layer": "Which identity",
+            "calm": "True to quiet the identity instead of stirring it",
+            "reason": "Why you do it",
+        },
+    ),
 }

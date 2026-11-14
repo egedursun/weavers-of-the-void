@@ -12,6 +12,8 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import GRIEVANCE_PARTS, LoyaltyPart
+from aerona.engine.belonging.effects import identity_loyalty, realm_fault
+from aerona.engine.belonging.mockery import suppressed
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import Values, values_for
@@ -88,6 +90,15 @@ async def loyalty_parts(ctx: TickContext, realm: Realm, member: EntityRow, won: 
     wronged = await injustices(ctx, member.id)
     if wronged:
         parts[LoyaltyPart.INJUSTICE] = wronged * ctx.rules.trials.injustice_grievance
+    fault = await realm_fault(ctx.session, ctx.rules, sorted(realm.members))
+    cohesion, separatism = await identity_loyalty(ctx.session, ctx.rules, realm.entity.id, member.id, ruler_id=realm.ruler_id, fault=fault)
+    if cohesion:
+        parts[LoyaltyPart.IDENTITY] = cohesion
+    if separatism:
+        parts[LoyaltyPart.SEPARATISM] = separatism
+    silenced = await suppressed(ctx.session, ctx.rules, realm.entity.id, ctx.epoch)
+    if silenced:
+        parts[LoyaltyPart.SUPPRESSION] = silenced
     return parts
 
 

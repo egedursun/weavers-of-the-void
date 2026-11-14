@@ -1,0 +1,92 @@
+from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryLawRow, SanctuaryRow, SatireRow
+from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
+
+S = Subsystem
+E = EdgeKind
+DRAWER = "section-belonging"
+
+BELONGING_MECHANICS = (
+    Mechanic(
+        key="identities",
+        spec_item="F43",
+        title="Identity layers and salience: holy war, hunger, invasion, strikes, preaching, segregation and mixed marriages set which identity matters",
+        subsystem=S.SOCIAL,
+        phases=("belonging", "polity_cycles", "labour_allocation"),
+        surface=Surface(drawer=DRAWER, chart="chart-identities"),
+        backfill="belonging: every town, people and named mortal reads its identities from the next epoch",
+        templates=(),
+        tables=(HeldIdentityRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("stir_identity",),
+        targets=("settlement", "people", "mortal", "polity"),
+        couplings=(
+            Coupling(S.FAITH, "a holy war makes faith matter more", E.MODIFIER, "identities.holy_war"),
+            Coupling(S.ECONOMY, "a year of hunger makes rank matter more", E.MODIFIER, "identities.famine"),
+            Coupling(S.WAR, "an enemy army in the land makes people and realm matter more", E.MODIFIER, "identities.invasion"),
+            Coupling(S.SOCIAL, "marriages across lines make those lines matter less", E.MODIFIER, "identities.crossing"),
+            Coupling(S.MIND, "holders who share a salient identity think better of each other", E.MODIFIER, "identities.in_group_opinion"),
+            Coupling(S.POLITY, "a salient bond with the realm holds a member loyal", E.MODIFIER, "identities.cohesion"),
+            Coupling(S.POLITY, "a member that differs from its ruler along the realm's fault line drifts away", E.MODIFIER, "identities.separatism"),
+            Coupling(S.WAR, "a salient realm identity raises the levy", E.MODIFIER, "identities.mobilisation_pct"),
+        ),
+    ),
+    Mechanic(
+        key="peer_groups",
+        spec_item="S3.1/RP6",
+        title="Peer groups: children of a town and rank play together, learn by their play, make friends and rivals, and grow into companions",
+        subsystem=S.SOCIAL,
+        phases=("belonging", "polity_cycles"),
+        surface=Surface(drawer=DRAWER, chart="chart-peers"),
+        backfill="belonging: the named children of each town and rank gather into peer groups from the next epoch",
+        templates=(),
+        tables=(PeerGroupRow.__tablename__, PeerMemberRow.__tablename__),
+        targets=("settlement", "mortal"),
+        couplings=(
+            Coupling(S.MIND, "play shapes a child's facets", E.MODIFIER, "peer_groups.play_facet"),
+            Coupling(S.MIND, "play teaches a skill", E.FLOW, "peer_groups.play_skill"),
+            Coupling(S.SOCIAL, "children of a group become friends or rivals", E.TRIGGER, "peer_groups.friend_chance"),
+            Coupling(S.MIND, "a childhood without play leaves stress in the grown", E.MODIFIER, "peer_groups.deprived_stress"),
+            Coupling(S.POLITY, "a ruler's childhood companions are favoured for the council", E.MODIFIER, "peer_groups.companion_weight"),
+        ),
+    ),
+    Mechanic(
+        key="sanctuary",
+        spec_item="S4.4/RP6",
+        title="Sanctuary and asylum: the hunted shelter in temples, welcoming towns and foreign realms; pursuers wait, bargain, besiege or break in",
+        subsystem=S.LAW,
+        phases=("sanctuary", "outlawry", "prisons", "trials"),
+        surface=Surface(drawer=DRAWER, chart="chart-sanctuary"),
+        backfill="sanctuary: outlaws, the accused and defectors seek refuge from the next epoch",
+        templates=("sanctuary.claimed", "sanctuary.violated"),
+        tables=(SanctuaryRow.__tablename__, SanctuaryLawRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("seek_sanctuary",),
+        targets=("mortal", "structure", "settlement", "polity"),
+        couplings=(
+            Coupling(S.LAW, "a sheltered fugitive cannot be seized or punished", E.RULE_SWITCH, "sanctuary.seek_chance"),
+            Coupling(S.FAITH, "a temple earns a fee from those it shelters", E.FLOW, "sanctuary.fee"),
+            Coupling(S.POLITY, "breaking sanctuary brings infamy and the god's curse", E.TRIGGER, "sanctuary.infamy"),
+            Coupling(S.POLITY, "asylum sours the realm the fugitive fled", E.FLOW, "sanctuary.asylum_relation"),
+        ),
+    ),
+    Mechanic(
+        key="satire",
+        spec_item="S4.6/RP6",
+        title="Satire and the licensed fool: jesters and satirists mock rulers; tolerated mockery costs standing and vents anger, punished breeds grievance",
+        subsystem=S.SOCIAL,
+        phases=("satire", "public_opinion", "crowds", "polity_cycles"),
+        surface=Surface(drawer=DRAWER, chart="chart-satire"),
+        backfill="satire: jesters take their seats and satires are read from the next epoch",
+        templates=("satire.punished",),
+        tables=(SatireRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("mock_the_ruler",),
+        targets=("mortal", "polity", "artwork"),
+        couplings=(
+            Coupling(S.COMMUNICATION, "a tolerated satire lowers approval of the ruler", E.MODIFIER, "satire.opinion_pct"),
+            Coupling(S.SOCIAL, "a tolerated satire lets anger out before it becomes a riot", E.MODIFIER, "satire.vent"),
+            Coupling(S.POLITY, "punished satire breeds grievance against the realm", E.MODIFIER, "satire.suppression"),
+            Coupling(S.MIND, "a jester's truths loosen the ruler's groupthink", E.MODIFIER, "satire.groupthink_relief"),
+        ),
+    ),
+)

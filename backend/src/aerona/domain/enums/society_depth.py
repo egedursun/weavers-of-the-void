@@ -47,9 +47,14 @@ class LoyaltyPart(StrEnum):
     FAITH = "faith"
     PROSPERITY = "prosperity"
     INJUSTICE = "injustice"
+    IDENTITY = "identity"
+    SEPARATISM = "separatism"
+    SUPPRESSION = "suppression"
 
 
-GRIEVANCE_PARTS = frozenset({LoyaltyPart.TRIBUTE, LoyaltyPart.WEARINESS, LoyaltyPart.CONQUEST, LoyaltyPart.TAX, LoyaltyPart.INJUSTICE})
+GRIEVANCE_PARTS = frozenset(
+    {LoyaltyPart.TRIBUTE, LoyaltyPart.WEARINESS, LoyaltyPart.CONQUEST, LoyaltyPart.TAX, LoyaltyPart.INJUSTICE, LoyaltyPart.SEPARATISM, LoyaltyPart.SUPPRESSION}
+)
 
 
 class MobilityEvent(StrEnum):

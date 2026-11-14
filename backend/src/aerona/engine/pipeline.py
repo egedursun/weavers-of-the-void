@@ -24,6 +24,7 @@ from aerona.engine.phases import (
     arcana,
     arts,
     belief_memory,
+    belonging,
     births,
     body,
     casualties,
@@ -221,6 +222,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + arts.PHASES
     + ages.PHASES
     + folkways.PHASES
+    + belonging.PHASES
     + climes.PHASES
     + crafts.PHASES
     + customs.PHASES
@@ -511,11 +513,13 @@ SOCIETY_ENGINE_STAGE = stage(
     "resilience",
     "structural_demography",
     "asabiyya",
+    "satire",
     "crowds",
     "mobs",
     "popular_movements",
     "demography_depth",
     "role_norms",
+    "sanctuary",
     "legal_systems",
     "trials",
     "appeals",
@@ -633,6 +637,7 @@ MIND_STAGE = stage(
     "mishaps",
     "witchcraft",
     "customs",
+    "belonging",
     "town_life",
     "civics",
     "trades",

@@ -10,16 +10,19 @@ from aerona.constants.units import PERCENT
 from aerona.db.bond_index import bond_lookup
 from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondRepository
+from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow, TraitRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.renown import RulerCurrencyRow
 from aerona.db.tables.society import CommunityRelationRow
+from aerona.domain.enums.belonging import IdentityLayer
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import OpinionComponent, TraitEffect, TraitKind, ValueAxis
+from aerona.engine.belonging.effects import identities_of, shared_weight
 from aerona.engine.mind.book import ValueIndex, trait_effect, traits_of, values_for
 from aerona.engine.mind.memories import memories_about, strength_of
 from aerona.engine.mind.space import NEUTRAL_DISTANCE, memory_weight, value_alignment
@@ -52,6 +55,7 @@ class PairFacts:
     infamy: int = 0
     dread: int = 0
     tyranny: int = 0
+    shared_identity: int = 0
 
 
 @dataclass(frozen=True)
@@ -98,6 +102,7 @@ def shared_terms(rules: Rules, facts: PairFacts) -> list[OpinionTerm]:
         OpinionTerm("infamy", -round(facts.infamy * rules.local_renown.opinion_pct / PERCENT)) if facts.infamy else None,
         OpinionTerm("dread", -round(facts.dread * rules.currencies.opinion_pct / PERCENT)) if facts.dread else None,
         OpinionTerm("tyranny", -round(facts.tyranny * rules.currencies.opinion_pct / PERCENT)) if facts.tyranny else None,
+        OpinionTerm("shared_identity", round(facts.shared_identity * rules.identities.in_group_opinion / PERCENT)) if facts.shared_identity else None,
     ]
     return [term for term in terms if term is not None]
 
@@ -192,6 +197,7 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
     bond = await personal_bond(session, first, second)
     glory, infamy = await standing_with(session, second, first)
     purse = await session.get(RulerCurrencyRow, second)
+    shared = round(shared_weight(await identities_of(session, first), await identities_of(session, second)) * PERCENT)
     return PairFacts(
         same_god=first_god is not None and first_god == second_god,
         other_god=first_god is not None and second_god is not None and first_god != second_god,
@@ -209,6 +215,7 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
         infamy=infamy,
         dread=purse.dread if purse is not None else 0,
         tyranny=purse.tyranny if purse is not None else 0,
+        shared_identity=shared,
     )
 
 
@@ -276,6 +283,7 @@ class OpinionContext:
     memories: dict[tuple[int, int], list[MemoryRow]] = field(default_factory=dict)
     traits: dict[int, set[TraitKind]] = field(default_factory=dict)
     rulers: dict[int, list[int]] = field(default_factory=dict)
+    identities: dict[int, dict[IdentityLayer, HeldIdentityRow]] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int, nodes: Iterable[int], values: ValueIndex) -> "OpinionContext":
@@ -294,6 +302,8 @@ class OpinionContext:
             context.memories.setdefault((row.holder_node_id, row.subject_node_id), []).append(row)
         for trait in await session.scalars(select(TraitRow).where(TraitRow.node_id.in_(ids))):
             context.traits.setdefault(trait.node_id, set()).add(trait.trait)
+        for held_row in await session.scalars(select(HeldIdentityRow).where(HeldIdentityRow.holder_entity_id.in_(ids))):
+            context.identities.setdefault(held_row.holder_entity_id, {})[held_row.layer] = held_row
         return context
 
     def facts(self, first: int, second: int) -> PairFacts:
@@ -312,6 +322,7 @@ class OpinionContext:
             feud=(min(first, second), max(first, second)) in self.feuds,
             kin=any(self.bonds.between(first, second, kind) for kind in KIN_BONDS),
             common_enemies=len((enemies_first & enemies_second) - {first, second}),
+            shared_identity=round(shared_weight(self.identities.get(first, {}), self.identities.get(second, {})) * PERCENT),
         )
 
     def opinion(self, holder_id: int, subject_id: int) -> Opinion:

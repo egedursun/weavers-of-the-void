@@ -27,6 +27,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LabourReason
+from aerona.engine.belonging.effects import identity_levy
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.collective.demography import levy_factor
 from aerona.engine.collective.roles import combat_sexes
@@ -361,7 +362,7 @@ async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow
     law *= feudal_levy(laws, community.id, rules)
     ageing = await levy_factor(session, rules, community.id)
     bond = await solidarity(session, community, rules.asabiyya.levy_weight) * await soldier_factor(session, rules, community)
-    return max(0.1, martial * cohesion * season * law * ageing * bond)
+    return max(0.1, martial * cohesion * season * law * ageing * bond * await identity_levy(session, rules, community.id))
 
 
 async def fighting_age(session: AsyncSession, community_id: int, rules: Rules | None = None) -> int | None:

@@ -1017,4 +1017,14 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You bring your town into the culture of a busy road between worlds: it comes to share that culture's ways and speech. 1 action.",
         {"culture_id": "The culture of the road"},
     ),
+    T.SEEK_SANCTUARY: ToolText(
+        "If you are hunted as an outlaw or accused before a court, you claim sanctuary in a temple of your town, or with a town whose custom "
+        "welcomes guests. While you are sheltered no one may seize or punish you; your pursuer may wait, bargain, surround the refuge or break in. 1 action.",
+        {},
+    ),
+    T.MOCK_THE_RULER: ToolText(
+        "You mock the ruler of your realm in public. Where the court tolerates mockery it costs the ruler standing and its folk approve of the "
+        "ruler less; where it does not, you may be imprisoned. 1 action.",
+        {},
+    ),
 }

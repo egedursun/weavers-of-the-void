@@ -53,6 +53,14 @@ from aerona.db.tables.arts import (
     LeagueRow,
     MatchRow,
 )
+from aerona.db.tables.belonging import (
+    HeldIdentityRow,
+    PeerGroupRow,
+    PeerMemberRow,
+    SanctuaryLawRow,
+    SanctuaryRow,
+    SatireRow,
+)
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldMapRow, WorldRow
@@ -856,6 +864,7 @@ __all__ = [
     "GroupRankRow",
     "GuildSecretRow",
     "HeirloomRow",
+    "HeldIdentityRow",
     "HerdRow",
     "HeresyRow",
     "HeroQuestRow",
@@ -1012,6 +1021,8 @@ __all__ = [
     "PatronageTieRow",
     "PayrollRow",
     "PeaceTermRow",
+    "PeerGroupRow",
+    "PeerMemberRow",
     "PeopleBiologyRow",
     "PeopleCultureRow",
     "PeopleReproductionRow",
@@ -1096,6 +1107,9 @@ __all__ = [
     "RuleOverrideRow",
     "RulerCurrencyRow",
     "SacramentRow",
+    "SanctuaryLawRow",
+    "SanctuaryRow",
+    "SatireRow",
     "ScenarioRow",
     "SchemeRow",
     "SchoolLineageRow",

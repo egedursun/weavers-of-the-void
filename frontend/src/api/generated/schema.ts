@@ -5151,6 +5151,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/belonging/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_belonging_api_belonging_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -12809,6 +12825,342 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_witch_hunt_delete_api_actions_witch_hunt_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/held_identity:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_held_identity_set_api_actions_held_identity_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/held_identity:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_held_identity_edit_api_actions_held_identity_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/held_identity:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_held_identity_delete_api_actions_held_identity_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/peer_group:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_peer_group_create_api_actions_peer_group_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/peer_group:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_peer_group_edit_api_actions_peer_group_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/peer_group:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_peer_group_delete_api_actions_peer_group_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/peer_member:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_peer_member_set_api_actions_peer_member_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/peer_member:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_peer_member_edit_api_actions_peer_member_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/peer_member:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_peer_member_delete_api_actions_peer_member_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sanctuary:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sanctuary_create_api_actions_sanctuary_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sanctuary:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sanctuary_edit_api_actions_sanctuary_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sanctuary:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sanctuary_delete_api_actions_sanctuary_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sanctuary_law:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sanctuary_law_set_api_actions_sanctuary_law_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sanctuary_law:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sanctuary_law_edit_api_actions_sanctuary_law_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sanctuary_law:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sanctuary_law_delete_api_actions_sanctuary_law_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/satire:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_satire_create_api_actions_satire_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/satire:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_satire_edit_api_actions_satire_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/satire:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_satire_delete_api_actions_satire_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/belonging:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_belonging_run_api_actions_belonging_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sanctuary:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sanctuary_run_api_actions_sanctuary_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/satire:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_satire_run_api_actions_satire_run_post']
     delete?: never
     options?: never
     head?: never
@@ -37505,6 +37857,18 @@ export interface components {
       false: boolean
       held: string[]
     }
+    BelongingNodeView: {
+      node: components['schemas']['NodeRef']
+      epoch: number
+      realm: components['schemas']['NodeRef'] | null
+      identities: components['schemas']['HeldIdentityView'][]
+      fault_layer: components['schemas']['IdentityLayer'] | null
+      peer_groups: components['schemas']['PeerGroupView'][]
+      sanctuaries: components['schemas']['SanctuaryView'][]
+      sanctuary_law: components['schemas']['SanctuaryLawView'] | null
+      satires: components['schemas']['SatireView'][]
+      jester: components['schemas']['NodeRef'] | null
+    }
     BetCreateInput: {
       match_id: number
       town_id: number
@@ -46248,6 +46612,7 @@ export interface components {
       conflict: number
       regions: components['schemas']['NodeRef'][]
     }
+    FugitiveKind: 'outlaw' | 'accused' | 'defector'
     FunctionBreakdownView: {
       base: number
       design_pct: number
@@ -47417,6 +47782,37 @@ export interface components {
       name: string
       since_epoch: number
     }
+    HeldIdentityDeleteInput: {
+      holder_id: number
+      layer: components['schemas']['IdentityLayer']
+    }
+    HeldIdentityEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      holder_id: number
+      layer: components['schemas']['IdentityLayer']
+    }
+    HeldIdentitySetInput: {
+      holder_id: number
+      layer: components['schemas']['IdentityLayer']
+      value_node_id?: number | null
+      value_label?: string | null
+      strength: number
+      salience: number
+      driver: components['schemas']['SalienceDriver']
+    }
+    HeldIdentityView: {
+      layer: components['schemas']['IdentityLayer']
+      value: components['schemas']['NodeRef'] | null
+      value_label: string | null
+      strength: number
+      salience: number
+      driver: components['schemas']['SalienceDriver']
+      updated_epoch: number
+      locked: string[]
+    }
     HeldLawRecord: {
       law: components['schemas']['NaturalLaw']
       label: string
@@ -48186,6 +48582,16 @@ export interface components {
       exposure?: number | null
       hold: boolean
     }
+    IdentityLayer:
+      | 'people'
+      | 'faith'
+      | 'class'
+      | 'locality'
+      | 'house'
+      | 'profession'
+      | 'generation'
+      | 'polity'
+      | 'circle'
     IdentityReason: 'spy' | 'blood_curse' | 'exile' | 'impostor'
     IdentityUnmaskInput: {
       mortal_id: number
@@ -51005,6 +51411,9 @@ export interface components {
       | 'faith'
       | 'prosperity'
       | 'injustice'
+      | 'identity'
+      | 'separatism'
+      | 'suppression'
     LoyaltyPartView: {
       part: components['schemas']['LoyaltyPart']
       value: number
@@ -53155,6 +53564,8 @@ export interface components {
       | 'buy_insurance'
       | 'invent_game'
       | 'join_road_folk'
+      | 'seek_sanctuary'
+      | 'mock_the_ruler'
     MortalTurnFinishedEvent: {
       id: number
       kind: 'mortal.turn_finished'
@@ -54060,6 +54471,7 @@ export interface components {
       | 'admiral'
       | 'speaker'
       | 'chief_scientist'
+      | 'jester'
     OfficeView: {
       id: number
       kind: components['schemas']['OfficeKind']
@@ -54769,6 +55181,60 @@ export interface components {
       epoch: number
       note: string | null
     }
+    PeerGroupCreateInput: {
+      settlement_entity_id: number
+      social_class: components['schemas']['SocialClass']
+      play: components['schemas']['PlayKind']
+      children: number
+      cohesion: number
+      deprived: boolean
+    }
+    PeerGroupDeleteInput: {
+      record_id: number
+    }
+    PeerGroupEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    PeerGroupView: {
+      id: number
+      settlement: components['schemas']['NodeRef']
+      social_class: components['schemas']['SocialClass']
+      play: components['schemas']['PlayKind']
+      children: number
+      cohesion: number
+      deprived: boolean
+      formed_epoch: number
+      dissolved_epoch: number | null
+      members: components['schemas']['PeerMemberView'][]
+      locked: string[]
+    }
+    PeerMemberDeleteInput: {
+      group_id: number
+      mortal_id: number
+    }
+    PeerMemberEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      group_id: number
+      mortal_id: number
+    }
+    PeerMemberSetInput: {
+      group_id: number
+      mortal_id: number
+      deprived_epochs: number
+    }
+    PeerMemberView: {
+      mortal: components['schemas']['NodeRef']
+      joined_epoch: number
+      deprived_epochs: number
+      locked: string[]
+    }
     PeopleBrief: {
       entity: components['schemas']['EntitySummary']
       population: number
@@ -55410,6 +55876,8 @@ export interface components {
       | 'brew_base'
       | 'reagent'
       | 'poison'
+    PlayKind:
+      'games' | 'mock_fights' | 'imitation' | 'riding' | 'archery' | 'songs'
     PlayerHints: {
       creator: components['schemas']['CreatorHints']
       sons_waiting: string[]
@@ -58678,6 +59146,16 @@ export interface components {
       ok: boolean
       safety_backup: string
     }
+    SalienceDriver:
+      | 'baseline'
+      | 'holy_war'
+      | 'famine'
+      | 'invasion'
+      | 'strike'
+      | 'rhetoric'
+      | 'segregation'
+      | 'crossing'
+      | 'god'
     SampleNames: {
       language_id: number
       names: string[]
@@ -58685,6 +59163,97 @@ export interface components {
     SampleNamesRequest: {
       count: number
       salt: string
+    }
+    SanctuaryCreateInput: {
+      fugitive_entity_id: number
+      host_entity_id: number
+      kind: components['schemas']['SanctuaryKind']
+      fugitive_kind: components['schemas']['FugitiveKind']
+      pursuer_entity_id?: number | null
+      state: components['schemas']['SanctuaryState']
+      fee: number
+      siege_epochs: number
+    }
+    SanctuaryDeleteInput: {
+      record_id: number
+    }
+    SanctuaryEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    SanctuaryKind: 'temple' | 'hospitality' | 'asylum'
+    SanctuaryLawDeleteInput: {
+      polity_id: number
+    }
+    SanctuaryLawEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      polity_id: number
+    }
+    SanctuaryLawSetInput: {
+      polity_id: number
+      restricted: boolean
+      fee_pct: number
+    }
+    SanctuaryLawView: {
+      restricted: boolean
+      fee_pct: number
+      locked: string[]
+    }
+    SanctuaryState:
+      'sheltered' | 'negotiating' | 'besieged' | 'violated' | 'ended'
+    SanctuaryView: {
+      id: number
+      fugitive: components['schemas']['NodeRef']
+      host: components['schemas']['NodeRef']
+      kind: components['schemas']['SanctuaryKind']
+      fugitive_kind: components['schemas']['FugitiveKind']
+      pursuer: components['schemas']['NodeRef'] | null
+      state: components['schemas']['SanctuaryState']
+      fee: number
+      granted_epoch: number
+      siege_epochs: number
+      locked: string[]
+    }
+    SatireCreateInput: {
+      satirist_entity_id?: number | null
+      target_entity_id: number
+      polity_entity_id?: number | null
+      work_entity_id?: number | null
+      source: components['schemas']['SatireSource']
+      bite: number
+      tolerated: boolean
+      punished: boolean
+    }
+    SatireDeleteInput: {
+      record_id: number
+    }
+    SatireEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      record_id: number
+    }
+    SatireSource: 'jester' | 'artwork' | 'mortal' | 'god'
+    SatireView: {
+      id: number
+      satirist: components['schemas']['NodeRef'] | null
+      target: components['schemas']['NodeRef']
+      polity: components['schemas']['NodeRef'] | null
+      work: components['schemas']['NodeRef'] | null
+      source: components['schemas']['SatireSource']
+      bite: number
+      tolerated: boolean
+      punished: boolean
+      judged: boolean
+      epoch: number
+      locked: string[]
     }
     SavedGenesis: {
       lore_language: components['schemas']['LoreLanguage']
@@ -60478,6 +61047,7 @@ export interface components {
       | 'lay_affinity'
       | 'stir_monsoon'
       | 'turn_wind'
+      | 'stir_identity'
     SonToolsView: {
       son_id: number
       rarity: components['schemas']['Rarity']
@@ -76628,6 +77198,35 @@ export interface operations {
       }
     }
   }
+  node_belonging_api_belonging_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BelongingNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   node_customs_api_customs_of__node_id__get: {
     parameters: {
       query?: never
@@ -91203,6 +91802,645 @@ export interface operations {
         'application/json': components['schemas']['WitchHuntDeleteInput']
       }
     }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_held_identity_set_api_actions_held_identity_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HeldIdentitySetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_held_identity_edit_api_actions_held_identity_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HeldIdentityEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_held_identity_delete_api_actions_held_identity_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HeldIdentityDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_peer_group_create_api_actions_peer_group_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PeerGroupCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_peer_group_edit_api_actions_peer_group_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PeerGroupEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_peer_group_delete_api_actions_peer_group_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PeerGroupDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_peer_member_set_api_actions_peer_member_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PeerMemberSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_peer_member_edit_api_actions_peer_member_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PeerMemberEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_peer_member_delete_api_actions_peer_member_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PeerMemberDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sanctuary_create_api_actions_sanctuary_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SanctuaryCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sanctuary_edit_api_actions_sanctuary_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SanctuaryEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sanctuary_delete_api_actions_sanctuary_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SanctuaryDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sanctuary_law_set_api_actions_sanctuary_law_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SanctuaryLawSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sanctuary_law_edit_api_actions_sanctuary_law_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SanctuaryLawEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sanctuary_law_delete_api_actions_sanctuary_law_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SanctuaryLawDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_satire_create_api_actions_satire_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SatireCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_satire_edit_api_actions_satire_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SatireEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_satire_delete_api_actions_satire_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SatireDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_belonging_run_api_actions_belonging_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sanctuary_run_api_actions_sanctuary_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_satire_run_api_actions_satire_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
     responses: {
       200: {
         headers: {
@@ -137774,6 +139012,9 @@ export const foundableFactionValues: ReadonlyArray<
   'smuggling_ring',
   'pirate_confederacy',
 ]
+export const fugitiveKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['FugitiveKind']
+> = ['outlaw', 'accused', 'defector']
 export const funeralCustomValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FuneralCustom']
 > = [
@@ -138448,6 +139689,19 @@ export const ideaStateValues: ReadonlyArray<
 export const ideaStrainValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdeaStrain']
 > = ['none', 'distraction', 'focus_loss', 'obsession']
+export const identityLayerValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['IdentityLayer']
+> = [
+  'people',
+  'faith',
+  'class',
+  'locality',
+  'house',
+  'profession',
+  'generation',
+  'polity',
+  'circle',
+]
 export const identityReasonValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdentityReason']
 > = ['spy', 'blood_curse', 'exile', 'impostor']
@@ -139144,6 +140398,9 @@ export const loyaltyPartValues: ReadonlyArray<
   'faith',
   'prosperity',
   'injustice',
+  'identity',
+  'separatism',
+  'suppression',
 ]
 export const luckReachValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LuckReach']
@@ -139811,6 +141068,8 @@ export const mortalToolIdValues: ReadonlyArray<
   'buy_insurance',
   'invent_game',
   'join_road_folk',
+  'seek_sanctuary',
+  'mock_the_ruler',
 ]
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalTurnFinishedEvent']['kind']
@@ -140100,6 +141359,7 @@ export const officeKindValues: ReadonlyArray<
   'admiral',
   'speaker',
   'chief_scientist',
+  'jester',
 ]
 export const omenReadingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OmenReading']
@@ -140431,6 +141691,9 @@ export const plantYieldValues: ReadonlyArray<
   'reagent',
   'poison',
 ]
+export const playKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PlayKind']
+> = ['games', 'mock_fights', 'imitation', 'riding', 'archery', 'songs']
 export const plotKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlotKind']
 > = [
@@ -141138,6 +142401,28 @@ export const sacramentProtectionValues: ReadonlyArray<
 export const sacredClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SacredClass']
 > = ['profane', 'notable', 'holy']
+export const salienceDriverValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SalienceDriver']
+> = [
+  'baseline',
+  'holy_war',
+  'famine',
+  'invasion',
+  'strike',
+  'rhetoric',
+  'segregation',
+  'crossing',
+  'god',
+]
+export const sanctuaryKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SanctuaryKind']
+> = ['temple', 'hospitality', 'asylum']
+export const sanctuaryStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SanctuaryState']
+> = ['sheltered', 'negotiating', 'besieged', 'violated', 'ended']
+export const satireSourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SatireSource']
+> = ['jester', 'artwork', 'mortal', 'god']
 export const scarKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ScarKind']
 > = [
@@ -141790,6 +143075,7 @@ export const sonToolIdValues: ReadonlyArray<
   'lay_affinity',
   'stir_monsoon',
   'turn_wind',
+  'stir_identity',
 ]
 export const sonTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnFinishedEvent']['kind']

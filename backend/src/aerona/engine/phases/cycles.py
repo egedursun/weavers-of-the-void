@@ -203,6 +203,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.gatherings",
     "table.geasa",
     "table.gifts",
+    "table.held_identities",
     "table.house_members",
     "table.kinship_systems",
     "table.marriages",

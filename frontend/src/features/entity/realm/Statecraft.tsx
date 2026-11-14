@@ -6,6 +6,7 @@ import {
   BookOpenCheck,
   Coins,
   Crown,
+  Drama,
   Flame,
   Gavel,
   GitFork,
@@ -141,6 +142,12 @@ const OFFICE_POWERS: Record<string, Named & { hint: string }> = {
     icon: GraduationCap,
     tone: 'info',
     hint: 'Keeps the realm’s scholars at their work and is paid a stipend for it',
+  },
+  jest: {
+    label: 'Jest',
+    icon: Drama,
+    tone: 'gold',
+    hint: 'Mocks the ruler by licence and speaks what the council will not',
   },
 }
 const LAW_HOLDS: Record<string, Named & { hint: string }> = {

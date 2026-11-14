@@ -28,6 +28,7 @@ async def living(ctx: TickContext, kinds: tuple[EntityType, ...]) -> list[Entity
     "table.community_relations",
     "table.cosmos",
     "table.faction_profiles",
+    "table.held_identities",
     "table.holder_techniques",
     "table.memories",
     "table.messages",
@@ -80,6 +81,7 @@ async def correspondence(ctx: TickContext) -> None:
     "table.polity_members",
     "table.polity_profiles",
     "table.public_opinion",
+    "table.satires",
     "table.settlement_profiles",
 )
 @writes("table.public_opinion")

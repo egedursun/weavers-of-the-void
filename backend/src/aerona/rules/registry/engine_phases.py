@@ -523,6 +523,11 @@ class EnginePhasesRules:
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: prevailing winds, rain shadows, monsoons, ocean currents and climate oscillations"
     )
     crossings: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: launch windows between worlds and the cosmopolitan cultures of busy roads")
+    belonging: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: identity layers and their salience, and the peer groups of children")
+    sanctuary: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fugitives in sanctuary, asylum and the pursuers who wait, bargain, besiege or break in"
+    )
+    satire: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: court jesters and satires of rulers, tolerated or punished")
     arcs: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: arcs read in lives, their beats and outcomes, setups and payoffs, and the drama manager"
     )
