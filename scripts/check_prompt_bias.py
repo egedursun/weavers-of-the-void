@@ -124,6 +124,15 @@ PATTERNS = (
         prose_only=True,
     ),
     Pattern(
+        "stock image",
+        re.compile(
+            r"\b(?:into|inside|buried in|sank into|sinks into) (?:the )?(?:mist|fog)\b|\bwhisper(?:s|ed|ing)? (?:that|the same|it)\b|"
+            r"\b(?:their|his|her) bones\b|\btook a breath\b|\bby (?:fire and )?lamp(?:light)?\b",
+            re.IGNORECASE,
+        ),
+        prose_only=True,
+    ),
+    Pattern(
         "borrowed imagery",
         re.compile(
             r"\b(wove|woven|weave|weaves|weaved|weaving (?:a|an|the|together|into|itself)|unthread\w*|stitch(?:es|ed|ing)?|re-?stitch\w*|"

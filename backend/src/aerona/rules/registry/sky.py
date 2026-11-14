@@ -38,7 +38,7 @@ class SkyRules:
     eclipse_sanity_loss: int = rule(5, 0, 100, RuleGroup.SKY, "Mortals' sanity loss during an eclipse")
     eclipse_piety_gain: int = rule(5, 0, 100, RuleGroup.SKY, "Piety increase during an eclipse")
     eclipse_prophecy_power: int = rule(4, 1, 12, RuleGroup.SKY, "Power level of the eclipse prophecy")
-    eclipse_prophet_communities: int = rule(2, 0, 20, RuleGroup.SKY, "Number of communities whispering the eclipse prophecy (the world's most important)")
+    eclipse_prophet_communities: int = rule(2, 0, 20, RuleGroup.SKY, "Number of communities foretelling the eclipse prophecy (the world's most important)")
     eclipse_certainty_base: int = rule(40, 0, 100, RuleGroup.SKY, "Base certainty of the eclipse prophecy")
     eclipse_certainty_die: int = rule(40, 1, 100, RuleGroup.SKY, "Certainty die of the eclipse prophecy (1\u2026n)")
     comet_power: int = rule(4, 1, 12, RuleGroup.SKY, "Power level of a comet")

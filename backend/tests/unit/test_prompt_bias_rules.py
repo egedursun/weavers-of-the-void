@@ -51,6 +51,21 @@ def test_a_reaction_our_text_imposes_is_caught() -> None:
     assert "imposed reaction" not in rules_hit(module, engine_line, "{maker} raised a lament made by those who knew them.")
 
 
+def test_a_stock_image_in_our_wording_is_caught() -> None:
+    module = checker()
+    engine_line = REPOSITORY_ROOT / "backend/src/aerona/engine/cosmos/sample.py"
+    for text in (
+        "{world} was forgotten; nobody can turn to a world buried in mist.",
+        "{name} is dead; your word does not reach their bones.",
+        "The seers whisper the same prophecy.",
+        "The cosmos took a breath; doom receded.",
+        "Some keep watch by fire and lamp while the rest sleep.",
+    ):
+        assert "stock image" in rules_hit(module, engine_line, text), text
+    assert "stock image" not in rules_hit(module, engine_line, "{world} was forgotten; no one can turn to a forgotten world.")
+    assert "stock image" not in rules_hit(module, engine_line, "The weather to hold: clear, rain, storm, snow or fog")
+
+
 def test_a_steering_example_list_is_caught_without_a_lead_in() -> None:
     module = checker()
     assert "steering example" in rules_hit(module, PROMPT, "ore vein, healing herb, sacred spring, bone bed…")

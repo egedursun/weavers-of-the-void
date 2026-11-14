@@ -119,7 +119,7 @@ async def forget_world(ctx: TickContext, world_id: int, by: str) -> str:
         route.active = False
     for son in await session.scalars(select(SonRow).where(SonRow.current_world_id == world.id)):
         son.current_world_id = primary
-    text = f"{by} forgot {world.name}. The world sank into mist; its roads closed, its name remained only in tales."
+    text = f"{by} forgot {world.name}. Its routes closed, and it survives only in tales."
     await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key="cosmos.world_forgotten", world_id=world.id, feed_category=FeedCategory.WORLD)
     await session.flush()
     return text

@@ -41,7 +41,7 @@ ACT_WORDS = {
     LandAct.SHIFT_RIVER: "moved its river",
     LandAct.PARCH: "parched it into desert",
     LandAct.GREEN: "brought the grass back",
-    LandAct.SALT_SOIL: "sowed its soil with salt",
+    LandAct.SALT_SOIL: "made its soil saline",
     LandAct.ENRICH_SOIL: "made its soil rich",
     LandAct.RAISE_LAND: "raised the land",
     LandAct.LOWER_LAND: "lowered the land",

@@ -26,7 +26,7 @@ CREATION_DESCRIPTION = (
 )
 
 CREATION_FIELDS: dict[str, str] = {
-    "name": "Original proper name; fitting the world's naming language. Generic names (River, Dark Forest, Dragon) are forbidden.",
+    "name": "A proper name in the world's naming language.",
     "subtype": "What it is, e.g.: {{ entity.examples | join(', ') }}",
     "description": "3 to 7 sentences. Concrete, sensory details of its own; how it was born, what it is connected with, how mortals know it.",
     "domain": "If empty, your first domain. The domain used in this creation; one of: {{ domains | join(', ') }}. Your own domains are cheap.",
@@ -1037,7 +1037,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"place_id": "The place's id", "reason": "Why you raise it"},
     ),
     T.RESHAPE_LAND: ToolText(
-        "You lay a hand on a land and reshape it: move its river into a neighbouring land (shift_river), parch it into desert (parch), "
+        "You reshape a land: move its river into a neighbouring land (shift_river), parch it into desert (parch), "
         "bring the grass back to a desert (green), sow its soil with salt (salt_soil), make its soil rich (enrich_soil), raise or lower "
         "the land (raise_land, lower_land), carve a valley or fill one (carve_valley, fill_valley), open a spring (open_spring), call up "
         "lava (call_lava) or sink a coast under the sea (sink_coast). Rivers bow to gods of sea, storm, earth or stone; deserts to gods of "
@@ -1122,7 +1122,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.EXTINGUISH_STAR: ToolText(
-        "You extinguish a star: the worlds around it sink into darkness and cold, leakage rises, the apocalypse draws near. A terrible act; the whole cosmos remembers it. "
+        "You extinguish a star: the worlds around it lose their light and warmth, leakage rises and doom advances; the whole cosmos remembers it. "
         "{{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_extinguish_pct) }} essence, {{ rules.son_tools.extinguish_star_ap }} actions.",
         {"star_id": "The star's id", "reason": "Why you put it out"},
     ),

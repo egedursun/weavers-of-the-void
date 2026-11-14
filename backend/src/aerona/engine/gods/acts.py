@@ -342,7 +342,7 @@ async def wrath(ctx: TickContext, creator: CreatorRow, target: EntityRow, reason
 async def world_wrath(ctx: TickContext, creator: CreatorRow, world: WorldRow, kind: Disaster) -> list[int]:
     rules = ctx.rules.god_power
     if world.discovery is Discovery.FORGOTTEN:
-        raise ValidationFailedError(f"{world.name} is forgotten; no hand reaches the world in the mist.")
+        raise ValidationFailedError(f"{world.name} is forgotten and cannot be acted on.")
     if kind not in DISASTERS:
         raise ValidationFailedError("Choose the form of wrath (earthquake, flood, plague, drought, storm).")
     regions = await canon(ctx.session, [EntityType.REGION], world.id)

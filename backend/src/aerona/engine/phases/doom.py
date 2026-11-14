@@ -51,8 +51,8 @@ from aerona.rules.registry import Rules
 
 DOOM_FORECAST_ACTION = "doom.forecast"
 APOCALYPSE_DISASTERS = (Disaster.EARTHQUAKE, Disaster.FLOOD, Disaster.DROUGHT, Disaster.STORM)
-FIRST_OMEN = "Omens fell from the sky: wells turned red, birds flew backwards. Seers whisper that the end of the world is near."
-FINAL_OMEN = "The apocalypse is very near: the stars shifted from their places, the dead spoke in their sleep. If the gods do nothing the world will shatter."
+FIRST_OMEN = "Doom reached its first omen: the end of the world draws near."
+FINAL_OMEN = "Doom reached its final omen: if the gods do nothing, the world will end."
 
 
 @dataclass(frozen=True)

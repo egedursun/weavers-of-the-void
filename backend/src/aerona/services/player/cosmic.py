@@ -541,7 +541,7 @@ async def command_climate(scope: PlayerScope, command: Climate) -> Effect:
     if command.world_id is not None:
         world = await guards.world(scope.session, command.world_id)
         if world.discovery is Discovery.FORGOTTEN:
-            raise ValidationFailedError(f"{world.name} is forgotten; no climate is commanded to the sky inside the mist.")
+            raise ValidationFailedError(f"{world.name} is forgotten; no climate can be commanded there.")
         targets = [world]
     else:
         targets = list(await scope.session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)))

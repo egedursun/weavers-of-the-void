@@ -113,11 +113,11 @@ async def reseal_temporary(ctx: TickContext) -> int:
 WARNINGS = (
     (
         "warning_1",
-        "Something is leaking into {world}: nights are a moment too long, shadows a step behind. The peoples began to dream the same dream.",
+        "Leakage from outside the cosmos crossed its first threshold in {world}.",
         "horror.warning_first",
     ),
-    ("warning_2", "{world}'s geometry is breaking: some valleys are bigger inside, some roads turn back onto themselves.", "horror.warning_geometry"),
-    ("outer_being_threshold", "A tear opened in {world}'s sky. Something outside is looking in.", "horror.warning_tear"),
+    ("warning_2", "Leakage from outside the cosmos crossed its second threshold in {world}.", "horror.warning_geometry"),
+    ("outer_being_threshold", "Leakage in {world} crossed the threshold at which beings from outside the cosmos can enter.", "horror.warning_tear"),
 )
 
 
@@ -428,7 +428,7 @@ async def stars_align(ctx: TickContext, world: WorldRow) -> str:
     await open_alignment(ctx, [TravelMethod.ANCIENT_GATE, TravelMethod.SLINGSHOT_ORBIT], danger_add=horror.alignment_route_danger)
     for item in await WorldRepository(ctx.session).all_worlds():
         item.leakage = min(PERCENT_MAX, item.leakage + horror.alignment_leak)
-    return "The stars aligned: all gates opened at once and all worlds looked into the same darkness for a moment."
+    return "An alignment opened every ancient gate and slingshot route at once, and leakage rose in every world."
 
 
 async def eye_in_the_sky(ctx: TickContext, world: WorldRow) -> str:
@@ -510,9 +510,9 @@ async def _whispered_knowledge(ctx: TickContext, world: WorldRow) -> EntityRow:
         ctx.session,
         ctx.epoch,
         RecordSpec(
-            name=f"Whispers from Beyond ({world.name})",
+            name=f"Knowledge from Outside ({world.name})",
             entity_type=EntityType.KNOWLEDGE,
-            body="Words that came from outside the world, heard in sleep and never spoken aloud by choice.",
+            body="Knowledge that came from outside the world.",
             stats=KnowledgeStats(level=horror.whispers_knowledge_level, spread=0),
             power=horror.whispers_knowledge_power,
             world_id=world.id,
@@ -538,10 +538,10 @@ async def whispers_from_beyond(ctx: TickContext, world: WorldRow) -> str | None:
         listener = max(communities, key=lambda item: (item.importance or 0, -item.id))
     else:
         return None
-    if not await teach(ctx, listener.id, knowledge, "heard it whispered from beyond the world"):
+    if not await teach(ctx, listener.id, knowledge, "learned it from outside the world"):
         return None
     shift_sanity(ctx.rules, listener, -horror.whispers_sanity_loss)
-    return f"Whispers from beyond reached {listener.name} in {world.name}: they now know what should not be known, and they cannot stop listening."
+    return f"{listener.name} in {world.name} gained knowledge from outside the world and lost sanity."
 
 
 async def horror_event(ctx: TickContext, kind: HorrorEventKind, world: WorldRow) -> str | None:
@@ -625,7 +625,7 @@ async def _world(session: AsyncSession, world_id: int) -> WorldRow:
     if world is None:
         raise NotFoundError("No such world.")
     if world.discovery is Discovery.FORGOTTEN:
-        raise ValidationFailedError(f"{world.name} was forgotten; nothing can be ordered inside the mist.")
+        raise ValidationFailedError(f"{world.name} was forgotten; nothing can be ordered there.")
     return world
 
 

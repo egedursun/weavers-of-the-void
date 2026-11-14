@@ -325,7 +325,7 @@ async def eclipse_watches(ctx: TickContext, atlas: RegionAtlas) -> int:
         host = max(towns, key=lambda town: (stat_or(town, "population", 0), -town.id), default=None)
         if host is None or made >= table.emergent_cap:
             continue
-        name = tag(ctx, f"the Watch of the Dark Sun over {host.name}")
+        name = tag(ctx, f"the Eclipse Watch over {host.name}")
         if name.casefold() in known:
             continue
         event, _ = await happen(
@@ -333,7 +333,7 @@ async def eclipse_watches(ctx: TickContext, atlas: RegionAtlas) -> int:
             Happening(
                 EngineKind.ECLIPSE_WATCH,
                 name,
-                f"The sun went dark over {host.name}; the people gathered on the roofs and walls and waited in silence for the light.",
+                f"The sun went dark over {host.name}, and the people gathered to watch it.",
                 f"The people of {host.name} gathered to watch the sun go dark.",
                 host,
                 30,

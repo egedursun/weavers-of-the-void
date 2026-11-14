@@ -392,17 +392,17 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.BUILD_STRUCTURE: ToolText(
-        "You build a monument: temple, tower, wall, bridge, monument, tomb, mine, harbour, library. It can be dedicated to a god."
+        "You build a structure of one of your world's structure kinds. It can be dedicated to a god."
         " A named mortal needs a craft skill of at least {{ rules.skills.tool_min_craft }} (smithing, carpentry, masonry and the like). 1 action.",
         {
             "name": NAME_FIELD,
             "structure_kind": "What it is and what it does: {{ structure_kinds }}",
-            "subtype": "temple, tower, wall, bridge, tomb, mine, harbour, library…",
+            "subtype": "Its own kind name in your people's terms",
             "description": DESCRIPTION_FIELD,
             "location_id": "Your own settlement, place or region; if empty, where you are",
             "dedicated_son_id": "The god it is dedicated to, if any",
-            "material": "What it is built of (stone, wood, clay, glass…); holy stone makes a temple shine, soft wood rots; it must be in your people's stores",
-            "channels_ley": "True if it is raised to draw on the ley lines (a ley gate, a star tower, a stone ring); it gains strength only where a line runs",
+            "material": "What it is built of, from your people's stores; a holy material raises a temple's sanctity and a soft one decays sooner",
+            "channels_ley": "True if it is raised to draw on the ley lines; it gains strength only where a line runs",
             "image_prompt": IMAGE_PROMPT_FIELD,
         },
     ),
@@ -605,7 +605,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"spirit_id": "The free spirit's id", "target_id": "The item, vessel or monument"},
     ),
     T.SEARCH_RUINS: ToolText(
-        "You search a ruin, a remnant or the bones of a dead god on your land: you may find lost knowledge, an ownerless item, or awaken something sleeping. 1 action.",
+        "You search a ruin, a remnant or the remains of a dead god on your land: you may find lost knowledge, an ownerless item, or bring a curse on yourself. 1 action.",
         {"target_id": "The id of a place that is a ruin, remnant or god's corpse", "how": "How you search"},
     ),
     T.SABOTAGE: ToolText(

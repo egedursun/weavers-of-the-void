@@ -381,7 +381,7 @@ async def archive_burned(ctx: TickContext) -> int:
             continue
         await EntityRepository(ctx.session).add_flag(archive.id, EntityFlag.BURNED, ctx.epoch)
         lost += await _burn_holdings(ctx, archive)
-        text = f"The Cosmic Archive burned. {beyond.archive_burn_loss_pct}% of the knowledge it held turned to ash with it; this is the end of an age."
+        text = f"The Cosmic Archive burned. {beyond.archive_burn_loss_pct}% of the knowledge it held was lost with it; this is the end of an age."
         await ctx.chronicle(ChronicleKind.AGE_CHANGE, text, template_key="beyond.archive_burned", entity_ids=[archive.id])
         await note(ctx, f"The Cosmic Archive burned; {beyond.archive_burn_loss_pct}% of its knowledge was lost.", key="beyond.archive_burned_note")
     return lost

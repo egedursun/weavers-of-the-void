@@ -243,7 +243,7 @@ async def incite(ctx: TickContext, spymaster: EntityRow, target: EntityRow, netw
     town.unrest = clamp_int(town.unrest + rules.incite_unrest, 0, PERCENT)
     risen = town.unrest >= rules.incite_uprising_unrest and await incite_uprising_quietly(ctx, target)
     claimant = await plant_claimant(ctx, spymaster, target)
-    planted = f"; they whispered that {claimant.name} was the rightful ruler" if claimant is not None else ""
+    planted = f"; they claimed that {claimant.name} was the rightful ruler" if claimant is not None else ""
     text = f"Agents of {spymaster.name} stirred the streets of {target.name}{planted}" + (" until the townsfolk rose against their rulers." if risen else ".")
     await _note(ctx, text, "espionage.incite", (spymaster.id, target.id))
     return text

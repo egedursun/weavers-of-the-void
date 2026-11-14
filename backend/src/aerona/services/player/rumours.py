@@ -35,7 +35,7 @@ async def plant_rumour(scope: PlayerScope, command: PlantRumour) -> Effect:
         fidelity=command.fidelity,
         atrocity=command.atrocity,
     )
-    return Effect(f"The whisper takes root, {row.fidelity}% true to the tale.", command.community_id)
+    return Effect(f"The rumour spreads, {row.fidelity}% true to the account.", command.community_id)
 
 
 @player_action("rumour:edit", ActionKind.EDIT_RECORD)

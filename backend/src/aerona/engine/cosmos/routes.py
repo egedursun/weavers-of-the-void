@@ -147,7 +147,7 @@ def _shut_until(route: RouteRow) -> tuple[RouteState, str, int | None] | None:
 
 def _closed_status(route: RouteRow, forgotten: Collection[int]) -> tuple[RouteState, str, int | None] | None:
     if route.world_a_id in forgotten or route.world_b_id in forgotten:
-        return RouteState.FORGOTTEN, "The world at the end of the route was forgotten; the route is in the mist.", None
+        return RouteState.FORGOTTEN, "The world at the end of the route was forgotten; the route is closed.", None
     if route.active:
         return None
     shut = _shut_until(route)
@@ -905,7 +905,7 @@ async def stitch_route(ctx: TickContext, route_id: int, by: str) -> str:
         raise ValidationFailedError("This route is already open.")
     forgotten = await forgotten_world_ids(session)
     if route.world_a_id in forgotten or route.world_b_id in forgotten:
-        raise ValidationFailedError("A world at the end of this route was forgotten; the route inside the mist cannot be reopened.")
+        raise ValidationFailedError("A world at the end of this route was forgotten; the route cannot be reopened.")
     if route.method is TravelMethod.DIVINE_BRIDGE and route.builder_son_id is not None:
         builder = await session.get(SonRow, route.builder_son_id)
         if builder is None or builder.status is not SonStatus.ACTIVE:

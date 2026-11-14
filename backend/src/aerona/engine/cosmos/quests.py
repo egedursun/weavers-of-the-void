@@ -141,7 +141,7 @@ async def _invalid_reason(session: AsyncSession, quest: LegendaryQuestRow) -> st
     if quest.kind is Q.SEALED_GATE and (quest.target_route_id is None or await session.get(RouteRow, quest.target_route_id) is None):
         return "the sealed route no longer exists"
     if quest.kind is Q.ARCHIVE and await live_archive(session) is None:
-        return "the Cosmic Archive vanished or was buried in mist"
+        return "the Cosmic Archive was lost"
     return None
 
 
@@ -194,7 +194,7 @@ async def settle_quest(ctx: TickContext, quest: LegendaryQuestRow, thread: Threa
     if await _completed(ctx.session, quest):
         _close(thread, quest, ctx.epoch, LegendaryQuestOutcome.COMPLETED, "completed successfully")
         await _reward(ctx)
-        text = f"Legendary quest completed: {name}. The cosmos took a breath; doom receded, the gods' fame grew."
+        text = f"Legendary quest completed: {name}. Doom receded, and the gods' fame grew."
         await ctx.chronicle(ChronicleKind.LEGENDARY_QUEST, text, template_key="beyond.quest_completed")
         return LegendaryQuestOutcome.COMPLETED
     if ctx.epoch >= quest.deadline_epoch:

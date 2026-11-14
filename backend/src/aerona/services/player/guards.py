@@ -26,7 +26,7 @@ async def son(session: AsyncSession, son_id: int) -> SonRow:
 async def living_son(session: AsyncSession, son_id: int) -> SonRow:
     found = await son(session, son_id)
     if found.status is SonStatus.DEAD:
-        raise ValidationFailedError(f"{found.name} is dead; their bones do not stir.")
+        raise ValidationFailedError(f"{found.name} is dead.")
     return found
 
 
@@ -60,7 +60,7 @@ async def world(session: AsyncSession, world_id: int) -> WorldRow:
 async def open_world(session: AsyncSession, world_id: int) -> WorldRow:
     found = await world(session, world_id)
     if found.discovery is Discovery.FORGOTTEN:
-        raise ValidationFailedError(f"{found.name} was forgotten; no hand reaches into the fog.")
+        raise ValidationFailedError(f"{found.name} was forgotten and cannot be acted on.")
     return found
 
 

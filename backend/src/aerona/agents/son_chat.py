@@ -39,7 +39,7 @@ async def chat_with_son(runtime: AgentRuntime, son_id: int, text: str) -> ChatRe
         if son is None:
             raise NotFoundError("Son not found.")
         if son.status is SonStatus.DEAD:
-            raise ValidationFailedError(f"{son.name} is dead; your voice does not reach their bones.")
+            raise ValidationFailedError(f"{son.name} is dead and cannot be reached.")
         said = text.strip()[: rules.council.chat_max_chars]
         if not said:
             raise ValidationFailedError("Say something.")

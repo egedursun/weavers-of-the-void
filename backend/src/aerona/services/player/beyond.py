@@ -161,7 +161,7 @@ async def outer_being(scope: PlayerScope, command: WorldTarget) -> Effect:
 @player_action("horror:cult", ActionKind.OUTER_CULT)
 async def outer_cult(scope: PlayerScope, command: EntityTarget) -> Effect:
     cult = await spawn_outer_cult(scope.session, scope.rules, command.entity_id)
-    return Effect(f"{cult.name} began to whisper.", cult.id, created_ids=(cult.id,))
+    return Effect(f"{cult.name} arose.", cult.id, created_ids=(cult.id,))
 
 
 @player_action("horror:suppress_cult", ActionKind.DESTROY)

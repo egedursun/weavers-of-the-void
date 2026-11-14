@@ -568,7 +568,7 @@ async def settle_intuition(ctx: TickContext, intuition: HorizonIntuitionRow, bor
         tail = ""
     except ValidationFailedError:
         await WorldRepository(ctx.session).set_discovery(born, Discovery.LEGEND)
-        tail = " But its road dissolved into the mist; the world is remembered only as a legend."
+        tail = " But its route closed; the world is remembered only as a legend."
     text = f"{seeker.name} discovered a world nobody knew: {born.name}.{tail}"
     await ctx.chronicle(
         ChronicleKind.EXPLORATION,

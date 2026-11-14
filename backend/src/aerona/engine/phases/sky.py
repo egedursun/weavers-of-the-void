@@ -102,7 +102,7 @@ async def eclipse_seers(ctx: TickContext, prophecy: EntityRow, world: WorldRow) 
     ranked = sorted(communities, key=lambda entity: (entity.entity_type is not EntityType.CULT, -(entity.importance or 0), entity.id))
     seers = ranked[: ctx.rules.sky.eclipse_prophet_communities]
     for seer in seers:
-        await connect(ctx.session, seer.id, prophecy.id, BondKind.PROPHESIES, ctx.epoch, description="whispered it during the eclipse")
+        await connect(ctx.session, seer.id, prophecy.id, BondKind.PROPHESIES, ctx.epoch, description="foretold it during the eclipse")
     return seers
 
 
@@ -135,7 +135,7 @@ async def _eclipse(ctx: TickContext, world: WorldRow) -> str:
         RecordSpec(
             name=f"{world.name} Eclipse Prophecy",
             entity_type=EntityType.PROPHECY,
-            body=f"When {world.name}'s sky darkened the seers whispered the same words.",
+            body=f"A prophecy foretold during the long eclipse over {world.name}.",
             stats=ProphecyStats(certainty=clamp_percent(sky.eclipse_certainty_base + rng.die(sky.eclipse_certainty_die) + await omen_bonus(ctx, world.id))),
             power=sky.eclipse_prophecy_power,
             world_id=world.id,
@@ -144,7 +144,7 @@ async def _eclipse(ctx: TickContext, world: WorldRow) -> str:
         ),
     )
     await eclipse_seers(ctx, prophecy, world)
-    return f"In {world.name} the sky darkened: an eclipse lasted the whole epoch. The seers whisper the same prophecy."
+    return f"In {world.name} an eclipse lasted the whole epoch, and its seers foretold the same prophecy."
 
 
 async def _comet(ctx: TickContext, world: WorldRow) -> str:
@@ -265,7 +265,7 @@ async def sky_event(ctx: TickContext, kind: SkyEventKind, order: SkyOrder) -> Sk
     if world is None:
         raise NotFoundError("No such world.")
     if kind not in STAR_EVENTS and world.discovery is Discovery.FORGOTTEN:
-        raise ValidationFailedError(f"{world.name} was forgotten; no event can be ordered in the sky inside the mist.")
+        raise ValidationFailedError(f"{world.name} was forgotten; no event can be ordered in its sky.")
     star_id = order.star_id if order.star_id is not None else await WorldRepository(ctx.session).root_star_id(world)
     if kind is SkyEventKind.ECLIPSE:
         text = await _eclipse(ctx, world)

@@ -1721,6 +1721,7 @@ Per CLAUDE.md rule 1, each step runs the static gates and the tests that cover i
 ### 5.10 Coverage and completion contract
 
 - Step 0 of W44 extends `scripts/spec_coverage.py` to read this file (foundations F50–F56, sections 44.x, 45.x, 46.x, reference lanes, couplings, loops, stories, decisions) and to write `docs/spec/16-coverage.md` with the columns of `13-coverage.md`; the commit gate checks both matrices.
+- Step 0 of W44 also adds `scripts/check_inventory.py` and `docs/spec/inventory.md`: one row for every table, enum type, engine step, incident kind, agent tool, god lever, screen and model-facing text file, each with its status against rules 1–8 and the layers of 6.6 (proven by a named guard, done, or the spec row that closes it). The commit gate fails when the code holds a countable thing without a row, or when a row names a guard that does not exist (6.7).
 - A row is done only when every work column is filled (or `n/a` where it does not apply) and its tests pass. `deferred-approved` needs the user's explicit approval.
 - A wave is done when every row of the wave is done, its audit has been run against this spec, screenshots have been taken and opened, and it is committed, pushed and deployed.
 
@@ -1732,7 +1733,7 @@ Per CLAUDE.md rule 1, each step runs the static gates and the tests that cover i
 
 **W46:** F54 profiles and lines → 46.2–46.3 methods and design → 46.4–46.7 crops, structures, vessels, gear → 46.8–46.10 bodies, clones, symbionts → 46.11–46.13 medicine and disease, production, links and computation → 46.14–46.16 world shaping, designed sapience, escape and decay → 46.17–46.20 law, faith, economy, war, gods → genesis, prompts, book, Codex, screens → fixups → audit.
 
-**W47:** step 0 audit of built sections against 47.8 → guards (`check_acts_as.py`, enum scan, `check_enum_values_read.py`, `check_spec_depth.py`) written first so they list every gap → 47.1 structures → 47.2 eras, energy, medicine, logistics, signals, extraction → 47.3 crime, punishment, trial, unions, taxes, revolts → 47.4 sweep → 47.5 god layer → 47.6 typed models and renames → 47.7 unread values → 47.8 thin sections → 47.10 mishaps, fortune and drawn harm → screens, Codex, book, prompts → fixups → audit with every guard at zero.
+**W47:** step 0 audit of built sections against 47.8 → guards (`check_acts_as.py`, enum scan, `check_enum_values_read.py`, `check_spec_depth.py`) written first so they list every gap → 47.1 structures → 47.2 eras, energy, medicine, logistics, signals, extraction → 47.3 crime, punishment, trial, unions, taxes, revolts → 47.4 sweep → 47.5 god layer → 47.6 typed models and renames → 47.7 unread values → 47.8 thin sections → 47.10 mishaps, fortune and drawn harm → screens, Codex, book, prompts → fixups → audit with every guard at zero. Then 47.13 integrity for every table and 47.14 the full read of model-facing text, each with its guard.
 
 **W48:** `catalog/concepts.py` and both guards first (they list every gap) → F57 machinery → 48.1 goods → 48.2 food, cuisine, drink → 48.3 dress, colour, scent, emblems → 48.4 household goods, tools, instruments, games, substances → 48.5 money, materials, preservation, species products, production methods → 48.6 society → 48.7 culture → 48.8 nature and cosmos → 48.9 unification → 48.10 property catalogues for all 250 → genesis, Kinds library, Ways of life, Codex, book, prompts → fixups → audit with both guards at zero.
 
@@ -1976,14 +1977,35 @@ The sweeps above went through concepts, genres and mechanic families. This sweep
 | What is kept | everything, for ever; no folding away, sampling or cutting | folding hid and capped records | W49 F58.12, K.42 |
 | Names | a name for every made, born and notable thing and happening, from the world's languages | naming prompts, collection titles | W49 F58.10 (happenings), W48 (kinds) |
 | Look | visual direction from typed fields, style at render time | image prompt templates, 0.5 rule 8 | 0.5, 5.5 |
+| Model-facing wording | every string read in full against rule 2 | pattern guards only | 47.14 (ledger of the full read) |
 | Control | create, edit, hold, delete every record; revert any change | god levers, `check_control.py` | W49 49.5 (records and reverts) |
 | Reach | every feature for every kind of node | `ThingSections`, `check_wiring.py` | W49 History section |
 | Books | every record in the lore book and the Codex, never cut | rule 7, `services/books/typed.py` | W49 49.5, `check_record_cuts.py` |
 | Search | every record queryable by its typed fields | `services/search.py` (text) | W49 49.5 |
-| Integrity and legacy | checks and recorded fixups for every new value | `services/integrity`, fixups | each wave's compliance catalogue |
+| Integrity and legacy | checks and recorded fixups for every value of every table | `services/integrity` (132 of 676 tables), fixups | 47.13 (every table), each wave's compliance catalogue |
 | Speed | measured bands for every added cost | 5.12a | W49 49.8 |
 
 Every future wave fills this table for what it adds, beside its compliance catalogue.
+
+### 6.7 Closed inventory audit (2026-11-14)
+
+The sweeps of 6.1–6.6 searched for what might be missing, so each new question could still find something. This audit instead enumerated, by script, every countable thing in the code and in the specs. It checked each against the same criteria (rules 1–8 of `CLAUDE.md` and the layers of 6.6) and separated what a guard already proves from what nothing proves.
+
+| Axis | Count | Proven by a guard | Not proven before this audit | Closed by |
+|---|---|---|---|---|
+| Tables | 676 (10 bookkeeping) | read by a phase, written with god levers (`check_wiring.py`, `check_control.py`), book and Codex sections, every served field read, held nodes respected | integrity: 132 tables appear in `services/integrity`, 544 have no check beyond foreign keys; history, changes, moments and terms | 47.13; W49 F58.5–F58.7 |
+| Enums | 819 types, 7,671 values | no unused type, complete label maps | every value read; two layers for content concepts | W47 `check_enum_values_read.py`; W48 |
+| Engine steps | 389 | god control held and forced, eager epochs | each write recorded with its happening | W49 `test_every_change_recorded.py` |
+| Incident kinds | 935 keys in 252 families | none | roles, facts, steps, template, place, clock | W49 F58.1, Appendix 49.A |
+| Agent tools | 398 (239 son, 159 mortal) | every tool runs to success, every field described | — | — |
+| God levers | 1,877 | every lever runs with real values, unique, reached from a screen | revert of any change | W49 49.5 |
+| Screens | 876 components in 66 features | hidden controls, raw ids, labels, paging, orphans, every field read | — (look and polish are checked by screenshots, rule 5) | — |
+| Model-facing text | 34,865 prose strings in 1,305 files, 194 templates | pattern families of `check_prompt_bias.py`, `check_canned_lines.py` | a full read: a lexicon sweep found 255 hits, many of them fixed images in our own wording | 47.14 (the hits found are fixed with this audit) |
+| Spec 13 items | 843 (537 done, 1 in progress, 305 planned) | `spec_coverage.py check` | depth of planned sections | W47 47.8 and `check_spec_depth.py` |
+| Spec 16 items | six waves | — | coverage matrix | 5.10 step 0 |
+| The inventory itself | — | — | nothing failed when a new countable thing appeared without being judged | 5.10 step 0: `scripts/check_inventory.py` |
+
+**Model context.** F58.12 keeps every record. The model receives records through retrieval (paged reads and the `recall_event` tool), never through silent truncation, because no context holds an unbounded history.
 
 ## Part 7. W47 — The depth pass: every existing and planned mechanic at full breadth and depth
 
@@ -2709,6 +2731,55 @@ Decided on 2026-11-14 on the same delegation as 5.12.
 | K.37 | Is fortune real? | A natural law `fortune_law`: `causes_only` (mishaps come only from exposures and typed sources), `personal` (each being also carries a streak), `divine` (fortune is only the gods' favour), `belief_shaped` (the luck beliefs of peoples become real). The seed decides; when silent, `personal`. Bounds keep causes first: the personal streak stays within ±15 and halves back toward zero every four seasons; total fortune is capped at ±100; fortune shifts any single draw by at most ±20% of its base and the severity tail by at most one band. Fortune colours a life; exposure and choices decide it. |
 | K.38 | Can a mishap kill or maim a named mortal? | Yes, by drawn severity like any harm; notable mishaps are rare because exposures and care keep them so, not because they are forbidden. Default rates (rules `mishaps.*`, balance-banded in 5.12a): an adult named mortal of ordinary exposure has about one small mishap per eight seasons, one grave mishap per eighty and one deadly mishap per four hundred; children and the old of their biology double the rate; dangerous work triples it; skill, care and safety law reduce it. |
 
+### 47.13 Integrity for every table
+
+Measurement (2026-11-14): `services/integrity` names 132 of 676 tables. The other 544 have no check beyond their foreign keys, and nothing proves their values stay valid after engine steps, levers, imports and fixups.
+
+1. **Generic checks from the schema**, for every table:
+   - percent and 0–100 columns stay in range;
+   - enum columns hold declared values, including values stored as text in JSON lists, checked against the enum their catalogue names;
+   - node and entity references point at existing rows of an allowed kind;
+   - `locked` lists name real columns;
+   - profile tables keep one row per thing;
+   - epochs are never in the future;
+   - treasury amounts follow `engine/economy/purse.py`.
+
+   They are derived from column types and catalogue metadata, so a new table is covered on creation.
+2. **Typed invariants** in `catalog/invariants.py`, a `total()` table over every table, for what the schema cannot say:
+   - a captive is held by a living captor;
+   - a ruler holds the seat they rule from;
+   - an order's target exists;
+   - a construct's maker or seal holder is valid;
+   - every cross-row rule a section of spec 13 or 16 states in its integrity column.
+
+   A table with no rule beyond the generic checks says so with its reason.
+3. **Repair or report.** Each check either repairs (clamp, drop a dangling reference, re-derive a derived value) with a recorded change (W49 F58.5) or reports to the integrity screen with a god lever to resolve it, never silently.
+4. **Guard.** `scripts/check_integrity_coverage.py` fails when a table has no row in `catalog/invariants.py`. `tests/services/integrity/test_every_invariant.py` breaks each invariant on a seeded world and proves it is found.
+
+### 47.14 A full read of model-facing text
+
+Measurement (2026-11-14): 34,865 prose strings in 1,305 files and 194 templates reach the model or the chronicle; pattern guards cannot see images that use ordinary words. A lexicon sweep found 255 hits. Among them were the following images in our own wording, fixed with this audit:
+
+- the forgotten world "sinking into mist" and "no hand reaching into the fog";
+- the dead whose "bones do not stir";
+- doom omens of "wells turned red, birds flew backwards";
+- leak horror of "nights a moment too long, shadows a step behind";
+- eclipse lines where "seers whisper the same prophecy";
+- a vigil kept "by fire and lamp";
+- "the cosmos took a breath";
+- an example list of forbidden names given to the model;
+- tool texts judging an act as "terrible".
+
+1. **A ledger of the read.** `docs/spec/model-text-ledger.md` lists every file that holds model-facing prose, the strings in it and the date it was read in full against rule 2. A file enters the ledger only after every string in it has been read and rewritten where it pushes a theme, tone, conflict, gender or look the seed did not ask for.
+2. **Guard.** `scripts/check_text_ledger.py` fails when a file with model-facing prose is missing from the ledger, or when its strings changed after the date it was read.
+3. **Order.**
+   - Templates and tool texts first.
+   - Then chronicle and result lines.
+   - Then catalogue descriptions: world types, phenomena, peoples, afflictions, deposits, relics.
+   - Then everything else.
+
+   Each kind description says what the kind is and does, plainly. A fantasy kind keeps its function (a world that is a god's body, a star that perceives) without the imagery of bone, blood, fog or eyes.
+
 ---
 
 ## Part 8. W48 — Typed kinds: every concept a world can define in its own terms
@@ -3061,7 +3132,7 @@ From the changes, any record, node, region, map layer or value can be reconstruc
 
 #### F58.12 Retention
 
-Everything is kept, for ever, in every world (K.42): every incident, fact, step, state, change, term, witness and telling. Nothing is sampled, compacted, folded away or cut, in storage, the API, the book, the Codex or the model's context (memory: the book is never truncated). Volume is met by:
+Everything is kept, for ever, in every world (K.42): every incident, fact, step, state, change, term, witness and telling. Nothing is sampled, compacted, folded away or cut, in storage, the API, the book or the Codex (memory: the book is never truncated). The model reaches any record by retrieval (paged context blocks, `recall_event`, search by typed fields), never through silent truncation; a context block that cannot hold everything says how many records it leaves for retrieval and how to ask for them. Volume is met by:
 
 - bulk inserts at flush;
 - integer keys and indexes on `node_id`, `incident_id`, `epoch` and `moment`;

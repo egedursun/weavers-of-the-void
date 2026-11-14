@@ -221,7 +221,7 @@ async def sleep_custom_kept(session: AsyncSession, community_id: int) -> bool:
 SLEEP_NAMES = {K.SIESTA: "The Midday Rest of {name}", K.NIGHT_VIGIL: "The Long Night Vigil of {name}"}
 SLEEP_BODIES = {
     K.SIESTA: "Under a day of {hours} hours the work stops while the sun is high, and the folk sleep through the heat.",
-    K.NIGHT_VIGIL: "Through a night of {hours} hours some keep watch by fire and lamp while the rest sleep in turns.",
+    K.NIGHT_VIGIL: "Through a night of {hours} hours some keep watch while the rest sleep in turns.",
 }
 
 

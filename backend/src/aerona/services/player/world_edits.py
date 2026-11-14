@@ -155,7 +155,7 @@ async def _discovery(scope: PlayerScope, world: WorldRow, discovery: Discovery, 
         creator = await scope.creator()
         ctx = await scope.context("forget_world")
         await forget_world(ctx, world.id, creator.name)
-        notes.append("it sank into the mist")
+        notes.append("it was forgotten")
         return
     remembered = world.discovery is Discovery.FORGOTTEN
     reopened = await WorldRepository(scope.session).set_discovery(world, discovery)
@@ -166,7 +166,7 @@ async def _discovery(scope: PlayerScope, world: WorldRow, discovery: Discovery, 
         select(RouteRow.id).where(((RouteRow.world_a_id == world.id) | (RouteRow.world_b_id == world.id)) & RouteRow.active.is_(False))
     )
     still = len(list(closed))
-    note = "came out of the mist"
+    note = "was remembered again"
     if reopened:
         note += f"; {several(len(reopened), 'road', 'roads')} closed during forgetting {agree(len(reopened), 'was', 'were')} reopened"
     if still:

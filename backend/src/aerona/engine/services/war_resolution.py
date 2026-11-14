@@ -173,7 +173,7 @@ async def burn_books(ctx: TickContext, victor: EntityRow, loser: EntityRow) -> l
         await retire_in(ctx, keep, f"burned by {victor.name} after the conquest", close_bonds=True)
         await witnessed(ctx, loser.id, victor.id, ActKind.BURNING_BOOKS, base=ctx.rules.memory.outrage_magnitude, note=keep.name)
         await judged(ctx, victor.id, loser.id, ActKind.BURNING_BOOKS, note=keep.name)
-        notes.append(f"{victor.name} burned {keep.name}; its books went up in smoke.")
+        notes.append(f"{victor.name} burned {keep.name}; its books were destroyed.")
     return notes
 
 
