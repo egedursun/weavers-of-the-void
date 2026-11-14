@@ -13,7 +13,7 @@
 
 <p align="center">
   <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-d4af37?style=flat-square">
-  <img alt="Expansions" src="https://img.shields.io/badge/expansions-94%20included-7b3fe4?style=flat-square">
+  <img alt="Expansions" src="https://img.shields.io/badge/expansions-99%20included-7b3fe4?style=flat-square">
   <img alt="Rules" src="https://img.shields.io/badge/tunable%20rules-3%2C300%2B-4b2a8c?style=flat-square">
   <img alt="Python" src="https://img.shields.io/badge/python-3.13-3776ab?style=flat-square&logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-async-009688?style=flat-square&logo=fastapi&logoColor=white">
@@ -29,7 +29,7 @@
   <a href="#the-pitch">The pitch</a> ·
   <a href="#god-cards">God cards</a> ·
   <a href="#the-cosmos">The cosmos</a> ·
-  <a href="#the-complete-edition-the-loom-and-94-expansions">94 expansions</a> ·
+  <a href="#the-complete-edition-the-loom-and-99-expansions">99 expansions</a> ·
   <a href="#a-tour-of-the-app">The app</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#documentation">Docs</a>
@@ -55,7 +55,7 @@
   <a href="#74-starfall"><img src="common/assets/images/dlc-covers/74-starfall.jpg" width="15%" alt="Starfall"></a>
 </p>
 
-<p align="center"><sub><b>The Loom and 94 expansions, all included.</b> <a href="#the-cover-wall">See all 95 covers →</a></sub></p>
+<p align="center"><sub><b>The Loom and 99 expansions, all included.</b> <a href="#the-cover-wall">See all 100 covers →</a></sub></p>
 
 ---
 
@@ -75,8 +75,8 @@
 - [A tour of the app](#a-tour-of-the-app)
 - [The agents](#the-agents)
 - [By the numbers](#by-the-numbers)
-- [The complete edition: The Loom and 94 expansions](#the-complete-edition-the-loom-and-94-expansions)
-  - [The Loom](#the-loom) · [The thirteen chapters](#the-thirteen-chapters) · [The cover wall](#the-cover-wall) · [Every expansion](#every-expansion)
+- [The complete edition: The Loom and 99 expansions](#the-complete-edition-the-loom-and-99-expansions)
+  - [The Loom](#the-loom) · [The fifteen chapters](#the-fifteen-chapters) · [The cover wall](#the-cover-wall) · [Every expansion](#every-expansion)
   - [I](#chapter-i) · [II](#chapter-ii) · [III](#chapter-iii) · [IV](#chapter-iv) · [V](#chapter-v) · [VI](#chapter-vi) · [VII](#chapter-vii) · [VIII](#chapter-viii) · [IX](#chapter-ix) · [X](#chapter-x) · [XI](#chapter-xi)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
@@ -112,7 +112,7 @@ Nothing is scripted. Nothing is lost. Every number has a reason you can read, an
 
 - **A story nobody wrote.** No script, no event deck, no quest list. Every legend in your chronicle grows out of causes you can trace.
 - **Gods with minds of their own.** Your sons are agents, not dice rolls. They plan, they hold grudges, they lie to the council and they rebel.
-- **Depth all the way down.** Ninety-four expansions of interlocking mechanics, from the soil under a field to the far side of reality, all running at once.
+- **Depth all the way down.** Ninety-nine expansions of interlocking mechanics, from the soil under a field to the far side of reality, all running at once.
 - **Total control, zero lock-in.** Every rule tunable, every mechanic triggerable, every act undoable, every prompt visible. Your world lives on your disk.
 - **Beautiful by default.** A celestial interface, a living map, a 3D cosmos and a painting for every record, generated on your own machine.
 
@@ -457,15 +457,15 @@ Twenty-nine agent roles, every one on Claude Haiku, every prompt in one typed ca
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
-## The complete edition: The Loom and 94 expansions
+## The complete edition: The Loom and 99 expansions
 
 <p align="center">
   <img src="common/assets/images/collectors-edition.jpg" width="520" alt="The Weavers of the Void collector's edition box on a display pedestal">
 </p>
 
-<p align="center"><sub><b>The Collector's Edition</b> · the base experience and all 94 expansions in one box</sub></p>
+<p align="center"><sub><b>The Collector's Edition</b> · the base experience and all 99 expansions in one box</sub></p>
 
-Weavers of the Void ships as the complete edition. **The Loom** and all **94 expansions** across thirteen chapters are fully integrated into the engine, the agents and the interface. There is nothing to unlock, nothing to install and nothing to wait for: every mechanic below runs in every world from the first epoch, and every one of them can be tuned, triggered and inspected from the app.
+Weavers of the Void ships as the complete edition. **The Loom** and all **99 expansions** across fifteen chapters are fully integrated into the engine, the agents and the interface. There is nothing to unlock, nothing to install and nothing to wait for: every mechanic below runs in every world from the first epoch, and every one of them can be tuned, triggered and inspected from the app.
 
 ### The Loom
 
@@ -492,7 +492,7 @@ Before the gods walk and the armies march, the world needs a loom. Pull any thre
 </tr>
 </table>
 
-### The thirteen chapters
+### The fifteen chapters
 
 | Chapter | Expansions | What it brings |
 |---|---|---|
@@ -509,10 +509,12 @@ Before the gods walk and the armies march, the world needs a loom. Pull any thre
 | 📖 [**XI. Knowledge and Eras**](#chapter-xi) | 81–85 | Discovery, scholarship, open-ended technology, the storyteller and expeditions into the dark |
 | 🌌 [**XII. Galaxies and Dimensions**](#chapter-xii) | 86 | Galaxies real and fabled, clusters and the cosmic web, travel and trade between galaxies, layered dimensions and beings from beyond |
 | 🧬 [**XIII. Minds, Gifts and the Living**](#chapter-xiii) | 87–94 | Made minds and second selves, remade bodies, networks and information, plenty and ruin, born powers, hidden peoples, living craft and the ways of life of every people |
+| 📜 [**XIV. The Record and the Common Life**](#chapter-xiv) | 95–97 | Every happening kept and told in full, the public voice of media, satire and speech, and public works, state enterprise, endowments and everyday trade |
+| 🌦 [**XV. Skies and Rains**](#chapter-xv) | 98–99 | Fields, storms and what bodies can bear under every sky, and the politics of working the weather |
 
 ### The cover wall
 
-The Loom and ninety-four expansions: ninety-five covers, one wall. Click any cover to jump to its features.
+The Loom and ninety-nine expansions: one hundred covers, one wall. Click any cover to jump to its features.
 
 <p align="center">
 <a href="#the-loom"><img src="common/assets/images/dlc-covers/00-the-loom.jpg" width="11%" alt="The Loom"></a>
@@ -610,6 +612,11 @@ The Loom and ninety-four expansions: ninety-five covers, one wall. Click any cov
 <a href="#92-the-hidden-folk"><img src="common/assets/images/dlc/dlc-92-the-hidden-folk.jpeg" width="11%" alt="Expansion 92"></a>
 <a href="#93-grown-not-built"><img src="common/assets/images/dlc/dlc-93-grown-not-built.jpeg" width="11%" alt="Expansion 93"></a>
 <a href="#94-ways-of-life"><img src="common/assets/images/dlc/dlc-94-ways-of-life.jpeg" width="11%" alt="Expansion 94"></a>
+<a href="#95-as-it-happened"><img src="common/assets/images/dlc/dlc-95-as-it-happened.jpeg" width="11%" alt="Expansion 95"></a>
+<a href="#96-the-public-voice"><img src="common/assets/images/dlc/dlc-96-the-public-voice.jpeg" width="11%" alt="Expansion 96"></a>
+<a href="#97-builders-and-benefactors"><img src="common/assets/images/dlc/dlc-97-builders-and-benefactors.jpeg" width="11%" alt="Expansion 97"></a>
+<a href="#98-under-every-sky"><img src="common/assets/images/dlc/dlc-98-under-every-sky.jpeg" width="11%" alt="Expansion 98"></a>
+<a href="#99-the-rainmakers"><img src="common/assets/images/dlc/dlc-99-the-rainmakers.jpeg" width="11%" alt="Expansion 99"></a>
 </p>
 
 ### Every expansion
@@ -685,6 +692,7 @@ Beneath every region lies a column of stone you can read layer by layer: clay, l
 - **When the Mine Comes Down** — depth against the rock's strength and the miners' engineering sets the risk of collapse each year. A cave-in crushes miners, seals the shaft and sometimes breaks open a cavern, letting its beasts climb out.
 - **Seal the Deep** — seal gates, collapsed tunnels, plug walls, warding rites and divine acts hold back what you woke. Every seal weakens with time, beasts and miners test it, and opening one again is a scheme waiting for a schemer.
 - **Bones of Ages Past** — fossil beds hold extinct beasts, earlier creations and lost peoples. Floods, quakes and digs bring them up, and each culture reads them its own way: dragon bones for the bards, giants' relics for the priests, deep time for heretic scholars.
+- **Silt and Shore** — rivers and winds carry sediment that builds deltas and marshes, silts harbours and canals and buries towns and finds, while coasts grow or wear away over generations. Fossil beds keep their preservation and richness, organic beds become coal and oil, and well-kept remains let living craft revive extinct species.
 
 **In your world:** The miners of a mountain town chased a silver vein through the granite until the floor gave way into a cavern. Something came up the shaft. Their seal gate held for three generations, until a rival house paid to have it opened.
 
@@ -751,6 +759,7 @@ Species leave the bestiary and take up residence in your land. Each one lives re
 - **Pests and Blights** — crop pests thin the harvest, iron eaters gnaw the ore, plague bearers spread sickness, and vermin spoil the granary until a cat-like hunter is tamed for the work.
 - **Flora Alive** — crops, herbs, dyes, timber, brews, reagents and poisons are living plants with seasons, soils and pests. Annual, perennial or tree, wild or cultivated into new cultivars, each crop is weighed against the year it grows in.
 - **Companions and Champions** — a hound at the hearth eases loneliness, and its death leaves real grief. Falcons and war dogs sharpen the hunt. Among the largest, deadliest species, one beast may rise as a region's named terror or guardian.
+- **Root, Bark and Seed** — every plant has a body of roots, stems, wood, bark, leaves, flowers, fruit, seeds and sap, and its products come from those parts. Its growth form sets the years to first harvest and its damage from storm and fire.
 
 **In your world:** A king's hunters killed the last of the sacred white stags. The stag's cult fell into a crisis of doctrine, the wolves that had fed on the herd turned on the flocks, and the shepherds drove far fewer sheep to the winter market.
 
@@ -817,6 +826,7 @@ Plague is no longer a stroke of bad luck. It is a named enemy with a vector, a h
 - **Where Plague Begins** — clearing forests, hunting bushmeat and herding beside wild hosts let a creature's disease leap to people. Insects follow the warm seasons, birds carry fevers along their migrations, and exterminating a host is a cure with an ecological price.
 - **Hard Choices** — close the ports, quarantine the poor quarter, burn the dead, expel the sick or ring the bells, and pay in trade, riots, funeral quarrels or a crowd that spreads it. Purity-minded peoples found leper colonies; merciful ones build hospitals.
 - **The Cure Race** — hospitals, universities and monasteries race against one disease, faster with scholars, true theories and fresh cases nearby. The winner holds a cure it can sell. Variolation trades a small risk for immunity, until the herd is safe.
+- **What Makes It Sick** — every disease has an agent (virus, bacterium, fungus, parasite, prion, toxin, deficiency, spirit, curse or a made one), and cures work only by class. Agents evolve at their own rates, survive in water, soil or objects by kind, and hide in reservoir species between outbreaks.
 
 **In your world:** A merchant who never felt ill carried the marsh fever upriver to the capital. The queen closed the ports, the guilds rioted in the empty markets, and a monastery won the race to a cure. It sold the cure city by city, and every city paid its price.
 
@@ -850,6 +860,7 @@ A duel at the river ford ends in a single stroke. The king lives, but his sword 
 - **The Silver Hand** — prostheses of wood, glass, silver and star metal restore part of what was lost, by material and craftsmanship. A legendary one becomes a relic that passes down the line and carries legitimacy with it.
 - **What the Body Can Still Do** — melee, missile, command, craft, scholarship, presence, mobility and fertility are all read from the body. A blind scholar needs a reader. A people without helmets fills its halls with one-eyed veterans.
 - **Scars Read by Culture** — honour cultures prize battle scars, purity cultures bar the maimed from the throne, and cults that sanctify suffering recruit them. Generations after a great war, a people still calls itself a people of one-armed grandfathers.
+- **Systems and Sensitivities** — breath, circulation, digestion, regulation and nerves run each body, and a failing system has its own effects. Some beings react to a food, a plant, an animal, a material, a substance or a power, and peoples learn what to avoid.
 
 **In your world:** A duel took the king's sword hand. His people required a whole body on the throne, so his legitimacy collapsed and a rival claimant rose. The victors of the civil war blamed the healer who failed him, his guild lost its standing, and medicine spread more slowly through the kingdom.
 
@@ -916,6 +927,7 @@ A girl grows up in a household that cannot quite feed her. She learns her letter
 - **Fifteen Life Dreams** — rule a realm, found a house, slay a beast, find love, know a truth. Each has milestones. A maimed would-be champion despairs unless he finds a new dream, and inspiration can strike as a masterwork fever.
 - **Conviction and Breaking Points** — living by one's beliefs earns conviction to spend on a heroic effort in a crisis. Stress past its limit breaks a mortal into rage, flight, despair, zeal, vice or a sudden vision.
 - **Twenty Ways to Die** — from bleeding, childbirth and drowning to execution, curse, void and heartbreak, each recorded with its place. The manner of death sets the house's prestige, the burial rite and the kind of ghost left behind.
+- **Raising the Young** — infant care and feeding, the ages of naming, work and responsibility, each culture's ways of shaping children into adults, schools of teaching, and youth groups that serve, court, compete or turn to crime.
 
 **In your world:** A queen died in childbirth and left an infant daughter, while the law demanded a grown male heir. A regency council formed, a rival house pressed its claim, and the regent's mounting stress made the civil war that followed all but certain.
 
@@ -938,6 +950,7 @@ Two squires share a tent on campaign and come home comrades in arms. Years later
 - **The Art of Persuasion** — appeal to belief, to self-interest, to authority, to evidence or to fear. The speaker's oratory meets the listener's stubbornness, and the result sways councils, congregations and envoys.
 - **Pecking Orders and Circles** — households, courts, warbands and crews rank their members by strength, office and nerve. Drinking halls, poets' circles and hunting lodges breed friendships, conspiracies and ideologies.
 - **Duels of Wit** — riddle games, insult verse, disputations, song and storytelling contests fought round by round, for honour, a bride or a captive's freedom. The judges' tastes count, and a famous flyting becomes a heroic poem.
+- **Norms of Intimacy** — each culture's own stance on relations before, within and outside unions, on restraint and vows, on the course of pregnancy and the time after birth, and on a child's standing, all told plainly and behind closed doors.
 
 **In your world:** A squire's loyalty to his lord burned so fiercely that he invoked it at the ford and broke the enemy line. When the lord later betrayed him, grief struck at full force, and the squire took up a new life dream: vengeance.
 
@@ -960,6 +973,7 @@ The veteran comes home from the war with one leg. In a poor household he is anot
 - **Taverns and Inns** — gossip runs through them, schemers and mercenary captains recruit in them, brawls break out in them, caravans sleep in them, and the innkeeper sells what he has overheard.
 - **Drink and Its Customs** — every people decides which substances are taken, by whom and on which nights. Brewing feeds the economy, sacred drink gives mystics their visions, dependence ruins lives and feasts end in brawls.
 - **Hours in a Year** — every class divides its year between work, rest, worship, leisure, travel and military service. Rest days and long festivals cost output and buy cohesion, and forced labour takes the hours back.
+- **The Shape of a Day** — time budgets by class and age, sleep, washing and grooming customs, housework and who does it, servants, leisure pursuits, tourism, and norms of personal space.
 
 **In your world:** Sailors on a long voyage ran out of fresh food and fell to a scurvy-like sickness. The survivors drank their story into the harbour tavern, the gossip spread through the port, and the next fleet would not sail without the techniques that kept its food fresh.
 
@@ -1015,6 +1029,7 @@ A guest is killed at a feast. In one hall it is the unthinkable crime, and the h
 - **Rules of the Room** — thirteen situations, from funeral, feast and court to mourning, sacred days and meeting a stranger, each with its own rules on speech, dress, gifts, laughter, weapons and food.
 - **Will Against Custom** — every choice weighs desire, the bond with the other person and the norms of the room. Breaking a norm costs reputation, unless you are a rebel who enjoys it. Every custom keeps the history of where it came from.
 - **Purity and Pollution** — corpses, birth, blood, forbidden foods, outsiders and trades such as tanning bar a person from temples and marriage until purified. Hereditary castes decide who works which trade, who lives in which district and who handles the dead.
+- **What They Say, What They Do** — every judged act is weighed against the values its doer professes. A wide gap, once seen, costs trust, legitimacy and followers, and hands leverage to whoever knows.
 
 **In your world:** A plague reached a city where touching the dead made a person impure. The avoidance slowed the contagion, but the sick were left without carers, and the low-caste gravediggers, who could not refuse the work, died first and in the greatest numbers.
 
@@ -1037,6 +1052,7 @@ Generations of cousin marriage have kept the crown in the family. They have also
 - **Marriage Alliances** — cross-cousin marriage, clan exogamy, bride price, dowry, bride service, levirate and sororate. Lineages that exchange brides build lasting alliances, and the wife-givers come to outrank the wife-takers.
 - **Other Ways to Be Born** — two sexes, sexes that change with age, sexes chosen in a fertile phase, hive castes of worker, soldier and breeder, or budding and fission. Succession, marriage and war all follow the system.
 - **The Gift in the Blood** — magical aptitude runs in the genome, recessive and rare. Mage orders test children for it, bloodlines are bred toward it, and cultures honour, fear, persecute or tax it, while persecution thins it out.
+- **Duties of Kin** — what grandparents, the siblings of parents, in-laws, cousins and sworn kin owe each other, and kin groups from kindreds to clans, phratries and moieties with land, heads and councils.
 
 **In your world:** To keep two claims in one house, the Varns married cousin to cousin. Their heirs came out sickly and touched with madness, rival houses contested every succession, and each challenge drove the Varns to marry closer still.
 
@@ -1059,6 +1075,7 @@ The war is over, and the valley counts its dead. Not as one number: as a missing
 - **The Long Transition** — towns, literacy, educated women and surviving children slowly lower birth rates. The people grows old: fewer levies, more elders, a different politics.
 - **Diasporas** — migrants follow their kin, and each wave pulls the next. Diasporas send money and news home, arrange marriages across the sea, build foreign quarters, and in time assimilate or become a new people.
 - **Roles by Culture** — who may hold office, own property, fight, preach or inherit is set by sex, age and class, so matriarchies, egalitarian clans and caste societies all grow from each culture's own rules, and drift after every war.
+- **Policies of Number** — rewards, taxes, limits, settlement grants, permits and expulsions by which realms, faiths and peoples try to grow, hold or reshape their numbers.
 
 **In your world:** A conquest left the defeated people a war generation that would not forget. Their children grew up on the stories, and when the last veteran of the conquest died, the movement the conquerors had suppressed for decades rose in the capital.
 
@@ -1124,6 +1141,7 @@ Three houses sit at one wedding table. The bride's brother will leave the tourna
 - **Marked Bodies** — tattoos, scarification, piercings, cranial shaping, filed teeth and jewellery codes carry meaning: status, clan, deeds, marriage, mourning, protection. A warrior's tattoos count his kills; an exile's brand names his crime.
 - **Names with Power** — patronymics, clan names, deed names, a secret name behind the public one, new names at initiation, marriage or vows, and the names of the dead left unspoken for a time.
 - **Age-Sets** — those initiated together form a named set that rises together from warriors to senior elders, may marry only after the warrior grade and stays loyal across lineages. Delay the promotion feast and the young grow restless.
+- **Tending the Dead** — those who wash, prepare, carry and keep the dead, their standing, and every way a culture treats remains, with what each does to health, land and relics.
 
 **In your world:** A chieftain murdered his rival at a wedding feast. His own people's hospitality law made the deed unthinkable, so his infamy outran his victory, and the massacre became a yearly day of mourning that kept the grievance alive for generations.
 
@@ -1811,6 +1829,7 @@ The wind backs west and your squadron holds the gauge. You close on a reach, rak
 - **Twelve Hulls by Design** — rafts, longships and carracks to bone hulls, living ships and generation ships, built from hulls, sails, sky-sails or void-sails, holds, wards and mage stations. Designs evolve, old ships are refitted, and neglected masts snap in storms.
 - **Stars and Sea Clocks** — the compass works only where the world has a magnetic field, the astrolabe needs astronomy, and the sea clock gives longitude. Lost ships drift to unknown shores, and crews who run short of water mutiny.
 - **The Admiralty Board** — admirals fight generals for the treasury in council, and naval treaties cap tonnage by class. Cheating on them is a scheme of its own.
+- **Engagements in Every Domain** — ship against ship at sea, in the sky and in space, with weapons that choose the section they strike and chains of fire, flooding, venting and power loss.
 
 **In your world:** The admiralty hid two warships from the tonnage treaty. When war came they held the weather gauge, raked the enemy flagship with chain shot and took her as a prize. The prize money filled the captains' houses, and recruits crowded the docks.
 
@@ -1833,6 +1852,7 @@ The spear reaches first. Your champion turns it on his shield, steps inside, and
 - **Wounds That Remain** — duels end by yield, disarm, crippling wound or death. The loser does not limp off "badly wounded". He loses an eye, a hand or a leg, and carries the loss for life.
 - **Five Reasons to Fight** — war duels, honour duels born of grievance, trials by combat, champions whose single fight ends a war, and duels between gods that leave divine wounds.
 - **Mercy on the Ground** — a downed fighter fights at a penalty. The victor's mercy decides whether he lives, honour decides whether a yield is accepted, and every exchange goes into a plain account for the battle report and the bard.
+- **Exchange by Exchange** — every duel recorded step by step, each blow with its weapon, its target and the injury it left.
 
 **In your world:** Two kings agreed that a champion would end their war. The challenger's spear held the first exchange. The defender closed, broke his elbow in a lock and, as his people's mercy required, let him yield. The bards sang of it, and the treaty held.
 
@@ -2418,6 +2438,7 @@ The worlds move, and the voyage moves with them. Sail when the orbits align and 
 - **The River That Forgets** — some crossings strip passengers of memory and knowledge. Colonists who travel the river of the dead arrive without their history, and new legends grow in the gap.
 - **Six Levels of Knowing** — every realm knows each world as unknown, rumoured, detected, observed, surveyed or mapped. Survey level gates journeys, colony plans and claims, and sky-sailing techniques raise it.
 - **Cultures of the Routes** — along busy routes merchants, crews and diasporas of several worlds share values, a common tongue, the art of the routes and a history of the system, a counterweight to every world's nativism.
+- **Battles Between the Stars** — spacecraft engage ship to ship with shields, beams, torpedoes and boarding.
 
 **In your world:** When the window opened, a fleet of refugees sailed from a plague-struck world. The sickness crossed the void with them, swept the port where they landed, and the port's realm closed the route, stranding the merchants who lived by it.
 
@@ -2516,6 +2537,7 @@ Your physicians are certain that bleeding cures fever. They are wrong, and the p
 - **Examinations and Credentials** — realms recruit officials by examination in law, writing, lore and the canon. Merit replaces birth, until credentials outnumber offices and frustrated graduates become counter-elites.
 - **Free Minds and Fleeing Scholars** — academic freedom feeds research and debate. Suppress it and scholars migrate to freer patrons, taking their knowledge with them.
 - **Printing and Numbers** — printing makes books cheap and ideas fast, and censored books turn into contraband and heresy. Cultures count in base ten, twelve, twenty or sixty, and the zero sharpens accounts, engineering and star charts.
+- **What the Elders Know** — each people's own classification of weather, sky, matter, land, plants, animals, body, mind and society, how accurate it is, and what it makes possible or dangerous.
 
 **In your world:** A city's physicians bled their patients, and the plague that survived the treatment came back hardier. A rival university that held the contagion theory found the cure first, traded it for a treaty clause and earned a great person of its own.
 
@@ -2810,6 +2832,137 @@ Every people now lives in its own terms. Your peoples have their own goods and d
 - **Invented, Borrowed, Forgotten** — mortals invent kinds, neighbours adopt them, derived kinds grow from older ones, sons bless or forbid them, and every kind is yours to create, edit, hold and delete in the Kinds library.
 
 **In your world:** Two peoples traded for a generation. One adopted the other's hospitality drink, brewed it from its own grain and drank it at every guesting. The boiled brew slowly ended a waterborne sickness in its towns, and nobody ever learned why.
+
+</td>
+</tr>
+</table>
+</details>
+
+<p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
+
+<a id="chapter-xiv"></a>
+
+### 📜 XIV. The Record and the Common Life
+
+<details open>
+<summary><b>Expansions 95–97</b> · <sub>3 expansions</sub></summary>
+
+<table>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-95-as-it-happened.jpeg"><img src="common/assets/images/dlc/dlc-95-as-it-happened.jpeg" width="220" alt="As It Happened box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-95-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-95-cover-back.jpeg" width="220" alt="As It Happened box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 95. As It Happened
+
+*Every blow, every word, every price, kept.*
+
+The Loom keeps a cause for every change. This expansion keeps the whole happening. Each event in your world now records who acted and who was acted on, with what, how much, where and when to the hour of the world's own calendar, and every step along the way. A duel is told exchange by exchange, a broadside shot by shot, a birth from labour to naming, a trial from accusation to sentence. Every value that changed keeps its before and after, and the reasons behind each number.
+
+- **Step by Step** — duels with their feints, parries, falls and finishing blows; battles with every stack's charge and rout; sea, sky and space engagements with each hit on each section, fires, flooding, venting and boarding.
+- **The Account** — every happening has typed roles, facts and a plain account rendered from them, so the record can be retold in any language and searched by what happened.
+- **Witnesses and Versions** — those present saw, heard or took part. Rumours grow from the true steps with typed distortions, and memories point at the moment they keep.
+- **The World Then** — scrub any drawer or the atlas back to any moment and see a border, a town or a ruler as it was.
+- **The God's Pen** — write a happening into history, rewrite how it is told, or revert any change, and the reversal itself is recorded.
+- **Nothing Lost** — every record is kept for ever, in the book, the Codex and on every screen.
+
+**In your world:** A champion broke a rival's arm in the third exchange and struck again as the rival rose. A watcher told it with the wrong weapon, and that version spread through the markets. Ages later, a scholar set the two accounts side by side in the book.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-96-the-public-voice.jpeg"><img src="common/assets/images/dlc/dlc-96-the-public-voice.jpeg" width="220" alt="The Public Voice box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-96-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-96-cover-back.jpeg" width="220" alt="The Public Voice box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 96. The Public Voice
+
+*What a people hears, it comes to believe.*
+
+Words and images now reach the many. Your peoples record what they see and hear, from carvings and knotted cords to print, image, sound, moving pictures, broadcast and networks. Outlets win audiences with their own stance and trust, and speakers move assemblies, courts and crowds.
+
+- **Media of Every Age** — every recorded form a world can hold, each with fidelity, durability, reach and the technique that opens it.
+- **Outlets and Audiences** — owners, stances, trust and revenue; items made from real happenings, with their accuracy measured against the record.
+- **Censorship and Exposure** — licences, seizures and bans by law; false items found out cost an outlet its trust.
+- **Records as Evidence** — a recorded image or sound can decide a trial or overturn an official history.
+- **Satire and Speech** — humour styles with their allowed targets, satire that wounds rulers where it is tolerated, and orators whose skill turns a vote or a crowd.
+
+**In your world:** A trusted outlet printed a slanted account of a killing, and the town believed it. A recorded image kept in an archive contradicted it before the court. The outlet lost its readers within a season.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-97-builders-and-benefactors.jpeg"><img src="common/assets/images/dlc/dlc-97-builders-and-benefactors.jpeg" width="220" alt="Builders and Benefactors box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-97-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-97-cover-back.jpeg" width="220" alt="Builders and Benefactors box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 97. Builders and Benefactors
+
+*Roads outlive the realms that pay for them.*
+
+Realms and the rich now build for the long term. Polities raise roads, bridges, canals, rail lines, aqueducts and sewers stage by stage with paid, levied or bound labour, run monopolies and royal works, and keep them up or watch them decay. Founders endow schools, temples and relief that outlast their houses. Trade gains its everyday face: shops, wholesale and retail, promotion, leases and money changers.
+
+- **Public Works** — every works kind with stages, labour, materials, budget, quality and upkeep; finished works change speed, harvests, health and war.
+- **State Enterprise** — monopolies, mints, arsenals and state companies, with prices, revenue, skimming and privatisation.
+- **Endowments** — capital that pays a beneficiary for ever, with trustees who may serve it, skim it or be captured.
+- **Shops and Tiers** — producers, wholesalers and retailers, each with its margin, in every market large enough to hold them.
+- **Promotion, Leases and Exchange** — demand moved by claims that may be false; rent on land, houses, vessels and more; exchange rates and spreads between currencies.
+
+**In your world:** A realm dug a canal with levied labour. The levy's anger fed a revolt among the young, and the canal finished three seasons late. Within a generation it had doubled the realm's trade, and the founder of the school beside its locks was remembered longer than the king.
+
+
+
+## XV. Skies and Rains
+
+</td>
+</tr>
+</table>
+</details>
+
+<p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
+
+<a id="chapter-xv"></a>
+
+### 🌦 XV. Skies and Rains
+
+<details open>
+<summary><b>Expansions 98–99</b> · <sub>2 expansions</sub></summary>
+
+<table>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-98-under-every-sky.jpeg"><img src="common/assets/images/dlc/dlc-98-under-every-sky.jpeg" width="220" alt="Under Every Sky box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-98-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-98-cover-back.jpeg" width="220" alt="Under Every Sky box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 98. Under Every Sky
+
+*Some worlds are kind to bodies. Most are not.*
+
+Every world now presses on the bodies that live under it. Stars have cycles of flares and particle storms, worlds have magnetic fields that shield them, weaken and reverse, and every biology has limits of gravity, air, cold, heat and radiation. Settling a new world means meeting those limits, or paying to go beyond them.
+
+- **Fields and Storms** — magnetic fields that guard a world, waver and flip over epochs; flares, particle storms and cosmic ray bursts on the cycle of each star.
+- **When the Sky Breaks Through** — radiation reaches those outside shelter and in orbit, signals and networks fail, and compasses err. Auroras spread toward the equator, and every faith reads them its own way.
+- **What a Body Can Bear** — each biology has its own tolerances of gravity, air, pressure, cold, heat and radiation, so the same world weighs differently on different peoples.
+- **The Price of Settling** — beyond a body's limits it needs shelter, gear, augments or grown organs. Long voyages and light worlds wear on it, and some peoples adapt over generations.
+- **Shields of the Gods** — gods and powers that span worlds can strengthen a world's field or strip it away.
+
+**In your world:** A field reversal weakened a world's shield for a generation. Auroras hung over the equator, the signal towers fell silent, and a fleet trusting its compasses was lost at sea. The world's seers said the sky had opened, and a new faith grew around the lights.
+
+</td>
+</tr>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc/dlc-99-the-rainmakers.jpeg"><img src="common/assets/images/dlc/dlc-99-the-rainmakers.jpeg" width="220" alt="The Rainmakers box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc/cover-back/dlc-99-cover-back.jpeg"><img src="common/assets/images/dlc/cover-back/dlc-99-cover-back.jpeg" width="220" alt="The Rainmakers box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 99. The Rainmakers
+
+*Who owns the rain?*
+
+The weather is no longer only nature's. Your peoples call rain, drive off storms, divert rivers and move ice, by rite, by power, by seeding, by structures and by living craft. Every success falls somewhere else as a loss. Forecasts decide when to sow, sail and march, and an accurate forecast that nobody believes still fails.
+
+- **Working the Weather** — rain, dry, calm, cold or warm, by rite, power, seeding, diversion, made structures or living craft, each with its cost and strength.
+- **Downwind** — your rain is a neighbour's drought. Neighbours read weather works as acts with intent, treaties ban them, and banned rainmakers work in secret.
+- **Whose Forecast** — sight, lore, almanac, instrument, a network of observers or a model, each with its accuracy. Sowing dates, voyages and campaigns follow the forecast that is believed.
+- **Water from the Mountain** — snowpack feeds the summer rivers, so a poor snow year upstream is a dry harvest downstream, and the upper valley holds the lower one's fate.
+- **Weather of Its Own** — valleys, lakes and cities make their own climate and change where people settle, what they grow and what makes them ill.
+
+**In your world:** In a drought year a realm's rainmakers brought rain to its uplands. The crops of the neighbour downwind withered, and the neighbour called it an act of war. The peace that followed banned weather work by treaty, and a generation later the rainmakers worked by night.
 
 </td>
 </tr>
@@ -3184,7 +3337,7 @@ No. Weavers of the Void runs on your Claude subscription through the Claude Agen
 Your database, backups and images stay on your disk. Only the agents' prompts and replies travel to Claude.
 
 **Are the expansions extra?**
-No. The Loom and all 94 expansions are part of every world from the first epoch.
+No. The Loom and all 99 expansions are part of every world from the first epoch.
 
 **Can I play in Turkish?**
 Yes. Choose Turkish as the lore language in the genesis wizard, and every chronicle, name and legend is written in it; even the engine's own chronicle lines are localised by an agent. The interface itself is English.
@@ -3218,7 +3371,7 @@ It is seeded. The same world with the same seed produces the same history, which
 | [API](docs/spec/11-api.md) · [Frontend](docs/spec/12-frontend.md) | Every route and every screen |
 | [Depth expansion](docs/spec/13-depth-expansion.md) · [Interconnection](docs/spec/13-interconnection.md) · [Coverage](docs/spec/13-coverage.md) | The mechanics behind expansions 1–86 and how they connect |
 | [Minds, powers, living craft and typed kinds](docs/spec/16-minds-powers-living-craft.md) | The mechanics behind expansions 87–94 and the depth of every other |
-| [Expansions](docs/spec/15-dlc-ideas.md) | The Loom and all 94 expansions in full |
+| [Expansions](docs/spec/15-dlc-ideas.md) | The Loom and all 99 expansions in full |
 | [Mechanic coverage](docs/spec/coverage.md) | Traceability from every mechanic to its module, trigger, control, screen and test |
 
 ---
