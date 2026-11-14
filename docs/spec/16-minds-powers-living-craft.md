@@ -3356,6 +3356,7 @@ The sweeps of spec 13 (1R.18) checked the Outline of Cultural Materials (OCM) at
 | Registered mechanics (572) | no coupling | 22 |
 | | one coupling | 80 |
 | Node types (51) | below a spec 13 depth target | 23 (17 of them on attributes read, 21 on mechanics acting) |
+| UNESCO sub-disciplines (374) and motif ranges (259) | see 50.21 | closed in 50.22–50.29, Appendices 50.C and 50.D |
 | | no attribute read and no mechanic acting | 7: `title`, `phenomenon`, `vehicle_type`, `unit_type`, `equipment_model`, `dish`, `building_type` |
 
 The 181 label-only and absent subcategories fall into two groups:
@@ -3950,7 +3951,7 @@ The 100 subcategories that existing waves give kinds but not behaviour are marke
 
 | Guard | Fails when |
 |---|---|
-| `scripts/check_ocm_coverage.py` | an OCM subcategory has no closing section, or a done closure names a missing table or step |
+| `scripts/check_ocm_coverage.py` | an OCM subcategory, a UNESCO sub-discipline (Appendix 50.C) or a motif range (Appendix 50.D) has no closing section, or a done closure names a missing table or step; it reads `docs/spec/ocm-coverage.md`, `docs/spec/science-coverage.md` and `docs/spec/motif-coverage.md` |
 | `scripts/check_mechanic_couplings.py` | a registered mechanic has fewer than two couplings to other subsystems without a stated reason |
 | `scripts/depth_metric.py check` | a node type is below its target after W50 |
 | `scripts/check_inventory.py` (5.10) | a table, enum, step, kind, tool, lever, screen or text file of W50 has no inventory row |
@@ -4187,6 +4188,14 @@ The rules below apply to each family of 50.1–50.13. The per-family blocks that
 | 50.12 death work | `death_work`; funeral custom treatment | death, health, faith, necromancy | `death_work:*` | "The dead" section | `the_dead` | plain per people | allowed treatment | funeral customs |
 | 50.13 speech | `humour_styles`, `speeches` | relations, assemblies, courts, crowds | `humour_style:*`, `speech:*` | incident pages, culture drawers | `give_speech`, `satirise`; `speech` | humour and speeches | venue exists | facets and histories |
 | 50.14–50.16 | registry couplings, depth targets, `ocm-coverage.md` | — | — | — | — | — | the guards of 50.17 | — |
+| 50.22 space weather | `world_fields`, `star_activity`, `space_weather_events` | sky, cosmos, signals, navigation, body | `world_field:*`, `star_activity:*`, `space_weather_event:*` | "Fields and space weather" in world and star drawers | `shield_world`; `space_weather` | world and star entries | events reach existing worlds | from world physics and star type |
+| 50.23 water, ice and sediment | `region_cryosphere`, `sediment_flows`, `coasts`, `local_climates` | environment, routes, agrarian, works, excavation | levers per table | atlas layers | `dredge`, `move_ice`; `water_and_ice` | region entries | flows join existing regions | from terrain and climate |
+| 50.24 disease agents | `disease_profiles` agent, survival, reservoirs, cure classes | disease | existing disease levers | disease drawer | `disease` | disease entries | cure classes valid for agent | agents from vector and origin |
+| 50.25 body systems | `body_systems`, `sensitivities` | body, travel, settlement | `body_system:*`, `sensitivity:*` | body section | `body` | body sections | systems per biology | from plans and biochemistry |
+| 50.26 plant bodies | `plant_anatomy` | ecology, production, agrarian | `plant_anatomy:*` | species drawer | — | species entries | parts match products | generated for plants |
+| 50.27 fossils | `fossil_beds` | excavation, extraction, theories, W46 revival | `fossil_bed:*` | region and excavation screens | `study_fossils`; `excavation` | region entries | species exist | from prehistory and geology |
+| 50.28 observation and weather works | `observation_methods`, `weather_works` | forecasts, navigation, calendars, weather | `observation_method:*`, `weather_work:*` | people and region drawers | `forecast`, `work_weather`; `forecasting` | people entries | methods per people | from techniques |
+| 50.29 professed values | `professions_of_value` | mind, standing, secrets, media | `profession_of_value:*` | mortal drawer | `expose_hypocrisy`; `standing` | mortal entries | acts are recorded incidents | from values and acts |
 
 Every new agent tool has a case in `every_son_tool.py` or `every_mortal_tool.py`. Every lever runs with real values in `test_every_lever.py`. Every table reaches the book and the Codex through `services/books/typed.py`, and every incident kind of W50 follows F58.
 
@@ -4223,6 +4232,7 @@ Every new agent tool has a case in `every_son_tool.py` or `every_mortal_tool.py`
 | K.46 | Which taxonomy closes "granularity"? | The 689 world-content subcategories of the OCM 2025 edition, kept as data in `docs/spec/ocm-coverage.md`, plus the registry and the depth metric. |
 | K.47 | How are intimacy and reproduction told? | Plainly and behind closed doors, as typed norms a culture authors; no default, no quota, no explicit content. |
 | K.48 | May a mechanic stay isolated? | Only a bookkeeping mechanic, with its reason stated in the registry. |
+| K.49 | Which lists close nature, cosmos, myth and magic? | The six-digit UNESCO nomenclature for fields 21, 24 and 25 (374 sub-disciplines) and the 259 ranges of the Thompson motif index, kept as data beside the OCM list. |
 
 ### 50.20 Execution order
 
@@ -4243,9 +4253,283 @@ Every new agent tool has a case in `every_son_tool.py` or `every_mortal_tool.py`
 15. 50.16 facets.
 16. 50.14 couplings.
 17. 50.15 depth targets.
-18. Surfaces, fixups and the audit.
+18. 50.22–50.29, nature, cosmos and standing.
+19. Surfaces, fixups and the audit.
 
 The wave is gated once.
+
+### 50.21 Nature, cosmos, myth and magic at subcategory level
+
+The OCM covers human life. The natural world, the cosmos, myth and magic were swept by spec 13 at the level of major classes only. W50 applies the same closed method to two more fixed lists:
+
+- **The natural world and the cosmos.** The six-digit UNESCO International Standard Nomenclature for Fields of Science and Technology (the TESEO code list): every sub-discipline of 21 Astronomy and Astrophysics (37), 24 Life Sciences (175, after leaving out `240213`, which classifies people by race and is not world content) and 25 Earth and Space Sciences (162).
+- **Myth, magic and the shapes of story.** Stith Thompson's *Motif-Index of Folk-Literature*: all 259 ranges of its 23 divisions, from A (mythological motifs) and D (magic) to E (the dead), F (marvels), M (ordaining the future), N (chance and fate) and V (religion).
+
+**Results.**
+
+| List | Own state and behaviour | Some typed state | A label only | Absent |
+|---|---:|---:|---:|---:|
+| UNESCO sub-disciplines (374) | 104 | 69 | 64 | 137 |
+| Motif ranges (259) | 144 | 55 | 29 | 31 |
+
+A second pass checked every label-only and absent item by synonyms and tables. Three kinds of item turned out to be covered elsewhere:
+
+- **Things that exist under other names.** Supernova remnants and nebulae are galactic structure kinds; comets are cosmic features and impacts; auroras are a world physics column; crop pests and immunity have their own tables.
+- **Items planned in spec 13.** Layered geology (G1R.3.1), aquifers (G1R.3.2), river hydrology (G1R.3.3), tectonics (G1R.4.7), microbes, symbiosis, dormancy, thermoregulation, senses and plant defences (W34), and biogeography (G1R.23.7).
+- **Methods of a science rather than facts of a world.** Telescopes, spectroscopy, photogrammetry, radar and numerical models, which the world reaches as knowledge techniques and instruments.
+
+What no section carried is closed in 50.22–50.29.
+
+Below the engine's scale (cells, molecules, chromosomes), the world is read through tissues (F23), heredity (spec 13 F14 and W46 46.3) and disease agents (50.24). This scale bridging is stated for every such item in Appendix 50.C.
+
+### 50.22 Space weather and magnetic fields
+
+**Current.** Stars have activity and radiation, worlds have radiation and an aurora column, flares are a sky event kind, and the compass works only where a world has a magnetosphere (spec 13 10.9). Fields, particle storms and their effects are not modelled.
+
+**State.**
+
+- **`world_fields`.** World, magnetosphere strength (0–100), field reversals (epoch, length), upper air shielding (0–100), radiation at the surface (derived).
+- **`star_activity`.** Star, cycle length in years, phase, flare rate, particle storm rate, wind strength.
+- **`space_weather_events`.** Star or source, kind (`SpaceWeatherKind`: `flare`, `particle_storm`, `field_storm`, `field_reversal`, `cosmic_ray_burst`, `wind_surge`), strength, worlds and orbits reached, epoch.
+
+**Behaviour.**
+
+1. Activity follows the star's cycle and evolution. Events reach worlds by distance and the world's shielding (field and air).
+2. Effects are typed by what they reach:
+   - auroras at the poles or everywhere by strength;
+   - radiation dose to beings outside shelter and in orbit (body harm, mutation chance where biology allows);
+   - outages of signals and networks (F51, 47.2);
+   - compass errors and navigation loss (50.28);
+   - crop and herd stress at extreme doses;
+   - spacecraft section damage (W49 49.3).
+3. Field reversals weaken shielding for their length and move auroras toward the equator. Peoples read them as omens through their faiths.
+4. Gods and powers that span worlds can strengthen or strip a world's field. Living worlds may grow their own.
+
+**Tools and control.**
+
+- Son tool `shield_world`.
+- God levers `world_field:*`, `star_activity:*`, `space_weather_event:*`.
+- A "Fields and space weather" section in world and star drawers.
+- Context block `space_weather`.
+
+**Incidents.** `sky.flare`, `sky.particle_storm`, `sky.field_reversal`, `sky.outage`.
+
+**Rules namespace.** `space_weather`:
+
+- `flare_base_pct` 5 [0–100]
+- `shield_per_field_point` 1 [0–5]
+- `outage_threshold` 40 [0–100]
+- `dose_harm_per_point` 1 [0–20]
+- `reversal_chance_per_epoch_pct` 1 [0–100]
+
+**Legacy.** World fields come from world physics (mass, rotation, core); star activity from star type and age.
+
+### 50.23 Water, ice and sediment in place
+
+**Current.** Rainfall, winds, rain shadows, currents, monsoons, climate ages and a global cryosphere exist. Rivers with flow and aquifers are planned in spec 13. Seasonal ice on seas and lakes, frozen ground, snowpack, sediment carried and laid down by water and wind, coasts that build or wear away, and the climate of a valley or a city are not modelled.
+
+**State.**
+
+- **`region_cryosphere`.** Region: sea or lake ice (months per year, thickness), frozen ground (depth, seasonal thaw), snowpack (depth, melt season), glaciers (extent, advance or retreat).
+- **`sediment_flows`.** Source region, sink region, carrier (`SedimentCarrier`: `river`, `wind`, `ice`, `wave`, `slope`), load, kind (silt, sand, gravel, volcanic, organic).
+- **`coasts`.** Region: form (`CoastForm`: `cliff`, `beach`, `delta`, `marsh`, `reef`, `ice_shelf`, `fjord`, `lagoon`), building or wearing rate, harbour silting.
+- **`local_climates`.** Region or district: shift of temperature, humidity and wind from valleys, slopes, water bodies, forests and built land.
+
+**Behaviour.**
+
+1. Seasonal ice blocks or opens sea and river routes, makes ice roads, and sets fishing seasons.
+2. Frozen ground limits farming, building and burial; its thaw can collapse structures and release what it held (preserved remains, old disease where the world allows).
+3. Snowpack stores water and releases it in its melt season, feeding rivers and irrigation; a poor snow year means a dry summer downstream.
+4. Sediment builds deltas and marshes, fertilises flood plains, silts harbours and canals (upkeep for 50.4 works) and buries settlements and finds (excavation layers).
+5. Coasts build or wear away. Wearing claims fields and structures; building moves harbours inland over generations.
+6. Local climates shape where crops grow, where people prefer to live, disease exposure and the heat of dense districts.
+
+**Tools and control.**
+
+- Mortal tool `dredge`; son tool `move_ice`.
+- God levers `region_cryosphere:*`, `sediment_flow:*`, `coast:*`, `local_climate:*`.
+- Layers on the atlas.
+- Context block `water_and_ice`.
+
+**Incidents.** `land.ice_closed`, `land.ice_opened`, `land.thaw_collapse`, `land.snow_drought`, `land.silted`, `land.coast_lost`, `land.delta_grew`.
+
+**Rules namespace.** `water_and_ice`:
+
+- `silting_per_epoch` 2 [0–50]
+- `coast_wear_per_epoch` 1 [0–50]
+- `thaw_collapse_pct` 5 [0–100]
+- `snow_water_share_pct` 30 [0–100]
+
+**Legacy.** Derived from terrain, climate, latitude and existing rivers and coasts.
+
+### 50.24 Agents of disease
+
+**Current.** Diseases have vectors, virulence, lethality, targets, climate affinity, host species, immunity, resistance, mutation and cures. What a disease *is*, and therefore what can cure it and where it survives, is not typed.
+
+**State.**
+
+- `disease_profiles` gains `agent` (`DiseaseAgent`: `virus`, `bacterium`, `fungus`, `parasite`, `prion`, `toxin`, `deficiency` (nutrition, F39), `spirit` (where spirits exist), `curse` (where curses exist), `made` (W44, W46 designed), `unknown`).
+- It also gains environmental survival (outside a host, in water, in soil, in cold), reservoir species, and the cure classes that work (`CureClass`: `rest_and_care`, `herbal`, `antimicrobial`, `antiparasitic`, `antitoxin`, `nutritional`, `rite`, `exorcism`, `power`, `designed`).
+
+**Behaviour.**
+
+1. Cures work only by class. A rite does nothing against a bacterium unless the world's natural laws make faith heal. An antimicrobial does nothing against a curse. Theories of disease (folk and formal, 50.7) decide which cures a people tries.
+2. Agents evolve by kind: bacteria resist overused antimicrobials, viruses mutate fast, prions do not. Each kind has its typed rate.
+3. Survival outside the host sets which spread paths work: water, soil, objects or only bodies. Reservoirs keep a disease alive between outbreaks.
+4. Deficiencies follow diet (F39) and spread with famine and monotony, not contact.
+
+**Tools and control.**
+
+- Existing disease levers gain the new fields.
+- Context block additions to `disease`.
+
+**Incidents.** `disease.resistance_rose`, `disease.wrong_cure`, `disease.reservoir_found`.
+
+**Rules namespace.** `disease`:
+
+- `resistance_per_overuse` 5 [0–50]
+- `agent_mutation_pct` (per agent kind)
+- `survival_by_medium` (per agent kind)
+
+**Legacy.** Agents are assigned from vector, target and origin. `unknown` is used where nothing fits, until the model or the god sets one.
+
+### 50.25 Bodies: systems and sensitivities
+
+**Current.** Bodies have plans, parts, tissues, organs, senses (planned), functions, conditions, immunity and decompression harm. The internal systems that run a body (breath, blood, digestion, hormones, nerves), and individual sensitivities, are not modelled as systems.
+
+**State.**
+
+- **`body_systems`.** Per biology: systems (`BodySystem`: `breath`, `circulation`, `digestion`, `regulation` (hormones and their equivalents), `nerves`, `immunity`, `reproduction`, `structure`, `none` for bodies without them). Each system has its tolerances: air and pressure, cold and heat, gravity, diet range, sleep need, toxins.
+- **`sensitivities`.** Per being: kind (`Sensitivity`: `to_food`, `to_plant`, `to_animal`, `to_material`, `to_substance`, `to_light`, `to_sound`, `to_power`), trigger kind, severity.
+
+**Behaviour.**
+
+1. Tolerances decide where a being can live and travel unaided: gravity, air, cold, radiation (50.22), depth. They also decide what equipment (48.4), augments (W44) or grown organs (W46) it needs to go further.
+2. Damage to a system has typed effects through capacities (F23): breath loss limits exertion, digestion loss limits diet, regulation loss changes growth and mood.
+3. Sensitivities trigger on contact with their kind: harm, illness, the loss of a food or a trade. Peoples learn which plants and goods to avoid (50.7).
+4. Low gravity, long voyages and new worlds wear on systems (W49 group 4 steps).
+
+**Tools and control.**
+
+- God levers `body_system:*`, `sensitivity:*`.
+- The body section shows systems and sensitivities.
+- Context block additions to `body`.
+
+**Incidents.** `body.system_failed`, `body.sensitivity_reaction`, `body.tolerance_exceeded`.
+
+**Rules namespace.** `body_systems`.
+
+**Legacy.** Systems derived from body plans and biochemistry. No sensitivities at start, except where the model assigns them.
+
+### 50.26 Plant bodies
+
+**Current.** Plants are species with classes, yields, perennials, crop pests and blight. Unlike creatures, they have no generated anatomy, so the products they yield do not follow from their bodies.
+
+**State.**
+
+- **`plant_anatomy`.** Per plant species: growth form (`PlantForm`: `tree`, `shrub`, `herb`, `grass`, `vine`, `succulent`, `aquatic`, `moss_like`, `fungus_like`, `colonial`, `made`). It also holds parts with typed properties (`PlantPart`: `root`, `tuber`, `stem`, `wood`, `bark`, `leaf`, `flower`, `fruit`, `seed`, `sap`, `fibre`, `spore`), defences (W34), lifespan, season of growth and the reproduction mode.
+
+**Behaviour.**
+
+1. Products (48.5) derive from parts: wood from stems, fibre from stems or seeds, dyes and medicines from flowers, roots and bark, food from fruit, seed, tuber or leaf.
+2. Growth form sets land use, labour and time to first harvest, and storm and fire damage.
+3. Reproduction mode sets spread, invasion and domestication (W46 46.2).
+
+**Tools and control.**
+
+- God levers `plant_anatomy:*`.
+- A plant anatomy section in species drawers.
+
+**Legacy.** Generated for existing plant species from their class and yields.
+
+**Rules namespace.** `plants`.
+
+### 50.27 The deep record of life
+
+**Current.** Extinction exists and excavations find typed items. Fossils of past life, and the remains of extinct species in rock, ice and bog, are not modelled.
+
+**State.**
+
+- **`fossil_beds`.** Region, layer (excavation layers and spec 13 G1R.3.1 strata), species represented (extinct or living), preservation (`Preservation`: `rock`, `amber`, `ice`, `bog`, `tar`, `ash`, `dry`), richness.
+
+**Behaviour.**
+
+1. Extinctions and mass deaths over deep time (spec 13 F48 prehistory) lay down beds where conditions preserve them.
+2. Excavations and mines find fossils. Peoples read them through their knowledge:
+   - as the bones of past beings in a people's own terms (legends, relics, monster lore);
+   - as evidence that overturns theories (theories, 50.7);
+   - as materials of trade and craft.
+3. Fossil fuels (coal and oil from organic beds) follow the same layers, linking extraction to deep time.
+4. Designed revival of extinct species (W46) needs preserved remains.
+
+**Tools and control.**
+
+- Mortal tool `study_fossils`.
+- God levers `fossil_bed:*`.
+- Beds on the excavation and region screens.
+
+**Incidents.** `land.fossil_found`, `land.fossil_read`, `life.revived`.
+
+**Rules namespace.** `fossils`.
+
+**Legacy.** Beds derived from prehistory, extinctions and region geology.
+
+### 50.28 Observation, forecasting and the shaping of weather
+
+**Current.**
+
+- Navigation reads seamanship.
+- Forecast models and winter forecasts exist (W25).
+- Sons can shape weather.
+- Folk knowledge of weather and sky is 50.7.
+
+Methods of observation, the accuracy of forecasts by method, and mortal attempts to change the weather are not typed.
+
+**State.**
+
+- **`observation_methods`.** Per people: method kinds by domain (`ObservationMethod`: `sight`, `lore`, `almanac`, `instrument`, `network_of_observers`, `model`, `network` (W44), `power` (W45), `divination` (W25)), with accuracy and reach.
+- **`weather_works`.** Holder, region, method (`WeatherWorkMethod`: `rite`, `power`, `seeding`, `diversion`, `made_structure`, `living_craft`), aim (rain, dry, calm, cold, warm), strength, cost, side effects.
+
+**Behaviour.**
+
+1. Forecast accuracy by method sets farming choices (sowing date), sailing losses, war timing and disaster preparation. An accurate forecast that is not believed still fails (trust, 50.2).
+2. Instruments and observer networks raise navigation accuracy, calendar precision and discovery of sky events.
+3. Weather works shift a region's weather within the world's laws, at a cost and with typed side effects downwind (drought elsewhere). Neighbours read them as acts with intent, and treaties may ban them.
+
+**Tools and control.**
+
+- Mortal tools `forecast`, `work_weather`.
+- God levers `observation_method:*`, `weather_work:*`.
+- Context block `forecasting`.
+
+**Incidents.** `weather.forecast_kept`, `weather.forecast_failed`, `weather.worked`, `weather.side_effect`.
+
+**Rules namespace.** `forecasting`.
+
+**Legacy.** Methods derived from techniques (astronomy instruments, cartography, navigation) and folk knowledge.
+
+### 50.29 Professed values and acts
+
+**Current.** Values, ethics, judged acts and reputation exist. The gap between what a being professes and what it does, and the cost when that gap is seen, is not modelled. The motif index's hypocrites (K2000) are its narrative form.
+
+**State.** `professions_of_value`: holder, value axis or tenet, strength professed, the acts recorded against it (incidents, W49), the gap, and who knows it.
+
+**Behaviour.**
+
+1. Every judged act is compared with the actor's professed values. A wide gap, once witnessed or exposed (secrets, media, rumour), costs trust, legitimacy and following, and gives leverage to those who know.
+2. Leaders with wide gaps lose followers who hold the professed value strongly, and keep those who follow for other reasons.
+
+**Tools and control.**
+
+- Mortal tool `expose_hypocrisy`.
+- God levers `profession_of_value:*`.
+- Context block additions to `standing`.
+
+**Incidents.** `standing.hypocrisy_exposed`.
+
+**Rules namespace.** `standing`.
+
+**Legacy.** Derived from values and recorded acts.
 
 ### Appendix 48.A — The 300 enums without an authored layer
 
@@ -5913,3 +6197,650 @@ Generated on 2026-11-14 from the interconnection registry (572 mechanics). Each 
 | `mortal_equipment` | war | 0 | economy: equipment demand drives smiths and trade; social: fine equipment raises standing |
 | `phased_battle_decides` | war | 1 | economy: battle outcomes set loot and losses; demography: casualties reduce populations |
 | `resource_conflict` | war | 1 | polity: resource wars change borders and treaties; demography: war losses |
+
+### Appendix 50.C — Every UNESCO sub-discipline of the natural world and the cosmos
+
+Generated on 2026-11-14 from the six-digit UNESCO nomenclature (TESEO list) for fields 21, 24 and 25, names in the list's own language. Status was measured as in 50.0, and each item is closed by the named section. W44 step 0 copies this table to `docs/spec/science-coverage.md`.
+
+| Code | Sub-discipline | Measured status | Closed by |
+|---|---|---|---|
+| 210101 | Estrellas Dobles | own state and behaviour in code | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210102 | Cumulos | own state and behaviour in code | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210103 | Rayos Cosmicos | some typed state in code | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210104 | Galaxias | own state and behaviour in code | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210105 | Gravitacion | some typed state in code | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210106 | Nebulosas | a label only | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210107 | Novas | a label only | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210108 | Pulsares | a label only | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210109 | Quasares | a label only | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210110 | Estrellas | own state and behaviour in code | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210111 | Evolucion Estelar Y Diagrama Hr | some typed state in code | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210112 | Composicion Estelar | some typed state in code | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210113 | Supernovas | a label only | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210114 | Estrellas Variables | a label only | code (stars, galaxies, clusters, cosmic features; spec 13 10.9–10.16); W48 48.8 |
+| 210115 | Fuentes De Rayos X | absent from code | **50.22** |
+| 210201 | Campos Interplanetarios | absent from code | **50.22** |
+| 210202 | Materia Interplanetaria | some typed state in code | code (cosmic features, routes) |
+| 210203 | Particulas Interplanetarias | absent from code | **50.22** |
+| 210301 | Astronomia De Posicion | own state and behaviour in code | **50.28**; also knowledge techniques (spec 13 8.4) and instruments (48.4) |
+| 210302 | Telescopios | a label only | **50.28** |
+| 210303 | Espectroscopia Astrofisica | absent from code | **50.28** |
+| 210401 | Cometas | a label only | code (worlds, moons, world physics; spec 13 10.9, G1R.4.7) |
+| 210402 | Meteoritos | own state and behaviour in code | code (worlds, moons, world physics; spec 13 10.9, G1R.4.7) |
+| 210403 | Atmosfera Planetaria | own state and behaviour in code | code (worlds, moons, world physics; spec 13 10.9, G1R.4.7) |
+| 210404 | Geologia Planetaria | absent from code | code (worlds, moons, world physics; spec 13 10.9, G1R.4.7) |
+| 210405 | Fisica Planetaria | some typed state in code | code (worlds, moons, world physics; spec 13 10.9, G1R.4.7) |
+| 210406 | Campos Magneticos Planetarios | absent from code | **50.22** |
+| 210407 | Planetas | own state and behaviour in code | code (worlds, moons, world physics; spec 13 10.9, G1R.4.7) |
+| 210408 | Satelites | some typed state in code | code (worlds, moons, world physics; spec 13 10.9, G1R.4.7) |
+| 210409 | Tectitas | absent from code | code (worlds, moons, world physics; spec 13 10.9, G1R.4.7) |
+| 210410 | La Luna | some typed state in code | code (worlds, moons, world physics; spec 13 10.9, G1R.4.7) |
+| 210501 | Antenas Telescopicas | a label only | **50.28** |
+| 210502 | Radiotelescopios | absent from code | **50.28** |
+| 210601 | Energia Solar | a label only | **50.22** |
+| 210602 | Fisica Solar | a label only | **50.22** |
+| 210603 | Viento Solar | a label only | **50.22** |
+| 210604 | El Sol | own state and behaviour in code | code (stars, stellar evolution) |
+| 240101 | Anatomia Animal | own state and behaviour in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240102 | Comportamiento Animal | own state and behaviour in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240103 | Comunicacion Animal | own state and behaviour in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240104 | Citologia Animal | own state and behaviour in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240105 | Desarrollo Animal | some typed state in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240106 | Ecologia Animal | some typed state in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240107 | Embriologia Animal | absent from code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240108 | Genetica Animal | own state and behaviour in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240109 | Crecimiento Animal | some typed state in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240110 | Histologia Animal | some typed state in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240111 | Patologia Animal | own state and behaviour in code | **50.24**; also code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240112 | Parasitologia Animal | absent from code | **50.24** |
+| 240113 | Fisiologia Animal | some typed state in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240114 | Taxonomia Animal | some typed state in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240115 | Zoologia General | own state and behaviour in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240116 | Herpetologia | absent from code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240117 | Invertebrados | absent from code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240118 | Mamiferos | absent from code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240119 | Zoologia Marina | a label only | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240120 | Ornitologia | a label only | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240121 | Primates | absent from code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240122 | Protozoologia | a label only | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240123 | Vertebrados | absent from code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240124 | Ictiologia | a label only | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240125 | Invertebrados No Insectos | absent from code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240126 | Bioquimica De La Taxonomia Animal | own state and behaviour in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240127 | Taxonomia De Invertebrados No Insectos | absent from code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240129 | Taxonomia De Peces | a label only | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240130 | Mamiferos Ungulados | own state and behaviour in code | code (species, anatomy, ecology, lineages, temperament); W48 48.5, 48.8 |
+| 240201 | Archivos Antropologicos | own state and behaviour in code | code (body, genetics, demography) |
+| 240202 | Genetica Antropologica | some typed state in code | code (body, genetics, demography) |
+| 240203 | Antropometria Y Antropologia Forense | some typed state in code | code (body, genetics, demography) |
+| 240204 | Composicion Del Cuerpo | own state and behaviour in code | code (body, genetics, demography) |
+| 240205 | Constitucion Del Cuerpo | own state and behaviour in code | code (body, genetics, demography) |
+| 240206 | Etnologia | own state and behaviour in code | code (body, genetics, demography) |
+| 240207 | Antropologia Medica | some typed state in code | code (body, genetics, demography) |
+| 240208 | Habitos Alimentarios Antropologicos | own state and behaviour in code | code (body, genetics, demography) |
+| 240209 | Osteologia | some typed state in code | code (body, genetics, demography) |
+| 240210 | Biologia De Poblaciones | own state and behaviour in code | code (body, genetics, demography) |
+| 240211 | Comportamiento De Los Primates | absent from code | code (body, genetics, demography) |
+| 240212 | Somatologia De Los Primates | own state and behaviour in code | code (body, genetics, demography) |
+| 240214 | Desarrollo Somatico | some typed state in code | code (body, genetics, demography) |
+| 240215 | Envejecimiento Somatico | some typed state in code | code (body, genetics, demography) |
+| 240401 | Bioestadistica | absent from code | knowledge (statistics as a branch); engine metrics |
+| 240601 | Bioacustica | own state and behaviour in code | code (body capacities, F23) |
+| 240602 | Bioelectricidad | a label only | code (body capacities, F23) |
+| 240603 | Bioenergetica | own state and behaviour in code | code (body capacities, F23) |
+| 240604 | Biomecanica | own state and behaviour in code | code (body capacities, F23) |
+| 240605 | Biooptica | own state and behaviour in code | code (body capacities, F23) |
+| 240606 | Fisica Medica | absent from code | code (body capacities, F23) |
+| 240701 | Cultivo Celular | absent from code | below the engine's scale: read through tissues (F23), heredity and disease agents (50.24) |
+| 240702 | Citogenetica | absent from code | below the engine's scale: read through tissues (F23), heredity and disease agents (50.24) |
+| 240703 | Morfologia Celular | absent from code | below the engine's scale: read through tissues (F23), heredity and disease agents (50.24) |
+| 240704 | Citologia | own state and behaviour in code | below the engine's scale: read through tissues (F23), heredity and disease agents (50.24) |
+| 240705 | Cultivo De Tejidos | absent from code | below the engine's scale: read through tissues (F23), heredity and disease agents (50.24) |
+| 240706 | Estructura De La Pared Celular | absent from code | below the engine's scale: read through tissues (F23), heredity and disease agents (50.24) |
+| 240801 | Etologia Animal | own state and behaviour in code | code (behaviour, temperament, hives and herds) |
+| 240802 | Etologia Humana | own state and behaviour in code | code (behaviour, temperament, hives and herds) |
+| 240803 | Etologia De Insectos | own state and behaviour in code | code (behaviour, temperament, hives and herds) |
+| 240804 | Etologia De Mamiferos Ungulados | own state and behaviour in code | code (behaviour, temperament, hives and herds) |
+| 240901 | Embriologia | absent from code | code (genetics, lineages); W46 46.3 design; below scale where molecular |
+| 240902 | Ingenieria Genetica | absent from code | code (genetics, lineages); W46 46.3 design; below scale where molecular |
+| 240903 | Genetica De Poblaciones | own state and behaviour in code | code (genetics, lineages); W46 46.3 design; below scale where molecular |
+| 240904 | Citogenetica Animal | absent from code | code (genetics, lineages); W46 46.3 design; below scale where molecular |
+| 240905 | Genetica Del Desarrollo | absent from code | code (genetics, lineages); W46 46.3 design; below scale where molecular |
+| 240906 | Genetica Molecular | some typed state in code | code (genetics, lineages); W46 46.3 design; below scale where molecular |
+| 240907 | Genetica Molecular De Plantas | absent from code | code (genetics, lineages); W46 46.3 design; below scale where molecular |
+| 240908 | Genetica Molecular De Levaduras | absent from code | code (genetics, lineages); W46 46.3 design; below scale where molecular |
+| 240909 | Sintesis De Oligonucleotidos | a label only | code (genetics, lineages); W46 46.3 design; below scale where molecular |
+| 241001 | Grupo Sanguineo | own state and behaviour in code | code (body, life course, genetics); spec 13 W34 senses |
+| 241002 | Anatomia Humana | some typed state in code | code (body, life course, genetics); spec 13 W34 senses |
+| 241003 | Citologia Humana | absent from code | code (body, life course, genetics); spec 13 W34 senses |
+| 241004 | Desarrollo Humano | some typed state in code | code (body, life course, genetics); spec 13 W34 senses |
+| 241005 | Ecologia Humana | absent from code | code (body, life course, genetics); spec 13 W34 senses |
+| 241006 | Embriologia Humana | absent from code | code (body, life course, genetics); spec 13 W34 senses |
+| 241007 | Genetica Humana | absent from code | code (body, life course, genetics); spec 13 W34 senses |
+| 241008 | Histologia Humana | some typed state in code | code (body, life course, genetics); spec 13 W34 senses |
+| 241009 | Neuroanatomia Humana | some typed state in code | code (body, life course, genetics); spec 13 W34 senses |
+| 241011 | Organos Sensoriales | own state and behaviour in code | code (body, life course, genetics); spec 13 W34 senses |
+| 241012 | Anatomia Sistematica | some typed state in code | code (body, life course, genetics); spec 13 W34 senses |
+| 241013 | Anatomia Topografica | some typed state in code | code (body, life course, genetics); spec 13 W34 senses |
+| 241101 | Fisiologia Del Equilibrio | own state and behaviour in code | **50.25**; also code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241102 | Anestesiologia | some typed state in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241103 | Fisiologia Cardiovascular | own state and behaviour in code | **50.25**; also code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241104 | Fisiologia Endocrina | absent from code | **50.25** |
+| 241105 | Fisiologia Ambiental | some typed state in code | **50.25**; also code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241106 | Fisiologia Del Ejercicio | some typed state in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241107 | Fisiologia Gastrointestinal | absent from code | **50.25** |
+| 241108 | Metabolismo Humano | some typed state in code | **50.25**; also code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241109 | Regulacion De La Temperatura Humana | some typed state in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241110 | Fisiologia Muscular | some typed state in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241111 | Neurofisiologia Humana | some typed state in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241112 | Fisiologia Del Sistema Nervioso Central | a label only | **50.25** |
+| 241113 | Fisiologia De La Audicion | some typed state in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241114 | Fisiologia Del Lenguaje | some typed state in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241115 | Fisiologia De La Vision | own state and behaviour in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241116 | Fisiologia De La Reproduccion | own state and behaviour in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241117 | Fisiologia De La Respiracion | some typed state in code | **50.25**; also code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241118 | Fisiologia Del Movimiento | own state and behaviour in code | code (body functions, exertion, F23); spec 13 W34 thermoregulation |
+| 241201 | Antigenos | own state and behaviour in code | code (immunities, vaccination); W46 grown organs |
+| 241202 | Anticuerpos | own state and behaviour in code | code (immunities, vaccination); W46 grown organs |
+| 241203 | Reaccion Antigeno-Anticuerpo | own state and behaviour in code | code (immunities, vaccination); W46 grown organs |
+| 241204 | Formacion De Anticuerpos | own state and behaviour in code | code (immunities, vaccination); W46 grown organs |
+| 241205 | Hipersensibilidad | absent from code | **50.25** |
+| 241206 | Inmunizacion | some typed state in code | code (immunities, vaccination); W46 grown organs |
+| 241207 | Inmunoquimica | own state and behaviour in code | code (immunities, vaccination); W46 grown organs |
+| 241208 | Trasplante De Organos | some typed state in code | code (immunities, vaccination); W46 grown organs |
+| 241209 | Anticuerpos De Tejidos | own state and behaviour in code | code (immunities, vaccination); W46 grown organs |
+| 241210 | Vacunas | some typed state in code | code (immunities, vaccination); W46 grown organs |
+| 241301 | Entomologia General | a label only | code (species classes, insectoid plans, crop pests, swarms) |
+| 241302 | Desarrollo De Los Insectos | absent from code | code (species classes, insectoid plans, crop pests, swarms) |
+| 241303 | Ecologia De Los Insectos | a label only | code (species classes, insectoid plans, crop pests, swarms) |
+| 241304 | Morfologia De Los Insectos | a label only | code (species classes, insectoid plans, crop pests, swarms) |
+| 241305 | Fisiologia De Los Insectos | a label only | code (species classes, insectoid plans, crop pests, swarms) |
+| 241306 | Taxonomia De Los Insectos | a label only | code (species classes, insectoid plans, crop pests, swarms) |
+| 241307 | Endocrinologia De Los Insectos | a label only | code (species classes, insectoid plans, crop pests, swarms) |
+| 241401 | Antibioticos | absent from code | **50.24** |
+| 241402 | Fisiologia Bacteriana | absent from code | **50.24** |
+| 241403 | Metabolismo Bacteriano | absent from code | **50.24** |
+| 241404 | Bacteriologia | absent from code | **50.24** |
+| 241405 | Bacteriofagia | absent from code | **50.24** |
+| 241406 | Micologia | a label only | **50.24** |
+| 241407 | Metabolismo Microbiano | a label only | spec 13 W34 microbes; code (fermentation methods) |
+| 241408 | Procesos Microbianos | a label only | spec 13 W34 microbes; code (fermentation methods) |
+| 241409 | Mohos | absent from code | **50.24** |
+| 241410 | Levaduras | a label only | spec 13 W34 microbes; code (fermentation methods) |
+| 241411 | Degradacion De Residuos Vegetales | own state and behaviour in code | spec 13 W34 microbes; code (fermentation methods) |
+| 241501 | Biologia Molecular De Microorganismos | a label only | below scale: W46 46.3 |
+| 241502 | Biologia Molecular De Plantas | absent from code | below scale: W46 46.3 |
+| 241601 | Paleontologia Animal | absent from code | **50.27** |
+| 241602 | Paleontologia De Los Invertebrados | absent from code | **50.27** |
+| 241603 | Palinologia | absent from code | **50.27** |
+| 241604 | Paleontologia De Las Plantas | absent from code | **50.27** |
+| 241605 | Paleontologia De Los Vertebrados | absent from code | **50.27** |
+| 241701 | Briologia | a label only | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241702 | Dendrologia | own state and behaviour in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241703 | Botanica General | own state and behaviour in code | **50.26**; also code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241704 | Flora Lacustre | absent from code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241705 | Botanica Marina | absent from code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241706 | Setas | a label only | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241707 | Algologia | absent from code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241708 | Fitobiologia | own state and behaviour in code | **50.26**; also code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241709 | Fitopatologia | a label only | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241710 | Paleobotanica | absent from code | **50.27** |
+| 241711 | Anatomia Vegetal | absent from code | **50.26** |
+| 241712 | Citologia Vegetal | absent from code | **50.26** |
+| 241713 | Ecologia Vegetal | own state and behaviour in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241714 | Genetica Vegetal | absent from code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241715 | Desarrollo Vegetal | some typed state in code | **50.26**; also code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241716 | Histologia Vegetal | absent from code | **50.26** |
+| 241717 | Nutricion Vegetal | own state and behaviour in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241718 | Parasitologia Vegetal | own state and behaviour in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241719 | Fisiologia Vegetal | a label only | **50.26** |
+| 241720 | Taxonomia Vegetal | absent from code | **50.26** |
+| 241721 | Pteridologia | a label only | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241722 | Fijacion Y Movilizacion Biologica De Nutrientes | own state and behaviour in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241723 | Fijacion Biologica Del Nitrogeno | some typed state in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241724 | Fisiologia De La Maduracion | own state and behaviour in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241725 | Recursos Fitogeneticos | own state and behaviour in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241726 | Taxonomia De Plantas Vasculares | own state and behaviour in code | **50.26**; also code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 241727 | Flora Mediterranea | some typed state in code | code (flora, species, perennials, crop pests); spec 13 W34 plant defences |
+| 242001 | Arbovirus | some typed state in code | **50.24** |
+| 242002 | Bacteriofagos | absent from code | **50.24** |
+| 242003 | Virus Dermatropicos | absent from code | **50.24** |
+| 242004 | Enterovirus | absent from code | **50.24** |
+| 242005 | Virus Neurotropicos | absent from code | **50.24** |
+| 242006 | Virus Pantropicos | absent from code | **50.24** |
+| 242007 | Poxvirus | absent from code | **50.24** |
+| 242008 | Virus Respiratorios | absent from code | **50.24** |
+| 242009 | Virus Viscerotropicos | absent from code | **50.24** |
+| 242010 | Virologia Animal | absent from code | **50.24** |
+| 242011 | Retrovirus | absent from code | **50.24** |
+| 242101 | Neurofisiologia | some typed state in code | code (nerves, F23 tissues); F50 minds |
+| 242102 | Neuroquimica | absent from code | code (nerves, F23 tissues); F50 minds |
+| 242103 | Neurobiologia Molecular | absent from code | code (nerves, F23 tissues); F50 minds |
+| 250101 | Aeronomia | absent from code | **50.22** |
+| 250102 | Luminiscencia Atmosferica | absent from code | **50.22** |
+| 250103 | Interacciones Mar-Aire | a label only | code (climate, weather, winds, rain shadows W31) |
+| 250104 | Acustica Atmosferica | some typed state in code | code (climate, weather, winds, rain shadows W31) |
+| 250105 | Quimica Atmosferica | own state and behaviour in code | code (climate, weather, winds, rain shadows W31) |
+| 250106 | Dinamica Atmosferica | own state and behaviour in code | code (climate, weather, winds, rain shadows W31) |
+| 250107 | Electricidad Atmosferica | a label only | code (climate, weather, winds, rain shadows W31) |
+| 250108 | Optica Atmosferica | a label only | code (climate, weather, winds, rain shadows W31) |
+| 250109 | Radiactividad Atmosferica | some typed state in code | code (climate, weather, winds, rain shadows W31) |
+| 250110 | Estructura Atmosferica | some typed state in code | code (climate, weather, winds, rain shadows W31) |
+| 250111 | Termodinamica Atmosferica | some typed state in code | code (climate, weather, winds, rain shadows W31) |
+| 250112 | Turbulencia Atmosferica | absent from code | code (climate, weather, winds, rain shadows W31) |
+| 250113 | Auroras | some typed state in code | **50.22**; also code (climate, weather, winds, rain shadows W31) |
+| 250114 | Fisica De Las Nubes | a label only | code (climate, weather, winds, rain shadows W31) |
+| 250115 | Efectos De La Radiacion Cosmica En La Atmosfera | absent from code | **50.22** |
+| 250116 | Difusion Atmosferica | absent from code | code (climate, weather, winds, rain shadows W31) |
+| 250117 | Pulsaciones Geomagneticas | absent from code | **50.22** |
+| 250118 | Ionosfera | absent from code | **50.22** |
+| 250119 | Particulas Magnetosfericas | absent from code | **50.22** |
+| 250120 | Ondas Magnetosfericas | absent from code | **50.22** |
+| 250121 | Modelos Numericos De La Atmosfera | own state and behaviour in code | **50.28**; also code (climate, weather, winds, rain shadows W31) |
+| 250122 | Fisica De La Precipitacion | own state and behaviour in code | code (climate, weather, winds, rain shadows W31) |
+| 250123 | Transferencia Radiactiva | some typed state in code | code (climate, weather, winds, rain shadows W31) |
+| 250124 | Efectos Del Viento Solar En La Atmosfera | a label only | **50.22** |
+| 250125 | Energia Eolica | a label only | code (climate, weather, winds, rain shadows W31) |
+| 250201 | Climatologia Analitica | own state and behaviour in code | code (climate, climate ages, regional climate W31) |
+| 250202 | Climatologia Aplicada | own state and behaviour in code | code (climate, climate ages, regional climate W31) |
+| 250203 | Bioclimatologia | some typed state in code | code (climate, climate ages, regional climate W31) |
+| 250204 | Microclimatologia | absent from code | **50.23** |
+| 250205 | Paleoclimatologia | a label only | code (climate, climate ages, regional climate W31) |
+| 250206 | Climatologia Fisica | own state and behaviour in code | code (climate, climate ages, regional climate W31) |
+| 250207 | Climatologia Regional | own state and behaviour in code | code (climate, climate ages, regional climate W31) |
+| 250208 | Climatologia De Montaña | some typed state in code | code (climate, climate ages, regional climate W31) |
+| 250209 | Cambio Climatico | absent from code | code (climate, climate ages, regional climate W31) |
+| 250301 | Cosmoquimica | absent from code | spec 13 G1R.3.1 layered geology; materials (F23); code (dating) |
+| 250302 | Petrologia Experimental | some typed state in code | spec 13 G1R.3.1 layered geology; materials (F23); code (dating) |
+| 250303 | Geoquimica Exploratoria | some typed state in code | spec 13 G1R.3.1 layered geology; materials (F23); code (dating) |
+| 250304 | Geocronologia Y Radioisotopos | own state and behaviour in code | spec 13 G1R.3.1 layered geology; materials (F23); code (dating) |
+| 250305 | Geoquimica De Altas Temperaturas | absent from code | spec 13 G1R.3.1 layered geology; materials (F23); code (dating) |
+| 250306 | Geoquimica De Bajas Temperaturas | absent from code | spec 13 G1R.3.1 layered geology; materials (F23); code (dating) |
+| 250307 | Geoquimica Organica | own state and behaviour in code | spec 13 G1R.3.1 layered geology; materials (F23); code (dating) |
+| 250308 | Isotopos Estables | absent from code | spec 13 G1R.3.1 layered geology; materials (F23); code (dating) |
+| 250309 | Distribucion De Oligoelementos | own state and behaviour in code | spec 13 G1R.3.1 layered geology; materials (F23); code (dating) |
+| 250310 | Geoquimica Sedimentaria | absent from code | **50.23** |
+| 250401 | Astronomia Geodesica | some typed state in code | knowledge (cartography, surveys) |
+| 250402 | Cartografia Geodesica | own state and behaviour in code | knowledge (cartography, surveys) |
+| 250403 | Navegacion Geodesica | a label only | **50.28** |
+| 250404 | Fotogrametria Geodesica | absent from code | **50.28** |
+| 250405 | Levantamiento Geodesico | own state and behaviour in code | **50.28**; also knowledge (cartography, surveys) |
+| 250406 | Geodesia Fisica | some typed state in code | knowledge (cartography, surveys) |
+| 250407 | Geodesia De Satelites | absent from code | **50.28** |
+| 250408 | Geodesia Teorica | a label only | knowledge (cartography, surveys) |
+| 250409 | Redes Geodesicas Y Deformaciones | absent from code | knowledge (cartography, surveys) |
+| 250501 | Biogeografia | own state and behaviour in code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250502 | Cartografia Geografica | own state and behaviour in code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250503 | Geografia De Los Recursos Naturales | own state and behaviour in code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250504 | Usos Del Suelo | absent from code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250505 | Teoria De La Localizacion Geografica | own state and behaviour in code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250506 | Geografia Medica | absent from code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250507 | Geografia Fisica | own state and behaviour in code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250508 | Geografia Topografica | some typed state in code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250509 | Biogeografia Botanica | absent from code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250510 | Geografia De Montaña | some typed state in code | code (regions, terrain, land use rings, endemic diseases); spec 13 G1R.23.7 biogeography |
+| 250601 | Geologia Regional | own state and behaviour in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250602 | Geologia Del Carbon | own state and behaviour in code | **50.27**; also spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250603 | Geologia Aplicada A La Ingenieria | some typed state in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250604 | Geologia Ambiental | own state and behaviour in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250605 | Hidrogeologia | absent from code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250606 | Exploraciones Geologicas | absent from code | **50.28** |
+| 250607 | Geomorfologia | own state and behaviour in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250608 | Energia Geotermica | absent from code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250609 | Geologia Glacial | a label only | **50.23** |
+| 250610 | Yacimientos Minerales | own state and behaviour in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250611 | Mineralogia | own state and behaviour in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250612 | Geologia Del Petroleo | own state and behaviour in code | **50.27**; also spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250613 | Petrologia Ignea Y Metamorfica | absent from code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250614 | Petrologia Sedimentaria | absent from code | **50.23** |
+| 250615 | Fotogeologia | absent from code | **50.28** |
+| 250616 | Teledeteccion | absent from code | **50.28** |
+| 250617 | Mecanica De Rocas | own state and behaviour in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250618 | Sedimentologia | absent from code | **50.23** |
+| 250619 | Estratigrafia | own state and behaviour in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250620 | Geologia Estructural | some typed state in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250621 | Vulcanologia | some typed state in code | spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250622 | Analisis De Diagrafias | absent from code | **50.28** |
+| 250623 | Petrologia Sedimentaria Del Carbon | own state and behaviour in code | **50.27**; also spec 13 G1R.3.1, G1R.3.2, G1R.4.7; code (deposits, extraction, volcanism); W47 47.2 geothermal |
+| 250624 | Paleontologia Estratigrafica | absent from code | **50.27** |
+| 250701 | Geomagnetismo Y Prospeccion Magnetica | absent from code | **50.22** |
+| 250702 | Gravedad Terrestre Y Prospeccion Gravimetrica | some typed state in code | spec 13 G1R.4.7 tectonics; code (quakes, gravity) |
+| 250703 | Flujos De Calor Terrestre | absent from code | spec 13 G1R.4.7 tectonics; code (quakes, gravity) |
+| 250704 | Paleomagnetismo | absent from code | **50.22** |
+| 250705 | Sismologia Y Prospeccion Sismica | a label only | spec 13 G1R.4.7 tectonics; code (quakes, gravity) |
+| 250706 | Geofisica De La Masa Solida Terrestre | absent from code | spec 13 G1R.4.7 tectonics; code (quakes, gravity) |
+| 250707 | Tectonica | own state and behaviour in code | spec 13 G1R.4.7 tectonics; code (quakes, gravity) |
+| 250708 | Estructura Litosferica | absent from code | spec 13 G1R.4.7 tectonics; code (quakes, gravity) |
+| 250801 | Erosion Del Agua | some typed state in code | spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250802 | Evaporacion | absent from code | **50.23** |
+| 250803 | Glaciologia | a label only | **50.23** |
+| 250804 | Aguas Subterraneas | absent from code | spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250805 | Hidrobiologia | a label only | spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250806 | Hidrografia | own state and behaviour in code | spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250807 | Hielo | own state and behaviour in code | **50.23**; also spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250808 | Limnologia | a label only | spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250809 | Suelo Helado | absent from code | **50.23** |
+| 250810 | Precipitacion | own state and behaviour in code | spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250811 | Calidad De Las Aguas | own state and behaviour in code | spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250812 | Nieve | a label only | **50.23** |
+| 250813 | Humedad Del Suelo | some typed state in code | spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250814 | Aguas Superficiales | own state and behaviour in code | spec 13 G1R.3.2, G1R.3.3; code (rainfall, lakes) |
+| 250815 | Transpiracion | absent from code | **50.23** |
+| 250901 | Meteorologia Agricola | absent from code | **50.28** |
+| 250902 | Contaminacion Atmosferica | own state and behaviour in code | code (weather, storms, monsoons, forecasts) |
+| 250903 | Prevision Meteorologica A Largo Plazo | own state and behaviour in code | **50.28**; also code (weather, storms, monsoons, forecasts) |
+| 250904 | Hidrometeorologia | a label only | code (weather, storms, monsoons, forecasts) |
+| 250905 | Meteorologia Industrial | absent from code | code (weather, storms, monsoons, forecasts) |
+| 250906 | Meteorologia Marina | a label only | code (weather, storms, monsoons, forecasts) |
+| 250907 | Mesometeorologia | a label only | code (weather, storms, monsoons, forecasts) |
+| 250908 | Micrometeorologia | absent from code | code (weather, storms, monsoons, forecasts) |
+| 250909 | Prediccion Numerica Meteorologica | own state and behaviour in code | **50.28**; also code (weather, storms, monsoons, forecasts) |
+| 250910 | Observacion Meteorologica A Corto Plazo | own state and behaviour in code | **50.28**; also code (weather, storms, monsoons, forecasts) |
+| 250911 | Prediccion Operacional Meteorologica | own state and behaviour in code | **50.28**; also code (weather, storms, monsoons, forecasts) |
+| 250912 | Meteorologia Polar | a label only | code (weather, storms, monsoons, forecasts) |
+| 250913 | Meteorologia Por Radar | absent from code | **50.28** |
+| 250914 | Radiometeorologia | absent from code | **50.28** |
+| 250915 | Meteorologia Por Cohetes | a label only | **50.28** |
+| 250916 | Meteorologia Por Satelites | absent from code | **50.28** |
+| 250917 | Meteorologia Sinoptica | own state and behaviour in code | code (weather, storms, monsoons, forecasts) |
+| 250918 | Meteorologia Tropical | own state and behaviour in code | code (weather, storms, monsoons, forecasts) |
+| 250919 | Analisis Del Tiempo Meteorologico | own state and behaviour in code | code (weather, storms, monsoons, forecasts) |
+| 250920 | Modificacion Del Tiempo Meteorologico | a label only | **50.28** |
+| 250921 | Meteorologia Aeronautica | a label only | code (weather, storms, monsoons, forecasts) |
+| 250922 | Meteorologia Maritima | own state and behaviour in code | code (weather, storms, monsoons, forecasts) |
+| 251001 | Oceanografia Biologica | a label only | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251002 | Oceanografia Quimica | a label only | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251003 | Oceanografia Descriptiva | a label only | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251004 | Botanica Oceanografica | absent from code | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251005 | Zoologia Oceanografica | absent from code | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251006 | Procesos Del Fondo Marino | absent from code | **50.23** |
+| 251007 | Oceanografia Fisica | some typed state in code | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251008 | Interacciones Aire-Oceano | a label only | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251009 | Hielo Marino | absent from code | **50.23** |
+| 251010 | Procesos Litorales Y Sublitorales | some typed state in code | **50.23**; also code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251011 | Acustica Submarina | absent from code | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251012 | Geologia Marina | absent from code | **50.23** |
+| 251013 | Recursos Marinos Renovables | a label only | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251014 | Acuicultura Marina | absent from code | code (currents, upwelling, winds, fisheries); W48 48.5 methods; W46 cultivation (aquaculture) |
+| 251015 | Dinamica Sedimentaria Marina | absent from code | **50.23** |
+| 251101 | Bioquimica De Suelos | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251102 | Biologia De Suelos | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251103 | Cartografia De Suelos | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251104 | Quimica De Suelos | own state and behaviour in code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251105 | Clasificacion De Suelos | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251106 | Conservacion De Suelos | some typed state in code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251107 | Ingenieria De Suelos | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251108 | Mecanica De Suelos En La Agricultura | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251109 | Microbiologia De Suelos | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251110 | Mineralogia De Suelos | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251111 | Genesis Y Morfologia De Suelos | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251112 | Fisica De Suelos | absent from code | code (soil, nutrients, salinity); spec 13 W34 soil microbes; W48 48.8 soil kinds |
+| 251201 | Exobiologia | own state and behaviour in code | code (life classes, biochemistries, decompression) |
+| 251202 | Medicina Espacial | a label only | **50.25** |
+| 251203 | Fisiologia Espacial | some typed state in code | **50.25**; also code (life classes, biochemistries, decompression) |
+
+### Appendix 50.D — Every range of the Thompson motif index
+
+Generated on 2026-11-14 from the 259 ranges of the *Motif-Index of Folk-Literature*. Status was measured as in 50.0, and each range is closed by the named section. W44 step 0 copies this table to `docs/spec/motif-coverage.md`.
+
+| Range | Heading | Measured status | Closed by |
+|---|---|---|---|
+| A0 – A99 | Creator | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A100 – A149 | The gods in general part 1 | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A150 – A199 | The gods in general part 2 | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A200 – A299 | Gods of the upper world | a label only | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A300 – A399 | Gods of the underworld | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A400 – A499 | Gods of the earth | some typed state in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A500 – A599 | Demigods and culture heroes | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A600 – A649 | Creation of the universe | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A650 – A699 | Nature of the universe | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A700 – A709 | The heavens | some typed state in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A710 – A739 | The sun | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A740 – A759 | The moon | some typed state in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A760 – A799 | The stars and the heavenly lights | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A800 – A899 | The earth | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A900 – A949 | Topographical features of the earth | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A950 – A999 | Land features | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1000 – A1099 | World calamities and renewals | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1100 – A1199 | Establishment of natural order | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1200 – A1299 | Creation of man | a label only | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1300 – A1399 | Ordering of human life | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1400 – A1499 | Acquisition of culture | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1500 – A1599 | Origin of customs | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1600 – A1699 | Distribution and differentiation of peoples | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1700 – A1799 | Creation of animal life  –  general | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1800 – A1899 | Creation of mammals | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A1900 – A1999 | Creation of birds | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A2000 – A2099 | Creation of insects | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A2100 – A2199 | Creation of fish and other animals | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A2200 – A2299 | Various causes of animal characteristics | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A2300 – A2399 | Causes of animal characteristics: body | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A2400 – A2499 | Causes of animal characteristics: appearance and habits | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A2500 – A2599 | Animal characteristics – miscellaneous | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A2600 – A2699 | Origin of trees and plants | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A2700 – A2799 | Origin of plant characteristics | own state and behaviour in code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| A2800 – A2899 | Miscellaneous explanations | absent from code | code (gods, creator, genesis, cosmos, sky, world shaping, peoples' origins, etiology in legends); W47 47.5–47.6; W48 48.8 |
+| B0 – B49 | Mythical animals I | own state and behaviour in code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B50 – B99 | Mythical animals II | own state and behaviour in code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B100 – B199 | Magic animals | own state and behaviour in code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B200 – B249 | Animals with human traits I | absent from code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B250 – B299 | Animals with human traits II | absent from code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B300 – B349 | Helpful animals  –  general | own state and behaviour in code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B400 – B499 | Kinds of helpful animals | own state and behaviour in code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B500 – B599 | Services of helpful animals | some typed state in code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B600 – B699 | Marriage of person to animal | a label only | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B700 – B799 | Fanciful traits of animals | absent from code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| B800 – B899 | Miscellaneous animal motifs | own state and behaviour in code | code (beasts, monsters, divine creatures, companions, familiars, uplifted kinds); W46 46.15; 50.8 unions with other kinds |
+| C0 – C99 | Tabu connected with supernatural beings | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C100 – C199 | Sex Tabu | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C200 – C249 | Eating Tabus | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C250 – C299 | Drinking Tabus | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C300 – C399 | Looking tabu | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C400 – C499 | Speaking tabu | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C500 – C549 | Tabu: touching | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C550 – C599 | Class tabu | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C600 – C649 | Unique Prohibitions and Compulsions. The One Forbidden Thing | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C650 – C699 | Unique Prohibitions and Compulsions. The One Compulsory Thing | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C700 – C829 | Miscellaneous Tabus | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C830 – C899 | Unclassified Tabus | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| C900 – C999 | Punishment for breaking tabu | own state and behaviour in code | code (taboos, geasa, purity ranks F41); 50.8; W47 customs |
+| D0 – D99 | Transformation (general) | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D100 – D199 | Transformation: man to animal | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D200 – D299 | Transformation: man to object | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D300 – D399 | Transformation: animal to person | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D400 – D499 | Other forms of transformation | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D500 – D599 | Means of transformation | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D600 – D699 | Miscellaneous transformation incidents | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D700 – D799 | Disenchantment | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D800 – D899 | Ownership of magic objects | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D900 – D999 | Kinds of magic objects I | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1000 – D1099 | Kinds of magic objects II | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1100 – D1199 | Kinds of magic objects III | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1200 – D1299 | Kinds of magic objects IV | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1300 – D1339 | Function of magic objects I | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1340 – D1369 | Function of magic objects II | absent from code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1370 – D1399 | Function of magic objects III | absent from code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1400 – D1439 | Magic object gives power over other persons | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1440 – D1499 | Magic object gives power over animals | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1500 – D1549 | Magic object controls disease | own state and behaviour in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1550 – D1599 | Magic object miraculously opens and closes | own state and behaviour in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1600 – D1649 | Automatic magic objects | own state and behaviour in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1650 – D1699 | Other characteristics of magic objects | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1700 – D1799 | Possession and means of employment of magic powers | own state and behaviour in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1800 – D1949 | Lasting magic qualities | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D1950 – D2049 | Temporary magic characteristics | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D2050 – D2099 | Destructive magic powers | some typed state in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D2100 – D2149 | Other manifestations of magic power | own state and behaviour in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| D2150 – D2199 | Miscellaneous magical manifestations | own state and behaviour in code | code (rites, enchantments, item powers, curses, transformation, constructs); W45 45.3 power grammar applied to things; F55 relics |
+| E0 – E199 | Resuscitation | some typed state in code | code (spirits, ghosts, necromancy, rebirth, souls, afterlife) |
+| E200 – E299 | Malevolent return from the dead | some typed state in code | code (spirits, ghosts, necromancy, rebirth, souls, afterlife) |
+| E300 – E399 | Friendly return from the dead | own state and behaviour in code | code (spirits, ghosts, necromancy, rebirth, souls, afterlife) |
+| E400 – E499 | Ghosts and revenants – miscellaneous I | a label only | code (spirits, ghosts, necromancy, rebirth, souls, afterlife) |
+| E500 – E599 | Ghosts and revenants – miscellaneous II | some typed state in code | code (spirits, ghosts, necromancy, rebirth, souls, afterlife) |
+| E600 – E699 | Reincarnation | own state and behaviour in code | code (spirits, ghosts, necromancy, rebirth, souls, afterlife) |
+| E700 – E799 | The soul | own state and behaviour in code | code (spirits, ghosts, necromancy, rebirth, souls, afterlife) |
+| F0 – F149 | Other world journeys I | some typed state in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F150 – F199 | Other world journeys II | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F200 – F299 | Fairies and elves | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F300 – F399 | Fairies and mortals | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F400 – F449 | Spirits and demons I | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F450 – F479 | Spirits and demons II | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F480 – F499 | Spirits and demons III | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F500 – F539 | Remarkable persons I | some typed state in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F540 – F599 | Remarkable persons II | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F600 – F699 | Persons with extraordinary powers | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F700 – F799 | Extraordinary places and things | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F800 – F899 | Extraordinary rocks and stones | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F900 – F999 | Extraordinary occurrences I | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| F1000 – F1099 | Extraordinary occurrences II | own state and behaviour in code | code (journeys beyond, realms, spirits, wonders, phenomena); W45 F53 hidden folk, 45.4 powers; W48 48.8 |
+| G0 – G99 | Cannibals and cannibalism | a label only | code (monsters, giants by size traits, witchcraft, abductors, monster contracts) |
+| G100 – G199 | Giant ogres | a label only | code (monsters, giants by size traits, witchcraft, abductors, monster contracts) |
+| G200 – G299 | Witches | own state and behaviour in code | code (monsters, giants by size traits, witchcraft, abductors, monster contracts) |
+| G300 – G302 | Other ogres | own state and behaviour in code | code (monsters, giants by size traits, witchcraft, abductors, monster contracts) |
+| G304 – G399 | Other ogres | own state and behaviour in code | code (monsters, giants by size traits, witchcraft, abductors, monster contracts) |
+| G400 – G499 | Falling into ogre’s power | own state and behaviour in code | code (monsters, giants by size traits, witchcraft, abductors, monster contracts) |
+| G500 – G599 | Ogre defeated | own state and behaviour in code | code (monsters, giants by size traits, witchcraft, abductors, monster contracts) |
+| G600 – G699 | Other ogre motifs | some typed state in code | code (monsters, giants by size traits, witchcraft, abductors, monster contracts) |
+| H0 – H199 | Identity tests: Recognition | some typed state in code | code (contests, ordeals, wedding challenges, heroquests, storylets, examinations) |
+| H200 – H299 | Tests of truth | own state and behaviour in code | code (contests, ordeals, wedding challenges, heroquests, storylets, examinations) |
+| H300 – H499 | Marriage tests | a label only | code (contests, ordeals, wedding challenges, heroquests, storylets, examinations) |
+| H500 – H699 | Tests of cleverness I | own state and behaviour in code | code (contests, ordeals, wedding challenges, heroquests, storylets, examinations) |
+| H700 – H899 | Tests of cleverness II | own state and behaviour in code | code (contests, ordeals, wedding challenges, heroquests, storylets, examinations) |
+| H900 – H1199 | Tests of prowess: tasks | own state and behaviour in code | code (contests, ordeals, wedding challenges, heroquests, storylets, examinations) |
+| H1000 – H1199 | Nature of tasks | own state and behaviour in code | code (contests, ordeals, wedding challenges, heroquests, storylets, examinations) |
+| H1200 – H1399 | Tests of prowess: quests | own state and behaviour in code | code (contests, ordeals, wedding challenges, heroquests, storylets, examinations) |
+| H1400 – H1599 | Other Tests | own state and behaviour in code | code (contests, ordeals, wedding challenges, heroquests, storylets, examinations) |
+| J0 – J199 | Acquisition and possession of wisdom (knowledge) | own state and behaviour in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J200 – J499 | Choices | own state and behaviour in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J500 – J599 | Prudence and discretion | a label only | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J600 – J799 | Forethought | own state and behaviour in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J800 – J899 | Adaptability | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J900 – J999 | Humility | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J1000 – J1099 | Other aspects of wisdom | some typed state in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J1100 – J1249 | Clever persons and acts | own state and behaviour in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J1250 – J1399 | Clever verbal retorts (repartee) I | own state and behaviour in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J1400 – J1499 | Clever verbal retorts (repartee) II | own state and behaviour in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J1500 – J1649 | Clever practical retorts | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J1650 – J1699 | Miscellaneous clever acts | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J1700 – J1749 | Fools (general) | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J1750 – J1849 | Absurd misunderstandings | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J1850–J1999 | Absurd disregard of facts | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2000 – J2049 | Absurd absent-mindedness | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2050 – J2199 | Absurd short-sightedness | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2200 – J2259 | Absurd lack of logic | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2260 – J2299 | Absurd scientific theories | own state and behaviour in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2300 – J2349 | Gullible fools | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2350 – J2399 | Talkative fools | some typed state in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2400 – J2449 | Foolish imitation | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2450 – J2499 | Literal fools | some typed state in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2500 – J2599 | Foolish extreme | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2600 – J2649 | Cowardly fool | a label only | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2650 – J2699 | Bungling fool | own state and behaviour in code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| J2700 – J2799 | The easy problem made hard | absent from code | code (traits, facets, wits, learning biases, theories, mishaps 47.10); 50.13 humour |
+| K0 – K99 | Contests won by deception | own state and behaviour in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K100 – K299 | Deceptive bargains | own state and behaviour in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K300 – K399 | Thefts and cheats I | a label only | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K400 – K499 | Thefts and cheats II | a label only | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K500 – K599 | Escape by deception I | some typed state in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K600 – K699 | Escape by deception II | some typed state in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K700 – K799 | Capture by deception | some typed state in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K800 – K999 | Killing or maiming by deception | some typed state in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K1000 – K1199 | Deception into self-injury | a label only | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K1200 – K1299 | Deception into humiliating position | a label only | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K1300 – K1399 | Seduction or deceptive marriage | a label only | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K1400 – K1499 | Dupe’s property destroyed | own state and behaviour in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K1500 – K1599 | Deceptions connected with adultery | own state and behaviour in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K1600 – K1699 | Deceiver falls into own trap | own state and behaviour in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K1700 – K1799 | Deception through bluffing | some typed state in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K1800 – K1899 | Deception by disguise or illusion | own state and behaviour in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K1900 – K1999 | Impostures | some typed state in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K2000 – K2099 | Hypocrites | absent from code | **50.29** |
+| K2100 – K2199 | False accusations | own state and behaviour in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K2200 – K2299 | Villains and traitors | a label only | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| K2300 – K2399 | Other deceptions | some typed state in code | code (schemes, intrigue, theft, assassination, forgery, false accusation, disguise, pacts) |
+| L0 – L99 | Victorious youngest child | own state and behaviour in code | code (storyteller arcs: rags to riches, rise and fall, redemption) |
+| L100 – L199 | Unpromising hero (heroine) | own state and behaviour in code | code (storyteller arcs: rags to riches, rise and fall, redemption) |
+| L200 – L299 | Modesty brings reward | a label only | code (storyteller arcs: rags to riches, rise and fall, redemption) |
+| L300 – L399 | Triumph of the weak | a label only | code (storyteller arcs: rags to riches, rise and fall, redemption) |
+| L400 – L499 | Pride brought low | some typed state in code | code (storyteller arcs: rags to riches, rise and fall, redemption) |
+| M0 – M99 | Judgments and decrees | own state and behaviour in code | code (rulings, decrees, oaths, pacts, prophecy, curses) |
+| M100 – M199 | Vows and oaths | own state and behaviour in code | code (rulings, decrees, oaths, pacts, prophecy, curses) |
+| M200 – M299 | Bargains and promises | own state and behaviour in code | code (rulings, decrees, oaths, pacts, prophecy, curses) |
+| M300 – M399 | Prophecies | own state and behaviour in code | code (rulings, decrees, oaths, pacts, prophecy, curses) |
+| M400 – M499 | Curses | some typed state in code | code (rulings, decrees, oaths, pacts, prophecy, curses) |
+| N0 – N99 | Wagers and gambling | own state and behaviour in code | code (fortune law K.37, mishaps 47.10, wagers, treasure, encounters 47.8.12, patrons) |
+| N100 – N299 | The ways of luck and fate | own state and behaviour in code | code (fortune law K.37, mishaps 47.10, wagers, treasure, encounters 47.8.12, patrons) |
+| N300 – N399 | Unlucky accidents | own state and behaviour in code | code (fortune law K.37, mishaps 47.10, wagers, treasure, encounters 47.8.12, patrons) |
+| N400 – N499 | Lucky accidents | own state and behaviour in code | code (fortune law K.37, mishaps 47.10, wagers, treasure, encounters 47.8.12, patrons) |
+| N500 – N599 | Treasure trove | own state and behaviour in code | code (fortune law K.37, mishaps 47.10, wagers, treasure, encounters 47.8.12, patrons) |
+| N600 – N699 | Other lucky accidents | own state and behaviour in code | code (fortune law K.37, mishaps 47.10, wagers, treasure, encounters 47.8.12, patrons) |
+| N700 – N799 | Accidental encounters | absent from code | code (fortune law K.37, mishaps 47.10, wagers, treasure, encounters 47.8.12, patrons) |
+| N800 – N899 | Helpers | own state and behaviour in code | code (fortune law K.37, mishaps 47.10, wagers, treasure, encounters 47.8.12, patrons) |
+| P0 – P99 | Royalty and nobility | own state and behaviour in code | code (titles, classes, estates, family, professions, government, customs) |
+| P100 – P199 | Other social orders | own state and behaviour in code | code (titles, classes, estates, family, professions, government, customs) |
+| P200 – P299 | The family | own state and behaviour in code | code (titles, classes, estates, family, professions, government, customs) |
+| P300 – P399 | Other social relationships | own state and behaviour in code | code (titles, classes, estates, family, professions, government, customs) |
+| P400 – P499 | Trades and professions | own state and behaviour in code | code (titles, classes, estates, family, professions, government, customs) |
+| P500 – P599 | Government | own state and behaviour in code | code (titles, classes, estates, family, professions, government, customs) |
+| P600 – P699 | Customs | own state and behaviour in code | code (titles, classes, estates, family, professions, government, customs) |
+| P700 – P799 | Society – miscellaneous motifs | some typed state in code | code (titles, classes, estates, family, professions, government, customs) |
+| Q0 – Q99 | Deeds rewarded | own state and behaviour in code | code (justice, divine rulings, punishments, rewards) |
+| Q100 – Q199 | Nature of rewards | own state and behaviour in code | code (justice, divine rulings, punishments, rewards) |
+| Q200 – Q299 | Deeds punished I | own state and behaviour in code | code (justice, divine rulings, punishments, rewards) |
+| Q300 – Q399 | Deeds punished II | some typed state in code | code (justice, divine rulings, punishments, rewards) |
+| Q400 – Q499 | Kinds of punishment I | own state and behaviour in code | code (justice, divine rulings, punishments, rewards) |
+| Q500 – Q549 | Kinds of punishment II | some typed state in code | code (justice, divine rulings, punishments, rewards) |
+| Q550 – Q599 | Kinds of punishment III | some typed state in code | code (justice, divine rulings, punishments, rewards) |
+| R0 – R99 | Captivity | own state and behaviour in code | code (captivity, rescue, escape, refuge) |
+| R100 – R199 | Rescues | a label only | code (captivity, rescue, escape, refuge) |
+| R200 – R299 | Escapes and pursuits | some typed state in code | code (captivity, rescue, escape, refuge) |
+| R300 – R399 | Refuges and recapture | some typed state in code | code (captivity, rescue, escape, refuge) |
+| S0 – S99 | Cruel relatives | some typed state in code | code (crimes, punishments, sacrifice, infanticide norms 50.8, persecution) |
+| S100 – S199 | Revolting murders or mutilations | a label only | code (crimes, punishments, sacrifice, infanticide norms 50.8, persecution) |
+| S200 – S299 | Cruel sacrifices | some typed state in code | code (crimes, punishments, sacrifice, infanticide norms 50.8, persecution) |
+| S300 – S399 | Abandoned or murdered children | own state and behaviour in code | code (crimes, punishments, sacrifice, infanticide norms 50.8, persecution) |
+| S400 – S499 | Cruel persecutions | some typed state in code | code (crimes, punishments, sacrifice, infanticide norms 50.8, persecution) |
+| T0 – T99 | Love | own state and behaviour in code | code (attraction, unions, households); 50.8 |
+| T100 – T199 | Marriage | own state and behaviour in code | code (attraction, unions, households); 50.8 |
+| T200 – T299 | Married life | some typed state in code | code (attraction, unions, households); 50.8 |
+| T300 – T399 | Chastity and celibacy | a label only | code (attraction, unions, households); 50.8 |
+| T400 – T499 | Illicit sexual relations | own state and behaviour in code | code (attraction, unions, households); 50.8 |
+| T500 – T599 | Conception and birth | own state and behaviour in code | code (attraction, unions, households); 50.8 |
+| T600 – T699 | Care of children | some typed state in code | code (attraction, unions, households); 50.8 |
+| U0 – U99 | Life's inequalities | own state and behaviour in code | code (classes, poverty, living standards) |
+| U100 – U299 | The nature of life – miscellaneous motifs | own state and behaviour in code | code (classes, poverty, living standards) |
+| V0 – V99 | Religious services | own state and behaviour in code | code (faith, temples, relics, clergy, doctrine, orders, miracles) |
+| V100 – V199 | Religious edifices and objects | own state and behaviour in code | code (faith, temples, relics, clergy, doctrine, orders, miracles) |
+| V200 – V299 | Sacred persons | own state and behaviour in code | code (faith, temples, relics, clergy, doctrine, orders, miracles) |
+| V300 – V399 | Religious beliefs | own state and behaviour in code | code (faith, temples, relics, clergy, doctrine, orders, miracles) |
+| V400 – V449 | Religious virtues | a label only | code (faith, temples, relics, clergy, doctrine, orders, miracles) |
+| V450 – V499 | Religious orders | own state and behaviour in code | code (faith, temples, relics, clergy, doctrine, orders, miracles) |
+| V500 – V599 | Religious motifs – miscellaneous | own state and behaviour in code | code (faith, temples, relics, clergy, doctrine, orders, miracles) |
+| W0 – W99 | Favorable traits of character | own state and behaviour in code | code (traits, values, virtues and vices) |
+| W100 – W199 | Unfavorable traits of character | own state and behaviour in code | code (traits, values, virtues and vices) |
+| W200 – W299 | Traits of character – miscellaneous | own state and behaviour in code | code (traits, values, virtues and vices) |
+| X0 – X99 | Humor of discomfiture | a label only | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X100 – X199 | Humor of disability | a label only | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X200 – X299 | Humor of social classes: Humor dealing with tradesmen | a label only | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X300 – X499 | Humor of social classes: . Humor dealing with professions | a label only | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X500 – X599 | Humor concerning other social classes | a label only | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X600 – X699 | Humor concerning races or nations | a label only | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X700 – X799 | Humor concerning sex | a label only | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X800 – X899 | Humor based on drunkenness | own state and behaviour in code | 50.13 humour; code (legend distortion, tall tales as legends) |
+| X900 – X909 | Humor of lies and exaggeration | own state and behaviour in code | 50.13 humour; code (legend distortion, tall tales as legends) |
+| X910 – X959 | Lie: the remarkable man – his birth, growth, death, physical powers, strength | own state and behaviour in code | 50.13 humour; code (legend distortion, tall tales as legends) |
+| X960 – X1019 | Lie: remarkable person's skills | own state and behaviour in code | 50.13 humour; code (legend distortion, tall tales as legends) |
+| X1020 – X1099 | Remarkable man's extraordinary possessions | absent from code | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X1100 – X1199 | Lie: great hunters and fishermen | own state and behaviour in code | 50.13 humour; code (legend distortion, tall tales as legends) |
+| X1200 – X1399 | Lies about animals | absent from code | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X1400 – X1499 | Lies about plants, fruits, vegetables, and trees | absent from code | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X1500 – X1599 | Lies about geography and topography | absent from code | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X1600 – X1699 | Lies about weather and climate | absent from code | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X1700 – X1799 | Lies: logical absurdities | absent from code | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| X1800 – X1899 | Miscellaneous lies and exaggerations | absent from code | **50.13**; also 50.13 humour; code (legend distortion, tall tales as legends) |
+| Z0 – Z19 | Formulas | absent from code | W48 48.7 art modes and verbal forms; 48.3 emblems; code (heroes, heraldry) |
+| Z20 – Z59 | Cumulative tales | a label only | W48 48.7 art modes and verbal forms; 48.3 emblems; code (heroes, heraldry) |
+| Z60 –Z99 | Other formulistic motifs | absent from code | W48 48.7 art modes and verbal forms; 48.3 emblems; code (heroes, heraldry) |
+| Z100 – Z199 | Symbolism | own state and behaviour in code | W48 48.7 art modes and verbal forms; 48.3 emblems; code (heroes, heraldry) |
+| Z200 – Z299 | Heroes | own state and behaviour in code | W48 48.7 art modes and verbal forms; 48.3 emblems; code (heroes, heraldry) |
+| Z300 – Z399 | Unique exceptions | some typed state in code | W48 48.7 art modes and verbal forms; 48.3 emblems; code (heroes, heraldry) |
