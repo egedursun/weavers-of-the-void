@@ -97,6 +97,8 @@ async def take_contract(call: MortalCall, args: TakeContractInput) -> str:
     beast = await living_entity(call.session, row.beast_entity_id)
     if beast is None or beast.world_id != call.me.world_id:
         fail(MortalResult.CONTRACT_DECLINED, why="its quarry is beyond your world")
+    if held(beast.id):
+        fail(MortalResult.CONTRACT_DECLINED, why="a stronger hand holds its quarry")
     try:
         await constructs.assign_hunter(call.tick, row.id, call.me.id)
     except ValidationFailedError as error:
@@ -110,6 +112,8 @@ async def command_construct(call: MortalCall, args: CommandConstructInput) -> st
     body = await living_entity(call.session, args.construct_id)
     if body is None or await call.session.get(ConstructRow, body.id) is None:
         fail(MortalResult.COMMAND_DECLINED, why="there is no such construct")
+    if held(body.id):
+        fail(MortalResult.COMMAND_DECLINED, why="a stronger hand holds it")
     rules = await constructs.rules_of(call.tick, body.id)
     if rules is None or await holder_of(call.tick, rules) != call.me.id:
         fail(MortalResult.COMMAND_DECLINED, why="you do not hold what commands it")

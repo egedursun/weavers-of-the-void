@@ -4,12 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.arts_lines import mortal_arts_lines, son_arts_lines
 from aerona.agents.context.scope import load_scope
 from aerona.db.repositories.cosmos import CosmosRepository
-from aerona.db.tables.arts import ArtMovementRow, ArtPriceRow, BetRow, CanonWorkRow, CollectorRow, ForgeryRow
+from aerona.db.tables.arts import ArtMovementRow, ArtPriceRow, BetRow, CanonWorkRow, CollectorRow, ForgeryRow, MatchRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import MovementRow
 from aerona.db.tables.constructs import InstructionOrderRow, InstructionSetRow, RemadeRow
 from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.tables.culture import ArtworkProfileRow
+from aerona.db.tables.discovery import ArtFormProfileRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -21,12 +22,13 @@ from aerona.db.tables.polity import ClaimRow, OfficeRow, PolityMemberRow, Polity
 from aerona.db.tables.sacred import BirthSignRow, DivinationSystemRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow
-from aerona.domain.enums.arts import CanonPath, ClubKind, FandomLine, ForgeryKind, ForgeryStatus
+from aerona.domain.enums.arts import ArtMarketRole, CanonPath, ClubKind, FandomLine, ForgeryKind, ForgeryStatus
 from aerona.domain.enums.body import BodyFunction
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import CollectiveActKind
 from aerona.domain.enums.constructs import CommandToken, ContractStatus, MindWill, OrderCondition, OrderKind
 from aerona.domain.enums.culture import ArtMedium, MagicSource
+from aerona.domain.enums.discovery import ArtDiscipline
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
@@ -37,17 +39,30 @@ from aerona.domain.enums.mind import SkillKind, SkillSource, TraitKind, TraitSou
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.sacred import DivinationKind, DivinationValidity, SignInfluence
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.domain.models.entity_stats import ArmyStats, ArtworkStats, BeastStats, CelestialStats, PeopleStats, PolityStats, SpiritStats, TitleStats
+from aerona.domain.models.entity_stats import (
+    ArmyStats,
+    ArtFormStats,
+    ArtworkStats,
+    BeastStats,
+    CelestialStats,
+    HouseStats,
+    PeopleStats,
+    PolityStats,
+    SpiritStats,
+    TitleStats,
+)
 from aerona.engine.arts import control as arts
 from aerona.engine.arts.forgery import ForgeryTally, examine, forge, forge_works
-from aerona.engine.arts.movements import MovementTally, form_canon, found_movements, teach_canon, tend_movements
-from aerona.engine.arts.sport import SportTally, buy_favour, play, prowess, read_line
+from aerona.engine.arts.market import COLLECTOR_ROLES, MarketTally, bidder_for, gather_collectors
+from aerona.engine.arts.movements import MovementTally, form_canon, found_movements, honour_forms, teach_canon, tend_movements
+from aerona.engine.arts.sport import SportTally, buy_favour, play, prowess, read_line, settle_bets
 from aerona.engine.constructs.making import Design, make_construct
-from aerona.engine.constructs.orders import OrderTally, keep_constructs
+from aerona.engine.constructs.orders import OrderTally, keep_constructs, renewer_near
 from aerona.engine.constructs.remaking import RemadeTally, keep_remade, may_remake, remake
 from aerona.engine.constructs.wards import SealTally, keep_seals, unbind
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.contracts import ContractTally, keep_contracts
+from aerona.engine.economy.purse import coin_of
 from aerona.engine.intrigue.schemes import choose_kind, forge_work
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.primitives.manual import manual_context
@@ -133,10 +148,14 @@ async def test_fans_split_by_class_give_a_club_leverage_and_a_weak_ruler_buys_it
     club.fandom = 100
     await read_line(ctx, club, town)
     assert club.line is FandomLine.CLASS and club.leverage > 0
+    backers = await session.get(EntityRow, club.faction_entity_id)
+    assert backers is not None
+    before = await coin_of(session, ctx.rules, backers)
     tally = SportTally()
     await buy_favour(ctx, tally)
     profile = await session.get(MortalProfileRow, ruler.id)
     assert tally.bought == 1 and club.bought_by_entity_id is not None
+    assert await coin_of(session, ctx.rules, backers) > before
     assert profile is not None and (profile.legitimacy or 0) > 10
 
 
@@ -177,13 +196,13 @@ async def test_a_priced_work_is_forged_and_a_keen_eyed_collector_exposes_it(sess
     await forge_works(ctx, tally)
     row = await session.scalar(select(ForgeryRow).where(ForgeryRow.forger_entity_id == forger.id))
     assert tally.forged == 1 and row is not None and row.kind is ForgeryKind.ARTWORK and row.original_entity_id == piece.id
-    session.add(ArtPriceRow(artwork_entity_id=row.item_entity_id, price=300, locked=[]))
+    session.add(ArtPriceRow(artwork_entity_id=row.item_entity_id, price=300, provenance=40, locked=["provenance"]))
     await session.flush()
     await examine(ctx, tally)
     profile = await session.get(MortalProfileRow, forger.id)
     copy = await session.get(ArtPriceRow, row.item_entity_id)
     assert row.status is ForgeryStatus.EXPOSED and row.exposed_by_entity_id == critic.id
-    assert copy is not None and copy.price == 0 and profile is not None and profile.infamy > 0
+    assert copy is not None and copy.price == 0 and copy.provenance == 40 and profile is not None and profile.infamy > 0
 
 
 async def test_a_forged_charter_gives_a_fabricated_claim_that_dies_with_its_exposure(session: AsyncSession, world: CoreWorld) -> None:
@@ -322,6 +341,21 @@ async def test_a_raided_town_posts_a_bounty_and_a_studied_hunt_slays_the_beast(s
     assert row.status is ContractStatus.SLAIN and row.hunter_entity_id == hunter.id and tally.slain == 1
     profile = await session.get(MortalProfileRow, hunter.id)
     assert beast.status is not EntityStatus.CANON and profile is not None and profile.renown > 0
+    ballad = await session.scalar(
+        select(EntityRow)
+        .join(BondRow, BondRow.source_node_id == EntityRow.id)
+        .where(
+            EntityRow.entity_type == EntityType.LEGEND,
+            EntityRow.subtype == "heroic ballad",
+            BondRow.kind == BondKind.TELLS_OF,
+            BondRow.target_node_id == beast.id,
+        )
+    )
+    assert ballad is not None and ballad.name == "Rook and The Ashen Maw"
+    sung = await session.scalar(
+        select(BondRow).where(BondRow.source_node_id == town.id, BondRow.target_node_id == ballad.id, BondRow.kind == BondKind.TELLS_OF)
+    )
+    assert sung is not None
 
 
 async def test_a_dreaded_birth_under_a_ruling_sky_is_shaped_by_it_and_sent_away_by_star_readers(session: AsyncSession, world: CoreWorld) -> None:
@@ -351,9 +385,12 @@ async def test_a_dreaded_birth_under_a_ruling_sky_is_shaped_by_it_and_sent_away_
 async def test_a_court_deep_in_magic_remakes_the_condemned_who_labour_and_rise(session: AsyncSession, world: CoreWorld) -> None:
     town = await settlement(session, "Grimhold", world, world.regions[0])
     folk = await people_of(session, world, town)
-    lore = await knowledge(session, world, "Deep Workings", KnowledgeBranch.MAGIC)
+    lore = await knowledge(session, world, "Deep Workings", KnowledgeBranch.BIOMANCY)
     await bond(session, folk.id, lore.id, BondKind.KNOWS)
     session.add(society(town.id, SocialClass.FARMER))
+    await write_values(session, ValueHolder.CULTURE, folk.id, {ValueAxis.MERCY: 10})
+    assert not await may_remake(await at(session, 3, punitive_remaking={"magic_floor": 1}), town.id)
+    await write_values(session, ValueHolder.CULTURE, folk.id, {ValueAxis.MERCY: -60})
     convict = await mortal(session, "Tobin", world, town.id, charisma=60, agility=60, strength=40)
     await session.flush()
     ctx = await at(session, 3, punitive_remaking={"magic_floor": 1, "revolt_count": 1, "revolt_grievance": 10})
@@ -424,3 +461,90 @@ async def test_the_values_a_canon_carries_pull_its_people_across_generations(ses
     await teach_canon(await at(session, 4, canon={"value_pull": 50}), tally)
     values = await stored_values(session, ValueHolder.CULTURE, folk.id)
     assert tally.taught == 1 and values[ValueAxis.HONOUR] == 50
+
+
+async def test_a_contested_work_at_a_fair_fetches_more_and_noble_houses_collect(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Fairhaven", world, world.regions[0])
+    maker = await mortal(session, "Ilse", world, town.id)
+    piece = await work(session, world, "The Long Harvest", maker, town)
+    price = ArtPriceRow(artwork_entity_id=piece.id, price=100, locked=[])
+    session.add(price)
+    buyers = [await mortal(session, name, world, town.id) for name in ("Abel", "Brina", "Corin")]
+    for buyer in buyers:
+        session.add(MortalProfileRow(entity_id=buyer.id, wealth=100, locked=[]))
+        session.add(CollectorRow(holder_entity_id=buyer.id, connoisseurship=40, locked=[]))
+    house = await entity(session, "House Varro", EntityType.HOUSE, HouseStats(), world_id=world.world.id)
+    await session.flush()
+    ctx = await at(session, 3, art_markets={"auction_pct": 20, "collector_chance": 100})
+    profile = await session.get(ArtworkProfileRow, piece.id)
+    assert profile is not None
+    quiet = await bidder_for(ctx, price, profile, maker.id, auction=False)
+    assert quiet is not None and price.price == 100
+    winner = await bidder_for(ctx, price, profile, maker.id, auction=True)
+    assert winner is not None and price.price == 140
+    price.locked = ["price"]
+    await bidder_for(ctx, price, profile, maker.id, auction=True)
+    assert price.price == 140
+    await gather_collectors(ctx, MarketTally())
+    collection = await session.get(CollectorRow, house.id)
+    assert collection is not None and collection.role is ArtMarketRole.PATRON is COLLECTOR_ROLES[EntityType.HOUSE]
+
+
+async def test_works_in_a_canon_lend_their_art_form_prestige_unless_it_is_locked(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Lyrewell", world, world.regions[0])
+    folk = await people_of(session, world, town)
+    maker = await mortal(session, "Odette", world, town.id)
+    form = await entity(session, "Ringing Verse", EntityType.ART_FORM, ArtFormStats(), world_id=world.world.id)
+    form_row = ArtFormProfileRow(art_form_entity_id=form.id, discipline=ArtDiscipline.POETRY, prestige=5, locked=[])
+    session.add(form_row)
+    pieces = [await work(session, world, name, maker, town) for name in ("First Verse", "Second Verse", "Third Verse")]
+    for piece in pieces:
+        profile = await session.get(ArtworkProfileRow, piece.id)
+        assert profile is not None
+        profile.art_form_entity_id = form.id
+        session.add(CanonWorkRow(people_entity_id=folk.id, artwork_entity_id=piece.id, path=CanonPath.RENOWN, locked=[]))
+    await session.flush()
+    await honour_forms(await at(session, 3, canon={"form_prestige": 10}))
+    assert form_row.prestige == 30
+    await honour_forms(await at(session, 4, canon={"form_prestige": 10}))
+    assert form_row.prestige == 30
+    form_row.prestige, form_row.locked = 5, ["prestige"]
+    await honour_forms(await at(session, 5, canon={"form_prestige": 10}))
+    assert form_row.prestige == 5
+
+
+async def test_the_losers_stakes_are_shared_among_the_winners_by_their_stakes(session: AsyncSession, world: CoreWorld) -> None:
+    towns = [await settlement(session, name, world, world.regions[0], wealth=50) for name in ("Ashby", "Brook", "Crane")]
+    ctx = await at(session, 2)
+    home = await arts.start_club(ctx, towns[0].id, ClubKind.TEAM_GAME)
+    away = await arts.start_club(ctx, towns[2].id, ClubKind.TEAM_GAME)
+    match = MatchRow(home_entity_id=home.faction_entity_id, away_entity_id=away.faction_entity_id, winner_entity_id=home.faction_entity_id, epoch=2, locked=[])
+    session.add(match)
+    await session.flush()
+    for town, club, stake in ((towns[0], home, 2), (towns[1], home, 6), (towns[2], away, 8)):
+        session.add(BetRow(match_id=match.id, settlement_entity_id=town.id, club_entity_id=club.faction_entity_id, stake=stake, locked=[]))
+    await session.flush()
+    await settle_bets(ctx, match)
+    assert [stat_or(town, "wealth", 0) for town in towns] == [52, 56, 42]
+
+
+async def test_a_skilled_maker_of_the_town_renews_a_construct_whose_maker_is_dead(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Cogsby", world, world.regions[0])
+    maker = await mortal(session, "Hale", world, town.id)
+    heir = await mortal(session, "Ysolde", world, town.id)
+    session.add(SkillRow(holder_node_id=heir.id, skill=SkillKind.ENGINEERING, level=6, peak=6, last_used_epoch=1, source=SkillSource.PRACTICE))
+    ctx = await at(session, 2)
+    row = await make_construct(ctx, maker, Design(material=MaterialKind.IRON, source=MagicSource.LEY, token=CommandToken.WORD))
+    construct = await session.get(EntityRow, row.entity_id)
+    assert construct is not None
+    maker.status, maker.end_epoch = EntityStatus.DEAD, 2
+    await session.flush()
+    assert await renewer_near(ctx, construct) is heir
+    row.power = 50
+    await keep_constructs(await at(session, 3), OrderTally())
+    renewed = row.power
+    heir.status, heir.end_epoch = EntityStatus.DEAD, 3
+    row.power = 50
+    await session.flush()
+    await keep_constructs(await at(session, 4), OrderTally())
+    assert renewed > row.power

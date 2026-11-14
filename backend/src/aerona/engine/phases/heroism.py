@@ -6,7 +6,6 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import several
-from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -16,13 +15,12 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.ecology import BeastTemper
-from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.war import WarCause
-from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
@@ -38,6 +36,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
 from aerona.engine.mind.memories import remember
+from aerona.engine.mythic.ballads import carry_legend, sing_of_slaying, tell_legend
 from aerona.engine.nature.sleepers import lair_factor
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -46,16 +45,14 @@ from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, close, connect, living_entity
-from aerona.engine.primitives.records import RecordSpec, open_record, retire
+from aerona.engine.primitives.records import retire
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.primitives.strength import equipment, species_trait_bonus, weapon_power
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.services.war import declare_war
 
 VICTORY_KINDS = (BondKind.KILLED, BondKind.BEAT)
-CARRIER_BOND_KINDS = (BondKind.LIVES_IN, BondKind.DESCENDS_FROM)
 EPIC_SUBTYPE = "age-changing epic"
-BALLAD_SUBTYPE = "heroic ballad"
 LAMENT_SUBTYPE = "lament"
 
 
@@ -89,44 +86,6 @@ async def wild_beasts(ctx: TickContext) -> list[EntityRow]:
         .order_by(EntityRow.id)
     )
     return list(rows)
-
-
-async def legend_carrier(ctx: TickContext, hero: EntityRow) -> EntityRow | None:
-    location = await living_entity(ctx.session, hero.location_id)
-    if location is not None and location.entity_type in COMMUNITY_TYPES:
-        return location
-    repository = BondRepository(ctx.session)
-    bonds = [bond for kind in CARRIER_BOND_KINDS for bond in await repository.outgoing(hero.id, kind, active_only=False)]
-    for bond in sorted(bonds, key=lambda item: (item.active, item.id), reverse=True):
-        target = await living_entity(ctx.session, bond.target_node_id)
-        if target is not None and target.entity_type in COMMUNITY_TYPES:
-            return target
-    return None
-
-
-async def carry_legend(ctx: TickContext, hero: EntityRow, legend: EntityRow, description: str) -> None:
-    carrier = await legend_carrier(ctx, hero)
-    if carrier is not None:
-        await connect(ctx.session, carrier.id, legend.id, BondKind.TELLS_OF, ctx.epoch, description=description)
-
-
-async def _legend(ctx: TickContext, *, name: str, subtype: str, body: str, power: int, spread: int, subjects: list[EntityRow]) -> EntityRow:
-    legend = await open_record(
-        ctx.session,
-        ctx.epoch,
-        RecordSpec(
-            entity_type=EntityType.LEGEND,
-            name=name,
-            body=body,
-            stats=LegendStats(spread=spread),
-            power=power,
-            world_id=subjects[0].world_id,
-            subtype=subtype,
-        ),
-    )
-    for subject in subjects:
-        await connect(ctx.session, legend.id, subject.id, BondKind.TELLS_OF, ctx.epoch)
-    return legend
 
 
 async def hero_power(ctx: TickContext, hero: EntityRow, patron: SonRow | None, roll: int) -> float:
@@ -230,7 +189,7 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
         hero.title = f"{monster.name} Slayer"
         await add_flag(ctx.session, hero.id, EntityFlag.AGE_CHANGER, ctx.epoch)
         hero.power_level = min(hunt.power_cap, hero.power_level + hunt.megafauna_slayer_power_gain)
-        epic = await _legend(
+        epic = await tell_legend(
             ctx,
             name=f"The Fall of {monster.name}",
             subtype=EPIC_SUBTYPE,
@@ -257,16 +216,7 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
     await _reward_weapon(ctx, hero, monster)
     ballad: EntityRow | None = None
     if slain:
-        ballad = await _legend(
-            ctx,
-            name=f"{hero.name} and {monster.name}",
-            subtype=BALLAD_SUBTYPE,
-            body=f"{hero.name}, {context}, killed {monster.name}. The mortals began to tell of it.",
-            power=hunt.ballad_power,
-            spread=hunt.ballad_spread,
-            subjects=[hero, monster],
-        )
-        await carry_legend(ctx, hero, ballad, "sings their ballad")
+        ballad = await sing_of_slaying(ctx, hero, monster, context)
     deed = "killed it" if slain else "drove it back"
     ids = [hero.id, monster.id] + ([ballad.id] if ballad is not None else [])
     await note(ctx, f"{hero.name}, {context}, faced {monster.name} and {deed}.", key="heroism.victory", ids=ids, son_id=patron.id if patron else None)
@@ -307,7 +257,7 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
     style = await strike_style(ctx.session, ctx.rules, monster, hero)
     await fatal_injury(ctx, hero, Harm(hunt.armor_save_hp_loss, HarmCause.MONSTER, f"fell before {monster.name}", style=style, killer_id=monster.id))
     await die(ctx, hero, cause=f"fell before {monster.name}", manner=DeathCause.MONSTER, killer_id=monster.id, forced=True)
-    lament = await _legend(
+    lament = await tell_legend(
         ctx,
         name=f"Lament for {hero.name}",
         subtype=LAMENT_SUBTYPE,

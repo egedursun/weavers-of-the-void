@@ -26,7 +26,7 @@ ARTS_MECHANICS = (
         subsystem=S.CULTURE,
         phases=("art_market",),
         surface=Surface(drawer=DRAWER, chart=PRICES),
-        backfill="art_market: rulers, churches and renowned mortals take up collecting and every work is priced over the epochs after the upgrade",
+        backfill="art_market: rulers, noble houses, churches and renowned mortals take up collecting and every work is priced in the epochs after the upgrade",
         templates=("arts.sold", "arts.lured"),
         tables=(ArtPriceRow.__tablename__, ArtSaleRow.__tablename__, CollectorRow.__tablename__),
         exposure=Exposure.TOOL,
@@ -37,6 +37,7 @@ ARTS_MECHANICS = (
             Coupling(S.SOCIAL, "the renown of the maker raises the price of a work", E.MODIFIER, "art_markets.renown_pct"),
             Coupling(S.POLITY, "a court full of works draws renowned makers to the capital", E.TRIGGER, "art_markets.lure_chance"),
             Coupling(S.SOCIAL, "fairs and gatherings bring buyers and sellers together", E.MODIFIER, "art_markets.gathering_pct"),
+            Coupling(S.ECONOMY, "rival bidders at a fair raise a work's price", E.MODIFIER, "art_markets.auction_pct"),
         ),
     ),
     Mechanic(
@@ -77,6 +78,7 @@ ARTS_MECHANICS = (
             Coupling(S.ECONOMY, "a work in the canon fetches a higher price", E.MODIFIER, "art_markets.canon_pct"),
             Coupling(S.CULTURE, "rival movements contest the canon and wear works out of it", E.FLOW, "canon.contest_loss"),
             Coupling(S.MIND, "the values a canon carries pull the values of its people across generations", E.FLOW, "canon.value_pull"),
+            Coupling(S.CULTURE, "works in a canon lend their art form prestige", E.FLOW, "canon.form_prestige"),
         ),
     ),
     Mechanic(
@@ -134,6 +136,7 @@ ARTS_MECHANICS = (
         couplings=(
             Coupling(S.SOCIAL, "a lost match sparks a riot where fans hold leverage", E.TRIGGER, "circus_factions.riot_chance"),
             Coupling(S.POLITY, "a ruler low in legitimacy buys a club's favour", E.FLOW, "circus_factions.buy_cost"),
+            Coupling(S.ECONOMY, "the coin a ruler pays for favour goes to the club", E.FLOW, "circus_factions.buy_cost"),
             Coupling(S.POLITY, "a bought club lends its ruler legitimacy", E.FLOW, "circus_factions.buy_gain"),
             Coupling(S.FAITH, "fans of a faith line follow the town's church", E.MODIFIER, "circus_factions.line_share"),
         ),
@@ -158,6 +161,7 @@ ARTS_MECHANICS = (
             Coupling(S.FAITH, "a bound soul lets a construct grow a will of its own", E.TRIGGER, "constructs.will_chance"),
             Coupling(S.SOCIAL, "a construct past every order rises against its maker", E.TRIGGER, "constructs.will_chance"),
             Coupling(S.MAGIC, "a dispel drains a construct's power", E.FLOW, "constructs.upkeep"),
+            Coupling(S.KNOWLEDGE, "a skilled maker of the same town renews a construct whose maker is dead", E.FLOW, "constructs.renew"),
             Coupling(S.WAR, "construct stacks stand still without their seal", E.RULE_SWITCH, "constructs.maker_magic"),
         ),
     ),
@@ -178,6 +182,7 @@ ARTS_MECHANICS = (
             Coupling(S.ECONOMY, "the town pays the bounty to the slayer", E.FLOW, "monster_contracts.bounty"),
             Coupling(S.BODY, "a failed hunt wounds the hunter", E.FLOW, "monster_contracts.wound"),
             Coupling(S.SOCIAL, "a slain beast brings its hunter renown", E.FLOW, "monster_contracts.renown"),
+            Coupling(S.CULTURE, "a slain beast passes into a ballad its hunter's town sings", E.TRIGGER, "world_hunt.ballad_power"),
             Coupling(S.KNOWLEDGE, "study of the quarry makes the hunt likelier", E.MODIFIER, "monster_contracts.study_step"),
         ),
     ),
@@ -215,7 +220,8 @@ ARTS_MECHANICS = (
         exposure=Exposure.CONTEXT,
         targets=("mortal", "settlement", "polity"),
         couplings=(
-            Coupling(S.MAGIC, "only peoples deep in magic can remake", E.RULE_SWITCH, "punitive_remaking.magic_floor"),
+            Coupling(S.MAGIC, "only peoples deep in magic or biomancy can remake", E.RULE_SWITCH, "punitive_remaking.magic_floor"),
+            Coupling(S.MIND, "only a people whose values hold little mercy remakes the condemned", E.RULE_SWITCH, "punitive_remaking.cruel_mercy"),
             Coupling(S.ECONOMY, "the remade labour for their town", E.FLOW, "punitive_remaking.labour_goods"),
             Coupling(S.SOCIAL, "the grievance of the remade rises in revolt", E.TRIGGER, "punitive_remaking.revolt_grievance"),
         ),

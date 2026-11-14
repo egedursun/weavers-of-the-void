@@ -3462,7 +3462,7 @@ MECHANIC_ACTIONS = (
     _sync(Meta("lever:pin", "Pin a field so that no mechanic can change it", G.SETTINGS), levers.pin_field, levers.PinField, free, ("J.16c",)),
     _sync(Meta("lever:unpin", "Release a pinned field", G.SETTINGS), levers.unpin_field, levers.UnpinField, free, ("J.16c",)),
     _sync(
-        Meta("lever:suppress", "Suppress a mechanic on a record for some epochs", G.SETTINGS),
+        Meta("lever:suppress", "Suppress a mechanic on a record for some epochs, in the engine and in the tools of gods and mortals", G.SETTINGS),
         levers.suppress_mechanic,
         levers.SuppressMechanic,
         free,

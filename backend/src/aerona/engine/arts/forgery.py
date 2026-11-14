@@ -255,6 +255,7 @@ async def expose(ctx: TickContext, row: ForgeryRow, expert_id: int | None) -> No
     price = await ctx.session.get(ArtPriceRow, row.item_entity_id)
     if price is not None and "price" not in price.locked:
         price.price = 0
+    if price is not None and "provenance" not in price.locked:
         price.provenance = 0
     relic = await ctx.session.get(RelicRow, row.item_entity_id)
     if relic is not None and "sanctity" not in relic.locked:

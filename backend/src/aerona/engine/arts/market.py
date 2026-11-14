@@ -11,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arts import ArtMarketRole
 from aerona.domain.enums.bond import BondKind, BondState
@@ -21,11 +22,15 @@ from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import close, connect, living_entity
-from aerona.engine.renown.currencies import members_of
 from aerona.engine.sacred.places import realm_of_town, region_of, town_of
 
 MIDDLING = 50
-COLLECTOR_ROLES = {EntityType.POLITY: ArtMarketRole.PATRON, EntityType.CULT: ArtMarketRole.COLLECTOR, EntityType.FACTION: ArtMarketRole.DEALER}
+COLLECTOR_ROLES = {
+    EntityType.POLITY: ArtMarketRole.PATRON,
+    EntityType.HOUSE: ArtMarketRole.PATRON,
+    EntityType.CULT: ArtMarketRole.COLLECTOR,
+    EntityType.FACTION: ArtMarketRole.DEALER,
+}
 
 
 @dataclass
@@ -61,7 +66,7 @@ async def gather_collectors(ctx: TickContext, tally: MarketTally) -> None:
         .where(
             EntityRow.status == EntityStatus.CANON,
             EntityRow.id.not_in(known),
-            (EntityRow.entity_type.in_([EntityType.POLITY, EntityType.CULT])) | (EntityRow.id.in_(guilds)),
+            (EntityRow.entity_type.in_([EntityType.POLITY, EntityType.HOUSE, EntityType.CULT])) | (EntityRow.id.in_(guilds)),
         )
         .order_by(EntityRow.id)
     )
@@ -146,19 +151,28 @@ async def fair_regions(ctx: TickContext) -> dict[int, int]:
     return regions
 
 
-async def bidder_for(ctx: TickContext, row: ArtPriceRow, profile: ArtworkProfileRow, seller_id: int | None) -> EntityRow | None:
-    collectors = list(await ctx.session.scalars(select(CollectorRow).order_by(CollectorRow.holder_entity_id)))
-    best: tuple[int, int, EntityRow] | None = None
-    for collector in collectors:
+async def bidders_for(ctx: TickContext, row: ArtPriceRow, profile: ArtworkProfileRow, seller_id: int | None) -> list[tuple[int, int, int, EntityRow]]:
+    found: list[tuple[int, int, int, EntityRow]] = []
+    for collector in list(await ctx.session.scalars(select(CollectorRow).order_by(CollectorRow.holder_entity_id))):
         if collector.holder_entity_id == seller_id or held(collector.holder_entity_id):
             continue
         holder = await living_entity(ctx.session, collector.holder_entity_id)
-        if holder is None or await coin_of(ctx.session, ctx.rules, holder) < row.price:
+        purse = await coin_of(ctx.session, ctx.rules, holder) if holder is not None else 0
+        if holder is None or purse < row.price:
             continue
-        keen = (1 if collector.taste_form_entity_id == profile.art_form_entity_id else 0, collector.connoisseurship)
-        if best is None or keen > best[:2]:
-            best = (keen[0], keen[1], holder)
-    return best[2] if best is not None else None
+        found.append((1 if collector.taste_form_entity_id == profile.art_form_entity_id else 0, collector.connoisseurship, purse, holder))
+    return sorted(found, key=lambda item: (-item[0], -item[1], item[3].id))
+
+
+async def bidder_for(ctx: TickContext, row: ArtPriceRow, profile: ArtworkProfileRow, seller_id: int | None, *, auction: bool) -> EntityRow | None:
+    bidders = await bidders_for(ctx, row, profile, seller_id)
+    if not bidders:
+        return None
+    _, _, purse, winner = bidders[0]
+    if auction and len(bidders) > 1 and "price" not in row.locked:
+        raised = round_half_up(row.price * (1 + ctx.rules.art_markets.auction_pct * (len(bidders) - 1) / PERCENT))
+        row.price = min(purse, raised)
+    return winner
 
 
 async def sell(
@@ -214,7 +228,7 @@ async def trade_works(ctx: TickContext, tally: MarketTally) -> None:
         if not ctx.rng(f"sale.{artwork.id}").chance(chance):
             continue
         seller = await owner_of(ctx, artwork.id)
-        buyer = await bidder_for(ctx, row, profile, seller)
+        buyer = await bidder_for(ctx, row, profile, seller, auction=region is not None and region.id in fairs)
         if buyer is None:
             continue
         sale = await sell(ctx, artwork, row, buyer, seller_id=seller, fair_place_id=fairs.get(region.id) if region is not None else None)
@@ -264,17 +278,9 @@ async def court_patronage(ctx: TickContext, tally: MarketTally) -> None:
         home = await town_of(ctx.session, artist)
         if home is not None and await realm_of_town(ctx.session, home.id) == target[1]:
             continue
-        capital = await ctx.session.scalar(
-            select(EntityRow.id)
-            .where(
-                EntityRow.entity_type == EntityType.SETTLEMENT,
-                EntityRow.status == EntityStatus.CANON,
-                EntityRow.id.in_(await members_of(ctx.session, target[1])),
-            )
-            .order_by(EntityRow.id)
-            .limit(1)
-        )
-        if capital is None:
+        seat = await ctx.session.get(PolityProfileRow, target[1])
+        capital = seat.capital_entity_id if seat is not None else None
+        if capital is None or held(capital):
             continue
         artist.location_id = int(capital)
         tally.lured += 1

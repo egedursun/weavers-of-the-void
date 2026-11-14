@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.arts import ArtMovementRow, CanonWorkRow, CollectorRow
 from aerona.db.tables.culture import ArtworkProfileRow
+from aerona.db.tables.discovery import ArtFormProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.write_guard import held
@@ -252,10 +253,28 @@ async def teach_canon(ctx: TickContext, tally: MovementTally) -> None:
         tally.taught += 1
 
 
+async def honour_forms(ctx: TickContext) -> None:
+    step = ctx.rules.canon.form_prestige
+    forms = Counter(
+        form
+        for form in await ctx.session.scalars(
+            select(ArtworkProfileRow.art_form_entity_id)
+            .join(CanonWorkRow, CanonWorkRow.artwork_entity_id == ArtworkProfileRow.artwork_entity_id)
+            .where(ArtworkProfileRow.art_form_entity_id.is_not(None))
+        )
+        if form is not None
+    )
+    for form_id, works in sorted(forms.items()):
+        form = await ctx.session.get(ArtFormProfileRow, form_id)
+        if form is not None and not held(form_id) and "prestige" not in form.locked:
+            form.prestige = max(form.prestige, clamp_int(works * step, 0, PERCENT))
+
+
 async def keep_movements(ctx: TickContext, tally: MovementTally) -> None:
     await found_movements(ctx, tally)
     await tend_movements(ctx, tally)
     await form_canon(ctx, tally)
     await contest_canon(ctx, tally)
     await teach_canon(ctx, tally)
+    await honour_forms(ctx)
     await ctx.session.flush()

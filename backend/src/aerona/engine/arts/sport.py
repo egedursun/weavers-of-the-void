@@ -18,7 +18,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.collective.crowds import CrowdTally, spark
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import take_coin
+from aerona.engine.economy.purse import receive_coin, take_coin
 from aerona.engine.notes import note
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.folk import present_among
@@ -171,12 +171,16 @@ async def wager(ctx: TickContext, match: MatchRow, club: ClubRow, home: EntityRo
 
 
 async def settle_bets(ctx: TickContext, match: MatchRow) -> None:
-    for bet in await ctx.session.scalars(select(BetRow).where(BetRow.match_id == match.id)):
-        town = await living_entity(ctx.session, bet.settlement_entity_id)
+    bets = list(await ctx.session.scalars(select(BetRow).where(BetRow.match_id == match.id).order_by(BetRow.id)))
+    for bet in bets:
         bet.won = bet.club_entity_id == match.winner_entity_id
+    staked_on_winner = sum(bet.stake for bet in bets if bet.won)
+    lost_pool = sum(bet.stake for bet in bets if not bet.won)
+    for bet in bets:
+        town = await living_entity(ctx.session, bet.settlement_entity_id)
         if town is None or held(town.id):
             continue
-        shift = bet.stake if bet.won else -bet.stake
+        shift = round_half_up(lost_pool * bet.stake / staked_on_winner) if bet.won and staked_on_winner else -bet.stake
         set_stats(town, wealth=clamp_int(stat_or(town, "wealth", 0) + shift, 0, PERCENT))
 
 
@@ -251,7 +255,14 @@ async def play_seasons(ctx: TickContext, tally: SportTally) -> None:
                 league.champion_entity_id = champion.faction_entity_id
             league.season_epoch = ctx.epoch
             tally.champions += 1
-            await note(ctx, "A champion was named in the league.", key="sport.champion", ids=[league.faction_entity_id, champion.faction_entity_id])
+            named = await ctx.session.get(EntityRow, champion.faction_entity_id)
+            circuit = await ctx.session.get(EntityRow, league.faction_entity_id)
+            await note(
+                ctx,
+                f"{named.name if named else 'A club'} were named champions of {circuit.name if circuit else 'the league'}.",
+                key="sport.champion",
+                ids=[league.faction_entity_id, champion.faction_entity_id],
+            )
 
 
 async def buy_favour(ctx: TickContext, tally: SportTally) -> None:
@@ -270,6 +281,9 @@ async def buy_favour(ctx: TickContext, tally: SportTally) -> None:
             continue
         if not await take_coin(ctx.session, ctx.rules, realm, table.buy_cost):
             continue
+        backers = await ctx.session.get(EntityRow, club.faction_entity_id)
+        if backers is not None:
+            await receive_coin(ctx.session, ctx.rules, backers, table.buy_cost)
         club.bought_by_entity_id = realm.id
         tally.bought += 1
         await note(ctx, f"{ruler.name} bought the favour of a club of {realm.name}.", key="sport.bought", ids=[ruler.id, club.faction_entity_id])

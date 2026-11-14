@@ -117,7 +117,8 @@ MADE_KIND_MECHANICS = (
         backfill="megastructures: every megastructure keeps its state from the first epoch after the upgrade",
         templates=("megastructures.",),
         tables=(MegastructureRow.__tablename__,),
-        exposure=Exposure.CONTEXT,
+        exposure=Exposure.TOOL,
+        tools=("draw_structure_type", "shape_structure_type"),
         targets=("structure", "world"),
         couplings=(
             Coupling(S.COSMOS, "a star collector dims its star", E.MODIFIER, "megastructures.collector_dim"),

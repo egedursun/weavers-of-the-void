@@ -21,7 +21,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState
-from aerona.engine.constructs.making import Design, make_construct
+from aerona.engine.constructs.making import Design, make_construct, skilled_makers
 from aerona.engine.constructs.wards import realm_of_army
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
@@ -399,12 +399,24 @@ async def renew(ctx: TickContext, row: ConstructRow, maker: EntityRow | None) ->
     return table.renew
 
 
+async def renewer_near(ctx: TickContext, construct: EntityRow) -> EntityRow | None:
+    town = await town_of(ctx.session, construct)
+    if town is None:
+        return None
+    for maker in await skilled_makers(ctx):
+        home = await town_of(ctx.session, maker)
+        if home is not None and home.id == town.id and not held(maker.id):
+            return maker
+    return None
+
+
 async def wear(ctx: TickContext, construct: EntityRow, row: ConstructRow, tally: OrderTally) -> bool:
     table = ctx.rules.constructs
     maker = await living_entity(ctx.session, row.maker_entity_id)
     upkeep = row.upkeep // 2 if row.power_source is MagicSource.DIVINE and maker is not None else row.upkeep
+    keeper = maker if maker is not None else await renewer_near(ctx, construct)
     if "power" not in row.locked:
-        row.power = clamp_int(row.power - upkeep + await renew(ctx, row, maker), 0, PERCENT)
+        row.power = clamp_int(row.power - upkeep + await renew(ctx, row, keeper), 0, PERCENT)
     if "decay" not in row.locked:
         hardness = MATERIALS[row.material].hardness
         row.decay = clamp_int(row.decay + max(1, round_half_up(table.wear * (PERCENT - hardness) / PERCENT * 2)), 0, PERCENT)

@@ -17,6 +17,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import HELD, fall, towns_near
 from aerona.engine.economy.purse import give_coin, take_coin
+from aerona.engine.mythic.ballads import sing_of_slaying
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -131,6 +132,7 @@ async def slay(ctx: TickContext, row: MonsterContractRow, hunter: EntityRow, bea
     if profile is not None and "renown" not in profile.locked:
         profile.renown = clamp_int(profile.renown + table.renown, 0, PERCENT)
     await settle(ctx, row, ContractStatus.SLAIN)
+    await sing_of_slaying(ctx, hunter, beast, "hunting for a bounty")
     await note(ctx, f"{hunter.name} slew {beast.name} and claimed the bounty.", key="contract.slain", ids=[hunter.id, beast.id])
 
 

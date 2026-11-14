@@ -10,8 +10,11 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyFunction
 from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger
 from aerona.domain.enums.economy import GoodsFlow
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
@@ -36,9 +39,18 @@ async def may_remake(ctx: TickContext, community_id: int | None) -> bool:
     community = await ctx.session.get(EntityRow, community_id)
     if community is None:
         return False
+    table = ctx.rules.punitive_remaking
     knowledge = await KnowledgeMap.load(ctx.session)
-    holders = [community.id, community.affiliated_entity_id]
-    return any(holder is not None and knowledge.level(holder, KnowledgeBranch.MAGIC) >= ctx.rules.punitive_remaking.magic_floor for holder in holders)
+    holders = [holder for holder in (community.id, community.affiliated_entity_id) if holder is not None]
+    able = False
+    for holder in holders:
+        if max(knowledge.level(holder, KnowledgeBranch.MAGIC), knowledge.level(holder, KnowledgeBranch.BIOMANCY)) >= table.magic_floor:
+            able = True
+    if not able:
+        return False
+    people = community.affiliated_entity_id if community.entity_type is not EntityType.PEOPLE else community.id
+    values = await stored_values(ctx.session, ValueHolder.CULTURE, people) if people is not None else {}
+    return values.get(ValueAxis.MERCY, 0) <= table.cruel_mercy
 
 
 async def remake(ctx: TickContext, culprit: EntityRow, case_id: int | None) -> RemadeRow:

@@ -10,8 +10,9 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.models.entity_stats import ItemStats, SpeciesStats
+from aerona.engine.mythic.ballads import legend_carrier
 from aerona.engine.phases.curses import curse_decay, cursed_items
-from aerona.engine.phases.heroism import EncounterOutcome, encounter, legend_carrier
+from aerona.engine.phases.heroism import EncounterOutcome, encounter
 from aerona.engine.phases.monsters import monster_raids
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import round_half_up

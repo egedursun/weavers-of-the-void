@@ -17,6 +17,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.turn import LongJobTrace, PendingJob
 from aerona.engine.context import Publisher, TickContext, TickEnvironment
+from aerona.engine.interconnect.tool_holds import tool_holds
 from aerona.engine.stats import TickStats
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.agent import PendingLongJobContext, ToolFailureContext, ToolRejectionContext
@@ -213,7 +214,8 @@ class ToolRuntime[CallT: ToolCall]:
     async def _read(self, spec: ToolSpec[CallT, Any], parsed: ToolInput) -> ToolResult:
         async with self._database.read() as session:
             call = await self.build_call(await self._environment(session, spec, writable=False))
-            outcome = await spec.handler(call, parsed)
+            async with tool_holds(session, self.settings.epoch, spec.name):
+                outcome = await spec.handler(call, parsed)
             await session.rollback()
         text = outcome if isinstance(outcome, str) else ""
         self._done.append(DoneAction(spec.name, True, text))
@@ -233,7 +235,8 @@ class ToolRuntime[CallT: ToolCall]:
             marker = await chronicle_marker(session)
             recorder = change_capture(session)
             try:
-                outcome = await spec.handler(call, parsed)
+                async with tool_holds(session, self.settings.epoch, spec.name):
+                    outcome = await spec.handler(call, parsed)
                 if isinstance(outcome, LongJob):
                     call.turn.set_pending_job(PendingJob(kind=outcome.kind, essence=outcome.essence, action_points=outcome.action_points, epoch=call.epoch))
                     await session.flush()

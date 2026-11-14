@@ -13,7 +13,7 @@ S = RuleGroup.SKY
 
 @dataclass(frozen=True)
 class ArtMarketRules:
-    collector_chance: int = rule(20, 0, 100, M, "Chance each epoch that a realm, church or merchant guild without a collection begins one (%)")
+    collector_chance: int = rule(20, 0, 100, M, "Chance each epoch that a realm, noble house, church or merchant guild without a collection begins one (%)")
     collectors_per_epoch: int = rule(6, 0, 1000, M, "New collectors that may arise across the cosmos in one epoch")
     base_price: int = rule(20, 0, 100000, M, "Price in coin of a work of middling quality by an unknown hand")
     renown_pct: int = rule(100, 0, 1000, M, "Price a work gains at its maker's full renown (%)")
@@ -23,6 +23,7 @@ class ArtMarketRules:
     sale_chance: int = rule(25, 0, 100, M, "Chance each epoch that an owned work comes up for sale (%)")
     gathering_pct: int = rule(200, 0, 1000, M, "Chance of a sale against the usual when a gathering is held in the work's land (%)")
     sales_per_epoch: int = rule(30, 0, 10000, M, "Works that may change hands across the cosmos in one epoch")
+    auction_pct: int = rule(15, 0, 200, M, "Price a work gains at an auction for every rival bidder beyond the first (%)")
     grandeur_per_work: int = rule(2, 0, 100, M, "Grandeur a court gains each epoch for every work its realm holds, capped by its grandeur")
     lure_renown: int = rule(60, 0, 100, M, "Renown from which an artist is drawn to the grandest court of its world")
     lure_chance: int = rule(10, 0, 100, M, "Chance each epoch that a renowned artist moves to the grandest court (%)")
@@ -48,6 +49,7 @@ class CanonRules:
     contest_chance: int = rule(20, 0, 100, C, "Chance each epoch that a rival movement contests a work of the canon (%)")
     contest_loss: int = rule(15, 0, 100, C, "Weight a contested work loses each epoch")
     value_pull: int = rule(5, 0, 100, C, "Share of the gap a people's values close each epoch toward the values its canon carries (%)")
+    form_prestige: int = rule(10, 0, 100, C, "Prestige an art form holds at least for every work of it in a canon")
 
 
 @dataclass(frozen=True)
@@ -90,7 +92,7 @@ class ConstructRules:
     constructs_per_epoch: int = rule(3, 0, 1000, H, "Constructs that may be made across the cosmos in one epoch")
     maker_magic: int = rule(4, 0, 10, H, "Magic knowledge a maker's people needs before it makes constructs")
     upkeep: int = rule(5, 0, 100, H, "Power a construct burns each epoch")
-    renew: int = rule(20, 0, 100, H, "Power a living maker renews in its construct each epoch")
+    renew: int = rule(20, 0, 100, H, "Power a living maker, or a skilled maker of its town once it is dead, renews in its construct each epoch")
     wear: int = rule(3, 0, 100, H, "Decay a construct gathers each epoch before its material")
     will_chance: int = rule(10, 0, 100, H, "Chance each epoch that a construct with a bound soul grows in will (%)")
     guard_defense: int = rule(5, 0, 100, H, "Defence a guarding construct lends its charge")
@@ -128,7 +130,10 @@ class AstrologyRules:
 
 @dataclass(frozen=True)
 class PunitiveRemakingRules:
-    magic_floor: int = rule(5, 0, 10, P, "Magic knowledge a people needs before its courts can remake the condemned")
+    magic_floor: int = rule(5, 0, 10, P, "Knowledge of magic or of biomancy a people needs before its courts can remake the condemned")
+    cruel_mercy: int = rule(
+        -20, -100, 100, P, "Weight of mercy among a people's values at or below which its penal ethic is cruel enough to remake the condemned"
+    )
     remake_chance: int = rule(30, 0, 100, P, "Chance a court able and willing to remake chooses it over another punishment (%)")
     labour_goods: int = rule(10, 0, 100000, P, "Goods a remade labourer makes for its realm's town each epoch")
     grievance_step: int = rule(5, 0, 100, P, "Grievance a remade mortal gathers each epoch")
