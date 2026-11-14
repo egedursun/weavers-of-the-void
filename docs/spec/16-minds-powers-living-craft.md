@@ -3806,7 +3806,7 @@ The 102 registered mechanics with at most one coupling (Appendix 50.B) act on th
 - `mortal_births` reaches household load (50.5), kin duties (50.6) and population policy (50.1).
 - `planetary_climate` reaches harvests, migration and faith.
 
-The couplings are registered in the interconnection registry with their edge kinds and rule keys, and each has an acceptance check.
+Appendix 50.B names, for every one of the 102, the subsystems it gains and the effect it carries to each. The couplings are registered in the interconnection registry with their edge kinds and rule keys, and each has an acceptance check.
 
 **Guard.** `scripts/check_mechanic_couplings.py` fails when a registered mechanic has fewer than two couplings to other subsystems, unless its entry states why it can drive nothing else (bookkeeping mechanics only).
 
@@ -3839,23 +3839,110 @@ The depth metric's shortfalls are closed section by section. The seven types rea
 
 ### 50.16 Facets with kinds but no behaviour
 
-The 100 subcategories that existing waves give kinds but not behaviour are marked **50.16** in Appendix 50.A. Each one follows the same rule: its kind table (W47, W48) carries typed properties that an engine step reads, so the facet changes something in the world.
+The 100 subcategories that existing waves give kinds but not behaviour are marked **50.16** in Appendix 50.A. Each one gets the typed state and the engine behaviour named below. Its kind table (W47, W48) carries the typed properties, and the engine step named in the last column reads them, so the facet changes something in the world. Every facet also follows 50.17a (eras, worlds, kinds of thing, incidents, rules, book and Codex).
 
-| Group | Subcategories (OCM codes) | Behaviour each one gains |
-|---|---|---|
-| Food industries | 228, 237, 242, 247, 253, 257, 266, 272, 274, 277 | each industry is a production method row (48.5) with inputs, outputs, hands, energy and technique; its output enters diets, trade and health; its workers are a profession (48.6) with exposures (47.10) |
-| Fibre, leather and paper | 282, 283, 284, 287, 289, 290, 291, 294 | production methods for each; garments (48.3) are made from them; dress norms read garments and enter standing and etiquette |
-| Crafts and building trades | 301, 306, 322, 323, 324, 333, 334, 335, 337, 338, 354, 355, 365, 367, 368 | each trade is a profession with skill, tools (48.4), guild and output quality; structures (47.1) need the trades their form uses; missing trades block or slow building |
-| Energy, chemicals and machines | 377, 378, 383, 384, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 397, 399, 400, 403, 404, 406, 408, 414, 416, 417 | each is a method or tool kind under the per-family technology levels (47.2); outputs feed production, war and households; hazards follow the mishap model (47.10) |
-| Transport and navigation | 496, 502, 506, 507, 508 | carriers and vehicle families (47.2) with routes, terminals (50.4 works) and navigation accuracy (folk knowledge and instruments, 50.7) |
-| Music and spectacle | 533, 534, 541 | music traditions and instruments (48.4) are played at gatherings and rites, move mood and renown, and pass by teaching; spectacles draw crowds, wealth and unrest |
-| Gender and unions | 462, 562, 583, 585, 589, 595, 890 | culture data on roles, union payments, nuptials, restraint and plural unions (47.3.4, 50.8) read by marriage choice, inheritance and household labour, with `any` as the default role rule |
-| Kin groups and rule | 614, 616, 642 | kin groups (50.6); government forms read their typed rule axes (47.3) |
-| Offences | 683, 684, 685, 687 | crime kinds (W27, 47.3) with detection, trial and sanction, and the norms of 50.8 for union offences |
-| War kinds | 711, 713, 715, 717, 718 | unit families and equipment models (W42, W48) with their own battle factors, logistics and costs |
-| Care, death and faith | 755, 756, 759, 762, 763, 769, 785 | healing roles and methods (spec 13 7.2) with success by knowledge; suicide as an incident with typed causes (despair, honour, ritual, protest) read from values, standing and need, recorded with care (G9); dying with its last acts (wills, confessions, successions); ancestor cults and asceticism as practices with costs and effects |
-| Learning | 811, 812, 813, 814, 874, 875 | branches of knowledge with research paths (8.4), schools and teachers with lineages, apprenticeships that pass skills with quality |
-| Life stages and prehistory | 172, 880, 884 | spec 13 F48 prehistory (planned); life stage rules per biology with their standing (50.9, 50.11) |
+| OCM | Facet | Typed state | Engine behaviour that reads it |
+|---|---|---|---|
+| 172 | Prehistory | spec 13 F48 prehistory digest per world (eras, peoples, finds), built by W39 | genesis seeds the digest; excavations (W13 sites) reveal its layers; historiography quotes it; claims and legitimacy may rest on it |
+| 228 | Marine industries | production methods of family `marine` (48.5) over sea species products (pearls, shell, oils, salt from water, kelp) with catch grounds | coastal grounds yield by stock and season; overharvest depletes stocks (ecology); products enter trade and crafts; divers and crews carry exposures (47.10) |
+| 237 | Animal by-products | species products (48.5) by part (hide, horn, bone, fat, gut, feather, chitin, silk, venom) with yield per kill or harvest | butchering and gathering yield them; leather, glue, tallow and tools methods consume them; sacred species forbid their use where faith says so |
+| 242 | Agricultural science | knowledge branch `agronomy` with sub-techniques (rotation, selection, grafting, manuring, irrigation design) and research paths (8.4) | each technique raises yield or resilience on the crops it names; selection feeds designed lines (W46 46.2); failed trials record losses |
+| 247 | Floriculture | crop kinds of category `ornamental` (48.1) with gardens as a land use | gardens supply rites, dyes, scent kinds (48.3) and gifts; prestige gardens raise elite standing; they compete with food land |
+| 253 | Meat packing | production method `slaughter_and_dress` and `cure_meat` with yield, waste and spoilage | herds and hunts feed it; output enters diets and trade; waste raises disease near settlements without refuse handling (50.5) |
+| 257 | Confectionery | dish and good kinds of category `sweetener` products (48.1, 48.2) with methods (boiling, candying, baking) | sweet goods raise feast quality and gift value; sugar crops feed it; demand rises with wealth |
+| 266 | Cannibalism | remains treatment `consumption` (50.12) and act kinds, only as a culture's own custom or a species' diet | read by funeral and war customs where the culture authors them; others judge it by their norms (opinion, war cause); disease routes through it where biology says |
+| 272 | Non-alcoholic beverages | drink kinds (48.2) with `alcohol_strength` 0, stimulant and water-safety properties | they meet thirst and the drink need; boiled or brewed drinks lower waterborne disease; stimulants raise work and alter sleep (50.5) |
+| 274 | Beverage industries | production methods for drink kinds (brewing, fermenting, distilling, infusing) with workshops | output feeds taverns, rites and trade; taxes and bans apply by law; spoilage and quality follow method and water |
+| 277 | Smoking and stimulant leaves | substance kinds (48.4) with dependence, health effects and ritual uses; crop kinds that yield them | use spreads by culture and trade; dependence and health effects follow the intoxication model; bans and monopolies (50.4) tax it |
+| 282 | Leather industry | methods `tan` (bark, mineral, smoke, oil) with inputs and pollution | hides become leather for garments, arms and gear; tanneries pollute water (industry pollution) and are placed by law outside walls |
+| 283 | Cordage | method `twist_cord` from fibre products; good kind `cord` | ships, construction, nets, snares and siege engines need cord; shortages slow them |
+| 284 | Knots and lashings | technique `knotwork` (F24) and the knot records already in writing systems | raises rigging and construction quality; knot records serve as writing where the culture uses them |
+| 287 | Felted fabrics | method `felt` from wool or hair; garment and shelter kinds that use felt | felt tents and garments serve nomads and cold lands; felt quality enters warmth (weather exposure) |
+| 289 | Paper industry | methods for writing media (paper, parchment, bark, leaf, tablet, film, data) with inputs | media supply sets book output, archives, bureaucracy cost and printing; shortages slow records |
+| 290 | Clothing | garment kinds (48.3) worn per person and class with warmth, protection and status | dress norms read garments for standing and etiquette; warmth enters weather exposure; uniforms mark offices and armies |
+| 291 | Normal garb | each culture's everyday garment set by class, life stage and climate | read by needs (warmth), basket cost and standing; changes with fashion cycles (W26) |
+| 294 | Clothing manufacture | method `make_garment` (household, tailor, workshop, factory) with labour and quality | garment supply and price; household textile duty (50.5); tailors as a profession |
+| 301 | Ornament | ornament kinds (48.3 adornment) with material, value and meaning | worn for status, gifts and dowry; buried with the dead; stolen and looted |
+| 306 | Jewellery manufacture | method `make_jewellery` with precious materials and skill | output enters wealth storage, gifts, dowries and trade; masterworks become items with history |
+| 322 | Woodworking | profession and method family `wood` with tools (48.4) | furniture, carts, ships, houses and arms need it; skill sets quality |
+| 323 | Ceramics | methods `pottery`, `kiln_fire`, `glaze` with kilns | storage vessels cut spoilage; tiles and bricks build; pottery styles mark cultures in excavations |
+| 324 | Stone tools | method family `knap` and `grind` with stone materials | tools and arms where metal is unknown or scarce; quality from material and skill |
+| 333 | Masonry | profession and method `masonry` | stone structures need masons; skill sets durability and collapse risk |
+| 334 | Tall frame building | building form `frame_tower` (high rise) needing structural materials and techniques | dense housing and offices; collapse risk by material and quake; lifts (355) required above a height |
+| 335 | Carpentry | profession and method `carpentry` | timber structures, roofs, scaffolds and ships need it |
+| 337 | Electrical installation | trade `wiring` and structure component `power_feed` | structures run electric functions only when fed (47.2 energy); faults raise fire mishaps |
+| 338 | Other building trades | trades `glazing`, `plaster`, `roofing`, `paving`, `plumbing` as professions | each finishes structures and raises their condition; missing trades leave structures below full function |
+| 354 | Heating and lighting equipment | furnishing kinds of category `heating`, `lighting` (48.4) with fuel and output | warmth and light enter needs, work hours (50.5) and fire risk |
+| 355 | Lifts and building machines | structure component `lift` with power source | tall structures need them; failures are mishaps |
+| 365 | Public utilities | public works kinds `aqueduct`, `sewer`, `power_line`, `network_line` (50.4) | supply water, sanitation, power and networks to districts; outages follow neglect |
+| 367 | Parks | district land use `park` | leisure (50.5), health, elite prestige and protest gatherings |
+| 368 | Other facilities | structure kinds outside the named classes read by their own effects (47.1) | each facility acts by its effects table |
+| 377 | Electric power | energy kind `electric` (47.2) with generation, grid and storage | powers structures, machines, media (50.2) and networks |
+| 378 | Fission and fusion power | energy kinds `fission`, `fusion` (47.2) with fuel, waste and accident hazards | large output; waste and accidents scar land and raise disease and doom where the world says |
+| 383 | Rubber and elastic materials | material kinds with elasticity property (F23) from plants or synthesis | seals, wheels and protective gear read elasticity |
+| 384 | Synthetic materials | materials of origin `synthesis` (F23) by technique | substitute natural materials; pollution by method |
+| 386 | Paints and dyes | dye products and colour terms (48.3) with sources and fastness | colours carry status and meaning; dye works pollute; rare colours are luxuries |
+| 387 | Fertilizers | goods that add soil nutrients (spec 13 soil nutrients) by kind | raise yields on depleted soils; runoff pollutes water |
+| 388 | Soap and cleaners | goods of category `cleaner` with method | read by care customs (50.5) and disease exposure |
+| 389 | Explosives | goods with blast property and method; storage hazard | mining, siege, war and accidents read them |
+| 390 | Capital goods | production methods that make tools and machines (48.4, 48.5) | output raises other methods' productivity; shortages bottleneck chains |
+| 391 | Hardware | goods of category `hardware` (nails, fittings, locks) with methods | construction and crafts consume them |
+| 392 | Machine industries | methods that make machines by family technology level (47.2) | supply of machines to industry and households |
+| 393 | Electrical supplies | goods of category `electrical` (wire, cells, components) | electric structures and devices consume them |
+| 394 | Making heating and lighting equipment | methods for furnishing kinds of 354 | supply and price of heating and lighting |
+| 395 | Optics | goods and techniques `lens`, `optic_instrument` | navigation, astronomy, medicine (sight aids) and war read them |
+| 397 | Rail equipment | vehicle families of carrier `rail` (47.2) with methods | rail transport capacity |
+| 399 | Aircraft industry | vehicle families of domain `air` with shipyards of kind airfield | air transport and air war capacity |
+| 400 | Machines | tool kinds of category `machine` (48.4) with power, output and wear | raise production where a method uses them; wear and repair |
+| 403 | Electrical machines | machines with energy kind electric | as 400, gated by electric supply |
+| 404 | Household machines | furnishing and tool kinds used in housework (50.5) | cut housework load and change household time budgets |
+| 406 | Weight-moving machines | tool kinds `crane`, `hoist`, `lift` | construction speed and port handling |
+| 408 | Computing | structures `data_centre`, `ai_core` (W42) and tool kinds of category `computer` | networks (F51), made minds (F50), research speed, record keeping |
+| 414 | Other hardware | goods outside named classes read by their kind properties (48.1) | as their properties say |
+| 416 | Appliances | furnishing kinds of category `appliance` | as 404 |
+| 417 | Apparatus | tool kinds of category `instrument` for science and navigation | research speed, navigation accuracy, medicine |
+| 462 | Division of labour | culture data assigning duties and professions to roles (sexes where the biology has them, age, class, kin), default `any` | read by housework (50.5), professions and armies; changes with values and movements |
+| 496 | Railways | carrier `rail` routes and terminals (50.4 works) | land transport speed and capacity, troop movement, settlement growth along lines |
+| 502 | Navigation | navigation accuracy from instruments (417), folk knowledge of sky and waters (50.7) and skill | voyage losses, speed and discovery of routes |
+| 506 | Aircraft | vehicle families of domain `air` | air transport and war |
+| 507 | Aviation | carrier `air` with crews and routes | travel time, mail, trade of light goods, war |
+| 508 | Airfields | structure kind `airfield` (W42) with capacity | air routes need terminals |
+| 533 | Music | music traditions (48.4) with forms, instruments and venues | gatherings, rites, mood, renown of musicians, transmission by teaching |
+| 534 | Musical instruments | instrument kinds (48.4) with makers | traditions need their instruments; instruments are trade goods and heirlooms |
+| 541 | Spectacles | gatherings of kind `spectacle` (circus, games, processions) with crowds | draw crowds and wealth, raise ruler favour, risk crowd mishaps and riots |
+| 562 | Status by sex | culture data of role eligibility (`GenderRule`, `any` by default) | read by offices, inheritance, professions and armies only where the culture sets it |
+| 583 | Union payments | marriage payment kinds (48.6) with amounts | move wealth between households; debts and feuds when unpaid |
+| 585 | Nuptials | union rites (traditions of stage `union`) with guests and cost | gatherings, alliances, feasts, standing |
+| 589 | Celibacy | restraint customs (50.8) and vows | clergy and ascetic roles; inheritance passes elsewhere; vows broken record scandal |
+| 595 | Plural unions | union forms (47.3.4) allowing more than one spouse | household form, inheritance shares, co-spouse duties (50.6), status |
+| 614 | Clans | kin groups of form `clan` (50.6) | corporate land, exogamy, feuds, councils |
+| 616 | Moieties | kin groups of form `moiety` | marriage rules and ritual halves |
+| 642 | Forms of government | government kinds over typed rule axes (47.3: who rules, how chosen, limits) | succession, councils, legitimacy, decisions |
+| 683 | Offences against persons | crime kinds (W27) `assault`, `abduction`, `false_imprisonment` with sanctions | trials, feuds, standing |
+| 684 | Union offences | crime kinds read from intimacy norms (50.8) where the culture names them | scandal, sanction, divorce, feud |
+| 685 | Property offences | crime kinds `theft`, `fraud`, `trespass`, `damage` | courts, restitution, guards |
+| 687 | Offences against the state | crime kinds `treason`, `sedition`, `desertion`, `tax_evasion` | trials, purges, exile |
+| 711 | Military engineering | siege works and fortifications with engineer units | sieges and defences read them |
+| 713 | Ordnance | equipment models of artillery families with range, rate and crew | battle missile phases and sieges |
+| 715 | Military vehicles | vehicle families of war use (chariots to armoured carriers) with stacks | mobility, shock and protection in battle |
+| 717 | Military aircraft | air units and vehicles | air superiority and bombardment |
+| 718 | Special military equipment | equipment families `sensor`, `jammer`, `drone`, `ward_node` | scouting, deception and electronic war |
+| 755 | Healing rites | healing methods of kind `rite` with success by faith and skill | restore function and morale; failures raise doubt |
+| 756 | Spiritual healers | professions of category `healing` with a faith or power base | treat by rite or power; standing by results |
+| 759 | Medical personnel | professions of category `healing` with skill and institutions | treatment success, epidemics response |
+| 762 | Suicide | incident kind `death.self` with typed causes (`despair`, `honour`, `ritual`, `protest`, `loss`, `illness`) read from stress, standing, values and need, told with care (G9) | kin grief, memory, norms judge it; a protest death can start a movement |
+| 763 | Dying | the last acts of a dying mortal (will, confession, naming an heir, last words recorded by the model) as steps (W49) | succession, inheritance, reconciliation, legends |
+| 769 | Cult of the dead | ancestral rites (48.7 `ancestral_rite`) with offerings and shrines | ancestor favour (ancestral guardians), house morale, cost |
+| 785 | Asceticism | restraint customs and practices (fasting, poverty, solitude) with costs and gains | piety, visions (W25 mysticism), health strain |
+| 811 | Logic | knowledge branch with research paths | raises theory testing and law reasoning |
+| 812 | Philosophy | knowledge branch and ideologies with tenets (48.7) | shapes ideologies and values over time |
+| 813 | Scientific method | technique `empiricism` with effect on theory overturning (theories) | false theories fall faster; research yields rise |
+| 814 | Humanistic study | historiography, philology and the study of texts as branches | accounts of history (W20), decipherment, translation quality |
+| 874 | Vocational education | apprenticeships and trade schools with skill transfer quality | skilled labour supply, guild control |
+| 875 | Teachers | teacher role with skill, lineage and pupils | learning speed, school reputation |
+| 880 | Life stages | life stage rules per biology (spec 13 3.1 reference pass) with standing (50.9, 50.11) | duties, rights, work, marriage, office |
+| 884 | Coming of age | rites of stage `coming_of_age` with tests and gifts | adult standing, youth group exit (50.11) |
+| 890 | Roles by sex | culture data as 562 | as 562 |
 
 **Guard.** `scripts/check_ocm_coverage.py` reads `docs/spec/ocm-coverage.md` (Appendix 50.A as data). It fails when a subcategory has no closing section, or when its closing section names a table or engine step that does not exist once its wave is marked done.
 
@@ -3868,6 +3955,219 @@ The 100 subcategories that existing waves give kinds but not behaviour are marke
 | `scripts/depth_metric.py check` | a node type is below its target after W50 |
 | `scripts/check_inventory.py` (5.10) | a table, enum, step, kind, tool, lever, screen or text file of W50 has no inventory row |
 | `tests/engine/core/test_daily_life.py`, `test_kin_duties.py`, `test_media.py`, `test_commerce.py`, `test_public_works.py`, `test_population_policy.py`, `test_folk_knowledge.py`, `test_unions_and_birth.py`, `test_childhood.py`, `test_endowments.py`, `test_youth.py`, `test_death_work.py`, `test_speech.py` | a family's behaviour does not produce its effects on a seeded world |
+
+### 50.17a Integration of every family
+
+The rules below apply to each family of 50.1–50.13. The per-family blocks that follow name what is specific to each.
+
+- **Every era and every kind of world.**
+  - Each family reads the world's technology levels per family (47.2), its natural laws, its biologies and its peoples' cultures.
+  - A family whose subject a world lacks stays idle there and says so on its screens; this applies, for example, to housework in a people that keeps no houses, or to media before any recording technique.
+  - Made minds (W44), innate powers (W45) and living craft (W46) take part wherever their kinds do the family's work.
+- **Every kind of thing (rule 6).**
+  - Sections that apply to every node render through `ThingSections`. Media, endowments, speeches and policies can be held or authored by any node kind that can act: mortals, peoples, polities, faiths, factions, sons, foreign gods and the Creator.
+  - A section for some kinds only says why the others cannot have it.
+- **Genesis.**
+  - The genesis output (spec 16 5.2) writes each people's starting rows for the families that apply to it, from the seed and the culture, through typed fields only.
+  - No family has a template default that carries images. An empty value means the model chooses from the world's canon.
+- **Prompts and context.**
+  - Each family has a context block (named in its section) that carries typed values with labels.
+  - Tool texts list every enum value they accept (`test_tool_enum_lists.py`) and describe every field (`test_catalogue.py`).
+  - Templates are read in full when touched (rule 2).
+- **Incidents.** Every happening of a family is an incident kind under F58: roles, facts, steps, terms, place and clock. The kinds are listed per family below, and each has a plain template.
+- **Rules.**
+  - Every number is a rule key in the family's namespace, with its default and range listed below. Each key is editable by the god from the rules screen and read through the registry (G1 no magic numbers).
+  - Balance bands for each family are added to `13-balance-bands.json` and kept by `balance_sim.py`.
+- **Legacy and integrity.** Each family has recorded fixups as named and checks under 47.13.
+- **Book and Codex.** Each family renders as a designed section in the entries of its holders and in the "Records of the Cosmos" appendix, with labelled values and never truncated.
+
+### 50.17b Per-family detail
+
+#### 50.1 Population policy
+
+- **Incidents:** `population.policy_adopted`, `population.policy_repealed`, `population.instrument_enforced`, `population.resisted`, `population.expulsion`, `population.resettlement`, `population.target_met`.
+- **Rules:**
+  - `population_policy.birth_reward_pct` 10 [0–100]
+  - `population_policy.birth_tax_pct` 10 [0–100]
+  - `population_policy.child_limit_resistance` 30 [0–100]
+  - `population_policy.expulsion_grievance` 40 [0–100]
+  - `population_policy.enforcement_cost_per_point` 2 [0–50]
+  - `population_policy.review_every_epochs` 2 [1–20]
+- **Tools:**
+  - mortal `set_population_policy`: `aim`, `instruments` (list of `PopulationInstrument` with `strength` 0–100), `target_node_id`, `reason`;
+  - son `move_population_policy`: `holder_node_id`, `aim`, `reason`.
+- **Couplings:** births, migration, refugees, health, labour supply, unrest, faith teaching, made births (W44, W46).
+
+#### 50.2 Recorded and mass media
+
+- **Incidents:** `media.outlet_founded`, `media.item_published`, `media.item_exposed`, `media.outlet_censored`, `media.outlet_seized`, `media.record_found`, `media.star_rose`.
+- **Rules:**
+  - `media.reach_per_staff` 2 [0–20]
+  - `media.trust_loss_on_exposure` 25 [0–100]
+  - `media.opinion_shift_pct` 15 [0–100]
+  - `media.record_decay_per_epoch` 3 [0–50]
+  - `media.censorship_cost` 10 [0–100]
+  - `media.evidence_weight_pct` 40 [0–100]
+- **Tools:**
+  - mortal `found_outlet` (`medium`, `audience_node_ids`, `stance` axes, `funding`);
+  - mortal `publish_item` (`outlet_id`, `kind`, `subject_incident_id`, `slant`);
+  - mortal `censor_outlet` (`outlet_id`, `measure`);
+  - son `sway_outlet` (`outlet_id`, `stance` axes, `reason`).
+- **Couplings:** opinion, rumours, legitimacy, prices, evidence, historiography, arts (`recorded` mode), law, surveillance, networks.
+
+#### 50.3 Commerce practice
+
+- **Incidents:** `commerce.shop_opened`, `commerce.shop_closed`, `commerce.tier_cornered`, `commerce.promotion_run`, `commerce.claim_exposed`, `commerce.lease_signed`, `commerce.lease_defaulted`, `commerce.rate_shock`.
+- **Rules:**
+  - `commerce.retail_margin_pct` 20 [0–200]
+  - `commerce.wholesale_margin_pct` 10 [0–200]
+  - `commerce.promotion_demand_pct` 10 [0–100]
+  - `commerce.false_claim_trust_loss` 20 [0–100]
+  - `commerce.lease_default_chance_pct` 5 [0–100]
+  - `commerce.exchange_spread_pct` 3 [0–50]
+  - `commerce.no_shop_basket_pct` 15 [0–100]
+- **Tools:**
+  - mortal `open_shop` (`form`, `goods_kinds`, `structure_id`);
+  - mortal `promote` (`subject`, `medium`, `claim_accuracy`);
+  - mortal `lease_out` (`thing_id`, `lessee_id`, `rent`, `term`);
+  - mortal `change_money` (`from_currency`, `to_currency`, `amount`).
+- **Couplings:** markets, basket, brands, credit, courts, trust, routes, currencies.
+
+#### 50.4 State enterprise and public works
+
+- **Incidents:** `works.begun`, `works.stage_done`, `works.delayed`, `works.finished`, `works.failed`, `works.neglected`, `enterprise.founded`, `enterprise.privatised`, `enterprise.skimmed`.
+- **Rules:**
+  - `public_works.labour_per_stage` 100 [1–10000]
+  - `public_works.quality_floor` 30 [0–100]
+  - `public_works.upkeep_pct` 5 [0–50]
+  - `public_works.decay_per_neglected_epoch` 10 [0–100]
+  - `state_enterprise.monopoly_price_pct` 30 [0–300]
+  - `state_enterprise.skim_chance_pct` 10 [0–100]
+- **Tools:**
+  - mortal `begin_works` (`kind`, `route_or_region_id`, `labour` regime, `budget`);
+  - mortal `fund_works` (`works_id`, `amount`);
+  - mortal `found_enterprise` (`sector`, `form`, `manager_id`);
+  - son `bless_works` (`works_id`, `reason`).
+- **Couplings:** routes, harvests, health, war, treasury, labour regimes, companies, terraforming, megastructures.
+
+#### 50.5 Daily life, time and personal care
+
+- **Incidents:** `daily.servant_hired`, `daily.servant_left`, `daily.duty_breached`, `daily.leisure_trend`, `daily.tourism_season`, `daily.norm_breach`.
+- **Rules:**
+  - `daily_life.overwork_stress_pct` 20 [0–100]
+  - `daily_life.leisure_happiness_pct` 10 [0–100]
+  - `daily_life.care_disease_pct` 15 [0–100]
+  - `daily_life.servant_relief_pct` 30 [0–100]
+  - `daily_life.tourism_spend_pct` 5 [0–100]
+  - `daily_life.space_breach_trust_loss` 5 [0–100]
+- **Tools:**
+  - mortal `hire_servant` (`household_id`, `terms`, `duties`);
+  - mortal `take_leisure` (`kind`, `venue_id`);
+  - mortal `set_house_duties` (`household_id`, assignments by member and `HouseDuty`).
+- **Couplings:** labour, needs, stress, disease, sanitation, venues, wealth, etiquette, diplomacy.
+
+#### 50.6 Kin roles, households and kin groups
+
+- **Incidents:** `kin.called_on`, `kin.duty_kept`, `kin.duty_breached`, `kin.group_founded`, `kin.group_split`, `kin.head_chosen`, `kin.land_shared`.
+- **Rules:**
+  - `kin.help_share_pct` 20 [0–100]
+  - `kin.breach_shame` 10 [0–100]
+  - `kin.group_exogamy_strength` 80 [0–100]
+  - `kin.split_size` 200 [2–100000]
+- **Tools:**
+  - mortal `call_on_kin` (`role`, `need`);
+  - mortal `convene_kin_group` (`group_id`, `agenda`).
+- **Couplings:** feuds, inheritance, fostering, unions, councils, migration, households, care.
+
+#### 50.7 Folk knowledge systems
+
+- **Incidents:** `folk.class_learned`, `folk.class_corrected`, `folk.lore_lost`, `folk.misclassification_harm`, `folk.lore_exchanged`.
+- **Rules:**
+  - `folk_knowledge.accuracy_success_pct` 50 [0–100]
+  - `folk_knowledge.loss_on_holder_death_pct` 10 [0–100]
+  - `folk_knowledge.contact_gain` 5 [0–50]
+  - `folk_knowledge.failure_correction` 10 [0–100]
+- **Tools:**
+  - mortal `teach_lore` (`domain`, `learner_id`);
+  - mortal `test_lore` (`domain`, `class_id`).
+- **Couplings:** gathering, herbal treatment, hunting, herding, farming, sailing, care, rule, theories, omens, naming.
+
+#### 50.8 Intimacy, sexual norms and the course of reproduction
+
+- **Incidents:** `unions.norm_changed`, `unions.scandal`, `unions.sanction`, `unions.vow_taken`, `unions.vow_broken`, `birth.complication`, `birth.recovered`, `birth.recognition`.
+  - Told plainly and behind closed doors.
+- **Rules:**
+  - `unions_and_birth.scandal_shame` 15 [0–100]
+  - `unions_and_birth.persecution_flight_pct` 10 [0–100]
+  - `unions_and_birth.complication_base_pct` 8 [0–100]
+  - `unions_and_birth.attendant_care_pct` 50 [0–100]
+  - `unions_and_birth.recognition_cost` 10 [0–100]
+- **Tools:**
+  - mortal `seek_recognition` (`child_id`, `path`);
+  - mortal `take_restraint_vow` (`kind`, `term`).
+- **Couplings:** attraction, affairs, unions, secrets, leverage, births, health, succession, inheritance, movements.
+
+#### 50.9 Infancy, childhood and socialization
+
+- **Incidents:** `childhood.named`, `childhood.weaned`, `childhood.put_to_work`, `childhood.school_entered`, `childhood.raised_by`, `childhood.method_founded`.
+- **Rules:**
+  - `childhood.infant_survival_pct` 85 [0–100]
+  - `childhood.harsh_stress_pct` 20 [0–100]
+  - `childhood.play_cooperation_pct` 10 [0–100]
+  - `childhood.labour_schooling_loss_pct` 30 [0–100]
+  - `childhood.pedagogy_speed_pct` 20 [0–100]
+- **Tools:**
+  - mortal `raise_child` (`child_id`, technique weights);
+  - mortal `found_school_method` (`school_id`, `theory`).
+- **Couplings:** values, traits, skills, labour, schooling, law, households, births.
+
+#### 50.10 Philanthropy and endowments
+
+- **Incidents:** `endowment.founded`, `endowment.paid`, `endowment.skimmed`, `endowment.captured`, `endowment.confiscated`, `endowment.outlived_founder`.
+- **Rules:**
+  - `endowments.income_pct` 5 [0–50]
+  - `endowments.skim_chance_pct` 10 [0–100]
+  - `endowments.renown_per_epoch` 2 [0–50]
+  - `endowments.confiscation_risk_pct` 5 [0–100]
+- **Tools:**
+  - mortal `endow` (`beneficiary_id`, `purpose`, `capital`);
+  - mortal `audit_endowment` (`endowment_id`).
+- **Couplings:** welfare, schools, temples, remembrance, factions, law, dark ages.
+
+#### 50.11 Youth, adolescence and delinquency
+
+- **Incidents:** `youth.group_formed`, `youth.group_disbanded`, `youth.delinquency`, `youth.recruited`, `youth.came_of_age`.
+- **Rules:**
+  - `youth.delinquency_base_pct` 5 [0–100]
+  - `youth.recruitment_pct` 20 [0–100]
+  - `youth.service_cooption_pct` 30 [0–100]
+- **Tools:**
+  - mortal `lead_youth` (`group_id`, `purpose`);
+  - mortal `reform_youth` (`group_id`, `measure`).
+- **Couplings:** crime, gangs, movements, revolts, schools, festivals, armies.
+
+#### 50.12 Death work and the handling of the dead
+
+- **Incidents:** `death_work.remains_treated`, `death_work.untended`, `death_work.exception`, `death_work.role_shunned`.
+- **Rules:**
+  - `death_work.untended_disease_pct` 30 [0–100]
+  - `death_work.role_standing` 50 [0–100]
+  - `death_work.treatment_cost` 5 [0–100]
+- **Tools:** no new tool; the existing funeral and rite tools take `remains_treatment`.
+- **Couplings:** disease, relics, necromancy, spirits, land use, professions, purity ranks.
+
+#### 50.13 Humour, conversation and public speech
+
+- **Incidents:** `speech.given`, `speech.moved_vote`, `speech.moved_crowd`, `speech.satire_punished`, `speech.offence_taken`.
+- **Rules:**
+  - `speech.persuasion_pct` 20 [0–100]
+  - `speech.satire_legitimacy_loss` 5 [0–100]
+  - `speech.offence_threshold` 50 [0–100]
+  - `speech.humour_ease_pct` 10 [0–100]
+- **Tools:**
+  - mortal `give_speech` (`venue`, `aim`, `audience_node_id`);
+  - mortal `satirise` (`target_id`, `medium`).
+- **Couplings:** assemblies, courts, crowds, congregations, legitimacy, media, diplomacy, trust.
 
 ### 50.18 Compliance catalogue (W50)
 
@@ -5505,111 +5805,111 @@ Generated on 2026-11-14 from the OCM 2025 edition (HRAF, `ocm-2025.pdf`): 689 wo
 | 890 | Gender Roles And Issues | a label only (enum value or flag) | culture data (GenderRule, any by default); W48 48.6; deepened by **50.16** |
 | 920 | Diaspora-homeland Relations | some typed state in code | code (diaspora) |
 
-### Appendix 50.B — Registered mechanics with at most one coupling
+### Appendix 50.B — Registered mechanics with at most one coupling and the couplings they gain
 
-Generated on 2026-11-14 from the interconnection registry (572 mechanics). Each gains couplings under 50.14.
+Generated on 2026-11-14 from the interconnection registry (572 mechanics). Each gains the couplings in the last column under 50.14.
 
-| Mechanic | Subsystem | Couplings | Title |
+| Mechanic | Subsystem | Couplings now | Couplings gained (subsystem: effect) |
 |---|---|---|---|
-| `anatomy` | body | 1 | Body plans |
-| `body_functions` | body | 1 | Vital, wits, hearing, sight, horn, tail and venom levels feed wound deaths, festering, sanity, perception, scouting, goring and venomous bites |
-| `cognitive_decline` | body | 1 | Cognitive decline: the old may lose their memory by degrees, forgetting skills, teaching less and losing office |
-| `wounded_and_learning` | body | 1 | Wounded treated by medicine go home to recover; victories teach tactics; named casualties are recorded |
-| `incidents` | core | 1 | Causality log |
-| `apocalypse_variants` | cosmos | 0 | The end takes the shape of the cause that drove the doom clock most, from a world war to a dimensional collapse or a galactic death |
-| `clusters` | cosmos | 1 | Clusters hold galaxies; their hot medium strips star formation and their drift lengthens the roads between them |
-| `cosmic_beings` | cosmos | 1 | Cosmic beings roam their scale, cross where veils are thin, show themselves and act on their aims until bound or banished |
-| `cosmic_features` | cosmos | 0 | Asteroid fields feed miners and pirates, wormholes open and close, black holes swallow near worlds and slow time for those who pass, rogue worlds stir orbits, and comets and wandering stars return as omens |
-| `cosmic_influence` | cosmos | 0 | Where a region lies in the cosmos, the phenomena over it and the rifts in it change its magic and fertility |
-| `impacts` | cosmos | 0 | Bodies from fields, comets and rogue worlds strike or pass by; warned peoples pray, hoard and flee, and a strike leaves a crater, ruin, a winter, a remembered year, star metal and a legend |
-| `natural_law_fertility` | cosmos | 1 | Natural laws multiply fertility |
-| `regional_leak` | cosmos | 1 | Leak gathers in regions near outer beings, gates, rifts and leak wounds; horror chooses those regions first |
-| `rifts` | cosmos | 1 | Rifts tear regions open into other dimensions, grow or shrink, open passages between worlds and leave leak wounds |
-| `star_systems` | cosmos | 0 | Stars gather into systems with a primary and companions; worlds circle one star or both, and the system's light sets its temperate band |
-| `stellar_evolution` | cosmos | 1 | Stars live by their mass, swell into giants or end in supernovae, and stars made by sons live outside these laws while their makers pay |
-| `voyages` | cosmos | 1 | Journeys carry cargo, passengers with their condition, convoys and escorts, and meet derelicts, tolls and touches from outside |
-| `ghost_legends` | culture | 1 | Hauntings become ghost legends of high credence, which keep people out of haunted places |
-| `legacy_traits` | culture | 1 | Legacy traits: successor peoples keep martial styles, aesthetics, rites, beliefs and values of their predecessors, named in their founding myth |
-| `legend_memories` | culture | 0 | Legends swell what their tellers remember and plant memories of what never happened |
-| `route_renown` | culture | 0 | Famous roads, carried culture and legends |
-| `human_sacrifice_deaths` | demography | 1 | Human-sacrificing communities give their own people to the god; every other people of the world is appalled |
-| `rebirth_paths` | demography | 1 | A reborn soul comes back to its people, its house or by merit, as its doctrine teaches; a god may open the gate by its own hand |
-| `hunting_grounds` | ecology | 1 | Hides, chitin, ivory and dragonbone from living species |
-| `life_classes` | ecology | 0 | Each world's life has a complexity and the places it lives; creatures and peoples arise only where life is complex enough, life grows more complex on temperate worlds, and each people's body fits the world it arose on |
-| `species_goods` | ecology | 1 | Wild herds, fish and silk are worked as grounds of their own |
-| `arms_and_wear` | economy | 1 | Weapon mix, material and condition drawn from stocks, read in combat and worn by battle and campaign |
-| `deposits` | economy | 1 | Hidden deposits and prospecting |
-| `divine_materials` | economy | 1 | Gods forge new materials with every property they name |
-| `economic_indicators` | economy | 0 | Each realm and world keeps output, prices, trade balance, treasury, debt, idleness and living by class every epoch |
-| `economy_holds` | economy | 0 | Held stores, workshops, resources and workers stay as the Creator set them |
-| `food_chain` | economy | 1 | Grain is milled, livestock butchered, milk made into cheese and fruit pressed into wine, each step a method, the raw stage spoiling |
-| `markets` | economy | 1 | Market prices from supply, need and coin |
-| `mercenaries_and_debt` | economy | 1 | Mercenaries raised by contract and paid each season; war loans and debased coin when the chest runs dry |
-| `mine_support` | economy | 1 | Deeper galleries cave in more, hard rock holds them up, pumps keep water out and fire-setting weakens them |
-| `patrols` | economy | 1 | Garrisoned and entrenched armies patrol their region and take bandit danger off the routes through it |
-| `polity_production` | economy | 1 | A realm's production chain: every member's workshops, runs and bottlenecks gathered into one |
-| `regrowth` | economy | 0 | Renewable and finite reserves |
-| `route_holds` | economy | 1 | Closed and held routes: a way closed by the Creator or a god is never founded again until it is opened, and held values stay as set |
-| `salvage` | economy | 1 | The victor strips the field: arms mend its stacks, its worst-armed gain quality and routed siege engines change hands |
-| `substitution` | economy | 1 | People eat and burn the cheapest and best-liked goods of a family first |
-| `temple_loot` | economy | 1 | Sacked temples flood the victor's market with treasure |
-| `tool_wear` | economy | 1 | Work wears out tools by method, so a blockade on iron reaches the fields through broken ploughs |
-| `typed_resource_mechanics` | economy | 1 | Typed parameters of decaying, addictive, sentient and sacred resources |
-| `workshop_designs` | economy | 1 | Workshop designs drawn on a base kind change capacity, output, quality and storage |
-| `environment_layers` | environment | 0 | Rainfall, danger, scar and sacred layers on the map, kept with every epoch's snapshot so the past shows the land as it was |
-| `planetary_climate` | environment | 0 | Ice brightens a cooling world, volcanoes and burning thicken its air, the seas rise and fall with the ice, and ice ages and scorching ages follow from them |
-| `regional_climate` | environment | 1 | Region temperature and rainfall shift toward what coast, height, climate age and cleared neighbours ask; gods can turn them |
-| `terraforming` | environment | 0 | Gods and powers that span worlds reshape a world's air toward what its makers breathe, its warmth, water and face over epochs, and native life of another chemistry suffers |
-| `weather_exposure` | environment | 1 | Travellers and soldiers in frozen or searing lands suffer frostbite and heat |
-| `world_physics` | environment | 1 | Each world's orbit, body and air set its year, day, seasons, light, warmth, gravity, tides, rings, eclipses and auroras, and the warmth of its regions follows; great eclipses and transits fall on the calendar its orbits set |
-| `celestial_omens` | faith | 1 | Peoples read celestial bodies as omens, returns move piety and doom, and the epoch star lifts cults, prophecies and rites |
-| `faith_backfill` | faith | 1 | Old spirits gain soul records, old strata their typed entry rules and counts, dead saints their relics, as if it had always been so |
-| `faith_incidents` | faith | 1 | Temples, saints, crusades, inquisitions and iconoclasm are distinct incidents; the inquisition hunts the members of suppressed heresies first |
-| `heresies` | faith | 1 | Doctrinal drift, heresies, suppression and tolerance |
-| `missions_journeys` | faith | 1 | Missionaries travel with journeys between worlds as well as the trade roads |
-| `saint_bones` | faith | 1 | A saint's bones become a holy relic item owned by the church |
-| `strata_routing` | faith | 1 | Strata admit souls by typed entry rules over deeds, rite, tenets and god; a stratum can be closed or given to one god or church |
-| `avatars` | gods | 1 | A god walks the world in a mortal form that raises awe and love and wins peoples; its death shatters the god's manifestation |
-| `mortal_births` | household | 0 | Children born of fertility, stress, sustenance and kinship; childbirth deaths, twins, stillbirths, inherited abilities and bloodline marks |
-| `mortal_death_record` | household | 0 | Typed manner and place of death; widowing, grief and the house's prestige by the manner of death |
-| `mortal_kin` | household | 0 | Typed kin: parents, spouses, the promised, concubines, wards and sworn kin; marriages, betrothals, divorce, fostering and widowing |
-| `mortal_life_course` | household | 0 | Abilities, sex, life stages from the people's lifespan curve, growth and elder decline, health, fertility, schooling and old-age death |
-| `spy_agents` | intrigue | 1 | Typed spy networks owned by realms, factions and cults, run by named agents under cover |
-| `knowledge_gated_extraction` | knowledge | 1 | A resource yields only to a people that knows its branch to the level it needs |
-| `reverse_engineering` | knowledge | 1 | Scholars take apart the made things their people own and learn the techniques behind them |
-| `specialised_scholars` | knowledge | 1 | Scholars skilled in a branch's own craft push that branch more than learned generalists |
-| `world_surveys` | knowledge | 0 | Every people and realm knows each world only so far, from rumour to a full map, and learns of it by its settlements' journeys; journeys, colonies and conquests need it to know enough |
-| `mortal_justice` | law | 0 | Sentences under the penal code: fines, flogging, exile, branding, the loss of a hand, the tongue or the eyes, and death |
-| `pardons` | law | 1 | Pardons and amnesties: rulers free friends at a cost in corruption, the wrongly condemned to renown, and all at a new reign |
-| `precedents` | law | 1 | Case law: rulings bind later courts by their authority, grow when followed, fade, and are set aside by judges who disagree |
-| `research_agreements` | law | 1 | Trade pacts between realms that keep court scholars grow a research agreement; the one behind learns from the one ahead |
-| `ley_attunement` | magic | 1 | Works that channel the ley gain function on a line and more at a nexus |
-| `conviction` | mind | 1 | Acting in character builds conviction that steadies the mind, slows changes of belief and is spent for heroic efforts |
-| `drink_need` | mind | 1 | Brewed drink is a need for peoples who love a drink and a pleasure for the rest |
-| `grief` | mind | 1 | A death leaves kin, spouses and companions in shock, then mourning stretched by mourning rites, then acceptance or a grief that will not heal |
-| `mortal_loyalty` | mind | 1 | Loyalty to liege, people and god from shared values, regard and fear; low loyalty breeds plots, flight and conversion |
-| `mortal_stress` | mind | 1 | Stress from wounds, unmet needs, war, grief and torn loyalties; past the threshold a mind breaks |
-| `quirks` | mind | 1 | Quirks: minor traits places and events leave on a mortal, kept after return and changing how they fare and how often they set out |
-| `army_command` | polity | 1 | Commanders and sub-commanders as army offices; the marshal's and ruler's traits choose strategy |
-| `church_and_crown` | polity | 1 | A god-king's faith fuses the high priesthood with the crown; otherwise the clergy's sway drives investiture quarrels as typed incidents |
-| `ethnic_relations` | polity | 1 | Peoples under one crown draw closer in harmony or clash in strife that stirs unrest and costs the realm stability |
-| `tolls` | polity | 1 | Tolls and diverted traffic |
-| `war_causes_and_peace` | polity | 1 | Typed war causes with aims that carry parameters; every ending maps to a treaty with its clauses |
-| `ancestral_guardians` | social | 1 | Guardian ancestors bring their house luck and lend morale only where their people fight on ancestral ground |
-| `attraction` | social | 1 | Attraction: whom each mortal is drawn to and how strongly, settled from the rules of its world and gating courtship and bonds |
-| `captive_depth` | social | 1 | Mass captives from sacks; ransom by rank and house prestige from treasuries; wards' loyalty; captive marriage; captive tongues |
-| `feuds` | social | 1 | Feuds between houses and communities: honour times grievance, peace-tenet mediation, marriage and common-enemy brakes, fading |
-| `mortal_acts` | social | 0 | Gratitude repays benefactors with protection and gifts; careers are chosen among many paths |
-| `mortal_standing` | social | 1 | Personal wealth, fading renown, honour, infamy and legitimacy in office; patrons fund works and the ambitious buy favour |
-| `peace_movement` | social | 1 | Where war support sinks a peace movement rises, protests, and if it rises up forces its realm's wars toward an end |
-| `pecking_orders` | social | 1 | Households, courts, circles, warbands and crews hold pecking orders by strength, office, renown and assertiveness, challenged from below |
-| `popular_movements` | social | 1 | Movements: lasting cascades that grow with grievance, fade without it and take up arms as rebels or a religious movement |
-| `abductors` | war | 1 | Abductors carry people off from the towns in their reach to their lairs; slaying the creature frees its captives |
-| `battle_ground_record` | war | 1 | Every recorded battle carries its year, season, weather and ground |
-| `duel_ordeals` | war | 1 | Footing, pain and an injury in every exchange; trials by combat and duels of gods' champions |
-| `engine_designs` | war | 1 | War machine designs: siege engines built to a realm's design, whose frame, counterweight and arms strengthen its batteries |
-| `levies` | war | 1 | Levies and demobilisation |
-| `lost_lands` | war | 1 | Irredentism: memories of lands lost in war that fade, are kept alive by anniversaries and raise a claim when strong |
-| `mortal_equipment` | war | 0 | Equipment slots: main and off hand, body armour, helm, padding, cloak, mount and magic focus shape blows, armour, mobility and spellcraft |
-| `phased_battle_decides` | war | 1 | The phased battle alone decides: no flat patron bonus, no die; allies fight with their own stacks |
-| `resource_conflict` | war | 1 | Wars to seize strategic resources |
+| `anatomy` | body | 1 | war: body plan sets reach, armour fit and mount use; household: body plan sets dwelling and furnishing needs |
+| `body_functions` | body | 1 | economy: senses and strength set work output by profession; social: lost senses change standing where wholeness norms apply |
+| `cognitive_decline` | body | 1 | polity: an office holder's decline raises succession pressure; household: care load for the declining rises (50.5) |
+| `wounded_and_learning` | body | 1 | war: veterans raise unit quality; demography: wounded return as maimed cohorts |
+| `incidents` | core | 1 | mind: incidents plant memories; knowledge: incidents feed historiography and media (50.2) |
+| `apocalypse_variants` | cosmos | 0 | polity: each variant's warnings move policies and alliances before the end; faith: millenarian movements read the variant |
+| `clusters` | cosmos | 1 | cosmos: cluster medium sets star formation in member galaxies; knowledge: distance sets survey and route discovery |
+| `cosmic_beings` | cosmos | 1 | faith: manifestations found cults and move piety; environment: a being's acts scar regions and change danger |
+| `cosmic_features` | cosmos | 0 | economy: asteroid riches feed mining and trade; war: pirates and wormhole control set route safety and campaigns |
+| `cosmic_influence` | cosmos | 0 | magic: position and phenomena set magic strength in regions; ecology: fertility changes reach harvests and species |
+| `impacts` | cosmos | 0 | demography: impacts kill and displace; polity: warnings move granary and migration policy |
+| `natural_law_fertility` | cosmos | 1 | demography: fertility laws move births; economy: harvest fertility moves food supply |
+| `regional_leak` | cosmos | 1 | faith: leak raises outer cults and doubt; demography: leak pushes people away |
+| `rifts` | cosmos | 1 | cosmos: rifts open passages and leak; demography: rifts displace people |
+| `star_systems` | cosmos | 0 | environment: the temperate band sets world climates; knowledge: system structure sets navigation |
+| `stellar_evolution` | cosmos | 1 | demography: a star's change moves habitability and migration; faith: star changes become omens |
+| `voyages` | cosmos | 1 | economy: cargo moves goods and prices; culture: passengers carry customs and language |
+| `ghost_legends` | culture | 1 | demography: hauntings keep people from places and move settlement; faith: legends raise spirit worship or exorcism |
+| `legacy_traits` | culture | 1 | war: martial styles carry into the successor's armies; faith: rites and beliefs carry into its cults |
+| `legend_memories` | culture | 0 | mind: false memories move opinions; polity: legends support claims and legitimacy |
+| `route_renown` | culture | 0 | economy: renowned roads draw traffic and inns (50.3); faith: renowned roads become pilgrim ways |
+| `human_sacrifice_deaths` | demography | 1 | polity: other peoples' horror moves relations and war causes; faith: sacrifice feeds the god's essence where doctrine says |
+| `rebirth_paths` | demography | 1 | household: reborn souls return to houses with memories where doctrine says; faith: rebirth success moves piety |
+| `hunting_grounds` | ecology | 1 | social: hunting rights and poaching drive disputes; body: hunting carries exposures (47.10) |
+| `life_classes` | ecology | 0 | demography: peoples arise only where life is complex; economy: life classes set the species products available |
+| `species_goods` | ecology | 1 | social: rights to grounds drive disputes; ecology: overuse depletes species |
+| `arms_and_wear` | economy | 1 | war: weapon mix and condition set battle factors; polity: re-arming costs treasury |
+| `deposits` | economy | 1 | economy: revealed reserves open extraction and prices; war: rich deposits become war aims |
+| `divine_materials` | economy | 1 | war: new materials change arms and armour factors; faith: divine materials become sacred goods |
+| `economic_indicators` | economy | 0 | polity: indicators move policy choices, unrest and legitimacy; mind: living standards move stress and happiness |
+| `economy_holds` | economy | 0 | gods: holds are god acts recorded with their actor; polity: held stores and workers are excluded from taxation and levies while held |
+| `food_chain` | economy | 1 | economy: method chains set prices and stocks; body: preserved food quality sets nutrition and illness |
+| `markets` | economy | 1 | polity: prices move unrest and policy; household: prices move basket and living standard |
+| `mercenaries_and_debt` | economy | 1 | polity: debt and debasement move legitimacy and credit; social: unpaid mercenaries raid and riot |
+| `mine_support` | economy | 1 | economy: collapses cut output and raise costs; demography: mine deaths reduce population and raise grief |
+| `patrols` | economy | 1 | polity: patrol cost and route safety move trade income; social: banditry falls and rises with patrols |
+| `polity_production` | economy | 1 | war: bottlenecks limit armament; social: shortages raise unrest |
+| `regrowth` | economy | 0 | ecology: regeneration sets species and forest recovery; polity: depletion moves policy and conquest |
+| `route_holds` | economy | 1 | economy: held routes stop trade on them; polity: held routes change war and supply plans |
+| `salvage` | economy | 1 | war: salvaged arms re-equip stacks; polity: salvage enriches the victor's treasury |
+| `substitution` | economy | 1 | economy: substitution moves demand and prices across a family; household: it moves basket composition |
+| `temple_loot` | economy | 1 | faith: looted faiths turn hostile; social: looting raises grievance and feuds |
+| `tool_wear` | economy | 1 | economy: worn tools cut output; household: tool replacement cost moves basket |
+| `typed_resource_mechanics` | economy | 1 | economy: decay, addiction and sacred limits move supply and price; faith: sacred resources move piety when used |
+| `workshop_designs` | economy | 1 | polity: designs spread by trade and conquest; knowledge: designs advance technique |
+| `environment_layers` | environment | 0 | faith: sacred layers draw pilgrims and temples; demography: danger and scars push migration |
+| `planetary_climate` | environment | 0 | ecology: climate ages move species ranges and extinctions; demography: harvests and migration follow climate |
+| `regional_climate` | environment | 1 | economy: regional shifts move harvests and prices; demography: migration follows habitability |
+| `terraforming` | environment | 0 | ecology: native life declines or adapts; demography: new habitability draws settlers |
+| `weather_exposure` | environment | 1 | war: exposure losses weaken armies; demography: exposure deaths among travellers and the poor |
+| `world_physics` | environment | 1 | ecology: gravity, air and light set what life fits; economy: day and year lengths set work calendars |
+| `celestial_omens` | faith | 1 | polity: omen readings move rulers' decisions and legitimacy; demography: ominous signs delay unions and births where believed |
+| `faith_backfill` | faith | 1 | household: funeral rites and rebirth paths reach households; demography: rebirth paths route souls back to peoples |
+| `faith_incidents` | faith | 1 | polity: crusades and inquisitions move legitimacy and wars; social: iconoclasm and persecution raise unrest |
+| `heresies` | faith | 1 | polity: suppression costs and unrest; social: heresies split communities and start movements |
+| `missions_journeys` | faith | 1 | culture: missionaries carry language and customs; polity: missions move alliances and conflicts |
+| `saint_bones` | faith | 1 | economy: relics draw pilgrims and gifts; polity: relic possession supports legitimacy |
+| `strata_routing` | faith | 1 | household: kin expect routing by rites and act on it; social: routing doctrines move behaviour toward the favoured deeds |
+| `avatars` | gods | 1 | polity: an avatar's presence moves legitimacy and alliances; war: an avatar in battle lifts morale and draws enemy fire |
+| `mortal_births` | household | 0 | demography: births set population by people and class; household: births raise care load and housework (50.5, 50.9) |
+| `mortal_death_record` | household | 0 | social: manner of death moves house prestige and feuds; faith: manner of death sets afterlife routing |
+| `mortal_kin` | household | 0 | law: unions and divorces become legal acts with property effects; economy: dowries and inheritance move wealth |
+| `mortal_life_course` | household | 0 | economy: life stages set who works; polity: age sets eligibility for office |
+| `spy_agents` | intrigue | 1 | polity: revealed aims move diplomacy; social: exposed spies raise distrust |
+| `knowledge_gated_extraction` | knowledge | 1 | polity: gated resources become reasons for research agreements and conquest; social: holders of the knowledge gain standing |
+| `reverse_engineering` | knowledge | 1 | war: copied arms change battle factors; law: copying breaks incorporeal rights |
+| `specialised_scholars` | knowledge | 1 | economy: specialised branches raise their methods' output; polity: scholars become court assets |
+| `world_surveys` | knowledge | 0 | polity: survey level sets colonisation and war reach; economy: survey level sets trade between worlds |
+| `mortal_justice` | law | 0 | social: sentences move infamy and kin shame; demography: exile and executions move population |
+| `pardons` | law | 1 | social: pardons move faction favour and grievance; mind: pardoned mortals gain gratitude memories |
+| `precedents` | law | 1 | polity: binding rulings constrain rulers' acts; social: harsh precedent raises grievance |
+| `research_agreements` | law | 1 | polity: agreements bind relations and are broken in war; economy: shared techniques raise production |
+| `ley_attunement` | magic | 1 | economy: attuned works yield more; polity: control of nexuses becomes a war aim |
+| `conviction` | mind | 1 | mind: conviction slows belief change; social: high conviction raises renown and rivalry |
+| `drink_need` | mind | 1 | economy: drink demand drives brewing and trade; social: drinking customs shape circles and brawls |
+| `grief` | mind | 1 | household: grief lowers work and care for its length; social: grief drives vengeance or reconciliation |
+| `mortal_loyalty` | mind | 1 | polity: loyalty sets plots, desertion and service; faith: loyalty to god sets conversion |
+| `mortal_stress` | mind | 1 | social: breaks start quarrels and violence; body: long stress raises illness |
+| `quirks` | mind | 1 | social: quirks change interactions and standing; economy: quirks change work output for some professions |
+| `army_command` | polity | 1 | war: officers' traits choose tactics and stance in battle; mind: command success and failure move officers' stress and renown |
+| `church_and_crown` | polity | 1 | faith: investiture outcomes move clergy loyalty and heresy; law: who holds courts of faith follows the outcome |
+| `ethnic_relations` | polity | 1 | social: strife raises riots and feuds; culture: harmony raises culture exchange and mixed unions |
+| `tolls` | polity | 1 | economy: tolls move prices and route choice; polity: toll income funds the holder |
+| `war_causes_and_peace` | polity | 1 | law: treaty clauses become obligations with breaches; social: war aims move war support |
+| `ancestral_guardians` | social | 1 | war: morale lift on ancestral ground; faith: veneration feeds ancestral rites and their cost |
+| `attraction` | social | 1 | social: attraction drives courtship, affairs and rivalry; law: intimacy norms (50.8) judge the bonds it starts |
+| `captive_depth` | social | 1 | polity: ransoms move treasuries and treaties; demography: captives assimilate into the captor people over generations |
+| `feuds` | social | 1 | law: feuds become cases and wergild clauses; polity: house feuds weaken councils and successions |
+| `mortal_acts` | social | 0 | polity: careers fill offices and armies; economy: careers set labour supply by profession |
+| `mortal_standing` | social | 1 | economy: wealth funds works and patronage; social: renown and infamy set alliances and marriages |
+| `peace_movement` | social | 1 | polity: movements force peace terms and change rulers; culture: peace movements leave commemorations |
+| `pecking_orders` | social | 1 | polity: rank in courts sets office access; mind: low rank raises stress and ambition |
+| `popular_movements` | social | 1 | law: movements change laws when they win; faith: religious movements found cults |
+| `abductors` | war | 1 | household: a carried-off member leaves a household short of labour and in grief; faith: captives freed by a hero or a god raise that patron's piety |
+| `battle_ground_record` | war | 1 | culture: famous battlefields become legends and pilgrimage sites; faith: battlefields with many dead raise hauntings where spirits exist |
+| `duel_ordeals` | war | 1 | social: duel outcomes move honour and feuds; polity: trials by combat settle claims and successions |
+| `engine_designs` | war | 1 | economy: building engines consumes materials and coin; polity: engine superiority shifts war aims and treaties |
+| `levies` | war | 1 | economy: levies take labour from fields and workshops; household: levied members leave households short (50.5) |
+| `lost_lands` | war | 1 | polity: irredentist claims start wars; culture: anniversaries become commemorations |
+| `mortal_equipment` | war | 0 | economy: equipment demand drives smiths and trade; social: fine equipment raises standing |
+| `phased_battle_decides` | war | 1 | economy: battle outcomes set loot and losses; demography: casualties reduce populations |
+| `resource_conflict` | war | 1 | polity: resource wars change borders and treaties; demography: war losses |
