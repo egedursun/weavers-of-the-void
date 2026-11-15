@@ -6,7 +6,7 @@ from aerona.db.tables.intrigue import FavourRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow, VassalageRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, RegionalStanding, TreatyKind
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState, SubjectKind
 from aerona.domain.enums.war import WarCause
@@ -20,6 +20,7 @@ from aerona.engine.polity.regard import RegardTally, on_conquest, tend_regard
 from aerona.engine.polity.spheres import SphereTally, tend_spheres
 from aerona.engine.polity.subjects import SubjectTally, forbidden_war, kind_for, pays_tribute, sends_levies, tend_subjects
 from aerona.engine.polity.wars import comrades
+from aerona.engine.primitives.distance import RegionAtlas
 from tests.engine.society.factories import Realm, context, make, people, tuned
 
 
@@ -161,3 +162,20 @@ async def test_subjects_become_tributaries_clients_or_protectorates_and_are_defe
     assert overlord_core.id in comrades(book, vassal_core.id)
     row.kind = SubjectKind.VASSAL
     assert overlord_core.id not in comrades(book, vassal_core.id)
+
+
+async def test_the_realm_book_lasts_through_births_and_is_read_again_when_a_realm_comes_goes_or_changes(realm: Realm) -> None:
+    first, _ = await polity(realm, "Ashmark")
+    book = await RealmBook.load(realm.session)
+    assert first.id in book.realms
+    await people(realm, "Wanderers")
+    await realm.session.flush()
+    kept = await RealmBook.load(realm.session)
+    assert kept.realms is book.realms and kept.atlas is await RegionAtlas.load(realm.session)
+    second, _ = await polity(realm, "Birchmark")
+    grown = await RealmBook.load(realm.session)
+    assert grown.realms is not book.realms and second.id in grown.realms
+    first.status, first.end_epoch = EntityStatus.DEAD, 2
+    fallen = await RealmBook.load(realm.session)
+    assert fallen is not grown and first.id not in fallen.realms and second.id in fallen.realms
+    assert await RealmBook.load(realm.session) is fallen

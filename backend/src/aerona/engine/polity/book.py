@@ -1,10 +1,11 @@
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
-from sqlalchemy import select
+from sqlalchemy import event, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import ORMExecuteState, Session
 
-from aerona.db.read_memo import memo_of, table_names
+from aerona.db.read_memo import memo_of, table_names, touched_rows
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, VassalageRow
@@ -14,7 +15,39 @@ from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.primitives.distance import RegionAtlas
 
 SEXES = ("female", "male")
-BOOK_TABLES = table_names((EntityRow, PolityProfileRow, PolityMemberRow, PolityTerritoryRow, OfficeRow, VassalageRow, WorldMapRow))
+BOOK_TABLES = table_names((PolityProfileRow, PolityMemberRow, PolityTerritoryRow, OfficeRow, VassalageRow, WorldMapRow))
+REALM_SHAPE = "aerona.realm_book.shape"
+REALM_COLUMNS = ("entity_type", "status")
+
+
+def realm_shape(sync: Session) -> int:
+    found: int = sync.info.setdefault(REALM_SHAPE, 0)
+    return found
+
+
+def reshapes_realms(row: EntityRow) -> bool:
+    state = inspect(row)
+    kinds = {*state.attrs.entity_type.history.added, *state.attrs.entity_type.history.unchanged, *state.attrs.entity_type.history.deleted}
+    return EntityType.POLITY in kinds and any(state.attrs[column].history.has_changes() for column in REALM_COLUMNS)
+
+
+def realms_pending(sync: Session) -> bool:
+    new, dirty, deleted = touched_rows(sync, EntityRow)
+    return bool(deleted) or any(row.entity_type is EntityType.POLITY for row in new) or any(reshapes_realms(row) for row in dirty)
+
+
+def follow_realms(sync: Session, *_: object) -> None:
+    if realms_pending(sync):
+        sync.info[REALM_SHAPE] = realm_shape(sync) + 1
+
+
+def reshape_on_write(state: ORMExecuteState) -> None:
+    if not state.is_select:
+        state.session.info[REALM_SHAPE] = realm_shape(state.session) + 1
+
+
+event.listen(Session, "after_flush", follow_realms)
+event.listen(Session, "do_orm_execute", reshape_on_write)
 
 
 def sex_of(mortal: EntityRow) -> str:
@@ -54,14 +87,22 @@ class RealmBook:
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "RealmBook":
+        atlas = await RegionAtlas.load(session)
+        sync = session.sync_session
         memo = memo_of(session, "realm_book", BOOK_TABLES)
-        if memo is not None and "book" in memo:
-            found: RealmBook = memo["book"]
+        known: tuple[int, RealmBook] | None = memo.get("book") if memo is not None else None
+        if known is not None and known[0] == realm_shape(sync) and not realms_pending(sync):
+            if known[1].atlas is not atlas and memo is not None:
+                memo["book"] = (known[0], replace(known[1], atlas=atlas))
+            found: RealmBook = memo["book"][1] if memo is not None else known[1]
             return found
+        if realms_pending(sync):
+            await session.flush()
+        shape = realm_shape(sync)
         book = await cls.read(session)
         after = memo_of(session, "realm_book", BOOK_TABLES)
-        if after is not None:
-            after["book"] = book
+        if after is not None and shape == realm_shape(sync):
+            after["book"] = (shape, book)
         return book
 
     @classmethod
