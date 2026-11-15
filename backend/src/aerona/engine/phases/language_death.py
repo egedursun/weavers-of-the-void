@@ -9,6 +9,7 @@ from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.transform import TransformKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -16,6 +17,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.primitives.language_profile import has_script
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, has_flag, living_entity, remove_flag
 from aerona.engine.primitives.stats import set_stats
+from aerona.engine.transform.record import blocked, record_transformation
 from aerona.language.titles import community_phrase
 from aerona.language.vitality import VitalityChange, assess_vitality, death_notes_allowed, vitality_note
 
@@ -91,9 +93,13 @@ async def language_death(ctx: TickContext) -> None:
             text = f"No one is raised speaking {language.name} any more, yet the priests still chant in it."
             await note(ctx, text, key="languages.liturgical", ids=[language.id])
             continue
+        kind = TransformKind.LANGUAGE_DEATH if assessment.change is VitalityChange.DIED else TransformKind.LANGUAGE_REVIVAL
+        if await blocked(ctx, kind, language.id):
+            continue
         if assessment.change is VitalityChange.DIED:
             await add_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE, ctx.epoch)
             await remove_flag(ctx.session, language.id, EntityFlag.REVIVED_LANGUAGE)
+            await record_transformation(ctx, kind, language.id, language.id)
             if assessment.decipherable:
                 await add_flag(ctx.session, language.id, EntityFlag.DECIPHERABLE, ctx.epoch)
             set_stats(language, spread=0)
@@ -105,6 +111,7 @@ async def language_death(ctx: TickContext) -> None:
         await remove_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE)
         await remove_flag(ctx.session, language.id, EntityFlag.DECIPHERABLE)
         await add_flag(ctx.session, language.id, EntityFlag.REVIVED_LANGUAGE, ctx.epoch)
+        await record_transformation(ctx, kind, language.id, language.id)
         ctx.count("revived")
         await note(ctx, vitality_note(language.name, assessment), key="languages.revived", ids=[language.id])
 

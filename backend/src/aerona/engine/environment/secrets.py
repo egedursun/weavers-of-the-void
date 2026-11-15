@@ -206,7 +206,7 @@ async def recover_rite(ctx: TickContext, secret: PlaceSecretRow, place: EntityRo
     known = await rite_of(ctx, school)
     if known is not None:
         if finder is not None:
-            await connect(ctx.session, finder.id, known[0].id, BondKind.KNOWS, ctx.epoch, description=f"found in {place.name}")
+            await connect(ctx.session, finder.id, known[0].id, BondKind.OWNS, ctx.epoch, description=f"found in {place.name}")
         return known[0]
     if finder is None:
         return None

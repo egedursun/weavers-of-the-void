@@ -59,7 +59,7 @@ SKIPPED_TABLES = frozenset(
         "world_maps",
     }
 )
-SKIPPED_COLUMNS = frozenset({"id", LOCK_COLUMN, "created_at", "updated_at"})
+SKIPPED_COLUMNS = frozenset({"id", LOCK_COLUMN, "created_at", "updated_at", "undo"})
 ID_SUFFIXES = ("_entity_id", "_node_id", "_id")
 NODE_SUFFIXES = ("_entity_id", "_node_id")
 INDEXED_LISTS: dict[str, list[str]] = {"biome_mix": [biome.name.lower().replace("_", " ") for biome in Biome]}

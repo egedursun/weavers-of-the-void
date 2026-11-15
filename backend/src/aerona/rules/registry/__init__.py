@@ -561,6 +561,7 @@ from aerona.rules.registry.tongues import (
     SoundChangeRules,
 )
 from aerona.rules.registry.trade import TradeRules
+from aerona.rules.registry.transform import TransformRules
 from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
 from aerona.rules.registry.ui import UiRules
@@ -1002,6 +1003,7 @@ class Rules:
     lifecycle_ends: LifecycleEndRules = field(default_factory=LifecycleEndRules)
     world_ends: WorldEndRules = field(default_factory=WorldEndRules)
     prehistory: PrehistoryRules = field(default_factory=PrehistoryRules)
+    transform: TransformRules = field(default_factory=TransformRules)
     fossils: FossilRules = field(default_factory=FossilRules)
     museums: MuseumRules = field(default_factory=MuseumRules)
     gardens: GardenRules = field(default_factory=GardenRules)

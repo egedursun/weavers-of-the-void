@@ -15,6 +15,7 @@ from aerona.domain.enums.polity import ClaimBasis, LawKind, OfficeKind
 from aerona.domain.enums.renown import Currency
 from aerona.domain.enums.statecraft import SubjectKind
 from aerona.domain.enums.titles import TitleRank, TitleTenure
+from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import TitleStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.knowledge import charted_share
@@ -29,6 +30,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats
 from aerona.engine.renown.currencies import bump, purse_of
+from aerona.engine.transform.record import blocked, record_transformation
 
 HOLDER = "holder_node_id"
 OFFICE_HOLDER = "holder_entity_id"
@@ -133,13 +135,14 @@ async def found_title(ctx: TickContext, realm: Realm, rank: TitleRank, tenure: T
         ctx.session.add(DeJureLinkRow(title_entity_id=entity.id, member_entity_id=land, since_epoch=ctx.epoch))
     await record_holder(ctx, row, realm.ruler_id, tenure)
     await ctx.session.flush()
+    await record_transformation(ctx, TransformKind.TITLE_RAISED, realm.entity.id, entity.id)
     return row
 
 
 async def seed_titles(ctx: TickContext, book: RealmBook, tally: TitleTally) -> None:
     linked = set(await ctx.session.scalars(select(DeJureLinkRow.member_entity_id)))
     for realm in book.realms.values():
-        if held(realm.entity.id) or await primary_title(ctx, realm.entity.id) is not None:
+        if held(realm.entity.id) or await primary_title(ctx, realm.entity.id) is not None or await blocked(ctx, TransformKind.TITLE_RAISED, realm.entity.id):
             continue
         lands = set(realm.territory) - linked
         await found_title(ctx, realm, rank_of(realm.profile.tier), TitleTenure.FOUNDED, lands)
@@ -299,7 +302,7 @@ async def usurp_and_create(ctx: TickContext, book: RealmBook, tally: TitleTally)
         if ruler is None or own is None or held(ruler) or held(own.title_entity_id):
             continue
         wanted = rank_of(realm.profile.tier)
-        if rank_index(wanted) > rank_index(own.rank) and RANK not in (own.locked or []):
+        if rank_index(wanted) > rank_index(own.rank) and RANK not in (own.locked or []) and not await blocked(ctx, TransformKind.TITLE_RAISED, realm.entity.id):
             lands = await de_jure_lands(ctx, own.title_entity_id) | set(realm.territory)
             higher = await found_title(ctx, realm, wanted, TitleTenure.CREATED, lands - await de_jure_lands(ctx, own.title_entity_id))
             purse = await purse_of(ctx.session, ruler, ctx.epoch)

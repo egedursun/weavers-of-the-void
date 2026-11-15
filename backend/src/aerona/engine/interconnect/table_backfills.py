@@ -9,6 +9,11 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("dreamt_pasts", "prehistory_events"): (
         "dreamt_pasts: dream worlds dream their past again from the next epoch; worlds with written lore take a past backfilled from it at the next start"
     ),
+    ("transformations", "transformations"): (
+        "transformations: past deifications, uplifts, god corpses, risen spirits, manifestations and raised beasts are entered at the next start"
+    ),
+    ("transformations", "transform_prospects"): "none: prospects are watched from the next epoch",
+    ("transformations", "star_modifiers"): "none: a star dims from the next death of its god",
     ("collections", "museum_collections"): "none: collections are founded and gathered from the next epoch",
     ("collections", "museum_pieces"): "none: collections are founded and gathered from the next epoch",
     ("gardens", "gardens"): "none: gardens are laid out from the next epoch",

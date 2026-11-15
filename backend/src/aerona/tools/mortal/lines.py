@@ -172,6 +172,7 @@ WORKSHOP_BOUGHT = Line("tools.mortal.workshop_bought", "{me} bought the {worksho
 POLICY_LAID = Line("tools.mortal.policy_laid", "{me} laid down this {policy} on {good}.")
 HOARD_OPENED = Line("tools.mortal.hoard_opened", "{me} bought up {good} in {place} and held it back.")
 HEROQUEST = Line("tools.mortal.heroquest", "{me} set out on a heroquest.")
+TRUE_NAME = Line("tools.mortal.true_name", "{me} learned a true name from {keeper}.")
 ENCHANTMENT = Line("tools.mortal.enchantment", "{me} laid {name} as a global enchantment.")
 CLAIM_TURF = Line("tools.mortal.claim_turf", "{me} claimed new streets for the organisation.")
 BRIBE_OFFICIAL = Line("tools.mortal.bribe_official", "{me} put {official} on the payroll.")

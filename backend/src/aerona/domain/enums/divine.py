@@ -133,6 +133,7 @@ class SonPunishment(StrEnum):
     CHAIN = "chain"
     EXILE = "exile"
     STRIP_POWER = "strip_power"
+    STRIP_DIVINITY = "strip_divinity"
 
 
 class LawScope(StrEnum):

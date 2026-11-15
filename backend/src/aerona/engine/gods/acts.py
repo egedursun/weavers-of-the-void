@@ -36,6 +36,7 @@ from aerona.engine.phases.disasters import apply_disaster, disaster_phrase, reco
 from aerona.engine.primitives.faith import worship_creator
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon
+from aerona.engine.transform.anchors import star_god_died
 from aerona.rules.registry import Rules
 
 THINKING_TYPES = frozenset(COMMUNITY_TYPES | {EntityType.MORTAL})
@@ -169,6 +170,7 @@ async def kill_foreign_god(ctx: TickContext, creator: CreatorRow, god: ForeignGo
     god.status = ForeignGodStatus.DEAD
     god.power = 0 if devour else god.power
     god.death_epoch = ctx.epoch
+    await star_god_died(ctx, god)
     god.awakening_pressure = 0
     god.defeated_epoch = None
     rng = ctx.rng("foreign_worshippers")

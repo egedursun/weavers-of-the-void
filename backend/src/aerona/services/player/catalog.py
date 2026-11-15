@@ -134,6 +134,7 @@ from aerona.services.player import (
     theories,
     titles,
     tongues,
+    transform,
     urban,
     urban_depth,
     variants,
@@ -5174,6 +5175,55 @@ WORLD_END_ACTIONS = (
     ),
 )
 
+TRANSFORM_ACTIONS = (
+    _sync(
+        Meta("transform:force", "Force a thing to become another kind of thing", G.COSMOS), transform.transform_force, transform.TransformTarget, free, ("F49",)
+    ),
+    _sync(Meta("transform:block", "Block a transformation of a thing", G.COSMOS), transform.transform_block, transform.TransformTarget, free, ("F49",)),
+    _sync(
+        Meta("transform:release", "Let a blocked transformation come again", G.COSMOS), transform.transform_release, transform.TransformTarget, free, ("F49",)
+    ),
+    _sync(
+        Meta("transform:revert", "Undo a transformation of this epoch", G.COSMOS), transform.transform_revert, transform.TransformationTarget, free, ("F49",)
+    ),
+    _sync(
+        Meta("transformation:edit", "Set the record of a transformation", G.COSMOS), transform.transformation_edit, transform.TransformationEdit, free, ("F49",)
+    ),
+    _sync(
+        Meta("transformation:delete", "Strike out the record of a transformation", G.COSMOS),
+        transform.transformation_delete,
+        transform.TransformationTarget,
+        free,
+        ("F49",),
+    ),
+    _sync(Meta("transform_prospect:edit", "Set the prospect of a transformation", G.COSMOS), transform.prospect_edit, transform.ProspectEdit, free, ("F49",)),
+    _sync(
+        Meta("transform_prospect:delete", "Strike out the prospect of a transformation", G.COSMOS),
+        transform.prospect_delete,
+        transform.ProspectTarget,
+        free,
+        ("F49",),
+    ),
+    _sync(
+        Meta("star_modifier:create", "Change how bright a star burns", G.COSMOS),
+        transform.star_modifier_create,
+        transform.StarModifierDraft,
+        free,
+        ("F49/RP10",),
+    ),
+    _sync(
+        Meta("star_modifier:edit", "Set a change to a star's light", G.COSMOS), transform.star_modifier_edit, transform.StarModifierEdit, free, ("F49/RP10",)
+    ),
+    _sync(
+        Meta("star_modifier:delete", "Lift a change to a star's light", G.COSMOS),
+        transform.star_modifier_delete,
+        transform.StarModifierTarget,
+        free,
+        ("F49/RP10",),
+    ),
+)
+
+
 PREHISTORY_ACTIONS = (
     _sync(
         Meta("prehistory:configure", "Plan the prehistory of a world", G.WORLDS),
@@ -5289,6 +5339,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *LIFECYCLE_ACTIONS,
     *WORLD_END_ACTIONS,
     *PREHISTORY_ACTIONS,
+    *TRANSFORM_ACTIONS,
     *FOSSIL_ACTIONS,
     *MUSEUM_ACTIONS,
     *ERAS_ACTIONS,

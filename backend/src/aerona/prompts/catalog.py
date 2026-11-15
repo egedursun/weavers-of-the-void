@@ -193,6 +193,7 @@ SPECS: tuple[PromptSpec, ...] = (
         defaults.bond_name_related_constraints,
     ),
     PromptSpec(P.MORTAL_TURN_SYSTEM, A.MORTAL, mortal.MortalTurnSystemContext),
+    PromptSpec(P.FALLEN_SON_TURN, A.MORTAL, mortal.FallenSonTurnContext),
     PromptSpec(P.MORTAL_TURN_USER, A.MORTAL, mortal.MortalTurnUserContext),
     PromptSpec(P.MORTAL_TURN_CONTINUATION, A.MORTAL, son_turn.TurnContinuationContext),
     PromptSpec(P.MORTAL_CONTEXT, A.MORTAL, mortal.MortalContextContext),

@@ -86,6 +86,7 @@ from tests.tools.every_setup_crafts import people_home, town_insurer
 from tests.tools.every_setup_customs import long_foreigner, town_pool
 from tests.tools.every_setup_eras import skilled_for_programme
 from tests.tools.every_setup_folkways import impure_mortal, neighbour, owned_item
+from tests.tools.every_setup_lifecycle import name_keeper
 from tests.tools.every_setup_means import money_changer
 from tests.tools.every_setup_nature import town_dweller
 from tests.tools.every_son_tool import faction, knowledge, language, mortal, people, plain, region, resource, route, settlement, species
@@ -214,6 +215,7 @@ MORTAL_CASES: dict[str, Case] = {
     "dig_site": named(plain(site_id=created("site")), dig_ready),
     "search_magic_sites": named(plain(), hidden_magic),
     "undertake_heroquest": named(plain(), quester),
+    "seek_true_name": named(plain(keeper_id=created("keeper")), name_keeper),
     "take_longevity": named(plain(form="body"), mortal_vis),
     "found_enchantment": named(plain(name="The Long Calm", effect="bounty", form="body", strength=30), mortal_vis),
     "decipher_script": named(plain(language_id=created("dead_tongue")), dead_script),

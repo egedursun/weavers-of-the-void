@@ -103,6 +103,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "companion_ids": "Mortals where you are who walk beside you (ids), if any",
         },
     ),
+    T.SEEK_TRUE_NAME: ToolText(
+        "You seek a true name, your own if you have lost it or another's, from someone in your land who keeps it: a beast or a mortal who "
+        "knows it. Learning a name gives you power over its bearer. 1 action.",
+        {"keeper_id": "Who you seek it from (an id)", "bearer_id": "Whose true name you seek (an id); leave it out to seek your own"},
+    ),
     T.TAKE_LONGEVITY: ToolText(
         "You take longevity magic: it adds years to your life each epoch it is paid in vis of the form you choose, and you come to need it; "
         "when the vis runs out the borrowed years fall away. 1 action.",

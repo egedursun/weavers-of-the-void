@@ -134,6 +134,7 @@ class PromptId(StrEnum):
     BOND_NAME_RELATED_USER = "bond_name_related_user"
 
     MORTAL_TURN_SYSTEM = "mortal_turn_system"
+    FALLEN_SON_TURN = "fallen_son_turn"
     MORTAL_TURN_USER = "mortal_turn_user"
     MORTAL_TURN_CONTINUATION = "mortal_turn_continuation"
     MORTAL_CONTEXT = "mortal_context"

@@ -16,6 +16,7 @@ from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, Leg
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import MemoryKind, SkillKind, ValueAxis, ValueHolder
 from aerona.domain.enums.society import NaturalLaw
+from aerona.domain.enums.transform import TransformKind
 from aerona.engine.context import TickContext
 from aerona.engine.lore.kinds import ArchetypeParams, kind_of, params_of
 from aerona.engine.lore.language import standardisation_of
@@ -25,6 +26,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity, spoken_language
 from aerona.engine.primitives.stats import stat
+from aerona.engine.transform.record import blocked, record_transformation
 
 A = LegendArchetype
 CATEGORY_ARCHETYPES = {
@@ -164,8 +166,9 @@ async def fix(ctx: TickContext, row: LegendProfileRow) -> int | None:
         .order_by(ArtworkProfileRow.artwork_entity_id)
     )
     for work_id in works:
-        if await living_entity(ctx.session, work_id) is not None:
+        if await living_entity(ctx.session, work_id) is not None and not await blocked(ctx, TransformKind.LEGEND_FIXED, row.legend_entity_id):
             row.fixed_in_entity_id = work_id
+            await record_transformation(ctx, TransformKind.LEGEND_FIXED, row.legend_entity_id, work_id)
             return work_id
     row.fixed_in_entity_id = None
     return None

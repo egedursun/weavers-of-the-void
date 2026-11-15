@@ -8,6 +8,7 @@ from aerona.agents.context.scope import Scope
 from aerona.agents.context.sky_calendar import sky_calendar
 from aerona.agents.context.son_faith import son_faith
 from aerona.agents.context.son_memory import son_memory
+from aerona.agents.context.transform_lines import prospect_lines
 from aerona.agents.context.world_summary import world_summary
 from aerona.agents.turns.ports import ToolCatalogue
 from aerona.catalog.creator import CREATOR_PASSIONS
@@ -162,6 +163,7 @@ async def son_user_context(scope: Scope, son: SonRow, points: int, catalogue: To
         memory=await son_memory(scope, son),
         opportunities=await son_opportunity_text(scope, son, catalogue),
         faith=await son_faith(scope, son),
+        changes=await prospect_lines(scope.session, scope.rules, subjects=[son.id], world_id=son.current_world_id),
         action_points=points,
         resumed=resumed,
         continuation=continuation,

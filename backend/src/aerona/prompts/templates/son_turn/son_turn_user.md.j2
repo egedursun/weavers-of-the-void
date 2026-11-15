@@ -34,6 +34,12 @@ The Creator has no special command for this age; act on your own desire and your
 
 === YOUR MEMORY ===
 {{ memory }}
+{% if changes %}
+
+=== CHANGES OF KIND UNDER WAY (press_transformation acts here) ===
+{% for line in changes %}- {{ line }}
+{% endfor %}
+{% endif %}
 {% if faith %}
 
 === YOUR FAITHFUL (doctrine, tenets, zeal and the dead; reveal_tenet and open_rebirth_gate act here) ===

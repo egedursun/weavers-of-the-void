@@ -21,12 +21,13 @@ class FlowCategory(StrEnum):
     CREATION = "creation"
     DIVINE = "divine"
     PLAYER = "player"
+    TRANSFORMATION = "transformation"
     UNSPECIFIED = "unspecified"
 
 
 TRANSFERS = frozenset({FlowCategory.MIGRATION, FlowCategory.LEVY, FlowCategory.JOURNEY, FlowCategory.MERGE})
 SOURCES = frozenset({FlowCategory.BIRTH, FlowCategory.GROWTH, FlowCategory.CREATION, FlowCategory.CONVERSION, FlowCategory.CAPTIVE})
-SINKS = frozenset({FlowCategory.DEATH, FlowCategory.CASUALTY, FlowCategory.DISASTER, FlowCategory.FAMINE, FlowCategory.PLAGUE})
+SINKS = frozenset({FlowCategory.DEATH, FlowCategory.CASUALTY, FlowCategory.DISASTER, FlowCategory.FAMINE, FlowCategory.PLAGUE, FlowCategory.TRANSFORMATION})
 
 FLOW_CATEGORY: ContextVar[FlowCategory | None] = ContextVar("flow_category", default=None)
 

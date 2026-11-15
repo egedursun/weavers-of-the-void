@@ -33,6 +33,7 @@ from aerona.domain.enums.military import ArmyRole, CaptiveFate, CommanderTrait, 
 from aerona.domain.enums.mind import Attribute, SkillKind, TraitEffect, ValueAxis
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.transform import TransformKind
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.body.variants import fear_of, folk_biology
@@ -71,6 +72,7 @@ from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.relations.passions import invoke
 from aerona.engine.renown.book import acclaim
 from aerona.engine.sacred.omens import battle_omen
+from aerona.engine.transform.record import blocked, record_transformation
 from aerona.engine.vehicles.fleet import after_battle, crew_specs
 
 EDGE_FLOOR, EDGE_CEILING = 0.5, 2.0
@@ -392,8 +394,10 @@ async def battlefield_scar(ctx: TickContext, region_id: int | None, fallen: int)
     region = await living_entity(ctx.session, region_id) if region_id is not None else None
     if region is None or region.entity_type is not EntityType.REGION or fallen < table.battlefield_deaths:
         return
-    if ctx.rng(f"ghost_road.{region.id}.{ctx.epoch}").chance(table.battlefield_chance):
-        await form_phenomenon(ctx, PhenomenonKind.GHOST_ROAD, region, PhenomenonCause.BATTLEFIELD)
+    if ctx.rng(f"ghost_road.{region.id}.{ctx.epoch}").chance(table.battlefield_chance) and not await blocked(ctx, TransformKind.EVENT_PHENOMENON, region.id):
+        road = await form_phenomenon(ctx, PhenomenonKind.GHOST_ROAD, region, PhenomenonCause.BATTLEFIELD)
+        if road is not None:
+            await record_transformation(ctx, TransformKind.EVENT_PHENOMENON, None, road.id)
 
 
 async def night_honour(ctx: TickContext, raider: Side, foe: Side) -> int:

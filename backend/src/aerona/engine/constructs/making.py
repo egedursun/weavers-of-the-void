@@ -19,6 +19,7 @@ from aerona.domain.enums.faith import AfterlifeState, BindingKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import BeastStats, ItemStats
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
@@ -29,6 +30,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.sacred.places import town_of
+from aerona.engine.transform.record import record_transformation
 
 CONSTRUCT = "construct"
 MAKING_SKILLS = (SkillKind.ALCHEMY, SkillKind.ENGINEERING)
@@ -178,6 +180,7 @@ async def make_construct(ctx: TickContext, maker: EntityRow, design: Design) -> 
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await record_transformation(ctx, TransformKind.CONSTRUCT, None, body.id)
     if source is MagicSource.SOUL:
         await bind_soul(ctx, row, body, maker)
     token_id = await token_item(ctx, maker, body, token) or token_for(token, maker)

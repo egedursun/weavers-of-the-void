@@ -146,5 +146,8 @@ class DeathRules:
     resurrection_devotion_required: int = rule(100, 0, 10000, RuleGroup.DEATH_AND_RESURRECTION, "Devotion required for the resurrection rite")
     fading_threshold: int = rule(10, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "A son below this existence starts fading out")
     fading_death_epochs: int = rule(3, 1, 50, RuleGroup.DEATH_AND_RESURRECTION, "Epochs for a fading son to die")
+    fading_applies_to_fallen: int = rule(
+        0, 0, 1, RuleGroup.DEATH_AND_RESURRECTION, "1 lets fading kill a fallen son living in a mortal body; 0 anchors its existence in that body"
+    )
     apostasy_chance: int = rule(50, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "A worshipper of a dead god falls into denial (%)")
     cult_resurrection_chance: int = rule(50, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "A devoted cult resurrects its god (%)")

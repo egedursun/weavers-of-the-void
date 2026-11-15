@@ -48,6 +48,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.transform.anchors import star_god_died
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
@@ -361,6 +362,7 @@ async def _son_wins(
     if killed:
         god.status = ForeignGodStatus.DEAD
         god.death_epoch = ctx.epoch
+        await star_god_died(ctx, god)
     else:
         god.status = ForeignGodStatus.DEFEATED
         god.defeated_epoch = ctx.epoch

@@ -1,12 +1,13 @@
 import math
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import GalaxyRow
 from aerona.db.tables.physics import StarPhysicsRow
+from aerona.db.tables.transform import StarModifierRow
 from aerona.domain.enums.cosmography import StarAge
 from aerona.domain.enums.world import DARK_STAR_TYPES, StarType
 from aerona.engine.cosmos.star_types import brightness_band, star_mechanics
@@ -158,9 +159,15 @@ async def physics_of_stars(session: AsyncSession, rules: Rules, stars: list[Star
     return found
 
 
-def refresh(rules: Rules, star: StarRow, physics: StarPhysicsRow) -> None:
+async def luminosity_shifts(session: AsyncSession) -> dict[int, int]:
+    rows = await session.execute(select(StarModifierRow.star_id, func.sum(StarModifierRow.luminosity_pct)).group_by(StarModifierRow.star_id))
+    return {star_id: int(total or 0) for star_id, total in rows}
+
+
+def refresh(rules: Rules, star: StarRow, physics: StarPhysicsRow, shift_pct: int = 0) -> None:
     if "luminosity" not in physics.locked:
-        physics.luminosity = luminosity_of(rules, physics.mass, star.age_stage, star.star_type)
+        base = luminosity_of(rules, physics.mass, star.age_stage, star.star_type)
+        physics.luminosity = base * max(0, PERCENT + shift_pct) / PERCENT
     if "lifetime_epochs" not in physics.locked:
         physics.lifetime_epochs = main_life(rules, physics.mass)
     inner, outer = band_of_light(rules, physics.luminosity)

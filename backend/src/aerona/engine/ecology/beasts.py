@@ -22,6 +22,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.enums.renown import ReputationAxis
+from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import BeastStats, ItemStats, LegendStats, PlaceStats
 from aerona.engine.arcana.vis import harvest_vis
 from aerona.engine.context import TickContext
@@ -47,6 +48,8 @@ from aerona.engine.primitives.queries import canon, close, connect, has_flag, li
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
 from aerona.engine.renown.deeds import acclaim_deed
+from aerona.engine.transform.creatures import colossal_remains
+from aerona.engine.transform.record import blocked, record_transformation
 from aerona.rules.registry import Rules
 
 ACTIVE = frozenset({BeastTemper.HUNGRY, BeastTemper.TERRITORIAL, BeastTemper.ENRAGED})
@@ -162,6 +165,8 @@ async def champions(ctx: TickContext) -> int:
         mighty = await has_flag(ctx.session, species.id, EntityFlag.MEGAFAUNA) or (huge and (stat(species, "danger") or 0) >= table.promotion_danger)
         if not mighty or not ctx.rng(f"champion.{species.id}.{ctx.epoch}").chance(table.promotion_chance):
             continue
+        if await blocked(ctx, TransformKind.BEAST_PROMOTION, species.id):
+            continue
         home = await ctx.session.scalar(
             select(SpeciesRangeRow.region_entity_id).where(SpeciesRangeRow.species_entity_id == species.id).order_by(SpeciesRangeRow.abundance.desc()).limit(1)
         )
@@ -190,6 +195,7 @@ async def champions(ctx: TickContext) -> int:
         )
         await profile_beast(ctx, beast, species)
         await connect(ctx.session, beast.id, species.id, BondKind.DESCENDS_FROM, ctx.epoch, description="the greatest of its kind")
+        await record_transformation(ctx, TransformKind.BEAST_PROMOTION, species.id, beast.id)
         await note(ctx, f"{beast.name} rose among the {species.name}.", key="beasts.risen", ids=[beast.id, species.id])
         risen += 1
     return risen
@@ -578,6 +584,7 @@ async def honour_slayer(ctx: TickContext, beast: EntityRow, slayer: EntityRow) -
 async def fall(ctx: TickContext, beast: EntityRow, row: BeastProfileRow) -> str:
     row.locked = []
     slayer = await slayer_of(ctx, beast.id)
+    await colossal_remains(ctx, beast, row)
     for profile, _ in await tribute_clauses(ctx, beast.id):
         await end_treaty(ctx, profile, TreatyStatus.FULFILLED, f"{beast.name} is dead")
     ctx.count("captives_rescued", await free_captives(ctx, beast))

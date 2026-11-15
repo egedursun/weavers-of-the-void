@@ -26,6 +26,7 @@ from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.cover import claim
@@ -35,6 +36,7 @@ from aerona.engine.demography.rites import restless as restless_by_rite
 from aerona.engine.divine.wounds import avatar_slain
 from aerona.engine.faith.judgement import profile_for
 from aerona.engine.folkways.wrongs import wrongly_condemned
+from aerona.engine.gods.god_death import fallen_body_died
 from aerona.engine.interconnect.causes import killing_incident
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
@@ -54,6 +56,7 @@ from aerona.engine.primitives.records import RecordSpec, append_sentence, open_r
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.relations.passions import bereaved
 from aerona.engine.sacred.guards import unrest_shift
+from aerona.engine.transform.record import blocked, record_transformation
 
 LIVING_DEATH_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
 RESTLESS_SPIRIT_SUBTYPE = "restless spirit"
@@ -138,6 +141,7 @@ async def die(
     key = "mortal.death.natural" if natural else "mortal.death.cause"
     await note(ctx, text, key=key, ids=ids, son_id=son_id, roles=roles, cause_incident_id=cause_id)
     await after_death(ctx, mortal)
+    await fallen_body_died(ctx, mortal)
     await sweep_dead_bonds(session, ctx.epoch, mortal.id)
     if await raise_lifespan_to_death_age(session, ctx.rules, mortal):
         ctx.count("lifespans_raised")
@@ -257,6 +261,8 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
     rng = ctx.rng(seed_of("spirit", mortal.id))
     place_id = underworld.id if underworld is not None else mortal.location_id
     rite = await rite_of(session, mortal)
+    if await blocked(ctx, TransformKind.SPIRIT_RISING, mortal.id):
+        return
     if not rng.chance(min(PERCENT, ctx.rules.world_engine.famous_spirit_chance * spirit_factor(ctx.rules, rite))):
         return
     if await _spirits_at(session, place_id) >= ctx.rules.deep_world.spirits_per_place_cap:
@@ -293,6 +299,7 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
         ),
     )
     await connect(session, spirit.id, mortal.id, BondKind.DESCENDS_FROM, ctx.epoch, description="their spirit")
+    await record_transformation(ctx, TransformKind.SPIRIT_RISING, mortal.id, spirit.id)
     profile = await profile_for(ctx, spirit, mortal)
     profile.alignment = SpiritAlignment.VENGEFUL if restless else SpiritAlignment.GUARDIAN
     manner = "as a restless spirit" if restless else "among the ancestors"

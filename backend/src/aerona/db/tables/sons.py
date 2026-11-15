@@ -83,6 +83,7 @@ class SonRow(StatColumns, PassionColumns, NodeRow):
     epic: Mapped[Epic | None] = mapped_column(PydanticJSON(Epic))
     anchor_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL", use_alter=True))
     corpse_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL", use_alter=True))
+    body_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL", use_alter=True))
     parent_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"), index=True)
     co_parent_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
     current_world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"), index=True)

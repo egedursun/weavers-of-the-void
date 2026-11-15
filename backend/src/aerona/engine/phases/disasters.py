@@ -76,6 +76,7 @@ from aerona.engine.settlement.districts import damage_districts
 from aerona.engine.storyteller.pace import paced
 from aerona.engine.structures.damage import harm, quake_loss
 from aerona.engine.structures.readers import strength_at
+from aerona.engine.transform.anchors import world_harmed
 from aerona.rules.registry import Rules
 
 DISASTER_DAMAGE: dict[Disaster, DamageType] = {
@@ -267,7 +268,9 @@ def disaster_phrase(disaster: Disaster) -> str:
 
 async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: float) -> DisasterImpact:
     with flowing(FlowCategory.DISASTER):
-        return await strike_disaster(ctx, target, disaster, severity)
+        impact = await strike_disaster(ctx, target, disaster, severity)
+    await world_harmed(ctx, target.world_id, severity)
+    return impact
 
 
 async def strike_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: float) -> DisasterImpact:

@@ -43,6 +43,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
+from aerona.engine.transform.bodies import lift_fallen
 
 QUEST_SKILLS = (SkillKind.RITUAL, SkillKind.LORE, SkillKind.PROPHECY, SkillKind.SPELLCRAFT, SkillKind.LEADERSHIP)
 ITEM_POWER = 4
@@ -292,6 +293,7 @@ async def succeed(ctx: TickContext, row: HeroquestRow, quester: EntityRow, tally
     await rewrite(ctx, row)
     await free_trapped(ctx, row)
     tally.succeeded += 1
+    await lift_fallen(ctx, quester.id, ctx.rules.transform.heroquest_existence)
     await note(ctx, f"{quester.name} returned from a heroquest with a boon.", key="mythic.heroquest_won", ids=[quester.id], kind=ChronicleKind.WORLD)
 
 

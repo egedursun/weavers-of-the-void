@@ -588,5 +588,12 @@ class EnginePhasesRules:
     dreamt_pasts: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: dream worlds dream their past again from the dreams of those who reach them"
     )
+    transformations: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: things whose conditions hold become other kinds of things, warned, blocked or forced by the Creator",
+    )
     collections: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: museums, treasuries, royal collections and cabinets gather their pieces")
     gardens: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: gardens, parks, groves and cemeteries are laid out and kept")

@@ -3,6 +3,7 @@ from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.lifecycle_ends import LifecycleStateRow
 from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
 from aerona.db.tables.prehistory import PrehistoryEventRow
+from aerona.db.tables.transform import StarModifierRow, TransformationRow, TransformProspectRow
 from aerona.db.tables.world_ends import WorldEndRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Mechanic, Subsystem, Surface
 
@@ -12,6 +13,7 @@ LIFE = "section-lifecycle"
 WORLD_END = "section-world-end"
 FOSSILS = "section-fossils"
 PREHISTORY = "section-prehistory"
+TRANSFORMS = "section-transformations"
 GROUNDS = "section-grounds"
 
 LIFECYCLE_MECHANICS = (
@@ -104,6 +106,45 @@ LIFECYCLE_MECHANICS = (
         couplings=(
             Coupling(S.CULTURE, "a digest keeps this many happenings of a past for Fate, the chronicler and the book", E.RULE_SWITCH, "prehistory.digest_size"),
             Coupling(S.GODS, "a son spends essence to give a world it made a past", E.FLOW, "prehistory.son_seed_cost"),
+        ),
+    ),
+    Mechanic(
+        key="transformations",
+        spec_item="F49",
+        title="Transformations: a son falls or is corrupted, a people loses its sapience, a faith or a realm forges a people, a star or a world gains a god",
+        subsystem=S.COSMOS,
+        phases=("transformations",),
+        surface=Surface(drawer=TRANSFORMS, chart="chart-transformations"),
+        backfill="transformations: past deifications, uplifts and raised spirits are entered in the record of transformations at the next start",
+        tables=(TransformationRow.__tablename__, TransformProspectRow.__tablename__, StarModifierRow.__tablename__),
+        tools=("press_transformation", "seek_true_name"),
+        targets=(
+            "son",
+            "people",
+            "cult",
+            "polity",
+            "house",
+            "phenomenon",
+            "world",
+            "star",
+            "ideology",
+            "beast",
+            "outer_being",
+            "spirit",
+            "mortal",
+            "title",
+            "tradition",
+            "theory",
+        ),
+        couplings=(
+            Coupling(S.GODS, "a son fading in a mortal body falls into it after this many epochs instead of dying", E.TRIGGER, "transform.fall_epochs"),
+            Coupling(
+                S.GODS, "a son at or below this sanity after bargaining with the outside may be corrupted", E.RULE_SWITCH, "transform.corruption_warning_sanity"
+            ),
+            Coupling(S.COSMOS, "a dead star god dims its star by this much", E.FLOW, "transform.star_god_dim_pct"),
+            Coupling(
+                S.DEMOGRAPHY, "a people losing its sapience becomes this many members per point of abundance", E.FLOW, "transform.people_to_species_density"
+            ),
         ),
     ),
     Mechanic(

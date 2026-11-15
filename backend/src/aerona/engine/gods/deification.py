@@ -22,12 +22,14 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import PowerEffect, Stat
+from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.profiles import Personality
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR, PassionBlock, StatBlock
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import stat
+from aerona.engine.transform.record import blocked, record_transformation
 from aerona.rules.registry import Rules
 
 DEIFY_RARITY_CAP = Rarity.LEGENDARY
@@ -114,11 +116,13 @@ def first_sentence(description: str) -> str:
     return text
 
 
-async def deify(ctx: TickContext, creator: CreatorRow, mortal: EntityRow) -> Deification:
+async def deify(ctx: TickContext, creator: CreatorRow, mortal: EntityRow, kind: TransformKind = TransformKind.DEIFICATION) -> Deification:
     if mortal.entity_type is not EntityType.MORTAL:
         raise ValidationFailedError("Only a named mortal can be raised to godhood.")
     if mortal.status is not EntityStatus.CANON:
         raise ValidationFailedError(f"{mortal.name} is not among the living.")
+    if await blocked(ctx, kind, mortal.id):
+        raise ValidationFailedError(f"The Creator has blocked {mortal.name} from rising to godhood.")
     if await ctx.session.scalar(select(SonRow.id).where(SonRow.name == mortal.name)) is not None:
         raise ValidationFailedError(f"A son named {mortal.name} already exists; rename the mortal first.")
     rng = ctx.rng(f"deify.{mortal.id}")
@@ -168,4 +172,5 @@ async def deify(ctx: TickContext, creator: CreatorRow, mortal: EntityRow) -> Dei
         entity_ids=[mortal.id],
         son_id=son.id,
     )
+    await record_transformation(ctx, kind, mortal.id, son.id)
     return Deification(son, mortal, tuple(followers))

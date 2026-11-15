@@ -17,6 +17,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, LawKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.statecraft import SubjectKind
+from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
@@ -30,6 +31,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.transform.record import record_transformation
 
 COMMUNITIES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 PRIESTLY = frozenset({MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER})
@@ -180,7 +182,10 @@ async def government_for(ctx: TickContext, core: EntityRow, members: list[Entity
     return GovernmentKind.MONARCHY
 
 
-async def found_polity(ctx: TickContext, book: RealmBook, core: EntityRow) -> Realm:
+FOUNDINGS = {EntityType.SETTLEMENT: TransformKind.CITY_STATE, EntityType.FACTION: TransformKind.SECESSION, EntityType.CULT: TransformKind.THEOCRACY}
+
+
+async def found_polity(ctx: TickContext, book: RealmBook, core: EntityRow, *, told: bool = True) -> Realm:
     entity = await create_record(
         ctx,
         RecordSpec(
@@ -214,6 +219,9 @@ async def found_polity(ctx: TickContext, book: RealmBook, core: EntityRow) -> Re
     realm.offices = list(await ctx.session.scalars(select(OfficeRow).where(OfficeRow.polity_entity_id == entity.id)))
     book.realms[entity.id] = realm
     ctx.count("polities_founded")
+    kind = FOUNDINGS.get(core.entity_type)
+    if told and kind is not None:
+        await record_transformation(ctx, kind, core.id, entity.id)
     return realm
 
 

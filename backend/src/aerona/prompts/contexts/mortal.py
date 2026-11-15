@@ -20,6 +20,22 @@ class MortalTurnSystemContext(LoreRulesContext):
     captor: str | None = None
 
 
+class FallenSonTurnContext(LoreRulesContext):
+    son_name: str
+    title: str
+    body_name: str
+    world_name: str
+    memory: str
+    body: list[str] = Field(default_factory=list)
+    remnant: list[str] = Field(default_factory=list)
+    existence: int
+    restoration_existence: int
+    knows_true_name: bool = False
+    action_points: int
+    paid_tools: list[str] = Field(default_factory=list)
+    free_tools: list[str] = Field(default_factory=list)
+
+
 class MortalTurnUserContext(PromptContext):
     age: int
     creator_name: str
@@ -243,3 +259,4 @@ class MortalContextContext(RulesContext):
     other_worlds: str = ""
     routes: list[RouteLine] = Field(default_factory=list)
     expeditions: list[ExpeditionLine] = Field(default_factory=list)
+    changes: list[str] = Field(default_factory=list)

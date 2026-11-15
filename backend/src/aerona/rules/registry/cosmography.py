@@ -191,6 +191,7 @@ class PhenomenaRules:
     leak_wound_leak: int = rule(3, 0, 50, P, "Leak a leak wound adds to its world each epoch at full intensity")
     weather_epochs: int = rule(5, 1, 100, P, "Epochs of weather a phenomenon forces over its regions at a time")
     time_slip_age_pct: int = rule(30, 0, 300, P, "How much faster or slower those in a time slip age (%)")
+    world_threshold: int = rule(95, 1, 100, P, "Intensity at which a phenomenon of the void, of dream or of time detaches as a world of its own")
 
 
 @dataclass(frozen=True)

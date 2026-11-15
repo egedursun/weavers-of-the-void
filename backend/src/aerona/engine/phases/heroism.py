@@ -442,6 +442,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.spirit_profiles",
     "table.tradition_profiles",
     "table.traits",
+    "table.transform_prospects",
     "table.world_domain_hooks",
     "table.world_maps",
     "table.world_materials",
@@ -474,6 +475,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.sacraments",
     "table.sons",
     "table.spirit_profiles",
+    "table.transformations",
 )
 async def glory_hunts(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine

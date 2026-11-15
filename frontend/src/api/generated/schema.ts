@@ -5455,6 +5455,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/transformations/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_transformations_api_transformations_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/transformations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['transformation_timeline_api_transformations_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -15097,6 +15129,182 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_deep_time_event_remove_api_actions_deep_time_event_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/transform:force': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_transform_force_api_actions_transform_force_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/transform:block': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_transform_block_api_actions_transform_block_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/transform:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_transform_release_api_actions_transform_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/transform:revert': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_transform_revert_api_actions_transform_revert_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/transformation:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_transformation_edit_api_actions_transformation_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/transformation:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_transformation_delete_api_actions_transformation_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/transform_prospect:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_transform_prospect_edit_api_actions_transform_prospect_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/transform_prospect:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_transform_prospect_delete_api_actions_transform_prospect_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/star_modifier:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_star_modifier_create_api_actions_star_modifier_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/star_modifier:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_star_modifier_edit_api_actions_star_modifier_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/star_modifier:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_star_modifier_delete_api_actions_star_modifier_delete_post']
     delete?: never
     options?: never
     head?: never
@@ -52977,6 +53185,20 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
+    KindChangeView: {
+      id: number
+      kind: components['schemas']['TransformKind']
+      epoch: number
+      trigger: components['schemas']['TransformTrigger']
+      state: components['schemas']['TransformState']
+      subject: components['schemas']['NodeRef'] | null
+      result: components['schemas']['NodeRef'] | null
+      subject_name: string
+      result_name: string | null
+      text: string | null
+      revertible: boolean
+      locked: string[]
+    }
     KindCreateInput: {
       catalog: components['schemas']['CustomCatalog']
       base: string
@@ -56619,6 +56841,7 @@ export interface components {
       | 'dig_site'
       | 'search_magic_sites'
       | 'undertake_heroquest'
+      | 'seek_true_name'
       | 'take_longevity'
       | 'found_enchantment'
       | 'decipher_script'
@@ -60295,6 +60518,7 @@ export interface components {
       | 'bond_name_related_system'
       | 'bond_name_related_user'
       | 'mortal_turn_system'
+      | 'fallen_son_turn'
       | 'mortal_turn_user'
       | 'mortal_turn_continuation'
       | 'mortal_context'
@@ -60418,6 +60642,7 @@ export interface components {
       | 'self'
       | 'current'
       | 'towed'
+    ProspectStance: 'open' | 'blocked' | 'forced'
     ProsthesisView: {
       id: number
       injury_id: number
@@ -64380,7 +64605,7 @@ export interface components {
       cover: string | null
       card: components['schemas']['SonCard']
     }
-    SonPunishment: 'chain' | 'exile' | 'strip_power'
+    SonPunishment: 'chain' | 'exile' | 'strip_power' | 'strip_divinity'
     SonRecord: {
       id: number
       name: string
@@ -64481,7 +64706,7 @@ export interface components {
       son_id: number
       value: number
     }
-    SonStatus: 'active' | 'asleep' | 'exiled' | 'dead'
+    SonStatus: 'active' | 'asleep' | 'exiled' | 'fallen' | 'dead'
     SonToolId:
       | 'world_summary'
       | 'inspect_entity'
@@ -64713,6 +64938,7 @@ export interface components {
       | 'shape_biology'
       | 'wake_lore'
       | 'plan_prehistory'
+      | 'press_transformation'
       | 'lay_bare_fossils'
       | 'found_museum'
       | 'lay_out_garden'
@@ -65529,6 +65755,34 @@ export interface components {
       }
       release?: string[]
       star_id: number
+    }
+    StarModifierCreateInput: {
+      star_id: number
+      luminosity_pct: number
+      age_epochs: number
+      decay: number
+    }
+    StarModifierDeleteInput: {
+      modifier_id: number
+    }
+    StarModifierEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      modifier_id: number
+    }
+    StarModifierSource: 'god_death' | 'divine_act'
+    StarModifierView: {
+      id: number
+      source: components['schemas']['StarModifierSource']
+      luminosity_pct: number
+      age_epochs: number
+      aged: boolean
+      decay: number
+      epoch: number
+      cause: components['schemas']['NodeRef'] | null
+      locked: string[]
     }
     StarPhysicsEditInput: {
       values?: {
@@ -68114,6 +68368,174 @@ export interface components {
       effects: components['schemas']['TraitEffectView'][]
       capacities: components['schemas']['TraitCapacityView'][]
       variant_id?: number | null
+    }
+    TransformBlockInput: {
+      kind: components['schemas']['TransformKind']
+      subject_id: number
+    }
+    TransformEnd:
+      | 'son'
+      | 'mortal'
+      | 'spirit'
+      | 'god'
+      | 'beast'
+      | 'species'
+      | 'people'
+      | 'cult'
+      | 'polity'
+      | 'house'
+      | 'settlement'
+      | 'faction'
+      | 'title'
+      | 'legend'
+      | 'creation'
+      | 'artwork'
+      | 'event'
+      | 'phenomenon'
+      | 'world'
+      | 'star'
+      | 'ideology'
+      | 'outer_being'
+      | 'place'
+      | 'made_thing'
+      | 'language'
+      | 'knowledge'
+      | 'theory'
+      | 'tradition'
+      | 'law'
+    TransformForceInput: {
+      kind: components['schemas']['TransformKind']
+      subject_id: number
+    }
+    TransformKind:
+      | 'deification'
+      | 'mantling'
+      | 'spirit_rising'
+      | 'reincarnation'
+      | 'possession'
+      | 'local_god'
+      | 'beast_curse'
+      | 'curse_lifted'
+      | 'uplift'
+      | 'city_state'
+      | 'secession'
+      | 'theocracy'
+      | 'title_raised'
+      | 'realm_from_title'
+      | 'manifestation'
+      | 'legend_fixed'
+      | 'artwork_remembered'
+      | 'event_phenomenon'
+      | 'god_corpse'
+      | 'construct'
+      | 'beast_promotion'
+      | 'language_death'
+      | 'language_revival'
+      | 'theory_settled'
+      | 'tradition_codified'
+      | 'fall'
+      | 'restoration'
+      | 'loss_of_sapience'
+      | 'ethnoreligious'
+      | 'nation_building'
+      | 'house_people'
+      | 'pocket_world'
+      | 'world_soul'
+      | 'star_god'
+      | 'sacralisation'
+      | 'secularisation'
+      | 'progenitor'
+      | 'outer_entry'
+      | 'corruption'
+      | 'colossal_corpse'
+    TransformKindView: {
+      kind: components['schemas']['TransformKind']
+      source: components['schemas']['TransformEnd']
+      target: components['schemas']['TransformEnd']
+      existing: boolean
+      watched: boolean
+      warned: boolean
+    }
+    TransformNodeView: {
+      node: components['schemas']['NodeRef']
+      end: components['schemas']['TransformEnd'] | null
+      epoch: number
+      warn_epochs: number
+      came_from: components['schemas']['KindChangeView'][]
+      became: components['schemas']['KindChangeView'][]
+      prospects: components['schemas']['TransformProspectView'][]
+      open_kinds: components['schemas']['TransformKind'][]
+      forceable: components['schemas']['TransformKind'][]
+      son_status: components['schemas']['SonStatus'] | null
+      sanity: number | null
+      corruption_band: number
+      body: components['schemas']['NodeRef'] | null
+      redeemers: components['schemas']['NodeRef'][]
+      legends: components['schemas']['NodeRef'][]
+      anchor_world: components['schemas']['NodeRef'] | null
+      anchor_star: components['schemas']['NodeRef'] | null
+      star_modifiers: components['schemas']['StarModifierView'][]
+      luminosity_shift: number
+      luminosity_shift_max: number
+    }
+    TransformProspectDeleteInput: {
+      prospect_id: number
+    }
+    TransformProspectEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      prospect_id: number
+    }
+    TransformProspectView: {
+      id: number
+      kind: components['schemas']['TransformKind']
+      subject_id: number
+      progress: number
+      stance: components['schemas']['ProspectStance']
+      trigger: components['schemas']['TransformTrigger']
+      warned_epoch: number | null
+      due_epoch: number | null
+      updated_epoch: number
+      locked: string[]
+    }
+    TransformReleaseInput: {
+      kind: components['schemas']['TransformKind']
+      subject_id: number
+    }
+    TransformRevertInput: {
+      transformation_id: number
+    }
+    TransformState: 'done' | 'reverted'
+    TransformTimelineView: {
+      epoch: number
+      kinds: components['schemas']['TransformKindView'][]
+      transformations: components['schemas']['KindChangeView'][]
+      prospects: components['schemas']['TransformProspectView'][]
+      subjects: components['schemas']['NodeRef'][]
+    }
+    TransformTrigger:
+      | 'engine'
+      | 'forced'
+      | 'creator'
+      | 'council'
+      | 'fading'
+      | 'son'
+      | 'curse'
+      | 'void'
+      | 'dark_age'
+      | 'punishment'
+      | 'backfill'
+    TransformationDeleteInput: {
+      transformation_id: number
+    }
+    TransformationEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      transformation_id: number
     }
     TransformationView: {
       plan_id: number
@@ -81820,6 +82242,62 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DeepTimeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_transformations_api_transformations_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TransformNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  transformation_timeline_api_transformations_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TransformTimelineView']
         }
       }
       default: {
@@ -100209,6 +100687,347 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['DeepTimeEventRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_transform_force_api_actions_transform_force_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransformForceInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_transform_block_api_actions_transform_block_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransformBlockInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_transform_release_api_actions_transform_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransformReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_transform_revert_api_actions_transform_revert_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransformRevertInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_transformation_edit_api_actions_transformation_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransformationEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_transformation_delete_api_actions_transformation_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransformationDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_transform_prospect_edit_api_actions_transform_prospect_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransformProspectEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_transform_prospect_delete_api_actions_transform_prospect_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransformProspectDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_star_modifier_create_api_actions_star_modifier_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarModifierCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_star_modifier_edit_api_actions_star_modifier_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarModifierEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_star_modifier_delete_api_actions_star_modifier_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarModifierDeleteInput']
       }
     }
     responses: {
@@ -149812,6 +150631,7 @@ export const mortalToolIdValues: ReadonlyArray<
   'dig_site',
   'search_magic_sites',
   'undertake_heroquest',
+  'seek_true_name',
   'take_longevity',
   'found_enchantment',
   'decipher_script',
@@ -150868,6 +151688,7 @@ export const promptIdValues: ReadonlyArray<
   'bond_name_related_system',
   'bond_name_related_user',
   'mortal_turn_system',
+  'fallen_son_turn',
   'mortal_turn_user',
   'mortal_turn_continuation',
   'mortal_context',
@@ -150942,6 +151763,9 @@ export const propulsionValues: ReadonlyArray<
   'current',
   'towed',
 ]
+export const prospectStanceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ProspectStance']
+> = ['open', 'blocked', 'forced']
 export const punishmentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PunishmentKind']
 > = [
@@ -151767,10 +152591,10 @@ export const sonNewEventKindValues: ReadonlyArray<
 > = ['son.new']
 export const sonPunishmentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonPunishment']
-> = ['chain', 'exile', 'strip_power']
+> = ['chain', 'exile', 'strip_power', 'strip_divinity']
 export const sonStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonStatus']
-> = ['active', 'asleep', 'exiled', 'dead']
+> = ['active', 'asleep', 'exiled', 'fallen', 'dead']
 export const sonToolIdValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonToolId']
 > = [
@@ -152004,6 +152828,7 @@ export const sonToolIdValues: ReadonlyArray<
   'shape_biology',
   'wake_lore',
   'plan_prehistory',
+  'press_transformation',
   'lay_bare_fossils',
   'found_museum',
   'lay_out_garden',
@@ -152157,6 +152982,9 @@ export const stanceValues: ReadonlyArray<
 export const starAgeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StarAge']
 > = ['young', 'main', 'old', 'dying', 'dead', 'reborn']
+export const starModifierSourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StarModifierSource']
+> = ['god_death', 'divine_act']
 export const starTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StarType']
 > = [
@@ -153179,6 +154007,101 @@ export const traitSourceValues: ReadonlyArray<
   'divine',
   'player',
   'facet',
+]
+export const transformEndValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TransformEnd']
+> = [
+  'son',
+  'mortal',
+  'spirit',
+  'god',
+  'beast',
+  'species',
+  'people',
+  'cult',
+  'polity',
+  'house',
+  'settlement',
+  'faction',
+  'title',
+  'legend',
+  'creation',
+  'artwork',
+  'event',
+  'phenomenon',
+  'world',
+  'star',
+  'ideology',
+  'outer_being',
+  'place',
+  'made_thing',
+  'language',
+  'knowledge',
+  'theory',
+  'tradition',
+  'law',
+]
+export const transformKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TransformKind']
+> = [
+  'deification',
+  'mantling',
+  'spirit_rising',
+  'reincarnation',
+  'possession',
+  'local_god',
+  'beast_curse',
+  'curse_lifted',
+  'uplift',
+  'city_state',
+  'secession',
+  'theocracy',
+  'title_raised',
+  'realm_from_title',
+  'manifestation',
+  'legend_fixed',
+  'artwork_remembered',
+  'event_phenomenon',
+  'god_corpse',
+  'construct',
+  'beast_promotion',
+  'language_death',
+  'language_revival',
+  'theory_settled',
+  'tradition_codified',
+  'fall',
+  'restoration',
+  'loss_of_sapience',
+  'ethnoreligious',
+  'nation_building',
+  'house_people',
+  'pocket_world',
+  'world_soul',
+  'star_god',
+  'sacralisation',
+  'secularisation',
+  'progenitor',
+  'outer_entry',
+  'corruption',
+  'colossal_corpse',
+]
+export const transformStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TransformState']
+> = ['done', 'reverted']
+export const transformTriggerValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TransformTrigger']
+> = [
+  'engine',
+  'forced',
+  'creator',
+  'council',
+  'fading',
+  'son',
+  'curse',
+  'void',
+  'dark_age',
+  'punishment',
+  'backfill',
 ]
 export const transitionKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TransitionKind']

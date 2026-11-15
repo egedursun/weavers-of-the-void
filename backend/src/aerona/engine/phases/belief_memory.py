@@ -14,6 +14,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ProphecyState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
 from aerona.domain.enums.environment import NotableYearKind
+from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import EntityStats, ItemStats, LegendStats, ResourceStats, SpeciesStats, SpiritStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
@@ -28,6 +29,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, connect, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import RecordSpec, definite, open_record, retire, sentence_case
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.transform.record import blocked, record_transformation
 from aerona.rules.registry import Rules
 
 TELLER_KINDS = (BondKind.CELEBRATES, BondKind.TELLS_OF)
@@ -231,6 +233,7 @@ async def manifest(ctx: TickContext, legend: EntityRow, place: EntityRow) -> Ent
         ids=[legend.id, created.id, place.id],
     )
     ctx.count("manifestations")
+    await record_transformation(ctx, TransformKind.MANIFESTATION, legend.id, created.id)
     return created
 
 
@@ -247,7 +250,7 @@ async def manifestations(ctx: TickContext) -> None:
         if not rng.chance(ctx.rules.deep_world.manifestation_chance):
             continue
         place = await legend_place(ctx, legend)
-        if place is None:
+        if place is None or await blocked(ctx, TransformKind.MANIFESTATION, legend.id):
             continue
         await manifest(ctx, legend, place)
         made += 1
@@ -399,6 +402,7 @@ async def fairy_tales(ctx: TickContext) -> None:
     "table.prophecy_conditions",
     "table.routes",
     "table.skills",
+    "table.transform_prospects",
     "table.world_maps",
     "tradition.rigidity",
     "tradition.spread",
@@ -415,6 +419,7 @@ async def fairy_tales(ctx: TickContext) -> None:
     "table.incidents",
     "table.legend_profiles",
     "table.name_registry",
+    "table.transformations",
     "tradition.spread",
 )
 async def belief_and_memory(ctx: TickContext) -> None:

@@ -26,6 +26,7 @@ from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.mythic import OfficeChoice
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.transform import TransformKind, TransformTrigger
 from aerona.domain.models.records import CouncilBallot, CouncilMinutes
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
@@ -37,6 +38,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.doom import step_doom
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.services.conflict import foreign_god_war
+from aerona.engine.transform.run import order
 
 M = CouncilMotion
 LASTING = frozenset({M.COSMIC_TRUCE, M.OUTLAW_RITE, M.PUNISH_SON, M.DIVIDE_WORLDS, M.HOLY_WORLD})
@@ -125,6 +127,9 @@ async def enact_punishment(ctx: TickContext, ruling: CouncilRulingRow, members: 
     if ruling.punishment is SonPunishment.EXILE:
         son.status = SonStatus.EXILED
         return [f"{son.name} was exiled"]
+    if ruling.punishment is SonPunishment.STRIP_DIVINITY:
+        await order(ctx, TransformKind.FALL, son.id, TransformTrigger.COUNCIL)
+        return [f"{son.name} will be stripped of divinity unless the Creator stays it"]
     son.chained = True
     return [f"{son.name} was chained"]
 

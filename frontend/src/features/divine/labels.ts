@@ -156,6 +156,7 @@ export const PUNISHMENTS: Record<Schema['SonPunishment'], string> = {
   chain: 'Chain',
   exile: 'Exile',
   strip_power: 'Strip a power',
+  strip_divinity: 'Strip of divinity',
 }
 
 export const LAW_SCOPES: Record<Schema['LawScope'], Named> = {

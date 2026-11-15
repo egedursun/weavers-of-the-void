@@ -42,6 +42,7 @@ SPEC_PROMPTS: dict[str, tuple[PromptId, ...]] = {
     "fate_bonds.suggest": (P.BOND_SUGGEST_SYSTEM, P.BOND_SUGGEST_USER),
     "fate_bonds.name_related": (P.BOND_NAME_RELATED_SYSTEM, P.BOND_NAME_RELATED_USER),
     "mortal.turn.system": (P.MORTAL_TURN_SYSTEM,),
+    "fallen.turn.system": (P.FALLEN_SON_TURN,),
     "mortal.turn.prompt": (P.MORTAL_TURN_USER,),
     "mortal.turn.continuation": (P.MORTAL_TURN_CONTINUATION,),
     "mortal.context": (P.MORTAL_CONTEXT,),

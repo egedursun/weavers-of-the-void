@@ -91,6 +91,7 @@ class SonTurnUserContext(RulesContext):
     memory: str
     opportunities: str = ""
     faith: str = ""
+    changes: list[str] = Field(default_factory=list)
     action_points: int
     resumed: bool = False
     continuation: str = ""

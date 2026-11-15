@@ -25,7 +25,7 @@ from aerona.engine.cosmos.catastrophe import scorch_world
 from aerona.engine.cosmos.features import periodic_period
 from aerona.engine.cosmos.impacts import call_impact, deflect_impact
 from aerona.engine.cosmos.lifeforms import life_of
-from aerona.engine.cosmos.stellar import physics_of_stars, refresh
+from aerona.engine.cosmos.stellar import luminosity_shifts, physics_of_stars, refresh
 from aerona.engine.cosmos.survey import OBSERVER_TYPES
 from aerona.engine.cosmos.systems import join_system, settle_systems, system_name
 from aerona.engine.cosmos.terraform import begin
@@ -57,7 +57,7 @@ async def edit_star_physics(ctx: TickContext, star_id: int, values: Values, rele
     if "mass" in values and float(values["mass"]) <= 0:
         raise ValidationFailedError("A star's mass must be above nothing.")
     apply(row, values, release)
-    refresh(ctx.rules, star, row)
+    refresh(ctx.rules, star, row, (await luminosity_shifts(ctx.session)).get(star.id, 0))
     await ctx.session.flush()
     return row
 

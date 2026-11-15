@@ -5,6 +5,7 @@ class SonStatus(StrEnum):
     ACTIVE = "active"
     ASLEEP = "asleep"
     EXILED = "exiled"
+    FALLEN = "fallen"
     DEAD = "dead"
 
 

@@ -1033,6 +1033,23 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
         free_tools=["worship"],
         captor="Vor",
     ),
+    P.FALLEN_SON_TURN: lambda: mortal.FallenSonTurnContext(
+        lore_language=LORE,
+        rules=RULES,
+        son_name="Aster",
+        title="Keeper of the Count",
+        body_name="Aster the Walker",
+        world_name="Aerona",
+        memory="MEMORY",
+        body=["Hale"],
+        remnant=["Vor"],
+        existence=12,
+        restoration_existence=40,
+        knows_true_name=False,
+        action_points=3,
+        paid_tools=["undertake_heroquest"],
+        free_tools=["seek_true_name"],
+    ),
     P.MORTAL_TURN_USER: lambda: mortal.MortalTurnUserContext(
         age=5, creator_name="Ul", manifestations=["Rise."], dreams=["Drown."], context="CONTEXT", opportunities="- Trade", resumed=True, actions_left=2
     ),

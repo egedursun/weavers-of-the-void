@@ -34,6 +34,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
+from aerona.engine.transform.lore import remember_artwork
 from aerona.rules.registry import Rules
 
 WEAK_CLAIM = 50
@@ -265,6 +266,7 @@ async def forgotten(ctx: TickContext, artwork: EntityRow, row: ArtworkProfileRow
     if not row.performed or row.canon or "performed" in row.locked or await performers_left(ctx, artwork, row):
         return False
     await retire(ctx.session, artwork, ctx.epoch, f"Epoch {ctx.epoch}: none were left who could perform it.", status=EntityStatus.DESTROYED)
+    await remember_artwork(ctx, artwork, row)
     await note(ctx, f"{artwork.name} was forgotten, for none were left who could perform it.", key="art.forgotten", ids=[artwork.id])
     return True
 
@@ -479,5 +481,8 @@ async def smash(ctx: TickContext, place_id: int, chance: int, reason: str) -> li
     for work in await images_in(ctx, place_id):
         if ctx.rng(f"smash.{work.id}.{ctx.epoch}").chance(chance):
             await retire(ctx.session, work, ctx.epoch, f"Epoch {ctx.epoch}: {reason}.", status=EntityStatus.DESTROYED)
+            profile = await ctx.session.get(ArtworkProfileRow, work.id)
+            if profile is not None:
+                await remember_artwork(ctx, work, profile)
             broken.append(work)
     return broken

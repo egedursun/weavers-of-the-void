@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.agents.fallen import run_fallen_turn
 from aerona.agents.son import run_son_turn
 from aerona.agents.son_state import initiative, turn_order
 from aerona.constants.llm import HAIKU_MODEL_ID
@@ -15,6 +16,18 @@ from aerona.epoch.state import require_run
 from aerona.events.kinds import EventKind
 
 INITIATIVE_STREAM = "epoch.initiative"
+TURNING = (SonStatus.ACTIVE, SonStatus.FALLEN)
+
+
+def takes_turn(son: SonRow) -> bool:
+    return son.status is SonStatus.ACTIVE or (son.status is SonStatus.FALLEN and son.body_entity_id is not None)
+
+
+async def turn_of(ec: EpochContext, son: SonRow) -> None:
+    if son.status is SonStatus.FALLEN:
+        await run_fallen_turn(ec.runtime, son.id)
+    else:
+        await run_son_turn(ec.runtime, son.id)
 
 
 async def eligible_sons(ec: EpochContext) -> list[tuple[SonRow, float]]:
@@ -23,16 +36,16 @@ async def eligible_sons(ec: EpochContext) -> list[tuple[SonRow, float]]:
         cosmos = await CosmosRepository(session).require_cosmos()
         rng = SeededRandom.for_epoch(cosmos.rng_seed, ec.epoch, INITIATIVE_STREAM)
         sons = await session.scalars(
-            select(SonRow).where(SonRow.status == SonStatus.ACTIVE, SonRow.chained.is_(False), SonRow.last_acted_epoch < ec.epoch).order_by(SonRow.id)
+            select(SonRow).where(SonRow.status.in_(TURNING), SonRow.chained.is_(False), SonRow.last_acted_epoch < ec.epoch).order_by(SonRow.id)
         )
-        ordered = [(son, initiative(rules, son, rng)) for son in sons]
+        ordered = [(son, initiative(rules, son, rng)) for son in sons if takes_turn(son)]
     return turn_order(ordered)
 
 
 async def still_due(ec: EpochContext, son_id: int) -> bool:
     async with ec.database.read() as session:
         son = await session.get(SonRow, son_id)
-        return son is not None and son.status is SonStatus.ACTIVE and son.last_acted_epoch < ec.epoch and not son.chained
+        return son is not None and takes_turn(son) and son.last_acted_epoch < ec.epoch and not son.chained
 
 
 async def son_turns(ec: EpochContext) -> None:
@@ -53,7 +66,7 @@ async def son_turns(ec: EpochContext) -> None:
             {"no": next(counter), "total": len(order), "son_id": son.id, "name": son.name, "model": HAIKU_MODEL_ID, "rarity": son.rarity.value},
         )
         try:
-            await run_son_turn(ec.runtime, son.id)
+            await turn_of(ec, son)
         except Exception as error:
             dropped.append(son)
             ec.runtime.error(f"{son.name}: {error} — will be retried once at the end of the phase.", retryable=True, son_id=son.id)
@@ -66,7 +79,7 @@ async def son_turns(ec: EpochContext) -> None:
             continue
         ec.publish(EventKind.AGENT_RETRY, {"actor": son.name, "kind": "dropped_turn", "attempt": 2, "total": 2, "wait_s": 0, "kept_steps": 0})
         try:
-            await run_son_turn(ec.runtime, son.id)
+            await turn_of(ec, son)
         except Exception as error:
             ec.runtime.error(f"{son.name} could not act this epoch: {error}", son_id=son.id)
     await ec.complete_phase(EpochPhase.GODS)

@@ -130,6 +130,7 @@ export const SON_STATUS_LABEL: Record<SonStatus, string> = {
   active: 'Active',
   asleep: 'Asleep',
   exiled: 'In exile',
+  fallen: 'Fallen into a mortal body',
   dead: 'Dead',
 }
 

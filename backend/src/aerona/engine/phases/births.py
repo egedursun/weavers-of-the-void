@@ -20,6 +20,7 @@ from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitEffect, Valu
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage, MortalSex
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import RecoveryKind
+from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
 from aerona.engine.agrarian.book import gap_site
 from aerona.engine.body.afflictions import afflict, inherit
@@ -74,6 +75,7 @@ from aerona.engine.primitives.records import RecordSpec, open_record, sentence_c
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat, stat_or
 from aerona.engine.storyteller.pace import recovered
+from aerona.engine.transform.record import blocked, record_transformation
 from aerona.language.generator import NameKind
 from aerona.language.titles import from_among
 from aerona.rules.registry import Rules
@@ -707,6 +709,7 @@ async def uplift(ctx: TickContext, atlas: RegionAtlas, species: EntityRow) -> En
         ids=[species.id, people.id],
     )
     ctx.count("new_peoples")
+    await record_transformation(ctx, TransformKind.UPLIFT, species.id, people.id)
     return people
 
 
@@ -719,7 +722,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
             return
         if (stat(species, "intelligence") or 0) < life.sapience_min_intelligence or await has_flag(ctx.session, species.id, EntityFlag.SPECIES_BECAME_PEOPLE):
             continue
-        if not rng.chance(ctx.rules.deep_world.sapience_chance):
+        if not rng.chance(ctx.rules.deep_world.sapience_chance) or await blocked(ctx, TransformKind.UPLIFT, species.id):
             continue
         await uplift(ctx, atlas, species)
         born += 1

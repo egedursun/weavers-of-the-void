@@ -591,6 +591,7 @@ from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
 from aerona.db.tables.tongues import DecipherWorkRow, DivineTongueRow, LanguageGrammarRow, LanguagePolicyRow, MeaningShiftRow, ScriptRow, SoundChangeRow
+from aerona.db.tables.transform import StarModifierRow, TransformationRow, TransformProspectRow
 from aerona.db.tables.urban import (
     ConvoyRow,
     CrimeStanceRow,
@@ -1211,6 +1212,7 @@ __all__ = [
     "SpyAgentRow",
     "SpyCellRow",
     "SpyNetworkRow",
+    "StarModifierRow",
     "StarPhysicsRow",
     "StarRow",
     "StarSystemRow",
@@ -1253,6 +1255,8 @@ __all__ = [
     "TraditionProfileRow",
     "TraitHistoryRow",
     "TraitRow",
+    "TransformProspectRow",
+    "TransformationRow",
     "TransportAssetRow",
     "TreatyBreachRow",
     "TreatyClauseRow",

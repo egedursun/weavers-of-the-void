@@ -21,6 +21,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mythic import MantlingState, OfficeChoice
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.transform import TransformKind
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, living_gods
 from aerona.engine.faith.book import patron_node
@@ -114,7 +115,7 @@ async def ascend(ctx: TickContext, mortal: EntityRow, row: MantlingRow) -> SonRo
     creator = await ctx.session.scalar(select(CreatorRow).limit(1))
     if creator is None:
         return None
-    deification = await deify(ctx, creator, mortal)
+    deification = await deify(ctx, creator, mortal, TransformKind.MANTLING)
     await carry_cults(ctx, mortal.id, deification.son.id)
     row.state = MantlingState.ASCENDED
     await note(ctx, f"{mortal.name} walked a god's path to its end and ascended.", key="mythic.mantled", ids=[mortal.id], kind=ChronicleKind.ASCENSION)
@@ -254,7 +255,7 @@ async def replace(ctx: TickContext, mortal: EntityRow, plan: Replacement) -> Son
     creator = await ctx.session.scalar(select(CreatorRow).limit(1))
     if row is None or creator is None:
         return None
-    son = (await deify(ctx, creator, mortal)).son
+    son = (await deify(ctx, creator, mortal, TransformKind.MANTLING)).son
     await carry_cults(ctx, mortal.id, son.id)
     son.domain_primary, son.domain_secondary = plan.domains
     for region, strength in plan.claims:

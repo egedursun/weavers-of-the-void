@@ -5,13 +5,14 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.discovery import TheoryProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.fossils import FossilBedRow
+from aerona.db.tables.intrigue import TrueNameRow
 from aerona.db.tables.lifecycle_ends import LifecycleStateRow
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.fossil import FossilSource
 from aerona.domain.enums.lifecycle_end import LifecycleCause, LifecycleKind, LifecycleState
 from aerona.domain.enums.world import WorldType
-from aerona.domain.models.entity_stats import TheoryStats
+from aerona.domain.models.entity_stats import BeastStats, TheoryStats
 from tests.tools.factories import Realm, make_entity
 
 Ids = dict[str, int]
@@ -54,3 +55,20 @@ async def son_made_world(session: AsyncSession, realm: Realm) -> Ids:
         )
     )
     return {"world": world.id}
+
+
+async def worshipped_star(session: AsyncSession, realm: Realm) -> Ids:
+    world = await session.get(WorldRow, realm.cosmos.world_id)
+    assert world is not None and world.star_id is not None
+    return {"star": world.star_id}
+
+
+async def name_keeper(session: AsyncSession, realm: Realm) -> Ids:
+    mortal = await session.get(EntityRow, realm.mortal_id)
+    assert mortal is not None
+    session.add(TrueNameRow(bearer_node_id=mortal.id, name="Ithren", language_node_id=None, known_by=[], since_epoch=1, locked=[]))
+    town = await session.get(EntityRow, mortal.location_id) if mortal.location_id is not None else None
+    land = town.location_id if town is not None else None
+    keeper = await make_entity(session, "Old Grey Watcher", EntityType.BEAST, world_id=realm.cosmos.world_id, location_id=land, stats=BeastStats())
+    await session.flush()
+    return {"keeper": keeper.id}

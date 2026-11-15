@@ -1703,6 +1703,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "you name while every other world is held, and its happenings become the world's past. 1 action.",
         {"world_id": "The world you made that gets a past", "epochs": "How many epochs of past it lives", "reason": "Why you give it a past"},
     ),
+    T.PRESS_TRANSFORMATION: ToolText(
+        "You press a thing in your reach toward becoming another kind of thing, a change whose conditions it already meets in part. "
+        "Its progress toward the change grows; the Creator may have blocked it. 1 action.",
+        {"kind": "The change you press toward", "subject_id": "The thing you press (an id)", "reason": "Why you press it"},
+    ),
     T.SHAPE_BIOLOGY: ToolText(
         "You give a people or species in your reach a variant of body, or take one from it. Its variants decide how much it eats, how "
         "many it bears, how it dies and sickens, how it holds in battle, how fire and storms harm it, whether it breathes, drinks and ages, "

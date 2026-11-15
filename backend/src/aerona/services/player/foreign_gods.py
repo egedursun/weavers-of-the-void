@@ -14,6 +14,7 @@ from aerona.domain.enums.son import ExistenceMode, Stat
 from aerona.domain.models.profiles import ExistenceProfile, GodDepth, Personality
 from aerona.engine.cosmos.foreign_gods import clean_stats, wake
 from aerona.engine.primitives.renames import rewrite_name
+from aerona.engine.transform.anchors import star_god_died
 from aerona.rules.registry import Rules
 from aerona.services.player import guards
 from aerona.services.player.chronicle import hand
@@ -185,6 +186,8 @@ async def edit_foreign_god(scope: PlayerScope, command: EditForeignGod) -> Effec
     messages: list[str] = []
     if command.status is not None and command.status is not god.status:
         _status(god, command.status, ctx.epoch)
+        if command.status is ForeignGodStatus.DEAD:
+            await star_god_died(ctx, god)
         line = FOREIGN_GOD_STATUS
         messages.append(await hand(ctx, creator, line, world_id=god.world_id, kind=ChronicleKind.FOREIGN_GOD, god=god.name, status=command.status.value))
     if not fields and not messages:

@@ -1,0 +1,71 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+T = RuleGroup.INTERCONNECTION
+
+
+@dataclass(frozen=True)
+class TransformRules:
+    warn_epochs: int = rule(1, 0, 10, T, "Epochs between the warning to the player and a fall or a corruption, while the player can still block it")
+    decay: int = rule(5, 0, 100, T, "Progress a transformation loses in an epoch when its conditions no longer hold")
+    fall_epochs: int = rule(3, 1, 50, T, "Epochs a son fading while anchored in a mortal body takes to fall into that body instead of dying")
+    fallen_drift_pct: int = rule(10, 0, 100, T, "Share of the gap to its renown and remnant worship a fallen son's existence closes each epoch")
+    fallen_attribute_bonus: int = rule(20, 0, 100, T, "Points above a mortal's usual attributes the body of a fallen son keeps from its godhood")
+    restoration_existence: int = rule(40, 1, 100, T, "Existence a fallen son must climb back to before it regains godhood")
+    restoration_essence_pct: int = rule(25, 0, 100, T, "Share of its full essence a son holds when it regains godhood")
+    heroquest_existence: int = rule(15, 0, 100, T, "Existence a fallen son gains when its body completes a heroquest")
+    true_name_existence: int = rule(10, 0, 100, T, "Existence a fallen son gains when its body learns its own true name")
+    corruption_warning_sanity: int = rule(
+        20, 1, 100, T, "Sanity at or below which a son who has bargained with the outside enters the band where it may be corrupted"
+    )
+    sapience_epochs: int = rule(6, 1, 100, T, "Epochs of full pressure (a curse, the void, a dark age or a god's punishment) for a people to lose its sapience")
+    sapience_void_pct: int = rule(
+        60, 1, 100, T, "Share of a people's members at the last stage of the void's taint that counts as full pressure toward losing sapience"
+    )
+    people_to_species_density: int = rule(10, 1, 100000, T, "Members of a people who become one point of the abundance of the kind they turn into")
+    ethnoreligious_epochs: int = rule(8, 1, 100, T, "Epochs of full pressure for a closed faith spread across lands to become a people")
+    ethnoreligious_cohesion: int = rule(70, 0, 100, T, "Cohesion a faith needs before its faithful start to become a people of their own")
+    ethnoreligious_share_pct: int = rule(30, 1, 100, T, "Share of each people that holds the faith who leave it to join the new people")
+    ethnoreligious_lands: int = rule(3, 1, 100, T, "Communities a faith must be held in, beyond its first, before it counts as scattered across lands")
+    nation_epochs: int = rule(8, 1, 100, T, "Epochs of full pressure for a realm to forge a people from its subjects")
+    nation_salience: int = rule(70, 0, 100, T, "Salience of belonging to the realm its subjects need before a people is forged")
+    nation_literacy: int = rule(40, 0, 100, T, "Share of a realm's subjects who can read, as a sign of its schooling, needed to forge a people")
+    house_epochs: int = rule(10, 1, 100, T, "Epochs of full pressure for a house to grow into a people")
+    house_members: int = rule(12, 2, 1000, T, "Living members a house needs before it counts as a tribe that can become a people")
+    house_generations: int = rule(5, 1, 100, T, "Epochs a house must have stood before it can become a people")
+    pocket_epochs: int = rule(2, 1, 100, T, "Epochs a phenomenon must stay past the threshold before it becomes a world")
+    world_soul_epochs: int = rule(8, 1, 100, T, "Epochs of full pressure for a living world worshipped by its peoples to ascend as a god")
+    world_soul_mood: int = rule(70, 0, 100, T, "Mood toward those who live on it that a living world needs before its soul can ascend")
+    world_soul_worshippers: int = rule(3, 1, 1000, T, "Communities worshipping the world it needs before its soul can ascend")
+    world_soul_harm_pct: int = rule(50, 0, 100, T, "Share of the harm done to a world that its soul god takes as wounds")
+    star_god_epochs: int = rule(10, 1, 100, T, "Epochs of full pressure for a star worshipped long and widely to gain a god")
+    star_god_worshippers: int = rule(5, 1, 1000, T, "Communities worshipping a star it needs before a god can rise from it")
+    star_god_dim_pct: int = rule(30, 0, 90, T, "How much dimmer a star burns when its god dies, as a share of its luminosity")
+    star_god_dim_decay: int = rule(0, 0, 100, T, "Points of a dead star god's dimming that fade each epoch; 0 leaves it for ever")
+    star_god_age_epochs: int = rule(20, 0, 10000, T, "Epochs a star's life cycle moves forward when its god dies")
+    sacralisation_epochs: int = rule(6, 1, 100, T, "Epochs of full pressure for a teaching to become a faith")
+    sacralisation_veneration: int = rule(60, 0, 100, T, "Veneration its founder needs before a teaching can become a faith")
+    secularisation_epochs: int = rule(6, 1, 100, T, "Epochs of full pressure for a faith to become a teaching")
+    secularisation_pressure: int = rule(60, 0, 100, T, "Secular pressure on a faith's adherents that counts as full pressure toward becoming a teaching")
+    progenitor_epochs: int = rule(4, 1, 100, T, "Epochs a beast that breeds takes to found a line of its own")
+    progenitor_offspring: int = rule(2, 1, 100, T, "Offspring a beast must have before its line counts as a kind of its own")
+    outer_entry_epochs: int = rule(8, 1, 100, T, "Epochs of full pressure for an outer being worshipped inside the cosmos to enter it as a god")
+    outer_entry_cults: int = rule(2, 1, 100, T, "Communities of its cult an outer being needs before it can enter the cosmos")
+    outer_entry_leak: int = rule(50, 0, 100, T, "Leak of the world it is worshipped in, at or above which the cosmos no longer keeps an outer being out")
+    theory_epochs: int = rule(5, 1, 100, T, "Epochs a sound account held as orthodox in many places takes to settle into knowledge")
+    theory_correctness: int = rule(80, 0, 100, T, "Correctness an account needs before it can settle into knowledge")
+    theory_orthodox: int = rule(3, 1, 1000, T, "Communities that must hold an account as orthodox before it can settle into knowledge")
+    remembered_quality: int = rule(70, 0, 100, T, "Quality at or above which a lost work is remembered as a legend, as a canon work always is")
+    local_god_epochs: int = rule(6, 1, 100, T, "Epochs of full pressure for a spirit worshipped by many communities to stand as a local god")
+    local_god_worshippers: int = rule(3, 1, 1000, T, "Communities worshipping a spirit it needs before it can stand as a local god")
+    realm_title_epochs: int = rule(4, 1, 100, T, "Epochs a title held by a community outside any realm takes to make it a realm of its own")
+    codified_epochs: int = rule(6, 1, 100, T, "Epochs a custom kept across a realm that writes its laws takes to be written down as law")
+    codified_keepers: int = rule(2, 1, 1000, T, "Communities of one realm that must keep a custom before it can be written down as law")
+    press_cost: int = rule(40, 0, 100000, T, "Essence a son spends to press a thing toward a transformation")
+    press_amount: int = rule(15, 1, 100, T, "Progress a son's pressing adds to a transformation")
+    seek_name_chance: int = rule(50, 0, 100, T, "Chance a mortal who seeks a true name from one who keeps it learns it")
+    context_prospects: int = rule(12, 0, 200, T, "Changes of kind under way an agent sees in its context, the nearest to coming first")
+    colossal_yield: int = rule(5, 1, 100, T, "Times the usual corpse yield the remains of a colossal beast hold as materials")
+    colossal_power: int = rule(70, 0, 100, T, "Power at or above which a beast's body becomes a place of its own when it dies")

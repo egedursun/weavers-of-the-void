@@ -61,6 +61,8 @@ class ForeignGodRow(StatColumns, NodeRow):
     created_epoch: Mapped[int]
     defeated_epoch: Mapped[int | None]
     death_epoch: Mapped[int | None]
+    anchor_world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
+    anchor_star_id: Mapped[int | None] = mapped_column(ForeignKey("stars.id", ondelete="SET NULL"))
 
 
 class ForeignGodPowerRow(Base):

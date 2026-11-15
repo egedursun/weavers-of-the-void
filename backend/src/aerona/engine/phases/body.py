@@ -268,6 +268,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
+    "table.transform_prospects",
     "table.world_domain_hooks",
     "table.world_maps",
 )
@@ -302,6 +303,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.sons",
     "table.spirit_profiles",
     "table.thoughts",
+    "table.transformations",
 )
 async def body_healing(ctx: TickContext) -> None:
     await heal_wounds(ctx)

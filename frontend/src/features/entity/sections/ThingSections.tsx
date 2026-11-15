@@ -32,6 +32,7 @@ import { RegimeSection } from '@/features/regime/RegimeSection'
 import { SacredSection } from '@/features/sacred/SacredSection'
 import { TalesSection } from '@/features/tales/TalesSection'
 import { TonguesSection } from '@/features/tongues/TonguesSection'
+import { TransformSection } from '@/features/transform/TransformSection'
 import { UrbanSection } from '@/features/urban/UrbanSection'
 import { WorldViewSection } from '@/features/worldview/WorldViewSection'
 import { AffairsSection } from './AffairsSection'
@@ -149,6 +150,7 @@ export function ThingSections({
       <LifecycleSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <WorldEndSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <PrehistorySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <TransformSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <FossilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <GroundsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />

@@ -208,6 +208,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.sons",
     "table.spy_agents",
     "table.spy_networks",
+    "table.transformations",
     "table.treaty_breaches",
     "table.vessel_profiles",
     "table.war_aims",

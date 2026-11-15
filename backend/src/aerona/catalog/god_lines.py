@@ -83,9 +83,15 @@ GOD_DEATH = Line(
     "gods.death.god_death",
     "{creator}'s son {son} died ({cause}). Their body became {corpse}; {apostates} of their worshippers turned away, {loyal} await their return.",
 )
+GOD_LEFT_COSMOS = Line(
+    "gods.death.left_cosmos",
+    "{creator}'s son {son} left the cosmos ({cause}) and lives on outside it as {successor}; {moved} of their worshippers now worship it.",
+)
 GOD_DEATH_FADED = "faded away, forgotten"
+FALLEN_BODY_DIED = "died in the mortal body {body}"
 GOD_DEATH_KILLED = "killed by {creator}'s hand"
 CORPSE_NAME = "Remains of {son}"
+OUTER_CULT_BOND = "worship carried over from a son who left the cosmos"
 CORPSE_DESCRIPTION = "{son}, {title}, died ({cause}). Their body fell {where} and became a place that still carries {domain_1} and {domain_2}."
 CORPSE_WHERE_LAND = "onto the lands of {home}"
 CORPSE_WHERE_WORLD = "to the world"

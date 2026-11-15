@@ -30,6 +30,7 @@ from aerona.domain.enums.faith import (
 )
 from aerona.domain.enums.mind import TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.domain.enums.society import CreatureTrait, NaturalLaw
+from aerona.domain.enums.transform import TransformKind
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.conditions import condition_of, end_condition
 from aerona.engine.context import TickContext
@@ -48,6 +49,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.sacred.guards import warded_hosts
+from aerona.engine.transform.record import blocked, record_transformation
 
 LIVING_STATES = (AfterlifeState.WANDERING, AfterlifeState.JUDGED, AfterlifeState.IN_REALM)
 
@@ -249,9 +251,11 @@ async def reincarnate(ctx: TickContext, profile: SpiritProfileRow, spirit: Entit
     gate = await gates(ctx, profile, home) if "state" not in profile.locked else None
     if gate is None or home is None or ledger_score(profile.deeds) < table.reincarnation_min_score:
         return None
-    if not ctx.rng(f"rebirth.{spirit.id}.{ctx.epoch}").chance(table.reincarnation_chance_pct):
+    if not ctx.rng(f"rebirth.{spirit.id}.{ctx.epoch}").chance(table.reincarnation_chance_pct) or await blocked(ctx, TransformKind.REINCARNATION, spirit.id):
         return None
-    return await rebirth(ctx, profile, spirit, home, gate)
+    child = await rebirth(ctx, profile, spirit, home, gate)
+    await record_transformation(ctx, TransformKind.REINCARNATION, spirit.id, child.id)
+    return child
 
 
 def restless(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow) -> bool:
@@ -311,9 +315,10 @@ async def possess(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow
         .order_by(EntityRow.id)
         .limit(1)
     )
-    if host is None:
+    if host is None or await blocked(ctx, TransformKind.POSSESSION, spirit.id):
         return None
     await take_host(ctx, profile, spirit, host)
+    await record_transformation(ctx, TransformKind.POSSESSION, spirit.id, host.id)
     return host
 
 

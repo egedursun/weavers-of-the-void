@@ -21,6 +21,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole
 from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.son import SonDeathCause, SonStatus, Stat
+from aerona.domain.enums.transform import GodDeathMode, TransformKind
 from aerona.domain.models.entity_stats import CultStats, PlaceStats, SpiritStats
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR
 from aerona.engine.context import TickContext
@@ -33,6 +34,10 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import canon, living_sons, top_region
 from aerona.engine.primitives.stats import headcount
+from aerona.engine.transform.bodies import living_body
+from aerona.engine.transform.ledger import Ledger
+from aerona.engine.transform.moves import move_bonds
+from aerona.engine.transform.record import blocked, record_transformation
 from aerona.rules.registry import Rules
 
 FADING_WARN_TWO = 2
@@ -92,7 +97,55 @@ async def _create(ctx: TickContext, draft: EntityDraft) -> EntityRow:
     return await EntityRepository(ctx.session).create(replace(draft, name=name, location_id=location_id))
 
 
-async def god_death(ctx: TickContext, son: SonRow, cause: str, death_cause: SonDeathCause) -> GodDeath:
+async def leave_cosmos(ctx: TickContext, son: SonRow, cause: str, successor_id: int, ledger: Ledger) -> GodDeath:
+    moved = await move_bonds(ctx, ledger, son.id, successor_id, kinds=(BondKind.WORSHIPS,), reason=god_lines.OUTER_CULT_BOND)
+    for column, value in (
+        ("status", SonStatus.DEAD),
+        ("death_epoch", ctx.epoch),
+        ("death_cause", SonDeathCause.COSMIC_HORROR),
+        ("rebel", False),
+        ("fading_epochs", 0),
+        ("body_entity_id", None),
+    ):
+        ledger.set(son, column, value)
+    creator = await creator_row(ctx.session)
+    successor = await ctx.session.get(EntityRow, successor_id)
+    line = god_lines.GOD_LEFT_COSMOS
+    await ctx.chronicle(
+        ChronicleKind.DEATH,
+        line.render(creator=creator.name if creator else "", son=son.name, cause=cause, successor=successor.name if successor else "", moved=moved),
+        template_key=line.key,
+        entity_ids=[successor_id],
+        son_id=son.id,
+    )
+    ctx.count("god_deaths")
+    await ctx.session.flush()
+    return GodDeath(None, None, None, 0, moved)
+
+
+async def sway_siblings(ctx: TickContext, son: SonRow) -> None:
+    rules = ctx.rules.death
+    repository = SonRepository(ctx.session)
+    for sibling in await living_sons(ctx.session):
+        relation = await repository.relation(sibling.id, son.id)
+        if relation <= -rules.god_death_relation_threshold:
+            sibling.fame += rules.god_death_enemy_renown
+        elif relation >= rules.god_death_relation_threshold:
+            sibling.wrath = clamp_percent(sibling.wrath + rules.god_death_friend_wrath)
+
+
+async def god_death(
+    ctx: TickContext,
+    son: SonRow,
+    cause: str,
+    death_cause: SonDeathCause,
+    *,
+    mode: GodDeathMode = GodDeathMode.IN_COSMOS,
+    successor_id: int | None = None,
+    ledger: Ledger | None = None,
+) -> GodDeath:
+    if mode is GodDeathMode.LEFT_COSMOS and successor_id is not None:
+        return await leave_cosmos(ctx, son, cause, successor_id, ledger or Ledger())
     rules = ctx.rules.death
     session = ctx.session
     worshippers = await worshippers_of(session, son.id)
@@ -124,6 +177,7 @@ async def god_death(ctx: TickContext, son: SonRow, cause: str, death_cause: SonD
     )
     if home is not None:
         await form_phenomenon(ctx, PhenomenonKind.GOD_CORPSE_AURA, home, PhenomenonCause.GOD_DEATH, cause_node_id=son.id)
+    await record_transformation(ctx, TransformKind.GOD_CORPSE, son.id, corpse.id)
     shade = await _create(
         ctx,
         EntityDraft(
@@ -166,18 +220,13 @@ async def god_death(ctx: TickContext, son: SonRow, cause: str, death_cause: SonD
     son.death_epoch = ctx.epoch
     son.death_cause = death_cause
     son.corpse_entity_id = corpse.id
+    son.body_entity_id = None
     son.rebel = False
     son.fading_epochs = 0
     creator = await creator_row(session)
     if creator is not None:
         gain(creator, son.essence / ctx.rules.death.dead_essence_divisor)
-    repository = SonRepository(session)
-    for sibling in await living_sons(session):
-        relation = await repository.relation(sibling.id, son.id)
-        if relation <= -rules.god_death_relation_threshold:
-            sibling.fame += rules.god_death_enemy_renown
-        elif relation >= rules.god_death_relation_threshold:
-            sibling.wrath = clamp_percent(sibling.wrath + rules.god_death_friend_wrath)
+    await sway_siblings(ctx, son)
     line = god_lines.GOD_DEATH
     await ctx.chronicle(
         ChronicleKind.DEATH,
@@ -315,14 +364,29 @@ async def tend_dead_son(ctx: TickContext, son: SonRow) -> bool:
     return False
 
 
+async def fallen_body_died(ctx: TickContext, mortal: EntityRow) -> None:
+    son = await ctx.session.scalar(select(SonRow).where(SonRow.body_entity_id == mortal.id, SonRow.status == SonStatus.FALLEN))
+    if son is not None:
+        await god_death(ctx, son, god_lines.FALLEN_BODY_DIED.format(body=mortal.name), SonDeathCause.OTHER)
+
+
+async def falls_instead(ctx: TickContext, son: SonRow) -> bool:
+    return await living_body(ctx.session, son) is not None and not await blocked(ctx, TransformKind.FALL, son.id)
+
+
 async def tend_living_son(ctx: TickContext, son: SonRow) -> bool:
     rules = ctx.rules.death
+    if son.status is SonStatus.FALLEN and not rules.fading_applies_to_fallen:
+        son.fading_epochs = 0
+        return False
     if son.existence > rules.fading_threshold:
         son.fading_epochs = 0
         return False
     son.fading_epochs += 1
     left = rules.fading_death_epochs - son.fading_epochs
     if left <= 0:
+        if await falls_instead(ctx, son):
+            return False
         await god_death(ctx, son, god_lines.GOD_DEATH_FADED, await death_cause(ctx.session, son.id))
         return True
     line = None

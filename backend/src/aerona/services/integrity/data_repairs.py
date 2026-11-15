@@ -53,6 +53,7 @@ from aerona.services.integrity.regime_links import mend_regime_links
 from aerona.services.integrity.sacred_links import mend_sacred_links
 from aerona.services.integrity.single_ruler import homeland_to_lives_in, restore_homelands, single_rule
 from aerona.services.integrity.tongue_links import mend_tongue_links
+from aerona.services.integrity.transformations import backfill_transformations
 from aerona.services.integrity.urban_links import mend_urban_links
 from aerona.services.integrity.war_truces import close_unfought_truces
 from aerona.services.integrity.world_views import seed_missing_views
@@ -148,6 +149,7 @@ class DataRepairs:
             ("biology_variants", seed_missing_biology),
             ("lifecycle_states", seed_missing_states),
             ("prehistories", mend_prehistories),
+            ("transformations", backfill_transformations),
             ("context_budgets", raise_context_budgets),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),

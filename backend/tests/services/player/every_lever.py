@@ -4355,3 +4355,32 @@ async def lore_free_world(session: AsyncSession) -> None:
             star_id=home.star_id,
         )
     )
+
+
+FALLEN = ("transform:force", {"kind": "fall", "subject_id": Pick("son")})
+BLOCKED_FALL = ("transform:block", {"kind": "fall", "subject_id": Pick("son")})
+DIMMED = ("star_modifier:create", {"star_id": Pick("star"), "luminosity_pct": -20, "age_epochs": 5, "decay": 2})
+LEVERS.update(
+    {
+        "transform:force": given(kind="fall", subject_id=Pick("son")),
+        "transform:block": given(kind="fall", subject_id=Pick("son")),
+        "transform:release": after(BLOCKED_FALL, kind="fall", subject_id=Pick("son")),
+        "transform:revert": after(FALLEN, transformation_id=Newest("transformations")),
+        "transformation:edit": after(
+            FALLEN, transformation_id=Newest("transformations"), values={"trigger": "forced", "subject_name": "Old", "result_name": "New"}, release=[]
+        ),
+        "transformation:delete": after(FALLEN, transformation_id=Newest("transformations")),
+        "transform_prospect:edit": after(
+            BLOCKED_FALL,
+            prospect_id=Newest("transform_prospects"),
+            values={"progress": 40, "stance": "open", "trigger": "engine", "warned_epoch": 1, "due_epoch": 2},
+            release=[],
+        ),
+        "transform_prospect:delete": after(BLOCKED_FALL, prospect_id=Newest("transform_prospects")),
+        "star_modifier:create": given(star_id=Pick("star"), luminosity_pct=-20, age_epochs=5, decay=2),
+        "star_modifier:edit": after(
+            DIMMED, modifier_id=Newest("star_modifiers"), values={"luminosity_pct": -10, "age_epochs": 3, "decay": 1, "source": "divine_act"}, release=[]
+        ),
+        "star_modifier:delete": after(DIMMED, modifier_id=Newest("star_modifiers")),
+    }
+)

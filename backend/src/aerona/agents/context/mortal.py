@@ -37,6 +37,7 @@ from aerona.agents.context.scope import Scope
 from aerona.agents.context.society import home_for
 from aerona.agents.context.statecraft import affairs_lines, statecraft_lines
 from aerona.agents.context.tongue_lines import mortal_tongue_lines
+from aerona.agents.context.transform_lines import mantling_line, prospect_lines
 from aerona.agents.context.urban_lines import mortal_urban_lines
 from aerona.agents.context.world_header import world_header
 from aerona.agents.context.world_line import world_line
@@ -242,9 +243,13 @@ async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> Mor
     mentions = await ChronicleRepository(scope.session).mentioning(me.id, scope.rules.mortal_tools.ctx_event_lines)
     beliefs = await scope.session.execute(select(FolkBeliefRow).where(FolkBeliefRow.people_entity_id == me.id))
     depth = me.depth
+    mantle = await mantling_line(scope.session, me.id)
+    circle = [me.id, *[node for node in (me.location_id, me.affiliated_entity_id) if node is not None]]
+    changes = ([mantle] if mantle else []) + await prospect_lines(scope.session, scope.rules, subjects=circle)
     return MortalContextContext(
         rules=scope.rules,
         full=full,
+        changes=changes,
         world_header=await world_header(scope, me.world_id, short=True),
         world_line=await world_line(scope, me.world_id),
         self_detail=await entity_detail(scope, me, private=True),

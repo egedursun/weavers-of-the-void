@@ -70,7 +70,7 @@ from tests.tools.every_setup_arts import art_work, built_construct, forged_work,
 from tests.tools.every_setup_crafts import material_resource
 from tests.tools.every_setup_eras import realm_programme
 from tests.tools.every_setup_folkways import owned_item
-from tests.tools.every_setup_lifecycle import forgotten_theory, hidden_fossils, son_made_world
+from tests.tools.every_setup_lifecycle import forgotten_theory, hidden_fossils, son_made_world, worshipped_star
 from tests.tools.every_setup_nature import first_kind, second_kind, two_kinds
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
@@ -425,6 +425,7 @@ SON_CASES: dict[str, Case] = {
     "shape_biology": Case(plain(holder_id=people, variant="aerial", gain=True, reason=REASON)),
     "wake_lore": Case(plain(lore_id=created("theory"), reason=REASON), forgotten_theory),
     "plan_prehistory": Case(plain(world_id=created("world"), epochs=3, reason=REASON), son_made_world),
+    "press_transformation": Case(plain(kind="star_god", subject_id=created("star"), reason=REASON), worshipped_star),
     "lay_bare_fossils": Case(plain(region_id=created("region"), reason=REASON), hidden_fossils),
     "found_museum": Case(plain(town_id=settlement, reason=REASON)),
     "lay_out_garden": Case(plain(town_id=settlement, kind="park", reason=REASON)),

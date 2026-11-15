@@ -195,6 +195,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
+    "table.transform_prospects",
     "table.world_domain_hooks",
     "table.world_maps",
 )
@@ -224,6 +225,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.sons",
     "table.spirit_profiles",
     "table.thoughts",
+    "table.transformations",
 )
 async def mortal_aging(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)

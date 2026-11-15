@@ -22,6 +22,7 @@ from aerona.engine.polity.titles import TitleTally, tend_titles
     "table.ruler_currencies",
     "table.title_holders",
     "table.title_profiles",
+    "table.transform_prospects",
     "table.vassalages",
     "table.world_maps",
 )
@@ -42,6 +43,7 @@ from aerona.engine.polity.titles import TitleTally, tend_titles
     "table.ruler_currencies",
     "table.title_holders",
     "table.title_profiles",
+    "table.transformations",
 )
 async def titles(ctx: TickContext) -> None:
     tally = TitleTally()

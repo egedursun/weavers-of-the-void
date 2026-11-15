@@ -730,6 +730,7 @@
       "aktif": "active",
       "uykuda": "asleep",
       "surgun": "exiled",
+      "dusmus": "fallen",
       "olu": "dead"
     },
     "rarity": {

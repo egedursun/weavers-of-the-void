@@ -480,6 +480,7 @@ from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
 from aerona.db.tables.tongues import DecipherWorkRow, DivineTongueRow, LanguageGrammarRow, LanguagePolicyRow, MeaningShiftRow, ScriptRow, SoundChangeRow
+from aerona.db.tables.transform import StarModifierRow, TransformationRow, TransformProspectRow
 from aerona.db.tables.urban import (
     ConvoyRow,
     CrimeStanceRow,
@@ -724,6 +725,29 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("plan_prehistory",),
         ("prehistory.",),
         ("c6bde0bacf5d",),
+    ),
+    ComplianceRow(
+        "F49",
+        (TransformationRow.__tablename__, TransformProspectRow.__tablename__, StarModifierRow.__tablename__),
+        ("transformations",),
+        (
+            "transform:force",
+            "transform:block",
+            "transform:release",
+            "transform:revert",
+            "transformation:edit",
+            "transformation:delete",
+            "transform_prospect:edit",
+            "transform_prospect:delete",
+            "star_modifier:create",
+            "star_modifier:edit",
+            "star_modifier:delete",
+        ),
+        ("TransformSection", "section-transformations", "TransformTimelinePanel", "section-transformation-timeline"),
+        ("son_turn_user", "mortal_context", "fallen_son_turn"),
+        ("press_transformation", "seek_true_name"),
+        ("transform.",),
+        ("1fdb2645b06e",),
     ),
     ComplianceRow(
         "S6.2/RP7",

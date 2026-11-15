@@ -8,6 +8,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import SkyEventRow, StarRow
 from aerona.db.tables.physics import StarPhysicsRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.transform import StarModifierRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import GalaxyAge, StarAge
@@ -27,6 +28,7 @@ from aerona.engine.cosmos.stellar import (
     engulf_orbit,
     giant_for,
     is_dwarf,
+    luminosity_shifts,
     physics_of_stars,
     refresh,
     remnant_for,
@@ -141,6 +143,10 @@ async def age_star(ctx: TickContext, star: StarRow, pace_pct: int = PERCENT, phy
         physics.age_epochs += 1
     if await keep_divine(ctx, star, physics):
         return
+    for shift in await ctx.session.scalars(select(StarModifierRow).where(StarModifierRow.star_id == star.id, StarModifierRow.aged.is_(False))):
+        if star.lifecycle_clock is not None:
+            star.lifecycle_clock = max(0, star.lifecycle_clock - shift.age_epochs)
+        shift.aged = True
     if star.lifecycle_clock is None:
         star.lifecycle_clock = stage_epochs(ctx.rules, star, star.age_stage, physics)
         return
@@ -221,6 +227,7 @@ async def star_cults(ctx: TickContext, cosmography: Cosmography, dimmed: dict[in
     "table.galactic_events",
     "table.galactic_structures",
     "table.sky_events",
+    "table.star_modifiers",
     "table.star_physics",
 )
 @writes("table.entity_flags", "table.star_physics", "table.stars")
@@ -239,6 +246,7 @@ async def star_lives(ctx: TickContext) -> None:
     )
     dimmed: dict[int, int] = {}
     physics_rows = await physics_of_stars(ctx.session, ctx.rules, list(cosmography.stars.values()))
+    shifts = await luminosity_shifts(ctx.session)
     for star in sorted(cosmography.stars.values(), key=lambda row: row.id):
         if held(star.id):
             continue
@@ -248,7 +256,7 @@ async def star_lives(ctx: TickContext) -> None:
         physics = physics_rows.get(star.id)
         await age_star(ctx, star, table.dying_galaxy_life_pct if dying else PERCENT, physics)
         if physics is not None:
-            refresh(ctx.rules, star, physics)
+            refresh(ctx.rules, star, physics, shifts.get(star.id, 0))
             drift_brightness(ctx.rules, star, physics)
             drift_metallicity(ctx.rules, star, physics, galaxy)
         dimmed[star.id] = max(0, before - star.brightness)
