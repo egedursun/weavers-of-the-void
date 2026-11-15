@@ -7,17 +7,17 @@ from aerona.rules.model import rule
 @dataclass(frozen=True)
 class FateRules:
     budget_new_creations_chars: int = rule(
-        60000,
+        100000,
         2000,
         1000000,
         RuleGroup.CONTEXT_BUDGETS,
         "Fate: creations in a single judgment call (characters); those that don't fit are weighed in extra rounds in the same epoch",
     )
-    budget_old_prophecies_chars: int = rule(12000, 500, 200000, RuleGroup.CONTEXT_BUDGETS, "Fate: old prophecies (characters)")
-    budget_epoch_events_chars: int = rule(20000, 1000, 400000, RuleGroup.CONTEXT_BUDGETS, "Fate: the epoch's events (characters)")
-    budget_engine_notes_chars: int = rule(12000, 500, 200000, RuleGroup.CONTEXT_BUDGETS, "Fate: engine notes (characters)")
-    budget_judgment_prompt_chars: int = rule(140000, 10000, 2000000, RuleGroup.CONTEXT_BUDGETS, "Fate: entire judgment prompt (characters)")
-    budget_chronicler_prompt_chars: int = rule(30000, 2000, 400000, RuleGroup.CONTEXT_BUDGETS, "Entire chronicler prompt (characters)")
+    budget_old_prophecies_chars: int = rule(40000, 500, 200000, RuleGroup.CONTEXT_BUDGETS, "Fate: old prophecies (characters)")
+    budget_epoch_events_chars: int = rule(60000, 1000, 400000, RuleGroup.CONTEXT_BUDGETS, "Fate: the epoch's events (characters)")
+    budget_engine_notes_chars: int = rule(40000, 500, 200000, RuleGroup.CONTEXT_BUDGETS, "Fate: engine notes (characters)")
+    budget_judgment_prompt_chars: int = rule(480000, 10000, 2000000, RuleGroup.CONTEXT_BUDGETS, "Fate: entire judgment prompt (characters)")
+    budget_chronicler_prompt_chars: int = rule(160000, 2000, 400000, RuleGroup.CONTEXT_BUDGETS, "Entire chronicler prompt (characters)")
     open_thread_cap: int = rule(12, 2, 100, RuleGroup.FATE_AND_CHRONICLE, "Open story cap (when exceeded, Fate closes more)")
     forced_close_cap: int = rule(6, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Maximum forced story closures in one epoch")
     new_thread_cap: int = rule(4, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Maximum new stories in one epoch")
@@ -54,14 +54,14 @@ class FateRules:
     son_turn_timeout: int = rule(420, 60, 3600, RuleGroup.AGENTS_AND_MODEL, "Son turn timeout (s)")
     prescreen_min_description: int = rule(140, 0, 2000, RuleGroup.FATE_AND_CHRONICLE, "Prescreen: a description shorter than this gets a warning (characters)")
     prescreen_max_off_domain_power: int = rule(7, 1, 11, RuleGroup.FATE_AND_CHRONICLE, "Prescreen: an off-domain creation stronger than this gets a warning")
-    voices_events_chars: int = rule(6000, 500, 100000, RuleGroup.CONTEXT_BUDGETS, "Events sent to the voices of the peoples (characters)")
+    voices_events_chars: int = rule(40000, 500, 100000, RuleGroup.CONTEXT_BUDGETS, "Events sent to the voices of the peoples (characters)")
     council_sentences: int = rule(
         2, 1, 50, RuleGroup.FATE_AND_CHRONICLE, "Sentences taken from the council line in epoch events (so the minutes aren't copied into the narrative)"
     )
     name_type_lines: int = rule(60, 0, 1000, RuleGroup.FATE_AND_CHRONICLE, "Chronicler prompt: types of records mentioned in the epoch (maximum lines)")
-    budget_name_type_chars: int = rule(3000, 0, 50000, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: name and type list (characters)")
+    budget_name_type_chars: int = rule(20000, 0, 50000, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: name and type list (characters)")
     budget_previous_judgments_chars: int = rule(
-        2500, 0, 50000, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: Fate's judgments from the previous epoch (characters)"
+        16000, 0, 50000, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: Fate's judgments from the previous epoch (characters)"
     )
     historian_opening_chars: int = rule(
         160, 20, 2000, RuleGroup.FATE_AND_CHRONICLE, "Historian prompt: length of the previous narrative opening shown (characters)"
@@ -79,17 +79,17 @@ class FateRules:
         RuleGroup.FATE_AND_CHRONICLE,
         "A story that never advanced may be closed only after this many stagnant epochs (closing a young story as 'nothing happened' is an easy ending)",
     )
-    budget_chronicler_engine_chars: int = rule(6000, 500, 200000, RuleGroup.CONTEXT_BUDGETS, "Chronicler: engine notes (characters)")
+    budget_chronicler_engine_chars: int = rule(40000, 500, 200000, RuleGroup.CONTEXT_BUDGETS, "Chronicler: engine notes (characters)")
     seer_default_charisma: int = rule(40, 0, 100, RuleGroup.FATE_AND_CHRONICLE, "Charisma of a seer with unknown charisma")
     creator_belief_max_people: int = rule(6, 0, 100, RuleGroup.FATE_AND_CHRONICLE, "Largest people for which the Creator's belief can be written in one epoch")
     budget_engine_born_chars: int = rule(
-        20000,
+        60000,
         500,
         400000,
         RuleGroup.CONTEXT_BUDGETS,
         "Fate prompt: section of those born from the world's own flow (characters; those not fitting are named in a separate naming round)",
     )
-    budget_world_records_chars: int = rule(4000, 0, 100000, RuleGroup.CONTEXT_BUDGETS, "Fate prompt: list of this epoch's world records (characters)")
+    budget_world_records_chars: int = rule(16000, 0, 100000, RuleGroup.CONTEXT_BUDGETS, "Fate prompt: list of this epoch's world records (characters)")
     chronicler_side_share_pct: int = rule(
         25, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: maximum share for engine results and unnamed records (% of data budget)"
     )

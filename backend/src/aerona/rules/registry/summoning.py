@@ -19,9 +19,9 @@ class SummoningRules:
     child_rarity_rolls: int = rule(
         20, 1, 1000, RuleGroup.SON_SUMMONING_AND_BIRTH, "Maximum rolls for a child's rarity (until it comes out lower than the parent)"
     )
-    recent_events: int = rule(15, 0, 500, RuleGroup.CONTEXT_BUDGETS, "Recent events in the summoning prompt")
+    recent_events: int = rule(45, 0, 500, RuleGroup.CONTEXT_BUDGETS, "Recent events in the summoning prompt")
     rebel_ambition: int = rule(60, 0, 100, RuleGroup.SON_SUMMONING_AND_BIRTH, "Son prompt: above this ambition (with low loyalty) prone to rebellion")
-    opportunities_chars: int = rule(2500, 0, 100000, RuleGroup.CONTEXT_BUDGETS, "Son prompt: opportunities section (characters)")
+    opportunities_chars: int = rule(20000, 0, 100000, RuleGroup.CONTEXT_BUDGETS, "Son prompt: opportunities section (characters)")
     power_effect_cap: int = rule(
         2,
         1,

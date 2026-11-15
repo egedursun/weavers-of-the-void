@@ -31,6 +31,7 @@ from aerona.services.integrity.arts_links import mend_arts_links
 from aerona.services.integrity.biology import seed_missing_biology
 from aerona.services.integrity.collective_links import mend_collective_links
 from aerona.services.integrity.containment import close_market_trade, close_mismatched_inside
+from aerona.services.integrity.context_budgets import raise_context_budgets
 from aerona.services.integrity.crafts_links import mend_crafts_links
 from aerona.services.integrity.customs_links import mend_customs_links
 from aerona.services.integrity.cycle_links import mend_cycle_links
@@ -145,6 +146,7 @@ class DataRepairs:
             ("world_views", seed_missing_views),
             ("biology_variants", seed_missing_biology),
             ("lifecycle_states", seed_missing_states),
+            ("context_budgets", raise_context_budgets),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),

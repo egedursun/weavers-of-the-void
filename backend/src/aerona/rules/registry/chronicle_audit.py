@@ -28,7 +28,7 @@ class ChronicleAuditRules:
     )
     deed_chars: int = rule(160, 30, 2000, RuleGroup.CONTEXT_BUDGETS, "Fact sheet: shown length of one deed or event (characters)")
     budget_chars: int = rule(
-        7000, 500, 100000, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: fact sheet and mandatory coverage (characters; not cut together with the rules)"
+        40000, 500, 100000, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: fact sheet and mandatory coverage (characters; not cut together with the rules)"
     )
     name_min_letters: int = rule(4, 2, 20, RuleGroup.FATE_AND_CHRONICLE, "Audit: shortest word of a name counted when looking for its mention (letters)")
     silent_min_deeds: int = rule(2, 1, 100, RuleGroup.FATE_AND_CHRONICLE, "Audit: an actor with this many deeds told as silent or idle is a contradiction")
