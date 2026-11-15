@@ -35,7 +35,7 @@ from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.hits import Harm
-from aerona.engine.body.variants import folk_biology
+from aerona.engine.body.variants import fear_of, folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.demography.biology import battle_edge, profiles_of
@@ -406,7 +406,7 @@ async def night_honour(ctx: TickContext, raider: Side, foe: Side) -> int:
     for army_id in sorted({stack.row.army_entity_id for stack in raider.stacks}) if shame else []:
         army = await living_entity(ctx.session, army_id)
         if army is not None and not held(army_id):
-            shift_stat(army, "morale", -table.night_dishonour_morale * shame / PERCENT)
+            shift_stat(army, "morale", -table.night_dishonour_morale * shame / PERCENT * await fear_of(ctx.session, army))
             shaken += 1
     return shaken
 

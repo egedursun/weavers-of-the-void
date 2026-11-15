@@ -349,7 +349,7 @@ def plan(
     delta -= wilds.symbiosis.drain(rules, species.id, present)
     delta -= predation(rules, wilds, species.id, region, hunters_of) * escape(rules, evolved)
     if profile.diet in HUNTERS and prey and sum(prey) / len(prey) < rules.ecology.hunger_threshold:
-        delta -= rules.ecology.hunger * profile.metabolism / rules.habitat.metabolism_mean
+        delta -= rules.ecology.hunger * profile.metabolism / rules.habitat.metabolism_mean * nature.factor("food_need_pct") * nature.factor("death_pct")
     hunted = (
         human_hunting(rules, wilds, species, region, protected=species.id in marks.protected, megafauna=megafauna)
         * wary(rules, evolved)

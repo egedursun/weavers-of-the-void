@@ -48,6 +48,7 @@ from aerona.engine.body.digits import lose_all, restore
 from aerona.engine.body.hits import MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KINDS
 from aerona.engine.body.state import refresh
 from aerona.engine.body.treatment import bleed, regain_blood, treat
+from aerona.engine.body.variants import ORDINARY, folk_biology, shaped
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import hospital_strengths
 from aerona.engine.disease.load import DiseaseLoads
@@ -453,7 +454,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
     body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
     if INJURY_HOLD in body.locked:
         return Tending()
-    anatomy = anatomy_for(body)
+    anatomy = shaped(anatomy_for(body), await folk_biology(ctx.session, bearer) if isinstance(bearer, EntityRow) else ORDINARY)
     table = ctx.rules.healing
     care = await world.care_for(ctx.session, bearer)
     stats = bearer_stats(bearer)

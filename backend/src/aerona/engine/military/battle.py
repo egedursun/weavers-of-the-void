@@ -757,12 +757,12 @@ def charges(stack: Stack) -> bool:
 
 
 def frighten(rules: Rules, target: Side, shock: float) -> int:
-    felt = resist(rules, target, shock)
+    dread = resist(rules, target, shock)
     for stack in target.stacks:
         if stack.alive:
-            stack.row.morale = max(0, round(stack.row.morale - felt * (1 - stack.row.morale / (2 * PERCENT))))
-            disorganise(rules, stack, felt * rules.battle_depth.shock_organisation_pct / PERCENT)
-    return round(felt)
+            stack.row.morale = max(0, round(stack.row.morale - dread * (1 - stack.row.morale / (2 * PERCENT))))
+            disorganise(rules, stack, dread * rules.battle_depth.shock_organisation_pct / PERCENT)
+    return round(dread)
 
 
 def reach(rules: Rules, striker: Side, target: Side) -> float:
@@ -1250,9 +1250,9 @@ def aftermath(rules: Rules, winner: Side, loser: Side, gap: float) -> tuple[dict
     salvage(rules, winner, loser)
     for stack in winner.stacks:
         stack.row.morale = min(PERCENT, stack.row.morale + campaigns.winner_morale_gain)
-    beaten = (campaigns.loser_morale_loss + round(gap / campaigns.loser_morale_diff_divisor)) * loser.dread_pct // PERCENT
+    dread = (campaigns.loser_morale_loss + round(gap / campaigns.loser_morale_diff_divisor)) * loser.dread_pct // PERCENT
     for stack in loser.stacks:
-        stack.row.morale = max(0, stack.row.morale - beaten)
+        stack.row.morale = max(0, stack.row.morale - dread)
     return wounded, maimed, by_kind
 
 

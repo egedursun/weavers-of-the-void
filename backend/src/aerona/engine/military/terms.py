@@ -10,6 +10,7 @@ from aerona.domain.enums.military import PeaceTermKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.renown import Currency, ReputationAxis
 from aerona.domain.enums.war import WarStatus
+from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.military.peace import record
 from aerona.engine.military.support import realm_of
@@ -75,7 +76,7 @@ async def frighten_or_harden(ctx: TickContext, war_id: int, perpetrator: EntityR
         for row in await ctx.session.scalars(select(ArmyRow).where(ArmyRow.owner_entity_id == victim.id, ArmyRow.disbanded_epoch.is_(None))):
             army = await living_entity(ctx.session, row.entity_id)
             if army is not None and not held(army.id):
-                shift_stat(army, "morale", -table.dread_morale)
+                shift_stat(army, "morale", -table.dread_morale * await fear_of(ctx.session, army))
         return True
     book = await RealmBook.load(ctx.session)
     homeland = {region for region in [book.atlas.top_region(victim.id)] if region is not None}

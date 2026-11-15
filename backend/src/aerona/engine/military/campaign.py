@@ -24,6 +24,7 @@ from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.body.hits import Harm
+from aerona.engine.body.variants import fear_of, fear_of_id
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -216,7 +217,7 @@ async def mutiny(ctx: TickContext, army: EntityRow, row: ArmyRow, profile: ArmyP
     rows = await stacks_of(ctx.session, army.id)
     if outcome is MutinyOutcome.GRUMBLING:
         for stack in rows:
-            stack.morale = clamp_int(stack.morale - ctx.rules.campaign_depth.mutiny_gain // 2, 0, PERCENT)
+            stack.morale = clamp_int(stack.morale - round_half_up(ctx.rules.campaign_depth.mutiny_gain // 2 * await fear_of(ctx.session, army)), 0, PERCENT)
     elif outcome is MutinyOutcome.REFUSAL:
         profile.stance = Stance.ENTRENCH
     elif outcome is MutinyOutcome.DEPOSED:
@@ -312,7 +313,8 @@ async def home_news(ctx: TickContext, atlas: RegionAtlas) -> int:
         if weight <= 0 or "morale" in (row.locked or []):
             continue
         weight *= 1 + (await values_for(ctx.session, origin)).get(ValueAxis.KINSHIP, 0) / PERCENT
-        row.morale = clamp_int(row.morale - round_half_up(table.home_news_morale * weight * table.home_news_pct / PERCENT), 0, PERCENT)
+        fear = await fear_of_id(ctx.session, row.army_entity_id)
+        row.morale = clamp_int(row.morale - round_half_up(table.home_news_morale * weight * table.home_news_pct / PERCENT * fear), 0, PERCENT)
         shaken += 1
     return shaken
 

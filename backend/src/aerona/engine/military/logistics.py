@@ -22,6 +22,7 @@ from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.military import RESTING, CommandArea, MoraleState, MutinyOutcome, Stance
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.agrarian.book import fell_plantings
+from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import unfit_for_land_war, view_of
 from aerona.engine.economy.stocks import goods_of, holding
@@ -358,9 +359,9 @@ async def desert_by_class(ctx: TickContext, march: March, rows: list[ArmyUnitRow
     return leaving
 
 
-def dishearten(rows: list[ArmyUnitRow], loss: int) -> None:
+def dishearten(rows: list[ArmyUnitRow], loss: int, fear: float) -> None:
     for row in rows:
-        row.morale = clamp_int(row.morale - loss, 0, PERCENT)
+        row.morale = clamp_int(row.morale - round_half_up(loss * fear), 0, PERCENT)
 
 
 async def holds_map(ctx: TickContext, owner_id: int) -> bool:
@@ -379,10 +380,10 @@ async def hardship(ctx: TickContext, march: March, rows: list[ArmyUnitRow], log:
     if profile.supply_days <= 0:
         log.starving = True
         dead += round_half_up(size * attrition.starvation_pct / PERCENT)
-        dishearten(rows, round_half_up(ctx.rules.morale.base * ctx.rules.morale.supply_pct / PERCENT))
+        dishearten(rows, round_half_up(ctx.rules.morale.base * ctx.rules.morale.supply_pct / PERCENT), await fear_of(ctx.session, march.army))
     log.unpaid = not await wages(ctx, march, rows)
     if log.unpaid:
-        dishearten(rows, ctx.rules.logistics.unpaid_morale)
+        dishearten(rows, ctx.rules.logistics.unpaid_morale, await fear_of(ctx.session, march.army))
     if log.starving or log.unpaid:
         log.deserted = await desert_by_class(ctx, march, rows)
     dead += straggle(ctx.rules, rows, profile)

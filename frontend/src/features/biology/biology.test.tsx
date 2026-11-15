@@ -54,6 +54,13 @@ describe('biology', () => {
         { bias: 'groupthink', shift: 50, damped: false },
         { bias: 'overconfidence', shift: 0, damped: true },
       ],
+      body: {
+        bleeds: false,
+        heals: true,
+        infects: true,
+        material: true,
+        tissue: 'crystal',
+      },
       seeded: true,
       updated_epoch: 5,
       locked: ['variants'],
@@ -65,6 +72,8 @@ describe('biology', () => {
       .element(screen.getByText('Harm from storms: 150%, its variants 150%'))
       .toBeVisible()
     await expect.element(screen.getByText('Groupthink: +50')).toBeVisible()
+    await expect.element(screen.getByText('Bleeds: no')).toBeVisible()
+    await expect.element(screen.getByText('Tissue: Crystal')).toBeVisible()
     await expect
       .element(screen.getByRole('button', { name: 'Hive' }))
       .toHaveAttribute('aria-pressed', 'true')
@@ -91,6 +100,7 @@ describe('biology', () => {
       effects: null,
       derived: null,
       leanings: [],
+      body: null,
       seeded: false,
       updated_epoch: null,
       locked: [],

@@ -43,6 +43,7 @@ from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.cohorts import return_maimed
 from aerona.engine.body.hits import Harm
+from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import WorldView, world_views
 from aerona.engine.demography.biology import acclimatised, profiles_of
@@ -677,7 +678,7 @@ async def _siege(
     besieger_name = besieger_entity.name if besieger_entity is not None else "the besiegers"
     if winner.id == besieged.id:
         war.score += sign
-        shift_stat(attacker_army, "morale", -campaigns.siege_repelled_morale_loss)
+        shift_stat(attacker_army, "morale", -campaigns.siege_repelled_morale_loss * await fear_of(ctx.session, attacker_army))
         siege.status, siege.ended_epoch = SiegeStatus.REPULSED, ctx.epoch
         return BattleOutcome.SIEGE_REPULSED, f"{besieged.name} repulsed the siege from behind its walls", siege
     if ctx.rng("breach").probability(breach_chance):
@@ -697,7 +698,7 @@ async def _siege(
     )
     if society is not None:
         await shift_stock(ctx.session, ctx.rules, besieged.id, Commodity.FOOD, -campaigns.siege_supply_loss, epoch=ctx.epoch, flow=GoodsFlow.SIEGE)
-    shift_stat(attacker_army, "morale", -campaigns.siege_attacker_morale_loss)
+    shift_stat(attacker_army, "morale", -campaigns.siege_attacker_morale_loss * await fear_of(ctx.session, attacker_army))
     return BattleOutcome.SIEGE_STARVATION, f"{besieger_name} laid siege to {besieged.name}; the walls hold but food is running low in the city", siege
 
 

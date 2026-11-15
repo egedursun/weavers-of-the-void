@@ -9,6 +9,7 @@ import { useGodAction } from '@/features/pantheon/godAction'
 type Schema = components['schemas']
 export type BiologyNodeView = Schema['BiologyNodeView']
 export type BiologyEffectsView = Schema['BiologyEffectsView']
+export type BiologyBodyView = Schema['BiologyBodyView']
 export type BiologyVariant = Schema['BiologyVariant']
 
 export const biologyKeys = {

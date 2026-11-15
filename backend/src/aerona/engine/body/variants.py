@@ -1,9 +1,10 @@
 from collections.abc import Iterable
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.anatomy import Anatomy
 from aerona.catalog.biology import (
     BIOLOGY_VARIANTS,
     CHEMISTRY_VARIANTS,
@@ -19,8 +20,10 @@ from aerona.db.tables.biology import BIOLOGY_FLAGS, BIOLOGY_SHARE_MAX, BIOLOGY_S
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.biology import BiologyVariant
+from aerona.domain.enums.ecology import TissueMaterial
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.folkways import DecisionBias
 from aerona.domain.enums.intervention import Disaster
@@ -131,6 +134,10 @@ async def holder_of(session: AsyncSession, entity: EntityRow | None) -> EntityRo
         return None
     if entity.entity_type in HOLDER_TYPES:
         return entity
+    if entity.entity_type is EntityType.ARMY:
+        army = await session.get(ArmyRow, entity.id)
+        owner = await session.get(EntityRow, army.owner_entity_id) if army is not None else None
+        return await holder_of(session, owner) if owner is not None and owner.id != entity.id else None
     if entity.entity_type is EntityType.BEAST:
         beast = await session.get(BeastProfileRow, entity.id)
         kind = beast.species_entity_id if beast is not None else None
@@ -141,6 +148,30 @@ async def holder_of(session: AsyncSession, entity: EntityRow | None) -> EntityRo
 async def folk_biology(session: AsyncSession, entity: EntityRow | None) -> BiologyView:
     holder = await holder_of(session, entity)
     return await biology_of(session, holder.id if holder is not None else None)
+
+
+def shaped(anatomy: Anatomy, view: BiologyView) -> Anatomy:
+    specs = [BIOLOGY_VARIANTS[variant] for variant in view.variants]
+    return replace(
+        anatomy,
+        breathes=anatomy.breathes and view.breathes,
+        bleeds=anatomy.bleeds and all(spec.bleeds for spec in specs),
+        heals=anatomy.heals and all(spec.heals for spec in specs),
+        infects=anatomy.infects and all(spec.infects for spec in specs),
+        material=anatomy.material and all(spec.material for spec in specs),
+    )
+
+
+def tissue_of(view: BiologyView) -> TissueMaterial | None:
+    return next((BIOLOGY_VARIANTS[variant].tissue for variant in view.variants if BIOLOGY_VARIANTS[variant].tissue is not None), None)
+
+
+async def fear_of(session: AsyncSession, entity: EntityRow | None) -> float:
+    return (await folk_biology(session, entity)).factor("morale_loss_pct")
+
+
+async def fear_of_id(session: AsyncSession, entity_id: int | None) -> float:
+    return await fear_of(session, await session.get(EntityRow, entity_id) if entity_id is not None else None)
 
 
 async def seed_biology(session: AsyncSession, holder_id: int, epoch: int) -> BiologyRow:

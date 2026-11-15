@@ -15,6 +15,7 @@ from aerona.domain.enums.environment import RiverClass, TerrainKind
 from aerona.domain.enums.military import RESTING, CommandArea, Stance
 from aerona.domain.enums.operations import CarrierKind, EchelonOrder
 from aerona.engine.agrarian.rings import eased_regions
+from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.military.command import command_areas
@@ -362,9 +363,10 @@ async def culminate(ctx: TickContext, march: March, flow: SupplyFlowRow | None, 
     if ctx.rng(f"culmination.{march.army.id}.{ctx.epoch}.{row.offensive_seasons}").chance(table.collapse_chance):
         if "cohesion" not in march.profile.locked:
             march.profile.cohesion = clamp_int(march.profile.cohesion - table.collapse_cohesion, 0, PERCENT)
+        fear = await fear_of(ctx.session, march.army)
         for stack in stacks:
             if "morale" not in stack.locked:
-                stack.morale = clamp_int(stack.morale - table.collapse_morale, 0, PERCENT)
+                stack.morale = clamp_int(stack.morale - round_half_up(table.collapse_morale * fear), 0, PERCENT)
         tally.collapsed += 1
         await note(
             ctx,

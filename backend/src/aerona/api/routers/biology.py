@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Path
 
 from aerona.api.dependencies import ServicesDep, reader
-from aerona.api.schemas.biology import BiologyEffectsView, BiologyLeaningView, BiologyNodeView
+from aerona.api.schemas.biology import BiologyBodyView, BiologyEffectsView, BiologyLeaningView, BiologyNodeView
 from aerona.api.views.common import node_refs
 from aerona.catalog.biology import BIOLOGY_VARIANTS
 from aerona.core.errors import NotFoundError
@@ -32,6 +32,17 @@ def leanings(variants: tuple[BiologyVariant, ...]) -> list[BiologyLeaningView]:
     return found
 
 
+def body_of(variants: tuple[BiologyVariant, ...]) -> BiologyBodyView:
+    specs = [BIOLOGY_VARIANTS[variant] for variant in variants]
+    return BiologyBodyView(
+        bleeds=all(spec.bleeds for spec in specs),
+        heals=all(spec.heals for spec in specs),
+        infects=all(spec.infects for spec in specs),
+        material=all(spec.material for spec in specs),
+        tissue=next((spec.tissue for spec in specs if spec.tissue is not None), None),
+    )
+
+
 @router.get("/biology/of/{node_id}", response_model=BiologyNodeView)
 async def node_biology(services: ServicesDep, node_id: NodeId) -> BiologyNodeView:
     async with reader(services) as session:
@@ -48,6 +59,7 @@ async def node_biology(services: ServicesDep, node_id: NodeId) -> BiologyNodeVie
                 effects=None,
                 derived=None,
                 leanings=[],
+                body=None,
                 seeded=False,
                 updated_epoch=None,
                 locked=[],
@@ -66,6 +78,7 @@ async def node_biology(services: ServicesDep, node_id: NodeId) -> BiologyNodeVie
             effects=effects_of({key: getattr(row, key) for key in BIOLOGY_EFFECTS} if row is not None else derived),
             derived=effects_of(derived),
             leanings=leanings(variants),
+            body=body_of(variants),
             seeded=row is not None,
             updated_epoch=row.updated_epoch if row is not None else None,
             locked=list(row.locked) if row is not None else [],

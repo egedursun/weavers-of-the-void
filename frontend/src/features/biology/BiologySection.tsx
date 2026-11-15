@@ -1,4 +1,4 @@
-import { RotateCcw, Unlock } from 'lucide-react'
+import { Bug, Droplet, Hand, HeartPulse, RotateCcw, Unlock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -16,10 +16,12 @@ import {
 } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
+import { TISSUE } from '@/features/entity/wilds/anatomyLabels'
 import { BIASES } from '@/features/folkways/labels'
 import { Ref } from '@/features/gatherings/parts'
 import { Bars } from '@/features/sacred/parts'
 import {
+  type BiologyBodyView,
   type BiologyEffectsView,
   type BiologyNodeView,
   type BiologyVariant,
@@ -68,6 +70,33 @@ function Flags({ effects }: { effects: BiologyEffectsView }) {
           {flag.label}: {effects[flag.key] ? 'yes' : 'no'}
         </Chip>
       ))}
+    </div>
+  )
+}
+
+const BODY_FLAGS = [
+  { key: 'bleeds', label: 'Bleeds', icon: Droplet },
+  { key: 'heals', label: 'Heals', icon: HeartPulse },
+  { key: 'infects', label: 'Takes infection', icon: Bug },
+  { key: 'material', label: 'Material body', icon: Hand },
+] as const
+
+function Body({ body }: { body: BiologyBodyView }) {
+  const tissue = body.tissue ? TISSUE[body.tissue] : null
+  return (
+    <div className='flex min-w-0 flex-wrap gap-2'>
+      {BODY_FLAGS.map((flag) => (
+        <Chip
+          key={flag.key}
+          icon={flag.icon}
+          variant={body[flag.key] ? 'outline' : 'warning'}
+        >
+          {flag.label}: {body[flag.key] ? 'yes' : 'no'}
+        </Chip>
+      ))}
+      <Chip icon={tissue?.icon ?? Hand}>
+        Tissue: {tissue ? tissue.label : 'its own'}
+      </Chip>
     </div>
   )
 }
@@ -256,6 +285,7 @@ export function BiologySection({
                 ],
               ]}
             />
+            {query.data.body && <Body body={query.data.body} />}
             {query.data.effects ? (
               <Flags effects={query.data.effects} />
             ) : (

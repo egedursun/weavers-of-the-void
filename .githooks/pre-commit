@@ -34,6 +34,7 @@ run frontend_orphans "$PYTHON" scripts/check_frontend_orphans.py
 run folk_queries "$PYTHON" scripts/check_folk_queries.py
 run coin_units "$PYTHON" scripts/check_coin_units.py
 run zero_fallbacks "$PYTHON" scripts/check_zero_fallbacks.py
+run morale_losses "$PYTHON" scripts/check_morale_losses.py
 run scene_colors "$PYTHON" scripts/check_scene_colors.py
 run counts "$PYTHON" scripts/check_counts.py
 run theme_tokens "$PYTHON" scripts/check_theme_tokens.py

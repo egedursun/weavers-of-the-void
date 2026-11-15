@@ -1,6 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.biology import BiologyVariant
+from aerona.domain.enums.ecology import TissueMaterial
 from aerona.domain.enums.folkways import DecisionBias
 
 
@@ -17,6 +18,14 @@ class BiologyEffectsView(ApiModel):
     ages: bool
 
 
+class BiologyBodyView(ApiModel):
+    bleeds: bool
+    heals: bool
+    infects: bool
+    material: bool
+    tissue: TissueMaterial | None
+
+
 class BiologyLeaningView(ApiModel):
     bias: DecisionBias
     shift: int
@@ -31,6 +40,7 @@ class BiologyNodeView(ApiModel):
     effects: BiologyEffectsView | None
     derived: BiologyEffectsView | None
     leanings: list[BiologyLeaningView]
+    body: BiologyBodyView | None
     seeded: bool
     updated_epoch: int | None
     locked: list[str]

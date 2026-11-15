@@ -39484,6 +39484,13 @@ export interface components {
       | 'crystal'
       | 'void'
       | 'spirit'
+    BiologyBodyView: {
+      bleeds: boolean
+      heals: boolean
+      infects: boolean
+      material: boolean
+      tissue: components['schemas']['TissueMaterial'] | null
+    }
     BiologyEditInput: {
       values?: {
         [key: string]: number | string | boolean | null
@@ -39516,6 +39523,7 @@ export interface components {
       effects: components['schemas']['BiologyEffectsView'] | null
       derived: components['schemas']['BiologyEffectsView'] | null
       leanings: components['schemas']['BiologyLeaningView'][]
+      body: components['schemas']['BiologyBodyView'] | null
       seeded: boolean
       updated_epoch: number | null
       locked: string[]

@@ -22,6 +22,7 @@ from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, Treasury
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.body.hits import Harm
+from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
 from aerona.engine.economy.purse import receive_coin, riches_of
@@ -376,7 +377,7 @@ async def sack_city(
     morale = ctx.rules.morale
     for march in homeward:
         rows = await stacks_of(ctx.session, march.army.id)
-        dishearten(rows, -morale.home_sacked_rage)
+        dishearten(rows, -morale.home_sacked_rage, await fear_of(ctx.session, march.army))
         desert(ctx.rules, march, rows, round_half_up((stat(march.army, "size") or 0) * morale.home_sacked_desertion_pct / PERCENT))
         sync(march.army, rows, ctx.rules)
     await damage_districts(ctx, besieged, DistrictHarm.SACK, 1.0)

@@ -24,7 +24,8 @@ from aerona.engine.body.digits import lose
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
 from aerona.engine.body.state import refresh
 from aerona.engine.body.strike import Layer, Wielding, generic_layers, worn_layers
-from aerona.engine.body.tissues import hardness_of, skin_kept, tissue_loss
+from aerona.engine.body.tissues import Hardness, hardness_of, skin_kept, tissue_loss
+from aerona.engine.body.variants import ORDINARY, folk_biology, shaped, tissue_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import weapon_of
 from aerona.engine.economy.materials import draw_strength, sharpness
@@ -298,7 +299,9 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
     if isinstance(bearer, EntityRow) and await is_immortal(ctx.session, bearer):
         return Wounding(WoundOutcome.IMMORTAL)
     body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
-    anatomy = anatomy_for(body)
+    nature = await folk_biology(ctx.session, bearer) if isinstance(bearer, EntityRow) else ORDINARY
+    anatomy = shaped(anatomy_for(body), nature)
+    tissue = tissue_of(nature)
     rng = ctx.rng(seed_of("hits", bearer.id, harm.cause.value, round_half_up(harm.damage)))
     harm = await armed(ctx, harm)
     hardiness = lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.TOUGHNESS), ctx.rules.mind_split.toughness_pct)
@@ -312,7 +315,7 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
         rng,
         wielding=await wielding_of(ctx, harm),
         layers=await layers_for(ctx, bearer, body),
-        hardness=hardness_of(creature),
+        hardness=hardness_of(creature) if creature is not None or tissue is None else Hardness(tissue, tissue),
     )
     await scorch_items(ctx, hits)
     if not lethal:

@@ -16,6 +16,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.region import DangerHarm, DangerSource
 from aerona.engine.body.cohorts import cohort
+from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.environment.dangers import harm_weight, weighted
 from aerona.engine.environment.knowledge import knowledge_of, polity_of
@@ -127,8 +128,9 @@ async def danger_toll(ctx: TickContext, army: EntityRow, rows: list[ArmyUnitRow]
     ambushed = ctx.rng(f"ambush.{army.id}.{region_id}").chance(chance)
     if ambushed:
         dead += round_half_up(size * table.ambush_loss_pct / PERCENT)
+        fear = await fear_of(ctx.session, army)
         for row in rows:
-            row.morale = clamp_int(row.morale - table.ambush_morale, 0, PERCENT)
+            row.morale = clamp_int(row.morale - round_half_up(table.ambush_morale * fear), 0, PERCENT)
         ctx.count("danger_ambushes")
     return Peril(dead, ambushed)
 

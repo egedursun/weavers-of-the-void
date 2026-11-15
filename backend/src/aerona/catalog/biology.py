@@ -5,7 +5,7 @@ from types import MappingProxyType
 from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.demography import FolkDiet, NaturalTrait
-from aerona.domain.enums.ecology import Biochemistry, Diet, Sociality
+from aerona.domain.enums.ecology import Biochemistry, Diet, Sociality, TissueMaterial
 from aerona.domain.enums.folkways import DecisionBias
 
 V = BiologyVariant
@@ -24,13 +24,30 @@ class BiologySpec:
     breathes: bool = True
     drinks: bool = True
     ages: bool = True
+    bleeds: bool = True
+    heals: bool = True
+    infects: bool = True
+    material: bool = True
+    tissue: TissueMaterial | None = None
     shifts: Mapping[DecisionBias, int] = field(default_factory=dict)
     damped: frozenset[DecisionBias] = frozenset()
 
 
 BIOLOGY_VARIANTS: MappingProxyType[BiologyVariant, BiologySpec] = MappingProxyType(
     {
-        V.INCORPOREAL: BiologySpec(food_need_pct=0, fertility_pct=40, death_pct=60, disease_pct=0, fire_harm_pct=50, breathes=False, drinks=False, ages=False),
+        V.INCORPOREAL: BiologySpec(
+            food_need_pct=0,
+            fertility_pct=40,
+            death_pct=60,
+            disease_pct=0,
+            fire_harm_pct=50,
+            breathes=False,
+            drinks=False,
+            ages=False,
+            bleeds=False,
+            infects=False,
+            material=False,
+        ),
         V.AQUATIC: BiologySpec(fertility_pct=140, death_pct=110, disease_pct=120, storm_harm_pct=80, drinks=False),
         V.AERIAL: BiologySpec(food_need_pct=130, fertility_pct=90, storm_harm_pct=150),
         V.SUBTERRANEAN: BiologySpec(food_need_pct=80, disease_pct=110, storm_harm_pct=40),
@@ -42,7 +59,7 @@ BIOLOGY_VARIANTS: MappingProxyType[BiologyVariant, BiologySpec] = MappingProxyTy
             shifts={B.GROUPTHINK: 50, B.COLONY_RISK_AVERSION: 40},
             damped=frozenset({B.OVERCONFIDENCE}),
         ),
-        V.PLANT_LIKE: BiologySpec(food_need_pct=40, death_pct=70, disease_pct=110, fire_harm_pct=200),
+        V.PLANT_LIKE: BiologySpec(food_need_pct=40, death_pct=70, disease_pct=110, fire_harm_pct=200, bleeds=False, tissue=TissueMaterial.WOOD),
         V.CONSTRUCT: BiologySpec(
             food_need_pct=0,
             fertility_pct=30,
@@ -52,14 +69,36 @@ BIOLOGY_VARIANTS: MappingProxyType[BiologyVariant, BiologySpec] = MappingProxyTy
             breathes=False,
             drinks=False,
             ages=False,
+            bleeds=False,
+            heals=False,
+            infects=False,
             shifts={B.LITERALISM: 40},
             damped=frozenset({B.LOSS_AVERSION, B.HOSTILE_ATTRIBUTION, B.OPTIMISM, B.FATALISM, B.SCARCITY_PANIC}),
         ),
         V.AGELESS: BiologySpec(fertility_pct=25, death_pct=30, ages=False, shifts={B.SUNK_COST: 20, B.HOSTILE_ATTRIBUTION: 15, B.RECENCY: -20}),
         V.SHAPESHIFTING: BiologySpec(disease_pct=90),
-        V.GASEOUS: BiologySpec(food_need_pct=30, fertility_pct=80, disease_pct=60, fire_harm_pct=120, storm_harm_pct=200, drinks=False),
+        V.GASEOUS: BiologySpec(
+            food_need_pct=30,
+            fertility_pct=80,
+            disease_pct=60,
+            fire_harm_pct=120,
+            storm_harm_pct=200,
+            drinks=False,
+            bleeds=False,
+            material=False,
+        ),
         V.CRYSTALLINE: BiologySpec(
-            food_need_pct=60, fertility_pct=60, death_pct=60, disease_pct=50, fire_harm_pct=70, storm_harm_pct=120, breathes=False, drinks=False
+            food_need_pct=60,
+            fertility_pct=60,
+            death_pct=60,
+            disease_pct=50,
+            fire_harm_pct=70,
+            storm_harm_pct=120,
+            breathes=False,
+            drinks=False,
+            bleeds=False,
+            infects=False,
+            tissue=TissueMaterial.CRYSTAL,
         ),
         V.UNDEAD: BiologySpec(
             food_need_pct=0,
@@ -71,6 +110,9 @@ BIOLOGY_VARIANTS: MappingProxyType[BiologyVariant, BiologySpec] = MappingProxyTy
             breathes=False,
             drinks=False,
             ages=False,
+            bleeds=False,
+            heals=False,
+            infects=False,
             shifts={B.LITERALISM: 20, B.AUTHORITY_DEFERENCE: 20},
         ),
     }

@@ -1,32 +1,42 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.anatomy import ANATOMIES
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.economy import CommunityStockRow
+from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.biology import BiologyVariant
-from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.body import BodyPlan, DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import NaturalTrait
 from aerona.domain.enums.ecology import Diet, Sociality
 from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.folkways import DecisionBias
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.world_view import BindingNeed
+from aerona.domain.models.entity_stats import ArmyStats
+from aerona.engine.body.hits import Harm
 from aerona.engine.body.variant_control import edit_biology, restore_biology, set_variant
-from aerona.engine.body.variants import BiologyTally, bias_target, biology_of, folk_biology, keep_biology
+from aerona.engine.body.variants import BiologyTally, bias_target, biology_of, fear_of, folk_biology, keep_biology, shaped
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_view_control import edit_view
 from aerona.engine.cosmos.world_views import ViewTally, keep_views
 from aerona.engine.economy.household import eat
+from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.military.logistics import dishearten
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.stats import stat
 from aerona.services.integrity.biology import seed_missing_biology
-from tests.engine.core.factories import CoreWorld, bond, mortal, settlement, tuned_rules
+from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 
 async def at(session: AsyncSession, epoch: int) -> TickContext:
@@ -126,3 +136,41 @@ async def test_a_mortal_reads_the_biology_of_its_people_and_its_mind_leans_as_it
     assert bias_target(view, DecisionBias.LITERALISM, 50, bias_pct) == 90
     assert bias_target(view, DecisionBias.GROUPTHINK, 50, bias_pct) == 100
     assert bias_target(view, DecisionBias.OVERCONFIDENCE, 80, bias_pct) == 50
+
+
+async def test_an_army_fears_as_the_body_of_the_people_that_raised_it(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Gearward", world, world.regions[0], population=1000)
+    await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
+    host = await entity(session, "Iron Host", EntityType.ARMY, ArmyStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(ArmyRow(entity_id=host.id, owner_entity_id=town.id, raised_epoch=1))
+    rows = [ArmyUnitRow(army_entity_id=host.id, kind=UnitKind.LINE_INFANTRY, count=100, morale=60, locked=[])]
+    session.add_all(rows)
+    await winged_hive(session, world)
+    ctx = await at(session, 2)
+    await keep_biology(ctx, BiologyTally())
+    assert await fear_of(session, host) == 0.5
+    await set_variant(ctx, world.people.id, BiologyVariant.CONSTRUCT, True)
+    assert await fear_of(session, host) == 0
+    dishearten(rows, 20, await fear_of(session, host))
+    assert rows[0].morale == 60
+    await set_variant(ctx, world.people.id, BiologyVariant.CONSTRUCT, False)
+    await set_variant(ctx, world.people.id, BiologyVariant.HIVE, False)
+    dishearten(rows, 20, await fear_of(session, host))
+    assert rows[0].morale == 40
+
+
+async def test_a_blade_passes_through_a_mortal_whose_people_have_no_material_body(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Mistholm", world, world.regions[0], population=1000)
+    await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
+    shade = await mortal(session, "Vey", world, town.id, hp=60)
+    await bond(session, shade.id, town.id, BondKind.LIVES_IN)
+    await winged_hive(session, world)
+    ctx = await at(session, 2)
+    await keep_biology(ctx, BiologyTally())
+    struck = await apply_hits(ctx, shade, Harm(30, HarmCause.BATTLE, "fell", damage_type=DamageType.CUT))
+    assert struck.hp_lost > 0
+    await set_variant(ctx, world.people.id, BiologyVariant.INCORPOREAL, True)
+    before = stat(shade, "hp")
+    passed = await apply_hits(ctx, shade, Harm(30, HarmCause.BATTLE, "fell", damage_type=DamageType.CUT))
+    assert passed.hp_lost < struck.hp_lost and stat(shade, "hp") == (before or 0) - passed.hp_lost
+    assert shaped(ANATOMIES[BodyPlan.HUMANOID], await folk_biology(session, shade)).material is False
