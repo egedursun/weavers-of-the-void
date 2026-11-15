@@ -31,12 +31,7 @@ def test_no_reader_of_the_chronicle_drops_folded_lines() -> None:
 
 
 def test_a_writer_that_cuts_what_it_stores_at_a_fixed_length_is_caught() -> None:
-    writer = (
-        "row.note = label[:120]\n"
-        "row.summary = phase.summary\n"
-        "first = name[:1].upper()\n"
-        "casting.effect = text[:480] or 'nothing'\n"
-    )
+    writer = "row.note = label[:120]\nrow.summary = phase.summary\nfirst = name[:1].upper()\ncasting.effect = text[:480] or 'nothing'\n"
     assert [item.line for item in checker().fixed_cuts({Path("writer.py"): writer})] == [1, 4]
 
 

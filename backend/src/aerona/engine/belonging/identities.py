@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.db.tables.belonging import HeldIdentityRow
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import MovementRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow
@@ -15,6 +16,7 @@ from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.belonging import IdentityLayer, SalienceDriver
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import CollectiveActKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
@@ -103,6 +105,7 @@ async def movement_pushes(ctx: TickContext, pushes: Pushes) -> None:
 async def apart_pushes(ctx: TickContext, communities: list[EntityRow], pushes: Pushes) -> None:
     table = ctx.rules.identities
     quarters = set(await ctx.session.scalars(select(DistrictRow.settlement_entity_id).where(DistrictRow.kind == DistrictKind.FOREIGN_QUARTER)))
+    castes = set(await ctx.session.scalars(select(DistrictRow.settlement_entity_id).where(DistrictRow.purity_rank_id.is_not(None))))
     apart = set(
         await ctx.session.scalars(select(PurityRankRow.people_entity_id).where((PurityRankRow.commensal.is_(True)) | (PurityRankRow.endogamous.is_(True))))
     )
@@ -110,7 +113,7 @@ async def apart_pushes(ctx: TickContext, communities: list[EntityRow], pushes: P
         if community.id in quarters:
             push(pushes, community.id, IdentityLayer.PEOPLE, table.segregation, SalienceDriver.SEGREGATION)
         folk = await people_of(ctx.session, community)
-        if folk is not None and folk.id in apart:
+        if (folk is not None and folk.id in apart) or community.id in castes:
             push(pushes, community.id, IdentityLayer.CLASS, table.segregation, SalienceDriver.SEGREGATION)
 
 
@@ -124,6 +127,28 @@ async def crossing_pushes(ctx: TickContext, atlas: RegionAtlas, pushes: Pushes, 
         for layer in (IdentityLayer.PEOPLE, IdentityLayer.FAITH):
             if mine[layer][0] is not None and theirs[layer][0] is not None and mine[layer][0] != theirs[layer][0]:
                 push(pushes, first.location_id, layer, -table.crossing, SalienceDriver.CROSSING)
+                tally.crossed += 1
+
+
+async def guild_pushes(ctx: TickContext, atlas: RegionAtlas, pushes: Pushes, tally: IdentityTally) -> None:
+    table = ctx.rules.identities
+    guilds = await ctx.session.execute(
+        select(EntityRow)
+        .join(FactionProfileRow, FactionProfileRow.faction_entity_id == EntityRow.id)
+        .where(FactionProfileRow.kind.in_(list(GUILDS)), EntityRow.status == EntityStatus.CANON, EntityRow.location_id.is_not(None))
+        .order_by(EntityRow.id)
+    )
+    for (guild,) in guilds.all():
+        members = await ctx.session.scalars(
+            select(EntityRow)
+            .join(BondRow, BondRow.source_node_id == EntityRow.id)
+            .where(BondRow.target_node_id == guild.id, BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE)
+            .order_by(EntityRow.id)
+        )
+        values = [await values_of(ctx.session, atlas, member) for member in members]
+        for layer in (IdentityLayer.PEOPLE, IdentityLayer.FAITH):
+            if guild.location_id is not None and len({row[layer][0] for row in values if row[layer][0] is not None}) > 1:
+                push(pushes, guild.location_id, layer, -table.crossing, SalienceDriver.CROSSING)
                 tally.crossed += 1
 
 
@@ -165,6 +190,7 @@ async def keep_identities(ctx: TickContext, tally: IdentityTally) -> None:
     await hunger_pushes(ctx, atlas, pushes)
     await movement_pushes(ctx, pushes)
     await apart_pushes(ctx, communities, pushes)
+    await guild_pushes(ctx, atlas, pushes, tally)
     await crossing_pushes(ctx, atlas, pushes, tally)
     for community in communities:
         if held(community.id):

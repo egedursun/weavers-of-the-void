@@ -51,6 +51,7 @@ class ArmedTally:
     "table.incidents",
     "table.indentures",
     "table.mind_facets",
+    "table.offices",
     "table.outbreaks",
     "table.polity_members",
     "table.polity_profiles",

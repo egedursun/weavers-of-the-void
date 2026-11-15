@@ -6,39 +6,44 @@ from aerona.agents.context.belonging_lines import mortal_belonging_lines
 from aerona.agents.context.scope import load_scope
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryLawRow, SanctuaryRow, SatireRow
-from aerona.db.tables.collective import AccountRow, AccountStanceRow, SocialNormRow
+from aerona.db.tables.collective import AccountRow, AccountStanceRow, CrowdMoodRow, SocialNormRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.folkways import BiasWeightRow
+from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.folkways import BiasWeightRow, PurityRankRow
 from aerona.db.tables.gatherings import CollectionMemberRow, CollectionPlaceRow, CollectionRow
 from aerona.db.tables.law_depth import DefectionRow, OutlawRow
 from aerona.db.tables.mind import FacetRow, SkillRow
 from aerona.db.tables.mortal import MarriageRow, MortalProfileRow
 from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.relations import RelationshipRow
+from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.belonging import FugitiveKind, IdentityLayer, PlayKind, SalienceDriver, SanctuaryKind, SanctuaryState, SatireSource
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.collective import AccountStance, NormBehaviour, NormSituation
+from aerona.domain.enums.collective import AccountStance, CollectiveActKind, NormBehaviour, NormSituation
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.folkways import DecisionBias
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.mind import EthicalStance, Facet
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, Jurisdiction, LawArea, LawKind, OfficeKind
 from aerona.domain.enums.relations import RelationType
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LoyaltyPart
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import WarCause, WarSide
-from aerona.domain.models.entity_stats import EventStats, HouseStats, LawStats, PeopleStats, PolityStats, StructureStats
-from aerona.engine.belonging.effects import identity_levy, shared_identity
+from aerona.domain.models.entity_stats import EventStats, FactionStats, HouseStats, LawStats, PeopleStats, PolityStats, StructureStats
+from aerona.engine.belonging.effects import apart_from_ruler, identity_levy, shared_identity
 from aerona.engine.belonging.identities import IdentityTally, keep_identities
 from aerona.engine.belonging.mockery import sting, vent
 from aerona.engine.belonging.peers import PeerTally, companions_of, keep_peers
 from aerona.engine.belonging.sanctuary import SanctuaryTally, keep_sanctuaries
 from aerona.engine.belonging.satire import SatireTally, keep_satire
 from aerona.engine.collective.accounts import HistoryTally, chronicle_collection
+from aerona.engine.collective.crowds import crowd_for
 from aerona.engine.context import TickContext
 from aerona.engine.law.prisons import imprison
 from aerona.engine.polity.book import Realm
@@ -151,6 +156,12 @@ async def test_a_fault_line_on_people_breeds_separatism_and_a_salient_realm_hold
     assert parts[LoyaltyPart.SEPARATISM] == round(rules.identities.separatism * 80 / 100)
     assert parts[LoyaltyPart.IDENTITY] == round(rules.identities.cohesion * 90 / 100)
     assert await identity_levy(session, rules, far.id) > 1
+    assert await apart_from_ruler(session, rules, far.id) == 80 and await apart_from_ruler(session, rules, town.id) == 0
+    mood = CrowdMoodRow(settlement_entity_id=far.id, anger=0, anxiety=0, fervour=0, deterrence=0, agitation=0, locked=[])
+    ctx = await at(session, 3, identities={"revolt_cut": 20})
+    calm = crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2)
+    divided = crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2, divided=80)
+    assert divided.cut == calm.cut + 16
 
 
 async def test_children_of_a_town_play_learn_befriend_and_grow_into_companions(session: AsyncSession, world: CoreWorld) -> None:
@@ -339,3 +350,26 @@ async def test_childhood_friends_keep_relationships_of_known_kinds_that_the_soci
     await refresh_kinds(session, tuned_rules(), first.id, 3)
     with pytest.raises(ValueError, match="known kind"):
         rows[0].kinds = ["childhood"]
+
+
+async def test_caste_quarters_raise_rank_and_mixed_guilds_quiet_the_lines_they_cross(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Tierwall", world, world.regions[0])
+    rank = PurityRankRow(people_entity_id=world.people.id, name="Keepers", standing=80, professions=[], endogamous=False, commensal=False, locked=[])
+    session.add(rank)
+    await session.flush()
+    session.add(DistrictRow(settlement_entity_id=town.id, kind=DistrictKind.MARKET, built_epoch=1, purity_rank_id=rank.id, locked=[]))
+    other = await entity(session, "Hillfolk", EntityType.PEOPLE, PeopleStats(population=300), world_id=world.world.id)
+    guild = await entity(session, "The Joiners", EntityType.FACTION, FactionStats(), world_id=world.world.id, location_id=town.id)
+    session.add(FactionProfileRow(faction_entity_id=guild.id, kind=FactionKind.CRAFT_GUILD, locked=[]))
+    first, second = await mortal(session, "Iri", world, town.id), await mortal(session, "Oss", world, town.id)
+    await bond(session, first.id, world.people.id, BondKind.DESCENDS_FROM)
+    await bond(session, second.id, other.id, BondKind.DESCENDS_FROM)
+    await bond(session, first.id, guild.id, BondKind.MEMBER_OF)
+    await bond(session, second.id, guild.id, BondKind.MEMBER_OF)
+    await session.flush()
+    await keep_identities(await at(session, 3), IdentityTally())
+    rank_line = await session.get(HeldIdentityRow, (town.id, IdentityLayer.CLASS))
+    people_line = await session.get(HeldIdentityRow, (town.id, IdentityLayer.PEOPLE))
+    rest = tuned_rules().identities.base_salience
+    assert rank_line is not None and rank_line.driver is SalienceDriver.SEGREGATION and rank_line.salience > rest
+    assert people_line is not None and people_line.driver is SalienceDriver.CROSSING and people_line.salience < rest

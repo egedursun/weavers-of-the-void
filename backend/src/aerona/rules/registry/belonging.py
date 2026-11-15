@@ -17,13 +17,24 @@ class IdentityRules:
     invasion: int = rule(25, 0, 100, M, "People and realm salience a community gains while an enemy army stands in its land")
     strike: int = rule(15, 0, 100, M, "Profession salience a community gains while its guilds strike")
     rhetoric: int = rule(10, 0, 100, M, "Salience a community gains in the layer a movement there preaches")
-    segregation: int = rule(10, 0, 100, M, "People and class salience a community gains when its districts keep peoples or ranks apart")
-    crossing: int = rule(10, 0, 100, M, "People and faith salience a community loses for marriages across those lines among its folk")
+    segregation: int = rule(
+        10,
+        0,
+        100,
+        M,
+        "People and class salience a community gains when its districts keep peoples or ranks apart, as a foreign quarter or the quarters of its castes",
+    )
+    crossing: int = rule(
+        10, 0, 100, M, "People and faith salience a community loses for marriages across those lines among its folk, and for guilds whose members cross them"
+    )
     mortal_pct: int = rule(70, 0, 100, M, "Share of its home community's salience a mortal's identity takes each epoch (%)")
     in_group_opinion: int = rule(15, 0, 100, M, "Opinion two holders gain for an identity they share, at full salience")
     cohesion: int = rule(15, 0, 100, P, "Loyalty a realm member gains from a fully salient identity with the realm")
     separatism: int = rule(20, 0, 100, P, "Loyalty a realm member loses when a fully salient people or locality differs from its ruler's")
     mobilisation_pct: int = rule(20, 0, 100, P, "Share more or less levy a realm raises as realm salience stands above or below the resting salience (%)")
+    revolt_cut: int = rule(
+        15, 0, 100, P, "Threshold a crowd of a town loses when the line its realm divides along sets the town apart from its ruler, at full salience"
+    )
     fault_at: int = rule(55, 0, 100, M, "Salience from which a layer becomes the line along which a realm divides")
     memory_at: int = rule(50, 0, 100, M, "Salience from which the identity group of a place keeps its own account of what happened there")
 

@@ -4,7 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.belonging import HeldIdentityRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.domain.enums.belonging import IdentityLayer
+from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
@@ -68,6 +70,19 @@ async def identity_loyalty(
     ruler = (await identities_of(session, ruler_id)).get(fault)
     differs = ruler is not None and (ruler.value_node_id is not None or ruler.value_label is not None) and not same_value(mine[fault], ruler)
     return cohesion, round_half_up(table.separatism * mine[fault].salience / PERCENT) if differs else 0
+
+
+async def apart_from_ruler(session: AsyncSession, rules: Rules, town_id: int) -> int:
+    realm = await session.scalar(
+        select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == town_id).order_by(PolityMemberRow.polity_entity_id).limit(1)
+    )
+    if realm is None:
+        return 0
+    members = sorted(await session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == realm)))
+    fault = await realm_fault(session, rules, members)
+    ruler = await session.scalar(select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == realm, OfficeRow.kind == OfficeKind.RULER).limit(1))
+    _, separatism = await identity_loyalty(session, rules, int(realm), town_id, ruler_id=ruler, fault=fault)
+    return round_half_up(separatism * PERCENT / max(1, rules.identities.separatism))
 
 
 async def identity_levy(session: AsyncSession, rules: Rules, community_id: int) -> float:

@@ -24,6 +24,7 @@ from aerona.domain.enums.gathering import CollectionRole
 from aerona.domain.enums.mind import Facet
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.world import SkyEventKind
+from aerona.engine.belonging.effects import apart_from_ruler
 from aerona.engine.belonging.mockery import vent
 from aerona.engine.body.hits import Harm
 from aerona.engine.collective.book import population_of, realm_of_town, shift, soldiers_of, towns
@@ -196,7 +197,15 @@ async def deterrence_of(ctx: TickContext, town: EntityRow, profile: SettlementPr
 
 
 def crowd_for(
-    ctx: TickContext, mood: CrowdMoodRow, act: CollectiveActKind, conformity: float, *, stress: int = 0, bound: int = 0, vented: float = 0.0
+    ctx: TickContext,
+    mood: CrowdMoodRow,
+    act: CollectiveActKind,
+    conformity: float,
+    *,
+    stress: int = 0,
+    bound: int = 0,
+    vented: float = 0.0,
+    divided: int = 0,
 ) -> Crowd:
     table = ctx.rules.collective_behaviour
     spec_mood = TRIGGER_MOOD[act]
@@ -204,6 +213,7 @@ def crowd_for(
     cut += ctx.rules.structural_demography.threshold_cut * stress / PERCENT
     cut += ctx.rules.labour_regimes.crowd_cut * bound / PERCENT
     cut -= vented
+    cut += ctx.rules.identities.revolt_cut * divided / PERCENT
     return Crowd(
         base=table.base_threshold,
         cut=cut,
@@ -366,7 +376,8 @@ async def spark(ctx: TickContext, town: EntityRow, trigger: CollectiveTrigger, t
     district, district_people = await choose_district(ctx, town, rng)
     bound = await indentured_share(ctx.session, town.id)
     vented = await vent(ctx.session, ctx.rules, await realm_of(ctx.session, town.id), ctx.epoch)
-    crowd = crowd_for(ctx, mood, act, await conformity_of(ctx, town), stress=await psi_of(ctx.session, town.id), bound=bound, vented=vented)
+    divided = await apart_from_ruler(ctx.session, ctx.rules, town.id)
+    crowd = crowd_for(ctx, mood, act, await conformity_of(ctx, town), stress=await psi_of(ctx.session, town.id), bound=bound, vented=vented, divided=divided)
     share = cascade(ctx, crowd, rng)
     outcome = outcome_of(ctx, act, share)
     participants = round_half_up(district_people * share / PERCENT)
