@@ -32,6 +32,7 @@ from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.lore.learning import institution_factor, patron_factor
 from aerona.engine.lore.printing import banned_for, read_in_secret
 from aerona.engine.lore.truth import branch_factor
+from aerona.engine.means.media import legible
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import raw_level
@@ -340,7 +341,8 @@ async def read_books(ctx: TickContext) -> int:
             continue
         paper = ctx.rules.technique_effects.paper_pct if await has_technique(ctx.session, holder, Technique.PAPER) else 0
         monks = ctx.rules.technique_effects.monastic_pct if await has_technique(ctx.session, holder, Technique.MONASTICISM) else 0
-        row.progress = clamp_int(row.progress + round_half_up(table.book_progress * fidelity / PERCENT * (1 + (paper + monks) / PERCENT)), 0, PERCENT)
+        read = table.book_progress * fidelity / PERCENT * (1 + (paper + monks) / PERCENT) * await legible(ctx, book)
+        row.progress = clamp_int(row.progress + round_half_up(read), 0, PERCENT)
         taught += 1
     return taught
 

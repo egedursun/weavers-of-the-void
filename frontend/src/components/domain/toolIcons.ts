@@ -566,6 +566,10 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   sow_crop: Sprout,
   keep_pet: PawPrint,
   train_herd: Target,
+  set_economic_order: Scale,
+  begin_transition: ArrowLeftRight,
+  change_money: Coins,
+  move_economic_order: Scale,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

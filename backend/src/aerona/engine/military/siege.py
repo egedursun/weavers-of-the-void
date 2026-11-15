@@ -28,6 +28,7 @@ from aerona.engine.economy.purse import receive_coin
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.folkways.biases import lean_community
 from aerona.engine.happenings.emergence import record_sack
+from aerona.engine.honours.units import HonourTally, honour_siege
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.art import smash
@@ -308,6 +309,8 @@ async def sack(
     choice: SackChoice = SackChoice.SACK,
 ) -> int:
     report = await sack_city(ctx, besieged, profile, homeward=homeward, victor=victor, siege=siege, choice=choice)
+    if profile is not None and victor is not None:
+        await honour_siege(ctx, profile.army_entity_id, besieged, HonourTally())
     return report.dead
 
 

@@ -67,6 +67,7 @@ BLUEPRINTS = (
     FactionBlueprint(K.WORKERS_UNION, "workers' union", "Union", "industrial workers"),
     FactionBlueprint(K.ENGINEERS_SOCIETY, "engineers' society", "Society of Engineers", "engineers"),
     FactionBlueprint(K.FINANCIERS, "financiers' exchange", "Exchange", "financiers"),
+    FactionBlueprint(K.VETERANS, "veterans' association", "Veterans", "veterans"),
     FactionBlueprint(K.REBELS, "rebel band", "Rebels", "malcontents"),
     FactionBlueprint(K.BANDITS, "bandit band", "Brigands", "outlaws"),
     FactionBlueprint(K.PIRATES, "pirate crew", "Corsairs", "sea-robbers"),

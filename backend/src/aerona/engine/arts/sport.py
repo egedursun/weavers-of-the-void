@@ -22,13 +22,13 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.collective.crowds import CrowdTally, spark
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import receive_coin, take_coin
+from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
 from aerona.engine.notes import note
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.sacred.places import church_of, realm_of_town, ruler_of
 from aerona.engine.structures.readers import working
 
@@ -183,8 +183,7 @@ async def read_line(ctx: TickContext, club: ClubRow, home: EntityRow) -> None:
 
 async def wager(ctx: TickContext, match: MatchRow, club: ClubRow, home: EntityRow) -> BetRow | None:
     table = ctx.rules.sports
-    wealth = stat_or(home, "wealth", 0)
-    stake = round_half_up(wealth * table.stake_pct / PERCENT * club.fandom / PERCENT)
+    stake = round_half_up(await coin_of(ctx.session, ctx.rules, home) * table.stake_pct / PERCENT * club.fandom / PERCENT)
     if stake <= 0:
         return None
     row = BetRow(match_id=match.id, settlement_entity_id=home.id, club_entity_id=club.faction_entity_id, stake=stake, locked=[])
@@ -198,13 +197,18 @@ async def settle_bets(ctx: TickContext, match: MatchRow) -> None:
     for bet in bets:
         bet.won = bet.club_entity_id == match.winner_entity_id
     staked_on_winner = sum(bet.stake for bet in bets if bet.won)
-    lost_pool = sum(bet.stake for bet in bets if not bet.won)
+    pool = 0
     for bet in bets:
         town = await living_entity(ctx.session, bet.settlement_entity_id)
-        if town is None or held(town.id):
+        if bet.won or town is None or held(town.id):
             continue
-        shift = round_half_up(lost_pool * bet.stake / staked_on_winner) if bet.won and staked_on_winner else -bet.stake
-        set_stats(town, wealth=clamp_int(stat_or(town, "wealth", 0) + shift, 0, PERCENT))
+        if await take_coin(ctx.session, ctx.rules, town, bet.stake):
+            pool += bet.stake
+    for bet in bets:
+        town = await living_entity(ctx.session, bet.settlement_entity_id)
+        if not bet.won or town is None or held(town.id) or not staked_on_winner:
+            continue
+        await receive_coin(ctx.session, ctx.rules, town, round_half_up(pool * bet.stake / staked_on_winner))
 
 
 async def play(ctx: TickContext, league_id: int | None, home: ClubRow, away: ClubRow, tally: SportTally, *, fixed: int | None = None) -> MatchRow:

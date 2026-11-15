@@ -162,7 +162,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     },
     EntityType.FACTION: {
         **WORSHIPPED_SON_FIELD,
-        "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market, void_pirates, social_circle, crime_family, thieves_guild, smuggling_ring, pirate_confederacy, workers_union, engineers_society or financiers; its kind decides what it strives for and how it acts",
+        "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market, void_pirates, social_circle, crime_family, thieves_guild, smuggling_ring, pirate_confederacy, workers_union, engineers_society or financiers, veterans; its kind decides what it strives for and how it acts",
     },
     EntityType.LAW: {
         "law_kind": "What the law rules; one of: {{ law_kinds }}",
@@ -1668,6 +1668,15 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.LENGTHEN_WINTER: ToolText(
         "You make the long winter now holding the world you walk last longer. 1 action.",
         {"world_id": "The world you walk", "epochs": "How many epochs longer it holds", "reason": "Why you lengthen it"},
+    ),
+    T.MOVE_ECONOMIC_ORDER: ToolText(
+        "You move one axis of the economic order of a realm in your reach. 1 action.",
+        {
+            "polity_id": "The realm",
+            "axis": "The axis you move: ownership, allocation, labour or distribution",
+            "value": "Its new value, one the axis allows",
+            "reason": "Why you move it",
+        },
     ),
     T.PRESS_TALE: ToolText(
         "You press a tale under way in a life in your reach toward its next turn: the schemes and happenings that would bring it grow "

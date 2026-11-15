@@ -38,9 +38,11 @@ from aerona.engine.history.collections import open_collection
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import items
 from aerona.engine.lore.research_depth import add_progress
+from aerona.engine.means.containers import read_marks
 from aerona.engine.military.engineering import earthworks_of
 from aerona.engine.mind.book import skill_level
 from aerona.engine.notes import note
+from aerona.engine.orders.savings import unearth_hoards
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -243,8 +245,11 @@ async def suffer(ctx: TickContext, dig: ExcavationRow, risk: ExcavationRisk, sit
 
 
 async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRow, site: EntityRow, leader: EntityRow) -> str:
+    hoard = await unearth_hoards(ctx, [place for place in (site.id, site.location_id) if place is not None], leader)
+    marked = await read_marks(ctx, site)
+    found = (f"; they found a buried hoard worth {hoard} coin" if hoard else "") + ("; stamped jars told of the trade that once passed there" if marked else "")
     if stage.find is ExcavationFind.NOTHING:
-        return ""
+        return found
     keeper = dig.sponsor_node_id or leader.id
     technique = ctx.rng(f"dig.technique.{dig.id}.{stage.id}").pick(list(LOST_TECHNIQUES))
     if stage.find is ExcavationFind.TECHNIQUE:
@@ -270,7 +275,7 @@ async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRo
         )
         if hidden is not None:
             await reveal_hidden_route(ctx, int(hidden), f"A map unearthed at {site.name}")
-    return f"; they found {item.name}"
+    return f"; they found {item.name}{found}"
 
 
 async def dig_on(ctx: TickContext, dig: ExcavationRow, tally: DigTally) -> None:

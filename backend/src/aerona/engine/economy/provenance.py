@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.materials import ARMOUR_MATERIALS, LUXURY_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
+from aerona.catalog.means import BUILDING
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -13,19 +14,21 @@ from aerona.db.tables.economy import CommunityStockRow, CurrencyRow, NodeMateria
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import VehicleKind
 from aerona.engine.economy.materials import MaterialBook, set_node_material, workable
+from aerona.engine.eras.effects import era_techniques
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
 M = MaterialKind
 MADE_TYPES = frozenset({EntityType.ITEM, EntityType.STRUCTURE, EntityType.VESSEL})
-COMMON = frozenset({M.WOOD, M.STONE, M.BONE, M.HIDE, M.CLAY, M.CLOTH})
+COMMON = frozenset({M.WOOD, M.STONE, M.BONE, M.HIDE, M.CLAY, M.CLOTH, M.MUD_BRICK, M.RUBBLE, M.THATCH})
 HOLY_WORKS = frozenset({EngineKind.TEMPLE, EngineKind.WONDER})
 STONE_WORKS = frozenset({EngineKind.WALL, EngineKind.LIBRARY, EngineKind.SCHOOL, EngineKind.OBSERVATORY, EngineKind.COSMIC_ARCHIVE})
 HULLS: MappingProxyType[VehicleKind, tuple[MaterialKind, ...]] = MappingProxyType(
@@ -39,8 +42,8 @@ HULLS: MappingProxyType[VehicleKind, tuple[MaterialKind, ...]] = MappingProxyTyp
 FABRICS: MappingProxyType[VehicleKind, tuple[MaterialKind, ...]] = MappingProxyType(
     {VehicleKind.SHIP: (M.CLOTH, M.LEATHER, M.HIDE), VehicleKind.MOUNT: (M.LEATHER, M.CLOTH, M.HIDE)}
 )
-STRUCTURE_STOCK = (M.LIVING_WOOD, M.STONE, M.CLAY, M.WOOD)
-HOLY_STOCK = (M.GOLD, M.SILVER, M.CRYSTAL, M.STONE, M.CLAY, M.WOOD)
+STRUCTURE_STOCK = (M.LIVING_WOOD, M.HYDRAULIC_CONCRETE, M.DRESSED_STONE, M.LIME_MORTAR, M.FIRED_BRICK, M.TILE, M.STONE, M.RUBBLE, M.MUD_BRICK, M.WOOD, M.THATCH)
+HOLY_STOCK = (M.GOLD, M.SILVER, M.CRYSTAL, M.DRESSED_STONE, M.STONE, M.FIRED_BRICK, M.MUD_BRICK, M.WOOD)
 JEWEL_STOCK = (*LUXURY_MATERIALS, M.BONE, M.WOOD)
 
 
@@ -50,6 +53,7 @@ class Workshop:
     levels: dict[KnowledgeBranch, int] = field(default_factory=dict)
     supplies: set[MaterialKind] = field(default_factory=set)
     magic: int = 0
+    techniques: frozenset[Technique] = frozenset()
 
 
 async def maker_of(session: AsyncSession, entity: EntityRow) -> EntityRow | None:
@@ -86,14 +90,29 @@ async def workshop_of(session: AsyncSession, entity: EntityRow) -> Workshop:
         return Workshop(None)
     levels = (await known_levels(session, [community.id])).get(community.id, {})
     region = await session.get(RegionEnvironmentRow, community.location_id) if community.location_id is not None else None
-    return Workshop(community.id, dict(levels), await supplies_of(session, community), region.magic_density if region is not None else 0)
+    magic = region.magic_density if region is not None else 0
+    return Workshop(community.id, dict(levels), await supplies_of(session, community), magic, await era_techniques(session, community.id))
+
+
+def supplied(kind: MaterialKind, shop: Workshop) -> bool:
+    spec = BUILDING.get(kind)
+    return kind in shop.supplies or (spec is not None and bool(set(spec.made_from) & shop.supplies))
+
+
+def known_how(kind: MaterialKind, shop: Workshop) -> bool:
+    spec = BUILDING.get(kind)
+    return spec is None or spec.needs is None or spec.needs in shop.techniques
 
 
 def pick(rules: Rules, book: MaterialBook, world_id: int | None, shop: Workshop, candidates: Iterable[MaterialKind]) -> MaterialKind:
     ordered = list(candidates)
-    fit = [kind for kind in ordered if (props := book.props(world_id, kind)) is not None and workable(rules, props, shop.levels, shop.magic)]
+    fit = [
+        kind
+        for kind in ordered
+        if (props := book.props(world_id, kind)) is not None and workable(rules, props, shop.levels, shop.magic) and known_how(kind, shop)
+    ]
     for kind in fit:
-        if kind in shop.supplies:
+        if supplied(kind, shop):
             return kind
     for kind in fit:
         if kind in COMMON:

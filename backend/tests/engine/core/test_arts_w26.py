@@ -521,8 +521,9 @@ async def test_the_losers_stakes_are_shared_among_the_winners_by_their_stakes(se
     match = MatchRow(home_entity_id=home.faction_entity_id, away_entity_id=away.faction_entity_id, winner_entity_id=home.faction_entity_id, epoch=2, locked=[])
     session.add(match)
     await session.flush()
+    coin = ctx.rules.taxation.wealth_per_treasury
     for town, club, stake in ((towns[0], home, 2), (towns[1], home, 6), (towns[2], away, 8)):
-        session.add(BetRow(match_id=match.id, settlement_entity_id=town.id, club_entity_id=club.faction_entity_id, stake=stake, locked=[]))
+        session.add(BetRow(match_id=match.id, settlement_entity_id=town.id, club_entity_id=club.faction_entity_id, stake=stake * coin, locked=[]))
     await session.flush()
     await settle_bets(ctx, match)
     assert [stat_or(town, "wealth", 0) for town in towns] == [52, 56, 42]

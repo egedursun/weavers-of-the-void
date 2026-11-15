@@ -12,6 +12,7 @@ from aerona.domain.enums.structure import STANDING_STATES, ConstructionState
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import decay_loss
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.means.building import can_repair, weathering
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag
@@ -58,10 +59,11 @@ async def wear(ctx: TickContext, work: EntityRow, profile: StructureProfileRow, 
         return
     table = ctx.rules.upkeep
     props = await material_props(ctx.session, work)
-    decay = round_half_up(decay_loss(ctx.rules, props, 0) * table.wear_decay_pct / PERCENT) if props is not None else 0
+    weather = await weathering(ctx, work, profile)
+    decay = round_half_up(decay_loss(ctx.rules, props, 0) * table.wear_decay_pct / PERCENT * weather) if props is not None else 0
     ceiling = stat_or(work, "durability", PERCENT)
     rows = await ensure_sections(ctx.session, work, profile)
-    if paid:
+    if paid and await can_repair(ctx, work, profile):
         await mend_sections(ctx.session, ctx.rules, work.id, table.repair_step - decay, rebuild=False)
         await mend_sections(ctx.session, ctx.rules, work.id, ctx.rules.integrity.rebuild_step, rebuild=True)
     else:

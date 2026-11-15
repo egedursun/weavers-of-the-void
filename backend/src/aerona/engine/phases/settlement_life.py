@@ -9,6 +9,7 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.means.water import lifted_water
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
@@ -97,6 +98,7 @@ JUSTICE_FULL = 100
     "table.people_culture",
     "table.place_environment",
     "table.polity_members",
+    "table.polity_profiles",
     "table.poor_relief",
     "table.preparedness",
     "table.pressures",
@@ -116,11 +118,13 @@ JUSTICE_FULL = 100
     "table.turf",
     "table.war_sides",
     "table.wars",
+    "table.water_lifts",
     "table.workshops",
     "table.world_domain_hooks",
     "table.world_maps",
     "table.world_seasons",
     "table.worlds",
+    "table.written_works",
 )
 @writes(
     "faction.strength",
@@ -189,7 +193,7 @@ async def settlement_life(ctx: TickContext) -> None:
         await stir_unrest(ctx, town, tension=tension, festival=festival, region=region)
         burned = await fires(ctx, town, ground, knowledge, weather)
         ctx.count("fires", burned)
-        sanitation(ctx, town, knowledge)
+        sanitation(ctx, town, knowledge, lifted=await lifted_water(ctx, town.entity.id))
         hallow(ctx, town)
         await endure_siege(ctx, town, values)
         await prestige(ctx, town)

@@ -21,6 +21,7 @@ from aerona.engine.environment.years import world_years
 from aerona.engine.industry.energy import scale_by_energy
 from aerona.engine.industry.methods import allowed, feed, local_price, method_for
 from aerona.engine.industry.quality import at_least
+from aerona.engine.means.containers import sealed_share
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
 
@@ -119,6 +120,7 @@ async def spoil(ctx: TickContext, book: EconomyBook, community: EntityRow, row: 
     granary = book.workshop(community.id, WorkshopKind.GRANARY)
     shelter = max(0.0, 1 - (granary.level if granary is not None else 0) * table.granary_pct / PERCENT)
     shelter *= await ctx.hook_easing(community.id, DomainHook.PRESERVATION)
+    shelter *= await sealed_share(ctx, community.id, sum(lot.quantity for lot in await perishables(ctx, community.id)))
     ledger = goods_of(ctx.session, ctx.epoch)
     years = max(1, len(world_years(ctx.environment, community.world_id or 0, "stores")))
     lost_total = 0

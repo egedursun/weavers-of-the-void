@@ -555,3 +555,16 @@ class EnginePhasesRules:
     attraction: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: whom each new mortal is drawn to")
     cognitive_decline: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the failing of minds in late life")
     being_wounds: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the healing of cosmic and outer beings and the remains of the slain")
+    written_media: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: what each people writes on, and how written works rot, burn and are copied"
+    )
+    vaults: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the locks, seals, guards and traps of stores and the smiths who improve them")
+    water_lifting: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: dry towns and mining towns raising devices to lift water")
+    pilots: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: ports taking up navigation instruments and navigators refining them")
+    containers: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the containers towns make, use and break")
+    saving: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: household saving, buried hoards, and hoards lost and found")
+    money_changing: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rates between coins, money changers, shocks and bills of exchange")
+    economic_orders: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the economic order of each realm, its flows and its changes of order")
+    putting_out: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: work put out to villages and shares bought in chains")
+    tourism: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the wealthy travelling to sights")
+    veterans: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: grants of land and pensions to veterans, and their associations")

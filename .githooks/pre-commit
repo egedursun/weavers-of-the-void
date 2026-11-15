@@ -44,6 +44,7 @@ run moon_orbits "$PYTHON" scripts/check_moon_orbits.py
 run goods_ledger "$PYTHON" scripts/check_goods_ledger.py
 run town_people "$PYTHON" scripts/check_town_people.py
 run war_foes "$PYTHON" scripts/check_war_foes.py
+run point_shares "$PYTHON" scripts/check_point_shares.py
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check
 
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then

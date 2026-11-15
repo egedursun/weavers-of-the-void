@@ -33,6 +33,14 @@ class MaterialKind(StrEnum):
     SULFUR = "sulfur"
     CLAY = "clay"
     GEMS = "gems"
+    MUD_BRICK = "mud_brick"
+    FIRED_BRICK = "fired_brick"
+    DRESSED_STONE = "dressed_stone"
+    RUBBLE = "rubble"
+    LIME_MORTAR = "lime_mortar"
+    HYDRAULIC_CONCRETE = "hydraulic_concrete"
+    THATCH = "thatch"
+    TILE = "tile"
 
 
 MINERAL_KINDS = frozenset(

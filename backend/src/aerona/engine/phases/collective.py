@@ -166,7 +166,7 @@ async def historiography(ctx: TickContext) -> None:
     count(ctx, "history", tally)
 
 
-@reads("table.accounts", "table.epoch_year_cursors", "table.founding_myths", "table.polity_profiles")
+@reads("table.accounts", "table.epoch_year_cursors", "table.founding_myths", "table.polity_profiles", "table.settlement_profiles")
 @writes(
     "table.account_stances",
     "table.accounts",

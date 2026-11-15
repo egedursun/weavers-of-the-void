@@ -62,10 +62,13 @@ from aerona.engine.folkways.shunning import outsider_barrier
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research_depth import capable_among
 from aerona.engine.lore.truth import theory_factor
+from aerona.engine.means.containers import packed_capacity
+from aerona.engine.means.navigation import instrument_navigation
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.nature.effects import sensed
 from aerona.engine.nature.senses import NAVIGATION
 from aerona.engine.notes import note
+from aerona.engine.orders.exchange import billed_between, exchange_cost
 from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.law_effects import toll_rate
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -509,7 +512,7 @@ def lane_for(
 
 async def carried_capacity(ctx: TickContext, route: Route, fallback: int) -> int:
     carried = await route_capacity(ctx.session, route.entity.id)
-    capacity = fallback if carried is None else carried
+    capacity = await packed_capacity(ctx, route.ends, fallback if carried is None else carried)
     harbour = await harbour_limit(ctx.session, ctx.rules, route.profile)
     return capacity if harbour is None else min(capacity, harbour)
 
@@ -526,6 +529,8 @@ async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = Fa
     danger = (stat(route.entity, "danger") or 0) * ((PERCENT - ctx.rules.technique_effects.insurance_pct) / PERCENT if insured else 1)
     if route.profile.mode is TradeMode.SEA:
         danger *= await clock_navigation(ctx.session, ctx.rules, route.ends) * await sea_navigation(ctx.session, ctx.rules, route.ends, ctx.epoch)
+        danger *= await instrument_navigation(ctx, route.ends, max(1, len(route.path) - 1))
+    danger *= await billed_between(ctx, route.ends)
     taken = await ledger.take(
         lane.seller_id, lane.commodity, lane.volume, GoodsFlow.TRADE, exclude=lane.terms.banned.kinds, exclude_worlds=lane.terms.banned.worlds
     )
@@ -563,7 +568,8 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
             tally.noted += 1
             tally.credit += 1
     else:
-        charge(buyer, round_half_up(value * rate / THOUSAND))
+        cost = round_half_up(value * rate / THOUSAND)
+        charge(buyer, cost + await exchange_cost(ctx, lane.seller_id, lane.buyer_id, cost))
     if lane.desperate and COMMODITIES[lane.commodity].nourishment > 0 and tally.noted < flow.note_cap:
         tally.noted += 1
         await note(

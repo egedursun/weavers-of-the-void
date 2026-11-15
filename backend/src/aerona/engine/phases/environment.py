@@ -89,6 +89,7 @@ from aerona.engine.environment.years import SampledYear, world_years
 from aerona.engine.industry.pollution import disease_extra, fertility_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.calendar_rites import backfill_holy_days, hallow_holy_days
+from aerona.engine.means.water import irrigation_lift
 from aerona.engine.nature.cover import cover_of, poisoned_forage, smothered
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import LAND_COMMUNITY_TYPES, CapacityModel, RegionKey, RegionLoad
@@ -1040,6 +1041,7 @@ async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeaso
             / PERCENT
             * pollinated
             * harvest_lift(ctx.rules, season.lifts.get(env.entity_id))
+            * await irrigation_lift(ctx, env)
             * smothered(ctx.rules, await cover_of(ctx.session, env.entity_id, PlantDefence.ALLELOPATHY))
         )
         grown = env.harvest_pct

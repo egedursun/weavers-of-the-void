@@ -142,6 +142,7 @@ const FACTION_KINDS: Record<string, Named> = {
   workers_union: { label: "Workers' union", icon: Hammer, tone: 'warning' },
   engineers_society: { label: "Engineers' society", icon: Cog, tone: 'info' },
   financiers: { label: 'Financiers', icon: Coins, tone: 'gold' },
+  veterans: { label: "Veterans' association", icon: Medal, tone: 'warning' },
   club: { label: 'Club', icon: Trophy, tone: 'gold' },
   league: { label: 'League', icon: Medal, tone: 'info' },
 }

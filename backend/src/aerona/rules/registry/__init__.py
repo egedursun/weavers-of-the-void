@@ -282,6 +282,7 @@ from aerona.rules.registry.god_power import GodPowerRules
 from aerona.rules.registry.guide import GuideRules
 from aerona.rules.registry.harshness import HarshnessRules
 from aerona.rules.registry.heroes import HeroesRules
+from aerona.rules.registry.honours import UnitHonourRules, VeteranRules
 from aerona.rules.registry.husbandry import HusbandryRules
 from aerona.rules.registry.image_gen import ImageGenRules
 from aerona.rules.registry.incitement import IncitementRules
@@ -362,6 +363,14 @@ from aerona.rules.registry.made_kinds import (
 from aerona.rules.registry.market import MarketRules
 from aerona.rules.registry.markets import BankingRules, MarketsRules, MoneyRules, TollsRules, TradeRoutesRules
 from aerona.rules.registry.materials import MaterialsRules
+from aerona.rules.registry.means import (
+    BuildingMaterialRules,
+    ContainerRules,
+    NavigationRules,
+    SecurityRules,
+    WaterLiftingRules,
+    WritingMediaRules,
+)
 from aerona.rules.registry.mechanics import MechanicsRules
 from aerona.rules.registry.metrics import MetricsRules
 from aerona.rules.registry.military import (
@@ -440,6 +449,7 @@ from aerona.rules.registry.operations import (
     TheatreRules,
 )
 from aerona.rules.registry.opportunities import OpportunitiesRules
+from aerona.rules.registry.orders import EconomicOrderRules, ExchangeRules, PuttingOutRules, SavingRules, TourismRules
 from aerona.rules.registry.pantheon import PantheonRules
 from aerona.rules.registry.physics import (
     CosmicFeatureRules,
@@ -965,6 +975,19 @@ class Rules:
     totems: TotemsRules = field(default_factory=TotemsRules)
     beasts: BeastsRules = field(default_factory=BeastsRules)
     species_nature: SpeciesNatureRules = field(default_factory=SpeciesNatureRules)
+    writing_media: WritingMediaRules = field(default_factory=WritingMediaRules)
+    security: SecurityRules = field(default_factory=SecurityRules)
+    water_lifting: WaterLiftingRules = field(default_factory=WaterLiftingRules)
+    navigation_instruments: NavigationRules = field(default_factory=NavigationRules)
+    building_materials: BuildingMaterialRules = field(default_factory=BuildingMaterialRules)
+    containers: ContainerRules = field(default_factory=ContainerRules)
+    saving: SavingRules = field(default_factory=SavingRules)
+    exchange_rates: ExchangeRules = field(default_factory=ExchangeRules)
+    economic_orders: EconomicOrderRules = field(default_factory=EconomicOrderRules)
+    putting_out: PuttingOutRules = field(default_factory=PuttingOutRules)
+    tourism: TourismRules = field(default_factory=TourismRules)
+    unit_honours: UnitHonourRules = field(default_factory=UnitHonourRules)
+    veterans: VeteranRules = field(default_factory=VeteranRules)
     geography: GeographyRules = field(default_factory=GeographyRules)
     life_cycles: LifeCyclesRules = field(default_factory=LifeCyclesRules)
     remembrance: RemembranceRules = field(default_factory=RemembranceRules)

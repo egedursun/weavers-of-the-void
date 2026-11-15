@@ -333,6 +333,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.people_reproduction",
     "table.personality_values",
     "table.polity_members",
+    "table.polity_profiles",
     "table.prostheses",
     "table.regimes",
     "table.relationships",

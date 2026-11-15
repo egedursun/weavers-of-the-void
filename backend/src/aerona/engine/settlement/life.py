@@ -58,6 +58,8 @@ from aerona.engine.factions.estates import armed_share, exempt_share
 from aerona.engine.happenings.emergence import record_fire
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import lacks
+from aerona.engine.means.building import burn_structures
+from aerona.engine.means.media import burn_works
 from aerona.engine.military.occupation import occupation_over, occupation_tax, pay_occupier
 from aerona.engine.mind.drives import unrest as needs_unrest
 from aerona.engine.mind.space import value_distance
@@ -713,11 +715,13 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
             kind=ChronicleKind.WORLD,
         )
         await record_fire(ctx, town.entity, dead)
+        await burn_works(ctx, town.entity)
+        await burn_structures(ctx, town.entity, gale)
         await mark_ruin(ctx, town.entity, RebuildCause.FIRE)
     return burned
 
 
-def sanitation(ctx: TickContext, town: Town, knowledge: KnowledgeMap) -> None:
+def sanitation(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, lifted: int = 0) -> None:
     table = ctx.rules.sanitation
     if "sanitation" in town.profile.locked:
         return
@@ -733,6 +737,7 @@ def sanitation(ctx: TickContext, town: Town, knowledge: KnowledgeMap) -> None:
         + (table.sewers if infrastructure.sewers else 0)
         + knowledge.level(town.entity.id, KnowledgeBranch.MEDICINE) * table.medicine_step
         + town.effects(ctx.rules).sanitation
+        + lifted
         - min(1.0, crowd) * table.crowding_loss
         - (1 - town.urban.covered(UrbanService.WATER)) * ctx.rules.coverage.thirst
         - (1 - max(town.urban.covered(UrbanService.HEALING), town.urban.covered(UrbanService.BATH))) * ctx.rules.coverage.disease

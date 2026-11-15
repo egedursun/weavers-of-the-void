@@ -253,6 +253,7 @@ SHARPEN_SENSE = Line("tools.son.sharpen_sense", "{son} sharpened the {sense} of 
 SABOTAGE_PROGRAMME = Line("tools.son.sabotage_programme", "{son} set back the programme of {realm} toward {technique}: {reason}")
 STIR_WITCH_HUNT = Line("tools.son.stir_witch_hunt", "{son} stirred a witch hunt in {town}: {reason}")
 LENGTHEN_WINTER = Line("tools.son.lengthen_winter", "{son} lengthened the long winter of {world}: {reason}")
+MOVE_ECONOMIC_ORDER = Line("tools.son.move_economic_order", "{son} moved the economic order of {realm}: {reason}")
 PRESS_TALE = Line("tools.son.press_tale", "{son} pressed the tale of {tale} of {subject}: {reason}")
 FORESHADOW = Line("tools.son.foreshadow", "{son} set something up about {subject}: {reason}")
 ECHO_LIFE = Line("tools.son.echo_life", "{son} marked the life of {mortal} to echo into the next age: {reason}")

@@ -48,6 +48,7 @@ from aerona.engine.intrigue.identities import assume
 from aerona.engine.intrigue.leverage import leaned_on
 from aerona.engine.intrigue.names import teach_name
 from aerona.engine.intrigue.secrets import expose, grant_hook, keep_secret
+from aerona.engine.means.security import attempt_theft
 from aerona.engine.mind.book import best_skill, traits_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
@@ -375,6 +376,9 @@ async def steal_relic(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, tar
     relic = await owned_relic(ctx, target.id)
     if relic is None:
         return "there was nothing worth stealing"
+    attempt = await attempt_theft(ctx, owner, target, relic)
+    if attempt.thwarted:
+        return f"the locks that kept {relic.name} held" + ("; the seal named the thief" if attempt.betrayed else "")
     bonds = BondRepository(ctx.session)
     for bond in await bonds.active_between(target.id, relic.id, [BondKind.OWNS]):
         await bonds.deactivate(bond, ctx.epoch, "stolen")

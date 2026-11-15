@@ -74,6 +74,7 @@ from aerona.engine.phases import (
     happenings,
     heroes,
     heroism,
+    honours,
     horror,
     households,
     industry,
@@ -92,6 +93,7 @@ from aerona.engine.phases import (
     made_kinds,
     magic,
     market,
+    means,
     mechanics_assignment,
     migration,
     mind,
@@ -102,6 +104,7 @@ from aerona.engine.phases import (
     native_faith,
     nature,
     operations,
+    orders,
     pantheon,
     places,
     population,
@@ -222,6 +225,9 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + operations.PHASES
     + sacred.PHASES
     + arts.PHASES
+    + means.PHASES
+    + orders.PHASES
+    + honours.PHASES
     + ages.PHASES
     + folkways.PHASES
     + belonging.PHASES
@@ -344,6 +350,7 @@ SUB_ENGINE_STAGE = stage(
     "vendetta_cycles",
     "prisoners",
     "war_casualties",
+    "veterans",
     "crossings",
     "travel",
     "cosmic_trade",
@@ -489,7 +496,13 @@ SOCIETY_STAGE = stage(
 )
 SOCIETY_ENGINE_STAGE = stage(
     "people_customs",
+    "written_media",
+    "vaults",
+    "water_lifting",
+    "pilots",
+    "containers",
     "society_economy",
+    "putting_out",
     "refining",
     "market_manipulation",
     "markets",
@@ -497,6 +510,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "convoys",
     "transport_fleets",
     "trade_flow",
+    "tourism",
     "speculation",
     "industry_aftermath",
     "site_profits",
@@ -504,8 +518,10 @@ SOCIETY_ENGINE_STAGE = stage(
     "economic_indicators",
     "credit_ratings",
     "banking",
+    "money_changing",
     "society_mobility",
     "labour_regimes",
+    "economic_orders",
     "structure_upkeep",
     "district_coverage",
     "desirability",
@@ -536,6 +552,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "prisons",
     "public_opinion",
     "households",
+    "saving",
     "heroes",
     "spontaneous_births",
     "factions",

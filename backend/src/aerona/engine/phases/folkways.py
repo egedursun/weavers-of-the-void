@@ -35,6 +35,7 @@ from aerona.engine.phases.dominion import count
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
+    "table.famine_lore",
     "table.genomes",
     "table.holder_levels",
     "table.injuries",
@@ -87,7 +88,7 @@ async def biases(ctx: TickContext) -> None:
     count(ctx, "biases", tally)
 
 
-@reads("table.culture_values", "table.impurity_sources", "table.purity_ranks")
+@reads("table.culture_values", "table.districts", "table.impurity_sources", "table.purity_ranks")
 async def purity(ctx: TickContext) -> None:
     tally = PurityTally()
     await keep_purity(ctx, tally)

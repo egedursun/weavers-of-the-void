@@ -24,21 +24,24 @@ from aerona.db.tables.collective import LearningEventRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
-from aerona.db.tables.culture import ArtworkProfileRow
+from aerona.db.tables.culture import ArtworkProfileRow, BookContentRow
 from aerona.db.tables.cycles import ManumissionRow
 from aerona.db.tables.ecology import SpeciesRangeRow
-from aerona.db.tables.economy import WorkshopRow
+from aerona.db.tables.economy import CurrencyRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import DeferredStepRow, EpochRow
 from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.gatherings import CollectionRow
+from aerona.db.tables.honours import NamedUnitRow
+from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import MoleHuntRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
-from aerona.db.tables.military import OccupationRow
+from aerona.db.tables.military import ArmyUnitRow, OccupationRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.operations import SupplyFlowRow
+from aerona.db.tables.orders import BillOfExchangeRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.tables.sacred import DivinationSystemRow, DoctrineSacramentRow, GeniusLocusRow
@@ -70,6 +73,7 @@ from aerona.domain.enums.epoch import DeferredStepStatus
 from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import MoleHuntOutcome
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import OfficeKind
@@ -4034,3 +4038,157 @@ LEVERS.update(
 LEVERS.update(
     {name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in NATURE_EDITS.items()}
 )
+
+
+async def means_ground(session: AsyncSession) -> None:
+    town = await canon(session, TOWN, 0)
+    item = await canon(session, EntityType.ITEM, 0)
+    lore = await canon(session, EntityType.KNOWLEDGE, 0)
+    if item is not None and lore is not None and await session.get(BookContentRow, (item, lore)) is None:
+        session.add(BookContentRow(book_entity_id=item, knowledge_entity_id=lore, fidelity=80))
+    if town is not None and await session.scalar(select(HouseholdRow.id).limit(1)) is None:
+        session.add(HouseholdRow(name="House of the Harness", settlement_node_id=town, wealth=100, income=20, expenses=5, locked=[]))
+    coins = list(await session.scalars(select(CurrencyRow.id)))
+    realm = await canon(session, REALM, 0)
+    for index in range(len(coins), 2):
+        issuer = realm if realm is not None else town
+        if issuer is not None:
+            session.add(
+                CurrencyRow(issuer_entity_id=issuer, name=f"Harness Coin {index}", metal=MaterialKind.SILVER, purity=80, supply=100, trust=70, minted_epoch=1)
+            )
+    await session.flush()
+
+
+BOOK = Computed(lambda session: session.scalar(select(BookContentRow.book_entity_id).order_by(BookContentRow.book_entity_id).limit(1)))
+BILL = Computed(lambda session: session.scalar(select(BillOfExchangeRow.id).order_by(BillOfExchangeRow.id.desc()).limit(1)))
+FREE_UNIT = Computed(
+    lambda session: session.scalar(
+        select(ArmyUnitRow.id)
+        .where(ArmyUnitRow.id.not_in(select(NamedUnitRow.unit_id).where(NamedUnitRow.unit_id.is_not(None))))
+        .order_by(ArmyUnitRow.id)
+        .limit(1)
+    )
+)
+HOUSEHOLD = Computed(lambda session: session.scalar(select(HouseholdRow.id).order_by(HouseholdRow.id).limit(1)))
+CUSTOM_UP = ("writing_custom:set", {"people_id": Pick(EntityType.PEOPLE), "medium": "papyrus"})
+WORK_UP = ("written_work:set", {"work_id": BOOK, "medium": "parchment", "condition": 90, "copies": 1})
+VAULT_UP = ("security:set", {"holder_id": Pick(TOWN), "lock": "warded", "lock_quality": 40, "sealed": False, "guards": 1, "traps": False})
+LIFT_UP = ("water_lift:set", {"settlement_id": Pick(TOWN), "device": "noria", "count": 2})
+KIT_UP = ("navigation_kit:set", {"holder_id": Pick(TOWN), "aid": "astrolabe", "quality": 40})
+STOCK_UP = ("container_stock:set", {"community_id": Pick(TOWN), "kind": "barrel", "count": 12, "broken": 0})
+SAVING_UP = ("saving:set", {"household_id": HOUSEHOLD, "share_pct": 15, "form": "deposit", "saved": 0})
+HOARD_UP = ("hoard:create", {"place_id": Pick(TOWN), "amount": 30, "state": "hidden"})
+RATE_UP = ("exchange_rate:create", {"base_currency_id": Pick("currency"), "quote_currency_id": Pick("currency", 1), "market_id": Pick(TOWN), "rate": 120})
+BILL_UP = ("bill_of_exchange:create", {"drawer_id": Pick(TOWN), "payee_id": Pick(TOWN, 1), "from_id": Pick(TOWN), "to_id": Pick(TOWN, 1), "amount": 25})
+ORDER_UP = ("economic_order:create", {"polity_id": Pick(REALM), "sector": "cloth", "allocation": "command", "planning_capacity": 40})
+ORDER_KIND_UP = ("economic_order_kind:create", {"name": "Harness Order", "ownership": "common", "allocation": "need", "labour": "kin", "distribution": "equal"})
+TRANSITION_UP = ("order_transition:create", {"polity_id": Pick(REALM), "kind": "land_reform", "compensation": "partial"})
+PUT_OUT_UP = ("putting_out:create", {"merchant_id": Pick(EntityType.FACTION), "town_id": Pick(TOWN), "raw": "wool", "product": "cloth", "volume": 8})
+CHAIN_UP = ("chain_holding:set", {"holder_id": Pick(EntityType.FACTION), "town_id": Pick(TOWN), "product": "cloth", "share_pct": 25})
+FLOW_UP = ("tourist_flow:create", {"origin_id": Pick(TOWN), "sight_id": Pick(TOWN, 1), "sight": "city", "visitors": 15, "income": 30})
+UNIT_UP = ("named_unit:create", {"name": "The Harness Guard", "unit_id": FREE_UNIT, "owner_id": Pick(REALM), "esprit": 45})
+HONOUR_UP = ("unit_honour:create", {"named_unit_id": Newest("named_unit"), "kind": "victory", "note": "the harness field"})
+GRANT_UP = ("veteran_grant:create", {"polity_id": Pick(REALM), "kind": "pension", "veterans": 12})
+MEANS_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "writing_custom:edit": {"medium": "paper"},
+    "written_work:edit": {"medium": "paper", "condition": 70, "copies": 3},
+    "security:edit": {"lock": "tumbler", "lock_quality": 55, "sealed": True, "guards": 2, "traps": True, "thwarted": 1},
+    "water_lift:edit": {"count": 3},
+    "navigation_kit:edit": {"quality": 60},
+    "container_stock:edit": {"count": 20, "broken": 2},
+    "saving:edit": {"share_pct": 20, "form": "investment", "saved": 10},
+    "hoard:edit": {
+        "holder_node_id": Pick(MORTAL),
+        "place_entity_id": Pick(TOWN),
+        "amount": 40,
+        "state": "lost",
+        "found_by_node_id": None,
+        "hidden_epoch": 1,
+        "found_epoch": None,
+    },
+    "exchange_rate:edit": {"rate": 140, "spread_pct": 6, "changer_node_id": Pick(MORTAL), "convertible": False, "volume": 5},
+    "bill_of_exchange:edit": {
+        "drawer_node_id": Pick(TOWN),
+        "payee_node_id": Pick(TOWN, 1),
+        "from_entity_id": Pick(TOWN),
+        "to_entity_id": Pick(TOWN, 1),
+        "amount": 30,
+        "settled": True,
+    },
+    "economic_order:edit": {
+        "sector": "grain",
+        "ownership": "state",
+        "allocation": "redistribution",
+        "labour": "corvee",
+        "distribution": "by_office",
+        "planning_capacity": 55,
+        "kind_id": None,
+    },
+    "economic_order_kind:edit": {"name": "Harness Order Renamed", "ownership": "private", "allocation": "market", "labour": "free", "distribution": "by_share"},
+    "order_transition:edit": {"kind": "emancipation", "stage": "transferring", "compensation": "full", "resistance": 10, "transferred": 1, "ended_epoch": None},
+    "putting_out:edit": {"town_entity_id": Pick(TOWN), "raw": "fibre", "product": "cloth", "volume": 12, "active": True},
+    "chain_holding:edit": {"share_pct": 30},
+    "tourist_flow:edit": {"sight": "wonder", "visitors": 25, "income": 50},
+    "named_unit:edit": {
+        "name": "The Harness Guard of Old",
+        "nickname": "the Steady",
+        "esprit": 60,
+        "battles": 2,
+        "unit_id": FREE_UNIT,
+        "owner_entity_id": Pick(REALM),
+        "raised_from_entity_id": Pick(TOWN),
+        "disbanded_epoch": None,
+    },
+    "unit_honour:edit": {"kind": "stand", "note": "the harness ford"},
+    "veteran_grant:edit": {"kind": "land", "veterans": 20, "settlement_entity_id": Pick(TOWN)},
+}
+EDITS = {**EDITS, **MEANS_EDITS}
+LEVERS.update(
+    {
+        "writing_custom:set": given(**CUSTOM_UP[1]),
+        **{name: after(CUSTOM_UP, people_id=Pick(EntityType.PEOPLE)) for name in ("writing_custom:edit", "writing_custom:delete")},
+        "written_work:set": setup_then(means_ground, **WORK_UP[1]),
+        **{name: setup_then(means_ground, WORK_UP, work_id=BOOK) for name in ("written_work:edit", "written_work:delete")},
+        "security:set": given(**VAULT_UP[1]),
+        **{name: after(VAULT_UP, holder_id=Pick(TOWN)) for name in ("security:edit", "security:delete")},
+        "water_lift:set": given(**LIFT_UP[1]),
+        **{name: after(LIFT_UP, settlement_id=Pick(TOWN), device="noria") for name in ("water_lift:edit", "water_lift:delete")},
+        "navigation_kit:set": given(**KIT_UP[1]),
+        **{name: after(KIT_UP, holder_id=Pick(TOWN), aid="astrolabe") for name in ("navigation_kit:edit", "navigation_kit:delete")},
+        "container_stock:set": given(**STOCK_UP[1]),
+        **{name: after(STOCK_UP, community_id=Pick(TOWN), kind="barrel") for name in ("container_stock:edit", "container_stock:delete")},
+        "saving:set": setup_then(means_ground, **SAVING_UP[1]),
+        **{name: setup_then(means_ground, SAVING_UP, household_id=HOUSEHOLD) for name in ("saving:edit", "saving:delete")},
+        "hoard:create": given(**HOARD_UP[1]),
+        **{name: after(HOARD_UP, record_id=Newest("hoard")) for name in ("hoard:edit", "hoard:delete")},
+        "exchange_rate:create": setup_then(means_ground, **RATE_UP[1]),
+        **{name: setup_then(means_ground, RATE_UP, record_id=Newest("exchange_rate")) for name in ("exchange_rate:edit", "exchange_rate:delete")},
+        "bill_of_exchange:create": given(**BILL_UP[1]),
+        **{name: after(BILL_UP, record_id=BILL) for name in ("bill_of_exchange:edit", "bill_of_exchange:delete")},
+        "economic_order:create": given(**ORDER_UP[1]),
+        **{name: after(ORDER_UP, record_id=Newest("economic_order")) for name in ("economic_order:edit", "economic_order:delete")},
+        "economic_order_kind:create": given(**ORDER_KIND_UP[1]),
+        **{name: after(ORDER_KIND_UP, record_id=Newest("economic_order_kind")) for name in ("economic_order_kind:edit", "economic_order_kind:delete")},
+        "order_transition:create": given(**TRANSITION_UP[1]),
+        **{
+            name: after(TRANSITION_UP, record_id=Newest("order_transition"))
+            for name in ("order_transition:edit", "order_transition:delete", "order_transition:advance")
+        },
+        "putting_out:create": given(**PUT_OUT_UP[1]),
+        **{name: after(PUT_OUT_UP, record_id=Newest("putting_out")) for name in ("putting_out:edit", "putting_out:delete")},
+        "chain_holding:set": given(**CHAIN_UP[1]),
+        **{
+            name: after(CHAIN_UP, holder_id=Pick(EntityType.FACTION), town_id=Pick(TOWN), product="cloth")
+            for name in ("chain_holding:edit", "chain_holding:delete")
+        },
+        "tourist_flow:create": given(**FLOW_UP[1]),
+        **{name: after(FLOW_UP, record_id=Newest("tourist_flow")) for name in ("tourist_flow:edit", "tourist_flow:delete")},
+        "named_unit:create": given(**UNIT_UP[1]),
+        **{name: after(UNIT_UP, record_id=Newest("named_unit")) for name in ("named_unit:edit", "named_unit:delete")},
+        "unit_honour:create": after(UNIT_UP, **HONOUR_UP[1]),
+        **{name: after(UNIT_UP, HONOUR_UP, record_id=Newest("unit_honour")) for name in ("unit_honour:edit", "unit_honour:delete")},
+        "veteran_grant:create": given(**GRANT_UP[1]),
+        **{name: after(GRANT_UP, record_id=Newest("veteran_grant")) for name in ("veteran_grant:edit", "veteran_grant:delete")},
+    }
+)
+LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in MEANS_EDITS.items()})

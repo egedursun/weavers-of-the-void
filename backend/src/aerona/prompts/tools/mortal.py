@@ -975,6 +975,35 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "As one learned in the sky, you read when the long season of your world will turn; your people may heed you and store food. 1 action.",
         {},
     ),
+    T.SET_ECONOMIC_ORDER: ToolText(
+        "As ruler of a realm, you set its economic order, or that of one good it makes: who owns, how goods are allotted, how labour is "
+        "bound and how the product is shared. 1 action.",
+        {
+            "polity_id": "The realm you rule",
+            "sector": "The good whose order you set, or empty for the whole realm",
+            "ownership": "Who owns land and works: household, kin_group, community, temple, ruler, state, private, cooperative, company, common or none",
+            "allocation": "How goods are allotted: market, redistribution, command, obligation, gift, need or abundance",
+            "labour": "How labour is bound: free, kin, corvee, serf, bound, enslaved, conscripted, cooperative or made",
+            "distribution": "How the product is shared: by_holding, by_office, by_need, by_work, by_share, equal or by_prestige",
+            "reason": "Why you set it",
+        },
+    ),
+    T.BEGIN_TRANSITION: ToolText(
+        "As ruler of a realm, you proclaim a change of its economic order; holdings move in stages to their new hands, and those who lose "
+        "them resist unless they are paid. 1 action.",
+        {
+            "polity_id": "The realm you rule",
+            "sector": "The good whose order changes, or empty for the whole realm",
+            "kind": "The change: collectivisation, nationalisation, privatisation, land_reform, enclosure, emancipation, decollectivisation or "
+            "restoration_of_holdings",
+            "compensation": "What the losers are paid: none, partial or full",
+            "reason": "Why you change it",
+        },
+    ),
+    T.CHANGE_MONEY: ToolText(
+        "With the accounting of a money changer, you take up the changing of coin at your market and keep a share of the spread. 1 action.",
+        {},
+    ),
     T.SABOTAGE_REMAKING: ToolText(
         "You set back a plan that remakes the land you live from: its progress falls back and the land it touches goes back a step. 1 action.",
         {"plan_id": "The plan"},

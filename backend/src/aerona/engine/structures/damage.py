@@ -17,6 +17,7 @@ from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.happenings.effects import scar
+from aerona.engine.means.strength import siege_guard
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import add_flag, living_entity
@@ -132,7 +133,9 @@ async def harm(
     design = await ctx.session.get(StructureDesignRow, profile.design_id) if profile.design_id is not None else None
     form = design.form if design is not None and design.form is not None else FORMS[profile.kind]
     guard = FORM_GUARD.get(form)
-    loss = loss * (guard.get(force, PERCENT) if guard is not None else PERCENT) / PERCENT
+    loss = (
+        loss * (guard.get(force, PERCENT) if guard is not None else PERCENT) / PERCENT * siege_guard(ctx.rules, await material_props(ctx.session, work), force)
+    )
     strike = strike_rows(ctx, rows, loss, force, even=even)
     profile.condition = clamp_int(overall(rows), 0, PERCENT)
     if profile.construction_state in STANDING_STATES and "construction_state" not in profile.locked:

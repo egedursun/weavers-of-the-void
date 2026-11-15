@@ -231,7 +231,7 @@ async def test_lost_star_needs_a_star_reborn_after_the_start(session: AsyncSessi
     assert not nothing.done and "no dead star" in nothing.text
     await _star(session, "Embers", StarType.DEAD_STAR)
     waiting = await measure(session, rules, row, 3)
-    assert not waiting.done and "1 dead stars" in waiting.text
+    assert not waiting.done and "1 dead star is waiting" in waiting.text
     await _star(session, "Phoenix", StarType.REBORN_STAR)
     reborn = await measure(session, rules, row, 4)
     assert reborn.done and reborn.percent == 100

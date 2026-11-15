@@ -34,7 +34,15 @@ from aerona.engine.vehicles.production import vehicle_works
     "table.unit_designs",
     "table.world_materials",
 )
-@writes("table.community_stocks", "table.entities", "table.equipment_models", "table.equipment_stores", "table.goods_flows", "table.name_registry")
+@writes(
+    "table.army_unit_equipment",
+    "table.community_stocks",
+    "table.entities",
+    "table.equipment_models",
+    "table.equipment_stores",
+    "table.goods_flows",
+    "table.name_registry",
+)
 async def equipment_forging(ctx: TickContext) -> None:
     count(ctx, "equipment_forging", await forge_all(ctx))
     ctx.count("equipment_issued", await equip_bare_stacks(ctx))

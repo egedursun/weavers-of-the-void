@@ -14,6 +14,7 @@ from aerona.db.tables.society import ReverenceRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.models.entity_stats import EventStats, MortalStats
+from aerona.engine.body.customs import people_id_of
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
@@ -36,7 +37,6 @@ from aerona.services.integrity.location_bonds import add_missing_inside_bonds
 from aerona.services.integrity.single_ruler import homeland_to_lives_in, restore_homelands, single_rule
 from aerona.services.integrity.war_truces import close_unfought_truces
 from aerona.services.notifications import Notifier
-from aerona.engine.body.customs import people_id_of
 from tests.services.app.factories import Cosmos, make_entity
 
 

@@ -41,6 +41,7 @@ from aerona.engine.industry.methods import feed, method_for, outdated, process_o
 from aerona.engine.industry.pollution import fish_factor
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.means.water import flooded_yield
 from aerona.engine.nature.effects import cold_work
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
@@ -432,6 +433,8 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
         else:
             row.workers = workers
         output = await output_of(ctx, book, resource, profile, community, workers=workers)
+        if kind is ExtractionKind.MINING:
+            output = await flooded_yield(ctx, community.id, profile.extraction_difficulty, output)
         if output <= 0:
             if knowledge_gate(ctx.rules, book, profile, community.id) <= 0:
                 tally.gated += 1

@@ -35,6 +35,7 @@ class FactionKind(StrEnum):
     WORKERS_UNION = "workers_union"
     ENGINEERS_SOCIETY = "engineers_society"
     FINANCIERS = "financiers"
+    VETERANS = "veterans"
 
 
 class FoundableFaction(StrEnum):
@@ -62,6 +63,7 @@ class FoundableFaction(StrEnum):
     WORKERS_UNION = "workers_union"
     ENGINEERS_SOCIETY = "engineers_society"
     FINANCIERS = "financiers"
+    VETERANS = "veterans"
 
 
 class FactionScale(StrEnum):

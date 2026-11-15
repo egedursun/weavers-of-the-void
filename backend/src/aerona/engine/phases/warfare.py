@@ -59,6 +59,7 @@ from aerona.engine.environment.battleground import (
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.eras.effects import tech_factor
+from aerona.engine.honours.units import HonourTally, disband_units, honour_battle
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.causes import war_cause_incident
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -308,6 +309,7 @@ async def idle_armies(ctx: TickContext) -> int:
         if remaining > 0:
             continue
         row.disbanded_epoch = ctx.epoch
+        await disband_units(ctx, army.id, HonourTally())
         await retire_stacks(ctx.session, army.id)
         home = owner.name if owner is not None else "their homes"
         await retire_in(ctx, army, f"the army without a war stood down; its soldiers went back to {home}", close_bonds=True)
@@ -1130,6 +1132,11 @@ async def _honours(
     await _toll(ctx, result, field, armies[winner.id][1].commander_entity_id)
     await hail_victor(ctx, winner, armies[winner.id][1].commander_entity_id)
     await capture_standard(ctx, war, result, attacker_id=attacker_id)
+    event = await ctx.session.get(EntityRow, war.event_entity_id)
+    honours = HonourTally()
+    await honour_battle(ctx, result, event.name if event is not None else "the field", honours)
+    for key, value in vars(honours).items():
+        ctx.count(f"unit_honours_{key}", value)
     if result.outcome is OutcomeClass.MASSACRE and result.loser is not None:
         await terror(ctx, war.id, winner, result.loser.entity, "massacre")
 
@@ -1665,6 +1672,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.named_units",
     "table.natural_law_profiles",
     "table.node_materials",
     "table.nodes",
@@ -1808,6 +1816,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.mind_facets",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.named_units",
     "table.node_materials",
     "table.occupations",
     "table.offices",
@@ -1836,6 +1845,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.treaty_parties",
     "table.treaty_profiles",
     "table.tributes",
+    "table.unit_honours",
     "table.vessel_profiles",
     "table.war_aims",
     "table.war_sides",
@@ -1942,6 +1952,7 @@ async def disband_army(ctx: TickContext, army_id: int) -> None:
         raise NotFoundError("No such standing army.")
     row.disbanded_epoch = ctx.epoch
     stand_down(ctx.rules, army, await living_entity(ctx.session, row.owner_entity_id))
+    await disband_units(ctx, army.id, HonourTally())
     await retire_stacks(ctx.session, army.id)
     await retire_in(ctx, army, "disbanded by decree", close_bonds=True)
 

@@ -13,11 +13,17 @@ from aerona.engine.phases.dominion import count
 
 
 @reads(
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
     "table.age_sets",
     "table.body_marks",
     "table.bonds",
+    "table.community_societies",
     "table.cosmopolitan_members",
     "table.culture_drift_causes",
+    "table.gatherings",
     "table.intoxicant_customs",
     "table.language_profiles",
     "table.lexemes",
@@ -27,17 +33,21 @@ from aerona.engine.phases.dominion import count
     "table.name_registry",
     "table.naming_customs",
     "table.revivals",
+    "table.settlement_profiles",
     "table.time_budgets",
     "table.true_names",
 )
 @writes(
+    "settlement.defense",
     "table.body_marks",
+    "table.entities",
     "table.intoxicant_customs",
     "table.language_profiles",
     "table.mark_customs",
     "table.mortal_profiles",
     "table.name_forms",
     "table.naming_customs",
+    "table.settlement_profiles",
     "table.time_budgets",
     "table.true_names",
 )
@@ -84,6 +94,7 @@ async def town_life(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.border_controls",
     "table.case_witnesses",
     "table.crime_cases",
     "table.evidence",
@@ -98,6 +109,7 @@ async def town_life(ctx: TickContext) -> None:
     "table.wars",
 )
 @writes(
+    "table.border_controls",
     "table.crime_cases",
     "table.evidence",
     "table.measure_standards",

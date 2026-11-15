@@ -138,6 +138,7 @@ async def tell_shortfalls(ctx: TickContext, book: EconomyBook) -> int:
     "table.community_relations",
     "table.community_societies",
     "table.community_stocks",
+    "table.container_stocks",
     "table.divine_wounds",
     "table.entity_traits",
     "table.epoch_year_cursors",

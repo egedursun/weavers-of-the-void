@@ -55,6 +55,7 @@ async def trades(ctx: TickContext) -> None:
 
 
 @reads(
+    "settlement.prosperity",
     "table.assistive_aids",
     "table.conditions",
     "table.epoch_year_cursors",
@@ -63,20 +64,26 @@ async def trades(ctx: TickContext) -> None:
     "table.holder_techniques",
     "table.language_profiles",
     "table.lexemes",
+    "table.minds",
     "table.name_registry",
     "table.number_systems",
     "table.offices",
+    "table.settlement_profiles",
     "table.skills",
 )
 @writes(
+    "settlement.prosperity",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.game_followings",
     "table.games",
     "table.incident_participants",
     "table.incidents",
     "table.number_systems",
+    "table.settlement_profiles",
+    "table.skills",
 )
 async def learning_aids(ctx: TickContext) -> None:
     aids, games, numbers = AidTally(), GameTally(), NumberTally()

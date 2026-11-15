@@ -105,6 +105,14 @@ PHYSICS: MappingProxyType[MaterialKind, tuple[int, ...]] = MappingProxyType(
         M.SKYSTEEL: (92, 100, 100, 32, 90, 92, 90, 92, 70, 50, 35, 95),
         M.VOID_GLASS: (100, 100, 100, 25, 75, 30, 80, 40, 0, 0, 25, 100),
         M.GODFLESH: (100, 98, 100, 45, 60, 98, 55, 95, 90, 20, 46, 40),
+        M.MUD_BRICK: (70, 100, 100, 45, 15, 15, 12, 15, 0, 20, 45, 0),
+        M.FIRED_BRICK: (85, 100, 100, 50, 35, 25, 25, 25, 0, 25, 50, 0),
+        M.DRESSED_STONE: (85, 100, 100, 80, 60, 55, 55, 50, 0, 35, 82, 0),
+        M.RUBBLE: (85, 100, 100, 70, 40, 35, 30, 30, 0, 30, 70, 0),
+        M.LIME_MORTAR: (75, 100, 100, 55, 30, 30, 25, 30, 0, 25, 55, 0),
+        M.HYDRAULIC_CONCRETE: (85, 100, 100, 70, 50, 45, 40, 45, 0, 30, 70, 0),
+        M.THATCH: (100, 10, 100, 5, 5, 20, 3, 15, 30, 5, 5, 0),
+        M.TILE: (85, 100, 100, 40, 30, 15, 25, 15, 0, 25, 40, 0),
     }
 )
 
@@ -148,6 +156,14 @@ MATERIALS: MappingProxyType[MaterialKind, MaterialSpec] = MappingProxyType(
             worked(spec((M.SKYSTEEL, "Skysteel", F.EXOTIC), (90, 88, 30, 92), (85, 50, 10), (92, 97, 0)), B.METALLURGY, 6, B.MAGIC),
             worked(spec((M.VOID_GLASS, "Void glass", F.EXOTIC), (75, 20, 20, 95), (100, 0, 95), (95, 90, 0)), B.FORBIDDEN, 1),
             worked(spec((M.GODFLESH, "Godflesh", F.EXOTIC), (60, 95, 40, 40), (100, 100, 60), (100, 100, 5)), B.FORBIDDEN, 1),
+            spec((M.MUD_BRICK, "Mud brick", F.STONE), (15, 10, 45, 0), (10, 5, 0), (2, 2, 30)),
+            worked(spec((M.FIRED_BRICK, "Fired brick", F.STONE), (40, 20, 50, 0), (10, 5, 0), (5, 6, 8)), B.ARCHITECTURE, 1),
+            worked(spec((M.DRESSED_STONE, "Dressed stone", F.STONE), (60, 30, 85, 0), (15, 20, 0), (10, 12, 2)), B.ARCHITECTURE, 2),
+            spec((M.RUBBLE, "Rubble", F.STONE), (35, 20, 75, 0), (10, 5, 0), (2, 2, 12)),
+            worked(spec((M.LIME_MORTAR, "Lime mortar", F.STONE), (35, 25, 55, 0), (10, 5, 0), (8, 6, 10)), B.ARCHITECTURE, 2),
+            worked(spec((M.HYDRAULIC_CONCRETE, "Hydraulic concrete", F.STONE), (55, 35, 70, 0), (10, 5, 0), (20, 15, 1)), B.ARCHITECTURE, 3),
+            spec((M.THATCH, "Thatch", F.ORGANIC), (2, 15, 5, 0), (10, 5, 0), (2, 1, 50)),
+            worked(spec((M.TILE, "Tile", F.STONE), (35, 10, 40, 0), (10, 5, 0), (8, 6, 6)), B.ARCHITECTURE, 1),
         )
     }
 )

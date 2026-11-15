@@ -485,6 +485,8 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.nodes",
+    "table.polity_members",
+    "table.polity_profiles",
     "table.prostheses",
     "table.region_environment",
     "table.tradition_profiles",

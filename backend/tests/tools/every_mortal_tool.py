@@ -86,6 +86,7 @@ from tests.tools.every_setup_crafts import people_home, town_insurer
 from tests.tools.every_setup_customs import long_foreigner, town_pool
 from tests.tools.every_setup_eras import skilled_for_programme
 from tests.tools.every_setup_folkways import impure_mortal, neighbour, owned_item
+from tests.tools.every_setup_means import money_changer
 from tests.tools.every_setup_nature import town_dweller
 from tests.tools.every_son_tool import faction, knowledge, language, mortal, people, plain, region, resource, route, settlement, species
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
@@ -287,6 +288,12 @@ MORTAL_CASES: dict[str, Case] = {
     "take_contract": named(plain(contract_id=created("contract")), posted_contract),
     "command_construct": named(plain(construct_id=created("construct"), kind="serve", target_id=settlement), built_construct),
     "forecast_seasons": named(plain(), sky_scholar),
+    "set_economic_order": named(
+        plain(polity_id=created("polity"), ownership="state", allocation="redistribution", labour="corvee", distribution="by_office", reason=REASON),
+        ruled_realm,
+    ),
+    "begin_transition": named(plain(polity_id=created("polity"), kind="land_reform", compensation="partial", reason=REASON), ruled_realm),
+    "change_money": named(plain(), money_changer),
     "sabotage_remaking": named(plain(plan_id=created("plan")), remade_land),
     "swear_vengeance": named(plain(foe_id=created("foe")), slain_kin),
     "purify_self": named(plain(), impure_mortal),

@@ -70,7 +70,7 @@ class SportRules:
     league_clubs: int = rule(2, 2, 100, C, "Clubs a realm needs before they form a league")
     rating_step: int = rule(5, 0, 100, C, "Rating a club gains for a win or loses for a defeat")
     fandom_step: int = rule(3, 0, 100, C, "Fandom a club gains for a win or loses for a defeat")
-    stake_pct: int = rule(2, 0, 100, C, "Wealth of a town its fans wager on a match, at full fandom (%)")
+    stake_pct: int = rule(2, 0, 100, C, "Share of a town's coin its fans wager on a match, at full fandom (%)")
     season_epochs: int = rule(2, 1, 100, C, "Epochs a league season runs before a champion is named")
     athletes: int = rule(5, 0, 100, C, "Athletes a new club signs from the strongest and swiftest mortals of its town")
     field_following: int = rule(40, 0, 100, C, "Popularity a ball game or wrestling needs among a town's people before a club forms there without an arena")

@@ -435,6 +435,14 @@ export const MATERIAL_LABEL: Record<MaterialKind, string> = {
   sulfur: 'Sulfur',
   clay: 'Clay',
   gems: 'Gems',
+  mud_brick: 'Mud brick',
+  fired_brick: 'Fired brick',
+  dressed_stone: 'Dressed stone',
+  rubble: 'Rubble',
+  lime_mortar: 'Lime mortar',
+  hydraulic_concrete: 'Hydraulic concrete',
+  thatch: 'Thatch',
+  tile: 'Tile',
 }
 
 export const MATERIAL_KINDS = Object.keys(MATERIAL_LABEL) as MaterialKind[]

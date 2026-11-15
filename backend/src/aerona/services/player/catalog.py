@@ -71,6 +71,7 @@ from aerona.services.player import (
     god_power,
     happenings,
     heroes,
+    honours,
     horizon,
     households,
     incidents,
@@ -89,6 +90,7 @@ from aerona.services.player import (
     made_kinds,
     made_things,
     market,
+    means,
     mechanics,
     memory,
     messages,
@@ -101,6 +103,7 @@ from aerona.services.player import (
     native_faith,
     nature,
     operations,
+    orders,
     pantheon,
     peoples,
     physics,
@@ -2704,15 +2707,21 @@ ECONOMY_ACTIONS = (
         economy_depth.set_slot,
         economy_depth.SlotMaterial,
         free,
-        ("F3.1",),
+        ("F3.1", "F3/RP6"),
     ),
-    _sync(Meta("node_material:release", "Release a held material slot", G.ENTITIES), economy_depth.release_slot, economy_depth.SlotTarget, free, ("F3.1",)),
+    _sync(
+        Meta("node_material:release", "Release a held material slot", G.ENTITIES),
+        economy_depth.release_slot,
+        economy_depth.SlotTarget,
+        free,
+        ("F3.1", "F3/RP6"),
+    ),
     _sync(
         Meta("node_material:clear", "Clear a material slot so its makers choose anew", G.ENTITIES),
         economy_depth.clear_slot,
         economy_depth.SlotTarget,
         free,
-        ("F3.1",),
+        ("F3.1", "F3/RP6"),
     ),
     _sync(Meta("stock:set", "Set and hold a store of goods", G.SOCIETY), economy_depth.set_stock, economy_depth.SetStock, free, ("F3.2",)),
     _sync(Meta("stock:release", "Release a held store", G.SOCIETY), economy_depth.release_stock, economy_depth.StockTarget, free, ("F3.2",)),
@@ -4926,6 +4935,147 @@ MADE_KIND_ACTIONS = (
     ),
 )
 
+
+MEANS_ACTIONS = (
+    _sync(Meta("writing_custom:set", "Set what a people writes on", G.SOCIETY), means.writing_custom_set, means.WritingCustomDraft, free, ("S7.1/RP6",)),
+    _sync(Meta("writing_custom:edit", "Edit what a people writes on", G.SOCIETY), means.writing_custom_edit, means.WritingCustomEdit, free, ("S7.1/RP6",)),
+    _sync(
+        Meta("writing_custom:delete", "Strike what a people writes on", G.SOCIETY), means.writing_custom_delete, means.WritingCustomTarget, free, ("S7.1/RP6",)
+    ),
+    _sync(Meta("written_work:set", "Set the medium of a written work", G.SOCIETY), means.written_work_set, means.WrittenWorkDraft, free, ("S7.1/RP6",)),
+    _sync(Meta("written_work:edit", "Edit a written work's medium", G.SOCIETY), means.written_work_edit, means.WrittenWorkEdit, free, ("S7.1/RP6",)),
+    _sync(Meta("written_work:delete", "Strike a written work's medium", G.SOCIETY), means.written_work_delete, means.WrittenWorkTarget, free, ("S7.1/RP6",)),
+    _sync(Meta("security:set", "Secure a vault", G.SOCIETY), means.security_set, means.SecurityDraft, free, ("S7.1/RP6",)),
+    _sync(Meta("security:edit", "Edit a vault", G.SOCIETY), means.security_edit, means.SecurityEdit, free, ("S7.1/RP6",)),
+    _sync(Meta("security:delete", "Lay a vault open", G.SOCIETY), means.security_delete, means.SecurityTarget, free, ("S7.1/RP6",)),
+    _sync(Meta("water_lift:set", "Raise water-lifting devices", G.SOCIETY), means.water_lift_set, means.WaterLiftDraft, free, ("S7.2/RP6",)),
+    _sync(Meta("water_lift:edit", "Edit water-lifting devices", G.SOCIETY), means.water_lift_edit, means.WaterLiftEdit, free, ("S7.2/RP6",)),
+    _sync(Meta("water_lift:delete", "Take down water-lifting devices", G.SOCIETY), means.water_lift_delete, means.WaterLiftTarget, free, ("S7.2/RP6",)),
+    _sync(Meta("navigation_kit:set", "Give a port an instrument", G.SOCIETY), means.navigation_kit_set, means.NavigationKitDraft, free, ("S7.3/RP6",)),
+    _sync(Meta("navigation_kit:edit", "Edit a port's instrument", G.SOCIETY), means.navigation_kit_edit, means.NavigationKitEdit, free, ("S7.3/RP6",)),
+    _sync(Meta("navigation_kit:delete", "Take a port's instrument", G.SOCIETY), means.navigation_kit_delete, means.NavigationKitTarget, free, ("S7.3/RP6",)),
+    _sync(Meta("container_stock:set", "Stock containers", G.SOCIETY), means.container_stock_set, means.ContainerStockDraft, free, ("S6.4/RP6",)),
+    _sync(Meta("container_stock:edit", "Edit a stock of containers", G.SOCIETY), means.container_stock_edit, means.ContainerStockEdit, free, ("S6.4/RP6",)),
+    _sync(
+        Meta("container_stock:delete", "Empty a stock of containers", G.SOCIETY), means.container_stock_delete, means.ContainerStockTarget, free, ("S6.4/RP6",)
+    ),
+    _sync(
+        Meta("means:run", "Read every medium, vault, water device, instrument and container now", G.SOCIETY),
+        means.means_run,
+        means.RunNow,
+        free,
+        ("S7.1/RP6", "S7.2/RP6", "S7.3/RP6", "S6.4/RP6", "F3/RP6"),
+    ),
+)
+
+ORDERS_ACTIONS = (
+    _sync(Meta("saving:set", "Set how a household saves", G.SOCIETY), orders.saving_set, orders.SavingDraft, free, ("S6.4/RP6",)),
+    _sync(Meta("saving:edit", "Edit how a household saves", G.SOCIETY), orders.saving_edit, orders.SavingEdit, free, ("S6.4/RP6",)),
+    _sync(Meta("saving:delete", "Strike a household's saving", G.SOCIETY), orders.saving_delete, orders.SavingTarget, free, ("S6.4/RP6",)),
+    _sync(Meta("hoard:create", "Bury a hoard", G.SOCIETY), orders.hoard_create, orders.HoardDraft, free, ("S6.4/RP6",)),
+    _sync(Meta("hoard:edit", "Edit a hoard", G.SOCIETY), orders.hoard_edit, orders.HoardEdit, free, ("S6.4/RP6",)),
+    _sync(Meta("hoard:delete", "Strike a hoard", G.SOCIETY), orders.hoard_delete, orders.HoardTarget, free, ("S6.4/RP6",)),
+    _sync(Meta("exchange_rate:create", "Set a rate between two coins", G.SOCIETY), orders.exchange_rate_create, orders.ExchangeRateDraft, free, ("S6.4/RP6",)),
+    _sync(Meta("exchange_rate:edit", "Edit a rate between coins", G.SOCIETY), orders.exchange_rate_edit, orders.ExchangeRateEdit, free, ("S6.4/RP6",)),
+    _sync(Meta("exchange_rate:delete", "Strike a rate between coins", G.SOCIETY), orders.exchange_rate_delete, orders.ExchangeRateTarget, free, ("S6.4/RP6",)),
+    _sync(
+        Meta("bill_of_exchange:create", "Draw a bill of exchange", G.SOCIETY), orders.bill_of_exchange_create, orders.BillOfExchangeDraft, free, ("S6.4/RP6",)
+    ),
+    _sync(Meta("bill_of_exchange:edit", "Edit a bill of exchange", G.SOCIETY), orders.bill_of_exchange_edit, orders.BillOfExchangeEdit, free, ("S6.4/RP6",)),
+    _sync(
+        Meta("bill_of_exchange:delete", "Tear up a bill of exchange", G.SOCIETY),
+        orders.bill_of_exchange_delete,
+        orders.BillOfExchangeTarget,
+        free,
+        ("S6.4/RP6",),
+    ),
+    _sync(Meta("economic_order:create", "Set an economic order", G.SOCIETY), orders.economic_order_create, orders.EconomicOrderDraft, free, ("S4.6/RP6",)),
+    _sync(Meta("economic_order:edit", "Edit an economic order", G.SOCIETY), orders.economic_order_edit, orders.EconomicOrderEdit, free, ("S4.6/RP6",)),
+    _sync(Meta("economic_order:delete", "Strike an economic order", G.SOCIETY), orders.economic_order_delete, orders.EconomicOrderTarget, free, ("S4.6/RP6",)),
+    _sync(
+        Meta("economic_order_kind:create", "Name an economic order", G.SOCIETY),
+        orders.economic_order_kind_create,
+        orders.EconomicOrderKindDraft,
+        free,
+        ("S4.6/RP6",),
+    ),
+    _sync(
+        Meta("economic_order_kind:edit", "Edit a named economic order", G.SOCIETY),
+        orders.economic_order_kind_edit,
+        orders.EconomicOrderKindEdit,
+        free,
+        ("S4.6/RP6",),
+    ),
+    _sync(
+        Meta("economic_order_kind:delete", "Strike a named economic order", G.SOCIETY),
+        orders.economic_order_kind_delete,
+        orders.EconomicOrderKindTarget,
+        free,
+        ("S4.6/RP6",),
+    ),
+    _sync(
+        Meta("order_transition:create", "Proclaim a change of economic order", G.SOCIETY),
+        orders.order_transition_create,
+        orders.OrderTransitionDraft,
+        free,
+        ("S4.6/RP6",),
+    ),
+    _sync(
+        Meta("order_transition:edit", "Edit a change of economic order", G.SOCIETY),
+        orders.order_transition_edit,
+        orders.OrderTransitionEdit,
+        free,
+        ("S4.6/RP6",),
+    ),
+    _sync(
+        Meta("order_transition:delete", "Call off a change of economic order", G.SOCIETY),
+        orders.order_transition_delete,
+        orders.OrderTransitionTarget,
+        free,
+        ("S4.6/RP6",),
+    ),
+    _sync(
+        Meta("order_transition:advance", "Push a change of economic order to its next stage", G.SOCIETY),
+        orders.order_transition_advance,
+        orders.OrderTransitionTarget,
+        free,
+        ("S4.6/RP6",),
+    ),
+    _sync(Meta("putting_out:create", "Put work out to a village", G.SOCIETY), orders.putting_out_create, orders.PuttingOutDraft, free, ("S6.4/RP6",)),
+    _sync(Meta("putting_out:edit", "Edit work put out", G.SOCIETY), orders.putting_out_edit, orders.PuttingOutEdit, free, ("S6.4/RP6",)),
+    _sync(Meta("putting_out:delete", "End work put out", G.SOCIETY), orders.putting_out_delete, orders.PuttingOutTarget, free, ("S6.4/RP6",)),
+    _sync(Meta("chain_holding:set", "Hold a share in a chain", G.SOCIETY), orders.chain_holding_set, orders.ChainHoldingDraft, free, ("S6.4/RP6",)),
+    _sync(Meta("chain_holding:edit", "Edit a share in a chain", G.SOCIETY), orders.chain_holding_edit, orders.ChainHoldingEdit, free, ("S6.4/RP6",)),
+    _sync(Meta("chain_holding:delete", "Sell a share in a chain", G.SOCIETY), orders.chain_holding_delete, orders.ChainHoldingTarget, free, ("S6.4/RP6",)),
+    _sync(Meta("tourist_flow:create", "Send travellers to a sight", G.SOCIETY), orders.tourist_flow_create, orders.TouristFlowDraft, free, ("S6.4/RP6",)),
+    _sync(Meta("tourist_flow:edit", "Edit a flow of travellers", G.SOCIETY), orders.tourist_flow_edit, orders.TouristFlowEdit, free, ("S6.4/RP6",)),
+    _sync(Meta("tourist_flow:delete", "Strike a flow of travellers", G.SOCIETY), orders.tourist_flow_delete, orders.TouristFlowTarget, free, ("S6.4/RP6",)),
+    _sync(
+        Meta("orders:run", "Read every saving, rate, order, work put out and journey of pleasure now", G.SOCIETY),
+        orders.orders_run,
+        orders.RunNow,
+        free,
+        ("S6.4/RP6", "S4.6/RP6"),
+    ),
+)
+
+HONOURS_ACTIONS = (
+    _sync(Meta("named_unit:create", "Name a unit", G.WARFARE), honours.named_unit_create, honours.NamedUnitDraft, free, ("S5.1/RP6",)),
+    _sync(Meta("named_unit:edit", "Edit a named unit", G.WARFARE), honours.named_unit_edit, honours.NamedUnitEdit, free, ("S5.1/RP6",)),
+    _sync(Meta("named_unit:delete", "Strike a named unit from the rolls", G.WARFARE), honours.named_unit_delete, honours.NamedUnitTarget, free, ("S5.1/RP6",)),
+    _sync(Meta("unit_honour:create", "Set an honour on a standard", G.WARFARE), honours.unit_honour_create, honours.UnitHonourDraft, free, ("S5.1/RP6",)),
+    _sync(Meta("unit_honour:edit", "Edit an honour on a standard", G.WARFARE), honours.unit_honour_edit, honours.UnitHonourEdit, free, ("S5.1/RP6",)),
+    _sync(Meta("unit_honour:delete", "Strike an honour from a standard", G.WARFARE), honours.unit_honour_delete, honours.UnitHonourTarget, free, ("S5.1/RP6",)),
+    _sync(
+        Meta("veteran_grant:create", "Grant veterans land or pensions", G.WARFARE), honours.veteran_grant_create, honours.VeteranGrantDraft, free, ("S5.1/RP6",)
+    ),
+    _sync(Meta("veteran_grant:edit", "Edit a grant to veterans", G.WARFARE), honours.veteran_grant_edit, honours.VeteranGrantEdit, free, ("S5.1/RP6",)),
+    _sync(
+        Meta("veteran_grant:delete", "Withdraw a grant to veterans", G.WARFARE), honours.veteran_grant_delete, honours.VeteranGrantTarget, free, ("S5.1/RP6",)
+    ),
+    _sync(Meta("honours:run", "Read every grant to veterans and association now", G.WARFARE), honours.honours_run, honours.RunNow, free, ("S5.1/RP6",)),
+)
+
 ACTIONS: tuple[ActionSpec, ...] = (
     *CYCLE_ACTIONS,
     *REGIME_ACTIONS,
@@ -4937,6 +5087,9 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *FOLKWAYS_ACTIONS,
     *BELONGING_ACTIONS,
     *NATURE_ACTIONS,
+    *MEANS_ACTIONS,
+    *ORDERS_ACTIONS,
+    *HONOURS_ACTIONS,
     *ERAS_ACTIONS,
     *CLIMES_ACTIONS,
     *CRAFTS_ACTIONS,

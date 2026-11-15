@@ -67,6 +67,7 @@ CLASS_OF_KIND = MappingProxyType(
         FactionKind.WORKERS_UNION: SocialClass.ARTISAN,
         FactionKind.ENGINEERS_SOCIETY: SocialClass.PROFESSIONAL,
         FactionKind.FINANCIERS: SocialClass.MERCHANT,
+        FactionKind.VETERANS: SocialClass.WARRIOR,
     }
 )
 

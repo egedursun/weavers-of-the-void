@@ -15,6 +15,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.customs.rights import unarmed
 from aerona.engine.folkways.purity import barred_professions
+from aerona.engine.means.media import legible
 from aerona.engine.mind.book import is_locked, mind_of, set_skill, skills_of
 from aerona.engine.mind.skills import SKILL_LOCK, level_cost, practise
 from aerona.engine.mortal.profile import is_held
@@ -163,16 +164,17 @@ async def attend_lectures(ctx: TickContext, mortal: EntityRow, profile: MortalPr
 async def read_books(ctx: TickContext, mortal: EntityRow) -> int:
     owned = select(BondRow.target_node_id).where(BondRow.source_node_id == mortal.id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
     rows = await ctx.session.execute(
-        select(BookContentRow.fidelity, EntityRow.knowledge_branch)
+        select(BookContentRow.book_entity_id, BookContentRow.fidelity, EntityRow.knowledge_branch)
         .join(EntityRow, EntityRow.id == BookContentRow.knowledge_entity_id)
         .where(BookContentRow.book_entity_id.in_(owned))
     )
     gained = 0
-    for fidelity, branch in rows:
+    for book, fidelity, branch in rows:
         skill = BRANCH_SKILLS.get(KnowledgeBranch(branch)) if branch is not None else None
         if skill is None:
             continue
-        gained += await practise(ctx.session, ctx.rules, mortal.id, skill, ctx.rules.skills.book_xp * fidelity / PERCENT, epoch=ctx.epoch)
+        xp = ctx.rules.skills.book_xp * fidelity / PERCENT * await legible(ctx, book)
+        gained += await practise(ctx.session, ctx.rules, mortal.id, skill, xp, epoch=ctx.epoch)
     return gained
 
 

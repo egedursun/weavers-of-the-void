@@ -47,6 +47,7 @@ from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import ancestral_site, guardians_of
 from aerona.engine.folkways.fed import battle_luck
+from aerona.engine.honours.units import esprit_morale
 from aerona.engine.intrigue.beliefs import beliefs_of
 from aerona.engine.intrigue.sources import cowardice
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -249,6 +250,7 @@ async def side_of(
         "babel": -await babel(ctx, community),
         "beast_dread": -await beast_dread(ctx, enemy.id),
         "luck": await battle_luck(ctx.session, ctx.rules, community),
+        "esprit": await esprit_morale(ctx, rows),
         "warned": table.morale.warned_morale if await warned(ctx, community.id, enemy.id) else 0,
         "passion": await passion_morale(ctx, commander, [community.id, enemy.id]),
         "divine": round(

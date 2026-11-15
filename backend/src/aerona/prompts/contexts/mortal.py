@@ -204,6 +204,9 @@ class HomeLine(ContextItem):
     belonging: list[str] = Field(default_factory=list)
     eras: list[str] = Field(default_factory=list)
     nature: list[str] = Field(default_factory=list)
+    means: list[str] = Field(default_factory=list)
+    economy: list[str] = Field(default_factory=list)
+    honours: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

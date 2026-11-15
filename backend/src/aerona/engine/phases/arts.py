@@ -56,7 +56,7 @@ async def monster_contracts(ctx: TickContext) -> None:
     count(ctx, "monster_contracts", tally)
 
 
-@reads("celestial.cycle", "celestial.influence", "celestial.visibility", "settlement.population")
+@reads("celestial.cycle", "celestial.influence", "celestial.visibility", "settlement.population", "table.divination_systems")
 @writes("table.birth_signs")
 async def birth_signs(ctx: TickContext) -> None:
     tally = SignTally()

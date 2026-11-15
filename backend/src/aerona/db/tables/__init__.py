@@ -372,6 +372,7 @@ from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, God
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
+from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow, VeteranGrantRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.integrity import MegastructureRow, StructureDesignSectionRow, StructureSectionRow
@@ -411,6 +412,7 @@ from aerona.db.tables.lore import (
     ThreadLinkRow,
     ThreadRow,
 )
+from aerona.db.tables.means import ContainerStockRow, NavigationKitRow, SecurityRow, WaterLiftRow, WritingCustomRow, WrittenWorkRow
 from aerona.db.tables.meta import AchievementRow, ImageRow, MapNoteRow, MapSnapshotRow, NotificationRow, ScenarioRow, ScoreRow
 from aerona.db.tables.military import (
     ArmyMovementRow,
@@ -463,6 +465,18 @@ from aerona.db.tables.operations import (
     SupplyFlowRow,
     TheatreRow,
     TransportAssetRow,
+)
+from aerona.db.tables.orders import (
+    BillOfExchangeRow,
+    ChainHoldingRow,
+    EconomicOrderKindRow,
+    EconomicOrderRow,
+    ExchangeRateRow,
+    HoardRow,
+    OrderTransitionRow,
+    PuttingOutRow,
+    SavingRow,
+    TouristFlowRow,
 )
 from aerona.db.tables.ownership import SiteProfitRow
 from aerona.db.tables.physics import (
@@ -640,6 +654,7 @@ __all__ = [
     "BeliefRow",
     "BetRow",
     "BiasWeightRow",
+    "BillOfExchangeRow",
     "BirthSignRow",
     "BlueprintRow",
     "BodyCustomRow",
@@ -666,6 +681,7 @@ __all__ = [
     "CatchGroundRow",
     "CelestialReadingRow",
     "CentralPlaceRow",
+    "ChainHoldingRow",
     "ChallengeRow",
     "CharmRow",
     "ChemicalWorksRow",
@@ -705,6 +721,7 @@ __all__ = [
     "ConfederationRow",
     "ConstructRow",
     "ConstructionRow",
+    "ContainerStockRow",
     "ContestRow",
     "ConvoyRow",
     "CooperativeRow",
@@ -788,6 +805,8 @@ __all__ = [
     "EchelonRow",
     "EcoTransformationRow",
     "EconomicIndicatorRow",
+    "EconomicOrderKindRow",
+    "EconomicOrderRow",
     "EcosystemServiceRow",
     "ElectionRow",
     "EmotionHarvestRow",
@@ -820,6 +839,7 @@ __all__ = [
     "ExaminationRow",
     "ExcavationRow",
     "ExcavationStageRow",
+    "ExchangeRateRow",
     "ExpeditionLogRow",
     "ExpeditionMemberRow",
     "ExpeditionRow",
@@ -874,6 +894,7 @@ __all__ = [
     "HeroquestMemberRow",
     "HeroquestRow",
     "HistorianViewRow",
+    "HoardRow",
     "HolderLevelRow",
     "HolderTechniqueRow",
     "HolyOrderProfileRow",
@@ -996,8 +1017,10 @@ __all__ = [
     "NameFormRow",
     "NameMeaningRow",
     "NameRegistryRow",
+    "NamedUnitRow",
     "NamingCustomRow",
     "NaturalLawProfileRow",
+    "NavigationKitRow",
     "NeedRow",
     "NetworkReviewRow",
     "NobleDemandRow",
@@ -1014,6 +1037,7 @@ __all__ = [
     "OfficeHistoryRow",
     "OfficeRow",
     "OrderLawRow",
+    "OrderTransitionRow",
     "OutbreakRow",
     "OuterBargainRow",
     "OuterBeingProfileRow",
@@ -1067,6 +1091,7 @@ __all__ = [
     "PurificationRow",
     "PurityRankRow",
     "PurityRow",
+    "PuttingOutRow",
     "QuarantineRow",
     "QuirkRow",
     "RacketRow",
@@ -1113,6 +1138,7 @@ __all__ = [
     "SanctuaryLawRow",
     "SanctuaryRow",
     "SatireRow",
+    "SavingRow",
     "ScenarioRow",
     "SchemeRow",
     "SchoolLineageRow",
@@ -1120,6 +1146,7 @@ __all__ = [
     "ScoreRow",
     "ScriptRow",
     "SecretRow",
+    "SecurityRow",
     "SenseProfileRow",
     "SentenceRow",
     "ServitorRow",
@@ -1196,6 +1223,7 @@ __all__ = [
     "TimeBudgetRow",
     "TitleHolderRow",
     "TitleProfileRow",
+    "TouristFlowRow",
     "TradeFlowRow",
     "TradePolicyRow",
     "TradeRouteLossRow",
@@ -1221,12 +1249,14 @@ __all__ = [
     "UnitDesignEquipmentRow",
     "UnitDesignRow",
     "UnitDesignTechniqueRow",
+    "UnitHonourRow",
     "VassalageRow",
     "VehicleGroupRow",
     "VehicleGroupSectionRow",
     "VenalOfficeRow",
     "VesselProfileRow",
     "VesselSectionRow",
+    "VeteranGrantRow",
     "VisStockRow",
     "VisionRow",
     "WarAimRow",
@@ -1234,6 +1264,7 @@ __all__ = [
     "WarRow",
     "WarSideRow",
     "WarpingRow",
+    "WaterLiftRow",
     "WelfareRow",
     "WinterForecastRow",
     "WitchHuntRow",
@@ -1252,4 +1283,6 @@ __all__ = [
     "WorldRow",
     "WorldSeasonRow",
     "WorldSurveyRow",
+    "WritingCustomRow",
+    "WrittenWorkRow",
 ]

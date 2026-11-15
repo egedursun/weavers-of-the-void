@@ -1,6 +1,8 @@
 from aerona.engine.interconnect.registry import Mechanic
 
 TABLE_BACKFILLS: dict[tuple[str, str], str] = {
+    ("unit_honours", "named_units"): "none: units raised from one land take their names after their next battle",
+    ("unit_honours", "unit_honours"): "none: honours are set on standards from the next battle and siege",
     ("logistics_network", "supply_flows"): "none: supply flows are written from the next campaign season",
     (
         "examinations",

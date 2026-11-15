@@ -63,6 +63,7 @@ from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOUR
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
 from aerona.engine.interconnect.catalog_made import BEHAVIOURS as MADE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_made_kinds import MADE_KIND_MECHANICS
+from aerona.engine.interconnect.catalog_means import HONOURS_MECHANICS, MEANS_MECHANICS, ORDERS_MECHANICS
 from aerona.engine.interconnect.catalog_military import BEHAVIOURS as MILITARY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_military import MILITARY_MECHANICS
 from aerona.engine.interconnect.catalog_military_depth import MILITARY_DEPTH_MECHANICS
@@ -1033,6 +1034,9 @@ BUILT_IN = (
     *BELONGING_MECHANICS,
     *ERAS_MECHANICS,
     *NATURE_MECHANICS,
+    *MEANS_MECHANICS,
+    *ORDERS_MECHANICS,
+    *HONOURS_MECHANICS,
     *CUSTOMS_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,
