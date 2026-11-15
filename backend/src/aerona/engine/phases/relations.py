@@ -301,6 +301,7 @@ async def relations_pecking(ctx: TickContext) -> None:
     "table.group_ranks",
     "table.incident_participants",
     "table.incidents",
+    "table.memories",
     "table.mortal_profiles",
     "table.name_registry",
     "table.relationships",

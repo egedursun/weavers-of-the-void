@@ -330,6 +330,7 @@ async def dating_systems(ctx: TickContext) -> None:
 @reads(
     "table.armies",
     "table.arms",
+    "table.culture_values",
     "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.house_members",

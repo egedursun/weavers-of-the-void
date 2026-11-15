@@ -571,7 +571,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     rate = max(rate, await ctx.hook_pct(entity.id, DomainHook.HARVEST_FLOOR) * rules.domains.harvest_floor_per_pct / PERCENT / PERCENT)
     await save_society(ctx.session, entity.id, society, stocks=False)
     await seed_stocks(ctx, entity)
-    await harvest_goods(ctx, world.economy, entity, rate, society.shares[SocialClass.FARMER])
+    await harvest_goods(ctx, world.economy, entity, rate, society.shares[SocialClass.FARMER], labour=labour)
     await gather_commons(ctx, world.economy, entity, society.shares[SocialClass.FARMER])
     await kitchen(ctx, world.economy, entity, RefiningTally())
     await cook_dishes(ctx, entity, KitchenTally())

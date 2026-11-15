@@ -66,6 +66,7 @@ class EconomyRules:
     )
     storage_base_index: int = rule(150, 0, 10000, RuleGroup.ECONOMY, "Supply index a community can store without granaries or warehouses")
     farm_units_per_1000_farmers: int = rule(1300, 0, 100000, RuleGroup.ECONOMY, "Units of food a thousand farmers raise in an epoch at a neutral harvest")
+    sea_catch_pct: int = rule(130, 0, 1000, RuleGroup.ECONOMY, "Catch of a community's fishers against an ordinary epoch, whatever the soil of its land (%)")
     fodder_share_pct: int = rule(20, 0, 100, RuleGroup.ECONOMY, "Share of pasture output cut as fodder rather than raised as livestock (%)")
     prosthetic_tools_per_1000_maimed: int = rule(30, 0, 10000, RuleGroup.ECONOMY, "Tools a thousand maimed need each epoch for crutches, hooks and false limbs")
     sentient_bargain_pct_per_level: int = rule(

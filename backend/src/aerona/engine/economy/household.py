@@ -80,7 +80,9 @@ def mix_of(ctx: TickContext, book: EconomyBook, community: EntityRow, sea: int |
     return crop_mix(ctx.rules, farmed=region.farmed, grazed=region.grazed, coastal=coastal, river=region.river_class, sea=sea)
 
 
-async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRow, rate: float, farmer_share: float) -> dict[CommodityKind, int]:
+async def harvest_goods(
+    ctx: TickContext, book: EconomyBook, community: EntityRow, rate: float, farmer_share: float, *, labour: float = 1.0
+) -> dict[CommodityKind, int]:
     table = ctx.rules.economy
     hands = book.hands(community.id, Job.FARMING, Job.HERDING, Job.FISHING)
     farmers = hands if hands is not None else round_half_up(headcount(community) * farmer_share / PERCENT)
@@ -94,7 +96,8 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
     land = units * farming.output_pct / PERCENT * powered
     land *= outdated(book, ctx.rules, community.id, ProcessKind.FARMING)
     land *= await feed(ctx, community.id, farming, crews)
-    sea = units * fishing.output_pct / PERCENT * fish_factor(ctx.rules, book.pollution.get(region_id_of(book, community.id) or -1))
+    catch = farmers * table.farm_units_per_1000_farmers / THOUSAND * table.sea_catch_pct / PERCENT * labour * tools
+    sea = catch * fishing.output_pct / PERCENT * fish_factor(ctx.rules, book.pollution.get(region_id_of(book, community.id) or -1))
     sea *= outdated(book, ctx.rules, community.id, ProcessKind.FISHING)
     sea *= await ctx.hook_factor(community.id, DomainHook.CATCH)
     if mix.fish > 0:
