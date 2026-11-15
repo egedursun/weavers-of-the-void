@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.models.entity_stats import LanguageStats
@@ -75,7 +76,7 @@ async def dialect_divergence(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     contacts = await BondIndex.load(ctx.session, CONTACT_KINDS)
     founded = 0
-    for settlement in await canon(ctx.session, [EntityType.SETTLEMENT]):
+    for settlement in unheld(await canon(ctx.session, [EntityType.SETTLEMENT])):
         if founded >= rules.world_effects.dialect_cap:
             return
         if settlement.status is not EntityStatus.CANON:

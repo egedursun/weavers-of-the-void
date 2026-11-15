@@ -1698,6 +1698,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "or a people that studies its field. A rite taken up from a faded text may come back corrupted. 1 action.",
         {"lore_id": "The ideology, theory or rite you wake", "reason": "Why you wake it"},
     ),
+    T.PLAN_PREHISTORY: ToolText(
+        "You give a world you made, still empty of lore, a prehistory: at the end of this age the engine runs its past for the epochs "
+        "you name while every other world is held, and its happenings become the world's past. 1 action.",
+        {"world_id": "The world you made that gets a past", "epochs": "How many epochs of past it lives", "reason": "Why you give it a past"},
+    ),
     T.SHAPE_BIOLOGY: ToolText(
         "You give a people or species in your reach a variant of body, or take one from it. Its variants decide how much it eats, how "
         "many it bears, how it dies and sickens, how it holds in battle, how fire and storms harm it, whether it breathes, drinks and ages, "

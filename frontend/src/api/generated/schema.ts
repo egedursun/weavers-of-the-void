@@ -5423,6 +5423,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/prehistory/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_prehistory_api_prehistory_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/deep-time': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['deep_time_api_deep_time_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -14841,6 +14873,230 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_world_end_remove_api_actions_world_end_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prehistory:configure': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prehistory_configure_api_actions_prehistory_configure_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prehistory:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prehistory_run_api_actions_prehistory_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prehistory:seed': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prehistory_seed_api_actions_prehistory_seed_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prehistory:abort': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prehistory_abort_api_actions_prehistory_abort_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prehistory:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prehistory_edit_api_actions_prehistory_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prehistory:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prehistory_remove_api_actions_prehistory_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prehistory_event:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prehistory_event_edit_api_actions_prehistory_event_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prehistory_event:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prehistory_event_remove_api_actions_prehistory_event_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_time:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_time_run_api_actions_deep_time_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_time:stop': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_time_stop_api_actions_deep_time_stop_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_time:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_time_edit_api_actions_deep_time_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_time:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_time_remove_api_actions_deep_time_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_time_event:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_time_event_edit_api_actions_deep_time_event_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_time_event:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_time_event_remove_api_actions_deep_time_event_remove_post']
     delete?: never
     options?: never
     head?: never
@@ -44555,6 +44811,56 @@ export interface components {
       deed: components['schemas']['CreatureDeed']
       weight: number
     }
+    DeepTimeEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      run_id: number
+    }
+    DeepTimeEventEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      event_id: number
+    }
+    DeepTimeEventRemoveInput: {
+      event_id: number
+    }
+    DeepTimeHappeningView: {
+      id: number
+      epoch: number
+      magnitude: number
+      text: string | null
+      locked: string[]
+    }
+    DeepTimeRemoveInput: {
+      run_id: number
+    }
+    DeepTimeRunInput: {
+      epochs: number
+    }
+    DeepTimeRunView: {
+      id: number
+      epochs: number
+      ran: number
+      from_epoch: number
+      to_epoch: number
+      state: components['schemas']['DeepTimeState']
+      sons_simulated: number
+      locked: string[]
+      happenings: components['schemas']['DeepTimeHappeningView'][]
+    }
+    DeepTimeState: 'running' | 'done' | 'stopped'
+    DeepTimeStopInput: {
+      run_id: number
+    }
+    DeepTimeView: {
+      runs: components['schemas']['DeepTimeRunView'][]
+      max_epochs: number
+      cost_per_epoch: number
+    }
     DefectionDeleteInput: {
       defection_id: number
     }
@@ -49692,6 +49998,7 @@ export interface components {
       moisture_pct?: number | null
       climate_era?: components['schemas']['ClimateEra'] | null
       world_age?: components['schemas']['WorldAge'] | null
+      prehistory_epochs: number
       tone?: string | null
       seed_idea?: string | null
     }
@@ -52338,6 +52645,8 @@ export interface components {
       | 'content'
       | 'maintenance'
       | 'retry'
+      | 'prehistory'
+      | 'deep_time'
     JobPayload: {
       epoch?: number | null
       job_id: string
@@ -59427,6 +59736,7 @@ export interface components {
       parent_world_id?: number | null
       new_star: boolean
       new_star_type?: components['schemas']['StarType'] | null
+      prehistory_epochs?: number | null
     }
     PostWorldsWorldIdWrathBody: {
       disaster: components['schemas']['Disaster']
@@ -59569,6 +59879,95 @@ export interface components {
       strength: number
       held: boolean
     }
+    PrehistoryAbortInput: {
+      world_id: number
+    }
+    PrehistoryConfigureInput: {
+      world_id: number
+      epochs: number
+      resolution: number
+    }
+    PrehistoryEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      world_id: number
+    }
+    PrehistoryEventEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      event_id: number
+    }
+    PrehistoryEventRemoveInput: {
+      event_id: number
+    }
+    PrehistoryHappeningView: {
+      id: number
+      round: number
+      magnitude: number
+      source: components['schemas']['PrehistorySource']
+      text: string | null
+      subject: components['schemas']['NodeRef'] | null
+      source_world: components['schemas']['NodeRef'] | null
+      mirrored: boolean
+      locked: string[]
+    }
+    PrehistoryKind:
+      | 'full'
+      | 'living'
+      | 'souls'
+      | 'dreamt'
+      | 'mirrored'
+      | 'palace'
+      | 'voyage'
+      | 'phenomenon'
+      | 'corpse'
+    PrehistoryNodeView: {
+      node: components['schemas']['NodeRef']
+      world: components['schemas']['NodeRef'] | null
+      world_type: components['schemas']['WorldType'] | null
+      kind_of_world: components['schemas']['PrehistoryKind'] | null
+      kind: components['schemas']['PrehistoryKind'] | null
+      state: components['schemas']['PrehistoryState'] | null
+      source: components['schemas']['PrehistorySource'] | null
+      epochs: number
+      resolution: number
+      rounds_done: number
+      birth_epoch: number | null
+      seconds: number
+      slow_rounds: number
+      source_world: components['schemas']['NodeRef'] | null
+      locked: string[]
+      happenings: components['schemas']['PrehistoryHappeningView'][]
+      lore_free: boolean
+      default_epochs: number
+      default_resolution: number
+      epochs_max: number
+      resolution_max: number
+      seed_cost: number
+      absent_reason: string | null
+    }
+    PrehistoryOptions: {
+      default: number
+      maximum: number
+    }
+    PrehistoryRemoveInput: {
+      world_id: number
+    }
+    PrehistoryRunInput: {
+      world_id: number
+    }
+    PrehistorySeedInput: {
+      world_id: number
+      epochs: number
+      resolution: number
+    }
+    PrehistorySource:
+      'simulated' | 'backfilled' | 'mirrored' | 'dreamt' | 'derived'
+    PrehistoryState: 'planned' | 'running' | 'done' | 'aborted'
     PremiumView: {
       commodity: components['schemas']['CommodityKind']
       premium_pct: number
@@ -64313,6 +64712,7 @@ export interface components {
       | 'shift_world_nature'
       | 'shape_biology'
       | 'wake_lore'
+      | 'plan_prehistory'
       | 'lay_bare_fossils'
       | 'found_museum'
       | 'lay_out_garden'
@@ -69496,6 +69896,7 @@ export interface components {
       moisture_pct?: unknown
       climate_era?: string | null
       world_age?: string | null
+      prehistory_epochs?: unknown
       tone?: string | null
       seed?: string | null
     }
@@ -69525,6 +69926,7 @@ export interface components {
       }
       templates: components['schemas']['WizardTemplate'][]
       first_sons: components['schemas']['FirstSonsOptions']
+      prehistory: components['schemas']['PrehistoryOptions']
     }
     WizardTemplate: {
       key: components['schemas']['GenesisTemplate']
@@ -70073,6 +70475,7 @@ export interface components {
       need: components['schemas']['BindingNeed']
       settle: components['schemas']['SettleMode']
       war: components['schemas']['WarTerrain']
+      prehistory_kind: components['schemas']['PrehistoryKind']
       seasons: boolean
       nights: boolean
       fire: boolean
@@ -81361,6 +81764,62 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['GroundsNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_prehistory_api_prehistory_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PrehistoryNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  deep_time_api_deep_time_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DeepTimeView']
         }
       }
       default: {
@@ -99316,6 +99775,440 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['WorldEndRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prehistory_configure_api_actions_prehistory_configure_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrehistoryConfigureInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prehistory_run_api_actions_prehistory_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrehistoryRunInput']
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prehistory_seed_api_actions_prehistory_seed_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrehistorySeedInput']
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prehistory_abort_api_actions_prehistory_abort_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrehistoryAbortInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prehistory_edit_api_actions_prehistory_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrehistoryEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prehistory_remove_api_actions_prehistory_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrehistoryRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prehistory_event_edit_api_actions_prehistory_event_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrehistoryEventEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prehistory_event_remove_api_actions_prehistory_event_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrehistoryEventRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_time_run_api_actions_deep_time_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepTimeRunInput']
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_time_stop_api_actions_deep_time_stop_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepTimeStopInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_time_edit_api_actions_deep_time_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepTimeEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_time_remove_api_actions_deep_time_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepTimeRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_time_event_edit_api_actions_deep_time_event_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepTimeEventEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_time_event_remove_api_actions_deep_time_event_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepTimeEventRemoveInput']
       }
     }
     responses: {
@@ -145366,6 +146259,9 @@ export const decisionRuleValues: ReadonlyArray<
 export const decreeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DecreeKind']
 > = ['war', 'peace', 'alliance', 'marriage', 'trade']
+export const deepTimeStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DeepTimeState']
+> = ['running', 'done', 'stopped']
 export const defenderActionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DefenderAction']
 > = ['sally', 'repair', 'ration', 'seek_relief']
@@ -147872,6 +148768,8 @@ export const jobKindValues: ReadonlyArray<
   'content',
   'maintenance',
   'retry',
+  'prehistory',
+  'deep_time',
 ]
 export const jobProgressEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['JobProgressEvent']['kind']
@@ -149756,6 +150654,25 @@ export const preferenceKindValues: ReadonlyArray<
   'deity_aspect',
   'looks',
 ]
+export const prehistoryKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PrehistoryKind']
+> = [
+  'full',
+  'living',
+  'souls',
+  'dreamt',
+  'mirrored',
+  'palace',
+  'voyage',
+  'phenomenon',
+  'corpse',
+]
+export const prehistorySourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PrehistorySource']
+> = ['simulated', 'backfilled', 'mirrored', 'dreamt', 'derived']
+export const prehistoryStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PrehistoryState']
+> = ['planned', 'running', 'done', 'aborted']
 export const preparednessKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PreparednessKind']
 > = ['levee', 'firebreak', 'stockpile', 'drill', 'watchtower', 'seawall']
@@ -151086,6 +152003,7 @@ export const sonToolIdValues: ReadonlyArray<
   'shift_world_nature',
   'shape_biology',
   'wake_lore',
+  'plan_prehistory',
   'lay_bare_fossils',
   'found_museum',
   'lay_out_garden',

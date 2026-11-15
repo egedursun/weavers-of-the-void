@@ -4,6 +4,7 @@ from typing import Any, cast
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.prehistory import WORLD_PREHISTORY
 from aerona.catalog.world_views import WORLD_VIEWS, WorldViewSpec
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memo_of
@@ -20,6 +21,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.physics import AirNeed
+from aerona.domain.enums.prehistory import PrehistoryKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_view import BindingNeed, SettleMode, WarTerrain, WorldLight
 from aerona.engine.body.customs import people_id_of
@@ -50,6 +52,7 @@ class WorldView:
     need: BindingNeed = BindingNeed.NONE
     settle: SettleMode = SettleMode.GROUND
     war: WarTerrain = WarTerrain.LAND
+    prehistory_kind: PrehistoryKind = PrehistoryKind.FULL
     seasons: bool = True
     nights: bool = True
     fire: bool = True
@@ -101,6 +104,7 @@ def default_values(rules: Rules, world_type: WorldType) -> dict[str, object]:
         "need": spec.need,
         "settle": spec.settle,
         "war": spec.war,
+        "prehistory_kind": WORLD_PREHISTORY[world_type],
         "seasons": spec.seasons,
         "nights": spec.nights,
         "fire": spec.fire,

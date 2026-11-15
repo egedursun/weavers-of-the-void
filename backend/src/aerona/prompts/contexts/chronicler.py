@@ -130,6 +130,7 @@ class ChroniclerUserContext(LoreRulesContext):
     event_phases: list[str] = Field(default_factory=list)
     pending: list[EntityLineItem] = Field(default_factory=list)
     facts: ChroniclerFactSheet | None = None
+    prehistories: list[str] = Field(default_factory=list)
 
 
 class AuditFindingItem(ContextItem):

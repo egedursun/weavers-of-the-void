@@ -576,7 +576,7 @@ async def religion_spread(ctx: TickContext) -> None:
     for community in world.communities:
         if conversions >= settings.conversion_cap and syncretisms >= settings.syncretism_cap:
             break
-        if community.status is not EntityStatus.CANON:
+        if community.status is not EntityStatus.CANON or held(community.id):
             continue
         old = faith.patron(community.id)
         if old is not None and old == creator_id:

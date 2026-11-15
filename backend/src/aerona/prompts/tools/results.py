@@ -533,6 +533,8 @@ class SonResult(StrEnum):
     BIOLOGY_REFUSED = "You cannot reshape that body: {{ why }}."
     LORE_WOKEN = "{{ lore }} is taken up again and is now {{ state }}."
     WAKE_REFUSED = "You cannot wake that lore: {{ why }}."
+    PREHISTORY_PLANNED = "{{ world }} will live {{ epochs }} epoch(s) of its past before its story goes on; the run comes at the end of this age."
+    PREHISTORY_REFUSED = "You cannot give that world a past: {{ why }}."
     FOSSILS_LAID_BARE = "Remains ({{ source }}) came to light in {{ region }}; those who found them read them as {{ reading }}."
     FOSSILS_REFUSED = "You cannot lay bare remains there: {{ why }}."
     MUSEUM_FOUNDED = "{{ town }} now keeps a museum; it gathers the pieces of its land from the next epoch."

@@ -4,18 +4,16 @@ from pathlib import Path
 import pytest
 
 from aerona.core.errors import BusyError
-from aerona.db.migrations import upgrade_to_head
 from aerona.db.session import Database
 from aerona.domain.enums.job import JobKind, JobStatus
 from aerona.events.bus import EventBus
 from aerona.jobs.context import JobContext
 from aerona.jobs.manager import JobManager
+from tests.conftest import OpenDatabase
 
 
-async def build_manager(tmp_path: Path) -> tuple[JobManager, Database]:
-    url = f"sqlite+aiosqlite:///{tmp_path / 'jobs.db'}"
-    await upgrade_to_head(url)
-    database = Database(url)
+async def build_manager(tmp_path: Path, open_database: OpenDatabase) -> tuple[JobManager, Database]:
+    database = open_database(tmp_path / "jobs.db")
     return JobManager(database, EventBus()), database
 
 
@@ -27,8 +25,8 @@ async def wait_for_status(manager: JobManager, job_id: str, status: JobStatus) -
     raise AssertionError(f"job never reached {status}")
 
 
-async def test_job_runs_and_records_result(tmp_path: Path) -> None:
-    manager, database = await build_manager(tmp_path)
+async def test_job_runs_and_records_result(tmp_path: Path, open_database: OpenDatabase) -> None:
+    manager, database = await build_manager(tmp_path, open_database)
 
     async def handler(context: JobContext) -> dict[str, int]:
         context.report(0.5, "halfway")
@@ -42,8 +40,8 @@ async def test_job_runs_and_records_result(tmp_path: Path) -> None:
     await database.dispose()
 
 
-async def test_exclusive_group_blocks_second_job_and_cancel_works(tmp_path: Path) -> None:
-    manager, database = await build_manager(tmp_path)
+async def test_exclusive_group_blocks_second_job_and_cancel_works(tmp_path: Path, open_database: OpenDatabase) -> None:
+    manager, database = await build_manager(tmp_path, open_database)
     started = asyncio.Event()
 
     async def slow(_context: JobContext) -> None:
@@ -60,8 +58,8 @@ async def test_exclusive_group_blocks_second_job_and_cancel_works(tmp_path: Path
     await database.dispose()
 
 
-async def test_failed_job_records_error(tmp_path: Path) -> None:
-    manager, database = await build_manager(tmp_path)
+async def test_failed_job_records_error(tmp_path: Path, open_database: OpenDatabase) -> None:
+    manager, database = await build_manager(tmp_path, open_database)
 
     async def broken(_context: JobContext) -> None:
         raise RuntimeError("boom")
@@ -72,8 +70,8 @@ async def test_failed_job_records_error(tmp_path: Path) -> None:
     await database.dispose()
 
 
-async def test_jobs_beyond_the_capacity_wait_in_the_queue(tmp_path: Path) -> None:
-    jobs, _ = await build_manager(tmp_path)
+async def test_jobs_beyond_the_capacity_wait_in_the_queue(tmp_path: Path, open_database: OpenDatabase) -> None:
+    jobs, _ = await build_manager(tmp_path, open_database)
     jobs.bind_capacity(lambda: 1)
     release = asyncio.Event()
     started: list[str] = []
@@ -93,8 +91,8 @@ async def test_jobs_beyond_the_capacity_wait_in_the_queue(tmp_path: Path) -> Non
     assert started == [first, second]
 
 
-async def test_a_duplicate_key_returns_the_running_job(tmp_path: Path) -> None:
-    jobs, _ = await build_manager(tmp_path)
+async def test_a_duplicate_key_returns_the_running_job(tmp_path: Path, open_database: OpenDatabase) -> None:
+    jobs, _ = await build_manager(tmp_path, open_database)
     release = asyncio.Event()
 
     async def slow(context: JobContext) -> dict[str, object] | None:

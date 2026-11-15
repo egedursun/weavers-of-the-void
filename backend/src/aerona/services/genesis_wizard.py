@@ -47,8 +47,10 @@ from aerona.domain.enums.world import (
     TechnologyEra,
     WorldType,
 )
-from aerona.domain.models.genesis import MOISTURE_FLOOR, GenesisOutcome, GenesisSettings
+from aerona.domain.models.genesis import MOISTURE_FLOOR, PREHISTORY_CEILING, GenesisOutcome, GenesisSettings
 from aerona.engine.cosmos.control import tear_rift
+from aerona.engine.prehistory.control import configure
+from aerona.engine.prehistory.run import run_prehistory
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.events.bus import EventBus
@@ -69,6 +71,7 @@ PEOPLES_WAKING = "The first mortal peoples are waking."
 STAGE_GENESIS = "genesis"
 STAGE_PEOPLES = "peoples"
 STAGE_WORLDS = "worlds"
+STAGE_PREHISTORY = "prehistory"
 STAGE_DONE = "done"
 FIRST_EXTRA_WORLD = 2
 
@@ -93,8 +96,15 @@ class WizardInput(BaseModel):
     moisture_pct: Any = None
     climate_era: str | None = None
     world_age: str | None = None
+    prehistory_epochs: Any = None
     tone: str | None = None
     seed: str | None = None
+
+
+@dataclass(frozen=True)
+class PrehistoryOptions:
+    default: int
+    maximum: int
 
 
 @dataclass(frozen=True)
@@ -155,6 +165,7 @@ class WizardOptions:
     lore_languages: dict[LoreLanguage, str]
     templates: list[WizardTemplate]
     first_sons: FirstSonsOptions
+    prehistory: PrehistoryOptions
 
 
 @dataclass(frozen=True)
@@ -193,6 +204,7 @@ def options(rules: Rules) -> WizardOptions:
             rarities=allowed_first_son_rarities(rules),
             default=list(DEFAULT_FIRST_SONS),
         ),
+        prehistory=PrehistoryOptions(default=rules.prehistory.epochs, maximum=PREHISTORY_CEILING),
     )
 
 
@@ -278,6 +290,7 @@ def sanitize(rules: Rules, raw: WizardInput) -> GenesisSettings:
         moisture_pct=_bounded(raw.moisture_pct, None, MOISTURE_FLOOR, PERCENT),
         climate_era=_optional(ClimateEra, raw.climate_era, template.climate_era if template else None),
         world_age=_optional(WorldAge, raw.world_age, template.world_age if template else None),
+        prehistory_epochs=_bounded(raw.prehistory_epochs, rules.prehistory.epochs, 0, PREHISTORY_CEILING) or 0,
         tone=tone,
         seed_idea=seed,
     )
@@ -401,6 +414,9 @@ class GenesisWizard:
                 worlds.append(await self._ports.worlds.create(extra_world_order(settings, seed, number, sun=sun, layer=layer)))
         if layer is not None and first_world is not None:
             await self._join_layer(first_world, layer[0], worlds[0] if worlds else None)
+        if settings is not None and settings.prehistory_epochs and first_world is not None:
+            self._report(context, 0.9, STAGE_PREHISTORY)
+            await self._prehistory(first_world, settings.prehistory_epochs)
         self._report(context, 1.0, STAGE_DONE)
         return {"peoples": awakened, "worlds": worlds}
 
@@ -426,6 +442,12 @@ class GenesisWizard:
                 by_node_id=creator.id if creator is not None else None,
                 cause=RiftCause.CREATOR,
             )
+
+    async def _prehistory(self, world_id: int, epochs: int) -> None:
+        async with self._database.write() as session:
+            ctx = await manual_context(session, "genesis_prehistory", self._rules)
+            await configure(ctx, world_id, epochs, self._rules.prehistory.resolution)
+        await run_prehistory(self._database, world_id, rules=self._rules, publish=self._publish)
 
     @staticmethod
     def _report(context: JobContext | None, progress: float, stage: str) -> None:

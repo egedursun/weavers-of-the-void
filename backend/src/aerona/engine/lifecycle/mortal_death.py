@@ -16,6 +16,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.culture import ItemDeed
@@ -88,7 +89,7 @@ async def die(
     event_id: int | None = None,
 ) -> DeathResult | None:
     session = ctx.session
-    if mortal.entity_type is not EntityType.MORTAL or mortal.status not in LIVING_DEATH_STATUSES:
+    if mortal.entity_type is not EntityType.MORTAL or mortal.status not in LIVING_DEATH_STATUSES or held(mortal.id):
         return None
     flags = await EntityRepository(session).flags(mortal.id)
     if not forced and immortal(flags):

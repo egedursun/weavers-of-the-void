@@ -40,6 +40,11 @@ THIS AGE'S WORLD RECORDS (events, deaths, births opened by the engine; take reco
 {% endset %}
 {{ budget(records_body | trim, f.budget_world_records_chars, "look with search_entities", trim) if world_records else "(none)" }}
 
+{% if prehistories %}
+PREHISTORY (happenings simulated before a world joined the cosmos, by magnitude; tell them as that world's past and reconcile them with its cosmology where they differ):
+{{ budget(prehistories | join("\n"), f.budget_engine_notes_chars, "rest in the prehistory digest", trim) }}
+
+{% endif %}
 OLD PROPHECIES:
 {{ budget(prophecies | join("\n\n---\n\n"), f.budget_old_prophecies_chars, "look with search_entities", trim) if prophecies else "(none)" }}
 

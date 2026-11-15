@@ -18,6 +18,7 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.epoch import EpochStepKind, EpochStepStatus
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.son import SonStatus
+from aerona.engine.prehistory.run import born_prehistories
 from aerona.epoch.context import EpochContext
 from aerona.epoch.phases.naming import name_pending
 from aerona.epoch.state import attempted, step_status
@@ -39,6 +40,7 @@ async def deferred_worlds(ec: EpochContext) -> None:
     try:
         born = await process_intuitions(ec.runtime) + await process_deferred_births(ec.runtime)
         ec.summary["worlds_born"] = born
+        ec.summary["prehistories"] = await born_prehistories(ec.database, ec.epoch, publish=ec.publish)
         await ec.mark(EpochStepKind.WORLD_BIRTH, EpochStepStatus.DONE)
     except Exception as error:
         await ec.mark(EpochStepKind.WORLD_BIRTH, EpochStepStatus.FAILED, str(error))

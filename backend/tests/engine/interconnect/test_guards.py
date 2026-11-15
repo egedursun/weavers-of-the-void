@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.body import ConditionRow
-from aerona.db.write_guard import WRITE_GUARD, guard_idle
+from aerona.db.write_guard import HELD_SCOPE, WRITE_GUARD, HeldScope, guard_idle, held
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
@@ -124,3 +124,16 @@ def test_only_a_phase_guard_with_nothing_pinned_counts_as_idle_and_any_other_gua
             assert guard_idle() is idle
         finally:
             WRITE_GUARD.reset(token)
+
+
+def test_a_scope_of_one_world_holds_every_other_node_and_any_new_node_until_it_is_let_in() -> None:
+    inside = {4, 40}
+    token = HELD_SCOPE.set(HeldScope(None, frozenset(), inside))
+    try:
+        assert not held(4, 40) and held(41) and held(4, 99)
+        inside.add(99)
+        assert not held(99)
+    finally:
+        HELD_SCOPE.reset(token)
+    state = GuardState(GuardIndex(frozenset(), frozenset()), frozenset(), inside=inside)
+    assert state.blocks(41, "stats.hp") and not state.blocks(40, "stats.hp") and not state.blocks_nothing

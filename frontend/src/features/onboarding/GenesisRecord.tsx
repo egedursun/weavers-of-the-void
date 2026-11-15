@@ -19,6 +19,7 @@ import {
   Users,
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
+import { plural } from '@/lib/units'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, MiniStat, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
@@ -143,6 +144,16 @@ function GenesisBody({
               label='First peoples'
               value={formatInteger(settings.peoples)}
               tone='success'
+            />
+            <MiniStat
+              icon={Hourglass}
+              label='Prehistory'
+              value={
+                settings.prehistory_epochs
+                  ? plural(settings.prehistory_epochs, 'epoch')
+                  : 'None'
+              }
+              tone='info'
             />
             <MiniStat
               icon={Orbit}

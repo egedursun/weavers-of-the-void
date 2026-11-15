@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, MercenaryContractRow, OccupationRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.military import ContractStatus, Stance
@@ -69,6 +70,8 @@ async def hire_mercenaries(ctx: TickContext) -> int:
     sides = await SideIndex.load(ctx.session, neighbourhood)
     for item in await ongoing_wars(ctx.session):
         for side_id, enemy_id in ((item.attacker_id, item.defender_id), (item.defender_id, item.attacker_id)):
+            if held(side_id):
+                continue
             employer = await living_entity(ctx.session, side_id)
             company = next((found for found in companies if employer is not None and found.world_id == employer.world_id), None)
             if employer is None or company is None or not await outnumbered(ctx, item.war, side_id, enemy_id):

@@ -113,8 +113,11 @@ def open_database(schema_template: Path) -> OpenDatabase:
 
 
 @pytest.fixture
-def settings(tmp_path: Path) -> Settings:
-    return Settings(data_dir=tmp_path / "data", llm_enabled=False, image_worker_url="")
+def settings(tmp_path: Path, schema_template: Path) -> Settings:
+    found = Settings(data_dir=tmp_path / "data", llm_enabled=False, image_worker_url="")
+    found.database_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(schema_template, found.database_path)
+    return found
 
 
 @pytest.fixture

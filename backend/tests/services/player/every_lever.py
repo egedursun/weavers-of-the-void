@@ -14,6 +14,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.base import Base
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
+from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.agency import CreationRewardRow
 from aerona.db.tables.ages import EcoTransformationRow
 from aerona.db.tables.agrarian import BrandRow, CommonsRow
@@ -44,6 +45,7 @@ from aerona.db.tables.museums import MuseumPieceRow
 from aerona.db.tables.operations import SupplyFlowRow
 from aerona.db.tables.orders import BillOfExchangeRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
+from aerona.db.tables.prehistory import DeepTimeEventRow, DeepTimeRunRow, PrehistoryEventRow, PrehistoryRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.tables.sacred import DivinationSystemRow, DoctrineSacramentRow, GeniusLocusRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
@@ -78,6 +80,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.prehistory import DeepTimeState, PrehistoryKind, PrehistorySource, PrehistoryState
 from aerona.domain.enums.sacred import DivinationKind, SacramentKind, SacramentProtection
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw
@@ -4264,3 +4267,91 @@ LEVERS.update(
         "garden:uproot": after(GARDEN, garden_id=Newest("gardens"), species_id=Pick(EntityType.SPECIES)),
     }
 )
+
+
+async def first_world(session: AsyncSession) -> int:
+    found = await session.scalar(select(WorldRow.id).order_by(WorldRow.id).limit(1))
+    assert found is not None
+    return found
+
+
+async def running_prehistory(session: AsyncSession) -> None:
+    row = await session.get(PrehistoryRow, await first_world(session))
+    assert row is not None
+    row.state = PrehistoryState.RUNNING
+    await session.flush()
+
+
+async def prehistory_happening(session: AsyncSession) -> None:
+    world_id = await first_world(session)
+    if await session.get(PrehistoryRow, world_id) is None:
+        session.add(PrehistoryRow(world_id=world_id, kind=PrehistoryKind.FULL, state=PrehistoryState.DONE, epochs=1, rounds_done=1, locked=[]))
+    session.add(PrehistoryEventRow(world_id=world_id, round=0, magnitude=40, source=PrehistorySource.BACKFILLED, subject_node_id=world_id, locked=[]))
+    await session.flush()
+
+
+async def deep_time_run(session: AsyncSession, state: DeepTimeState) -> None:
+    run = DeepTimeRunRow(epochs=2, ran=1, from_epoch=1, to_epoch=1, state=state, locked=[])
+    session.add(run)
+    await session.flush()
+    session.add(DeepTimeEventRow(run_id=run.id, epoch=1, magnitude=30, locked=[]))
+    await session.flush()
+
+
+async def running_deep_time(session: AsyncSession) -> None:
+    await deep_time_run(session, DeepTimeState.RUNNING)
+
+
+async def finished_deep_time(session: AsyncSession) -> None:
+    await deep_time_run(session, DeepTimeState.DONE)
+
+
+PLANNED = ("prehistory:configure", {"world_id": WORLD, "epochs": 2, "resolution": 1})
+LEVERS.update(
+    {
+        "prehistory:configure": given(world_id=WORLD, epochs=2, resolution=1),
+        "prehistory:edit": after(PLANNED, world_id=WORLD, values={"epochs": 3, "resolution": 2, "kind": "living", "state": "planned"}, release=[]),
+        "prehistory:remove": after(PLANNED, world_id=WORLD),
+        "prehistory:abort": Lever(values={"world_id": WORLD}, before=(PLANNED,), then=running_prehistory),
+        "prehistory_event:edit": Lever(
+            values={"event_id": Newest("prehistory_events"), "values": {"magnitude": 60, "round": 2, "mirrored": True}, "release": []},
+            setup=prehistory_happening,
+        ),
+        "prehistory_event:remove": Lever(values={"event_id": Newest("prehistory_events")}, setup=prehistory_happening),
+        "deep_time:stop": Lever(values={"run_id": Newest("deep_time_runs")}, setup=running_deep_time),
+        "deep_time:edit": Lever(values={"run_id": Newest("deep_time_runs"), "values": {"state": "stopped"}, "release": []}, setup=finished_deep_time),
+        "deep_time:remove": Lever(values={"run_id": Newest("deep_time_runs")}, setup=finished_deep_time),
+        "deep_time_event:edit": Lever(values={"event_id": Newest("deep_time_events"), "values": {"magnitude": 55}, "release": []}, setup=finished_deep_time),
+        "deep_time_event:remove": Lever(values={"event_id": Newest("deep_time_events")}, setup=finished_deep_time),
+    }
+)
+
+
+async def planned_prehistory(session: AsyncSession) -> None:
+    world_id = await first_world(session)
+    known = await session.get(PrehistoryRow, world_id)
+    if known is not None:
+        await session.delete(known)
+        await session.flush()
+    session.add(PrehistoryRow(world_id=world_id, kind=PrehistoryKind.FULL, state=PrehistoryState.PLANNED, epochs=1, resolution=1, locked=[]))
+    await session.flush()
+
+
+async def lore_free_world(session: AsyncSession) -> None:
+    await rich_creator(session)
+    home = await session.get(WorldRow, await first_world(session))
+    assert home is not None
+    await WorldRepository(session).create_world(
+        WorldDraft(
+            name="Quiet Shore",
+            world_type=WorldType.ORDINARY,
+            orbit=home.orbit + 1,
+            terrain_seed="quiet",
+            terrain_sea=0.3,
+            terrain_mountains=0.3,
+            terrain_humidity=0.5,
+            danger=10,
+            created_epoch=1,
+            star_id=home.star_id,
+        )
+    )

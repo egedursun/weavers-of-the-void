@@ -3,6 +3,7 @@ import {
   BookOpen,
   Bot,
   Eye,
+  FastForward,
   FileInput,
   FlaskConical,
   Globe,
@@ -40,6 +41,8 @@ export const JOB_KIND_ICON: Record<JobKind, LucideIcon> = {
   content: PenLine,
   retry: RotateCw,
   maintenance: Wrench,
+  prehistory: Hourglass,
+  deep_time: FastForward,
 }
 
 export const JOB_STATUS_TONE: Record<JobStatus, KpiTone> = {

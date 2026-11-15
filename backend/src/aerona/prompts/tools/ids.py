@@ -232,6 +232,7 @@ class SonToolId(StrEnum):
     SHIFT_WORLD_NATURE = "shift_world_nature"
     SHAPE_BIOLOGY = "shape_biology"
     WAKE_LORE = "wake_lore"
+    PLAN_PREHISTORY = "plan_prehistory"
     LAY_BARE_FOSSILS = "lay_bare_fossils"
     FOUND_MUSEUM = "found_museum"
     LAY_OUT_GARDEN = "lay_out_garden"

@@ -483,6 +483,7 @@ from aerona.rules.registry.polity import (
     TreatiesRules,
 )
 from aerona.rules.registry.power_unlock_levels import PowerUnlockLevelsRules
+from aerona.rules.registry.prehistory import PrehistoryRules
 from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules, RefiningRules
 from aerona.rules.registry.rarities import RaritiesRules
 from aerona.rules.registry.rarity_gates import RarityGatesRules
@@ -1000,6 +1001,7 @@ class Rules:
     biology_variants: BiologyVariantRules = field(default_factory=BiologyVariantRules)
     lifecycle_ends: LifecycleEndRules = field(default_factory=LifecycleEndRules)
     world_ends: WorldEndRules = field(default_factory=WorldEndRules)
+    prehistory: PrehistoryRules = field(default_factory=PrehistoryRules)
     fossils: FossilRules = field(default_factory=FossilRules)
     museums: MuseumRules = field(default_factory=MuseumRules)
     gardens: GardenRules = field(default_factory=GardenRules)

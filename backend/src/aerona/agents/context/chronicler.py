@@ -8,6 +8,7 @@ from sqlalchemy import func, or_, select
 from aerona.agents.context.chronicle_facts import epoch_facts
 from aerona.agents.context.entity_line import line_items
 from aerona.agents.context.happenings import event_phase_lines
+from aerona.agents.context.prehistory_lines import prehistory_digests
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.world_header import world_header
@@ -201,4 +202,5 @@ async def chronicler_context(
         event_phases=await event_phase_lines(scope.session, epoch),
         pending=pending,
         facts=(await epoch_facts(scope, epoch)).sheet,
+        prehistories=await prehistory_digests(scope.session, epoch),
     )

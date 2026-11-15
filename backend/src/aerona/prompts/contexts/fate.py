@@ -66,6 +66,7 @@ class FateJudgmentContext(LoreRulesContext):
     threads: list[FateThreadLine] = Field(default_factory=list)
     pantheon: list[NamedRecord] = Field(default_factory=list)
     languages: list[NamedRecord] = Field(default_factory=list)
+    prehistories: list[str] = Field(default_factory=list)
 
 
 class FateExtraJudgmentContext(PromptContext):

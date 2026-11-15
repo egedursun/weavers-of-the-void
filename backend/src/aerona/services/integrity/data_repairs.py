@@ -48,6 +48,7 @@ from aerona.services.integrity.mythic_links import mend_mythic_links
 from aerona.services.integrity.network import RepairLog
 from aerona.services.integrity.operations_links import mend_operations_links, own_stray_ships
 from aerona.services.integrity.orders_links import mend_orders_links
+from aerona.services.integrity.prehistory import mend_prehistories
 from aerona.services.integrity.regime_links import mend_regime_links
 from aerona.services.integrity.sacred_links import mend_sacred_links
 from aerona.services.integrity.single_ruler import homeland_to_lives_in, restore_homelands, single_rule
@@ -146,6 +147,7 @@ class DataRepairs:
             ("world_views", seed_missing_views),
             ("biology_variants", seed_missing_biology),
             ("lifecycle_states", seed_missing_states),
+            ("prehistories", mend_prehistories),
             ("context_budgets", raise_context_budgets),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),

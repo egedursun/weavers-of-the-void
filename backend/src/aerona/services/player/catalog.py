@@ -112,6 +112,7 @@ from aerona.services.player import (
     peoples,
     physics,
     places,
+    prehistory,
     profiles,
     realms,
     record_rows,
@@ -5173,6 +5174,77 @@ WORLD_END_ACTIONS = (
     ),
 )
 
+PREHISTORY_ACTIONS = (
+    _sync(
+        Meta("prehistory:configure", "Plan the prehistory of a world", G.WORLDS),
+        prehistory.prehistory_configure,
+        prehistory.PrehistoryPlan,
+        free,
+        ("F48",),
+    ),
+    _job(Meta("prehistory:run", "Run the planned prehistory of a world", G.WORLDS), prehistory.run_planned, prehistory.PrehistoryTarget, free, ("F48",)),
+    _job(
+        Meta("prehistory:seed", "Seed a prehistory for a world still empty of lore", G.WORLDS),
+        prehistory.seed_prehistory,
+        prehistory.PrehistoryPlan,
+        lambda rules: essence(rules.prehistory.seed_cost),
+        ("F48",),
+    ),
+    _sync(Meta("prehistory:abort", "Stop a running prehistory", G.WORLDS), prehistory.prehistory_abort, prehistory.PrehistoryTarget, free, ("F48",)),
+    _sync(Meta("prehistory:edit", "Set the record of a prehistory", G.WORLDS), prehistory.prehistory_edit, prehistory.PrehistoryEdit, free, ("F48", "F48/RP9")),
+    _sync(
+        Meta("prehistory:remove", "Strike out the record of a prehistory", G.WORLDS),
+        prehistory.prehistory_remove,
+        prehistory.PrehistoryTarget,
+        free,
+        ("F48",),
+    ),
+    _sync(
+        Meta("prehistory_event:edit", "Set a happening of a prehistory", G.WORLDS),
+        prehistory.prehistory_event_edit,
+        prehistory.PrehistoryEventEdit,
+        free,
+        ("F48",),
+    ),
+    _sync(
+        Meta("prehistory_event:remove", "Strike a happening out of a prehistory", G.WORLDS),
+        prehistory.prehistory_event_remove,
+        prehistory.PrehistoryEventTarget,
+        free,
+        ("F48",),
+    ),
+    _job(
+        Meta("deep_time:run", "Fast-forward deep time", G.COSMOS),
+        prehistory.run_deep_time,
+        prehistory.DeepTimePlan,
+        lambda rules: f"{rules.prehistory.deep_time_cost} essence an epoch",
+        ("F48",),
+    ),
+    _sync(Meta("deep_time:stop", "Stop a fast-forward of deep time", G.COSMOS), prehistory.deep_time_stop, prehistory.DeepTimeTarget, free, ("F48",)),
+    _sync(Meta("deep_time:edit", "Set the record of a fast-forward", G.COSMOS), prehistory.deep_time_edit, prehistory.DeepTimeEdit, free, ("F48",)),
+    _sync(
+        Meta("deep_time:remove", "Strike out the record of a fast-forward", G.COSMOS),
+        prehistory.deep_time_remove,
+        prehistory.DeepTimeTarget,
+        free,
+        ("F48",),
+    ),
+    _sync(
+        Meta("deep_time_event:edit", "Set a happening of a fast-forward", G.COSMOS),
+        prehistory.deep_time_event_edit,
+        prehistory.DeepTimeEventEdit,
+        free,
+        ("F48",),
+    ),
+    _sync(
+        Meta("deep_time_event:remove", "Strike a happening out of a fast-forward", G.COSMOS),
+        prehistory.deep_time_event_remove,
+        prehistory.DeepTimeEventTarget,
+        free,
+        ("F48",),
+    ),
+)
+
 FOSSIL_ACTIONS = (
     _sync(Meta("fossil_bed:create", "Lay down a fossil bed in a land", G.CREATURES), fossils.fossil_bed_create, fossils.FossilPlace, free, ("S6.2/RP7",)),
     _sync(Meta("fossil_bed:edit", "Set the values of a fossil bed", G.CREATURES), fossils.fossil_bed_edit, fossils.FossilEdit, free, ("S6.2/RP7",)),
@@ -5216,6 +5288,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *BIOLOGY_ACTIONS,
     *LIFECYCLE_ACTIONS,
     *WORLD_END_ACTIONS,
+    *PREHISTORY_ACTIONS,
     *FOSSIL_ACTIONS,
     *MUSEUM_ACTIONS,
     *ERAS_ACTIONS,

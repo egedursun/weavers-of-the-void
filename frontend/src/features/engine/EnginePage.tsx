@@ -29,6 +29,7 @@ import { type Choice, ChoiceTiles } from '@/components/domain/SettingsKit'
 import { Muted, Text } from '@/components/typography'
 import { READ_ONLY_REASON } from '@/features/entity/actions/gate'
 import { useWorldState } from '@/features/overview/api'
+import { DeepTimePanel } from '@/features/prehistory/DeepTimePanel'
 import { IntegrityPanel } from './IntegrityPanel'
 import { PhaseRow } from './PhaseRow'
 import { SeedPanel } from './SeedPanel'
@@ -272,6 +273,7 @@ export function EnginePage() {
         />
       )}
       <IntegrityPanel readOnlyReason={readOnlyReason} />
+      <DeepTimePanel readOnlyReason={readOnlyReason} />
       <SeedPanel />
       <ConfirmDialog
         open={pending !== null}

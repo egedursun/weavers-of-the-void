@@ -516,6 +516,7 @@ from aerona.db.tables.polity import (
     TreatyProfileRow,
     VassalageRow,
 )
+from aerona.db.tables.prehistory import DeepTimeEventRow, DeepTimeRunRow, PrehistoryEventRow, PrehistoryRow
 from aerona.db.tables.regime import (
     AcademicFreedomRow,
     BreedingPlanRow,
@@ -773,6 +774,8 @@ __all__ = [
     "DecipherWorkRow",
     "DeedClaimRow",
     "DeedRow",
+    "DeepTimeEventRow",
+    "DeepTimeRunRow",
     "DefectionRow",
     "DeferredStepRow",
     "DemographicTransitionRow",
@@ -1091,6 +1094,8 @@ __all__ = [
     "PossessionRow",
     "PowerBaseRow",
     "PrecedentRow",
+    "PrehistoryEventRow",
+    "PrehistoryRow",
     "PreparednessRow",
     "PressureRow",
     "PrisonRow",

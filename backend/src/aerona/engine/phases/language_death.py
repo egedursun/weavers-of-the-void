@@ -5,6 +5,7 @@ from aerona.db.tables.culture import LanguageStandingRow, SpeakerCohortRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.tongues import DivineTongueRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
@@ -76,7 +77,7 @@ async def liturgical(ctx: TickContext, language_id: int) -> bool:
 async def language_death(ctx: TickContext) -> None:
     rules = ctx.rules
     notes_written = 0
-    for language in await canon(ctx.session, [EntityType.LANGUAGE]):
+    for language in unheld(await canon(ctx.session, [EntityType.LANGUAGE])):
         if await kept_by_god(ctx, language.id):
             continue
         dead = await has_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE)

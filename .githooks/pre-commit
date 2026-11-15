@@ -5,8 +5,19 @@ cd "$ROOT"
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$STAGED" ] && exit 0
 PYTHON="$ROOT/backend/.venv/bin/python"
+GATE_LOCK="$(cd "$(git rev-parse --git-common-dir)" && pwd)/aerona-gate.lock"
+until mkdir "$GATE_LOCK" 2>/dev/null; do
+  holder=$(cat "$GATE_LOCK/pid" 2>/dev/null || true)
+  if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
+    rm -rf "$GATE_LOCK"
+    continue
+  fi
+  echo "pre-commit: another gate is running (pid ${holder:-unknown}); waiting for it to finish"
+  sleep 15
+done
+echo $$ > "$GATE_LOCK/pid"
 LOGS=$(mktemp -d)
-trap 'rm -rf "$LOGS"' EXIT
+trap 'rm -rf "$LOGS" "$GATE_LOCK"' EXIT
 JOBS=""
 
 run() {

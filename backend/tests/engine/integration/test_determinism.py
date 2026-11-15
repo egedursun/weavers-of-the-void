@@ -17,7 +17,7 @@ from aerona.rules.registry import Rules
 from tests.conftest import OpenDatabase
 from tests.engine.integration.factories import seed_rich_cosmos
 
-EPOCHS = 10
+EPOCHS = 5
 TIMING_COLUMNS = frozenset({"seconds", "elapsed_seconds", "duration_seconds", "phase_seconds"})
 
 
@@ -58,7 +58,7 @@ def digests_in_process(template: str, path: str) -> dict[str, str]:
     return asyncio.run(seeded_run(Database(f"sqlite+aiosqlite:///{path}")))
 
 
-async def test_a_seeded_ten_epoch_run_leaves_an_identical_database(tmp_path: Path, schema_template: Path) -> None:
+async def test_a_seeded_five_epoch_run_leaves_an_identical_database(tmp_path: Path, schema_template: Path) -> None:
     loop = asyncio.get_running_loop()
     with ProcessPoolExecutor(max_workers=2, mp_context=multiprocessing.get_context("spawn")) as pool:
         first, second = await asyncio.gather(

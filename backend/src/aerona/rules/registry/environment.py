@@ -315,3 +315,6 @@ class EngineBudgetRules:
     regression_pct: int = rule(
         15, 0, 1000, RuleGroup.ENGINE_PHASES, "Growth of the work of a tick of the reference world beyond its budget that fails the benchmark (%)"
     )
+    prehistory_seconds_per_epoch: int = rule(
+        10, 1, 3600, RuleGroup.ENGINE_PHASES, "Seconds one round of a prehistory should stay under; a slower round is reported in the prehistory's record"
+    )

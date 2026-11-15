@@ -538,7 +538,7 @@ async def environment_survey(ctx: TickContext) -> None:
     worlds = list(await ctx.session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)))
     calendars = 0
     by_id = {world.id: world for world in worlds}
-    for world in worlds:
+    for world in unheld(worlds):
         calendars += int(await ensure_world_calendar(ctx, world, moons[world.id], root_of(by_id, world).orbit))
     records = {record.id: record for world_records in (await stored_regions(ctx.session)).values() for record in world_records}
     book = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)

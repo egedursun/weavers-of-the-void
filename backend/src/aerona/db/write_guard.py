@@ -14,6 +14,7 @@ WRITE_GUARD: ContextVar[Callable[[int, str], bool] | None] = ContextVar("write_g
 class HeldScope:
     only: int | None
     nodes: frozenset[int]
+    inside: set[int] | None = None
 
 
 HELD_SCOPE: ContextVar[HeldScope | None] = ContextVar("held_scope", default=None)
@@ -47,6 +48,8 @@ def held(*node_ids: int | None) -> bool:
     scope = HELD_SCOPE.get()
     if scope is None:
         return False
+    if scope.inside is not None:
+        return any(node_id is not None and node_id not in scope.inside for node_id in node_ids)
     return any(node_id is not None and (node_id != scope.only if scope.only is not None else node_id in scope.nodes) for node_id in node_ids)
 
 
@@ -54,6 +57,8 @@ def free_rows(column: NodeColumn) -> ColumnElement[bool]:
     scope = HELD_SCOPE.get()
     if scope is None:
         return true()
+    if scope.inside is not None:
+        return column.in_(sorted(scope.inside))
     if scope.only is not None:
         return column == scope.only
     return column.notin_(sorted(scope.nodes)) if scope.nodes else true()

@@ -26,6 +26,7 @@ import { MeansSection } from '@/features/means/MeansSection'
 import { NatureSection } from '@/features/nature/NatureSection'
 import { OperationsSection } from '@/features/operations/OperationsSection'
 import { OrdersSection } from '@/features/orders/OrdersSection'
+import { PrehistorySection } from '@/features/prehistory/PrehistorySection'
 import { PursuitsSection } from '@/features/pursuits/PursuitsSection'
 import { RegimeSection } from '@/features/regime/RegimeSection'
 import { SacredSection } from '@/features/sacred/SacredSection'
@@ -147,6 +148,7 @@ export function ThingSections({
       <BiologySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <LifecycleSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <WorldEndSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <PrehistorySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <FossilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <GroundsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />

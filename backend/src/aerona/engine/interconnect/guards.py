@@ -57,13 +57,14 @@ class GuardState:
     flows: Counter[tuple[str, str, int, str]] | None = None
     only: int | None = None
     moved: Counter[tuple[int, str]] = field(default_factory=Counter)
+    inside: set[int] | None = None
 
     @property
     def blocks_nothing(self) -> bool:
-        return self.only is None and not self.index.guarded_nodes
+        return self.only is None and not self.index.guarded_nodes and self.inside is None
 
     def blocks(self, node_id: int, key: str) -> bool:
-        if self.only is not None and node_id != self.only:
+        if (self.only is not None and node_id != self.only) or (self.inside is not None and node_id not in self.inside):
             return True
         if node_id not in self.index.guarded_nodes:
             return False
@@ -129,7 +130,7 @@ def guarded(state: GuardState) -> Iterator[None]:
     token = ACTIVE_GUARD.set(state)
     write_token = WRITE_GUARD.set(state.blocks)
     suppressed = frozenset(node_id for node_id, key in state.index.suppressions if any(key == suppression_key(writer) for writer in state.writers))
-    held_token = HELD_SCOPE.set(HeldScope(state.only, suppressed))
+    held_token = HELD_SCOPE.set(HeldScope(state.only, suppressed, state.inside))
     try:
         yield
     finally:
@@ -149,10 +150,10 @@ async def phase_indexes(ctx: TickContext) -> tuple[GuardIndex, ModifierIndex]:
     return found
 
 
-async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None) -> None:
+async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None, inside: set[int] | None = None) -> None:
     ctx.session.info.pop(LAST_INCIDENT, None)
     guard_index, index = await phase_indexes(ctx)
-    state = GuardState(guard_index, mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only)
+    state = GuardState(guard_index, mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only, inside=inside)
     with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules):
         await phase.run(ctx)
         sync = ctx.session.sync_session

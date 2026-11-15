@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.prehistory import PrehistoryKind
 from aerona.domain.enums.world_view import BindingNeed, SettleMode, WarTerrain, WorldLight
 
 SHARE_MAX = 500
@@ -20,7 +21,7 @@ WORLD_VIEW_SHARES = (
     "plague_pct",
 )
 WORLD_VIEW_NUMBERS = ("route_danger", "leak", "leak_repair", "sanity_erosion", "fertility_decay", "sea_pct")
-WORLD_VIEW_KINDS = ("light", "need", "settle", "war")
+WORLD_VIEW_KINDS = ("light", "need", "settle", "war", "prehistory_kind")
 WORLD_VIEW_FIELDS = (*WORLD_VIEW_KINDS, *WORLD_VIEW_FLAGS, *WORLD_VIEW_SHARES, *WORLD_VIEW_NUMBERS)
 
 
@@ -37,6 +38,7 @@ class WorldViewRow(Base):
     need: Mapped[BindingNeed] = mapped_column(enum_type(BindingNeed, "need"), default=BindingNeed.NONE)
     settle: Mapped[SettleMode] = mapped_column(enum_type(SettleMode, "settle"), default=SettleMode.GROUND)
     war: Mapped[WarTerrain] = mapped_column(enum_type(WarTerrain, "war"), default=WarTerrain.LAND)
+    prehistory_kind: Mapped[PrehistoryKind] = mapped_column(enum_type(PrehistoryKind, "prehistory_kind"), default=PrehistoryKind.FULL)
     seasons: Mapped[bool] = mapped_column(default=True)
     nights: Mapped[bool] = mapped_column(default=True)
     fire: Mapped[bool] = mapped_column(default=True)

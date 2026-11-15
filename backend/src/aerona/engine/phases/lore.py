@@ -262,7 +262,8 @@ async def language_cycles(ctx: TickContext) -> None:
         ctx.count(key, value)
     liturgical = set(await ctx.session.scalars(select(PeopleCultureRow.liturgical_language_id).where(PeopleCultureRow.liturgical_language_id.is_not(None))))
     standings = [
-        await stand(ctx, language, {int(item) for item in liturgical if item is not None}) for language in await canon(ctx.session, [EntityType.LANGUAGE])
+        await stand(ctx, language, {int(item) for item in liturgical if item is not None})
+        for language in unheld(await canon(ctx.session, [EntityType.LANGUAGE]))
     ]
     franca = max((row for row in standings if row.lingua_franca), key=lambda row: (row.prestige, -row.language_entity_id), default=None)
     if franca is not None:

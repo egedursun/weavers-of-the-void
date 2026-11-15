@@ -11,6 +11,7 @@ from aerona.engine.phases.dominion import count
     "table.entity_traits",
     "table.ferment_cultures",
     "table.outbreaks",
+    "table.people_biology",
     "table.region_environment",
     "table.region_pollution",
     "table.sense_profiles",

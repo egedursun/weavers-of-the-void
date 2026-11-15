@@ -414,6 +414,8 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     for bond in list(await ctx.session.scalars(statement.order_by(BondRow.epoch, BondRow.id))):
         if ended >= settings.alliance_end_cap:
             break
+        if held(bond.source_node_id, bond.target_node_id):
+            continue
         first, second = await living_entity(ctx.session, bond.source_node_id), await living_entity(ctx.session, bond.target_node_id)
         if first is None or second is None or first.entity_type not in COMMUNITY_TYPES or second.entity_type not in COMMUNITY_TYPES:
             continue

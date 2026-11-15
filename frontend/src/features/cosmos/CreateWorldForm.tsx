@@ -6,6 +6,7 @@ import { type components } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Select,
@@ -58,6 +59,7 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
   const [starOpen, setStarOpen] = useState(false)
   const [parentId, setParentId] = useState('')
   const [newStarType, setNewStarType] = useState<StarType | 'fate'>('fate')
+  const [prehistory, setPrehistory] = useState('')
   const topLevel = index.worlds.filter(
     (item) => item.world.parent_world_id === null
   )
@@ -75,6 +77,8 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
       if (placement === 'moon') body.parent_world_id = Number(parent)
       if (placement === 'new' && newStarType !== 'fate')
         body.new_star_type = newStarType
+      if (prehistory.trim() !== '')
+        body.prehistory_epochs = Math.max(0, Number(prehistory) || 0)
       return unwrap(api.POST('/api/worlds', { body }))
     },
     success: 'A new world is being born; watch the live feed',
@@ -144,6 +148,22 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
               <Muted variant='caption'>{`${inspiration.length} / ${maxLength}`}</Muted>
             )}
           </div>
+        )}
+      </FormRow>
+      <FormRow
+        label='Prehistory'
+        description='Epochs it lives before it joins the cosmos while every other world is held; its happenings become its past. Empty uses the rule of your world.'
+      >
+        {(id) => (
+          <Input
+            id={id}
+            type='number'
+            min={0}
+            max={1000}
+            value={prehistory}
+            placeholder='Rule of your world'
+            onChange={(event) => setPrehistory(event.target.value)}
+          />
         )}
       </FormRow>
       <div className='flex min-w-0 flex-col gap-2'>

@@ -2,6 +2,7 @@ from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.lifecycle_ends import LifecycleStateRow
 from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
+from aerona.db.tables.prehistory import PrehistoryEventRow
 from aerona.db.tables.world_ends import WorldEndRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Mechanic, Subsystem, Surface
 
@@ -10,6 +11,7 @@ E = EdgeKind
 LIFE = "section-lifecycle"
 WORLD_END = "section-world-end"
 FOSSILS = "section-fossils"
+PREHISTORY = "section-prehistory"
 GROUNDS = "section-grounds"
 
 LIFECYCLE_MECHANICS = (
@@ -84,6 +86,24 @@ LIFECYCLE_MECHANICS = (
         couplings=(
             Coupling(S.COSMOS, "a world lit only by a dead star freezes dead after this long", E.TRIGGER, "world_ends.frozen_epochs"),
             Coupling(S.GODS, "ending a world costs the Creator essence", E.FLOW, "world_ends.end_cost"),
+        ),
+    ),
+    Mechanic(
+        key="dreamt_pasts",
+        spec_item="F48/RP9",
+        title="Prehistory: a past run before a world joins the cosmos, borrowed from its source, mirrored, or dreamt again each epoch",
+        subsystem=S.COSMOS,
+        phases=("dreamt_pasts",),
+        surface=Surface(drawer=PREHISTORY, chart="chart-prehistory"),
+        backfill=(
+            "dreamt_pasts: dream worlds dream their past again from the next epoch; worlds with written lore take a past backfilled from it at the next start"
+        ),
+        tables=(PrehistoryEventRow.__tablename__,),
+        tools=("plan_prehistory",),
+        targets=("world",),
+        couplings=(
+            Coupling(S.CULTURE, "a digest keeps this many happenings of a past for Fate, the chronicler and the book", E.RULE_SWITCH, "prehistory.digest_size"),
+            Coupling(S.GODS, "a son spends essence to give a world it made a past", E.FLOW, "prehistory.son_seed_cost"),
         ),
     ),
     Mechanic(

@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react'
 import {
+  Hourglass,
   CircleAlert,
   CircleCheck,
   Droplets,
@@ -9,6 +10,7 @@ import {
   Lock,
   Users,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { RARITY_LABEL } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
@@ -189,6 +191,12 @@ export function GenesisPreview({
             <Badge variant='outline'>
               <ClimateIcon />
               {climate}
+            </Badge>
+          )}
+          {draft.prehistoryEpochs !== null && draft.prehistoryEpochs > 0 && (
+            <Badge variant='outline'>
+              <Hourglass />
+              {`${plural(draft.prehistoryEpochs, 'epoch')} of prehistory`}
             </Badge>
           )}
           {age && AgeIcon && (

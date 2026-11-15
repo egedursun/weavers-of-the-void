@@ -6,6 +6,9 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ),
     ("world_ends", "world_ends"): "none: worlds come to their end from the next epoch",
     ("fossils", "fossil_beds"): "none: fossil beds are laid from what died out from the next epoch",
+    ("dreamt_pasts", "prehistory_events"): (
+        "dreamt_pasts: dream worlds dream their past again from the next epoch; worlds with written lore take a past backfilled from it at the next start"
+    ),
     ("collections", "museum_collections"): "none: collections are founded and gathered from the next epoch",
     ("collections", "museum_pieces"): "none: collections are founded and gathered from the next epoch",
     ("gardens", "gardens"): "none: gardens are laid out from the next epoch",

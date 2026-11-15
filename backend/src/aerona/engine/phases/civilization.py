@@ -363,6 +363,8 @@ async def repayments(ctx: TickContext) -> int:
 async def late_debts(ctx: TickContext) -> int:
     marked = 0
     for bond in await active_bonds(ctx.session, [BondKind.OWES]):
+        if held(bond.source_node_id, bond.target_node_id):
+            continue
         if bond.debt_status is DebtStatus.OVERDUE or bond.debt_due_epoch is None or bond.debt_due_epoch >= ctx.epoch:
             continue
         parties = await _debt_parties(ctx, bond)

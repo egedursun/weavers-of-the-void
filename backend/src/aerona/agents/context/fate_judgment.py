@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from sqlalchemy import case, select
 
+from aerona.agents.context.prehistory_lines import prehistory_digests
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.world_summary import world_summary
 from aerona.agents.fate.threads import ThreadQuota
@@ -66,6 +67,7 @@ async def fate_judgment_context(
         new_creations=list(creations),
         pending=list(pending),
         world_records=await world_records(scope, epoch),
+        prehistories=await prehistory_digests(scope.session, epoch),
         prophecies=list(prophecies),
         threads=[
             FateThreadLine(

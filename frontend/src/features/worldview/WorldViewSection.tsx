@@ -11,6 +11,7 @@ import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
 import { Ref } from '@/features/gatherings/parts'
 import { humanize } from '@/features/pantheon/labels'
+import { PREHISTORY_KINDS } from '@/features/prehistory/labels'
 import { Bars } from '@/features/sacred/parts'
 import {
   type WorldNatureView,
@@ -54,6 +55,12 @@ const FIELDS: readonly Field[] = [
     kind: 'pick',
     table: table(WARS),
   },
+  {
+    key: 'prehistory_kind',
+    label: 'Kind of past it takes',
+    kind: 'pick',
+    table: table(PREHISTORY_KINDS),
+  },
   ...FLAGS.map((flag): Field => ({
     key: flag.key,
     label: flag.label,
@@ -81,12 +88,14 @@ function Nature({ nature }: { nature: WorldNatureView }) {
   const need = NEEDS[nature.need]
   const settle = SETTLES[nature.settle]
   const war = WARS[nature.war]
+  const past = PREHISTORY_KINDS[nature.prehistory_kind]
   return (
     <div className='flex min-w-0 flex-wrap gap-2'>
       <Chip icon={light.icon}>Light: {light.label}</Chip>
       <Chip icon={need.icon}>Towns bound to: {need.label}</Chip>
       <Chip icon={settle.icon}>Towns stand: {settle.label}</Chip>
       <Chip icon={war.icon}>Wars fought: {war.label}</Chip>
+      <Chip icon={past.icon}>Past it takes: {past.label}</Chip>
       {FLAGS.map((flag) => (
         <Chip
           key={flag.key}

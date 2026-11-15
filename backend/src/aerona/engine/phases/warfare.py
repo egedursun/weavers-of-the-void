@@ -1540,7 +1540,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
                 ctx.count("winter_taboo_rest")
                 continue
         suitability = ground.season.campaign if ground.season is not None else PERCENT
-        if not contact or fought >= cap or not (storm or rng.chance(settings.season_engagement_pct * suitability / PERCENT)):
+        if not contact or fought >= cap or held(attacker.id, defender.id) or not (storm or rng.chance(settings.season_engagement_pct * suitability / PERCENT)):
             continue
         if storm:
             ground = replace(ground, urban=True)

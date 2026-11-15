@@ -11,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultOfficeRow, CultTenetRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
@@ -291,7 +292,7 @@ async def staff(ctx: TickContext, church: Church) -> int:
 async def ensure_doctrines(ctx: TickContext, book: FaithBook) -> int:
     founded = 0
     for church in book.churches.values():
-        if church.doctrine is None:
+        if church.doctrine is None and not held(church.cult.id):
             await found_doctrine(ctx, church)
             founded += 1
     await ctx.session.flush()

@@ -112,6 +112,7 @@ from aerona.engine.phases import (
     pantheon,
     places,
     population,
+    prehistory,
     prisoners,
     production,
     prosperity,
@@ -237,6 +238,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + biology_variants.PHASES
     + lifecycle_ends.PHASES
     + fossils.PHASES
+    + prehistory.PHASES
     + museums.PHASES
     + ages.PHASES
     + folkways.PHASES
@@ -515,6 +517,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "lifecycle_ends",
     "world_ends",
     "fossils",
+    "dreamt_pasts",
     "collections",
     "gardens",
     "world_views",

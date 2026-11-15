@@ -259,6 +259,7 @@ FOUND_MUSEUM = Line("tools.son.found_museum", "{son} founded a museum in {town}:
 LAY_OUT_GARDEN = Line("tools.son.lay_out_garden", "{son} laid out a garden ({kind}) in {town}: {reason}")
 LAY_BARE_FOSSILS = Line("tools.son.lay_bare_fossils", "{son} laid bare remains in {region}: {reason}")
 WAKE_LORE = Line("tools.son.wake_lore", "{son} woke {lore} from what survives of it: {reason}")
+PLAN_PREHISTORY = Line("tools.son.plan_prehistory", "{son} gave {world} a past of {epochs:epoch|epochs} before its story goes on: {reason}")
 SHAPE_BIOLOGY = Line("tools.son.shape_biology", "{son} reshaped the body of {holder}, {variant}: {reason}")
 PRESS_TALE = Line("tools.son.press_tale", "{son} pressed the tale of {tale} of {subject}: {reason}")
 FORESHADOW = Line("tools.son.foreshadow", "{son} set something up about {subject}: {reason}")

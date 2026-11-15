@@ -585,5 +585,8 @@ class EnginePhasesRules:
     fossils: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fossil beds laid down from what died out, found by digging and upheaval, and read"
     )
+    dreamt_pasts: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: dream worlds dream their past again from the dreams of those who reach them"
+    )
     collections: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: museums, treasuries, royal collections and cabinets gather their pieces")
     gardens: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: gardens, parks, groves and cemeteries are laid out and kept")

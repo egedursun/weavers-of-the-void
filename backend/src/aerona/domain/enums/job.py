@@ -29,6 +29,8 @@ class JobKind(StrEnum):
     CONTENT = "content"
     MAINTENANCE = "maintenance"
     RETRY = "retry"
+    PREHISTORY = "prehistory"
+    DEEP_TIME = "deep_time"
 
 
 TERMINAL_JOB_STATUSES = frozenset({JobStatus.SUCCEEDED, JobStatus.FAILED, JobStatus.CANCELLED, JobStatus.INTERRUPTED})

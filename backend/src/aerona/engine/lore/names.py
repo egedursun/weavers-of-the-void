@@ -123,7 +123,7 @@ async def give_meanings(ctx: TickContext) -> int:
         glosses: list[str] = []
         if language is not None:
             parts = split(entity.name, await lexicon(ctx.session, language.id))
-            if not parts:
+            if not parts and not held(language.id):
                 token = next(iter(TOKEN.findall(entity.name)), None)
                 if token is not None:
                     parts = await coined(ctx, language, token, entity, await feature_of(ctx.session, entity, atlas))

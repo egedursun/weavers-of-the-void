@@ -1,14 +1,19 @@
 import math
 from typing import Any
 
+from pydantic import Field
+
 from aerona.constants.tool_inputs import IMAGE_PROMPT_MAX
 from aerona.core.errors import BusyError, ValidationFailedError
+from aerona.db.tables.prehistory import EPOCHS_MAX
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.world import StarType, WorldType
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
+from aerona.engine.prehistory.control import configure
+from aerona.engine.prehistory.run import run_prehistory
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JobContext
 from aerona.rules.registry import Rules
@@ -43,6 +48,7 @@ class CreateWorld(Command):
     parent_world_id: int | None = None
     new_star: bool = False
     new_star_type: StarType | None = None
+    prehistory_epochs: int | None = Field(default=None, ge=0, le=EPOCHS_MAX)
 
 
 class AwakenPeoples(Command):
@@ -150,6 +156,12 @@ async def create_world(runtime: PlayerRuntime, rules: Rules, command: CreateWorl
         context.report(0.0, "world")
         world_id = await maker.create(request)
         runtime.bus.publish(EventKind.WORLD_BORN, {"world_id": world_id})
+        epochs = rules.prehistory.epochs if command.prehistory_epochs is None else command.prehistory_epochs
+        if epochs:
+            context.report(0.5, "prehistory")
+            async with runtime.database.write() as session:
+                await configure(await runtime.scope(session, rules).context("create_world_prehistory"), world_id, epochs, rules.prehistory.resolution)
+            await run_prehistory(runtime.database, world_id, rules=rules, publish=runtime.publish)
         return {"world_id": world_id}
 
     job = CostedJob("create_world", ActionKind.CREATE_WORLD, JobKind.WORLD_CREATION, "world", rules.balance.create_world, "balance.create_world")

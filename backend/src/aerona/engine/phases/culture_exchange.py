@@ -60,7 +60,7 @@ def contact_rates(ctx: TickContext, first_contact: bool) -> ContactRates:
 async def _diffuse_direction(
     ctx: TickContext, source: EntityRow, target: EntityRow, holdings: KnowledgeHoldings, spread: list[int], *, cap: int, weight: float = 1.0
 ) -> None:
-    if target.entity_type not in AGENT_TYPES:
+    if target.entity_type not in AGENT_TYPES or frozen(source.id, target.id):
         return
     settings = ctx.rules.knowledge
     rng = ctx.rng(f"diffusion.{source.id}.{target.id}")

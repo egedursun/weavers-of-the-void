@@ -74,6 +74,11 @@ RESULTS OF THE WORLD ENGINE:
 
 CHAINS OF CAUSE (tell them as causes, not as separate events):
 {{ chains | join("\n") if chains else "(none)" }}
+{% if prehistories %}
+
+PREHISTORY (happenings simulated before a world joined the cosmos, by magnitude; tell them as that world's past, before this age):
+{{ budget(prehistories | join("\n"), f.budget_chronicler_engine_chars, "rest in the prehistory digest", trim) }}
+{% endif %}
 
 EVENTS AND THEIR PHASES (mark where a famine, plague or siege turns: its beginning, its height, its aftermath, its end):
 {{ event_phases | join("\n") if event_phases else "(none)" }}

@@ -573,6 +573,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   shift_world_nature: Globe,
   shape_biology: Dna,
   wake_lore: BookOpen,
+  plan_prehistory: Hourglass,
   lay_bare_fossils: Shovel,
   found_museum: Landmark,
   lay_out_garden: Sprout,

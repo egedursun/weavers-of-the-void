@@ -1,5 +1,6 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.prehistory import PrehistoryKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_view import BindingNeed, SettleMode, WarTerrain, WorldLight
 
@@ -9,6 +10,7 @@ class WorldNatureView(ApiModel):
     need: BindingNeed
     settle: SettleMode
     war: WarTerrain
+    prehistory_kind: PrehistoryKind
     seasons: bool
     nights: bool
     fire: bool

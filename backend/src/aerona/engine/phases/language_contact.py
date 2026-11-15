@@ -9,6 +9,7 @@ from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
@@ -207,6 +208,8 @@ async def trade_contact(ctx: TickContext, tally: ContactTally) -> None:
     for link in sorted(await trade_links(ctx), key=lambda item: (-item.volume, item.first, item.second)):
         if tally.loans_left <= 0:
             break
+        if held(link.first, link.second):
+            continue
         rng = ctx.rng(f"trade.{link.first}.{link.second}")
         if not rng.chance(min(100.0, table.trade_loan_chance * link_weight(ctx, link))):
             continue
@@ -305,7 +308,7 @@ async def birth_creole(ctx: TickContext, community: EntityRow, first: EntityRow,
 
 async def creole_round(ctx: TickContext, tally: ContactTally) -> None:
     table = ctx.rules.language_contact
-    for community in await canon(ctx.session, COMMUNITY_TYPES):
+    for community in unheld(await canon(ctx.session, COMMUNITY_TYPES)):
         if tally.creoles >= table.creole_cap or tally.events >= table.event_cap:
             return
         bonds = sorted(await active_bonds(ctx.session, [BondKind.SPEAKS], sources=[community.id]), key=lambda item: item.id)

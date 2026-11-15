@@ -10,6 +10,7 @@ import {
   Sparkles,
   Thermometer,
 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Label as FieldLabel } from '@/components/ui/label'
 import {
@@ -347,6 +348,25 @@ export function FirstWorldFields({ draft, update, options }: StepProps) {
               onChange={(worldAge) => update({ worldAge })}
             />
           </div>
+          <RangeField
+            label='Prehistory'
+            icon={Hourglass}
+            hint='Epochs the first world lives before play while nothing else moves; its happenings become its past. None starts it from your creations alone.'
+            value={draft.prehistoryEpochs ?? options.prehistory.default}
+            min={0}
+            max={options.prehistory.maximum}
+            level={
+              (draft.prehistoryEpochs ?? options.prehistory.default) === 0
+                ? 'No past'
+                : plural(
+                    draft.prehistoryEpochs ?? options.prehistory.default,
+                    'epoch'
+                  )
+            }
+            lowLabel='No past'
+            highLabel='A deep past'
+            onChange={(prehistoryEpochs) => update({ prehistoryEpochs })}
+          />
         </Part>
       </div>
     </SettingGroup>

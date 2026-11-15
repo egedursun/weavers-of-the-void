@@ -31,6 +31,8 @@ export const JOB_KIND_LABEL: Record<JobKind, string> = {
   completion: 'Completion',
   revelation: 'Revelation',
   world_creation: 'World creation',
+  prehistory: 'Prehistory',
+  deep_time: 'Fast-forward of deep time',
   awakening: 'Awakening',
   content: 'Writing',
   retry: 'Retry',

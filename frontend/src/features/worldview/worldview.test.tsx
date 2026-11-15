@@ -20,6 +20,7 @@ const NATURE = {
   need: 'water',
   settle: 'oasis',
   war: 'land',
+  prehistory_kind: 'full',
   seasons: true,
   nights: true,
   fire: true,

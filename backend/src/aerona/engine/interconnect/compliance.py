@@ -418,6 +418,7 @@ from aerona.db.tables.polity import (
     TreatyProfileRow,
     VassalageRow,
 )
+from aerona.db.tables.prehistory import DeepTimeEventRow, DeepTimeRunRow, PrehistoryEventRow, PrehistoryRow
 from aerona.db.tables.regime import (
     AcademicFreedomRow,
     BreedingPlanRow,
@@ -697,6 +698,32 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("wake_lore",),
         ("lifecycle.", "world_end."),
         ("8ad812bbd71a",),
+    ),
+    ComplianceRow(
+        "F48",
+        (PrehistoryRow.__tablename__, PrehistoryEventRow.__tablename__, DeepTimeRunRow.__tablename__, DeepTimeEventRow.__tablename__),
+        ("dreamt_pasts",),
+        (
+            "prehistory:configure",
+            "prehistory:run",
+            "prehistory:seed",
+            "prehistory:abort",
+            "prehistory:edit",
+            "prehistory:remove",
+            "prehistory_event:edit",
+            "prehistory_event:remove",
+            "deep_time:run",
+            "deep_time:stop",
+            "deep_time:edit",
+            "deep_time:remove",
+            "deep_time_event:edit",
+            "deep_time_event:remove",
+        ),
+        ("PrehistorySection", "section-prehistory", "DeepTimePanel", "section-deep-time"),
+        ("fate_judgment_user", "chronicler_user"),
+        ("plan_prehistory",),
+        ("prehistory.",),
+        ("c6bde0bacf5d",),
     ),
     ComplianceRow(
         "S6.2/RP7",

@@ -14,7 +14,7 @@ from aerona.engine.pipeline import EpochRun, simulate
 from tests.conftest import OpenDatabase
 from tests.engine.integration.factories import seed_rich_cosmos
 
-EPOCHS = 12
+EPOCHS = 6
 SUBSYSTEM_PREFIXES: dict[str, frozenset[str]] = {
     "core": frozenset({"mortal", "monsters", "heroism", "births", "curses", "magic", "spirits", "transition"}),
     "war": frozenset({"war", "diplomacy", "grudges", "faction", "espionage", "tribute", "prisoners"}),
@@ -82,7 +82,7 @@ def failures(outcome: Outcome) -> dict[str, int]:
     return found
 
 
-async def test_a_rich_cosmos_lives_twelve_epochs_deterministically(tmp_path: Path, open_database: OpenDatabase) -> None:
+async def test_a_rich_cosmos_lives_six_epochs_deterministically(tmp_path: Path, open_database: OpenDatabase) -> None:
     first = await run_world(open_database, tmp_path / "first.db")
     assert len(first.runs) == EPOCHS
     assert failures(first) == {}

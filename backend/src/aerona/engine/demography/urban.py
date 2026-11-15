@@ -1,6 +1,7 @@
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
@@ -41,6 +42,8 @@ def class_shift(rules: Rules, culture: PeopleCultureRow | None, farmers: int, ar
 
 
 async def urban_drift(ctx: TickContext, community: EntityRow, culture: PeopleCultureRow | None) -> int:
+    if held(community.id):
+        return 0
     rows = await cohorts_of(ctx.session, community.id)
     farmers = sum(row.count for key, row in rows.items() if key[2] is SocialClass.FARMER)
     artisans = sum(row.count for key, row in rows.items() if key[2] is SocialClass.ARTISAN)

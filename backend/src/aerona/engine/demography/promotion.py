@@ -7,6 +7,7 @@ from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import BodyFunction, HarmCause, InjuryKind, MaimedKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition
@@ -141,6 +142,8 @@ async def promote(ctx: TickContext) -> int:
     for moment in await notable_moments(ctx):
         if raised >= table.promotion_cap:
             break
+        if frozen(moment.community.id):
+            continue
         if not ctx.rng(f"promote.{moment.community.id}.{moment.reason}").chance(chance):
             continue
         roles = NOTABLE_ROLES[moment.social_class]

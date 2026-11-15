@@ -11,6 +11,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import BattleRow, SiegeRow, TributeRow, WarRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
@@ -273,7 +274,7 @@ async def desolation(ctx: TickContext, atlas: RegionAtlas) -> int:
     ruined = {atlas.top_region(ruin_id) for ruin_id in ruins}
     desolate = await flags_by_entity(session, EntityFlag.DESOLATE)
     changed = 0
-    for region in await canon(session, [EntityType.REGION]):
+    for region in unheld(await canon(session, [EntityType.REGION])):
         empty = region.id in ruined and region.id not in populated
         if empty and region.id not in desolate:
             await add_flag(session, region.id, EntityFlag.DESOLATE, ctx.epoch)

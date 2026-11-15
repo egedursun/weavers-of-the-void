@@ -22,6 +22,7 @@ from aerona.engine.phases.dominion import count
     "table.bonds",
     "table.community_societies",
     "table.community_stocks",
+    "table.corvee_levies",
     "table.cosmopolitan_members",
     "table.culture_drift_causes",
     "table.epoch_year_cursors",

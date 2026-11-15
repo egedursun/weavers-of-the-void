@@ -14,6 +14,9 @@ LEGACY_DANGER_KEY = "darkness"
 DANGER_KEY = "danger"
 
 
+PREHISTORY_CEILING = 1000
+
+
 class GenesisSettings(ValueObject):
     template: GenesisTemplate | None = None
     magic: int = Field(ge=0, le=PERCENT_CEILING)
@@ -32,6 +35,7 @@ class GenesisSettings(ValueObject):
     moisture_pct: int | None = Field(default=None, ge=MOISTURE_FLOOR, le=PERCENT_CEILING)
     climate_era: ClimateEra | None = None
     world_age: WorldAge | None = None
+    prehistory_epochs: int = Field(default=0, ge=0, le=PREHISTORY_CEILING)
     tone: str | None = None
     seed_idea: str | None = None
 

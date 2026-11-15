@@ -15,7 +15,7 @@ from aerona.rules.registry import Rules
 from aerona.services.player.catalog import ACTIONS, action, run_job
 from aerona.services.player.ports import ContentJob, CreativePorts, RevelationRequest, WorldCreationRequest
 from aerona.services.player.runtime import PlayerRuntime
-from tests.services.player.every_lever import Lever, Pick, foreign_god, payload_for
+from tests.services.player.every_lever import Lever, Newest, Pick, foreign_god, lore_free_world, payload_for, planned_prehistory
 
 JOB_ACTIONS = sorted(spec.id for spec in ACTIONS if spec.job is not None)
 JOBS: Mapping[str, Lever] = {
@@ -29,6 +29,9 @@ JOBS: Mapping[str, Lever] = {
     "foreign_god:wake": Lever(values={"god_id": Pick("foreign_god")}, setup=foreign_god),
     "mortal:act": Lever(values={"entity_id": Pick(EntityType.MORTAL)}),
     "chronicle:audit": Lever(values={"epoch": 1}),
+    "prehistory:run": Lever(values={"world_id": Pick("world")}, setup=planned_prehistory),
+    "prehistory:seed": Lever(values={"world_id": Newest("worlds"), "epochs": 1}, setup=lore_free_world),
+    "deep_time:run": Lever(values={"epochs": 1}),
 }
 
 
