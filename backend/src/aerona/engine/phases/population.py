@@ -131,7 +131,7 @@ async def grow_community(
             rules, biology, ground, await fed_index(ctx.session, community.id), magic, band=await band_at(ctx.session, rules, ctx.epoch, community.id)
         ),
         crowding=max(0.0, load.population * footprint(rules, biology) / max(1.0, capacity)),
-        disease=diseases.of(community) + disease_load(rules, fit),
+        disease=max(0.0, diseases.of(community) + disease_load(rules, fit) - rules.demography.endemic_baseline / PERCENT),
         stress=await stress_of(ctx, community),
         mortality=mortality,
     )

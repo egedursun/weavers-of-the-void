@@ -45,7 +45,7 @@ from aerona.engine.demography.recruitment import recruit, recruitment_factor, re
 from aerona.engine.demography.society_control import edit_standing, hold_need, impose_drift, set_corvee, set_labour
 from aerona.engine.demography.wealth import gini, wealth_targets
 from aerona.engine.economy.household import Meal, Wear, diet_demand, eat, eating_order
-from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.economy.stocks import goods_of, holding, nourishment_need
 from aerona.engine.mind.book import write_pressures
 from aerona.engine.mind.drift_causes import famine_shift, ideology_shift, impositions_of, lost_war_sign, record_causes, spend_impositions
 from aerona.engine.phases.society_economy import EconomyInputs, satisfaction_targets, society_economy
@@ -86,8 +86,8 @@ def test_every_commodity_has_a_typed_shortfall_and_a_trade() -> None:
 
 
 def test_cuisine_staples_set_dietary_demand_and_eating_order() -> None:
-    plain = diet_demand(RULES, 1000, ())
-    fish = diet_demand(RULES, 1000, (CommodityKind.FISH,))
+    plain = diet_demand(RULES, 1000, (), nourishment_need(RULES, 1000))
+    fish = diet_demand(RULES, 1000, (CommodityKind.FISH,), nourishment_need(RULES, 1000))
     assert fish[CommodityKind.FISH] > plain[CommodityKind.FISH]
     assert fish[CommodityKind.GRAIN] < plain[CommodityKind.GRAIN]
     nourish = {kind: COMMODITIES[kind].nourishment for kind in FOOD_KINDS}
@@ -276,7 +276,11 @@ async def test_cuisine_staples_feed_eating(realm: Realm) -> None:
     await ledger.add(folk.id, CommodityKind.GRAIN, 5000, GoodsFlow.SEED)
     meal = await eat(ctx, folk, (CommodityKind.FISH,))
     assert meal.fed_pct == 100
-    assert meal.eaten[CommodityKind.FISH] >= meal.wanted[CommodityKind.FISH] > diet_demand(ctx.rules, 5000, ())[CommodityKind.FISH]
+    assert (
+        meal.eaten[CommodityKind.FISH]
+        >= meal.wanted[CommodityKind.FISH]
+        > diet_demand(ctx.rules, 5000, (), nourishment_need(ctx.rules, 5000))[CommodityKind.FISH]
+    )
 
 
 async def test_labour_allocation_records_reasons_and_honours_holds_and_corvee(realm: Realm) -> None:

@@ -58,6 +58,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "settlement.population",
     "settlement.prosperity",
     "settlement.wealth",
+    "table.armies",
     "table.army_units",
     "table.beliefs",
     "table.bias_weights",

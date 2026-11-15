@@ -42,6 +42,7 @@ register_profile_table("rumours", "carrier_entity_id")
 @writes(
     "settlement.defense",
     "table.applied_fixups",
+    "table.bias_weights",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",

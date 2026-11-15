@@ -16,7 +16,7 @@ async def heroquests(ctx: TickContext) -> None:
     count(ctx, "heroquest", tally)
 
 
-@reads("table.reputations")
+@reads("table.bonds", "table.reputations")
 async def mantling(ctx: TickContext) -> None:
     tally = MantleTally()
     await mantle_world(ctx, tally)

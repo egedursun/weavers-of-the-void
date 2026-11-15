@@ -20,7 +20,7 @@ from aerona.engine.demography.basket import build_basket, needs_of, save_basket,
 from aerona.engine.demography.prices import local_prices
 from aerona.engine.demography.wealth import gini, stock_value, wealth_targets
 from aerona.engine.economy.household import Meal, Wear, diet_demand
-from aerona.engine.economy.stocks import epoch_need, holdings
+from aerona.engine.economy.stocks import epoch_need, holdings, nourishment_need
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
 
@@ -43,7 +43,7 @@ async def backfill_community(ctx: TickContext, community: EntityRow, society: Co
     shares = {social_class: society.share(social_class) for social_class in SocialClass}
     held = await holdings(ctx.session, community.id)
     staples = await staples_of(ctx.session, community)
-    meal = backfill_meal(population, diet_demand(ctx.rules, population, staples), held)
+    meal = backfill_meal(population, diet_demand(ctx.rules, population, staples, nourishment_need(ctx.rules, population)), held)
     wanted = {kind: epoch_need(ctx.rules, population, kind) for kind in COMMODITIES if kind not in FOOD_KINDS and epoch_need(ctx.rules, population, kind) > 0}
     worn = Wear(wanted, {kind: min(amount, held.get(kind, 0)) for kind, amount in wanted.items()})
     basket = build_basket(shares, meal, worn, staples=staples, order=SERVE_ORDER, held={}, luxuries_left=held.get(CommodityKind.LUXURIES, 0))

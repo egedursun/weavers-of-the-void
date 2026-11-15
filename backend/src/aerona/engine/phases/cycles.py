@@ -185,6 +185,7 @@ async def long_plans(ctx: TickContext) -> None:
 
 
 @reads(
+    "house.wealth",
     "people.piety",
     "people.wealth",
     "settlement.piety",
@@ -206,6 +207,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.gifts",
     "table.held_identities",
     "table.house_members",
+    "table.house_profiles",
     "table.kinship_systems",
     "table.language_profiles",
     "table.marriages",
@@ -227,6 +229,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.traits",
 )
 @writes(
+    "house.wealth",
     "people.wealth",
     "table.ceremonial_circuits",
     "table.chronicle",
@@ -301,9 +304,12 @@ async def reproduction_systems(ctx: TickContext) -> None:
     "table.minds",
     "table.name_registry",
     "table.nodes",
+    "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
     "table.region_environment",
+    "table.reputations",
+    "table.ruler_currencies",
     "table.settlement_profiles",
     "table.speaker_cohorts",
     "table.tradition_profiles",

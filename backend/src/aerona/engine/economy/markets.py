@@ -19,7 +19,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.household import diet_demand
 from aerona.engine.economy.manipulation import plays_at
 from aerona.engine.economy.materials import price_premium
-from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
+from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of, nourishment_need
 from aerona.engine.environment.years import world_years
 from aerona.engine.factions.book import monopoly_factor
 from aerona.engine.faith.book import forbidden_foods
@@ -159,7 +159,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     population = headcount(market)
     quotes: dict[CommodityKind, Quote] = {}
     forbidden = await forbidden_foods(ctx.session, market.id) | await taboos(ctx, market.id)
-    diet = diet_demand(ctx.rules, population, await staples_of(ctx.session, market))
+    diet = diet_demand(ctx.rules, population, await staples_of(ctx.session, market), nourishment_need(ctx.rules, population))
     held = await price_holds(ctx, market.id)
     growth = year_growth(ctx, book, market)
     tastes = await market_fit(ctx.session, market.id)

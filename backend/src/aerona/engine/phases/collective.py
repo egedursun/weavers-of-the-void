@@ -43,14 +43,19 @@ class ArmedTally:
 
 
 @reads(
+    "mortal.charisma",
     "settlement.population",
+    "table.collection_members",
+    "table.collection_places",
     "table.community_societies",
     "table.crowd_moods",
     "table.districts",
+    "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.incidents",
     "table.indentures",
     "table.mind_facets",
+    "table.nodes",
     "table.offices",
     "table.outbreaks",
     "table.polity_members",
@@ -60,7 +65,21 @@ class ArmedTally:
     "table.settlement_profiles",
     "table.sky_events",
 )
-@writes("table.cascades", "table.community_societies", "table.crowd_moods", "table.incident_collections", "table.mobs", "table.movements")
+@writes(
+    "table.cascades",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.collection_members",
+    "table.collection_places",
+    "table.community_societies",
+    "table.crowd_moods",
+    "table.epoch_year_cursors",
+    "table.incident_collections",
+    "table.incident_participants",
+    "table.incidents",
+    "table.mobs",
+    "table.movements",
+)
 async def crowds(ctx: TickContext) -> None:
     tally = CrowdTally()
     await stir_towns(ctx, tally)
@@ -98,16 +117,31 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     await ctx.session.flush()
 
 
-@reads("table.crowd_moods", "table.epoch_year_cursors", "table.movements")
+@reads(
+    "faction.wealth",
+    "table.bonds",
+    "table.collection_members",
+    "table.collection_places",
+    "table.crowd_moods",
+    "table.epoch_year_cursors",
+    "table.movements",
+    "table.name_registry",
+    "table.nodes",
+)
 @writes(
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.collection_members",
+    "table.collection_places",
     "table.entities",
     "table.epoch_year_cursors",
     "table.faction_profiles",
+    "table.incident_collections",
     "table.incident_participants",
     "table.incidents",
     "table.movements",
+    "table.name_registry",
 )
 async def popular_movements(ctx: TickContext) -> None:
     tally = CrowdTally()
@@ -148,6 +182,7 @@ async def social_norms(ctx: TickContext) -> None:
     "table.accounts",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",

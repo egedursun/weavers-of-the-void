@@ -1800,6 +1800,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.equipment_models",
     "table.equipment_stores",
     "table.event_casualties",
     "table.event_footprints",

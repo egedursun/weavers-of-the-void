@@ -860,6 +860,7 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.preferences",
     "table.region_environment",
     "table.reputations",
+    "table.ruler_currencies",
     "table.sky_events",
     "table.thoughts",
     "table.tradition_profiles",

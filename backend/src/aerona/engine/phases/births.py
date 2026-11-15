@@ -746,6 +746,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.genomes",
+    "table.land_rings",
     "table.language_profiles",
     "table.lexemes",
     "table.maimed_cohorts",

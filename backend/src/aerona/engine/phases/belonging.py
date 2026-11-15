@@ -9,21 +9,41 @@ from aerona.engine.phases.dominion import count
 
 
 @reads(
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.intellect",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "table.army_profiles",
+    "table.bonds",
     "table.coalition_members",
+    "table.community_cohorts",
     "table.districts",
+    "table.faction_profiles",
+    "table.game_followings",
+    "table.genomes",
     "table.held_identities",
     "table.house_members",
+    "table.incubating_ideas",
+    "table.law_jurisdictions",
     "table.marriages",
+    "table.mind_facets",
+    "table.mortal_profiles",
     "table.movements",
     "table.nodes",
     "table.notable_years",
     "table.peer_groups",
+    "table.peer_members",
     "table.polity_members",
     "table.polity_profiles",
     "table.purity_ranks",
+    "table.skills",
 )
-@writes("table.held_identities")
+@writes("table.bonds", "table.held_identities", "table.mind_facets", "table.peer_groups", "table.peer_members", "table.relationships", "table.skills")
 async def belonging(ctx: TickContext) -> None:
     identities, peers = IdentityTally(), PeerTally()
     await keep_identities(ctx, identities)

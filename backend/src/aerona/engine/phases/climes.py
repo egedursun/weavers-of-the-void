@@ -31,6 +31,7 @@ from aerona.engine.phases.dominion import count
     "table.monsoon_seasons",
     "table.notable_years",
     "table.region_environment",
+    "table.region_pollution",
     "table.region_winds",
 )
 async def climes(ctx: TickContext) -> None:

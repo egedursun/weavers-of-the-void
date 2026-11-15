@@ -1134,6 +1134,7 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.sky_events",
     "table.species_profiles",
     "table.species_yields",
+    "table.water_lifts",
     "table.world_biochemistries",
     "table.world_maps",
     "table.world_seasons",

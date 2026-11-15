@@ -22,6 +22,7 @@ from aerona.engine.sacred.spirits import SpiritTally, keep_place_spirits
     "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.genius_loci",
+    "table.mind_facets",
     "table.minds",
     "table.mortal_profiles",
     "table.name_registry",

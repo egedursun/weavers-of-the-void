@@ -43,6 +43,7 @@ async def money_changing(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.bonds",
     "table.community_societies",
     "table.economic_order_kinds",
     "table.economic_orders",

@@ -110,8 +110,8 @@ async def attributes_of(session: AsyncSession, node_id: int) -> Attributes:
 
 
 async def facets_of(session: AsyncSession, node_id: int) -> Facets:
-    rows = await rows_by_prefix(session, FacetRow, node_id)
-    return {row.facet: row.value for row in rows}
+    stored = {row.facet: row.value for row in await rows_by_prefix(session, FacetRow, node_id)}
+    return {facet: stored.get(facet, NEUTRAL_FACET) for facet in Facet} if stored else {}
 
 
 async def write_attributes(session: AsyncSession, node_id: int, values: Mapping[Attribute, int]) -> None:

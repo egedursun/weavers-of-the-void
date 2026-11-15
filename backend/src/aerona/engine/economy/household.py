@@ -158,14 +158,11 @@ def eating_order(staples: tuple[CommodityKind, ...]) -> tuple[CommodityKind, ...
     return (*staples, *(kind for kind in EATING_ORDER if kind not in staples))
 
 
-def diet_demand(rules: Rules, population: int, staples: tuple[CommodityKind, ...]) -> dict[CommodityKind, int]:
+def diet_demand(rules: Rules, population: int, staples: tuple[CommodityKind, ...], need: int) -> dict[CommodityKind, int]:
     base = {kind: epoch_need(rules, population, kind) for kind in EATING_ORDER}
-    if not staples:
-        return base
     weight = {kind: base[kind] * (rules.consumption.staple_demand_pct if kind in staples else PERCENT) / PERCENT for kind in base}
-    wanted = sum(base[kind] * COMMODITIES[kind].nourishment for kind in base)
     weighted = sum(weight[kind] * COMMODITIES[kind].nourishment for kind in base)
-    scale = wanted / weighted if weighted > 0 else 1.0
+    scale = need / weighted if weighted > 0 else 0.0
     return {kind: round_half_up(weight[kind] * scale) for kind in base}
 
 
@@ -192,7 +189,7 @@ async def eat(ctx: TickContext, community: EntityRow, staples: tuple[CommodityKi
         return Meal(PERCENT)
     ledger = goods_of(ctx.session, ctx.epoch)
     order = eating_order(staples)
-    wanted = diet_demand(ctx.rules, population, staples)
+    wanted = diet_demand(ctx.rules, population, staples, need)
     eaten: dict[CommodityKind, int] = {}
     tasted: list[tuple[int, int]] = []
     left = need
