@@ -117,6 +117,7 @@ async def mortal_survey(ctx: TickContext) -> None:
     "mortal.willpower",
     "mortal.wisdom",
     "table.age_set_members",
+    "table.assistive_aids",
     "table.bodies",
     "table.body_customs",
     "table.bonds",

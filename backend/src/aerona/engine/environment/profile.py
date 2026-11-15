@@ -386,9 +386,10 @@ class CropMix:
     fish: float
 
 
-def crop_mix(rules: Rules, *, farmed: int, grazed: int, coastal: bool, river: RiverClass) -> CropMix:
+def crop_mix(rules: Rules, *, farmed: int, grazed: int, coastal: bool, river: RiverClass, sea: int | None = None) -> CropMix:
     settings = rules.environment
-    water = settings.coast_fishing_share if coastal else settings.river_fishing_share if river is not RiverClass.NONE else 0
+    coast = settings.coast_fishing_share if sea is None else sea
+    water = coast if coastal else settings.river_fishing_share if river is not RiverClass.NONE else 0
     land = max(0.0, 1 - water / PERCENT)
     sown = farmed + grazed
     grain = farmed / sown if sown > 0 else 1.0

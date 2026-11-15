@@ -27,6 +27,7 @@ class WorldNatureView(ApiModel):
     leak_repair: int
     sanity_erosion: int
     fertility_decay: int
+    sea_pct: int
 
 
 class WorldViewNodeView(ApiModel):

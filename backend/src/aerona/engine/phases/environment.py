@@ -45,6 +45,7 @@ from aerona.engine.cosmos.cycles import cycles_by_world, soil_swing
 from aerona.engine.cosmos.orbits import SKYLESS_WORLDS, rogue_worlds, root_of
 from aerona.engine.cosmos.phenomena import phenomenon_passability
 from aerona.engine.cosmos.star_types import star_heat
+from aerona.engine.cosmos.world_views import world_views
 from aerona.engine.cosmos.worldlife import cosmic_disease
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.ecology.domestication import grazing_heads
@@ -184,6 +185,7 @@ class RegionContext:
     make: Make = field(default_factory=Make)
     clime_rain: int = 0
     clime_heat: int = 0
+    sea: int | None = None
 
     def surroundings(self, rules: Rules, env: RegionEnvironmentRow) -> Surroundings:
         return Surroundings(
@@ -202,8 +204,8 @@ class RegionContext:
         )
 
 
-def factor_of(rules: Rules, env: RegionEnvironmentRow, works: Works) -> float:
-    mix = crop_mix(rules, farmed=env.farmed, grazed=env.grazed, coastal=env.coast_kind is not CoastKind.NONE, river=env.river_class)
+def factor_of(rules: Rules, env: RegionEnvironmentRow, works: Works, sea: int | None = None) -> float:
+    mix = crop_mix(rules, farmed=env.farmed, grazed=env.grazed, coastal=env.coast_kind is not CoastKind.NONE, river=env.river_class, sea=sea)
     return climate_factor(rules, temperature=env.temperature, rainfall=env.rainfall, river=env.river_class, scars=env.scars, works=works, mix=mix)
 
 
@@ -315,7 +317,7 @@ def new_region_environment(ctx: TickContext, region: EntityRow, geography: Geogr
     )
     fertility = stat(region, "fertility")
     if fertility is not None:
-        env.soil_fertility = soil_for(fertility, factor_of(rules, env, context.works))
+        env.soil_fertility = soil_for(fertility, factor_of(rules, env, context.works, context.sea))
         env.soil_base = env.soil_fertility
         env.derived_fertility = fertility
     return env
@@ -424,6 +426,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     rogue = await rogue_worlds(ctx.session)
     dominion = await DominionBook.load(ctx.session)
     shifts = await clime_shifts(ctx.session, ctx.rules, ctx.epoch)
+    views = await world_views(ctx.session, ctx.rules)
     for region in regions:
         world = book.worlds.get(region.world_id)
         if world is None:
@@ -444,6 +447,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
             dominion_heat=dominion.scale_at(ctx.rules, region.id, DivineScale.HEAT) * ctx.rules.dominion.heat_per_step,
             clime_rain=shifts.get(region.id, (0, 0))[0],
             clime_heat=shifts.get(region.id, (0, 0))[1],
+            sea=views[world.id].sea_pct if world.id in views else None,
         )
     return contexts
 
@@ -457,7 +461,11 @@ async def survey_places(ctx: TickContext, book: EnvironmentBook, contexts: dict[
         region_id = book.atlas.top_region(place.id)
         env = book.regions.get(region_id) if region_id is not None else None
         context = contexts.get(region_id) if region_id is not None else None
-        factor = factor_of(ctx.rules, env, context.works if context is not None else Works()) if env is not None else 1.0
+        factor = (
+            factor_of(ctx.rules, env, context.works if context is not None else Works(), context.sea if context is not None else None)
+            if env is not None
+            else 1.0
+        )
         kind = kinds.get(place.id) or await place_kind_of(ctx.session, place.id)
         row = new_place_environment(ctx.rules, place, region_id, factor, kind)
         ctx.session.add(row)
@@ -722,7 +730,10 @@ async def environment_derive(ctx: TickContext) -> None:
         recover_soil(rules, env, soil_swing(rules, cycles.get(env.world_id)) + nutrient_shift(rules, stocks.get(env.entity_id), env.soil_base))
         if current is not None or not region.is_water:
             set_base_stats(
-                region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works) * fertility_factor(rules, fouled.get(region.id)))
+                region,
+                fertility=fertility_from(
+                    env.soil_fertility, factor_of(rules, env, context.works, context.sea) * fertility_factor(rules, fouled.get(region.id))
+                ),
             )
             env.derived_fertility = base_stat(region, "fertility")
             derived += 1
@@ -734,7 +745,7 @@ async def environment_derive(ctx: TickContext) -> None:
             continue
         place_env.soil_fertility = fold_external(place_env.derived_fertility, base_stat(place, "fertility"), place_env.soil_fertility)
         soiled = fertility_factor(rules, fouled.get(place_env.region_entity_id or -1))
-        set_base_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env, context.works) * soiled))
+        set_base_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env, context.works, context.sea) * soiled))
         place_env.derived_fertility = base_stat(place, "fertility")
     await ctx.session.flush()
     ctx.count("regions_derived", derived)

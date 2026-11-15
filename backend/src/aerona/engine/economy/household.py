@@ -72,11 +72,12 @@ class Wear:
         return {kind: amount - self.got.get(kind, 0) for kind, amount in self.wanted.items() if amount > self.got.get(kind, 0)}
 
 
-def mix_of(ctx: TickContext, book: EconomyBook, community: EntityRow) -> CropMix:
+def mix_of(ctx: TickContext, book: EconomyBook, community: EntityRow, sea: int | None = None) -> CropMix:
     region = book.ground.region_of(community.id)
     if region is None:
         return CropMix(1.0, 0.0, 0.0)
-    return crop_mix(ctx.rules, farmed=region.farmed, grazed=region.grazed, coastal=region.coast_kind is not CoastKind.NONE, river=region.river_class)
+    coastal = region.coast_kind is not CoastKind.NONE
+    return crop_mix(ctx.rules, farmed=region.farmed, grazed=region.grazed, coastal=coastal, river=region.river_class, sea=sea)
 
 
 async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRow, rate: float, farmer_share: float) -> dict[CommodityKind, int]:
@@ -85,7 +86,7 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
     farmers = hands if hands is not None else round_half_up(headcount(community) * farmer_share / PERCENT)
     tools = await tools_factor(ctx, community.id, farmers)
     units = farmers * table.farm_units_per_1000_farmers / THOUSAND * rate * tools
-    mix = mix_of(ctx, book, community)
+    mix = mix_of(ctx, book, community, (await view_of(ctx.session, ctx.rules, community.world_id)).sea_pct)
     farming = method_for(book, community.id, ProcessKind.FARMING)
     fishing = method_for(book, community.id, ProcessKind.FISHING)
     crews = round_half_up(farmers * ctx.rules.energy.extraction_per_100_workers / PERCENT)

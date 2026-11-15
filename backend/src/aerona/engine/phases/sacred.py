@@ -27,6 +27,7 @@ from aerona.engine.sacred.spirits import SpiritTally, keep_place_spirits
     "table.mortal_profiles",
     "table.name_registry",
     "table.nodes",
+    "table.personality_values",
     "table.petitions",
     "table.place_profiles",
     "table.region_environment",

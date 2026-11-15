@@ -43,6 +43,8 @@ def view_lines(view: WorldView) -> list[str]:
         if not flag
     )
     found.extend(f"{label} at {getattr(view, key)}% of an ordinary world" for key, label in SHARES if getattr(view, key) != PERCENT)
+    if view.sea_pct != WorldView().sea_pct:
+        found.append(f"the sea gives {view.sea_pct}% of the food of its coasts")
     return found
 
 

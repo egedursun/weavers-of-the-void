@@ -88,6 +88,7 @@ export const NUMBERS = [
   { key: 'leak_repair', label: 'Leak it mends' },
   { key: 'sanity_erosion', label: 'Sanity it wears away' },
   { key: 'fertility_decay', label: 'Fertility it loses' },
+  { key: 'sea_pct', label: 'Share of a coast fed by the sea (%)' },
 ] as const
 
 export const FLAGS = [

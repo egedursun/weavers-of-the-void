@@ -28,6 +28,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 
 @reads(
     "cult.zeal",
+    "people.wealth",
     "settlement.wealth",
     "table.bonds",
     "table.collection_members",
@@ -48,6 +49,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.mortal_profiles",
     "table.nodes",
     "table.offices",
+    "table.people_culture",
     "table.place_profiles",
     "table.polity_members",
     "table.polity_profiles",
@@ -62,6 +64,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 )
 @writes(
     "cult.zeal",
+    "people.wealth",
     "settlement.wealth",
     "table.bonds",
     "table.chronicle",
@@ -80,6 +83,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.incidents",
     "table.memories",
     "table.mortal_profiles",
+    "table.people_culture",
     "table.polity_profiles",
     "table.relationships",
     "table.secrets",

@@ -68848,6 +68848,7 @@ export interface components {
       leak_repair: number
       sanity_erosion: number
       fertility_decay: number
+      sea_pct: number
     }
     WorldPalette: {
       world_type: components['schemas']['WorldType']

@@ -22,6 +22,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.urban import ConvoyRow
 from aerona.db.tables.warfare import ArmyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.crafts import InsuranceCover
@@ -234,16 +235,16 @@ async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, wor
     first, second = route.ends
     capacity = capacity_of(ctx, book, route, works) * await trade_barrier(ctx.session, ctx.rules, first, second, ctx.epoch)
     capacity *= await outsider_barrier(ctx.session, ctx.rules, first, second)
-    held = book.techniques.get(first, set()) | book.techniques.get(second, set())
-    if Technique.JOINT_STOCK in held:
+    known = book.techniques.get(first, set()) | book.techniques.get(second, set())
+    if Technique.JOINT_STOCK in known:
         capacity *= 1 + ctx.rules.technique_effects.joint_stock_pct / PERCENT
     if route.profile.mode is TradeMode.SEA:
         table = ctx.rules.technique_effects
         capacity *= max([await theory_factor(ctx.session, ctx.rules, end, TheoryDomain.COSMOLOGY) for end in (first, second)])
         capacity *= (
-            1 + (table.navigation_pct * (Technique.NAVIGATION_STARS in held) + table.instruments_pct * (Technique.ASTRONOMY_INSTRUMENTS in held)) / PERCENT
+            1 + (table.navigation_pct * (Technique.NAVIGATION_STARS in known) + table.instruments_pct * (Technique.ASTRONOMY_INSTRUMENTS in known)) / PERCENT
         )
-        capacity *= 1 + channel_value(ctx.rules, held, EraChannel.SEA_ROUTES) / PERCENT
+        capacity *= 1 + channel_value(ctx.rules, known, EraChannel.SEA_ROUTES) / PERCENT
     return clamp_int(round_half_up(capacity), 0, ctx.rules.trade_routes.capacity_cap)
 
 
@@ -257,7 +258,7 @@ def danger_of(book: EconomyBook, path: list[int]) -> int:
     return round_half_up(sum(dangers) / len(dangers)) if dangers else 0
 
 
-def held(route: Route, key: str) -> bool:
+def route_locked(route: Route, key: str) -> bool:
     return key in (route.profile.locked or [])
 
 
@@ -265,13 +266,13 @@ def assess(ctx: TickContext, book: EconomyBook, route: Route, lairs: Lairs) -> D
     profile = route.profile
     found = dangers_of(ctx, book, profile.mode, route.path, lairs, route_id=route.entity.id, world_id=route.entity.world_id)
     for cause, key in DANGER_KEYS.items():
-        if held(route, key):
+        if route_locked(route, key):
             setattr(found, cause.value, getattr(profile, key))
         else:
             setattr(profile, key, getattr(found, cause.value))
-    if not held(route, "danger"):
+    if not route_locked(route, "danger"):
         set_stats(route.entity, danger=found.total)
-    if not held(route, "season_pct"):
+    if not route_locked(route, "season_pct"):
         profile.season_pct = season_pct_of(ctx.rules, book, profile.mode, route.path, route.entity.world_id)
     return found
 
@@ -357,7 +358,7 @@ async def set_tolls(
     free = waived if waived is not None else await clause_pairs(ctx.session, ClauseKind.TOLLS_WAIVED)
     for region in route.path:
         master = granted if granted is not None else masters.get(region)
-        if master is None or master in homes or held(route, f"untolled.{region}"):
+        if master is None or master in homes or route_locked(route, f"untolled.{region}") or held(route.entity.id, region, master):
             continue
         if frozenset((master, first)) in free or frozenset((master, second)) in free:
             toll = route.tolls.get(region)
@@ -380,7 +381,7 @@ async def set_tolls(
     if realms is not None:
         for toll in route.tolls.values():
             toll.polity_entity_id = realms.treasury_of(toll.controller_entity_id)
-    if held(route, "controller_entity_id"):
+    if route_locked(route, "controller_entity_id"):
         return
     if granted is not None:
         route.profile.controller_entity_id = granted
@@ -834,9 +835,9 @@ async def _grow(ctx: TickContext, route: Route, moved: int) -> None:
     if moved < lanes.renown_volume:
         return
     before = stat(route.entity, "renown") or 0
-    renown = before if held(route, "renown") else clamp_int(before + lanes.renown_per_epoch, 0, PERCENT)
+    renown = before if route_locked(route, "renown") else clamp_int(before + lanes.renown_per_epoch, 0, PERCENT)
     culture = stat(route.entity, "culture") or 0
-    set_stats(route.entity, renown=renown, culture=culture if held(route, "culture") else clamp_int(culture + lanes.culture_per_epoch, 0, PERCENT))
+    set_stats(route.entity, renown=renown, culture=culture if route_locked(route, "culture") else clamp_int(culture + lanes.culture_per_epoch, 0, PERCENT))
     if before < lanes.legend_renown <= renown:
         await _pass_into_legend(ctx, route)
 
@@ -844,7 +845,7 @@ async def _grow(ctx: TickContext, route: Route, moved: int) -> None:
 async def _age(ctx: TickContext, book: EconomyBook, route: Route, tally: RouteTally) -> bool:
     lanes = ctx.rules.trade_routes
     profile = route.profile
-    if held(route, "status"):
+    if route_locked(route, "status"):
         return True
     if profile.status is TradeRouteStatus.FORMING and profile.traffic_epochs >= lanes.formation_epochs:
         profile.status = TradeRouteStatus.OPEN
@@ -870,7 +871,7 @@ def orphaned(book: EconomyBook, route: Route) -> bool:
 
 
 async def close_orphan(ctx: TickContext, route: Route, tally: RouteTally) -> None:
-    if held(route, "status") or route.profile.status is TradeRouteStatus.CLOSED:
+    if route_locked(route, "status") or route.profile.status is TradeRouteStatus.CLOSED:
         return
     route.profile.status = TradeRouteStatus.CLOSED
     route.profile.blockaded_by_entity_id = None
@@ -885,9 +886,9 @@ async def close_orphan(ctx: TickContext, route: Route, tally: RouteTally) -> Non
 
 async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: dict[int, Works], enemies: set[tuple[int, int]], tally: RouteTally) -> None:
     profile = route.profile
-    if not held(route, "capacity"):
+    if not route_locked(route, "capacity"):
         set_stats(route.entity, capacity=await spoken_capacity(ctx, book, route, works))
-    steady = held(route, "blockaded_by_entity_id") or held(route, "status")
+    steady = route_locked(route, "blockaded_by_entity_id") or route_locked(route, "status")
     blocker = None if steady else await blocker_of(ctx, book, route, enemies)
     if blocker is not None and profile.status is not TradeRouteStatus.BLOCKADED:
         await _blockade(ctx, book, route, blocker, tally)
@@ -902,9 +903,16 @@ async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: di
     if not await _age(ctx, book, route, tally):
         return
     await _grow(ctx, route, moved)
-    if not held(route, "chokepoint") and weigh_chokepoint(ctx, book, profile, route.path, moved=moved, strategic=tally.strategic.get(route.entity.id, 0)):
+    if not route_locked(route, "chokepoint") and weigh_chokepoint(
+        ctx, book, profile, route.path, moved=moved, strategic=tally.strategic.get(route.entity.id, 0)
+    ):
         tally.chokepoints += 1
-    if toll_total(route) >= ctx.rules.tolls.divert_total_pct and not held(route, "path") and not await divert(ctx, book, route, works) and profile.chokepoint:
+    if (
+        toll_total(route) >= ctx.rules.tolls.divert_total_pct
+        and not route_locked(route, "path")
+        and not await divert(ctx, book, route, works)
+        and profile.chokepoint
+    ):
         await _chokepoint_war(ctx, book, route, tally)
 
 

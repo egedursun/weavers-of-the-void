@@ -53,11 +53,10 @@ def one_year(rules: Rules, rows: dict[CohortKey, CohortRow], biology: PeopleBiol
     fertility = (biology.fertility_pct if biology is not None else PERCENT) / PERCENT
     mothers = sum(row.count for key, row in rows.items() if key[0] is A.ADULT and key[1] is Sex.FEMALE and key[3] is not CohortCondition.SICK)
     birth_rate = table.birth_pct_per_year / PERCENT * fertility * pressures.fertility
-    birth_rate *= max(0.0, 1 - pressures.hunger * table.hunger_birth_pct / PERCENT) * max(0.0, 1 - pressures.stress * table.stress_birth_pct / PERCENT)
+    famine = pressures.hunger**2
+    birth_rate *= max(0.0, 1 - famine * table.hunger_birth_pct / PERCENT) * max(0.0, 1 - pressures.stress * table.stress_birth_pct / PERCENT)
     extra = (
-        1
-        + pressures.hunger * table.hunger_death_pct / PERCENT * harshness(rules, HarshnessScale.FAMINE_DEATH)
-        + pressures.crowding * table.crowding_death_pct / PERCENT
+        1 + famine * table.hunger_death_pct / PERCENT * harshness(rules, HarshnessScale.FAMINE_DEATH) + pressures.crowding * table.crowding_death_pct / PERCENT
     )
     extra += pressures.disease * table.disease_death_pct / PERCENT * harshness(rules, HarshnessScale.DISEASE_DEATH)
     deaths = {}

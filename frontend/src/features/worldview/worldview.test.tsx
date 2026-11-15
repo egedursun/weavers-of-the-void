@@ -38,6 +38,7 @@ const NATURE = {
   leak_repair: 0,
   sanity_erosion: 0,
   fertility_decay: 0,
+  sea_pct: 25,
 }
 
 function serveBase() {

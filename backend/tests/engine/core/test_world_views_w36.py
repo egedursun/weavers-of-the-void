@@ -8,7 +8,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.world_views import WorldViewRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind
-from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.environment import RiverClass, TemperatureBand
 from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.world import WorldType
@@ -19,6 +19,7 @@ from aerona.engine.cosmos.world_views import ViewTally, default_view, keep_views
 from aerona.engine.economy.extraction import world_share
 from aerona.engine.economy.household import eat
 from aerona.engine.environment.battleground import night_chance
+from aerona.engine.environment.profile import crop_mix
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats, stat
@@ -163,3 +164,11 @@ async def test_a_world_follows_its_kind_in_every_value_the_god_has_not_held(sess
     await session.flush()
     assert await seed_missing_views(session, ctx.rules, 3) == 1
     assert row.timber_pct == 100 and row.storm_pct == 300
+
+
+async def test_an_ocean_world_feeds_its_coasts_mostly_from_the_sea(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await at(session, 2)
+    ocean = default_view(ctx.rules, WorldType.OCEAN)
+    assert ocean.sea_pct > default_view(ctx.rules, WorldType.ORDINARY).sea_pct
+    mix = crop_mix(ctx.rules, farmed=50, grazed=50, coastal=True, river=RiverClass.NONE, sea=ocean.sea_pct)
+    assert mix.fish == ocean.sea_pct / 100 and round(mix.grain + mix.pasture + mix.fish, 6) == 1

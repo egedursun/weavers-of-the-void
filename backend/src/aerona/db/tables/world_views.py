@@ -19,7 +19,7 @@ WORLD_VIEW_SHARES = (
     "drought_pct",
     "plague_pct",
 )
-WORLD_VIEW_NUMBERS = ("route_danger", "leak", "leak_repair", "sanity_erosion", "fertility_decay")
+WORLD_VIEW_NUMBERS = ("route_danger", "leak", "leak_repair", "sanity_erosion", "fertility_decay", "sea_pct")
 WORLD_VIEW_KINDS = ("light", "need", "settle", "war")
 WORLD_VIEW_FIELDS = (*WORLD_VIEW_KINDS, *WORLD_VIEW_FLAGS, *WORLD_VIEW_SHARES, *WORLD_VIEW_NUMBERS)
 
@@ -55,5 +55,6 @@ class WorldViewRow(Base):
     leak_repair: Mapped[int] = mapped_column(default=0)
     sanity_erosion: Mapped[int] = mapped_column(default=0)
     fertility_decay: Mapped[int] = mapped_column(default=0)
+    sea_pct: Mapped[int] = mapped_column(default=25)
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

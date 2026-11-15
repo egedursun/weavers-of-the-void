@@ -313,6 +313,7 @@ async def reproduction_systems(ctx: TickContext) -> None:
     "table.settlement_profiles",
     "table.speaker_cohorts",
     "table.tradition_profiles",
+    "table.traits",
     "table.treaty_profiles",
     "table.tributes",
 )

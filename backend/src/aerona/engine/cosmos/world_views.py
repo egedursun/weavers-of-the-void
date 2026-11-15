@@ -67,6 +67,7 @@ class WorldView:
     leak_repair: int = 0
     sanity_erosion: int = 0
     fertility_decay: int = 0
+    sea_pct: int = 25
 
     def disaster(self, disaster: Disaster) -> int:
         return {
@@ -105,6 +106,7 @@ def default_values(rules: Rules, world_type: WorldType) -> dict[str, object]:
         "soil": spec.soil,
         "timber_pct": share(spec.timber_pct),
         "food_need_pct": share(spec.food_need_pct),
+        "sea_pct": clamp_int(spec.sea_pct if spec.sea_pct is not None else rules.environment.coast_fishing_share, 0, PERCENT),
         "capacity_pct": share(mechanics.capacity_pct(rules) if mechanics.capacity_pct is not None else PERCENT),
         "ore_yield_pct": share(mechanics.ore_yield_pct(rules) if mechanics.ore_yield_pct is not None else PERCENT),
         "route_danger": clamp_int(mechanics.route_danger(rules), 0, PERCENT),

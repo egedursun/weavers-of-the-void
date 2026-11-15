@@ -19,6 +19,7 @@ class WorldViewSpec:
     need: BindingNeed = BindingNeed.NONE
     settle: SettleMode = SettleMode.GROUND
     war: WarTerrain = WarTerrain.LAND
+    sea_pct: int | None = None
 
 
 ORDINARY_VIEW = WorldViewSpec()
@@ -28,7 +29,7 @@ SEALED_WORLD = WorldViewSpec(soil=False, timber_pct=0, need=BindingNeed.AIR, set
 WORLD_VIEWS: MappingProxyType[WorldType, WorldViewSpec] = MappingProxyType(
     {
         W.ORDINARY: ORDINARY_VIEW,
-        W.OCEAN: WorldViewSpec(timber_pct=30, settle=SettleMode.STILT, war=WarTerrain.NAVAL),
+        W.OCEAN: WorldViewSpec(timber_pct=30, settle=SettleMode.STILT, war=WarTerrain.NAVAL, sea_pct=70),
         W.SAND: WorldViewSpec(timber_pct=20, need=BindingNeed.WATER, settle=SettleMode.OASIS),
         W.ICE: WorldViewSpec(timber_pct=10, need=BindingNeed.HEAT, settle=SettleMode.VENT),
         W.LAVA: WorldViewSpec(light=WorldLight.LAVA_GLOW, timber_pct=40),
@@ -53,13 +54,13 @@ WORLD_VIEWS: MappingProxyType[WorldType, WorldViewSpec] = MappingProxyType(
         W.GREENHOUSE: WorldViewSpec(seasons=False, timber_pct=10, need=BindingNeed.WATER, settle=SettleMode.HABITAT),
         W.DWARF_PLANET: replace(SEALED_WORLD, fire=False),
         W.CHTHONIAN: replace(SEALED_WORLD, seasons=False, nights=False, fire=False),
-        W.HYCEAN: WorldViewSpec(timber_pct=20, settle=SettleMode.FLOATING, war=WarTerrain.NAVAL),
+        W.HYCEAN: WorldViewSpec(timber_pct=20, settle=SettleMode.FLOATING, war=WarTerrain.NAVAL, sea_pct=70),
         W.JUNGLE: WorldViewSpec(timber_pct=150),
         W.FORGE: WorldViewSpec(timber_pct=50),
         W.FUNGAL: WorldViewSpec(timber_pct=40),
         W.SHATTERED: WorldViewSpec(war=WarTerrain.SKY),
         W.HOLLOW: WorldViewSpec(light=WorldLight.INNER_SUN, seasons=False, nights=False),
-        W.ICE_SHELL: WorldViewSpec(soil=False, timber_pct=0, fire=False, need=BindingNeed.HEAT, settle=SettleMode.VENT, war=WarTerrain.NAVAL),
+        W.ICE_SHELL: WorldViewSpec(soil=False, timber_pct=0, fire=False, need=BindingNeed.HEAT, settle=SettleMode.VENT, war=WarTerrain.NAVAL, sea_pct=60),
         W.METHANE: WorldViewSpec(timber_pct=0, fire=False, need=BindingNeed.HEAT),
     }
 )
