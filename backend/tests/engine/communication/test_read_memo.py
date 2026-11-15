@@ -1,9 +1,9 @@
 import warnings
 
-from sqlalchemy import event, exists, select, update
+from sqlalchemy import event, exists, insert, select, update
 from sqlalchemy.orm import ORMExecuteState
 
-from aerona.db.read_memo import DirtyStates, memo_of, pending_tables, table_names
+from aerona.db.read_memo import KEEP_KEY, DirtyStates, memo_of, pending_tables, table_names
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.economy import GoodsFlowRow
@@ -211,3 +211,34 @@ async def test_each_namer_starts_from_the_registered_names_and_keeps_its_own_inv
     assert await realm.session.scalar(select(NameRegistryRow.display).where(NameRegistryRow.display == "Qorvathe")) == "Qorvathe"
     third = await Namer(realm.session, rules).pool()
     assert third.is_taken("Qorvathe") and not second.is_taken("Qorvathe")
+
+
+async def test_a_small_table_read_whole_answers_missing_keys_without_asking_until_something_writes_past_it(realm: Realm) -> None:
+    sync = realm.session.sync_session
+    sync.info[KEEP_KEY] = []
+    town = await settlement(realm, "Larkspur")
+    kinds = list(TraitKind)[:4]
+    realm.session.add(TraitRow(node_id=town.id, trait=kinds[0], source=TraitSource.BIRTH, epoch=1))
+    await realm.session.flush()
+    statements: list[str] = []
+
+    def listener(_conn: object, _cursor: object, statement: str, *_: object) -> None:
+        statements.append(statement)
+
+    engine = realm.session.get_bind()
+    event.listen(engine, "before_cursor_execute", listener)
+    try:
+        assert await realm.session.get(TraitRow, (town.id, kinds[1])) is None
+        counted = len(statements)
+        assert await realm.session.get(TraitRow, (town.id, kinds[2])) is None and len(statements) == counted
+        found = await realm.session.get(TraitRow, (town.id, kinds[0]))
+        assert found is not None and found.trait is kinds[0] and len(statements) == counted
+        realm.session.add(TraitRow(node_id=town.id, trait=kinds[1], source=TraitSource.BIRTH, epoch=1))
+        added = await realm.session.get(TraitRow, (town.id, kinds[1]))
+        assert added is not None and added.trait is kinds[1]
+        await realm.session.execute(insert(TraitRow).values(node_id=town.id, trait=kinds[3], source=TraitSource.BIRTH, epoch=1))
+        written = await realm.session.get(TraitRow, (town.id, kinds[3]))
+        assert written is not None and written.trait is kinds[3]
+    finally:
+        event.remove(engine, "before_cursor_execute", listener)
+        sync.info.pop(KEEP_KEY, None)

@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import event, select
+from sqlalchemy import event, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapper, ORMExecuteState, Session, class_mapper
 from sqlalchemy.orm._typing import OrmExecuteOptionsParameter
@@ -11,9 +11,11 @@ from sqlalchemy.orm.session import _EntityBindKey, _PKIdentityArgument
 from sqlalchemy.sql.selectable import ForUpdateParameter
 from sqlalchemy.util import EMPTY_DICT
 
-from aerona.db.read_memo import memo_of, table_names, track_dirty
+from aerona.db.read_memo import KEEP_KEY, memo_of, pending_tables, register_index, table_names, track_dirty
 
 PREFIX_KEYS = 2
+WHOLE_KEY = "aerona.whole_tables"
+WHOLE_ROWS_MAX = 40_000
 COLUMN_KEYS: dict[Mapper[Any], frozenset[str]] = {}
 
 
@@ -31,6 +33,7 @@ class TrackedSession(Session):
 
     def expunge_all(self) -> None:
         super().expunge_all()
+        self.info.pop(WHOLE_KEY, None)
         track_dirty(self)
 
 
@@ -80,6 +83,9 @@ class FastSession(AsyncSession):
 
     async def load_unknown[O](self, entity: _EntityBindKey[O], mapper: Mapper[O], ident: _PKIdentityArgument, key: Any) -> O | None:
         tables = table_names(mapper.tables)
+        if await self.whole_table(mapper, tables):
+            found: O | None = self.sync_session.identity_map.get(key)
+            return found
         if len(mapper.primary_key) == PREFIX_KEYS and isinstance(ident, tuple | list):
             siblings = await self.prefix_keys(mapper, ident[0], tables)
             if siblings is not None:
@@ -94,6 +100,22 @@ class FastSession(AsyncSession):
             if after is not None:
                 after[key] = True
         return loaded
+
+    async def whole_table(self, mapper: Mapper[Any], tables: frozenset[str]) -> bool:
+        sync = self.sync_session
+        if KEEP_KEY not in sync.info or len(mapper.tables) != 1 or mapper.inherits is not None or mapper.polymorphic_on is not None:
+            return False
+        if not tables.isdisjoint(pending_tables(sync)):
+            return False
+        table = next(iter(tables))
+        known: dict[str, bool] = sync.info.setdefault(WHOLE_KEY, {})
+        if table not in known:
+            known[table] = False
+            count = await self.scalar(select(func.count()).select_from(mapper.local_table))
+            if count is not None and count <= WHOLE_ROWS_MAX:
+                list(await self.scalars(select(mapper)))
+                sync.info.setdefault(WHOLE_KEY, {})[table] = True
+        return sync.info.get(WHOLE_KEY, {}).get(table) is True
 
     async def prefix_keys[O](self, mapper: Mapper[O], value: Any, tables: frozenset[str]) -> dict[tuple[Any, ...], O] | None:
         name = f"prefix_keys:{','.join(sorted(tables))}"
@@ -136,9 +158,16 @@ async def rows_by_prefix[O](session: AsyncSession, model: type[O], value: Any) -
     return list(await session.scalars(select(model).where(mapper.primary_key[0] == value)))
 
 
+def drop_whole_on_write(state: ORMExecuteState) -> None:
+    if not state.is_select:
+        state.session.info.pop(WHOLE_KEY, None)
+
+
 def fetch_matches(state: ORMExecuteState) -> None:
     if (state.is_update or state.is_delete) and not state.is_executemany and state.execution_options.get("synchronize_session") is None:
         state.update_execution_options(synchronize_session="fetch")
 
 
 event.listen(Session, "do_orm_execute", fetch_matches)
+event.listen(Session, "do_orm_execute", drop_whole_on_write)
+register_index(WHOLE_KEY)
