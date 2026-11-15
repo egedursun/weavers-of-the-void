@@ -5,10 +5,10 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import ImpuritySourceRow, PurityRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.folkways import ImpuritySource, PurityState
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.engine.body.customs import people_of
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.rules.registry import Rules
 
 SICK_SOURCES = (ImpuritySource.THE_DEAD, ImpuritySource.BODILY_FLUIDS)
@@ -22,12 +22,8 @@ async def shunned_sick(session: AsyncSession) -> dict[int, int]:
         weights[people_id] = max(weights.get(people_id, 0), weight)
     if not weights:
         return {}
-    towns = await session.execute(
-        select(EntityRow.id, EntityRow.affiliated_entity_id).where(
-            EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.affiliated_entity_id.in_(sorted(weights))
-        )
-    )
-    return {**weights, **{town: weights[people] for town, people in towns if people is not None}}
+    towns = {town: people for people in sorted(weights) for town in await towns_of_people(session, people)}
+    return {**weights, **{town: weights[people] for town, people in towns.items()}}
 
 
 async def outsider_weight(session: AsyncSession, people_id: int) -> int:

@@ -34,6 +34,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
 from aerona.domain.enums.urban import CrimeStance, MarketPlay, OrderLaw, RacketKind, TransportKind, UrbanService
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.divine.control import apply
 from aerona.engine.economy.convoys import ConvoyTally, dispatch
@@ -72,7 +73,7 @@ async def edit_district(ctx: TickContext, district_id: int, values: Values, rele
     if rank_id is not None:
         rank = await ctx.session.get(PurityRankRow, rank_id)
         town = await ctx.session.get(EntityRow, district.settlement_entity_id)
-        if rank is None or town is None or rank.people_entity_id != town.affiliated_entity_id:
+        if rank is None or town is None or rank.people_entity_id != await people_id_of(ctx.session, town):
             raise ValidationFailedError("A district can only be the quarter of a caste of its own town's people.")
     row = apply(district, allowed(values, DISTRICT_FIELDS, "district"), release)
     await ctx.session.flush()

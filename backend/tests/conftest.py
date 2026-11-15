@@ -10,10 +10,14 @@ from pathlib import Path
 import pytest
 from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import event
+from sqlalchemy.orm import Session, UOWTransaction
 
 from aerona.constants.media import MediaBackend
 from aerona.db.migrations import SCRIPT_LOCATION, upgrade_to_head_sync
 from aerona.db.session import Database
+from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.entity import EntityType
 from aerona.engine.pipeline import simulate
 from aerona.main import create_app
 from aerona.settings import Settings
@@ -37,6 +41,13 @@ class SwallowedFailures(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         if record.exc_info is not None:
             self.records.append(record)
+
+
+@event.listens_for(Session, "before_flush")
+def towns_hold_no_affiliation(session: Session, flush: UOWTransaction, instances: object) -> None:
+    for row in [*session.new, *session.dirty]:
+        if isinstance(row, EntityRow) and row.entity_type is EntityType.SETTLEMENT and row.affiliated_entity_id is not None:
+            raise AssertionError(f"{row.name} is a settlement holding an affiliation; a town holds its people by a homeland bond")
 
 
 @pytest.fixture(autouse=True)

@@ -50,6 +50,11 @@ async def people_of(session: AsyncSession, entity: EntityRow) -> EntityRow | Non
     return found
 
 
+async def people_id_of(session: AsyncSession, entity: EntityRow | None) -> int | None:
+    folk = await people_of(session, entity) if entity is not None else None
+    return folk.id if folk is not None else None
+
+
 async def _people_of(session: AsyncSession, entity: EntityRow) -> EntityRow | None:
     community = entity if entity.entity_type is EntityType.SETTLEMENT else await community_of(session, entity)
     if community is None:

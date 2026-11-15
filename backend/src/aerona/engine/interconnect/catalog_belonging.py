@@ -61,7 +61,7 @@ BELONGING_MECHANICS = (
         phases=("sanctuary", "outlawry", "prisons", "trials"),
         surface=Surface(drawer=DRAWER, chart="chart-sanctuary"),
         backfill="sanctuary: outlaws, the accused and defectors seek refuge from the next epoch",
-        templates=("sanctuary.claimed", "sanctuary.violated"),
+        templates=("sanctuary.claimed", "sanctuary.violated", "sanctuary.law"),
         tables=(SanctuaryRow.__tablename__, SanctuaryLawRow.__tablename__),
         exposure=Exposure.TOOL,
         tools=("seek_sanctuary",),
@@ -72,6 +72,9 @@ BELONGING_MECHANICS = (
             Coupling(S.FAITH, "a cult gains influence from the sanctuary its temples give", E.FLOW, "sanctuary.cult_influence"),
             Coupling(S.POLITY, "breaking sanctuary brings infamy and the god's curse", E.TRIGGER, "sanctuary.infamy"),
             Coupling(S.POLITY, "asylum sours the realm the fugitive fled", E.FLOW, "sanctuary.asylum_relation"),
+            Coupling(S.LAW, "a realm whose own refuges shelter those it hunts lays down a law of sanctuary", E.TRIGGER, "sanctuary.law_chance"),
+            Coupling(S.LAW, "a ruler who prizes law bars sanctuary rather than taxing it", E.RULE_SWITCH, "sanctuary.restrict_from"),
+            Coupling(S.ECONOMY, "a realm that taxes sanctuary takes a share of the fees", E.FLOW, "sanctuary.levy_pct"),
         ),
     ),
     Mechanic(

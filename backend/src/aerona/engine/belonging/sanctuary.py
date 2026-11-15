@@ -15,7 +15,7 @@ from aerona.domain.enums.belonging import FugitiveKind, SanctuaryKind, Sanctuary
 from aerona.domain.enums.collective import NormSituation
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.justice import CaseStage
-from aerona.domain.enums.mind import EthicalStance, MemoryKind
+from aerona.domain.enums.mind import EthicalStance, MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.belonging.refuge import OPEN_STATES, refuge_of
 from aerona.engine.body.afflictions import desecration_curse
@@ -25,6 +25,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import realm_of
 from aerona.engine.economy.purse import give_coin, receive_coin, take_coin
 from aerona.engine.law.prisons import imprison
+from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.hooks import desecrated
 from aerona.engine.mortal.standing import add_infamy
 from aerona.engine.notes import note
@@ -47,6 +48,7 @@ class SanctuaryTally:
     besieged: int = 0
     violated: int = 0
     surrendered: int = 0
+    laws: int = 0
 
 
 @dataclass(frozen=True)
@@ -231,9 +233,30 @@ async def pursue(ctx: TickContext, row: SanctuaryRow, tally: SanctuaryTally) -> 
         tally.besieged += 1
 
 
+async def legislate(ctx: TickContext, row: SanctuaryRow, tally: SanctuaryTally) -> None:
+    table = ctx.rules.sanctuary
+    host = await ctx.session.get(EntityRow, row.host_entity_id)
+    realm = await realm_of(ctx.session, host.location_id or host.id) if host is not None else None
+    if realm is None or realm != row.pursuer_entity_id or held(realm) or await ctx.session.get(SanctuaryLawRow, realm) is not None:
+        return
+    if not ctx.rng(seed_of("sanctuary.law", realm, ctx.epoch)).chance(table.law_chance):
+        return
+    ruler = await ruler_id(ctx, realm)
+    values = await stored_values(ctx.session, ValueHolder.PERSONAL, ruler) if ruler is not None else {}
+    strict = values.get(ValueAxis.LAW, 0) >= table.restrict_from
+    ctx.session.add(SanctuaryLawRow(polity_entity_id=realm, restricted=strict, fee_pct=0 if strict else table.levy_pct, locked=[]))
+    await ctx.session.flush()
+    tally.laws += 1
+    named = await ctx.session.get(EntityRow, realm)
+    what = "barred its temples from sheltering the hunted" if strict else "took a share of what its refuges are paid"
+    await note(ctx, f"{named.name if named else 'A realm'} {what}.", key="sanctuary.law", ids=[realm])
+
+
 async def keep_sanctuaries(ctx: TickContext, tally: SanctuaryTally) -> None:
     await seek(ctx, tally)
     await asylums(ctx, tally)
+    for row in list(await ctx.session.scalars(select(SanctuaryRow).where(SanctuaryRow.state.in_(OPEN_STATES)).order_by(SanctuaryRow.id))):
+        await legislate(ctx, row, tally)
     for row in list(await ctx.session.scalars(select(SanctuaryRow).where(SanctuaryRow.state.in_(OPEN_STATES)).order_by(SanctuaryRow.id))):
         if held(row.fugitive_entity_id, row.host_entity_id):
             continue

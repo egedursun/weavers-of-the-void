@@ -163,7 +163,7 @@ async def build_peace(ctx: TickContext, war_id: int, victor_id: int | None, term
         return await end_war(ctx, item.war, WarEnding.WHITE_PEACE, reason="peace made by decree", chosen=chosen)
     if not item.involves(victor_id):
         raise ValidationFailedError("The victor must be a side of the war.")
-    loser_id = item.defender_id if victor_id == item.attacker_id else item.attacker_id
+    loser_id = item.foe_of(victor_id)
     return await end_war(ctx, item.war, WarEnding.VICTORY, victor_id=victor_id, loser_id=loser_id, reason="peace terms set by decree", chosen=chosen)
 
 

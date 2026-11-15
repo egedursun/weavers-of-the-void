@@ -417,7 +417,7 @@ async def tire_side(ctx: TickContext, atlas: RegionAtlas, war: WarRow, row: WarS
 
 async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behind: bool) -> None:
     war = item.war
-    other = item.defender_id if side_id == item.attacker_id else item.attacker_id
+    other = item.foe_of(side_id)
     event = await war_event(ctx.session, war)
     if behind:
         await end_war(ctx, war, WarEnding.VICTORY, victor_id=other, loser_id=side_id, reason="war weariness")
@@ -1973,7 +1973,7 @@ async def grant_victory(ctx: TickContext, war_id: int, victor_id: int) -> WarSet
     item = await require_ongoing_war(ctx.session, war_id)
     if not item.involves(victor_id):
         raise ValidationFailedError("The victor must be a side of the war.")
-    loser_id = item.defender_id if victor_id == item.attacker_id else item.attacker_id
+    loser_id = item.foe_of(victor_id)
     return await end_war(ctx, item.war, WarEnding.VICTORY, victor_id=victor_id, loser_id=loser_id)
 
 

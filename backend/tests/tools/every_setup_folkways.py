@@ -25,7 +25,6 @@ async def owned_item(session: AsyncSession, realm: Realm) -> Ids:
 async def impure_mortal(session: AsyncSession, realm: Realm) -> Ids:
     town = await session.get(EntityRow, realm.settlement_id)
     assert town is not None
-    town.affiliated_entity_id = realm.people_id
     await connect(session, realm.settlement_id, realm.people_id, BondKind.DESCENDS_FROM)
     session.add(PurityRow(holder_node_id=realm.mortal_id, state=PurityState.IMPURE, since_epoch=0, locked=[]))
     session.add(PurificationRow(people_entity_id=realm.people_id, method=Purification.WASHING, epochs=0, cost=0, success=100, locked=[]))

@@ -22,6 +22,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.climes.windows import PHYSICAL, opens, pair
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import spoken_language
@@ -154,7 +155,7 @@ async def found_art(ctx: TickContext, called: str, members: list[int]) -> None:
 
 
 async def road_belonging(session: AsyncSession, people_id: int) -> int:
-    towns = select(EntityRow.id).where(EntityRow.affiliated_entity_id == people_id)
+    towns = await towns_of_people(session, people_id)
     found = await session.scalar(
         select(func.max(CosmopolitanMemberRow.share)).where(
             or_(CosmopolitanMemberRow.community_entity_id == people_id, CosmopolitanMemberRow.community_entity_id.in_(towns))

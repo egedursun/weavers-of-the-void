@@ -65,7 +65,7 @@ async def privateers(ctx: TickContext, factions: FactionBook, realms: RealmBook)
         if core is None or held(faction_id):
             continue
         for item in await ongoing_wars(ctx.session, core):
-            enemy_id = item.defender_id if item.attacker_id == core else item.attacker_id
+            enemy_id = item.foe_id
             enemy = await living_entity(ctx.session, enemy_id)
             if enemy is None or held(enemy.id):
                 continue
@@ -165,7 +165,7 @@ async def defect(
     wars = await ongoing_wars(ctx.session, core) if core is not None else []
     if wars and not ctx.rng(f"turncoat.{company.id}.{ctx.epoch}").chance(table.banditry_chance):
         item = wars[0]
-        enemy = item.defender_id if item.attacker_id == core else item.attacker_id
+        enemy = item.foe_id
         side = await ctx.session.scalar(select(WarSideRow.side).where(WarSideRow.war_id == item.war.id, WarSideRow.entity_id == enemy).limit(1))
         if side is not None and await ctx.session.get(WarSideRow, (item.war.id, company.id)) is None:
             ctx.session.add(new_side(ctx, item.war.id, company.id, side))

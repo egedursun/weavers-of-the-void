@@ -46,7 +46,7 @@ from aerona.services.integrity.network import RepairLog
 from aerona.services.integrity.operations_links import mend_operations_links, own_stray_ships
 from aerona.services.integrity.regime_links import mend_regime_links
 from aerona.services.integrity.sacred_links import mend_sacred_links
-from aerona.services.integrity.single_ruler import homeland_to_lives_in, single_rule
+from aerona.services.integrity.single_ruler import homeland_to_lives_in, restore_homelands, single_rule
 from aerona.services.integrity.tongue_links import mend_tongue_links
 from aerona.services.integrity.urban_links import mend_urban_links
 from aerona.services.integrity.war_truces import close_unfought_truces
@@ -114,6 +114,7 @@ class DataRepairs:
             ("rejection_marks", lambda session, rules, epoch: mark_rejected_bonds(session, epoch)),
             ("stale_location_bonds", lambda session, rules, epoch: close_stale_inside_bonds(session, epoch)),
             ("homeland_rule", lambda session, rules, epoch: homeland_to_lives_in(session, epoch)),
+            ("homelands", lambda session, rules, epoch: restore_homelands(session)),
             ("single_rule", lambda session, rules, epoch: single_rule(session, epoch)),
             ("inside_bonds", lambda session, rules, epoch: close_mismatched_inside(session, epoch)),
             ("market_trade", lambda session, rules, epoch: close_market_trade(session, epoch)),

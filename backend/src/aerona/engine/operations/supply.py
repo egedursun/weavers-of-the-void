@@ -245,7 +245,7 @@ async def interdicted(ctx: TickContext, march: March, path: list[int]) -> bool:
     if not inner:
         return False
     for item in await ongoing_wars(ctx.session, march.owner.id):
-        enemy = item.defender_id if item.attacker_id == march.owner.id else item.attacker_id
+        enemy = item.foe_id
         if inner & await army_regions(ctx, enemy):
             return True
     return False

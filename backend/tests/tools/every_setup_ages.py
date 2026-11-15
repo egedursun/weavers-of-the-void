@@ -28,7 +28,7 @@ async def sky_scholar(session: AsyncSession, realm: Realm) -> Ids:
     session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.ASTRONOMY, level=6, peak=6, last_used_epoch=1, source=SkillSource.PRACTICE))
     town = await session.get(EntityRow, realm.settlement_id)
     assert town is not None
-    town.affiliated_entity_id = realm.people_id
+    await connect(session, town.id, realm.people_id, BondKind.DESCENDS_FROM)
     await session.flush()
     return found
 

@@ -112,7 +112,7 @@ async def work(session: AsyncSession, world: CoreWorld, name: str, author: Entit
 async def people_of(session: AsyncSession, world: CoreWorld, *towns: EntityRow) -> EntityRow:
     folk = await entity(session, f"Folk of {towns[0].name}", EntityType.PEOPLE, PeopleStats(population=900), world_id=world.world.id)
     for town in towns:
-        town.affiliated_entity_id = folk.id
+        await bond(session, town.id, folk.id, BondKind.DESCENDS_FROM)
     await session.flush()
     return folk
 

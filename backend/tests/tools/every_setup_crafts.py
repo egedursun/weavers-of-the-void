@@ -66,7 +66,6 @@ async def people_home(session: AsyncSession, realm: Realm) -> Ids:
     town = await session.get(EntityRow, realm.settlement_id)
     me = await session.get(EntityRow, realm.mortal_id)
     assert town is not None and me is not None
-    town.affiliated_entity_id = realm.people_id
     me.location_id = realm.settlement_id
     await connect(session, town.id, realm.people_id, BondKind.DESCENDS_FROM)
     await session.flush()

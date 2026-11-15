@@ -65,6 +65,9 @@ class SanctuaryRules:
     surrender_epochs: int = rule(3, 1, 50, P, "Epochs of siege after which a fugitive gives itself up")
     infamy: int = rule(15, 0, 100, P, "Infamy a pursuer earns for breaking a sanctuary")
     asylum_relation: int = rule(10, 0, 100, P, "Relation two realms lose when one gives asylum to the other's fugitive")
+    law_chance: int = rule(30, 0, 100, P, "Chance each epoch that a realm whose own refuges shelter those it hunts lays down a law of sanctuary (%)")
+    restrict_from: int = rule(60, 0, 100, P, "Regard for law of a ruler from which its realm bars sanctuary rather than taxing it")
+    levy_pct: int = rule(30, 0, 100, P, "Share of a refuge's fees a realm takes once it taxes sanctuary (%)")
 
 
 @dataclass(frozen=True)

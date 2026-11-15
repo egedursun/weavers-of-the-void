@@ -6,14 +6,14 @@ from aerona.db.tables.urban import CrimeStanceRow
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.urban import CrimeStance
 from aerona.engine.renown.currencies import realm_of_community
-from aerona.engine.services.war import ongoing_wars
+from aerona.engine.services.war import foe_realms
 
 
 async def privateers_against(session: AsyncSession, owner_id: int | None) -> bool:
     realm = await realm_of_community(session, owner_id) if owner_id is not None else None
     if realm is None:
         return False
-    foes = {side for war in await ongoing_wars(session, realm) for side in war.sides if side != realm}
+    foes = await foe_realms(session, realm)
     if not foes:
         return False
     privateers = await session.scalar(

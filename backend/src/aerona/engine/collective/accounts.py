@@ -32,6 +32,7 @@ from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.ethics import holder_kind
 from aerona.engine.notes import note
 from aerona.engine.polity.control import grant_claim
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
@@ -586,15 +587,14 @@ async def believe_myths(ctx: TickContext, tally: HistoryTally) -> None:
             if doubted and ctx.rng(f"debunk.{holder.id}.{ctx.epoch}").chance(table.scandal_pct / 4):
                 await debunk(ctx, myth, holder, tally)
         else:
-            for town in await towns_of_people(ctx, holder.id):
+            for town in await town_profiles_of(ctx, holder.id):
                 shift(town, "unrest", -table.myth_cohesion * lean)
 
 
-async def towns_of_people(ctx: TickContext, people_id: int) -> list[SettlementProfileRow]:
+async def town_profiles_of(ctx: TickContext, people_id: int) -> list[SettlementProfileRow]:
     rows = await ctx.session.scalars(
         select(SettlementProfileRow)
-        .join(EntityRow, EntityRow.id == SettlementProfileRow.settlement_entity_id)
-        .where(EntityRow.affiliated_entity_id == people_id, EntityRow.status == EntityStatus.CANON)
+        .where(SettlementProfileRow.settlement_entity_id.in_(await towns_of_people(ctx.session, people_id)))
         .order_by(SettlementProfileRow.settlement_entity_id)
     )
     return [row for row in rows if not held(row.settlement_entity_id)]
@@ -607,7 +607,7 @@ async def debunk(ctx: TickContext, myth: FoundingMythRow, holder: EntityRow, tal
     if realm is not None:
         shift(realm, "legitimacy", -table.debunk_cost)
         shift(realm, "stability", -table.debunk_cost)
-    for town in await towns_of_people(ctx, holder.id):
+    for town in await town_profiles_of(ctx, holder.id):
         shift(town, "unrest", table.debunk_cost)
     tally.debunked += 1
     await note(ctx, f"The founding story of {holder.name} was shown to be untrue.", key="history.myth_debunked", ids=[holder.id])

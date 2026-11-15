@@ -28,7 +28,7 @@ from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.grief import OPEN_STAGES
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.notes import note
-from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
@@ -119,9 +119,7 @@ async def cheer(ctx: TickContext, town: EntityRow, amount: int) -> None:
 
 
 async def brawls(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) -> None:
-    towns = list(
-        await ctx.session.scalars(select(EntityRow.id).where(EntityRow.affiliated_entity_id == people.id, EntityRow.entity_type == EntityType.SETTLEMENT))
-    )
+    towns = await towns_of_people(ctx.session, people.id)
     if not towns:
         return
     for gathering in list(
@@ -165,11 +163,7 @@ async def visions(ctx: TickContext, people: EntityRow, tally: IntoxicationTally)
 
 async def brew(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) -> None:
     for town in list(
-        await ctx.session.scalars(
-            select(EntityRow).where(
-                EntityRow.affiliated_entity_id == people.id, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON
-            )
-        )
+        await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_(await towns_of_people(ctx.session, people.id))).order_by(EntityRow.id))
     ):
         if held(town.id):
             continue

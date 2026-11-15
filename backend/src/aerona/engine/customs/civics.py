@@ -23,7 +23,7 @@ from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.renown.currencies import members_of, ruler_of_realm
-from aerona.engine.services.war import ongoing_wars
+from aerona.engine.services.war import ongoing_wars, realms_of_side
 
 RIGHTS: Mapping[Membership, tuple[MemberRight, ...]] = {
     Membership.CITIZEN: tuple(MemberRight),
@@ -234,11 +234,12 @@ async def adopt_borders(ctx: TickContext, tally: CivicsTally) -> None:
     table = ctx.rules.borders
     for war in await ongoing_wars(ctx.session):
         for side in war.sides:
-            entity = await ctx.session.get(EntityRow, side)
-            if entity is None or entity.entity_type is not EntityType.POLITY or held(side) or await ctx.session.get(BorderControlRow, side) is not None:
-                continue
-            ctx.session.add(BorderControlRow(polity_entity_id=side, fee=PERCENT // 2, delay=table.war_delay, enforcement=table.war_enforcement, locked=[]))
-            tally.borders += 1
+            for realm in sorted(await realms_of_side(ctx.session, side)):
+                if held(realm) or await ctx.session.get(BorderControlRow, realm) is not None:
+                    continue
+                ctx.session.add(BorderControlRow(polity_entity_id=realm, fee=PERCENT // 2, delay=table.war_delay, enforcement=table.war_enforcement, locked=[]))
+                await ctx.session.flush()
+                tally.borders += 1
 
 
 async def keep_civics(ctx: TickContext, tally: CivicsTally) -> None:

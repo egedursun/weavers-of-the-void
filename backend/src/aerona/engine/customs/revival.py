@@ -22,7 +22,7 @@ from aerona.engine.lore.names import tongue_of
 from aerona.engine.mind.book import clamp_value, stored_values, write_values
 from aerona.engine.notes import note
 from aerona.engine.primitives.faith import change_religion, is_living_god, patron_node
-from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.renown.currencies import ruler_of_realm
@@ -42,7 +42,7 @@ class RevivalTally:
 
 
 async def towns_of(ctx: TickContext, people_id: int) -> list[int]:
-    return list(await ctx.session.scalars(select(EntityRow.id).where(EntityRow.affiliated_entity_id == people_id, EntityRow.status == EntityStatus.CANON)))
+    return await towns_of_people(ctx.session, people_id)
 
 
 async def pressure_on(ctx: TickContext, people_id: int) -> int:

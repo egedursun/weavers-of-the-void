@@ -214,12 +214,12 @@ async def abandon_mid_war(ctx: TickContext, traitor: EntityRow, victim: EntityRo
     collapsed = 0
     rng = ctx.rng(f"betrayal.collapse.{traitor.id}.{victim.id}")
     for item in await ongoing_wars(ctx.session, victim.id):
-        enemy_id = item.defender_id if item.attacker_id == victim.id else item.attacker_id
+        enemy_id = item.foe_id
         enemy = await living_entity(ctx.session, enemy_id)
         if enemy is None or enemy.id == traitor.id or not rng.chance(ctx.rules.diplomacy.betrayal_war_collapse_chance):
             continue
         event = await living_entity(ctx.session, item.war.event_entity_id)
-        await end_war(ctx, item.war, WarEnding.BETRAYAL, victor_id=enemy.id, loser_id=victim.id, reason="betrayal", apply_relation=False)
+        await end_war(ctx, item.war, WarEnding.BETRAYAL, victor_id=enemy.id, loser_id=item.own_id or victim.id, reason="betrayal", apply_relation=False)
         war_name = event.name if event is not None else "the war"
         text = f"Abandoned by its ally {traitor.name}, {victim.name} could not hold the field and {war_name} was lost to {enemy.name}."
         await _note(ctx, text, "diplomacy.betrayal_war_lost", (victim.id, enemy.id, traitor.id))

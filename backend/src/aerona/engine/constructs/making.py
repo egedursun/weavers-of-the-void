@@ -20,6 +20,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import BeastStats, ItemStats
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import profile_of
 from aerona.engine.notes import note
@@ -65,7 +66,7 @@ class MakingTally:
 async def body_material(ctx: TickContext, maker: EntityRow) -> MaterialKind:
     knowledge = await KnowledgeMap.load(ctx.session)
     town = await town_of(ctx.session, maker)
-    holders = [holder for holder in (town.id if town else None, town.affiliated_entity_id if town else None) if holder is not None]
+    holders = [holder for holder in (town.id if town else None, await people_id_of(ctx.session, town)) if holder is not None]
     level = max((knowledge.level(holder, KnowledgeBranch.METALLURGY) for holder in holders), default=0)
     reachable = [kind for kind in BODIES if MATERIALS[kind].level <= level]
     return max(reachable or [MaterialKind.CLAY], key=lambda kind: (MATERIALS[kind].hardness, kind.value))
@@ -227,7 +228,7 @@ async def skilled_makers(ctx: TickContext) -> list[EntityRow]:
 
 async def knows_making(ctx: TickContext, knowledge: KnowledgeMap, maker: EntityRow) -> bool:
     town = await town_of(ctx.session, maker)
-    holders = [holder for holder in (town.id if town else None, town.affiliated_entity_id if town else None) if holder is not None]
+    holders = [holder for holder in (town.id if town else None, await people_id_of(ctx.session, town)) if holder is not None]
     return any(knowledge.level(holder, KnowledgeBranch.MAGIC) >= ctx.rules.constructs.maker_magic for holder in holders)
 
 

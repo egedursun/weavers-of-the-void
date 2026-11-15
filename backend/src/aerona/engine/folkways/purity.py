@@ -27,7 +27,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.mind.book import values_for
 from aerona.engine.mortal.kin import close_kin_of, parents_of
-from aerona.engine.primitives.folk import folk_among
+from aerona.engine.primitives.folk import folk_among, towns_of_people
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import has_flag
@@ -336,12 +336,7 @@ async def keep_purity(ctx: TickContext, tally: PurityTally) -> None:
 async def quarter_castes(ctx: TickContext, people: EntityRow, ranks: list[PurityRankRow], tally: PurityTally) -> None:
     order = sorted(ranks, key=lambda rank: (-rank.standing, rank.id))
     known = {rank.id for rank in ranks}
-    towns = await ctx.session.scalars(
-        select(EntityRow.id).where(
-            EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.affiliated_entity_id == people.id
-        )
-    )
-    for town in list(towns):
+    for town in await towns_of_people(ctx.session, people.id):
         if held(town):
             continue
         districts = list(

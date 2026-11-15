@@ -118,6 +118,8 @@ ARTS_MECHANICS = (
             Coupling(S.CULTURE, "arenas and stadiums let a town keep a club", E.TRIGGER, "sports.club_population"),
             Coupling(S.SOCIAL, "wins and losses raise and lower fandom", E.FLOW, "sports.fandom_step"),
             Coupling(S.BODY, "the strength and swiftness of a club's athletes weigh in every match", E.MODIFIER, "sports.athletes"),
+            Coupling(S.CULTURE, "a people that loves a ball game or wrestling keeps a club without an arena", E.TRIGGER, "sports.field_following"),
+            Coupling(S.SOCIAL, "clubs outside any league meet their neighbours in friendly matches", E.TRIGGER, "sports.friendly_chance"),
         ),
     ),
     Mechanic(

@@ -169,7 +169,6 @@ async def test_travellers_of_a_busy_road_grow_a_culture_that_pulls_their_values_
     first = await settlement(session, "Brinehold", world, world.regions[0])
     second = await settlement(session, "Farshore", world, world.regions[1])
     for town in (first, second):
-        town.affiliated_entity_id = world.people.id
         await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
         await bond(session, town.id, world.language.id, BondKind.SPEAKS)
     session.add(CultureValueRow(entity_id=world.people.id, axis=ValueAxis.TRADITION, value=40))
@@ -233,7 +232,7 @@ async def test_a_mortal_sees_the_number_of_each_road_culture_it_can_join(session
 async def test_a_quiet_road_loses_its_culture_and_belonging_eases_a_peoples_pressure_to_a_movement(session: AsyncSession, world: CoreWorld) -> None:
     other, _ = await add_empty_world(session)
     town = await settlement(session, "Wayside", world, world.regions[0])
-    town.affiliated_entity_id = world.people.id
+    await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
     route = RouteRow(world_a_id=world.world.id, world_b_id=other.id, method=TravelMethod.LIGHT_SAIL, duration_epochs=2, danger=10, created_epoch=1, traffic=0)
     session.add(route)
     await session.flush()

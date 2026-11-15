@@ -97,7 +97,6 @@ async def at(session: AsyncSession, epoch: int, **rules: dict[str, int]) -> Tick
 
 async def home(session: AsyncSession, world: CoreWorld, name: str, *techniques: Technique) -> EntityRow:
     town = await settlement(session, name, world, world.regions[0])
-    town.affiliated_entity_id = world.people.id
     await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
     session.add(SettlementProfileRow(settlement_entity_id=town.id, size_tier=SizeTier.TOWN))
     session.add_all([HolderTechniqueRow(holder_entity_id=town.id, technique=technique) for technique in techniques])

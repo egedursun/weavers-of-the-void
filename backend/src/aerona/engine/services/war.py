@@ -1,4 +1,5 @@
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -15,7 +16,7 @@ from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import WorldSeasonRow
-from aerona.db.tables.polity import TreatyProfileRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyProfileRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, TributeRow, WarRow, WarSideRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
@@ -42,6 +43,7 @@ from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.crises import crisis_instead
 from aerona.engine.polity.regard import on_war
 from aerona.engine.polity.subjects import forbidden_war
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.levies import levy, levy_category
 from aerona.engine.primitives.naming import Namer, seed_of
@@ -77,10 +79,21 @@ class OngoingWar:
     war: WarRow
     attacker_id: int
     defender_id: int
+    own_id: int | None = None
 
     @property
     def sides(self) -> tuple[int, int]:
         return (self.attacker_id, self.defender_id)
+
+    def foe_of(self, own_id: int) -> int:
+        return self.defender_id if own_id == self.attacker_id else self.attacker_id
+
+    def foe_of_camp(self, camp: WarSide) -> int:
+        return self.defender_id if camp is WarSide.ATTACKER else self.attacker_id
+
+    @property
+    def foe_id(self) -> int:
+        return self.foe_of(self.own_id if self.own_id is not None else self.attacker_id)
 
     def involves(self, entity_id: int) -> bool:
         return entity_id in self.sides
@@ -177,16 +190,67 @@ async def active_wars(session: AsyncSession) -> list[WarRow]:
     return list(await session.scalars(select(WarRow).where(WarRow.status.in_(ACTIVE_WAR_STATUSES)).order_by(WarRow.id)))
 
 
+async def realms_holding(session: AsyncSession, town_ids: Iterable[int]) -> set[int]:
+    towns = sorted(set(town_ids))
+    members = select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id.in_(towns))
+    cores = select(PolityProfileRow.polity_entity_id).where(PolityProfileRow.core_entity_id.in_(towns))
+    return set(await session.scalars(members)) | set(await session.scalars(cores))
+
+
+@memoized(BondRow, EntityRow, PolityMemberRow, PolityProfileRow)
+async def war_family(session: AsyncSession, node_id: int) -> frozenset[int]:
+    node = await session.get(EntityRow, node_id)
+    family = {node_id}
+    if node is None:
+        return frozenset(family)
+    towns: set[int] = set()
+    if node.entity_type is EntityType.POLITY:
+        profile = await session.get(PolityProfileRow, node_id)
+        towns = set(await session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == node_id)))
+        towns |= {profile.core_entity_id} if profile is not None and profile.core_entity_id is not None else set()
+    elif node.entity_type is EntityType.SETTLEMENT:
+        towns = {node_id}
+        family |= await realms_holding(session, towns)
+    elif node.entity_type is EntityType.PEOPLE:
+        towns = set(await towns_of_people(session, node_id))
+        family |= await realms_holding(session, towns)
+    family |= towns
+    for town_id in sorted(towns):
+        folk = await people_of(session, town) if (town := await session.get(EntityRow, town_id)) is not None else None
+        family |= {folk.id} if folk is not None else set()
+    return frozenset(family)
+
+
+async def realms_in(session: AsyncSession, ids: Iterable[int]) -> set[int]:
+    found = await session.scalars(select(EntityRow.id).where(EntityRow.id.in_(sorted(set(ids))), EntityRow.entity_type == EntityType.POLITY))
+    return set(found)
+
+
+async def realms_of_side(session: AsyncSession, side_id: int) -> set[int]:
+    return await realms_in(session, await war_family(session, side_id))
+
+
+async def foe_realms(session: AsyncSession, node_id: int) -> set[int]:
+    found: set[int] = set()
+    for item in await ongoing_wars(session, node_id):
+        found |= await realms_of_side(session, item.foe_id)
+    return found - await realms_of_side(session, node_id)
+
+
 async def ongoing_wars(session: AsyncSession, side_id: int | None = None) -> list[OngoingWar]:
     result: list[OngoingWar] = []
+    family = await war_family(session, side_id) if side_id is not None else frozenset()
     for war in await active_wars(session):
         sides = await sides_of(session, war)
         if sides is None:
             continue
         if await living_entity(session, sides[0]) is None or await living_entity(session, sides[1]) is None:
             continue
-        if side_id is None or side_id in sides:
+        if side_id is None:
             result.append(OngoingWar(war, sides[0], sides[1]))
+        elif sides[0] in family or sides[1] in family:
+            own = side_id if side_id in sides else sides[0] if sides[0] in family else sides[1]
+            result.append(OngoingWar(war, sides[0], sides[1], own))
     return result
 
 

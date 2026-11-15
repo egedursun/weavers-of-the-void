@@ -635,7 +635,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
             "son_turn_system",
         ),
         ("seek_sanctuary",),
-        ("sanctuary.claimed", "sanctuary.violated"),
+        ("sanctuary.claimed", "sanctuary.violated", "sanctuary.law"),
         ("0a3a6bd53c20",),
     ),
     ComplianceRow(

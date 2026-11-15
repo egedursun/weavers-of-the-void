@@ -299,7 +299,7 @@ async def refresh_realms(ctx: TickContext, book: RealmBook) -> dict[str, int]:
         population = sum(stat(communities[item], "population") or 0 for item in member_ids)
         realm = by_core.get(core_id)
         if realm is None:
-            if population < table.min_founding_population:
+            if population < table.min_founding_population or held(core_id):
                 continue
             realm = await found_polity(ctx, book, core)
             counts["founded"] += 1

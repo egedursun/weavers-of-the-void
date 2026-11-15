@@ -349,7 +349,7 @@ async def test_literacy_and_silence_pull_a_town_into_godlessness_and_miracles_br
         )
     )
     town = await settlement(session, "Quillhaven", world, world.regions[3], piety=12, prosperity=90)
-    town.affiliated_entity_id = people.id
+    await bond(session, town.id, people.id, BondKind.DESCENDS_FROM)
     await session.flush()
     rules = {"literacy_pct": 100, "drift_pct": 100, "godless_piety": 10}
     tally = RiteTally()
@@ -375,7 +375,7 @@ async def ruled_realm(session: AsyncSession, world: CoreWorld, town: EntityRow, 
 async def test_divination_reads_truly_only_with_a_seer_and_a_heeded_ill_omen_holds_a_war(session: AsyncSession, world: CoreWorld) -> None:
     people = await entity(session, "Bird Watchers", EntityType.PEOPLE, PeopleStats(population=900), world_id=world.world.id, location_id=world.regions[0].id)
     town = await settlement(session, "Augurhold", world, world.regions[0])
-    town.affiliated_entity_id = people.id
+    await bond(session, town.id, people.id, BondKind.DESCENDS_FROM)
     king = await mortal(session, "Reynard", world, town.id)
     session.add(MortalProfileRow(entity_id=king.id, legitimacy=50, locked=[]))
     await write_values(session, ValueHolder.PERSONAL, king.id, {ValueAxis.SUPERSTITION: 90})
@@ -554,7 +554,7 @@ async def test_a_revered_mystic_founds_a_holy_order(session: AsyncSession, world
 async def test_a_divination_system_counts_its_diviners_and_one_with_none_is_never_consulted(session: AsyncSession, world: CoreWorld) -> None:
     people = await entity(session, "Lot Casters", EntityType.PEOPLE, PeopleStats(population=900), world_id=world.world.id, location_id=world.regions[0].id)
     town = await settlement(session, "Lotby", world, world.regions[0])
-    town.affiliated_entity_id = people.id
+    await bond(session, town.id, people.id, BondKind.DESCENDS_FROM)
     king = await mortal(session, "Brand", world, town.id)
     realm = await ruled_realm(session, world, town, king)
     system = DivinationSystemRow(people_entity_id=people.id, kind=DivinationKind.AUGURY, locked=[])

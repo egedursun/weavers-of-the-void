@@ -25,7 +25,7 @@ from aerona.domain.enums.mind import Attribute, PressureKind
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.engine.body.conditions import end_condition, gain_condition
-from aerona.engine.body.customs import people_of
+from aerona.engine.body.customs import people_id_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.split import MIDPOINT, attributes_of, has_attributes, store_attributes
@@ -106,7 +106,8 @@ async def derive_diet(ctx: TickContext, town: EntityRow, row: DietRow) -> None:
         if share not in row.locked:
             setattr(row, share, clamp_int(shares.get(share, 0), 0, PERCENT))
     if "preserved" not in row.locked:
-        lore = await ctx.session.get(FamineLoreRow, town.affiliated_entity_id) if town.affiliated_entity_id is not None else None
+        folk = await people_id_of(ctx.session, town)
+        lore = await ctx.session.get(FamineLoreRow, folk) if folk is not None else None
         stored = lore.storage * ctx.rules.nutrition.stores_pct // PERCENT if lore is not None else 0
         row.preserved = clamp_int(max(round_half_up(preserved * PERCENT / food) if food else 0, stored), 0, PERCENT)
     if "special" not in row.locked:

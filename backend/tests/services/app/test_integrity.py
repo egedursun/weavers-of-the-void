@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.collective import DiasporaRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import EpochRow
@@ -32,9 +33,10 @@ from aerona.services.integrity.data_repairs import (
 )
 from aerona.services.integrity.epoch_years import align_epoch_years
 from aerona.services.integrity.location_bonds import add_missing_inside_bonds
-from aerona.services.integrity.single_ruler import homeland_to_lives_in, single_rule
+from aerona.services.integrity.single_ruler import homeland_to_lives_in, restore_homelands, single_rule
 from aerona.services.integrity.war_truces import close_unfought_truces
 from aerona.services.notifications import Notifier
+from aerona.engine.body.customs import people_id_of
 from tests.services.app.factories import Cosmos, make_entity
 
 
@@ -57,6 +59,29 @@ async def test_bond_level_repairs(session: AsyncSession, rules: Rules, world: Co
     assert marked >= 1
     assert await close_mismatched_inside(session, 2) == 0
     assert await single_rule(session, 2) == 0
+
+
+async def test_homeland_repairs_keep_each_town_s_own_people(session: AsyncSession, world: Cosmos) -> None:
+    ruled = await make_entity(session, "Harbourmouth", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
+    stray = await make_entity(session, "Lowtown", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
+    settled = await make_entity(session, "Upland Steading", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
+    guests = await make_entity(session, "Farfolk", EntityType.PEOPLE, world_id=world.world.id, location_id=world.region.id)
+    session.add_all(
+        [
+            BondRow(source_node_id=world.people.id, target_node_id=ruled.id, kind=BondKind.RULES, role=BondRole.HOMELAND, epoch=1),
+            BondRow(source_node_id=guests.id, target_node_id=stray.id, kind=BondKind.LIVES_IN, epoch=1),
+            BondRow(source_node_id=world.people.id, target_node_id=stray.id, kind=BondKind.LIVES_IN, epoch=1),
+            DiasporaRow(people_entity_id=guests.id, host_entity_id=stray.id, locked=[]),
+            BondRow(source_node_id=world.people.id, target_node_id=world.region.id, kind=BondKind.LIVES_IN, epoch=1),
+        ]
+    )
+    await session.flush()
+    assert await homeland_to_lives_in(session, 2) == 1
+    assert await restore_homelands(session) >= 1
+    assert await people_id_of(session, ruled) == world.people.id
+    assert await people_id_of(session, stray) == world.people.id
+    assert await people_id_of(session, settled) == world.people.id
+    assert await restore_homelands(session) == 0
 
 
 async def test_missing_inside_and_epoch_years(session: AsyncSession, rules: Rules, world: Cosmos) -> None:

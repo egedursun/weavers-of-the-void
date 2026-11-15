@@ -6,6 +6,7 @@ from aerona.db.tables.ages import ArcFigureRow, ArcRow, IrregularSeasonRow, Setu
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.ages import ArcOutcome, ArcStage, PayoffKind, SeasonSpell
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.sacred.places import town_of
 
 LIST_LINES = 3
@@ -53,10 +54,10 @@ async def season_lines(scope: Scope, me: EntityRow) -> list[str]:
         return []
     spell = "a long winter" if row.spell is SeasonSpell.WINTER else "a long summer"
     found = [f"the seasons of your world run irregular; {spell} holds since epoch {row.spell_started_epoch}"]
-    town = await town_of(scope.session, me)
-    if town is not None and town.affiliated_entity_id is not None:
+    folk = await people_id_of(scope.session, await town_of(scope.session, me))
+    if folk is not None:
         forecast = await scope.session.scalar(
-            select(WinterForecastRow).where(WinterForecastRow.world_id == me.world_id, WinterForecastRow.people_entity_id == town.affiliated_entity_id)
+            select(WinterForecastRow).where(WinterForecastRow.world_id == me.world_id, WinterForecastRow.people_entity_id == folk)
         )
         if forecast is not None:
             heeded = "your people heeded it and stored food" if forecast.heeded else "your people paid it little mind"

@@ -16,6 +16,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import stored_values
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
 from aerona.rules.registry import Rules
@@ -126,11 +127,7 @@ async def keep_time_budgets(ctx: TickContext, tally: TimeTally) -> None:
         if not budgets:
             continue
         for town in list(
-            await ctx.session.scalars(
-                select(EntityRow)
-                .where(EntityRow.affiliated_entity_id == people.id, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
-                .order_by(EntityRow.id)
-            )
+            await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_(await towns_of_people(ctx.session, people.id))).order_by(EntityRow.id))
         ):
             if not held(town.id):
                 await live_by(ctx, town, budgets, tally)

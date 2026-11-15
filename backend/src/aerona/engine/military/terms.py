@@ -9,7 +9,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.military import PeaceTermKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.renown import Currency, ReputationAxis
-from aerona.domain.enums.war import WarSide, WarStatus
+from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.military.peace import record
 from aerona.engine.military.support import realm_of
@@ -28,7 +28,7 @@ from aerona.engine.services.war_resolution import make_peace
 async def separate_peace(ctx: TickContext, item: OngoingWar, ally: WarSideRow) -> bool:
     if ally.weariness < ctx.rules.war_conduct.separate_peace_at or held(ally.entity_id) or "left_epoch" in ally.locked:
         return False
-    enemy_id = item.defender_id if ally.side is WarSide.ATTACKER else item.attacker_id
+    enemy_id = item.foe_of_camp(ally.side)
     ally.left_epoch = ctx.epoch
     await make_peace(ctx, ally.entity_id, enemy_id, "a separate peace")
     leaver, enemy = await living_entity(ctx.session, ally.entity_id), await living_entity(ctx.session, enemy_id)

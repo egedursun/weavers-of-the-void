@@ -106,7 +106,7 @@ async def test_a_chaotic_orbit_brings_long_winters_that_starve_the_unprepared_mo
     heeding = await settlement(session, "Heedford", world, regions[0], population=900)
     careless = await settlement(session, "Carelow", world, regions[1], population=900)
     heeding.world_id = careless.world_id = home.id
-    heeding.affiliated_entity_id = folk.id
+    await bond(session, heeding.id, folk.id, BondKind.DESCENDS_FROM)
     session.add_all([society(heeding.id, 0), society(careless.id, 0)])
     await session.flush()
     for town in (heeding, careless):
@@ -137,7 +137,7 @@ async def test_a_people_that_remembers_its_famines_loses_less_to_a_long_winter(s
     stored = await settlement(session, "Granary Hold", world, regions[0], population=900)
     bare = await settlement(session, "Barewick", world, regions[1], population=900)
     stored.world_id = bare.world_id = home.id
-    stored.affiliated_entity_id = wise.id
+    await bond(session, stored.id, wise.id, BondKind.DESCENDS_FROM)
     session.add_all([society(stored.id, 0), society(bare.id, 0), FamineLoreRow(people_entity_id=wise.id, memory=80, famine_foods=True, storage=100, locked=[])])
     session.add(IrregularSeasonRow(world_id=home.id, spell=SeasonSpell.WINTER, spell_started_epoch=3, spell_length=5, severity=100, locked=[]))
     await session.flush()

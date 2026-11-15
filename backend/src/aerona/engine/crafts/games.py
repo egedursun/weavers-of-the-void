@@ -12,10 +12,11 @@ from aerona.domain.enums.crafts import GameKind, GameRule
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.mortal.learning import practise_subject
 from aerona.engine.notes import note
-from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
@@ -34,13 +35,7 @@ class GameTally:
 
 
 async def towns_of(ctx: TickContext, people_id: int) -> list[EntityRow]:
-    return list(
-        await ctx.session.scalars(
-            select(EntityRow)
-            .where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.affiliated_entity_id == people_id)
-            .order_by(EntityRow.id)
-        )
-    )
+    return list(await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_(await towns_of_people(ctx.session, people_id))).order_by(EntityRow.id)))
 
 
 async def invent(ctx: TickContext, people: EntityRow, tally: GameTally) -> None:
@@ -67,11 +62,12 @@ async def neighbours(ctx: TickContext, people_id: int) -> list[int]:
     if not regions:
         return []
     found = await ctx.session.scalars(
-        select(EntityRow.affiliated_entity_id)
+        select(EntityRow)
         .where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(sorted(regions)))
-        .order_by(EntityRow.affiliated_entity_id)
+        .order_by(EntityRow.id)
     )
-    return sorted({item for item in found if item is not None and item != people_id})
+    folks = {await people_id_of(ctx.session, town) for town in list(found)}
+    return sorted(item for item in folks if item is not None and item != people_id)
 
 
 async def spread(ctx: TickContext, row: GameFollowingRow, tally: GameTally) -> None:

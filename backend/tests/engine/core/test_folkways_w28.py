@@ -92,7 +92,6 @@ async def at(session: AsyncSession, epoch: int, **rules: dict[str, int]) -> Tick
 
 async def home(session: AsyncSession, world: CoreWorld, name: str, **values: int) -> tuple[EntityRow, EntityRow]:
     town = await settlement(session, name, world, world.regions[0])
-    town.affiliated_entity_id = world.people.id
     await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
     for axis, value in values.items():
         session.add(CultureValueRow(entity_id=world.people.id, axis=ValueAxis(axis), value=value))
@@ -443,7 +442,6 @@ async def test_a_people_that_holds_outsiders_unclean_trades_with_strangers_only_
     session.add(ImpuritySourceRow(people_entity_id=folk.id, source=ImpuritySource.OUTSIDERS, weight=100, lasts=1, locked=[]))
     others = await entity(session, "Far Folk", EntityType.PEOPLE, PeopleStats(population=500), world_id=world.world.id)
     market = await settlement(session, "Openport", world, world.regions[1])
-    market.affiliated_entity_id = others.id
     await bond(session, market.id, others.id, BondKind.DESCENDS_FROM)
     await session.flush()
     rules = tuned_rules(purity={"outsider_trade_pct": 60})

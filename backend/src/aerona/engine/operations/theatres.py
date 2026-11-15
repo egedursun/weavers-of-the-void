@@ -67,7 +67,7 @@ async def allocate(ctx: TickContext, owner: EntityRow, wars: list[OngoingWar], a
     error = table.error_pct * max(0, PERCENT - strategy) // PERCENT
     rows: list[tuple[TheatreRow, list[ArmyRow]]] = []
     for item in wars:
-        enemy_id = item.defender_id if item.attacker_id == owner.id else item.attacker_id
+        enemy_id = item.foe_of(owner.id)
         mine, armies = await war_soldiers(ctx, item.war.id, owner.id)
         theirs, _ = await war_soldiers(ctx, item.war.id, enemy_id)
         row = await theatre_of(ctx, owner.id, item.war.id)

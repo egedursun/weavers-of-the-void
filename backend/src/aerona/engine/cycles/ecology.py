@@ -10,6 +10,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import LongPlanKind, LongPlanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -94,7 +95,7 @@ async def dependents(ctx: TickContext, region_ids: list[int], plan: LongPlanRow)
         .where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(region_ids))
         .order_by(EntityRow.id)
     )
-    return [town for town in rows if plan.holder_node_id not in (town.affiliated_entity_id, town.id) and not held(town.id)]
+    return [town for town in list(rows) if plan.holder_node_id not in (await people_id_of(ctx.session, town), town.id) and not held(town.id)]
 
 
 def step_away(current: int, target: int, step: int) -> int:

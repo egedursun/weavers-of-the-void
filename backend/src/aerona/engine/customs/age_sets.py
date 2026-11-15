@@ -19,7 +19,7 @@ from aerona.engine.gatherings.hold import plan
 from aerona.engine.gatherings.occasions import Guest, Occasion
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
-from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.relations.book import ensure_relation
 from aerona.engine.relations.book import shift as shift_relation
@@ -97,12 +97,7 @@ async def bond_mates(ctx: TickContext, row: AgeSetRow) -> None:
 
 
 async def hold_promotion(ctx: TickContext, people: EntityRow, row: AgeSetRow) -> None:
-    town = await ctx.session.scalar(
-        select(EntityRow.id)
-        .where(EntityRow.affiliated_entity_id == people.id, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
-        .order_by(EntityRow.id)
-        .limit(1)
-    )
+    town = next(iter(await towns_of_people(ctx.session, people.id)), None)
     mates = await ctx.session.scalars(
         select(AgeSetMemberRow.mortal_entity_id).where(AgeSetMemberRow.age_set_id == row.id).order_by(AgeSetMemberRow.mortal_entity_id)
     )

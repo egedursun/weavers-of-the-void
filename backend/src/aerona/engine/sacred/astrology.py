@@ -10,9 +10,11 @@ from aerona.db.tables.sacred import FORTUNE_MAX, FORTUNE_MIN, BirthSignRow, Divi
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.sacred import DivinationKind, SignInfluence
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.omens import BRIGHT, influence_share, returns_now
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.sacred.places import town_of
@@ -72,17 +74,8 @@ def fortune_of(ctx: TickContext, body: EntityRow | None, dreaded: bool) -> int:
 
 
 async def foster_away(ctx: TickContext, mortal: EntityRow, home: EntityRow) -> bool:
-    other = await ctx.session.scalar(
-        select(EntityRow)
-        .where(
-            EntityRow.entity_type == EntityType.SETTLEMENT,
-            EntityRow.status == EntityStatus.CANON,
-            EntityRow.affiliated_entity_id == home.affiliated_entity_id,
-            EntityRow.id != home.id,
-        )
-        .order_by(EntityRow.id)
-        .limit(1)
-    )
+    kin = [town for town in await towns_of_people(ctx.session, await people_id_of(ctx.session, home)) if town != home.id]
+    other = await ctx.session.get(EntityRow, kin[0]) if kin else None
     if other is None or held(other.id):
         return False
     mortal.location_id = other.id
@@ -126,14 +119,14 @@ async def sign_birth(ctx: TickContext, mortal: EntityRow, tally: SignTally) -> B
         dreaded
         and home is not None
         and not held(home.id)
-        and await reads_stars(ctx, home.affiliated_entity_id)
+        and await reads_stars(ctx, await people_id_of(ctx.session, home))
         and rng.chance(table.foster_chance)
         and await foster_away(ctx, mortal, home)
     ):
         row.exposed = True
         tally.fostered += 1
         await note(ctx, f"{mortal.name} was born under a dreaded sign and sent away from {home.name}.", key="sign.fostered", ids=[mortal.id, home.id])
-    if home is not None and await reads_stars(ctx, home.affiliated_entity_id):
+    if home is not None and await reads_stars(ctx, await people_id_of(ctx.session, home)):
         await read_by_folk(ctx, mortal, row)
     tally.signed += 1
     tally.real += influence is SignInfluence.REAL

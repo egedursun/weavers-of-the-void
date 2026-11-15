@@ -15,6 +15,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.structure import StructureKind
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.collective.crowds import mood_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import stored_values, write_values
@@ -96,7 +97,7 @@ async def found_movements(ctx: TickContext, tally: MovementTally) -> None:
 async def people_of_faction(ctx: TickContext, faction_id: int) -> int | None:
     profile = await ctx.session.get(FactionProfileRow, faction_id)
     home = await ctx.session.get(EntityRow, profile.home_entity_id) if profile is not None and profile.home_entity_id is not None else None
-    return home.affiliated_entity_id if home is not None else None
+    return await people_id_of(ctx.session, home)
 
 
 async def tend_movements(ctx: TickContext, tally: MovementTally) -> None:
@@ -154,9 +155,9 @@ async def path_for(ctx: TickContext, artwork: EntityRow, profile: ArtworkProfile
 async def people_of_work(ctx: TickContext, artwork: EntityRow, profile: ArtworkProfileRow) -> int | None:
     author = await ctx.session.get(EntityRow, profile.author_entity_id) if profile.author_entity_id is not None else None
     for holder in (author, artwork):
-        town = await town_of(ctx.session, holder) if holder is not None else None
-        if town is not None and town.affiliated_entity_id is not None:
-            return town.affiliated_entity_id
+        folk = await people_id_of(ctx.session, await town_of(ctx.session, holder)) if holder is not None else None
+        if folk is not None:
+            return folk
     return None
 
 

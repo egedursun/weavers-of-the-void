@@ -152,7 +152,6 @@ async def test_senses_are_read_for_kinds_and_peoples_and_sharpen_detection(sessi
     town = await settlement(session, "Scentby", world, world.regions[0])
     session.add(SenseProfileRow(holder_entity_id=world.people.id, sense=SenseKind.SMELL, acuity=100, locked=[]))
     await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
-    town.affiliated_entity_id = world.people.id
     await session.flush()
     assert await sense_score(session, town.id, AGENTS) > 0.5
     assert await sense_score(session, town.id, TRACKING) > 0.0
@@ -165,7 +164,7 @@ async def test_island_kinds_drift_and_revered_endemics_are_spared(session: Async
     ground.dominant_terrain = TerrainKind.ISLAND
     giant = await kind(session, world, "Isle Ox", region, size_class=SizeClass.HUGE)
     town = await settlement(session, "Grove", world, world.regions[0])
-    town.affiliated_entity_id = world.people.id
+    await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
     session.add(CultureValueRow(entity_id=world.people.id, axis=ValueAxis.NATURE, value=90))
     await session.flush()
     tally = IslandTally()

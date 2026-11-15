@@ -257,7 +257,7 @@ async def allies_of(ctx: TickContext, realm_id: int) -> list[int]:
 async def enemies_of(ctx: TickContext, realm: EntityRow, policies: PolicyBook) -> set[int]:
     enemies: set[int] = set()
     for war in await ongoing_wars(ctx.session, realm.id):
-        other = war.defender_id if war.attacker_id == realm.id else war.attacker_id
+        other = war.foe_id
         enemies.add(policies.realm_of(other) or other)
     return enemies
 

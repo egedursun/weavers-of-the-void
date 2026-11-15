@@ -378,7 +378,7 @@ async def node_operations(services: ServicesDep, node_id: NodeId) -> OperationsN
                 WarOptionView(
                     war_id=item.war.id,
                     war=at(refs, events.get(item.war.id)),
-                    enemy=ref(refs, item.defender_id if item.attacker_id == node_id else item.attacker_id),
+                    enemy=ref(refs, item.foe_id),
                 )
                 for item in wars
             ],

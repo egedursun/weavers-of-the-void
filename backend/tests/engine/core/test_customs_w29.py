@@ -95,7 +95,6 @@ async def at(session: AsyncSession, epoch: int, **rules: dict[str, int]) -> Tick
 
 async def home(session: AsyncSession, world: CoreWorld, name: str, **values: int) -> tuple[EntityRow, EntityRow]:
     town = await settlement(session, name, world, world.regions[0])
-    town.affiliated_entity_id = world.people.id
     await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
     for axis, value in values.items():
         session.add(CultureValueRow(entity_id=world.people.id, axis=ValueAxis(axis), value=value))

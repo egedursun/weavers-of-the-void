@@ -14,6 +14,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cycles import LongPlanStatus
 from aerona.domain.enums.mind import SkillKind
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.cycles.ecology import set_back
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.sacred.places import region_of, town_of
@@ -46,11 +47,11 @@ async def forecast_seasons(call: MortalCall, args: ForecastSeasonsInput) -> str:
     skill = await call.session.scalar(select(SkillRow.level).where(SkillRow.holder_node_id == call.me.id, SkillRow.skill == SkillKind.ASTRONOMY).limit(1))
     if (skill or 0) < call.tick.rules.long_seasons.scholar_skill:
         fail(MortalResult.FORECAST_DECLINED, why="you lack the learning of the sky to read the seasons")
-    town = await town_of(call.session, call.me)
-    if town is None or town.affiliated_entity_id is None:
+    folk = await people_id_of(call.session, await town_of(call.session, call.me))
+    if folk is None:
         fail(MortalResult.FORECAST_DECLINED, why="you belong to no people that would heed you")
     made = await control.read_winter(call.tick, call.me.world_id)
-    call.target(town.affiliated_entity_id)
+    call.target(folk)
     await call.chronicle(ChronicleKind.KNOWLEDGE, lines.FORECAST_SEASONS, entity_ids=[call.me.id], me=call.me.name)
     return result(MortalResult.SEASONS_FORECAST, peoples=made)
 

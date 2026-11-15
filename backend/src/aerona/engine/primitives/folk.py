@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.primitives.queries import active_bonds
 
 HOMELAND_BONDS = (BondKind.RULES, BondKind.LIVES_IN)
@@ -52,3 +52,16 @@ async def present_in(session: AsyncSession, place: EntityRow) -> ColumnElement[b
 
 async def folk_of(session: AsyncSession, community: EntityRow) -> ColumnElement[bool]:
     return await folk_among(session, [community.id])
+
+
+async def towns_of_people(session: AsyncSession, people_id: int | None) -> list[int]:
+    people = await session.get(EntityRow, people_id) if people_id is not None else None
+    if people is None:
+        return []
+    places = sorted(await homes_of(session, people))
+    found = await session.scalars(
+        select(EntityRow.id)
+        .where(EntityRow.id.in_(places), EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    return list(found)

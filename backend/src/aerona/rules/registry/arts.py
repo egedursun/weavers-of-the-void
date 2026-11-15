@@ -73,6 +73,8 @@ class SportRules:
     stake_pct: int = rule(2, 0, 100, C, "Wealth of a town its fans wager on a match, at full fandom (%)")
     season_epochs: int = rule(2, 1, 100, C, "Epochs a league season runs before a champion is named")
     athletes: int = rule(5, 0, 100, C, "Athletes a new club signs from the strongest and swiftest mortals of its town")
+    field_following: int = rule(40, 0, 100, C, "Popularity a ball game or wrestling needs among a town's people before a club forms there without an arena")
+    friendly_chance: int = rule(50, 0, 100, C, "Chance each epoch that the clubs of a world outside any league meet in friendly matches (%)")
 
 
 @dataclass(frozen=True)

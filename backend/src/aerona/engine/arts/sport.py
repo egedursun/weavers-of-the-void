@@ -1,10 +1,12 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.arts import BetRow, ClubRow, LeagueRow, MatchRow
+from aerona.db.tables.crafts import GameFollowingRow, GameRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -12,10 +14,12 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arts import ClubKind, FandomLine
 from aerona.domain.enums.collective import CollectiveTrigger
+from aerona.domain.enums.crafts import GameKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import StructureKind
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.collective.crowds import CrowdTally, spark
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import receive_coin, take_coin
@@ -29,7 +33,9 @@ from aerona.engine.sacred.places import church_of, realm_of_town, ruler_of
 from aerona.engine.structures.readers import working
 
 ARENAS = (StructureKind.ARENA, StructureKind.STADIUM)
+FIELD_GAMES = MappingProxyType({GameKind.BALL: ClubKind.TEAM_GAME, GameKind.WRESTLING: ClubKind.COMBAT})
 MIDDLING = 50
+PAIR = 2
 
 
 @dataclass
@@ -41,6 +47,7 @@ class SportTally:
     riots: int = 0
     bought: int = 0
     champions: int = 0
+    friendlies: int = 0
 
 
 async def home_of(ctx: TickContext, club_id: int) -> EntityRow | None:
@@ -93,6 +100,20 @@ async def prowess(ctx: TickContext, club: ClubRow) -> int:
     return sum(scores) // len(scores) if scores else 0
 
 
+async def field_game(ctx: TickContext, town: EntityRow) -> ClubKind | None:
+    folk = await people_id_of(ctx.session, town)
+    if folk is None:
+        return None
+    found = await ctx.session.scalar(
+        select(GameRow.kind)
+        .join(GameFollowingRow, GameFollowingRow.game_id == GameRow.id)
+        .where(GameFollowingRow.people_entity_id == folk, GameRow.kind.in_(list(FIELD_GAMES)), GameFollowingRow.popularity >= ctx.rules.sports.field_following)
+        .order_by(GameFollowingRow.popularity.desc(), GameRow.id)
+        .limit(1)
+    )
+    return FIELD_GAMES[found] if found is not None else None
+
+
 async def found_clubs(ctx: TickContext, tally: SportTally) -> None:
     table = ctx.rules.sports
     homed = set(await ctx.session.scalars(select(FactionProfileRow.home_entity_id).where(FactionProfileRow.kind == FactionKind.CLUB)))
@@ -104,9 +125,11 @@ async def found_clubs(ctx: TickContext, tally: SportTally) -> None:
             return
         if held(town.id) or town.id in homed or stat_or(town, "population", 0) < table.club_population:
             continue
-        if not await working(ctx.session, ARENAS, host_id=town.id) or not ctx.rng(f"club.{town.id}").chance(table.club_chance):
+        arena = bool(await working(ctx.session, ARENAS, host_id=town.id))
+        kind = None if arena else await field_game(ctx, town)
+        if (not arena and kind is None) or not ctx.rng(f"club.{town.id}").chance(table.club_chance):
             continue
-        club = await found_club(ctx, town, None)
+        club = await found_club(ctx, town, kind)
         tally.clubs += 1
         await note(ctx, f"A club formed in {town.name}.", key="sport.club", ids=[club.faction_entity_id, town.id])
 
@@ -265,6 +288,21 @@ async def play_seasons(ctx: TickContext, tally: SportTally) -> None:
             )
 
 
+async def play_friendlies(ctx: TickContext, tally: SportTally) -> None:
+    by_world: dict[int, list[ClubRow]] = defaultdict(list)
+    for club in await ctx.session.scalars(select(ClubRow).where(ClubRow.league_entity_id.is_(None)).order_by(ClubRow.faction_entity_id)):
+        home = await home_of(ctx, club.faction_entity_id)
+        if home is not None and not held(club.faction_entity_id):
+            by_world[home.world_id].append(club)
+    for world_id, clubs in sorted(by_world.items()):
+        if len(clubs) < PAIR or not ctx.rng(f"friendly.{world_id}").chance(ctx.rules.sports.friendly_chance):
+            continue
+        ctx.rng(f"friendly.draw.{world_id}").shuffle(clubs)
+        for hosts, guests in zip(clubs[::2], clubs[1::2], strict=False):
+            await play(ctx, None, hosts, guests, tally)
+            tally.friendlies += 1
+
+
 async def buy_favour(ctx: TickContext, tally: SportTally) -> None:
     table = ctx.rules.circus_factions
     for club in list(
@@ -298,5 +336,6 @@ async def keep_sport(ctx: TickContext, tally: SportTally) -> None:
     await found_clubs(ctx, tally)
     await form_leagues(ctx, tally)
     await play_seasons(ctx, tally)
+    await play_friendlies(ctx, tally)
     await buy_favour(ctx, tally)
     await ctx.session.flush()

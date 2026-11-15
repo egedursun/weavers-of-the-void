@@ -42,6 +42,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.settlement import DistrictKind, SizeTier, WaterSupply
 from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.domain.enums.urban import HousingLevel, LandCover, LandGround, Morphology, ZoneKind
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.urban.cityscape import DIGGINGS, HOUSE_SLOTS, homes_of, land_tiles, perimeter_of, pick_tile, provisional, resource_prefer, slots_of
 from aerona.engine.urban.coverage import home_of, people_of_districts
@@ -112,16 +113,15 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
         for building in buildings:
             zones[ZONE_OF_STRUCTURE[building.kind]].buildings += 1
         forms = await design_forms(session, [row.design_id for row in buildings])
+        folk = await people_id_of(session, town)
         castes = (
             [
                 CasteQuarter(id=rank.id, name=rank.name, standing=rank.standing)
                 for rank in await session.scalars(
-                    select(PurityRankRow)
-                    .where(PurityRankRow.people_entity_id == town.affiliated_entity_id)
-                    .order_by(PurityRankRow.standing.desc(), PurityRankRow.id)
+                    select(PurityRankRow).where(PurityRankRow.people_entity_id == folk).order_by(PurityRankRow.standing.desc(), PurityRankRow.id)
                 )
             ]
-            if town.affiliated_entity_id is not None
+            if folk is not None
             else []
         )
         quarters = {caste.id: caste for caste in castes}

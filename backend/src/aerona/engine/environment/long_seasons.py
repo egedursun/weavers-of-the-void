@@ -16,10 +16,12 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import Commodity, NaturalLaw
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.aiding import aid_quality
 from aerona.engine.crafts.reckoning import numeracy_of
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import shift_stock, stock
 
@@ -107,9 +109,9 @@ async def scholar_of(ctx: TickContext, people_id: int) -> tuple[EntityRow, int] 
         .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, SkillRow.skill == SkillKind.ASTRONOMY)
         .order_by(SkillRow.level.desc(), EntityRow.id)
     )
+    homes = set(await towns_of_people(ctx.session, people_id))
     for mortal, level in found:
-        town = await ctx.session.get(EntityRow, mortal.location_id) if mortal.location_id is not None else None
-        if town is not None and town.affiliated_entity_id == people_id and level >= ctx.rules.long_seasons.scholar_skill:
+        if mortal.location_id in homes and level >= ctx.rules.long_seasons.scholar_skill:
             return mortal, int(level)
     return None
 
@@ -157,16 +159,16 @@ async def forecast(ctx: TickContext, world: WorldRow, row: IrregularSeasonRow, t
 
 
 async def prepared(ctx: TickContext, world_id: int, town: EntityRow) -> bool:
-    if town.affiliated_entity_id is None:
+    folk = await people_id_of(ctx.session, town)
+    if folk is None:
         return False
-    row = await ctx.session.scalar(
-        select(WinterForecastRow).where(WinterForecastRow.world_id == world_id, WinterForecastRow.people_entity_id == town.affiliated_entity_id)
-    )
+    row = await ctx.session.scalar(select(WinterForecastRow).where(WinterForecastRow.world_id == world_id, WinterForecastRow.people_entity_id == folk))
     return row is not None and row.heeded
 
 
 async def eased(ctx: TickContext, town: EntityRow, loss_pct: int) -> int:
-    lore = await ctx.session.get(FamineLoreRow, town.affiliated_entity_id) if town.affiliated_entity_id is not None else None
+    folk = await people_id_of(ctx.session, town)
+    lore = await ctx.session.get(FamineLoreRow, folk) if folk is not None else None
     if lore is None:
         return loss_pct
     table = ctx.rules.long_seasons

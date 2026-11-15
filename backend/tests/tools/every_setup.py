@@ -1315,7 +1315,7 @@ async def court_diviners(session: AsyncSession, realm: Realm) -> Ids:
     session.add(PolityMemberRow(polity_entity_id=found["polity"], member_entity_id=realm.settlement_id))
     town = await session.get(EntityRow, realm.settlement_id)
     assert town is not None
-    town.affiliated_entity_id = realm.people_id
+    await connect(session, town.id, realm.people_id, BondKind.DESCENDS_FROM)
     session.add(DivinationSystemRow(people_entity_id=realm.people_id, kind=DivinationKind.AUGURY, locked=[]))
     await session.flush()
     return found

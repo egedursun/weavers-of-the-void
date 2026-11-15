@@ -27,6 +27,7 @@ from aerona.domain.enums.sacred import DivinationKind, DivinationQuestion, Divin
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import ProphecyStats
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.climes.shifts import oscillation_sight
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.control import new_plan
@@ -155,7 +156,7 @@ async def foe_of(ctx: TickContext, realm_id: int) -> int | None:
     wars = await ongoing_wars(ctx.session, realm_id)
     if wars:
         war = wars[0]
-        return war.defender_id if war.attacker_id == realm_id else war.attacker_id
+        return war.foe_id
     rival = await ctx.session.scalar(
         select(BondRow.target_node_id).where(BondRow.source_node_id == realm_id, BondRow.kind == BondKind.RIVAL).order_by(BondRow.target_node_id).limit(1)
     )
@@ -273,12 +274,10 @@ async def court_systems(ctx: TickContext, realm_id: int) -> list[DivinationSyste
     if capital is None:
         return []
     people_ids: set[int] = set()
-    for town_id in await members_of(ctx.session, realm_id):
-        town = await ctx.session.get(EntityRow, town_id)
-        if town is not None and town.affiliated_entity_id is not None:
-            people_ids.add(town.affiliated_entity_id)
-    if capital.affiliated_entity_id is not None:
-        people_ids.add(capital.affiliated_entity_id)
+    for town_id in [*await members_of(ctx.session, realm_id), capital.id]:
+        folk = await people_id_of(ctx.session, await ctx.session.get(EntityRow, town_id))
+        if folk is not None:
+            people_ids.add(folk)
     if not people_ids:
         return []
     rows = await ctx.session.scalars(
@@ -474,7 +473,7 @@ async def archive_of(ctx: TickContext, home_id: int | None) -> int:
 
 
 async def counts(ctx: TickContext, home: EntityRow, realm_id: int) -> bool:
-    holders = [home.id, home.affiliated_entity_id, realm_id]
+    holders = [home.id, await people_id_of(ctx.session, home), realm_id]
     for holder in holders:
         if holder is not None and await has_technique(ctx.session, holder, Technique.CENSUS):
             return True

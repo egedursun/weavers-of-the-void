@@ -183,7 +183,7 @@ async def realm_goal(ctx: TickContext, realm: Realm, profile: FactionProfileRow,
         wars = await ongoing_wars(ctx.session, core)
         if not wars:
             return None, None
-        return (wars[0].defender_id if wars[0].attacker_id == core else wars[0].attacker_id), None
+        return wars[0].foe_id, None
     if kind is G.INDEPENDENCE and home is not None and home != core:
         return home, str(realm.entity.id)
     return (home, None) if kind is G.LOOT and home is not None else (None, None)

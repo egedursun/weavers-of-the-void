@@ -65,15 +65,15 @@ async def bump_devotion(ctx: TickContext, target: EntityRow) -> None:
 
 
 async def miracle_of_peace(ctx: TickContext, target: EntityRow, reason: str) -> int:
-    others: set[int] = set()
+    pairs: set[tuple[int, int]] = set()
     for bond in await BondRepository(ctx.session).touching(target.id, [BondState.ACTIVE]):
         if bond.kind is BondKind.ENEMY:
-            others.add(bond.other_end(target.id))
+            pairs.add((target.id, bond.other_end(target.id)))
     for war in await ongoing_wars(ctx.session, target.id):
-        others.update(side for side in war.sides if side != target.id)
-    for other in sorted(others):
-        await settle_peace(ctx, target.id, other, WarEnding.MIRACLE, reason)
-    return len(others)
+        pairs.add((war.own_id if war.own_id is not None else target.id, war.foe_id))
+    for own, other in sorted(pairs):
+        await settle_peace(ctx, own, other, WarEnding.MIRACLE, reason)
+    return len(pairs)
 
 
 async def restore_senses(ctx: TickContext, target: EntityRow) -> tuple[str, ...]:
