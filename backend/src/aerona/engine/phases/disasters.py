@@ -40,6 +40,7 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.agrarian.book import deposit, shield_of
 from aerona.engine.body.hits import Harm
+from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import cold_snap
 from aerona.engine.cosmos.world_views import WorldView, world_views
@@ -279,6 +280,7 @@ async def strike_disaster(ctx: TickContext, target: EntityRow, disaster: Disaste
             impact.notes.append(f"{entity.name} was protected")
             continue
         scale = severity * knowledge.ratio(ctx.rules, entity.id, KnowledgeBranch.ASTRONOMY, effects.astronomy_disaster_severity)
+        scale *= (await folk_biology(ctx.session, entity)).disaster(disaster)
         if entity.entity_type is EntityType.MORTAL:
             if entity.status is EntityStatus.CANON and await _strike_mortal(ctx, entity, disaster, scale, knowledge):
                 impact.dead.append(entity)

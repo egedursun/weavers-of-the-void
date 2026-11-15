@@ -32,6 +32,8 @@ class DecisionBias(StrEnum):
     PLANNING_FALLACY = "planning_fallacy"
     HALO = "halo"
     PROJECTION = "projection"
+    LITERALISM = "literalism"
+    COLONY_RISK_AVERSION = "colony_risk_aversion"
 
 
 class BiasedDecision(StrEnum):

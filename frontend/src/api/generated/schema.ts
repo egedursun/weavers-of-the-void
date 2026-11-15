@@ -5263,6 +5263,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/biology/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_biology_api_biology_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -14489,6 +14505,86 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_world_views_run_api_actions_world_views_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/biology:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_biology_edit_api_actions_biology_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/biology_variant:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_biology_variant_add_api_actions_biology_variant_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/biology_variant:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_biology_variant_remove_api_actions_biology_variant_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/biology:reset': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_biology_reset_api_actions_biology_reset_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/biology_variants:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_biology_variants_run_api_actions_biology_variants_run_post']
     delete?: never
     options?: never
     head?: never
@@ -39388,6 +39484,67 @@ export interface components {
       | 'crystal'
       | 'void'
       | 'spirit'
+    BiologyEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      holder_id: number
+    }
+    BiologyEffectsView: {
+      food_need_pct: number
+      fertility_pct: number
+      death_pct: number
+      disease_pct: number
+      morale_loss_pct: number
+      fire_harm_pct: number
+      storm_harm_pct: number
+      breathes: boolean
+      drinks: boolean
+      ages: boolean
+    }
+    BiologyLeaningView: {
+      bias: components['schemas']['DecisionBias']
+      shift: number
+      damped: boolean
+    }
+    BiologyNodeView: {
+      node: components['schemas']['NodeRef']
+      holder: components['schemas']['NodeRef'] | null
+      variants: components['schemas']['BiologyVariant'][]
+      body_variants: components['schemas']['BiologyVariant'][]
+      effects: components['schemas']['BiologyEffectsView'] | null
+      derived: components['schemas']['BiologyEffectsView'] | null
+      leanings: components['schemas']['BiologyLeaningView'][]
+      seeded: boolean
+      updated_epoch: number | null
+      locked: string[]
+      absent_reason: string | null
+    }
+    BiologyResetInput: {
+      holder_id: number
+    }
+    BiologyVariant:
+      | 'incorporeal'
+      | 'aquatic'
+      | 'aerial'
+      | 'subterranean'
+      | 'hive'
+      | 'plant_like'
+      | 'construct'
+      | 'ageless'
+      | 'shapeshifting'
+      | 'gaseous'
+      | 'crystalline'
+      | 'undead'
+    BiologyVariantAddInput: {
+      holder_id: number
+      variant: components['schemas']['BiologyVariant']
+    }
+    BiologyVariantRemoveInput: {
+      holder_id: number
+      variant: components['schemas']['BiologyVariant']
+    }
     BiologyView: {
       maturity_years: number
       adult_years: number
@@ -43690,6 +43847,8 @@ export interface components {
       | 'planning_fallacy'
       | 'halo'
       | 'projection'
+      | 'literalism'
+      | 'colony_risk_aversion'
     DecisionBiasView: {
       bias: components['schemas']['DecisionBias']
       weight: number
@@ -63128,6 +63287,7 @@ export interface components {
       | 'lengthen_winter'
       | 'move_economic_order'
       | 'shift_world_nature'
+      | 'shape_biology'
       | 'press_tale'
       | 'foreshadow'
       | 'echo_life'
@@ -79812,6 +79972,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['WorldViewNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_biology_api_biology_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BiologyNodeView']
         }
       }
       default: {
@@ -97398,6 +97587,157 @@ export interface operations {
     }
   }
   action_world_views_run_api_actions_world_views_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_biology_edit_api_actions_biology_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BiologyEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_biology_variant_add_api_actions_biology_variant_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BiologyVariantAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_biology_variant_remove_api_actions_biology_variant_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BiologyVariantRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_biology_reset_api_actions_biology_reset_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BiologyResetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_biology_variants_run_api_actions_biology_variants_run_post: {
     parameters: {
       query?: never
       header?: never
@@ -141599,6 +141939,22 @@ export const bindingNeedValues: ReadonlyArray<
 export const biochemistryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Biochemistry']
 > = ['carbon_water', 'carbon_ammonia', 'silicon', 'crystal', 'void', 'spirit']
+export const biologyVariantValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BiologyVariant']
+> = [
+  'incorporeal',
+  'aquatic',
+  'aerial',
+  'subterranean',
+  'hive',
+  'plant_like',
+  'construct',
+  'ageless',
+  'shapeshifting',
+  'gaseous',
+  'crystalline',
+  'undead',
+]
 export const biomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Biome']
 > = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -142804,6 +143160,8 @@ export const decisionBiasValues: ReadonlyArray<
   'planning_fallacy',
   'halo',
   'projection',
+  'literalism',
+  'colony_risk_aversion',
 ]
 export const decisionRuleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DecisionRule']
@@ -148312,6 +148670,7 @@ export const sonToolIdValues: ReadonlyArray<
   'lengthen_winter',
   'move_economic_order',
   'shift_world_nature',
+  'shape_biology',
   'press_tale',
   'foreshadow',
   'echo_life',

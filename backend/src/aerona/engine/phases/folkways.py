@@ -80,7 +80,7 @@ async def nutrition(ctx: TickContext) -> None:
     count(ctx, "nutrition", tally)
 
 
-@reads("table.bias_weights", "table.bonds", "table.mortal_profiles")
+@reads("table.bias_weights", "table.biology_variants", "table.bonds", "table.mortal_profiles")
 @writes("table.bias_weights")
 async def biases(ctx: TickContext) -> None:
     tally = BiasTally()

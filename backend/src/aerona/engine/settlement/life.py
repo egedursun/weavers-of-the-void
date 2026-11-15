@@ -45,6 +45,7 @@ from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.agrarian.book import centrality_of, counted_people, shield_of
 from aerona.engine.agrarian.ruin import mark_ruin
 from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.demography.cohorts import cohorts_of
@@ -687,6 +688,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
     dry *= 1 + await foe_pct(ctx, town.entity.id, DomainHook.FIRE_CURSE) / PERCENT
     rng = ctx.rng(f"fire.{town.entity.id}")
     burned = 0
+    nature = await folk_biology(ctx.session, town.entity)
     for year in fire_years(ctx, town, ground, book):
         damp = 1 - year.wet / PERCENT * table.wet_damp_pct / PERCENT
         if not rng.chance(table.chance_pct * town.profile.fire_risk / PERCENT * dry * max(0.0, damp)):
@@ -710,7 +712,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
         replan(town.profile)
         floor, _ = headcount_bounds(ctx.rules, town.entity)
         before = stat(town.entity, "population") or 0
-        dead = min(max(0, before - floor), round_half_up(before * table.death_pct * gale / PERCENT))
+        dead = min(max(0, before - floor), round_half_up(before * table.death_pct * gale / PERCENT * nature.factor("fire_harm_pct")))
         with flowing(FlowCategory.DISASTER):
             set_stats(town.entity, population=before - dead)
         ledger(ctx, town, TreasuryEntry.FIRE, -table.treasury_loss, "great fire")

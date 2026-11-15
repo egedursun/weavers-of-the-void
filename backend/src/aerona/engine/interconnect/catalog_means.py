@@ -1,3 +1,4 @@
+from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow, VeteranGrantRow
 from aerona.db.tables.means import ContainerStockRow, NavigationKitRow, SecurityRow, WaterLiftRow, WritingCustomRow, WrittenWorkRow
 from aerona.db.tables.orders import (
@@ -396,6 +397,41 @@ WORLD_VIEW_MECHANICS = (
             Coupling(S.WAR, "a land army wastes where wars are fought at sea, in the sky or by boarding", E.FLOW, "world_views.terrain_attrition_pct"),
             Coupling(S.COSMOS, "a son moves a share of a world's nature at most this far", E.MODIFIER, "world_views.son_step"),
             Coupling(S.COSMOS, "moving a world's nature costs a son essence", E.FLOW, "world_views.son_cost"),
+        ),
+    ),
+)
+
+BIOLOGY = "section-biology"
+
+BIOLOGY_MECHANICS = (
+    Mechanic(
+        key="biology_variants",
+        spec_item="F46",
+        title=(
+            "Biology variants: each people and species carries the variants of its body as values the god can set, and eating, births, deaths, "
+            "sickness, battle fear, fire, storms, ageing and the leanings of minds read them"
+        ),
+        subsystem=S.DEMOGRAPHY,
+        phases=(
+            "biology_variants",
+            "population_growth",
+            "society_economy",
+            "ecology",
+            "campaigns",
+            "settlement_life",
+            "natural_disasters",
+            "world_views",
+            "mortal_aging",
+            "biases",
+        ),
+        surface=Surface(drawer=BIOLOGY, chart="chart-biology"),
+        backfill="migration 4490378d89b2: every people and species takes the variants its body shows at the next start or epoch",
+        tables=(BiologyRow.__tablename__,),
+        tools=("shape_biology",),
+        targets=("people", "species", "settlement", "mortal", "army", "beast"),
+        couplings=(
+            Coupling(S.FAITH, "the leanings of a biology reach the minds of its people", E.MODIFIER, "biology_variants.bias_pct"),
+            Coupling(S.COSMOS, "reshaping a body costs a son essence", E.FLOW, "biology_variants.son_cost"),
         ),
     ),
 )

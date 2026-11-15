@@ -114,6 +114,12 @@ export const BIASES: Record<Schema['DecisionBias'], Named> = {
   planning_fallacy: { label: 'Planning fallacy', icon: Scroll, tone: 'info' },
   halo: { label: 'Halo', icon: Sparkles, tone: 'gold' },
   projection: { label: 'Projection', icon: User, tone: 'verdigris' },
+  literalism: { label: 'Literalism', icon: Scroll, tone: 'muted' },
+  colony_risk_aversion: {
+    label: 'Colony risk aversion',
+    icon: Shield,
+    tone: 'info',
+  },
 }
 
 export const DECISIONS: Record<Schema['BiasedDecision'], Named> = {

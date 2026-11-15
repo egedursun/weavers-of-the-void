@@ -19,6 +19,7 @@ from aerona.services.player import (
     assignments,
     belonging,
     beyond,
+    biology,
     body,
     bonds,
     calendar,
@@ -5089,6 +5090,32 @@ WORLD_VIEW_ACTIONS = (
     _sync(Meta("world_views:run", "Read what every world binds its towns to now", G.WORLDS), world_views.world_views_run, world_views.RunNow, free, ("F45",)),
 )
 
+BIOLOGY_ACTIONS = (
+    _sync(Meta("biology:edit", "Set the biology of a people or species", G.CREATURES), biology.biology_edit, biology.BiologyEdit, free, ("F46",)),
+    _sync(
+        Meta("biology_variant:add", "Give a people or species a biology variant", G.CREATURES),
+        biology.biology_variant_add,
+        biology.BiologyVariantChange,
+        free,
+        ("F46",),
+    ),
+    _sync(
+        Meta("biology_variant:remove", "Take a biology variant from a people or species", G.CREATURES),
+        biology.biology_variant_remove,
+        biology.BiologyVariantChange,
+        free,
+        ("F46",),
+    ),
+    _sync(Meta("biology:reset", "Return a biology to what its body shows", G.CREATURES), biology.biology_reset, biology.BiologyTarget, free, ("F46",)),
+    _sync(
+        Meta("biology_variants:run", "Read the biology of every people and species now", G.CREATURES),
+        biology.biology_variants_run,
+        biology.RunNow,
+        free,
+        ("F46",),
+    ),
+)
+
 ACTIONS: tuple[ActionSpec, ...] = (
     *CYCLE_ACTIONS,
     *REGIME_ACTIONS,
@@ -5104,6 +5131,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *ORDERS_ACTIONS,
     *HONOURS_ACTIONS,
     *WORLD_VIEW_ACTIONS,
+    *BIOLOGY_ACTIONS,
     *ERAS_ACTIONS,
     *CLIMES_ACTIONS,
     *CRAFTS_ACTIONS,

@@ -230,6 +230,7 @@ class SonToolId(StrEnum):
     LENGTHEN_WINTER = "lengthen_winter"
     MOVE_ECONOMIC_ORDER = "move_economic_order"
     SHIFT_WORLD_NATURE = "shift_world_nature"
+    SHAPE_BIOLOGY = "shape_biology"
     PRESS_TALE = "press_tale"
     FORESHADOW = "foreshadow"
     ECHO_LIFE = "echo_life"

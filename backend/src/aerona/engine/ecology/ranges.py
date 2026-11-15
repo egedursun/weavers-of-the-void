@@ -23,6 +23,7 @@ from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.agrarian.book import reserve_factor, reserve_marks
+from aerona.engine.body.variants import ORDINARY, BiologyView, biology_views
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import bearable, tolerated
@@ -71,6 +72,7 @@ class Wilds:
     tracking: dict[int, float] = field(default_factory=dict)
     epoch: int = 0
     presence: dict[int, dict[int, int]] = field(default_factory=dict)
+    natures: dict[int, BiologyView] = field(default_factory=dict)
 
     def present(self, region_id: int) -> dict[int, int]:
         if region_id not in self.presence:
@@ -115,6 +117,7 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
     wilds.bands = await season_bands(ctx.session, ctx.rules, ctx.epoch)
     wilds.spared = await spared_kinds(ctx.session, ctx.rules.island_rule.revered_value)
     wilds.epoch = ctx.epoch
+    wilds.natures = await biology_views(ctx.session)
     for region, communities in wilds.hunters.items():
         keen = [await sense_score(ctx.session, community.id, TRACKING) for community in communities]
         wilds.tracking[region] = 1 + sum(keen) / len(keen) * ctx.rules.senses.tracking_pct / PERCENT if keen else 1.0
@@ -335,7 +338,14 @@ def plan(
     capacity *= wilds.symbiosis.room(rules, species.id, present) / (
         rules.thermoregulation.endotherm_cold_food_pct / PERCENT if chilled(profile.thermoregulation, band) else 1
     )
-    delta = (capacity - row.abundance) * growth_rate(rules, profile, land, traits) * fecund(rules, evolved) * activity(rules, profile.thermoregulation, band)
+    nature = wilds.natures.get(species.id, ORDINARY)
+    delta = (
+        (capacity - row.abundance)
+        * growth_rate(rules, profile, land, traits)
+        * fecund(rules, evolved)
+        * activity(rules, profile.thermoregulation, band)
+        * nature.factor("fertility_pct")
+    )
     delta -= wilds.symbiosis.drain(rules, species.id, present)
     delta -= predation(rules, wilds, species.id, region, hunters_of) * escape(rules, evolved)
     if profile.diet in HUNTERS and prey and sum(prey) / len(prey) < rules.ecology.hunger_threshold:
@@ -350,7 +360,7 @@ def plan(
         hunted = 0.0
     delta -= hunted
     if region in wilds.sick.get(species.id, set()):
-        delta -= rules.habitat.disease_loss * (1 - rules.habitat.regeneration_pct / PERCENT if T.REGENERATING in traits else 1)
+        delta -= rules.habitat.disease_loss * (1 - rules.habitat.regeneration_pct / PERCENT if T.REGENERATING in traits else 1) * nature.factor("disease_pct")
     if species.id not in marks.invasive:
         delta -= wilds.invasive[region] * rules.ecology.invasive_pressure * (1 - profile.territoriality / PERCENT * rules.habitat.territory_pct / PERCENT)
     swing = ctx.rng(f"range.{species.id}.{region}").die(rules.ecology.noise) - (rules.ecology.noise + 1) / 2

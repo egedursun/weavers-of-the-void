@@ -15,6 +15,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.folkways import BiasedDecision, DecisionBias
 from aerona.domain.enums.mind import Facet, SkillKind
+from aerona.engine.body.variants import ORDINARY, bias_target, folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import living_gods
 from aerona.engine.mind.book import load_holder
@@ -44,6 +45,8 @@ SOURCES: Mapping[DecisionBias, tuple[tuple[Facet, int], ...]] = {
     DecisionBias.PLANNING_FALLACY: ((Facet.IMAGINATION, 1), (Facet.THOROUGHNESS, -1)),
     DecisionBias.HALO: ((Facet.FRIENDLINESS, 1), (Facet.GRATITUDE, 1), (Facet.THOROUGHNESS, -1)),
     DecisionBias.PROJECTION: ((Facet.SELF_CONSCIOUSNESS, 1), (Facet.IMAGINATION, -1), (Facet.FRIENDLINESS, 1)),
+    DecisionBias.LITERALISM: (),
+    DecisionBias.COLONY_RISK_AVERSION: (),
 }
 
 PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = {
@@ -53,6 +56,7 @@ PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = {
         DecisionBias.LOSS_AVERSION: -1,
         DecisionBias.OPTIMISM: 1,
         DecisionBias.HOSTILE_ATTRIBUTION: 1,
+        DecisionBias.COLONY_RISK_AVERSION: -1,
     },
     BiasedDecision.PEACE: {
         DecisionBias.SUNK_COST: -1,
@@ -62,6 +66,8 @@ PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = {
         DecisionBias.OPTIMISM: -1,
         DecisionBias.ANCHORING: -1,
         DecisionBias.GROUPTHINK: -1,
+        DecisionBias.LITERALISM: -1,
+        DecisionBias.COLONY_RISK_AVERSION: 1,
     },
     BiasedDecision.SURRENDER: {
         DecisionBias.SUNK_COST: -1,
@@ -69,6 +75,7 @@ PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = {
         DecisionBias.SCARCITY_PANIC: 1,
         DecisionBias.PLANNING_FALLACY: -1,
         DecisionBias.AUTHORITY_DEFERENCE: -1,
+        DecisionBias.LITERALISM: -1,
     },
     BiasedDecision.SCHEME: {
         DecisionBias.HOSTILE_ATTRIBUTION: 1,
@@ -84,6 +91,7 @@ PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = {
         DecisionBias.CONFIRMATION: -1,
     },
     BiasedDecision.CONVERSION: {
+        DecisionBias.LITERALISM: -1,
         DecisionBias.STATUS_QUO: -1,
         DecisionBias.IN_GROUP_FAVOUR: -1,
         DecisionBias.CONFIRMATION: -1,
@@ -91,6 +99,7 @@ PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = {
         DecisionBias.HALO: 1,
     },
     BiasedDecision.MIGRATION: {
+        DecisionBias.COLONY_RISK_AVERSION: -1,
         DecisionBias.STATUS_QUO: -1,
         DecisionBias.LOSS_AVERSION: -1,
         DecisionBias.SCARCITY_PANIC: 1,
@@ -117,7 +126,7 @@ class BiasTally:
 
 def derived_weight(facets: Mapping[Facet, int], bias: DecisionBias, stress: int, stress_pct: int) -> int:
     parts = SOURCES[bias]
-    lean = sum(facets.get(facet, 0) * sign for facet, sign in parts) / len(parts)
+    lean = sum(facets.get(facet, 0) * sign for facet, sign in parts) / len(parts) if parts else 0.0
     return clamp_int(round_half_up(MIDDLE + lean * MIDDLE / FACET_MAX + stress * stress_pct / PERCENT), 0, PERCENT)
 
 
@@ -142,8 +151,10 @@ async def derive(ctx: TickContext, node_id: int, tally: BiasTally) -> dict[Decis
         return found
     profile = await ctx.session.get(MortalProfileRow, node_id)
     stress = profile.stress if profile is not None else 0
+    entity = await ctx.session.get(EntityRow, node_id)
+    nature = await folk_biology(ctx.session, entity) if entity is not None else ORDINARY
     for bias in DecisionBias:
-        weight = derived_weight(facets, bias, stress, table.stress_pct)
+        weight = bias_target(nature, bias, derived_weight(facets, bias, stress, table.stress_pct), ctx.rules.biology_variants.bias_pct)
         row = found.get(bias)
         if row is None:
             row = BiasWeightRow(holder_node_id=node_id, bias=bias, weight=weight, last_shift=0, locked=[])

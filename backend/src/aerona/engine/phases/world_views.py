@@ -8,6 +8,7 @@ from aerona.engine.phases.dominion import count
 @reads(
     "settlement.population",
     "settlement.prosperity",
+    "table.biology_variants",
     "table.epoch_year_cursors",
     "table.people_biology",
     "table.region_environment",

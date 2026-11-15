@@ -4,6 +4,7 @@ from aerona.agents.context.ages_lines import mortal_ages_lines
 from aerona.agents.context.agrarian_lines import mortal_agrarian_lines
 from aerona.agents.context.arts_lines import mortal_arts_lines
 from aerona.agents.context.belonging_lines import mortal_belonging_lines
+from aerona.agents.context.biology_lines import mortal_biology_lines
 from aerona.agents.context.climes_lines import mortal_climes_lines
 from aerona.agents.context.collective_lines import mortal_collective_lines
 from aerona.agents.context.crafts_lines import mortal_crafts_lines
@@ -224,6 +225,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "economy": await mortal_economy_lines(scope, me),
             "honours": await mortal_honours_lines(scope, me),
             "world_nature": await mortal_world_lines(scope, me),
+            "biology": await mortal_biology_lines(scope, me),
         }
     )
 

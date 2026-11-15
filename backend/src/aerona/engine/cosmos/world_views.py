@@ -23,6 +23,7 @@ from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_view import BindingNeed, SettleMode, WarTerrain, WorldLight
 from aerona.engine.body.customs import people_id_of
+from aerona.engine.body.variants import biology_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import disaster_pct, mechanics_of
 from aerona.engine.economy.purse import take_coin
@@ -226,6 +227,9 @@ async def water_met(ctx: TickContext, town: EntityRow, atlas: RegionAtlas, peopl
 
 async def born_free(ctx: TickContext, town: EntityRow, need: BindingNeed) -> bool:
     folk = await people_id_of(ctx.session, town)
+    nature = await biology_of(ctx.session, folk)
+    if (need is BindingNeed.AIR and not nature.breathes) or (need is BindingNeed.WATER and not nature.drinks):
+        return True
     biology = await ctx.session.get(PeopleBiologyRow, folk) if folk is not None else None
     if biology is None:
         return False

@@ -54,6 +54,7 @@ from aerona.rules.registry.battle_depth import BattleDepthRules
 from aerona.rules.registry.battle_tables import BattleTerrainRules, BattleWeatherRules, TacticMatchupRules
 from aerona.rules.registry.belonging import IdentityRules, PeerRules, SanctuaryRules, SatireRules
 from aerona.rules.registry.beyond import BeyondRules
+from aerona.rules.registry.biology_variants import BiologyVariantRules
 from aerona.rules.registry.body import (
     AnatomyRules,
     ArmourRules,
@@ -990,6 +991,7 @@ class Rules:
     unit_honours: UnitHonourRules = field(default_factory=UnitHonourRules)
     veterans: VeteranRules = field(default_factory=VeteranRules)
     world_views: WorldViewRules = field(default_factory=WorldViewRules)
+    biology_variants: BiologyVariantRules = field(default_factory=BiologyVariantRules)
     geography: GeographyRules = field(default_factory=GeographyRules)
     life_cycles: LifeCyclesRules = field(default_factory=LifeCyclesRules)
     remembrance: RemembranceRules = field(default_factory=RemembranceRules)

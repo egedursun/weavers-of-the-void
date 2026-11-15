@@ -4198,3 +4198,11 @@ LEVERS.update(
         "world_view:reset": given(world_id=WORLD),
     }
 )
+LEVERS.update(
+    {
+        "biology:edit": given(holder_id=Pick(EntityType.PEOPLE), values={"food_need_pct": 80, "breathes": False, "storm_harm_pct": 150}, release=[]),
+        "biology_variant:add": given(holder_id=Pick(EntityType.PEOPLE), variant="aquatic"),
+        "biology_variant:remove": given(holder_id=Pick(EntityType.PEOPLE), variant="aquatic"),
+        "biology:reset": given(holder_id=Pick(EntityType.PEOPLE)),
+    }
+)

@@ -1679,6 +1679,17 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you move it",
         },
     ),
+    T.SHAPE_BIOLOGY: ToolText(
+        "You give a people or species in your reach a variant of body, or take one from it. Its variants decide how much it eats, how "
+        "many it bears, how it dies and sickens, how it holds in battle, how fire and storms harm it, whether it breathes, drinks and ages, "
+        "and how its minds lean. 1 action.",
+        {
+            "holder_id": "The people or species you reshape",
+            "variant": "The variant of body you give or take",
+            "gain": "True to give the variant, false to take it away",
+            "reason": "Why you reshape it",
+        },
+    ),
     T.MOVE_ECONOMIC_ORDER: ToolText(
         "You move one axis of the economic order of a realm in your reach. 1 action.",
         {

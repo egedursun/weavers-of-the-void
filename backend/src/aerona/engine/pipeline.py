@@ -25,6 +25,7 @@ from aerona.engine.phases import (
     arts,
     belief_memory,
     belonging,
+    biology_variants,
     births,
     body,
     casualties,
@@ -230,6 +231,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + orders.PHASES
     + honours.PHASES
     + world_views.PHASES
+    + biology_variants.PHASES
     + ages.PHASES
     + folkways.PHASES
     + belonging.PHASES
@@ -503,6 +505,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "water_lifting",
     "pilots",
     "containers",
+    "biology_variants",
     "world_views",
     "society_economy",
     "putting_out",

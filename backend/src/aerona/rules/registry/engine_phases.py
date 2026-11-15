@@ -571,3 +571,6 @@ class EnginePhasesRules:
     world_views: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: what each world binds its towns to, and the upkeep of floating and sealed towns"
     )
+    biology_variants: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the biology variants of every people and species and the effects they carry"
+    )

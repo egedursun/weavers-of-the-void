@@ -255,6 +255,7 @@ STIR_WITCH_HUNT = Line("tools.son.stir_witch_hunt", "{son} stirred a witch hunt 
 LENGTHEN_WINTER = Line("tools.son.lengthen_winter", "{son} lengthened the long winter of {world}: {reason}")
 MOVE_ECONOMIC_ORDER = Line("tools.son.move_economic_order", "{son} moved the economic order of {realm}: {reason}")
 SHIFT_WORLD_NATURE = Line("tools.son.shift_world_nature", "{son} moved the nature of {world}: {reason}")
+SHAPE_BIOLOGY = Line("tools.son.shape_biology", "{son} reshaped the body of {holder}, {variant}: {reason}")
 PRESS_TALE = Line("tools.son.press_tale", "{son} pressed the tale of {tale} of {subject}: {reason}")
 FORESHADOW = Line("tools.son.foreshadow", "{son} set something up about {subject}: {reason}")
 ECHO_LIFE = Line("tools.son.echo_life", "{son} marked the life of {mortal} to echo into the next age: {reason}")

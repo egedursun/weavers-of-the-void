@@ -208,6 +208,7 @@ class HomeLine(ContextItem):
     economy: list[str] = Field(default_factory=list)
     honours: list[str] = Field(default_factory=list)
     world_nature: list[str] = Field(default_factory=list)
+    biology: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

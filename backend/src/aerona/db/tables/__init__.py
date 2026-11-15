@@ -61,6 +61,7 @@ from aerona.db.tables.belonging import (
     SanctuaryRow,
     SatireRow,
 )
+from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldMapRow, WorldRow
@@ -656,6 +657,7 @@ __all__ = [
     "BetRow",
     "BiasWeightRow",
     "BillOfExchangeRow",
+    "BiologyRow",
     "BirthSignRow",
     "BlueprintRow",
     "BodyCustomRow",

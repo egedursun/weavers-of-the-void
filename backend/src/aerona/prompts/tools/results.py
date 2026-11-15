@@ -529,6 +529,8 @@ class SonResult(StrEnum):
     ORDER_MOVED = "The {{ axis }} of the economic order of {{ realm }} is now {{ value }}."
     NATURE_SHIFTED = "The {{ share }} of {{ world }} is now {{ value }}."
     NATURE_REFUSED = "You cannot move the nature of that world: {{ why }}."
+    BIOLOGY_SHAPED = "{{ holder }} is {% if gain %}now{% else %}no longer{% endif %} {{ variant }} in body."
+    BIOLOGY_REFUSED = "You cannot reshape that body: {{ why }}."
     ORDER_MOVE_REFUSED = "You cannot move that economic order: {{ why }}."
     WINTER_REFUSED = "You cannot lengthen that winter: {{ why }}."
     TALE_PRESSED = "The tale of {{ tale }} of {{ subject }} is pressed toward its next turn."

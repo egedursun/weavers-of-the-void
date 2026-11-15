@@ -421,6 +421,7 @@ SON_CASES: dict[str, Case] = {
     "unsettle_seasons": Case(plain(world_id=world, reason=REASON)),
     "lengthen_winter": Case(plain(world_id=world, epochs=2, reason=REASON), long_winter),
     "shift_world_nature": Case(plain(world_id=world, share="storm_pct", change=10, reason=REASON)),
+    "shape_biology": Case(plain(holder_id=people, variant="aerial", gain=True, reason=REASON)),
     "move_economic_order": Case(plain(polity_id=created("polity"), axis="allocation", value="command", reason=REASON), ruled_realm),
     "press_tale": Case(plain(arc_id=created("arc"), reason=REASON), open_tale),
     "foreshadow": Case(plain(subject_id=mortal, reason=REASON)),

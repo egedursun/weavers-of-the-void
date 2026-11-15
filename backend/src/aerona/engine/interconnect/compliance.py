@@ -43,6 +43,7 @@ from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.arcana import LabTextRow, LawUpkeepRow, LongevityRow, RiteGrammarRow, VisStockRow, WarpingRow
 from aerona.db.tables.arts import ArtMovementRow, ArtPriceRow, ArtSaleRow, BetRow, CanonWorkRow, ClubRow, CollectorRow, ForgeryRow, LeagueRow, MatchRow
 from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryLawRow, SanctuaryRow, SatireRow
+from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.climes import (
@@ -661,6 +662,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("shift_world_nature",),
         ("world_views.",),
         ("39ded63f7c3f",),
+    ),
+    ComplianceRow(
+        "F46",
+        (BiologyRow.__tablename__,),
+        ("biology_variants", "population_growth", "society_economy", "campaigns", "settlement_life", "natural_disasters", "world_views"),
+        ("biology:edit", "biology_variant:add", "biology_variant:remove", "biology:reset", "biology_variants:run"),
+        ("BiologySection", "section-biology"),
+        ("mortal_context", "son_turn_system"),
+        ("shape_biology",),
+        ("biology_variants.",),
+        ("4490378d89b2",),
     ),
     ComplianceRow(
         "F3/RP6",

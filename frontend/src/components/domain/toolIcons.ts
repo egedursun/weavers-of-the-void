@@ -571,6 +571,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   change_money: Coins,
   move_economic_order: Scale,
   shift_world_nature: Globe,
+  shape_biology: Dna,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

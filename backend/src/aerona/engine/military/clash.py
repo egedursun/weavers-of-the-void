@@ -35,6 +35,7 @@ from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.hits import Harm
+from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.demography.biology import battle_edge, profiles_of
@@ -294,6 +295,7 @@ async def side_of(
         wits=await wits_of(ctx, commander),
         initiative_officers=await bold_officers(ctx, [item.id for item, _ in armies]),
         areas=await command_areas(ctx.session, commander),
+        dread_pct=(await folk_biology(ctx.session, community)).morale_loss_pct,
     )
 
 

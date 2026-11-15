@@ -167,6 +167,7 @@ class Side:
     terror_dealt: int = 0
     medicine: int = 0
     priests_healing: bool = True
+    dread_pct: int = PERCENT
     width: int = 0
     reserves_committed: int = 0
     span: int = 0
@@ -605,7 +606,7 @@ def deal(targets: list[Stack], damage: float, rules: Rules, *, attackers: list[S
 
 
 def resist(rules: Rules, side: Side, shock: float) -> float:
-    return shock * max(0.0, 1 - side.willpower / PERCENT * rules.battle_magic.willpower_pct / PERCENT)
+    return shock * max(0.0, 1 - side.willpower / PERCENT * rules.battle_magic.willpower_pct / PERCENT) * side.dread_pct / PERCENT
 
 
 def shaken(rules: Rules, side: Side, streams: Streams | None = None, *, phase: str = "check") -> None:
@@ -614,7 +615,7 @@ def shaken(rules: Rules, side: Side, streams: Streams | None = None, *, phase: s
         if not stack.alive or stack.start <= 0:
             continue
         share = stack.lost / stack.start
-        stack.row.morale = max(0, round(stack.row.morale - share * PERCENT * 0.8))
+        stack.row.morale = max(0, round(stack.row.morale - share * PERCENT * 0.8 * side.dread_pct / PERCENT))
         if settle(rules, stack) is MoraleState.ROUTING:
             routs += 1
     if routs:
@@ -1249,7 +1250,7 @@ def aftermath(rules: Rules, winner: Side, loser: Side, gap: float) -> tuple[dict
     salvage(rules, winner, loser)
     for stack in winner.stacks:
         stack.row.morale = min(PERCENT, stack.row.morale + campaigns.winner_morale_gain)
-    beaten = campaigns.loser_morale_loss + round(gap / campaigns.loser_morale_diff_divisor)
+    beaten = (campaigns.loser_morale_loss + round(gap / campaigns.loser_morale_diff_divisor)) * loser.dread_pct // PERCENT
     for stack in loser.stacks:
         stack.row.morale = max(0, stack.row.morale - beaten)
     return wounded, maimed, by_kind

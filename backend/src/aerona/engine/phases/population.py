@@ -8,6 +8,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.body.customs import people_of
+from aerona.engine.body.variants import biology_of
 from aerona.engine.collective.demography import fertility_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.lifeforms import disease_load, habitability, habitable_growth
@@ -114,6 +115,9 @@ async def grow_community(
         vigour *= growth_factor(rules, culture)
     fit = await habitability(ctx.session, rules, biology, community.world_id)
     vigour *= habitable_growth(rules, fit)
+    nature = await biology_of(ctx.session, people.id if people is not None else None)
+    vigour *= nature.factor("fertility_pct")
+    mortality *= nature.factor("death_pct")
     region_id = model.atlas.top_region(community.id)
     ground = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
     magic = model.knowledge.level(community.id, KnowledgeBranch.MAGIC)
@@ -128,7 +132,7 @@ async def grow_community(
             rules, biology, ground, await fed_index(ctx.session, community.id), magic, band=await band_at(ctx.session, rules, ctx.epoch, community.id)
         ),
         crowding=max(0.0, load.population * footprint(rules, biology) / max(1.0, capacity)),
-        disease=max(0.0, diseases.of(community) + disease_load(rules, fit) - rules.demography.endemic_baseline / PERCENT),
+        disease=max(0.0, diseases.of(community) + disease_load(rules, fit) - rules.demography.endemic_baseline / PERCENT) * nature.factor("disease_pct"),
         stress=await stress_of(ctx, community),
         mortality=mortality,
         time=model.physics.of(community.world_id).time,
@@ -156,6 +160,7 @@ async def grow_community(
     "region.fertility",
     "settlement.population",
     "settlement.prosperity",
+    "table.biology_variants",
     "table.bonds",
     "table.class_standing",
     "table.community_cohorts",

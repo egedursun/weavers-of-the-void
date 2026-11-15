@@ -3,6 +3,7 @@ import { AgrarianSection } from '@/features/agrarian/AgrarianSection'
 import { ArcanaSection } from '@/features/arcana/ArcanaSection'
 import { MythicSection } from '@/features/arcana/MythicSection'
 import { BelongingSection } from '@/features/belonging/BelongingSection'
+import { BiologySection } from '@/features/biology/BiologySection'
 import { ClimesSection } from '@/features/climes/ClimesSection'
 import { CollectiveSection } from '@/features/collective/CollectiveSection'
 import { CraftsSection } from '@/features/crafts/CraftsSection'
@@ -139,6 +140,7 @@ export function ThingSections({
       <OrdersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <HonoursSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <WorldViewSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <BiologySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>
