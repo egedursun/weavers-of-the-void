@@ -22,6 +22,7 @@ from aerona.engine.cosmos.stellar import hundredths, physics_of_stars
 from aerona.engine.cosmos.survey import survey_cycle
 from aerona.engine.cosmos.systems import ensure_systems, sync_system, systems_of, turn_galaxies
 from aerona.engine.cosmos.terraform import powers_reshape, terraform_cycle
+from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.environment.profile import make_factor, make_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -126,7 +127,8 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
         derive(ctx.rules, world, row, sky=sky, moons=circling, parent=parent, rogue=rogue, orbit=root.orbit, shards=world.id in shards)
         if not quiet and lose_air(ctx.rules, row):
             ctx.count("air_lost")
-        changed = apply_to_world(ctx.rules, world, row, sky, circling, orbit=root.orbit)
+        seasons = (await view_of(ctx.session, ctx.rules, world.id)).seasons
+        changed = apply_to_world(ctx.rules, world, row, sky, circling, orbit=root.orbit, seasons=seasons)
         if "season_count" in changed:
             await write_seasons(ctx, world)
         if not quiet and world_id in known and row.tidally_locked and not was_locked:

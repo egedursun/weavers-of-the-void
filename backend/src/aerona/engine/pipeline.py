@@ -146,6 +146,7 @@ from aerona.engine.phases import (
     wonders,
     works,
     world_balance,
+    world_views,
     writing,
 )
 from aerona.engine.primitives.manual import silent
@@ -228,6 +229,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + means.PHASES
     + orders.PHASES
     + honours.PHASES
+    + world_views.PHASES
     + ages.PHASES
     + folkways.PHASES
     + belonging.PHASES
@@ -501,6 +503,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "water_lifting",
     "pilots",
     "containers",
+    "world_views",
     "society_economy",
     "putting_out",
     "refining",

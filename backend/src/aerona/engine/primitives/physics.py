@@ -7,7 +7,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.domain.enums.world import Atmosphere, Gravity, WorldType
 from aerona.engine.cosmos.placement import CosmicPull, Cosmography, cosmography_of
 from aerona.engine.cosmos.star_types import star_capacity_pct
-from aerona.engine.cosmos.world_types import mechanics_of
+from aerona.engine.cosmos.world_views import WorldView, default_view, world_views
 from aerona.rules.registry import Rules
 
 
@@ -37,26 +37,37 @@ def gravity_war(rules: Rules, gravity: Gravity) -> int:
     ]
 
 
-def world_physics(rules: Rules, world: WorldRow | None, star: StarRow | None = None, pull: CosmicPull | None = None) -> WorldPhysics:
+def world_physics(
+    rules: Rules, world: WorldRow | None, star: StarRow | None = None, pull: CosmicPull | None = None, view: WorldView | None = None
+) -> WorldPhysics:
     if world is None:
         return WorldPhysics()
     heavens = pull or CosmicPull()
-    type_capacity = mechanics_of(world.world_type).capacity_pct
-    capacity = capacity_pct(rules, world.atmosphere) / PERCENT * (type_capacity(rules) / PERCENT if type_capacity is not None else 1.0)
+    shown = view or default_view(rules, world.world_type)
+    capacity = capacity_pct(rules, world.atmosphere) / PERCENT * shown.capacity_pct / PERCENT
     capacity *= star_capacity_pct(rules, star) / PERCENT
     capacity *= heavens.capacity
     return WorldPhysics((world.time_factor or 1.0) * heavens.time, capacity, gravity_war(rules, world.gravity), world.world_type)
 
 
 class PhysicsTable:
-    def __init__(self, worlds: dict[int, WorldRow], rules: Rules, stars: dict[int, StarRow] | None = None, cosmography: Cosmography | None = None) -> None:
+    def __init__(
+        self,
+        worlds: dict[int, WorldRow],
+        rules: Rules,
+        stars: dict[int, StarRow] | None = None,
+        cosmography: Cosmography | None = None,
+        views: dict[int, WorldView] | None = None,
+    ) -> None:
         found = stars or {}
+        shown = views or {}
         self._physics = {
             world_id: world_physics(
                 rules,
                 world,
                 found.get(world.star_id) if world.star_id is not None else None,
                 cosmography.pull(rules, cosmography.place_world(world)) if cosmography is not None else None,
+                shown.get(world_id),
             )
             for world_id, world in worlds.items()
         }
@@ -64,7 +75,7 @@ class PhysicsTable:
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules) -> "PhysicsTable":
         cosmography = await cosmography_of(session)
-        return cls(dict(cosmography.worlds), rules, dict(cosmography.stars), cosmography)
+        return cls(dict(cosmography.worlds), rules, dict(cosmography.stars), cosmography, await world_views(session, rules))
 
     def of(self, world_id: int | None) -> WorldPhysics:
         if world_id is None:

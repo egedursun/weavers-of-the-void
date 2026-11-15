@@ -488,6 +488,7 @@ from aerona.db.tables.urban import (
     TurfRow,
 )
 from aerona.db.tables.warfare import CasusBelliRow, SiegeRow, WarProductionRow, WarRow, WarSideRow
+from aerona.db.tables.world_views import WorldViewRow
 
 
 @dataclass(frozen=True)
@@ -649,6 +650,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("honours.", "veterans."),
         ("c3567396253d",),
+    ),
+    ComplianceRow(
+        "F45",
+        (WorldViewRow.__tablename__,),
+        ("world_views", "society_economy", "resource_economy", "natural_disasters", "world_physics", "settlement_life", "campaigns"),
+        ("world_view:edit", "world_view:reset", "world_views:run"),
+        ("WorldViewSection", "section-world-view"),
+        ("mortal_context", "son_turn_system"),
+        ("shift_world_nature",),
+        ("world_views.",),
+        ("39ded63f7c3f",),
     ),
     ComplianceRow(
         "F3/RP6",

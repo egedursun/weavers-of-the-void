@@ -4192,3 +4192,9 @@ LEVERS.update(
     }
 )
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in MEANS_EDITS.items()})
+LEVERS.update(
+    {
+        "world_view:edit": given(world_id=WORLD, values={"storm_pct": 150, "need": "heat", "fire": False, "light": "magic"}, release=[]),
+        "world_view:reset": given(world_id=WORLD),
+    }
+)

@@ -13,7 +13,7 @@ from aerona.domain.enums.world import Atmosphere, Gravity, WorldType
 from aerona.engine.cosmos.climate import band_heat
 from aerona.engine.cosmos.star_types import star_heat, star_mechanics
 from aerona.engine.cosmos.stellar import hundredths, luminosity_of, typical_mass
-from aerona.engine.environment.seasons import NO_SEASON_WORLDS, SEASON_SHAPES, season_count_for
+from aerona.engine.environment.seasons import SEASON_SHAPES, season_count_for
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.rules.registry import Rules
 
@@ -351,7 +351,7 @@ def lose_air(rules: Rules, physics: WorldPhysicsRow) -> bool:
     return True
 
 
-def apply_to_world(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, sky: Sky, moons: list[Moon], *, orbit: float) -> list[str]:
+def apply_to_world(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, sky: Sky, moons: list[Moon], *, orbit: float, seasons: bool = True) -> list[str]:
     changed: list[str] = []
     if "gravity" not in world.locked and world.gravity is not gravity_band(rules, physics.gravity_g):
         world.gravity = gravity_band(rules, physics.gravity_g)
@@ -371,7 +371,7 @@ def apply_to_world(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, sky:
             world.day_length_hours = max(1, day)
             changed.append("day_length_hours")
     if "season_count" not in calendar and world.axial_tilt is not None:
-        count = 1 if physics.tidally_locked or world.world_type in NO_SEASON_WORLDS else season_count_for(rules, world.world_type, world.axial_tilt)
+        count = 1 if physics.tidally_locked or not seasons else season_count_for(rules, world.world_type, world.axial_tilt)
         if count == 1 and physics.eccentricity * PERCENT >= rules.orbits.global_season_eccentricity_pct and not physics.tidally_locked:
             count = 2
         if not physics.circumbinary and not physics.tidally_locked and sky.companion_share * PERCENT >= rules.orbits.binary_season_share_pct:

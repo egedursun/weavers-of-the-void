@@ -51,6 +51,7 @@ from aerona.services.integrity.single_ruler import homeland_to_lives_in, restore
 from aerona.services.integrity.tongue_links import mend_tongue_links
 from aerona.services.integrity.urban_links import mend_urban_links
 from aerona.services.integrity.war_truces import close_unfought_truces
+from aerona.services.integrity.world_views import seed_missing_views
 from aerona.services.name_report import refit_pending_names
 from aerona.services.narrative import backfill_endings, sweep_narratives
 
@@ -139,6 +140,7 @@ class DataRepairs:
             ("customs_links", lambda session, rules, epoch: mend_customs_links(session, epoch)),
             ("crafts_links", lambda session, rules, epoch: mend_crafts_links(session)),
             ("orders_links", lambda session, rules, epoch: mend_orders_links(session, epoch)),
+            ("world_views", seed_missing_views),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),

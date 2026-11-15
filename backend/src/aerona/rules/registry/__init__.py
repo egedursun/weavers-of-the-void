@@ -605,6 +605,7 @@ from aerona.rules.registry.world_epoch_transition import WorldEpochTransitionRul
 from aerona.rules.registry.world_hunt import WorldHuntRules
 from aerona.rules.registry.world_physics import WorldPhysicsRules
 from aerona.rules.registry.world_terrain import WorldTerrainRules
+from aerona.rules.registry.world_views import WorldViewRules
 from aerona.rules.registry.world_war_strength import WorldWarStrengthRules
 
 
@@ -988,6 +989,7 @@ class Rules:
     tourism: TourismRules = field(default_factory=TourismRules)
     unit_honours: UnitHonourRules = field(default_factory=UnitHonourRules)
     veterans: VeteranRules = field(default_factory=VeteranRules)
+    world_views: WorldViewRules = field(default_factory=WorldViewRules)
     geography: GeographyRules = field(default_factory=GeographyRules)
     life_cycles: LifeCyclesRules = field(default_factory=LifeCyclesRules)
     remembrance: RemembranceRules = field(default_factory=RemembranceRules)

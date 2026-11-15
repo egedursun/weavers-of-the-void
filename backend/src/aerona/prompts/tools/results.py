@@ -527,6 +527,8 @@ class SonResult(StrEnum):
     SEASONS_REFUSED = "You cannot unsettle those seasons: {{ why }}."
     WINTER_LENGTHENED = "The long winter of {{ world }} will hold {{ epochs | several('epoch', 'epochs') }} longer."
     ORDER_MOVED = "The {{ axis }} of the economic order of {{ realm }} is now {{ value }}."
+    NATURE_SHIFTED = "The {{ share }} of {{ world }} is now {{ value }}."
+    NATURE_REFUSED = "You cannot move the nature of that world: {{ why }}."
     ORDER_MOVE_REFUSED = "You cannot move that economic order: {{ why }}."
     WINTER_REFUSED = "You cannot lengthen that winter: {{ why }}."
     TALE_PRESSED = "The tale of {{ tale }} of {{ subject }} is pressed toward its next turn."

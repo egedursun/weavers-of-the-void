@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 
+from aerona.catalog.world_views import WORLD_VIEWS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.environment import PlaceCover, ScarKind, TerrainKind, WeatherEffect
-from aerona.domain.enums.world import WorldType
 from aerona.engine.environment.book import EnvironmentBook, add_scar, season_attrition
 from aerona.engine.environment.weather import Weather
 from aerona.rules.registry import Rules
 
-ENDLESS_DAY_WORLDS = frozenset({WorldType.TIDALLY_LOCKED, WorldType.HOT_GIANT, WorldType.CHTHONIAN, WorldType.HOLLOW})
+ENDLESS_DAY_WORLDS = frozenset(world_type for world_type, view in WORLD_VIEWS.items() if not view.nights)
 
 
 @dataclass(frozen=True)
@@ -50,8 +50,8 @@ class BattleGround:
         return ", ".join(parts)
 
 
-def night_chance(rules: Rules, world_type: WorldType, day_length_hours: int | None) -> float:
-    if world_type in ENDLESS_DAY_WORLDS:
+def night_chance(rules: Rules, nights: bool, day_length_hours: int | None) -> float:
+    if not nights:
         return 0.0
     settings = rules.campaigns
     hours = day_length_hours if day_length_hours is not None else settings.standard_day_hours

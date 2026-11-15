@@ -46,6 +46,7 @@ from aerona.engine.agrarian.book import centrality_of, counted_people, shield_of
 from aerona.engine.agrarian.ruin import mark_ruin
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
 from aerona.engine.divine.hooks import foe_pct
@@ -506,7 +507,12 @@ async def bandits_near(ctx: TickContext, atlas: RegionAtlas, town: Town) -> list
     return [band for band in found if atlas.top_region(band.id) in near]
 
 
-async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: list[EntityRow], hierarchy: int) -> None:
+def band_pressure(rules: Rules, atlas: RegionAtlas, town: Town, bands: list[EntityRow]) -> float:
+    home = atlas.top_region(town.entity.id)
+    return sum(1.0 if atlas.top_region(band.id) == home else rules.crime.neighbour_band_pct / PERCENT for band in bands)
+
+
+async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: list[EntityRow], hierarchy: int, pressure: float) -> None:
     table = ctx.rules.crime
     profile = town.profile
     society = await ctx.session.get(CommunitySocietyRow, town.entity.id)
@@ -527,7 +533,7 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
             + outcast_share(society) * PERCENT * table.outcast_pct / PERCENT
             + inequality_pressure(ctx.rules, society, hierarchy)
             + (PERCENT - profile.public_order) * table.disorder_pct / PERCENT
-            + len(bands) * table.bandit_crime
+            + pressure * table.bandit_crime
             - policing
             - justice * table.justice_pct
             - rule * ctx.rules.dominion.crime_per_step
@@ -667,6 +673,10 @@ def self_igniting(rules: Rules, town: Town, ground: RegionEnvironmentRow | None)
 
 async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | None, knowledge: KnowledgeMap, book: EnvironmentBook | None = None) -> int:
     table = ctx.rules.fire
+    if not (await view_of(ctx.session, ctx.rules, town.entity.world_id)).fire:
+        if "fire_risk" not in town.profile.locked:
+            town.profile.fire_risk = 0
+        return 0
     people = stat(town.entity, "population") or 0
     crowd = min(1.0, people / max(1, housing_of(ctx.rules, town)))
     brigade = 1 - town.urban.covered(UrbanService.FIRE) * ctx.rules.prevention.brigade_pct / PERCENT

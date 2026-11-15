@@ -27,6 +27,7 @@ import { SacredSection } from '@/features/sacred/SacredSection'
 import { TalesSection } from '@/features/tales/TalesSection'
 import { TonguesSection } from '@/features/tongues/TonguesSection'
 import { UrbanSection } from '@/features/urban/UrbanSection'
+import { WorldViewSection } from '@/features/worldview/WorldViewSection'
 import { AffairsSection } from './AffairsSection'
 import { AspirationsSection } from './AspirationsSection'
 import { BondsSection } from './BondsSection'
@@ -137,6 +138,7 @@ export function ThingSections({
       <MeansSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <OrdersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <HonoursSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <WorldViewSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>

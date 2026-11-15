@@ -36,6 +36,7 @@ from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.starlife import flare_weight_pct
 from aerona.engine.cosmos.stars import black_sun, flare, require_star, supernova, worlds_of_star
 from aerona.engine.cosmos.world_types import mechanics_of
+from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.cosmos.worlds import align_moons
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads, writes
@@ -488,7 +489,7 @@ async def drift_worlds(ctx: TickContext) -> None:
     rng = ctx.rng("drift")
     for world in await WorldRepository(session).reachable_worlds():
         mechanics = mechanics_of(world.world_type)
-        decay = mechanics.fertility_decay(ctx.rules)
+        decay = (await view_of(session, ctx.rules, world.id)).fertility_decay
         if decay:
             for region in await canon(session, [EntityType.REGION], world.id):
                 shift_bounded(ctx.rules, region, FERTILITY_KEY, -decay)

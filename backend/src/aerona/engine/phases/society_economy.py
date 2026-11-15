@@ -10,7 +10,6 @@ from aerona.constants.units import PERCENT, TENTHS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
-from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -24,11 +23,10 @@ from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityFlag, En
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.war import WarCause
-from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.body.cohorts import labour_factor
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.world_types import ore_yield_pct
+from aerona.engine.cosmos.world_views import light_pct, view_of
 from aerona.engine.cuisine.dishes import KitchenTally, cook_dishes
 from aerona.engine.cycles.indenture import bondage_weight, freed_stigma
 from aerona.engine.demography.backfill import society_depth_backfill
@@ -101,7 +99,6 @@ class EconomyWorld:
     atlas: RegionAtlas
     faith: FaithIndex
     harvests: Mapping[int, int] = field(default_factory=dict)
-    world_types: Mapping[int, WorldType] = field(default_factory=dict)
     ledger: EconomyBook | None = None
 
     @property
@@ -113,12 +110,7 @@ class EconomyWorld:
     async def load(cls, session: AsyncSession) -> "EconomyWorld":
         entities = {entity.id: entity for entity in await canon(session)}
         harvests = {region_id: value for region_id, value in await session.execute(select(RegionEnvironmentRow.entity_id, RegionEnvironmentRow.harvest_pct))}
-        world_types = {world_id: world_type for world_id, world_type in await session.execute(select(WorldRow.id, WorldRow.world_type))}
-        return cls(await CommunityBook.load(session), entities, await RegionAtlas.load(session), await FaithIndex.load(session), harvests, world_types)
-
-    def ore_yield(self, rules: Rules, world_id: int | None) -> float:
-        world_type = self.world_types.get(world_id) if world_id is not None else None
-        return fraction(ore_yield_pct(rules, world_type)) if world_type is not None else 1.0
+        return cls(await CommunityBook.load(session), entities, await RegionAtlas.load(session), await FaithIndex.load(session), harvests)
 
 
 @dataclass
@@ -561,6 +553,12 @@ async def consume(ctx: TickContext, entity: EntityRow, society: Society, world: 
     return meal, basket
 
 
+async def ground_share(ctx: TickContext, entity: EntityRow) -> float:
+    view = await view_of(ctx.session, ctx.rules, entity.world_id)
+    soil = PERCENT if view.soil else ctx.rules.world_views.soilless_harvest_pct
+    return light_pct(ctx.rules, view.light) / PERCENT * soil / PERCENT
+
+
 async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInputs, world: EconomyWorld, counters: EconomyCounters) -> Society:
     rules = ctx.rules
     settings = rules.society
@@ -569,6 +567,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     society.shares = drift_shares(rules, society.shares, class_targets(rules, inputs))
     labour = await labour_factor(ctx, entity)
     rate = food_rate(settings, inputs, society.shares[SocialClass.FARMER], rules.knowledge) * labour
+    rate *= await ground_share(ctx, entity)
     rate = max(rate, await ctx.hook_pct(entity.id, DomainHook.HARVEST_FLOOR) * rules.domains.harvest_floor_per_pct / PERCENT / PERCENT)
     await save_society(ctx.session, entity.id, society, stocks=False)
     await seed_stocks(ctx, entity)

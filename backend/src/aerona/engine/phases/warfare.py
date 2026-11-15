@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 
 from sqlalchemy import func, select
@@ -43,6 +44,7 @@ from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.cohorts import return_maimed
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.world_views import WorldView, world_views
 from aerona.engine.demography.biology import acclimatised, profiles_of
 from aerona.engine.economy.equipment import march_burden, siege_engines, suffer_heat
 from aerona.engine.economy.loot import loot_temples
@@ -168,6 +170,7 @@ class Theatre:
     laws: LawBook
     ground: EnvironmentBook
     supply: Network | None = None
+    views: Mapping[int, WorldView] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "Theatre":
@@ -178,6 +181,7 @@ class Theatre:
             neighbourhood,
             await ctx.laws(),
             await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch),
+            views=await world_views(ctx.session, ctx.rules),
         )
 
     def battleground(
@@ -201,7 +205,8 @@ class Theatre:
         season = self.ground.season_at(defender.world_id, season_index)
         weather = self.ground.weather(ctx.environment.world_seed, ctx.epoch, region, season, slot) if region is not None else None
         world = self.ground.worlds.get(defender.world_id)
-        chance = night_chance(ctx.rules, world.world_type, world.day_length_hours) if world is not None else 0.0
+        view = self.views.get(world.id) if world is not None else None
+        chance = night_chance(ctx.rules, view.nights if view is not None else True, world.day_length_hours) if world is not None else 0.0
         night = ctx.environment.rng(f"night.{war.id}.{slot}").chance(chance)
         site_id = site.entity_id if site is not None else None
         return BattleGround(region=region, place=place or site, season=season, weather=weather, year=year, night=night, urban=urban, site_id=site_id)

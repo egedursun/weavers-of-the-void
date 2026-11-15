@@ -600,6 +600,7 @@ from aerona.db.tables.urban import (
 )
 from aerona.db.tables.vehicles import DesignMountRow, DesignSectionRow, DesignTechniqueRow, VehicleGroupRow, VehicleGroupSectionRow, VesselSectionRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, CasusBelliRow, HeroQuestRow, SiegeRow, TributeRow, WarProductionRow, WarRow, WarSideRow
+from aerona.db.tables.world_views import WorldViewRow
 
 __all__ = [
     "AcademicFreedomRow",
@@ -1283,6 +1284,7 @@ __all__ = [
     "WorldRow",
     "WorldSeasonRow",
     "WorldSurveyRow",
+    "WorldViewRow",
     "WritingCustomRow",
     "WrittenWorkRow",
 ]

@@ -49,6 +49,7 @@ from aerona.engine.polity.subjects import SubjectTally, tend_subjects
     "table.treaty_profiles",
     "table.vassalages",
     "table.world_maps",
+    "table.world_type_profiles",
 )
 @writes(
     "table.bonds",

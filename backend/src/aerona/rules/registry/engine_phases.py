@@ -568,3 +568,6 @@ class EnginePhasesRules:
     putting_out: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: work put out to villages and shares bought in chains")
     tourism: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the wealthy travelling to sights")
     veterans: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: grants of land and pensions to veterans, and their associations")
+    world_views: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: what each world binds its towns to, and the upkeep of floating and sealed towns"
+    )

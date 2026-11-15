@@ -39,6 +39,7 @@ from aerona.agents.context.urban_lines import mortal_urban_lines
 from aerona.agents.context.world_header import world_header
 from aerona.agents.context.world_line import world_line
 from aerona.agents.context.world_summary import route_lines
+from aerona.agents.context.world_view_lines import mortal_world_lines
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository
@@ -222,6 +223,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "means": await mortal_means_lines(scope, me),
             "economy": await mortal_economy_lines(scope, me),
             "honours": await mortal_honours_lines(scope, me),
+            "world_nature": await mortal_world_lines(scope, me),
         }
     )
 

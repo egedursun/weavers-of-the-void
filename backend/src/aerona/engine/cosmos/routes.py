@@ -43,7 +43,8 @@ from aerona.engine.cosmos.placement import Cosmography, cosmography_of, within_r
 from aerona.engine.cosmos.resources import cosmic_access
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.vessels import owned_vessels
-from aerona.engine.cosmos.world_types import hidden_route_method, mechanics_of, river_reaches
+from aerona.engine.cosmos.world_types import hidden_route_method, river_reaches
+from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.economy.materials import light_fabric, rig_of
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.folkways.fed import KEEPING_FOODS
@@ -310,7 +311,7 @@ async def open_route(session: AsyncSession, rules: Rules, rng: SeededRandom, epo
         raise ValidationFailedError(f"{profile.label} cannot reach that far: the worlds lie {SCOPE_LABELS[scope].lower()}.")
     if spec.method is TravelMethod.FILAMENT_LANE and not (on_filament(ladder, first) and on_filament(ladder, second)):
         raise ValidationFailedError(f"{profile.label} runs only along a filament of galaxies, and both worlds must lie on one.")
-    terrain = mechanics_of(first.world_type).route_danger(rules) + mechanics_of(second.world_type).route_danger(rules)
+    terrain = (await view_of(session, rules, first.id)).route_danger + (await view_of(session, rules, second.id)).route_danger
     terrain += scope_danger(rules, scope) + cosmic_route_danger(rules, ladder, first) + cosmic_route_danger(rules, ladder, second)
     bound_star_id = await _star_of(session, first) if spec.method is TravelMethod.LIGHT_SAIL else None
     bound_star = await session.get(StarRow, bound_star_id) if bound_star_id is not None else None

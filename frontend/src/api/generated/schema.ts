@@ -5247,6 +5247,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/world-views/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_world_view_api_world_views_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -14425,6 +14441,54 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_honours_run_api_actions_honours_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_view:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_view_edit_api_actions_world_view_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_view:reset': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_view_reset_api_actions_world_view_reset_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_views:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_views_run_api_actions_world_views_run_post']
     delete?: never
     options?: never
     head?: never
@@ -39316,6 +39380,7 @@ export interface components {
       locked: string[]
     }
     BindingKind: 'none' | 'place' | 'item' | 'structure' | 'beast' | 'person'
+    BindingNeed: 'none' | 'water' | 'heat' | 'air' | 'offerings' | 'belief'
     Biochemistry:
       | 'carbon_water'
       | 'carbon_ammonia'
@@ -61774,6 +61839,15 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
+    SettleMode:
+      | 'ground'
+      | 'floating'
+      | 'stilt'
+      | 'oasis'
+      | 'vent'
+      | 'habitat'
+      | 'band'
+      | 'deck'
     SettlementAbandonInput: {
       settlement_id: number
     }
@@ -63053,6 +63127,7 @@ export interface components {
       | 'unsettle_seasons'
       | 'lengthen_winter'
       | 'move_economic_order'
+      | 'shift_world_nature'
       | 'press_tale'
       | 'foreshadow'
       | 'echo_life'
@@ -68014,6 +68089,7 @@ export interface components {
       instigator?: components['schemas']['NodeRef'] | null
       incitement_held: boolean
     }
+    WarTerrain: 'land' | 'naval' | 'sky' | 'boarding' | 'strata'
     WarVictoryInput: {
       war_id: number
       victor_id: number
@@ -68720,6 +68796,15 @@ export interface components {
       biochemistry: components['schemas']['Biochemistry']
       present: boolean
     }
+    WorldLight:
+      | 'star'
+      | 'lava_glow'
+      | 'magic'
+      | 'inner_sun'
+      | 'divine'
+      | 'ship_cycle'
+      | 'fading_god'
+      | 'none'
     WorldMap: {
       seed: string
       world_type: components['schemas']['WorldType']
@@ -68739,6 +68824,30 @@ export interface components {
       world_name: string
       narrative: string | null
       summary: string | null
+    }
+    WorldNatureView: {
+      light: components['schemas']['WorldLight']
+      need: components['schemas']['BindingNeed']
+      settle: components['schemas']['SettleMode']
+      war: components['schemas']['WarTerrain']
+      seasons: boolean
+      nights: boolean
+      fire: boolean
+      soil: boolean
+      timber_pct: number
+      food_need_pct: number
+      capacity_pct: number
+      ore_yield_pct: number
+      storm_pct: number
+      quake_pct: number
+      flood_pct: number
+      drought_pct: number
+      plague_pct: number
+      route_danger: number
+      leak: number
+      leak_repair: number
+      sanity_erosion: number
+      fertility_decay: number
     }
     WorldPalette: {
       world_type: components['schemas']['WorldType']
@@ -68974,6 +69083,27 @@ export interface components {
       world_type: components['schemas']['WorldType']
       label: string
       description: string
+    }
+    WorldViewEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      world_id: number
+    }
+    WorldViewNodeView: {
+      node: components['schemas']['NodeRef']
+      world: components['schemas']['NodeRef'] | null
+      world_type: components['schemas']['WorldType'] | null
+      nature: components['schemas']['WorldNatureView'] | null
+      kind_nature: components['schemas']['WorldNatureView'] | null
+      seeded: boolean
+      updated_epoch: number | null
+      locked: string[]
+      absent_reason: string | null
+    }
+    WorldViewResetInput: {
+      world_id: number
     }
     WorldWiki: {
       world: components['schemas']['WorldRecord']
@@ -79652,6 +79782,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HonoursNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_world_view_api_world_views_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorldViewNodeView']
         }
       }
       default: {
@@ -97149,6 +97308,95 @@ export interface operations {
     }
   }
   action_honours_run_api_actions_honours_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_world_view_edit_api_actions_world_view_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldViewEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_world_view_reset_api_actions_world_view_reset_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldViewResetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_world_views_run_api_actions_world_views_run_post: {
     parameters: {
       query?: never
       header?: never
@@ -141344,6 +141592,9 @@ export const biasedDecisionValues: ReadonlyArray<
 export const bindingKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BindingKind']
 > = ['none', 'place', 'item', 'structure', 'beast', 'person']
+export const bindingNeedValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BindingNeed']
+> = ['none', 'water', 'heat', 'air', 'offerings', 'belief']
 export const biochemistryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Biochemistry']
 > = ['carbon_water', 'carbon_ammonia', 'silicon', 'crystal', 'void', 'spirit']
@@ -147580,6 +147831,9 @@ export const servitorRankValues: ReadonlyArray<
 export const servitorRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ServitorRole']
 > = ['messenger', 'guard', 'judge', 'host', 'spy']
+export const settleModeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SettleMode']
+> = ['ground', 'floating', 'stilt', 'oasis', 'vent', 'habitat', 'band', 'deck']
 export const settlementStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SettlementStats']['kind']
 > = ['settlement']
@@ -148056,6 +148310,7 @@ export const sonToolIdValues: ReadonlyArray<
   'unsettle_seasons',
   'lengthen_winter',
   'move_economic_order',
+  'shift_world_nature',
   'press_tale',
   'foreshadow',
   'echo_life',
@@ -149851,6 +150106,9 @@ export const warSideValues: ReadonlyArray<
 export const warStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WarStatus']
 > = ['mobilizing', 'ongoing', 'ended']
+export const warTerrainValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WarTerrain']
+> = ['land', 'naval', 'sky', 'boarding', 'strata']
 export const waterLiftValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WaterLift']
 > = ['shaduf', 'noria', 'screw', 'chain_pump', 'steam_pump']
@@ -149938,6 +150196,18 @@ export const worldChangedEventKindValues: ReadonlyArray<
 export const worldChangesEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldChangesEvent']['kind']
 > = ['world.changes']
+export const worldLightValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WorldLight']
+> = [
+  'star',
+  'lava_glow',
+  'magic',
+  'inner_sun',
+  'divine',
+  'ship_cycle',
+  'fading_god',
+  'none',
+]
 export const worldReplacedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldReplacedEvent']['kind']
 > = ['world.replaced']

@@ -1669,6 +1669,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You make the long winter now holding the world you walk last longer. 1 action.",
         {"world_id": "The world you walk", "epochs": "How many epochs longer it holds", "reason": "Why you lengthen it"},
     ),
+    T.SHIFT_WORLD_NATURE: ToolText(
+        "You move one share of the nature of the world you walk: how much timber, food, ore and room for life it gives, and how often "
+        "its storms, quakes, floods, droughts and plagues come. 1 action.",
+        {
+            "world_id": "The world you walk",
+            "share": "The share you move: timber_pct, food_need_pct, capacity_pct, ore_yield_pct, storm_pct, quake_pct, flood_pct, drought_pct or plague_pct",
+            "change": "How far you move it, up or down",
+            "reason": "Why you move it",
+        },
+    ),
     T.MOVE_ECONOMIC_ORDER: ToolText(
         "You move one axis of the economic order of a realm in your reach. 1 action.",
         {

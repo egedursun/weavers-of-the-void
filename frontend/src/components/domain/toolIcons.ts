@@ -570,6 +570,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   begin_transition: ArrowLeftRight,
   change_money: Coins,
   move_economic_order: Scale,
+  shift_world_nature: Globe,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

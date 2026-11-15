@@ -21,6 +21,7 @@ from aerona.engine.services.war import ongoing_wars
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import (
     administer,
+    band_pressure,
     bandits_near,
     build,
     capacities,
@@ -186,7 +187,9 @@ async def settlement_life(ctx: TickContext) -> None:
         foreign = await foreigners(ctx, town)
         ctx.count("built", await build(ctx, town, knowledge, at_war=at_war, foreign=foreign, ground=ground))
         justice = max(community.justice_values(settlement.id), default=0) / JUSTICE_FULL
-        await keep_order(ctx, town, justice=justice, bands=await bandits_near(ctx, atlas, town), hierarchy=values.get(ValueAxis.HIERARCHY, 0))
+        bands = await bandits_near(ctx, atlas, town)
+        pressure = band_pressure(ctx.rules, atlas, town, bands)
+        await keep_order(ctx, town, justice=justice, bands=bands, hierarchy=values.get(ValueAxis.HIERARCHY, 0), pressure=pressure)
         ctx.count("punished", 1 if await punish(ctx, town, statutes) else 0)
         festival = festivals_and_alms(ctx, town, society)
         tension = await urban_drift(ctx, town)

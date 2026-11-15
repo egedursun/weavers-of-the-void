@@ -37,13 +37,12 @@ from aerona.domain.enums.settlement import DistrictHarm
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.structure import StructureKind
-from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.agrarian.book import deposit, shield_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import cold_snap
-from aerona.engine.cosmos.world_types import disaster_pct
+from aerona.engine.cosmos.world_views import WorldView, world_views
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.harm import disease_harm, lasting_illness
 from aerona.engine.disease.outbreaks import STRIKING, disease_for, lethality_factor, open_outbreak, spread_factor, tally
@@ -360,7 +359,7 @@ class DisasterWorld:
     laws: LawBook
     climates: Mapping[int, int]
     struck: int = 0
-    world_types: Mapping[int, WorldType] = field(default_factory=dict)
+    views: Mapping[int, WorldView] = field(default_factory=dict)
     bodies: Mapping[int, WorldPhysicsRow] = field(default_factory=dict)
     dominion: DominionBook = field(default_factory=DominionBook)
 
@@ -369,8 +368,8 @@ class DisasterWorld:
         return max(0.0, 1 - fortune * rules.dominion.fortune_per_step_pct / PERCENT)
 
     def nature_mult(self, rules: Rules, world_id: int | None, disaster: Disaster) -> float:
-        world_type = self.world_types.get(world_id) if world_id is not None else None
-        kind = fraction(disaster_pct(rules, world_type, disaster)) if world_type is not None else 1.0
+        view = self.views.get(world_id) if world_id is not None else None
+        kind = fraction(view.disaster(disaster)) if view is not None else 1.0
         return kind * self.restless(rules, world_id, disaster)
 
     def restless(self, rules: Rules, world_id: int | None, disaster: Disaster) -> float:
@@ -887,11 +886,9 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.thoughts",
 )
 async def natural_disasters(ctx: TickContext) -> None:
-    world_types = {world_id: world_type for world_id, world_type in await ctx.session.execute(select(WorldRow.id, WorldRow.world_type))}
+    views = await world_views(ctx.session, ctx.rules)
     bodies = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
-    world = DisasterWorld(
-        await ctx.laws(), await climate_plague_multipliers(ctx), world_types=world_types, bodies=bodies, dominion=await DominionBook.load(ctx.session)
-    )
+    world = DisasterWorld(await ctx.laws(), await climate_plague_multipliers(ctx), views=views, bodies=bodies, dominion=await DominionBook.load(ctx.session))
     await _region_disasters(ctx, world)
     await _city_plagues(ctx, world)
     ctx.count("disasters", world.struck)

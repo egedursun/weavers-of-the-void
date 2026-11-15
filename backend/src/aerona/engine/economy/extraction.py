@@ -25,6 +25,7 @@ from aerona.engine.body.cohorts import cohort, labour_factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import cosmography_of
+from aerona.engine.cosmos.world_views import WorldView, light_pct, view_of
 from aerona.engine.crafts.catch import catch_factor
 from aerona.engine.crafts.linking import affinity_value
 from aerona.engine.crafts.timekeeping import clock_output
@@ -222,6 +223,17 @@ def knowledge_gate(rules: Rules, book: EconomyBook, profile: ResourceProfileRow,
     return (rules.extraction.knowledge_short_pct / PERCENT) ** short
 
 
+def world_share(rules: Rules, view: WorldView, kind: ExtractionKind) -> float:
+    if kind is ExtractionKind.MINING:
+        return view.ore_yield_pct / PERCENT
+    if kind is ExtractionKind.LOGGING:
+        return view.timber_pct / PERCENT
+    if kind is ExtractionKind.FARMING:
+        soil = PERCENT if view.soil else rules.world_views.soilless_harvest_pct
+        return light_pct(rules, view.light) / PERCENT * soil / PERCENT
+    return 1.0
+
+
 async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, community: EntityRow, *, workers: int) -> int:
     table = ctx.rules.extraction
     gate = knowledge_gate(ctx.rules, book, profile, community.id)
@@ -246,6 +258,7 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
         raw *= await draught(ctx, community.id) * await fertilised(ctx.session, ctx.rules, community.id)
     else:
         raw *= await step_here(ctx, community.id, DivineScale.PRODUCTIVITY, ctx.rules.dominion.output_per_step_pct)
+    raw *= world_share(ctx.rules, await view_of(ctx.session, ctx.rules, resource.world_id), kind)
     if kind is ExtractionKind.MINING:
         raw *= await blasted(ctx.session, ctx.rules, community.id)
         ladder = await cosmography_of(ctx.session)

@@ -7,30 +7,30 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 
 | Node type | A | B | C |
 |---|---:|---:|---:|
-| region | 289 / 215 met | 487 / 160 met | 397 / 120 met |
-| place | 74 / 25 met | 163 / 20 met | 285 / 15 met |
-| resource | 59 / 35 met | 68 / 50 met | 200 / 30 met |
-| settlement | 1359 / 280 met | 1275 / 230 met | 420 / 145 met |
+| region | 289 / 215 met | 488 / 160 met | 397 / 120 met |
+| place | 74 / 25 met | 164 / 20 met | 285 / 15 met |
+| resource | 59 / 35 met | 69 / 50 met | 220 / 30 met |
+| settlement | 1359 / 280 met | 1276 / 230 met | 420 / 145 met |
 | species | 233 / 150 met | 209 / 150 met | 200 / 95 met |
-| people | 1205 / 320 met | 1023 / 220 met | 420 / 140 met |
-| mortal | 778 / 355 met | 892 / 340 met | 420 / 200 met |
+| people | 1205 / 320 met | 1024 / 220 met | 420 / 140 met |
+| mortal | 778 / 355 met | 893 / 340 met | 420 / 200 met |
 | item | 90 / 65 met | 105 / 60 met | 220 / 45 met |
 | structure | 204 / 55 met | 48 / 70 short | 257 / 55 met |
 | language | 62 / 110 short | 64 / 90 short | 100 / 55 met |
 | legend | 64 / 30 met | 48 / 40 met | 117 / 35 met |
 | tradition | 44 / 20 met | 57 / 25 met | 80 / 25 met |
-| cult | 357 / 90 met | 515 / 100 met | 420 / 75 met |
-| faction | 379 / 95 met | 509 / 110 met | 380 / 80 met |
+| cult | 357 / 90 met | 516 / 100 met | 420 / 75 met |
+| faction | 379 / 95 met | 510 / 110 met | 380 / 80 met |
 | celestial | 11 / 10 met | 3 / 12 short | 38 / 15 met |
 | artwork | 35 / 20 met | 45 / 20 met | 145 / 15 met |
 | law | 73 / 55 met | 88 / 60 met | 200 / 45 met |
 | spirit | 68 / 60 met | 190 / 60 met | 220 / 40 met |
 | knowledge | 133 / 70 met | 260 / 110 met | 300 / 85 met |
 | prophecy | 25 / 15 met | 23 / 15 met | 60 / 15 met |
-| event | 43 / 15 met | 222 / 20 met | 340 / 15 met |
+| event | 43 / 15 met | 223 / 20 met | 340 / 15 met |
 | vessel | 20 / 80 short | 13 / 65 short | 100 / 35 met |
 | outer_being | 21 / 15 met | 16 / 20 short | 120 / 20 met |
-| army | 415 / 240 met | 379 / 200 met | 400 / 95 met |
+| army | 415 / 240 met | 380 / 200 met | 400 / 95 met |
 | natural_law | 6 / 10 short | 4 / 30 short | 60 / 30 met |
 | trade_route | 54 / 25 met | 65 / 25 met | 220 / 25 met |
 | disease | 62 / 45 met | 57 / 50 met | 180 / 40 met |
@@ -54,6 +54,6 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | creator | 25 / 35 short | 13 / 40 short | 97 / 35 met |
 | foreign_god | 104 / 200 short | 33 / 140 short | 141 / 100 met |
 | war | 192 / 95 met | 161 / 110 met | 140 / 75 met |
-| world | 139 / 195 short | 61 / 135 short | 203 / 115 met |
+| world | 139 / 195 short | 62 / 135 short | 203 / 115 met |
 | star | 17 / 35 short | 3 / 30 short | 30 / 25 met |
 | route | 26 / 45 short | 3 / 30 short | 40 / 25 met |

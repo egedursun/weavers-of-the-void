@@ -510,6 +510,7 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.world_maps",
     "table.world_physics",
     "table.world_seasons",
+    "table.world_type_profiles",
 )
 @writes(
     "table.applied_fixups",
@@ -671,6 +672,7 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "table.world_maps",
     "table.world_physics",
     "table.world_seasons",
+    "table.world_type_profiles",
 )
 @writes("place.fertility", "region.fertility", "table.entities", "table.place_environment", "table.region_environment")
 async def environment_derive(ctx: TickContext) -> None:
@@ -1135,6 +1137,7 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.world_biochemistries",
     "table.world_maps",
     "table.world_seasons",
+    "table.world_type_profiles",
 )
 @writes(
     "table.chronicle",

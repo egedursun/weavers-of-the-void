@@ -21,6 +21,7 @@ from aerona.agents.context.regime_lines import son_regime_lines
 from aerona.agents.context.sacred_lines import son_sacred_lines
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.tongue_lines import son_tongue_lines
+from aerona.agents.context.world_view_lines import son_world_lines
 from aerona.catalog.domain_effects import ACTIVITY_LABELS, DOMAIN_EFFECTS, HOOKS, SYNERGY_OF
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.constants.units import PERCENT
@@ -113,4 +114,5 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     lines.extend(await son_era_lines(scope, son))
     lines.extend(await son_nature_lines(scope, son))
     lines.extend(await son_economy_lines(scope, son))
+    lines.extend(await son_world_lines(scope, son))
     return lines

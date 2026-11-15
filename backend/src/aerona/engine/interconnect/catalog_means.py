@@ -12,6 +12,7 @@ from aerona.db.tables.orders import (
     SavingRow,
     TouristFlowRow,
 )
+from aerona.db.tables.world_views import WorldViewRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 S = Subsystem
@@ -343,6 +344,58 @@ HONOURS_MECHANICS = (
             Coupling(S.ECONOMY, "a pension is paid this long", E.MODIFIER, "veterans.pension_years"),
             Coupling(S.SOCIAL, "unpaid pensions sour the realm's towns", E.FLOW, "veterans.unpaid_grievance"),
             Coupling(S.SOCIAL, "veterans of a town band into an association", E.TRIGGER, "veterans.association_from"),
+        ),
+    ),
+)
+
+WORLD_VIEWS = "section-world-view"
+
+WORLD_VIEW_MECHANICS = (
+    Mechanic(
+        key="world_views",
+        spec_item="F45",
+        title=(
+            "World natures: each world carries the nature of its kind as values the god can set, and harvests, "
+            "extraction, eating, fire, seasons, disasters, roads, towns and wars read it"
+        ),
+        subsystem=S.COSMOS,
+        phases=(
+            "world_views",
+            "society_economy",
+            "resource_economy",
+            "natural_disasters",
+            "world_physics",
+            "horror",
+            "sky",
+            "settlement_life",
+            "campaigns",
+        ),
+        surface=Surface(drawer=WORLD_VIEWS, chart="chart-world-view"),
+        backfill="migration 39ded63f7c3f: every world takes the nature of its kind at the next start or epoch",
+        tables=(WorldViewRow.__tablename__,),
+        tools=("shift_world_nature",),
+        targets=("world", "settlement", "region", "army", "resource"),
+        couplings=(
+            Coupling(S.ENVIRONMENT, "a harvest under starlight", E.MODIFIER, "world_views.star_light_pct"),
+            Coupling(S.ENVIRONMENT, "a harvest under the glow of lava", E.MODIFIER, "world_views.lava_light_pct"),
+            Coupling(S.ENVIRONMENT, "a harvest under light made by magic", E.MODIFIER, "world_views.magic_light_pct"),
+            Coupling(S.ENVIRONMENT, "a harvest under the sun inside a hollow world", E.MODIFIER, "world_views.inner_sun_light_pct"),
+            Coupling(S.ENVIRONMENT, "a harvest under the light of a god", E.MODIFIER, "world_views.divine_light_pct"),
+            Coupling(S.ENVIRONMENT, "a harvest under the light cycles of a ship", E.MODIFIER, "world_views.ship_light_pct"),
+            Coupling(S.ENVIRONMENT, "a harvest under the fading light of a dead god", E.MODIFIER, "world_views.fading_light_pct"),
+            Coupling(S.ENVIRONMENT, "a harvest where there is no light", E.MODIFIER, "world_views.dark_light_pct"),
+            Coupling(S.ECONOMY, "a world without soil still yields this share", E.MODIFIER, "world_views.soilless_harvest_pct"),
+            Coupling(S.DEMOGRAPHY, "every hundred townsfolk need this much of what their world binds them to", E.FLOW, "world_views.need_per_100"),
+            Coupling(S.ECONOMY, "each lifted unit of water meets the need of this many townsfolk", E.MODIFIER, "world_views.water_lift_share"),
+            Coupling(S.ENVIRONMENT, "rain enough frees a town from other water", E.RULE_SWITCH, "world_views.rain_water_from"),
+            Coupling(S.FAITH, "piety enough sustains a town on a world fed by belief", E.RULE_SWITCH, "world_views.belief_from"),
+            Coupling(S.SOCIAL, "a town short of what binds it grows restless", E.FLOW, "world_views.shortfall_unrest"),
+            Coupling(S.ECONOMY, "a town short of what binds it loses prosperity", E.FLOW, "world_views.shortfall_prosperity"),
+            Coupling(S.ECONOMY, "a floating or sealed town pays upkeep", E.FLOW, "world_views.float_upkeep"),
+            Coupling(S.ECONOMY, "an unpaid upkeep costs prosperity", E.FLOW, "world_views.upkeep_unpaid_prosperity"),
+            Coupling(S.WAR, "a land army wastes where wars are fought at sea, in the sky or by boarding", E.FLOW, "world_views.terrain_attrition_pct"),
+            Coupling(S.COSMOS, "a son moves a share of a world's nature at most this far", E.MODIFIER, "world_views.son_step"),
+            Coupling(S.COSMOS, "moving a world's nature costs a son essence", E.FLOW, "world_views.son_cost"),
         ),
     ),
 )

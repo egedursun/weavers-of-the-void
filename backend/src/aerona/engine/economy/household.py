@@ -18,6 +18,7 @@ from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.ecology.flora import split_fields
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import tools_factor
@@ -184,7 +185,8 @@ async def substitute_order(ctx: TickContext, community: EntityRow, order: tuple[
 
 async def eat(ctx: TickContext, community: EntityRow, staples: tuple[CommodityKind, ...] = ()) -> Meal:
     population = headcount(community)
-    need = nourishment_need(ctx.rules, population)
+    view = await view_of(ctx.session, ctx.rules, community.world_id)
+    need = round_half_up(nourishment_need(ctx.rules, population) * view.food_need_pct / PERCENT)
     if need <= 0:
         return Meal(PERCENT)
     ledger = goods_of(ctx.session, ctx.epoch)

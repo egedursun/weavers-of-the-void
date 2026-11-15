@@ -115,6 +115,7 @@ from aerona.api.routers import (
     urban_depth,
     wars,
     wilds,
+    world_views,
 )
 from aerona.api.schemas.common import ErrorResponse
 from aerona.api.security import BodyLimit
@@ -204,6 +205,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     eras,
     nature,
     means,
+    world_views,
     customs,
     made_kinds,
     law_depth,

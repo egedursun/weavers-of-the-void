@@ -19,6 +19,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.environment.battleground import ENDLESS_DAY_WORLDS
 from aerona.engine.lore.traditions import Keeping, cost_for, profile_of
 from aerona.engine.primitives.distance import RegionAtlas
@@ -202,10 +203,11 @@ async def backfill_holy_days(ctx: TickContext) -> int:
     return founded
 
 
-def long_days(rules_hours: int, world: WorldRow | None) -> bool:
+def long_days(rules_hours: int, world: WorldRow | None, nights: bool | None = None) -> bool:
     if world is None:
         return False
-    return world.world_type in ENDLESS_DAY_WORLDS or (world.day_length_hours or 0) >= rules_hours
+    endless = world.world_type in ENDLESS_DAY_WORLDS if nights is None else not nights
+    return endless or (world.day_length_hours or 0) >= rules_hours
 
 
 async def sleep_custom_kept(session: AsyncSession, community_id: int) -> bool:
@@ -235,7 +237,8 @@ async def found_sleep_customs(ctx: TickContext, atlas: RegionAtlas) -> int:
     )
     for community in unheld(communities):
         world = worlds.get(community.world_id or 0)
-        if not long_days(table.long_day_hours, world) or await sleep_custom_kept(ctx.session, community.id):
+        nights = (await view_of(ctx.session, ctx.rules, world.id)).nights if world is not None else None
+        if not long_days(table.long_day_hours, world, nights) or await sleep_custom_kept(ctx.session, community.id):
             continue
         if not ctx.rng(f"sleep_custom.{community.id}").chance(table.sleep_custom_chance):
             continue

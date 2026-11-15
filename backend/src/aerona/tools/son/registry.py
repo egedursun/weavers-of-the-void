@@ -71,6 +71,7 @@ from aerona.tools.son import (
     urban_depth,
     war,
     works,
+    world_views,
     world_works,
 )
 from aerona.tools.son.availability import SonWorldState, condition_holds, star_lines
@@ -109,6 +110,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     arts.specs,
     ages.specs,
     economic.specs,
+    world_views.specs,
     folkways.specs,
     belonging.specs,
     climes.specs,

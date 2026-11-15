@@ -6,6 +6,7 @@ from aerona.db.tables.celestial import SkyEventRow, StarRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.routes import JourneyRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.economy import ExtractionKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import KnowledgeBranch
@@ -19,13 +20,14 @@ from aerona.engine.cosmos.orbits import eclipse_period
 from aerona.engine.cosmos.routes import RouteBook, RouteSpec, can_use_route, open_route, sky_calendar
 from aerona.engine.cosmos.star_types import brightness_band
 from aerona.engine.cosmos.stars import StarSpec, create_star, rekindle_star, supernova
+from aerona.engine.cosmos.world_views import default_view, view_of
+from aerona.engine.economy.extraction import world_share
 from aerona.engine.environment.book import active_sky
 from aerona.engine.phases.afterlife import void_storm
 from aerona.engine.phases.climate import star_instability
 from aerona.engine.phases.disasters import DisasterWorld
 from aerona.engine.phases.horror import _sanity_context, horror_event
 from aerona.engine.phases.sky import SkyOrder, sky_event, spontaneous_bag, star_event_weight
-from aerona.engine.phases.society_economy import EconomyWorld
 from aerona.engine.phases.travel import bridge_collapse
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.physics import PhysicsTable
@@ -217,15 +219,15 @@ async def test_whispers_find_a_new_listener_each_time(ctx: TickContext, cosmos: 
 async def test_iron_worlds_yield_more_ore_to_their_communities(ctx: TickContext, cosmos: Cosmos) -> None:
     cosmos.home.world_type = WorldType.IRON
     await ctx.session.flush()
-    economy = await EconomyWorld.load(ctx.session)
-    assert economy.ore_yield(ctx.rules, cosmos.home.id) == ctx.rules.world_physics.iron_ore_yield / 100
-    assert economy.ore_yield(ctx.rules, None) == 1.0
+    view = await view_of(ctx.session, ctx.rules, cosmos.home.id)
+    assert world_share(ctx.rules, view, ExtractionKind.MINING) == ctx.rules.world_physics.iron_ore_yield / 100
+    assert world_share(ctx.rules, await view_of(ctx.session, ctx.rules, None), ExtractionKind.MINING) == 1.0
 
 
 async def test_nature_of_the_world_shapes_its_disasters(ctx: TickContext, cosmos: Cosmos) -> None:
-    quaking = DisasterWorld(await ctx.laws(), {}, world_types={cosmos.home.id: WorldType.CHTHONIAN})
+    quaking = DisasterWorld(await ctx.laws(), {}, views={cosmos.home.id: default_view(ctx.rules, WorldType.CHTHONIAN)})
     assert quaking.nature_mult(ctx.rules, cosmos.home.id, Disaster.EARTHQUAKE) == ctx.rules.world_physics.chthonian_earthquake_pct / 100
-    built = DisasterWorld(await ctx.laws(), {}, world_types={cosmos.home.id: WorldType.GODS_PALACE})
+    built = DisasterWorld(await ctx.laws(), {}, views={cosmos.home.id: default_view(ctx.rules, WorldType.GODS_PALACE)})
     assert built.nature_mult(ctx.rules, cosmos.home.id, Disaster.EARTHQUAKE) == 0
 
 

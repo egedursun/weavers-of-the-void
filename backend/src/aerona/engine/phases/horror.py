@@ -38,7 +38,7 @@ from aerona.engine.cosmos.placement import world_pull
 from aerona.engine.cosmos.routes import open_alignment
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
 from aerona.engine.cosmos.star_types import star_mechanics
-from aerona.engine.cosmos.world_types import mechanics_of
+from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.cosmos.worldlife import hot_regions
 from aerona.engine.divine.outer import breach_pressure, open_breaches, outer_profile, seed_void_tenets
 from aerona.engine.divine.wounds import sanity_ceiling
@@ -171,7 +171,7 @@ async def _sanity_context(ctx: TickContext, knowledge: KnowledgeMap) -> SanityCo
         leaks={world.id: world.leakage for world in worlds},
         outer_worlds=outer,
         void_erosion={
-            world.id: mechanics_of(world.world_type).sanity_erosion(ctx.rules)
+            world.id: (await view_of(ctx.session, ctx.rules, world.id)).sanity_erosion
             + (star_mechanics(stars[world.star_id]).sanity_erosion(ctx.rules) if world.star_id in stars else 0)
             + (await world_pull(ctx.session, ctx.rules, world)).sanity
             for world in worlds
@@ -595,6 +595,7 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     "table.rifts",
     "table.routes",
     "table.world_domain_hooks",
+    "table.world_type_profiles",
 )
 @writes(
     "people.population",

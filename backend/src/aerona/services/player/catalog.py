@@ -135,6 +135,7 @@ from aerona.services.player import (
     warfare,
     wilds,
     world_edits,
+    world_views,
 )
 from aerona.services.player.canon import ConfirmationWord
 from aerona.services.player.runtime import PlayerRuntime
@@ -5076,6 +5077,18 @@ HONOURS_ACTIONS = (
     _sync(Meta("honours:run", "Read every grant to veterans and association now", G.WARFARE), honours.honours_run, honours.RunNow, free, ("S5.1/RP6",)),
 )
 
+WORLD_VIEW_ACTIONS = (
+    _sync(Meta("world_view:edit", "Set the nature of a world", G.WORLDS), world_views.world_view_edit, world_views.WorldViewEdit, free, ("F45",)),
+    _sync(
+        Meta("world_view:reset", "Return a world to the nature of its kind", G.WORLDS),
+        world_views.world_view_reset,
+        world_views.WorldViewTarget,
+        free,
+        ("F45",),
+    ),
+    _sync(Meta("world_views:run", "Read what every world binds its towns to now", G.WORLDS), world_views.world_views_run, world_views.RunNow, free, ("F45",)),
+)
+
 ACTIONS: tuple[ActionSpec, ...] = (
     *CYCLE_ACTIONS,
     *REGIME_ACTIONS,
@@ -5090,6 +5103,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *MEANS_ACTIONS,
     *ORDERS_ACTIONS,
     *HONOURS_ACTIONS,
+    *WORLD_VIEW_ACTIONS,
     *ERAS_ACTIONS,
     *CLIMES_ACTIONS,
     *CRAFTS_ACTIONS,

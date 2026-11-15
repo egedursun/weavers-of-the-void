@@ -23,6 +23,7 @@ from aerona.domain.enums.military import RESTING, CommandArea, MoraleState, Muti
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.world_views import unfit_for_land_war, view_of
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.environment.book import EnvironmentBook, add_scar
 from aerona.engine.environment.perils import Wandering, danger_toll, navigate
@@ -210,6 +211,13 @@ def entrench(rules: Rules, profile: ArmyProfileRow, left: RegionEnvironmentRow |
         if left is not None and not held(left.entity_id):
             leave_earthworks(rules, profile, left)
         profile.entrenchment = 0
+
+
+async def terrain_toll(ctx: TickContext, march: March) -> int:
+    view = await view_of(ctx.session, ctx.rules, march.army.world_id)
+    if not unfit_for_land_war(view) or march.profile.stance is Stance.RETREAT:
+        return 0
+    return round_half_up((stat(march.army, "size") or 0) * ctx.rules.world_views.terrain_attrition_pct / PERCENT)
 
 
 def supply_line(atlas: RegionAtlas, owner: EntityRow, profile: ArmyProfileRow) -> list[int]:
@@ -490,7 +498,7 @@ async def campaign_season(
         land = await ctx.session.get(EntityRow, region.entity_id)
         if land is not None:
             await fell_plantings(ctx, land, ctx.rules.perennials.raid_felling_pct)
-    dead += wandering.dead + peril.dead
+    dead += wandering.dead + peril.dead + await terrain_toll(ctx, march)
     log.unfed_mounts = not feed_mounts(ctx.rules, profile, rows, log.foraged)
     await rearm(ctx, march.army, march.owner, rows)
     dead += await hardship(ctx, march, rows, log)

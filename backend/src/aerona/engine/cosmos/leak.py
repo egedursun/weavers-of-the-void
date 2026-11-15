@@ -22,7 +22,7 @@ from aerona.domain.enums.world import DARK_STAR_TYPES, StarType
 from aerona.domain.models.records import LedgerItem
 from aerona.engine.cosmos.placement import world_pull
 from aerona.engine.cosmos.star_types import star_mechanics
-from aerona.engine.cosmos.world_types import mechanics_of
+from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity
 from aerona.engine.primitives.society import class_shares
@@ -130,7 +130,7 @@ def leak_cap(rules: Rules, world: WorldRow, epoch: int) -> int:
 async def leak_delta(session: AsyncSession, rules: Rules, world: WorldRow, epoch: int, doom_share: float, *, knowledge: KnowledgeMap) -> LeakDelta:
     horror = rules.cosmic_horror
     sources = await _sources(session, world, knowledge)
-    mechanics = mechanics_of(world.world_type)
+    view = await view_of(session, rules, world.id)
     star = star_mechanics(sources.star_type) if sources.star_type is not None else None
 
     def capped(value: float) -> float:
@@ -145,7 +145,7 @@ async def leak_delta(session: AsyncSession, rules: Rules, world: WorldRow, epoch
         "outer cults": capped(sources.outer_cults * horror.outer_cult_leak),
         "outer beings": sources.outer_beings * horror.outer_being_leak,
         "doom": doom_share * horror.apocalypse_leak,
-        "world nature": mechanics.leak(rules),
+        "world nature": view.leak,
         "the heavens": float((await world_pull(session, rules, world)).leak),
         "rifts": capped(await open_rifts(session, world.id) * rules.rifts.world_leak),
         "phenomena": await wound_leak(session, rules, world.id),
@@ -162,7 +162,7 @@ async def leak_delta(session: AsyncSession, rules: Rules, world: WorldRow, epoch
         "worshippers": worship_repair,
         "temples": min(horror.temple_cap, await _temples(session, world.id)) * scale_m,
         "priests": min(horror.priest_cap, await _priest_communities(session, rules, world.id)) * scale_m,
-        "fabric repair": horror.fabric_self_repair + max(0.0, (world.leakage - horror.repair_threshold) / horror.repair_divisor) + mechanics.leak_repair(rules),
+        "fabric repair": horror.fabric_self_repair + max(0.0, (world.leakage - horror.repair_threshold) / horror.repair_divisor) + view.leak_repair,
         "star's hold": star.leak_repair(rules) if star is not None else 0,
     }
     items = {key: round(value * factor, BREAKDOWN_DECIMALS) for key, value in increases.items() if value}
