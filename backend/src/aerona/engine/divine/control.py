@@ -28,6 +28,7 @@ from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHook, GoalSource, GoalState, GodGoalKind, SonPunishment, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
@@ -41,6 +42,7 @@ from aerona.engine.divine.outer import outer_profile
 from aerona.engine.divine.rulings import Motion, enact, record
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.divine.wounds import gather, inflict
+from aerona.engine.lifecycle.states import state_of
 from aerona.engine.polity.control import lock
 from aerona.engine.primitives.edits import bounds, coerce
 from aerona.engine.primitives.queries import living_entity
@@ -335,6 +337,8 @@ async def open_breach(ctx: TickContext, being_id: int, region_id: int | None, st
     being = await living_entity(ctx.session, being_id)
     if being is None or being.entity_type is not EntityType.OUTER_BEING:
         raise NotFoundError("No such outer being.")
+    if await state_of(ctx.session, being.id) is LifecycleState.DESTROYED:
+        raise ValidationFailedError("That outer being is destroyed for good; no breach can open for it.")
     if region_id is not None:
         region = await living_entity(ctx.session, region_id)
         if region is None or region.entity_type is not EntityType.REGION:

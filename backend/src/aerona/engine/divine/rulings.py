@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import aliased
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.sons import SonRepository
@@ -68,11 +69,12 @@ class Motion:
 
 async def divide(ctx: TickContext) -> list[str]:
     worshipped = Counter[tuple[int, int]]()
+    god = aliased(SonRow, flat=True)
     rows = await ctx.session.execute(
         select(EntityRow.world_id, BondRow.target_node_id)
         .join(BondRow, BondRow.source_node_id == EntityRow.id)
-        .join(SonRow, SonRow.id == BondRow.target_node_id)
-        .where(BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, SonRow.status != SonStatus.DEAD)
+        .join(god, god.id == BondRow.target_node_id)
+        .where(BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, god.status != SonStatus.DEAD)
     )
     for world_id, son_id in rows:
         worshipped[(world_id, son_id)] += 1

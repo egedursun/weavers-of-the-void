@@ -53,6 +53,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect, WeatherKind
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment, TenetKind
+from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
@@ -98,7 +99,7 @@ from aerona.engine.industry.pollution import void_scar
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.intrigue.names import name_power
 from aerona.engine.intrigue.sources import hidden_rites
-from aerona.engine.lifecycle.states import ended_ids
+from aerona.engine.lifecycle.states import ended_ids, state_of
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.intel import gain_intel
 from aerona.engine.lore.kinds import RiteEffectParams, kind_of, params_of
@@ -464,6 +465,7 @@ async def unmet(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> str
         (need.slot is not None and not await season_of(ctx, caster, CalendarSlot(need.slot)), "it is not the season for it"),
         (need.participants is not None and await gathering(ctx, caster) < need.participants, "too few take part"),
         (mortal and await unclean(ctx.session, caster.id), "the caster is unclean in the eyes of their people"),
+        (await state_of(ctx.session, row.rite_entity_id) is LifecycleState.LOST, "no one living knows that rite and no text of it survives"),
     )
     return next((reason for failed, reason in checks if failed), None)
 

@@ -14,11 +14,13 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import GoalSource, GodGoalKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.engine.divine import control
 from aerona.engine.divine.foreign import friendship, pact_between, seal_pact
 from aerona.engine.divine.goals import GOAL_LABELS, active_goals
 from aerona.engine.divine.outer import oppose_cost
 from aerona.engine.divine.wounds import gather
+from aerona.engine.lifecycle.states import state_of
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import stat_or
 from aerona.prompts import SonToolId
@@ -92,6 +94,8 @@ async def take_mortal_form(call: SonCall, args: MortalFormInput) -> str:
 async def ward_against_outer(call: SonCall, args: WardInput) -> str:
     table = call.rules.outer_beings
     being = require_type(await require_canon(call.session, args.outsider_id), {EntityType.OUTER_BEING}, SonResult.NOT_AN_OUTSIDER, name=str(args.outsider_id))
+    if await state_of(call.session, being.id) is LifecycleState.DESTROYED:
+        fail(SonResult.NOT_AN_OUTSIDER, name=being.name)
     await ensure_in_reach(call, being)
     cost = oppose_cost(table.oppose_cost_pct, being)
     require_essence(call, cost)

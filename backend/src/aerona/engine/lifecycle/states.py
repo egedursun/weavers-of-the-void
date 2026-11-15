@@ -21,5 +21,9 @@ async def states(session: AsyncSession) -> dict[int, LifecycleState]:
     return found
 
 
+async def state_of(session: AsyncSession, holder_id: int) -> LifecycleState:
+    return (await states(session)).get(holder_id, S.ACTIVE)
+
+
 async def ended_ids(session: AsyncSession) -> frozenset[int]:
     return frozenset(holder for holder, state in (await states(session)).items() if state in GONE)

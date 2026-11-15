@@ -80,13 +80,12 @@ async def remains(ctx: TickContext) -> list[Remains]:
     ):
         if beast.id not in laid:
             found.append(Remains(beast, FossilSource.BEAST))
-    for people, world in await session.execute(
-        select(EntityRow, WorldRow)
-        .join(WorldRow, WorldRow.id == EntityRow.world_id)
-        .where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.DEAD)
-        .order_by(EntityRow.id)
+    born = {world_id: epoch for world_id, epoch in await session.execute(select(WorldRow.id, WorldRow.created_epoch))}
+    for people in await session.scalars(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.DEAD).order_by(EntityRow.id)
     ):
-        if people.id not in laid and ctx.epoch - world.created_epoch >= ctx.rules.fossils.old_world_epochs:
+        age = ctx.epoch - born.get(people.world_id or 0, ctx.epoch)
+        if people.id not in laid and people.world_id in born and age >= ctx.rules.fossils.old_world_epochs:
             found.append(Remains(people, FossilSource.EXTINCT_PEOPLE))
     return found
 

@@ -1,6 +1,8 @@
+import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.arcana import LabTextRow, WarpingRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow
@@ -15,7 +17,7 @@ from aerona.domain.enums.culture import MagicSchool, MagicSource
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import FavourOrigin, HookSource, HookStrength, IntrigueSecret
-from aerona.domain.enums.lifecycle_end import LifecycleCause, LifecycleState
+from aerona.domain.enums.lifecycle_end import LifecycleCause, LifecycleKind, LifecycleState
 from aerona.domain.enums.world import SkyEventKind, StarType, WorldType
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
 from aerona.domain.models.entity_stats import DiseaseStats, IdeologyStats, ItemStats, OuterBeingStats, RiteStats
@@ -24,8 +26,11 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_end_control import declare_end
 from aerona.engine.cosmos.world_ends import EndingTally, keep_world_ends
 from aerona.engine.disease.book import DiseaseBook
+from aerona.engine.divine.control import open_breach
 from aerona.engine.intrigue.decay import DecayTally, keep_decays
+from aerona.engine.lifecycle.end_control import destroy
 from aerona.engine.lifecycle.ends import EndTally, keep_ends
+from aerona.engine.lore.rites import unmet
 from aerona.engine.primitives.manual import manual_context
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
@@ -188,3 +193,18 @@ async def test_a_world_under_a_dead_star_freezes_dead_and_the_god_can_transfigur
     assert villager.status is not EntityStatus.CANON and town.status is not EntityStatus.CANON and row.lives_ended >= 2
     changed = await declare_end(await at(session, 9), world.world.id, WorldEnd.TRANSFIGURED, WorldEndCause.BELIEF_DRIFT, WorldType.HOLLOW)
     assert changed.state is WorldEnd.TRANSFIGURED and changed.new_type is WorldType.HOLLOW and world.world.world_type is WorldType.HOLLOW
+
+
+async def test_a_lost_rite_cannot_be_cast_and_a_destroyed_outer_being_opens_no_breach(session: AsyncSession, world: CoreWorld) -> None:
+    caster = await mortal(session, "Ilse", world, world.regions[0].id)
+    rite = await entity(session, "Ember Call", EntityType.RITE, RiteStats(), world_id=world.world.id)
+    profile = RiteProfileRow(rite_entity_id=rite.id, school=MagicSchool.ELEMENTAL_FIRE, source=MagicSource.LEY, requirements={}, cost={}, locked=[])
+    session.add(profile)
+    session.add(LifecycleStateRow(holder_entity_id=rite.id, kind=LifecycleKind.RITE, state=LifecycleState.LOST, cause=LifecycleCause.NO_TEXTS, locked=[]))
+    being = await entity(session, "The Hollow Reach", EntityType.OUTER_BEING, OuterBeingStats(interest=0), world_id=world.world.id)
+    await session.flush()
+    ctx = await at(session, 2)
+    assert await unmet(ctx, caster, profile) == "no one living knows that rite and no text of it survives"
+    await destroy(ctx, being.id)
+    with pytest.raises(ValidationFailedError):
+        await open_breach(ctx, being.id, world.regions[0].id, 30)

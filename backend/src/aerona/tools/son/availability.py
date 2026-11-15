@@ -10,12 +10,14 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import DimensionRow, RiftRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.lifecycle_ends import LifecycleStateRow
 from aerona.db.tables.physics import ImpactEventRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.agent import TurnCounter
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.physics import ImpactOutcome
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, SonDistribution
@@ -51,7 +53,12 @@ async def world_state(session: AsyncSession, son: SonRow) -> SonWorldState:
     dead_star = await session.scalar(select(StarRow.id).where(StarRow.star_type.in_(list(EXTINGUISHED_STAR_TYPES))).limit(1)) is not None
     spirit = await session.scalar(select(EntityRow.id).where(EntityRow.entity_type == EntityType.SPIRIT, EntityRow.status == EntityStatus.CANON).limit(1))
     god = await session.scalar(select(ForeignGodRow.id).where(ForeignGodRow.contacted.is_(True), ForeignGodRow.status == ForeignGodStatus.AWAKE).limit(1))
-    outer = await session.scalar(select(EntityRow.id).where(EntityRow.entity_type == EntityType.OUTER_BEING, EntityRow.status == EntityStatus.CANON).limit(1))
+    destroyed = select(LifecycleStateRow.holder_entity_id).where(LifecycleStateRow.state == LifecycleState.DESTROYED)
+    outer = await session.scalar(
+        select(EntityRow.id)
+        .where(EntityRow.entity_type == EntityType.OUTER_BEING, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(destroyed))
+        .limit(1)
+    )
     return SonWorldState(
         world_count=worlds,
         automatic_distribution=cosmos is None or cosmos.son_distribution is SonDistribution.AUTO,

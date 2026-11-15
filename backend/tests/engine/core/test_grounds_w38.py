@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import CommunityStockRow
@@ -11,6 +12,7 @@ from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.lifecycle_ends import LifecycleStateRow
 from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
 from aerona.db.tables.structures import StructureProfileRow
+from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.fossil import FossilSource
@@ -18,7 +20,7 @@ from aerona.domain.enums.garden import GardenKind
 from aerona.domain.enums.lifecycle_end import LifecycleKind, LifecycleState
 from aerona.domain.enums.museum import HoardKind, PieceKind
 from aerona.domain.enums.structure import StructureKind
-from aerona.domain.models.entity_stats import ArtworkStats, DiseaseStats, StructureStats
+from aerona.domain.models.entity_stats import ArtworkStats, DiseaseStats, ItemStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.fossils import FossilTally, keep_fossils
 from aerona.engine.museums.gardens import GardenTally, keep_gardens
@@ -105,3 +107,18 @@ async def test_a_park_is_laid_out_falls_into_ruin_unpaid_and_gardens_feed_needs_
     assert await gardens_kept(session, ctx.rules, [town.id]) == 1
     assert await physic_share(session, ctx.rules, town.id) > 0
     assert (world.species.id, world.regions[0].id) in await refuges(session, {town.id: world.regions[0].id})
+
+
+async def test_a_temple_keeps_the_relics_held_in_its_town(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Shrineholm", world, world.regions[0])
+    temple = await entity(session, "The High House", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+    session.add(StructureProfileRow(structure_entity_id=temple.id, kind=StructureKind.TEMPLE, host_entity_id=town.id, locked=[]))
+    relic = await entity(session, "The First Lamp", EntityType.ITEM, ItemStats(), world_id=world.world.id, location_id=town.id)
+    session.add(ItemProfileRow(item_entity_id=relic.id, item_class=ItemClass.HOLY_RELIC, locked=[]))
+    await session.flush()
+    ctx = await at(session, 2)
+    await keep_hoards(ctx, HoardTally())
+    hoard = await session.scalar(select(MuseumCollectionRow).where(MuseumCollectionRow.keeper_entity_id == town.id))
+    assert hoard is not None and hoard.kind is HoardKind.TEMPLE_TREASURY and hoard.prestige > 0
+    piece = await session.scalar(select(MuseumPieceRow).where(MuseumPieceRow.item_entity_id == relic.id))
+    assert piece is not None and piece.kind is PieceKind.RELIC

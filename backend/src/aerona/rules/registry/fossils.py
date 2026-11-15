@@ -14,7 +14,7 @@ class FossilRules:
     find_pct: int = rule(2, 0, 100, E, "Chance each epoch an unfound fossil bed is found where nothing disturbs it (%)")
     mine_pct: int = rule(10, 0, 100, E, "Chance a mine or quarry in its land adds each epoch to finding a fossil bed (%)")
     erosion_pct: int = rule(25, 0, 100, E, "Chance a quake or flood in its land that epoch adds to finding a fossil bed (%)")
-    reading_from: int = rule(30, -100, 100, E, "Value of superstition, piety or knowledge from which a people reads a find in its way")
+    reading_from: int = rule(10, -100, 100, E, "Value of superstition, piety or knowledge from which a people reads a find in its way")
     legend_credence: int = rule(10, 0, 100, E, "Credence the legends of a people gain when it reads its find as the remains of beings of its legends")
     relic_followers_pct: int = rule(5, 0, 100, E, "Share of followers the cults of its land gain when a find is read as sacred relics (%)")
     deep_time_strength: int = rule(10, 0, 100, E, "Strength the theories of a people gain when it reads a find as evidence of deep time")

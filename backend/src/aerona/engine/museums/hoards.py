@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
@@ -101,6 +101,22 @@ async def prized_of(ctx: TickContext, owner_id: int) -> list[tuple[int, PieceKin
     return [(item_id, PieceKind.RELIC if item_class in RELICS else PieceKind.ARTIFACT) for item_id, item_class in rows.all()]
 
 
+async def prized_in(ctx: TickContext, town_id: int, classes: frozenset[ItemClass]) -> list[tuple[int, PieceKind]]:
+    residents = select(EntityRow.id).where(EntityRow.location_id == town_id, EntityRow.status == EntityStatus.CANON)
+    kept = select(BondRow.target_node_id).where(BondRow.source_node_id.in_(residents), BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
+    rows = await ctx.session.execute(
+        select(ItemProfileRow.item_entity_id, ItemProfileRow.item_class)
+        .join(EntityRow, EntityRow.id == ItemProfileRow.item_entity_id)
+        .where(
+            EntityRow.status == EntityStatus.CANON,
+            ItemProfileRow.item_class.in_(list(classes)),
+            or_(EntityRow.location_id == town_id, ItemProfileRow.item_entity_id.in_(kept)),
+        )
+        .order_by(ItemProfileRow.item_entity_id)
+    )
+    return [(item_id, PieceKind.RELIC if item_class in RELICS else PieceKind.ARTIFACT) for item_id, item_class in rows.all()]
+
+
 async def ruler_of(ctx: TickContext, polity_id: int) -> int | None:
     found = await ctx.session.scalar(
         select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == polity_id, OfficeRow.kind == OfficeKind.RULER).limit(1)
@@ -113,7 +129,11 @@ async def offered(ctx: TickContext, atlas: RegionAtlas, hoard: MuseumCollectionR
     owner = await ruler_of(ctx, hoard.keeper_entity_id) if hoard.kind is HoardKind.ROYAL_COLLECTION else hoard.keeper_entity_id
     if owner is not None:
         found.extend((item_id, None, kind) for item_id, kind in await prized_of(ctx, owner))
-    if hoard.kind is HoardKind.TEMPLE_TREASURY or hoard.kind is HoardKind.ROYAL_COLLECTION:
+    if hoard.kind is HoardKind.ROYAL_COLLECTION:
+        return found
+    classes = RELICS if hoard.kind is HoardKind.TEMPLE_TREASURY else RELICS | ARTIFACTS
+    found.extend((item_id, None, kind) for item_id, kind in await prized_in(ctx, hoard.keeper_entity_id, classes))
+    if hoard.kind is HoardKind.TEMPLE_TREASURY:
         return found
     art = await ctx.session.scalars(
         select(EntityRow.id)
