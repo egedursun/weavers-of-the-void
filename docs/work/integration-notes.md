@@ -182,3 +182,28 @@ W35 cross-cutting layers (spec 16 6.6), filled at the W35 audit of 2026-11-15:
 | Search | text search only | W49 49.5 |
 | Integrity and legacy | orders_links repair closes open transitions of vanished realms, idle putting-out, orphaned named units, dead changers, lost hoards and dead chain holders; migration c3567396253d backfills | every table, 47.13 |
 | Speed | engine tick measured at 144–171 s on the real-data copy, against a 20 s target | W49 49.8 |
+
+W36 cross-cutting layers (spec 16 6.6), filled at the W36 audit of 2026-11-15:
+
+| Layer | What W36 gives | Left to |
+|---|---|---|
+| Record of what happened | world_views.short notes when a town runs short of what its world binds it to; tallies of seeded, met, short, upkept and unpaid in every epoch's counts | typed incident records, W49 F58.1–F58.4 |
+| What changed | god levers and the son tool through the ledger; the son tool is refused on a held world and on a held value | engine-side change capture, W49 F58.5 |
+| When | updated_epoch on every world nature | in-world calendar moment, W49 F58.6 |
+| Where | one nature per world; towns, regions, armies and resources read the nature of their world | |
+| Why | couplings with rule keys for every number; the kind of world is the stated source of every default | stored causes, W49 F58.7–F58.8 |
+| Who knows | the nature of the world is in mortal and son context | witnesses and rumours, W49 F58.9 |
+| How it is told | plain lines from fields | re-renderable tiers, W49 F58.10 |
+| What it was | none | W49 F58.11 |
+| What is kept | one row per world, never folded | |
+| Names | none added | |
+| Look | none added; image style stays at render time | |
+| Model-facing wording | the son tool text, its results and the context lines read in full against rule 2: they name the fields, not images | |
+| Control | world_view:edit (with hold and release), world_view:reset, world_views:run, proven in the lever harness; the son tool proven in the tool harness | record reverts, W49 49.5 |
+| Reach | WorldViewSection in ThingSections for every kind of thing; the Creator and stars stand on no world and the section says so with its controls disabled | |
+| Books | world entries render the world nature as a typed section in the book and the Codex | |
+| Search | text search only | W49 49.5 |
+| Integrity and legacy | startup seeding of every missing world nature; migration 39ded63f7c3f; the god's held values survive a seeding | every table, 47.13 |
+| Speed | world natures are read through one memo per session | W49 49.8 |
+
+W36 audit, lived world (2026-11-15): the population of the real-data world fell from 2.8 million at epoch 49 to 0.3 million at epoch 57 and kept shrinking at the 25% cap on every non-dream world. The cause was the order of energy draws: resource_economy ran before society_economy and spent a town's whole pool of muscle on mines, quarries and logging, so harvest_goods found no energy and the fields of whole towns yielded nothing. Farmers now work their own fields first (worked_by_hand) and the shared pool holds only the muscle of the other workers; check_food_energy keeps food from being drawn from the shared pool alone.

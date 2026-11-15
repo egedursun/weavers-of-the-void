@@ -2,10 +2,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.world_views import WorldViewRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind
+from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_view import BindingNeed, SettleMode, WarTerrain, WorldLight
@@ -20,7 +24,8 @@ from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import fires
-from tests.engine.core.factories import CoreWorld, settlement, tuned_rules
+from aerona.services.integrity.world_views import seed_missing_views
+from tests.engine.core.factories import CoreWorld, bond, settlement, tuned_rules
 
 
 async def at(session: AsyncSession, epoch: int, **rules: dict[str, int]) -> TickContext:
@@ -119,3 +124,42 @@ async def test_a_sealed_town_breathes_while_it_pays_its_upkeep(session: AsyncSes
     set_stats(town, wealth=0)
     await keep_views(await at(session, 4), tally)
     assert tally.unpaid == 1 and tally.short == 1 and profile.unrest == ctx.rules.world_views.shortfall_unrest
+
+
+async def test_a_people_that_breathes_nothing_or_was_born_to_the_cold_is_not_bound_to_air_or_heat(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Stonebreath", world, world.regions[0], population=1000)
+    await bond(session, town.id, world.people.id, BondKind.DESCENDS_FROM)
+    session.add(SettlementProfileRow(settlement_entity_id=town.id, size_tier=SizeTier.TOWN, unrest=0, locked=[]))
+    session.add(
+        PeopleBiologyRow(
+            people_entity_id=world.people.id,
+            maturity_years=15,
+            adult_years=40,
+            elder_years=60,
+            fertility_pct=50,
+            acclimatised=TemperatureBand.FROZEN,
+            staple=CommodityKind.GRAIN,
+            air=AirNeed.NONE,
+            locked=[],
+        )
+    )
+    await session.flush()
+    ctx = await at(session, 2)
+    await keep_views(ctx, ViewTally())
+    for need in (BindingNeed.AIR, BindingNeed.HEAT):
+        await edit_view(ctx, world.world.id, {"need": need.value}, [])
+        tally = ViewTally()
+        await keep_views(await at(session, 3), tally)
+        assert tally.short == 0 and tally.met >= 1
+
+
+async def test_a_world_follows_its_kind_in_every_value_the_god_has_not_held(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await at(session, 2)
+    await keep_views(ctx, ViewTally())
+    await edit_view(ctx, world.world.id, {"storm_pct": 300}, [])
+    row = await session.get(WorldViewRow, world.world.id)
+    assert row is not None
+    row.timber_pct = 7
+    await session.flush()
+    assert await seed_missing_views(session, ctx.rules, 3) == 1
+    assert row.timber_pct == 100 and row.storm_pct == 300

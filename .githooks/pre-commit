@@ -48,6 +48,8 @@ run point_shares "$PYTHON" scripts/check_point_shares.py
 run held_ids "$PYTHON" scripts/check_held_ids.py
 run ended_war_sides "$PYTHON" scripts/check_ended_war_sides.py
 run purse_welfare "$PYTHON" scripts/check_purse_welfare.py
+run method_orphans "$PYTHON" scripts/check_method_orphans.py
+run food_energy "$PYTHON" scripts/check_food_energy.py
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check
 
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then

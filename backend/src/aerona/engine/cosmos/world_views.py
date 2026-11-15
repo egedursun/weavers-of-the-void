@@ -8,6 +8,7 @@ from aerona.catalog.world_views import WORLD_VIEWS, WorldViewSpec
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.means import WaterLiftRow
@@ -16,9 +17,12 @@ from aerona.db.tables.world_views import SHARE_MAX, WORLD_VIEW_FIELDS, WorldView
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_view import BindingNeed, SettleMode, WarTerrain, WorldLight
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import disaster_pct, mechanics_of
 from aerona.engine.economy.purse import take_coin
@@ -35,6 +39,7 @@ HEAT_STOCKS = (CommodityKind.FUEL, CommodityKind.PEAT, CommodityKind.COAL)
 AIR_STOCKS = (CommodityKind.TOOLS,)
 OFFERING_STOCKS = (CommodityKind.SACRED_GOODS, CommodityKind.INCENSE)
 UPKEPT = frozenset({SettleMode.FLOATING, SettleMode.HABITAT})
+COLD_BORN = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 LAND_UNFIT = frozenset({WarTerrain.NAVAL, WarTerrain.SKY, WarTerrain.BOARDING})
 
 
@@ -217,7 +222,19 @@ async def water_met(ctx: TickContext, town: EntityRow, atlas: RegionAtlas, peopl
     return devices * table.water_lift_share * PERCENT >= people
 
 
+async def born_free(ctx: TickContext, town: EntityRow, need: BindingNeed) -> bool:
+    folk = await people_id_of(ctx.session, town)
+    biology = await ctx.session.get(PeopleBiologyRow, folk) if folk is not None else None
+    if biology is None:
+        return False
+    if need is BindingNeed.AIR:
+        return biology.air is AirNeed.NONE
+    return need is BindingNeed.HEAT and biology.acclimatised in COLD_BORN
+
+
 async def need_met(ctx: TickContext, town: EntityRow, view: WorldView, atlas: RegionAtlas) -> bool:
+    if await born_free(ctx, town, view.need):
+        return True
     table = ctx.rules.world_views
     people = stat(town, "population") or 0
     wanted = max(1, people * table.need_per_100 // PERCENT)
@@ -264,7 +281,9 @@ async def keep_needs(ctx: TickContext, tally: ViewTally) -> None:
         sealed = await upkept(ctx, town, view, tally)
         if view.need is BindingNeed.NONE:
             continue
-        met = sealed if view.need is BindingNeed.AIR and sealed is not None else await need_met(ctx, town, view, atlas)
+        met = (
+            (sealed or await born_free(ctx, town, view.need)) if view.need is BindingNeed.AIR and sealed is not None else await need_met(ctx, town, view, atlas)
+        )
         if met:
             tally.met += 1
             continue

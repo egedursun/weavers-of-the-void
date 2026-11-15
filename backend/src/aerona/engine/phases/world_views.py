@@ -9,6 +9,7 @@ from aerona.engine.phases.dominion import count
     "settlement.population",
     "settlement.prosperity",
     "table.epoch_year_cursors",
+    "table.people_biology",
     "table.region_environment",
     "table.settlement_profiles",
     "table.water_lifts",

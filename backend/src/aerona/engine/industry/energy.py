@@ -27,6 +27,8 @@ from aerona.rules.registry import Rules
 
 THOUSAND = 1000
 WORKING = tuple(job for job in Job if job is not Job.IDLE)
+FOOD_JOBS = (Job.FARMING, Job.HERDING, Job.FISHING)
+POOLED = tuple(job for job in WORKING if job not in FOOD_JOBS)
 
 
 async def leys_by_region(ctx: TickContext) -> Counter[int]:
@@ -62,9 +64,21 @@ def clergy_of(book: EconomyBook, community: EntityRow) -> int:
     return round_half_up(headcount(community) * share / PERCENT)
 
 
-def workers_of(book: EconomyBook, community: EntityRow) -> int:
-    hands = book.hands(community.id, *WORKING)
+def pooled_workers(book: EconomyBook, community: EntityRow) -> int:
+    hands = book.hands(community.id, *POOLED)
     return hands if hands is not None else headcount(community)
+
+
+def own_hands(rules: Rules, workers: int) -> int:
+    return round_half_up(workers * rules.energy.muscle_per_100_workers / PERCENT)
+
+
+def worked_by_hand(book: EconomyBook, rules: Rules, community_id: int, kind: EnergyKind, *, need: int, workers: int) -> float:
+    if need <= 0:
+        return 1.0
+    own = own_hands(rules, workers) if kind is EnergyKind.MUSCLE else 0
+    rest = max(0, need - own)
+    return min(1.0, (min(own, need) + (draw(book, community_id, kind, rest) if rest else 0)) / need)
 
 
 async def mages_of(ctx: TickContext, community_id: int) -> int:
@@ -99,7 +113,7 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
     beasts = held.get(CommodityKind.LIVESTOCK, 0) + held.get(CommodityKind.MOUNTS, 0)
     draught = await kept_for(ctx, community.id, SpeciesUse.LABOUR)
     muscle = (
-        workers_of(book, community) * table.muscle_per_100_workers / PERCENT
+        pooled_workers(book, community) * table.muscle_per_100_workers / PERCENT
         + beasts * table.muscle_per_10_beasts / 10
         + draught * ctx.rules.husbandry.muscle_per_10_draught / 10
     )
