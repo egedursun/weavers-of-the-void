@@ -7,41 +7,41 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 
 | Node type | A | B | C |
 |---|---:|---:|---:|
-| region | 289 / 215 met | 489 / 160 met | 398 / 120 met |
-| place | 74 / 25 met | 165 / 20 met | 285 / 15 met |
+| region | 289 / 215 met | 491 / 160 met | 398 / 120 met |
+| place | 74 / 25 met | 165 / 20 met | 287 / 15 met |
 | resource | 59 / 35 met | 69 / 50 met | 220 / 30 met |
-| settlement | 1359 / 280 met | 1277 / 230 met | 420 / 145 met |
-| species | 233 / 150 met | 210 / 150 met | 200 / 95 met |
-| people | 1205 / 320 met | 1025 / 220 met | 420 / 140 met |
-| mortal | 778 / 355 met | 894 / 340 met | 420 / 200 met |
+| settlement | 1359 / 280 met | 1281 / 230 met | 420 / 145 met |
+| species | 233 / 150 met | 211 / 150 met | 200 / 95 met |
+| people | 1205 / 320 met | 1028 / 220 met | 420 / 140 met |
+| mortal | 778 / 355 met | 896 / 340 met | 420 / 200 met |
 | item | 90 / 65 met | 105 / 60 met | 220 / 45 met |
-| structure | 204 / 55 met | 48 / 70 short | 257 / 55 met |
+| structure | 204 / 55 met | 48 / 70 short | 258 / 55 met |
 | language | 62 / 110 short | 64 / 90 short | 100 / 55 met |
-| legend | 64 / 30 met | 48 / 40 met | 117 / 35 met |
+| legend | 64 / 30 met | 48 / 40 met | 118 / 35 met |
 | tradition | 44 / 20 met | 57 / 25 met | 80 / 25 met |
-| cult | 357 / 90 met | 517 / 100 met | 420 / 75 met |
-| faction | 379 / 95 met | 511 / 110 met | 380 / 80 met |
+| cult | 357 / 90 met | 519 / 100 met | 420 / 75 met |
+| faction | 379 / 95 met | 513 / 110 met | 380 / 80 met |
 | celestial | 11 / 10 met | 3 / 12 short | 38 / 15 met |
-| artwork | 35 / 20 met | 45 / 20 met | 145 / 15 met |
-| law | 73 / 55 met | 88 / 60 met | 200 / 45 met |
-| spirit | 68 / 60 met | 191 / 60 met | 220 / 40 met |
-| knowledge | 133 / 70 met | 260 / 110 met | 300 / 85 met |
+| artwork | 35 / 20 met | 45 / 20 met | 146 / 15 met |
+| law | 73 / 55 met | 89 / 60 met | 200 / 45 met |
+| spirit | 68 / 60 met | 192 / 60 met | 220 / 40 met |
+| knowledge | 133 / 70 met | 261 / 110 met | 300 / 85 met |
 | prophecy | 25 / 15 met | 23 / 15 met | 60 / 15 met |
-| event | 43 / 15 met | 224 / 20 met | 340 / 15 met |
+| event | 43 / 15 met | 225 / 20 met | 340 / 15 met |
 | vessel | 20 / 80 short | 13 / 65 short | 100 / 35 met |
-| outer_being | 21 / 15 met | 16 / 20 short | 120 / 20 met |
-| army | 415 / 240 met | 381 / 200 met | 400 / 95 met |
+| outer_being | 21 / 15 met | 17 / 20 short | 135 / 20 met |
+| army | 415 / 240 met | 383 / 200 met | 400 / 95 met |
 | natural_law | 6 / 10 short | 4 / 30 short | 60 / 30 met |
 | trade_route | 54 / 25 met | 65 / 25 met | 220 / 25 met |
-| disease | 62 / 45 met | 57 / 50 met | 180 / 40 met |
-| polity | 517 / 225 met | 278 / 220 met | 286 / 150 met |
+| disease | 62 / 45 met | 58 / 50 met | 180 / 40 met |
+| polity | 517 / 225 met | 280 / 220 met | 286 / 150 met |
 | house | 130 / 60 met | 69 / 55 met | 220 / 45 met |
 | treaty | 84 / 25 met | 37 / 20 met | 140 / 20 met |
 | title | 0 / 25 short | 0 / 25 short | 0 / 25 short |
-| ideology | 30 / 20 met | 29 / 20 met | 60 / 20 met |
-| rite | 68 / 50 met | 71 / 55 met | 120 / 45 met |
-| beast | 86 / 150 short | 70 / 90 short | 179 / 65 met |
-| theory | 8 / 15 short | 143 / 20 met | 180 / 25 met |
+| ideology | 30 / 20 met | 30 / 20 met | 75 / 20 met |
+| rite | 68 / 50 met | 72 / 55 met | 120 / 45 met |
+| beast | 86 / 150 short | 71 / 90 short | 179 / 65 met |
+| theory | 8 / 15 short | 145 / 20 met | 180 / 25 met |
 | art_form | 8 / 20 short | 1 / 20 short | 20 / 20 met |
 | phenomenon | 0 / 20 short | 0 / 20 short | 0 / 25 short |
 | cosmic_being | 0 | 1 | 20 |
@@ -51,9 +51,9 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | dish | 0 | 0 | 0 |
 | building_type | 0 | 0 | 0 |
 | son | 247 / 350 short | 117 / 320 short | 280 / 190 met |
-| creator | 25 / 35 short | 13 / 40 short | 97 / 35 met |
+| creator | 25 / 35 short | 13 / 40 short | 98 / 35 met |
 | foreign_god | 104 / 200 short | 33 / 140 short | 141 / 100 met |
 | war | 192 / 95 met | 161 / 110 met | 140 / 75 met |
-| world | 139 / 195 short | 62 / 135 short | 203 / 115 met |
+| world | 139 / 195 short | 63 / 135 short | 203 / 115 met |
 | star | 17 / 35 short | 3 / 30 short | 30 / 25 met |
 | route | 26 / 45 short | 3 / 30 short | 40 / 25 met |

@@ -91,6 +91,7 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.immunities",
     "table.impurity_sources",
     "table.ley_lines",
+    "table.lifecycle_states",
     "table.outbreaks",
     "table.plague_responses",
     "table.quarantines",

@@ -23,6 +23,7 @@ from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_
 from aerona.agents.context.justice import case_lines, proposal_lines
 from aerona.agents.context.language_lines import language_lines
 from aerona.agents.context.law_lines import mortal_law_lines
+from aerona.agents.context.lifecycle_lines import mortal_grounds_lines
 from aerona.agents.context.lineage import lineage_lines
 from aerona.agents.context.means_lines import mortal_economy_lines, mortal_honours_lines, mortal_means_lines
 from aerona.agents.context.mythic_lines import mortal_magic_lines
@@ -226,6 +227,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "honours": await mortal_honours_lines(scope, me),
             "world_nature": await mortal_world_lines(scope, me),
             "biology": await mortal_biology_lines(scope, me),
+            "grounds": await mortal_grounds_lines(scope, me),
         }
     )
 

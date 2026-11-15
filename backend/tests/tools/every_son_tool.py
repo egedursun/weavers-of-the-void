@@ -70,6 +70,7 @@ from tests.tools.every_setup_arts import art_work, built_construct, forged_work,
 from tests.tools.every_setup_crafts import material_resource
 from tests.tools.every_setup_eras import realm_programme
 from tests.tools.every_setup_folkways import owned_item
+from tests.tools.every_setup_lifecycle import forgotten_theory, hidden_fossils
 from tests.tools.every_setup_nature import first_kind, second_kind, two_kinds
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
@@ -422,6 +423,10 @@ SON_CASES: dict[str, Case] = {
     "lengthen_winter": Case(plain(world_id=world, epochs=2, reason=REASON), long_winter),
     "shift_world_nature": Case(plain(world_id=world, share="storm_pct", change=10, reason=REASON)),
     "shape_biology": Case(plain(holder_id=people, variant="aerial", gain=True, reason=REASON)),
+    "wake_lore": Case(plain(lore_id=created("theory"), reason=REASON), forgotten_theory),
+    "lay_bare_fossils": Case(plain(region_id=created("region"), reason=REASON), hidden_fossils),
+    "found_museum": Case(plain(town_id=settlement, reason=REASON)),
+    "lay_out_garden": Case(plain(town_id=settlement, kind="park", reason=REASON)),
     "move_economic_order": Case(plain(polity_id=created("polity"), axis="allocation", value="command", reason=REASON), ruled_realm),
     "press_tale": Case(plain(arc_id=created("arc"), reason=REASON), open_tale),
     "foreshadow": Case(plain(subject_id=mortal, reason=REASON)),

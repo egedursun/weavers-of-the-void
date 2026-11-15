@@ -40,6 +40,7 @@ from aerona.db.tables.law_depth import MoleHuntRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
 from aerona.db.tables.military import ArmyUnitRow, OccupationRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.museums import MuseumPieceRow
 from aerona.db.tables.operations import SupplyFlowRow
 from aerona.db.tables.orders import BillOfExchangeRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
@@ -85,7 +86,7 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.world import WorldType
-from aerona.domain.models.entity_stats import CelestialStats, NaturalLawStats, OuterBeingStats, StructureStats, VesselStats
+from aerona.domain.models.entity_stats import CelestialStats, IdeologyStats, NaturalLawStats, OuterBeingStats, StructureStats, VesselStats
 from aerona.engine.arts.movements import found_movement, makers_by_town
 from aerona.engine.cosmos import control
 from aerona.engine.cosmos.beings import create_being
@@ -99,6 +100,7 @@ from aerona.engine.economy.route_control import route_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import connect, spoken_language
+from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import set_stats
 from aerona.engine.sacred.places import town_of
 from aerona.engine.services.war import sides_of
@@ -4204,5 +4206,56 @@ LEVERS.update(
         "biology_variant:add": given(holder_id=Pick(EntityType.PEOPLE), variant="aquatic"),
         "biology_variant:remove": given(holder_id=Pick(EntityType.PEOPLE), variant="aquatic"),
         "biology:reset": given(holder_id=Pick(EntityType.PEOPLE)),
+    }
+)
+
+
+async def lore_and_outer(session: AsyncSession) -> None:
+    world = await session.scalar(select(EntityRow.world_id).where(EntityRow.entity_type == EntityType.SETTLEMENT).order_by(EntityRow.id).limit(1))
+    for kind, name, stats in (
+        (EntityType.IDEOLOGY, "The Plain Way", IdeologyStats()),
+        (EntityType.OUTER_BEING, "The Hollow Reach", OuterBeingStats(interest=0)),
+    ):
+        await open_record(session, 1, RecordSpec(entity_type=kind, name=name, body="", stats=stats, power=1, world_id=world))
+    await rich_creator(session)
+
+
+async def looted_piece(session: AsyncSession) -> None:
+    piece = await session.scalar(select(MuseumPieceRow).order_by(MuseumPieceRow.id.desc()).limit(1))
+    victim = await canon(session, EntityType.SETTLEMENT, 1)
+    assert piece is not None and victim is not None
+    piece.looted_from_entity_id = victim
+    await session.flush()
+
+
+MUSEUM = ("museum:found", {"keeper_id": Pick(TOWN), "kind": "museum"})
+PIECE = ("museum_piece:add", {"collection_id": Newest("museum_collections"), "kind": "specimen", "item_id": Pick(EntityType.SPECIES)})
+FOSSIL_BED = ("fossil_bed:create", {"region_id": Pick(REGION), "source": "megafauna", "richness": 50})
+GARDEN = ("garden:found", {"town_id": Pick(TOWN), "kind": "physic"})
+ENDED = ("world_end:declare", {"world_id": WORLD, "state": "transfigured", "cause": "belief_drift", "new_type": "hollow"})
+LEVERS.update(
+    {
+        "lifecycle:edit": setup_then(lore_and_outer, holder_id=Newest(EntityType.IDEOLOGY), values={"state": "dormant", "idle_epochs": 2}, release=[]),
+        "lifecycle:reset": setup_then(lore_and_outer, holder_id=Newest(EntityType.IDEOLOGY)),
+        "lifecycle:destroy": setup_then(lore_and_outer, holder_id=Newest(EntityType.OUTER_BEING)),
+        "world_end:declare": Lever(values={"world_id": WORLD, "state": "transfigured", "cause": "belief_drift", "new_type": "hollow"}, setup=rich_creator),
+        "world_end:edit": setup_then(rich_creator, ENDED, world_id=WORLD, values={"cause": "divine_wrath", "state": "transfigured"}, release=[]),
+        "world_end:remove": setup_then(rich_creator, ENDED, world_id=WORLD),
+        "fossil_bed:create": given(region_id=Pick(REGION), source="megafauna", richness=50),
+        "fossil_bed:edit": after(FOSSIL_BED, bed_id=Newest("fossil_beds"), values={"richness": 70, "reading": "deep_time", "frozen": True}, release=[]),
+        "fossil_bed:delete": after(FOSSIL_BED, bed_id=Newest("fossil_beds")),
+        "fossil_bed:reveal": after(FOSSIL_BED, bed_id=Newest("fossil_beds")),
+        "museum:found": given(keeper_id=Pick(TOWN), kind="museum"),
+        "museum:edit": after(MUSEUM, collection_id=Newest("museum_collections"), values={"prestige": 40, "kind": "cabinet"}, release=[]),
+        "museum:delete": after(MUSEUM, collection_id=Newest("museum_collections")),
+        "museum_piece:add": after(MUSEUM, collection_id=Newest("museum_collections"), kind="specimen", item_id=Pick(EntityType.SPECIES)),
+        "museum_piece:edit": after(MUSEUM, PIECE, piece_id=Newest("museum_pieces"), values={"kind": "relic"}, release=[]),
+        "museum_piece:remove": after(MUSEUM, PIECE, piece_id=Newest("museum_pieces")),
+        "museum_piece:restitute": Lever(values={"piece_id": Newest("museum_pieces")}, before=(MUSEUM, PIECE), then=looted_piece),
+        "garden:found": given(town_id=Pick(TOWN), kind="physic"),
+        "garden:edit": after(GARDEN, garden_id=Newest("gardens"), values={"condition": 80, "upkeep": 12, "kind": "park"}, release=[]),
+        "garden:delete": after(GARDEN, garden_id=Newest("gardens")),
+        "garden:plant": after(GARDEN, garden_id=Newest("gardens"), species_id=Pick(EntityType.SPECIES)),
+        "garden:uproot": after(GARDEN, garden_id=Newest("gardens"), species_id=Pick(EntityType.SPECIES)),
     }
 )

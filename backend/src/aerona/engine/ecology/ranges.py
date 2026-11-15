@@ -12,6 +12,7 @@ from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.ecology import HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.gardens import GardenRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.divine import DomainHook
@@ -31,6 +32,7 @@ from aerona.engine.ecology.evolution import cold_reach, escape, evolved_traits, 
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.faith.book import FaithBook
+from aerona.engine.museums.reading import refuges
 from aerona.engine.nature.islands import spared_kinds
 from aerona.engine.nature.seasons import activity, asleep, chilled, season_bands
 from aerona.engine.nature.senses import TRACKING, sense_score
@@ -73,6 +75,8 @@ class Wilds:
     epoch: int = 0
     presence: dict[int, dict[int, int]] = field(default_factory=dict)
     natures: dict[int, BiologyView] = field(default_factory=dict)
+    refuges: set[tuple[int, int]] = field(default_factory=set)
+    refuge_floor: int = 0
 
     def present(self, region_id: int) -> dict[int, int]:
         if region_id not in self.presence:
@@ -118,6 +122,9 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
     wilds.spared = await spared_kinds(ctx.session, ctx.rules.island_rule.revered_value)
     wilds.epoch = ctx.epoch
     wilds.natures = await biology_views(ctx.session)
+    towns = set(await ctx.session.scalars(select(GardenRow.settlement_entity_id)))
+    wilds.refuges = await refuges(ctx.session, {town: atlas.top_region(town) for town in towns})
+    wilds.refuge_floor = ctx.rules.gardens.refuge_floor
     for region, communities in wilds.hunters.items():
         keen = [await sense_score(ctx.session, community.id, TRACKING) for community in communities]
         wilds.tracking[region] = 1 + sum(keen) / len(keen) * ctx.rules.senses.tracking_pct / PERCENT if keen else 1.0
@@ -365,6 +372,8 @@ def plan(
         delta -= wilds.invasive[region] * rules.ecology.invasive_pressure * (1 - profile.territoriality / PERCENT * rules.habitat.territory_pct / PERCENT)
     swing = ctx.rng(f"range.{species.id}.{region}").die(rules.ecology.noise) - (rules.ecology.noise + 1) / 2
     delta += swing * (1 - rules.habitat.long_lived_pct / PERCENT if T.LONG_LIVED in traits else 1)
+    if (species.id, region) in wilds.refuges and row.abundance + delta < wilds.refuge_floor:
+        delta = wilds.refuge_floor - row.abundance
     return Pressure(hunted=min(hunted, row.abundance), loss=delta)
 
 

@@ -62,6 +62,7 @@ from aerona.engine.lore.research import lacks
 from aerona.engine.mind.hooks import failed_to_heal, healed
 from aerona.engine.mind.split import attribute, lean_factor
 from aerona.engine.mind.thoughts import think
+from aerona.engine.museums.reading import physic_share
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.harshness import harshness
@@ -204,6 +205,7 @@ class Care:
     hospital: float = 0.0
     medicine: int = 0
     community_id: int | None = None
+    physic: float = 0.0
 
 
 @dataclass
@@ -284,6 +286,7 @@ class HealingWorld:
             hospital=ward,
             medicine=medicine,
             community_id=home,
+            physic=await physic_share(session, rules, home),
         )
 
 
@@ -330,6 +333,7 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
     vital = part is not None and part.vital
     index = tier_index(care.tier)
     deadly = (table.lethal_infected_vital if vital else table.lethal_infected_limb) * max(0, PERCENT - index * table.lethal_medicine_cut_pct) / PERCENT
+    deadly *= 1 - care.physic
     deadly *= 1 - care.hospital * ctx.rules.structure_functions.hospital_death_cut_pct / PERCENT
     deadly *= harshness(ctx.rules, HarshnessScale.INFECTION)
     lethal = row.infected_epochs >= table.lethal_after_epochs or rng.chance(deadly)
@@ -416,6 +420,7 @@ def infection_chance(ctx: TickContext, row: InjuryRow, body: BodyRow, care: Care
     chance *= harshness(ctx.rules, HarshnessScale.INFECTION) * (1 + (PERCENT - body.vital) * table.vital_infection_pct / PERCENT / PERCENT)
     chance *= (PERCENT - medicine_cut(table, care.tier)) / PERCENT * (PERCENT - min(table.healer_skill_cap, skill)) / PERCENT
     chance *= 1 - care.hospital * ctx.rules.structure_functions.hospital_infection_cut_pct / PERCENT
+    chance *= 1 - care.physic
     return chance * (1 - ctx.rules.tissues.clean_infection_pct / PERCENT if TreatmentStep.CLEAN.value in row.treatments else 1)
 
 

@@ -302,6 +302,8 @@ from aerona.db.tables.folkways import (
     PurityRow,
     WitchHuntRow,
 )
+from aerona.db.tables.fossils import FossilBedRow
+from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
@@ -326,6 +328,7 @@ from aerona.db.tables.law_depth import (
     RegistryRow,
     SpyCellRow,
 )
+from aerona.db.tables.lifecycle_ends import LifecycleStateRow
 from aerona.db.tables.lore import FolkBeliefRow, MessageRow
 from aerona.db.tables.means import ContainerStockRow, NavigationKitRow, SecurityRow, WaterLiftRow, WritingCustomRow, WrittenWorkRow
 from aerona.db.tables.military import (
@@ -352,6 +355,7 @@ from aerona.db.tables.military import (
 )
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
+from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, HeroquestMemberRow, HeroquestRow, MantlingRow, ServitorRow
 from aerona.db.tables.nature import FermentCultureRow, SenseProfileRow, SoilMicrobiotaRow, SpeciesRelationRow
 from aerona.db.tables.operations import (
@@ -489,6 +493,7 @@ from aerona.db.tables.urban import (
     TurfRow,
 )
 from aerona.db.tables.warfare import CasusBelliRow, SiegeRow, WarProductionRow, WarRow, WarSideRow
+from aerona.db.tables.world_ends import WorldEndRow
 from aerona.db.tables.world_views import WorldViewRow
 
 
@@ -673,6 +678,62 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("shape_biology",),
         ("biology_variants.",),
         ("4490378d89b2",),
+    ),
+    ComplianceRow(
+        "F47",
+        (LifecycleStateRow.__tablename__, WorldEndRow.__tablename__),
+        ("lifecycle_ends", "world_ends", "intrigue", "renown_hearsay", "ruler_currencies", "polity_cycles", "warping"),
+        (
+            "lifecycle:edit",
+            "lifecycle:reset",
+            "lifecycle:destroy",
+            "lifecycles:run",
+            "world_end:declare",
+            "world_end:edit",
+            "world_end:remove",
+        ),
+        ("LifecycleSection", "section-lifecycle", "WorldEndSection", "section-world-end"),
+        ("son_turn_system",),
+        ("wake_lore",),
+        ("lifecycle.", "world_end."),
+        ("8ad812bbd71a",),
+    ),
+    ComplianceRow(
+        "S6.2/RP7",
+        (FossilBedRow.__tablename__,),
+        ("fossils",),
+        ("fossil_bed:create", "fossil_bed:edit", "fossil_bed:delete", "fossil_bed:reveal", "fossils:run"),
+        ("FossilSection", "section-fossils"),
+        ("mortal_context", "son_turn_system"),
+        ("lay_bare_fossils",),
+        ("fossil.",),
+        ("8ad812bbd71a",),
+    ),
+    ComplianceRow(
+        "S7.2/RP7",
+        (MuseumCollectionRow.__tablename__, MuseumPieceRow.__tablename__, GardenRow.__tablename__),
+        ("collections", "gardens", "ruler_currencies", "research_cycles", "tourism", "mind_survey", "body_healing", "ecology"),
+        (
+            "museum:found",
+            "museum:edit",
+            "museum:delete",
+            "museum_piece:add",
+            "museum_piece:edit",
+            "museum_piece:remove",
+            "museum_piece:restitute",
+            "museums:run",
+            "garden:found",
+            "garden:edit",
+            "garden:delete",
+            "garden:plant",
+            "garden:uproot",
+            "gardens:run",
+        ),
+        ("GroundsSection", "section-grounds"),
+        ("mortal_context",),
+        ("found_museum", "lay_out_garden"),
+        ("museum.",),
+        ("8ad812bbd71a",),
     ),
     ComplianceRow(
         "F3/RP6",

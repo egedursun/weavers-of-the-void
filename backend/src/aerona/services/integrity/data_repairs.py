@@ -41,6 +41,7 @@ from aerona.services.integrity.folk_names import repair_belief_names
 from aerona.services.integrity.folkways_links import mend_folkways_links
 from aerona.services.integrity.graph_ends import repair_graph_ends
 from aerona.services.integrity.law_links import mend_law_links
+from aerona.services.integrity.lifecycle_ends import seed_missing_states
 from aerona.services.integrity.location_bonds import add_missing_inside_bonds, close_stale_inside_bonds
 from aerona.services.integrity.mythic_links import mend_mythic_links
 from aerona.services.integrity.network import RepairLog
@@ -143,6 +144,7 @@ class DataRepairs:
             ("orders_links", lambda session, rules, epoch: mend_orders_links(session, epoch)),
             ("world_views", seed_missing_views),
             ("biology_variants", seed_missing_biology),
+            ("lifecycle_states", seed_missing_states),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),

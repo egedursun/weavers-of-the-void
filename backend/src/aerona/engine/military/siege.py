@@ -58,6 +58,7 @@ from aerona.engine.military.siege_depth import (
     works_breach,
 )
 from aerona.engine.military.units import stacks_of, sync, take
+from aerona.engine.museums.hoards import loot
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -366,6 +367,7 @@ async def sack_city(
     if victor is not None:
         report.captives = await mass_captives(ctx, besieged, victor, siege.war_id if siege is not None else 0, depth.captive_pct) if siege is not None else 0
         report.relics = await plunder_relics(ctx, besieged, victor)
+        report.relics += await loot(ctx, besieged.id, victor.id)
         report.witnesses = await infamy(ctx, besieged, victor, await RegionAtlas.load(ctx.session))
         await change_relation(ctx, besieged.id, victor.id, -ctx.rules.campaigns.conquest_relation, MemoryKind.CONQUERED_US, note="sacked the city")
     report.maimed = await maim(ctx, besieged)

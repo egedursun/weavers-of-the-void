@@ -370,6 +370,8 @@ from aerona.db.tables.folkways import (
     WitchHuntRow,
 )
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow, OuterBargainRow
+from aerona.db.tables.fossils import FossilBedRow
+from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
@@ -398,6 +400,7 @@ from aerona.db.tables.law_depth import (
 )
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
+from aerona.db.tables.lifecycle_ends import LifecycleStateRow
 from aerona.db.tables.lore import (
     CanonFactRow,
     ChronicleEntityRow,
@@ -449,6 +452,7 @@ from aerona.db.tables.mind import (
 )
 from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.motifs import MotifOverrideRow
+from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, HeroquestMemberRow, HeroquestRow, MantlingRow, ServitorRow
 from aerona.db.tables.nature import FermentCultureRow, SenseProfileRow, SoilMicrobiotaRow, SpeciesRelationRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
@@ -601,6 +605,7 @@ from aerona.db.tables.urban import (
 )
 from aerona.db.tables.vehicles import DesignMountRow, DesignSectionRow, DesignTechniqueRow, VehicleGroupRow, VehicleGroupSectionRow, VesselSectionRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, CasusBelliRow, HeroQuestRow, SiegeRow, TributeRow, WarProductionRow, WarRow, WarSideRow
+from aerona.db.tables.world_ends import WorldEndRow
 from aerona.db.tables.world_views import WorldViewRow
 
 __all__ = [
@@ -864,6 +869,7 @@ __all__ = [
     "ForesightRow",
     "ForgeryRow",
     "FormationHistoryRow",
+    "FossilBedRow",
     "FoundingMythRow",
     "GalacticEventRow",
     "GalacticStructureRow",
@@ -871,6 +877,7 @@ __all__ = [
     "GameFollowingRow",
     "GameReserveRow",
     "GameRow",
+    "GardenRow",
     "GatheringGuestRow",
     "GatheringRow",
     "GeasRow",
@@ -966,6 +973,7 @@ __all__ = [
     "LegendaryQuestRow",
     "LexemeRow",
     "LeyLineRow",
+    "LifecycleStateRow",
     "LineageMarkRow",
     "LineageSegmentRow",
     "LoanRow",
@@ -1015,6 +1023,8 @@ __all__ = [
     "MovementProfileRow",
     "MovementRow",
     "MovementSupportRow",
+    "MuseumCollectionRow",
+    "MuseumPieceRow",
     "MysticRow",
     "NameExonymRow",
     "NameFormRow",
@@ -1277,6 +1287,7 @@ __all__ = [
     "WorldBiochemistryRow",
     "WorldCycleRow",
     "WorldDomainHookRow",
+    "WorldEndRow",
     "WorldEraRow",
     "WorldLeakItemRow",
     "WorldLifeRow",

@@ -14,6 +14,7 @@ class LocalRenownRules:
     brawl_magnitude: int = rule(4, 0, 100, G, "Troublemaking a brawl earns where it happens")
     hearsay_pct: int = rule(60, 0, 100, G, "Share of a deed's reputation a community gains when the rumour reaches it, before fidelity (%)")
     fade: int = rule(2, 0, 20, G, "Reputation that fades each epoch where nothing renews it")
+    account_slow_pct: int = rule(50, 0, 100, G, "Share of the fading of a reputation that an account told of its subject holds back (%)")
     aggregate_pct: int = rule(100, 0, 400, G, "How strongly local reputations raise global renown and infamy (%)")
     opinion_pct: int = rule(30, 0, 200, G, "How much a community's view of a subject's glory and infamy feeds its opinion (%)")
 
@@ -27,6 +28,8 @@ class CurrencyRules:
     dread_fade: int = rule(3, 0, 50, G, "Dread that fades each epoch")
     tyranny_act: int = rule(6, 0, 100, G, "Tyranny an act the realm's own people condemn adds to its ruler")
     tyranny_fade: int = rule(1, 0, 50, G, "Tyranny that fades each epoch")
+    prestige_fade: int = rule(1, 0, 50, G, "Prestige that fades each epoch a ruler wins no new renown")
+    amends_pct: int = rule(50, 0, 400, G, "How much faster tyranny fades for each act of mercy or restitution of the epoch (%)")
     dread_suppress_pct: int = rule(60, 0, 100, G, "How much full dread suppresses faction challenges (%)")
     tyranny_pressure_pct: int = rule(60, 0, 400, G, "How much full tyranny raises faction pressure (%)")
     opinion_pct: int = rule(30, 0, 200, G, "How much dread and tyranny lower the opinion of the ruled (%)")

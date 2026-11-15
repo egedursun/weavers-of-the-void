@@ -5279,6 +5279,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/lifecycle/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_lifecycle_api_lifecycle_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/world-ends/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_world_end_api_world_ends_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/fossils/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_fossils_api_fossils_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/grounds/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_grounds_api_grounds_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/customs/of/{node_id}': {
     parameters: {
       query?: never
@@ -14585,6 +14649,422 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_biology_variants_run_api_actions_biology_variants_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lifecycle:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lifecycle_edit_api_actions_lifecycle_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lifecycle:reset': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lifecycle_reset_api_actions_lifecycle_reset_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lifecycle:destroy': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lifecycle_destroy_api_actions_lifecycle_destroy_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lifecycles:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lifecycles_run_api_actions_lifecycles_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_end:declare': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_end_declare_api_actions_world_end_declare_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_end:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_end_edit_api_actions_world_end_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_end:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_end_remove_api_actions_world_end_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/fossil_bed:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_fossil_bed_create_api_actions_fossil_bed_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/fossil_bed:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_fossil_bed_edit_api_actions_fossil_bed_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/fossil_bed:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_fossil_bed_delete_api_actions_fossil_bed_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/fossil_bed:reveal': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_fossil_bed_reveal_api_actions_fossil_bed_reveal_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/fossils:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_fossils_run_api_actions_fossils_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/museum:found': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_museum_found_api_actions_museum_found_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/museum:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_museum_edit_api_actions_museum_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/museum:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_museum_delete_api_actions_museum_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/museum_piece:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_museum_piece_add_api_actions_museum_piece_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/museum_piece:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_museum_piece_edit_api_actions_museum_piece_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/museum_piece:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_museum_piece_remove_api_actions_museum_piece_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/museum_piece:restitute': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_museum_piece_restitute_api_actions_museum_piece_restitute_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/museums:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_museums_run_api_actions_museums_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/garden:found': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_garden_found_api_actions_garden_found_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/garden:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_garden_edit_api_actions_garden_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/garden:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_garden_delete_api_actions_garden_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/garden:plant': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_garden_plant_api_actions_garden_plant_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/garden:uproot': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_garden_uproot_api_actions_garden_uproot_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/gardens:run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_gardens_run_api_actions_gardens_run_post']
     delete?: never
     options?: never
     head?: never
@@ -48358,6 +48838,53 @@ export interface components {
       epoch: number
       subject: components['schemas']['NodeRef'] | null
     }
+    FossilBedCreateInput: {
+      region_id: number
+      source: components['schemas']['FossilSource']
+      richness: number
+    }
+    FossilBedDeleteInput: {
+      bed_id: number
+    }
+    FossilBedEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      bed_id: number
+    }
+    FossilBedRevealInput: {
+      bed_id: number
+    }
+    FossilBedView: {
+      id: number
+      region: components['schemas']['NodeRef'] | null
+      source: components['schemas']['FossilSource']
+      source_node: components['schemas']['NodeRef'] | null
+      richness: number
+      frozen: boolean
+      disease: components['schemas']['NodeRef'] | null
+      laid_epoch: number
+      found_epoch: number | null
+      finder: components['schemas']['NodeRef'] | null
+      reading: components['schemas']['FossilReading']
+      locked: string[]
+    }
+    FossilNodeView: {
+      node: components['schemas']['NodeRef']
+      region: components['schemas']['NodeRef'] | null
+      beds: components['schemas']['FossilBedView'][]
+      world_found: number
+      world_hidden: number
+      absent_reason: string | null
+    }
+    FossilReading: 'unread' | 'legend' | 'relic' | 'deep_time'
+    FossilSource:
+      | 'extinct_species'
+      | 'megafauna'
+      | 'beast'
+      | 'previous_creation'
+      | 'extinct_people'
     FoundableFaction:
       | 'merchant_guild'
       | 'craft_guild'
@@ -48747,6 +49274,48 @@ export interface components {
       rule: components['schemas']['GameRule']
       origin: components['schemas']['NodeRef'] | null
       created_epoch: number
+      locked: string[]
+    }
+    GardenDeleteInput: {
+      garden_id: number
+    }
+    GardenEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      garden_id: number
+    }
+    GardenFoundInput: {
+      town_id: number
+      kind: components['schemas']['GardenKind']
+    }
+    GardenKind:
+      | 'pleasure'
+      | 'physic'
+      | 'monastery'
+      | 'park'
+      | 'hunting_park'
+      | 'sacred_grove'
+      | 'cemetery'
+    GardenPlantInput: {
+      garden_id: number
+      species_id: number
+    }
+    GardenUprootInput: {
+      garden_id: number
+      species_id: number
+    }
+    GardenView: {
+      id: number
+      town: components['schemas']['NodeRef'] | null
+      structure: components['schemas']['NodeRef'] | null
+      kind: components['schemas']['GardenKind']
+      species: components['schemas']['NodeRef'][]
+      upkeep: number
+      condition: number
+      unpaid_epochs: number
+      founded_epoch: number
       locked: string[]
     }
     GateNeed: {
@@ -49474,6 +50043,13 @@ export interface components {
       first_stock: number
       locked: string[]
     }
+    GroundsNodeView: {
+      node: components['schemas']['NodeRef']
+      keeper: components['schemas']['NodeRef'] | null
+      collections: components['schemas']['MuseumCollectionView'][]
+      gardens: components['schemas']['GardenView'][]
+      absent_reason: string | null
+    }
     GroupKind: 'household' | 'court' | 'circle' | 'warband' | 'crew'
     GroupSectionView: {
       section: components['schemas']['VehicleSection']
@@ -50052,6 +50628,7 @@ export interface components {
       world_material_id?: number | null
       units?: number | null
     }
+    HoardKind: 'cabinet' | 'temple_treasury' | 'royal_collection' | 'museum'
     HoardState: 'hidden' | 'lost' | 'found' | 'spent'
     HoardView: {
       id: number
@@ -52932,6 +53509,57 @@ export interface components {
       locked: string[]
     }
     LifeStage: 'infant' | 'child' | 'youth' | 'adult' | 'elder' | 'ancient'
+    LifecycleCause:
+      | 'living'
+      | 'no_adherents'
+      | 'no_texts'
+      | 'no_practitioners'
+      | 'no_hosts'
+      | 'sealed'
+      | 'revived'
+      | 'rediscovered'
+      | 'reconstructed'
+      | 'rereleased'
+      | 'returned'
+      | 'god_act'
+    LifecycleDestroyInput: {
+      holder_id: number
+    }
+    LifecycleEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      holder_id: number
+    }
+    LifecycleKind: 'ideology' | 'theory' | 'rite' | 'disease' | 'outer_being'
+    LifecycleNodeView: {
+      node: components['schemas']['NodeRef']
+      kind: components['schemas']['LifecycleKind'] | null
+      state: components['schemas']['LifecycleState'] | null
+      cause: components['schemas']['LifecycleCause'] | null
+      idle_epochs: number
+      grace_epochs: number
+      since_epoch: number | null
+      holders: number
+      texts: number
+      seeded: boolean
+      locked: string[]
+      destroy_cost: number
+      absent_reason: string | null
+    }
+    LifecycleResetInput: {
+      holder_id: number
+    }
+    LifecycleState:
+      | 'active'
+      | 'dormant'
+      | 'extinct'
+      | 'lost'
+      | 'corrupted'
+      | 'eradicated'
+      | 'banished'
+      | 'destroyed'
     LikenessView: {
       parent: components['schemas']['NodeRef']
       likeness: number
@@ -55629,6 +56257,59 @@ export interface components {
       attrition: number
       note: string | null
     }
+    MuseumCollectionView: {
+      id: number
+      keeper: components['schemas']['NodeRef'] | null
+      structure: components['schemas']['NodeRef'] | null
+      kind: components['schemas']['HoardKind']
+      prestige: number
+      founded_epoch: number
+      pieces: components['schemas']['MuseumPieceView'][]
+      locked: string[]
+    }
+    MuseumDeleteInput: {
+      collection_id: number
+    }
+    MuseumEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      collection_id: number
+    }
+    MuseumFoundInput: {
+      keeper_id: number
+      kind: components['schemas']['HoardKind']
+    }
+    MuseumPieceAddInput: {
+      collection_id: number
+      kind: components['schemas']['PieceKind']
+      item_id: number
+    }
+    MuseumPieceEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      piece_id: number
+    }
+    MuseumPieceRemoveInput: {
+      piece_id: number
+    }
+    MuseumPieceRestituteInput: {
+      piece_id: number
+    }
+    MuseumPieceView: {
+      id: number
+      kind: components['schemas']['PieceKind']
+      item: components['schemas']['NodeRef'] | null
+      fossil_bed_id: number | null
+      acquired_epoch: number
+      looted_from: components['schemas']['NodeRef'] | null
+      returned_epoch: number | null
+      returned_by: components['schemas']['NodeRef'] | null
+      locked: string[]
+    }
     MysticCreateInput: {
       mortal_id: number
       sender_id?: number | null
@@ -57672,6 +58353,7 @@ export interface components {
       first_id: number
       second_id: number
     }
+    PieceKind: 'artifact' | 'relic' | 'fossil' | 'art' | 'specimen'
     PilgrimageClearInput: {
       entity_id: number
     }
@@ -63296,6 +63978,10 @@ export interface components {
       | 'move_economic_order'
       | 'shift_world_nature'
       | 'shape_biology'
+      | 'wake_lore'
+      | 'lay_bare_fossils'
+      | 'found_museum'
+      | 'lay_out_garden'
       | 'press_tale'
       | 'foreshadow'
       | 'echo_life'
@@ -66348,7 +67034,14 @@ export interface components {
       epoch: number
       locked: string[]
     }
-    TouristSight: 'wonder' | 'baths' | 'sacred' | 'battlefield' | 'city'
+    TouristSight:
+      | 'wonder'
+      | 'baths'
+      | 'sacred'
+      | 'battlefield'
+      | 'city'
+      | 'collection'
+      | 'garden'
     TownUrbanEditInput: {
       values?: {
         [key: string]: number | string | boolean | null
@@ -68907,7 +69600,55 @@ export interface components {
       thrones: components['schemas']['ThroneView'][]
       sites: components['schemas']['MagicSiteView'][]
     }
+    WorldEnd:
+      | 'shattered'
+      | 'swallowed'
+      | 'frozen_dead'
+      | 'sunk_into_void'
+      | 'forgotten'
+      | 'transfigured'
+    WorldEndCause:
+      | 'impact'
+      | 'divine_wrath'
+      | 'star_giant'
+      | 'star_death'
+      | 'void'
+      | 'oblivion'
+      | 'belief_drift'
+    WorldEndDeclareInput: {
+      world_id: number
+      state: components['schemas']['WorldEnd']
+      cause: components['schemas']['WorldEndCause']
+      new_type?: components['schemas']['WorldType'] | null
+    }
+    WorldEndEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      world_id: number
+    }
     WorldEndGoldenAgeInput: {
+      world_id: number
+    }
+    WorldEndNodeView: {
+      node: components['schemas']['NodeRef']
+      world: components['schemas']['NodeRef'] | null
+      world_type: components['schemas']['WorldType'] | null
+      state: components['schemas']['WorldEnd'] | null
+      cause: components['schemas']['WorldEndCause'] | null
+      epoch: number | null
+      former_type: components['schemas']['WorldType'] | null
+      new_type: components['schemas']['WorldType'] | null
+      lives_ended: number
+      homeless: number
+      anchors_lost: number
+      routes_closed: number
+      locked: string[]
+      end_cost: number
+      absent_reason: string | null
+    }
+    WorldEndRemoveInput: {
       world_id: number
     }
     WorldEpochStarInput: {
@@ -80009,6 +80750,122 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BiologyNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_lifecycle_api_lifecycle_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LifecycleNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_world_end_api_world_ends_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorldEndNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_fossils_api_fossils_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FossilNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_grounds_api_grounds_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GroundsNodeView']
         }
       }
       default: {
@@ -97746,6 +98603,796 @@ export interface operations {
     }
   }
   action_biology_variants_run_api_actions_biology_variants_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lifecycle_edit_api_actions_lifecycle_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LifecycleEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lifecycle_reset_api_actions_lifecycle_reset_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LifecycleResetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lifecycle_destroy_api_actions_lifecycle_destroy_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LifecycleDestroyInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lifecycles_run_api_actions_lifecycles_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_world_end_declare_api_actions_world_end_declare_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldEndDeclareInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_world_end_edit_api_actions_world_end_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldEndEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_world_end_remove_api_actions_world_end_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldEndRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_fossil_bed_create_api_actions_fossil_bed_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FossilBedCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_fossil_bed_edit_api_actions_fossil_bed_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FossilBedEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_fossil_bed_delete_api_actions_fossil_bed_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FossilBedDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_fossil_bed_reveal_api_actions_fossil_bed_reveal_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FossilBedRevealInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_fossils_run_api_actions_fossils_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_museum_found_api_actions_museum_found_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MuseumFoundInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_museum_edit_api_actions_museum_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MuseumEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_museum_delete_api_actions_museum_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MuseumDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_museum_piece_add_api_actions_museum_piece_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MuseumPieceAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_museum_piece_edit_api_actions_museum_piece_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MuseumPieceEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_museum_piece_remove_api_actions_museum_piece_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MuseumPieceRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_museum_piece_restitute_api_actions_museum_piece_restitute_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MuseumPieceRestituteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_museums_run_api_actions_museums_run_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_garden_found_api_actions_garden_found_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GardenFoundInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_garden_edit_api_actions_garden_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GardenEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_garden_delete_api_actions_garden_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GardenDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_garden_plant_api_actions_garden_plant_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GardenPlantInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_garden_uproot_api_actions_garden_uproot_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GardenUprootInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_gardens_run_api_actions_gardens_run_post: {
     parameters: {
       query?: never
       header?: never
@@ -144512,6 +146159,18 @@ export const formativeKindValues: ReadonlyArray<
   'golden_age',
   'conquest',
 ]
+export const fossilReadingValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['FossilReading']
+> = ['unread', 'legend', 'relic', 'deep_time']
+export const fossilSourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['FossilSource']
+> = [
+  'extinct_species',
+  'megafauna',
+  'beast',
+  'previous_creation',
+  'extinct_people',
+]
 export const foundableFactionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FoundableFaction']
 > = [
@@ -144661,6 +146320,17 @@ export const gameKindValues: ReadonlyArray<
 export const gameRuleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GameRule']
 > = ['strategy', 'chance', 'physical']
+export const gardenKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GardenKind']
+> = [
+  'pleasure',
+  'physic',
+  'monastery',
+  'park',
+  'hunting_park',
+  'sacred_grove',
+  'cemetery',
+]
 export const gatheringKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GatheringKind']
 > = [
@@ -145117,6 +146787,9 @@ export const heroquestBoonValues: ReadonlyArray<
 export const heroquestStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HeroquestState']
 > = ['questing', 'succeeded', 'failed', 'trapped', 'broken']
+export const hoardKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['HoardKind']
+> = ['cabinet', 'temple_treasury', 'royal_collection', 'museum']
 export const hoardStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HoardState']
 > = ['hidden', 'lost', 'found', 'spent']
@@ -145837,6 +147510,37 @@ export const lifeGoalValues: ReadonlyArray<
 export const lifeStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LifeStage']
 > = ['infant', 'child', 'youth', 'adult', 'elder', 'ancient']
+export const lifecycleCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LifecycleCause']
+> = [
+  'living',
+  'no_adherents',
+  'no_texts',
+  'no_practitioners',
+  'no_hosts',
+  'sealed',
+  'revived',
+  'rediscovered',
+  'reconstructed',
+  'rereleased',
+  'returned',
+  'god_act',
+]
+export const lifecycleKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LifecycleKind']
+> = ['ideology', 'theory', 'rite', 'disease', 'outer_being']
+export const lifecycleStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LifecycleState']
+> = [
+  'active',
+  'dormant',
+  'extinct',
+  'lost',
+  'corrupted',
+  'eradicated',
+  'banished',
+  'destroyed',
+]
 export const linkGroupValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LinkGroup']
 > = [
@@ -147189,6 +148893,9 @@ export const phenomenonKindValues: ReadonlyArray<
 export const phenomenonStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PhenomenonStats']['kind']
 > = ['phenomenon']
+export const pieceKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PieceKind']
+> = ['artifact', 'relic', 'fossil', 'art', 'specimen']
 export const placeCoverValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlaceCover']
 > = ['open', 'light', 'heavy']
@@ -148679,6 +150386,10 @@ export const sonToolIdValues: ReadonlyArray<
   'move_economic_order',
   'shift_world_nature',
   'shape_biology',
+  'wake_lore',
+  'lay_bare_fossils',
+  'found_museum',
+  'lay_out_garden',
   'press_tale',
   'foreshadow',
   'echo_life',
@@ -149720,7 +151431,7 @@ export const toolBlockValues: ReadonlyArray<
 > = ['rarity', 'actor_type', 'civilization_tier', 'world_state', 'unwired']
 export const touristSightValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TouristSight']
-> = ['wonder', 'baths', 'sacred', 'battlefield', 'city']
+> = ['wonder', 'baths', 'sacred', 'battlefield', 'city', 'collection', 'garden']
 export const tradeLossValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TradeLoss']
 > = ['bandits', 'sea', 'beasts', 'weather']
@@ -150564,6 +152275,27 @@ export const worldChangedEventKindValues: ReadonlyArray<
 export const worldChangesEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldChangesEvent']['kind']
 > = ['world.changes']
+export const worldEndValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WorldEnd']
+> = [
+  'shattered',
+  'swallowed',
+  'frozen_dead',
+  'sunk_into_void',
+  'forgotten',
+  'transfigured',
+]
+export const worldEndCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WorldEndCause']
+> = [
+  'impact',
+  'divine_wrath',
+  'star_giant',
+  'star_death',
+  'void',
+  'oblivion',
+  'belief_drift',
+]
 export const worldLightValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldLight']
 > = [

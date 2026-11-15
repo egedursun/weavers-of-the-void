@@ -90,3 +90,5 @@ class TouristSight(StrEnum):
     SACRED = "sacred"
     BATTLEFIELD = "battlefield"
     CITY = "city"
+    COLLECTION = "collection"
+    GARDEN = "garden"

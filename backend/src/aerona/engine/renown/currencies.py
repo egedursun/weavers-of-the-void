@@ -1,22 +1,26 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.renown import GLORIOUS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.justice import CrimeCaseRow
+from aerona.db.tables.museums import MuseumPieceRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.renown import RulerCurrencyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.faction import OUTLAW_KINDS, FactionKind
+from aerona.domain.enums.justice import Verdict
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.renown import Currency, ReputationAxis
 from aerona.engine.context import TickContext
+from aerona.engine.museums.reading import grandeur
 from aerona.engine.notes import note
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.renown.book import among
 
 FEARSOME = frozenset({ActKind.EXECUTION, ActKind.MUTILATION, ActKind.TORTURE})
@@ -120,6 +124,23 @@ async def silence(ctx: TickContext, row: RulerCurrencyRow, members: list[int], t
     tally.silenced += 1
 
 
+async def amends(ctx: TickContext, polity_id: int, members: list[int]) -> int:
+    places = [polity_id, *members]
+    mercy = await ctx.session.scalar(
+        select(func.count())
+        .select_from(CrimeCaseRow)
+        .where(
+            CrimeCaseRow.closed_epoch == ctx.epoch,
+            CrimeCaseRow.verdict.in_([Verdict.ACQUITTED, Verdict.DROPPED]),
+            or_(CrimeCaseRow.polity_entity_id.in_(places), CrimeCaseRow.settlement_entity_id.in_(places)),
+        )
+    )
+    returned = await ctx.session.scalar(
+        select(func.count()).select_from(MuseumPieceRow).where(MuseumPieceRow.returned_epoch == ctx.epoch, MuseumPieceRow.returned_by_entity_id.in_(places))
+    )
+    return int(mercy or 0) + int(returned or 0)
+
+
 async def tend_currencies(ctx: TickContext, tally: CurrencyTally) -> None:
     table = ctx.rules.currencies
     rulers = await ctx.session.execute(
@@ -133,11 +154,15 @@ async def tend_currencies(ctx: TickContext, tally: CurrencyTally) -> None:
             continue
         members = await members_of(ctx.session, polity_id)
         if Currency.PRESTIGE.value not in row.locked:
-            row.prestige = clamp_int(max(row.prestige, await among(ctx.session, ruler_id, members, GLORIOUS) * table.prestige_pct / PERCENT), 0, PERCENT)
+            won = max(
+                await among(ctx.session, ruler_id, members, GLORIOUS) * table.prestige_pct / PERCENT,
+                float(await grandeur(ctx.session, ctx.rules, [polity_id, *members])),
+            )
+            row.prestige = clamp_int(max(row.prestige - table.prestige_fade, won), 0, PERCENT)
         if Currency.PIETY.value not in row.locked:
             row.piety = clamp_int(max(row.piety, await among(ctx.session, ruler_id, members, PIOUS) * table.piety_pct / PERCENT), 0, PERCENT)
         bump(row, Currency.DREAD, -table.dread_fade)
-        bump(row, Currency.TYRANNY, -table.tyranny_fade)
+        bump(row, Currency.TYRANNY, -round_half_up(table.tyranny_fade * (1 + await amends(ctx, polity_id, members) * table.amends_pct / PERCENT)))
         row.updated_epoch = ctx.epoch
         await court_clergy(ctx, row, members, tally)
         await silence(ctx, row, members, tally)

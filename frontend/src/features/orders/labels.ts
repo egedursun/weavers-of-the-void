@@ -1,4 +1,5 @@
 import {
+  Sprout,
   ArrowLeftRight,
   Bath,
   Building2,
@@ -148,4 +149,6 @@ export const SIGHTS: Record<Schema['TouristSight'], Named> = {
   sacred: { label: 'Holy place', icon: Church, tone: 'verdigris' },
   battlefield: { label: 'Battlefield', icon: Swords, tone: 'danger' },
   city: { label: 'Great city', icon: Building2, tone: 'success' },
+  collection: { label: 'Collection', icon: Landmark, tone: 'gold' },
+  garden: { label: 'Garden', icon: Sprout, tone: 'success' },
 }

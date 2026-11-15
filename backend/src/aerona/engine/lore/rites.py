@@ -98,6 +98,7 @@ from aerona.engine.industry.pollution import void_scar
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.intrigue.names import name_power
 from aerona.engine.intrigue.sources import hidden_rites
+from aerona.engine.lifecycle.states import ended_ids
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.intel import gain_intel
 from aerona.engine.lore.kinds import RiteEffectParams, kind_of, params_of
@@ -216,8 +217,9 @@ async def schools_for(ctx: TickContext, caster: EntityRow) -> list[MagicSchool]:
 
 async def rite_of(ctx: TickContext, school: MagicSchool) -> tuple[EntityRow, RiteProfileRow] | None:
     rows = await ctx.session.scalars(select(RiteProfileRow).where(RiteProfileRow.school == school).order_by(RiteProfileRow.rite_entity_id))
+    gone = await ended_ids(ctx.session)
     for row in rows:
-        rite = await living_entity(ctx.session, row.rite_entity_id)
+        rite = await living_entity(ctx.session, row.rite_entity_id) if row.rite_entity_id not in gone else None
         if rite is not None:
             return rite, row
     return None

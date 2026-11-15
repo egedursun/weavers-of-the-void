@@ -32,6 +32,7 @@ from aerona.engine.mind.book import Values, best_skill, is_locked, mind_of, need
 from aerona.engine.mind.memories import strength_of
 from aerona.engine.mind.preferences import market_fit, nature_bonus
 from aerona.engine.mortal.kin import close_kin_of, partners_of
+from aerona.engine.museums.reading import gardens_kept
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -302,6 +303,7 @@ async def deeper_needs(
     levels = {row.skill: row.level for row in skills}
     used = {row.skill for row in skills if row.last_used_epoch >= epoch}
     home = [mortal.id, *([community.id] if community is not None else [])]
+    grounds = await gardens_kept(session, rules, home)
     branches = sum(len(found) for found in (await known_levels(session, home)).values())
     works = len(
         list(
@@ -339,8 +341,10 @@ async def deeper_needs(
             + max((levels.get(skill, 0) for skill in MAKING_SKILLS), default=0) * table.creating_skill_pct / PERCENT
             + (table.creating_practised if used & MAKING_SKILLS else 0)
         ),
-        NeedKind.BEAUTY: pct(table.beauty_base + works * table.beauty_per_work),
-        NeedKind.NATURE: pct(fertility * table.nature_fertility_pct / PERCENT + await nature_bonus(session, rules, mortal)),
+        NeedKind.BEAUTY: pct(table.beauty_base + works * table.beauty_per_work + grounds * rules.gardens.beauty_per_garden),
+        NeedKind.NATURE: pct(
+            fertility * table.nature_fertility_pct / PERCENT + await nature_bonus(session, rules, mortal) + grounds * rules.gardens.nature_per_garden
+        ),
         NeedKind.ADVENTURE: pct(table.adventure_base + (table.adventure_travelled if used & TRAVEL_SKILLS or mortal.mortal_role is MortalRole.EXPLORER else 0)),
         NeedKind.FIGHTING: pct(table.fighting_base + (table.fighting_fought if used & FIGHT_SKILLS else 0)),
         NeedKind.WEALTH: pct(wealth * table.wealth_pct / PERCENT),

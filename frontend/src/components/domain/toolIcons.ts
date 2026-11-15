@@ -572,6 +572,10 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   move_economic_order: Scale,
   shift_world_nature: Globe,
   shape_biology: Dna,
+  wake_lore: BookOpen,
+  lay_bare_fossils: Shovel,
+  found_museum: Landmark,
+  lay_out_garden: Sprout,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

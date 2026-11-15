@@ -160,6 +160,7 @@ async def natural_laws(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.legend_profiles",
     "table.lexemes",
+    "table.lifecycle_states",
     "table.outer_being_profiles",
     "table.spirit_profiles",
     "table.stars",

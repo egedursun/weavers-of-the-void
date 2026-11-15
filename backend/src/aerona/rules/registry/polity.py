@@ -93,7 +93,7 @@ class LegitimacyRules:
     weariness_pct: int = rule(40, 0, 100, P, "Stability lost at the worst war weariness (%)")
     faction_pct: int = rule(30, 0, 100, P, "Stability lost when one faction overwhelms the rest (%)")
     unrest_pct: int = rule(50, 0, 100, P, "Stability lost at the worst unrest of the realm's cities (%)")
-    weariness_decay: int = rule(10, 0, 100, P, "War weariness lost per epoch at peace")
+    weariness_decay: int = rule(10, 0, 100, P, "Least war weariness a realm at peace sheds each epoch, before its maimed and its memories of war slow it")
     body_reading_pct: int = rule(30, 0, 200, P, "Weight of the people's reading of the ruler's body (%)")
     honour_pct: int = rule(20, 0, 100, P, "Legitimacy from the ruler's honour at its fullest")
     infamy_pct: int = rule(30, 0, 100, P, "Legitimacy lost to the ruler's infamy at its worst")

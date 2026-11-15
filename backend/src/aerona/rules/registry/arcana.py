@@ -79,6 +79,8 @@ class WarpingRules:
     marked_at: int = rule(50, 0, 100, H, "Warping at which magic marks a mortal's body")
     unmoored_at: int = rule(75, 0, 100, H, "Warping at which magic unmoors a mortal's mind and slows its ageing")
     bearers_max: int = rule(2000, 0, 100000, H, "Mortals the warping step weighs each epoch at most")
+    fade: int = rule(2, 0, 100, H, "Warping that fades each epoch from a mortal not exposed to magic")
+    permanent_stage: int = rule(3, 1, 3, H, "Stage of warping from which it never fades below the mark of that stage")
 
 
 @dataclass(frozen=True)

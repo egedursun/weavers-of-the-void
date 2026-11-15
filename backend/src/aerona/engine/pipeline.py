@@ -65,6 +65,7 @@ from aerona.engine.phases import (
     faith,
     finance,
     folkways,
+    fossils,
     gatherings,
     genetics,
     geography,
@@ -89,6 +90,7 @@ from aerona.engine.phases import (
     law_depth,
     life_cycles,
     life_seed,
+    lifecycle_ends,
     living_stats,
     lore,
     made_kinds,
@@ -101,6 +103,7 @@ from aerona.engine.phases import (
     monsters,
     mortal_life,
     mortals,
+    museums,
     mythic,
     native_faith,
     nature,
@@ -232,6 +235,9 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + honours.PHASES
     + world_views.PHASES
     + biology_variants.PHASES
+    + lifecycle_ends.PHASES
+    + fossils.PHASES
+    + museums.PHASES
     + ages.PHASES
     + folkways.PHASES
     + belonging.PHASES
@@ -506,6 +512,11 @@ SOCIETY_ENGINE_STAGE = stage(
     "pilots",
     "containers",
     "biology_variants",
+    "lifecycle_ends",
+    "world_ends",
+    "fossils",
+    "collections",
+    "gardens",
     "world_views",
     "society_economy",
     "putting_out",

@@ -5,6 +5,8 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.gardens import GardenRow
+from aerona.db.tables.museums import MuseumCollectionRow
 from aerona.db.tables.orders import TouristFlowRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sites import BattlefieldFeatureRow
@@ -42,6 +44,7 @@ class Sight:
     entity: EntityRow
     kind: TouristSight
     host_id: int
+    draw: int = 0
 
 
 @dataclass
@@ -85,11 +88,27 @@ async def sights_of(ctx: TickContext, world_id: int) -> list[Sight]:
         .order_by(EntityRow.id)
     )
     found.extend(Sight(city, TouristSight.CITY, city.id) for city in cities)
+    for hoard, keeper in await ctx.session.execute(
+        select(MuseumCollectionRow, EntityRow)
+        .join(EntityRow, EntityRow.id == MuseumCollectionRow.keeper_entity_id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON, EntityRow.entity_type == EntityType.SETTLEMENT)
+        .order_by(MuseumCollectionRow.id)
+    ):
+        if hoard.prestige > 0:
+            found.append(Sight(keeper, TouristSight.COLLECTION, keeper.id, hoard.prestige))
+    for garden, town in await ctx.session.execute(
+        select(GardenRow, EntityRow)
+        .join(EntityRow, EntityRow.id == GardenRow.settlement_entity_id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON)
+        .order_by(GardenRow.id)
+    ):
+        if garden.condition > 0:
+            found.append(Sight(town, TouristSight.GARDEN, town.id, garden.condition // 2))
     return found
 
 
 def renown_of(sight: Sight) -> int:
-    return stat_or(sight.entity, "renown", 0) + stat_or(sight.entity, "splendor", 0) + stat_or(sight.entity, "prestige", 0)
+    return stat_or(sight.entity, "renown", 0) + stat_or(sight.entity, "splendor", 0) + stat_or(sight.entity, "prestige", 0) + sight.draw
 
 
 async def spread_sickness(ctx: TickContext, book: DiseaseBook, atlas: RegionAtlas, host: EntityRow, origin: EntityRow) -> bool:

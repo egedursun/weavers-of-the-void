@@ -4,6 +4,7 @@ from aerona.db.tables.intrigue import IdentityRow, SchemeRow
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.intrigue.beliefs import fade_beliefs
+from aerona.engine.intrigue.decay import DecayTally, keep_decays
 from aerona.engine.intrigue.identities import tend_identity
 from aerona.engine.intrigue.names import confide_names, renew_names, research_names, seed_true_names
 from aerona.engine.intrigue.schemes import OPEN, SchemeTally, plotters, tend_scheme
@@ -70,6 +71,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.offices",
     "table.outbreaks",
     "table.people_culture",
+    "table.personality_values",
     "table.polity_members",
     "table.region_environment",
     "table.relationships",
@@ -113,6 +115,10 @@ async def intrigue(ctx: TickContext) -> None:
     unmasked = 0
     for row in list(await ctx.session.scalars(select(IdentityRow).order_by(IdentityRow.mortal_node_id))):
         unmasked += await tend_identity(ctx, row)
+    decays = DecayTally()
+    await keep_decays(ctx, decays)
+    for name, value in vars(decays).items():
+        ctx.count(name, value)
     schemes = SchemeTally()
     await plotters(ctx, schemes)
     for scheme in list(await ctx.session.scalars(select(SchemeRow).where(SchemeRow.phase.in_(list(OPEN))).order_by(SchemeRow.id))):

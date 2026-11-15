@@ -21,11 +21,28 @@ from aerona.engine.primitives.queries import canon
 class WarpTally:
     exposed: int = 0
     staged: int = 0
+    faded: int = 0
 
 
 def stage_for(ctx: TickContext, value: int) -> int:
     table = ctx.rules.warping
     return sum(1 for mark in (table.touched_at, table.marked_at, table.unmoored_at) if value >= mark)
+
+
+def floor_of(ctx: TickContext, row: WarpingRow) -> int:
+    table = ctx.rules.warping
+    marks = (table.touched_at, table.marked_at, table.unmoored_at)
+    return marks[table.permanent_stage - 1] if row.stage >= table.permanent_stage else 0
+
+
+def fade(ctx: TickContext, row: WarpingRow) -> bool:
+    if row.updated_epoch >= ctx.epoch or "value" in row.locked:
+        return False
+    lowered = max(floor_of(ctx, row), row.value - ctx.rules.warping.fade)
+    if lowered >= row.value:
+        return False
+    row.value = lowered
+    return True
 
 
 async def warp_row(ctx: TickContext, node_id: int) -> WarpingRow:
@@ -85,5 +102,6 @@ async def warp_world(ctx: TickContext, tally: WarpTally) -> None:
         bearer = await ctx.session.get(EntityRow, row.node_id)
         if bearer is None or held(bearer.id):
             continue
+        tally.faded += int(fade(ctx, row))
         tally.staged += int(await settle_stage(ctx, bearer, row))
     await ctx.session.flush()

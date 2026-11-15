@@ -98,6 +98,14 @@ class IntrigueRules:
     spy_learn_pct: int = rule(20, 0, 100, RuleGroup.REPUTATION, "Chance each epoch a spy network learns a secret of someone it watches (%)")
     likeness_notice: int = rule(70, 0, 100, RuleGroup.REPUTATION, "Likeness to a hidden true parent from which kin may notice it")
     likeness_notice_pct: int = rule(10, 0, 100, RuleGroup.REPUTATION, "Chance each epoch kin notice a child's likeness to a hidden true parent (%)")
+    favour_decay_pct: int = rule(10, 0, 100, RuleGroup.REPUTATION, "Share of a favour owed that fades each epoch it is not called (%)")
+    weak_reciprocity_pct: int = rule(
+        50, 0, 400, RuleGroup.REPUTATION, "How much faster favours fade where the debtor holds friendship of little worth, at its lowest (%)"
+    )
+    inherited_from: int = rule(30, -100, 100, RuleGroup.REPUTATION, "Family value from which the kin of a dead debtor take on the favours the debtor owed")
+    obsolete_pct: int = rule(
+        25, 0, 100, RuleGroup.REPUTATION, "Share of its severity a secret loses each epoch once its subject is dead or it is already known to all (%)"
+    )
     debt_secret_at: int = rule(100, 0, 10000, RuleGroup.REPUTATION, "Debt from which a noble household hides what it owes")
     coward_anxiety: int = rule(30, -100, 100, RuleGroup.REPUTATION, "Anxiety from which a beaten commander may have fled the field in secret")
     coward_pct: int = rule(30, 0, 100, RuleGroup.REPUTATION, "Chance an anxious beaten commander hides that they fled (%)")

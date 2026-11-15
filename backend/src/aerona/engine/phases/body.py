@@ -231,6 +231,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
+    "table.gardens",
     "table.genomes",
     "table.goods_flows",
     "table.griefs",

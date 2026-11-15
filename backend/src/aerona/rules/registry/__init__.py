@@ -271,6 +271,8 @@ from aerona.rules.registry.folk import BiologyRules, CustomsRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
 from aerona.rules.registry.folkways import BiasRules, MishapRules, NutritionRules, PurityRules, WitchcraftRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
+from aerona.rules.registry.fossils import FossilRules
+from aerona.rules.registry.gardens import GardenRules
 from aerona.rules.registry.gatherings import CollectionRules, GatheringRules
 from aerona.rules.registry.genesis import GenesisRules
 from aerona.rules.registry.genetics import GeneticsRules, GiftRules, HouseholdRules
@@ -325,6 +327,7 @@ from aerona.rules.registry.law_depth import (
 )
 from aerona.rules.registry.ledger import LedgerRules
 from aerona.rules.registry.life_cycles import LifeCyclesRules
+from aerona.rules.registry.lifecycle_ends import LifecycleEndRules
 from aerona.rules.registry.limits import LimitsRules
 from aerona.rules.registry.link_graph import LinkGraphRules
 from aerona.rules.registry.lore import (
@@ -418,6 +421,7 @@ from aerona.rules.registry.mortal_agents import MortalAgentsRules
 from aerona.rules.registry.mortal_life import AgingRules, EducationRules, FertilityRules, KinshipRules
 from aerona.rules.registry.mortal_standing import EquipmentRules, PunishmentRules, StandingRules
 from aerona.rules.registry.mortal_tools import MortalToolsRules
+from aerona.rules.registry.museums import MuseumRules
 from aerona.rules.registry.mythic import (
     CosmicOfficeRules,
     GeasRules,
@@ -601,6 +605,7 @@ from aerona.rules.registry.wonders import WondersRules
 from aerona.rules.registry.world_balance import WorldBalanceRules
 from aerona.rules.registry.world_birth import WorldBirthRules
 from aerona.rules.registry.world_effects import WorldEffectsRules
+from aerona.rules.registry.world_ends import WorldEndRules
 from aerona.rules.registry.world_engine import WorldEngineRules
 from aerona.rules.registry.world_epoch_transition import WorldEpochTransitionRules
 from aerona.rules.registry.world_hunt import WorldHuntRules
@@ -992,6 +997,11 @@ class Rules:
     veterans: VeteranRules = field(default_factory=VeteranRules)
     world_views: WorldViewRules = field(default_factory=WorldViewRules)
     biology_variants: BiologyVariantRules = field(default_factory=BiologyVariantRules)
+    lifecycle_ends: LifecycleEndRules = field(default_factory=LifecycleEndRules)
+    world_ends: WorldEndRules = field(default_factory=WorldEndRules)
+    fossils: FossilRules = field(default_factory=FossilRules)
+    museums: MuseumRules = field(default_factory=MuseumRules)
+    gardens: GardenRules = field(default_factory=GardenRules)
     geography: GeographyRules = field(default_factory=GeographyRules)
     life_cycles: LifeCyclesRules = field(default_factory=LifeCyclesRules)
     remembrance: RemembranceRules = field(default_factory=RemembranceRules)

@@ -40,6 +40,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "settlement.piety",
     "settlement.population",
     "settlement.prosperity",
+    "table.accounts",
     "table.applied_fixups",
     "table.armies",
     "table.army_officers",

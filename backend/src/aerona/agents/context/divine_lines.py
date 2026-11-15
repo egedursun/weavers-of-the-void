@@ -14,6 +14,7 @@ from aerona.agents.context.dominion_lines import dominion_lines
 from aerona.agents.context.era_lines import son_era_lines
 from aerona.agents.context.evolution_lines import son_evolution_lines
 from aerona.agents.context.folkways_lines import son_folkways_lines
+from aerona.agents.context.lifecycle_lines import son_fossil_lines, son_lifecycle_lines, son_world_end_lines
 from aerona.agents.context.means_lines import son_economy_lines
 from aerona.agents.context.mythic_lines import mythic_lines
 from aerona.agents.context.nature_lines import son_nature_lines
@@ -117,4 +118,7 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     lines.extend(await son_economy_lines(scope, son))
     lines.extend(await son_world_lines(scope, son))
     lines.extend(await son_biology_lines(scope, son))
+    lines.extend(await son_lifecycle_lines(scope, son))
+    lines.extend(await son_world_end_lines(scope, son))
+    lines.extend(await son_fossil_lines(scope, son))
     return lines

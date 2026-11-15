@@ -1679,6 +1679,25 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you move it",
         },
     ),
+    T.FOUND_MUSEUM: ToolText(
+        "You found a museum in a town in your reach: it gathers the prized things, works, finds and living kinds of its land, "
+        "gives its realm grandeur, helps its research and draws travellers. 1 action.",
+        {"town_id": "The town that keeps the museum", "reason": "Why you found it"},
+    ),
+    T.LAY_OUT_GARDEN: ToolText(
+        "You lay out a garden, park, grove or cemetery in a town in your reach. It feeds the need of its folk for beauty and nature, "
+        "and a physic garden helps its healers. 1 action.",
+        {"town_id": "The town that keeps it", "kind": "The kind of garden", "reason": "Why you lay it out"},
+    ),
+    T.LAY_BARE_FOSSILS: ToolText(
+        "You lay bare the hidden remains in a land in your reach, so that those living there find them and read them in their own way. 1 action.",
+        {"region_id": "The land whose remains you lay bare", "reason": "Why you lay them bare"},
+    ),
+    T.WAKE_LORE: ToolText(
+        "You wake a dormant ideology or rite, or a forgotten theory, in your reach from what survives of it: its texts, "
+        "or a people that studies its field. A rite taken up from a faded text may come back corrupted. 1 action.",
+        {"lore_id": "The ideology, theory or rite you wake", "reason": "Why you wake it"},
+    ),
     T.SHAPE_BIOLOGY: ToolText(
         "You give a people or species in your reach a variant of body, or take one from it. Its variants decide how much it eats, how "
         "many it bears, how it dies and sickens, how it holds in battle, how fire and storms harm it, whether it breathes, drinks and ages, "

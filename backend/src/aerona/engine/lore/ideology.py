@@ -22,6 +22,7 @@ from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import IdeologyStats, ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
+from aerona.engine.lifecycle.states import ended_ids
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.lore.items import profile_of
 from aerona.engine.lore.printing import banned_for, printed, read_in_secret
@@ -406,4 +407,5 @@ async def living_creeds(ctx: TickContext) -> list[tuple[EntityRow, IdeologyProfi
         .where(EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
-    return [(entity, profile) for entity, profile in rows.all()]
+    gone = await ended_ids(ctx.session)
+    return [(entity, profile) for entity, profile in rows.all() if entity.id not in gone]

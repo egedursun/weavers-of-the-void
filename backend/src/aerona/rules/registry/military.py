@@ -216,6 +216,10 @@ class WarWearinessRules:
     martial_resist_pct: int = rule(50, 0, 100, W, "Share of weariness a martial people shrugs off at full martial value (%)")
     peace_threshold: int = rule(70, 0, 100, W, "Weariness above which a side seeks peace")
     honour_hold_pct: int = rule(50, 0, 100, W, "Share of peace pressure an honour culture resists while humiliated (%)")
+    recovery_pct: int = rule(15, 0, 100, W, "Share of its war weariness a realm at peace sheds each epoch (%)")
+    maimed_slow_pct: int = rule(50, 0, 100, W, "Share of that recovery a realm loses while its maimed veterans are many, at their most (%)")
+    maimed_full: int = rule(1000, 1, 100000, W, "Maimed veterans of a realm at which its recovery is slowed the most")
+    memory_slow_pct: int = rule(30, 0, 100, W, "Share of that recovery a realm loses while it keeps accounts of its wars (%)")
 
 
 @dataclass(frozen=True)

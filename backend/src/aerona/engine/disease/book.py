@@ -33,6 +33,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, StructureKind
 from aerona.engine.eras.effects import channel_by_holder
 from aerona.engine.folkways.shunning import shunned_sick
+from aerona.engine.lifecycle.states import ended_ids
 from aerona.engine.lore.truth import ruling_truths
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
@@ -99,9 +100,11 @@ class DiseaseBook:
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int) -> "DiseaseBook":
         atlas = await RegionAtlas.load(session)
+        gone = await ended_ids(session)
         diseases = {
             row.id: row
             for row in await session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.DISEASE, EntityRow.status == EntityStatus.CANON))
+            if row.id not in gone
         }
         profiles = {row.disease_entity_id: row for row in await session.scalars(select(DiseaseProfileRow))}
         outbreaks = list(await session.scalars(select(OutbreakRow).where(OutbreakRow.status != OutbreakStatus.ENDED).order_by(OutbreakRow.id)))

@@ -574,3 +574,16 @@ class EnginePhasesRules:
     biology_variants: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the biology variants of every people and species and the effects they carry"
     )
+    lifecycle_ends: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: ideologies, theories and rites fall dormant or are lost, diseases die out and outer beings are banished",
+    )
+    world_ends: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: worlds lit only by a dead star freeze dead")
+    fossils: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fossil beds laid down from what died out, found by digging and upheaval, and read"
+    )
+    collections: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: museums, treasuries, royal collections and cabinets gather their pieces")
+    gardens: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: gardens, parks, groves and cemeteries are laid out and kept")

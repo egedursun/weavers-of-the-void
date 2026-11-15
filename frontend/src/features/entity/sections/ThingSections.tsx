@@ -17,6 +17,10 @@ import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
 import { HonoursSection } from '@/features/honours/HonoursSection'
 import { LawDepthSection } from '@/features/lawDepth/LawDepthSection'
+import { FossilSection } from '@/features/lifecycle/FossilSection'
+import { GroundsSection } from '@/features/lifecycle/GroundsSection'
+import { LifecycleSection } from '@/features/lifecycle/LifecycleSection'
+import { WorldEndSection } from '@/features/lifecycle/WorldEndSection'
 import { MadeKindsSection } from '@/features/madeKinds/MadeKindsSection'
 import { MeansSection } from '@/features/means/MeansSection'
 import { NatureSection } from '@/features/nature/NatureSection'
@@ -141,6 +145,10 @@ export function ThingSections({
       <HonoursSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <WorldViewSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <BiologySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <LifecycleSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <WorldEndSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <FossilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <GroundsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>

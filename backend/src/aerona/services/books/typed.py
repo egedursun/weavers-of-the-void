@@ -93,6 +93,7 @@ ID_LISTS = frozenset(
         "stops",
         "circuit",
         "members",
+        "species",
     }
 )
 PERCENT_LISTS = frozenset({"milestones"})

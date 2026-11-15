@@ -33,6 +33,7 @@ from aerona.engine.lore.learning import institution_factor, patron_factor
 from aerona.engine.lore.printing import banned_for, read_in_secret
 from aerona.engine.lore.truth import branch_factor
 from aerona.engine.means.media import legible
+from aerona.engine.museums.reading import collection_factor
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import raw_level
@@ -156,6 +157,7 @@ async def research_factor(ctx: TickContext, community: EntityRow, branch: Knowle
         * await school_factor(ctx.session, ctx.rules, community.id)
         * (await farming_boost(ctx.session, community) if branch is KnowledgeBranch.AGRICULTURE else 1.0)
         * await notation_boost(ctx.session, ctx.rules, community.id, branch)
+        * await collection_factor(ctx.session, ctx.rules, community.id, natural=branch in NATURAL_BRANCHES)
     )
 
 

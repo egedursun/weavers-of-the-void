@@ -1,6 +1,14 @@
 from aerona.engine.interconnect.registry import Mechanic
 
 TABLE_BACKFILLS: dict[tuple[str, str], str] = {
+    ("lifecycle_ends", "lifecycle_states"): (
+        "migration 8ad812bbd71a: every ideology, theory, rite, disease and outer being takes its state at the next start or epoch"
+    ),
+    ("world_ends", "world_ends"): "none: worlds come to their end from the next epoch",
+    ("fossils", "fossil_beds"): "none: fossil beds are laid from what died out from the next epoch",
+    ("collections", "museum_collections"): "none: collections are founded and gathered from the next epoch",
+    ("collections", "museum_pieces"): "none: collections are founded and gathered from the next epoch",
+    ("gardens", "gardens"): "none: gardens are laid out from the next epoch",
     ("biology_variants", "biology_variants"): "migration 4490378d89b2: every people and species takes the variants its body shows at the next start or epoch",
     ("world_views", "world_type_profiles"): "migration 39ded63f7c3f: every world takes the nature of its kind at the next start or epoch",
     ("unit_honours", "named_units"): "none: units raised from one land take their names after their next battle",

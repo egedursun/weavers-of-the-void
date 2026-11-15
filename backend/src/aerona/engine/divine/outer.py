@@ -24,6 +24,7 @@ from aerona.domain.enums.world import DARK_STAR_TYPES
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.wounds import inflict
+from aerona.engine.lifecycle.states import ended_ids
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.records import retire_in
@@ -147,8 +148,9 @@ async def outer_feeding(ctx: TickContext) -> int:
     beings = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.OUTER_BEING, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
+    gone = await ended_ids(ctx.session)
     for being in list(beings):
-        if held(being.id):
+        if held(being.id) or being.id in gone:
             continue
         row = await outer_profile(ctx, being)
         if "reach" not in row.locked:

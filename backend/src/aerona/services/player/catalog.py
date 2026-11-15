@@ -65,6 +65,7 @@ from aerona.services.player import (
     flora,
     folkways,
     foreign_gods,
+    fossils,
     foundations,
     gatherings,
     genetics,
@@ -86,6 +87,7 @@ from aerona.services.player import (
     law_depth,
     levers,
     life_cycles,
+    lifecycle_ends,
     living_stats,
     lore,
     made_kinds,
@@ -100,6 +102,7 @@ from aerona.services.player import (
     mind,
     modifiers,
     mortals,
+    museums,
     mythic,
     native_faith,
     nature,
@@ -136,6 +139,7 @@ from aerona.services.player import (
     warfare,
     wilds,
     world_edits,
+    world_ends,
     world_views,
 )
 from aerona.services.player.canon import ConfirmationWord
@@ -5116,6 +5120,80 @@ BIOLOGY_ACTIONS = (
     ),
 )
 
+LIFECYCLE_ACTIONS = (
+    _sync(
+        Meta("lifecycle:edit", "Set the life of an ideology, theory, rite, disease or outer being", G.CANON),
+        lifecycle_ends.lifecycle_edit,
+        lifecycle_ends.LifecycleEdit,
+        free,
+        ("F47",),
+    ),
+    _sync(
+        Meta("lifecycle:reset", "Read the life of a thing again from the world", G.CANON),
+        lifecycle_ends.lifecycle_reset,
+        lifecycle_ends.LifecycleTarget,
+        free,
+        ("F47",),
+    ),
+    _sync(
+        Meta("lifecycle:destroy", "Destroy an outer being for good", G.GOD_POWER),
+        lifecycle_ends.lifecycle_destroy,
+        lifecycle_ends.LifecycleTarget,
+        lambda rules: essence(rules.lifecycle_ends.destroy_cost),
+        ("F47",),
+    ),
+    _sync(
+        Meta("lifecycles:run", "Read the life of every ideology, theory, rite, disease and outer being now", G.CANON),
+        lifecycle_ends.lifecycles_run,
+        lifecycle_ends.RunNow,
+        free,
+        ("F47",),
+    ),
+)
+
+WORLD_END_ACTIONS = (
+    _sync(
+        Meta("world_end:declare", "Bring a world to its end", G.WORLDS),
+        world_ends.world_end_declare,
+        world_ends.WorldEndDeclare,
+        lambda rules: essence(rules.world_ends.end_cost),
+        ("F47",),
+    ),
+    _sync(Meta("world_end:edit", "Set the record of the end of a world", G.WORLDS), world_ends.world_end_edit, world_ends.WorldEndEdit, free, ("F47",)),
+    _sync(
+        Meta("world_end:remove", "Strike out the record of the end of a world", G.WORLDS),
+        world_ends.world_end_remove,
+        world_ends.WorldEndTarget,
+        free,
+        ("F47",),
+    ),
+)
+
+FOSSIL_ACTIONS = (
+    _sync(Meta("fossil_bed:create", "Lay down a fossil bed in a land", G.CREATURES), fossils.fossil_bed_create, fossils.FossilPlace, free, ("S6.2/RP7",)),
+    _sync(Meta("fossil_bed:edit", "Set the values of a fossil bed", G.CREATURES), fossils.fossil_bed_edit, fossils.FossilEdit, free, ("S6.2/RP7",)),
+    _sync(Meta("fossil_bed:delete", "Remove a fossil bed", G.CREATURES), fossils.fossil_bed_delete, fossils.FossilTarget, free, ("S6.2/RP7",)),
+    _sync(Meta("fossil_bed:reveal", "Bring a fossil bed to light now", G.CREATURES), fossils.fossil_bed_reveal, fossils.FossilTarget, free, ("S6.2/RP7",)),
+    _sync(Meta("fossils:run", "Read every fossil bed now", G.CREATURES), fossils.fossils_run, fossils.RunNow, free, ("S6.2/RP7",)),
+)
+
+MUSEUM_ACTIONS = (
+    _sync(Meta("museum:found", "Found a collection", G.SOCIETY), museums.collection_found, museums.HoardFound, free, ("S7.2/RP7",)),
+    _sync(Meta("museum:edit", "Set the values of a collection", G.SOCIETY), museums.collection_edit, museums.HoardEdit, free, ("S7.2/RP7",)),
+    _sync(Meta("museum:delete", "Disperse a collection", G.SOCIETY), museums.collection_delete, museums.HoardTarget, free, ("S7.2/RP7",)),
+    _sync(Meta("museum_piece:add", "Place a thing in a collection", G.SOCIETY), museums.collection_piece_add, museums.PieceAdd, free, ("S7.2/RP7",)),
+    _sync(Meta("museum_piece:edit", "Set the kind of a piece", G.SOCIETY), museums.collection_piece_edit, museums.PieceEdit, free, ("S7.2/RP7",)),
+    _sync(Meta("museum_piece:remove", "Take out a piece", G.SOCIETY), museums.collection_piece_remove, museums.PieceTarget, free, ("S7.2/RP7",)),
+    _sync(Meta("museum_piece:restitute", "Give back a piece", G.SOCIETY), museums.collection_piece_restitute, museums.PieceTarget, free, ("S7.2/RP7",)),
+    _sync(Meta("museums:run", "Read every collection now", G.SOCIETY), museums.collections_run, museums.RunNow, free, ("S7.2/RP7",)),
+    _sync(Meta("garden:found", "Lay out a garden in a town", G.SOCIETY), museums.garden_found, museums.GardenFound, free, ("S7.2/RP7",)),
+    _sync(Meta("garden:edit", "Set the values of a garden", G.SOCIETY), museums.garden_edit, museums.GardenEdit, free, ("S7.2/RP7",)),
+    _sync(Meta("garden:delete", "Remove a garden", G.SOCIETY), museums.garden_delete, museums.GardenTarget, free, ("S7.2/RP7",)),
+    _sync(Meta("garden:plant", "Plant a kind of life in a garden", G.SOCIETY), museums.garden_plant, museums.GardenPlant, free, ("S7.2/RP7",)),
+    _sync(Meta("garden:uproot", "Take a kind of life from a garden", G.SOCIETY), museums.garden_uproot, museums.GardenPlant, free, ("S7.2/RP7",)),
+    _sync(Meta("gardens:run", "Read every garden now", G.SOCIETY), museums.gardens_run, museums.RunNow, free, ("S7.2/RP7",)),
+)
+
 ACTIONS: tuple[ActionSpec, ...] = (
     *CYCLE_ACTIONS,
     *REGIME_ACTIONS,
@@ -5132,6 +5210,10 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *HONOURS_ACTIONS,
     *WORLD_VIEW_ACTIONS,
     *BIOLOGY_ACTIONS,
+    *LIFECYCLE_ACTIONS,
+    *WORLD_END_ACTIONS,
+    *FOSSIL_ACTIONS,
+    *MUSEUM_ACTIONS,
     *ERAS_ACTIONS,
     *CLIMES_ACTIONS,
     *CRAFTS_ACTIONS,

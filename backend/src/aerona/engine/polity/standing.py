@@ -2,13 +2,15 @@ from sqlalchemy import func, select
 
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
-from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
+from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, MaimedCohortRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.culture import ArtworkProfileRow, ItemProfileRow
 from aerona.db.tables.demography import LabourRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultTenetRow
+from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import PolityMemberRow
@@ -23,6 +25,7 @@ from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind, OathKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -255,6 +258,19 @@ async def war_support(ctx: TickContext, realm: Realm) -> float:
     return sum(found) / len(found) if found else 0.0
 
 
+async def recovery(ctx: TickContext, realm: Realm) -> int:
+    table = ctx.rules.war_weariness
+    places = [realm.entity.id, *realm.members]
+    maimed = await ctx.session.scalar(select(func.sum(MaimedCohortRow.veterans)).where(MaimedCohortRow.community_entity_id.in_(places)))
+    wars = select(CollectionRow.id).where(CollectionRow.kind == CollectionKind.WAR)
+    told = await ctx.session.scalar(
+        select(AccountRow.id).where(AccountRow.holder_entity_id.in_(places), AccountRow.collection_id.in_(wars), AccountRow.defaced.is_(False)).limit(1)
+    )
+    pace = 1 - min(1.0, int(maimed or 0) / table.maimed_full) * table.maimed_slow_pct / PERCENT
+    pace *= 1 - (table.memory_slow_pct / PERCENT if told is not None else 0.0)
+    return round_half_up(max(ctx.rules.legitimacy.weariness_decay, realm.profile.war_weariness * table.recovery_pct / PERCENT) * pace)
+
+
 async def stability(ctx: TickContext, book: RealmBook, realm: Realm, legit: int) -> dict[str, int]:
     table = ctx.rules.legitimacy
     parts = {"legitimacy": legit}
@@ -263,7 +279,7 @@ async def stability(ctx: TickContext, book: RealmBook, realm: Realm, legit: int)
     worn = await ctx.session.scalar(
         select(func.max(WarSideRow.weariness)).where(WarSideRow.entity_id.in_([realm.entity.id, *realm.members]), WarSideRow.left_epoch.is_(None))
     )
-    eased = profile.war_weariness - table.weariness_decay
+    eased = profile.war_weariness - await recovery(ctx, realm)
     support = round_half_up(await war_support(ctx, realm) * ctx.rules.communication.war_support_pct / PERCENT)
     profile.war_weariness = clamp_int((max(int(worn or 0), eased) if fighting else eased) - support, 0, PERCENT)
     if profile.war_weariness:
