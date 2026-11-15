@@ -37,6 +37,12 @@ ERAS_MECHANICS = (
         targets=("settlement", "people", "polity", "mortal"),
         couplings=(
             Coupling(S.ECONOMY, "steam, factories, electricity and nuclear power raise industry", E.MODIFIER, "eras.factory_pct"),
+            Coupling(
+                S.POLITY,
+                "factories, engines and banking raise unions of workers, societies of engineers and exchanges of financiers",
+                E.TRIGGER,
+                "factions.engineers_min_professional_pct",
+            ),
             Coupling(S.ECONOMY, "fertilisers, bred crops and genetic engineering raise harvests", E.MODIFIER, "eras.green_pct"),
             Coupling(S.ECONOMY, "canning and refrigeration spare goods on the road", E.MODIFIER, "eras.refrigeration_pct"),
             Coupling(S.DEMOGRAPHY, "vaccines, antibiotics and genetic engineering spare the sick", E.MODIFIER, "eras.antibiotics_pct"),

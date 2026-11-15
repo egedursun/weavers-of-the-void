@@ -46005,6 +46005,9 @@ export interface components {
       | 'art_movement'
       | 'club'
       | 'league'
+      | 'workers_union'
+      | 'engineers_society'
+      | 'financiers'
     FactionMemberInput: {
       faction_id: number
       mortal_id: number
@@ -46944,6 +46947,9 @@ export interface components {
       | 'thieves_guild'
       | 'smuggling_ring'
       | 'pirate_confederacy'
+      | 'workers_union'
+      | 'engineers_society'
+      | 'financiers'
     FoundationHoldInput: {
       kind: components['schemas']['HoldKind']
       node_id: number
@@ -140029,6 +140035,9 @@ export const factionKindValues: ReadonlyArray<
   'art_movement',
   'club',
   'league',
+  'workers_union',
+  'engineers_society',
+  'financiers',
 ]
 export const factionRankValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FactionRank']
@@ -140231,6 +140240,9 @@ export const foundableFactionValues: ReadonlyArray<
   'thieves_guild',
   'smuggling_ring',
   'pirate_confederacy',
+  'workers_union',
+  'engineers_society',
+  'financiers',
 ]
 export const fugitiveKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FugitiveKind']

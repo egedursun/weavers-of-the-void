@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -14,6 +15,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.limits import PERCENT_MAX
@@ -23,6 +25,7 @@ from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.demography.recruitment import founding_factor, recruit
+from aerona.engine.eras.effects import era_techniques
 from aerona.engine.factions.agenda import dues, influence_from_members, monopolies, plan_goals, pursue, schisms
 from aerona.engine.factions.book import ENGINE_OF_KIND, FactionBook, backfill_profiles, new_profile
 from aerona.engine.factions.outlaws import hire, pay_companies, privateers, suppress
@@ -51,6 +54,9 @@ class FactionBlueprint:
     members: str
 
 
+ENGINEERING = frozenset({Technique.STEAM_POWER, Technique.MACHINE_TOOLS, Technique.RAILWAYS})
+FINANCE = frozenset({Technique.BANKING, Technique.JOINT_STOCK})
+
 BLUEPRINTS = (
     FactionBlueprint(K.MERCHANT_GUILD, "merchant guild", "Guild", "merchants"),
     FactionBlueprint(K.CRAFT_GUILD, "craft guild", "Craft Guild", "artisans"),
@@ -58,6 +64,9 @@ BLUEPRINTS = (
     FactionBlueprint(K.WARRIOR_ORDER, "warrior order", "Warrior Order", "warriors"),
     FactionBlueprint(K.NOBLE_COUNCIL, "noble council", "Council of Lords", "nobles"),
     FactionBlueprint(K.PEASANT_LEAGUE, "peasant league", "League", "farmers"),
+    FactionBlueprint(K.WORKERS_UNION, "workers' union", "Union", "industrial workers"),
+    FactionBlueprint(K.ENGINEERS_SOCIETY, "engineers' society", "Society of Engineers", "engineers"),
+    FactionBlueprint(K.FINANCIERS, "financiers' exchange", "Exchange", "financiers"),
     FactionBlueprint(K.REBELS, "rebel band", "Rebels", "malcontents"),
     FactionBlueprint(K.BANDITS, "bandit band", "Brigands", "outlaws"),
     FactionBlueprint(K.PIRATES, "pirate crew", "Corsairs", "sea-robbers"),
@@ -128,6 +137,17 @@ async def _existing(ctx: TickContext, community_id: int, kind: FactionKind) -> b
     return await ctx.session.scalar(statement.limit(1)) is not None
 
 
+async def industrial_kinds(ctx: TickContext, community: EntityRow, shares: Mapping[SocialClass, float]) -> list[FactionKind]:
+    rules = ctx.rules.factions
+    known = await era_techniques(ctx.session, community.id)
+    wanted = (
+        (K.WORKERS_UNION, Technique.FACTORY_PRODUCTION in known and shares[SocialClass.ARTISAN] >= rules.craft_min_artisan_pct),
+        (K.ENGINEERS_SOCIETY, bool(known & ENGINEERING) and shares[SocialClass.PROFESSIONAL] >= rules.engineers_min_professional_pct),
+        (K.FINANCIERS, bool(known & FINANCE) and shares[SocialClass.MERCHANT] >= rules.guild_min_merchant_pct),
+    )
+    return [kind for kind, fits in wanted if fits]
+
+
 async def eligible_kinds(ctx: TickContext, community: EntityRow) -> list[FactionKind]:
     rules = ctx.rules.factions
     shares = await class_shares(ctx.session, ctx.rules, community.id)
@@ -154,6 +174,7 @@ async def eligible_kinds(ctx: TickContext, community: EntityRow) -> list[Faction
         kinds.append(K.PEASANT_LEAGUE)
     if shares[SocialClass.SCRIBE] >= rules.academy_min_scribe_pct:
         kinds.append(K.SCHOLARS_ACADEMY)
+    kinds += await industrial_kinds(ctx, community, shares)
     crime = town.crime if town is not None else 0
     if town is not None and town.unrest >= rules.secret_unrest:
         kinds.append(K.SECRET_SOCIETY)

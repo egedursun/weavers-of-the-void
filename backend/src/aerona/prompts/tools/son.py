@@ -162,7 +162,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     },
     EntityType.FACTION: {
         **WORSHIPPED_SON_FIELD,
-        "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market, void_pirates, social_circle, crime_family, thieves_guild, smuggling_ring or pirate_confederacy; its kind decides what it strives for and how it acts",
+        "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market, void_pirates, social_circle, crime_family, thieves_guild, smuggling_ring, pirate_confederacy, workers_union, engineers_society or financiers; its kind decides what it strives for and how it acts",
     },
     EntityType.LAW: {
         "law_kind": "What the law rules; one of: {{ law_kinds }}",

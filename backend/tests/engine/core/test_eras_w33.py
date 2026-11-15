@@ -7,18 +7,21 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.eras import EraChannel, ProgrammeStage
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind
-from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.world import TechnologyEra
 from aerona.domain.models.entity_stats import NaturalLawStats, PolityStats
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_of, era_techniques, tech_bonus, tech_factor, tech_relief
 from aerona.engine.eras.progress import EraTally, era_doom, keep_floors, keep_programmes
+from aerona.engine.phases.factions import eligible_kinds
 from aerona.engine.primitives.manual import manual_context
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
@@ -153,3 +156,28 @@ async def test_a_wandering_mortal_reads_the_era_of_its_people_never_below_the_st
     assert era_of(await era_techniques(session, wanderer.id), TechnologyEra.IRON) is TechnologyEra.IRON
     await knows(session, world.people, Technique.ELECTRICITY)
     assert era_of(await era_techniques(session, wanderer.id), TechnologyEra.IRON) is TechnologyEra.ELECTRICAL
+
+
+async def test_industry_raises_unions_of_workers_societies_of_engineers_and_exchanges_of_financiers(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Forgeham", world, world.regions[0])
+    shares = {f"share_{item.value}": 0.0 for item in SocialClass}
+    shares.update({"share_artisan": 40.0, "share_professional": 20.0, "share_merchant": 40.0})
+    session.add(
+        CommunitySocietyRow(
+            entity_id=town.id,
+            **shares,
+            **{f"satisfaction_{item.value}": 50 for item in SocialClass},
+            stock_food=0,
+            stock_ore=0,
+            stock_goods=0,
+            price_food=100,
+            price_ore=100,
+            price_goods=100,
+        )
+    )
+    await session.flush()
+    ctx = await at(session, 3)
+    assert not {FactionKind.WORKERS_UNION, FactionKind.ENGINEERS_SOCIETY, FactionKind.FINANCIERS} & set(await eligible_kinds(ctx, town))
+    await knows(session, town, Technique.FACTORY_PRODUCTION, Technique.STEAM_POWER, Technique.BANKING)
+    found = set(await eligible_kinds(await at(session, 3), town))
+    assert {FactionKind.WORKERS_UNION, FactionKind.ENGINEERS_SOCIETY, FactionKind.FINANCIERS} <= found

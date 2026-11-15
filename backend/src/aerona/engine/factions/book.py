@@ -64,6 +64,9 @@ CLASS_OF_KIND = MappingProxyType(
         FactionKind.THIEVES_GUILD: SocialClass.OUTCAST,
         FactionKind.SMUGGLING_RING: SocialClass.OUTCAST,
         FactionKind.PIRATE_CONFEDERACY: SocialClass.OUTCAST,
+        FactionKind.WORKERS_UNION: SocialClass.ARTISAN,
+        FactionKind.ENGINEERS_SOCIETY: SocialClass.PROFESSIONAL,
+        FactionKind.FINANCIERS: SocialClass.MERCHANT,
     }
 )
 

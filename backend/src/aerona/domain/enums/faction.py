@@ -32,6 +32,9 @@ class FactionKind(StrEnum):
     ART_MOVEMENT = "art_movement"
     CLUB = "club"
     LEAGUE = "league"
+    WORKERS_UNION = "workers_union"
+    ENGINEERS_SOCIETY = "engineers_society"
+    FINANCIERS = "financiers"
 
 
 class FoundableFaction(StrEnum):
@@ -56,6 +59,9 @@ class FoundableFaction(StrEnum):
     THIEVES_GUILD = "thieves_guild"
     SMUGGLING_RING = "smuggling_ring"
     PIRATE_CONFEDERACY = "pirate_confederacy"
+    WORKERS_UNION = "workers_union"
+    ENGINEERS_SOCIETY = "engineers_society"
+    FINANCIERS = "financiers"
 
 
 class FactionScale(StrEnum):

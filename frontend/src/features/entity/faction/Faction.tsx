@@ -8,6 +8,7 @@ import {
   PackageOpen,
   KeyRound,
   Church,
+  Cog,
   Building2,
   Landmark,
   Ban,
@@ -138,6 +139,9 @@ const FACTION_KINDS: Record<string, Named> = {
     tone: 'danger',
   },
   art_movement: { label: 'Art movement', icon: Palette, tone: 'verdigris' },
+  workers_union: { label: "Workers' union", icon: Hammer, tone: 'warning' },
+  engineers_society: { label: "Engineers' society", icon: Cog, tone: 'info' },
+  financiers: { label: 'Financiers', icon: Coins, tone: 'gold' },
   club: { label: 'Club', icon: Trophy, tone: 'gold' },
   league: { label: 'League', icon: Medal, tone: 'info' },
 }
