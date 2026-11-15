@@ -1,10 +1,12 @@
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.civics import LAW_GATES
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.affairs import CouncilSeatRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import EstatePrivilegeRow, EstateProfileRow
@@ -214,6 +216,11 @@ async def estates_have_rights(ctx: TickContext, realm: Realm) -> bool:
     return charter is None or bool(charter.get("estates_rights", True))
 
 
+@memoized(FactionProfileRow)
+async def faction_profiles(session: AsyncSession) -> tuple[FactionProfileRow, ...]:
+    return tuple(await session.scalars(select(FactionProfileRow).order_by(FactionProfileRow.faction_entity_id)))
+
+
 async def hear_factions(ctx: TickContext, hearing: Hearing) -> None:
     table = ctx.rules.enactment
     key = str(hearing.realm.entity.id)
@@ -224,7 +231,7 @@ async def hear_factions(ctx: TickContext, hearing: Hearing) -> None:
             .where(EstateProfileRow.polity_entity_id == hearing.realm.entity.id, EstatePrivilegeRow.privilege == EstatePrivilege.COUNCIL_SEAT)
         )
     )
-    for profile in await ctx.session.scalars(select(FactionProfileRow).order_by(FactionProfileRow.faction_entity_id)):
+    for profile in await faction_profiles(ctx.session):
         sway = int((profile.influence_over or {}).get(key, 0))
         faction_id = profile.faction_entity_id
         if sway <= 0 or faction_id in hearing.stands or held(faction_id):

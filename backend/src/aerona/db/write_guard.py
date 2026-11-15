@@ -33,6 +33,11 @@ def chosen_bonds() -> Iterator[None]:
 NodeColumn = ColumnElement[int] | InstrumentedAttribute[int] | InstrumentedAttribute[int | None]
 
 
+def guard_idle() -> bool:
+    guard = WRITE_GUARD.get()
+    return guard is None or getattr(getattr(guard, "__self__", None), "blocks_nothing", False) is True
+
+
 def write_blocked(node_id: int, key: str) -> bool:
     guard = WRITE_GUARD.get()
     return guard is not None and guard(node_id, key)

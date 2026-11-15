@@ -2,13 +2,14 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.body import ConditionRow
+from aerona.db.write_guard import WRITE_GUARD, guard_idle
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.engine.body.book import injuries_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.interconnect.guards import run_guarded
+from aerona.engine.interconnect.guards import GuardIndex, GuardState, run_guarded
 from aerona.engine.interconnect.registry import suppression_key
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phase import Phase
@@ -110,3 +111,16 @@ async def test_wonders_and_conditions_become_modifiers_each_epoch(session: Async
     assert readings["strength"] == round(60 * rules.modifiers.illness_strength_pct / 100)
     await run_guarded(Phase("modifier_upkeep", modifier_upkeep), make_ctx(session, rules, epoch=6))
     assert len((await ModifierIndex.load(session, epoch=6)).contributions(town.id, "prosperity")) == 1
+
+
+def test_only_a_phase_guard_with_nothing_pinned_counts_as_idle_and_any_other_guard_keeps_every_check() -> None:
+    quiet = GuardState(GuardIndex(frozenset(), frozenset()), frozenset())
+    pinned = GuardState(GuardIndex(frozenset({(7, "stats.hp")}), frozenset()), frozenset())
+    focused = GuardState(GuardIndex(frozenset(), frozenset()), frozenset(), only=7)
+    assert guard_idle()
+    for guard, idle in ((quiet.blocks, True), (pinned.blocks, False), (focused.blocks, False), (lambda node_id, _key: node_id == 7, False)):
+        token = WRITE_GUARD.set(guard)
+        try:
+            assert guard_idle() is idle
+        finally:
+            WRITE_GUARD.reset(token)

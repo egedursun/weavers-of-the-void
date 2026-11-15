@@ -58,6 +58,10 @@ class GuardState:
     only: int | None = None
     moved: Counter[tuple[int, str]] = field(default_factory=Counter)
 
+    @property
+    def blocks_nothing(self) -> bool:
+        return self.only is None and not self.index.guarded_nodes
+
     def blocks(self, node_id: int, key: str) -> bool:
         if self.only is not None and node_id != self.only:
             return True

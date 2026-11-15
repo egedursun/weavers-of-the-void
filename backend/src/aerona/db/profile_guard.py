@@ -7,7 +7,7 @@ from sqlalchemy.orm.attributes import get_history, set_committed_value
 from sqlalchemy.orm.base import instance_state
 
 from aerona.db.base import Base
-from aerona.db.write_guard import RESTORED, WRITE_GUARD, write_blocked
+from aerona.db.write_guard import RESTORED, WRITE_GUARD, guard_idle, write_blocked
 
 ENTITY_TABLE = "entities"
 NODE_TABLES = frozenset({"nodes", ENTITY_TABLE, "sons", "worlds", "stars", "foreign_gods", "creator"})
@@ -154,7 +154,7 @@ def column_frozen(row: object, column: str) -> bool:
 def restore_owned(row: object) -> list[str]:
     state = instance_state(row)
     shape = owned_shape(state.mapper)
-    if shape is None or state.pending:
+    if shape is None or state.pending or (guard_idle() and not standing_locks(row)):
         return []
     changed = [column for column in shape.columns if column in state.committed_state]
     if not changed:
@@ -179,6 +179,8 @@ def restore_held(row: object) -> list[str]:
     shape = _shape(state.mapper)
     if shape is None or state.pending:
         return restore_owned(row)
+    if guard_idle() and not standing_locks(row):
+        return []
     changed = [column for column in shape.columns if column in state.committed_state]
     if not changed:
         return []

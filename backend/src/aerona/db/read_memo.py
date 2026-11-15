@@ -26,10 +26,6 @@ class Memo:
     live: bool = False
     values: dict[Hashable, Any] = field(default_factory=dict)
 
-    def touched_by(self, changed: set[str] | None, reshaped: set[str] | None = None) -> bool:
-        scope = reshaped if self.live and reshaped is not None else changed
-        return scope is None or not self.tables or not self.tables.isdisjoint(scope)
-
 
 def with_parts(name: str) -> set[str]:
     return {name, f"{name}.other"} if name in STRUCTURAL else {name}
@@ -180,8 +176,35 @@ def pending_tables(sync: Session) -> set[str]:
     return found
 
 
-def memos(sync: Session) -> dict[str, Memo]:
-    found: dict[str, Memo] = sync.info.setdefault(MEMO_KEY, {})
+class MemoTable(dict[str, Memo]):
+    def __init__(self) -> None:
+        super().__init__()
+        self.plain: dict[str, set[str]] = {}
+        self.live: dict[str, set[str]] = {}
+        self.every: set[str] = set()
+
+    def keep(self, name: str, memo: Memo) -> None:
+        self[name] = memo
+        if not memo.tables:
+            self.every.add(name)
+            return
+        index = self.live if memo.live else self.plain
+        for table in memo.tables:
+            index.setdefault(table, set()).add(name)
+
+    def touched(self, changed: set[str], reshaped: set[str] | None) -> set[str]:
+        found = set(self.every)
+        for table in changed:
+            found.update(self.plain.get(table, ()))
+        for table in reshaped if reshaped is not None else changed:
+            found.update(self.live.get(table, ()))
+        return found
+
+
+def memos(sync: Session) -> MemoTable:
+    found = sync.info.get(MEMO_KEY)
+    if not isinstance(found, MemoTable):
+        found = sync.info[MEMO_KEY] = MemoTable()
     return found
 
 
@@ -192,7 +215,8 @@ def memo_for(sync: Session, name: str, tables: frozenset[str] = EVERY_TABLE, liv
     table = memos(sync)
     memo = table.get(name)
     if memo is None:
-        memo = table[name] = Memo(tables, live)
+        memo = Memo(tables, live)
+        table.keep(name, memo)
     return memo.values
 
 
@@ -203,8 +227,11 @@ def memo_of(session: AsyncSession, name: str, tables: frozenset[str] = EVERY_TAB
 def forget(sync: Session, changed: set[str] | None, reshaped: set[str] | None = None) -> None:
     sync.info.pop(PENDING_KEY, None)
     table = memos(sync)
-    for name in [name for name, memo in table.items() if memo.touched_by(changed, reshaped)]:
-        del table[name]
+    if changed is None:
+        sync.info[MEMO_KEY] = MemoTable()
+        return
+    for name in table.touched(changed, reshaped):
+        table.pop(name, None)
 
 
 def flushing_tables(sync: Session) -> set[str]:

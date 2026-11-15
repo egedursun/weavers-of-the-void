@@ -64,6 +64,13 @@ class NamePool:
         for name in names:
             self.add(name)
 
+    def copy(self) -> "NamePool":
+        twin = NamePool((), self._rules)
+        twin._normalized = set(self._normalized)
+        twin._by_length = {length: list(names) for length, names in self._by_length.items()}
+        twin._families = {root: list(names) for root, names in self._families.items()}
+        return twin
+
     def add(self, name: str) -> None:
         normalized = normalize_name(name)
         if not normalized or normalized in self._normalized:

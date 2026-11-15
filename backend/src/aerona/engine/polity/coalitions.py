@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.grammar import several
+from aerona.db.read_memo import memoized
 from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.statecraft import PolityRegardRow
 from aerona.db.write_guard import held
@@ -26,18 +28,22 @@ class CoalitionTally:
     wars: int = 0
 
 
-async def coalitions_against(ctx: TickContext, target_core: int) -> list[int]:
-    rows = await ctx.session.scalars(
+@memoized(TreatyClauseRow, TreatyProfileRow)
+async def coalition_targets(session: AsyncSession) -> tuple[tuple[int, tuple[object, ...]], ...]:
+    rows = await session.scalars(
         select(TreatyClauseRow.treaty_entity_id)
         .join(TreatyProfileRow, TreatyProfileRow.treaty_entity_id == TreatyClauseRow.treaty_entity_id)
         .where(TreatyProfileRow.kind == TreatyKind.COALITION, TreatyProfileRow.status == TreatyStatus.IN_FORCE, TreatyClauseRow.kind == ClauseKind.CALL_TO_ARMS)
     )
-    found: list[int] = []
+    found: list[tuple[int, tuple[object, ...]]] = []
     for treaty_id in dict.fromkeys(rows):
-        clauses = await ctx.session.scalars(select(TreatyClauseRow.params).where(TreatyClauseRow.treaty_entity_id == treaty_id))
-        if any(params.get(AGAINST) == target_core for params in clauses):
-            found.append(treaty_id)
-    return found
+        clauses = await session.scalars(select(TreatyClauseRow.params).where(TreatyClauseRow.treaty_entity_id == treaty_id))
+        found.append((treaty_id, tuple(params.get(AGAINST) for params in clauses)))
+    return tuple(found)
+
+
+async def coalitions_against(ctx: TickContext, target_core: int) -> list[int]:
+    return [treaty_id for treaty_id, targets in await coalition_targets(ctx.session) if target_core in targets]
 
 
 async def members_of(ctx: TickContext, treaty_id: int) -> list[int]:

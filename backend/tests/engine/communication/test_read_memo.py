@@ -9,15 +9,17 @@ from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.economy import GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import TraitRow
-from aerona.db.tables.node import NodeRow
+from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitKind, TraitSource
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.queries import canon
 from aerona.engine.services.community_relations import relation
+from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, settlement
 
 
@@ -195,3 +197,17 @@ async def test_a_read_that_names_a_pending_table_only_in_a_subquery_still_flushe
     realm.session.add(BondRow(source_node_id=other.id, target_node_id=town.id, kind=BondKind.ALLY, state=BondState.ACTIVE, epoch=1))
     shaped = select(EntityRow.id).where(EntityRow.id == other.id, exists().where(BondRow.source_node_id == EntityRow.id, BondRow.kind == BondKind.ALLY))
     assert await realm.session.scalar(shaped) == other.id
+
+
+async def test_each_namer_starts_from_the_registered_names_and_keeps_its_own_inventions_to_itself(realm: Realm) -> None:
+    rules = Rules()
+    first = await Namer(realm.session, rules).pool()
+    first.add("Zzorquin")
+    assert first.is_taken("Zzorquin")
+    second = await Namer(realm.session, rules).pool()
+    assert not second.is_taken("Zzorquin") and second is not first
+    await settlement(realm, "Qorvathe")
+    await realm.session.flush()
+    assert await realm.session.scalar(select(NameRegistryRow.display).where(NameRegistryRow.display == "Qorvathe")) == "Qorvathe"
+    third = await Namer(realm.session, rules).pool()
+    assert third.is_taken("Qorvathe") and not second.is_taken("Qorvathe")

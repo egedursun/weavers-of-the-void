@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.engine import ENGINE_SEED_SEPARATOR, PERSON_NAME_ATTEMPTS, WORLD_LANGUAGE_FALLBACKS
+from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
@@ -24,6 +25,42 @@ from aerona.language.similarity import NamePool
 from aerona.language.voice import build_voice, phonology_for
 from aerona.rules.registry import Rules
 
+NAME_TABLES = table_names((NameRegistryRow,))
+ALPHABET_TABLES = table_names((LexemeRow, EntityRow))
+
+
+async def registered_pool(session: AsyncSession, rules: Rules) -> NamePool:
+    memo = memo_of(session, "registered_pool", NAME_TABLES)
+    known: tuple[Rules, NamePool] | None = memo.get(id(rules)) if memo is not None else None
+    if known is not None and known[0] is rules:
+        return known[1]
+    pool = NamePool(list(await session.scalars(select(NameRegistryRow.display))), rules)
+    after = memo_of(session, "registered_pool", NAME_TABLES)
+    if after is not None:
+        after[id(rules)] = (rules, pool)
+    return pool
+
+
+async def alphabet_of_world(session: AsyncSession, rules: Rules, world_id: int) -> frozenset[str] | None:
+    memo = memo_of(session, "world_alphabet", ALPHABET_TABLES)
+    key = (id(rules), world_id)
+    known: tuple[Rules, frozenset[str] | None] | None = memo.get(key) if memo is not None else None
+    if known is not None and known[0] is rules:
+        return known[1]
+    statement = select(LexemeRow.word).join(EntityRow, EntityRow.id == LexemeRow.language_entity_id).where(EntityRow.world_id == world_id)
+    found = world_alphabet(list(await session.scalars(statement)), rules)
+    after = memo_of(session, "world_alphabet", ALPHABET_TABLES)
+    if after is not None:
+        after[key] = (rules, found)
+    return found
+
+
+@memoized(LanguageProfileRow)
+async def language_parents(session: AsyncSession) -> tuple[tuple[int, int | None], ...]:
+    return tuple(
+        (entity_id, parent) for entity_id, parent in await session.execute(select(LanguageProfileRow.entity_id, LanguageProfileRow.parent_language_id))
+    )
+
 
 class Namer:
     def __init__(self, session: AsyncSession, rules: Rules, *, persist: bool = True) -> None:
@@ -38,20 +75,17 @@ class Namer:
 
     async def pool(self) -> NamePool:
         if self._pool is None:
-            names = await self.session.scalars(select(NameRegistryRow.display))
-            self._pool = NamePool(list(names), self.rules)
+            self._pool = (await registered_pool(self.session, self.rules)).copy()
         return self._pool
 
     async def world_alphabet(self, world_id: int) -> frozenset[str] | None:
         if world_id not in self._alphabets:
-            statement = select(LexemeRow.word).join(EntityRow, EntityRow.id == LexemeRow.language_entity_id).where(EntityRow.world_id == world_id)
-            self._alphabets[world_id] = world_alphabet(list(await self.session.scalars(statement)), self.rules)
+            self._alphabets[world_id] = await alphabet_of_world(self.session, self.rules, world_id)
         return self._alphabets[world_id]
 
     async def _parent_map(self) -> dict[int, int | None]:
         if self._parents is None:
-            rows = await self.session.execute(select(LanguageProfileRow.entity_id, LanguageProfileRow.parent_language_id))
-            self._parents = {entity_id: parent for entity_id, parent in rows}
+            self._parents = dict(await language_parents(self.session))
         return self._parents
 
     async def _lexicon(self, language_ids: Sequence[int]) -> list[str]:

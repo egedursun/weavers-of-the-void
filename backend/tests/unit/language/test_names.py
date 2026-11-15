@@ -102,3 +102,15 @@ def test_unique_names_take_roman_numerals() -> None:
     assert pool.unique("Velar") == "Velar"
     assert roman_numeral(1994) == "MCMXCIV"
     assert roman_numeral(UINT32_MASK) == roman_numeral(3999)
+
+
+def test_a_copied_name_pool_answers_exactly_as_the_original_and_grows_on_its_own() -> None:
+    rules = Rules()
+    names = ["Arvel", "Arvelin", "Borrow Deep", "Corvan", "Corvane", "Dask", "Arvex", "Arvon"]
+    original = NamePool(names, rules)
+    twin = original.copy()
+    for probe in ["Arvek", "Corvan", "Daska", "Borrow Deep", "Arvelo", "Zim"]:
+        assert twin.similar_to(probe) == original.similar_to(probe) and twin.is_taken(probe) == original.is_taken(probe)
+        assert twin.unique(probe) == original.unique(probe)
+    twin.add("Zimra")
+    assert twin.is_taken("Zimra") and not original.is_taken("Zimra")
