@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -91,6 +91,13 @@ async def output_of(ctx: TickContext, community_id: int) -> dict[CommodityKind, 
     return by_epoch.get(ctx.epoch) or by_epoch.get(ctx.epoch - 1) or {}
 
 
+async def land_holders(ctx: TickContext, land_id: int) -> int:
+    statement = select(func.count(func.distinct(CultHoldingRow.cult_entity_id))).where(
+        CultHoldingRow.holding_entity_id == land_id, CultHoldingRow.kind == HoldingKind.LAND
+    )
+    return max(1, int(await ctx.session.scalar(statement) or 0))
+
+
 async def tithe_base(ctx: TickContext, church: Church) -> list[EntityRow]:
     lands = {row.holding_entity_id for row in await holdings_of(ctx, church, HoldingKind.LAND)}
     return [member for member in church.members if member.id in lands]
@@ -110,8 +117,9 @@ async def tithe(ctx: TickContext, church: Church, laws: LawBook) -> int:
             continue
         measured = True
         rate, enforcement = await tithe_terms(ctx, church, laws, member.id)
+        sharing = await land_holders(ctx, member.id)
         for commodity, made in sorted(output.items()):
-            due = round_half_up(made * rate / PERCENT * enforcement / PERCENT)
+            due = round_half_up(made * rate / PERCENT * enforcement / PERCENT / sharing)
             if due > 0:
                 units += await ledger.take_units(member.id, commodity, due, GoodsFlow.OFFERING)
     if not measured:

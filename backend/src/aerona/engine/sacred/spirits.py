@@ -188,12 +188,18 @@ def expected(ctx: TickContext, row: GeniusLocusRow) -> int:
     return max(0, round_half_up(touchy))
 
 
+async def spirits_kept(ctx: TickContext, community_id: int) -> int:
+    statement = select(func.count()).select_from(GeniusLocusRow).where(GeniusLocusRow.community_entity_id == community_id)
+    return max(1, int(await ctx.session.scalar(statement) or 0))
+
+
 async def bring_offerings(ctx: TickContext, row: GeniusLocusRow, community: EntityRow | None) -> int:
     table = ctx.rules.genius_loci
     if community is None or held(community.id) or stat_or(community, "piety", 0) < table.offering_piety:
         return 0
     people = stat_or(community, "population", 0)
-    given = max(1, round_half_up(people * table.offering_per_thousand / THOUSAND * stat_or(community, "piety", 0) / PERCENT))
+    kept = await spirits_kept(ctx, community.id)
+    given = max(1, round_half_up(people * table.offering_per_thousand / THOUSAND * stat_or(community, "piety", 0) / PERCENT / kept))
     food = await stock(ctx.session, ctx.rules, community.id, Commodity.FOOD)
     given = min(given, food // max(1, table.offering_food)) if table.offering_food else given
     if given <= 0:

@@ -78,7 +78,7 @@ async def _targets(ctx: TickContext, faction: EntityRow) -> list[tuple[bool, int
     bonds = BondRepository(ctx.session)
     ranked: list[tuple[bool, int, EntityRow]] = []
     for community in await canon(ctx.session, COMMUNITY_TYPES, faction.world_id):
-        if community.id == faction.id:
+        if community.id == faction.id or held(community.id):
             continue
         hostile = bool(await bonds.active_between(faction.id, community.id, [BondKind.ENEMY, BondKind.PAYS_TRIBUTE]))
         truce = await has_truce(ctx.session, ctx.rules, faction.id, community.id, ctx.epoch)
@@ -109,7 +109,7 @@ async def found_networks(ctx: TickContext) -> int:
         if founded >= rules.spy_net_cap:
             break
         chance = await would_spy(ctx, owner)
-        if chance is None or owner.id in owned:
+        if chance is None or owner.id in owned or held(owner.id):
             continue
         targets = await _targets(ctx, owner)
         if not targets:

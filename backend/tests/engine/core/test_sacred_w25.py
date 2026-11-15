@@ -116,7 +116,7 @@ from aerona.engine.sacred.mysteries import (
 )
 from aerona.engine.sacred.omens import battle_omen, war_forbidden
 from aerona.engine.sacred.rites import RiteTally, keep_afterlife_belief, keep_climates, keep_sacraments, weigh_town
-from aerona.engine.sacred.spirits import SpiritTally, keep_place_spirits
+from aerona.engine.sacred.spirits import SpiritTally, bring_offerings, keep_place_spirits
 from aerona.engine.services.war import declare_war
 from aerona.services.integrity.sacred_links import mend_sacred_links
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
@@ -181,6 +181,23 @@ async def test_a_place_spirit_rises_takes_offerings_and_favours_its_town_until_p
     await keep_place_spirits(ctx, SpiritTally())
     assert row.offended is SpiritOffence.POLLUTION
     assert stat_or(town, "population", 0) < before
+
+
+async def test_a_town_shares_its_offerings_among_the_spirits_it_keeps_instead_of_giving_each_the_whole(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Manyshrine", world, world.regions[0], population=4000, piety=100)
+    session.add(society(town.id, 5000))
+    rows = []
+    for index in range(4):
+        spirit = await entity(session, f"Spirit {index}", EntityType.SPIRIT, SpiritStats(), world_id=world.world.id, location_id=town.id)
+        rows.append(GeniusLocusRow(spirit_entity_id=spirit.id, community_entity_id=town.id, kind=GeniusLocusKind.SPRING, locked=[]))
+    session.add(rows[0])
+    await session.flush()
+    ctx = await at(session, 3, genius_loci={"offering_food": 0})
+    alone = await bring_offerings(ctx, rows[0], town)
+    session.add_all(rows[1:])
+    await session.flush()
+    shared = await bring_offerings(ctx, rows[0], town)
+    assert alone > 1 and shared == round(alone / 4)
 
 
 async def test_petitions_are_read_appealed_granted_and_an_unwatched_office_goes_rogue(session: AsyncSession, world: CoreWorld) -> None:

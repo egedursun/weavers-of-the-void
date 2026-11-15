@@ -9,6 +9,7 @@ P = RuleGroup.CIVILIZATION
 
 @dataclass(frozen=True)
 class ConsumptionRules:
+    nourishment_per_1000: int = rule(6000, 0, 1000000, E, "Nourishment a thousand people need in an epoch, however many foods their world holds")
     grain_per_1000: int = rule(500, 0, 100000, E, "Units of grain a thousand people use in an epoch")
     livestock_per_1000: int = rule(150, 0, 100000, E, "Units of livestock a thousand people use in an epoch")
     fish_per_1000: int = rule(100, 0, 100000, E, "Units of fish a thousand people use in an epoch")

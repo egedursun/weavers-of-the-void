@@ -95,11 +95,13 @@ def epoch_need(rules: Rules, population: int, commodity: CommodityKind) -> int:
 
 
 def aggregate_need(rules: Rules, population: int, aggregate: Commodity) -> int:
+    if aggregate is Commodity.FOOD:
+        return round_half_up(nourishment_need(rules, population) / COMMODITIES[CommodityKind.GRAIN].nourishment)
     return sum(epoch_need(rules, population, kind) for kind, item in COMMODITIES.items() if item.aggregate is aggregate)
 
 
 def nourishment_need(rules: Rules, population: int) -> int:
-    return sum(epoch_need(rules, population, kind) * item.nourishment for kind, item in COMMODITIES.items() if item.nourishment > 0)
+    return round_half_up(population * rules.consumption.nourishment_per_1000 / THOUSAND)
 
 
 def supply_index(rules: Rules, stocked: int, need: int) -> int:
