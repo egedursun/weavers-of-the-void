@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.nature import SpeciesRelationRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ecology import GROWN, SIZE_ORDER, DomesticationStage
@@ -19,6 +20,7 @@ from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
 K = SymbiosisKind
@@ -133,11 +135,19 @@ async def plague_herds(ctx: TickContext, tally: SymbiosisTally) -> None:
             select(SpeciesRangeRow.region_entity_id).where(SpeciesRangeRow.species_entity_id == row.first_species_id, SpeciesRangeRow.abundance > 0)
         )
         for region in list(lands):
+            ground = await ctx.session.get(RegionEnvironmentRow, region)
+            if ground is not None and not held(region) and "disease_load" not in ground.locked:
+                ground.disease_load = clamp_int(ground.disease_load + round(table.vector_load * row.strength / PERCENT), 0, PERCENT)
             for town in atlas.communities_in(region):
                 if held(town):
                     continue
                 want = round(table.livestock_loss * row.strength / PERCENT)
                 tally.livestock += await ledger.take_units(town, CommodityKind.LIVESTOCK, want, GoodsFlow.LOSS) if want > 0 else 0
+
+
+async def mimics_of(session: AsyncSession) -> dict[int, tuple[int, int]]:
+    rows = await session.scalars(select(SpeciesRelationRow).where(SpeciesRelationRow.kind == K.MIMICRY).order_by(SpeciesRelationRow.id))
+    return {row.first_species_id: (row.second_species_id, row.strength) for row in rows}
 
 
 async def keep_symbiosis(ctx: TickContext, tally: SymbiosisTally) -> None:

@@ -14,22 +14,26 @@ from aerona.db.tables.nature import FermentCultureRow, SenseProfileRow, SoilMicr
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
-from aerona.domain.enums.ecology import Diet, SizeClass, SpeciesClass
+from aerona.domain.enums.ecology import Diet, DomesticationStage, SizeClass, SpeciesClass
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand, TerrainKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.nature import Dormancy, FermentKind, PlantDefence, SenseKind, SymbiosisKind, Thermoregulation
+from aerona.domain.enums.region import DangerSource
 from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
+from aerona.engine.environment.dangers import DangerScene
+from aerona.engine.environment.dangers import _beasts as beasts_danger
 from aerona.engine.nature.cover import defence_cover, grazing, passage, smothered
 from aerona.engine.nature.islands import IslandTally, drifted_size, keep_islands, spared_kinds
 from aerona.engine.nature.microbes import MicrobeTally, culture_lift, keep_microbes, microbe_factor
 from aerona.engine.nature.seasons import activity, asleep, chilled
 from aerona.engine.nature.senses import AGENTS, TRACKING, SenseTally, seed_senses, sense_score
 from aerona.engine.nature.sleepers import SleeperTally, keep_sleepers, lair_factor, raid_factor
-from aerona.engine.nature.symbiosis import SymbiosisBook, SymbiosisTally, form_relations
+from aerona.engine.nature.symbiosis import SymbiosisBook, SymbiosisTally, form_relations, keep_symbiosis
 from aerona.engine.phases.environment import environment_survey
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.manual import manual_context
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
@@ -201,3 +205,33 @@ async def test_a_new_kind_takes_its_sleep_blood_and_defence_from_its_maker_or_it
     plant = await session.get(PlantProfileRow, thorn.id)
     assert grown.dormancy is Dormancy.NONE and plant is not None and plant.defence is PlantDefence.THORNS
     assert plant.defence_potency == ctx.rules.plant_defences.default_potency
+
+
+async def test_a_parasite_of_herds_raises_disease_and_a_mimic_is_feared_as_the_kind_it_copies(session: AsyncSession, world: CoreWorld) -> None:
+    region = world.regions[0].id
+    ctx = await surveyed(session, symbiosis={"vector_load": 10, "mimic_alarm_pct": 100})
+    ground = await land(session, region)
+    before = ground.disease_load
+    host = await kind(session, world, "Woolback", region, stage=DomesticationStage.DOMESTICATED, aggression=0)
+    tick = await kind(session, world, "Bloodmite", region, aggression=0)
+    model = await kind(session, world, "Stingwing", region, aggression=90)
+    mimic = await kind(session, world, "Falsewing", region, aggression=0)
+    session.add_all(
+        [
+            SpeciesRelationRow(first_species_id=tick, second_species_id=host, kind=SymbiosisKind.PARASITISM, strength=100),
+            SpeciesRelationRow(first_species_id=mimic, second_species_id=model, kind=SymbiosisKind.MIMICRY, strength=100),
+        ]
+    )
+    await session.flush()
+    await keep_symbiosis(ctx, SymbiosisTally())
+    assert ground.disease_load == min(100, before + 10)
+    scene = DangerScene(await RegionAtlas.load(session), {region: ground}, {region: world.regions[0]}, {})
+    await beasts_danger(session, ctx.rules, scene)
+    slot = scene.derived[region][DangerSource.BEASTS]
+    alone = DangerScene(await RegionAtlas.load(session), {region: ground}, {region: world.regions[0]}, {})
+    model_range = await session.get(SpeciesRangeRow, (model, region))
+    assert model_range is not None
+    model_range.abundance = 0
+    await session.flush()
+    await beasts_danger(session, ctx.rules, alone)
+    assert slot.strength > alone.derived[region][DangerSource.BEASTS].strength

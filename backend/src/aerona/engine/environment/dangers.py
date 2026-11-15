@@ -25,6 +25,7 @@ from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.cycles.hospitality import circuit_stops
 from aerona.engine.ecology.ranges import wildness
 from aerona.engine.environment.memory import darkness
+from aerona.engine.nature.symbiosis import mimics_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
@@ -156,18 +157,23 @@ async def _beasts(session: AsyncSession, rules: Rules, scene: DangerScene) -> No
     table = rules.regional_danger
     profiles = {row.species_entity_id: row for row in await session.scalars(select(SpeciesProfileRow))}
     living = set(await session.scalars(select(EntityRow.id).where(EntityRow.entity_type == EntityType.SPECIES, EntityRow.status == EntityStatus.CANON)))
-    for row in await session.scalars(select(SpeciesRangeRow).order_by(SpeciesRangeRow.species_entity_id, SpeciesRangeRow.region_entity_id)):
+    ranges = list(await session.scalars(select(SpeciesRangeRow).order_by(SpeciesRangeRow.species_entity_id, SpeciesRangeRow.region_entity_id)))
+    present = {(row.species_entity_id, row.region_entity_id) for row in ranges if row.abundance > 0}
+    mimics = await mimics_of(session)
+    for row in ranges:
         profile = profiles.get(row.species_entity_id)
-        if (
-            row.species_entity_id not in living
-            or profile is None
-            or profile.stage is not DomesticationStage.WILD
-            or profile.aggression < table.beasts_aggression_min
-        ):
+        if row.species_entity_id not in living or profile is None or profile.stage is not DomesticationStage.WILD:
+            continue
+        aggression = profile.aggression
+        copied = mimics.get(row.species_entity_id)
+        model = profiles.get(copied[0]) if copied is not None and (copied[0], row.region_entity_id) in present else None
+        if copied is not None and model is not None:
+            aggression = max(aggression, round(model.aggression * rules.symbiosis.mimic_alarm_pct / PERCENT * copied[1] / PERCENT))
+        if aggression < table.beasts_aggression_min:
             continue
         slot = scene.slot(row.region_entity_id, DangerSource.BEASTS)
         if slot is not None:
-            slot.add(min(row.abundance, PERCENT) * profile.aggression / PERCENT * table.beasts_species_pct / PERCENT, row.species_entity_id)
+            slot.add(min(row.abundance, PERCENT) * aggression / PERCENT * table.beasts_species_pct / PERCENT, row.species_entity_id)
     beasts = await session.execute(
         select(BeastProfileRow.beast_entity_id, BeastProfileRow.lair_place_id, BeastProfileRow.temper)
         .join(EntityRow, EntityRow.id == BeastProfileRow.beast_entity_id)

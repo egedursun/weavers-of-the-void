@@ -45,6 +45,8 @@ class SymbiosisRules:
     parasite_loss: int = rule(4, 0, 50, C, "Abundance a host loses each epoch to a parasite sharing its land, at full strength")
     livestock_loss: int = rule(3, 0, 100, C, "Livestock a town loses each epoch to a parasite of its herds living in its land, at full strength")
     mimic_shield_pct: int = rule(50, 0, 100, C, "Share of hunting a mimic escapes where the kind it copies lives, at full strength (%)")
+    vector_load: int = rule(3, 0, 100, C, "Disease load a parasite of herds raises in its land each epoch, at full strength")
+    mimic_alarm_pct: int = rule(80, 0, 100, C, "Share of the danger of the kind it copies a mimic is read with by those who meet it there (%)")
 
 
 @dataclass(frozen=True)

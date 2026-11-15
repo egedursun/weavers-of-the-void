@@ -68,6 +68,7 @@ async def survey_regions(ctx: TickContext) -> dict[str, int]:
     "table.rifts",
     "table.species_profiles",
     "table.species_ranges",
+    "table.species_relations",
     "table.trade_route_profiles",
     "table.tradition_participation",
     "table.tradition_profiles",

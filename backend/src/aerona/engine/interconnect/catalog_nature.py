@@ -59,7 +59,9 @@ NATURE_MECHANICS = (
             Coupling(S.ECOLOGY, "a mutualist gives room to the kind it lives with", E.MODIFIER, "symbiosis.mutual_pct"),
             Coupling(S.ECOLOGY, "a parasite drains its host", E.FLOW, "symbiosis.parasite_loss"),
             Coupling(S.ECONOMY, "a parasite of herds takes a town's livestock", E.FLOW, "symbiosis.livestock_loss"),
+            Coupling(S.BODY, "a parasite of herds carries disease into its land", E.FLOW, "symbiosis.vector_load"),
             Coupling(S.ECOLOGY, "a mimic is spared by hunters where its model lives", E.MODIFIER, "symbiosis.mimic_shield_pct"),
+            Coupling(S.WAR, "a mimic is feared as the kind it copies by those who meet it", E.MODIFIER, "symbiosis.mimic_alarm_pct"),
         ),
     ),
     Mechanic(
