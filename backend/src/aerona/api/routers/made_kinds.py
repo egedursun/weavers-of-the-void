@@ -41,7 +41,7 @@ from aerona.catalog.structure_sections import FORMS
 from aerona.catalog.structure_sections import LAYOUTS as STRUCTURE_LAYOUTS
 from aerona.catalog.structures import MEGASTRUCTURES, STRUCTURES
 from aerona.catalog.units import UNITS
-from aerona.catalog.vehicles import FRAMES, frame_layout
+from aerona.catalog.vehicles import DESIGN_KIND_LABELS, FRAMES, frame_layout
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.body import BodyRow, InjuryRow
@@ -66,6 +66,7 @@ from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.structure import BuildingForm
 from aerona.engine.body.decline import decline_severity
 from aerona.engine.cosmos.being_wounds import VAST, can_roam, can_see, effective_might
+from aerona.engine.cuisine.dishes import COURSE_LABELS
 from aerona.engine.equipment.models import MOUNT_FAMILIES
 from aerona.engine.primitives.stats import stat
 from aerona.engine.vehicles.fleet import army_pace
@@ -704,12 +705,14 @@ async def own_kinds(session: AsyncSession, node_id: int) -> OwnKindsView:
     buildings = await session.scalars(select(StructureDesignRow).where(StructureDesignRow.origin_node_id == node_id).order_by(StructureDesignRow.name))
     return OwnKindsView(
         vehicle_types=[
-            KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=FRAMES[row.frame].label if row.frame is not None else row.kind.value)
+            KindRef(
+                id=row.id, entity_id=row.entity_id, name=row.name, family=FRAMES[row.frame].label if row.frame is not None else DESIGN_KIND_LABELS[row.kind]
+            )
             for row in vehicles
         ],
         unit_types=[KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=UNITS[row.base_kind].label) for row in units],
         equipment_models=[KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=FAMILIES[row.family].label) for row in models],
-        dishes=[KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=row.course.value.replace("_", " ")) for row in foods],
+        dishes=[KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=COURSE_LABELS[row.course]) for row in foods],
         building_types=[KindRef(id=row.id, entity_id=row.entity_id, name=row.name, family=STRUCTURES[row.base_kind].label) for row in buildings],
     )
 

@@ -49,6 +49,7 @@ import {
   MindPicker,
   NodePicker,
 } from '../mind/parts'
+import { CLASS_SPEC } from '../society/labels'
 
 const SPAN = 100
 const WORKING = 'Working on it.'
@@ -702,7 +703,7 @@ function IndicatorRow({
             <Badge
               key={item.key}
               variant='outline'
-            >{`${item.label} ${item.value}`}</Badge>
+            >{`${CLASS_SPEC[item.key].label} ${item.value}`}</Badge>
           )}
         </PagedList>
       )}

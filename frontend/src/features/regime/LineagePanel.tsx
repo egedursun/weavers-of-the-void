@@ -15,6 +15,7 @@ import { Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
 import { Chip, Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
+import { PLAN_STATUSES } from '@/features/cycles/labels'
 import { clamp, SPAN } from '@/features/cycles/model'
 import { TextField } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
@@ -169,7 +170,7 @@ function BreedingCard({
       icon={Dna}
       tone='verdigris'
       title={`${row.name}: ${row.house.name} bred toward ${aim}`}
-      caption={`${row.progress} of ${plural(row.steps, 'step', 'steps')} · ${row.status}`}
+      caption={`${row.progress} of ${plural(row.steps, 'step', 'steps')} · ${PLAN_STATUSES[row.status].label}`}
       removeLabel='End the design'
       editTitle='Set the breeding plan'
       note='The design steers the house’s marriages toward carriers of a trait of the blood or toward claimants of a realm. Love matches set it back, childless couples stall it, and each concealed parentage keeps it secret but becomes a secret of its own that can be exposed.'

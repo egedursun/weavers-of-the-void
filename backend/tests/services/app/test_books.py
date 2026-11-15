@@ -1,10 +1,14 @@
+import importlib
+import pkgutil
 import re
 from dataclasses import replace
+from enum import StrEnum
 
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import aerona.domain.enums
 from aerona.api.views.common import mentioning
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
@@ -12,14 +16,16 @@ from aerona.db.tables.cosmography import GalaxyRow
 from aerona.db.tables.epochs import EpochRunRow
 from aerona.db.tables.job import JobRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
-from aerona.db.tables.lore import LexemeRow, ThreadRow
+from aerona.db.tables.lore import CouncilRow, LexemeRow, ThreadRow
 from aerona.db.tables.mind import AttributeRow, FacetRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.agent import CouncilCaller
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech
 from aerona.domain.enums.cosmography import DimensionKind, WorldAge
+from aerona.domain.enums.divine import CouncilMotion
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.mind import Attribute, Facet
@@ -27,6 +33,7 @@ from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.world import ClimateEra, CosmosShape, CosmosSize, GenesisTemplate, WorldType
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.domain.models.profiles import EntityDepth
+from aerona.domain.models.records import CouncilMinutes
 from aerona.engine.cosmos.ladder import ensure_ladder
 from aerona.engine.notes import fold_tick_lines, last_chronicle_id
 from aerona.rules.registry import Rules
@@ -292,3 +299,37 @@ async def test_every_node_reference_in_the_book_is_named(session: AsyncSession, 
     raw = sorted(set(re.findall(r"(?<![\w&])#\d+\b", codex)) | set(re.findall(r"(?<![\w&])#\d+\b", page.html)))
     assert raw == []
     assert codex.count("It turned first.") == 1
+
+
+MARKUP = re.compile(r"<style.*?</style>|<script.*?</script>|<[^>]*>|\]\([^)]*\)", re.DOTALL)
+SNAKE_WORD = re.compile(r"\b[a-z0-9]+(?:_[a-z0-9]+)+\b")
+
+
+def enum_keys() -> frozenset[str]:
+    for module in pkgutil.walk_packages(aerona.domain.enums.__path__, f"{aerona.domain.enums.__name__}."):
+        importlib.import_module(module.name)
+    found: set[str] = set()
+    pending: list[type[StrEnum]] = list(StrEnum.__subclasses__())
+    while pending:
+        kind = pending.pop()
+        pending.extend(kind.__subclasses__())
+        if kind.__module__.startswith("aerona."):
+            found.update(member.value for member in kind if "_" in member.value)
+    return frozenset(found)
+
+
+async def test_the_book_and_the_codex_never_show_a_raw_enum_key(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
+    language_id = await enrich(session, world)
+    session.add(
+        LexemeRow(language_entity_id=language_id, word="Sehar", meaning="a name", part_of_speech=PartOfSpeech.PROPER_NAME, added_by_kind=ActorKind.SON, epoch=1)
+    )
+    minutes = CouncilMinutes(topic="The flood", convened_by=CouncilCaller.FATE, motion="Rest", passed=True, decision=CouncilMotion.CALL_FOR_PEACE)
+    session.add(CouncilRow(epoch=1, topic="The flood", minutes=minutes, passed=True))
+    await ChronicleRepository(session).append(ChronicleDraft(epoch=1, kind=ChronicleKind.CREATOR_HAND, text="The sky dimmed.", world_id=world.world.id))
+    await session.flush()
+    page = await book_page(session, rules)
+    codex = await codex_markdown(session, rules, CodexLinks())
+    keys = enum_keys()
+    for text in (page.html, codex):
+        assert "Call for peace" in text and "Proper name" in text
+        assert sorted(set(SNAKE_WORD.findall(MARKUP.sub(" ", text))) & keys) == []

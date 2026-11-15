@@ -10,6 +10,7 @@ from aerona.domain.enums.culture import (
     MagicSchool,
     MagicSource,
     RiteEffectKind,
+    SayingKind,
     TraditionKind,
 )
 from aerona.domain.enums.domain import Domain
@@ -372,4 +373,18 @@ ART_WORDS = MappingProxyType(
         ArtMedium.CARVING: ("carving", "relief", "stele", "totem"),
         ArtMedium.ARCHITECTURE_ORNAMENT: ("frieze", "ornament", "gate", "arch"),
     }
+)
+
+SAYING_KIND_LABELS = total(
+    SayingKind,
+    {
+        SayingKind.PROVERB: "Proverb",
+        SayingKind.LULLABY: "Lullaby",
+        SayingKind.PRAYER: "Prayer",
+        SayingKind.MALEDICTION: "Malediction",
+        SayingKind.FOLK_SONG: "Folk song",
+        SayingKind.OATH: "Oath",
+        SayingKind.TONGUE_TWISTER: "Tongue twister",
+        SayingKind.HYMN: "Hymn",
+    },
 )

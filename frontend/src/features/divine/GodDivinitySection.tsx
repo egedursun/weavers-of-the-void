@@ -134,6 +134,7 @@ function DomainsCard({ view }: { view: GodDivinity }) {
 }
 
 function ActivityCard({ view }: { view: GodDivinity }) {
+  const labels = useLabels()
   const series = useMemo(
     () =>
       view.domains.map((domain, index) => ({
@@ -180,7 +181,7 @@ function ActivityCard({ view }: { view: GodDivinity }) {
                   size='sm'
                   variant='secondary'
                 >
-                  {`${row.domain}: ${row.count} → ${row.essence} essence`}
+                  {`${labels.domain(row.domain)}: ${row.count} → ${row.essence} essence`}
                 </Badge>
               ))}
           </div>
@@ -191,6 +192,7 @@ function ActivityCard({ view }: { view: GodDivinity }) {
 }
 
 function GoalRow({ goal, busy }: { goal: GoalView; busy: string | null }) {
+  const labels = useLabels()
   const edit = useDivineAction(
     'god_goal:edit',
     (vars: { values: EditValues; release: string[] }) => ({
@@ -233,7 +235,7 @@ function GoalRow({ goal, busy }: { goal: GoalView; busy: string | null }) {
             {goal.world && <NodeName item={goal.world} />}
             {goal.domain && (
               <Badge size='sm' variant='outline'>
-                {goal.domain}
+                {labels.domain(goal.domain)}
               </Badge>
             )}
             {goal.amount > 0 && (

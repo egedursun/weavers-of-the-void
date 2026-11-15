@@ -1,6 +1,6 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.environment import RiverClass
-from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource, MemoryOrigin, RegionMemoryKind, TerrainHazard
+from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource, HazardSeason, MemoryOrigin, RegionMemoryKind, TerrainHazard
 
 
 class RegionDangerView(ApiModel):
@@ -64,7 +64,7 @@ class RegionHazardView(ApiModel):
 class HazardExposure(ApiModel):
     hazard: TerrainHazard
     label: str
-    season: str
+    season: HazardSeason
 
 
 class RiverNeighbour(ApiModel):

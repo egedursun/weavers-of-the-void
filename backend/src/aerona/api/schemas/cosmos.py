@@ -5,7 +5,7 @@ from aerona.domain.enums.chronicle import LegendaryQuestKind, LegendaryQuestOutc
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.travel import HorizonStatus, TravelMethod
-from aerona.domain.enums.world import SkyEventKind, WorldType
+from aerona.domain.enums.world import Discovery, SkyEventKind, WorldType
 from aerona.services.codex import Danger, GodLine, PeopleLine, ResourceLine, RouteLine
 
 
@@ -88,7 +88,7 @@ class SensedWorld(ApiModel):
 class DiscoveryWorld(ApiModel):
     world_id: int
     name: str
-    discovery: str
+    discovery: Discovery
     regions: int
     places: int
     communities: int

@@ -310,7 +310,7 @@ async def engine_council(ctx: TickContext) -> CouncilRow | None:
     row = CouncilRow(
         epoch=ctx.epoch,
         topic=label,
-        minutes=CouncilMinutes(topic=label, convened_by=CouncilCaller.FATE.value, motion=label, ballots=ballots, passed=passed, decision=motion.motion.value),
+        minutes=CouncilMinutes(topic=label, convened_by=CouncilCaller.FATE, motion=label, ballots=ballots, passed=passed, decision=motion.motion),
         passed=passed,
     )
     ctx.session.add(row)

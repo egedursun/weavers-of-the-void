@@ -534,7 +534,7 @@ const COUNCILS: Schemas['CouncilRecord'][] = [
         { son_id: 9, name: 'Kharun the Ashen', vote: 'no', reason: 'I will not bow.' },
       ],
       passed: true,
-      decision: 'The sons will claim the godless.',
+      decision: 'holy_world',
       notes: ['Kharun left the hall before the vote ended.'],
       summary: 'A seer dreamed of three brothers arguing under a pale star.',
     },

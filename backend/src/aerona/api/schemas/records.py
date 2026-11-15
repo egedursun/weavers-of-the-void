@@ -11,7 +11,7 @@ from aerona.domain.enums.cosmography import GalacticZone, RouteScope, StarAge, W
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import PrayerTone
 from aerona.domain.enums.entity import ArchiveOverride, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
-from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.limits import POWER_SLOTS
 from aerona.domain.enums.meta import ImageMime, ImageOrigin
 from aerona.domain.enums.node import ActorKind, NodeKind
@@ -307,7 +307,7 @@ class StarRecord(ApiModel):
 class ForeignGodPower(ApiModel):
     slot: int
     name: str
-    effect: str
+    effect: ForeignGodPowerEffect
     description: str
 
 

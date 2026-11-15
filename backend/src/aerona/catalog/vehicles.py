@@ -356,6 +356,16 @@ class FrameSpec:
         return len(MOUNTS[self.family])
 
 
+DESIGN_KIND_LABELS: MappingProxyType[DesignKind, str] = total(
+    DesignKind,
+    {
+        DesignKind.VESSEL: "Vessel",
+        DesignKind.SKYSHIP: "Skyship",
+        DesignKind.SIEGE_ENGINE: "Siege engine",
+        DesignKind.LAND_VEHICLE: "Land vehicle",
+        DesignKind.SPACECRAFT: "Spacecraft",
+    },
+)
 SIEGE_FAMILIES = frozenset({Y.RAM, Y.TOWER, Y.THROWER, Y.GUN})
 DESIGN_KINDS: MappingProxyType[VehicleDomain, DesignKind] = total(
     VehicleDomain,

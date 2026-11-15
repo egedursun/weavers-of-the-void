@@ -171,7 +171,7 @@ async def political_map(session: AsyncSession, rules: Rules, world_id: int | Non
         top_id, top_value = max(holders.items(), key=lambda item: (item[1], -item[0]))
         top = by_id[top_id]
         result[region] = RegionControl(
-            ruler_id=top_id, ruler_name=top.name, ruler_type=top.entity_type.value, share=round(top_value / total * PERCENT), contested=len(holders) > 1
+            ruler_id=top_id, ruler_name=top.name, ruler_type=top.entity_type, share=round(top_value / total * PERCENT), contested=len(holders) > 1
         )
     return result
 
@@ -250,15 +250,15 @@ async def ground_snapshot(session: AsyncSession, world_id: int) -> dict[int, Gro
         top = max(dangers.get(row.entity_id, []), key=lambda item: (item.strength, -item.id), default=None)
         scar = max(sorted(row.scars), key=lambda key: row.scars[key], default=None)
         found[row.entity_id] = GroundSnapshot(
-            terrain=row.dominant_terrain.value,
-            soil=row.soil.value,
-            climate=row.temperature_band.value,
+            terrain=row.dominant_terrain,
+            soil=row.soil,
+            climate=row.temperature_band,
             land_use=main_use(row),
             ley_lines=degree[row.entity_id],
             nexus=row.entity_id in nexus,
             rainfall=row.rainfall,
             danger=danger_stat.get(row.entity_id, 0),
-            danger_source=top.source.value if top is not None and top.strength > 0 else None,
+            danger_source=top.source if top is not None and top.strength > 0 else None,
             sacredness=row.sacredness,
             scar=scar,
             scar_depth=row.scars.get(scar, 0) if scar is not None else 0,

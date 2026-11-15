@@ -58,7 +58,7 @@ async def read_catalogue() -> Catalogue:
             BondKindInfo(
                 key=kind.value,
                 label=spec.label,
-                category=spec.category.value,
+                category=spec.category,
                 fate_suggestable=spec.fate_suggestable,
                 weavable=spec.weavable,
                 link_groups=link_groups_of(kind.value),

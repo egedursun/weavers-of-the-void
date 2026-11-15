@@ -4,7 +4,7 @@ from aerona.api.schemas.common import ApiModel, RequestModel
 from aerona.api.schemas.records import BondView, ChronicleLineRecord, EntityRecord, EntitySummary, ImageRecord, NodeRef
 from aerona.constants.api import ENTITY_PAGE_DEFAULT, ENTITY_PAGE_MAX
 from aerona.domain.enums.entity import EntityFlag, EntityType
-from aerona.domain.enums.society import CreatureTrait
+from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, SocialClass
 from aerona.services.importance import ArchiveMode
 
 
@@ -44,7 +44,7 @@ class SocietyInsight(ApiModel):
     satisfaction: dict[str, int]
     stocks: dict[str, int]
     prices: dict[str, int]
-    unhappiest: str | None
+    unhappiest: SocialClass | None
     bankruptcy_risk: bool
     uprising_risk: bool
 
@@ -78,7 +78,7 @@ class ExplorationInsight(ApiModel):
 
 
 class KnowledgeInsight(ApiModel):
-    branch: str | None
+    branch: KnowledgeBranch | None
     level: int
     level_cap: int
     branch_multiplier: float

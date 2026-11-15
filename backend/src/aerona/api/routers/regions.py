@@ -143,9 +143,7 @@ async def region_terrain(services: ServicesDep, region_id: int = Path(ge=1)) -> 
             for row in hazards
         ],
         exposure=[
-            HazardExposure(hazard=hazard, label=spec.label, season=spec.season.value)
-            for hazard, spec in HAZARDS.items()
-            if exposed(rules, hazard, spec, ground)
+            HazardExposure(hazard=hazard, label=spec.label, season=spec.season) for hazard, spec in HAZARDS.items() if exposed(rules, hazard, spec, ground)
         ],
         river_class=ground.river_class,
         river_neighbours=[

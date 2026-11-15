@@ -5,6 +5,7 @@ from aerona.domain.enums.economy import (
     CommodityFamily,
     CommodityKind,
     FoeNature,
+    GoodsFlow,
     LoanStatus,
     MaterialFamily,
     MaterialOrigin,
@@ -17,7 +18,7 @@ from aerona.domain.enums.economy import (
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.polity import DebtRemedy
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 
 
 class MaterialView(ApiModel):
@@ -115,7 +116,7 @@ class ChainStepView(ApiModel):
 
 class FlowView(ApiModel):
     commodity: CommodityKind
-    flow: str
+    flow: GoodsFlow
     quantity: int
 
 
@@ -159,7 +160,7 @@ class RunView(ApiModel):
 
 
 class MechanicParamView(ApiModel):
-    mechanic: str
+    mechanic: ResourceMechanic
     magnitude: int | None
     epochs: int | None
 

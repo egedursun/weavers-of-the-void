@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/tooltip'
 import { EntityLink, Medallion, PagedList, Portrait } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import { MOTIONS, type Named } from '@/features/divine/labels'
 import { type SonPublic, useSons } from '@/features/pantheon/api'
 import { mediaUrl } from '@/features/pantheon/media'
 import { type CouncilRecord as Council, type CouncilVote } from './api'
@@ -66,6 +67,16 @@ function VoteBadge({ vote }: { vote: CouncilVote }) {
     <Badge size='sm' variant={VOTE_BADGE[vote]}>
       <Icon />
       {VOTE_LABEL[vote]}
+    </Badge>
+  )
+}
+
+function DecisionBadge({ decision }: { decision: Named }) {
+  const Icon = decision.icon
+  return (
+    <Badge variant='outline' className='self-start'>
+      <Icon />
+      {decision.label}
     </Badge>
   )
 }
@@ -132,6 +143,8 @@ export function CouncilRecord({
   const voteOf = (sonId: number) =>
     minutes.ballots.find((ballot) => ballot.son_id === sonId)?.vote
   const byFate = minutes.convened_by === 'fate'
+  const decision =
+    minutes.decision === 'none' ? null : MOTIONS[minutes.decision]
   return (
     <Collapsible
       defaultOpen={defaultOpen}
@@ -309,7 +322,7 @@ export function CouncilRecord({
             <Text weight='semibold'>
               {council.passed ? 'Motion accepted' : 'Motion rejected'}
             </Text>
-            {minutes.decision && <Text>{minutes.decision}</Text>}
+            {decision && <DecisionBadge decision={decision} />}
             {minutes.notes.length > 0 && (
               <ul className='flex min-w-0 list-disc flex-col gap-1 pl-5'>
                 {minutes.notes.map((note, index) => (

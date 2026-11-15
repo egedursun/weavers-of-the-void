@@ -3,6 +3,7 @@ from aerona.api.schemas.mind import LabelView
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.finance import CreditState, SpeculationStatus, TradePolicyKind
+from aerona.domain.enums.society import SocialClass
 
 
 class FinanceCreditView(ApiModel):
@@ -48,8 +49,7 @@ class FinanceHoardView(ApiModel):
 
 
 class FinanceLivingView(ApiModel):
-    key: str
-    label: str
+    key: SocialClass
     value: int
 
 

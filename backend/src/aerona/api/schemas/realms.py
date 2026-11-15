@@ -1,5 +1,7 @@
 from aerona.api.schemas.common import ApiModel
+from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import (
     ClaimBasis,
     ClauseKind,
@@ -56,7 +58,7 @@ class RealmLoanView(ApiModel):
     interest_pct: int
     repaid: int
     due_epoch: int
-    status: str
+    status: LoanStatus
 
 
 class VassalView(ApiModel):
@@ -82,7 +84,7 @@ class SentenceView(ApiModel):
     mortal_id: int
     mortal: str
     settlement_id: int | None
-    crime: str
+    crime: CrimeKind
     penalty: str
     epoch: int
 

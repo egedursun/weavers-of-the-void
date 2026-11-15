@@ -8,6 +8,7 @@ from urllib.parse import quote
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 from markupsafe import Markup, escape
 
+from aerona.catalog.tongues import PART_OF_SPEECH_LABELS
 from aerona.constants.books import (
     ARTICLE_WIDTH,
     CODEX_IMAGE_WIDTH,
@@ -23,6 +24,9 @@ from aerona.constants.books import (
     PRINT_PORTRAIT_PIXELS,
     PRINT_PORTRAIT_WIDTH,
 )
+from aerona.domain.enums.chronicle import PartOfSpeech
+from aerona.domain.enums.divine import CouncilMotion
+from aerona.engine.divine.rulings import MOTION_LABELS
 from aerona.rules.registry import Rules
 from aerona.services.books.mapsvg import MapPicture
 from aerona.services.books.model import BookModel, EntityArticle, SonArticle
@@ -197,6 +201,14 @@ def plain_text(text: str) -> str:
     return re.sub(r"\s+([,.;:])", r"\1", cleaned).strip()
 
 
+def motion_label(motion: CouncilMotion) -> str:
+    return MOTION_LABELS[motion]
+
+
+def speech_part(part: PartOfSpeech | None) -> str:
+    return PART_OF_SPEECH_LABELS[part] if part is not None else ""
+
+
 def key_words(text: str) -> str:
     return re.sub(r"\b[a-z0-9]+(?:_[a-z0-9]+)+\b", lambda match: match.group(0).replace("_", " "), text)
 
@@ -216,6 +228,8 @@ def _html_environment() -> Environment:
     environment.filters["paragraphs"] = paragraphs
     environment.filters["plain"] = plain_text
     environment.filters["keys"] = key_words
+    environment.filters["motion"] = motion_label
+    environment.filters["speech_part"] = speech_part
     return environment
 
 
@@ -226,6 +240,8 @@ def _markdown_environment() -> Environment:
     environment.filters["heading"] = heading
     environment.filters["plain"] = plain_text
     environment.filters["keys"] = key_words
+    environment.filters["motion"] = motion_label
+    environment.filters["speech_part"] = speech_part
     environment.globals["guide_markdown"] = guide_markdown
     return environment
 

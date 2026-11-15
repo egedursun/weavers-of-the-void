@@ -43,6 +43,7 @@ import {
   MindPicker,
   NodePicker,
 } from '../mind/parts'
+import { DISTRICT_SPEC } from '../society/labels'
 
 const SPAN = 100
 const WORKING = 'Working on it.'
@@ -221,8 +222,8 @@ function DwellingCard({
             tone={look.tone}
             title={`${dwelling.kind_label} of ${plural(dwelling.rooms, 'room', 'rooms')}`}
             meta={
-              dwelling.district_label
-                ? `In the ${dwelling.district_label.toLowerCase()} district`
+              dwelling.district_kind
+                ? `In the ${DISTRICT_SPEC[dwelling.district_kind].label.toLowerCase()} district`
                 : dwelling.settlement
                   ? `In ${dwelling.settlement.name}`
                   : 'Out in the open land'

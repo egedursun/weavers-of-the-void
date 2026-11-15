@@ -1,5 +1,5 @@
 from aerona.api.schemas.common import ApiModel
-from aerona.domain.enums.bond import LinkGroup
+from aerona.domain.enums.bond import BondCategory, LinkGroup
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intervention import Disaster, Miracle
@@ -29,7 +29,7 @@ class EntityTypeInfo(Labelled):
 
 
 class BondKindInfo(Labelled):
-    category: str
+    category: BondCategory
     fate_suggestable: bool
     weavable: bool
     link_groups: list[LinkGroup]

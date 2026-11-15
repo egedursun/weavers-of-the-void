@@ -23,14 +23,30 @@ import {
   Telescope,
   Users,
   Wand2,
+  CircleX,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
+import { type InspirationState } from './api'
 
 export const ASPIRATION_ICON = Star
 export const WANT_ICON = Target
 export const FEAR_ICON = Ghost
 export const FOCUS_ICON = Award
 export const INSPIRATION_ICON = Flame
+
+export const DREAM_STATES: Record<components['schemas']['DreamState'], Named> =
+  {
+    pursuing: { label: 'Pursuing', icon: Compass, tone: 'info' },
+    fulfilled: { label: 'Fulfilled', icon: Award, tone: 'success' },
+    failed: { label: 'Failed', icon: CircleX, tone: 'danger' },
+  }
+
+export const INSPIRATION_STATES: Record<InspirationState, Named> = {
+  burning: { label: 'Burning', icon: Flame, tone: 'warning' },
+  fulfilled: { label: 'Fulfilled', icon: Award, tone: 'success' },
+  failed: { label: 'Failed', icon: CircleX, tone: 'danger' },
+}
 
 export const GOAL_ICONS: Record<string, Named> = {
   rule_a_realm: { label: 'Rule a realm', icon: Crown, tone: 'gold' },

@@ -4,7 +4,7 @@ import { DISTRICT_SPEC } from '@/features/entity/society/labels'
 import { type CityPick } from './CityScene3D'
 import { type CityScene } from './api'
 import { hexRing, hexToWorld } from './hex'
-import { ZONES } from './labels'
+import { STATES, ZONES } from './labels'
 
 const CORNERS = Array.from({ length: 6 }, (_, index) => {
   const angle = (Math.PI / 3) * index + Math.PI / 6
@@ -145,7 +145,7 @@ export function CityPlan2D({
             strokeWidth={0.06}
             onClick={() => onPick({ kind: 'building', id: building.node.id })}
           >
-            <title>{`${building.node.name}: ${building.state}`}</title>
+            <title>{`${building.node.name}: ${STATES[building.state]}`}</title>
           </circle>
         )
       })}

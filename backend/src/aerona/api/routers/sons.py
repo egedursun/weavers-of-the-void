@@ -165,7 +165,7 @@ async def read_son(
                     epoch=row.epoch,
                     sender=refs.get(row.sender_node_id),
                     recipient=refs.get(row.recipient_node_id),
-                    intent=row.intent.value,
+                    intent=row.intent,
                     text=row.text,
                     tone=row.tone,
                     answered=row.answered,

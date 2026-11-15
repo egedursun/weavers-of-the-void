@@ -13,6 +13,7 @@ from aerona.domain.enums.mortal import (
     MortalSex,
     StressBreak,
 )
+from aerona.domain.enums.society import SocialClass
 
 
 class AbilityView(ApiModel):
@@ -70,7 +71,7 @@ class MortalProfileView(ApiModel):
     last_break_epoch: int | None
     cause_of_death: DeathCause | None
     death_place: NodeRef | None
-    social_class: str | None
+    social_class: SocialClass | None
     held: list[str]
     marriages: list[MarriageView]
     kin: list[KinLink]

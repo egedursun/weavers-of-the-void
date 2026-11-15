@@ -38,6 +38,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.engine.gods.economy import ADDICTION_HOLD
 from aerona.engine.phases.doom import doom_forecast
 from aerona.engine.phases.world_balance import son_shares, world_pulse
+from aerona.engine.primitives.ledger import DoomItem
 from aerona.services.codex import traveller_guide
 from aerona.services.images.records import covers_of
 
@@ -126,7 +127,7 @@ async def addiction_immunities(services: ServicesDep, community_id: Annotated[in
 
 class DoomPart(ApiModel):
     key: str
-    label: str
+    label: DoomItem
     value: float
 
 
@@ -153,7 +154,7 @@ async def read_doom(services: ServicesDep) -> DoomForecastView:
         raw=forecast.raw,
         step=forecast.step,
         epochs_left=remaining / forecast.step if forecast.step > 0 else None,
-        parts=[DoomPart(key=item.name.lower(), label=item.value, value=value) for item, value in forecast.items],
+        parts=[DoomPart(key=item.name.lower(), label=item, value=value) for item, value in forecast.items],
     )
 
 
@@ -200,7 +201,7 @@ async def discovery_summary(services: ServicesDep) -> DiscoverySummary:
                 DiscoveryWorld(
                     world_id=world.id,
                     name=world.name,
-                    discovery=world.discovery.value,
+                    discovery=world.discovery,
                     regions=await count_types(session, world.id, (EntityType.REGION,)),
                     places=await count_types(session, world.id, (EntityType.PLACE,)),
                     communities=await count_types(session, world.id, COMMUNITY_TYPES),

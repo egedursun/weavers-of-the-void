@@ -105,11 +105,7 @@ export function ForeignGodProfile({ detail }: { detail: ForeignGodDetail }) {
                       {power.name}
                     </Text>
                   </div>
-                  <Label>
-                    {FOREIGN_EFFECT_LABEL[
-                      power.effect as keyof typeof FOREIGN_EFFECT_LABEL
-                    ] ?? humanize(power.effect)}
-                  </Label>
+                  <Label>{FOREIGN_EFFECT_LABEL[power.effect]}</Label>
                   {power.description && (
                     <Muted variant='caption'>{power.description}</Muted>
                   )}

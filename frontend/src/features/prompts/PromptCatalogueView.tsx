@@ -90,6 +90,7 @@ function PromptList({
           <Button
             variant={entry.prompt_id === selected ? 'secondary' : 'ghost'}
             size='sm'
+            className='font-mono'
             aria-pressed={entry.prompt_id === selected}
             onClick={() => onSelect(entry.prompt_id)}
           >

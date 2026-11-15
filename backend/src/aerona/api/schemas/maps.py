@@ -5,7 +5,9 @@ from pydantic import Field
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.model import WorldMap
+from aerona.domain.enums.culture import ArtMedium
 from aerona.domain.enums.disease import OutbreakStatus
+from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.military import Stance
@@ -147,6 +149,7 @@ class MapLore(ApiModel):
     x: float
     y: float
     detail: str | None = None
+    medium: ArtMedium | None = None
 
 
 class MapLair(ApiModel):
@@ -155,7 +158,7 @@ class MapLair(ApiModel):
     x: float
     y: float
     terror: int
-    temper: str
+    temper: BeastTemper
     reach: int
 
 

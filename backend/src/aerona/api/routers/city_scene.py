@@ -331,20 +331,20 @@ async def structure_types(services: ServicesDep, world_id: NodeId) -> StructureT
                 )
         types = []
         for kind in StructureKind:
-            spec = STRUCTURES.get(kind)
+            spec = STRUCTURES[kind]
             types.append(
                 StructureTypeView(
                     kind=kind,
-                    label=spec.label if spec is not None else kind.value.replace("_", " ").capitalize(),
+                    label=spec.label,
                     zone=ZONE_OF_STRUCTURE[kind],
-                    group=spec.group if spec is not None else None,
+                    group=spec.group,
                     civic=CIVIC_SERVICE_OF.get(kind),
                     service=SERVICE_OF.get(kind),
                     amenity=kind in AMENITIES,
                     nuisance=kind in NUISANCES,
-                    staff=spec.staff if spec is not None else None,
-                    tier=spec.min_tier if spec is not None else None,
-                    upkeep=spec.upkeep if spec is not None else None,
+                    staff=spec.staff,
+                    tier=spec.min_tier,
+                    upkeep=spec.upkeep,
                     instances=grouped.get(kind, []),
                 )
             )

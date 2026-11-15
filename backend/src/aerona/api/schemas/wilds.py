@@ -1,7 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.affliction import PackageKind
-from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.body import BodyPlan, InjuryKind, InjuryState
 from aerona.domain.enums.ecology import (
     Aversion,
     AwakeningTrigger,
@@ -192,9 +192,9 @@ class WoundView(ApiModel):
 
 class BeastWound(ApiModel):
     part: str
-    kind: str
+    kind: InjuryKind
     severity: int
-    state: str
+    state: InjuryState
     function_loss: int
 
 
@@ -219,7 +219,7 @@ class BeastCard(ApiModel):
     renown: int
     wounds: list[WoundView]
     injuries: list[BeastWound]
-    body_plan: str | None
+    body_plan: BodyPlan | None
     hp: int
     treasures: list[NodeRef]
     tributes: list[BeastTributeView]

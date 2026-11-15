@@ -1245,6 +1245,22 @@
       "tanri": "creator",
       "kader": "fate"
     },
+    "council_motion": {
+      "yok": "none",
+      "barisa_cagri": "call_for_peace"
+    },
+    "saying_kind": {
+      "atasözü": "proverb",
+      "atasozu": "proverb",
+      "ninni": "lullaby",
+      "dua": "prayer",
+      "beddua": "malediction",
+      "türkü": "folk_song",
+      "turku": "folk_song",
+      "yemin": "oath",
+      "tekerleme": "tongue_twister",
+      "ilahi": "hymn"
+    },
     "social_class": {
       "ciftci": "farmer",
       "zanaatkar": "artisan",

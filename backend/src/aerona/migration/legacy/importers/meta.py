@@ -114,15 +114,14 @@ async def import_map_notes(context: MigrationContext) -> None:
 def _region_control(context: MigrationContext, payload: Any) -> RegionControl | None:
     vocabulary = context.vocabulary
     ruler = context.entity(as_int(vocabulary.field("map_snapshot", payload, "ruler_id")))
-    if ruler is None:
+    facts = context.facts(ruler)
+    if ruler is None or facts is None:
         return None
-    raw_type = vocabulary.field("map_snapshot", payload, "ruler_type")
-    ruler_type = vocabulary.decode("entity_type", raw_type) or str(raw_type or "")
     share = as_float(vocabulary.field("map_snapshot", payload, "share")) or 0.0
     return RegionControl(
         ruler_id=ruler,
         ruler_name=as_text(vocabulary.field("map_snapshot", payload, "ruler_name")) or "",
-        ruler_type=ruler_type,
+        ruler_type=facts.entity_type,
         share=max(0.0, share),
         contested=bool(vocabulary.field("map_snapshot", payload, "contested")),
     )

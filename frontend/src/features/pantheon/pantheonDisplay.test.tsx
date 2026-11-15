@@ -411,9 +411,8 @@ describe('council record', () => {
       .element(screen.getByRole('progressbar', { name: 'Yes votes' }))
       .toBeVisible()
     await expect.element(screen.getByText('Motion accepted')).toBeVisible()
-    await expect
-      .element(screen.getByText('The sons will claim the godless.'))
-      .toBeVisible()
+    await expect.element(screen.getByText('Declare a holy world')).toBeVisible()
+    expect(document.body.textContent).not.toContain('holy_world')
     await expect
       .element(screen.getByText('Kharun left the hall before the vote ended.'))
       .toBeVisible()

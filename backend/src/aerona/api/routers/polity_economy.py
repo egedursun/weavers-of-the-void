@@ -46,7 +46,7 @@ async def resource_pacts(services: ServicesDep, resource_id: Id) -> list[PactVie
                 PactView(
                     treaty_id=treaty.id,
                     name=treaty.name,
-                    status=profile.status.value,
+                    status=profile.status,
                     owner_id=clause.obligor_node_id,
                     owner_name=owners.get(clause.obligor_node_id, "") if clause.obligor_node_id is not None else "",
                     demand=str(params.get("demand") or ""),

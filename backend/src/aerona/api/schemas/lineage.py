@@ -1,7 +1,11 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.mind import LabelView
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.genetics import DwellingKind, GiftStance, HouseholdDecision, HouseholdRole, Locus, LocusGroup
+from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 
 
@@ -30,8 +34,7 @@ class GeneView(ApiModel):
 
 
 class GiftView(ApiModel):
-    school: str
-    label: str
+    school: MagicSchool
     aptitude: int
     gifted: bool
 
@@ -78,7 +81,7 @@ class ResemblanceView(ApiModel):
 
 class LineageView(ApiModel):
     node_id: int
-    node_kind: str
+    node_kind: EntityType | NodeKind
     can_hold_genome: bool
     can_hold_pool: bool
     can_hold_likeness: bool
@@ -112,7 +115,7 @@ class DwellingView(ApiModel):
     expected_quality: int
     rooms: int
     district_id: int | None
-    district_label: str | None
+    district_kind: DistrictKind | None
     settlement: NodeRef | None
     furnishings: list[FurnishingView]
     built_epoch: int
@@ -162,7 +165,7 @@ class AggregateView(ApiModel):
 
 class HomeView(ApiModel):
     node_id: int
-    node_kind: str
+    node_kind: EntityType | NodeKind
     can_hold_household: bool
     can_hold_aggregates: bool
     reason: str | None

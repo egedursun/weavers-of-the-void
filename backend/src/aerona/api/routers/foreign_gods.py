@@ -84,7 +84,7 @@ async def read_foreign_god(
         )
         return ForeignGodDetail(
             god=await foreign_god_record(session, god),
-            powers=[ForeignGodPower(slot=row.slot, name=row.name, effect=row.effect.value, description=row.description) for row in powers],
+            powers=[ForeignGodPower(slot=row.slot, name=row.name, effect=row.effect, description=row.description) for row in powers],
             kill_cost=foreign_kill_cost_for(rules, god.power, immortal),
             deathless=immortal,
             deathless_caption=DEATHLESS_CAPTION.format(multiplier=rules.god_power.kill_immortal_foreign_mult) if immortal else None,

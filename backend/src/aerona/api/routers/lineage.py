@@ -114,8 +114,7 @@ async def genome_view(session: AsyncSession, rules: Rules, row: GenomeRow) -> Ge
         ],
         gifts=[
             GiftView(
-                school=school.value,
-                label=school.value.replace("elemental_", "").replace("_", " ").capitalize(),
+                school=school,
                 aptitude=value,
                 gifted=value >= rules.gift.gifted_at,
             )
@@ -183,7 +182,7 @@ async def lineage_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Line
             )
         return LineageView(
             node_id=node_id,
-            node_kind=kind.value if kind is not None else node.kind.value,
+            node_kind=kind if kind is not None else node.kind,
             can_hold_genome=can_genome,
             can_hold_pool=can_pool,
             can_hold_likeness=can_likeness,
@@ -211,7 +210,7 @@ async def dwelling_view(session: AsyncSession, rules: Rules, row: DwellingRow, s
         expected_quality=expectation(social_class),
         rooms=row.rooms,
         district_id=row.district_id,
-        district_label=district.kind.value.replace("_", " ").capitalize() if district is not None else None,
+        district_kind=district.kind if district is not None else None,
         settlement=await node_ref(session, row.settlement_node_id),
         furnishings=[FurnishingView(item=refs[item.item_node_id], placed_epoch=item.placed_epoch) for item in items if item.item_node_id in refs],
         built_epoch=row.built_epoch,
@@ -330,7 +329,7 @@ async def home_view(services: ServicesDep, node_id: int = Path(ge=1)) -> HomeVie
         )
         return HomeView(
             node_id=node_id,
-            node_kind=kind.value if kind is not None else node.kind.value,
+            node_kind=kind if kind is not None else node.kind,
             can_hold_household=can_household,
             can_hold_aggregates=can_aggregates,
             reason=reason,

@@ -182,7 +182,7 @@
 {% for world_name, narrative in chapter.world_chapters %}<h5>On {{ world_name }}</h5>{{ narrative.narrative | paragraphs }}{% endfor %}
 {% if chapter.stats %}<ul class="stats"><li>Population<b>{{ chapter.stats.population }}</b></li><li>Followers<b>{{ chapter.stats.followers }}</b></li><li>Records<b>{{ chapter.stats.entities }}</b></li><li>Languages<b>{{ chapter.stats.languages }}</b></li><li>Words<b>{{ chapter.stats.words }}</b></li><li>Knowledge<b>{{ chapter.stats.knowledge }}</b></li><li>Wars<b>{{ chapter.stats.wars }}</b></li><li>Trade<b>{{ chapter.stats.trade_routes }}</b></li><li>Alliances<b>{{ chapter.stats.alliances }}</b></li><li>Dead<b>{{ chapter.stats.dead }}</b></li></ul>{% endif %}
 {% for people, view in chapter.perspectives %}<div class="quote">{{ view.text }}<cite>As {{ people }}'s historian tells it{% if view.historian %} · {{ view.historian }}{% endif %}</cite></div>{% endfor %}
-{% for council in chapter.councils %}<div class="council"><span class="label overline">Council</span><h5>{{ council.topic }}</h5>{% for speech in council.minutes.speeches %}<p class="speech"><b>{{ speech.name }}.</b> {{ speech.words }}</p>{% endfor %}<p><i>{{ council.minutes.motion }}</i> — <span class="verdict {{ 'passed' if council.passed else 'rejected' }}">{{ "passed" if council.passed else "rejected" }}</span>. {{ council.minutes.decision }}</p></div>{% endfor %}
+{% for council in chapter.councils %}<div class="council"><span class="label overline">Council</span><h5>{{ council.topic }}</h5>{% for speech in council.minutes.speeches %}<p class="speech"><b>{{ speech.name }}.</b> {{ speech.words }}</p>{% endfor %}<p><i>{{ council.minutes.motion }}</i> — <span class="verdict {{ 'passed' if council.passed else 'rejected' }}">{{ "passed" if council.passed else "rejected" }}</span>.{% if council.minutes.decision != "none" %} {{ council.minutes.decision | motion }}.{% endif %}</p></div>{% endfor %}
 {% if chapter.lines %}<p class="sublabel">Chronicle</p>{{ chronicle_lines(chapter.lines, book, false) }}{% endif %}
 {% if chapter.born %}<p class="meta small">Born in this epoch: {% for id, name in chapter.born %}{{ link("entity", id, name, false) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
 </article>
@@ -237,7 +237,7 @@
 {% for language in book.languages %}
 {{ entity_article(language.article, false, links) }}
 <p class="meta small">{{ language.words | length }} words · {% if language.speakers %}spoken by {{ language.speakers | join(", ") }}{% else %}a dead language{% endif %}</p>
-{% if language.words %}<table><thead><tr><th>Word</th><th>Kind</th><th>Meaning</th><th>Origin</th><th>Example</th></tr></thead><tbody>{% for word in language.words %}<tr><td class="word">{{ word.word }}</td><td class="meta">{{ word.part_of_speech.value if word.part_of_speech else "" }}</td><td>{{ word.meaning }}</td><td class="small">{{ word.etymology or "" }}</td><td class="small"><i>{{ word.example or "" }}</i></td></tr>{% endfor %}</tbody></table>{% endif %}
+{% if language.words %}<table><thead><tr><th>Word</th><th>Kind</th><th>Meaning</th><th>Origin</th><th>Example</th></tr></thead><tbody>{% for word in language.words %}<tr><td class="word">{{ word.word }}</td><td class="meta">{{ word.part_of_speech | speech_part }}</td><td>{{ word.meaning }}</td><td class="small">{{ word.etymology or "" }}</td><td class="small"><i>{{ word.example or "" }}</i></td></tr>{% endfor %}</tbody></table>{% endif %}
 {% endfor %}
 </section>
 {% endif %}

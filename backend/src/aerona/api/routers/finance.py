@@ -107,9 +107,7 @@ async def indicator_views(session: AsyncSession, node_id: int) -> list[FinanceIn
             market_access=row.market_access,
             black_market=row.black_market,
             living=[
-                FinanceLivingView(key=key, label=SocialClass(key).value.replace("_", " ").capitalize(), value=value)
-                for key, value in (row.living or {}).items()
-                if key in SocialClass.__members__.values()
+                FinanceLivingView(key=SocialClass(key), value=value) for key, value in (row.living or {}).items() if key in SocialClass.__members__.values()
             ],
             held=list(row.locked or []),
         )

@@ -6,10 +6,14 @@ from aerona.main import create_app
 
 GENERATED = Path(__file__).resolve().parents[3] / "frontend" / "src" / "api" / "generated" / "schema.ts"
 KEY = re.compile(r"""['"]?([A-Za-z_][\w.:-]*)['"]?\??:""")
-QUOTED = re.compile(r"""['"]([^'"\n]*)['"]""")
+QUOTED = re.compile(r"'([^'\n]*)'|\"([^\"\n]*)\"")
 
 
 SCHEMA_ENTRY = re.compile(r"^    ([A-Za-z_]\w*):(.*)$")
+
+
+def quoted_values(text: str) -> set[str]:
+    return {single or double for single, double in QUOTED.findall(text)}
 
 
 def enum_unions(text: str) -> dict[str, set[str]]:
@@ -20,26 +24,29 @@ def enum_unions(text: str) -> dict[str, set[str]]:
         if entry is not None:
             current = entry.group(1)
             rest = entry.group(2).strip()
-            if rest.startswith("'") or rest == "":
-                unions[current] = set(QUOTED.findall(rest))
+            if rest.startswith(("'", '"')) or rest == "":
+                unions[current] = quoted_values(rest)
             else:
                 current = None
-        elif current is not None and line.strip().startswith("| '"):
-            unions[current] |= set(QUOTED.findall(line))
+        elif current is not None and line.strip().startswith(("| '", '| "')):
+            unions[current] |= quoted_values(line)
         elif current is not None and line.strip():
             current = None
     return {name: values for name, values in unions.items() if values}
 
 
 def test_each_enum_is_checked_against_its_own_union() -> None:
-    text = "  schemas: {\n    Boon:\n      | 'item'\n      | 'rite'\n    Trial: 'skill' | 'faith'\n    Other: {\n      title: string\n    }\n"
-    assert enum_unions(text) == {"Boon": {"item", "rite"}, "Trial": {"skill", "faith"}}
+    text = (
+        "  schemas: {\n    Boon:\n      | 'item'\n      | \"maker's mark\"\n      | 'rite'\n"
+        "    Trial: 'skill' | 'faith'\n    Other: {\n      title: string\n    }\n"
+    )
+    assert enum_unions(text) == {"Boon": {"item", "maker's mark", "rite"}, "Trial": {"skill", "faith"}}
 
 
 def test_the_frontend_types_are_generated_from_the_api_as_it_stands() -> None:
     components: dict[str, Any] = create_app().openapi()["components"]["schemas"]
     text = GENERATED.read_text()
-    keys, quoted = set(KEY.findall(text)), set(QUOTED.findall(text))
+    keys, quoted = set(KEY.findall(text)), quoted_values(text)
     missing = [name for name in components if name not in keys]
     unions = enum_unions(text)
     missing += [

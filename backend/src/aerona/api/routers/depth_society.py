@@ -233,7 +233,7 @@ async def biology_view(session: AsyncSession, rules: Rules, community: EntityRow
             strength_pct=round(neutral * PERCENT),
             disease_pct=round(immunity_factor(rules, biology, culture, 0) * PERCENT),
             fleet_pct=round(fleet * PERCENT),
-            mount=mount_fit(biology).value,
+            mount=mount_fit(biology),
             hunger_pct=round(hunger * PERCENT),
             work=[WorkFactor(job=job, pct=round(value * PERCENT)) for job, value in sorted(job_factors(rules, biology).items())],
         ),

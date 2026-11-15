@@ -1,7 +1,11 @@
+from enum import StrEnum
 from typing import Any
 
-from aerona.domain.enums.agent import CouncilVote
+from aerona.catalog.lore import SAYING_KIND_LABELS
+from aerona.domain.enums.agent import CouncilCaller, CouncilVote
 from aerona.domain.enums.creator import CreatorPassion
+from aerona.domain.enums.culture import SayingKind
+from aerona.domain.enums.divine import CouncilMotion
 from aerona.domain.enums.meta import ScoreComponent
 from aerona.domain.enums.son import ExistenceMode
 from aerona.domain.enums.travel import JourneyEventKind
@@ -15,13 +19,22 @@ def _texts(value: Any) -> tuple[str, ...]:
     return tuple(text for item in as_list(value) if (text := as_text(item)) is not None)
 
 
+def _known[E: StrEnum](vocabulary: Vocabulary, enum_name: str, text: str, kind: type[E]) -> E | None:
+    return vocabulary.decode_as(enum_name, text, kind) or (kind(text) if text in kind._value2member_map_ else None)
+
+
+def _saying_form(vocabulary: Vocabulary, text: str) -> str:
+    kind = _known(vocabulary, "saying_kind", text, SayingKind)
+    return SAYING_KIND_LABELS[kind] if kind is not None else text
+
+
 def _sayings(vocabulary: Vocabulary, shape: str, value: Any) -> tuple[Saying, ...]:
     sayings: list[Saying] = []
     for item in as_list(value):
         if isinstance(item, dict):
             text = as_text(vocabulary.field(shape, item, "saying_text"))
             if text is not None:
-                sayings.append(Saying(form=as_text(vocabulary.field(shape, item, "saying_form")) or "", text=text))
+                sayings.append(Saying(form=_saying_form(vocabulary, as_text(vocabulary.field(shape, item, "saying_form")) or ""), text=text))
         elif (text := as_text(item)) is not None:
             sayings.append(Saying(form="", text=text))
     return tuple(sayings)
@@ -180,7 +193,10 @@ def council_minutes(vocabulary: Vocabulary, payload: Any, topic: str, son_ids: d
                 reason=as_text(vocabulary.field("council", item, "reason")) or "",
             )
         )
-    caller = vocabulary.decode("council_caller", vocabulary.field("council", data, "convened_by")) or "creator"
+    caller = vocabulary.decode_as("council_caller", vocabulary.field("council", data, "convened_by"), CouncilCaller) or CouncilCaller.CREATOR
+    said = as_text(vocabulary.field("council", data, "decision")) or ""
+    decision = _known(vocabulary, "council_motion", said, CouncilMotion)
+    notes = _texts(vocabulary.field("council", data, "notes"))
     return CouncilMinutes(
         topic=as_text(vocabulary.field("council", data, "topic")) or topic,
         convened_by=caller,
@@ -188,8 +204,8 @@ def council_minutes(vocabulary: Vocabulary, payload: Any, topic: str, son_ids: d
         motion=as_text(vocabulary.field("council", data, "motion")) or "",
         ballots=tuple(ballots),
         passed=bool(vocabulary.field("council", data, "passed")),
-        decision=as_text(vocabulary.field("council", data, "decision")) or "",
-        notes=_texts(vocabulary.field("council", data, "notes")),
+        decision=decision or CouncilMotion.NONE,
+        notes=notes if decision is not None or not said else (said, *notes),
         summary=as_text(vocabulary.field("council", data, "summary")) or "",
     )
 

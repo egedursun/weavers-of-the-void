@@ -661,7 +661,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 - **{{ speech.name }}.** {{ speech.words }}
 {% endfor %}
 
-*{{ council.minutes.motion }}* — **{{ "passed" if council.passed else "rejected" }}.** {{ council.minutes.decision }}
+*{{ council.minutes.motion }}* — **{{ "passed" if council.passed else "rejected" }}.**{% if council.minutes.decision != "none" %} {{ council.minutes.decision | motion }}.{% endif %}
 
 {% endfor %}
 {% if chapter.lines %}
@@ -781,7 +781,7 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 | Word | Kind | Meaning | Origin | Example |
 |---|---|---|---|---|
 {% for word in language.words %}
-| **{{ word.word | cell }}** | {{ (word.part_of_speech.value if word.part_of_speech else "") | cell }} | {{ word.meaning | cell }} | {{ word.etymology | cell }} | {{ word.example | cell }} |
+| **{{ word.word | cell }}** | {{ word.part_of_speech | speech_part | cell }} | {{ word.meaning | cell }} | {{ word.etymology | cell }} | {{ word.example | cell }} |
 {% endfor %}
 
 {% endif %}

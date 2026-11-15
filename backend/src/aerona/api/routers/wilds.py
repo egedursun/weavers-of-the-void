@@ -340,10 +340,9 @@ async def beast_card(entity_id: Id, services: ServicesDep) -> BeastCard:
             renown=stat(beast, "renown") or 0,
             wounds=[WoundView(by=ref(refs, item.subject_node_id), epoch=item.epoch) for item in wounds],
             injuries=[
-                BeastWound(part=item.part, kind=item.kind.value, severity=item.severity, state=item.state.value, function_loss=item.function_loss)
-                for item in injuries
+                BeastWound(part=item.part, kind=item.kind, severity=item.severity, state=item.state, function_loss=item.function_loss) for item in injuries
             ],
-            body_plan=body.plan.value if body is not None else None,
+            body_plan=body.plan if body is not None else None,
             hp=stat(beast, "hp") or 0,
             treasures=listed(refs, treasures),
             tributes=[

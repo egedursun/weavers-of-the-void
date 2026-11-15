@@ -255,7 +255,7 @@ async def community_economy(services: ServicesDep, community_id: int = Path(ge=1
         flow_epoch = await session.scalar(select(func.max(GoodsFlowRow.epoch)).where(GoodsFlowRow.community_entity_id == community_id))
         flows = (
             [
-                FlowView(commodity=row.commodity, flow=row.flow.value, quantity=row.quantity)
+                FlowView(commodity=row.commodity, flow=row.flow, quantity=row.quantity)
                 for row in await session.scalars(select(GoodsFlowRow).where(GoodsFlowRow.community_entity_id == community_id, GoodsFlowRow.epoch == flow_epoch))
             ]
             if flow_epoch is not None
@@ -385,7 +385,7 @@ async def resource_profile(services: ServicesDep, resource_id: int = Path(ge=1))
             runs=[
                 RunView(epoch=run.epoch, community_id=run.community_entity_id, quantity=run.quantity, quality=run.quality, workers=run.workers) for run in runs
             ],
-            params=[MechanicParamView(mechanic=row.mechanic.value, magnitude=row.magnitude, epochs=row.epochs) for row in params],
+            params=[MechanicParamView(mechanic=row.mechanic, magnitude=row.magnitude, epochs=row.epochs) for row in params],
             owners=owners,
         )
 

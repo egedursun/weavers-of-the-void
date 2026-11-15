@@ -19,6 +19,7 @@ import { GAINS, PRICES } from '@/features/divine/labels'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { useLabels } from '@/features/pantheon/labels'
 
 type SonRecord = components['schemas']['SonRecord']
 type Mode = components['schemas']['OuterBargainMode']
@@ -38,6 +39,7 @@ type OuterBargainFormProps = {
 }
 
 export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
+  const labels = useLabels()
   const living = sons.filter((son) => son.status !== 'dead')
   const [chosen, setChosen] = useState<number | null>(fixedSonId ?? null)
   const [outer, setOuter] = useState<number | null>(null)
@@ -167,7 +169,7 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
               <SelectContent>
                 {[son.domain_primary, son.domain_secondary].map((domain) => (
                   <SelectItem key={domain} value={domain}>
-                    {domain}
+                    {labels.domain(domain)}
                   </SelectItem>
                 ))}
               </SelectContent>

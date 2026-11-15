@@ -270,21 +270,21 @@ async def apply_council(scope: Scope, members: list[SonRow], output: CouncilOutp
     passed = yes > no
     notes: list[str] = []
     await apply_alliances(scope, names, output, notes)
-    held_row = CouncilRow(epoch=scope.epoch, topic=topic, minutes=CouncilMinutes(topic=topic, convened_by=caller.value), passed=passed)
+    held_row = CouncilRow(epoch=scope.epoch, topic=topic, minutes=CouncilMinutes(topic=topic, convened_by=caller), passed=passed)
     scope.session.add(held_row)
     await scope.session.flush()
     if passed:
         await apply_decision(scope, members, output, notes, held_row.id)
     minutes = CouncilMinutes(
         topic=topic,
-        convened_by=caller.value,
+        convened_by=caller,
         speeches=tuple(
             CouncilSpeech(son_id=item.son_id, name=names[item.son_id], words=sanitize(item.words)) for item in output.speeches if item.son_id in names
         ),
         motion=sanitize(output.motion),
         ballots=tuple(CouncilBallot(son_id=vote.son_id, name=names[vote.son_id], vote=vote.vote, reason=sanitize(vote.reason)) for vote in votes.values()),
         passed=passed,
-        decision=output.decision.value,
+        decision=output.decision,
         notes=tuple(notes),
         summary=sanitize(output.minutes),
     )

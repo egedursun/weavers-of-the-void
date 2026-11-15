@@ -368,9 +368,7 @@ async def lore_marks(session: AsyncSession, world_id: int, positions: dict[int, 
     )
     for entity_id, name, place, medium in works:
         if place in positions:
-            found.append(
-                MapLore(kind="artwork", entity_id=entity_id, name=name, place_id=place, x=positions[place][0], y=positions[place][1], detail=medium.value)
-            )
+            found.append(MapLore(kind="artwork", entity_id=entity_id, name=name, place_id=place, x=positions[place][0], y=positions[place][1], medium=medium))
     casters = await session.execute(
         select(CastingRow.rite_entity_id, EntityRow.location_id, CastingRow.effect)
         .join(EntityRow, EntityRow.id == CastingRow.caster_entity_id)
@@ -730,9 +728,7 @@ async def lair_marks(session: AsyncSession, world_id: int, positions: dict[int, 
     for beast, row in rows:
         point = positions.get(row.lair_place_id or 0) or positions.get(beast.location_id or 0) or positions.get(beast.id)
         if point is not None:
-            found.append(
-                MapLair(beast_id=beast.id, name=beast.name, x=point[0], y=point[1], terror=stat(beast, "terror") or 0, temper=row.temper.value, reach=reach)
-            )
+            found.append(MapLair(beast_id=beast.id, name=beast.name, x=point[0], y=point[1], terror=stat(beast, "terror") or 0, temper=row.temper, reach=reach))
     return found
 
 

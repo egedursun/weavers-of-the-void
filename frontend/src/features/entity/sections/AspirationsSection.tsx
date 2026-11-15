@@ -29,11 +29,13 @@ import {
 } from '../mind/api'
 import {
   ASPIRATION_ICON,
+  DREAM_STATES,
   FEAR_ICON,
   FOCUS_ICON,
   FOCUS_ICONS,
   GOAL_ICONS,
   INSPIRATION_ICON,
+  INSPIRATION_STATES,
   WANT_ICON,
 } from '../mind/aspirationLabels'
 import { named } from '../mind/labels'
@@ -99,7 +101,7 @@ function DreamCard({
             <Badge
               variant={dream.state === 'fulfilled' ? 'default' : 'outline'}
             >
-              {dream.state}
+              {DREAM_STATES[dream.state].label}
             </Badge>
           </div>
           {dream.target && (
@@ -531,7 +533,7 @@ function InspirationCard({
                 <Text weight='semibold' truncate>
                   {item.label}
                 </Text>
-                <Muted variant='caption'>{`${item.state}${item.material ? ` · ${item.material}` : ''} · until epoch ${item.deadline_epoch}`}</Muted>
+                <Muted variant='caption'>{`${INSPIRATION_STATES[item.state].label}${item.material ? ` · ${item.material}` : ''} · until epoch ${item.deadline_epoch}`}</Muted>
               </div>
               {item.result && (
                 <EntityLink kind='entity' id={String(item.result.id)}>

@@ -401,3 +401,14 @@ class CustomCatalog(StrEnum):
 
 PERFORMED_MEDIA = frozenset({ArtMedium.SONG, ArtMedium.EPIC_POEM, ArtMedium.PLAY, ArtMedium.DANCE, ArtMedium.MUSIC})
 VERBAL_MEDIA = frozenset({ArtMedium.SONG, ArtMedium.EPIC_POEM, ArtMedium.PLAY, ArtMedium.BOOK})
+
+
+class SayingKind(StrEnum):
+    PROVERB = "proverb"
+    LULLABY = "lullaby"
+    PRAYER = "prayer"
+    MALEDICTION = "malediction"
+    FOLK_SONG = "folk_song"
+    OATH = "oath"
+    TONGUE_TWISTER = "tongue_twister"
+    HYMN = "hymn"

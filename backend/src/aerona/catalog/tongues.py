@@ -2,7 +2,7 @@ from types import MappingProxyType
 
 from aerona.core.total import total
 from aerona.domain.enums.body import BodyFunction
-from aerona.domain.enums.chronicle import WritingSystem
+from aerona.domain.enums.chronicle import PartOfSpeech, WritingSystem
 from aerona.domain.enums.tongues import LanguageModality, MorphologyType, NumberSystem, SoundChangeKind, WordOrder
 
 W = WritingSystem
@@ -75,4 +75,19 @@ COMPOUNDING = frozenset({MorphologyType.AGGLUTINATIVE, MorphologyType.POLYSYNTHE
 NUMBER_COUNTS = total(
     NumberSystem,
     {NumberSystem.NONE: 0, NumberSystem.SINGULAR_PLURAL: 2, NumberSystem.DUAL: 3, NumberSystem.TRIAL: 4, NumberSystem.PAUCAL: 4},
+)
+
+PART_OF_SPEECH_LABELS = total(
+    PartOfSpeech,
+    {
+        PartOfSpeech.NOUN: "Noun",
+        PartOfSpeech.VERB: "Verb",
+        PartOfSpeech.ADJECTIVE: "Adjective",
+        PartOfSpeech.AFFIX: "Affix",
+        PartOfSpeech.TITLE: "Title",
+        PartOfSpeech.PLACE_NAME: "Place name",
+        PartOfSpeech.PROPER_NAME: "Proper name",
+        PartOfSpeech.NUMBER: "Number",
+        PartOfSpeech.INTERJECTION: "Interjection",
+    },
 )

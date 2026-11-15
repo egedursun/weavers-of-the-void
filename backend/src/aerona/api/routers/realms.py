@@ -194,7 +194,7 @@ async def realm(services: ServicesDep, polity_id: int = Path(ge=1)) -> RealmView
                     interest_pct=row.interest_pct,
                     repaid=row.repaid,
                     due_epoch=row.due_epoch,
-                    status=row.status.value,
+                    status=row.status,
                 )
                 for row in loans
             ],
@@ -209,7 +209,7 @@ async def realm(services: ServicesDep, polity_id: int = Path(ge=1)) -> RealmView
                     mortal_id=row.mortal_entity_id,
                     mortal=names.get(row.mortal_entity_id, ""),
                     settlement_id=row.settlement_entity_id,
-                    crime=row.crime.value,
+                    crime=row.crime,
                     penalty=row.penalty,
                     epoch=row.epoch,
                 )

@@ -186,7 +186,7 @@ function PropertyGrid({
         <PropertyField
           key={property.key}
           property={property}
-          aria={`${prefix} ${property.key}`}
+          aria={`${prefix} ${property.label}`}
           value={values[property.key]}
           onChange={(next) => onChange(property.key, next)}
         />

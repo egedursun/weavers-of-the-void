@@ -15,6 +15,7 @@ import {
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { SCHOOLS } from '@/features/entity/lore/model'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -351,7 +352,7 @@ function GiftsCard({ genome }: { genome: Genome }) {
             <div key={gift.school} className='flex min-w-0 flex-col gap-1'>
               <div className='flex min-w-0 items-center justify-between gap-2'>
                 <Text variant='caption' weight='semibold'>
-                  {gift.label}
+                  {SCHOOLS[gift.school].label}
                 </Text>
                 <Badge variant={gift.gifted ? 'default' : 'outline'}>
                   {gift.gifted
@@ -363,7 +364,7 @@ function GiftsCard({ genome }: { genome: Genome }) {
                 value={gift.aptitude}
                 size='sm'
                 tone={gift.gifted ? 'success' : 'default'}
-                aria-label={`${gift.label} aptitude ${gift.aptitude}`}
+                aria-label={`${SCHOOLS[gift.school].label} aptitude ${gift.aptitude}`}
               />
             </div>
           ))}

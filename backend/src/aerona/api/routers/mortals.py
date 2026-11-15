@@ -131,7 +131,7 @@ async def mortal_profile(services: ServicesDep, mortal_id: int = Path(ge=1)) -> 
             last_break_epoch=profile.last_break_epoch,
             cause_of_death=profile.cause_of_death,
             death_place=await node_ref(session, profile.death_place_id),
-            social_class=mortal.social_class.value if mortal.social_class is not None else None,
+            social_class=mortal.social_class,
             held=sorted(set(profile.locked or [])),
             marriages=await marriage_views(session, mortal_id),
             kin=await kin_links(session, mortal_id),

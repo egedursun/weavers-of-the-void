@@ -134,7 +134,7 @@ function ValueFields({
         <NumberField
           key={item.key}
           label={`${item.label} (0–${item.max})`}
-          aria={`${prefix} ${item.key}`}
+          aria={`${prefix} ${item.label}`}
           value={values[item.key]}
           max={item.max}
           onChange={(next) => onChange(item.key, next)}

@@ -11,6 +11,7 @@ from aerona.api.schemas.records import (
     SonRecord,
     WorldRecord,
 )
+from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.creator import CreatorMoodAxis, CreatorMoodLabel, CreatorPassion
 from aerona.domain.enums.dominion import PrayerTone
 from aerona.domain.enums.son import ReputationLabel, SonDeathCause
@@ -129,7 +130,7 @@ class MessageView(ApiModel):
     epoch: int
     sender: NodeRef | None
     recipient: NodeRef | None
-    intent: str
+    intent: MessageIntent
     text: str
     tone: PrayerTone | None
     answered: bool

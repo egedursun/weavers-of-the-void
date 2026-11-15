@@ -40,7 +40,7 @@ async def society_insight(session: AsyncSession, rules: Rules, entity: EntityRow
         satisfaction={key.value: value for key, value in society.satisfaction.items()},
         stocks={key.value: value for key, value in society.stocks.items()},
         prices={key.value: value for key, value in society.prices.items()},
-        unhappiest=view.unhappiest.value if view.unhappiest is not None else None,
+        unhappiest=view.unhappiest,
         bankruptcy_risk=view.bankruptcy_risk,
         uprising_risk=view.uprising_risk,
     )
@@ -89,7 +89,7 @@ def knowledge_insight(rules: Rules, entity: EntityRow) -> KnowledgeInsight | Non
         return None
     level = knowledge_level(rules, entity)
     return KnowledgeInsight(
-        branch=entity.knowledge_branch.value if entity.knowledge_branch is not None else None,
+        branch=entity.knowledge_branch,
         level=level,
         level_cap=rules.knowledge.level_cap,
         branch_multiplier=level_multiplier(rules.knowledge, level),

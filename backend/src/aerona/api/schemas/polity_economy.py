@@ -1,6 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.polity import TreatyStatus
 
 
 class MemberOutputView(ApiModel):
@@ -47,7 +48,7 @@ class PolityProductionView(ApiModel):
 class PactView(ApiModel):
     treaty_id: int
     name: str
-    status: str
+    status: TreatyStatus
     owner_id: int | None
     owner_name: str
     demand: str

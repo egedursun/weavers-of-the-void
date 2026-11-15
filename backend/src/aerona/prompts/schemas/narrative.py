@@ -1,7 +1,6 @@
-from enum import StrEnum
-
 from pydantic import Field
 
+from aerona.domain.enums.culture import SayingKind
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect
 from aerona.prompts.schemas.base import OutputModel
 from aerona.prompts.schemas.shared import ExistenceOutput
@@ -28,17 +27,6 @@ class FolkBeliefOutput(OutputModel):
 class VoicesOutput(OutputModel):
     views: list[HistorianViewOutput]
     beliefs: list[FolkBeliefOutput]
-
-
-class SayingKind(StrEnum):
-    PROVERB = "proverb"
-    LULLABY = "lullaby"
-    PRAYER = "prayer"
-    MALEDICTION = "malediction"
-    FOLK_SONG = "folk_song"
-    OATH = "oath"
-    TONGUE_TWISTER = "tongue_twister"
-    HYMN = "hymn"
 
 
 class SayingOutput(OutputModel):

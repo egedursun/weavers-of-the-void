@@ -1,11 +1,15 @@
 from pydantic import Field
 
-from aerona.domain.enums.agent import CouncilVote
+from aerona.domain.enums.agent import CouncilCaller, CouncilVote
 from aerona.domain.enums.chronicle import ChronicleAuditKind
 from aerona.domain.enums.creator import CreatorMoodAxis
+from aerona.domain.enums.divine import CouncilMotion
 from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import SoilKind, TemperatureBand, TerrainKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.meta import ScoreComponent
+from aerona.domain.enums.region import DangerSource
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.travel import JourneyEventKind
 from aerona.domain.models.base import ValueObject
@@ -48,12 +52,12 @@ class CouncilBallot(ValueObject):
 
 class CouncilMinutes(ValueObject):
     topic: str
-    convened_by: str
+    convened_by: CouncilCaller
     speeches: tuple[CouncilSpeech, ...] = ()
     motion: str = ""
     ballots: tuple[CouncilBallot, ...] = ()
     passed: bool = False
-    decision: str = ""
+    decision: CouncilMotion = CouncilMotion.NONE
     notes: tuple[str, ...] = ()
     summary: str = ""
 
@@ -75,21 +79,21 @@ class ScoreBreakdown(ValueObject):
 class RegionControl(ValueObject):
     ruler_id: int
     ruler_name: str
-    ruler_type: str
+    ruler_type: EntityType
     share: float = Field(ge=0)
     contested: bool = False
 
 
 class GroundSnapshot(ValueObject):
-    terrain: str
-    soil: str
-    climate: str
+    terrain: TerrainKind
+    soil: SoilKind
+    climate: TemperatureBand
     land_use: str
     ley_lines: int = 0
     nexus: bool = False
     rainfall: int = 0
     danger: int = 0
-    danger_source: str | None = None
+    danger_source: DangerSource | None = None
     sacredness: int = 0
     scar: str | None = None
     scar_depth: int = 0

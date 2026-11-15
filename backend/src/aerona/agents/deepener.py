@@ -15,6 +15,7 @@ from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.text import epoch_mentions, replace_name, sanitize, strip_meta_sentences
 from aerona.catalog.domains import DOMAIN_LABELS
+from aerona.catalog.lore import SAYING_KIND_LABELS
 from aerona.catalog.rarities import RARITY_LABELS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.agents import (
@@ -35,6 +36,7 @@ from aerona.db.tables.lore import ChronicleRow, FolkBeliefRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import SayingKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.profiles import EntityDepth, Epic, EpicChapter, GodDepth, GodName, Personality, Saying
 from aerona.engine.cosmos.foreign_gods import clean_existence, clean_powers, unwrap_text
@@ -66,7 +68,6 @@ TEMPLATE_TAG_LINE = re.compile(TEMPLATE_TAG_LINE_PATTERN)
 TEMPLATE_NOTE_LINE = re.compile(TEMPLATE_NOTE_LINE_PATTERN, re.IGNORECASE)
 TEMPLATE_WORD = re.compile(TEMPLATE_WORD_PATTERN, re.IGNORECASE)
 TRACE_KINDS = (ChronicleKind.CREATOR_HAND, ChronicleKind.DIVINE_SIGN, ChronicleKind.MIRACLE)
-SAYING_FORM = "proverb"
 
 
 def template_leftover(line: str) -> bool:
@@ -117,8 +118,8 @@ def normalize_depth(output: DeepenOutput, epoch: int, old: str | None, new: str 
     history, embedded = split_embedded(clean(output.history, old, new))
     rumours = clean_list(output.rumours, old, new) or clean_list(embedded.get("rumours", []) + embedded.get("rumors", []))
     details = clean_list(output.details, old, new) or clean_list(embedded.get("details", []))
-    sayings = tuple(Saying(form=item.kind.value, text=text) for item in output.sayings if (text := clean(item.text, old, new))) or tuple(
-        Saying(form=SAYING_FORM, text=text) for text in clean_list(embedded.get("sayings", []))
+    sayings = tuple(Saying(form=SAYING_KIND_LABELS[item.kind], text=text) for item in output.sayings if (text := clean(item.text, old, new))) or tuple(
+        Saying(form=SAYING_KIND_LABELS[SayingKind.PROVERB], text=text) for text in clean_list(embedded.get("sayings", []))
     )
     hidden = clean(output.hidden_truth, old, new) or " ".join(clean_list(embedded.get("hidden truth", [])))
     special = {key: value for key, raw in (output.special or {}).items() if (value := clean(raw, old, new))}
@@ -257,7 +258,7 @@ async def creator_epic(runtime: AgentRuntime) -> Epic:
 
 
 def sayings_of(items: Sequence[SayingOutput]) -> tuple[Saying, ...]:
-    return tuple(Saying(form=item.kind.value, text=text) for item in items if (text := clean(item.text)))
+    return tuple(Saying(form=SAYING_KIND_LABELS[item.kind], text=text) for item in items if (text := clean(item.text)))
 
 
 async def creator_deepen(runtime: AgentRuntime) -> GodDepth:

@@ -1,4 +1,5 @@
 from aerona.api.schemas.common import ApiModel
+from aerona.catalog.peoples import MountFit
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.demography import (
     Aesthetic,
@@ -64,7 +65,7 @@ class KinEffectsView(ApiModel):
     strength_pct: int
     disease_pct: int
     fleet_pct: int
-    mount: str
+    mount: MountFit
     hunger_pct: int
     work: list[WorkFactor]
 
