@@ -27,6 +27,7 @@ class Pressures:
     disease: float
     stress: float
     mortality: float
+    time: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -112,7 +113,7 @@ async def demographic_step(ctx: TickContext, community: EntityRow, biology: Peop
         births += await give_births(ctx, community, rows, year.births)
         deaths += sum(take(rows, band, amount) for band, amount in year.deaths.items())
         age_cohorts(ctx.session, community, rows, spans, ctx.epoch)
-    remaining = ctx.rules.time.years_per_epoch - sampled
+    remaining = round_half_up(ctx.rules.time.years_per_epoch * pressures.time) - sampled
     after = total(rows)
     if remaining > 0 and sampled > 0 and before > 0 and after > 0:
         yearly = (after / before) ** (1 / sampled)

@@ -1,5 +1,3 @@
-import math
-
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
@@ -101,7 +99,6 @@ async def grow_community(
         prosperity_term = (value - transition.growth_prosperity_threshold) / engine.growth_prosperity_divisor
     vigour = max(engine.growth_min_pct / PERCENT, 1 + fertility / engine.growth_fertility_divisor + prosperity_term)
     vigour *= multiplier if fertility >= transition.bounty_power_min_fertility else 1.0
-    vigour *= math.sqrt(model.physics.of(community.world_id).time)
     vigour *= model.knowledge.ratio(rules, community.id, KnowledgeBranch.AGRICULTURE, engine.growth_agriculture_pct)
     mortality = 1.0
     if laws.has(NaturalLaw.IMMORTALITY, community.world_id):
@@ -134,6 +131,7 @@ async def grow_community(
         disease=max(0.0, diseases.of(community) + disease_load(rules, fit) - rules.demography.endemic_baseline / PERCENT),
         stress=await stress_of(ctx, community),
         mortality=mortality,
+        time=model.physics.of(community.world_id).time,
     )
     floor, cap = headcount_bounds(rules, community)
     before = stat_or(community, "population", floor)
