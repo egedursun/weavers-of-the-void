@@ -23,7 +23,7 @@ def pool_of(workers: int) -> ProcessPoolExecutor:
 
 def close_pools() -> None:
     for pool in POOLS.values():
-        pool.shutdown(wait=False, cancel_futures=True)
+        pool.shutdown(wait=True, cancel_futures=True)
     POOLS.clear()
 
 

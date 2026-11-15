@@ -73,7 +73,7 @@ class Steps:
                 self.session.expire_all()
                 forget_all(self.session.sync_session)
                 drop_lookup(self.session.sync_session)
-            self.session.sync_session.info[KEEP_KEY] = []
+                self.session.sync_session.info[KEEP_KEY] = []
             async with self.session.begin():
                 yield self.session
             self.database.generation += 1

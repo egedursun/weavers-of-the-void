@@ -118,8 +118,11 @@ def held_columns(row: object) -> frozenset[str]:
 
 
 def standing_locks(row: object) -> frozenset[str]:
-    if LOCK_COLUMN not in instance_state(row).mapper.column_attrs:
+    state = instance_state(row)
+    if LOCK_COLUMN not in state.mapper.column_attrs:
         return frozenset()
+    if LOCK_COLUMN not in state.committed_state:
+        return held_columns(row)
     history = get_history(row, LOCK_COLUMN)
     if not history.has_changes():
         return held_columns(row)
@@ -156,12 +159,14 @@ def restore_owned(row: object) -> list[str]:
     changed = [column for column in shape.columns if column in state.committed_state]
     if not changed:
         return []
-    owners = owner_ids(row, shape)
+    owners: list[int] | None = None
     held = standing_locks(row)
     restored: list[str] = []
     for column in changed:
-        if column not in held and not any(write_blocked(node_id, profile_key(shape.table, column)) for node_id in owners):
-            continue
+        if column not in held:
+            owners = owner_ids(row, shape) if owners is None else owners
+            if not any(write_blocked(node_id, profile_key(shape.table, column)) for node_id in owners):
+                continue
         history = get_history(row, column)
         if history.deleted and history.has_changes():
             set_committed_value(row, column, history.deleted[0])

@@ -13,6 +13,8 @@ MEMO_KEY = "aerona.read_memo"
 FLUSHING_KEY = "aerona.read_memo.flushing"
 PENDING_KEY = "aerona.read_memo.pending"
 KEEP_KEY = "aerona.read_memo.keep"
+READ_SHAPES_KEPT = 20_000
+READ_SHAPES: dict[Hashable, frozenset[str]] = {}
 DIRTY_KEY = "aerona.read_memo.dirty"
 EVERY_TABLE: frozenset[str] = frozenset()
 STRUCTURAL: dict[str, frozenset[str]] = {"entities": frozenset({"entity_type", "status", "location_id", "world_id", "creator_son_id"})}
@@ -257,9 +259,17 @@ def read_tables(state: ORMExecuteState) -> set[str]:
     statement = state.statement
     if not isinstance(statement, ClauseElement):
         return set()
+    shape = statement._generate_cache_key()
+    known = READ_SHAPES.get(shape.key) if shape is not None else None
+    if known is not None:
+        return set(known)
     found = {element.name for element in visitors.iterate(statement) if isinstance(element, Table)}
     for mapper in state.all_mappers:
         found.update(table.name for table in mapper.tables if isinstance(table, Table))
+    if shape is not None:
+        if len(READ_SHAPES) >= READ_SHAPES_KEPT:
+            READ_SHAPES.clear()
+        READ_SHAPES[shape.key] = frozenset(found)
     return found
 
 

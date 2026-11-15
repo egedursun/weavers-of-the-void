@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.ethics import HONOUR_MODELS, STANCE_ORDER, STANCE_READINGS
 from aerona.catalog.mind import ACT_READINGS
 from aerona.constants.units import PERCENT
+from aerona.db.fast_session import rows_by_prefix
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureEthicRow, CultureHonourRow, MemoryRow, ThoughtRow
@@ -75,8 +76,7 @@ def stance_for(rules: Rules, reading: float) -> EthicalStance:
 async def ethics_of(session: AsyncSession, holder_id: int | None) -> dict[ActKind, CultureEthicRow]:
     if holder_id is None:
         return {}
-    rows = await session.scalars(select(CultureEthicRow).where(CultureEthicRow.holder_entity_id == holder_id))
-    return {row.act: row for row in rows}
+    return {row.act: row for row in await rows_by_prefix(session, CultureEthicRow, holder_id)}
 
 
 async def culture_of(session: AsyncSession, node_id: int | None) -> EntityRow | None:
@@ -117,11 +117,15 @@ async def church_of(session: AsyncSession, people: EntityRow) -> list[int]:
     return found
 
 
-async def target_reading(session: AsyncSession, rules: Rules, culture: EntityRow, act: ActKind, values: Values) -> float:
-    reading: float = value_reading(values, act)
+async def church_ethics(session: AsyncSession, culture: EntityRow) -> list[dict[ActKind, CultureEthicRow]]:
     if culture.entity_type is not EntityType.PEOPLE:
-        return reading
-    stances = [row.stance for cult in await church_of(session, culture) if (row := (await ethics_of(session, cult)).get(act)) is not None]
+        return []
+    return [await ethics_of(session, cult) for cult in await church_of(session, culture)]
+
+
+def target_reading(rules: Rules, act: ActKind, values: Values, church: list[dict[ActKind, CultureEthicRow]]) -> float:
+    reading: float = value_reading(values, act)
+    stances = [row.stance for ethics in church if (row := ethics.get(act)) is not None]
     if stances:
         cult_reading = sum(STANCE_READINGS[stance] for stance in stances) / len(stances)
         reading += (cult_reading - reading) * rules.ethics.cult_pull_pct / PERCENT
@@ -147,16 +151,15 @@ async def drift_ethics(ctx: TickContext, culture: EntityRow) -> int:
         return 0
     moved = 0
     held = await ethics_of(ctx.session, culture.id)
+    church = await church_ethics(ctx.session, culture)
     for act in ActKind:
         if act not in held:
-            await write_stance(
-                ctx.session, culture.id, act, stance_for(ctx.rules, await target_reading(ctx.session, ctx.rules, culture, act, values)), ctx.epoch
-            )
+            await write_stance(ctx.session, culture.id, act, stance_for(ctx.rules, target_reading(ctx.rules, act, values, church)), ctx.epoch)
             moved += 1
     for act, row in held.items():
         if STANCE_FIELD in (row.locked or []):
             continue
-        wanted = stance_for(ctx.rules, await target_reading(ctx.session, ctx.rules, culture, act, values))
+        wanted = stance_for(ctx.rules, target_reading(ctx.rules, act, values, church))
         here, there = STANCE_ORDER.index(row.stance), STANCE_ORDER.index(wanted)
         if here == there:
             continue

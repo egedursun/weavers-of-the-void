@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import event, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -84,7 +84,7 @@ async def test_steps_keep_one_session_and_reload_after_a_foreign_write(tmp_path:
     await database.dispose()
 
 
-async def test_each_step_starts_a_fresh_keep_list_so_old_rows_can_be_freed(tmp_path: Path) -> None:
+async def test_rows_read_in_one_step_stay_kept_for_the_next_and_are_let_go_after_a_foreign_write(tmp_path: Path) -> None:
     database = Database(f"sqlite+aiosqlite:///{tmp_path / 'keep.db'}")
     async with database.engine.begin() as connection:
         await connection.run_sync(ProbeBase.metadata.create_all)
@@ -94,7 +94,18 @@ async def test_each_step_starts_a_fresh_keep_list_so_old_rows_can_be_freed(tmp_p
         async with steps.step() as session:
             await session.get(Probe, 1)
             first: list[object] = session.sync_session.info[KEEP_KEY]
+            assert any(isinstance(row, Probe) for row in first)
+        loads: list[object] = []
+        event.listen(session.sync_session, "loaded_as_persistent", lambda _session, row: loads.append(row))
         async with steps.step() as session:
-            second: list[object] = session.sync_session.info[KEEP_KEY]
-            assert second is not first and second == []
+            assert session.sync_session.info[KEEP_KEY] is first
+            assert (await session.scalars(select(Probe))).all() and not loads
+        async with database.write() as other:
+            row = await other.get(Probe, 1)
+            assert row is not None
+            row.value = 3
+        async with steps.step() as session:
+            assert session.sync_session.info[KEEP_KEY] is not first
+            renewed = await session.get(Probe, 1)
+            assert renewed is not None and renewed.value == 3
     await database.dispose()

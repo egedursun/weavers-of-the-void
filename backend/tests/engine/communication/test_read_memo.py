@@ -1,16 +1,22 @@
 import warnings
 
-from sqlalchemy import event, select, update
+from sqlalchemy import event, exists, select, update
+from sqlalchemy.orm import ORMExecuteState
 
 from aerona.db.read_memo import DirtyStates, memo_of, pending_tables, table_names
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.economy import GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import TraitRow
 from aerona.db.tables.node import NodeRow
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.mind import TraitKind, TraitSource
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.queries import canon
 from aerona.engine.services.community_relations import relation
 from tests.engine.society.factories import Realm, context, settlement
 
@@ -133,3 +139,59 @@ async def test_the_goods_ledger_moves_stock_and_logs_flows_without_a_flush_per_c
     flows = {row.flow: row.quantity for row in await realm.session.scalars(select(GoodsFlowRow).where(GoodsFlowRow.community_entity_id == town.id))}
     assert flushes == [1]
     assert flows == {GoodsFlow.HARVEST: 120, GoodsFlow.CONSUMPTION: -35}
+
+
+async def test_a_narrow_canon_read_is_cut_from_a_wider_kept_one_and_matches_the_database(realm: Realm) -> None:
+    await settlement(realm, "Alder")
+    await settlement(realm, "Birch")
+    await realm.session.flush()
+    everything = await canon(realm.session)
+    statements: list[str] = []
+    sync = realm.session.sync_session
+
+    def listener(state: ORMExecuteState) -> None:
+        statements.append(str(state.statement))
+
+    event.listen(sync, "do_orm_execute", listener)
+    try:
+        towns = await canon(realm.session, [EntityType.SETTLEMENT], realm.world.id)
+    finally:
+        event.remove(sync, "do_orm_execute", listener)
+    assert not statements and towns and set(towns) <= set(everything)
+    fresh = list(
+        await realm.session.scalars(
+            select(EntityRow)
+            .where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.world_id == realm.world.id)
+            .order_by(EntityRow.id)
+        )
+    )
+    assert towns == fresh
+
+
+async def test_a_two_part_key_is_found_among_its_siblings_and_a_missing_one_stays_missing_until_it_is_added(realm: Realm) -> None:
+    town = await settlement(realm, "Gorse")
+    kinds = list(TraitKind)[:3]
+    for kind in kinds[:2]:
+        realm.session.add(TraitRow(node_id=town.id, trait=kind, source=TraitSource.BIRTH, epoch=1))
+    await realm.session.flush()
+    realm.session.expunge_all()
+    first = await realm.session.get(TraitRow, (town.id, kinds[0]))
+    second = await realm.session.get(TraitRow, (town.id, kinds[1]))
+    assert first is not None and first.trait is kinds[0] and second is not None and second.trait is kinds[1]
+    assert await realm.session.get(TraitRow, (town.id, kinds[2])) is None
+    realm.session.add(TraitRow(node_id=town.id, trait=kinds[2], source=TraitSource.BIRTH, epoch=1))
+    await realm.session.flush()
+    third = await realm.session.get(TraitRow, (town.id, kinds[2]))
+    assert third is not None and third.trait is kinds[2]
+
+
+async def test_a_read_that_names_a_pending_table_only_in_a_subquery_still_flushes_first(realm: Realm) -> None:
+    town = await settlement(realm, "Heath")
+    other = await settlement(realm, "Ivybridge")
+    await realm.session.flush()
+    for target in (town, other):
+        shaped = select(EntityRow.id).where(EntityRow.id == target.id, exists().where(BondRow.source_node_id == EntityRow.id, BondRow.kind == BondKind.ALLY))
+        assert await realm.session.scalar(shaped) is None
+    realm.session.add(BondRow(source_node_id=other.id, target_node_id=town.id, kind=BondKind.ALLY, state=BondState.ACTIVE, epoch=1))
+    shaped = select(EntityRow.id).where(EntityRow.id == other.id, exists().where(BondRow.source_node_id == EntityRow.id, BondRow.kind == BondKind.ALLY))
+    assert await realm.session.scalar(shaped) == other.id

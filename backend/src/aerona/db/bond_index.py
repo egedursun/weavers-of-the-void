@@ -20,11 +20,15 @@ class BondLookup:
     by_target: dict[int, list[BondRow]] = field(default_factory=lambda: defaultdict(list))
     ends: dict[int, tuple[int, int, BondKind]] = field(default_factory=dict)
     by_kind: dict[BondKind, list[BondRow]] = field(default_factory=lambda: defaultdict(list))
+    by_source_kind: dict[tuple[int, BondKind], list[BondRow]] = field(default_factory=lambda: defaultdict(list))
+    by_target_kind: dict[tuple[int, BondKind], list[BondRow]] = field(default_factory=lambda: defaultdict(list))
 
     def add(self, row: BondRow) -> None:
         self.by_source[row.source_node_id].append(row)
         self.by_target[row.target_node_id].append(row)
         self.by_kind[row.kind].append(row)
+        self.by_source_kind[(row.source_node_id, row.kind)].append(row)
+        self.by_target_kind[(row.target_node_id, row.kind)].append(row)
         self.ends[row.id] = (row.source_node_id, row.target_node_id, row.kind)
 
     def remove(self, row: BondRow) -> None:
@@ -32,12 +36,20 @@ class BondLookup:
         self.by_source[source] = [bond for bond in self.by_source.get(source, []) if bond is not row]
         self.by_target[target] = [bond for bond in self.by_target.get(target, []) if bond is not row]
         self.by_kind[kind] = [bond for bond in self.by_kind.get(kind, []) if bond is not row]
+        self.by_source_kind[(source, kind)] = [bond for bond in self.by_source_kind.get((source, kind), []) if bond is not row]
+        self.by_target_kind[(target, kind)] = [bond for bond in self.by_target_kind.get((target, kind), []) if bond is not row]
 
     def moved(self, row: BondRow) -> None:
         if self.ends.get(row.id) != (row.source_node_id, row.target_node_id, row.kind):
             self.remove(row)
             self.add(row)
-            for bonds in (self.by_source[row.source_node_id], self.by_target[row.target_node_id], self.by_kind[row.kind]):
+            for bonds in (
+                self.by_source[row.source_node_id],
+                self.by_target[row.target_node_id],
+                self.by_kind[row.kind],
+                self.by_source_kind[(row.source_node_id, row.kind)],
+                self.by_target_kind[(row.target_node_id, row.kind)],
+            ):
                 bonds.sort(key=lambda bond: bond.id)
 
     def select(
@@ -50,8 +62,12 @@ class BondLookup:
         wanted_kinds = frozenset(kinds) if kinds is not None else None
         wanted_states = frozenset(states)
         wanted_targets = frozenset(targets) if targets is not None else None
-        if sources is not None:
+        if sources is not None and wanted_kinds is not None:
+            pool = [bond for source in dict.fromkeys(sources) for kind in wanted_kinds for bond in self.by_source_kind.get((source, kind), [])]
+        elif sources is not None:
             pool = [bond for source in dict.fromkeys(sources) for bond in self.by_source.get(source, [])]
+        elif wanted_targets is not None and wanted_kinds is not None:
+            pool = [bond for target in wanted_targets for kind in wanted_kinds for bond in self.by_target_kind.get((target, kind), [])]
         elif wanted_targets is not None:
             pool = [bond for target in wanted_targets for bond in self.by_target.get(target, [])]
         elif wanted_kinds is not None:

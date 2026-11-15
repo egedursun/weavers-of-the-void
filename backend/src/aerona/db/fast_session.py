@@ -14,13 +14,13 @@ from sqlalchemy.util import EMPTY_DICT
 from aerona.db.read_memo import memo_of, table_names, track_dirty
 
 PREFIX_KEYS = 2
-COLUMN_KEYS: dict[Mapper[Any], tuple[str, ...]] = {}
+COLUMN_KEYS: dict[Mapper[Any], frozenset[str]] = {}
 
 
-def column_keys(mapper: Mapper[Any]) -> tuple[str, ...]:
+def column_keys(mapper: Mapper[Any]) -> frozenset[str]:
     found = COLUMN_KEYS.get(mapper)
     if found is None:
-        found = COLUMN_KEYS[mapper] = tuple(prop.key for prop in mapper.column_attrs if not prop.deferred)
+        found = COLUMN_KEYS[mapper] = frozenset(prop.key for prop in mapper.column_attrs if not prop.deferred)
     return found
 
 
@@ -73,7 +73,7 @@ class FastSession(AsyncSession):
         if known is not None:
             state = instance_state(known)
             if not state.expired and state.mapper.isa(mapper):
-                if all(key in state.dict for key in column_keys(mapper)):
+                if state.dict.keys() >= column_keys(mapper):
                     return known
                 return await super().get(entity, ident, populate_existing=True)
         return await self.load_unknown(entity, mapper, ident, key)
@@ -81,10 +81,9 @@ class FastSession(AsyncSession):
     async def load_unknown[O](self, entity: _EntityBindKey[O], mapper: Mapper[O], ident: _PKIdentityArgument, key: Any) -> O | None:
         tables = table_names(mapper.tables)
         if len(mapper.primary_key) == PREFIX_KEYS and isinstance(ident, tuple | list):
-            siblings = await self.prefix_rows(mapper, ident[0], tables)
+            siblings = await self.prefix_keys(mapper, ident[0], tables)
             if siblings is not None:
-                wanted = tuple(ident)
-                return next((row for row in siblings if tuple(mapper.primary_key_from_instance(row)) == wanted), None)
+                return siblings.get(tuple(ident))
         name = f"missing:{','.join(sorted(tables))}"
         missing = memo_of(self, name, tables)
         if missing is not None and key in missing:
@@ -95,6 +94,23 @@ class FastSession(AsyncSession):
             if after is not None:
                 after[key] = True
         return loaded
+
+    async def prefix_keys[O](self, mapper: Mapper[O], value: Any, tables: frozenset[str]) -> dict[tuple[Any, ...], O] | None:
+        name = f"prefix_keys:{','.join(sorted(tables))}"
+        memo = memo_of(self, name, tables)
+        if memo is not None and value in memo:
+            known: dict[tuple[Any, ...], O] = memo[value]
+            return known
+        siblings = await self.prefix_rows(mapper, value, tables)
+        if siblings is None:
+            return None
+        keyed: dict[tuple[Any, ...], O] = {}
+        for row in siblings:
+            keyed.setdefault(tuple(mapper.primary_key_from_instance(row)), row)
+        after = memo_of(self, name, tables)
+        if after is not None:
+            after[value] = keyed
+        return keyed
 
     async def prefix_rows[O](self, mapper: Mapper[O], value: Any, tables: frozenset[str]) -> list[O] | None:
         name = f"prefix:{','.join(sorted(tables))}"

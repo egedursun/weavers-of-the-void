@@ -8,15 +8,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
 from aerona.db.bond_index import bond_lookup
-from aerona.db.read_memo import memo_of, memoized, table_names
+from aerona.db.read_memo import memoized, pending_tables, table_names
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, PersonalityValueRow, TraitRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.renown import ReputationRow, RulerCurrencyRow
 from aerona.db.tables.society import CommunityRelationRow
+from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.belonging import IdentityLayer
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -25,6 +28,7 @@ from aerona.domain.enums.mind import OpinionComponent, TraitEffect, TraitKind, V
 from aerona.engine.belonging.effects import identities_of, shared_weight
 from aerona.engine.mind.book import ValueIndex, trait_effect, traits_of, values_for
 from aerona.engine.mind.memories import memories_about, strength_of
+from aerona.engine.mind.opinion_cache import OPINION_CACHE, OpinionCache, opinion_cache
 from aerona.engine.mind.space import NEUTRAL_DISTANCE, memory_weight, value_alignment
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import BondIndex, active_bonds, spoken_language
@@ -46,6 +50,7 @@ OPINION_TABLES = table_names(
         EntityRow,
     )
 )
+CACHE_TABLES = OPINION_TABLES | table_names((NodeRow, SonRow, ForeignGodRow))
 
 PAIR_BONDS = (BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE)
 KIN_BONDS = KIN_BOND_KINDS
@@ -203,21 +208,42 @@ async def personal_bond(session: AsyncSession, first: int, second: int) -> Relat
     return (await bonds_held(session, first)).get(second)
 
 
-async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFacts:
-    bonds = BondRepository(session)
-    first_god, second_god = await _patron(session, first), await _patron(session, second)
-    first_language, second_language = await _language(session, first), await _language(session, second)
+@dataclass(frozen=True)
+class NodeFacts:
+    values: Mapping[ValueAxis, int]
+    traits: frozenset[TraitKind]
+    patron: int | None
+    language: int | None
+    enemies: frozenset[int]
+    identities: dict[IdentityLayer, HeldIdentityRow]
+    dread: int
+    tyranny: int
+
+
+async def node_facts(session: AsyncSession, node_id: int) -> NodeFacts:
+    purse = await session.get(RulerCurrencyRow, node_id)
+    return NodeFacts(
+        values=await values_for(session, node_id),
+        traits=frozenset(await traits_of(session, node_id)),
+        patron=await _patron(session, node_id),
+        language=await _language(session, node_id),
+        enemies=await _enemies(session, node_id),
+        identities=await identities_of(session, node_id),
+        dread=purse.dread if purse is not None else 0,
+        tyranny=purse.tyranny if purse is not None else 0,
+    )
+
+
+async def facts_between(session: AsyncSession, first: int, second: int, mine: NodeFacts, theirs: NodeFacts) -> PairFacts:
     relation = await session.get(CommunityRelationRow, (min(first, second), max(first, second)))
-    kinds = {bond.kind for bond in await bonds.active_between(first, second, PAIR_KINDS)}
-    common = (await _enemies(session, first) & await _enemies(session, second)) - {first, second}
+    kinds = {bond.kind for bond in await BondRepository(session).active_between(first, second, PAIR_KINDS)}
+    common = (mine.enemies & theirs.enemies) - {first, second}
     bond = await personal_bond(session, first, second)
     glory, infamy = await standing_with(session, second, first)
-    purse = await session.get(RulerCurrencyRow, second)
-    shared = round(shared_weight(await identities_of(session, first), await identities_of(session, second)) * PERCENT)
     return PairFacts(
-        same_god=first_god is not None and first_god == second_god,
-        other_god=first_god is not None and second_god is not None and first_god != second_god,
-        same_language=first_language is not None and first_language == second_language,
+        same_god=mine.patron is not None and mine.patron == theirs.patron,
+        other_god=mine.patron is not None and theirs.patron is not None and mine.patron != theirs.patron,
+        same_language=mine.language is not None and mine.language == theirs.language,
         enemy=BondKind.ENEMY in kinds,
         ally=BondKind.ALLY in kinds,
         trade=BondKind.TRADES_WITH in kinds,
@@ -229,36 +255,52 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
         rivalry=bond.rivalry if bond is not None else 0,
         glory=glory,
         infamy=infamy,
-        dread=purse.dread if purse is not None else 0,
-        tyranny=purse.tyranny if purse is not None else 0,
-        shared_identity=shared,
+        dread=theirs.dread,
+        tyranny=theirs.tyranny,
+        shared_identity=round(shared_weight(mine.identities, theirs.identities) * PERCENT),
     )
 
 
+async def kept_facts(session: AsyncSession, cache: OpinionCache, node_id: int) -> NodeFacts:
+    found: NodeFacts | None = cache.nodes.get(node_id)
+    if found is None:
+        found = await node_facts(session, node_id)
+        if cache is session.sync_session.info.get(OPINION_CACHE):
+            cache.nodes[node_id] = found
+    return found
+
+
 async def opinion(session: AsyncSession, rules: Rules, epoch: int, holder_id: int, subject_id: int) -> Opinion:
-    key = (id(rules), epoch, holder_id, subject_id)
-    memo = memo_of(session, "opinion", OPINION_TABLES)
-    if memo is not None and key in memo:
-        found: Opinion = memo[key]
+    sync = session.sync_session
+    if not CACHE_TABLES.isdisjoint(pending_tables(sync)):
+        await session.flush()
+    cache = opinion_cache(sync, rules, epoch)
+    found: Opinion | None = cache.values.get((holder_id, subject_id))
+    if found is not None:
         return found
-    value = await composed(session, rules, epoch, holder_id, subject_id)
-    after = memo_of(session, "opinion", OPINION_TABLES)
-    if after is not None:
-        after[key] = value
+    mine, theirs = await kept_facts(session, cache, holder_id), await kept_facts(session, cache, subject_id)
+    value = await composed_from(session, rules, epoch, holder_id, subject_id, mine=mine, theirs=theirs)
+    if cache is sync.info.get(OPINION_CACHE):
+        cache.put(holder_id, subject_id, value)
     return value
 
 
 async def composed(session: AsyncSession, rules: Rules, epoch: int, holder_id: int, subject_id: int) -> Opinion:
+    mine, theirs = await node_facts(session, holder_id), await node_facts(session, subject_id)
+    return await composed_from(session, rules, epoch, holder_id, subject_id, mine=mine, theirs=theirs)
+
+
+async def composed_from(session: AsyncSession, rules: Rules, epoch: int, holder_id: int, subject_id: int, *, mine: NodeFacts, theirs: NodeFacts) -> Opinion:
     return compose(
         rules,
         epoch,
         holder_id=holder_id,
         subject_id=subject_id,
-        holder_values=await values_for(session, holder_id),
-        subject_values=await values_for(session, subject_id),
-        holder_traits=await traits_of(session, holder_id),
+        holder_values=mine.values,
+        subject_values=theirs.values,
+        holder_traits=mine.traits,
         memories=await memories_about(session, holder_id, subject_id),
-        facts=await pair_facts(session, holder_id, subject_id),
+        facts=await facts_between(session, holder_id, subject_id, mine, theirs),
     )
 
 

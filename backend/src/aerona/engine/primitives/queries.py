@@ -1,5 +1,6 @@
 from collections import defaultdict, deque
-from collections.abc import Iterable, Sequence
+from collections.abc import Hashable, Iterable, Sequence
+from typing import Any, cast
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,11 +21,21 @@ ACTIVE_ONLY = (BondState.ACTIVE,)
 CANON_TABLES = table_names((EntityRow,))
 
 
+def narrowed(memo: dict[Hashable, Any], wanted: list[EntityType] | None, world_id: int | None) -> list[EntityRow] | None:
+    for key, rows in memo.items():
+        types: tuple[EntityType, ...] | None
+        world: int | None
+        types, world = cast(tuple[tuple[EntityType, ...] | None, int | None], key)
+        if (types is None or (wanted is not None and set(wanted) <= set(types))) and world in (None, world_id):
+            return [row for row in rows if (wanted is None or row.entity_type in wanted) and (world_id is None or row.world_id == world_id)]
+    return None
+
+
 async def canon(session: AsyncSession, types: Iterable[EntityType] | None = None, world_id: int | None = None) -> list[EntityRow]:
     wanted = list(types) if types is not None else None
     key = (tuple(sorted(wanted)) if wanted is not None else None, world_id)
     memo = memo_of(session, "canon", CANON_TABLES)
-    found: list[EntityRow] | None = memo.get(key) if memo is not None else None
+    found: list[EntityRow] | None = None if memo is None else memo[key] if key in memo else narrowed(memo, wanted, world_id)
     if found is None:
         statement = select(EntityRow).where(EntityRow.status == EntityStatus.CANON)
         if wanted is not None:
