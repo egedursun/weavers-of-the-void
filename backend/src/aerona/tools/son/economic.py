@@ -1,17 +1,15 @@
 from typing import Annotated, Any, Literal
 
 from pydantic import Field
-from sqlalchemy import select
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.orders import EconomicOrderRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
-from aerona.engine.orders.economy import AXIS_ENUMS, axes_of, set_order
+from aerona.engine.orders.economy import AXIS_ENUMS, axes_of, locked_axes, order_of, set_order
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -41,8 +39,8 @@ async def move_economic_order(call: SonCall, args: MoveEconomicOrderInput) -> st
     allowed = [item.value for item in AXIS_ENUMS[args.axis]]
     if args.value not in allowed:
         fail(SonResult.ORDER_MOVE_REFUSED, why=f"{args.axis} may be {', '.join(allowed)}")
-    order = await call.session.scalar(select(EconomicOrderRow).where(EconomicOrderRow.polity_entity_id == realm.id, EconomicOrderRow.sector.is_(None)).limit(1))
-    if order is not None and args.axis in order.locked:
+    order = await order_of(call.session, realm.id, None)
+    if locked_axes(order, {args.axis: args.value}):
         fail(SonResult.ORDER_MOVE_REFUSED, why=f"the {args.axis} of {realm.name} is held fast")
     axes = {**(axes_of(order) if order is not None else {}), args.axis: args.value}
     await set_order(call.tick, realm.id, None, axes)

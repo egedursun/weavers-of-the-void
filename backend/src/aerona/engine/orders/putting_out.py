@@ -23,7 +23,14 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import shift_stat
 
-PUT_OUT: MappingProxyType[CommodityKind, CommodityKind] = MappingProxyType({CommodityKind.WOOL: CommodityKind.CLOTH, CommodityKind.FIBRE: CommodityKind.CLOTH})
+PUT_OUT: MappingProxyType[CommodityKind, CommodityKind] = MappingProxyType(
+    {
+        CommodityKind.WOOL: CommodityKind.CLOTH,
+        CommodityKind.FIBRE: CommodityKind.CLOTH,
+        CommodityKind.TIMBER: CommodityKind.TOOLS,
+        CommodityKind.ORE: CommodityKind.TOOLS,
+    }
+)
 VILLAGES = (SizeTier.HAMLET, SizeTier.VILLAGE)
 
 

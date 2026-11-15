@@ -13,8 +13,8 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.orders import AllocationMode, Compensation, DistributionRule, OrderLabour, OwnershipRegime, TransitionKind
+from aerona.engine.orders.economy import axes_of, changed_axes, locked_axes, open_transition, order_of, set_order, transition_target
 from aerona.engine.orders.economy import begin_transition as proclaim
-from aerona.engine.orders.economy import set_order
 from aerona.engine.sacred.places import ruler_of
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -62,6 +62,9 @@ async def ruled_realm(call: MortalCall, polity_id: int, refused: MortalResult) -
 async def set_economic_order(call: MortalCall, args: SetEconomicOrderInput) -> str:
     realm = await ruled_realm(call, args.polity_id, MortalResult.ORDER_REFUSED)
     axes = {"ownership": args.ownership.value, "allocation": args.allocation.value, "labour": args.labour.value, "distribution": args.distribution.value}
+    fast = locked_axes(await order_of(call.session, realm.id, args.sector), axes)
+    if fast:
+        fail(MortalResult.ORDER_REFUSED, why=f"the {' and '.join(fast)} of {realm.name} is held fast")
     await set_order(call.tick, realm.id, args.sector, axes)
     call.target(realm.id)
     await call.chronicle(
@@ -72,6 +75,16 @@ async def set_economic_order(call: MortalCall, args: SetEconomicOrderInput) -> s
 
 async def begin_transition(call: MortalCall, args: BeginTransitionInput) -> str:
     realm = await ruled_realm(call, args.polity_id, MortalResult.TRANSITION_REFUSED)
+    if await open_transition(call.session, realm.id, args.sector) is not None:
+        fail(MortalResult.TRANSITION_REFUSED, why=f"a change of the order of {realm.name} is already under way")
+    order = await order_of(call.session, realm.id, args.sector)
+    wanted = await transition_target(call.session, realm.id, args.kind)
+    current = axes_of(order) if order is not None else {}
+    if not changed_axes(current, wanted):
+        fail(MortalResult.TRANSITION_REFUSED, why=f"the order of {realm.name} is already what that change would make it")
+    fast = locked_axes(order, wanted)
+    if fast:
+        fail(MortalResult.TRANSITION_REFUSED, why=f"the {' and '.join(fast)} of {realm.name} is held fast")
     row = await proclaim(call.tick, realm.id, args.sector, args.kind, args.compensation)
     call.target(realm.id)
     await call.chronicle(
@@ -86,6 +99,8 @@ async def change_money(call: MortalCall, args: ChangeMoneyInput) -> str:
         fail(MortalResult.CHANGING_REFUSED, why="you lack the accounting to change money")
     if call.me.location_id is None:
         fail(MortalResult.CHANGING_REFUSED, why="you stand at no market")
+    if held(call.me.location_id):
+        fail(MortalResult.CHANGING_REFUSED, why="a stronger hand holds this market")
     rates = list(await call.session.scalars(select(ExchangeRateRow).where(ExchangeRateRow.market_entity_id == call.me.location_id)))
     taken = [row for row in rates if "changer_node_id" not in row.locked]
     if not taken:

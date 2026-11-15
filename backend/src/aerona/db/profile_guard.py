@@ -7,7 +7,7 @@ from sqlalchemy.orm.attributes import get_history, set_committed_value
 from sqlalchemy.orm.base import instance_state
 
 from aerona.db.base import Base
-from aerona.db.write_guard import WRITE_GUARD, write_blocked
+from aerona.db.write_guard import RESTORED, WRITE_GUARD, write_blocked
 
 ENTITY_TABLE = "entities"
 NODE_TABLES = frozenset({"nodes", ENTITY_TABLE, "sons", "worlds", "stars", "foreign_gods", "creator"})
@@ -117,6 +117,16 @@ def held_columns(row: object) -> frozenset[str]:
     return frozenset(item for item in value if isinstance(item, str)) if isinstance(value, list | tuple | set | frozenset) else frozenset()
 
 
+def standing_locks(row: object) -> frozenset[str]:
+    if LOCK_COLUMN not in instance_state(row).mapper.column_attrs:
+        return frozenset()
+    history = get_history(row, LOCK_COLUMN)
+    if not history.has_changes():
+        return held_columns(row)
+    before = history.deleted[0] if history.deleted else None
+    return frozenset(item for item in before if isinstance(item, str)) if isinstance(before, list | tuple | set | frozenset) else frozenset()
+
+
 def profile_held(row: object, column: str) -> bool:
     shape = _shape(object_mapper(row))
     if shape is None:
@@ -147,7 +157,7 @@ def restore_owned(row: object) -> list[str]:
     if not changed:
         return []
     owners = owner_ids(row, shape)
-    held = held_columns(row)
+    held = standing_locks(row)
     restored: list[str] = []
     for column in changed:
         history = get_history(row, column)
@@ -170,7 +180,7 @@ def restore_held(row: object) -> list[str]:
     node_id = getattr(row, shape.node_column)
     if node_id is None:
         return []
-    held = held_columns(row)
+    held = standing_locks(row)
     restored: list[str] = []
     for column in changed:
         history = get_history(row, column)
@@ -186,6 +196,9 @@ def restore_held(row: object) -> list[str]:
 def hold_profile_columns(session: Session, flush_context: UOWTransaction, instances: object) -> None:
     if WRITE_GUARD.get() is None:
         return
+    restored = RESTORED.get()
     for state in list(session.identity_map._modified):
         if state not in session._deleted:
-            restore_held(state.obj())
+            columns = restore_held(state.obj())
+            if restored is not None:
+                restored.extend(profile_key(table_name(state.mapper), column) for column in columns)

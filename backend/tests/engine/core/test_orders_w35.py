@@ -2,15 +2,19 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import CommunityStockRow, CurrencyRow, LoanRow, ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.honours import NamedUnitRow
 from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.orders import (
     BillOfExchangeRow,
+    ChainHoldingRow,
     EconomicOrderKindRow,
     EconomicOrderRow,
     ExchangeRateRow,
     HoardRow,
+    OrderTransitionRow,
     PuttingOutRow,
     SavingRow,
 )
@@ -18,7 +22,7 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind, LoanStatus
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -45,6 +49,7 @@ from aerona.engine.orders.putting_out import PuttingOutTally, keep_putting_out
 from aerona.engine.orders.savings import SavingTally, keep_savings, unearth_hoards
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.society import stock
+from aerona.services.integrity.orders_links import mend_orders_links
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 
@@ -197,6 +202,10 @@ async def test_a_change_of_order_moves_holdings_in_stages_against_unpaid_losers(
     order = await session.scalar(select(EconomicOrderRow).where(EconomicOrderRow.polity_entity_id == realm.id))
     assert tally.transferred == 1 and row.resistance > 0 and row.stage is TransitionStage.DONE
     assert order is not None and order.ownership is OwnershipRegime.STATE
+    owner = await session.scalar(
+        select(BondRow.source_node_id).where(BondRow.target_node_id == mine.id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
+    )
+    assert owner == realm.id
 
 
 async def test_merchants_put_wool_out_to_villages_that_make_cloth_and_prosper(session: AsyncSession, world: CoreWorld) -> None:
@@ -223,3 +232,23 @@ async def test_a_spread_costs_buyers_across_two_coins(session: AsyncSession, wor
     ctx = await at(session, 2)
     assert await exchange_cost(ctx, first.id, second.id, 100) == 0
     assert await stock(session, ctx.rules, first.id, Commodity.FOOD) >= 0
+
+
+async def test_repairs_close_what_a_vanished_realm_merchant_or_host_left_open(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Lastwatch", world, world.regions[0])
+    realm = await realm_of(session, world, [town])
+    guild = await entity(session, "Lastwatch Guild", EntityType.FACTION, FactionStats(), world_id=world.world.id, location_id=town.id)
+    transition = OrderTransitionRow(polity_entity_id=realm.id, kind=TransitionKind.LAND_REFORM, from_axes={}, to_axes={}, started_epoch=1, locked=[])
+    work = PuttingOutRow(merchant_entity_id=guild.id, town_entity_id=town.id, raw=CommodityKind.WOOL, product=CommodityKind.CLOTH, locked=[])
+    unit = NamedUnitRow(unit_id=None, owner_entity_id=realm.id, name="The Lost Hundred", formed_epoch=1, locked=[])
+    chain = ChainHoldingRow(holder_entity_id=guild.id, town_entity_id=town.id, product=CommodityKind.CLOTH, locked=[])
+    session.add_all([transition, work, unit, chain])
+    realm.status, realm.end_epoch, guild.status, guild.end_epoch = EntityStatus.DEAD, 5, EntityStatus.DEAD, 5
+    await session.flush()
+    assert await mend_orders_links(session, 6) == 4
+    await session.refresh(transition)
+    await session.refresh(work)
+    await session.refresh(unit)
+    assert transition.stage is TransitionStage.FAILED and transition.ended_epoch == 6 and work.active is False and unit.disbanded_epoch == 6
+    assert await session.get(ChainHoldingRow, (guild.id, town.id, CommodityKind.CLOTH)) is None
+    assert await mend_orders_links(session, 7) == 0

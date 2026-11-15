@@ -11,13 +11,17 @@ from aerona.domain.enums.entity import EntityOrigin, EntityType
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.world import StarType, WorldType
 from aerona.domain.models.entity_stats import (
+    ArtworkStats,
     EntityStats,
     FactionStats,
+    HouseStats,
+    ItemStats,
     KnowledgeStats,
     LanguageStats,
     MortalStats,
     PeopleStats,
     PlaceStats,
+    PolityStats,
     RegionStats,
     SettlementStats,
     SpeciesStats,
@@ -37,6 +41,10 @@ STATS_BY_TYPE: dict[EntityType, EntityStats] = {
     EntityType.FACTION: FactionStats(),
     EntityType.KNOWLEDGE: KnowledgeStats(level=1),
     EntityType.TRADITION: TraditionStats(),
+    EntityType.POLITY: PolityStats(),
+    EntityType.HOUSE: HouseStats(),
+    EntityType.ITEM: ItemStats(),
+    EntityType.ARTWORK: ArtworkStats(),
 }
 
 

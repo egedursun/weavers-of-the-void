@@ -10,10 +10,12 @@ from aerona.engine.phases.dominion import count
 
 
 @reads(
+    "table.artwork_profiles",
     "table.book_contents",
     "table.community_stocks",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.item_profiles",
     "table.polity_members",
     "table.polity_profiles",
     "table.region_environment",

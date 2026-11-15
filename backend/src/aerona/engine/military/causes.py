@@ -11,13 +11,13 @@ from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import solidarity
 from aerona.engine.cycles.indenture import captive_price
+from aerona.engine.economy.purse import riches_of
 from aerona.engine.folkways.biases import lean_community
 from aerona.engine.intrigue.beliefs import BeliefView
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.services.war import current_war, declare_war, ongoing_wars, open_war
 
 
@@ -83,10 +83,10 @@ async def raiders(ctx: TickContext) -> int:
         if martial < table.raid_martial:
             continue
         home = atlas.top_region(raider.id)
-        wealth = stat_or(raider, "wealth", stat(raider, "prosperity") or 0)
+        wealth = riches_of(raider)
         seen = BeliefView(ctx.session, ctx.rules, raider.id)
         believed = {
-            other.id: await seen.of(other.id, "wealth", stat_or(other, "wealth", stat(other, "prosperity") or 0))
+            other.id: await seen.of(other.id, "wealth", riches_of(other))
             for other in communities
             if other.id != raider.id
             and other.world_id == raider.world_id

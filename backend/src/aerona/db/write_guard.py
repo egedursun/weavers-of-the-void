@@ -1,4 +1,5 @@
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Protocol
@@ -16,6 +17,19 @@ class HeldScope:
 
 
 HELD_SCOPE: ContextVar[HeldScope | None] = ContextVar("held_scope", default=None)
+RESTORED: ContextVar[list[str] | None] = ContextVar("restored", default=None)
+BOND_DOWNGRADES: ContextVar[list[str] | None] = ContextVar("bond_downgrades", default=None)
+
+
+@contextmanager
+def chosen_bonds() -> Iterator[None]:
+    token = BOND_DOWNGRADES.set(None)
+    try:
+        yield
+    finally:
+        BOND_DOWNGRADES.reset(token)
+
+
 NodeColumn = ColumnElement[int] | InstrumentedAttribute[int] | InstrumentedAttribute[int | None]
 
 

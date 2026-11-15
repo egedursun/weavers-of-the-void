@@ -33,6 +33,7 @@ STORES = frozenset(
 class SecurityTally:
     secured: int = 0
     improved: int = 0
+    locked: int = 0
 
 
 @dataclass(frozen=True)
@@ -45,6 +46,11 @@ class Attempt:
 def best_lock(level: int) -> LockKind | None:
     fitting = [kind for kind, spec in LOCKS.items() if spec.level <= level]
     return max(fitting, key=lambda kind: (LOCKS[kind].quality, kind.value), default=None)
+
+
+async def lock_for(ctx: TickContext, town: EntityRow) -> LockKind | None:
+    level = await branch_level(ctx.session, town.id, KnowledgeBranch.METALLURGY)
+    return best_lock(level) if level >= ctx.rules.security.metal_level else None
 
 
 async def secure_stores(ctx: TickContext, tally: SecurityTally) -> None:
@@ -60,17 +66,15 @@ async def secure_stores(ctx: TickContext, tally: SecurityTally) -> None:
     ).all():
         if profile.structure_entity_id in known or held(profile.structure_entity_id) or held(town.id):
             continue
-        level = await branch_level(ctx.session, town.id, KnowledgeBranch.METALLURGY)
-        lock = best_lock(level)
-        if level < table.metal_level or lock is None:
-            continue
+        lock = await lock_for(ctx, town)
         sealed = await branch_level(ctx.session, town.id, KnowledgeBranch.WRITING) > 0
         ctx.session.add(
             SecurityRow(
                 holder_entity_id=profile.structure_entity_id,
                 lock=lock,
-                lock_quality=min(LOCKS[lock].quality, table.seed_quality),
+                lock_quality=min(LOCKS[lock].quality, table.seed_quality) if lock is not None else 0,
                 sealed=sealed,
+                guards=table.seed_guards,
                 since_epoch=ctx.epoch,
                 locked=[],
             )
@@ -95,7 +99,14 @@ async def improve_locks(ctx: TickContext, tally: SecurityTally) -> None:
     for row in list(await ctx.session.scalars(select(SecurityRow).order_by(SecurityRow.holder_entity_id))):
         holder = await ctx.session.get(StructureProfileRow, row.holder_entity_id)
         town = await ctx.session.get(EntityRow, holder.host_entity_id) if holder is not None and holder.host_entity_id is not None else None
-        if town is None or held(row.holder_entity_id) or "lock_quality" in row.locked or row.lock is None:
+        if town is None or held(row.holder_entity_id):
+            continue
+        if row.lock is None and "lock" not in row.locked:
+            row.lock = await lock_for(ctx, town)
+            if row.lock is not None and "lock_quality" not in row.locked:
+                row.lock_quality = min(LOCKS[row.lock].quality, table.seed_quality)
+                tally.locked += 1
+        if row.lock is None or "lock_quality" in row.locked:
             continue
         if await master_smith(ctx, town):
             row.lock_quality = clamp_int(row.lock_quality + table.smith_gain, 0, LOCKS[row.lock].quality)

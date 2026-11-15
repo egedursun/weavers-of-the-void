@@ -29,7 +29,7 @@ from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.services.community_relations import change_relation
-from aerona.engine.services.war import realms_of_side, war_sides
+from aerona.engine.services.war import every_side, realms_of_side
 from aerona.language.generator import NameKind
 
 
@@ -54,7 +54,7 @@ async def members_of(ctx: TickContext, polity_id: int) -> list[int]:
 
 
 async def frontier_of(ctx: TickContext, war: WarRow, realm_id: int) -> EntityRow | None:
-    for side in await war_sides(ctx.session, war.id):
+    for side in await every_side(ctx.session, war.id):
         if realm_id in await realms_of_side(ctx.session, side.entity_id):
             continue
         foe = await ctx.session.get(EntityRow, side.entity_id)
@@ -133,7 +133,7 @@ async def grant_after_wars(ctx: TickContext, tally: VeteranTally) -> None:
         if war.event_entity_id in granted:
             continue
         realms: set[int] = set()
-        for side in await war_sides(ctx.session, war.id):
+        for side in await every_side(ctx.session, war.id):
             realms |= await realms_of_side(ctx.session, side.entity_id)
         for realm_id in sorted(realms):
             realm = await ctx.session.get(EntityRow, realm_id)

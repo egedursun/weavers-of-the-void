@@ -8,7 +8,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import has_stat, shift_stat, stat
+from aerona.engine.primitives.stats import has_stat, shift_stat, stat, stat_or
 from aerona.rules.registry import Rules
 
 TREASURY_LOCK = "treasury"
@@ -71,6 +71,10 @@ async def take_coin(session: AsyncSession, rules: Rules, payer: EntityRow, amoun
         return False
     await shift_points(session, payer, -points)
     return True
+
+
+def riches_of(holder: EntityRow) -> int:
+    return stat_or(holder, "wealth", stat(holder, "prosperity") or 0)
 
 
 def holds_wealth(holder: EntityRow) -> bool:

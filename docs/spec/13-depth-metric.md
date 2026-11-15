@@ -10,7 +10,7 @@ Targets are the latest of J.7, J.10, J.12-J.15 and J.17-J.18; where one is set t
 | region | 289 / 215 met | 487 / 160 met | 397 / 120 met |
 | place | 74 / 25 met | 163 / 20 met | 285 / 15 met |
 | resource | 59 / 35 met | 68 / 50 met | 200 / 30 met |
-| settlement | 1359 / 280 met | 1273 / 230 met | 420 / 145 met |
+| settlement | 1359 / 280 met | 1275 / 230 met | 420 / 145 met |
 | species | 233 / 150 met | 209 / 150 met | 200 / 95 met |
 | people | 1205 / 320 met | 1023 / 220 met | 420 / 140 met |
 | mortal | 778 / 355 met | 892 / 340 met | 420 / 200 met |

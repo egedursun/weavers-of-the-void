@@ -1,16 +1,20 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.honours import UnitHonourKind
 from aerona.engine.context import TickContext
+from aerona.engine.lore.history import record
+from aerona.engine.lore.items import standard_item
 from aerona.engine.military.battle import BattleResult, Side
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import Namer, seed_of
@@ -25,6 +29,8 @@ class HonourTally:
     honoured: int = 0
     reconstituted: int = 0
     disbanded: int = 0
+    borne: int = 0
+    nicknamed: int = 0
 
 
 async def owner_of(ctx: TickContext, row: ArmyUnitRow) -> int | None:
@@ -96,11 +102,47 @@ def esprit_shift(ctx: TickContext, kind: UnitHonourKind) -> int:
     }[kind]
 
 
-async def bestow(ctx: TickContext, named: NamedUnitRow, kind: UnitHonourKind, place: str, tally: HonourTally) -> None:
+GLORIOUS = frozenset({UnitHonourKind.VICTORY, UnitHonourKind.STAND, UnitHonourKind.SIEGE})
+
+
+async def bestow(ctx: TickContext, named: NamedUnitRow, kind: UnitHonourKind, place: str, tally: HonourTally, *, army_id: int | None = None) -> None:
     ctx.session.add(UnitHonourRow(named_unit_id=named.id, kind=kind, note=place, epoch=ctx.epoch, locked=[]))
+    await ctx.session.flush()
     if "esprit" not in named.locked:
         named.esprit = clamp_int(named.esprit + esprit_shift(ctx, kind), 0, PERCENT)
     tally.honoured += 1
+    await bear_on_standard(ctx, named, kind, place, army_id=army_id, tally=tally)
+    await earn_nickname(ctx, named, tally)
+
+
+async def bear_on_standard(ctx: TickContext, named: NamedUnitRow, kind: UnitHonourKind, place: str, *, army_id: int | None, tally: HonourTally) -> None:
+    if kind not in GLORIOUS:
+        return
+    owners = [node for node in (army_id, named.owner_entity_id) if node is not None]
+    item_id = await standard_item(ctx, owners)
+    if item_id is None or held(item_id):
+        return
+    profile = await ctx.session.get(ItemProfileRow, item_id)
+    if profile is not None and "renown" not in profile.locked:
+        profile.renown = clamp_int(profile.renown + ctx.rules.unit_honours.standard_renown, 0, PERCENT)
+    record(ctx, item_id, ItemDeed.BATTLE, named.owner_entity_id, f"{named.name}: {kind.value} at {place}")
+    tally.borne += 1
+
+
+async def earn_nickname(ctx: TickContext, named: NamedUnitRow, tally: HonourTally) -> None:
+    if named.nickname is not None or "nickname" in named.locked or named.raised_from_entity_id is None:
+        return
+    earned = await ctx.session.scalar(
+        select(func.count()).select_from(UnitHonourRow).where(UnitHonourRow.named_unit_id == named.id, UnitHonourRow.kind.in_(GLORIOUS))
+    )
+    if (earned or 0) < ctx.rules.unit_honours.nickname_honours:
+        return
+    word = await Namer(ctx.session, ctx.rules).from_speaker(named.raised_from_entity_id, seed_of("unit.nickname", named.id), NameKind.GENERAL)
+    if not word:
+        return
+    named.nickname = word
+    tally.nicknamed += 1
+    await note(ctx, f"{named.name} came to be called {word}.", key="honours.nicknamed", ids=[node for node in (named.owner_entity_id,) if node is not None])
 
 
 async def honour_battle(ctx: TickContext, result: BattleResult, place: str, tally: HonourTally) -> None:
@@ -121,14 +163,14 @@ async def honour_battle(ctx: TickContext, result: BattleResult, place: str, tall
                 named.battles += 1
             kind = honour_for(ctx, side, won, stack.lost * PERCENT // stack.start, row.count > 0)
             if kind is not None:
-                await bestow(ctx, named, kind, place, tally)
+                await bestow(ctx, named, kind, place, tally, army_id=row.army_entity_id)
 
 
 async def honour_siege(ctx: TickContext, army_id: int, town: EntityRow, tally: HonourTally) -> None:
     for row in list(await ctx.session.scalars(select(ArmyUnitRow).where(ArmyUnitRow.army_entity_id == army_id, ArmyUnitRow.count > 0))):
         named = await name_unit(ctx, row, tally)
         if named is not None and not held(army_id):
-            await bestow(ctx, named, UnitHonourKind.SIEGE, town.name, tally)
+            await bestow(ctx, named, UnitHonourKind.SIEGE, town.name, tally, army_id=army_id)
 
 
 async def disband_units(ctx: TickContext, army_id: int, tally: HonourTally) -> None:

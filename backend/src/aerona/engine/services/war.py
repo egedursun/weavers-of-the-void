@@ -173,12 +173,18 @@ async def standing_sides(session: AsyncSession, war_id: int) -> tuple[WarSideRow
     return tuple(await session.scalars(statement))
 
 
+@memoized(WarSideRow)
+async def every_side(session: AsyncSession, war_id: int) -> tuple[WarSideRow, ...]:
+    statement = select(WarSideRow).where(WarSideRow.war_id == war_id).order_by(WarSideRow.side, WarSideRow.joined_epoch, WarSideRow.entity_id)
+    return tuple(await session.scalars(statement))
+
+
 async def war_sides(session: AsyncSession, war_id: int) -> list[WarSideRow]:
     return list(await standing_sides(session, war_id))
 
 
 async def sides_of(session: AsyncSession, war: WarRow) -> tuple[int, int] | None:
-    rows = await war_sides(session, war.id)
+    rows = list(await every_side(session, war.id)) if war.ended_epoch is not None else await war_sides(session, war.id)
     attackers = [row.entity_id for row in rows if row.side is WarSide.ATTACKER]
     defenders = [row.entity_id for row in rows if row.side is WarSide.DEFENDER]
     if not attackers or not defenders:

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.write_guard import BOND_DOWNGRADES, chosen_bonds
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
 from tests.db.factories import make_entity, make_son
@@ -17,6 +18,7 @@ async def test_direction_is_normalized_for_typed_bonds(session: AsyncSession, wo
     assert (bond.source_node_id, bond.target_node_id, bond.kind) == (people.id, language.id, BondKind.SPEAKS)
 
 
+@pytest.mark.bond_downgrade_expected
 async def test_invalid_endpoints_are_downgraded_to_related(session: AsyncSession, world_id: int) -> None:
     region = await make_entity(session, "Oskar", EntityType.REGION, world_id=world_id)
     tradition = await make_entity(session, "Lantern Night", EntityType.TRADITION, world_id=world_id)
@@ -102,3 +104,34 @@ async def test_an_entity_has_a_single_patron(session: AsyncSession, world_id: in
     await bonds.connect(BondDraft(people.id, second.id, BondKind.WORSHIPS, 2))
     assert old.state is BondState.PAST
     assert await bonds.patron(people.id) == second.id
+
+
+@pytest.mark.bond_downgrade_expected
+async def test_a_downgrade_is_recorded_for_engine_code_and_not_for_a_chosen_bond(session: AsyncSession, world_id: int) -> None:
+    region = await make_entity(session, "Velm", EntityType.REGION, world_id=world_id)
+    tradition = await make_entity(session, "Velm Rite", EntityType.TRADITION, world_id=world_id)
+    downgrades = BOND_DOWNGRADES.get()
+    assert downgrades is not None
+    with chosen_bonds():
+        await BondRepository(session).connect(BondDraft(region.id, tradition.id, BondKind.KNOWS, 1))
+    assert downgrades == []
+    await BondRepository(session).connect(BondDraft(tradition.id, region.id, BondKind.KNOWS, 1))
+    assert downgrades == ["knows from tradition to region"]
+
+
+async def test_realms_and_houses_own_things_works_celebrate_their_subjects_and_sites_are_known(session: AsyncSession, world_id: int) -> None:
+    region = await make_entity(session, "Teld", EntityType.REGION, world_id=world_id)
+    realm = await make_entity(session, "Crown of Teld", EntityType.POLITY, world_id=world_id)
+    house = await make_entity(session, "House Teld", EntityType.HOUSE, world_id=world_id)
+    item = await make_entity(session, "Teld Standard", EntityType.ITEM, world_id=world_id)
+    mortal = await make_entity(session, "Ama", EntityType.MORTAL, location_id=region.id)
+    work = await make_entity(session, "Song of Ama", EntityType.ARTWORK, world_id=world_id)
+    site = await make_entity(session, "Teld Spring", EntityType.PLACE, location_id=region.id)
+    bonds = BondRepository(session)
+    made = [
+        await bonds.connect(BondDraft(realm.id, item.id, BondKind.OWNS, 1)),
+        await bonds.connect(BondDraft(house.id, item.id, BondKind.OWNS, 1)),
+        await bonds.connect(BondDraft(work.id, mortal.id, BondKind.CELEBRATES, 1)),
+        await bonds.connect(BondDraft(mortal.id, site.id, BondKind.KNOWS, 1)),
+    ]
+    assert [bond.kind for bond in made] == [BondKind.OWNS, BondKind.OWNS, BondKind.CELEBRATES, BondKind.KNOWS]

@@ -16,6 +16,10 @@ class UnitHonourRules:
     morale_pct: int = rule(20, 0, 100, W, "Share more morale a unit of full esprit holds in battle (%)")
     disband_renown: int = rule(5, 0, 100, W, "Renown a realm loses for disbanding a unit with honours")
     reconstitute_pct: int = rule(50, 0, 100, W, "Share of its old esprit a unit raised again from its veterans regains (%)")
+    nickname_honours: int = rule(
+        3, 1, 100, W, "Honours of victory, stand or siege after which a unit earns a nickname in the tongue of the land it was raised from"
+    )
+    standard_renown: int = rule(4, 0, 100, W, "Renown the standard its army or realm bears gains for each honour a unit earns")
 
 
 @dataclass(frozen=True)

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
@@ -442,18 +443,48 @@ async def keep_transitions(ctx: TickContext, tally: OrderTally) -> None:
         await advance(ctx, row, tally)
 
 
-async def begin_transition(ctx: TickContext, polity_id: int, sector: str | None, kind: TransitionKind, compensation: Compensation) -> OrderTransitionRow:
-    order = await ctx.session.scalar(select(EconomicOrderRow).where(EconomicOrderRow.polity_entity_id == polity_id, EconomicOrderRow.sector == sector).limit(1))
-    current = axes_of(order) if order is not None else {}
-    target = dict(TARGETS[kind])
-    if kind is TransitionKind.RESTORATION_OF_HOLDINGS:
-        last = await ctx.session.scalar(
-            select(OrderTransitionRow)
-            .where(OrderTransitionRow.polity_entity_id == polity_id, OrderTransitionRow.stage == TransitionStage.DONE)
-            .order_by(OrderTransitionRow.ended_epoch.desc(), OrderTransitionRow.id.desc())
-            .limit(1)
+async def order_of(session: AsyncSession, polity_id: int, sector: str | None) -> EconomicOrderRow | None:
+    return await session.scalar(select(EconomicOrderRow).where(EconomicOrderRow.polity_entity_id == polity_id, EconomicOrderRow.sector == sector).limit(1))
+
+
+async def open_transition(session: AsyncSession, polity_id: int, sector: str | None) -> OrderTransitionRow | None:
+    return await session.scalar(
+        select(OrderTransitionRow)
+        .where(
+            OrderTransitionRow.polity_entity_id == polity_id,
+            OrderTransitionRow.sector == sector,
+            OrderTransitionRow.stage.in_((TransitionStage.PROCLAIMED, TransitionStage.TRANSFERRING)),
         )
-        target = dict(last.from_axes) if last is not None else {}
+        .limit(1)
+    )
+
+
+async def transition_target(session: AsyncSession, polity_id: int, kind: TransitionKind) -> dict[str, str]:
+    if kind is not TransitionKind.RESTORATION_OF_HOLDINGS:
+        return dict(TARGETS[kind])
+    last = await session.scalar(
+        select(OrderTransitionRow)
+        .where(OrderTransitionRow.polity_entity_id == polity_id, OrderTransitionRow.stage == TransitionStage.DONE)
+        .order_by(OrderTransitionRow.ended_epoch.desc(), OrderTransitionRow.id.desc())
+        .limit(1)
+    )
+    return dict(last.from_axes) if last is not None else {}
+
+
+def changed_axes(current: dict[str, str], wanted: dict[str, str]) -> dict[str, str]:
+    return {axis: value for axis, value in wanted.items() if axis in AXES and current.get(axis) != value}
+
+
+def locked_axes(order: EconomicOrderRow | None, wanted: dict[str, str]) -> list[str]:
+    if order is None:
+        return []
+    return [axis for axis in changed_axes(axes_of(order), wanted) if axis in order.locked]
+
+
+async def begin_transition(ctx: TickContext, polity_id: int, sector: str | None, kind: TransitionKind, compensation: Compensation) -> OrderTransitionRow:
+    order = await order_of(ctx.session, polity_id, sector)
+    current = axes_of(order) if order is not None else {}
+    target = await transition_target(ctx.session, polity_id, kind)
     row = OrderTransitionRow(
         polity_entity_id=polity_id,
         sector=sector,
@@ -472,12 +503,12 @@ async def begin_transition(ctx: TickContext, polity_id: int, sector: str | None,
 
 
 async def set_order(ctx: TickContext, polity_id: int, sector: str | None, axes: dict[str, str]) -> EconomicOrderRow:
-    order = await ctx.session.scalar(select(EconomicOrderRow).where(EconomicOrderRow.polity_entity_id == polity_id, EconomicOrderRow.sector == sector).limit(1))
+    order = await order_of(ctx.session, polity_id, sector)
     if order is None:
         order = EconomicOrderRow(polity_entity_id=polity_id, sector=sector, since_epoch=ctx.epoch, locked=[])
         ctx.session.add(order)
     for axis, value in axes.items():
-        if axis in AXES:
+        if axis in AXES and axis not in order.locked:
             setattr(order, axis, AXIS_ENUMS[axis](value))
     order.since_epoch = ctx.epoch
     order.kind_id = await kind_matching(ctx, axes_of(order))

@@ -2,15 +2,16 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.lore import KNOWLEDGE_ITEMS
 from aerona.catalog.means import CASUAL_MEDIA, MEDIA
 from aerona.constants.units import PERCENT
-from aerona.db.tables.culture import BookContentRow
+from aerona.db.tables.culture import ArtworkProfileRow, BookContentRow, ItemProfileRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.means import WritingCustomRow, WrittenWorkRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.culture import ArtMedium, Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.means import WritingMedium
@@ -68,7 +69,17 @@ async def seed_customs(ctx: TickContext, tally: MediaTally) -> None:
     await ctx.session.flush()
 
 
+WRITTEN_ARTS = frozenset({ArtMedium.EPIC_POEM, ArtMedium.PLAY, ArtMedium.BOOK})
+
+
+async def writer_of(ctx: TickContext, work: EntityRow) -> EntityRow:
+    art = await ctx.session.get(ArtworkProfileRow, work.id)
+    author = await ctx.session.get(EntityRow, art.author_entity_id) if art is not None and art.author_entity_id is not None else None
+    return author or work
+
+
 async def custom_of(ctx: TickContext, work: EntityRow) -> WritingMedium:
+    work = await writer_of(ctx, work)
     folk = await people_of(ctx.session, work)
     if folk is None and work.location_id is not None:
         place = await ctx.session.get(EntityRow, work.location_id)
@@ -78,8 +89,14 @@ async def custom_of(ctx: TickContext, work: EntityRow) -> WritingMedium:
 
 
 async def register_works(ctx: TickContext, tally: MediaTally) -> None:
-    known = select(WrittenWorkRow.work_entity_id)
-    for work_id in sorted(set(await ctx.session.scalars(select(BookContentRow.book_entity_id).where(BookContentRow.book_entity_id.not_in(known))))):
+    known = set(await ctx.session.scalars(select(WrittenWorkRow.work_entity_id)))
+    sources = (
+        select(BookContentRow.book_entity_id),
+        select(ArtworkProfileRow.artwork_entity_id).where(ArtworkProfileRow.medium.in_(list(WRITTEN_ARTS))),
+        select(ItemProfileRow.item_entity_id).where(ItemProfileRow.item_class.in_(list(KNOWLEDGE_ITEMS))),
+    )
+    found = {work_id for source in sources for work_id in await ctx.session.scalars(source)}
+    for work_id in sorted(found - known):
         work = await ctx.session.get(EntityRow, work_id)
         if work is None or work.status is not EntityStatus.CANON or held(work.id):
             continue

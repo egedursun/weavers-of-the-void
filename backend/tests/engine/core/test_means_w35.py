@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.materials import MATERIALS
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
-from aerona.db.tables.culture import BookContentRow, HolderTechniqueRow
+from aerona.db.tables.culture import ArtworkProfileRow, BookContentRow, HolderTechniqueRow, ItemProfileRow
 from aerona.db.tables.economy import CommunityStockRow, NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -11,7 +11,7 @@ from aerona.db.tables.means import ContainerStockRow, NavigationKitRow, Security
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.culture import ArtMedium, ItemClass, Technique
 from aerona.domain.enums.economy import CommodityKind, MaterialSlot
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.integrity import HarmForce
@@ -20,7 +20,7 @@ from aerona.domain.enums.means import ContainerKind, LockKind, NavigationAid, Wa
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import ConstructionState, StructureKind
-from aerona.domain.models.entity_stats import ItemStats, KnowledgeStats, StructureStats
+from aerona.domain.models.entity_stats import ArtworkStats, ItemStats, KnowledgeStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import from_spec
 from aerona.engine.means.building import can_repair, weathering
@@ -215,3 +215,43 @@ async def test_skilled_makers_fill_a_town_with_containers_that_carry_its_roads_a
     await session.flush()
     full = 10_000
     assert await packed_capacity(ctx, (empty.id, empty.id), full) < full
+
+
+async def test_a_store_is_guarded_before_its_town_works_metal_and_locked_once_it_does(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Woodhold", world, world.regions[0])
+    store = await entity(session, "Woodhold Granary", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+    session.add(
+        StructureProfileRow(
+            structure_entity_id=store.id, kind=StructureKind.GRANARY, host_entity_id=town.id, construction_state=ConstructionState.COMPLETE, locked=[]
+        )
+    )
+    await session.flush()
+    ctx = await at(session, 2)
+    tally = SecurityTally()
+    await keep_security(ctx, tally)
+    vault = await session.get(SecurityRow, store.id)
+    assert vault is not None and vault.lock is None and vault.guards == ctx.rules.security.seed_guards and tally.secured == 1
+    await knows(session, world, town.id, KnowledgeBranch.METALLURGY, 4)
+    await keep_security(await at(session, 3), tally)
+    assert vault.lock is not None and vault.lock_quality > 0 and tally.locked == 1
+
+
+async def test_epic_poems_plays_and_book_items_are_written_on_their_maker_s_medium(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Scrollford", world, world.regions[0])
+    await homeland(session, world.people.id, town.id)
+    poet = await mortal(session, "Ilvi", world, town.id)
+    poem = await entity(session, "The Long Road Song", EntityType.ARTWORK, ArtworkStats(), world_id=world.world.id, location_id=town.id)
+    song = await entity(session, "A Short Air", EntityType.ARTWORK, ArtworkStats(), world_id=world.world.id, location_id=town.id)
+    tome = await entity(session, "A Bound Book", EntityType.ITEM, ItemStats(), world_id=world.world.id, location_id=town.id)
+    session.add_all(
+        [
+            ArtworkProfileRow(artwork_entity_id=poem.id, medium=ArtMedium.EPIC_POEM, author_entity_id=poet.id),
+            ArtworkProfileRow(artwork_entity_id=song.id, medium=ArtMedium.SONG, author_entity_id=poet.id),
+            ItemProfileRow(item_entity_id=tome.id, item_class=ItemClass.BOOK, locked=[]),
+        ]
+    )
+    await session.flush()
+    tally = MediaTally()
+    await keep_media(await at(session, 2), tally)
+    assert await session.get(WrittenWorkRow, poem.id) is not None and await session.get(WrittenWorkRow, tome.id) is not None
+    assert await session.get(WrittenWorkRow, song.id) is None and tally.works == 2

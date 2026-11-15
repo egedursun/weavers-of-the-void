@@ -13,7 +13,7 @@ from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.db.write_guard import write_blocked
+from aerona.db.write_guard import BOND_DOWNGRADES, write_blocked
 from aerona.domain.enums.bond import ROLE_BOND_KINDS, BondKind, BondRole, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
@@ -123,6 +123,9 @@ class BondRepository(Repository):
                 result = result.swapped()
                 subject_type, object_type = object_type, subject_type
             if not endpoints_valid(result.kind, subject_type, object_type):
+                downgrades = BOND_DOWNGRADES.get()
+                if downgrades is not None:
+                    downgrades.append(f"{result.kind.value} from {subject_type.value} to {object_type.value}")
                 label = bond_spec(result.kind).label
                 description = f"{label}: {result.description}" if result.description else label
                 result = replace(result, kind=BondKind.RELATED, description=description)

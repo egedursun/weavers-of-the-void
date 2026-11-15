@@ -17,6 +17,7 @@ from aerona.constants.media import MediaBackend
 from aerona.db.migrations import SCRIPT_LOCATION, upgrade_to_head_sync
 from aerona.db.session import Database
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import BOND_DOWNGRADES
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.pipeline import simulate
 from aerona.main import create_app
@@ -68,6 +69,18 @@ def no_swallowed_tool_failures(request: pytest.FixtureRequest) -> Iterator[None]
         first = handler.records[0]
         assert first.exc_info is not None
         pytest.fail(f"a tool call crashed inside the runtime: {first.exc_info[0].__name__ if first.exc_info[0] else ''}: {first.exc_info[1]}")
+
+
+@pytest.fixture(autouse=True)
+def no_engine_bond_downgrades(request: pytest.FixtureRequest) -> Iterator[None]:
+    downgrades: list[str] = []
+    token = BOND_DOWNGRADES.set(downgrades)
+    try:
+        yield
+    finally:
+        BOND_DOWNGRADES.reset(token)
+    if downgrades and request.node.get_closest_marker("bond_downgrade_expected") is None:
+        pytest.fail(f"engine code asked for a bond its ends cannot hold and it fell back to a plain relation: {', '.join(sorted(set(downgrades)))}")
 
 
 def schema_digest() -> str:

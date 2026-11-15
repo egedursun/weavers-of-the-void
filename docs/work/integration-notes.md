@@ -159,3 +159,26 @@ PLATFORM A LEFTOVERS:
 - EPOCH-016, EPOCH-041..046 tests; image autogen full bulk run test; snapshot-now action.
 - tests/engine/core/test_lifecycle.py::test_laws_freeze_or_haunt_the_old fails (age 70 vs 65).
 - UI needed: Fate controls panel (GET /api/fate/controls; fate:retry, fate:rejudge_debt, fate:rejudge_limbo, voices:retry, births:retry jobs; fate:override_verdict, voices:edit_view, voices:delete_view).
+
+W35 cross-cutting layers (spec 16 6.6), filled at the W35 audit of 2026-11-15:
+
+| Layer | What W35 gives | Left to |
+|---|---|---|
+| Record of what happened | notes with typed keys (economy.order_set, economy.transition_begun, honours.nicknamed, honours.disbanded, veterans.granted, honours.reconstituted); unit honours, item history rows for honours borne on standards, order transitions with stages | typed incident records, W49 F58.1–F58.4 |
+| What changed | actor tool calls and god levers through the ledger; tool writes to held values are refused and rolled back | engine-side change capture, W49 F58.5 |
+| When | since, hidden, issued, formed, disbanded, started and ended epochs on every table | in-world calendar moment, W49 F58.6 |
+| Where | hoard place, market, from and to markets of bills, village of putting-out, origin and sight of tourists, unit raised from | origin and destination per happening, W49 F58.6 |
+| Why | couplings with rule keys for every number; resistance and transferred on transitions | stored causes, W49 F58.7–F58.8 |
+| Who knows | hoards stay hidden until found by diggers | witnesses and rumours, W49 F58.9 |
+| How it is told | English notes and chronicle lines from fields | re-renderable tiers, W49 F58.10 |
+| What it was | none | W49 F58.11 |
+| What is kept | no table is folded or cut; transitions, honours and grants are kept after they end | |
+| Names | unit names and earned nicknames from the tongue of the land a unit was raised from | |
+| Look | none added | |
+| Model-facing wording | the four tool texts, results and context lines read in full against rule 2 | |
+| Control | 62 levers registered and proven; tools honour locks and holds through the runtime | record reverts, W49 49.5 |
+| Reach | MeansSection, OrdersSection and HonoursSection in ThingSections | |
+| Books | generic typed sections and records appendix render every W35 table with named references | |
+| Search | text search only | W49 49.5 |
+| Integrity and legacy | orders_links repair closes open transitions of vanished realms, idle putting-out, orphaned named units, dead changers, lost hoards and dead chain holders; migration c3567396253d backfills | every table, 47.13 |
+| Speed | engine tick measured at 144–171 s on the real-data copy, against a 20 s target | W49 49.8 |

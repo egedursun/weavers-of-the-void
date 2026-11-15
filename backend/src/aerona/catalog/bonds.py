@@ -34,6 +34,9 @@ DWELLING_TARGETS = frozenset({T.REGION, T.PLACE, T.SETTLEMENT, T.PEOPLE, T.FACTI
 RULED_TARGETS = frozenset({T.REGION, T.PLACE, T.SETTLEMENT, T.PEOPLE, T.FACTION, T.CULT, T.LAW, T.ARMY})
 WORSHIPPER_TYPES = AGENT_TYPES | {T.SPIRIT}
 KIN_TYPES = frozenset({T.MORTAL})
+OWNER_TYPES = AGENT_TYPES | {T.POLITY, T.HOUSE}
+CELEBRANT_TYPES = AGENT_TYPES | {T.ARTWORK}
+KNOWN_TYPES = frozenset({T.KNOWLEDGE, T.PLACE})
 
 BOND_KINDS: dict[BondKind, BondKindSpec] = {
     spec.kind: spec
@@ -46,7 +49,7 @@ BOND_KINDS: dict[BondKind, BondKindSpec] = {
         BondKindSpec(BondKind.DESCENDS_FROM, "descends from", NARRATIVE, fate_suggestable=True, weavable=True),
         BondKindSpec(BondKind.PROTECTS, "protects", MECHANICAL),
         BondKindSpec(BondKind.RULES, "rules", MECHANICAL, AGENT_TYPES, RULED_TARGETS),
-        BondKindSpec(BondKind.OWNS, "owner of", MECHANICAL, AGENT_TYPES),
+        BondKindSpec(BondKind.OWNS, "owner of", MECHANICAL, OWNER_TYPES),
         BondKindSpec(BondKind.BEAT, "beat", EVENT),
         BondKindSpec(BondKind.KILLED, "killed", EVENT),
         BondKindSpec(BondKind.CURSED, "cursed", EVENT),
@@ -60,7 +63,7 @@ BOND_KINDS: dict[BondKind, BondKindSpec] = {
         BondKindSpec(BondKind.TRADES_WITH, "trades with", MECHANICAL, AGENT_TYPES, AGENT_TYPES),
         BondKindSpec(BondKind.PROPHESIES, "prophesies", EVENT, fate_suggestable=True, weavable=True),
         BondKindSpec(BondKind.CAUSED, "caused", EVENT, fate_suggestable=True, weavable=True),
-        BondKindSpec(BondKind.CELEBRATES, "celebrates", NARRATIVE, AGENT_TYPES, fate_suggestable=True, weavable=True),
+        BondKindSpec(BondKind.CELEBRATES, "celebrates", NARRATIVE, CELEBRANT_TYPES, fate_suggestable=True, weavable=True),
         BondKindSpec(BondKind.FORBIDS, "forbids", NARRATIVE, fate_suggestable=True, weavable=True),
         BondKindSpec(BondKind.SPEAKS, "speaks", MECHANICAL, AGENT_TYPES),
         BondKindSpec(BondKind.PRODUCED, "produced", MECHANICAL),
@@ -70,7 +73,7 @@ BOND_KINDS: dict[BondKind, BondKindSpec] = {
         BondKindSpec(BondKind.SOUL_DESCENDED_TO, "soul descended to", MECHANICAL),
         BondKindSpec(BondKind.PARTY_TO, "party to", NARRATIVE, fate_suggestable=True),
         BondKindSpec(BondKind.MEMBER_OF, "member of", MECHANICAL),
-        BondKindSpec(BondKind.KNOWS, "knows", MECHANICAL, AGENT_TYPES, frozenset({T.KNOWLEDGE})),
+        BondKindSpec(BondKind.KNOWS, "knows", MECHANICAL, AGENT_TYPES, KNOWN_TYPES),
         BondKindSpec(BondKind.PAYS_TRIBUTE, "pays tribute to", MECHANICAL),
         BondKindSpec(BondKind.RELATED, "related to", NARRATIVE, weavable=True),
         BondKindSpec(BondKind.HOLDS_CAPTIVE, "holds captive", MECHANICAL),
@@ -103,9 +106,9 @@ BOND_KINDS: dict[BondKind, BondKindSpec] = {
 
 DIRECTION_RULES: dict[BondKind, DirectionRule] = {
     BondKind.SPEAKS: DirectionRule(AGENT_TYPES, frozenset({T.LANGUAGE})),
-    BondKind.OWNS: DirectionRule(AGENT_TYPES, frozenset({T.RESOURCE, T.ITEM, T.STRUCTURE, T.VESSEL})),
+    BondKind.OWNS: DirectionRule(OWNER_TYPES, frozenset({T.RESOURCE, T.ITEM, T.STRUCTURE, T.VESSEL})),
     BondKind.CELEBRATES: DirectionRule(AGENT_TYPES, frozenset({T.TRADITION})),
-    BondKind.KNOWS: DirectionRule(AGENT_TYPES, frozenset({T.KNOWLEDGE})),
+    BondKind.KNOWS: DirectionRule(AGENT_TYPES, KNOWN_TYPES),
     BondKind.RULES: DirectionRule(frozenset({T.MORTAL, T.PEOPLE, T.FACTION, T.CULT, T.SETTLEMENT}), frozenset({T.REGION, T.PLACE})),
     BondKind.TAMED: DirectionRule(frozenset({T.PEOPLE, T.SETTLEMENT, T.FACTION, T.MORTAL, T.CULT}), frozenset({T.SPECIES})),
     BondKind.LIVES_IN: DirectionRule(frozenset({T.MORTAL, T.PEOPLE, T.FACTION, T.CULT, T.SPECIES, T.ARMY}), frozenset({T.REGION, T.PLACE, T.SETTLEMENT})),

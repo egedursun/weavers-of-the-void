@@ -24,7 +24,7 @@ from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
-from aerona.engine.economy.purse import receive_coin
+from aerona.engine.economy.purse import receive_coin, riches_of
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.folkways.biases import lean_community
 from aerona.engine.happenings.emergence import record_sack
@@ -60,7 +60,7 @@ from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import shift_stat, stat, stat_or
+from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.settlement.districts import damage_districts
 from aerona.engine.structures.damage import mend_defences, strike_defences
@@ -348,7 +348,7 @@ async def sack_city(
             await change_relation(ctx, besieged.id, victor.id, depth.infamy, MemoryKind.GOODWILL, note="spared the city")
         ctx.count("cities_spared")
         return report
-    wealth = stat_or(besieged, "wealth", stat(besieged, "prosperity") or 0)
+    wealth = riches_of(besieged)
     taken = min(wealth, table.sack_loot)
     for key in ("wealth", "prosperity"):
         if stat(besieged, key) is not None:

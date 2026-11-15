@@ -63,6 +63,7 @@ MEANS_MECHANICS = (
             Coupling(S.BODY, "a trap harms the thief who springs it", E.FLOW, "security.trap_harm"),
             Coupling(S.INTRIGUE, "a thief's intrigue undoes a lock's hold", E.MODIFIER, "security.thief_pct"),
             Coupling(S.ECONOMY, "a town's first locks are of this quality", E.FLOW, "security.seed_quality"),
+            Coupling(S.ECONOMY, "a store is guarded from the epoch it is first secured", E.FLOW, "security.seed_guards"),
             Coupling(S.ECONOMY, "a smith of this skill improves locks", E.TRIGGER, "security.smith_skill"),
         ),
     ),
@@ -249,7 +250,7 @@ ORDERS_MECHANICS = (
         key="putting_out",
         spec_item="S6.4/RP6",
         title=(
-            "Putting-out and chains: merchant bodies hand wool and fibre to village households to make cloth at home, step "
+            "Putting-out and chains: merchant bodies hand raw goods to village households to make cloth or tools at home, step "
             "toward factories, and buy shares in the making of goods in towns they trade with"
         ),
         subsystem=S.ECONOMY,
@@ -316,6 +317,8 @@ HONOURS_MECHANICS = (
             Coupling(S.WAR, "esprit steadies a unit's side in battle", E.MODIFIER, "unit_honours.morale_pct"),
             Coupling(S.POLITY, "disbanding an honoured unit costs renown", E.FLOW, "unit_honours.disband_renown"),
             Coupling(S.WAR, "a unit raised again from its veterans regains part of its esprit", E.MODIFIER, "unit_honours.reconstitute_pct"),
+            Coupling(S.LANGUAGE, "a unit with enough honours earns a nickname in the tongue of its land", E.TRIGGER, "unit_honours.nickname_honours"),
+            Coupling(S.CULTURE, "each honour is borne on the standard of its army or realm and raises its renown", E.FLOW, "unit_honours.standard_renown"),
         ),
     ),
     Mechanic(

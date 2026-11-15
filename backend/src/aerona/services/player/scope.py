@@ -13,6 +13,7 @@ from aerona.db.ledger_capture import LedgerDraft
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
+from aerona.db.write_guard import chosen_bonds
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.node import ActorKind
 from aerona.engine.context import Publisher, TickContext
@@ -92,7 +93,8 @@ async def perform(scope: PlayerScope, action: str, kind: ActionKind, command: Ba
         async with session.begin_nested(), scope.ledger.capture(session) as capture:
             marker = await _last_action_id(session)
             essence_before = (await scope.creator()).essence
-            effect = await body()
+            with chosen_bonds():
+                effect = await body()
             creator = await scope.creator()
             delta = creator.essence - essence_before
             spent = effect.essence_spent or max(0, -delta)

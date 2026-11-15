@@ -17,6 +17,7 @@ class CommonResult(StrEnum):
     NEAREST_CHOICE = '"{{ given }}" is not a valid {{ field }}; nearest valid values: {{ choices }} (of {{ total }} options).'
     INVALID_FIELD = "{{ field }} is invalid: {{ detail }}."
     NOT_AVAILABLE = "{{ tool }} is not available to you now."
+    HELD_FAST = "A stronger hand holds what you would change: {{ fields }}. Nothing was done."
     MADNESS_LIMIT = "Your mind is too broken for {{ tool }}: a mad god can hold only deeds of at most {{ limit }} action(s)."
     MORTAL_STATUS = "Actions left: {{ remaining }}."
     LIMIT_REACHED = "{{ message }} {{ limit }}"

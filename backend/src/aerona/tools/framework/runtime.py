@@ -13,6 +13,7 @@ from aerona.core.errors import AeronaError
 from aerona.db.ledger_capture import RowChange
 from aerona.db.session import Database
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.write_guard import chosen_bonds
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.turn import LongJobTrace, PendingJob
@@ -37,6 +38,17 @@ LOGGER = logging.getLogger(__name__)
 
 def silent_publisher(_kind: Any, _payload: dict[str, Any]) -> None:
     return None
+
+
+def refuse_restored(restored: list[str]) -> None:
+    if restored:
+        fields = ", ".join(sorted({words_of(key) for key in restored}))
+        raise RejectionError(result(CommonResult.HELD_FAST, fields=fields))
+
+
+def words_of(key: str) -> str:
+    table, _, column = key.partition(".")
+    return f"the {column.replace('_', ' ')} of {table.replace('_', ' ')}"
 
 
 @dataclass(frozen=True)
@@ -235,8 +247,11 @@ class ToolRuntime[CallT: ToolCall]:
             marker = await chronicle_marker(session)
             recorder = change_capture(session)
             try:
-                async with tool_holds(session, self.settings.epoch, spec.name):
-                    outcome = await spec.handler(call, parsed)
+                with chosen_bonds():
+                    async with tool_holds(session, self.settings.epoch, spec.name) as restored:
+                        outcome = await spec.handler(call, parsed)
+                        await session.flush()
+                refuse_restored(restored)
                 if isinstance(outcome, LongJob):
                     call.turn.set_pending_job(PendingJob(kind=outcome.kind, essence=outcome.essence, action_points=outcome.action_points, epoch=call.epoch))
                     await session.flush()
@@ -284,6 +299,8 @@ class ToolRuntime[CallT: ToolCall]:
             return await self._refund(pending, error)
         try:
             return await self._finish_long_job(pending, value)
+        except RejectionError as rejection:
+            return await self._refund(pending, rejection)
         except Exception as error:
             LOGGER.exception("long tool job could not be finished")
             return await self._refund(pending, error)
@@ -295,8 +312,11 @@ class ToolRuntime[CallT: ToolCall]:
             call.turn.set_pending_job(None)
             recorder = change_capture(session)
             try:
-                body = await pending.job.finish(call, value)
-                await session.flush()
+                with chosen_bonds():
+                    async with tool_holds(session, self.settings.epoch, spec.name) as restored:
+                        body = await pending.job.finish(call, value)
+                        await session.flush()
+                refuse_restored(restored)
             finally:
                 recorder.stop()
             call.turn.add_long_job_trace(LongJobTrace(tool=spec.name, key=pending.job.trace_key(value), summary=body))

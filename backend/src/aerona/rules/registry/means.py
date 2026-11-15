@@ -23,6 +23,7 @@ class WritingMediaRules:
 class SecurityRules:
     seed_quality: int = rule(30, 0, 100, V, "Lock quality a treasury, archive or store first takes where its people work metal")
     metal_level: int = rule(2, 0, 10, V, "Metalworking a people needs before its holders lock their stores")
+    seed_guards: int = rule(2, 0, 100, V, "Guards a treasury, archive or store keeps from the epoch it is first secured")
     smith_gain: int = rule(2, 0, 100, V, "Lock quality a master smith of the town adds each epoch")
     smith_skill: int = rule(5, 0, 10, V, "Smithing a mortal needs to improve the locks of its town")
     lock_pct: int = rule(60, 0, 100, V, "Share by which a lock of full quality thwarts a theft (%)")

@@ -60,7 +60,7 @@ function SavingCard({
       caption={`Saves ${row.share_pct}% as ${form.label.toLowerCase()}; ${row.saved} put by; epoch ${row.updated_epoch}`}
       removeLabel='Strike the saving'
       editTitle='Set the saving'
-      note='Patient heads save more; insecure towns bury what they save, towns with a bank bank it, and the rest invest it.'
+      note='Patient heads save more; insecure towns bury what they save, towns with a bank deposit it there, and the rest invest it.'
       fields={[
         {
           key: 'share_pct',
