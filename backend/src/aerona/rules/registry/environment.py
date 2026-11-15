@@ -309,3 +309,9 @@ class CalendarsRules:
 class EngineBudgetRules:
     max_sub_steps_per_epoch: int = rule(400, 1, 1000000, RuleGroup.ENGINE_PHASES, "Most campaign seasons and sampled years the engine evaluates in one epoch")
     tick_target_seconds: int = rule(20, 1, 3600, RuleGroup.ENGINE_PHASES, "Seconds one engine tick of the reference world should stay under")
+    workers: int = rule(
+        0, 0, 256, RuleGroup.ENGINE_PHASES, "Worker processes that compute the shards of an engine step in parallel; 0 uses one fewer than the cores"
+    )
+    regression_pct: int = rule(
+        15, 0, 1000, RuleGroup.ENGINE_PHASES, "Growth of the work of a tick of the reference world beyond its budget that fails the benchmark (%)"
+    )

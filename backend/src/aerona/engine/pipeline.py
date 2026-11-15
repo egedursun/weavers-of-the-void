@@ -790,6 +790,7 @@ def find_phase(name: str) -> Phase:
 
 async def run_phase(environment: TickEnvironment, database: Database, phase: Phase, steps: Steps | None = None) -> None:
     started = time.perf_counter()
+    thought = time.process_time()
     try:
         async with database.write() if steps is None else steps.step() as session:
             await run_guarded(phase, TickContext(environment, session, phase.name))
@@ -799,6 +800,7 @@ async def run_phase(environment: TickEnvironment, database: Database, phase: Pha
         raise EnginePhaseError(phase.name, error) from error
     elapsed = time.perf_counter() - started
     environment.stats.phase_seconds[phase.name] = environment.stats.phase_seconds.get(phase.name, 0.0) + elapsed
+    environment.stats.phase_cpu[phase.name] = environment.stats.phase_cpu.get(phase.name, 0.0) + time.process_time() - thought
     environment.publish(EventKind.ENGINE_PHASE, {"epoch": environment.epoch, "phase": phase.name, "seconds": elapsed})
     await asyncio.sleep(0)
 

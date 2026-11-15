@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import ORMExecuteState, Session
 
 from aerona.cartography.graph import RegionGraph
 from aerona.cartography.model import ElevationClass, RegionRecord
 from aerona.constants.engine import ADJACENT_HOPS, LOCATION_CHAIN_MAX_HOPS, UNKNOWN_DISTANCE
-from aerona.db.read_memo import memo_of, table_names
+from aerona.db.read_memo import memo_of, register_index, table_names, touched_rows
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
@@ -49,6 +50,50 @@ async def terrain_of(session: AsyncSession) -> Terrain:
     return terrain
 
 
+PLACEMENT_SQL = text("SELECT id, entity_type, world_id, location_id FROM entities")
+LIVE_PLACEMENTS = "aerona.live_placements"
+ENTITY_TYPES = {kind.value: kind for kind in EntityType}
+
+
+def follow_placements(sync: Session, *_: object) -> None:
+    live: dict[int, Placement] | None = sync.info.get(LIVE_PLACEMENTS)
+    if live is None:
+        return
+    new, dirty, deleted = touched_rows(sync, EntityRow)
+    for row in (*new, *dirty):
+        if row.id is not None:
+            live[row.id] = Placement(row.id, row.entity_type, row.world_id, row.location_id)
+    for row in deleted:
+        live.pop(row.id, None)
+
+
+def drop_placements(sync: Session, *_: object) -> None:
+    sync.info.pop(LIVE_PLACEMENTS, None)
+
+
+def drop_placements_on_write(state: ORMExecuteState) -> None:
+    if not state.is_select and getattr(getattr(state.statement, "table", None), "name", EntityRow.__tablename__) == EntityRow.__tablename__:
+        drop_placements(state.session)
+
+
+event.listen(Session, "after_flush", follow_placements)
+event.listen(Session, "after_soft_rollback", drop_placements)
+event.listen(Session, "do_orm_execute", drop_placements_on_write)
+register_index(LIVE_PLACEMENTS)
+
+
+async def placements_of(session: AsyncSession) -> dict[int, Placement]:
+    await session.flush()
+    live: dict[int, Placement] | None = session.sync_session.info.get(LIVE_PLACEMENTS)
+    if live is None:
+        live = {
+            entity_id: Placement(entity_id, ENTITY_TYPES[kind], world_id, location_id)
+            for entity_id, kind, world_id, location_id in (await session.execute(PLACEMENT_SQL)).all()
+        }
+        session.sync_session.info[LIVE_PLACEMENTS] = live
+    return dict(live)
+
+
 class RegionAtlas:
     def __init__(self, placements: dict[int, Placement], records: dict[int, list[RegionRecord]], terrain: Terrain | None = None) -> None:
         shared = terrain or Terrain.of(records)
@@ -56,6 +101,7 @@ class RegionAtlas:
         self._graphs = shared.graphs
         self._records = shared.records
         self._top: dict[int, int | None] = {}
+        self._communities: dict[int, list[int]] | None = None
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "RegionAtlas":
@@ -63,16 +109,16 @@ class RegionAtlas:
         if memo is not None and "atlas" in memo:
             found: RegionAtlas = memo["atlas"]
             return found
-        rows = await session.execute(select(EntityRow.id, EntityRow.entity_type, EntityRow.world_id, EntityRow.location_id))
-        placements = {row[0]: Placement(row[0], row[1], row[2], row[3]) for row in rows}
-        atlas = cls(placements, {}, await terrain_of(session))
-        if memo is not None:
-            memo["atlas"] = atlas
+        atlas = cls(await placements_of(session), {}, await terrain_of(session))
+        after = memo_of(session, "atlas", ATLAS_TABLES)
+        if after is not None:
+            after["atlas"] = atlas
         return atlas
 
     def remember(self, entity: EntityRow) -> None:
         self._placements[entity.id] = Placement(entity.id, entity.entity_type, entity.world_id, entity.location_id)
         self._top.clear()
+        self._communities = None
 
     def top_region(self, entity_id: int | None) -> int | None:
         if entity_id is None:
@@ -93,11 +139,15 @@ class RegionAtlas:
         return found
 
     def communities_in(self, region_id: int) -> list[int]:
-        return sorted(
-            placement.entity_id
-            for placement in self._placements.values()
-            if placement.entity_type in COMMUNITY_TYPES and self.top_region(placement.entity_id) == region_id
-        )
+        if self._communities is None:
+            grouped: dict[int, list[int]] = {}
+            for placement in self._placements.values():
+                if placement.entity_type in COMMUNITY_TYPES:
+                    region = self.top_region(placement.entity_id)
+                    if region is not None:
+                        grouped.setdefault(region, []).append(placement.entity_id)
+            self._communities = {region: sorted(found) for region, found in grouped.items()}
+        return list(self._communities.get(region_id, []))
 
     def world_of(self, entity_id: int) -> int | None:
         placement = self._placements.get(entity_id)

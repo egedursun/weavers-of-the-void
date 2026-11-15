@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.read_memo import memo_of, table_names
+from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, VassalageRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -12,6 +14,7 @@ from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.primitives.distance import RegionAtlas
 
 SEXES = ("female", "male")
+BOOK_TABLES = table_names((EntityRow, PolityProfileRow, PolityMemberRow, PolityTerritoryRow, OfficeRow, VassalageRow, WorldMapRow))
 
 
 def sex_of(mortal: EntityRow) -> str:
@@ -51,6 +54,18 @@ class RealmBook:
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "RealmBook":
+        memo = memo_of(session, "realm_book", BOOK_TABLES)
+        if memo is not None and "book" in memo:
+            found: RealmBook = memo["book"]
+            return found
+        book = await cls.read(session)
+        after = memo_of(session, "realm_book", BOOK_TABLES)
+        if after is not None:
+            after["book"] = book
+        return book
+
+    @classmethod
+    async def read(cls, session: AsyncSession) -> "RealmBook":
         atlas = await RegionAtlas.load(session)
         polities = {
             row.id: row

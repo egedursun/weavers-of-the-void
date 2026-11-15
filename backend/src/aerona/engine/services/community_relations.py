@@ -7,7 +7,7 @@ from aerona.catalog.mind import MEMORIES
 from aerona.catalog.society import community_relation_label
 from aerona.constants.schema import SINGLETON_ID
 from aerona.constants.units import PERCENT
-from aerona.db.read_memo import memo_of, memoized
+from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import FeudRow
@@ -24,11 +24,14 @@ from aerona.engine.lore.language import barrier
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import memories_between, remember, strength_of
-from aerona.engine.mind.opinion import OpinionContext, pair_relation
+from aerona.engine.mind.opinion import OPINION_TABLES, OpinionContext, pair_relation
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
 SET_PASSES = 3
+
+
+RELATION_TABLES = OPINION_TABLES | table_names((CommunityRelationRow, CosmosRow))
 
 
 @dataclass(frozen=True)
@@ -88,7 +91,7 @@ async def remember_relation(session: AsyncSession, rules: Rules, first: int, sec
 async def relation(session: AsyncSession, rules: Rules, first: int, second: int) -> int:
     if first == second:
         return RELATION_MAX
-    memo = memo_of(session, "relation")
+    memo = memo_of(session, "relation", RELATION_TABLES)
     key = (id(rules), *pair_key(first, second))
     if memo is not None and key in memo:
         found: int = memo[key]

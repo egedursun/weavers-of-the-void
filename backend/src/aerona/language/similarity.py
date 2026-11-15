@@ -28,6 +28,19 @@ def letter_distance(first: str, second: str) -> int:
     return previous[-1]
 
 
+def within_one_edit(left: str, right: str) -> bool:
+    if abs(len(left) - len(right)) > 1:
+        return False
+    if len(left) > len(right):
+        left, right = right, left
+    index = 0
+    while index < len(left) and left[index] == right[index]:
+        index += 1
+    if len(left) == len(right):
+        return left[index + 1 :] == right[index + 1 :]
+    return left[index:] == right[index + 1 :]
+
+
 def roman_numeral(number: int) -> str:
     remaining = max(1, min(number, ROMAN_NUMERAL_LIMIT))
     parts: list[str] = []
@@ -76,7 +89,8 @@ class NamePool:
                 if length > settings.similar_name_max_length + 1:
                     continue
                 for existing in self._by_length.get(length, ()):
-                    if normalize_name(existing) != normalized and letter_distance(existing, name) <= 1:
+                    known = normalize_name(existing)
+                    if known != normalized and within_one_edit(known, normalized):
                         return existing
         if family and len(normalized) >= settings.root_letters:
             relatives = self._families.get(normalized[: settings.root_letters], [])

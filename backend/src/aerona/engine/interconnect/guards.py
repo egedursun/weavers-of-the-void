@@ -151,8 +151,12 @@ async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None
     state = GuardState(guard_index, mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only)
     with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules):
         await phase.run(ctx)
-        for row in list(ctx.session.dirty):
-            restore_held(row)
+        sync = ctx.session.sync_session
+        for modified in list(sync.identity_map._modified):
+            if modified not in sync._deleted and not modified.pending:
+                found = modified.obj()
+                if found is not None:
+                    restore_held(found)
         await ctx.session.flush()
     if state.moved:
         for hook in AFTER_PHASE:

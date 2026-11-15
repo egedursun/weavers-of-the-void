@@ -10,6 +10,7 @@ from aerona.catalog.backfill_words import LAW_WORDS
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for, law_terms, penal_cruelty, term_text
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -186,6 +187,7 @@ class LawBook:
         return row.enforcement / PERCENT if row is not None else 0.0
 
 
+@memoized(LawJurisdictionRow, BondRow)
 async def faithful_cults(session: AsyncSession) -> dict[int, list[int]]:
     cult_holders = set(await session.scalars(select(LawJurisdictionRow.node_entity_id).where(LawJurisdictionRow.jurisdiction == Jurisdiction.CULT)))
     if not cult_holders:

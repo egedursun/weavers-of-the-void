@@ -1,8 +1,6 @@
 import asyncio
 import hashlib
-import os
 from collections.abc import Sequence
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from functools import partial
 
@@ -12,13 +10,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.cartography.generator import GeneratedMap, generate_map
 from aerona.cartography.model import MARKER_TYPES, MapRequest, MarkerInput, PositionUpdate, RegionInput, WorldMap, placement_preference
 from aerona.cartography.terrain import TerrainOverrides
-from aerona.constants.cartography import MAP_BATCH_SIZE, MAP_GENERATOR_VERSION
+from aerona.constants.cartography import MAP_GENERATOR_VERSION
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.world import Discovery
+from aerona.engine.parallel.effects import Effect, EffectKind, commit, merged
+from aerona.engine.parallel.pool import compute_shards, workers_for
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
 
@@ -85,16 +85,16 @@ async def world_entities(session: AsyncSession, world_id: int) -> list[EntityRow
     return list(await session.scalars(statement))
 
 
-def _apply_positions(entities: dict[int, EntityRow], updates: Sequence[PositionUpdate]) -> None:
-    for update in updates:
-        found = entities.get(update.id)
-        if found is not None:
-            found.map_x, found.map_y = update.x, update.y
+def position_effects(world_id: int, updates: Sequence[PositionUpdate]) -> list[Effect]:
+    found: list[Effect] = []
+    for sequence, update in enumerate(updates):
+        found.append(Effect((world_id,), update.id, sequence * 2, EffectKind.SET_COLUMN, "map_x", update.x, "entities"))
+        found.append(Effect((world_id,), update.id, sequence * 2 + 1, EffectKind.SET_COLUMN, "map_y", update.y, "entities"))
+    return found
 
 
 def _generate_all(requests: list[MapRequest], rules: Rules) -> list[GeneratedMap]:
-    with ProcessPoolExecutor(max_workers=os.cpu_count()) as pool:
-        return list(pool.map(partial(generate_map, rules=rules), requests, chunksize=MAP_BATCH_SIZE))
+    return compute_shards(partial(generate_map, rules=rules), requests, workers_for(rules))
 
 
 async def generated_maps(requests: Sequence[MapRequest], rules: Rules) -> list[GeneratedMap]:
@@ -105,9 +105,7 @@ async def generated_maps(requests: Sequence[MapRequest], rules: Rules) -> list[G
 
 async def apply_world_map(session: AsyncSession, world: WorldRow, entities: list[EntityRow], generated: GeneratedMap, epoch: int) -> WorldMap:
     world_map = generated.world_map
-    by_id = {entity.id: entity for entity in entities}
-    _apply_positions(by_id, generated.new_positions)
-    _apply_positions(by_id, generated.relocated_positions)
+    await commit(session, merged([position_effects(world.id, [*generated.new_positions, *generated.relocated_positions])]))
     payload = world_map.model_dump(mode="json")
     signature = map_signature(map_request(world, entities))
     existing = await session.get(WorldMapRow, world.id)
@@ -136,18 +134,27 @@ async def regenerate_world_map(session: AsyncSession, rules: Rules, world_id: in
 
 
 async def map_is_stale(session: AsyncSession, world_id: int) -> bool:
-    stored = await session.get(WorldMapRow, world_id)
     world = await session.get(WorldRow, world_id)
-    if stored is None or world is None or stored.generator_version != MAP_GENERATOR_VERSION:
+    return world is None or await stale_with(session, world, await world_entities(session, world_id))
+
+
+async def stale_with(session: AsyncSession, world: WorldRow, entities: list[EntityRow]) -> bool:
+    stored = await session.get(WorldMapRow, world.id)
+    if stored is None or stored.generator_version != MAP_GENERATOR_VERSION:
         return True
-    return stored.signature != map_signature(map_request(world, await world_entities(session, world_id)))
+    return stored.signature != map_signature(map_request(world, entities))
 
 
 async def refresh_world_maps(session: AsyncSession, rules: Rules, epoch: int) -> list[MapRefresh]:
     refreshed: list[MapRefresh] = []
     statement = select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)
-    stale = [world for world in list(await session.scalars(statement)) if await map_is_stale(session, world.id)]
-    members = {world.id: await world_entities(session, world.id) for world in stale}
+    members: dict[int, list[EntityRow]] = {}
+    stale: list[WorldRow] = []
+    for world in list(await session.scalars(statement)):
+        entities = await world_entities(session, world.id)
+        if await stale_with(session, world, entities):
+            stale.append(world)
+            members[world.id] = entities
     maps = await generated_maps([map_request(world, members[world.id]) for world in stale], rules)
     for world, generated in zip(stale, maps, strict=True):
         world_map = await apply_world_map(session, world, members[world.id], generated, epoch)

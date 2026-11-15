@@ -8,14 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
 from aerona.db.bond_index import bond_lookup
-from aerona.db.read_memo import memoized
+from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.mind import MemoryRow, TraitRow
+from aerona.db.tables.mind import CultureValueRow, MemoryRow, PersonalityValueRow, TraitRow
 from aerona.db.tables.relations import RelationshipRow
-from aerona.db.tables.renown import RulerCurrencyRow
+from aerona.db.tables.renown import ReputationRow, RulerCurrencyRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.belonging import IdentityLayer
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
@@ -30,6 +30,22 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import BondIndex, active_bonds, spoken_language
 from aerona.engine.renown.book import standing_with
 from aerona.rules.registry import Rules
+
+OPINION_TABLES = table_names(
+    (
+        MemoryRow,
+        RelationshipRow,
+        BondRow,
+        CommunityRelationRow,
+        CultureValueRow,
+        PersonalityValueRow,
+        TraitRow,
+        HeldIdentityRow,
+        ReputationRow,
+        RulerCurrencyRow,
+        EntityRow,
+    )
+)
 
 PAIR_BONDS = (BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE)
 KIN_BONDS = KIN_BOND_KINDS
@@ -220,6 +236,19 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
 
 
 async def opinion(session: AsyncSession, rules: Rules, epoch: int, holder_id: int, subject_id: int) -> Opinion:
+    key = (id(rules), epoch, holder_id, subject_id)
+    memo = memo_of(session, "opinion", OPINION_TABLES)
+    if memo is not None and key in memo:
+        found: Opinion = memo[key]
+        return found
+    value = await composed(session, rules, epoch, holder_id, subject_id)
+    after = memo_of(session, "opinion", OPINION_TABLES)
+    if after is not None:
+        after[key] = value
+    return value
+
+
+async def composed(session: AsyncSession, rules: Rules, epoch: int, holder_id: int, subject_id: int) -> Opinion:
     return compose(
         rules,
         epoch,

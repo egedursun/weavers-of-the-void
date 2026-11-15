@@ -160,10 +160,10 @@ def restore_owned(row: object) -> list[str]:
     held = standing_locks(row)
     restored: list[str] = []
     for column in changed:
-        history = get_history(row, column)
-        if not history.deleted or not history.has_changes():
+        if column not in held and not any(write_blocked(node_id, profile_key(shape.table, column)) for node_id in owners):
             continue
-        if column in held or any(write_blocked(node_id, profile_key(shape.table, column)) for node_id in owners):
+        history = get_history(row, column)
+        if history.deleted and history.has_changes():
             set_committed_value(row, column, history.deleted[0])
             restored.append(column)
     return restored
@@ -183,10 +183,10 @@ def restore_held(row: object) -> list[str]:
     held = standing_locks(row)
     restored: list[str] = []
     for column in changed:
-        history = get_history(row, column)
-        if not history.deleted or not history.has_changes():
+        if column not in held and not write_blocked(int(node_id), profile_key(shape.table, column)):
             continue
-        if column in held or write_blocked(int(node_id), profile_key(shape.table, column)):
+        history = get_history(row, column)
+        if history.deleted and history.has_changes():
             set_committed_value(row, column, history.deleted[0])
             restored.append(column)
     return restored
