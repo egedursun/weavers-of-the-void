@@ -1709,6 +1709,11 @@ LEVERS: dict[str, Lever] = {
     ),
     "settings": given(mortal_agents_per_epoch=2),
     "scenario:abandon": after(("scenario:start", {"key": "doom_far"}), scenario_id=Newest("scenario")),
+    "scenario:start": given(key="many_worlds", target=3, deadline_epochs=6),
+    "scenario:custom": given(metric="languages", comparator="at_least", basis="gained", target=2, hold_epochs=1, deadline_epochs=5, title="New tongues"),
+    "scenario:edit": after(("scenario:start", {"key": "doom_far"}), scenario_id=Newest("scenario"), target=25, deadline_epochs=10),
+    "scenario:hold": after(("scenario:start", {"key": "doom_far"}), scenario_id=Newest("scenario"), held=True),
+    "scenario:delete": after(("scenario:start", {"key": "doom_far"}), scenario_id=Newest("scenario")),
     "quest:abandon": after(
         ("cosmic:extinguish_star", {"star_id": Pick("star")}), ("cosmic:legendary_quest", {"kind": "dead_star"}), thread_id=Newest("thread")
     ),

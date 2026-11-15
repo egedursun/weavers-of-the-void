@@ -137,6 +137,7 @@ class PassionHint(ContextItem):
 class ScenarioLine(ContextItem):
     name: str
     description: str
+    deadline_epoch: int | None = None
 
 
 class CreatorWishesContext(PromptContext):

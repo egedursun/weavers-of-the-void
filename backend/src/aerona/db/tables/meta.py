@@ -16,7 +16,17 @@ from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type, max_length
 from aerona.db.types import PydanticJSON
 from aerona.domain.enums.chronicle import NotificationCategory
-from aerona.domain.enums.meta import AchievementKey, ImageMime, ImageOrigin, ScenarioKey, ScenarioStatus
+from aerona.domain.enums.meta import (
+    ACHIEVEMENT_TIERS,
+    AchievementKey,
+    GoalBasis,
+    GoalComparator,
+    GoalMetric,
+    ImageMime,
+    ImageOrigin,
+    ScenarioKey,
+    ScenarioStatus,
+)
 from aerona.domain.models.records import MapSnapshotData, ScoreBreakdown
 
 
@@ -24,7 +34,15 @@ class ScenarioRow(Base):
     __tablename__ = "scenarios"
     __table_args__ = (
         CheckConstraint("status = 'running' OR end_epoch IS NOT NULL", name="finished_has_epoch"),
-        Index("ux_scenarios_running_key", "key", unique=True, sqlite_where=text("status = 'running'")),
+        CheckConstraint("key <> 'custom' OR (metric IS NOT NULL AND comparator IS NOT NULL AND basis IS NOT NULL)", name="custom_has_measure"),
+        CheckConstraint("deadline_epoch IS NULL OR deadline_epoch > start_epoch", name="deadline_after_start"),
+        at_least("tier", 1),
+        at_least("target", 0),
+        at_least("hold_epochs", 0),
+        at_least("points", 0),
+        at_least("awarded_points", 0),
+        max_length("title", TITLE_MAX_LENGTH),
+        Index("ux_scenarios_running_key", "key", unique=True, sqlite_where=text("status = 'running' AND key <> 'custom'")),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -32,19 +50,31 @@ class ScenarioRow(Base):
     status: Mapped[ScenarioStatus] = mapped_column(enum_type(ScenarioStatus, "status"), default=ScenarioStatus.RUNNING)
     start_epoch: Mapped[int]
     end_epoch: Mapped[int | None]
+    tier: Mapped[int] = mapped_column(default=1)
+    target: Mapped[int] = mapped_column(default=1)
+    deadline_epoch: Mapped[int | None]
+    held: Mapped[bool] = mapped_column(default=False)
+    metric: Mapped[GoalMetric | None] = mapped_column(enum_type(GoalMetric, "metric"))
+    comparator: Mapped[GoalComparator | None] = mapped_column(enum_type(GoalComparator, "comparator"))
+    basis: Mapped[GoalBasis | None] = mapped_column(enum_type(GoalBasis, "basis"))
+    hold_epochs: Mapped[int] = mapped_column(default=0)
+    title: Mapped[str | None] = mapped_column(String(TITLE_MAX_LENGTH))
     counter: Mapped[int] = mapped_column(default=0)
+    baseline_value: Mapped[int | None]
     baseline_entity_id: Mapped[int | None]
     baseline_chronicle_id: Mapped[int | None]
-    baseline_count: Mapped[int | None]
     baseline_rebel_ids: Mapped[list[int]] = mapped_column(PydanticJSON(list[int]), default=list)
-    points_awarded: Mapped[bool] = mapped_column(default=False)
+    points: Mapped[int] = mapped_column(default=0)
+    awarded_points: Mapped[int] = mapped_column(default=0)
     result: Mapped[str | None] = mapped_column(Text)
 
 
 class AchievementRow(CreatedAtMixin, Base):
     __tablename__ = "achievements"
+    __table_args__ = (between("tier", min(ACHIEVEMENT_TIERS), max(ACHIEVEMENT_TIERS)),)
 
     key: Mapped[AchievementKey] = mapped_column(enum_type(AchievementKey, "key"), primary_key=True)
+    tier: Mapped[int] = mapped_column(primary_key=True, default=1)
     epoch: Mapped[int]
 
 

@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Any
 
 from aerona.catalog.chronicle import NOTIFICATION_SEVERITY_MAX, NOTIFICATION_SEVERITY_MIN
+from aerona.catalog.scenarios import SCENARIOS
 from aerona.constants.schema import MAP_NOTE_COLOR_MAX_LENGTH, MAP_NOTE_MAX_LENGTH, NOTIFICATION_BODY_MAX_LENGTH, NOTIFICATION_TITLE_MAX_LENGTH
 from aerona.db.tables.epochs import EpochStatsRow
 from aerona.db.tables.meta import AchievementRow, MapNoteRow, MapSnapshotRow, NotificationRow, ScenarioRow, ScoreRow
@@ -9,6 +10,7 @@ from aerona.domain.enums.chronicle import NotificationCategory
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.meta import AchievementKey, ScenarioKey, ScenarioStatus
 from aerona.domain.models.records import EpochStatsData, MapSnapshotData, RegionControl, SonEpochStats
+from aerona.engine.gods.goals import preset_points
 from aerona.migration.legacy import blobs
 from aerona.migration.legacy.context import MigrationContext
 from aerona.migration.legacy.idmap import LegacyKind
@@ -54,13 +56,17 @@ async def import_scores(context: MigrationContext) -> None:
         if status is not ScenarioStatus.RUNNING and end is None:
             end = context.epoch
             context.report.warn(DEFAULTED, reference, f"end epoch set to {end}")
+        target = SCENARIOS[scenario_key].default_target(context.rules)
+        points = preset_points(context.rules, scenario_key, target, None)
         context.add(
             ScenarioRow(
                 key=scenario_key,
                 status=status,
                 start_epoch=max(0, row.integer("start_epoch") or 0),
                 end_epoch=end,
-                points_awarded=status is ScenarioStatus.COMPLETED,
+                target=target,
+                points=points,
+                awarded_points=points if status is ScenarioStatus.COMPLETED else 0,
                 result=row.text("result"),
             )
         )

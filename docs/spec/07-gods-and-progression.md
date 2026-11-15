@@ -946,148 +946,213 @@ Average love/fear/forgotten over living sons (0 if none), label via §3.4 using 
 
 ## 4. Goals, achievements and score (`hedef.js`)
 
-Optional game layer:
-- **Scenario** (senaryo, UI also "trial"/sınav): a goal the player chooses. At every epoch end the engine measures progress; when complete or failed it is recorded.
-- **Achievement** (başarım): always on, earned automatically.
-- **Score** (puan): computed at every epoch end from the world's vitality, achievements and scenarios; history kept.
+Game layer, measured at every epoch end by the `goals` phase (engine/phases/goals.py → engine/gods/goals.py):
+- **Goal** (scenario, UI "goal"): a target the player chooses, from the goal board (presets) or shaped by hand (a goal of one's own). Goals run side by side, each with a tier, a target, an optional deadline, an optional hold and a fixed worth in points.
+- **Achievement**: always on, earned automatically, in three tiers (I, II, III), each tier a threshold of one measured value.
+- **Score**: computed at every epoch end from the world's vitality, the achievement tiers earned and the points goals awarded; history kept.
 
-### 4.1 Tables
-- `senaryolar(id, anahtar, baslangic_cag, durum ∈ {suruyor running, tamam completed, basarisiz failed, birakildi abandoned}, veri JSON, bitis_cag, sonuc text)`.
-- `basarimlar(anahtar PK, cag)`.
-- `puanlar(cag PK, toplam, dokum JSON)`.
+### 4.1 Measures of the cosmos (`catalog/goal_metrics.py`, `engine/gods/metrics.py`)
 
-Helpers: `num(x, def)` coerces model-written stats ("12000", "much") to finite numbers; `tier(v)` = civilization tier of an entity (medeniyet.basamakOf); `population(list)` = Σ max(0, num(stats.population)); `warCount()` = count active `dusman`(enemy) bonds between entities (all, not only communities); `peoples()` = canon `halk`; `worshipped(v)` = the most recent active `tapar` bond of v (`(dst_type, dst_id)`); `threshold()` = max(1, `DENGE.kiyamet_esik`).
+One catalogue of measured values (`GoalMetric`, 60 values in 11 fields, `GoalCategory`) feeds achievements, goals, custom goals, the score and every progress bar. Each value has a label, a unit and a direction (`lower_is_better` for dead stars, ongoing wars and the doomsday clock). `MetricReader` measures each value at most once per evaluation. Values count canon records by type, entity flags on canon records (empires, golden ages, wonders), node tables (galaxies, clusters, dimensions), open rifts, arrived journeys and their scope (voyages beyond a galaxy: intergalactic, intercluster and interdimensional), busy routes whose scope reaches beyond a galaxy, worship bonds and prayers to the Creator, mantlings that ascended, won heroquests, museum collections, the Creator's own action records (deeds and the distinct kinds of deed), miracles credited to the Creator, the epoch and the doomsday clock as a share of its threshold.
 
-Display numbers: the old code spells numbers 0–100 in Turkish words (`yazi`) and ordinal names ("Birinci"… "Onuncu") — LANGUAGE-SPECIFIC; use English number words/ordinals or digits.
+| Key | Field | Label | Lower is better |
+|---|---|---|---|
+| `worlds` | Cosmos | Worlds in the cosmos |  |
+| `inhabited_worlds` | Cosmos | Worlds with a living people |  |
+| `moons` | Cosmos | Moons |  |
+| `stars` | Cosmos | Stars |  |
+| `reborn_stars` | Cosmos | Reborn stars |  |
+| `dead_stars` | Cosmos | Dead stars | yes |
+| `galaxies` | Scales of the cosmos | Galaxies |  |
+| `clusters` | Scales of the cosmos | Galaxy clusters |  |
+| `dimensions` | Scales of the cosmos | Dimensions |  |
+| `open_rifts` | Scales of the cosmos | Open rifts |  |
+| `cosmic_beings` | Scales of the cosmos | Cosmic beings |  |
+| `far_voyages` | Scales of the cosmos | Voyages arrived beyond a galaxy |  |
+| `far_trade_routes` | Scales of the cosmos | Busy trade routes beyond a galaxy |  |
+| `species` | Life | Species |  |
+| `beasts` | Life | Beasts |  |
+| `spirits` | Life | Spirits |  |
+| `awakened_species` | Life | Species that became peoples |  |
+| `peoples` | Peoples | Peoples |  |
+| `population` | Peoples | Population of the peoples |  |
+| `settlements` | Peoples | Settlements |  |
+| `polities` | Peoples | Realms |  |
+| `empires` | Peoples | Empires |  |
+| `golden_ages` | Peoples | Communities in a golden age |  |
+| `highest_civ_tier` | Peoples | Highest civilization stage |  |
+| `treaties` | Peoples | Treaties |  |
+| `trade_routes` | Peoples | Trade routes |  |
+| `languages` | Peoples | Languages |  |
+| `cults` | Faith | Cults |  |
+| `creator_worshippers` | Faith | Communities worshipping the Creator |  |
+| `prayers_to_creator` | Faith | Prayers to the Creator |  |
+| `fulfilled_prophecies` | Faith | Fulfilled prophecies |  |
+| `largest_faith` | Faith | Peoples sharing the widest faith |  |
+| `ascended_mortals` | Faith | Ascended mortals |  |
+| `living_sons` | Pantheon | Living sons |  |
+| `highest_son_level` | Pantheon | Highest son level |  |
+| `resurrections` | Pantheon | Resurrections |  |
+| `suppressed_rebellions` | Pantheon | Suppressed rebellions |  |
+| `foreign_gods` | Pantheon | Foreign gods |  |
+| `knowledge` | Learning and the arts | Knowledge |  |
+| `theories` | Learning and the arts | Theories |  |
+| `artworks` | Learning and the arts | Artworks |  |
+| `art_forms` | Learning and the arts | Art forms |  |
+| `legends` | Learning and the arts | Legends |  |
+| `traditions` | Learning and the arts | Traditions |  |
+| `laws` | Learning and the arts | Laws |  |
+| `wonders` | Learning and the arts | Wonders |  |
+| `museums` | Learning and the arts | Museum collections |  |
+| `completed_sagas` | Learning and the arts | Completed legendary quests |  |
+| `heroquests_won` | Learning and the arts | Won heroquests |  |
+| `arrived_journeys` | Discovery | Journeys arrived at another world |  |
+| `discoveries` | Discovery | Lands found by mortals |  |
+| `sensed_worlds` | Discovery | Sensed worlds born |  |
+| `vessels` | Discovery | Vessels |  |
+| `ongoing_wars` | Order | Ongoing wars | yes |
+| `warless_peoples` | Order | Peoples in a cosmos without war |  |
+| `epoch` | Time | Epochs behind the cosmos |  |
+| `doom_percent` | Time | Doomsday clock (% of the threshold) | yes |
+| `creator_deeds` | The Creator's hand | Deeds of the Creator |  |
+| `levers_used` | The Creator's hand | Kinds of deed done by the Creator |  |
+| `miracles` | The Creator's hand | Miracles of the Creator |  |
 
-### 4.2 Scenarios (full list)
 
-Each scenario: `progress(state, world) → {percent, text, done?, failed?, counter?}`, optional `start() → data` (stored in `veri`), optional `epochEnd(state, world) → data patch`. `state = {...veri, baslangic_cag}`.
+### 4.2 Tables
 
-| Key | Name | Description | Points | Progress logic |
-|---|---|---|---|---|
-| kiyamet_uzak | "Keep doomsday away for {doom_far_epochs} epochs" | "The doomsday clock must never reach {round(threshold*doom_far_limit/100)} for {doom_far_epochs} epochs." | doom_far_points | `limit = round(threshold*doom_far_limit/100)`; if clock ≥ limit → failed "Doomsday clock reached {clock}/{threshold}."; else elapsed = cag − start; percent = min(100, elapsed/duration*100); text "{elapsed}/{duration} epochs · clock {clock}/{threshold}"; done when elapsed ≥ duration |
-| tek_inanc | "Unite all peoples in one faith" | "Every people in the world worships the same god (a son or you); at least {one_faith_peoples} peoples." | one_faith_points | count peoples per `worshipped` key `type:id`; most = max count; percent = most/peoples*100; text "{most}/{n} peoples worship the same god"; done when n ≥ one_faith_peoples and most == n |
-| kayip_yildiz | "Rekindle the lost star" | "A dead star or black sun burns again." | lost_star_points | start: `reborn0` = count stars of type 'yeniden doğmuş yıldız'(reborn star). reborn = current count; dead = count types ∈ {ölü yıldız dead star, kara güneş black sun, yıldız kalıntısı star remnant}; if neither → text "There is no dead star in the cosmos yet; one must die first." percent 0; else percent = reborn > reborn0 ? 100 : 0, text "{dead} dead stars are waiting", done when reborn > reborn0 |
-| bes_dunya | "A {world_count}-world cosmos" | "At least {world_count} worlds in the cosmos, each with a living people." | world_points | worlds = non-forgotten; inhabited = those with ≥1 canon `halk`; percent = inhabited/world_count; text "{inhabited}/{world_count} worlds inhabited ({n} worlds)"; done when inhabited ≥ world_count |
-| uzun_baris | "{peace_epochs} epochs of peace" | "No war stays open for {peace_epochs} consecutive epochs." | peace_points | epochEnd: counter = warCount() ? 0 : counter+1. progress: counter (0 if wars now); text either "{n} wars ongoing; counter reset" or "{c}/{peace_epochs} peace epochs"; done when counter ≥ peace_epochs |
-| kozmik_guc | "A civilization reaching for the stars" | "A people reaches civilization tier {cosmic_tier} ("interstellar power")." | cosmic_points | best = max tier over peoples and settlements; percent; text "highest tier {best}/{cosmic_tier}"; done when best ≥ cosmic_tier |
-| sadik_panteon | "A loyal pantheon" | "No son rebels for {loyal_epochs} epochs; at the end every son's loyalty is above {loyal_loyalty}." | loyal_points | start: `asi0` = ids of current rebels, `kronik0` = max chronicle id. Fails if any non-dead rebel not in asi0 exists, or any chronicle row type 'isyan' with id > kronik0 whose text says "rebelled" (TR LIKE '%isyan etti%'; if kronik0 missing, cag > start). Else elapsed; loyalties of active sons (default `loyalty_default`); text "{elapsed}/{loyal_epochs} epochs without rebellion · {k}/{n} loyal"; done when elapsed ≥ loyal_epochs and all > loyal_loyalty |
-| yeni_ufuklar | "{horizon_land} new lands" | "{horizon_land} new lands enter the map (at least {horizon_regions} regions): by mortal discovery, by the sons or by your hand." | horizon_points | start: `id0` = max entity id. regions = count entities id > id0, type 'bolge', status ∈ {kanon, olu}; total = regions + same for 'yer'; percent = min(total/horizon_land, horizon_regions ? regions/horizon_regions : 1)*100; text "{total}/{land} new lands · {regions}/{need} regions"; done when both met |
+- `scenarios(id, key, status ∈ {running, completed, failed, abandoned}, start_epoch, end_epoch, tier, target, deadline_epoch, held, metric, comparator, basis, hold_epochs, title, counter, baseline_value, baseline_entity_id, baseline_chronicle_id, baseline_rebel_ids, points, awarded_points, result)`. A custom goal (`key = custom`) must name its metric, comparator (`at_least`, `at_most`) and basis (`total`, `gained`). Only one preset of a key runs at a time; custom goals run side by side up to `goals.custom_max_running`.
+- `achievements(key, tier, epoch)`, primary key `(key, tier)`, tier 1 to 3.
+- `scores(epoch PK, total, breakdown JSON)`.
 
-`startScenario(key)`: unknown → throw "No such scenario."; already running → throw "This scenario is already running."; insert `{key, start_epoch: cag, status:'suruyor', veri: start?() or {}}`; chronicle 'tanri' "{T} set himself a goal: {name}."; returns `goals()`.
-`abandonScenario(id)`: must be running else "No such running scenario."; status 'birakildi', end epoch; returns `goals()`.
-`scenarioProgress(row, w)`: calls progress inside try; on error `{text: "could not be measured: {error}"}`.
+Migration `a0be25fe960c`: adds the goal columns, fills the target and worth of every older goal from the defaults, keeps the points already awarded, moves the lost-star baseline, renames the gendered achievement key `fathers_hand` to `creators_hand` and keys achievements by tier.
 
-### 4.3 Achievements (full list; each has `condition(world)`; earned once)
+### 4.3 Goals (`catalog/scenarios.py`)
 
-| Key | Name | Description | Points | Condition |
-|---|---|---|---|---|
-| ilk_dunya | "{ordinal(ach_worlds)} sky" (e.g. "Second sky") | "There are {ach_worlds} worlds in the cosmos." | ach_worlds_points | count worlds ≥ ach_worlds |
-| uc_yildiz | Constellation | "A cosmos of {ach_stars} stars." | ach_stars_points | count stars ≥ ach_stars |
-| kehanet | The word came true | A prophecy was fulfilled. | ach_prophecy_points | ≥1 entity with status 'gerceklesti' |
-| dirilis | Return from death | A dead son was resurrected. | ach_resurrection_points | ≥1 chronicle row type 'dirilis' (NB: olum.js also writes 'dirilis' rows for rites — fires early; see §14) |
-| isyan_bastir | The father's hand | A rebellion was suppressed. | ach_rebellion_points | ≥1 chronicle 'isyan' whose text says "suppressed" (TR LIKE '%bastırdı%') |
-| on_dil | Babel | "{ach_languages} languages are spoken." | ach_languages_points | canon `dil` count ≥ ach_languages |
-| milyon | Crowded world | "Total population of peoples exceeded {ach_population}." | ach_population_points | population(peoples) ≥ ach_population |
-| ilk_dua | Someone called you | A mortal prayed directly to you. | ach_prayer_points | ≥1 message v→t |
-| kult | The creator's cult | "{ach_cult} communities worship you directly." | ach_cult_points | active v→t worship bonds ≥ ach_cult |
-| ilk_sefer | Interstellar traveller | A journey reached another world. | ach_voyage_points | ≥1 `yolculuklar` with status 'vardi'(arrived) |
-| efsane | Saga completed | A legendary expedition ended successfully. | ach_legend_points | ≥1 `iplikler` with `buyuk` not null, status 'kapandi', closing text contains "successfully" (TR '%başarıyla%') |
-| on_cag | "God of {ach_epochs} epochs" | "The world left {ach_epochs} epochs behind." | ach_epochs_points | w.cag ≥ ach_epochs |
-| elli_cag | Ancient | "The world left {ach_ancient_epochs} epochs behind." | ach_ancient_points | w.cag ≥ ach_ancient_epochs |
-| sekiz_ogul | Crowded pantheon | "{ach_sons} sons live at once." | ach_sons_points | non-dead sons ≥ ach_sons |
-| ilk_kasif | First explorers | Mortals found a land not on the map. | ach_discovery_points | ≥1 bond type 'kesfetti'(discovered) |
-| sezilen_dunya | Sensed world | A world sensed by sky-watching mortals came to light. | ach_sensed_points | ≥1 `ufuk_sezgi` row status 'dogdu'(born) |
-| barisci | The weapons fell silent | "An epoch ended without any war (with at least {ach_peace_peoples} peoples)." | ach_peace_points | peoples ≥ ach_peace_peoples and warCount() == 0 |
+Each preset has a field, a default target from the rules, a step added to the default at each higher tier, a worth in points and a measure. The tier of a new run is one more than the times the goal was completed, so the board offers the next rung of every chain; the player may set any target from 1 to `goals.scenario_target_max` (civilization stages stop at the highest stage). Metric presets count the total or what was gained since the goal began (`baseline_value` taken at the start).
 
-### 4.4 Per-epoch goals (`goalsEpoch(notes)`)
-```
-for each running scenario r:
-   data = S.epochEnd ? {...r.veri, ...S.epochEnd(state, w)} : r.veri; store
-   i = scenarioProgress({...r, veri:data}, w)
-   if i.done or i.failed:
-      UPDATE status = done ? 'tamam' : 'basarisiz', end_epoch, result = i.text
-      m = done ? "Goal achieved: {name}." : "Goal lost: {name}. {text}"
-      notes.push(m); chronicle(cag, null, 'tanri', m); notify({category:'basarim', title:m, importance:3})
-for each achievement not yet earned: try condition(w); if true: insert (key, cag); notify({category:'basarim', title:"Achievement: {name}", text: description, importance:2})
-p = score(w); INSERT OR REPLACE puanlar(cag, total, breakdown)
-```
-`notify` = bildirim.bildir (notification center; other part).
-
-### 4.5 Score (`score(w)`)
-```
-breakdown = {
-  population:   round(log10(1 + population(peoples)) * score_population),
-  diversity:    min(score_diversity_cap, count canon entities),
-  languages:    count canon 'dil' * score_language,
-  worlds:       count worlds * score_world,
-  civilization: max(0, tiers of peoples) * score_tier,
-  doomsday:     -round(num(w.kiyamet)/threshold * doom_score_penalty),
-  achievements: Σ points of earned achievements,
-  scenarios:    Σ points of completed scenarios (each completion counts, repeats included) }
-total = Σ breakdown
-```
-`goals()` (GET /api/hedefler): `{scenarios: [{key, name, description, points, history:[{id,status,start,end,result}]}], running: [{id,key,name,start, ...progress}], achievements: [{key,name,description,points,earned,epoch}], score, score_history:[{cag,total}]}`.
-
-### 4.6 Tunables — domain `GOAL` (old `HEDEF`)
-
-| Key (old) | Default | Min | Max | Group | Label |
+| Key | Name at tier I | Field | Target (default, step per tier) | Measure | Points |
 |---|---|---|---|---|---|
-| doom_far_epochs (kiyamet_uzak_cag) | 20 | 1 | 200 | Doomsday | Scenario: epochs to keep doomsday away |
-| doom_far_limit (kiyamet_uzak_esik) | 80 | 1 | 100 | Doomsday | Scenario: point the clock must not reach (% of threshold) |
-| doom_score_penalty (puan_kiyamet) | 150 | 0 | 1000 | Doomsday | Score: doomsday penalty when the clock is at the threshold |
-| doom_far_points (kiyamet_uzak_puan) | 300 | 0 | 10000 | Goals and achievements | Scenario points: keep doomsday away |
-| one_faith_peoples (tek_inanc_halk) | 3 | 1 | 100 | Goals and achievements | Scenario: minimum peoples that must unite in one faith |
-| one_faith_points (tek_inanc_puan) | 250 | 0 | 10000 | Goals and achievements | Scenario points: all peoples in one faith |
-| lost_star_points (kayip_yildiz_puan) | 200 | 0 | 10000 | Goals and achievements | Scenario points: rekindle the lost star |
-| world_count (dunya_sayi) | 5 | 1 | 100 | Goals and achievements | Scenario: number of worlds with a living people |
-| world_points (dunya_puan) | 250 | 0 | 10000 | Goals and achievements | Scenario points: multi-world cosmos |
-| peace_epochs (baris_cag) | 5 | 1 | 200 | Goals and achievements | Scenario: consecutive peace epochs |
-| peace_points (baris_puan) | 200 | 0 | 10000 | Goals and achievements | Scenario points: long peace |
-| cosmic_tier (kozmik_basamak) | 4 | 1 | 20 | Goals and achievements | Scenario: civilization tier to reach |
-| cosmic_points (kozmik_puan) | 300 | 0 | 10000 | Goals and achievements | Scenario points: civilization reaching the stars |
-| loyal_epochs (sadik_cag) | 10 | 1 | 200 | Goals and achievements | Scenario: epochs that must pass without rebellion |
-| loyal_loyalty (sadik_sadakat) | 60 | 0 | 100 | Goals and achievements | Scenario: loyalty every son must exceed |
-| loyalty_default (sadakat_varsayilan) | 50 | 0 | 100 | Goals and achievements | Scenario: assumed loyalty of a son without one |
-| loyal_points (sadik_puan) | 250 | 0 | 10000 | Goals and achievements | Scenario points: loyal pantheon |
-| horizon_land (ufuk_toprak) | 8 | 1 | 1000 | Goals and achievements | Scenario: new lands to open (region or place; by discovery, son or god) |
-| horizon_regions (ufuk_bolge) | 2 | 0 | 1000 | Goals and achievements | Scenario: how many of them must be new regions |
-| horizon_points (ufuk_puan) | 250 | 0 | 10000 | Goals and achievements | Scenario points: new horizons |
-| ach_worlds (b_dunya) | 2 | 1 | 100 | Goals and achievements | Achievement: number of worlds in the cosmos |
-| ach_worlds_points (b_dunya_puan) | 50 | 0 | 10000 | Goals and achievements | Achievement points: new sky |
-| ach_stars (b_yildiz) | 3 | 1 | 100 | Goals and achievements | Achievement: number of stars |
-| ach_stars_points (b_yildiz_puan) | 40 | 0 | 10000 | Goals and achievements | Achievement points: constellation |
-| ach_prophecy_points (b_kehanet_puan) | 40 | 0 | 10000 | Goals and achievements | Achievement points: prophecy fulfilled |
-| ach_resurrection_points (b_dirilis_puan) | 60 | 0 | 10000 | Goals and achievements | Achievement points: return from death |
-| ach_rebellion_points (b_isyan_puan) | 40 | 0 | 10000 | Goals and achievements | Achievement points: rebellion suppressed |
-| ach_languages (b_dil) | 10 | 1 | 1000 | Goals and achievements | Achievement: number of spoken languages |
-| ach_languages_points (b_dil_puan) | 50 | 0 | 10000 | Goals and achievements | Achievement points: Babel |
-| ach_population (b_nufus) | 1000000 | 1000 | 2000000000 | Goals and achievements | Achievement: total population of peoples |
-| ach_population_points (b_nufus_puan) | 60 | 0 | 10000 | Goals and achievements | Achievement points: crowded world |
-| ach_prayer_points (b_dua_puan) | 30 | 0 | 10000 | Goals and achievements | Achievement points: first prayer |
-| ach_cult (b_kult) | 3 | 1 | 100 | Goals and achievements | Achievement: communities worshipping the creator directly |
-| ach_cult_points (b_kult_puan) | 60 | 0 | 10000 | Goals and achievements | Achievement points: the creator's cult |
-| ach_voyage_points (b_sefer_puan) | 50 | 0 | 10000 | Goals and achievements | Achievement points: interstellar traveller |
-| ach_legend_points (b_efsane_puan) | 80 | 0 | 10000 | Goals and achievements | Achievement points: saga completed |
-| ach_epochs (b_cag) | 10 | 1 | 1000 | Goals and achievements | Achievement: epochs left behind (first threshold) |
-| ach_epochs_points (b_cag_puan) | 50 | 0 | 10000 | Goals and achievements | Achievement points: first epoch threshold |
-| ach_ancient_epochs (b_kadim_cag) | 50 | 1 | 10000 | Goals and achievements | Achievement: epochs left behind (ancient) |
-| ach_ancient_points (b_kadim_puan) | 150 | 0 | 10000 | Goals and achievements | Achievement points: ancient |
-| ach_sons (b_ogul) | 8 | 1 | 100 | Goals and achievements | Achievement: sons alive at once |
-| ach_sons_points (b_ogul_puan) | 50 | 0 | 10000 | Goals and achievements | Achievement points: crowded pantheon |
-| ach_peace_peoples (b_baris_halk) | 3 | 1 | 100 | Goals and achievements | Achievement: minimum peoples for a warless epoch |
-| ach_peace_points (b_baris_puan) | 40 | 0 | 10000 | Goals and achievements | Achievement points: the weapons fell silent |
-| ach_discovery_points (b_kesif_puan) | 40 | 0 | 10000 | Goals and achievements | Achievement points: first explorers |
-| ach_sensed_points (b_sezgi_puan) | 80 | 0 | 10000 | Goals and achievements | Achievement points: sensed world |
-| score_population (puan_nufus) | 20 | 0 | 1000 | Goals and achievements | Score: per tenfold of population |
-| score_diversity_cap (puan_cesitlilik_tavan) | 150 | 0 | 100000 | Goals and achievements | Score: max points for record diversity |
-| score_language (puan_dil) | 5 | 0 | 1000 | Goals and achievements | Score: per language |
-| score_world (puan_dunya) | 25 | 0 | 1000 | Goals and achievements | Score: per world |
-| score_tier (puan_basamak) | 20 | 0 | 1000 | Goals and achievements | Score: per step of the highest civilization tier |
+| `doom_far` | Keep doomsday away for 20 epochs | Time | 20, +5 | own measure | 300 |
+| `one_faith` | Unite all peoples in one faith | Faith | 3, +2 | own measure | 250 |
+| `lost_star` | Rekindle the lost star | Cosmos | 1, +1 | Reborn stars gained since the start | 200 |
+| `many_worlds` | A 5-world cosmos | Cosmos | 5, +3 | Worlds with a living people | 250 |
+| `long_peace` | 5 epochs of peace | Order | 5, +5 | own measure | 200 |
+| `cosmic_power` | A civilization reaching for the stars | Peoples | 4, +1 | Highest civilization stage | 300 |
+| `loyal_pantheon` | A loyal pantheon | Pantheon | 10, +5 | own measure | 250 |
+| `new_horizons` | 8 new lands | Discovery | 8, +4 | own measure | 250 |
+| `golden_age` | A golden age | Peoples | 1, +1 | Communities in a golden age | 250 |
+| `age_of_wonders` | An age of wonders | Learning and the arts | 2, +2 | Wonders gained since the start | 300 |
+| `bridge_the_galaxies` | Bridge the galaxies | Scales of the cosmos | 1, +2 | Voyages arrived beyond a galaxy gained since the start | 350 |
+| `age_of_learning` | An age of learning | Learning and the arts | 5, +5 | Knowledge + Theories gained since the start | 250 |
+| `teeming_life` | Teeming life | Life | 5, +5 | Species gained since the start | 200 |
+| `creators_faithful` | The Creator's faithful | Faith | 5, +5 | Communities worshipping the Creator | 250 |
+| `custom` | A goal of your own | The Creator's hand | 1, +0 | own measure | 150 |
+
+Progress logic of the bespoke presets: the doomsday goal fails when the clock reaches `round(threshold × keep_apocalypse_away_pct / 100)` and completes after `target` epochs; one faith completes when at least `target` peoples exist and all share one patron; long peace counts consecutive warless epoch ends (`counter`); a loyal pantheon fails on any new rebel or rebellion line since the start and completes after `target` epochs with every active son above `loyal_min_loyalty`; new horizons counts regions and places created since the start, at least `min(target, horizon_regions)` of them regions; the lost star counts reborn stars gained since the start and names the dead stars still waiting.
+
+A goal of one's own picks any measure, a bound (at least, at most), a basis (in all, gained from now; gained asks for at least), a target, a hold (epochs in a row the mark must be kept; 0 ends it when first reached; `counter` advances only at epoch ends) and an optional name. Its default name is "At least N …", "At most N …" or "Gain N …".
+
+Deadlines: a goal may set a deadline 1 to `goals.deadline_max_epochs` epochs ahead. At an epoch end on or after the deadline an unfinished goal fails ("The deadline of epoch N passed."); a manual measurement fails it only after the deadline epoch. A held goal is neither measured nor ended, its counter rests and its deadline moves one epoch later at every epoch end it is held.
+
+Worth: a preset is worth `points × min(target_points_cap_pct/100, target / default target)`; a custom goal is worth `custom_points × min(custom_ratio_cap_pct/100, ratio)` plus `custom_hold_points` per hold epoch, where ratio is the distance to cover over the value at the start (0 when already reached); a deadline adds `deadline_bonus_pct`. The worth is fixed at the start and weighed again on every edit. On completion a goal awards its worth minus the best worth of any earlier completion of the same goal (the same metric for custom goals), so repeating an easier target earns nothing and climbing the chain earns the difference.
+
+Levers (all free, catalogue group Goals): `scenario:start {key, target?, deadline_epochs?}`, `scenario:custom {metric, comparator, basis, target, hold_epochs, deadline_epochs?, title?}`, `scenario:edit {scenario_id, target, deadline_epochs?, hold_epochs, title?}`, `scenario:hold {scenario_id, held}`, `scenario:abandon {scenario_id}`, `scenario:delete {scenario_id}` (strikes a record and its awarded points), `goals:evaluate`. Chronicle on start `"{creator} set a goal: {name}."`, on end `"Goal achieved: {name}."` / `"Goal lost: {name}. {detail}"`. Running goals that are not held reach the sons' turn context as THE CREATOR'S GREAT PURPOSE with their deadline.
+
+### 4.4 Achievements (`catalog/achievements.py`)
+
+Every achievement rests on one measure; tier N is earned when the measure reaches `achievements.tier_N_<key>`, and lower tiers are earned with it when the value jumps. Tier I is worth `achievements.points_<key>`, tier II and III `tier_2_points_pct` and `tier_3_points_pct` of it. Each tier earned is stored with its epoch and filed as an achievement notification ("Achievement: Babel II"). Achievements never reach a prompt.
+
+| Key | Title | Field | Measure | Tiers (I / II / III) | Points (tier I) |
+|---|---|---|---|---|---|
+| `second_sky` | Many skies | Cosmos | Worlds in the cosmos | 2 / 5 / 12 | 50 |
+| `constellation` | Constellation | Cosmos | Stars | 3 / 10 / 30 | 40 |
+| `peopled_skies` | Peopled skies | Cosmos | Worlds with a living people | 2 / 5 / 10 | 70 |
+| `moons_in_orbit` | Moons in orbit | Cosmos | Moons | 1 / 5 / 15 | 40 |
+| `rekindled_star` | Rekindled star | Cosmos | Reborn stars | 1 / 2 / 4 | 90 |
+| `many_galaxies` | Many galaxies | Scales of the cosmos | Galaxies | 2 / 5 / 12 | 80 |
+| `galaxy_clusters` | Galaxy clusters | Scales of the cosmos | Galaxy clusters | 1 / 3 / 8 | 90 |
+| `many_dimensions` | Many dimensions | Scales of the cosmos | Dimensions | 2 / 4 / 8 | 100 |
+| `rifts_opened` | Rifts opened | Scales of the cosmos | Open rifts | 1 / 3 / 6 | 70 |
+| `cosmic_beings` | Cosmic beings | Scales of the cosmos | Cosmic beings | 1 / 3 / 8 | 90 |
+| `across_the_galaxies` | Across the galaxies | Scales of the cosmos | Voyages arrived beyond a galaxy | 1 / 5 / 20 | 120 |
+| `trade_between_galaxies` | Trade between galaxies | Scales of the cosmos | Busy trade routes beyond a galaxy | 1 / 3 / 8 | 120 |
+| `many_kinds_of_life` | Many kinds of life | Life | Species | 5 / 20 / 60 | 50 |
+| `beasts_of_the_wild` | Beasts of the wild | Life | Beasts | 1 / 5 / 15 | 40 |
+| `spirits_abroad` | Spirits abroad | Life | Spirits | 1 / 5 / 15 | 40 |
+| `species_awakened` | A species awakened | Life | Species that became peoples | 1 / 3 / 6 | 90 |
+| `many_peoples` | Many peoples | Peoples | Peoples | 3 / 10 / 25 | 50 |
+| `crowded_world` | Crowded world | Peoples | Population of the peoples | 1000000 / 10000000 / 100000000 | 60 |
+| `settled_lands` | Settled lands | Peoples | Settlements | 5 / 25 / 80 | 50 |
+| `realms_rise` | Realms rise | Peoples | Realms | 1 / 5 / 15 | 60 |
+| `empire` | Empire | Peoples | Empires | 1 / 2 / 4 | 100 |
+| `golden_age` | Golden age | Peoples | Communities in a golden age | 1 / 3 / 6 | 90 |
+| `height_of_civilization` | Height of civilization | Peoples | Highest civilization stage | 2 / 4 / 5 | 80 |
+| `treaties_signed` | Treaties signed | Peoples | Treaties | 1 / 5 / 15 | 50 |
+| `trade_routes` | Trade routes | Peoples | Trade routes | 1 / 5 / 20 | 50 |
+| `babel` | Babel | Peoples | Languages | 10 / 25 / 60 | 50 |
+| `first_prayer` | Someone called you | Faith | Prayers to the Creator | 1 / 25 / 200 | 30 |
+| `creators_cult` | The Creator's cult | Faith | Communities worshipping the Creator | 3 / 10 / 30 | 60 |
+| `prophecy_fulfilled` | The word came true | Faith | Fulfilled prophecies | 1 / 3 / 8 | 40 |
+| `many_faiths` | Many faiths | Faith | Cults | 3 / 10 / 30 | 50 |
+| `one_god_many_peoples` | One god, many peoples | Faith | Peoples sharing the widest faith | 3 / 8 / 15 | 80 |
+| `mortal_made_divine` | A mortal made divine | Faith | Ascended mortals | 1 / 3 / 6 | 120 |
+| `crowded_pantheon` | Crowded pantheon | Pantheon | Living sons | 8 / 15 / 25 | 50 |
+| `mighty_son` | A mighty son | Pantheon | Highest son level | 3 / 6 / 10 | 70 |
+| `return_from_death` | Return from death | Pantheon | Resurrections | 1 / 3 / 6 | 60 |
+| `creators_hand` | The Creator's hand | Pantheon | Suppressed rebellions | 1 / 3 / 6 | 40 |
+| `other_gods` | Other gods | Pantheon | Foreign gods | 1 / 3 / 6 | 50 |
+| `store_of_knowledge` | A store of knowledge | Learning and the arts | Knowledge | 5 / 20 / 60 | 50 |
+| `theories` | Theories | Learning and the arts | Theories | 1 / 5 / 15 | 60 |
+| `works_of_art` | Works of art | Learning and the arts | Artworks | 3 / 15 / 50 | 50 |
+| `arts` | The arts | Learning and the arts | Art forms | 1 / 4 / 10 | 50 |
+| `legends` | Legends | Learning and the arts | Legends | 3 / 15 / 50 | 40 |
+| `traditions` | Traditions | Learning and the arts | Traditions | 3 / 15 / 40 | 40 |
+| `rule_of_law` | Rule of law | Learning and the arts | Laws | 3 / 15 / 40 | 40 |
+| `wonders` | Wonders | Learning and the arts | Wonders | 1 / 3 / 8 | 120 |
+| `collections` | Collections | Learning and the arts | Museum collections | 1 / 3 / 8 | 60 |
+| `saga_completed` | Saga completed | Learning and the arts | Completed legendary quests | 1 / 3 / 8 | 80 |
+| `heroes_returned` | Heroes returned | Learning and the arts | Won heroquests | 1 / 3 / 8 | 80 |
+| `interstellar_traveller` | Interstellar traveller | Discovery | Journeys arrived at another world | 1 / 10 / 50 | 50 |
+| `first_explorers` | First explorers | Discovery | Lands found by mortals | 1 / 10 / 40 | 40 |
+| `sensed_world` | Sensed world | Discovery | Sensed worlds born | 1 / 3 / 6 | 80 |
+| `vessels` | Vessels | Discovery | Vessels | 1 / 5 / 20 | 50 |
+| `weapons_silent` | The weapons fell silent | Order | Peoples in a cosmos without war | 3 / 8 / 15 | 40 |
+| `god_of_epochs` | God of epochs | Time | Epochs behind the cosmos | 10 / 20 / 30 | 50 |
+| `ancient` | Ancient | Time | Epochs behind the cosmos | 50 / 100 / 200 | 150 |
+| `creator_at_work` | The Creator at work | The Creator's hand | Deeds of the Creator | 10 / 100 / 500 | 40 |
+| `master_of_levers` | Master of many deeds | The Creator's hand | Kinds of deed done by the Creator | 10 / 25 / 50 | 60 |
+| `miracles` | Miracles | The Creator's hand | Miracles of the Creator | 1 / 10 / 50 | 50 |
+
+### 4.5 Score (`score(session, rules, epoch)`)
+
+```
+population:   round(log10(1 + population) × score_population)
+diversity:    min(score_diversity_cap, canon records)
+languages:    languages × score_language
+worlds:       worlds × score_world
+civilization: highest civilization stage of a community × score_stage
+life:         min(score_life_cap, (species + beasts + spirits) × score_life)
+faith:        min(score_faith_cap, (cults + communities worshipping the Creator) × score_faith)
+culture:      min(score_culture_cap, (artworks + art forms + legends + traditions) × score_culture)
+knowledge:    min(score_knowledge_cap, (knowledge + theories) × score_knowledge)
+wonders:      min(score_wonder_cap, (wonders + museum collections) × score_wonder)
+scales:       min(score_scale_cap, (galaxies + clusters + dimensions) × score_scale)
+exploration:  min(score_exploration_cap, (discoveries + arrived journeys) × score_exploration)
+doomsday:     -round(clock / threshold × score_apocalypse_penalty)
+achievements: Σ points of every achievement tier earned
+scenarios:    Σ awarded_points of completed goals
+total = Σ parts
+```
+
+`GET /api/goals` serves the epoch, the fields, every measure with its value, the goal board (next tier, default target, highest target, worth, history), the running goals with progress, every achievement with its value, tier, percent toward the next tier and its three tiers, the score and its history. `GET /api/goals/quote` prices a goal before it starts. The book and the Codex render the chapter "Deeds and Trials": the score in full, every achievement tier earned with its field, what it took, epoch and points, every goal with field, tier, target, state, epochs, deadline, points awarded of its worth, aim and outcome, and the score by epoch.
+
+### 4.6 Tunables
+
+Domain `goals` (group Goals and achievements; the doomsday goal in group Apocalypse) holds every preset's target, step and points, `scenario_target_max`, `target_points_cap_pct`, `deadline_bonus_pct`, `deadline_max_epochs`, the custom goal rules (`custom_points`, `custom_ratio_cap_pct`, `custom_hold_points`, `custom_hold_max_epochs`, `custom_max_running`, `custom_target_max`) and the score weights and caps. Domain `achievements` (group Achievements) holds `tier_1_<key>`, `tier_2_<key>`, `tier_3_<key>` and `points_<key>` for every achievement plus `tier_2_points_pct` and `tier_3_points_pct`; tiers rise strictly (rules/constraints.py). The former `goals.ach_*` keys and `goals.default_loyalty` are renamed to their new homes in rules/renames.py.
 
 ### 4.7 Cross-references
-Calls `medeniyet.basamakOf`, `bildirim.bildir`, `world.getWorld/kanonlar/addKronik`, `DENGE.kiyamet_esik`. Called by `sim.js` (`hedefCagi`), server (`hedefler`, `senaryoBaslat`, `senaryoBirak`), `kitap.js` (`hedefler`).
+Reads the canon, nodes, bonds, flags, routes, journeys, mantlings, heroquests, museums, action records and miracle records through `engine/gods/metrics.py`; writes achievements, notifications and scores. Called by the `goals` phase, the player levers (services/player/goals.py), `GET /api/goals` and `GET /api/goals/quote`, the sons' turn context (agents/context/son_turn.py) and the book and Codex (services/books/deeds.py).
 
 ---
 

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.domain.enums.cosmography import GalaxyType
+from aerona.domain.enums.meta import ACHIEVEMENT_TIERS, AchievementKey
 
 RARITY_KEYS = ("common", "uncommon", "rare", "epic", "legendary", "mythic")
 
@@ -69,4 +70,6 @@ ASCENDING_CHAINS: list[AscendingChain] = [
     AscendingChain(("memory.forget_below", "memory.vengeance_threshold"), strict=True),
     AscendingChain(("opinion.reading_floor_pct", "opinion.reading_ceiling_pct"), strict=True),
     AscendingChain(("skills.rust_floor_pct", "skills.decline_start_pct")),
+    AscendingChain(("achievements.tier_2_points_pct", "achievements.tier_3_points_pct")),
+    *(AscendingChain(tuple(f"achievements.tier_{tier}_{key.value}" for tier in ACHIEVEMENT_TIERS), strict=True) for key in AchievementKey),
 ]

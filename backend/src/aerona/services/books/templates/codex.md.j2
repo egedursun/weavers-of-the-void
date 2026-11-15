@@ -835,19 +835,45 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 
 ## Deeds and Trials
 
-{% if book.scores %}
-Score **{{ book.scores[-1].total }}** · Achievements **{{ book.achievements | length }}**
+Score **{{ book.deeds.total }}** · Achievements **{{ book.deeds.earned | length }}/{{ book.deeds.tiers_total }}** · Achievement points **{{ book.deeds.earned_points }}** · Goals completed **{{ book.deeds.completed }}**
 
-{% endif %}
-{% for name, epoch in book.achievements %}
-- 🏆 **{{ name }}** · epoch {{ epoch }}
+{% if book.deeds.parts %}
+### The score in full
+
+| Part | Points |
+|---|---|
+{% for part in book.deeds.parts %}
+| {{ part.label | cell }} | {{ part.value }} |
 {% endfor %}
 
-{% if book.scenarios %}
-| Trial | State | Epochs |
-|---|---|---|
-{% for name, scenario in book.scenarios %}
-| {{ name | cell }} | {{ scenario.status.value | replace("_", " ") }} | {{ scenario.start_epoch }}{% if scenario.end_epoch %}–{{ scenario.end_epoch }}{% endif %} |
+{% endif %}
+{% if book.deeds.earned %}
+### Achievements
+
+| Achievement | Tier | Field | What it took | Epoch | Points |
+|---|---|---|---|---|---|
+{% for deed in book.deeds.earned %}
+| 🏆 {{ deed.name | cell }} | {{ deed.tier_label }} | {{ deed.category | cell }} | {{ deed.description | cell }} | {{ deed.epoch }} | {{ deed.points }} |
+{% endfor %}
+
+{% endif %}
+{% if book.deeds.trials %}
+### Goals
+
+| Goal | Field | Tier | Target | State | Epochs | Deadline | Points | Aim and outcome |
+|---|---|---|---|---|---|---|---|---|
+{% for trial in book.deeds.trials %}
+| {{ trial.name | cell }} | {{ trial.category | cell }} | {{ trial.tier_label }} | {{ trial.target }} | {{ trial.state }} | {{ trial.span }} | {{ trial.deadline }} | {{ trial.reward }} | {{ trial.description | cell }}{% if trial.result %} — *{{ trial.result | cell }}*{% endif %} |
+{% endfor %}
+
+{% endif %}
+{% if book.deeds.scores %}
+### Score by epoch
+
+| Epoch | Score |
+|---|---|
+{% for score in book.deeds.scores %}
+| {{ score.epoch }} | {{ score.total }} |
 {% endfor %}
 
 {% endif %}

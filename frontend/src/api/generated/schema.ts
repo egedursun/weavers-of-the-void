@@ -3631,6 +3631,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/goals/quote': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['goal_quote_api_goals_quote_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/opportunities': {
     parameters: {
       query?: never
@@ -3663,6 +3679,54 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/scenarios/custom': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['post_scenarios_custom_api_scenarios_custom_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/scenarios/{scenario_id}/edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['post_scenarios_scenario_id_edit_api_scenarios__scenario_id__edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/scenarios/{scenario_id}/hold': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['post_scenarios_scenario_id_hold_api_scenarios__scenario_id__hold_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/scenarios/{scenario_id}/abandon': {
     parameters: {
       query?: never
@@ -3673,6 +3737,22 @@ export interface paths {
     get?: never
     put?: never
     post: operations['post_scenarios_scenario_id_abandon_api_scenarios__scenario_id__abandon_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/scenarios/{scenario_id}/delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['post_scenarios_scenario_id_delete_api_scenarios__scenario_id__delete_post']
     delete?: never
     options?: never
     head?: never
@@ -37663,7 +37743,7 @@ export interface components {
       | 'constellation'
       | 'prophecy_fulfilled'
       | 'return_from_death'
-      | 'fathers_hand'
+      | 'creators_hand'
       | 'babel'
       | 'crowded_world'
       | 'first_prayer'
@@ -37676,13 +37756,64 @@ export interface components {
       | 'first_explorers'
       | 'sensed_world'
       | 'weapons_silent'
-    AchievementView: {
-      key: components['schemas']['AchievementKey']
+      | 'peopled_skies'
+      | 'moons_in_orbit'
+      | 'rekindled_star'
+      | 'many_galaxies'
+      | 'galaxy_clusters'
+      | 'many_dimensions'
+      | 'rifts_opened'
+      | 'cosmic_beings'
+      | 'across_the_galaxies'
+      | 'trade_between_galaxies'
+      | 'many_kinds_of_life'
+      | 'beasts_of_the_wild'
+      | 'spirits_abroad'
+      | 'species_awakened'
+      | 'many_peoples'
+      | 'settled_lands'
+      | 'realms_rise'
+      | 'empire'
+      | 'golden_age'
+      | 'height_of_civilization'
+      | 'treaties_signed'
+      | 'trade_routes'
+      | 'many_faiths'
+      | 'one_god_many_peoples'
+      | 'mortal_made_divine'
+      | 'mighty_son'
+      | 'other_gods'
+      | 'store_of_knowledge'
+      | 'theories'
+      | 'works_of_art'
+      | 'arts'
+      | 'legends'
+      | 'traditions'
+      | 'rule_of_law'
+      | 'wonders'
+      | 'collections'
+      | 'heroes_returned'
+      | 'vessels'
+      | 'creator_at_work'
+      | 'master_of_levers'
+      | 'miracles'
+    AchievementTierView: {
+      tier: number
       name: string
       description: string
+      threshold: number
       points: number
-      earned: boolean
       epoch: number | null
+    }
+    AchievementView: {
+      key: components['schemas']['AchievementKey']
+      category: components['schemas']['GoalCategory']
+      metric: components['schemas']['GoalMetric']
+      title: string
+      value: number
+      tier: number
+      percent: number
+      tiers: components['schemas']['AchievementTierView'][]
     }
     ActKind:
       | 'execution'
@@ -49735,9 +49866,98 @@ export interface components {
       aptitude: number
       gifted: boolean
     }
+    GoalBasis: 'total' | 'gained'
+    GoalCategory:
+      | 'cosmos'
+      | 'scales'
+      | 'life'
+      | 'peoples'
+      | 'faith'
+      | 'pantheon'
+      | 'culture'
+      | 'discovery'
+      | 'order'
+      | 'time'
+      | 'creator'
+    GoalCategoryView: {
+      category: components['schemas']['GoalCategory']
+      label: string
+    }
+    GoalComparator: 'at_least' | 'at_most'
+    GoalMetric:
+      | 'worlds'
+      | 'inhabited_worlds'
+      | 'moons'
+      | 'stars'
+      | 'reborn_stars'
+      | 'dead_stars'
+      | 'galaxies'
+      | 'clusters'
+      | 'dimensions'
+      | 'open_rifts'
+      | 'cosmic_beings'
+      | 'far_voyages'
+      | 'far_trade_routes'
+      | 'species'
+      | 'beasts'
+      | 'spirits'
+      | 'awakened_species'
+      | 'peoples'
+      | 'population'
+      | 'settlements'
+      | 'polities'
+      | 'empires'
+      | 'golden_ages'
+      | 'highest_civ_tier'
+      | 'treaties'
+      | 'trade_routes'
+      | 'languages'
+      | 'cults'
+      | 'creator_worshippers'
+      | 'prayers_to_creator'
+      | 'fulfilled_prophecies'
+      | 'largest_faith'
+      | 'ascended_mortals'
+      | 'living_sons'
+      | 'highest_son_level'
+      | 'resurrections'
+      | 'suppressed_rebellions'
+      | 'foreign_gods'
+      | 'knowledge'
+      | 'theories'
+      | 'artworks'
+      | 'art_forms'
+      | 'legends'
+      | 'traditions'
+      | 'laws'
+      | 'wonders'
+      | 'museums'
+      | 'completed_sagas'
+      | 'heroquests_won'
+      | 'arrived_journeys'
+      | 'discoveries'
+      | 'sensed_worlds'
+      | 'vessels'
+      | 'ongoing_wars'
+      | 'warless_peoples'
+      | 'epoch'
+      | 'doom_percent'
+      | 'creator_deeds'
+      | 'levers_used'
+      | 'miracles'
+    GoalQuote: {
+      name: string
+      description: string
+      target: number
+      start_value: number
+      points: number
+    }
     GoalSource: 'engine' | 'agent' | 'creator'
     GoalState: 'active' | 'done' | 'failed' | 'dropped'
     GoalsOverview: {
+      epoch: number
+      categories: components['schemas']['GoalCategoryView'][]
+      metrics: components['schemas']['MetricView'][]
       scenarios: components['schemas']['ScenarioView'][]
       running: components['schemas']['RunningScenario'][]
       achievements: components['schemas']['AchievementView'][]
@@ -55200,6 +55420,13 @@ export interface components {
       success: number
       locked: string[]
     }
+    MetricView: {
+      metric: components['schemas']['GoalMetric']
+      category: components['schemas']['GoalCategory']
+      label: string
+      value: number
+      lower_is_better: boolean
+    }
     Milestone: 'birth' | 'coming_of_age' | 'anniversary'
     MilestoneView: {
       label: string
@@ -59128,6 +59355,26 @@ export interface components {
     }
     PostScenariosBody: {
       key: components['schemas']['ScenarioKey']
+      target?: number | null
+      deadline_epochs?: number | null
+    }
+    PostScenariosCustomBody: {
+      metric: components['schemas']['GoalMetric']
+      comparator: components['schemas']['GoalComparator']
+      basis: components['schemas']['GoalBasis']
+      target: number
+      hold_epochs: number
+      deadline_epochs?: number | null
+      title?: string | null
+    }
+    PostScenariosScenarioIdEditBody: {
+      target: number
+      deadline_epochs?: number | null
+      hold_epochs: number
+      title?: string | null
+    }
+    PostScenariosScenarioIdHoldBody: {
+      held: boolean
     }
     PostSonsSonIdAbsoluteCommandBody: {
       text: string
@@ -61976,7 +62223,18 @@ export interface components {
       id: number
       key: components['schemas']['ScenarioKey']
       name: string
+      description: string
+      tier: number
+      target: number
       start_epoch: number
+      deadline_epoch: number | null
+      held: boolean
+      hold_epochs: number
+      points: number
+      metric: components['schemas']['GoalMetric'] | null
+      comparator: components['schemas']['GoalComparator'] | null
+      basis: components['schemas']['GoalBasis'] | null
+      title: string | null
       progress: components['schemas']['ScenarioProgress']
     }
     SacramentCreateInput: {
@@ -62223,8 +62481,14 @@ export interface components {
     ScenarioHistory: {
       id: number
       status: components['schemas']['ScenarioStatus']
+      name: string
+      tier: number
+      target: number
       start_epoch: number
       end_epoch: number | null
+      deadline_epoch: number | null
+      points: number
+      awarded_points: number
       result: string | null
     }
     ScenarioKey:
@@ -62236,18 +62500,30 @@ export interface components {
       | 'cosmic_power'
       | 'loyal_pantheon'
       | 'new_horizons'
+      | 'golden_age'
+      | 'age_of_wonders'
+      | 'bridge_the_galaxies'
+      | 'age_of_learning'
+      | 'teeming_life'
+      | 'creators_faithful'
+      | 'custom'
     ScenarioProgress: {
       percent: number
       text: string
+      value?: number | null
       done: boolean
       failed: boolean
     }
     ScenarioStatus: 'running' | 'completed' | 'failed' | 'abandoned'
     ScenarioView: {
       key: components['schemas']['ScenarioKey']
+      category: components['schemas']['GoalCategory']
       name: string
       description: string
       points: number
+      next_tier: number
+      default_target: number
+      target_max: number
       history: components['schemas']['ScenarioHistory'][]
     }
     SchemeBeginInput: {
@@ -62347,6 +62623,13 @@ export interface components {
       | 'languages'
       | 'worlds'
       | 'civilization'
+      | 'life'
+      | 'faith'
+      | 'culture'
+      | 'knowledge'
+      | 'wonders'
+      | 'scales'
+      | 'exploration'
       | 'doomsday'
       | 'achievements'
       | 'scenarios'
@@ -77727,6 +78010,41 @@ export interface operations {
       }
     }
   }
+  goal_quote_api_goals_quote_get: {
+    parameters: {
+      query?: {
+        key?: components['schemas']['ScenarioKey']
+        target?: number | null
+        deadline_epochs?: number | null
+        metric?: components['schemas']['GoalMetric'] | null
+        comparator?: components['schemas']['GoalComparator']
+        basis?: components['schemas']['GoalBasis']
+        hold_epochs?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GoalQuote']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   opportunities_api_opportunities_get: {
     parameters: {
       query?: never
@@ -77785,7 +78103,133 @@ export interface operations {
       }
     }
   }
+  post_scenarios_custom_api_scenarios_custom_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PostScenariosCustomBody']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  post_scenarios_scenario_id_edit_api_scenarios__scenario_id__edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        scenario_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PostScenariosScenarioIdEditBody']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  post_scenarios_scenario_id_hold_api_scenarios__scenario_id__hold_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        scenario_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PostScenariosScenarioIdHoldBody']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   post_scenarios_scenario_id_abandon_api_scenarios__scenario_id__abandon_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        scenario_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  post_scenarios_scenario_id_delete_api_scenarios__scenario_id__delete_post: {
     parameters: {
       query?: never
       header?: never
@@ -142900,7 +143344,7 @@ export const achievementKeyValues: ReadonlyArray<
   'constellation',
   'prophecy_fulfilled',
   'return_from_death',
-  'fathers_hand',
+  'creators_hand',
   'babel',
   'crowded_world',
   'first_prayer',
@@ -142913,6 +143357,47 @@ export const achievementKeyValues: ReadonlyArray<
   'first_explorers',
   'sensed_world',
   'weapons_silent',
+  'peopled_skies',
+  'moons_in_orbit',
+  'rekindled_star',
+  'many_galaxies',
+  'galaxy_clusters',
+  'many_dimensions',
+  'rifts_opened',
+  'cosmic_beings',
+  'across_the_galaxies',
+  'trade_between_galaxies',
+  'many_kinds_of_life',
+  'beasts_of_the_wild',
+  'spirits_abroad',
+  'species_awakened',
+  'many_peoples',
+  'settled_lands',
+  'realms_rise',
+  'empire',
+  'golden_age',
+  'height_of_civilization',
+  'treaties_signed',
+  'trade_routes',
+  'many_faiths',
+  'one_god_many_peoples',
+  'mortal_made_divine',
+  'mighty_son',
+  'other_gods',
+  'store_of_knowledge',
+  'theories',
+  'works_of_art',
+  'arts',
+  'legends',
+  'traditions',
+  'rule_of_law',
+  'wonders',
+  'collections',
+  'heroes_returned',
+  'vessels',
+  'creator_at_work',
+  'master_of_levers',
+  'miracles',
 ]
 export const actKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ActKind']
@@ -146535,6 +147020,91 @@ export const giftStanceValues: ReadonlyArray<
 export const giftStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GiftState']
 > = ['open', 'returned', 'refused', 'destroyed', 'lapsed']
+export const goalBasisValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GoalBasis']
+> = ['total', 'gained']
+export const goalCategoryValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GoalCategory']
+> = [
+  'cosmos',
+  'scales',
+  'life',
+  'peoples',
+  'faith',
+  'pantheon',
+  'culture',
+  'discovery',
+  'order',
+  'time',
+  'creator',
+]
+export const goalComparatorValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GoalComparator']
+> = ['at_least', 'at_most']
+export const goalMetricValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GoalMetric']
+> = [
+  'worlds',
+  'inhabited_worlds',
+  'moons',
+  'stars',
+  'reborn_stars',
+  'dead_stars',
+  'galaxies',
+  'clusters',
+  'dimensions',
+  'open_rifts',
+  'cosmic_beings',
+  'far_voyages',
+  'far_trade_routes',
+  'species',
+  'beasts',
+  'spirits',
+  'awakened_species',
+  'peoples',
+  'population',
+  'settlements',
+  'polities',
+  'empires',
+  'golden_ages',
+  'highest_civ_tier',
+  'treaties',
+  'trade_routes',
+  'languages',
+  'cults',
+  'creator_worshippers',
+  'prayers_to_creator',
+  'fulfilled_prophecies',
+  'largest_faith',
+  'ascended_mortals',
+  'living_sons',
+  'highest_son_level',
+  'resurrections',
+  'suppressed_rebellions',
+  'foreign_gods',
+  'knowledge',
+  'theories',
+  'artworks',
+  'art_forms',
+  'legends',
+  'traditions',
+  'laws',
+  'wonders',
+  'museums',
+  'completed_sagas',
+  'heroquests_won',
+  'arrived_journeys',
+  'discoveries',
+  'sensed_worlds',
+  'vessels',
+  'ongoing_wars',
+  'warless_peoples',
+  'epoch',
+  'doom_percent',
+  'creator_deeds',
+  'levers_used',
+  'miracles',
+]
 export const goalSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GoalSource']
 > = ['engine', 'agent', 'creator']
@@ -149871,6 +150441,13 @@ export const scenarioKeyValues: ReadonlyArray<
   'cosmic_power',
   'loyal_pantheon',
   'new_horizons',
+  'golden_age',
+  'age_of_wonders',
+  'bridge_the_galaxies',
+  'age_of_learning',
+  'teeming_life',
+  'creators_faithful',
+  'custom',
 ]
 export const scenarioStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ScenarioStatus']
@@ -149897,6 +150474,13 @@ export const scoreComponentValues: ReadonlyArray<
   'languages',
   'worlds',
   'civilization',
+  'life',
+  'faith',
+  'culture',
+  'knowledge',
+  'wonders',
+  'scales',
+  'exploration',
   'doomsday',
   'achievements',
   'scenarios',

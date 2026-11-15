@@ -504,9 +504,14 @@ Used by: Ledger drawer (`views/defter.js`), son drawer (son's pages), global und
 
 | Proposed | Old | Output / input | Used by |
 |---|---|---|---|
-| GET `/api/goals` | GET `/api/hedefler` | `{senaryolar: [{anahtar, ad, aciklama, puan, gecmis[]}], suren (running scenarios with progress), basarimlar (achievements [{anahtar, ad, aciklama, puan, kazanildi, cag}]), puan: {toplam, dokum: {nufus, cesitlilik, diller, dunyalar, medeniyet, kiyamet, basarim, senaryo}}, puan_gecmisi: [{cag, toplam}]}` | Goals panel |
-| POST `/api/scenarios` | POST `/api/senaryolar` | `{anahtar}` → goals; chronicle "X set himself a goal: …". Ledger `senaryo:basla` | Goals panel |
-| POST `/api/scenarios/{id}/abandon` | POST `/api/senaryolar/:id/birak` | → goals. Ledger `senaryo:birak` | Goals panel |
+| GET `/api/goals` | GET `/api/hedefler` | `GoalsOverview {epoch, categories[{category, label}], metrics[{metric, category, label, value, lower_is_better}], scenarios[{key, category, name, description, points, next_tier, default_target, target_max, history[{id, status, name, tier, target, start_epoch, end_epoch, deadline_epoch, points, awarded_points, result}]}], running[{id, key, name, description, tier, target, start_epoch, deadline_epoch, held, hold_epochs, points, metric, comparator, basis, title, progress{percent, text, value, done, failed}}], achievements[{key, category, metric, title, value, tier, percent, tiers[{tier, name, description, threshold, points, epoch}]}], score{parts{population, diversity, languages, worlds, civilization, life, faith, culture, knowledge, wonders, scales, exploration, doomsday, achievements, scenarios}}, score_history[[epoch, total]]}` | Goals panel |
+| GET `/api/goals/quote` | — | query `key, target?, deadline_epochs?, metric?, comparator, basis, hold_epochs` → `GoalQuote {name, description, target, start_value, points}`: the worth a start would fix | Goal dialogs, custom goal form |
+| POST `/api/scenarios` | POST `/api/senaryolar` | `{key, target?, deadline_epochs?}` → action outcome; chronicle "X set a goal: …". Ledger `scenario:start` | Goal board |
+| POST `/api/scenarios/custom` | — | `{metric, comparator, basis, target, hold_epochs, deadline_epochs?, title?}` → action outcome. Ledger `scenario:custom` | Custom goal form |
+| POST `/api/scenarios/{id}/edit` | — | `{target, deadline_epochs?, hold_epochs, title?}`; the worth is weighed again. Ledger `scenario:edit` | Running goals |
+| POST `/api/scenarios/{id}/hold` | — | `{held}`; a held goal is not measured and its deadline waits. Ledger `scenario:hold` | Running goals |
+| POST `/api/scenarios/{id}/abandon` | POST `/api/senaryolar/:id/birak` | → action outcome. Ledger `scenario:abandon` | Running goals |
+| POST `/api/scenarios/{id}/delete` | — | strikes the record and its awarded points. Ledger `scenario:delete` | Record of goals |
 | GET `/api/opportunities` | GET `/api/firsatlar` | `{genel: string[] (hints: unanswered prayers, spendable essence, sons yet to act, sons without orders, sleeping sons with epochs left, resurrectable sons, open threads, records without image, unread notifications, half-finished epoch, creator-specific opportunities), ogullar: {sonId: string[]} (per-son opportunity hints from the agent context builder)}` | Goals panel |
 
 ### 2.20 Rules, settings, models

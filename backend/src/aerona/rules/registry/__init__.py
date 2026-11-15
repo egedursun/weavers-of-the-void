@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 
+from aerona.rules.registry.achievements import AchievementRules
 from aerona.rules.registry.affairs import AffairsRules
 from aerona.rules.registry.agents import AgentsRules
 from aerona.rules.registry.ages import AgeRules, ArcRules, EcoTransformationRules, FormationRules, LongSeasonRules
@@ -1156,6 +1157,7 @@ class Rules:
     foreign_gods: ForeignGodsRules = field(default_factory=ForeignGodsRules)
     genesis: GenesisRules = field(default_factory=GenesisRules)
     goals: GoalsRules = field(default_factory=GoalsRules)
+    achievements: AchievementRules = field(default_factory=AchievementRules)
     god_actions: GodActionsRules = field(default_factory=GodActionsRules)
     god_hand: GodHandRules = field(default_factory=GodHandRules)
     god_power: GodPowerRules = field(default_factory=GodPowerRules)

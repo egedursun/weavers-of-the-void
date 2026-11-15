@@ -3,6 +3,7 @@ from types import MappingProxyType
 
 from aerona.domain.enums.cosmography import GalaxyType
 from aerona.domain.enums.economy import CommodityKind
+from aerona.rules.registry.goals import RENAMED_RULES as GOAL_RENAMES
 from aerona.rules.registry.war_depth import RENAMED_RULES as WAR_RENAMES
 
 RuleKey = tuple[str, str]
@@ -11,6 +12,7 @@ RENAMED_RULES: Mapping[RuleKey, RuleKey] = MappingProxyType(
     {
         **{("economy", f"consumption_{kind.value}_per_1000"): ("consumption", f"{kind.value}_per_1000") for kind in CommodityKind},
         **WAR_RENAMES,
+        **GOAL_RENAMES,
         **{("galaxy_types", f"{kind.value}_arms"): ("galaxy_types", f"{kind.value}_arms_max") for kind in GalaxyType},
         ("mobilisation", "martial_pct"): ("levies", "martial_pct"),
         ("star_life", "main_epochs"): ("stellar_evolution", "sun_life_epochs"),

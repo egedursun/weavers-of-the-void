@@ -1,60 +1,47 @@
 import logging
 import math
-from collections import Counter
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
-from sqlalchemy import Select, func, select
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog import god_lines
 from aerona.catalog.achievements import ACHIEVEMENTS
-from aerona.catalog.scenarios import SCENARIOS, doom_limit
+from aerona.catalog.goal_metrics import METRICS
+from aerona.catalog.scenarios import SCENARIOS, custom_description, custom_title, doom_limit, epochs
 from aerona.constants.units import PERCENT
 from aerona.core.errors import AeronaError
 from aerona.core.grammar import several
 from aerona.db.repositories.notifications import NotificationDraft, NotificationRepository, fitted_texts, raw_title
-from aerona.db.tables.agency import ActionRecordRow
-from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.lore import ChronicleRow, LegendaryQuestRow, MessageRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.meta import AchievementRow, ScenarioRow, ScoreRow
-from aerona.db.tables.node import NodeRow
-from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.agent import MessageIntent
-from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind, LegendaryQuestOutcome, NotificationCategory
+from aerona.domain.enums.chronicle import ChronicleKind, NotificationCategory
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.meta import AchievementKey, ScenarioKey, ScenarioStatus, ScoreComponent
-from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.meta import ACHIEVEMENT_TIERS, AchievementKey, GoalBasis, GoalComparator, GoalMetric, ScenarioKey, ScenarioStatus, ScoreComponent
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.travel import HorizonStatus, JourneyStatus
-from aerona.domain.enums.world import DARK_STAR_TYPES, EXTINGUISHED_STAR_TYPES, Discovery, StarType
 from aerona.domain.models.records import ScoreBreakdown
 from aerona.engine.context import TickContext
-from aerona.engine.gods.queries import canon_count, cosmos_row, world_count
-from aerona.engine.gods.stats import Trait, trait_or
-from aerona.engine.gods.worship import creator_node_id
-from aerona.engine.primitives.faith import patron_node
-from aerona.engine.primitives.queries import canon
+from aerona.engine.gods.metrics import MetricReader, faith_counts, measure_metric
+from aerona.engine.gods.queries import canon_count, cosmos_row
 from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
 
 logger = logging.getLogger(__name__)
-COMMUNITY_TIER_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 GOAL_SEVERITY = 3
 ACHIEVEMENT_SEVERITY = 2
 MEASURE_FAILURES = (AeronaError, SQLAlchemyError, ValueError, ArithmeticError, LookupError)
+M = GoalMetric
 
 
 @dataclass(frozen=True)
 class ScenarioProgress:
     percent: int
     text: str
+    value: int | None = None
     done: bool = False
     failed: bool = False
 
@@ -63,7 +50,7 @@ class ScenarioProgress:
 class GoalsEpochResult:
     completed: tuple[ScenarioKey, ...] = ()
     failed: tuple[ScenarioKey, ...] = ()
-    earned: tuple[AchievementKey, ...] = ()
+    earned: tuple[tuple[AchievementKey, int], ...] = ()
     score: ScoreBreakdown = field(default_factory=ScoreBreakdown)
 
 
@@ -71,11 +58,42 @@ def _percent(value: float) -> int:
     return int(max(0, min(PERCENT, round(value))))
 
 
-async def star_count(session: AsyncSession, types: frozenset[StarType] | None = None) -> int:
-    statement = select(func.count(StarRow.id))
-    if types is not None:
-        statement = statement.where(StarRow.star_type.in_(list(types)))
-    return int(await session.scalar(statement) or 0)
+def scenario_metrics(row: ScenarioRow) -> tuple[GoalMetric, ...]:
+    if row.key is ScenarioKey.CUSTOM:
+        return (row.metric,) if row.metric is not None else ()
+    return SCENARIOS[row.key].metrics
+
+
+def scenario_basis(row: ScenarioRow) -> GoalBasis:
+    if row.key is ScenarioKey.CUSTOM:
+        return row.basis or GoalBasis.TOTAL
+    return SCENARIOS[row.key].basis
+
+
+def scenario_comparator(row: ScenarioRow) -> GoalComparator:
+    if row.key is ScenarioKey.CUSTOM and row.comparator is not None:
+        return row.comparator
+    return GoalComparator.AT_LEAST
+
+
+def scenario_name(row: ScenarioRow) -> str:
+    if row.key is ScenarioKey.CUSTOM:
+        if row.title:
+            return row.title
+        if row.metric is None:
+            return SCENARIOS[row.key].name(row.target)
+        return custom_title(row.metric, scenario_comparator(row), scenario_basis(row), row.target)
+    return SCENARIOS[row.key].name(row.target, row.tier)
+
+
+def scenario_description(rules: Rules, row: ScenarioRow) -> str:
+    if row.key is ScenarioKey.CUSTOM and row.metric is not None:
+        return custom_description(row.metric, scenario_comparator(row), scenario_basis(row), row.target, row.hold_epochs)
+    return SCENARIOS[row.key].description(rules, row.target)
+
+
+async def metric_total(session: AsyncSession, rules: Rules, metrics: tuple[GoalMetric, ...], epoch: int) -> int:
+    return sum([await measure_metric(session, rules, metric, epoch) for metric in metrics])
 
 
 async def max_entity_id(session: AsyncSession) -> int:
@@ -86,43 +104,80 @@ async def max_chronicle_id(session: AsyncSession) -> int:
     return int(await session.scalar(select(func.max(ChronicleRow.id))) or 0)
 
 
-async def scenario_baseline(session: AsyncSession, row: ScenarioRow) -> None:
-    if row.key is ScenarioKey.LOST_STAR:
-        row.baseline_count = await star_count(session, frozenset({StarType.REBORN_STAR}))
-    elif row.key is ScenarioKey.LOYAL_PANTHEON:
+async def scenario_baseline(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> None:
+    if row.key is ScenarioKey.LOYAL_PANTHEON:
         rebels = await session.scalars(select(SonRow.id).where(SonRow.rebel.is_(True), SonRow.status != SonStatus.DEAD))
         row.baseline_rebel_ids = list(rebels)
         row.baseline_chronicle_id = await max_chronicle_id(session)
     elif row.key is ScenarioKey.NEW_HORIZONS:
         row.baseline_entity_id = await max_entity_id(session)
+    metrics = scenario_metrics(row)
+    if metrics:
+        row.baseline_value = await metric_total(session, rules, metrics, epoch)
 
 
-async def scenario_epoch_end(session: AsyncSession, row: ScenarioRow) -> None:
+async def goal_value(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> int:
+    total = await metric_total(session, rules, scenario_metrics(row), epoch)
+    return total - (row.baseline_value or 0) if scenario_basis(row) is GoalBasis.GAINED else total
+
+
+def reached(row: ScenarioRow, value: int) -> bool:
+    return value <= row.target if scenario_comparator(row) is GoalComparator.AT_MOST else value >= row.target
+
+
+def toward(row: ScenarioRow, value: int) -> int:
+    if reached(row, value):
+        return PERCENT
+    if scenario_comparator(row) is GoalComparator.AT_MOST:
+        return _percent(row.target / value * PERCENT) if value > 0 else PERCENT
+    return _percent(value / row.target * PERCENT) if row.target > 0 else PERCENT
+
+
+def value_text(row: ScenarioRow, value: int) -> str:
+    label = METRICS[scenario_metrics(row)[0]].label if len(scenario_metrics(row)) == 1 else "Measured"
+    if scenario_basis(row) is GoalBasis.GAINED:
+        return f"{label}: +{value}/{row.target} since the goal began"
+    if scenario_comparator(row) is GoalComparator.AT_MOST:
+        return f"{label}: {value} (at most {row.target})"
+    return f"{label}: {value}/{row.target}"
+
+
+async def scenario_epoch_end(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> None:
+    if row.held:
+        if row.deadline_epoch is not None:
+            row.deadline_epoch += 1
+        return
     if row.key is ScenarioKey.LONG_PEACE:
         row.counter = 0 if await ongoing_war_count(session) else row.counter + 1
+    elif row.key is ScenarioKey.CUSTOM and row.hold_epochs:
+        row.counter = row.counter + 1 if reached(row, await goal_value(session, rules, row, epoch)) else 0
 
 
-async def _one_faith(session: AsyncSession, rules: Rules) -> ScenarioProgress:
-    peoples = await canon(session, [EntityType.PEOPLE])
-    gods = Counter([god for god in [await patron_node(session, people) for people in peoples] if god is not None])
-    most = max(gods.values(), default=0)
-    total = len(peoples)
+async def _metric_goal(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
+    value = await goal_value(session, rules, row, epoch)
+    return ScenarioProgress(toward(row, value), value_text(row, value), value=value, done=reached(row, value))
+
+
+async def _custom(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
+    value = await goal_value(session, rules, row, epoch)
+    if not row.hold_epochs:
+        return ScenarioProgress(toward(row, value), value_text(row, value), value=value, done=reached(row, value))
+    held_for = min(row.counter, row.hold_epochs)
     return ScenarioProgress(
-        _percent(most / total * PERCENT if total else 0),
-        f"{most}/{several(total, 'people', 'peoples')} worship the same god",
-        done=total >= rules.goals.one_faith_min_peoples and most == total,
+        _percent(held_for / row.hold_epochs * PERCENT),
+        f"{value_text(row, value)} · held {held_for}/{epochs(row.hold_epochs)}",
+        value=value,
+        done=row.counter >= row.hold_epochs,
     )
 
 
-async def _many_worlds(session: AsyncSession, rules: Rules) -> ScenarioProgress:
-    target = rules.goals.inhabited_worlds
-    worlds = list(await session.scalars(select(WorldRow.id).where(WorldRow.discovery != Discovery.FORGOTTEN)))
-    statement = select(EntityRow.world_id).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON)
-    inhabited = len(set(await session.scalars(statement)) & set(worlds))
+async def _one_faith(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
+    most, total = await faith_counts(session)
     return ScenarioProgress(
-        _percent(inhabited / target * PERCENT),
-        f"{inhabited}/{several(target, 'world', 'worlds')} inhabited ({several(len(worlds), 'world', 'worlds')})",
-        done=inhabited >= target,
+        _percent(most / total * PERCENT if total else 0),
+        f"{most}/{several(total, 'people', 'peoples')} worship the same god (at least {row.target})",
+        value=most,
+        done=total >= row.target and most == total,
     )
 
 
@@ -141,15 +196,16 @@ async def _loyal_pantheon(session: AsyncSession, rules: Rules, row: ScenarioRow,
     loyalties = list(await session.scalars(select(SonRow.loyalty).where(SonRow.status == SonStatus.ACTIVE)))
     loyal = sum(1 for value in loyalties if value > goals.loyal_min_loyalty)
     return ScenarioProgress(
-        _percent(elapsed / goals.loyal_epochs * PERCENT),
-        f"{elapsed}/{several(goals.loyal_epochs, 'epoch', 'epochs')} without rebellion · {loyal}/{len(loyalties)} loyal",
-        done=elapsed >= goals.loyal_epochs and loyal == len(loyalties),
+        _percent(elapsed / max(1, row.target) * PERCENT),
+        f"{elapsed}/{epochs(row.target)} without rebellion · {loyal}/{len(loyalties)} loyal",
+        value=elapsed,
+        done=elapsed >= row.target and loyal == len(loyalties),
     )
 
 
-async def _new_horizons(session: AsyncSession, rules: Rules, row: ScenarioRow) -> ScenarioProgress:
-    goals = rules.goals
+async def _new_horizons(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
     baseline = row.baseline_entity_id or 0
+    needed_regions = min(row.target, rules.goals.horizon_regions)
 
     async def lands(entity_type: EntityType) -> int:
         statement = select(func.count(EntityRow.id)).where(
@@ -159,11 +215,12 @@ async def _new_horizons(session: AsyncSession, rules: Rules, row: ScenarioRow) -
 
     regions = await lands(EntityType.REGION)
     total = regions + await lands(EntityType.PLACE)
-    region_share = regions / goals.horizon_regions if goals.horizon_regions else 1.0
+    region_share = regions / needed_regions if needed_regions else 1.0
     return ScenarioProgress(
-        _percent(min(total / goals.horizon_lands, region_share) * PERCENT),
-        f"{total}/{goals.horizon_lands} new lands · {regions}/{goals.horizon_regions} regions",
-        done=total >= goals.horizon_lands and regions >= goals.horizon_regions,
+        _percent(min(total / max(1, row.target), region_share) * PERCENT),
+        f"{total}/{several(row.target, 'new land', 'new lands')} · {regions}/{several(needed_regions, 'region', 'regions')}",
+        value=total,
+        done=total >= row.target and regions >= needed_regions,
     )
 
 
@@ -172,59 +229,52 @@ async def _doom_far(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch
     clock = cosmos.doom_clock if cosmos is not None else 0
     threshold = max(1, rules.balance.apocalypse_threshold)
     if clock >= doom_limit(rules):
-        return ScenarioProgress(0, f"Doomsday clock reached {clock}/{threshold}.", failed=True)
+        return ScenarioProgress(0, f"Doomsday clock reached {clock}/{threshold}.", value=clock, failed=True)
     elapsed = epoch - row.start_epoch
-    duration = rules.goals.keep_apocalypse_away_epochs
     return ScenarioProgress(
-        _percent(elapsed / duration * PERCENT), f"{elapsed}/{several(duration, 'epoch', 'epochs')} · clock {clock}/{threshold}", done=elapsed >= duration
+        _percent(elapsed / max(1, row.target) * PERCENT),
+        f"{elapsed}/{epochs(row.target)} · clock {clock}/{threshold}",
+        value=elapsed,
+        done=elapsed >= row.target,
     )
 
 
 async def _lost_star(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
-    reborn = await star_count(session, frozenset({StarType.REBORN_STAR}))
-    dead = await star_count(session, EXTINGUISHED_STAR_TYPES & DARK_STAR_TYPES)
-    if not reborn and not dead:
-        return ScenarioProgress(0, "There is no dead star in the cosmos yet; one must die first.")
-    done = reborn > (row.baseline_count or 0)
-    return ScenarioProgress(PERCENT if done else 0, f"{several(dead, 'dead star is', 'dead stars are')} waiting", done=done)
+    progress = await _metric_goal(session, rules, row, epoch)
+    if progress.done:
+        return progress
+    dead = await measure_metric(session, rules, M.DEAD_STARS, epoch)
+    if not dead:
+        return ScenarioProgress(progress.percent, "There is no dead star in the cosmos yet; one must die first.", value=progress.value)
+    return ScenarioProgress(progress.percent, f"{progress.text} · {several(dead, 'dead star is', 'dead stars are')} waiting", value=progress.value)
 
 
 async def _long_peace(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
     wars = await ongoing_war_count(session)
     if wars:
-        return ScenarioProgress(0, f"{several(wars, 'war', 'wars')} ongoing; counter reset")
-    goal = rules.goals.peace_epochs
-    return ScenarioProgress(_percent(row.counter / goal * PERCENT), f"{row.counter}/{goal} peace epochs", done=row.counter >= goal)
-
-
-async def _cosmic_power(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
-    goal = rules.goals.cosmic_stage
-    best = max([entity.civ_tier or 0 for entity in await canon(session, COMMUNITY_TIER_TYPES)], default=0)
-    return ScenarioProgress(_percent(best / goal * PERCENT), f"highest tier {best}/{goal}", done=best >= goal)
-
-
-async def _one_faith_measure(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
-    return await _one_faith(session, rules)
-
-
-async def _many_worlds_measure(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
-    return await _many_worlds(session, rules)
-
-
-async def _new_horizons_measure(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
-    return await _new_horizons(session, rules, row)
+        return ScenarioProgress(0, f"{several(wars, 'war', 'wars')} ongoing; counter reset", value=0)
+    return ScenarioProgress(
+        _percent(row.counter / max(1, row.target) * PERCENT), f"{row.counter}/{row.target} peace epochs", value=row.counter, done=row.counter >= row.target
+    )
 
 
 Measure = Callable[[AsyncSession, Rules, ScenarioRow, int], Awaitable[ScenarioProgress]]
 MEASURES: dict[ScenarioKey, Measure] = {
     ScenarioKey.DOOM_FAR: _doom_far,
-    ScenarioKey.ONE_FAITH: _one_faith_measure,
+    ScenarioKey.ONE_FAITH: _one_faith,
     ScenarioKey.LOST_STAR: _lost_star,
-    ScenarioKey.MANY_WORLDS: _many_worlds_measure,
+    ScenarioKey.MANY_WORLDS: _metric_goal,
     ScenarioKey.LONG_PEACE: _long_peace,
-    ScenarioKey.COSMIC_POWER: _cosmic_power,
+    ScenarioKey.COSMIC_POWER: _metric_goal,
     ScenarioKey.LOYAL_PANTHEON: _loyal_pantheon,
-    ScenarioKey.NEW_HORIZONS: _new_horizons_measure,
+    ScenarioKey.NEW_HORIZONS: _new_horizons,
+    ScenarioKey.GOLDEN_AGE: _metric_goal,
+    ScenarioKey.AGE_OF_WONDERS: _metric_goal,
+    ScenarioKey.BRIDGE_THE_GALAXIES: _metric_goal,
+    ScenarioKey.AGE_OF_LEARNING: _metric_goal,
+    ScenarioKey.TEEMING_LIFE: _metric_goal,
+    ScenarioKey.CREATORS_FAITHFUL: _metric_goal,
+    ScenarioKey.CUSTOM: _custom,
 }
 
 
@@ -241,111 +291,81 @@ async def safe_measure(session: AsyncSession, rules: Rules, row: ScenarioRow, ep
         return ScenarioProgress(0, f"could not be measured: {error}")
 
 
-async def _count(session: AsyncSession, statement: Select[int]) -> int:
+def with_deadline(rules: Rules, points: int, deadline_epoch: int | None) -> int:
+    return round(points * (PERCENT + rules.goals.deadline_bonus_pct) / PERCENT) if deadline_epoch is not None else points
+
+
+def preset_points(rules: Rules, key: ScenarioKey, target: int, deadline_epoch: int | None) -> int:
+    spec = SCENARIOS[key]
+    ratio = min(rules.goals.target_points_cap_pct / PERCENT, target / max(1, spec.default_target(rules)))
+    return with_deadline(rules, round(spec.points(rules) * ratio), deadline_epoch)
+
+
+def custom_points(rules: Rules, *, comparator: GoalComparator, basis: GoalBasis, start: int, target: int, hold_epochs: int, deadline_epoch: int | None) -> int:
+    goals = rules.goals
+    if basis is GoalBasis.GAINED:
+        ratio = target / max(1, start)
+    elif comparator is GoalComparator.AT_MOST:
+        ratio = (start - target) / max(1, target) if start > target else 0.0
+    else:
+        ratio = (target - start) / max(1, start) if target > start else 0.0
+    reach = round(goals.custom_points * min(goals.custom_ratio_cap_pct / PERCENT, ratio))
+    return with_deadline(rules, reach + hold_epochs * goals.custom_hold_points, deadline_epoch)
+
+
+def scenario_points(rules: Rules, row: ScenarioRow) -> int:
+    if row.key is not ScenarioKey.CUSTOM:
+        return preset_points(rules, row.key, row.target, row.deadline_epoch)
+    return custom_points(
+        rules,
+        comparator=scenario_comparator(row),
+        basis=scenario_basis(row),
+        start=row.baseline_value or 0,
+        target=row.target,
+        hold_epochs=row.hold_epochs,
+        deadline_epoch=row.deadline_epoch,
+    )
+
+
+async def completed_tiers(session: AsyncSession, key: ScenarioKey) -> int:
+    statement = select(func.count(ScenarioRow.id)).where(ScenarioRow.key == key, ScenarioRow.status == ScenarioStatus.COMPLETED)
     return int(await session.scalar(statement) or 0)
 
 
-async def peoples_population(session: AsyncSession) -> int:
-    return sum(max(0, trait_or(people, Trait.POPULATION, 0)) for people in await canon(session, [EntityType.PEOPLE]))
+async def best_earlier_points(session: AsyncSession, row: ScenarioRow) -> int:
+    statement = select(func.max(ScenarioRow.points)).where(ScenarioRow.key == row.key, ScenarioRow.status == ScenarioStatus.COMPLETED, ScenarioRow.id != row.id)
+    if row.key is ScenarioKey.CUSTOM:
+        statement = statement.where(ScenarioRow.metric == row.metric)
+    return int(await session.scalar(statement) or 0)
 
 
-async def _creator_count(session: AsyncSession, build: Callable[[int], Select[int]]) -> int:
-    creator_id = await creator_node_id(session)
-    return await _count(session, build(creator_id)) if creator_id is not None else 0
-
-
-def _prayers_to(creator_id: int) -> Select[int]:
-    return (
-        select(func.count(MessageRow.id))
-        .join(NodeRow, NodeRow.id == MessageRow.sender_node_id)
-        .where(MessageRow.recipient_node_id == creator_id, MessageRow.intent == MessageIntent.PRAYER, NodeRow.kind == NodeKind.ENTITY)
-    )
-
-
-def _cult_of(creator_id: int) -> Select[int]:
-    return (
-        select(func.count(BondRow.id))
-        .join(NodeRow, NodeRow.id == BondRow.source_node_id)
-        .where(BondRow.target_node_id == creator_id, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, NodeRow.kind == NodeKind.ENTITY)
-    )
-
-
-async def _weapons_silent(session: AsyncSession, rules: Rules) -> bool:
-    return await canon_count(session, [EntityType.PEOPLE]) >= rules.goals.ach_peace_min_peoples and await ongoing_war_count(session) == 0
-
-
-Condition = Callable[[AsyncSession, Rules, int], Awaitable[bool]]
-
-
-async def _at_least(value: Awaitable[int], threshold: int) -> bool:
-    return await value >= threshold
-
-
-async def _any(value: Awaitable[int]) -> bool:
-    return await value > 0
-
-
-async def _flag(value: bool) -> bool:
-    return value
-
-
-CONDITIONS: dict[AchievementKey, Condition] = {
-    AchievementKey.SECOND_SKY: lambda session, rules, epoch: _at_least(world_count(session), rules.goals.ach_worlds),
-    AchievementKey.CONSTELLATION: lambda session, rules, epoch: _at_least(star_count(session), rules.goals.ach_stars),
-    AchievementKey.PROPHECY_FULFILLED: lambda session, rules, epoch: _any(
-        _count(session, select(func.count(EntityRow.id)).where(EntityRow.entity_type == EntityType.PROPHECY, EntityRow.status == EntityStatus.FULFILLED))
-    ),
-    AchievementKey.RETURN_FROM_DEATH: lambda session, rules, epoch: _any(
-        _count(session, select(func.count(ChronicleRow.id)).where(ChronicleRow.template_key == god_lines.SON_RESURRECTED.key))
-    ),
-    AchievementKey.FATHERS_HAND: lambda session, rules, epoch: _any(
-        _count(session, select(func.count(ActionRecordRow.id)).where(ActionRecordRow.kind == ActionKind.SUPPRESS_REBELLION))
-    ),
-    AchievementKey.BABEL: lambda session, rules, epoch: _at_least(canon_count(session, [EntityType.LANGUAGE]), rules.goals.ach_languages),
-    AchievementKey.CROWDED_WORLD: lambda session, rules, epoch: _at_least(peoples_population(session), rules.goals.ach_population),
-    AchievementKey.FIRST_PRAYER: lambda session, rules, epoch: _any(_creator_count(session, _prayers_to)),
-    AchievementKey.CREATORS_CULT: lambda session, rules, epoch: _at_least(_creator_count(session, _cult_of), rules.goals.ach_cult),
-    AchievementKey.INTERSTELLAR_TRAVELLER: lambda session, rules, epoch: _any(
-        _count(session, select(func.count(JourneyRow.id)).where(JourneyRow.status == JourneyStatus.ARRIVED))
-    ),
-    AchievementKey.SAGA_COMPLETED: lambda session, rules, epoch: _any(
-        _count(session, select(func.count(LegendaryQuestRow.thread_id)).where(LegendaryQuestRow.outcome == LegendaryQuestOutcome.COMPLETED))
-    ),
-    AchievementKey.GOD_OF_EPOCHS: lambda session, rules, epoch: _flag(epoch >= rules.goals.ach_epochs),
-    AchievementKey.ANCIENT: lambda session, rules, epoch: _flag(epoch >= rules.goals.ach_ancient_epochs),
-    AchievementKey.CROWDED_PANTHEON: lambda session, rules, epoch: _at_least(
-        _count(session, select(func.count(SonRow.id)).where(SonRow.status != SonStatus.DEAD)), rules.goals.ach_sons
-    ),
-    AchievementKey.FIRST_EXPLORERS: lambda session, rules, epoch: _any(
-        _count(session, select(func.count(BondRow.id)).where(BondRow.kind == BondKind.DISCOVERED))
-    ),
-    AchievementKey.SENSED_WORLD: lambda session, rules, epoch: _any(
-        _count(session, select(func.count(HorizonIntuitionRow.id)).where(HorizonIntuitionRow.status == HorizonStatus.BORN))
-    ),
-    AchievementKey.WEAPONS_SILENT: lambda session, rules, epoch: _weapons_silent(session, rules),
-}
-
-
-async def achieved(session: AsyncSession, rules: Rules, key: AchievementKey, epoch: int) -> bool:
-    return await CONDITIONS[key](session, rules, epoch)
-
-
-async def score(session: AsyncSession, rules: Rules) -> ScoreBreakdown:
+async def score(session: AsyncSession, rules: Rules, epoch: int = 0, reader: MetricReader | None = None) -> ScoreBreakdown:
     goals = rules.goals
+    reader = reader or MetricReader(session, rules, epoch)
     cosmos = await cosmos_row(session)
     clock = cosmos.doom_clock if cosmos is not None else 0
-    earned = list(await session.scalars(select(AchievementRow.key)))
-    awarded = set(await session.scalars(select(ScenarioRow.key).where(ScenarioRow.status == ScenarioStatus.COMPLETED, ScenarioRow.points_awarded.is_(True))))
-    peoples = await canon(session, [EntityType.PEOPLE])
+    earned = list(await session.scalars(select(AchievementRow)))
+    awarded = int(await session.scalar(select(func.sum(ScenarioRow.awarded_points)).where(ScenarioRow.status == ScenarioStatus.COMPLETED)) or 0)
+
+    async def capped(per: int, cap: int, *metrics: GoalMetric) -> int:
+        return min(cap, await reader.total(*metrics) * per)
+
     parts = {
-        ScoreComponent.POPULATION: round(math.log10(1 + await peoples_population(session)) * goals.score_population),
+        ScoreComponent.POPULATION: round(math.log10(1 + await reader.value(M.POPULATION)) * goals.score_population),
         ScoreComponent.DIVERSITY: min(goals.score_diversity_cap, await canon_count(session)),
-        ScoreComponent.LANGUAGES: await canon_count(session, [EntityType.LANGUAGE]) * goals.score_language,
-        ScoreComponent.WORLDS: await world_count(session) * goals.score_world,
-        ScoreComponent.CIVILIZATION: max([people.civ_tier or 0 for people in peoples], default=0) * goals.score_stage,
+        ScoreComponent.LANGUAGES: await reader.value(M.LANGUAGES) * goals.score_language,
+        ScoreComponent.WORLDS: await reader.value(M.WORLDS) * goals.score_world,
+        ScoreComponent.CIVILIZATION: await reader.value(M.HIGHEST_CIV_TIER) * goals.score_stage,
+        ScoreComponent.LIFE: await capped(goals.score_life, goals.score_life_cap, M.SPECIES, M.BEASTS, M.SPIRITS),
+        ScoreComponent.FAITH: await capped(goals.score_faith, goals.score_faith_cap, M.CULTS, M.CREATOR_WORSHIPPERS),
+        ScoreComponent.CULTURE: await capped(goals.score_culture, goals.score_culture_cap, M.ARTWORKS, M.ART_FORMS, M.LEGENDS, M.TRADITIONS),
+        ScoreComponent.KNOWLEDGE: await capped(goals.score_knowledge, goals.score_knowledge_cap, M.KNOWLEDGE, M.THEORIES),
+        ScoreComponent.WONDERS: await capped(goals.score_wonder, goals.score_wonder_cap, M.WONDERS, M.MUSEUMS),
+        ScoreComponent.SCALES: await capped(goals.score_scale, goals.score_scale_cap, M.GALAXIES, M.CLUSTERS, M.DIMENSIONS),
+        ScoreComponent.EXPLORATION: await capped(goals.score_exploration, goals.score_exploration_cap, M.DISCOVERIES, M.ARRIVED_JOURNEYS),
         ScoreComponent.DOOMSDAY: -round(clock / max(1, rules.balance.apocalypse_threshold) * goals.score_apocalypse_penalty),
-        ScoreComponent.ACHIEVEMENTS: sum(ACHIEVEMENTS[key].points(rules) for key in earned),
-        ScoreComponent.SCENARIOS: sum(SCENARIOS[key].points(rules) for key in awarded),
+        ScoreComponent.ACHIEVEMENTS: sum(ACHIEVEMENTS[row.key].points(rules, row.tier) for row in earned),
+        ScoreComponent.SCENARIOS: awarded,
     }
     return ScoreBreakdown(parts=parts)
 
@@ -371,14 +391,12 @@ async def notify(session: AsyncSession, epoch: int, title: str, body: str | None
 
 
 async def finish_scenario(ctx: TickContext, row: ScenarioRow, progress: ScenarioProgress) -> None:
-    spec = SCENARIOS[row.key]
-    name = spec.name(ctx.rules)
+    name = scenario_name(row)
     row.status = ScenarioStatus.COMPLETED if progress.done else ScenarioStatus.FAILED
     row.end_epoch = ctx.epoch
     row.result = progress.text
     if progress.done:
-        earlier = select(func.count(ScenarioRow.id)).where(ScenarioRow.key == row.key, ScenarioRow.points_awarded.is_(True), ScenarioRow.id != row.id)
-        row.points_awarded = not int(await ctx.session.scalar(earlier) or 0)
+        row.awarded_points = max(0, row.points - await best_earlier_points(ctx.session, row))
     line = god_lines.GOAL_ACHIEVED if progress.done else god_lines.GOAL_LOST
     text = line.render(name=name, detail=progress.text)
     await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key=line.key)
@@ -386,42 +404,66 @@ async def finish_scenario(ctx: TickContext, row: ScenarioRow, progress: Scenario
 
 
 async def epoch_end_goals(ctx: TickContext) -> GoalsEpochResult:
-    running = await running_scenarios(ctx.session)
-    for row in running:
-        await scenario_epoch_end(ctx.session, row)
-    return await evaluate_goals(ctx)
+    for row in await running_scenarios(ctx.session):
+        await scenario_epoch_end(ctx.session, ctx.rules, row, ctx.epoch)
+    return await evaluate_goals(ctx, closing=True)
 
 
 async def running_scenarios(session: AsyncSession) -> list[ScenarioRow]:
     return list(await session.scalars(select(ScenarioRow).where(ScenarioRow.status == ScenarioStatus.RUNNING).order_by(ScenarioRow.id)))
 
 
-async def evaluate_goals(ctx: TickContext) -> GoalsEpochResult:
-    session = ctx.session
+def past_deadline(row: ScenarioRow, epoch: int, closing: bool) -> bool:
+    if row.deadline_epoch is None:
+        return False
+    return epoch >= row.deadline_epoch if closing else epoch > row.deadline_epoch
+
+
+async def evaluate_scenarios(ctx: TickContext, closing: bool) -> tuple[list[ScenarioKey], list[ScenarioKey]]:
     completed: list[ScenarioKey] = []
     failed: list[ScenarioKey] = []
-    for row in await running_scenarios(session):
-        progress = await safe_measure(session, ctx.rules, row, ctx.epoch)
+    for row in await running_scenarios(ctx.session):
+        if row.held:
+            continue
+        progress = await safe_measure(ctx.session, ctx.rules, row, ctx.epoch)
+        if not (progress.done or progress.failed) and past_deadline(row, ctx.epoch, closing):
+            progress = ScenarioProgress(
+                progress.percent, f"The deadline of epoch {row.deadline_epoch} passed. {progress.text}", value=progress.value, failed=True
+            )
         if progress.done or progress.failed:
             await finish_scenario(ctx, row, progress)
             (completed if progress.done else failed).append(row.key)
-    earned_keys = set(await session.scalars(select(AchievementRow.key)))
-    earned: list[AchievementKey] = []
+    return completed, failed
+
+
+async def evaluate_achievements(ctx: TickContext, reader: MetricReader) -> list[tuple[AchievementKey, int]]:
+    session = ctx.session
+    have = {(row.key, row.tier) for row in await session.scalars(select(AchievementRow))}
+    earned: list[tuple[AchievementKey, int]] = []
     for key, spec in ACHIEVEMENTS.items():
-        if key in earned_keys:
+        if all((key, tier) in have for tier in ACHIEVEMENT_TIERS):
             continue
         try:
             async with session.begin_nested():
-                reached = await achieved(session, ctx.rules, key, ctx.epoch)
+                value = await reader.value(spec.metric)
         except MEASURE_FAILURES as error:
             logger.warning("Achievement %s could not be checked: %s", key, error)
             continue
-        if reached:
-            session.add(AchievementRow(key=key, epoch=ctx.epoch))
-            await notify(session, ctx.epoch, god_lines.ACHIEVEMENT_TITLE.format(name=spec.name(ctx.rules)), spec.description(ctx.rules), ACHIEVEMENT_SEVERITY)
-            earned.append(key)
-    await session.flush()
-    breakdown = await score(session, ctx.rules)
-    await store_score(session, ctx.epoch, breakdown)
+        for tier in ACHIEVEMENT_TIERS:
+            if (key, tier) in have or value < spec.threshold(ctx.rules, tier):
+                continue
+            session.add(AchievementRow(key=key, tier=tier, epoch=ctx.epoch))
+            await notify(session, ctx.epoch, god_lines.ACHIEVEMENT_TITLE.format(name=spec.name(tier)), spec.description(ctx.rules, tier), ACHIEVEMENT_SEVERITY)
+            earned.append((key, tier))
+    return earned
+
+
+async def evaluate_goals(ctx: TickContext, closing: bool = False) -> GoalsEpochResult:
+    completed, failed = await evaluate_scenarios(ctx, closing)
+    reader = MetricReader(ctx.session, ctx.rules, ctx.epoch)
+    earned = await evaluate_achievements(ctx, reader)
+    await ctx.session.flush()
+    breakdown = await score(ctx.session, ctx.rules, ctx.epoch, reader)
+    await store_score(ctx.session, ctx.epoch, breakdown)
     ctx.count("achievements", len(earned))
     return GoalsEpochResult(tuple(completed), tuple(failed), tuple(earned), breakdown)

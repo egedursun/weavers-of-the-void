@@ -5,7 +5,6 @@ from markupsafe import Markup
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.achievements import ACHIEVEMENTS
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.cosmography import (
     CAUSALITY_LABELS,
@@ -26,7 +25,6 @@ from aerona.catalog.genesis import AGE_CYCLE_LABELS, COSMOS_LABELS, SHAPE_LABELS
 from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS
 from aerona.catalog.powers import POWERS, power_unlock_levels
 from aerona.catalog.rarities import RARITY_LABELS, entity_rarity
-from aerona.catalog.scenarios import SCENARIOS
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.stats import PASSIONS, STATS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
@@ -43,7 +41,6 @@ from aerona.db.tables.faith import AfterlifeStratumRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lore import CanonFactRow, ChronicleEntityRow, ChronicleRow, CouncilRow, FolkBeliefRow, HistorianViewRow, LexemeRow, MessageRow, ThreadRow
-from aerona.db.tables.meta import AchievementRow, ScenarioRow, ScoreRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
@@ -66,6 +63,7 @@ from aerona.rules.registry import Rules
 from aerona.services.books.armssvg import arms_plan
 from aerona.services.books.citysvg import Plan, city_plan, land_plan, type_tables
 from aerona.services.books.command import add_command_areas
+from aerona.services.books.deeds import DeedsChapter, deeds_chapter
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.made import KindArticle, made_kinds
@@ -394,9 +392,7 @@ class BookModel:
     closed_threads: list[ThreadRow]
     facts: list[tuple[str, CanonFactRow, str]]
     prayers: list[tuple[str, str, MessageRow]]
-    achievements: list[tuple[str, int]]
-    scenarios: list[tuple[str, ScenarioRow]]
-    scores: list[ScoreRow]
+    deeds: DeedsChapter
     ledger: list[LedgerEntryRow]
     index: dict[str, list[IndexEntry]]
     multi_world: bool
@@ -1127,8 +1123,6 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
             select(MessageRow).where(or_(MessageRow.recipient_node_id == creator_id, MessageRow.sender_node_id == creator_id)).order_by(MessageRow.id)
         )
     ]
-    achievements = [(ACHIEVEMENTS[row.key].name(rules), row.epoch) for row in await session.scalars(select(AchievementRow).order_by(AchievementRow.epoch))]
-    scenarios = [(SCENARIOS[row.key].name(rules), row) for row in await session.scalars(select(ScenarioRow).order_by(ScenarioRow.id))]
     record_count = int(await session.scalar(select(func.count()).select_from(EntityRow).where(EntityRow.status != EntityStatus.REJECTED)) or 0)
     world = await session.get(WorldRow, cosmos.primary_world_id) if cosmos.primary_world_id else None
     return BookModel(
@@ -1154,9 +1148,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         closed_threads=[thread for thread in threads if thread.status is ThreadStatus.CLOSED],
         facts=facts,
         prayers=prayers,
-        achievements=achievements,
-        scenarios=scenarios,
-        scores=list(await session.scalars(select(ScoreRow).order_by(ScoreRow.epoch))),
+        deeds=await deeds_chapter(session, rules),
         ledger=list(await session.scalars(select(LedgerEntryRow).order_by(LedgerEntryRow.epoch, LedgerEntryRow.id))),
         index=builder.index(sons, groups, stars, gods, ladder),
         multi_world=multi_world,

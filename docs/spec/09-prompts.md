@@ -800,8 +800,8 @@ Continuation is offered only while the son is still `active` (a son who fell asl
 Up to two lines:
 - `FATHER'S PASSIONS (deeds that feed them please him): {passion label} ({hint}); …` — from the creator's passions
   (old `itibar.tutkular`; see appended fragments for `TUTKULAR` labels/hints).
-- `FATHER'S GREAT PURPOSE (ongoing scenario): {scenario name}: {scenario description} · …` — from scenarios in
-  state `running` (old `hedef.SENARYOLAR`).
+- `THE CREATOR'S GREAT PURPOSE (ongoing scenario): {scenario name}: {scenario description}[ (by epoch {deadline})] · …` — from running goals that are not held
+  (old `hedef.SENARYOLAR`).
 
 ### 5.5 Final word extraction (old `sozuAyikla`) — post-processing, not a prompt
 
@@ -2263,7 +2263,7 @@ Other effects of the same module (not prompt text, documented for completeness):
 
 Injected in son system prompt after the reputation/rebellion line. Up to two lines, each only if non-empty:
 - `FATHER'S PASSIONS (deeds that feed these please him): {"{name} ({hint})" joined "; "}`
-- `FATHER'S GREAT AIM (ongoing scenario): {"{scenario.name}: {scenario.description}" joined " · "}` — for every row in `senaryolar` with state `suruyor` (ongoing).
+- `THE CREATOR'S GREAT PURPOSE (ongoing scenario): {"{scenario.name}: {scenario.description}[ (by epoch {deadline})]" joined " · "}` — for every running goal that is not held: presets, and goals of the Creator's own named by their typed measure, bound and target or by the name the player gave; the deadline when one is set.
 
 ## `fragment.scenarios` — scenario names and descriptions (SENARYOLAR)
 
@@ -2280,7 +2280,7 @@ Player-chosen goals. Name/description are live (thresholds interpolated). Number
 | sadik_panteon | A loyal pantheon | Let no son rebel for {loyal_ages} ages; at the end let every son's loyalty be above {loyal_loyalty}. | fail on any new rebel or chronicle "isyan etti" (rebelled) after start ("A son rebelled."); done when elapsed >= loyal_ages and all active sons loyalty > loyal_loyalty | loyal_points |
 | yeni_ufuklar | {horizon_lands} new lands | Let {horizon_lands} new lands enter the map (at least {horizon_regions} regions): by mortals' exploration, by the sons' or by your hand. | count region+place entities with id > max id at start | horizon_points |
 
-Achievements (`BASARIMLAR`, UI + notifications only, never in prompts): first_world "{ordinal} sky" (cosmos has b_world worlds), three_stars "Constellation", prophecy "The word came true", resurrection "Return from death", crush_rebellion "The father's hand", ten_languages "Babel", million "Crowded world", first_prayer "Someone called you", cult "The creator's cult", first_voyage "Interstellar traveller", epic "Epic completed", ten_ages "God of {n} ages", fifty_ages "Ancient", eight_sons "Crowded pantheon", first_explorers "First explorers", sensed_world "Sensed world", peaceful "The weapons fell silent". Chronicle on scenario end: `"Aim fulfilled: {name}."` / `"Aim lost: {name}. {text}"`; on start `"{creator} set himself an aim: {name}."`. Score (`puan`): population `round(log10(1+pop) × score_population)`, diversity `min(score_diversity_cap, canon count)`, languages × score_language, worlds × score_world, max civ stage × score_stage, doom penalty `−round(doom/threshold × score_doom)`, plus achievement and completed-scenario points.
+Achievements (UI, notifications, book and Codex only, never in prompts): 58 achievements in three tiers each, every tier a threshold of one measured value; the full list, measures and default tiers are in spec 07 §4.4. Chronicle on goal end: `"Goal achieved: {name}."` / `"Goal lost: {name}. {detail}"`; on start `"{creator} set a goal: {name}."`. Score parts and weights: spec 07 §4.5.
 
 ### Tunables — `HEDEF` (goals)
 | English key | Turkish key | Default | Min | Max | Group | English label |

@@ -3,6 +3,7 @@ from enum import StrEnum
 
 class RuleGroup(StrEnum):
     AGENTS_AND_MODEL = "Agents and model"
+    ACHIEVEMENTS = "Achievements"
     APOCALYPSE = "Apocalypse"
     ATLAS_ARCHIVE = "Atlas archive"
     AWAKENING_OF_THE_PEOPLES = "Awakening of the peoples"

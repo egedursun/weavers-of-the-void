@@ -15,7 +15,7 @@
 {% if book.knowledge %}{% set _ = parts.append(("knowledge", "Knowledge", book.knowledge | length ~ " discoveries")) %}{% endif %}
 {% if book.languages %}{% set _ = parts.append(("languages", "Tongues and Dictionaries", book.languages | length ~ " languages")) %}{% endif %}
 {% if book.open_threads or book.closed_threads or book.facts or book.prayers %}{% set _ = parts.append(("stories", "Stories, Facts and Prayers", "")) %}{% endif %}
-{% if book.achievements or book.scenarios or book.scores %}{% set _ = parts.append(("achievements", "Deeds and Trials", book.achievements | length ~ " achievements")) %}{% endif %}
+{% if book.deeds.shown %}{% set _ = parts.append(("achievements", "Deeds and Trials", "Achievements " ~ (book.deeds.earned | length) ~ "/" ~ book.deeds.tiers_total)) %}{% endif %}
 {% if book.ledger %}{% set _ = parts.append(("ledger", "Fate's Ledger", book.ledger | length ~ " entries")) %}{% endif %}
 {% if book.chapters | selectattr("raw_lines") | list %}{% set _ = parts.append(("event-log", "Event Log", "")) %}{% endif %}
 {% if book.records %}{% set _ = parts.append(("records", "Records of the Cosmos", book.records | length ~ " registers")) %}{% endif %}
@@ -252,13 +252,14 @@
 </section>
 {% endif %}
 
-{% if book.achievements or book.scenarios or book.scores %}
+{% if book.deeds.shown %}
 <section class="chapter" id="achievements">
 {{ chapter_head("achievements", numeral("achievements"), "Deeds and Trials") }}
-{% if book.scores %}<ul class="stats"><li>Score<b>{{ book.scores[-1].total }}</b></li><li>Achievements<b>{{ book.achievements | length }}</b></li></ul>{% endif %}
-{% if book.achievements %}<h3 class="bm2">Achievements</h3><ul class="timeline">{% for name, epoch in book.achievements %}<li><span class="when">Epoch {{ epoch }}</span>{{ name }}</li>{% endfor %}</ul>{% endif %}
-{% if book.scenarios %}<h3 class="bm2">Trials</h3><table><thead><tr><th>Trial</th><th>State</th><th>Epochs</th></tr></thead><tbody>{% for name, scenario in book.scenarios %}<tr><td>{{ name }}</td><td>{{ scenario.status.value | replace("_", " ") }}</td><td>{{ scenario.start_epoch }}{% if scenario.end_epoch %}–{{ scenario.end_epoch }}{% endif %}</td></tr>{% endfor %}</tbody></table>{% endif %}
-{% if book.scores %}<h3 class="bm2">Score by epoch</h3><ul class="stats">{% for score in book.scores %}<li>E{{ score.epoch }}<b>{{ score.total }}</b></li>{% endfor %}</ul>{% endif %}
+<ul class="stats"><li>Score<b>{{ book.deeds.total }}</b></li><li>Achievements<b>{{ book.deeds.earned | length }}/{{ book.deeds.tiers_total }}</b></li><li>Achievement points<b>{{ book.deeds.earned_points }}</b></li><li>Goals completed<b>{{ book.deeds.completed }}</b></li></ul>
+{% if book.deeds.parts %}<h3 class="bm2">The score in full</h3><table><thead><tr><th>Part</th><th>Points</th></tr></thead><tbody>{% for part in book.deeds.parts %}<tr><td>{{ part.label }}</td><td>{{ part.value }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+{% if book.deeds.earned %}<h3 class="bm2">Achievements</h3><table><thead><tr><th>Achievement</th><th>Tier</th><th>Field</th><th>What it took</th><th>Epoch</th><th>Points</th></tr></thead><tbody>{% for deed in book.deeds.earned %}<tr><td>{{ deed.name }}</td><td>{{ deed.tier_label }}</td><td>{{ deed.category }}</td><td>{{ deed.description }}</td><td>{{ deed.epoch }}</td><td>{{ deed.points }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+{% if book.deeds.trials %}<h3 class="bm2">Goals</h3><table><thead><tr><th>Goal</th><th>Field</th><th>Tier</th><th>Target</th><th>State</th><th>Epochs</th><th>Deadline</th><th>Points</th><th>Aim and outcome</th></tr></thead><tbody>{% for trial in book.deeds.trials %}<tr><td>{{ trial.name }}</td><td>{{ trial.category }}</td><td>{{ trial.tier_label }}</td><td>{{ trial.target }}</td><td>{{ trial.state }}</td><td>{{ trial.span }}</td><td>{{ trial.deadline }}</td><td>{{ trial.reward }}</td><td>{{ trial.description }}{% if trial.result %}<br><i>{{ trial.result }}</i>{% endif %}</td></tr>{% endfor %}</tbody></table>{% endif %}
+{% if book.deeds.scores %}<h3 class="bm2">Score by epoch</h3><ul class="stats">{% for score in book.deeds.scores %}<li>E{{ score.epoch }}<b>{{ score.total }}</b></li>{% endfor %}</ul>{% endif %}
 </section>
 {% endif %}
 

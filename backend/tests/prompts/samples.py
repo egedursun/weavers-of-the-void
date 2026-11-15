@@ -940,7 +940,7 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
     P.SON_TURN_CONTINUATION: turn_continuation,
     P.CREATOR_WISHES: lambda: son_turn.CreatorWishesContext(
         passions=[son_turn.PassionHint(label="order", hint="laws, borders")],
-        scenarios=[son_turn.ScenarioLine(name="A loyal pantheon", description="No son rebels.")],
+        scenarios=[son_turn.ScenarioLine(name="A loyal pantheon", description="No son rebels.", deadline_epoch=12)],
     ),
     P.REPUTATION_LINE: lambda: son_turn.ReputationLineContext(
         stance=ReputationLabel.HATED, love=10, fear=70, oblivion=20, unanswered_prayers=2, passions=["order"]

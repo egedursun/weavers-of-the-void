@@ -81,3 +81,19 @@ ARTICLES = ArticleFormatter()
 
 def fill(template: str, **fields: object) -> str:
     return ARTICLES.format(template, **fields)
+
+
+ORDINAL_WORDS = ("First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth")
+ORDINAL_SUFFIXES = {1: "st", 2: "nd", 3: "rd"}
+TEEN_LOW = 11
+TEEN_HIGH = 13
+HUNDRED = 100
+TEN = 10
+
+
+def ordinal_word(number: int) -> str:
+    if 1 <= number <= len(ORDINAL_WORDS):
+        return ORDINAL_WORDS[number - 1]
+    if TEEN_LOW <= number % HUNDRED <= TEEN_HIGH:
+        return f"{number}th"
+    return f"{number}{ORDINAL_SUFFIXES.get(number % TEN, 'th')}"

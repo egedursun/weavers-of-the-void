@@ -6600,11 +6600,15 @@ Generated from the enum classification of 48.0. "Catalogue" marks the enums that
 | `KillMethod` | law_depth | 5 | widened: any damage type and harm cause (47.10) | has one |
 | `RecruitMotive` | law_depth | 4 | closed: the engine's own distinctions; instances are named through the kinds that use them | has one |
 | `RegistryKind` | law_depth | 5 | widened (47.4) | has one |
-| `AchievementKey` | meta | 17 | process; value `fathers_hand` renamed `creators_hand` (gendered) | has one |
+| `AchievementKey` | meta | 58 | process; value `fathers_hand` renamed `creators_hand` (gendered), done in migration a0be25fe960c | has one |
+| `GoalMetric` | meta | 60 | process: measured values of the cosmos for achievements, goals and the score | has one |
+| `GoalCategory` | meta | 11 | process: fields of goals and achievements | has one |
+| `GoalComparator` | meta | 2 | closed: at least, at most | has one |
+| `GoalBasis` | meta | 2 | closed: in all, gained since the start | has one |
 | `ImageMime` | meta | 3 | process: engine bookkeeping or record kind | — |
 | `LedgerOperation` | meta | 3 | process: engine bookkeeping or record kind | — |
-| `ScenarioKey` | meta | 8 | process: engine bookkeeping or record kind | has one |
-| `ScoreComponent` | meta | 8 | process: engine bookkeeping or record kind | — |
+| `ScenarioKey` | meta | 15 | process: engine bookkeeping or record kind | has one |
+| `ScoreComponent` | meta | 15 | process: engine bookkeeping or record kind | has one |
 | `CaptiveFate` | military | 7 | closed: the engine's own distinctions; instances are named through the kinds that use them | needed |
 | `CasualtyFate` | military | 4 | closed: the engine's own distinctions; instances are named through the kinds that use them | needed |
 | `CommandArea` | military | 5 | closed: the engine's own distinctions; instances are named through the kinds that use them | has one |

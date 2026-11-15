@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.achievements import ordinal_word
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.cosmography import DIMENSION_KINDS, WORLD_AGE_LABELS
 from aerona.catalog.genesis import (
@@ -26,7 +25,7 @@ from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH
 from aerona.catalog.rarities import DEFAULT_FIRST_SONS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import ConflictError, ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import ordinal_word, several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.db.tables.celestial import WorldRow

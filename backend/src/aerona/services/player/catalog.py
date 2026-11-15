@@ -706,7 +706,11 @@ FOREIGN_GOD_ACTIONS = (
 
 GOAL_ACTIONS = (
     _sync(Meta("scenario:start", "Start a scenario", G.GOALS), goals.start_scenario, goals.StartScenario, free, ("ACT-123",)),
+    _sync(Meta("scenario:custom", "Set a goal of your own", G.GOALS), goals.start_custom_goal, goals.StartCustomGoal, free, ()),
+    _sync(Meta("scenario:edit", "Edit a running goal", G.GOALS), goals.edit_scenario, goals.EditScenario, free, ()),
+    _sync(Meta("scenario:hold", "Hold or release a goal", G.GOALS), goals.hold_scenario, goals.HoldScenario, free, ()),
     _sync(Meta("scenario:abandon", "Abandon a scenario", G.GOALS), goals.abandon_scenario, goals.AbandonScenario, free, ("ACT-124",)),
+    _sync(Meta("scenario:delete", "Strike a goal from the record", G.GOALS), goals.delete_scenario, goals.ScenarioTarget, free, ()),
 )
 
 SETTING_ACTIONS = (

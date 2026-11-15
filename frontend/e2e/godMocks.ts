@@ -541,18 +541,83 @@ const COUNCILS: Schemas['CouncilRecord'][] = [
   },
 ]
 
+const GOAL_TIERS = (thresholds: number[], points: number, earned: (number | null)[]) =>
+  thresholds.map((threshold, index) => ({
+    tier: index + 1,
+    name: index === 0 ? 'Babel' : `Babel ${'I'.repeat(index + 1)}`,
+    description: `${threshold} languages are spoken.`,
+    threshold,
+    points: Math.round(points * [1, 1.5, 2.5][index]),
+    epoch: earned[index] ?? null,
+  }))
+
 const GOALS: Schemas['GoalsOverview'] = {
+  epoch: 12,
+  categories: [
+    { category: 'peoples', label: 'Peoples' },
+    { category: 'faith', label: 'Faith' },
+    { category: 'time', label: 'Time' },
+    { category: 'creator', label: "The Creator's hand" },
+  ],
+  metrics: [
+    { metric: 'languages', category: 'peoples', label: 'Languages', value: 12, lower_is_better: false },
+    { metric: 'prayers_to_creator', category: 'faith', label: 'Prayers to the Creator', value: 3, lower_is_better: false },
+    { metric: 'doom_percent', category: 'time', label: 'Doomsday clock (% of the threshold)', value: 30, lower_is_better: true },
+  ],
   scenarios: [
-    { key: 'doom_far', name: 'Keep the doom far', description: 'Keep the doom clock below half for ten epochs.', points: 40, history: [] },
-    { key: 'one_faith', name: 'One faith', description: 'Make one son worshipped by every people.', points: 60, history: [{ id: 1, status: 'failed', start_epoch: 2, end_epoch: 6, result: null }] },
+    { key: 'doom_far', category: 'time', name: 'Keep doomsday away for 20 epochs', description: 'The doomsday clock must never reach 80 for 20 epochs.', points: 300, next_tier: 1, default_target: 20, target_max: 1000, history: [] },
+    {
+      key: 'one_faith',
+      category: 'faith',
+      name: 'Unite all peoples in one faith',
+      description: 'Every people in the world worships the same god (a son or you); at least 3 peoples.',
+      points: 250,
+      next_tier: 1,
+      default_target: 3,
+      target_max: 1000,
+      history: [{ id: 1, status: 'failed', name: 'Unite all peoples in one faith', tier: 1, target: 3, start_epoch: 2, end_epoch: 6, deadline_epoch: 6, points: 312, awarded_points: 0, result: 'The deadline of epoch 6 passed.' }],
+    },
+    { key: 'custom', category: 'creator', name: 'A goal of your own', description: 'Choose any measure of the cosmos, a target, a hold and a deadline.', points: 150, next_tier: 1, default_target: 1, target_max: 2000000000, history: [] },
   ],
-  running: [{ id: 2, key: 'doom_far', name: 'Keep the doom far', start_epoch: 9, progress: { percent: 30, text: '3 of 10 epochs below half.', done: false, failed: false } }],
+  running: [
+    {
+      id: 2,
+      key: 'doom_far',
+      name: 'Keep doomsday away for 20 epochs',
+      description: 'The doomsday clock must never reach 80 for 20 epochs.',
+      tier: 1,
+      target: 20,
+      start_epoch: 9,
+      deadline_epoch: null,
+      held: false,
+      hold_epochs: 0,
+      points: 300,
+      metric: null,
+      comparator: null,
+      basis: null,
+      title: null,
+      progress: { percent: 15, text: '3/20 epochs · clock 30/100', value: 3, done: false, failed: false },
+    },
+  ],
   achievements: [
-    { key: 'first_prayer', name: 'First prayer', description: 'Answer your first prayer.', points: 5, earned: true, epoch: 2 },
-    { key: 'babel', name: 'Babel', description: 'Seven languages are spoken.', points: 15, earned: false, epoch: null },
+    { key: 'babel', category: 'peoples', metric: 'languages', title: 'Babel', value: 12, tier: 1, percent: 13, tiers: GOAL_TIERS([10, 25, 60], 50, [7]) },
+    {
+      key: 'first_prayer',
+      category: 'faith',
+      metric: 'prayers_to_creator',
+      title: 'Someone called you',
+      value: 3,
+      tier: 1,
+      percent: 8,
+      tiers: [
+        { tier: 1, name: 'Someone called you', description: 'Prayers made to you directly: 1.', threshold: 1, points: 30, epoch: 2 },
+        { tier: 2, name: 'Someone called you II', description: 'Prayers made to you directly: 25.', threshold: 25, points: 45, epoch: null },
+        { tier: 3, name: 'Someone called you III', description: 'Prayers made to you directly: 200.', threshold: 200, points: 75, epoch: null },
+      ],
+    },
   ],
-  score: { parts: { population: 120, diversity: 40, languages: 35, worlds: 20, civilization: 30, doomsday: -25, achievements: 5, scenarios: 0 } },
-  score_history: [[9, 160], [10, 190], [11, 210], [12, 225]],
+  score: { parts: { population: 120, diversity: 40, languages: 60, worlds: 25, civilization: 40, life: 12, faith: 15, culture: 9, knowledge: 8, wonders: 0, scales: 15, exploration: 4, doomsday: -45, achievements: 80, scenarios: 0 } },
+  score_history: [[9, 300], [10, 330], [11, 352], [12, 383]],
 }
 
 const HINTS: Schemas['PlayerHints'] = {

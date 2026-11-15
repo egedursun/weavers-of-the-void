@@ -3,5 +3,5 @@
 
 {% endif %}
 {% if scenarios %}
-- THE CREATOR'S GREAT PURPOSE (ongoing scenario): {% for scenario in scenarios %}{{ scenario.name }}: {{ scenario.description }}{% if not loop.last %} · {% endif %}{% endfor %}
+- THE CREATOR'S GREAT PURPOSE (ongoing scenario): {% for scenario in scenarios %}{{ scenario.name }}: {{ scenario.description }}{% if scenario.deadline_epoch %} (by epoch {{ scenario.deadline_epoch }}){% endif %}{% if not loop.last %} · {% endif %}{% endfor %}
 {% endif %}

@@ -13,7 +13,6 @@ from aerona.agents.turns.ports import ToolCatalogue
 from aerona.catalog.creator import CREATOR_PASSIONS
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.rarities import RARITY_LABELS
-from aerona.catalog.scenarios import SCENARIOS
 from aerona.catalog.stats import EXISTENCE_BAND_LABELS, EXISTENCE_MODES, STATS, existence_band, existence_band_effect, max_essence, max_hp
 from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
@@ -22,6 +21,7 @@ from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.meta import ScenarioStatus
 from aerona.engine.body.describe import body_lines
 from aerona.engine.gods.dedication import dedicated_structures, incited_wars
+from aerona.engine.gods.goals import scenario_description, scenario_name
 from aerona.engine.gods.opportunities import son_opportunities
 from aerona.engine.gods.progress import power_ceiling
 from aerona.engine.mind.describe import mind_lines
@@ -43,8 +43,12 @@ from aerona.prompts.contexts.son_turn import (
 
 async def creator_wishes(scope: Scope) -> str:
     passions = [PassionHint(label=CREATOR_PASSIONS[item].label, hint=CREATOR_PASSIONS[item].hint) for item in scope.creator.passions]
-    running = await scope.session.scalars(select(ScenarioRow).where(ScenarioRow.status == ScenarioStatus.RUNNING).order_by(ScenarioRow.id))
-    scenarios = [ScenarioLine(name=SCENARIOS[row.key].name(scope.rules), description=SCENARIOS[row.key].description(scope.rules)) for row in running]
+    running = await scope.session.scalars(
+        select(ScenarioRow).where(ScenarioRow.status == ScenarioStatus.RUNNING, ScenarioRow.held.is_(False)).order_by(ScenarioRow.id)
+    )
+    scenarios = [
+        ScenarioLine(name=scenario_name(row), description=scenario_description(scope.rules, row), deadline_epoch=row.deadline_epoch) for row in running
+    ]
     if not passions and not scenarios:
         return ""
     return render(PromptId.CREATOR_WISHES, CreatorWishesContext(passions=passions, scenarios=scenarios))
