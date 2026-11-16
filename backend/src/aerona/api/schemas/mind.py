@@ -36,6 +36,7 @@ from aerona.domain.enums.mind import (
     SkillSource,
     ThoughtKind,
     TraitEffect,
+    TraitFamily,
     TraitKind,
     TraitSource,
     ValueAxis,
@@ -65,6 +66,7 @@ class TraitCapacityView(ApiModel):
 class TraitView(ApiModel):
     trait: TraitKind
     label: str
+    family: TraitFamily
     source: TraitSource
     epoch: int
     source_node: NodeRef | None

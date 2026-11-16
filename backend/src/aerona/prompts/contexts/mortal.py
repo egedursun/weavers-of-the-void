@@ -229,6 +229,8 @@ class HomeLine(ContextItem):
     made_world: list[str] = Field(default_factory=list)
     powers: list[str] = Field(default_factory=list)
     living: list[str] = Field(default_factory=list)
+    fortune: list[str] = Field(default_factory=list)
+    home_and_trust: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

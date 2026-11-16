@@ -82,6 +82,16 @@ class RevoltKind(StrEnum):
     RELIGIOUS = "religious"
     SECESSION = "secession"
     SLAVE = "slave"
+    WORKER = "worker"
+    URBAN = "urban"
+    MUTINY = "mutiny"
+    MINORITY = "minority"
+    COLONIAL = "colonial"
+    TAX = "tax"
+    SUCCESSION = "succession"
+    SCHOLAR = "scholar"
+    MADE_MINDS = "made_minds"
+    GIFTED = "gifted"
 
 
 class SuccessionRule(StrEnum):
@@ -222,6 +232,11 @@ class OathKind(StrEnum):
     PROTECTION = "protection"
     SILENCE = "silence"
     SWORN_KINSHIP = "sworn_kinship"
+    SERVICE = "service"
+    POVERTY = "poverty"
+    NONVIOLENCE = "nonviolence"
+    FIDELITY = "fidelity"
+    SECRECY = "secrecy"
 
 
 class OathStatus(StrEnum):
@@ -296,64 +311,10 @@ class PartyRole(StrEnum):
 
 CLOSURES = frozenset({LawKind.CLOSED_SEASON, LawKind.PROTECTED_WATERS, LawKind.CATCH_QUOTA, LawKind.GEAR_BAN})
 
-LAW_AREAS: dict[LawKind, LawArea] = {
-    LawKind.SUCCESSION_RULE: LawArea.SUCCESSION,
-    LawKind.INHERITANCE_SPLIT: LawArea.PROPERTY,
-    LawKind.LAND_TENURE: LawArea.PROPERTY,
-    LawKind.SLAVERY: LawArea.PROPERTY,
-    LawKind.SERFDOM: LawArea.PROPERTY,
-    LawKind.TAX_RATE: LawArea.FISCAL,
-    LawKind.TITHE: LawArea.FISCAL,
-    LawKind.TOLLS: LawArea.FISCAL,
-    LawKind.DEBT_LAW: LawArea.FISCAL,
-    LawKind.PENAL_CODE: LawArea.PENAL,
-    LawKind.LEVY_LAW: LawArea.MILITARY,
-    LawKind.CONSCRIPTION: LawArea.MILITARY,
-    LawKind.STANDING_ARMY: LawArea.MILITARY,
-    LawKind.VETERAN_PENSION: LawArea.MILITARY,
-    LawKind.RANSOM_CUSTOM: LawArea.MILITARY,
-    LawKind.MARRIAGE_LAW: LawArea.SOCIAL,
-    LawKind.SUMPTUARY: LawArea.SOCIAL,
-    LawKind.GUILD_CHARTER: LawArea.SOCIAL,
-    LawKind.FOREIGNER_RIGHTS: LawArea.SOCIAL,
-    LawKind.RELIGIOUS_TOLERANCE: LawArea.SOCIAL,
-    LawKind.WORSHIP_BAN: LawArea.SOCIAL,
-    LawKind.BLOOD_FEUD: LawArea.SOCIAL,
-    LawKind.QUARANTINE: LawArea.PUBLIC_HEALTH,
-    LawKind.BURIAL_LAW: LawArea.PUBLIC_HEALTH,
-    LawKind.SANITATION: LawArea.PUBLIC_HEALTH,
-    LawKind.FAIR_MARKET: LawArea.FISCAL,
-    LawKind.MAGIC_BAN: LawArea.MAGIC,
-    LawKind.LICENSED_MAGIC: LawArea.MAGIC,
-    LawKind.RITE_RESTRICTIONS: LawArea.MAGIC,
-    LawKind.CENSORSHIP: LawArea.SOCIAL,
-    LawKind.FRANCHISE: LawArea.CONSTITUTIONAL,
-    LawKind.CONSTITUTION: LawArea.CONSTITUTIONAL,
-    LawKind.CUSTOM: LawArea.SOCIAL,
-    LawKind.LABOUR_LAW: LawArea.SOCIAL,
-    LawKind.ENVIRONMENT_LAW: LawArea.PUBLIC_HEALTH,
-    LawKind.DATA_PRIVACY: LawArea.SOCIAL,
-    LawKind.CLOSED_SEASON: LawArea.PROPERTY,
-    LawKind.PROTECTED_WATERS: LawArea.PROPERTY,
-    LawKind.CATCH_QUOTA: LawArea.PROPERTY,
-    LawKind.GEAR_BAN: LawArea.PROPERTY,
-    LawKind.WEAPONS_LAW: LawArea.PENAL,
-    LawKind.INTELLECTUAL_PROPERTY: LawArea.PROPERTY,
-    LawKind.MACHINE_LAW: LawArea.SOCIAL,
-    LawKind.SPACE_LAW: LawArea.PROPERTY,
-    LawKind.MIND_STATUS: LawArea.SOCIAL,
-    LawKind.COPY_LAW: LawArea.SOCIAL,
-    LawKind.COPY_SUCCESSION: LawArea.PROPERTY,
-    LawKind.ERASURE_LAW: LawArea.PENAL,
-    LawKind.AUGMENT_LAW: LawArea.PUBLIC_HEALTH,
-    LawKind.NETWORK_LAW: LawArea.PROPERTY,
-    LawKind.SURVEILLANCE_LAW: LawArea.SOCIAL,
-    LawKind.PROVISION_LAW: LawArea.FISCAL,
-    LawKind.POWER_LAW: LawArea.SOCIAL,
-    LawKind.SOURCE_LAW: LawArea.SOCIAL,
-    LawKind.LIVING_CRAFT_LAW: LawArea.PUBLIC_HEALTH,
-    LawKind.CLONE_LAW: LawArea.SOCIAL,
-    LawKind.CLONE_STATUS: LawArea.SOCIAL,
-    LawKind.GERMLINE_LAW: LawArea.PUBLIC_HEALTH,
-    LawKind.DESIGNED_STATUS: LawArea.SOCIAL,
-}
+
+class OathPenalty(StrEnum):
+    SHAME = "shame"
+    FINE = "fine"
+    EXILE = "exile"
+    OUTLAWRY = "outlawry"
+    CURSE = "curse"

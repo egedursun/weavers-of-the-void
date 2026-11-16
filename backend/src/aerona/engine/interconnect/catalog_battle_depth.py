@@ -12,7 +12,7 @@ BATTLE_DEPTH_MECHANICS = (
     Mechanic(
         key="order_and_morale",
         spec_item="S5.3/RP2",
-        title="Organisation, discipline, formation and the morale ladder: stacks lose cohesion before men, rout, break or rally",
+        title="Organisation, discipline, formation and the morale ladder: stacks lose cohesion before soldiers, rout, break or rally",
         subsystem=S.WAR,
         phases=CAMPAIGN,
         surface=Surface(drawer=ARMY),

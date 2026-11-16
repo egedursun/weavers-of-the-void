@@ -455,7 +455,7 @@ class EnginePhasesRules:
         0,
         1,
         RuleGroup.ENGINE_PHASES,
-        "Run the engine step: selectorates and coalitions, kinds of legitimacy, the time horizon of rulers, coup-proofing and big-men",
+        "Run the engine step: selectorates and coalitions, kinds of legitimacy, the time horizon of rulers, coup-proofing and leaders who rule by renown",
     )
     patronage: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: patrons and clients, offices bought and sold, and personal power bases")
     kin_politics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: nested lineages taking sides in feuds, and plans that steer marriages")
@@ -661,6 +661,9 @@ class EnginePhasesRules:
         "Run the engine step: peoples judge the gifted, realms register or hunt them, bands form and lines pass their powers on",
     )
     concealment: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: hidden truths are kept, sought, breached, revealed or forgotten")
+    fortune: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fortune is reckoned from its sources and streaks, and towns count their accidents"
+    )
     living: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: living things eat, grow, heal, age, breed and die; lines drift and escape; symbionts act"
     )

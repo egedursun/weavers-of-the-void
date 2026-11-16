@@ -80,7 +80,7 @@ async def edit_route(scope: PlayerScope, command: EditRoute) -> Effect:
 @player_action("trade_route:delete", ActionKind.OTHER)
 async def delete_route(scope: PlayerScope, command: RouteTarget) -> Effect:
     route = await route_control.delete_route(await scope.context("route_delete"), command.route_id)
-    return Effect(f"{route.name} is struck from the world; grass grows over it.", route.id)
+    return Effect(f"{route.name} is struck from the world.", route.id)
 
 
 @player_action("trade_route:toll_stop", ActionKind.OTHER)

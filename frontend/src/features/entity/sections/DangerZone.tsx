@@ -74,7 +74,7 @@ export function DangerZone({
     readOnlyReason ??
     (canon.isPending || merge.isPending ? 'Working on it.' : null)
   return (
-    <Collapsible className='flex min-w-0 flex-col gap-3 rounded-xl border border-destructive/40 p-4'>
+    <Collapsible className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-destructive/40 bg-card p-4'>
       <CollapsibleTrigger asChild>
         <Button variant='ghost' className='self-start text-destructive'>
           <ShieldAlert />

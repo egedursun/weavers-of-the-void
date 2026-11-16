@@ -35,9 +35,9 @@ CITY_CAP = 20
 MODEL_BY_TENET = (
     (TenetKind.REINCARNATION, AfterlifeModel.REBIRTH),
     (TenetKind.VOID_COMMUNION, AfterlifeModel.UNION),
-    (TenetKind.ANCESTOR_VENERATION, AfterlifeModel.ANCESTOR_HALL),
-    (TenetKind.HOLY_WAR, AfterlifeModel.WARRIOR_HALL),
-    (TenetKind.MARTYRDOM_GLORY, AfterlifeModel.WARRIOR_HALL),
+    (TenetKind.ANCESTOR_VENERATION, AfterlifeModel.REALM_OF_LINE),
+    (TenetKind.HOLY_WAR, AfterlifeModel.REALM_BY_DEATH),
+    (TenetKind.MARTYRDOM_GLORY, AfterlifeModel.REALM_BY_DEATH),
     (TenetKind.SOULS_REST, AfterlifeModel.COMMON_REALM),
 )
 

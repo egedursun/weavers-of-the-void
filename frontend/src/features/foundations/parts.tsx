@@ -43,8 +43,8 @@ export function HoldToggle({
     <label
       data-surface='FoundationHold'
       className={cn(
-        'flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border p-2.5',
-        held ? 'border-primary/40 bg-primary/5' : 'bg-background'
+        'flex min-w-0 cursor-pointer items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2.5',
+        held ? 'border-primary/40 bg-primary/5' : 'bg-card'
       )}
     >
       <Icon

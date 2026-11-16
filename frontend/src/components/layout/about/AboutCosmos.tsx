@@ -135,7 +135,7 @@ export function AboutCosmos() {
             {stats.map(({ label, value, icon: Icon }) => (
               <div
                 key={label}
-                className='flex items-center gap-3 rounded-lg border border-border/60 bg-background/50 px-3 py-2.5 backdrop-blur-sm'
+                className='flex items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2.5 backdrop-blur-sm'
               >
                 <Icon
                   className='size-icon-md shrink-0 text-brand-gold'

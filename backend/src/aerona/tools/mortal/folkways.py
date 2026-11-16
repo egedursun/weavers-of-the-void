@@ -37,7 +37,7 @@ class MakeCharmInput(ToolInput):
 async def purify_self(call: MortalCall, args: PurifySelfInput) -> str:
     row = await purity_of(call.tick, call.me.id)
     if row.state is PurityState.PURE:
-        fail(MortalResult.PURIFY_DECLINED, why="no impurity clings to you")
+        fail(MortalResult.PURIFY_DECLINED, why="no impurity is on you")
     if "state" in row.locked:
         fail(MortalResult.PURIFY_DECLINED, why="a stronger hand holds your state")
     folk = await people_of(call.session, call.me)

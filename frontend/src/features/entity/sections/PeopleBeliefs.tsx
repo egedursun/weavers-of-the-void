@@ -157,7 +157,7 @@ export function PeopleBeliefs({
             itemKey={(item) => item.id}
           >
             {(item) => (
-              <li className='flex min-w-0 flex-col gap-1 rounded-md border bg-card px-3 py-2'>
+              <li className='flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'>
                 <Label>
                   {`Epoch ${formatInteger(item.epoch)} · ${item.historian ?? 'a nameless historian'}`}
                 </Label>

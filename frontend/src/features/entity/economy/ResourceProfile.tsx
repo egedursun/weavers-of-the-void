@@ -61,6 +61,7 @@ import {
   type MaterialKind,
   branch,
   qualityTier,
+  EXTRACTIONS,
 } from './labels'
 import {
   NONE,
@@ -133,6 +134,7 @@ function WorkingForm({
       : `sub:${profile.world_material_id}`
   )
   const [hold, setHold] = useState(profile.held)
+  const [method, setMethod] = useState<string>(profile.extraction)
   const kinds = useKindChoices(worldId)
   const substances = Object.fromEntries(
     Object.entries(useMaterialChoices(worldId)).filter(([key]) =>
@@ -162,6 +164,10 @@ function WorkingForm({
                   ? null
                   : 0
                 : materialRef(substance).world_material_id,
+            extraction:
+              method === profile.extraction
+                ? null
+                : (method as Profile['extraction']),
             hold,
           },
         })
@@ -216,6 +222,13 @@ function WorkingForm({
           aria='Sealed until epoch'
           value={sealed}
           onChange={setSealed}
+        />
+        <ChoiceSelect
+          label='How it is worked'
+          value={method}
+          table={EXTRACTIONS}
+          blocked={blocked}
+          onPick={setMethod}
         />
         <ChoiceSelect
           label='Substance of this world'
@@ -613,7 +626,7 @@ function Summary({
   })
   return (
     <div className='flex min-w-0 flex-col gap-4'>
-      <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-xl border bg-background p-4'>
+      <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
         <Medallion icon={spec.icon} tone={family.tone} />
         <div className='flex min-w-0 flex-1 basis-48 flex-col gap-1.5'>
           <Text weight='semibold' truncate>
@@ -683,7 +696,7 @@ function Summary({
       {gated.length > 0 && (
         <div
           role='status'
-          className='flex min-w-0 items-start gap-3 rounded-lg border border-warning/40 bg-warning/5 p-3'
+          className='flex min-w-0 items-start gap-3 rounded-md border surface-framed border-warning/40 bg-warning/5 p-3'
         >
           <TriangleAlert
             aria-hidden='true'
@@ -754,7 +767,7 @@ function Summary({
         />
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-3 @xl/res:grid-cols-2'>
-        <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+        <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <PartHeader
             icon={Users}
             title='Who works it'
@@ -794,7 +807,7 @@ function Summary({
             )}
           </Paged>
         </div>
-        <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+        <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <PartHeader
             icon={UserRoundCog}
             title='Its masters'
@@ -836,44 +849,49 @@ function Workings({
     <div className='flex min-w-0 flex-col gap-2'>
       <Label variant='overline'>Workings</Label>
       <ul className='flex min-w-0 flex-col gap-2'>
-        {params.map((param) => (
-          <li
-            key={param.mechanic}
-            className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border bg-muted/30 p-2'
-          >
-            <SlidersHorizontal
-              aria-hidden='true'
-              className='size-icon-xs text-muted-foreground'
-            />
-            <Text as='span' weight='medium'>
-              {param.mechanic
-                .replaceAll('_', ' ')
-                .replace(/^./, (first) => first.toUpperCase())}
-            </Text>
-            <Badge size='sm' variant='secondary'>
-              {param.magnitude === null
-                ? 'Default strength'
-                : `Strength ${param.magnitude}`}
-            </Badge>
-            <Badge size='sm' variant='outline'>
-              {param.epochs === null
-                ? 'Default pace'
-                : `Every ${plural(param.epochs, 'epoch', 'epochs')}`}
-            </Badge>
-            <RowAction
-              path='/api/actions/resource:mechanic'
-              icon={SlidersHorizontal}
-              label='Tune this working'
-              iconOnly
-              fixed={{ resource_id: resourceId, mechanic: param.mechanic }}
-              defaults={{ magnitude: param.magnitude, epochs: param.epochs }}
-              labels={{
-                magnitude: 'Strength (empty for the rule default)',
-                epochs: 'Epochs between effects (empty for the rule default)',
-              }}
-            />
-          </li>
-        ))}
+        <Paged items={params} as='li'>
+          {(param) => (
+            <li
+              key={param.mechanic}
+              className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
+            >
+              <SlidersHorizontal
+                aria-hidden='true'
+                className='size-icon-xs text-muted-foreground'
+              />
+              <Text as='span' weight='medium'>
+                {param.mechanic
+                  .replaceAll('_', ' ')
+                  .replace(/^./, (first) => first.toUpperCase())}
+              </Text>
+              <Badge size='sm' variant='secondary'>
+                {param.magnitude === null
+                  ? 'Default strength'
+                  : `Strength ${param.magnitude}`}
+              </Badge>
+              <Badge size='sm' variant='outline'>
+                {param.epochs === null
+                  ? 'Default pace'
+                  : `Every ${plural(param.epochs, 'epoch', 'epochs')}`}
+              </Badge>
+              <RowAction
+                path='/api/actions/resource:mechanic'
+                icon={SlidersHorizontal}
+                label='Tune this working'
+                iconOnly
+                fixed={{ resource_id: resourceId, mechanic: param.mechanic }}
+                defaults={{
+                  magnitude: param.magnitude,
+                  epochs: param.epochs,
+                }}
+                labels={{
+                  magnitude: 'Strength (empty for the rule default)',
+                  epochs: 'Epochs between effects (empty for the rule default)',
+                }}
+              />
+            </li>
+          )}
+        </Paged>
       </ul>
     </div>
   )

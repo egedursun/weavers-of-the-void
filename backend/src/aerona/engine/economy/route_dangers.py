@@ -29,7 +29,7 @@ from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
 PATROLS = frozenset({Stance.GARRISON, Stance.ENTRENCH})
-BANDIT_KINDS = frozenset({EngineKind.REBELS, EngineKind.VOID_PIRATES})
+BANDIT_KINDS = frozenset({EngineKind.REBELS, EngineKind.ROUTE_RAIDERS})
 CARAVAN_TERRAIN = frozenset({TerrainKind.DESERT, TerrainKind.STEPPE})
 PASS_TERRAIN = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
 DANGER_KEYS: MappingProxyType[TradeLoss, str] = MappingProxyType(

@@ -121,7 +121,7 @@ function SmallChart({ spec, points }: { spec: ChartSpec; points: Point[] }) {
   return (
     <div
       data-chart-card={spec.id}
-      className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />

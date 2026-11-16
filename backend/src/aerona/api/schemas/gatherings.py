@@ -22,7 +22,7 @@ from aerona.domain.enums.site import (
     SiteChallenge,
     SiteRoomKind,
 )
-from aerona.domain.enums.storyteller import SpontaneousKind, StorytellerProfile, TensionBand
+from aerona.domain.enums.storyteller import PaletteDirection, PaletteSubsystem, SpontaneousKind, StorytellerProfile, TensionBand
 
 
 class GuestView(ApiModel):
@@ -130,6 +130,33 @@ class TensionPoint(ApiModel):
     band: TensionBand
 
 
+class TargetPointView(ApiModel):
+    epoch: int
+    target: int
+
+
+class RegionalTensionView(ApiModel):
+    region: NodeRef
+    tension: int
+    crisis: bool
+    updated_epoch: int
+    locked: list[str]
+
+
+class SubsystemTensionView(ApiModel):
+    subsystem: str
+    tension: int
+    updated_epoch: int
+    locked: list[str]
+
+
+class PaletteWeightView(ApiModel):
+    key: str
+    subsystem: PaletteSubsystem
+    direction: PaletteDirection
+    weight_pct: int
+
+
 class StorytellerView(ApiModel):
     world_id: int
     profile: StorytellerProfile
@@ -140,9 +167,13 @@ class StorytellerView(ApiModel):
     cycle_offset: int
     spotlight: NodeRef | None
     recent_kinds: dict[SpontaneousKind, int]
+    palette: list[PaletteWeightView]
     updated_epoch: int
     locked: list[str]
     curve: list[TensionPoint]
+    target_points: list[TargetPointView]
+    regions: list[RegionalTensionView]
+    subsystems: list[SubsystemTensionView]
 
 
 class ContentView(ApiModel):

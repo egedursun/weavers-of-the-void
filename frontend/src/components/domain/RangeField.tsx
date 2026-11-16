@@ -43,7 +43,7 @@ export function RangeField({
     <div
       data-domain='range-field'
       className={cn(
-        'flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3',
+        'flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3',
         disabled && 'bg-muted/40'
       )}
     >

@@ -167,7 +167,7 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     intellect = await effective(ctx.session, captive, "intellect", campaigns.captive_default_stat, rules=ctx.rules)
     if rng.probability(agility / campaigns.escape_agility_divisor + intellect / campaigns.escape_intellect_divisor):
         await release_captive(ctx, row, CaptiveStatus.ESCAPED)
-        await _note(ctx, ChronicleKind.ESCAPE, f"{captive.name} escaped from the dungeon of {captor.name}.", "prisoner.escaped", (captor.id, captive.id))
+        await _note(ctx, ChronicleKind.ESCAPE, f"{captive.name} escaped from the captivity of {captor.name}.", "prisoner.escaped", (captor.id, captive.id))
         return
     cruelty = await cruelty_drive(ctx.session, ctx.rules, captor.id)
     hated = home is not None and await relation(ctx.session, ctx.rules, home.id, captor.id) <= -campaigns.execution_relation

@@ -43,7 +43,7 @@ export function IncitementCard({
   return (
     <div
       data-surface='WarIncitement'
-      className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-4'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion
@@ -92,7 +92,7 @@ export function IncitementCard({
             allowNone
             disabled={busy !== null}
           />
-          <label className='flex min-w-0 items-center gap-2 self-end rounded-lg border bg-background p-2.5'>
+          <label className='flex min-w-0 items-center gap-2 self-end rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
             <Switch
               checked={hold}
               onCheckedChange={setHold}

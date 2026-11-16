@@ -15,6 +15,7 @@ from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
+from aerona.engine.law.records import record_events
 from aerona.engine.law.systems import written_code
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.justice import community_ruler
@@ -30,6 +31,7 @@ class RegistryTally:
     enforced: int = 0
     settled: int = 0
     disputes: int = 0
+    recorded: int = 0
 
 
 async def register(
@@ -157,3 +159,4 @@ async def enforce(ctx: TickContext, tally: RegistryTally) -> None:
 async def keep_registries(ctx: TickContext, tally: RegistryTally) -> None:
     await title_towns(ctx, tally)
     await enforce(ctx, tally)
+    tally.recorded += await record_events(ctx)

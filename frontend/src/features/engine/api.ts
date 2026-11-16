@@ -82,3 +82,33 @@ export function useRunIntegrity() {
     },
   })
 }
+
+export type IntegrityFinding = components['schemas']['IntegrityFindingView']
+
+export function useIntegrityFindings() {
+  return useQuery({
+    queryKey: [...queryKeys.world.all, 'integrity', 'findings'] as const,
+    queryFn: () => unwrap(api.GET('/api/integrity/findings')),
+  })
+}
+
+export function useResolveFinding() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (finding: IntegrityFinding) =>
+      unwrap(
+        api.POST('/api/integrity/findings/resolve', {
+          body: {
+            check: finding.check,
+            invariant: finding.invariant,
+            table: finding.table,
+            column: finding.column,
+            key: finding.key,
+          },
+        })
+      ),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.world.all })
+    },
+  })
+}

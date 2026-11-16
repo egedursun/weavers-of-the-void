@@ -113,7 +113,7 @@ function VariantRow({
     blocked ??
     (save.isPending || unmake.isPending || release.isPending ? WORKING : null)
   return (
-    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border bg-background p-2'>
+    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <Medallion icon={spec.icon} size='sm' />
       <div className='flex min-w-0 flex-1 flex-col'>
         <Text weight='semibold' truncate>
@@ -222,7 +222,7 @@ export function VariantForge() {
   return (
     <div
       data-surface='VariantForge'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={Hammer} tone='verdigris' size='sm' />

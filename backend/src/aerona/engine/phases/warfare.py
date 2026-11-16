@@ -9,6 +9,7 @@ from aerona.constants.units import PERCENT
 from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.core.grammar import agree, several
+from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository, caused_by
 from aerona.db.repositories.entities import EntityRepository
@@ -495,6 +496,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.magic_sites",
     "table.memories",
     "table.mercenary_contracts",
+    "table.network_nodes",
     "table.node_materials",
     "table.nodes",
     "table.occupations",
@@ -502,12 +504,14 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.peace_terms",
     "table.people_biology",
     "table.people_culture",
+    "table.personality_values",
     "table.place_environment",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
     "table.public_opinion",
     "table.region_environment",
+    "table.relationships",
     "table.routes",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
@@ -517,9 +521,11 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.sky_events",
     "table.slave_markets",
     "table.spy_agents",
+    "table.spy_networks",
     "table.trade_policies",
     "table.treaty_breaches",
     "table.treaty_clauses",
+    "table.treaty_parties",
     "table.treaty_profiles",
     "table.unit_designs",
     "table.vassalages",
@@ -791,6 +797,7 @@ async def duel(
     anchor_id: int | None,
     context: DuelContext = DuelContext.WAR,
     ground: BattleGround | None = None,
+    battle_id: int | None = None,
 ) -> str:
     campaigns = ctx.rules.campaigns
     bonds = BondRepository(ctx.session)
@@ -817,6 +824,10 @@ async def duel(
     await think(ctx.session, ctx.rules, loser.id, ThoughtKind.LOST_DUEL, ctx.epoch, subject_id=winner.id)
     style = await strike_style(ctx.session, ctx.rules, winner, loser)
     ctx.count(f"duel_{result.end.value}")
+    fate = CasualtyFate.KILLED if result.killed else DUEL_FATES[result.end]
+    harmed = sum(hit for target_id, hit in result.hits if target_id == loser.id)
+    side = theatre.sides.side_of(loser)
+    note_casualty(ctx, battle_id, loser, side_id=side, fate=fate, harm=harmed, note=f"fell to {winner.name} in single combat")
     if result.killed:
         cause = f"fell in a duel with {winner.name} in {label}"
         await death_path(ctx, loser, cause, winner.id, f"{label} duel", forced=True, event_id=anchor_id, harm=HarmCause.DUEL, style=style)
@@ -898,7 +909,7 @@ async def _heroics(ctx: TickContext, theatre: Theatre, report: BattleReport, bat
     if winners and losers and ctx.rng("duel_roll").chance(ctx.rules.campaigns.duel_chance):
         first, second = ctx.rng("duelists").pick(winners), ctx.rng("duelists").pick(losers)
         if not await forbidden(ctx, first.id, ActKind.DUELLING):
-            report.hero_texts.append(await duel(ctx, theatre, first, second, war=report.war, anchor_id=anchor, ground=report.ground))
+            report.hero_texts.append(await duel(ctx, theatre, first, second, war=report.war, anchor_id=anchor, ground=report.ground, battle_id=battle_id))
             report.ids.extend((first.id, second.id))
     candidates = [hero for hero in theatre.sides.heroes_of(report.loser.id) if hero.status is EntityStatus.CANON]
     fallen = [hero for hero in candidates if await out_cold(ctx.session, hero.id)]
@@ -953,6 +964,16 @@ async def _mark_ground(ctx: TickContext, ground: BattleGround, gap: float, outco
         await scar_region(ctx.session, ctx.rules, region, ScarKind.HAUNTED, settings.haunted_depth)
 
 
+DUEL_FATES: Mapping[DuelEnd, CasualtyFate] = total(
+    DuelEnd,
+    {
+        DuelEnd.YIELD: CasualtyFate.WOUNDED,
+        DuelEnd.DISARM: CasualtyFate.WOUNDED,
+        DuelEnd.CRIPPLED: CasualtyFate.MAIMED,
+        DuelEnd.DEATH: CasualtyFate.KILLED,
+        DuelEnd.EXHAUSTION: CasualtyFate.WOUNDED,
+    },
+)
 DUEL_ENDINGS = {
     DuelEnd.YIELD: "{loser} yielded",
     DuelEnd.DISARM: "{loser} lost the weapon and yielded",
@@ -1607,8 +1628,10 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.army_units",
     "table.asabiyya",
     "table.assistive_aids",
+    "table.augments",
     "table.beast_profiles",
     "table.beliefs",
+    "table.bias_weights",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -1653,6 +1676,8 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.feuds",
     "table.forced_weather",
     "table.foreign_gods",
+    "table.fortune_laws",
+    "table.fortune_profiles",
     "table.geasa",
     "table.genomes",
     "table.goods",
@@ -1690,6 +1715,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.name_registry",
     "table.named_units",
     "table.natural_law_profiles",
+    "table.network_nodes",
     "table.network_profiles",
     "table.node_materials",
     "table.nodes",
@@ -1716,6 +1742,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.regimes",
     "table.region_dangers",
     "table.region_environment",
+    "table.relation_components",
     "table.relationships",
     "table.reputations",
     "table.role_norms",
@@ -1788,6 +1815,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.battle_phases",
     "table.battle_stacks",
     "table.battles",
+    "table.bias_weights",
     "table.bodies",
     "table.body_customs",
     "table.bonds",

@@ -162,7 +162,7 @@ export const SETUP_KINDS: Record<Schema['SetupKind'], Named> = {
   dream: { label: 'Dream', icon: Moon, tone: 'verdigris' },
   foresight: { label: 'Foresight', icon: Telescope, tone: 'info' },
   portent: { label: 'Portent of a god', icon: Sparkles, tone: 'gold' },
-  thread: { label: 'Open story', icon: ScrollText, tone: 'muted' },
+  incident_arc: { label: 'Open incident arc', icon: ScrollText, tone: 'muted' },
 }
 
 export const PAYOFFS: Record<Schema['PayoffKind'], Named> = {

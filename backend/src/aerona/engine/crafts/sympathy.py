@@ -1,9 +1,12 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import delete, select
 
+from aerona.core.total import total
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.crafts import MaterialAffinityRow, SympatheticLinkRow
-from aerona.db.tables.culture import RiteEffectRow
+from aerona.db.tables.culture import ArtworkProfileRow, ItemHistoryRow, RiteEffectRow
 from aerona.db.tables.customs import EvidenceRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -11,7 +14,7 @@ from aerona.db.tables.folkways import AccusationRow
 from aerona.db.tables.intrigue import TrueNameRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.crafts import AffinityMode, LinkToken
 from aerona.domain.enums.culture import MagicSchool, RiteEffectKind
 from aerona.domain.enums.customs import EvidenceKind
@@ -23,6 +26,24 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import active_bonds, has_flag
 
 MAGICAL = frozenset({MaterialFamily.PRECIOUS, MaterialFamily.EXOTIC})
+TOKEN_STRENGTH: Mapping[LinkToken, int] = total(
+    LinkToken,
+    {LinkToken.HAIR: 50, LinkToken.BLOOD: 65, LinkToken.NAME: 90, LinkToken.PORTRAIT: 40, LinkToken.FRAGMENT: 55},
+)
+
+
+async def tokens_within_reach(ctx: TickContext, caster_id: int, target_id: int) -> list[LinkToken]:
+    found = [LinkToken.HAIR, LinkToken.BLOOD]
+    portrait = await ctx.session.scalar(select(ArtworkProfileRow.artwork_entity_id).where(ArtworkProfileRow.subject_node_id == target_id).limit(1))
+    if portrait is not None:
+        found.append(LinkToken.PORTRAIT)
+    owned = select(BondRow.target_node_id).where(BondRow.source_node_id == caster_id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
+    touched = await ctx.session.scalar(
+        select(ItemHistoryRow.id).where(ItemHistoryRow.item_entity_id.in_(owned), ItemHistoryRow.actor_entity_id == target_id).limit(1)
+    )
+    if touched is not None:
+        found.append(LinkToken.FRAGMENT)
+    return found
 
 
 @dataclass
@@ -81,11 +102,20 @@ async def take_links(ctx: TickContext, tally: SympathyTally) -> None:
         rng = ctx.rng(seed_of("sympathy", caster.id, ctx.epoch))
         if not rng.chance(table.take_chance):
             continue
-        token = rng.pick([LinkToken.HAIR, LinkToken.BLOOD])
+        token = rng.pick(await tokens_within_reach(ctx, caster.id, grudge.subject_node_id))
         true_name = await ctx.session.get(TrueNameRow, grudge.subject_node_id)
         if true_name is not None and caster.id in true_name.known_by:
             token = LinkToken.NAME
-        ctx.session.add(SympatheticLinkRow(holder_node_id=caster.id, target_node_id=grudge.subject_node_id, token=token, obtained_epoch=ctx.epoch, locked=[]))
+        ctx.session.add(
+            SympatheticLinkRow(
+                holder_node_id=caster.id,
+                target_node_id=grudge.subject_node_id,
+                token=token,
+                strength=TOKEN_STRENGTH[token],
+                obtained_epoch=ctx.epoch,
+                locked=[],
+            )
+        )
         tally.taken += 1
 
 

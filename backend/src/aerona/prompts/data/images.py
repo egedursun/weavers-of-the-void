@@ -14,7 +14,7 @@ IMAGE_DIRECTION: dict[EntityType, str] = {
     EntityType.TRADITION: "the tradition as its keepers practise it, among the community that keeps it",
     EntityType.LEGEND: "a scene illustrating the legend at its turning point",
     EntityType.NATURAL_LAW: "this natural law at work in the world, shown by what it does to the things it governs",
-    EntityType.PROPHECY: "the prophecy as its seer beholds it",
+    EntityType.PROPHECY: "the prophecy as it is foreseen",
     EntityType.EVENT: "the event as it happens, caught in the moment",
     EntityType.CELESTIAL: "the body of the sky as it is seen from the world beneath it",
     EntityType.PEOPLE: "these people together in their daily life, as their account gives them",

@@ -80,6 +80,8 @@ class FactionsRules:
     bandits_outcast_pct: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "Outcast share at which outlaws band together (%)")
     bandits_crime: int = rule(40, 0, 100, RuleGroup.CIVILIZATION, "Crime at which outlaws band together")
     mercenary_min_warrior_pct: int = rule(16, 0, 100, RuleGroup.CIVILIZATION, "Warrior share of a community at peace that founds a free company (%)")
+    found_renown: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "Renown a mortal needs to found a faction in their town")
+    found_cost: int = rule(5, 0, 100, RuleGroup.CIVILIZATION, "Wealth a mortal spends to found a faction")
 
 
 @dataclass(frozen=True)

@@ -75,7 +75,7 @@ async def mortal_crafts_lines(scope: Scope, me: EntityRow) -> list[str]:
         for spirit in await session.scalars(
             select(EmotionSpiritRow).where(EmotionSpiritRow.region_entity_id == region).order_by(EmotionSpiritRow.id).limit(LIST_LINES)
         ):
-            found.append(f"a spirit of {words(spirit.emotion.value)} haunts your land")
+            found.append(f"a spirit of {words(spirit.emotion.value)} roams your land")
     return found
 
 

@@ -13,7 +13,7 @@
 {% set shares = fair_shares(bodies | map("length") | list, limit) %}
 {% for section in sections %}
 — {% if section.world_name %}{{ section.world_name }} (world#{{ section.world_id }}){% else %}Cosmos and sky{% endif %} —
-{{ budget(bodies[loop.index0], [shares[loop.index0], 1] | max, "rest in the chronicle", trim) if bodies[loop.index0] else "(no events recorded this age: tell of its silence)" }}
+{{ budget(bodies[loop.index0], [shares[loop.index0], 1] | max, "rest in the chronicle", trim) if bodies[loop.index0] else "(no events recorded this age)" }}
 {% if not loop.last %}
 
 {% endif %}

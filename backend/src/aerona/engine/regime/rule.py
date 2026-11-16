@@ -349,11 +349,12 @@ async def routinise(ctx: TickContext, book: RealmBook, realm: Realm, row: Regime
     dead = await living_entity(ctx.session, previous) is None
     if not dead:
         shift(row, "traditional", -ctx.rules.legitimacy_types.usurper_tradition)
-    if dead and previous == row.founder_entity_id and dominant(row) is LegitimacyType.CHARISMATIC and "routinisation" not in row.locked:
+    unsettled = row.routinisation is Routinisation.NONE and "routinisation" not in row.locked
+    if dead and previous == row.founder_entity_id and dominant(row) is LegitimacyType.CHARISMATIC and unsettled:
         row.routinisation = Routinisation.PENDING
         row.crisis_epoch = ctx.epoch
         await note(
-            ctx, f"The founder of {realm.entity.name} is dead, and all ask what will hold the realm together now.", key="regime.crisis", ids=[realm.entity.id]
+            ctx, f"The founder of {realm.entity.name} is dead; the realm must find what will hold it together now.", key="regime.crisis", ids=[realm.entity.id]
         )
     if dead and row.leadership is LeadershipMode.ACHIEVED:
         await fragment(ctx, book, realm, tally)
@@ -427,7 +428,7 @@ async def fragment(ctx: TickContext, book: RealmBook, realm: Realm, tally: Regim
         tally.fragmented += len(leaving)
         await note(
             ctx,
-            f"With its big-man dead, {len(leaving)} of the following of {realm.entity.name} went their own way.",
+            f"With its leader of renown dead, {len(leaving)} of the following of {realm.entity.name} went their own way.",
             key="regime.fragmented",
             ids=[realm.entity.id],
         )

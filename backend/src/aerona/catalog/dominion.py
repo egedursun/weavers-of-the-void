@@ -144,6 +144,10 @@ ALIGNMENT_MANIFESTATIONS = total(
         PerceivedAlignment.MALEVOLENT: Manifestation.DREADFUL,
     },
 )
+MANIFESTATION_ORDER = total(
+    Manifestation,
+    {Manifestation.RADIANT: 0, Manifestation.SERENE: 0, Manifestation.STERN: -100, Manifestation.DREADFUL: 50},
+)
 
 HELPFUL_DEEDS = frozenset({CreatureDeed.TEND_FIELDS, CreatureDeed.HEAL_SICK, CreatureDeed.GUARD_HOLY_SITES})
 HARMFUL_DEEDS = frozenset({CreatureDeed.HUNT_FOLK, CreatureDeed.WRECK_WORKS, CreatureDeed.STRIKE_FOES})

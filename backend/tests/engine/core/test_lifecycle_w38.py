@@ -6,6 +6,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.arcana import LabTextRow, WarpingRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow
+from aerona.db.tables.cosmography import RiftRow
 from aerona.db.tables.culture import CastingRow, IdeologyAdherentRow, IdeologyProfileRow, RiteProfileRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.divine import BreachPointRow
@@ -13,6 +14,7 @@ from aerona.db.tables.intrigue import FavourRow, HookRow, SecretRow
 from aerona.db.tables.lifecycle_ends import LifecycleStateRow
 from aerona.db.tables.world_ends import WorldEndRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.cosmography import DimensionKind, RiftCause, RiftState
 from aerona.domain.enums.culture import MagicSchool, MagicSource
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -23,8 +25,9 @@ from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
 from aerona.domain.models.entity_stats import DiseaseStats, IdeologyStats, ItemStats, OuterBeingStats, RiteStats
 from aerona.engine.arcana.warping import WarpTally, warp_world
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure_ladder
 from aerona.engine.cosmos.world_end_control import declare_end
-from aerona.engine.cosmos.world_ends import EndingTally, keep_world_ends
+from aerona.engine.cosmos.world_ends import CAUSE_END, EndingTally, keep_world_ends
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.divine.control import open_breach
 from aerona.engine.intrigue.decay import DecayTally, keep_decays
@@ -208,3 +211,31 @@ async def test_a_lost_rite_cannot_be_cast_and_a_destroyed_outer_being_opens_no_b
     await destroy(ctx, being.id)
     with pytest.raises(ValidationFailedError):
         await open_breach(ctx, being.id, world.regions[0].id, 30)
+
+
+async def test_a_swollen_giant_swallows_its_nearest_world(session: AsyncSession, world: CoreWorld) -> None:
+    star = await session.get(StarRow, world.world.star_id) if world.world.star_id is not None else None
+    assert star is not None
+    star.star_type, star.created_epoch = StarType.RED_GIANT, 0
+    world.world.orbit = 0.5
+    await session.flush()
+    tally = EndingTally()
+    await keep_world_ends(await at(session, tuned_rules().world_ends.giant_epochs), tally)
+    row = await session.get(WorldEndRow, world.world.id)
+    assert row is not None and row.state is WorldEnd.SWALLOWED and row.cause is WorldEndCause.STAR_GIANT and tally.ended == 1
+
+
+async def test_a_world_torn_by_many_rifts_sinks_into_the_void(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await at(session, 2)
+    await ensure_ladder(session, ctx.rules)
+    dimension = await create_dimension(session, ctx.rules, DimensionDraft("The Other Side", DimensionKind.MIRROR, 0))
+    for _ in range(tuned_rules().world_ends.void_rifts):
+        session.add(RiftRow(world_id=world.world.id, dimension_id=dimension.id, state=RiftState.OPEN, cause=RiftCause.CONVERGENCE, opened_epoch=1, locked=[]))
+    await session.flush()
+    await keep_world_ends(ctx, EndingTally())
+    row = await session.get(WorldEndRow, world.world.id)
+    assert row is not None and row.state is WorldEnd.SUNK_INTO_VOID and row.cause is WorldEndCause.VOID
+
+
+def test_every_cause_brings_an_end() -> None:
+    assert set(CAUSE_END) == set(WorldEndCause)

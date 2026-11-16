@@ -8,7 +8,7 @@ import {
 } from './control-size'
 
 const fieldSurface =
-  'rounded-md border border-input bg-field shadow-xs transition-[color,box-shadow,border-color] outline-none placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20'
+  'rounded-md well transition-[color,box-shadow,border-color] outline-none placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20'
 
 type InputProps = Omit<React.ComponentProps<'input'>, 'size'> & {
   size?: ControlSize

@@ -78,7 +78,7 @@ function IngredientRow({
   const busy = why(remove.busy, set.isPending)
   const problem = numberProblem(share, 1, SPAN) ?? settled(share, row.share)
   return (
-    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <Chip icon={FOOD_ICON[row.commodity] ?? Wheat}>
         {COMMODITY[row.commodity].label}
       </Chip>

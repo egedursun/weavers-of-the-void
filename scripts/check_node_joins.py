@@ -46,7 +46,11 @@ def joins(files: dict[Path, str]) -> list[Join]:
                 continue
             classes = {name for call in calls for arg in call.args for name in [named(arg)] if name is not None}
             joined = any(
-                isinstance(call.func, ast.Attribute) and call.func.attr in {"join", "outerjoin"} and call.args and isinstance(call.args[0], ast.Name) and call.args[0].id in NODE_CLASSES
+                isinstance(call.func, ast.Attribute)
+                and call.func.attr in {"join", "outerjoin"}
+                and call.args
+                and isinstance(call.args[0], ast.Name)
+                and call.args[0].id in NODE_CLASSES
                 for call in calls
             )
             if joined and len(classes) >= 2:
@@ -57,7 +61,9 @@ def joins(files: dict[Path, str]) -> list[Join]:
 def main() -> int:
     found = joins({path: path.read_text(encoding="utf-8") for path in sorted(SOURCE.rglob("*.py"))})
     for item in found:
-        print(f"{item.path.relative_to(ROOT)}:{item.line}: joins {', '.join(item.classes)}, which share the nodes table; alias one with aliased(..., flat=True) or read them apart")
+        print(
+            f"{item.path.relative_to(ROOT)}:{item.line}: joins {', '.join(item.classes)}, which share the nodes table; alias one with aliased(..., flat=True) or read them apart"
+        )
     print(f"node joins: {len(found)}")
     return 1 if found else 0
 

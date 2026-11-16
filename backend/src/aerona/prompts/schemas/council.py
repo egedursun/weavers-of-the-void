@@ -5,7 +5,7 @@ from pydantic import Field
 from aerona.domain.enums.agent import CouncilVote
 from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.divine import CouncilMotion, SonPunishment
+from aerona.domain.enums.divine import CouncilMotion, SonPunishment, VotingRule
 from aerona.prompts.schemas.base import OutputModel
 
 
@@ -42,6 +42,7 @@ class CouncilOutput(OutputModel):
     world_id: int | None = Field(default=None, description="The id of the world the decision names")
     school: MagicSchool | None = Field(default=None, description="The school of rites an outlaw decision forbids")
     punishment: SonPunishment | None = Field(default=None, description="How a punished son is punished")
+    voting_rule: VotingRule | None = Field(default=None, description="How the council decides from now on, when the decision changes its rules")
     minutes: str = Field(
         description="A 3 to 5 sentence summary of the council as the mortals of this world came to know it, told in a way that suits this world; {{ attendance }} sons attended the council (write no other number)"
     )

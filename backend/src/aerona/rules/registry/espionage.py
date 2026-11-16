@@ -10,6 +10,22 @@ class EspionageRules:
         20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Bonus to setting up a spy network against an enemy or a tribute counterpart (%)"
     )
     spy_net_chance: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "An influential faction sets up a spy network (%)")
+    wider_sabotage_pct: int = rule(
+        50,
+        0,
+        100,
+        RuleGroup.WAR_AND_DIPLOMACY,
+        "Chance a sabotage strikes networks, crossings, fields, stores, guards, rites, sources or machines where the target has them (%)",
+    )
+    sabotage_outage_epochs: int = rule(2, 1, 20, RuleGroup.WAR_AND_DIPLOMACY, "Epochs a network attack keeps a network dark")
+    sabotage_outage_severity: int = rule(60, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Severity of the outage a network attack causes")
+    haul_damage: int = rule(20, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Hauling capacity a destroyed bridge takes from a town")
+    blight_pct: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of a town's food a loosed blight destroys (%)")
+    theft_pct: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of a town's food a supply theft carries off (%)")
+    mutiny_militia: int = rule(30, 0, 10000, RuleGroup.WAR_AND_DIPLOMACY, "Militia an incited mutiny takes from a town")
+    mutiny_unrest: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Unrest an incited mutiny adds to a town")
+    rite_piety: int = rule(10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Piety a disrupted rite takes from a town")
+    source_damage: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Stability a poisoning takes from each source of power a town draws on")
     spy_war_chance: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Captured spies lead to war (%)")
     spy_action_chance: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "The spy network acts this epoch (%)")
     spy_steal_knowledge_pct: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of spy actions that steal knowledge (otherwise sabotage) (%)")

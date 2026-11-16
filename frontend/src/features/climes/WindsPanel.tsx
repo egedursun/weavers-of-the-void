@@ -37,7 +37,7 @@ function Arrow({ from, label }: { from: number; label: string }) {
     <span
       role='img'
       aria-label={label}
-      className='flex size-control-sm shrink-0 items-center justify-center rounded-full border bg-muted'
+      className='flex size-control-sm shrink-0 items-center justify-center rounded-full border surface-well border-gild/45 bg-muted/70'
     >
       <ArrowDown
         className={cn(

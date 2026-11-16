@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
@@ -14,7 +15,7 @@ async def town_lines(scope: Scope, town_id: int) -> list[str]:
     districts = list(await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == town_id).order_by(DistrictRow.id)))
     if profile is not None:
         homes = ", ".join(sorted({district.housing.value for district in districts}))
-        found.append(f"your town grew {profile.morphology.value}; its homes are {homes or 'none'}; {profile.homeless} are homeless")
+        found.append(f"your town grew {spoken(profile.morphology)}; its homes are {homes or 'none'}; {profile.homeless} are homeless")
     for turf in await session.scalars(
         select(TurfRow).where(TurfRow.district_id.in_([district.id for district in districts])).order_by(TurfRow.faction_entity_id)
     ):

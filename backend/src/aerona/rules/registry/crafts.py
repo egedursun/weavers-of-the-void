@@ -65,6 +65,8 @@ class RightsRules:
     infringe_chance: int = rule(10, 0, 100, V, "Chance each epoch someone of another clan performs or copies a held right (%)")
     insult_opinion: int = rule(15, 0, 100, V, "Opinion a holder loses of one who performs or copies its right")
     licence_fee: int = rule(2, 0, 100, V, "Wealth a licensee pays the holder each epoch")
+    steal_chance: int = rule(20, 0, 100, V, "Chance one who copies a design, mark or privilege without leave claims it as their own (%)")
+    buy_price: int = rule(10, 0, 100, V, "Wealth a licensee pays a holder in want to buy a right outright")
 
 
 @dataclass(frozen=True)

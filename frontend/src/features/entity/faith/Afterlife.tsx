@@ -17,6 +17,7 @@ import {
   Unlink,
   Users,
 } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
@@ -39,8 +40,17 @@ import {
   LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { table } from '@/features/arcana/labels'
+import { type Field, RecordEditor } from '@/features/cosmography/parts'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import {
+  ACTIVITIES,
+  ADMISSIONS,
+  CONTACTS,
+  PERMANENCES,
+  VALENCES,
+} from '@/features/typedModels/labels'
 import { MindPicker } from '../mind/parts'
 import { goodBand, named, sentence } from '../realm/labels'
 import {
@@ -110,7 +120,7 @@ function LeverGroup({
   children: ReactNode
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Label variant='overline'>{title}</Label>
       {children}
     </div>
@@ -682,6 +692,17 @@ function StratumRung({
               text={`Lies in ${stratum.dimension.name}`}
             />
           )}
+          <Tag spec={VALENCES[stratum.valence]} />
+          <Tag spec={PERMANENCES[stratum.permanence]} />
+          <Tag spec={ADMISSIONS[stratum.admission]} />
+          <Tag spec={ACTIVITIES[stratum.activity]} />
+          <Tag spec={CONTACTS[stratum.contact]} />
+          {stratum.ruler && (
+            <Tag
+              spec={{ label: 'Ruled by', icon: Sparkles, tone: 'gold' }}
+              text={`Ruled by ${stratum.ruler.name}`}
+            />
+          )}
           {criteriaText(stratum.criteria).map((line) => (
             <Badge key={line} size='sm' variant='outline'>
               {line}
@@ -715,6 +736,7 @@ function StratumRung({
           </div>
         )}
         <ShowMore state={souls} noun={['soul', 'souls']} />
+        <StratumAxes realmId={realmId} stratum={stratum} blocked={blocked} />
         <StratumEditor
           key={JSON.stringify([
             stratum.name,
@@ -733,6 +755,78 @@ function StratumRung({
   )
 }
 
+const AXIS_FIELDS: readonly Field[] = [
+  {
+    key: 'valence',
+    label: 'What it gives',
+    kind: 'pick',
+    table: table(VALENCES),
+  },
+  {
+    key: 'permanence',
+    label: 'How long souls stay',
+    kind: 'pick',
+    table: table(PERMANENCES),
+  },
+  {
+    key: 'admission',
+    label: 'Who it takes',
+    kind: 'pick',
+    table: table(ADMISSIONS),
+  },
+  {
+    key: 'activity',
+    label: 'What souls do there',
+    kind: 'pick',
+    table: table(ACTIVITIES),
+  },
+  {
+    key: 'contact',
+    label: 'Whether the living reach it',
+    kind: 'pick',
+    table: table(CONTACTS),
+  },
+  { key: 'ruler_id', label: 'Its ruler', kind: 'node', types: [] },
+]
+
+function StratumAxes({
+  realmId,
+  stratum,
+  blocked,
+}: {
+  realmId: number
+  stratum: Stratum
+  blocked: string | null
+}) {
+  const reshape = useGodAction<EditValues>({
+    run: (values) =>
+      unwrap(
+        api.POST('/api/actions/afterlife:stratum', {
+          body: {
+            realm_id: realmId,
+            stratum_id: stratum.id,
+            kind: stratum.kind,
+            ...(values as Record<string, never>),
+            clear_links: false,
+            clear_dimension: false,
+            remove: false,
+          },
+        })
+      ),
+  })
+  return (
+    <RecordEditor
+      title='Shape what this realm is'
+      note='Its axes set who it takes, how long souls stay, what they do and whether the living can reach them; its name comes from the faith.'
+      fields={AXIS_FIELDS}
+      locked={[]}
+      busy={busyOf(blocked, reshape.isPending)}
+      onSave={(values) => reshape.mutate(values)}
+      onRelease={() => reshape.mutate({})}
+    />
+  )
+}
+
 export function AfterlifeSection({
   regionId,
   readOnlyReason,
@@ -743,7 +837,7 @@ export function AfterlifeSection({
   const view = useAfterlife(regionId)
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
-  const [kind, setKind] = useState<string>('paradise')
+  const [kind, setKind] = useState<string>('reward')
   const [name, setName] = useState('')
   const add = useGodAction({
     run: () =>
@@ -803,7 +897,7 @@ export function AfterlifeSection({
             <RealmGods gods={view.data?.gods ?? []} />
             <div
               data-surface='AfterlifeRealm'
-              className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
+              className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
             >
               <div className='flex min-w-0 items-center gap-2'>
                 <ArrowUp

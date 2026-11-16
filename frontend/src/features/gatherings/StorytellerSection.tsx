@@ -7,6 +7,8 @@ import { LineChart } from '@/components/domain/LineChart'
 import { ChoiceTiles } from '@/components/domain/SettingsKit'
 import { Label, Muted } from '@/components/typography'
 import { Chip, Facts, Meter, RecordEditor } from '@/features/cosmography/parts'
+import { StorytellerDepth } from './StorytellerDepth'
+import { StorytellerPalette } from './StorytellerPalette'
 import { type StorytellerView, useGatheringAction, useStoryteller } from './api'
 import { why } from './history'
 import {
@@ -223,6 +225,7 @@ export function StorytellerSection({
                 </div>
               )}
             </div>
+            <StorytellerPalette view={view} blocked={busy} />
             <Label variant='overline'>Choose the storyteller</Label>
             <ChoiceTiles
               label='Storyteller'
@@ -281,6 +284,7 @@ export function StorytellerSection({
               onSave={(values) => set.mutate({ values, release: [] })}
               onRelease={(release) => set.mutate({ values: {}, release })}
             />
+            <StorytellerDepth view={view} blocked={readOnlyReason} />
           </>
         ) : null}
       </div>

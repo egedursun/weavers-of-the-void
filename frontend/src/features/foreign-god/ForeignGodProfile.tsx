@@ -94,7 +94,7 @@ export function ForeignGodProfile({ detail }: { detail: ForeignGodDetail }) {
               {(power) => (
                 <li
                   key={power.slot}
-                  className='flex min-w-0 flex-col gap-1 rounded-lg border p-3'
+                  className='flex min-w-0 flex-col gap-1 rounded-md border surface-framed border-gild/70 bg-card p-3'
                 >
                   <div className='flex min-w-0 items-center gap-2'>
                     <Sparkles

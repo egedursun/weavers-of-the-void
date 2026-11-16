@@ -6,7 +6,7 @@
   "tells only what the god gave, never what the god took or cost",
   "says a ban or rite was set by its own ancestors, not by the god",
   "magnifies a small event, shrinks a great loss",
-  "confuses the god with another god, a hero or an animal",
+  "confuses the god with another god or another being",
   "misunderstands a word and builds the whole belief on that misunderstanding",
   "attributes something the god did to a natural phenomenon of their own land"
 ] %}
@@ -40,7 +40,7 @@ PAYOFFS THIS AGE (each pays off what was set up in an earlier age; a people that
 
 {% endif %}
 {% if historians %}
-HISTORIANS (for each, this age's account through its own people's eyes; do not open with "We …", do not repeat the opening of the previous account; the previous historian continues or their apprentice takes over{% if world_events %}; every historian tells as "we" ONLY the events of its own world, never another world's event as if it befell its own people, at most as news from afar{% endif %}):
+HISTORIANS (for each, this age's account from its own people's side; do not open with "We …", do not repeat the opening of the previous account; the previous historian continues or their apprentice takes over{% if world_events %}; every historian tells as "we" ONLY the events of its own world, never another world's event as if it befell its own people, at most as news from afar{% endif %}):
 {% for entry in historians %}
 people_id {{ entry.people.id }}{% if entry.world %} (its world: {{ entry.world }}){% endif %}: {{ entity_line(entry.people) }}
 {% if entry.society %}

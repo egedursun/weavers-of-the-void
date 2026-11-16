@@ -190,7 +190,7 @@ class LawBook:
             if law is None or law is NaturalLaw.NONE:
                 continue
             profile = profiles.get(entity_id)
-            if profile is not None and (profile.contested or profile.strength <= 0):
+            if profile is not None and (profile.contested or profile.suspended or profile.strength <= 0):
                 continue
             strength = profile.strength if profile is not None else PERCENT
             if profile is not None and profile.scope is LawScope.REGION and profile.region_entity_id is not None:

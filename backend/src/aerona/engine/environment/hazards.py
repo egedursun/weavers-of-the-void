@@ -151,8 +151,7 @@ async def strike(
                     rules.hazards.injury_damage,
                     HarmCause.DISASTER,
                     spec.words,
-                    kind=spec.injury,
-                    severity=rules.hazards.injury_severity,
+                    damage_type=spec.damage,
                     event_entity_id=region.id,
                 ),
             )

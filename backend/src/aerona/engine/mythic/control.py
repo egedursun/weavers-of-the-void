@@ -17,7 +17,7 @@ from aerona.db.tables.mythic import (
 )
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ActKind
-from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, GeasState, HeroquestState, OfficeChoice, ServitorRank, ServitorRole
+from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, GeasState, HeroquestState, OfficeChoice, ServitorRole
 from aerona.engine.context import TickContext
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, entity, found, node
@@ -91,10 +91,10 @@ async def delete_mantling(ctx: TickContext, mortal_id: int) -> None:
     await ctx.session.flush()
 
 
-async def create_servitor(ctx: TickContext, god_id: int, *, name: str, rank: ServitorRank, role: ServitorRole, post_id: int | None) -> ServitorRow:
+async def create_servitor(ctx: TickContext, god_id: int, *, name: str, role: ServitorRole, post_id: int | None) -> ServitorRow:
     await node(ctx, god_id, "god")
     post = await entity(ctx, post_id, "post") if post_id is not None else None
-    return await make_servitor(ctx, god_id, name=name, rank=rank, role=role, post_id=post.id if post else None, world_id=post.world_id if post else None)
+    return await make_servitor(ctx, god_id, name=name, role=role, post_id=post.id if post else None, world_id=post.world_id if post else None)
 
 
 async def edit_servitor(ctx: TickContext, spirit_id: int, values: Values, release: list[str]) -> ServitorRow:

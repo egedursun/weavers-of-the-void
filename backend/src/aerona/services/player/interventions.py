@@ -1,21 +1,28 @@
 import json
+from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
+from aerona.catalog.divine_grammar import VERB_SIGN
 from aerona.catalog.interventions import DISASTERS, MIRACLES
 from aerona.catalog.stats import max_essence, max_hp
+from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
+from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.divine import DivineObject, DivineVerb
 from aerona.domain.enums.entity import LOCATION_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster, InterventionKind, Miracle
 from aerona.domain.enums.job import JobKind
@@ -24,6 +31,7 @@ from aerona.domain.enums.son import SonStatus, Stat
 from aerona.domain.models.stats import STAT_CEILING
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.divine.grammar import APPLIERS
 from aerona.engine.dominion.miracles import impress, witness_count
 from aerona.engine.gods.interventions import MiracleEffect, apply_miracle
 from aerona.engine.gods.power import end_rebellion
@@ -53,6 +61,7 @@ from aerona.services.player.lines import (
     PEACE_EFFECT,
     SUPPRESS_FAILED,
     SUPPRESSED,
+    VERB_ACT,
 )
 from aerona.services.player.ports import RevelationRequest
 from aerona.services.player.runtime import CostedJob, PlayerRuntime, submit_costed, unavailable
@@ -101,6 +110,8 @@ class Intervene(Command):
     miracle: Miracle | None = None
     disaster: Disaster | None = None
     knowledge_id: int | None = None
+    object: DivineObject = DivineObject.STAT
+    object_key: str | None = Field(default=None, max_length=NAME_MAX_LENGTH)
 
 
 class SetKnowledge(Command):
@@ -246,7 +257,7 @@ async def punish(scope: PlayerScope, command: Punish) -> Effect:
         await apply_hits(
             ctx,
             son,
-            Harm(bolt, HarmCause.PUNISHMENT, "was struck by the creator's lightning", damage_type=DamageType.FIRE, source_node_id=creator.id),
+            Harm(bolt, HarmCause.PUNISHMENT, "was struck down by the creator", damage_type=DamageType.FIRE, source_node_id=creator.id),
             lethal=False,
         )
         line, kind = LIGHTNING, ActionKind.LIGHTNING
@@ -321,75 +332,120 @@ async def _curse(ctx: TickContext, target: EntityRow) -> list[str]:
     return notes
 
 
+@dataclass(frozen=True)
+class Act:
+    scope: PlayerScope
+    command: Intervene
+    target: EntityRow
+    creator: CreatorRow
+    ctx: TickContext
+    tool: str
+
+
+async def work_miracle(act: Act) -> Effect:
+    scope, command, target, creator, ctx = act.scope, act.command, act.target, act.creator, act.ctx
+    if command.miracle is None:
+        raise ValidationFailedError(f"Choose a miracle: {', '.join(MIRACLES)}.")
+    spent = guards.charge(creator, scope.rules.intervention_costs.miracle, "intervention_costs.miracle")
+    before = await _fingerprint(scope, target)
+    notes = await _miracle(ctx, target, command.miracle)
+    if await _fingerprint(scope, target) == before:
+        raise ValidationFailedError(f"The miracle found nothing to change in {target.name}; the essence was returned.")
+    await impress(
+        ctx,
+        creator.id,
+        target,
+        kind=command.miracle.value,
+        magnitude=scope.rules.miracle_impression.creator_magnitude,
+        witnesses=await witness_count(ctx, target),
+    )
+    label = MIRACLES[command.miracle].label.lower()
+    message = await tell(
+        ctx, MIRACLE, ids=[target.id], kind=ChronicleKind.MIRACLE, creator=creator.name, label=label, entity=target.name, effects=", ".join(notes) or label
+    )
+    return Effect(message, target.id, essence_spent=spent, kind=ActionKind.MIRACLE, tool=act.tool)
+
+
+async def send_disaster(act: Act) -> Effect:
+    scope, command, target, creator, ctx = act.scope, act.command, act.target, act.creator, act.ctx
+    if command.disaster is None:
+        raise ValidationFailedError(f"Choose a disaster: {', '.join(DISASTERS)}.")
+    if target.entity_type not in LOCATION_TYPES:
+        raise ValidationFailedError("Disasters strike regions, places and settlements.")
+    spent = guards.charge(creator, scope.rules.intervention_costs.disaster, "intervention_costs.disaster")
+    actions = scope.rules.god_actions
+    impact = await apply_disaster(ctx, target, command.disaster, actions.disaster_severity_pct / 100)
+    event = await record_disaster_event(ctx, target, command.disaster, actions.disaster_event_severity, impact)
+    detail = f"; {'; '.join(impact.notes)}" if impact.notes else ""
+    label = DISASTERS[command.disaster].label.lower()
+    message = await tell(
+        ctx, DISASTER, ids=[target.id, event.id], kind=ChronicleKind.DISASTER, creator=creator.name, label=label, entity=target.name, notes=detail
+    )
+    return Effect(message, target.id, essence_spent=spent, created_ids=(event.id,), kind=ActionKind.DISASTER, tool=act.tool, values={"dead": len(impact.dead)})
+
+
+async def teach_knowledge(act: Act) -> Effect:
+    scope, command, target, creator, ctx = act.scope, act.command, act.target, act.creator, act.ctx
+    if command.knowledge_id is None:
+        raise ValidationFailedError("Choose the knowledge to teach.")
+    knowledge = await guards.canon_entity(scope.session, command.knowledge_id, "This knowledge")
+    if knowledge.entity_type is not EntityType.KNOWLEDGE:
+        raise ValidationFailedError("Only a knowledge record can be taught.")
+    spent = guards.charge(creator, scope.rules.intervention_costs.teach_knowledge, "intervention_costs.teach_knowledge")
+    if not await teach(ctx, target.id, knowledge, f"taught by {creator.name}"):
+        raise ValidationFailedError(f"{target.name} already knows {knowledge.name}; the essence was returned.")
+    message = await tell(
+        ctx,
+        KNOWLEDGE_TAUGHT,
+        ids=[target.id, knowledge.id],
+        kind=ChronicleKind.KNOWLEDGE,
+        creator=creator.name,
+        entity=target.name,
+        knowledge=knowledge.name,
+    )
+    return Effect(message, target.id, essence_spent=spent, kind=ActionKind.TEACH_KNOWLEDGE, tool=act.tool)
+
+
+async def lay_curse(act: Act) -> Effect:
+    scope, target, creator, ctx = act.scope, act.target, act.creator, act.ctx
+    spent = guards.charge(creator, scope.rules.intervention_costs.curse, "intervention_costs.curse")
+    before = await _fingerprint(scope, target)
+    notes = await _curse(ctx, target)
+    if await _fingerprint(scope, target) == before:
+        raise ValidationFailedError(f"The curse found nothing to harm in {target.name}; the essence was returned.")
+    message = await tell(ctx, CURSED, ids=[target.id], creator=creator.name, entity=target.name, effects=", ".join(notes))
+    return Effect(message, target.id, essence_spent=spent, kind=ActionKind.CURSE, tool=act.tool)
+
+
+async def verb_act(act: Act) -> Effect:
+    scope, command, target, creator, ctx = act.scope, act.command, act.target, act.creator, act.ctx
+    verb = DivineVerb(command.action.value)
+    spent = guards.charge(creator, scope.rules.intervention_costs.verb_act, "intervention_costs.verb_act")
+    amount = VERB_SIGN[verb] * scope.rules.intervention_costs.verb_strength
+    await APPLIERS[command.object](ctx, target, command.object_key, amount, creator.id)
+    named = command.object.value.replace("_", " ") + (f" ({command.object_key.replace('_', ' ')})" if command.object_key else "")
+    message = await tell(ctx, VERB_ACT, ids=[target.id], creator=creator.name, verb=verb.value, entity=target.name, what=named)
+    return Effect(message, target.id, essence_spent=spent, kind=ActionKind.MIRACLE if amount > 0 else ActionKind.CURSE, tool=act.tool)
+
+
+INTERVENTIONS: Mapping[InterventionKind, Callable[[Act], Awaitable[Effect]]] = total(
+    InterventionKind,
+    {
+        InterventionKind.MIRACLE: work_miracle,
+        InterventionKind.DISASTER: send_disaster,
+        InterventionKind.TEACH_KNOWLEDGE: teach_knowledge,
+        InterventionKind.CURSE: lay_curse,
+        **{kind: verb_act for kind in InterventionKind if kind.value in DivineVerb._value2member_map_ and kind is not InterventionKind.CURSE},
+    },
+)
+
+
 @player_action("intervene", ActionKind.MIRACLE)
 async def intervene(scope: PlayerScope, command: Intervene) -> Effect:
     target = await guards.canon_entity(scope.session, command.entity_id)
     creator = await scope.creator()
-    costs = scope.rules.intervention_costs
     ctx = await scope.context(f"intervene.{command.action.value}")
-    tool = f"intervene:{command.action.value}"
-    if command.action is InterventionKind.MIRACLE:
-        if command.miracle is None:
-            raise ValidationFailedError(f"Choose a miracle: {', '.join(MIRACLES)}.")
-        spent = guards.charge(creator, costs.miracle, "intervention_costs.miracle")
-        before = await _fingerprint(scope, target)
-        notes = await _miracle(ctx, target, command.miracle)
-        if await _fingerprint(scope, target) == before:
-            raise ValidationFailedError(f"The miracle found nothing to change in {target.name}; the essence was returned.")
-        await impress(
-            ctx,
-            creator.id,
-            target,
-            kind=command.miracle.value,
-            magnitude=scope.rules.miracle_impression.creator_magnitude,
-            witnesses=await witness_count(ctx, target),
-        )
-        label = MIRACLES[command.miracle].label.lower()
-        message = await tell(
-            ctx, MIRACLE, ids=[target.id], kind=ChronicleKind.MIRACLE, creator=creator.name, label=label, entity=target.name, effects=", ".join(notes) or label
-        )
-        return Effect(message, target.id, essence_spent=spent, kind=ActionKind.MIRACLE, tool=tool)
-    if command.action is InterventionKind.DISASTER:
-        if command.disaster is None:
-            raise ValidationFailedError(f"Choose a disaster: {', '.join(DISASTERS)}.")
-        if target.entity_type not in LOCATION_TYPES:
-            raise ValidationFailedError("Disasters strike regions, places and settlements.")
-        spent = guards.charge(creator, costs.disaster, "intervention_costs.disaster")
-        actions = scope.rules.god_actions
-        impact = await apply_disaster(ctx, target, command.disaster, actions.disaster_severity_pct / 100)
-        event = await record_disaster_event(ctx, target, command.disaster, actions.disaster_event_severity, impact)
-        detail = f"; {'; '.join(impact.notes)}" if impact.notes else ""
-        label = DISASTERS[command.disaster].label.lower()
-        message = await tell(
-            ctx, DISASTER, ids=[target.id, event.id], kind=ChronicleKind.DISASTER, creator=creator.name, label=label, entity=target.name, notes=detail
-        )
-        return Effect(message, target.id, essence_spent=spent, created_ids=(event.id,), kind=ActionKind.DISASTER, tool=tool, values={"dead": len(impact.dead)})
-    if command.action is InterventionKind.TEACH_KNOWLEDGE:
-        if command.knowledge_id is None:
-            raise ValidationFailedError("Choose the knowledge to teach.")
-        knowledge = await guards.canon_entity(scope.session, command.knowledge_id, "This knowledge")
-        if knowledge.entity_type is not EntityType.KNOWLEDGE:
-            raise ValidationFailedError("Only a knowledge record can be taught.")
-        spent = guards.charge(creator, costs.teach_knowledge, "intervention_costs.teach_knowledge")
-        if not await teach(ctx, target.id, knowledge, f"taught by {creator.name}"):
-            raise ValidationFailedError(f"{target.name} already knows {knowledge.name}; the essence was returned.")
-        message = await tell(
-            ctx,
-            KNOWLEDGE_TAUGHT,
-            ids=[target.id, knowledge.id],
-            kind=ChronicleKind.KNOWLEDGE,
-            creator=creator.name,
-            entity=target.name,
-            knowledge=knowledge.name,
-        )
-        return Effect(message, target.id, essence_spent=spent, kind=ActionKind.TEACH_KNOWLEDGE, tool=tool)
-    spent = guards.charge(creator, costs.curse, "intervention_costs.curse")
-    before = await _fingerprint(scope, target)
-    notes = await _curse(ctx, target)
-    if await _fingerprint(scope, target) == before:
-        raise ValidationFailedError(f"The curse found nothing to wither in {target.name}; the essence was returned.")
-    message = await tell(ctx, CURSED, ids=[target.id], creator=creator.name, entity=target.name, effects=", ".join(notes))
-    return Effect(message, target.id, essence_spent=spent, kind=ActionKind.CURSE, tool=tool)
+    return await INTERVENTIONS[command.action](Act(scope, command, target, creator, ctx, f"intervene:{command.action.value}"))
 
 
 async def known_knowledge(scope: PlayerScope, entity_id: int) -> list[KnownKnowledge]:

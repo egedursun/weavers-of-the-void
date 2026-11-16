@@ -1,4 +1,6 @@
 import {
+  ScrollText,
+  MapPin,
   Anchor,
   Ban,
   CheckCircle2,
@@ -57,6 +59,13 @@ export const SUBJECT_KINDS: Record<string, Named> = {
   client: { label: 'Client', icon: Orbit, tone: 'info' },
   colony: { label: 'Colony', icon: Globe, tone: 'success' },
   protectorate: { label: 'Protectorate', icon: Anchor, tone: 'info' },
+  enclave: { label: 'Enclave', icon: MapPin, tone: 'muted' },
+  mandate: { label: 'Mandate', icon: ScrollText, tone: 'warning' },
+  associated_state: {
+    label: 'Associated state',
+    icon: Handshake,
+    tone: 'success',
+  },
 }
 
 export const STANDINGS: Record<string, Named> = {

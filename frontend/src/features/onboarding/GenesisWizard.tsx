@@ -117,7 +117,7 @@ export function GenesisWizard({ llmEnabled }: GenesisWizardProps) {
     >
       <section
         aria-label='Genesis wizard'
-        className='flex min-w-0 flex-col gap-6 rounded-xl border bg-card p-4 shadow-sm sm:p-6 lg:col-span-2'
+        className='flex min-w-0 flex-col gap-6 rounded-md border surface-framed border-gild/70 bg-card p-4 sm:p-6 lg:col-span-2'
       >
         <GenesisStepper current={stepIndex} reachable={reachable} onPick={go} />
         <div className='flex min-w-0 items-center gap-3'>

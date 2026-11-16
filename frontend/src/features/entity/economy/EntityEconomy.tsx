@@ -33,6 +33,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
+import { Flourish } from '@/components/ui/ornate'
 import { Progress } from '@/components/ui/progress'
 import {
   EmptyState,
@@ -45,7 +46,7 @@ import {
   Paged,
   LoadingBlock,
 } from '@/components/domain'
-import { Label, Muted, Stat, Text } from '@/components/typography'
+import { Label, Muted, SectionTitle, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { ControlPanel, MindPicker } from '../mind/parts'
@@ -140,7 +141,7 @@ function MarketQuotes({ economy }: { economy: Economy }) {
             {(quote) => (
               <li
                 key={quote.commodity}
-                className='flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-2'
+                className='flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card p-2'
               >
                 <div className='flex min-w-0 items-center justify-between gap-2'>
                   <Text as='span' weight='semibold' truncate>
@@ -186,9 +187,12 @@ export function PartHeader({
 }) {
   return (
     <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2'>
-      <Medallion icon={icon} tone={tone} size='sm' />
-      <div className='flex min-w-0 flex-1 basis-48 flex-col'>
-        <Label variant='overline'>{title}</Label>
+      <Medallion icon={icon} tone={tone} />
+      <div className='flex min-w-0 flex-1 basis-48 flex-col gap-0.5'>
+        <SectionTitle level={3} truncate className='text-gilded'>
+          {title}
+        </SectionTitle>
+        <Flourish />
         {note && <Muted variant='caption'>{note}</Muted>}
       </div>
       {aside}
@@ -344,7 +348,7 @@ function StoreTile({
       data-store={kind}
       data-overflow={over || undefined}
       className={cn(
-        'flex h-full min-w-0 flex-col gap-3 rounded-xl border bg-background p-4',
+        'flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4',
         over && TONE_BORDER.warning,
         short && TONE_BORDER.danger
       )}
@@ -496,7 +500,7 @@ function GoodTile({
   return (
     <li
       data-commodity={lot.commodity}
-      className='flex h-full min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2.5'
+      className='flex h-full min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2.5'
     >
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={spec.icon} tone={family.tone} size='sm' />
@@ -788,7 +792,7 @@ function StepRow({
       data-bottleneck={step.bottleneck ?? undefined}
       data-state={state}
       className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3',
+        'flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         state !== 'making' && TONE_BORDER[look.tone]
       )}
     >
@@ -980,7 +984,7 @@ function WorkshopCard({
     <li
       data-workshop={row.kind}
       className={cn(
-        'flex h-full min-w-0 flex-col gap-2.5 rounded-lg border bg-background p-3',
+        'flex h-full min-w-0 flex-col gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3',
         idle && TONE_BORDER.warning
       )}
     >
@@ -1303,7 +1307,7 @@ function CoinChoice({
   const value =
     economy.currency_id !== null ? String(economy.currency_id) : NO_COIN
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
       <PartHeader
         icon={Coins}
         title='Coin and market'

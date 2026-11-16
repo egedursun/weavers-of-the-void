@@ -33,7 +33,7 @@ WARLIKE = frozenset(
         FactionKind.MERCENARY_COMPANY,
         FactionKind.BANDITS,
         FactionKind.PIRATES,
-        FactionKind.VOID_PIRATES,
+        FactionKind.ROUTE_RAIDERS,
         FactionKind.PIRATE_CONFEDERACY,
     }
 )

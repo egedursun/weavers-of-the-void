@@ -648,7 +648,7 @@ export function CreateBeastDialog({
 
 export function WildsCreateBar({ regionId }: { regionId: number }) {
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border border-dashed bg-muted/20 p-3'>
+    <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-md p-3 sealed-well'>
       <Medallion icon={Sparkles} tone='success' size='sm' />
       <div className='flex min-w-0 flex-1 basis-60 flex-col'>
         <Text weight='semibold'>Fill this land with life</Text>

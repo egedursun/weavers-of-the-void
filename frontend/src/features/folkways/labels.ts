@@ -1,4 +1,16 @@
 import {
+  ArrowDown,
+  Weight,
+  Scissors,
+  Waves,
+  Cog,
+  CarFront,
+  Building,
+  Wind,
+  Snowflake,
+  Trophy,
+  Package,
+  Wrench,
   Anchor,
   Apple,
   Baby,
@@ -13,8 +25,12 @@ import {
   Crown,
   Dice5,
   Droplet,
+  Dna,
   Droplets,
   Eye,
+  FlaskConical,
+  Handshake,
+  Undo2,
   Flame,
   Gavel,
   Gem,
@@ -50,6 +66,7 @@ import {
   UtensilsCrossed,
   Wheat,
   Zap,
+  EyeOff,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -131,6 +148,17 @@ export const DECISIONS: Record<Schema['BiasedDecision'], Named> = {
   conversion: { label: 'Turning to a god', icon: Sparkles, tone: 'gold' },
   migration: { label: 'Leaving home', icon: TrendingUp, tone: 'info' },
   god_goal: { label: 'Taking up a goal', icon: Target, tone: 'gold' },
+  war: { label: 'Going to war', icon: Swords, tone: 'danger' },
+  retreat: { label: 'Falling back', icon: Undo2, tone: 'warning' },
+  trade: { label: 'Opening trade', icon: Coins, tone: 'success' },
+  alliance: { label: 'Making an alliance', icon: Handshake, tone: 'info' },
+  succession: { label: 'Naming an heir', icon: Crown, tone: 'gold' },
+  law: { label: 'Changing the law', icon: Gavel, tone: 'info' },
+  research: {
+    label: 'Choosing what to learn',
+    icon: FlaskConical,
+    tone: 'verdigris',
+  },
 }
 
 export const PURITY_STATES: Record<Schema['PurityState'], Named> = {
@@ -153,6 +181,8 @@ export const IMPURITY_SOURCES: Record<Schema['ImpuritySource'], Named> = {
   made_thing: { label: 'Made things', icon: Hammer, tone: 'info' },
   taboo: { label: 'A broken taboo', icon: Ban, tone: 'danger' },
   wound: { label: 'Wounds', icon: HeartPulse, tone: 'danger' },
+  augment: { label: 'Augments', icon: Cog, tone: 'info' },
+  designed_body: { label: 'Designed bodies', icon: Dna, tone: 'verdigris' },
 }
 
 export const PURIFICATIONS: Record<Schema['Purification'], Named> = {
@@ -173,6 +203,31 @@ export const MISHAP_KINDS: Record<Schema['MishapKind'], Named> = {
   livestock_death: { label: 'Herds lost', icon: Bone, tone: 'warning' },
   accident: { label: 'Accident', icon: Target, tone: 'info' },
   bad_luck: { label: 'Bad luck', icon: Dice5, tone: 'muted' },
+  fall: { label: 'A fall', icon: ArrowDown, tone: 'warning' },
+  crush: { label: 'Crushed', icon: Weight, tone: 'danger' },
+  cut: { label: 'A cut', icon: Scissors, tone: 'warning' },
+  burn: { label: 'A burn', icon: Flame, tone: 'danger' },
+  scald: { label: 'A scald', icon: Droplets, tone: 'warning' },
+  drowning: { label: 'Drowning', icon: Waves, tone: 'danger' },
+  beast: { label: 'Hurt by a beast', icon: PawPrint, tone: 'warning' },
+  tool: { label: 'A tool slipped', icon: Hammer, tone: 'info' },
+  machine: { label: 'Caught by a machine', icon: Cog, tone: 'danger' },
+  vehicle: { label: 'A vehicle mishap', icon: CarFront, tone: 'warning' },
+  collapse: { label: 'A collapse', icon: Building, tone: 'danger' },
+  house_fire: { label: 'A house fire', icon: Flame, tone: 'danger' },
+  poisoning: { label: 'Poisoning', icon: Skull, tone: 'danger' },
+  choking: { label: 'Choking', icon: Wind, tone: 'warning' },
+  exposure: { label: 'Exposure', icon: Snowflake, tone: 'warning' },
+  lightning: { label: 'Lightning', icon: Zap, tone: 'danger' },
+  sport: { label: 'Hurt at play', icon: Trophy, tone: 'info' },
+  brawl: { label: 'A brawl', icon: Swords, tone: 'warning' },
+  lost_way: { label: 'Lost the way', icon: MapPin, tone: 'info' },
+  stores_spoiled: { label: 'Stores spoiled', icon: Apple, tone: 'warning' },
+  goods_lost: { label: 'Goods lost', icon: Package, tone: 'warning' },
+  purse_lost: { label: 'A purse lost', icon: Coins, tone: 'warning' },
+  theft_suffered: { label: 'Robbed', icon: Hand, tone: 'warning' },
+  tool_broken: { label: 'A tool broke', icon: Wrench, tone: 'info' },
+  near_miss: { label: 'A near miss', icon: Eye, tone: 'muted' },
 }
 
 export const ATTRIBUTIONS: Record<Schema['MishapAttribution'], Named> = {
@@ -188,6 +243,8 @@ export const ATTRIBUTIONS: Record<Schema['MishapAttribution'], Named> = {
   enemy_scheme: { label: 'An enemy scheme', icon: Swords, tone: 'danger' },
   impurity: { label: 'Impurity', icon: Droplets, tone: 'warning' },
   broken_oath: { label: 'A broken oath', icon: Scale, tone: 'warning' },
+  made_mind: { label: 'A made mind', icon: Brain, tone: 'verdigris' },
+  hidden_people: { label: 'Those who hide', icon: EyeOff, tone: 'muted' },
 }
 
 export const RESPONSES: Record<Schema['MishapResponse'], Named> = {

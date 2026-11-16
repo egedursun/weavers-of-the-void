@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from aerona.prompts.contexts import agent as agent_contexts
 from aerona.prompts.contexts import (
     blocks,
-    chronicle,
     chronicler,
     cosmos,
     council,
@@ -212,8 +211,6 @@ SPECS: tuple[PromptSpec, ...] = (
     PromptSpec(P.ENTITY_STATE_REASON, A.AGENT, agent_contexts.EntityStateContext),
     PromptSpec(P.FIELD_ERROR, A.AGENT, agent_contexts.FieldErrorContext),
     PromptSpec(P.PER_EPOCH_LIMIT, A.AGENT, agent_contexts.PerEpochLimitContext),
-    PromptSpec(P.CREATOR_SIGN, A.CHRONICLE, chronicle.CreatorSignContext),
-    PromptSpec(P.SENTIENT_DEMAND, A.CHRONICLE, chronicle.SentientDemandContext),
     PromptSpec(P.LOCALISE_SYSTEM, A.LOCALISATION, localisation.LocaliseContext),
     PromptSpec(P.LOCALISE_USER, A.LOCALISATION, localisation.LocaliseContext, localisation_schemas.LocalisedLinesOutput),
 )

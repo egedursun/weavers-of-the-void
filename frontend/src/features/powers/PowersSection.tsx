@@ -14,6 +14,7 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -52,7 +53,7 @@ const SHOWN = 5
 const NONE = 'none'
 const YES_NO = { true: 'Yes', false: 'No' }
 const GODS = ['son', 'foreign_god', 'creator']
-const QUIET = new Set(['latent', 'burned_out', 'suppressed', 'lost'])
+const QUIET = new Set(['latent', 'exhausted', 'suppressed', 'lost'])
 
 type Choice = PowersNodeView['sources'][number]
 
@@ -402,9 +403,9 @@ function Power({
       <Ref node={power.granted_by} empty='granted by no god' />
       <Ref node={power.item} empty='held in no thing' />
       <ul className='flex min-w-0 flex-col gap-2'>
-        {power.restrictions.map((row) => (
-          <Restriction key={row.id} row={row} blocked={blocked} />
-        ))}
+        <Paged items={power.restrictions} as='li'>
+          {(row) => <Restriction key={row.id} row={row} blocked={blocked} />}
+        </Paged>
       </ul>
       <ul className='flex min-w-0 flex-wrap gap-2'>
         {triggers.visible.map((row) => (
@@ -413,9 +414,9 @@ function Power({
       </ul>
       <ShowMore state={triggers} />
       <ul className='flex min-w-0 flex-col gap-2'>
-        {power.spans.map((row) => (
-          <Span key={row.id} row={row} blocked={blocked} />
-        ))}
+        <Paged items={power.spans} as='li'>
+          {(row) => <Span key={row.id} row={row} blocked={blocked} />}
+        </Paged>
       </ul>
       <ForgeCard
         icon={CirclePlus}
@@ -682,21 +683,25 @@ export function PowersSection({
             )}
             {query.data.granted.length ? (
               <ul className='flex min-w-0 flex-col gap-2'>
-                {query.data.granted.map((power) => (
-                  <Power
-                    key={`granted-${power.id}`}
-                    power={power}
-                    view={query.data}
-                    blocked={blocked}
-                  />
-                ))}
+                <Paged items={query.data.granted} as='li'>
+                  {(power) => (
+                    <Power
+                      key={`granted-${power.id}`}
+                      power={power}
+                      view={query.data}
+                      blocked={blocked}
+                    />
+                  )}
+                </Paged>
               </ul>
             ) : null}
             {query.data.registry.length ? (
               <ul className='flex min-w-0 flex-col gap-2'>
-                {query.data.registry.map((row) => (
-                  <Registry key={row.id} row={row} blocked={blocked} />
-                ))}
+                <Paged items={query.data.registry} as='li'>
+                  {(row) => (
+                    <Registry key={row.id} row={row} blocked={blocked} />
+                  )}
+                </Paged>
               </ul>
             ) : null}
             {query.data.attitude ? (

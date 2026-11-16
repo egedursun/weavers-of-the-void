@@ -11,6 +11,7 @@ from aerona.domain.enums.travel import JourneyEventKind
 from aerona.domain.models.records import CargoLine
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.commerce import market_of
+from aerona.engine.cosmos.encounters import arrive, provision
 from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.cosmos.routes import add_event
 from aerona.engine.cosmos.sanity import shift_sanity
@@ -35,6 +36,7 @@ def escort_share(rules: Rules, journey: JourneyRow) -> float:
 async def voyage_epoch(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, route: RouteRow) -> None:
     table = ctx.rules.journeys
     rng = ctx.rng(f"voyage.{journey.id}")
+    await provision(ctx, journey)
     if journey.passengers and "passengers" not in journey.locked:
         journey.passengers = [
             line.model_copy(
@@ -82,6 +84,7 @@ async def unload(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) ->
         if dimension is not None and dimension.sanity_drain:
             shift_sanity(ctx.rules, traveller, -dimension.sanity_drain * ctx.rules.dimensions.visitor_sanity_pct / PERCENT)
     market = await market_of(ctx, journey.destination_world_id, {})
+    await arrive(ctx, journey, market)
     if market is not None and journey.cargo and not held(market.id):
         for line in journey.cargo:
             await goods_of(ctx.session, ctx.epoch).add(market.id, line.commodity, line.amount, GoodsFlow.TRADE, material=line.material)

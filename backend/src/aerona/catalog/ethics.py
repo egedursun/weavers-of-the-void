@@ -103,12 +103,14 @@ class HonourSpec:
     public_shame_pct: int
     guilt_pct: int
     law_pct: int
+    oath_pct: int
 
 
 HONOUR_MODELS: MappingProxyType[HonourModel, HonourSpec] = MappingProxyType(
     {
-        HonourModel.DIGNITY: HonourSpec("Dignity: law over insult", 50, 0, 100, 100, 150),
-        HonourModel.HONOUR: HonourSpec("Honour: a shame to one is a shame to the house", 150, 60, 120, 100, 100),
-        HonourModel.FACE: HonourSpec("Face: public shame weighs more than private guilt", 100, 30, 160, 50, 100),
+        HonourModel.DIGNITY: HonourSpec("Dignity: law over insult", 50, 0, 100, 100, 150, 60),
+        HonourModel.HONOUR: HonourSpec("Honour: a shame to one is a shame to the house", 150, 60, 120, 100, 100, 150),
+        HonourModel.FACE: HonourSpec("Face: public shame weighs more than private guilt", 100, 30, 160, 50, 100, 120),
+        HonourModel.NONE: HonourSpec("None: neither word nor standing is weighed beyond the act", 0, 0, 0, 100, 150, 0),
     }
 )

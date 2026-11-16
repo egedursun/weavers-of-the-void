@@ -190,9 +190,9 @@ async def test_possessions_are_set_edited_and_exorcised(scope: PlayerScope, sess
 async def test_custom_strata_take_typed_rules_links_and_closure(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     church = await faithful(session, world)
     rule = StratumCriteria(priority=5, renown_at_least=70)
-    await faith.set_stratum(scope, faith.SetStratum(realm_id=world.region.id, kind=StratumKind.PARADISE, name="Hall of Heroes", criteria=rule))
-    await faith.set_stratum(scope, faith.SetStratum(realm_id=world.region.id, kind=StratumKind.PARADISE, name="Garden of the Meek"))
-    rows = list(await session.scalars(select(AfterlifeStratumRow).where(AfterlifeStratumRow.kind == StratumKind.PARADISE)))
+    await faith.set_stratum(scope, faith.SetStratum(realm_id=world.region.id, kind=StratumKind.REWARD, name="Hall of Heroes", criteria=rule))
+    await faith.set_stratum(scope, faith.SetStratum(realm_id=world.region.id, kind=StratumKind.REWARD, name="Garden of the Meek"))
+    rows = list(await session.scalars(select(AfterlifeStratumRow).where(AfterlifeStratumRow.kind == StratumKind.REWARD)))
     assert len(rows) == 2
     hall = next(row for row in rows if row.name == "Hall of Heroes")
     assert StratumCriteria.read(hall.criteria) == rule

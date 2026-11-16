@@ -5,6 +5,7 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -199,9 +200,11 @@ function Augment({
     >
       <Ref node={augment.installed_by} empty='installed by no one named' />
       <ul className='flex min-w-0 flex-col gap-2'>
-        {augment.effects.map((effect) => (
-          <Effect key={effect.id} effect={effect} blocked={blocked} />
-        ))}
+        <Paged items={augment.effects} as='li'>
+          {(effect) => (
+            <Effect key={effect.id} effect={effect} blocked={blocked} />
+          )}
+        </Paged>
       </ul>
       <ForgeCard
         icon={CirclePlus}

@@ -27,7 +27,7 @@ from aerona.engine.relations.book import relation
 
 SYSTEM = "system"
 ADVOCATE = "advocate"
-DIVINE_TRIALS = frozenset({TrialKind.COMBAT, TrialKind.ORDEAL})
+DIVINE_TRIALS = frozenset({TrialKind.COMBAT, TrialKind.ORDEAL, TrialKind.ORACLE, TrialKind.DIVINE_JUDGEMENT})
 
 SACRED_CRIMES = frozenset({CrimeKind.BLASPHEMY, CrimeKind.WITCHCRAFT})
 

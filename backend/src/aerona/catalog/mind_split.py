@@ -177,7 +177,7 @@ FACETS: MappingProxyType[Facet, FacetSpec] = MappingProxyType(
         F.CURIOSITY: FacetSpec("Curiosity", G.MIND, lean(knowledge=25, xenophilia=10), T.CURIOUS, T.INCURIOUS),
         F.ABSTRACTION: FacetSpec("Abstraction", G.MIND, lean(knowledge=20, tradition=-10), T.SCHOLARLY, T.ILLITERATE_PROUD),
         F.ARTISTIC_INCLINATION: FacetSpec("Artistic inclination", G.MIND, lean(artwork=25, craftsmanship=10)),
-        F.TOLERANCE_OF_STRANGENESS: FacetSpec("Tolerance of strangeness", G.MIND, lean(xenophilia=20, purity=-15)),
+        F.TOLERANCE_OF_DIFFERENCE: FacetSpec("Tolerance of strangeness", G.MIND, lean(xenophilia=20, purity=-15)),
         F.HUMOUR: FacetSpec("Humour", G.MIND, lean(leisure=15, piety=-10)),
         F.SENSE_OF_DUTY: FacetSpec("Sense of duty", G.MIND, lean(loyalty=15, law=15, honour=10), T.JUST, T.ARBITRARY),
         F.GREED: FacetSpec("Greed", G.MIND, lean(wealth=25, mercy=-10), T.GREEDY, T.GENEROUS),
@@ -230,7 +230,7 @@ IDEAS: MappingProxyType[IdeaKind, IdeaSpec] = MappingProxyType(
             "Materialism", lean(wealth=25, piety=-10), att(analytical_ability=3, social_awareness=3), att(empathy=3), fac(greed=10, ambition=6)
         ),
         IK.REVERENCE_FOR_NATURE: IdeaSpec(
-            "Reverence for nature", lean(nature=25, wealth=-10), att(intuition=4, endurance=2), att(analytical_ability=2), fac(tolerance_of_strangeness=6)
+            "Reverence for nature", lean(nature=25, wealth=-10), att(intuition=4, endurance=2), att(analytical_ability=2), fac(tolerance_of_difference=6)
         ),
         IK.CRAFT_DEVOTION: IdeaSpec(
             "Devotion to craft", lean(craftsmanship=25, perseverance=10), att(focus=6), att(social_awareness=3), fac(thoroughness=10, perseverance=6)
@@ -240,7 +240,7 @@ IDEAS: MappingProxyType[IdeaKind, IdeaSpec] = MappingProxyType(
         ),
         IK.EGALITARIANISM: IdeaSpec("Equality of all", lean(hierarchy=-25, mercy=10), att(empathy=4), att(memory=2), fac(modesty=8, assertiveness=-4)),
         IK.DIVINE_ORDER: IdeaSpec(
-            "Divine order", lean(piety=25, hierarchy=10, law=10), att(willpower=4), att(creativity=3), fac(sense_of_duty=8, tolerance_of_strangeness=-6)
+            "Divine order", lean(piety=25, hierarchy=10, law=10), att(willpower=4), att(creativity=3), fac(sense_of_duty=8, tolerance_of_difference=-6)
         ),
     }
 )

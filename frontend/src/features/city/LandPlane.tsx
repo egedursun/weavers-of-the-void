@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { agree, plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
+import { OrnateFrame } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, KpiTile, PagedList } from '@/components/domain'
@@ -106,9 +107,9 @@ function LandBody({
       <section
         ref={stage}
         aria-label={`Land of ${scene.region.name}`}
-        className='relative flex min-w-0 scroll-mt-16 flex-col border-b'
+        className='relative flex min-w-0 scroll-mt-16 flex-col'
       >
-        <div className='relative h-scene min-w-0 overflow-hidden bg-card lg:h-scene-lg'>
+        <div className='scene-frame relative h-scene min-w-0 overflow-hidden bg-card lg:h-scene-lg'>
           {hasWebGL2() ? (
             <Suspense
               fallback={<Skeleton className='h-full w-full rounded-none' />}
@@ -188,174 +189,182 @@ function LandBody({
           <Legend scene={scene} />
         </div>
       </section>
-      <div className='flex min-w-0 flex-col gap-4 p-4 md:p-6'>
-        <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6'>
-          <KpiTile
-            label='Elevation'
-            value={scene.elevation}
-            icon={Mountain}
-            tone='muted'
+      <div className='p-4 md:p-6'>
+        <OrnateFrame
+          footCrest
+          className='flex min-w-0 flex-col gap-4 px-6 py-8'
+        >
+          <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6'>
+            <KpiTile
+              label='Elevation'
+              value={scene.elevation}
+              icon={Mountain}
+              tone='muted'
+            />
+            <KpiTile
+              label='Forest'
+              value={`${scene.forest_cover}%`}
+              icon={Trees}
+              tone='success'
+            />
+            <KpiTile
+              label='Farmed'
+              value={`${scene.farmed}%`}
+              icon={Wheat}
+              tone='gold'
+            />
+            <KpiTile
+              label='Mined'
+              value={`${scene.mined}%`}
+              icon={Pickaxe}
+              tone='warning'
+            />
+            <KpiTile
+              label='Moisture'
+              value={scene.moisture}
+              icon={Droplets}
+              tone='info'
+            />
+            <KpiTile
+              label='Deposits'
+              value={scene.resources.length}
+              icon={Gem}
+              tone='verdigris'
+            />
+          </div>
+          <Facts
+            items={[
+              [
+                'Terrain',
+                TERRAIN[scene.terrain]?.label ??
+                  scene.terrain.replaceAll('_', ' '),
+              ],
+              ['Climate', scene.temperature.replaceAll('_', ' ')],
+              ['Roughness', scene.roughness],
+              ['Soil fertility', scene.soil_fertility],
+              ['Magic density', scene.magic_density],
+              [SHARE_LABEL.grazed, `${scene.grazed}%`],
+              [SHARE_LABEL.wetland, `${scene.wetland}%`],
+              [SHARE_LABEL.cleared, `${scene.cleared}%`],
+              [SHARE_LABEL.built, `${scene.built}%`],
+            ]}
           />
-          <KpiTile
-            label='Forest'
-            value={`${scene.forest_cover}%`}
-            icon={Trees}
-            tone='success'
-          />
-          <KpiTile
-            label='Farmed'
-            value={`${scene.farmed}%`}
-            icon={Wheat}
-            tone='gold'
-          />
-          <KpiTile
-            label='Mined'
-            value={`${scene.mined}%`}
-            icon={Pickaxe}
-            tone='warning'
-          />
-          <KpiTile
-            label='Moisture'
-            value={scene.moisture}
-            icon={Droplets}
-            tone='info'
-          />
-          <KpiTile
-            label='Deposits'
-            value={scene.resources.length}
-            icon={Gem}
-            tone='verdigris'
-          />
-        </div>
-        <Facts
-          items={[
-            [
-              'Terrain',
-              TERRAIN[scene.terrain]?.label ??
-                scene.terrain.replaceAll('_', ' '),
-            ],
-            ['Climate', scene.temperature.replaceAll('_', ' ')],
-            ['Roughness', scene.roughness],
-            ['Soil fertility', scene.soil_fertility],
-            ['Magic density', scene.magic_density],
-            [SHARE_LABEL.grazed, `${scene.grazed}%`],
-            [SHARE_LABEL.wetland, `${scene.wetland}%`],
-            [SHARE_LABEL.cleared, `${scene.cleared}%`],
-            [SHARE_LABEL.built, `${scene.built}%`],
-          ]}
-        />
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList aria-label='Land panel' className='w-full'>
-            <TabsTrigger value='deposits'>{`Deposits · ${scene.resources.length}`}</TabsTrigger>
-            <TabsTrigger value='works'>{`Works · ${scene.works.length}`}</TabsTrigger>
-            <TabsTrigger value='towns'>{`Towns · ${scene.settlements.length}`}</TabsTrigger>
-            <TabsTrigger value='shape'>Shape</TabsTrigger>
-          </TabsList>
-          <TabsContent value='deposits' className='flex min-w-0 flex-col gap-2'>
-            {scene.resources.length === 0 && (
-              <Text variant='caption' tone='muted'>
-                No deposit lies in this land yet; lay one from the Shape tab.
-              </Text>
-            )}
-            <PagedList
-              items={scene.resources}
-              initial={8}
-              noun={['deposit', 'deposits']}
-              className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
-              itemKey={(row) => row.node.id}
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList aria-label='Land panel' className='w-full'>
+              <TabsTrigger value='deposits'>{`Deposits · ${scene.resources.length}`}</TabsTrigger>
+              <TabsTrigger value='works'>{`Works · ${scene.works.length}`}</TabsTrigger>
+              <TabsTrigger value='towns'>{`Towns · ${scene.settlements.length}`}</TabsTrigger>
+              <TabsTrigger value='shape'>Shape</TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value='deposits'
+              className='flex min-w-0 flex-col gap-2'
             >
-              {(row) => (
-                <RecordRow
-                  icon={COMMODITY[row.commodity].icon}
-                  tone='gold'
-                  title={<Ref node={row.node} />}
-                  caption={`${COMMODITY[row.commodity].label} · richness ${row.richness} · ${row.reserve} of ${row.initial_reserve} left`}
-                  aside={
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      onClick={() =>
-                        show({ kind: 'resource', id: row.node.id })
-                      }
-                    >
-                      Rule it
-                    </Button>
-                  }
-                />
+              {scene.resources.length === 0 && (
+                <Text variant='caption' tone='muted'>
+                  No deposit lies in this land yet; lay one from the Shape tab.
+                </Text>
               )}
-            </PagedList>
-          </TabsContent>
-          <TabsContent value='works' className='flex min-w-0 flex-col gap-2'>
-            {scene.works.length === 0 && (
-              <Text variant='caption' tone='muted'>
-                No work stands in the open land; mines and quarries are raised
-                here by the towns that work it.
-              </Text>
-            )}
-            <PagedList
-              items={scene.works}
-              initial={8}
-              noun={['work', 'works']}
-              className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
-              itemKey={(row) => row.node.id}
-            >
-              {(row) => (
-                <RecordRow
-                  icon={KIND_SPEC[row.kind].icon}
-                  tone={KIND_SPEC[row.kind].tone ?? 'muted'}
-                  title={<Ref node={row.node} />}
-                  caption={`${KIND_SPEC[row.kind].label} · ${STATES[row.state]}`}
-                  aside={
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      onClick={() => show({ kind: 'work', id: row.node.id })}
-                    >
-                      Rule it
-                    </Button>
-                  }
-                />
+              <PagedList
+                items={scene.resources}
+                initial={8}
+                noun={['deposit', 'deposits']}
+                className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
+                itemKey={(row) => row.node.id}
+              >
+                {(row) => (
+                  <RecordRow
+                    icon={COMMODITY[row.commodity].icon}
+                    tone='gold'
+                    title={<Ref node={row.node} />}
+                    caption={`${COMMODITY[row.commodity].label} · richness ${row.richness} · ${row.reserve} of ${row.initial_reserve} left`}
+                    aside={
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() =>
+                          show({ kind: 'resource', id: row.node.id })
+                        }
+                      >
+                        Rule the resource
+                      </Button>
+                    }
+                  />
+                )}
+              </PagedList>
+            </TabsContent>
+            <TabsContent value='works' className='flex min-w-0 flex-col gap-2'>
+              {scene.works.length === 0 && (
+                <Text variant='caption' tone='muted'>
+                  No work stands in the open land; mines and quarries are raised
+                  here by the towns that work it.
+                </Text>
               )}
-            </PagedList>
-          </TabsContent>
-          <TabsContent value='towns' className='flex min-w-0 flex-col gap-2'>
-            {scene.settlements.length === 0 && (
-              <Text variant='caption' tone='muted'>
-                No town stands in this land yet.
-              </Text>
-            )}
-            <PagedList
-              items={scene.settlements}
-              initial={8}
-              noun={['town', 'towns']}
-              className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
-              itemKey={(row) => row.node.id}
-            >
-              {(row) => (
-                <RecordRow
-                  icon={Sprout}
-                  tone='info'
-                  title={<Ref node={row.node} />}
-                  caption={`${row.detail} ${agree(Number(row.detail), 'person', 'people')}`}
-                  aside={
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      onClick={() =>
-                        show({ kind: 'settlement', id: row.node.id })
-                      }
-                    >
-                      Show
-                    </Button>
-                  }
-                />
+              <PagedList
+                items={scene.works}
+                initial={8}
+                noun={['work', 'works']}
+                className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
+                itemKey={(row) => row.node.id}
+              >
+                {(row) => (
+                  <RecordRow
+                    icon={KIND_SPEC[row.kind].icon}
+                    tone={KIND_SPEC[row.kind].tone ?? 'muted'}
+                    title={<Ref node={row.node} />}
+                    caption={`${KIND_SPEC[row.kind].label} · ${STATES[row.state]}`}
+                    aside={
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => show({ kind: 'work', id: row.node.id })}
+                      >
+                        Rule the work
+                      </Button>
+                    }
+                  />
+                )}
+              </PagedList>
+            </TabsContent>
+            <TabsContent value='towns' className='flex min-w-0 flex-col gap-2'>
+              {scene.settlements.length === 0 && (
+                <Text variant='caption' tone='muted'>
+                  No town stands in this land yet.
+                </Text>
               )}
-            </PagedList>
-          </TabsContent>
-          <TabsContent value='shape' className='flex min-w-0 flex-col gap-2'>
-            <LandForge scene={scene} blocked={blocked} />
-          </TabsContent>
-        </Tabs>
+              <PagedList
+                items={scene.settlements}
+                initial={8}
+                noun={['town', 'towns']}
+                className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
+                itemKey={(row) => row.node.id}
+              >
+                {(row) => (
+                  <RecordRow
+                    icon={Sprout}
+                    tone='info'
+                    title={<Ref node={row.node} />}
+                    caption={`${row.detail} ${agree(Number(row.detail), 'person', 'people')}`}
+                    aside={
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() =>
+                          show({ kind: 'settlement', id: row.node.id })
+                        }
+                      >
+                        Show
+                      </Button>
+                    }
+                  />
+                )}
+              </PagedList>
+            </TabsContent>
+            <TabsContent value='shape' className='flex min-w-0 flex-col gap-2'>
+              <LandForge scene={scene} blocked={blocked} />
+            </TabsContent>
+          </Tabs>
+        </OrnateFrame>
       </div>
     </>
   )

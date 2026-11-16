@@ -67,7 +67,7 @@ export function EntityPicker({
       <PopoverTrigger asChild>
         <Button
           id={id}
-          variant='outline'
+          variant='field'
           role='combobox'
           aria-expanded={open}
           className='w-full justify-between'

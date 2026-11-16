@@ -56,7 +56,7 @@ export function ImageUploadZone({
         if (!blocked) void upload(filesOf(event.dataTransfer.files))
       }}
       className={cn(
-        'flex min-w-0 flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-6 text-center',
+        'flex min-w-0 flex-col items-center justify-center gap-2 rounded-md px-4 py-6 text-center sealed-well',
         over && 'border-primary bg-primary/5'
       )}
     >

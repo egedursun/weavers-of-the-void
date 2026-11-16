@@ -53,7 +53,7 @@ async def promote_wonders(ctx: TickContext, works: Sequence[EntityRow], wonders:
         promoted += 1
         await note(
             ctx,
-            f"{work.name} joined the wonders of the world; it draws pilgrims and the envy of distant lands.",
+            f"{work.name} joined the wonders of the world; it draws pilgrims and renown.",
             key="wonders.promoted",
             ids=[work.id],
             kind=ChronicleKind.CONSTRUCTION,

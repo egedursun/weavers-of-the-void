@@ -128,6 +128,8 @@ async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) ->
         world.climate_imposed_by_son_id = None
         left = settings.duration + ctx.rng(f"era_length.{world.id}").die(settings.duration_die)
         left = max(1, left - await star_instability(ctx, world))
+        if era is ClimateEra.VARIABLE:
+            left = min(left, settings.variable_epochs)
         await announce_era(ctx, world, era, many_worlds)
     world.climate_epochs_left = left
     await apply_climate_effect(ctx, world, era)

@@ -6,16 +6,17 @@ from aerona.db.tables.made import MadeRelicRow, SalvageSiteRow
 from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.made import RelicStance, RelicState, RelicUse
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.made.backfill import keep_made_kinds, legacy_backfill
 from aerona.engine.made.doctrine import doctrine_here
-from aerona.engine.minds.values import best_level
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.technology.profiles import family_level
 
 DECLINE = {RelicState.WORKING: RelicState.FAILING, RelicState.FAILING: RelicState.BROKEN}
 STANCE_USE = partial(
@@ -41,7 +42,7 @@ async def mark_collapse(ctx: TickContext) -> int:
     ):
         if network.owner_node_id is None or held(network.network_entity_id) or await ctx.session.get(MadeRelicRow, network.network_entity_id) is not None:
             continue
-        if await best_level(ctx.session, network.owner_node_id) >= network.tech_level:
+        if await family_level(ctx.session, network.owner_node_id, TechFamily.COMMUNICATION) >= network.tech_level:
             continue
         ctx.session.add(
             MadeRelicRow(
@@ -65,7 +66,7 @@ async def mark_collapse(ctx: TickContext) -> int:
 async def keep_relic(ctx: TickContext, relic: MadeRelicRow, thing: EntityRow) -> None:
     table = ctx.rules.made_relics
     holder = await holder_of(ctx, thing)
-    level = await best_level(ctx.session, holder.id) if holder is not None else 0
+    level = await family_level(ctx.session, holder.id, TechFamily.COMMUNICATION) if holder is not None else 0
     if "is_relic" not in relic.locked:
         relic.is_relic = level < relic.make_knowledge
     repairable = level >= relic.repair_knowledge
@@ -87,6 +88,13 @@ async def keep_relic(ctx: TickContext, relic: MadeRelicRow, thing: EntityRow) ->
         doctrine = await doctrine_here(ctx.session, holder)
         if doctrine is not None and doctrine.relic_stance in STANCE_USE:
             relic.use = STANCE_USE[doctrine.relic_stance]
+        elif doctrine is None and level == 0:
+            relic.use = RelicUse.IGNORED
+    if "function_state" not in relic.locked:
+        if relic.use is RelicUse.IGNORED and relic.function_state is RelicState.WORKING:
+            relic.function_state = RelicState.DORMANT
+        elif relic.use is not RelicUse.IGNORED and relic.function_state is RelicState.DORMANT:
+            relic.function_state = RelicState.WORKING
     relic.updated_epoch = ctx.epoch
 
 

@@ -8,6 +8,7 @@ from aerona.domain.enums.storyteller import RecoveryKind, TensionBand
 from aerona.engine.context import TickContext
 from aerona.engine.gatherings.hold import GatheringTally, gather_all
 from aerona.engine.gatherings.occasions import occasions
+from aerona.engine.gatherings.wider_occasions import wider_occasions
 from aerona.engine.history.collections import CollectionTally, close_quiet, from_occupations, from_purges, from_schemes, gather_incidents
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.traditions import bless_harvest
@@ -31,6 +32,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "people.wealth",
     "settlement.wealth",
     "table.bonds",
+    "table.chronicle",
     "table.collection_members",
     "table.collection_places",
     "table.community_societies",
@@ -44,10 +46,13 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.incident_collections",
     "table.incidents",
     "table.law_jurisdictions",
+    "table.made_realm_profiles",
+    "table.made_realms",
     "table.memories",
     "table.mind_facets",
     "table.minds",
     "table.mortal_profiles",
+    "table.network_nodes",
     "table.nodes",
     "table.offices",
     "table.people_culture",
@@ -57,6 +62,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.purity",
     "table.schemes",
     "table.secrets",
+    "table.sons",
     "table.structure_profiles",
     "table.time_budgets",
     "table.title_holders",
@@ -94,7 +100,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 async def gatherings(ctx: TickContext) -> None:
     tally = GatheringTally()
     atlas = await RegionAtlas.load(ctx.session)
-    await gather_all(ctx, await occasions(ctx, atlas), atlas, tally)
+    await gather_all(ctx, [*await occasions(ctx, atlas), *[found for found in await wider_occasions(ctx) if not held(found.host_id)]], atlas, tally)
     count(ctx, "gathering", tally)
 
 
@@ -147,10 +153,23 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
     "table.epoch_year_cursors",
     "table.god_designs",
     "table.god_scales",
+    "table.hidden_truths",
+    "table.households",
     "table.incidents",
+    "table.living_lines",
+    "table.mind_profiles",
+    "table.natural_law_profiles",
+    "table.network_nodes",
+    "table.power_sources",
+    "table.powers",
     "table.region_dominion",
     "table.region_environment",
+    "table.regional_tensions",
+    "table.replicator_lines",
+    "table.sons",
     "table.storytellers",
+    "table.subsystem_tensions",
+    "table.wars",
 )
 @writes(
     "table.chronicle",
@@ -159,7 +178,9 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
     "table.incident_participants",
     "table.incidents",
     "table.region_environment",
+    "table.regional_tensions",
     "table.storytellers",
+    "table.subsystem_tensions",
     "table.tension_records",
 )
 async def storyteller(ctx: TickContext) -> None:
@@ -172,7 +193,17 @@ async def storyteller(ctx: TickContext) -> None:
     count(ctx, "storyteller", tally)
 
 
-@reads("table.place_profiles", "table.polity_members", "table.settlement_profiles", "table.site_holders", "table.site_rooms", "table.structure_profiles")
+@reads(
+    "table.made_realm_profiles",
+    "table.mind_profiles",
+    "table.place_profiles",
+    "table.polity_members",
+    "table.relics",
+    "table.settlement_profiles",
+    "table.site_holders",
+    "table.site_rooms",
+    "table.structure_profiles",
+)
 @writes("table.room_contents", "table.site_holders", "table.site_rooms")
 async def site_rooms(ctx: TickContext) -> None:
     tally = RoomTally()

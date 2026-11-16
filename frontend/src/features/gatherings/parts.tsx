@@ -25,12 +25,14 @@ export function ThingPicker({
   onChange,
   blocked,
   types,
+  kinds,
 }: {
   label: string
   value: number | null
   onChange: (value: number | null) => void
   blocked: string | null
   types?: readonly string[]
+  kinds?: readonly string[]
 }) {
   const id = useId()
   const names = useNames()
@@ -38,10 +40,12 @@ export function ThingPicker({
     () =>
       (names.data ?? [])
         .filter((entry) =>
-          entry.kind === 'entity'
-            ? entry.status !== 'dead' &&
-              (types === undefined || types.includes(entry.type))
-            : types === undefined && GOD_KINDS.has(entry.kind)
+          kinds !== undefined
+            ? kinds.includes(entry.kind)
+            : entry.kind === 'entity'
+              ? entry.status !== 'dead' &&
+                (types === undefined || types.includes(entry.type))
+              : types === undefined && GOD_KINDS.has(entry.kind)
         )
         .map((entry) => ({
           value: String(entry.id),
@@ -51,7 +55,7 @@ export function ThingPicker({
             ' '
           ),
         })),
-    [names.data, types]
+    [names.data, types, kinds]
   )
   return (
     <div className='flex min-w-0 flex-col gap-1'>

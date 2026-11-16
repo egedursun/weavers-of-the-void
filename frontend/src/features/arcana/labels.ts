@@ -183,15 +183,6 @@ export const MANTLING_STATES: Record<Schema['MantlingState'], Named> = {
   failed: { label: 'Failed', icon: X, tone: 'muted' },
 }
 
-export const RANKS: Record<Schema['ServitorRank'], Named> = {
-  herald: { label: 'Herald', icon: Megaphone, tone: 'info' },
-  guardian: { label: 'Guardian', icon: Shield, tone: 'gold' },
-  angel: { label: 'Angel', icon: Feather, tone: 'success' },
-  fury: { label: 'Fury', icon: Flame, tone: 'danger' },
-  psychopomp: { label: 'Psychopomp', icon: Route, tone: 'muted' },
-  choir: { label: 'Choir', icon: Music, tone: 'verdigris' },
-}
-
 export const ORIGINS: Record<Schema['ServitorOrigin'], Named> = {
   made: { label: 'Made by its god', icon: Hammer, tone: 'gold' },
   raised: {
@@ -208,6 +199,12 @@ export const ROLES: Record<Schema['ServitorRole'], Named> = {
   judge: { label: 'Judge of souls', icon: Scale, tone: 'verdigris' },
   host: { label: 'Host', icon: Swords, tone: 'danger' },
   spy: { label: 'Spy', icon: Eye, tone: 'muted' },
+  agent: { label: 'Agent at its post', icon: Feather, tone: 'success' },
+  avenger: { label: 'Avenger', icon: Flame, tone: 'danger' },
+  guide_of_souls: { label: 'Guide of souls', icon: Route, tone: 'muted' },
+  worshipper: { label: 'Worshipper', icon: Music, tone: 'verdigris' },
+  warden: { label: 'Warden of its post', icon: Shield, tone: 'gold' },
+  scribe: { label: 'Keeper of accounts', icon: ScrollText, tone: 'info' },
 }
 
 export const GEAS_MODES: Record<Schema['GeasMode'], Named> = {

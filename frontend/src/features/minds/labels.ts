@@ -1,4 +1,11 @@
 import {
+  Fuel,
+  BatteryCharging,
+  SunMedium,
+  Atom,
+  Orbit,
+  Star,
+  Church,
   Link2,
   RotateCcw,
   Activity,
@@ -547,6 +554,23 @@ export const ENERGY_KINDS: Record<Schema['EnergyKind'], Named> = {
   heat: { label: 'Heat', icon: Flame, tone: 'warning' },
   magic: { label: 'Magic', icon: Wand, tone: 'verdigris' },
   divine: { label: 'Divine', icon: Sun, tone: 'gold' },
+  fuel: { label: 'Fuel', icon: Fuel, tone: 'warning' },
+  electric: { label: 'Electric', icon: Zap, tone: 'info' },
+  stored: { label: 'Stored', icon: BatteryCharging, tone: 'info' },
+  solar: { label: 'Solar', icon: SunMedium, tone: 'gold' },
+  geothermal: { label: 'Geothermal', icon: Mountain, tone: 'warning' },
+  tidal: { label: 'Tidal', icon: Waves, tone: 'info' },
+  fission: { label: 'Fission', icon: Atom, tone: 'danger' },
+  fusion: { label: 'Fusion', icon: Orbit, tone: 'gold' },
+  stellar: { label: 'Stellar', icon: Star, tone: 'gold' },
+  source: {
+    label: 'From a source of power',
+    icon: Sparkles,
+    tone: 'verdigris',
+  },
+  feed: { label: 'Living feed', icon: Sprout, tone: 'success' },
+  belief: { label: 'Belief', icon: Church, tone: 'gold' },
+  void: { label: 'Drawn from the leak', icon: CircleDashed, tone: 'muted' },
 }
 
 export const BODY_PARTS: Record<Schema['BodyPart'], Named> = {

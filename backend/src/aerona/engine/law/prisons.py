@@ -115,13 +115,11 @@ async def suffer(ctx: TickContext, prison: PrisonRow, mortal: EntityRow, tally: 
     table = ctx.rules.prisons
     harsh = (PERCENT + prison.cruelty) / PERCENT
     if prison.food < table.food_at:
-        await apply_hits(ctx, mortal, Harm(round_half_up(table.hunger_hp * harsh), HarmCause.EXPOSURE, "went hungry in prison", severity=1), lethal=False)
+        await apply_hits(ctx, mortal, Harm(round_half_up(table.hunger_hp * harsh), HarmCause.EXPOSURE, "went hungry in prison"), lethal=False)
         tally.hungry += 1
     rng = ctx.rng(f"prison.sick.{mortal.id}")
     if rng.chance(table.sickness_pct * prison.crowding / PERCENT):
-        await apply_hits(
-            ctx, mortal, Harm(round_half_up(table.sickness_hp * harsh), HarmCause.EXPOSURE, "fell sick in a crowded prison", severity=1), lethal=False
-        )
+        await apply_hits(ctx, mortal, Harm(round_half_up(table.sickness_hp * harsh), HarmCause.EXPOSURE, "fell sick in a crowded prison"), lethal=False)
         tally.sick += 1
 
 

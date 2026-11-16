@@ -507,7 +507,7 @@ async def test_extinguishing_a_star_darkens_its_worlds_and_chills_the_siblings(d
     assert "sky.star_extinguished" in await keys(database)
 
 
-@pytest.mark.parametrize(("intent", "threshold", "won", "phrase"), [("alliance", -1000, True, "extended a hand"), ("threat", 1000, False, "with hostility")])
+@pytest.mark.parametrize(("intent", "threshold", "won", "phrase"), [("alliance", -1000, True, "accepted"), ("threat", 1000, False, "with hostility")])
 async def test_talking_to_a_foreign_god_shifts_its_stance(database: Database, intent: str, threshold: int, won: bool, phrase: str) -> None:
     realm = await seed_realm(database)
     tools = Rules().son_tools

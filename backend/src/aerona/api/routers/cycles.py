@@ -30,6 +30,7 @@ from aerona.api.schemas.cycles import (
     SolidarityView,
     StressPartView,
     StressView,
+    UnionView,
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
@@ -56,6 +57,7 @@ from aerona.db.tables.cycles import (
     StressReadingRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import LegacyKind, StressComponent
 from aerona.domain.enums.mind import ValueAxis
@@ -249,6 +251,7 @@ async def node_cycles(services: ServicesDep, node_id: NodeId) -> CyclesView:
             await session.scalars(select(ManumissionRow).where(ManumissionRow.community_entity_id == node_id).order_by(ManumissionRow.id.desc()))
         )
         kinship = await session.get(KinshipSystemRow, node_id)
+        union = await session.get(UnionCustomRow, node_id)
         reproduction = await session.get(PeopleReproductionRow, node_id)
         caste = await session.get(MortalCasteRow, node_id)
         market = await session.get(SlaveMarketRow, node_id)
@@ -317,6 +320,21 @@ async def node_cycles(services: ServicesDep, node_id: NodeId) -> CyclesView:
                 locked=list(kinship.locked),
             )
             if kinship is not None
+            else None,
+            union=UnionView(
+                form=union.form,
+                purpose=union.purpose,
+                residence=union.residence,
+                descent=union.descent,
+                exchange=union.exchange,
+                arrangement=union.arrangement,
+                dissolution=union.dissolution,
+                endogamy=union.endogamy,
+                exogamy=union.exogamy,
+                term_epochs=union.term_epochs,
+                locked=list(union.locked),
+            )
+            if union is not None
             else None,
             alliances=[
                 AllianceView(

@@ -5,7 +5,7 @@ import { type Truncate } from './textStyles'
 
 type LabelProps = HTMLAttributes<HTMLElement> & {
   as?: 'span' | 'dt' | 'label' | 'div' | 'legend' | 'p'
-  variant?: 'default' | 'overline'
+  variant?: 'default' | 'overline' | 'gilded'
   truncate?: Truncate
   htmlFor?: string
   children: ReactNode
@@ -20,12 +20,13 @@ export function Label({
   return (
     <Truncatable
       as={as}
-      data-typography={variant === 'overline' ? 'overline' : 'label'}
+      data-typography={variant === 'default' ? 'label' : variant}
       className={cn(
         'm-0 text-muted-foreground',
-        variant === 'overline'
-          ? 'text-overline font-semibold uppercase'
-          : 'text-caption font-medium',
+        variant === 'overline' && 'text-overline font-semibold uppercase',
+        variant === 'default' && 'text-caption font-medium',
+        variant === 'gilded' &&
+          'text-gilded font-display text-caption font-semibold',
         className
       )}
       {...props}

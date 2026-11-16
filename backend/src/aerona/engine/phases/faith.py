@@ -13,7 +13,8 @@ from aerona.engine.faith.book import Church, FaithBook, FaithLine
 from aerona.engine.faith.doctrine import ensure_doctrines, staff
 from aerona.engine.faith.exorcism import possessions
 from aerona.engine.faith.souls import fear_of_torment, gnaw, possess, profiles, realm_essence, reincarnate, soul_eaters, tend
-from aerona.engine.faith.works import canonise, devotion, pilgrim_plague, pilgrimage, sacred_beasts, saints, spend, survey_holdings, tithe
+from aerona.engine.faith.strata_life import stratum_turn
+from aerona.engine.faith.works import canonise, devotion, holding_income, pilgrim_plague, pilgrimage, sacred_beasts, saints, spend, survey_holdings, tithe
 from aerona.engine.faith.zeal import stir
 from aerona.engine.faith.zealotry import drift, fanaticism, investiture, suppress
 from aerona.engine.gods.progress import cap_gained_essence
@@ -87,6 +88,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     cult = church.cult.id
     ctx.count("clergy_appointed", await staff(ctx, church))
     ctx.count("holdings_added", await survey_holdings(ctx, church))
+    ctx.count("holding_income", await holding_income(ctx, church))
     ctx.count("tithes", await tithe(ctx, church, laws))
     ctx.count("devotion", await devotion(ctx, church, book.faith.patron(cult)))
     built = await spend(ctx, church, knowledge)
@@ -98,7 +100,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     ctx.count("pilgrims", pilgrims)
     for saint in await saints(ctx, church):
         relic = await canonise(ctx, church, saint)
-        text = f"{church.cult.name} named {saint.name} a saint; pilgrims come to the bones."
+        text = f"{church.cult.name} named {saint.name} a saint; pilgrims come to the relics."
         lines.append(FaithLine(text, "faith.saint", (cult, saint.id, relic.item_entity_id)))
         ctx.count("saints")
     zeal = await stir(ctx, church, book, laws=laws, atlas=atlas)
@@ -185,6 +187,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.mind_profiles",
     "table.minds",
     "table.name_registry",
+    "table.network_profiles",
     "table.node_materials",
     "table.nodes",
     "table.offices",
@@ -295,6 +298,7 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_values",
+    "table.dimensions",
     "table.divine_wounds",
     "table.entity_traits",
     "table.epoch_year_cursors",
@@ -345,6 +349,7 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.rite_effects",
     "table.rite_profiles",
     "table.sons",
+    "table.soul_judgements",
     "table.spirit_profiles",
     "table.traits",
 )
@@ -355,6 +360,11 @@ async def soul_cycles(ctx: TickContext) -> None:
         if held(spirit.id):
             continue
         ctx.count(f"spirits_{await tend(ctx, profile, spirit)}")
+        turned = await stratum_turn(ctx, profile, spirit)
+        if turned is not None:
+            ctx.count(f"strata_{turned}")
+            if turned in {"faded", "reborn"}:
+                continue
         region = atlas.top_region(spirit.id)
         fate = await gnaw(ctx, profile, spirit, eaten_here.get(region, [])) if region is not None else None
         if fate is not None:

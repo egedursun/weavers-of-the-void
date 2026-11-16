@@ -142,7 +142,7 @@ export function GodPanel({ state }: { state: WorldState }) {
   const cult = detail.data?.cult.length
   const multi = state.worlds.length > 1
   return (
-    <Card data-god-panel>
+    <Card data-god-panel frame='panel'>
       <CardContent className='flex min-w-0 flex-col gap-5'>
         <div className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'>
           <div className='flex shrink-0 flex-col items-start gap-2'>

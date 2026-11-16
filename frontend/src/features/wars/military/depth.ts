@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import {
+  Cpu,
   Clover,
   Anchor,
   Axe,
@@ -12,6 +13,12 @@ import {
   ClipboardList,
   Crown,
   Drama,
+  Droplet,
+  Eye,
+  Globe,
+  Hammer,
+  Lock,
+  MessageSquareWarning,
   Factory,
   Flag,
   Flame,
@@ -161,16 +168,45 @@ export const VESSEL_STATUS: Record<string, Named> = {
   ghost: { label: 'Ghost ship', icon: Ghost, tone: 'verdigris' },
 }
 
-export const FEUD_STATUS: Record<string, Named> = {
+export const FEUD_STATUS: Record<Feud['status'], Named> = {
   active: { label: 'Burning', icon: Flame, tone: 'danger' },
   mediated: { label: 'Mediated', icon: HandHeart, tone: 'success' },
   faded: { label: 'Faded', icon: Leaf, tone: 'muted' },
   ended: { label: 'Ended', icon: Handshake, tone: 'info' },
+  settled: { label: 'Settled', icon: Scale, tone: 'success' },
+  outlawed: { label: 'Ended by law', icon: Gavel, tone: 'info' },
+  extinguished: { label: 'A side is gone', icon: Skull, tone: 'muted' },
 }
 
-export const FEUD_PARTY: Record<string, Named> = {
+export const FEUD_PARTY: Record<Feud['party'], Named> = {
   house: { label: 'Between houses', icon: Crown, tone: 'gold' },
-  community: { label: 'Between peoples', icon: Users, tone: 'info' },
+  community: { label: 'Between communities', icon: Users, tone: 'info' },
+  people: { label: 'Between peoples', icon: Globe, tone: 'verdigris' },
+}
+
+export const FEUD_LEVEL: Record<Feud['level'], Named> = {
+  insult: { label: 'Insults', icon: MessageSquareWarning, tone: 'muted' },
+  blood: { label: 'Blood', icon: Droplet, tone: 'danger' },
+  raid: { label: 'Raids', icon: Swords, tone: 'danger' },
+  war: { label: 'War', icon: Flame, tone: 'danger' },
+}
+
+export const FEUD_ACTIONS: Record<string, Named> = {
+  mediated: { label: 'Mediated', icon: HandHeart, tone: 'success' },
+  raid: { label: 'A raid', icon: Swords, tone: 'danger' },
+  assassinate: { label: 'An assassination', icon: Skull, tone: 'danger' },
+  demand_wergild: { label: 'Wergild demanded', icon: Coins, tone: 'gold' },
+  escalate: { label: 'Open war', icon: Flame, tone: 'danger' },
+  rest: { label: 'A quiet epoch', icon: Leaf, tone: 'muted' },
+  ambush: { label: 'An ambush', icon: Eye, tone: 'danger' },
+  abduct: { label: 'An abduction', icon: Lock, tone: 'danger' },
+  destroy_property: { label: 'Goods destroyed', icon: Hammer, tone: 'warning' },
+  seek_mediation: {
+    label: 'Mediation sought',
+    icon: HandHeart,
+    tone: 'success',
+  },
+  call_allies: { label: 'Allies called', icon: Users, tone: 'warning' },
 }
 
 export const TERM: Record<string, Named> = {
@@ -330,6 +366,8 @@ export const OWNER_KIND: Record<
   faction: { label: 'Spies of a faction', icon: Users, tone: 'info' },
   cult: { label: 'Spies of a cult', icon: Sparkles, tone: 'verdigris' },
   community: { label: 'Spies of a people', icon: Users, tone: 'muted' },
+  company: { label: 'Spies of a company', icon: Coins, tone: 'gold' },
+  made_mind: { label: 'Spies of a made mind', icon: Cpu, tone: 'verdigris' },
 }
 
 export const SACK_CHOICE: Record<string, Named> = {

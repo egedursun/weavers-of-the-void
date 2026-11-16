@@ -5,7 +5,7 @@ from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.mind import ActKind
-from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, ServitorRank, ServitorRole
+from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, ServitorRole
 from aerona.engine.mythic import control
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -41,7 +41,6 @@ class MortalTarget(Command):
 class ServitorDraft(Command):
     god_id: int
     name: str = Field(min_length=1, max_length=NAME_MAX_LENGTH)
-    rank: ServitorRank
     role: ServitorRole
     post_id: int | None = None
 
@@ -127,9 +126,7 @@ async def delete_mantling(scope: PlayerScope, command: MortalTarget) -> Effect:
 
 @player_action("servitor:make", ActionKind.EDIT_RECORD)
 async def make_servitor(scope: PlayerScope, command: ServitorDraft) -> Effect:
-    row = await control.create_servitor(
-        await scope.context("servitor_make"), command.god_id, name=command.name, rank=command.rank, role=command.role, post_id=command.post_id
-    )
+    row = await control.create_servitor(await scope.context("servitor_make"), command.god_id, name=command.name, role=command.role, post_id=command.post_id)
     return Effect(f"{command.name} enters the service of its god.", row.spirit_entity_id, values={"spirit_id": row.spirit_entity_id})
 
 

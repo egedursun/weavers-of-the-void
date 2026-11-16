@@ -5,6 +5,7 @@ from pydantic import Field
 from aerona.catalog.interventions import DISASTERS
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import several
+from aerona.core.total import total
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.demography import AgeBand, Sex
 from aerona.domain.enums.entity import EngineKind
@@ -19,7 +20,7 @@ from aerona.services.player.scope import Command, Effect, PlayerScope, player_ac
 NAME_MAX = 120
 TEXT_MAX = 2000
 VOLCANIC = (Disaster.ERUPTION, Disaster.VOLCANIC_QUAKE)
-PHASE_WORDS = {EventPhase.ONSET: "beginning", EventPhase.PEAK: "height", EventPhase.AFTERMATH: "aftermath"}
+PHASE_WORDS = total(EventPhase, {EventPhase.ONSET: "beginning", EventPhase.PEAK: "height", EventPhase.AFTERMATH: "aftermath", EventPhase.MEMORY: "memory"})
 
 
 class CreateEvent(Command):

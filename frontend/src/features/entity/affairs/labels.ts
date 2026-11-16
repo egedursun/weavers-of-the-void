@@ -1,4 +1,9 @@
 import {
+  Wine,
+  Factory,
+  BadgeCheck,
+  Package,
+  Wallet,
   Fence,
   ShieldCheck,
   Shovel,
@@ -31,6 +36,7 @@ import {
 } from 'lucide-react'
 import {
   commodityKindValues,
+  type components,
   districtKindValues,
   socialClassValues,
 } from '@/api/generated/schema'
@@ -66,12 +72,23 @@ export const TASKS: Record<string, Named> = {
   },
 }
 
-export const TAX_KINDS: Record<string, Named> = {
+export const TAX_KINDS: Record<components['schemas']['TaxKind'], Named> = {
   land: { label: 'Land tax', icon: Wheat, tone: 'gold' },
   poll: { label: 'Poll tax', icon: Home, tone: 'warning' },
   trade: { label: 'Trade tax', icon: Building2, tone: 'info' },
   consumption: { label: 'Tax on luxuries', icon: Gem, tone: 'verdigris' },
   tithe: { label: 'Tithe', icon: Church, tone: 'muted' },
+  income: { label: 'Income tax', icon: Wallet, tone: 'info' },
+  property: { label: 'Property tax', icon: Landmark, tone: 'gold' },
+  inheritance: { label: 'Inheritance tax', icon: ScrollText, tone: 'muted' },
+  wealth: { label: 'Wealth tax', icon: Crown, tone: 'gold' },
+  company: { label: 'Company tax', icon: Coins, tone: 'info' },
+  labour_levy: { label: 'Labour levy', icon: Hammer, tone: 'warning' },
+  in_kind: { label: 'Tax paid in goods', icon: Package, tone: 'muted' },
+  licence: { label: 'Licence fees', icon: BadgeCheck, tone: 'info' },
+  seigniorage: { label: 'Seigniorage on coin', icon: Coins, tone: 'gold' },
+  pollution: { label: 'Pollution tax', icon: Factory, tone: 'warning' },
+  excise: { label: 'Excise on goods', icon: Wine, tone: 'verdigris' },
 }
 
 export const MANDATE_KINDS: Record<string, Named> = {

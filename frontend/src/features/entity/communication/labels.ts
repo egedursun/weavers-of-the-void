@@ -1,4 +1,8 @@
 import {
+  Eye,
+  Cable,
+  Brain,
+  Sprout,
   Network,
   Bird,
   Flame,
@@ -13,6 +17,7 @@ import {
   ThumbsUp,
   UserRoundCheck,
 } from 'lucide-react'
+import type { components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
 
 export const CORRESPONDENCE_ICON = MessagesSquare
@@ -30,6 +35,12 @@ export const MEDIUMS: Record<string, Named> = {
   bird: { label: 'Messenger bird', icon: Bird, tone: 'info' },
   magic_sending: { label: 'Magic sending', icon: Sparkles, tone: 'verdigris' },
   network: { label: 'By network', icon: Network, tone: 'info' },
+  mind_link: {
+    label: 'By a link between minds',
+    icon: Brain,
+    tone: 'verdigris',
+  },
+  broadcast: { label: 'By broadcast', icon: RadioTower, tone: 'warning' },
 }
 
 export const STATE_TONE: Record<string, Named['tone']> = {
@@ -39,12 +50,21 @@ export const STATE_TONE: Record<string, Named['tone']> = {
   lost: 'muted',
 }
 
-export const SIGNAL_ICONS: Record<string, Named> = {
-  fire_beacon: { label: 'Fire beacons', icon: Flame, tone: 'danger' },
-  mirror_tower: { label: 'Mirror towers', icon: RadioTower, tone: 'info' },
-  post_station: { label: 'Post stations', icon: ScrollText, tone: 'gold' },
-  sending_stone: { label: 'Sending stones', icon: Sparkles, tone: 'verdigris' },
-}
+export const SIGNAL_ICONS: Record<components['schemas']['SignalKind'], Named> =
+  {
+    beacon_chain: { label: 'Beacon chains', icon: Flame, tone: 'danger' },
+    optical_relay: { label: 'Optical relays', icon: Eye, tone: 'info' },
+    courier_post: { label: 'Courier posts', icon: ScrollText, tone: 'gold' },
+    bound_pair: { label: 'Bound pairs', icon: Sparkles, tone: 'verdigris' },
+    wire_station: { label: 'Wire stations', icon: Cable, tone: 'muted' },
+    radio_station: { label: 'Radio stations', icon: RadioTower, tone: 'info' },
+    mind_link_station: {
+      label: 'Mind-link stations',
+      icon: Brain,
+      tone: 'verdigris',
+    },
+    grown_node: { label: 'Grown nodes', icon: Sprout, tone: 'success' },
+  }
 
 export function approvalTone(approval: number): Named['tone'] {
   if (approval >= 30) return 'success'

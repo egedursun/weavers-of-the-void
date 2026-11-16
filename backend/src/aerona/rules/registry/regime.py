@@ -140,6 +140,7 @@ class SegmentaryRules:
     backing_regard: int = rule(5, 0, 100, H, "Regard a lineage gains for the kin it backs in a feud")
     fusion_weight: int = rule(10, 0, 400, H, "How much each lineage backing a side swells a feud (%)")
     foreign_weight: int = rule(50, 0, 400, H, "How much a feud with foreigners swells when the whole tribe unites (%)")
+    tribe_houses: int = rule(3, 2, 100, H, "Branch houses at which a founding house counts as a tribe rather than a clan")
 
 
 @dataclass(frozen=True)

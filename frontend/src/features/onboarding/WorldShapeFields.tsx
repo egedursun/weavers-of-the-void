@@ -187,7 +187,7 @@ function Step({
         <span
           aria-hidden='true'
           className={cn(
-            'flex size-control-sm shrink-0 items-center justify-center rounded-full border',
+            'flex size-control-sm shrink-0 items-center justify-center rounded-full border surface-sheen border-gild/60 bg-card',
             blocked === null
               ? 'border-primary/50 bg-primary/10 text-primary'
               : 'border-border bg-muted text-muted-foreground'
@@ -250,7 +250,7 @@ export function FirstWorldFields({ draft, update, options }: StepProps) {
       label='The first world'
       description='Its kind, its land, its climate and its age. Each is left to the seed unless you fix it, and every value can be changed later in the world drawer.'
     >
-      <div className='flex min-w-0 flex-col gap-5 rounded-xl border bg-muted/20 p-4'>
+      <div className='flex min-w-0 flex-col gap-5 rounded-md border surface-well border-gild/20 bg-muted/60 p-4'>
         <Part
           icon={Globe}
           title='Its kind'
@@ -437,7 +437,7 @@ export function MindsFields({ draft, update }: StepProps) {
       label='Minds'
       description='Two choices: how common made minds are, with the law of whether they may have a will, and how far networks reach at the start.'
     >
-      <div className='flex min-w-0 flex-col gap-5 rounded-xl border bg-muted/20 p-4'>
+      <div className='flex min-w-0 flex-col gap-5 rounded-md border surface-well border-gild/20 bg-muted/60 p-4'>
         <MindPart
           icon={BrainCircuit}
           title='Made minds'
@@ -488,7 +488,7 @@ export function CosmosFields({ draft, update, options }: StepProps) {
       label='Cosmos'
       description='Two choices: how many worlds the cosmos begins with, and where the worlds beyond the first one lie.'
     >
-      <div className='flex min-w-0 flex-col gap-5 rounded-xl border bg-muted/20 p-4'>
+      <div className='flex min-w-0 flex-col gap-5 rounded-md border surface-well border-gild/20 bg-muted/60 p-4'>
         <Step
           number={1}
           title='How many worlds'

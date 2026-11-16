@@ -1,7 +1,5 @@
 from enum import StrEnum
 
-from aerona.domain.enums.culture import MagicSchool
-
 
 class LocusGroup(StrEnum):
     LOOKS = "looks"
@@ -42,10 +40,6 @@ class Locus(StrEnum):
     GIFT_VOID = "gift_void"
 
 
-GIFT_LOCI: dict[MagicSchool, Locus] = {school: Locus(f"gift_{school.value}") for school in MagicSchool}
-SCHOOL_OF_LOCUS: dict[Locus, MagicSchool] = {locus: school for school, locus in GIFT_LOCI.items()}
-
-
 class GiftStance(StrEnum):
     HONOURED = "honoured"
     FEARED = "feared"
@@ -75,6 +69,26 @@ class DwellingKind(StrEnum):
     SHIP = "ship"
     TOWER = "tower"
     APARTMENT = "apartment"
+
+
+class HouseholdForm(StrEnum):
+    NUCLEAR = "nuclear"
+    EXTENDED = "extended"
+    STEM = "stem"
+    JOINT = "joint"
+    POLYGAMOUS = "polygamous"
+    COMMUNAL = "communal"
+    SINGLE = "single"
+    INSTITUTIONAL = "institutional"
+    MIXED = "mixed"
+    CHOSEN = "chosen"
+
+
+class DwellingTenure(StrEnum):
+    OWNED = "owned"
+    RENTED = "rented"
+    GRANTED = "granted"
+    SQUATTED = "squatted"
 
 
 class HouseholdDecision(StrEnum):

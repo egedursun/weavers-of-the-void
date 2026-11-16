@@ -1,0 +1,664 @@
+@utility gem-gold {
+  --tone: var(--brand-gold);
+}
+@utility gem-verdigris {
+  --tone: var(--brand-verdigris);
+}
+@utility gem-info {
+  --tone: var(--info);
+}
+@utility gem-success {
+  --tone: var(--success);
+}
+@utility gem-warning {
+  --tone: var(--warning);
+}
+@utility gem-danger {
+  --tone: var(--destructive);
+}
+@utility gem-muted {
+  --tone: var(--muted-foreground);
+}
+
+@utility text-gilded {
+  background-image: linear-gradient(
+    180deg,
+    var(--gild-text-hi) 0%,
+    var(--gild-text-hi) 38%,
+    var(--gild-text-lo) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.gild-stop-hi {
+  stop-color: var(--gild-hi);
+}
+.gild-stop {
+  stop-color: var(--gild);
+}
+.gild-stop-lo {
+  stop-color: var(--gild-lo);
+}
+.gild-stop-deep {
+  stop-color: var(--gild-deep);
+}
+.gem-stop-hi {
+  stop-color: color-mix(in oklch, var(--tone) 55%, white);
+}
+.gem-stop-lo {
+  stop-color: color-mix(in oklch, var(--tone) 70%, black);
+}
+.amethyst-stop-hi {
+  stop-color: var(--gem-hi);
+}
+.amethyst-stop-lo {
+  stop-color: var(--gem-lo);
+}
+
+.ornate-frame {
+  --frame-edge: 5px;
+  position: relative;
+  isolation: isolate;
+  border-radius: 3px;
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 50% 0%,
+      var(--frame-glow),
+      transparent 72%
+    ),
+    radial-gradient(1px 1px at 12% 22%, var(--frame-dust), transparent 70%),
+    radial-gradient(1px 1px at 78% 14%, var(--frame-dust), transparent 70%),
+    radial-gradient(1.5px 1.5px at 64% 68%, var(--frame-dust), transparent 70%),
+    radial-gradient(1px 1px at 32% 84%, var(--frame-dust), transparent 70%),
+    radial-gradient(1px 1px at 90% 52%, var(--frame-dust), transparent 70%),
+    radial-gradient(1.5px 1.5px at 46% 38%, var(--frame-dust), transparent 70%),
+    linear-gradient(180deg, var(--frame-hi), var(--frame-lo));
+  box-shadow:
+    0 0 0 1px var(--gild-deep),
+    0 0 28px -8px color-mix(in oklch, var(--gild) 28%, transparent),
+    0 24px 48px -28px color-mix(in oklch, black 80%, transparent);
+}
+
+.ornate-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: var(--frame-edge);
+  background:
+    linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in oklch, white 35%, transparent) 50%,
+        transparent
+      )
+      top / 100% 1px no-repeat,
+    linear-gradient(
+      135deg,
+      var(--gild-hi),
+      var(--gild) 18%,
+      var(--gild-lo) 36%,
+      var(--gild-hi) 52%,
+      var(--gild) 68%,
+      var(--gild-lo) 84%,
+      var(--gild-hi)
+    );
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklch, var(--gild-hi) 40%, transparent);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.ornate-frame::after {
+  content: '';
+  position: absolute;
+  inset: calc(var(--frame-edge) + 5px);
+  z-index: 1;
+  border: 1px solid var(--frame-rule);
+  border-radius: 1px;
+  box-shadow: inset 0 0 18px -6px
+    color-mix(in oklch, var(--gem-lo) 70%, transparent);
+  pointer-events: none;
+}
+
+.ornate-frame[data-frame='card'] {
+  --frame-edge: 3px;
+}
+
+.ornate-frame[data-frame='card']::after {
+  inset: calc(var(--frame-edge) + 4px);
+}
+
+.ornate-frame[data-frame='tile'] {
+  --frame-edge: 2px;
+  box-shadow:
+    0 0 0 1px var(--gild-deep),
+    0 14px 30px -20px color-mix(in oklch, black 80%, transparent);
+}
+
+.ornate-frame[data-frame='tile']::after {
+  inset: calc(var(--frame-edge) + 3px);
+}
+
+.ornate-corner {
+  --corner-size: 5.75rem;
+  --corner-shift: -0.9rem;
+  position: absolute;
+  z-index: 2;
+  width: var(--corner-size);
+  height: var(--corner-size);
+  object-fit: contain;
+  object-position: top left;
+  pointer-events: none;
+  user-select: none;
+  mask:
+    linear-gradient(90deg, #000 70%, transparent),
+    linear-gradient(180deg, #000 70%, transparent);
+  mask-composite: intersect;
+  filter: drop-shadow(0 2px 3px color-mix(in oklch, black 55%, transparent));
+}
+
+.ornate-corner[data-frame='card'] {
+  --corner-size: 3.25rem;
+  --corner-shift: -0.55rem;
+}
+
+.ornate-corner[data-frame='rail'] {
+  --corner-size: 2.5rem;
+  --corner-shift: -0.3rem;
+}
+
+.ornate-stud {
+  position: absolute;
+  z-index: 2;
+  width: 0.55rem;
+  height: 0.55rem;
+  transform: rotate(45deg);
+  border: 1px solid var(--gild-hi);
+  background: radial-gradient(circle at 35% 30%, var(--gem-hi), var(--gem-lo));
+  box-shadow:
+    0 0 0 1px var(--gild-deep),
+    0 0 6px color-mix(in oklch, var(--gem-hi) 60%, transparent);
+  pointer-events: none;
+}
+
+.ornate-stud[data-corner='tl'] {
+  top: -0.2rem;
+  left: -0.2rem;
+}
+.ornate-stud[data-corner='tr'] {
+  top: -0.2rem;
+  right: -0.2rem;
+}
+.ornate-stud[data-corner='bl'] {
+  bottom: -0.2rem;
+  left: -0.2rem;
+}
+.ornate-stud[data-corner='br'] {
+  right: -0.2rem;
+  bottom: -0.2rem;
+}
+
+.ornate-gem {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  width: 0.95rem;
+  height: 0.95rem;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border: 1.5px solid var(--gild-hi);
+  background: radial-gradient(
+    circle at 35% 30%,
+    color-mix(in oklch, var(--tone) 45%, white),
+    color-mix(in oklch, var(--tone) 75%, black)
+  );
+  box-shadow:
+    0 0 0 1px var(--gild-deep),
+    0 0 10px color-mix(in oklch, var(--tone) 70%, transparent);
+  pointer-events: none;
+}
+
+.ornate-gem::before,
+.ornate-gem::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 2.25rem;
+  height: 1px;
+  pointer-events: none;
+}
+
+.ornate-gem::before {
+  right: 100%;
+  transform-origin: right;
+  transform: rotate(-45deg) translateY(-50%);
+  background: linear-gradient(90deg, transparent, var(--gild-hi));
+}
+
+.ornate-gem::after {
+  left: 100%;
+  transform-origin: left;
+  transform: rotate(-45deg) translateY(-50%);
+  background: linear-gradient(90deg, var(--gild-hi), transparent);
+}
+
+.ornate-corner[data-corner='tl'] {
+  top: var(--corner-shift);
+  left: var(--corner-shift);
+}
+.ornate-corner[data-corner='tr'] {
+  top: var(--corner-shift);
+  right: var(--corner-shift);
+  transform: scaleX(-1);
+}
+.ornate-corner[data-corner='bl'] {
+  bottom: var(--corner-shift);
+  left: var(--corner-shift);
+  transform: scaleY(-1);
+}
+.ornate-corner[data-corner='br'] {
+  right: var(--corner-shift);
+  bottom: var(--corner-shift);
+  transform: scale(-1);
+}
+
+.ornate-crest {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  width: min(15rem, 46%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 2px 3px color-mix(in oklch, black 55%, transparent));
+}
+
+.ornate-crest[data-edge='bottom'] {
+  top: auto;
+  bottom: 0;
+  width: min(9rem, 30%);
+  transform: translate(-50%, 50%) scaleY(-1);
+}
+
+.ornate-frame[data-frame='tile'] > .ornate-crest {
+  width: min(6.5rem, 52%);
+}
+
+.ornate-nameplate {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  max-width: min(calc(100% - 20rem), 40rem);
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 2.25rem;
+  transform: translate(-50%, -50%);
+  isolation: isolate;
+  filter: drop-shadow(0 4px 8px color-mix(in oklch, black 50%, transparent));
+}
+
+.ornate-nameplate::before,
+.ornate-nameplate::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(
+    1.4rem 0,
+    calc(100% - 1.4rem) 0,
+    100% 50%,
+    calc(100% - 1.4rem) 100%,
+    1.4rem 100%,
+    0 50%
+  );
+}
+
+.ornate-nameplate::before {
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    var(--gild-hi),
+    var(--gild) 35%,
+    var(--gild-lo) 65%,
+    var(--gild-deep)
+  );
+}
+
+.ornate-nameplate::after {
+  inset: 3px;
+  background:
+    radial-gradient(
+      ellipse 80% 120% at 50% 0%,
+      color-mix(in oklch, var(--gem-hi) 30%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--gild) 35%, transparent);
+}
+
+.ornate-bay {
+  --halo-x: 1rem;
+  --halo-top: 1rem;
+  --halo-bottom: 1.05rem;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: var(--halo-top) var(--halo-x) var(--halo-bottom);
+}
+
+.ornate-bay[data-plated] {
+  --halo-top: 1.65rem;
+}
+
+.ornate-bay[data-crested] {
+  --halo-top: 1.75rem;
+}
+
+.ornate-bay[data-frame='card'] {
+  --halo-x: 0.6rem;
+  --halo-top: 0.75rem;
+  --halo-bottom: 0.6rem;
+}
+
+.ornate-bay[data-frame='tile'] {
+  --halo-x: 0.4rem;
+  --halo-top: 0.75rem;
+  --halo-bottom: 0.4rem;
+}
+
+.ornate-bay > .ornate-frame {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ornate-frame[data-plated] {
+  padding-top: 3rem;
+}
+
+.ornate-frame[data-frame='panel'] {
+  container: ornate / inline-size;
+}
+
+@container ornate (width < 46rem) {
+  .ornate-nameplate {
+    max-width: calc(100% - 11rem);
+    padding-inline: 1.75rem;
+  }
+  .ornate-nameplate > [data-typography] {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+  .ornate-nameplate-wing {
+    display: none;
+  }
+}
+
+.ornate-nameplate > [data-typography] {
+  letter-spacing: 0.04em;
+}
+
+.ornate-nameplate-wing {
+  position: absolute;
+  top: 50%;
+  width: 4.5rem;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ornate-nameplate-wing[data-side='start'] {
+  right: calc(100% - 0.6rem);
+  transform: translateY(-50%) scaleX(-1);
+}
+
+.ornate-nameplate-wing[data-side='end'] {
+  left: calc(100% - 0.6rem);
+  transform: translateY(-50%);
+}
+
+.ornate-divider {
+  display: block;
+  width: min(18rem, 100%);
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ornate-flourish {
+  display: block;
+  width: 8.5rem;
+  max-width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+.medallion {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: color-mix(in oklch, var(--tone) 80%, var(--gem-ink));
+  background: radial-gradient(
+    circle at 36% 30%,
+    color-mix(in oklch, var(--tone) 42%, var(--frame-hi)) 0%,
+    color-mix(in oklch, var(--tone) 16%, var(--frame-lo)) 62%,
+    var(--frame-lo) 100%
+  );
+  box-shadow:
+    0 0 0 1px var(--gild-deep),
+    0 0 14px -4px color-mix(in oklch, var(--tone) 70%, transparent),
+    inset 0 0 8px -2px color-mix(in oklch, var(--tone) 60%, transparent);
+}
+
+.medallion::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from 210deg,
+    var(--gild-hi),
+    var(--gild-lo),
+    var(--gild),
+    var(--gild-hi),
+    var(--gild-lo),
+    var(--gild-hi)
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.medallion::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  z-index: -1;
+  border-radius: inherit;
+  border: 1px solid color-mix(in oklch, var(--gild) 35%, transparent);
+}
+
+.medallion > svg {
+  filter: drop-shadow(
+    0 0 4px color-mix(in oklch, var(--tone) 75%, transparent)
+  );
+}
+
+.gilded-control {
+  --chamfer: 0.625rem;
+  --edge: 1.5px;
+  isolation: isolate;
+  background: transparent;
+  border-color: transparent;
+}
+
+.gilded-control::before,
+.gilded-control::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(
+    var(--chamfer) 0,
+    calc(100% - var(--chamfer)) 0,
+    100% 50%,
+    calc(100% - var(--chamfer)) 100%,
+    var(--chamfer) 100%,
+    0 50%
+  );
+  transition: filter 150ms ease;
+}
+
+.gilded-control[data-shape='card']::before,
+.gilded-control[data-shape='card']::after {
+  clip-path: none;
+  border-radius: var(--radius-md);
+}
+
+.gilded-control::before {
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    var(--gild-hi),
+    var(--gild) 40%,
+    var(--gild-lo) 70%,
+    var(--gild-deep)
+  );
+}
+
+.gilded-control::after {
+  inset: var(--edge);
+}
+
+.gilded-control:hover::before,
+.gilded-control:hover::after {
+  filter: brightness(1.08) saturate(1.05);
+}
+
+.gilded-control:active::after {
+  filter: brightness(0.94);
+}
+
+.gilded-control:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 3px var(--ring)) drop-shadow(0 0 1px var(--ring));
+}
+
+.gilded-control[data-variant='default'] {
+  color: var(--gild-ink);
+  text-shadow: 0 1px 0 color-mix(in oklch, var(--gild-hi) 70%, transparent);
+}
+
+.gilded-control[data-variant='default']::after {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, white 45%, transparent) 0%,
+      transparent 48%
+    ),
+    linear-gradient(180deg, var(--gild-hi), var(--gild) 55%, var(--gild-lo));
+}
+
+.gilded-control[data-variant='outline'] {
+  color: var(--plate-ink);
+}
+
+.gilded-control[data-variant='outline']::after {
+  background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
+}
+
+.gilded-control[data-variant='destructive'] {
+  color: var(--destructive-foreground);
+}
+
+.gilded-control[data-variant='destructive']::after {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--destructive) 80%, white),
+    var(--destructive) 55%,
+    color-mix(in oklch, var(--destructive) 70%, black)
+  );
+}
+
+.gilded-control > svg {
+  filter: drop-shadow(
+    0 0 3px color-mix(in oklch, var(--gild) 40%, transparent)
+  );
+}
+
+.gilded-portrait {
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    var(--gild-hi),
+    var(--gild-lo) 35%,
+    var(--gild) 65%,
+    var(--gild-hi)
+  );
+  box-shadow:
+    0 0 0 1px var(--gild-deep),
+    0 6px 18px -8px color-mix(in oklch, var(--gem-lo) 80%, transparent);
+}
+
+.gilded-portrait[data-portrait-size='xs'],
+.gilded-portrait[data-portrait-size='sm'] {
+  padding: 1.5px;
+}
+
+.gilded-portrait > [data-slot='avatar-fallback'] {
+  background: radial-gradient(
+    circle at 36% 30%,
+    var(--plate-hi),
+    var(--frame-lo) 85%
+  );
+}
+
+.plate-chip {
+  border-color: color-mix(in oklch, var(--gild) 50%, transparent);
+  background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--gild-hi) 18%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gilded-control::before,
+  .gilded-control::after {
+    transition: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .ornate-bay:not([data-frame='tile']) {
+    --halo-x: 0.55rem;
+  }
+  .ornate-corner[data-frame='panel'] {
+    --corner-size: 4rem;
+    --corner-shift: -0.45rem;
+  }
+  .ornate-nameplate {
+    max-width: calc(100% - 9rem);
+    padding-inline: 1.75rem;
+  }
+}
+
+.chart-glow {
+  filter: drop-shadow(
+    0 0 4px color-mix(in oklch, var(--gild) 45%, transparent)
+  );
+}

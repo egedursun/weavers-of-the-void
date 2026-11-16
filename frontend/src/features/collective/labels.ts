@@ -1,4 +1,15 @@
 import {
+  Unlock,
+  TrendingDown,
+  Split,
+  Database,
+  CloudLightning,
+  Brain,
+  Crosshair,
+  Bot,
+  Sprout,
+  Plane,
+  Repeat,
   Anchor,
   Baby,
   BookMarked,
@@ -143,6 +154,16 @@ export const ACCOUNT_KINDS: Record<Schema['AccountKind'], Named> = {
     icon: Hourglass,
     tone: 'verdigris',
   },
+  record: {
+    label: 'Record',
+    icon: Landmark,
+    tone: 'gold',
+  },
+  testimony: {
+    label: 'Testimony',
+    icon: Landmark,
+    tone: 'gold',
+  },
 }
 
 export const STANCES: Record<Schema['AccountStance'], Named> = {
@@ -157,6 +178,9 @@ export const MEDIA: Record<Schema['AccountMedium'], Named> = {
   book: { label: 'A book', icon: BookOpen, tone: 'info' },
   oral: { label: 'Told aloud', icon: MessageCircle, tone: 'muted' },
   inscription: { label: 'An inscription', icon: Mountain, tone: 'gold' },
+  record: { label: 'Record', icon: Database, tone: 'verdigris' },
+  performance: { label: 'Performance', icon: Drama, tone: 'verdigris' },
+  mind_state: { label: 'Mind state', icon: Brain, tone: 'verdigris' },
 }
 
 export const STORYLET_STATES: Record<Schema['StoryletStatus'], Named> = {
@@ -218,8 +242,27 @@ export const SITUATIONS: Record<Schema['NormSituation'], Named> = {
   hospitality: { label: 'As a guest or host', icon: Home, tone: 'success' },
   mourning: { label: 'In mourning', icon: HeartCrack, tone: 'muted' },
   sacred_day: { label: 'On a sacred day', icon: Sun, tone: 'gold' },
-  stranger: { label: 'With a stranger', icon: Globe, tone: 'verdigris' },
+  outsider: { label: 'With an outsider', icon: Globe, tone: 'verdigris' },
   superior: { label: 'Before a superior', icon: Landmark, tone: 'warning' },
+  network_space: { label: 'Within a network', icon: Globe, tone: 'info' },
+  realm: { label: 'In a made realm', icon: Sparkles, tone: 'verdigris' },
+  workplace: { label: 'At work', icon: Coins, tone: 'info' },
+  council: { label: 'In council', icon: Landmark, tone: 'gold' },
+  encounter_with_made_mind: {
+    label: 'Meeting a made mind',
+    icon: KeyRound,
+    tone: 'verdigris',
+  },
+  encounter_with_gifted: {
+    label: 'Meeting one of the gifted',
+    icon: Star,
+    tone: 'gold',
+  },
+  encounter_with_hidden: {
+    label: 'Meeting one who hides',
+    icon: EyeOff,
+    tone: 'muted',
+  },
 }
 
 export const BEHAVIOURS: Record<Schema['NormBehaviour'], Named> = {
@@ -236,6 +279,22 @@ export const BEHAVIOURS: Record<Schema['NormBehaviour'], Named> = {
   plain_speech: { label: 'Plain speech', icon: MessageCircle, tone: 'info' },
   forbidden_food: { label: 'Forbidden food', icon: Utensils, tone: 'danger' },
   secrets: { label: 'Telling secrets', icon: KeyRound, tone: 'verdigris' },
+  augment_display: {
+    label: 'Showing what was added to the body',
+    icon: Sparkles,
+    tone: 'info',
+  },
+  power_display: { label: 'Showing a power', icon: Star, tone: 'warning' },
+  data_sharing: {
+    label: 'Sharing what one knows',
+    icon: MessageCircle,
+    tone: 'info',
+  },
+  copy_disclosure: {
+    label: 'Owning to being a copy',
+    icon: KeyRound,
+    tone: 'verdigris',
+  },
 }
 
 export const ETHICS: Record<Schema['EthicalStance'], Named> = {
@@ -261,6 +320,15 @@ export const FORMATIVE: Record<Schema['FormativeKind'], Named> = {
   famine: { label: 'A famine', icon: Wheat, tone: 'warning' },
   golden_age: { label: 'A golden age', icon: Sun, tone: 'gold' },
   conquest: { label: 'A conquest', icon: Castle, tone: 'warning' },
+  revolution: { label: 'Revolution', icon: Flag, tone: 'danger' },
+  migration: { label: 'Migration', icon: Footprints, tone: 'danger' },
+  founding: { label: 'Founding', icon: Landmark, tone: 'danger' },
+  revelation: { label: 'Revelation', icon: Eye, tone: 'danger' },
+  collapse: { label: 'Collapse', icon: TrendingDown, tone: 'danger' },
+  contact: { label: 'Contact', icon: Handshake, tone: 'danger' },
+  disaster: { label: 'Disaster', icon: CloudLightning, tone: 'danger' },
+  liberation: { label: 'Liberation', icon: Unlock, tone: 'danger' },
+  schism: { label: 'Schism', icon: Split, tone: 'danger' },
 }
 
 export const ROLES: Record<Schema['RoleKind'], Named> = {
@@ -288,6 +356,13 @@ export const DATING: Record<Schema['DatingSystemKind'], Named> = {
     icon: CalendarDays,
     tone: 'verdigris',
   },
+  creation: {
+    label: 'Since the making of the world',
+    icon: Sparkles,
+    tone: 'gold',
+  },
+  event: { label: 'Since a great turning', icon: Flag, tone: 'info' },
+  cycle_count: { label: 'By counted cycles', icon: Repeat, tone: 'verdigris' },
 }
 
 export const TINCTURES: Record<Schema['Tincture'], string> = {
@@ -556,6 +631,9 @@ export const BEARERS: Record<Schema['HeraldryHolderKind'], Named> = {
   title: { label: 'A title', icon: Landmark, tone: 'info' },
   army: { label: 'An army', icon: Swords, tone: 'danger' },
   guild: { label: 'A guild or order', icon: Hammer, tone: 'verdigris' },
+  company: { label: 'A company', icon: Coins, tone: 'gold' },
+  order: { label: 'An order', icon: Shield, tone: 'verdigris' },
+  people: { label: 'A people', icon: Users, tone: 'info' },
 }
 
 export const DESIGN_KINDS: Record<Schema['DesignKind'], Named> = {
@@ -564,6 +642,15 @@ export const DESIGN_KINDS: Record<Schema['DesignKind'], Named> = {
   siege_engine: { label: 'A siege engine', icon: Castle, tone: 'warning' },
   land_vehicle: { label: 'A land vehicle', icon: Truck, tone: 'gold' },
   spacecraft: { label: 'A spacecraft', icon: Rocket, tone: 'verdigris' },
+  air_vehicle: { label: 'An air vehicle', icon: Plane, tone: 'info' },
+  underwater_vessel: {
+    label: 'An underwater vessel',
+    icon: Anchor,
+    tone: 'info',
+  },
+  living_vessel: { label: 'A living vessel', icon: Sprout, tone: 'success' },
+  made_body: { label: 'A made body', icon: Bot, tone: 'verdigris' },
+  weapon_system: { label: 'A weapon system', icon: Crosshair, tone: 'danger' },
 }
 
 export const PARTS: Record<Schema['DesignComponentKind'], Named> = {

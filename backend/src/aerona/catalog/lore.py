@@ -195,20 +195,20 @@ class RiteTemplate:
 
 RITE_TEMPLATES = MappingProxyType(
     {
-        S.ELEMENTAL_FIRE: RiteTemplate(S.ELEMENTAL_FIRE, "Calling of Flame", MagicSource.LEY, ((E.DAMAGE, 3),), 3),
-        S.ELEMENTAL_WATER: RiteTemplate(S.ELEMENTAL_WATER, "Rain Summoning", MagicSource.LEY, ((E.WEATHER_CHANGE, 4), (E.HARVEST_BLESSING, 2)), 4),
-        S.EARTH: RiteTemplate(S.EARTH, "Blessing of the Furrow", MagicSource.REAGENT, ((E.HARVEST_BLESSING, 3),), 2),
-        S.STORM: RiteTemplate(S.STORM, "Raising of the Storm", MagicSource.LEY, ((E.WEATHER_CHANGE, 5), (E.DAMAGE, 2)), 5),
-        S.LIFE: RiteTemplate(S.LIFE, "Laying on of Hands", MagicSource.DIVINE, ((E.HEAL, 4), (E.FERTILITY, 2)), 3),
-        S.DEATH: RiteTemplate(S.DEATH, "Raising of the Fallen", MagicSource.SOUL, ((E.RAISE_DEAD, 4), (E.UNSEAL_SOUL, 3)), 6),
-        S.MIND: RiteTemplate(S.MIND, "Bending of the Will", MagicSource.LEY, ((E.CURSE, 3),), 3),
-        S.ILLUSION: RiteTemplate(S.ILLUSION, "Veil of Fog", MagicSource.LEY, ((E.WEATHER_CHANGE, 4),), 4),
-        S.DIVINATION: RiteTemplate(S.DIVINATION, "Reading of Omens", MagicSource.REAGENT, ((E.SCRY, 4),), 2),
-        S.WARDING: RiteTemplate(S.WARDING, "Warding of the Walls", MagicSource.LEY, ((E.WARD, 4), (E.BLESS, 2), (E.EXORCISE, 3)), 3),
-        S.BINDING: RiteTemplate(S.BINDING, "Chain of Spirits", MagicSource.SOUL, ((E.BIND, 4), (E.SEAL_SOUL, 3)), 4),
-        S.SUMMONING: RiteTemplate(S.SUMMONING, "Calling of the Beast", MagicSource.REAGENT, ((E.SUMMON, 4),), 5),
-        S.BLOOD: RiteTemplate(S.BLOOD, "Blood Offering", MagicSource.BLOOD, ((E.BLESS, 4), (E.DAMAGE, 3)), 5),
-        S.VOID: RiteTemplate(S.VOID, "Opening of the Void", MagicSource.VOID, ((E.DAMAGE, 6), (E.CURSE, 4)), 8),
+        S.ELEMENTAL_FIRE: RiteTemplate(S.ELEMENTAL_FIRE, "Rite of Fire", MagicSource.LEY, ((E.DAMAGE, 3),), 3),
+        S.ELEMENTAL_WATER: RiteTemplate(S.ELEMENTAL_WATER, "Rite of Rain", MagicSource.LEY, ((E.WEATHER_CHANGE, 4), (E.HARVEST_BLESSING, 2)), 4),
+        S.EARTH: RiteTemplate(S.EARTH, "Rite of the Harvest", MagicSource.REAGENT, ((E.HARVEST_BLESSING, 3),), 2),
+        S.STORM: RiteTemplate(S.STORM, "Rite of the Storm", MagicSource.LEY, ((E.WEATHER_CHANGE, 5), (E.DAMAGE, 2)), 5),
+        S.LIFE: RiteTemplate(S.LIFE, "Rite of Healing", MagicSource.DIVINE, ((E.HEAL, 4), (E.FERTILITY, 2)), 3),
+        S.DEATH: RiteTemplate(S.DEATH, "Rite of Raising the Dead", MagicSource.SOUL, ((E.RAISE_DEAD, 4), (E.UNSEAL_SOUL, 3)), 6),
+        S.MIND: RiteTemplate(S.MIND, "Rite of the Will", MagicSource.LEY, ((E.CURSE, 3),), 3),
+        S.ILLUSION: RiteTemplate(S.ILLUSION, "Rite of Illusion", MagicSource.LEY, ((E.WEATHER_CHANGE, 4),), 4),
+        S.DIVINATION: RiteTemplate(S.DIVINATION, "Rite of Reading", MagicSource.REAGENT, ((E.SCRY, 4),), 2),
+        S.WARDING: RiteTemplate(S.WARDING, "Rite of Warding", MagicSource.LEY, ((E.WARD, 4), (E.BLESS, 2), (E.EXORCISE, 3)), 3),
+        S.BINDING: RiteTemplate(S.BINDING, "Rite of Binding", MagicSource.SOUL, ((E.BIND, 4), (E.SEAL_SOUL, 3)), 4),
+        S.SUMMONING: RiteTemplate(S.SUMMONING, "Rite of Summoning", MagicSource.REAGENT, ((E.SUMMON, 4),), 5),
+        S.BLOOD: RiteTemplate(S.BLOOD, "Rite of Blood", MagicSource.BLOOD, ((E.BLESS, 4), (E.DAMAGE, 3)), 5),
+        S.VOID: RiteTemplate(S.VOID, "Rite of the Void", MagicSource.VOID, ((E.DAMAGE, 6), (E.CURSE, 4)), 8),
     }
 )
 

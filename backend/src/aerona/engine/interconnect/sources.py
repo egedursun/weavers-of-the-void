@@ -39,6 +39,7 @@ SOURCE_SUBSYSTEMS: MappingProxyType[ModifierSource, Subsystem] = MappingProxyTyp
         S.WEATHER: Subsystem.ENVIRONMENT,
         S.SEASON: Subsystem.ENVIRONMENT,
         S.NATURAL_LAW: Subsystem.COSMOS,
+        S.LAW_GRAMMAR: Subsystem.COSMOS,
         S.GOD_POWER: Subsystem.GODS,
         S.BLESSING: Subsystem.GODS,
         S.CURSE: Subsystem.GODS,

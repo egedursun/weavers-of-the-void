@@ -41,6 +41,7 @@ from aerona.services.integrity.evolution_links import mend_evolution_links
 from aerona.services.integrity.folk_names import repair_belief_names
 from aerona.services.integrity.folkways_links import mend_folkways_links
 from aerona.services.integrity.graph_ends import repair_graph_ends
+from aerona.services.integrity.invariants import schema_repairs
 from aerona.services.integrity.law_links import mend_law_links
 from aerona.services.integrity.lifecycle_ends import seed_missing_states
 from aerona.services.integrity.living_links import mend_living_links
@@ -160,6 +161,7 @@ class DataRepairs:
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),
             ("pending_dialect_names", refit_pending_names),
             ("engine_drafts", lambda session, rules, epoch: requeue_engine_drafts(session)),
+            ("schema_repairs", lambda session, rules, epoch: schema_repairs(session)),
         ]
 
     async def run(self, session: AsyncSession, rules: Rules, on_step: StepReport | None = None) -> dict[str, int]:

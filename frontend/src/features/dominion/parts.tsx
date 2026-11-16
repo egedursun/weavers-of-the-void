@@ -14,7 +14,7 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { PagedList } from '@/components/domain'
+import { Paged, PagedList } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted } from '@/components/typography'
 import {
@@ -565,7 +565,7 @@ function DeedRow({
   const missing =
     typed === null || Number.isNaN(typed) ? 'Type a leaning first' : null
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <Chip icon={spec.icon}>{spec.label}</Chip>
         <Muted variant='caption'>{`leaning ${weight}`}</Muted>
@@ -670,15 +670,17 @@ export function CreatureCard({
       />
       <Label variant='overline'>Leanings and lessons</Label>
       <ul className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'>
-        {creature.weights.map((row) => (
-          <DeedRow
-            key={row.deed}
-            creature={creature}
-            deed={row.deed}
-            weight={row.weight}
-            blocked={busy}
-          />
-        ))}
+        <Paged items={creature.weights} as='li'>
+          {(row) => (
+            <DeedRow
+              key={row.deed}
+              creature={creature}
+              deed={row.deed}
+              weight={row.weight}
+              blocked={busy}
+            />
+          )}
+        </Paged>
       </ul>
       <Label variant='overline'>{`Lessons taught (${creature.lessons.length})`}</Label>
       {creature.lessons.length === 0 ? (

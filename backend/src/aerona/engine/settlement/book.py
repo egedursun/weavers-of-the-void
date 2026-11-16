@@ -37,11 +37,18 @@ class Town:
         return TIER_ORDER.index(self.profile.size_tier)
 
 
+def great_tier(rules: Rules, population: int, infrastructure: SettlementInfrastructureRow) -> SizeTier:
+    table = rules.urban
+    if population >= table.world_city_population and infrastructure.roads >= table.world_city_roads:
+        return SizeTier.WORLD_CITY
+    return SizeTier.MEGALOPOLIS if population >= table.megalopolis_population else SizeTier.METROPOLIS
+
+
 def tier_for(rules: Rules, population: int, infrastructure: SettlementInfrastructureRow, granary: int) -> SizeTier:
     table = rules.urban
     water = infrastructure.water
     if population >= table.metropolis_population and water is WaterSupply.AQUEDUCT and infrastructure.sewers:
-        return SizeTier.METROPOLIS
+        return great_tier(rules, population, infrastructure)
     if population >= table.city_population and water in {WaterSupply.CISTERN, WaterSupply.AQUEDUCT} and granary > 0:
         return SizeTier.CITY
     if population >= table.town_population and infrastructure.roads >= 1:

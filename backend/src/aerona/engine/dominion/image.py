@@ -3,17 +3,18 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.dominion import ALIGNMENT_MANIFESTATIONS
+from aerona.catalog.dominion import ALIGNMENT_MANIFESTATIONS, MANIFESTATION_ORDER
 from aerona.constants.units import PERCENT
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.dominion import GodImageRow, MiracleRecordRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import FolkBeliefRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.dominion import BeliefStance, PerceivedAlignment
+from aerona.domain.enums.dominion import BeliefStance, Manifestation, PerceivedAlignment
 from aerona.domain.enums.intervention import Miracle
 from aerona.domain.enums.mind import Facet, PressureKind
 from aerona.engine.context import TickContext
@@ -117,6 +118,8 @@ async def shape(ctx: TickContext, god: God, row: GodImageRow, tally: ImageTally)
         pull = clamp_int(pull * table.embrace_pull_pct / PERCENT, 0, PERCENT)
         god.fame = god.fame + table.embrace_fame
         tally.embraced += 1
+    if isinstance(god, SonRow) and row.stance is BeliefStance.YIELD:
+        pull = clamp_int(pull * table.yield_pull_pct / PERCENT, 0, PERCENT)
     if pull <= 0:
         return
     tally.pulled += 1
@@ -148,6 +151,22 @@ async def shape(ctx: TickContext, god: God, row: GodImageRow, tally: ImageTally)
     )
 
 
+def manifestation_of(ctx: TickContext, alignment: PerceivedAlignment, *, wrath: float, mercy: float) -> Manifestation:
+    if alignment is PerceivedAlignment.AMBIVALENT and wrath - mercy >= ctx.rules.god_images.stern_gap:
+        return Manifestation.STERN
+    return ALIGNMENT_MANIFESTATIONS[alignment]
+
+
+async def bear_image(ctx: TickContext, manifestation: Manifestation, believers: list[int]) -> None:
+    shift = MANIFESTATION_ORDER[manifestation] * ctx.rules.god_images.manifest_order // PERCENT
+    if not shift:
+        return
+    for town_id in believers:
+        town = await ctx.session.get(SettlementProfileRow, town_id)
+        if town is not None and not held(town_id) and "unrest" not in town.locked:
+            town.unrest = clamp_int(town.unrest + shift, 0, PERCENT)
+
+
 async def read_image(ctx: TickContext, god: God, tally: ImageTally) -> None:
     table = ctx.rules.god_images
     rows = list(await ctx.session.scalars(select(DivineStandingRow).where(DivineStandingRow.god_node_id == god.id)))
@@ -164,7 +183,7 @@ async def read_image(ctx: TickContext, god: God, tally: ImageTally) -> None:
         "believed_wrath": clamp_int(NEUTRAL + (fear - love) / 2, 0, PERCENT),
         "believed_mercy": clamp_int(NEUTRAL + (love - fear) / 2, 0, PERCENT),
         "believed_domain": await believed_domain(ctx, god),
-        "manifestation": ALIGNMENT_MANIFESTATIONS[common[0]],
+        "manifestation": manifestation_of(ctx, common[0], wrath=NEUTRAL + (fear - love) / 2, mercy=NEUTRAL + (love - fear) / 2),
     }
     for key, value in values.items():
         if key not in row.locked:
@@ -178,6 +197,7 @@ async def read_image(ctx: TickContext, god: God, tally: ImageTally) -> None:
     row.malleability = malleability_of(ctx, god)
     row.pull = round_half_up(table.base_pull * row.intensity / PERCENT * row.worship_share / PERCENT * (1 + row.crisis / PERCENT) * row.malleability / PERCENT)
     row.epoch = ctx.epoch
+    await bear_image(ctx, row.manifestation, believers)
     tally.images += 1
     await shape(ctx, god, row, tally)
 

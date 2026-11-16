@@ -30,6 +30,7 @@ from aerona.engine.lore.blueprints import steal_design
 from aerona.engine.lore.research import steal_technique
 from aerona.engine.military.feuds import house_feud
 from aerona.engine.military.forensics import choose_method, examine
+from aerona.engine.military.sabotage import WIDER_SABOTAGE, wider_choices
 from aerona.engine.military.spy_depth import topology_pct
 from aerona.engine.military.spycraft import (
     agents_of,
@@ -166,6 +167,11 @@ async def steal(ctx: TickContext, spymaster: EntityRow, target: EntityRow, netwo
 async def sabotage(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     kind = await sabotage_kind(ctx, target)
     rules = ctx.rules.espionage
+    if kind in WIDER_SABOTAGE:
+        line = await WIDER_SABOTAGE[kind][0](ctx, spymaster, target)
+        text = f"The agents of {spymaster.name} sabotaged {target.name}: {line}."
+        await _note(ctx, text, f"espionage.sabotage.{kind.value}", (spymaster.id, target.id))
+        return text
     if kind is SabotageKind.GRANARY_FIRE:
         society = await ctx.session.get(CommunitySocietyRow, target.id)
         burned = round_half_up((society.stock_food if society is not None else 0) * rules.granary_fire_pct / PERCENT)
@@ -192,6 +198,9 @@ async def sabotage_kind(ctx: TickContext, target: EntityRow) -> SabotageKind:
     at_war = bool(await BondRepository(ctx.session).outgoing(target.id, BondKind.ENEMY))
     walls = await ctx.session.get(SettlementInfrastructureRow, target.id)
     society = await ctx.session.get(CommunitySocietyRow, target.id)
+    wider = await wider_choices(ctx, target)
+    if wider and ctx.rng(f"sabotage.wider.{target.id}.{ctx.epoch}").chance(ctx.rules.espionage.wider_sabotage_pct):
+        return ctx.rng(f"sabotage.pick.{target.id}.{ctx.epoch}").pick(wider)
     if at_war and walls is not None and walls.walls_level > 0:
         return SabotageKind.WALL_WEAKENING
     if society is not None and society.stock_food > 0 and ctx.rng(f"granary.{target.id}.{ctx.epoch}").chance(PERCENT // 2):
@@ -354,12 +363,12 @@ async def network_for(ctx: TickContext, owner: EntityRow, target: EntityRow, bon
             agent_ids=[],
             depth=0,
             exposure=0,
-            cover=cover_for(owner)
+            cover=await cover_for(ctx.session, owner)
             if owner.entity_type in {EntityType.FACTION, EntityType.POLITY, EntityType.CULT}
             else COVERS.get(target.entity_type, SpyCover.BEGGAR),
             since_epoch=ctx.epoch,
             intel=0,
-            owner_kind=owner_kind(owner),
+            owner_kind=await owner_kind(ctx.session, owner),
             side_entity_id=await side_for(ctx, owner),
             revealed_aims=[],
             locked=[],
@@ -439,6 +448,7 @@ async def run_networks(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.community_relations",
     "table.community_stocks",
+    "table.company_profiles",
     "table.cosmos",
     "table.culture_values",
     "table.currencies",
@@ -456,6 +466,7 @@ async def run_networks(ctx: TickContext) -> None:
     "table.loans",
     "table.memories",
     "table.mercenary_contracts",
+    "table.mind_profiles",
     "table.minds",
     "table.nodes",
     "table.offices",

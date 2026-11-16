@@ -84,6 +84,7 @@ import {
   type StructureKind,
   type StructureView,
   structureField,
+  OWN_EFFECTS,
 } from './structureLabels'
 import { capacityText, raising, standing } from './structureModel'
 import {
@@ -381,7 +382,7 @@ function DesignCard({
   const busy = blocked ?? (edit.isPending || retire.isPending ? WORKING : null)
   const id = useId()
   return (
-    <li className='flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-3'>
+    <li className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion
           icon={PenTool}
@@ -566,7 +567,7 @@ function DesignsPanel({
             </FieldLabel>
             <Input
               id={`design-name-${worldId ?? 0}`}
-              placeholder='The Seven-Domed Temple'
+              placeholder='The name of the work'
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
@@ -965,7 +966,7 @@ function StructureAdjust({
         ))}
       </EditorGroup>
       <EditorGroup title='People' icon={Users} pairs>
-        <div className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-3'>
+        <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <FieldLabel>Architect</FieldLabel>
           <EntityPicker
             types={['mortal']}
@@ -974,14 +975,14 @@ function StructureAdjust({
             placeholder='No architect'
           />
         </div>
-        <div className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-3'>
+        <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <SonSelect
             value={view.dedicated_son_id}
             onChange={(value) => set('dedicated_son_id', value)}
             blocked={busy}
           />
         </div>
-        <div className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-3'>
+        <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <FieldLabel>Serves</FieldLabel>
           <EntityPicker
             types={['settlement', 'people']}
@@ -990,7 +991,7 @@ function StructureAdjust({
             placeholder='No one'
           />
         </div>
-        <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <FieldLabel>Staff at their posts</FieldLabel>
           <AmountForm
             label='Post staff'
@@ -1026,7 +1027,7 @@ function StructureAdjust({
               onSet={(value) => set(key, value)}
             />
           ))}
-          <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'>
+          <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <FieldLabel>Give coin to the builders</FieldLabel>
             <AmountForm
               label='Fund'
@@ -1051,7 +1052,7 @@ function StructureAdjust({
       )}
       {standing(view) && (
         <EditorGroup title='Harm' icon={Flame} pairs>
-          <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'>
+          <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <FieldLabel>Strike it</FieldLabel>
             <AmountForm
               label='Damage'
@@ -1088,7 +1089,7 @@ function StructureHero({ view }: { view: StructureView }) {
   const state = STATE_SPEC[view.construction_state]
   const group = GROUP_SPEC[view.group]
   return (
-    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={kind.icon} tone={kind.tone} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
@@ -1118,6 +1119,11 @@ function StructureHero({ view }: { view: StructureView }) {
               {`${view.locked.length} held`}
             </Badge>
           )}
+          {view.own_effects.map((effect) => (
+            <Badge key={effect} size='sm' variant='outline'>
+              {OWN_EFFECTS[effect]}
+            </Badge>
+          ))}
         </div>
         <Muted variant='caption'>{kind.hint}</Muted>
       </div>

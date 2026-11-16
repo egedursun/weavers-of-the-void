@@ -18,6 +18,7 @@ from aerona.db.tables.cycles import (
     SlaveMarketRow,
     StressReadingRow,
 )
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 S = Subsystem
@@ -200,6 +201,26 @@ CYCLE_MECHANICS = (
         ),
     ),
     Mechanic(
+        key="union_customs",
+        spec_item="S47.3",
+        title="Customs of union by axes: form, purpose, residence, descent, exchange, arrangement, dissolution and the circles partners come from",
+        subsystem=S.HOUSEHOLD,
+        phases=("kinship_systems",),
+        surface=Surface(drawer=DRAWER),
+        backfill="kinship_systems: every people's customs of union are read from its marriage custom and kinship system on the first epoch",
+        templates=("union.term",),
+        tables=(UnionCustomRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("shape_unions",),
+        targets=("people", "mortal", "house"),
+        couplings=(
+            Coupling(S.HOUSEHOLD, "the form and circles of union bar or allow each match", E.RULE_SWITCH, "kinship.purpose_bonus"),
+            Coupling(S.HOUSEHOLD, "the joined move to the family the residence names", E.FLOW, "kinship.union_payment"),
+            Coupling(S.SOCIAL, "the purpose of unions weighs prestige, faith, love, labour or wealth in a match", E.MODIFIER, "kinship.purpose_pull_pct"),
+            Coupling(S.ECONOMY, "the exchange passes between the families as a gift", E.FLOW, "kinship.union_payment"),
+        ),
+    ),
+    Mechanic(
         key="reproduction_systems",
         spec_item="S4.1/RP4",
         title="Reproductive systems: two sexes, sequential, ambisexual, caste or budding peoples, read by births, marriage, growth and levies",
@@ -221,7 +242,7 @@ CYCLE_MECHANICS = (
     Mechanic(
         key="nomadism",
         spec_item="S4.1/RP4",
-        title="Nomadism and transhumance: camps follow their pastures, herds graze and drink, riders take tribute or raid, confederations form and fragment",
+        title="Nomadism and transhumance: camps follow their pastures, herds graze and drink, herders take tribute or raid, confederations form and fragment",
         subsystem=S.ECOLOGY,
         phases=("nomadism",),
         surface=Surface(drawer=DRAWER),
@@ -241,8 +262,8 @@ CYCLE_MECHANICS = (
         targets=("settlement", "mortal"),
         couplings=(
             Coupling(S.ECOLOGY, "herds put grazing pressure on the land", E.FLOW, "nomadism.graze_pressure"),
-            Coupling(S.WAR, "riders raid settled neighbours", E.TRIGGER, "nomadism.raid_pct"),
-            Coupling(S.ECONOMY, "strong riders take tribute", E.TRIGGER, "nomadism.tribute_ratio"),
+            Coupling(S.WAR, "herders raid settled neighbours", E.TRIGGER, "nomadism.raid_pct"),
+            Coupling(S.ECONOMY, "strong herders take tribute", E.TRIGGER, "nomadism.tribute_ratio"),
             Coupling(S.ECONOMY, "camps trade the yield of their herds with settled neighbours", E.FLOW, "nomadism.trade_per_herd"),
             Coupling(S.ECOLOGY, "grazed-bare pastures send a camp on a new round", E.TRIGGER, "nomadism.reroute_at"),
             Coupling(S.SOCIAL, "life on the move raises solidarity", E.FLOW, "nomadism.steppe_asabiyya"),

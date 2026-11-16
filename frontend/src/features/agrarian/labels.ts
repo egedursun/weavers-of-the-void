@@ -1,4 +1,17 @@
 import {
+  Sparkles,
+  Siren,
+  ShieldCheck,
+  ShieldAlert,
+  Route,
+  RadioTower,
+  Pickaxe,
+  Orbit,
+  Landmark,
+  Home,
+  Footprints,
+  Coins,
+  BookOpen,
   Anchor,
   Apple,
   Axe,
@@ -70,12 +83,24 @@ export const PERENNIALS: Record<Schema['PerennialKind'], Named> = {
   vineyard: { label: 'Vineyard', icon: Grape, tone: 'verdigris' },
   grove: { label: 'Grove', icon: TreeDeciduous, tone: 'gold' },
   timber: { label: 'Timber plantation', icon: Trees, tone: 'info' },
+  plantation: { label: 'Plantation', icon: Sprout, tone: 'success' },
+  forest_garden: { label: 'Forest garden', icon: Trees, tone: 'success' },
 }
 
 export const COMMONS_KINDS: Record<Schema['CommonsKind'], Named> = {
   pasture: { label: 'Pasture', icon: Fence, tone: 'success' },
   woods: { label: 'Woods', icon: Trees, tone: 'verdigris' },
   fishery: { label: 'Fishery', icon: Fish, tone: 'info' },
+  water: { label: 'Water', icon: Droplets, tone: 'success' },
+  hunting_ground: {
+    label: 'Hunting ground',
+    icon: Footprints,
+    tone: 'success',
+  },
+  quarry: { label: 'Quarry', icon: Pickaxe, tone: 'success' },
+  spectrum: { label: 'Spectrum', icon: RadioTower, tone: 'success' },
+  orbits: { label: 'Orbits', icon: Orbit, tone: 'success' },
+  source_ground: { label: 'Source ground', icon: Sparkles, tone: 'success' },
 }
 
 export const COMMONS_RULES: Record<Schema['CommonsRule'], Named> = {
@@ -92,12 +117,33 @@ export const WORKS: Record<Schema['PreparednessKind'], Named> = {
   drill: { label: 'Drills', icon: Drill, tone: 'warning' },
   watchtower: { label: 'Watchtowers', icon: Eye, tone: 'verdigris' },
   seawall: { label: 'Seawalls', icon: Anchor, tone: 'info' },
+  quarantine_plan: {
+    label: 'Quarantine plan',
+    icon: ShieldAlert,
+    tone: 'info',
+  },
+  shelters: { label: 'Shelters', icon: Home, tone: 'info' },
+  warning_network: { label: 'Warning network', icon: Siren, tone: 'info' },
+  evacuation_routes: { label: 'Evacuation routes', icon: Route, tone: 'info' },
+  ward: { label: 'Ward', icon: ShieldCheck, tone: 'info' },
+  reserves_of_energy: {
+    label: 'Reserves of energy',
+    icon: Waves,
+    tone: 'info',
+  },
 }
 
 export const AID_KINDS: Record<Schema['AidKind'], Named> = {
   goods: { label: 'Goods', icon: Package, tone: 'gold' },
   healers: { label: 'Healers', icon: HeartPulse, tone: 'success' },
   labour: { label: 'Labour', icon: Hammer, tone: 'info' },
+  money: { label: 'Money', icon: Coins, tone: 'gold' },
+  credit: { label: 'Credit', icon: Landmark, tone: 'gold' },
+  food: { label: 'Food', icon: Wheat, tone: 'gold' },
+  shelter: { label: 'Shelter', icon: Home, tone: 'gold' },
+  medicine: { label: 'Medicine', icon: HeartPulse, tone: 'gold' },
+  soldiers: { label: 'Soldiers', icon: Shield, tone: 'gold' },
+  knowledge: { label: 'Knowledge', icon: BookOpen, tone: 'gold' },
 }
 
 export const PLANS: Record<Schema['RebuildPlan'], Named> = {

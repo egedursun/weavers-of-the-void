@@ -4,12 +4,13 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.quests import AIM_DEFAULTS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.war import HeroQuestKind
+from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestTargetKind
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import BondIndex
 from aerona.engine.primitives.stats import stat_or
@@ -21,11 +22,20 @@ THREAD_EXCLUDED_TYPES = frozenset({EntityType.LANGUAGE, EntityType.LAW})
 
 @dataclass(frozen=True)
 class QuestOption:
-    kind: HeroQuestKind
+    aim: QuestAim
+    target_kind: QuestTargetKind
     target_id: int
     weight: float
     description: str
     thread_id: int | None = None
+
+    @property
+    def obstacle(self) -> QuestObstacle:
+        return AIM_DEFAULTS[self.aim][0]
+
+    @property
+    def reward(self) -> QuestReward:
+        return AIM_DEFAULTS[self.aim][1]
 
 
 @dataclass(frozen=True)
@@ -57,7 +67,7 @@ def within_reach(rules: Rules, world: QuestWorld, hero: EntityRow, target: Entit
 def hunt_options(rules: Rules, world: QuestWorld, hero: EntityRow) -> list[QuestOption]:
     killed = {bond.target_node_id for bond in world.bonds.outgoing(hero.id, BondKind.KILLED)}
     return [
-        QuestOption(HeroQuestKind.HUNT, species.id, rules.heroes.quest_weight_hunt, f"to hunt {species.name}")
+        QuestOption(QuestAim.HUNT, QuestTargetKind.SPECIES, species.id, rules.heroes.quest_weight_hunt, f"to hunt {species.name}")
         for species in world.entities.values()
         if species.entity_type is EntityType.SPECIES
         and stat_or(species, "danger", 0) >= rules.heroes.hunt_quest_min_danger
@@ -87,8 +97,8 @@ def thread_options(rules: Rules, world: QuestWorld, hero: EntityRow, side: int |
             continue
         nearby = home is not None and any(world.atlas.top_region(item) == home for item in linked)
         if side in linked or nearby:
-            description = f"to pursue the secret of the open story around {target.name}"
-            options.append(QuestOption(HeroQuestKind.THREAD, target.id, rules.heroes.quest_weight_thread, description, thread.id))
+            description = f"to resolve the open incident arc around {target.name}"
+            options.append(QuestOption(QuestAim.RESOLVE, QuestTargetKind.INCIDENT_ARC, target.id, rules.heroes.quest_weight_thread, description, thread.id))
     return options
 
 
@@ -99,15 +109,23 @@ def relic_options(rules: Rules, world: QuestWorld, hero: EntityRow) -> list[Ques
         if item.entity_type is not EntityType.ITEM or world.bonds.incoming(item.id, BondKind.OWNS) or not within_reach(rules, world, hero, item):
             continue
         weight = settings.quest_weight_lost_item + (settings.quest_weight_strong_item_bonus if item.power_level >= settings.quest_strong_item_power else 0)
-        options.append(QuestOption(HeroQuestKind.RELIC, item.id, weight, f"to find the lost {item.name}"))
+        options.append(QuestOption(QuestAim.FIND, QuestTargetKind.ITEM, item.id, weight, f"to find the lost {item.name}"))
     return options
 
 
 def knowledge_options(rules: Rules, world: QuestWorld, hero: EntityRow) -> list[QuestOption]:
     return [
-        QuestOption(HeroQuestKind.KNOWLEDGE, item.id, rules.heroes.quest_weight_lost_knowledge, f"to search the ruins for the lost {item.name} knowledge")
+        QuestOption(QuestAim.LEARN, QuestTargetKind.KNOWLEDGE, item.id, rules.heroes.quest_weight_lost_knowledge, f"to recover the lost knowledge {item.name}")
         for item in world.entities.values()
         if item.entity_type is EntityType.KNOWLEDGE and item.id in world.lost and item.world_id == hero.world_id
+    ]
+
+
+def place_options(rules: Rules, world: QuestWorld, hero: EntityRow) -> list[QuestOption]:
+    return [
+        QuestOption(QuestAim.REACH, QuestTargetKind.PLACE, item.id, rules.heroes.quest_weight_lost_place, f"to reach the lost place {item.name}")
+        for item in world.entities.values()
+        if item.entity_type is EntityType.PLACE and item.id in world.lost and within_reach(rules, world, hero, item)
     ]
 
 
@@ -125,7 +143,7 @@ def vengeance_options(rules: Rules, world: QuestWorld, side: int | None) -> list
         if victims:
             target = victims[0]
             description = f"to avenge the blood feud on {enemy.name} ({target.name})"
-            options.append(QuestOption(HeroQuestKind.VENGEANCE, target.id, rules.heroes.quest_weight_vengeance, description))
+            options.append(QuestOption(QuestAim.AVENGE, QuestTargetKind.PERSON, target.id, rules.heroes.quest_weight_vengeance, description))
     return options
 
 
@@ -136,5 +154,6 @@ def quest_options(rules: Rules, world: QuestWorld, hero: EntityRow) -> list[Ques
         *thread_options(rules, world, hero, side),
         *relic_options(rules, world, hero),
         *knowledge_options(rules, world, hero),
+        *place_options(rules, world, hero),
         *vengeance_options(rules, world, side),
     ]

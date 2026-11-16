@@ -22,6 +22,7 @@ from aerona.engine.arcana.vis import give_vis, site_form
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.factions.order_laws import keep_law, outer_dealers
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int
@@ -87,6 +88,9 @@ async def accused_of(ctx: TickContext, order: EntityRow, law: OrderLawRow, membe
     if law.law is OrderLaw.SPARE_MEMBERS:
         killers = await killers_of_kin(ctx, order.id, ids)
         return killers[0] if killers else None
+    if law.law is OrderLaw.NO_OUTER_DEALINGS:
+        dealers = await outer_dealers(ctx, members)
+        return dealers[0] if dealers else None
     common = [member.mortal_entity_id for member in members if member.rank is not FactionRank.LEADER]
     if not common or not ctx.rng(f"order_breach.{order.id}.{law.law.value}").chance(ctx.rules.magical_orders.violation_pct):
         return None
@@ -184,6 +188,7 @@ async def keep_orders(ctx: TickContext, tally: OrderTally) -> None:
     for order, profile in await orders(ctx):
         members = list(await ctx.session.scalars(select(FactionMembershipRow).where(FactionMembershipRow.faction_entity_id == order.id)))
         for law in await found_laws(ctx, order, tally):
+            await keep_law(ctx, profile, law, members)
             accused = await accused_of(ctx, order, law, members)
             if accused is not None:
                 await try_member(ctx, order, law, accused, tally)

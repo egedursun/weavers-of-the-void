@@ -146,3 +146,14 @@ export function shortLabel(label: string): string {
     ? label.slice(0, DIRECT_LABEL_CHARS)
     : label
 }
+
+const AXIS_LABEL_SPACING = 16
+
+export function gridFractions(plotHeight: number): number[] {
+  const all = [0, 0.25, 0.5, 0.75, 1]
+  const room = Math.floor(plotHeight / AXIS_LABEL_SPACING)
+  if (room >= all.length - 1) return all
+  if (room >= 2) return [0, 0.5, 1]
+  if (room >= 1) return [0, 1]
+  return [1]
+}

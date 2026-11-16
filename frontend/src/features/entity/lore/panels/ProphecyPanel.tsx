@@ -2,10 +2,13 @@ import {
   CalendarDays,
   Check,
   Eye,
+  Feather,
   Gauge,
   Hourglass,
+  Repeat,
   ScrollText,
   Sparkles,
+  Swords,
   Users,
   X,
 } from 'lucide-react'
@@ -73,6 +76,14 @@ export function ProphecyPanel({
       >
         <NamedChip spec={state} />
         <RefChip icon={Eye} label='Seen by' item={card.seer} />
+        {card.rival && (
+          <RefChip icon={Swords} label='Its rival' item={card.rival} />
+        )}
+        {card.forged && (
+          <NamedChip
+            spec={{ label: 'Forged', icon: Feather, tone: 'danger' }}
+          />
+        )}
         {card.resolved_epoch !== null && (
           <NamedChip spec={{ label: '', icon: CalendarDays, tone: 'muted' }}>
             {`Settled in epoch ${card.resolved_epoch}`}
@@ -120,6 +131,13 @@ export function ProphecyPanel({
           icon={Users}
           tone='info'
           hint='Those who know of it'
+        />
+        <KpiTile
+          label='Retold'
+          value={card.retold}
+          icon={Repeat}
+          tone='muted'
+          hint='Times it was changed in the telling'
         />
       </div>
       <div className={LORE_GRID}>
@@ -212,6 +230,14 @@ export function ProphecyPanel({
               { key: 'predicate', kind: 'enum', table: PREDICATES },
               { key: 'deadline_epoch', kind: 'number', min: 0, nullable: true },
               { key: 'pressure', kind: 'number', min: 0, max: PERCENT },
+              { key: 'retold', kind: 'number', min: 0 },
+              { key: 'forged', kind: 'bool' },
+              {
+                key: 'rival_entity_id',
+                kind: 'number',
+                min: 1,
+                nullable: true,
+              },
             ]}
             current={card}
             blocked={blocked}

@@ -146,6 +146,7 @@ async def fade_star_modifiers(ctx: TickContext) -> int:
     "table.nodes",
     "table.phenomenon_profiles",
     "table.polity_members",
+    "table.reputations",
     "table.reverences",
     "table.star_modifiers",
     "table.theory_adherents",

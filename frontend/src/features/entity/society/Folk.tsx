@@ -1042,7 +1042,7 @@ export function FoundPeoplePanel({
       open={open}
       onOpenChange={setOpen}
       data-surface='FoundPeople'
-      className='flex min-w-0 flex-col rounded-lg border border-dashed bg-muted/20'
+      className='flex min-w-0 flex-col rounded-md sealed-well'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-3 p-3'>
         <Medallion icon={FOUND_ICON} tone='gold' size='sm' />

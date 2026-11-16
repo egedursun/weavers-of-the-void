@@ -73,7 +73,7 @@ export function WhyBreakdown({
           return (
             <div
               key={value.key}
-              className='flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-2'
+              className='flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card p-2'
             >
               <div className='flex min-w-0 items-baseline justify-between gap-2'>
                 <Label truncate>{humanize(value.key)}</Label>
@@ -223,7 +223,7 @@ export function ActingMechanics({
           return (
             <li
               key={mechanic.key}
-              className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/20 p-2'
+              className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
             >
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
                 <Medallion

@@ -462,11 +462,15 @@ async def factor(session: AsyncSession, node_id: int, capacity: Capacity) -> flo
 async def strike_style(session: AsyncSession, rules: Rules, attacker: EntityRow | None, defender: Bearer | None = None) -> StrikeStyle:
     if attacker is None:
         return StrikeStyle.NORMAL
-    if CreatureTrait.FLYING in await species_traits(session, attacker.id):
-        return StrikeStyle.AERIAL
+    traits = await species_traits(session, attacker.id)
+    found = next((style for trait, style in TRAIT_STYLES if trait in traits), None)
+    if found is not None:
+        return found
     body = await session.get(BodyRow, attacker.id)
     if body is None and attacker.entity_type is EntityType.MORTAL:
         body = await ensure_body(session, rules, attacker, attacker.birth_epoch)
+    if body is not None and body.plan is BodyPlan.AMORPHOUS:
+        return StrikeStyle.ENGULFING
     if body is not None and body.plan in WHOLE_PLANS:
         return StrikeStyle.WHOLE
     target = await session.get(BodyRow, defender.id) if defender is not None else None
@@ -477,6 +481,14 @@ async def strike_style(session: AsyncSession, rules: Rules, attacker: EntityRow 
     return StrikeStyle.TRAMPLE if huge else StrikeStyle.NORMAL
 
 
+TRAIT_STYLES = (
+    (CreatureTrait.FLYING, StrikeStyle.AERIAL),
+    (CreatureTrait.BURROWING, StrikeStyle.BURROWING),
+    (CreatureTrait.AMBUSH_PREDATOR, StrikeStyle.FROM_HIDING),
+    (CreatureTrait.CAMOUFLAGE, StrikeStyle.FROM_HIDING),
+    (CreatureTrait.FIRE_BREATHING, StrikeStyle.RANGED),
+    (CreatureTrait.COLD_BREATHING, StrikeStyle.RANGED),
+)
 AVERAGE_SIZE = HEIGHT_RANK[HeightClass.AVERAGE] + BUILD_RANK[BodyBuild.AVERAGE]
 
 

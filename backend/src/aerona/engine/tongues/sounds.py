@@ -1,8 +1,13 @@
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import delete, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.tongues import KIND_WEIGHTS, LENITION
+from aerona.catalog.tongues import KIND_WEIGHTS, LENITION, TEXTURE_LEAN, TEXTURE_LEAN_WEIGHT
+from aerona.core.random import SeededRandom
+from aerona.core.total import total
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
@@ -28,6 +33,8 @@ from aerona.engine.primitives.queries import canon, has_flag
 
 FIXED_REGISTERS = frozenset({WordRegister.ARCHAIC, WordRegister.SACRED, WordRegister.POETIC})
 SHORTEST = 2
+PAIR = 2
+GLIDE = "y"
 PLACE_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.REGION, EntityType.PLACE})
 NAME = "name"
 GLOSS_MAX = 2000
@@ -102,29 +109,103 @@ async def changes_of(ctx: TickContext, language_id: int) -> list[SoundChangeRow]
     return list(found)
 
 
-def invent(ctx: TickContext, language: EntityRow, phonology: Phonology) -> Change | None:
+def lenite(rng: SeededRandom, consonants: list[str], _vowels: list[str]) -> Change | None:
+    soft = [item for item in consonants if item in LENITION]
+    if not soft:
+        return None
+    source = rng.pick(soft)
+    return Change(SoundChangeKind.LENITION, source, LENITION[source], SoundEnvironment.BETWEEN_VOWELS)
+
+
+def shift_vowel(rng: SeededRandom, _consonants: list[str], vowels: list[str]) -> Change | None:
+    if len(vowels) < PAIR:
+        return None
+    source = rng.pick(vowels)
+    return Change(SoundChangeKind.VOWEL_SHIFT, source, rng.pick([item for item in vowels if item != source]), rng.pick(list(SoundEnvironment)))
+
+
+def lose(rng: SeededRandom, _consonants: list[str], vowels: list[str]) -> Change | None:
+    return Change(SoundChangeKind.LOSS, rng.pick(vowels), "", SoundEnvironment.FINAL) if vowels else None
+
+
+def shift(rng: SeededRandom, consonants: list[str], _vowels: list[str]) -> Change | None:
+    if len(consonants) < PAIR:
+        return None
+    source = rng.pick(consonants)
+    return Change(SoundChangeKind.SHIFT, source, rng.pick([item for item in consonants if item != source]), rng.pick(list(SoundEnvironment)))
+
+
+def merge(rng: SeededRandom, consonants: list[str], _vowels: list[str]) -> Change | None:
+    if len(consonants) < PAIR:
+        return None
+    source = rng.pick(consonants)
+    return Change(SoundChangeKind.MERGER, source, rng.pick([item for item in consonants if item != source]), SoundEnvironment.ANYWHERE)
+
+
+def metathesise(rng: SeededRandom, consonants: list[str], vowels: list[str]) -> Change | None:
+    if not consonants or not vowels:
+        return None
+    first, second = rng.pick(consonants), rng.pick(vowels)
+    return Change(SoundChangeKind.METATHESIS, first + second, second + first, SoundEnvironment.ANYWHERE)
+
+
+def insert_vowel(rng: SeededRandom, consonants: list[str], vowels: list[str]) -> Change | None:
+    if len(consonants) < PAIR or not vowels:
+        return None
+    first, second = rng.pick(consonants), rng.pick(consonants)
+    return Change(SoundChangeKind.EPENTHESIS, first + second, first + rng.pick(vowels) + second, SoundEnvironment.ANYWHERE)
+
+
+def assimilate(rng: SeededRandom, consonants: list[str], _vowels: list[str]) -> Change | None:
+    if len(consonants) < PAIR:
+        return None
+    first = rng.pick(consonants)
+    second = rng.pick([item for item in consonants if item != first])
+    return Change(SoundChangeKind.ASSIMILATION, first + second, second + second, SoundEnvironment.ANYWHERE)
+
+
+def palatalise(rng: SeededRandom, consonants: list[str], vowels: list[str]) -> Change | None:
+    if not consonants or not vowels:
+        return None
+    consonant, vowel = rng.pick(consonants), rng.pick(vowels)
+    return Change(SoundChangeKind.PALATALISATION, consonant + vowel, consonant + GLIDE + vowel, SoundEnvironment.ANYWHERE)
+
+
+def tone(rng: SeededRandom, consonants: list[str], _vowels: list[str]) -> Change | None:
+    return Change(SoundChangeKind.TONOGENESIS, rng.pick(consonants), "", SoundEnvironment.FINAL) if consonants else None
+
+
+INVENTORS: Mapping[SoundChangeKind, Callable[[SeededRandom, list[str], list[str]], Change | None]] = total(
+    SoundChangeKind,
+    {
+        SoundChangeKind.SHIFT: shift,
+        SoundChangeKind.LENITION: lenite,
+        SoundChangeKind.VOWEL_SHIFT: shift_vowel,
+        SoundChangeKind.MERGER: merge,
+        SoundChangeKind.LOSS: lose,
+        SoundChangeKind.METATHESIS: metathesise,
+        SoundChangeKind.EPENTHESIS: insert_vowel,
+        SoundChangeKind.ASSIMILATION: assimilate,
+        SoundChangeKind.PALATALISATION: palatalise,
+        SoundChangeKind.TONOGENESIS: tone,
+    },
+)
+
+
+async def texture_lean(session: AsyncSession) -> SoundChangeKind | None:
+    cosmos = await CosmosRepository(session).get()
+    settings = cosmos.genesis_settings if cosmos is not None else None
+    return TEXTURE_LEAN[settings.language_texture] if settings is not None else None
+
+
+def invent(ctx: TickContext, language: EntityRow, phonology: Phonology, lean: SoundChangeKind | None = None) -> Change | None:
     rng = ctx.rng(f"sound.invent.{language.id}.{ctx.epoch}")
     consonants = [item.casefold() for item in phonology.consonants if item]
     vowels = [item.casefold() for item in phonology.vowels if item]
     kinds = [kind for kind, weight in KIND_WEIGHTS.items() for _ in range(weight)]
-    kind = rng.pick(kinds)
-    if kind is SoundChangeKind.LENITION:
-        soft = [item for item in consonants if item in LENITION]
-        if not soft:
-            return None
-        source = rng.pick(soft)
-        return Change(kind, source, LENITION[source], SoundEnvironment.BETWEEN_VOWELS)
-    if kind is SoundChangeKind.VOWEL_SHIFT and len(vowels) > 1:
-        source = rng.pick(vowels)
-        return Change(kind, source, rng.pick([item for item in vowels if item != source]), rng.pick(list(SoundEnvironment)))
-    if kind is SoundChangeKind.LOSS and vowels:
-        return Change(kind, rng.pick(vowels), "", SoundEnvironment.FINAL)
-    if len(consonants) > 1:
-        source = rng.pick(consonants)
-        target = rng.pick([item for item in consonants if item != source])
-        environment = SoundEnvironment.ANYWHERE if kind is SoundChangeKind.MERGER else rng.pick(list(SoundEnvironment))
-        return Change(SoundChangeKind.MERGER if kind is SoundChangeKind.MERGER else SoundChangeKind.SHIFT, source, target, environment)
-    return None
+    if lean is not None:
+        kinds += [lean] * TEXTURE_LEAN_WEIGHT
+    return INVENTORS[rng.pick(kinds)](rng, consonants, vowels) or shift(rng, consonants, vowels)
 
 
 async def prestigious(ctx: TickContext, language: EntityRow, contacts: set[int]) -> int | None:
@@ -180,7 +261,10 @@ async def acquire(ctx: TickContext, language: EntityRow, tally: SoundTally) -> S
     elif contacts and rng.chance(table.contact_pct * len(contacts)):
         change, cause = await borrowed(ctx, rng.pick(sorted(contacts))), SoundChangeCause.CONTACT
     if change is None:
-        change, cause = invent(ctx, language, profile.phonology), SoundChangeCause.MIGRATION if moved else SoundChangeCause.DRIFT
+        change, cause = (
+            invent(ctx, language, profile.phonology, await texture_lean(ctx.session)),
+            SoundChangeCause.MIGRATION if moved else SoundChangeCause.DRIFT,
+        )
     if change is None or change in {as_change(row) for row in await changes_of(ctx, language.id)}:
         return None
     row = await add_change(ctx, language.id, change, cause)

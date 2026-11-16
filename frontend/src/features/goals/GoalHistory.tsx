@@ -57,7 +57,7 @@ function HistoryEntry({ entry }: { entry: Entry }) {
       ? `+${formatInteger(entry.awarded_points)} of ${formatInteger(entry.points)}`
       : `Worth ${formatInteger(entry.points)}`
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-xl border bg-background p-3'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion
           icon={SCENARIO_ICON[entry.key]}

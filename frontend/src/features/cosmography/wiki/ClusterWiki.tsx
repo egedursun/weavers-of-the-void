@@ -16,6 +16,7 @@ import {
   EmptyState,
   EntityLink,
   MiniStat,
+  Paged,
   PagedList,
   Section,
 } from '@/components/domain'
@@ -71,7 +72,7 @@ export function GalaxyCard({
   const worlds = ladder.placementsIn(galaxy.id).length
   const nucleus = NUCLEI[galaxy.nucleus]
   return (
-    <li className='flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card'>
+    <li className='flex min-w-0 flex-col overflow-hidden rounded-md border surface-sheen border-gild/60 bg-card'>
       <GalaxyThumb
         galaxy={galaxy}
         shape={catalog.shape}
@@ -296,31 +297,33 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
       {children.length > 0 && (
         <Section title='Clusters inside it' icon={Workflow} tone='verdigris'>
           <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
-            {children.map((row) => (
-              <li
-                key={row.id}
-                className='flex min-w-0 items-center gap-3 rounded-xl border bg-background p-2'
-              >
-                <ClusterThumb
-                  cluster={{
-                    id: row.id,
-                    kind: row.cluster_kind,
-                    galaxies: ladder.galaxiesIn(row.id).length,
-                    heat: row.medium_heat,
-                  }}
-                  label={row.name}
-                  className='size-portrait-lg shrink-0'
-                />
-                <span className='flex min-w-0 flex-col gap-1'>
-                  <EntityLink kind='cluster' id={String(row.id)}>
-                    {row.name}
-                  </EntityLink>
-                  <Chip>
-                    {catalogLabel(catalog.cluster_kinds, row.cluster_kind)}
-                  </Chip>
-                </span>
-              </li>
-            ))}
+            <Paged items={children} as='li'>
+              {(row) => (
+                <li
+                  key={row.id}
+                  className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'
+                >
+                  <ClusterThumb
+                    cluster={{
+                      id: row.id,
+                      kind: row.cluster_kind,
+                      galaxies: ladder.galaxiesIn(row.id).length,
+                      heat: row.medium_heat,
+                    }}
+                    label={row.name}
+                    className='size-portrait-lg shrink-0'
+                  />
+                  <span className='flex min-w-0 flex-col gap-1'>
+                    <EntityLink kind='cluster' id={String(row.id)}>
+                      {row.name}
+                    </EntityLink>
+                    <Chip>
+                      {catalogLabel(catalog.cluster_kinds, row.cluster_kind)}
+                    </Chip>
+                  </span>
+                </li>
+              )}
+            </Paged>
           </ul>
         </Section>
       )}

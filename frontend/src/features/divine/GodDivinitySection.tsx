@@ -83,41 +83,48 @@ function DomainsCard({ view }: { view: GodDivinity }) {
       wide
     >
       <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-        {view.domains.map((domain) => (
-          <div
-            key={domain.domain}
-            className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
-          >
-            <div className='flex min-w-0 flex-wrap items-center gap-2'>
-              <Text weight='semibold'>{domain.label}</Text>
-              <Badge
-                size='sm'
-                variant='outline'
-              >{`Feeds on ${domain.activity_label.toLowerCase()}`}</Badge>
-              {domain.severed && (
-                <Badge size='sm' variant='destructive'>
-                  Severed: its hooks are silent
-                </Badge>
-              )}
+        <Paged items={view.domains}>
+          {(domain) => (
+            <div
+              key={domain.domain}
+              className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'
+            >
+              <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                <Text weight='semibold'>{domain.label}</Text>
+                <Badge
+                  size='sm'
+                  variant='outline'
+                >{`Feeds on ${domain.activity_label.toLowerCase()}`}</Badge>
+                {domain.severed && (
+                  <Badge size='sm' variant='destructive'>
+                    Severed: its hooks are silent
+                  </Badge>
+                )}
+              </div>
+              <ul className='flex min-w-0 flex-col gap-1'>
+                <Paged items={domain.hooks} as='li' noun={['hook', 'hooks']}>
+                  {(hook) => (
+                    <li
+                      key={hook.hook}
+                      className='flex min-w-0 items-center gap-2'
+                    >
+                      <Badge
+                        size='sm'
+                        variant={hook.harmful ? 'warning' : 'secondary'}
+                      >{`+${hook.pct}%`}</Badge>
+                      <Text as='span' weight='medium'>
+                        {hook.label}
+                      </Text>
+                      <Muted as='span' variant='caption' truncate>
+                        {hook.effect}
+                      </Muted>
+                    </li>
+                  )}
+                </Paged>
+              </ul>
             </div>
-            <ul className='flex min-w-0 flex-col gap-1'>
-              {domain.hooks.map((hook) => (
-                <li key={hook.hook} className='flex min-w-0 items-center gap-2'>
-                  <Badge
-                    size='sm'
-                    variant={hook.harmful ? 'warning' : 'secondary'}
-                  >{`+${hook.pct}%`}</Badge>
-                  <Text as='span' weight='medium'>
-                    {hook.label}
-                  </Text>
-                  <Muted as='span' variant='caption' truncate>
-                    {hook.effect}
-                  </Muted>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+          )}
+        </Paged>
       </div>
       {view.synergy ? (
         <Badge size='sm' variant='default'>
@@ -213,7 +220,7 @@ function GoalRow({ goal, busy }: { goal: GoalView; busy: string | null }) {
       ? 'Change the progress or the state first'
       : null
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col gap-1'>
@@ -451,7 +458,7 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
       ? 'Change the healing, the severity or the form first'
       : null
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col gap-1'>
@@ -695,7 +702,7 @@ function AvatarsCard({
             {(row) => (
               <li
                 key={row.avatar.id}
-                className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-3'
+                className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'
               >
                 <Medallion
                   icon={Eye}

@@ -1,17 +1,20 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
 from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.catalog.urban import QUARTER_WORKS
-from aerona.catalog.zones import CIVIC_SERVICE_OF
+from aerona.catalog.zones import CIVIC_QUARTERED, CIVIC_SERVICE_OF
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
 from aerona.db.tables.disease import QuarantineRow
 from aerona.db.tables.economy import TradeFlowRow, WorkshopRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.settlement import (
     ADMIN_MAX,
@@ -35,6 +38,7 @@ from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, WeatherEffect
+from aerona.domain.enums.faith import BindingKind, SpiritAlignment
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
@@ -309,7 +313,8 @@ async def quarter_wants(ctx: TickContext, town: Town) -> list[str]:
         )
     )
     wants: list[str] = []
-    if DistrictKind.CIVIC_QUARTER not in kinds and sum(1 for kind in built if kind in CIVIC_SERVICE_OF) >= table.civic_quarter_at:
+    civic = sum(1 for kind in built if kind in CIVIC_SERVICE_OF and CIVIC_QUARTERED[CIVIC_SERVICE_OF[kind]])
+    if DistrictKind.CIVIC_QUARTER not in kinds and civic >= table.civic_quarter_at:
         wants.append("district:civic_quarter")
     greens = {StructureKind.PARK, StructureKind.FOUNTAIN}
     if DistrictKind.GARDENS not in kinds and greens & set(built) and (stat(town.entity, "prosperity") or 0) >= table.gardens_prosperity:
@@ -549,10 +554,79 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
         shift_stat(band, "strength", profile.crime * table.bandit_feed_pct / PERCENT / max(1, len(bands)), ctx.rules.society.default_stat)
 
 
+@dataclass(frozen=True)
+class Yield:
+    field: str
+    rule: str
+    sign: int
+
+
+U = UrbanService
+YIELDS: Mapping[UrbanService, tuple[Yield, ...]] = total(
+    UrbanService,
+    {
+        U.WATER: (),
+        U.FAITH: (),
+        U.WATCH: (),
+        U.HEALING: (),
+        U.MARKET: (),
+        U.SCHOOL: (),
+        U.BATH: (),
+        U.FIRE: (),
+        U.SANITATION: (),
+        U.TRANSPORT: (),
+        U.COMMUNICATION: (),
+        U.POWER: (Yield("prosperity", "power_yield", 1),),
+        U.COURTS: (Yield("public_order", "courts_order", 1), Yield("crime", "courts_order", -1)),
+        U.WELFARE: (Yield("unrest", "welfare_calm", -1), Yield("crime", "welfare_calm", -1)),
+        U.GRANARY: (Yield("siege_supplies", "granary_store", 1),),
+        U.PARKS: (Yield("sanitation", "parks_health", 1), Yield("prestige", "parks_health", 1)),
+        U.LIBRARY: (Yield("prestige", "library_prestige", 1),),
+        U.BURIAL: (Yield("sanitation", "burial_health", 1),),
+        U.DEPOT: (Yield("hauling_capacity", "depot_hauling", 1),),
+        U.ADMINISTRATION: (Yield("public_order", "admin_order", 1),),
+        U.ENTERTAINMENT: (Yield("unrest", "entertainment_calm", -1),),
+    },
+)
+BOUNDED = frozenset({"public_order", "crime", "unrest", "sanitation", "prestige"})
+
+
+def serve(ctx: TickContext, town: Town) -> None:
+    profile = town.profile
+    for service, yields in YIELDS.items():
+        share = town.urban.covered(service)
+        for item in yields:
+            amount = round_half_up(share * getattr(ctx.rules.coverage, item.rule)) * item.sign
+            if not amount:
+                continue
+            if item.field == "prosperity":
+                shift_stat(town.entity, "prosperity", amount, ctx.rules.society.default_stat, high=PERCENT)
+            elif item.field not in profile.locked:
+                value = getattr(profile, item.field) + amount
+                setattr(profile, item.field, clamp_int(value, 0, PERCENT) if item.field in BOUNDED else max(0, value))
+
+
+async def warded(ctx: TickContext, town: Town) -> None:
+    buildings = select(StructureProfileRow.structure_entity_id).where(StructureProfileRow.host_entity_id == town.entity.id)
+    spirits = await ctx.session.scalars(
+        select(SpiritProfileRow.alignment).where(SpiritProfileRow.binding == BindingKind.STRUCTURE, SpiritProfileRow.bound_entity_id.in_(buildings))
+    )
+    step = ctx.rules.coverage.warded_order
+    profile = town.profile
+    for alignment in spirits:
+        field = "unrest" if alignment is SpiritAlignment.VENGEFUL else "public_order"
+        if field not in profile.locked:
+            setattr(profile, field, clamp_int(getattr(profile, field) + step, 0, PERCENT))
+
+
 def hallow(ctx: TickContext, town: Town) -> None:
+    serve(ctx, town)
     table = ctx.rules.coverage
     shift_stat(town.entity, "piety", -(1 - town.urban.covered(UrbanService.FAITH)) * table.impiety, ctx.rules.society.default_stat)
     shift_stat(town.entity, "prosperity", -(1 - town.urban.covered(UrbanService.MARKET)) * table.prices, ctx.rules.society.default_stat)
+    shift_stat(town.entity, "prosperity", town.urban.covered(UrbanService.TRANSPORT) * table.transport_trade, ctx.rules.society.default_stat, high=PERCENT)
+    if "unrest" not in town.profile.locked:
+        town.profile.unrest = clamp_int(town.profile.unrest - round_half_up(town.urban.covered(UrbanService.COMMUNICATION) * table.news_calm), 0, PERCENT)
     floor = clamp_int(town.effects(ctx.rules).piety_floor, 0, PERCENT)
     piety = stat(town.entity, "piety")
     if floor > 0 and piety is not None and piety < floor:
@@ -717,7 +791,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
             set_stats(town.entity, population=before - dead)
         ledger(ctx, town, TreasuryEntry.FIRE, -table.treasury_loss, "great fire")
         burned += 1
-        driven = " Driven by the wind, it leapt from roof to roof." if year.wind >= PERCENT // HALF else ""
+        driven = " Driven by the wind, it spread fast." if year.wind >= PERCENT // HALF else ""
         await note(
             ctx,
             f"A great fire swept through the {district.kind.value.replace('_', ' ')} of {town.entity.name}; {dead} died in the flames.{driven}",
@@ -753,6 +827,7 @@ def sanitation(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, lifted:
         - min(1.0, crowd) * table.crowding_loss
         - (1 - town.urban.covered(UrbanService.WATER)) * ctx.rules.coverage.thirst
         - (1 - max(town.urban.covered(UrbanService.HEALING), town.urban.covered(UrbanService.BATH))) * ctx.rules.coverage.disease
+        + town.urban.covered(UrbanService.SANITATION) * ctx.rules.coverage.sewerage
         - town.urban.homeless_share * ctx.rules.homelessness.disease
     )
     town.profile.sanitation = clamp_int(value, 0, PERCENT)
@@ -904,5 +979,9 @@ async def literacy_of(ctx: TickContext, town: Town) -> int:
     people = await people_of(ctx.session, town.entity)
     culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
     literacy = culture.literacy if culture is not None else 0
-    unschooled = (1 - town.urban.covered(UrbanService.SCHOOL)) * ctx.rules.coverage.illiteracy
+    unschooled = max(
+        0.0,
+        (1 - town.urban.covered(UrbanService.SCHOOL)) * ctx.rules.coverage.illiteracy
+        - town.urban.covered(UrbanService.LIBRARY) * ctx.rules.coverage.library_literacy,
+    )
     return clamp_int(round_half_up(literacy - unschooled), 0, PERCENT)

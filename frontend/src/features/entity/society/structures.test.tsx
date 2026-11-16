@@ -21,6 +21,7 @@ const TEMPLE = {
   kind: 'temple',
   group: 'faith',
   label: 'Temple',
+  own_effects: [],
   design_id: null,
   design_name: null,
   level: 2,

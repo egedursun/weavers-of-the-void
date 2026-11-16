@@ -105,7 +105,7 @@ function GoldenAgeControls({
             onChange={(event) => setSince(event.target.value)}
           />
         </div>
-        <label className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2.5'>
+        <label className='flex min-w-0 items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
           <Switch
             checked={hold}
             onCheckedChange={setHold}

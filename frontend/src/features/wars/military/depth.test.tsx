@@ -122,6 +122,8 @@ describe('military depth surfaces', () => {
         intensity: 64,
         grievance: 50,
         generations: 1,
+        level: 'blood',
+        mediator: null,
         status: 'active',
         cause: 'the blood of Tam',
         since_epoch: 4,

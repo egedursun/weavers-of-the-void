@@ -95,7 +95,7 @@ export function ReputationPanel({
               return (
                 <li
                   key={son.son_id}
-                  className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2'
+                  className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                 >
                   <Portrait
                     name={son.name}

@@ -333,7 +333,7 @@ async def petition_delete(scope: PlayerScope, command: PetitionTarget) -> Effect
 @player_action("mystic:create", ActionKind.EDIT_RECORD)
 async def mystic_create(scope: PlayerScope, command: MysticDraft) -> Effect:
     await control.make_mystic(await scope.context("mystic_create"), command.mortal_id, command.sender_id)
-    return Effect("A vision seizes the mortal.", command.mortal_id)
+    return Effect("A vision comes to the mortal.", command.mortal_id)
 
 
 @player_action("mystic:edit", ActionKind.EDIT_RECORD)

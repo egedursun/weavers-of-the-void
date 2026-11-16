@@ -1,9 +1,10 @@
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import Field, model_validator
 
 from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.cosmography import DimensionKind, WorldAge
+from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.storyteller import StorytellerProfile
 from aerona.domain.enums.world import ClimateEra, CosmosShape, CosmosSize, GenesisTemplate, LanguageTexture, TechnologyEra, WorldType
 from aerona.domain.models.base import ValueObject
@@ -15,6 +16,8 @@ DANGER_KEY = "danger"
 
 
 PREHISTORY_CEILING = 1000
+TECH_LEVEL_CEILING = 10
+TechLevel = Annotated[int, Field(ge=0, le=TECH_LEVEL_CEILING)]
 
 
 class GenesisSettings(ValueObject):
@@ -22,6 +25,7 @@ class GenesisSettings(ValueObject):
     magic: int = Field(ge=0, le=PERCENT_CEILING)
     danger: int = Field(ge=0, le=PERCENT_CEILING)
     technology: TechnologyEra = TechnologyEra.IRON
+    technology_levels: dict[TechFamily, TechLevel] = Field(default_factory=dict)
     language_texture: LanguageTexture = LanguageTexture.FREE
     peoples: int = Field(ge=1)
     cosmos_size: CosmosSize = CosmosSize.SINGLE

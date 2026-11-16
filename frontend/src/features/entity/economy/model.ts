@@ -121,4 +121,4 @@ export function useKindChoices(
 }
 
 export const FORM_CARD =
-  '@container/form flex min-w-0 flex-col gap-4 rounded-xl border border-dashed bg-muted/20 p-4'
+  '@container/form flex min-w-0 flex-col gap-4 rounded-md p-4 sealed-well'

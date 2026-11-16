@@ -5,7 +5,6 @@ import {
   discoveryValues,
   gravityValues,
   journeyIntentValues,
-  legendaryQuestKindValues,
   skyEventKindValues,
   starTypeValues,
   travelMethodValues,
@@ -20,7 +19,6 @@ import {
   type HorizonStatus,
   type JourneyIntent,
   type JourneyStatus,
-  type LegendaryQuestKind,
   type SkyEventKind,
   type StarType,
   type TravelMethod,
@@ -36,8 +34,6 @@ export const GRAVITIES: readonly Gravity[] = gravityValues
 export const ATMOSPHERES: readonly Atmosphere[] = atmosphereValues
 export const CLIMATE_ERAS: readonly ClimateEra[] = climateEraValues
 export const JOURNEY_INTENTS: readonly JourneyIntent[] = journeyIntentValues
-export const LEGENDARY_QUESTS: readonly LegendaryQuestKind[] =
-  legendaryQuestKindValues
 export const DISASTERS: readonly Disaster[] = disasterValues
 
 export const STAR_TYPE_LABEL: Record<StarType, string> = {
@@ -159,6 +155,10 @@ export const CLIMATE_LABEL: Record<ClimateEra, string> = {
   rain: 'Rain age',
   ice_age: 'Ice age',
   scorching: 'Scorching age',
+  hothouse: 'Hothouse',
+  snowball: 'Snowball',
+  variable: 'Variable',
+  wet_cold: 'Wet cold',
 }
 
 export const JOURNEY_INTENT_LABEL: Record<JourneyIntent, string> = {
@@ -185,13 +185,6 @@ export const JOURNEY_STATUS_ORDER: Record<JourneyStatus, number> = {
   arrived: 3,
   recalled: 4,
   lost: 5,
-}
-
-export const LEGENDARY_QUEST_LABEL: Record<LegendaryQuestKind, string> = {
-  dead_star: 'Re-ignite the dead star',
-  sealed_gate: 'Re-open the sealed gate',
-  archive: 'Reach the Cosmic Archive',
-  expel_outer: 'Expel the Outsider',
 }
 
 export const DISASTER_LABEL: Record<Disaster, string> = {

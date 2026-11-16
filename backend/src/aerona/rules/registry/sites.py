@@ -9,6 +9,7 @@ H = RuleGroup.HEROES_AND_MORTALS
 @dataclass(frozen=True)
 class SiteRules:
     challenge_pct: int = rule(55, 0, 100, H, "Chance a room of a site holds a challenge (%)")
+    relic_piety: int = rule(5, 0, 100, H, "Piety a delver gains for carrying a relic out of the depths")
     difficulty_base: int = rule(25, 0, 100, H, "Difficulty of the first room of a site")
     difficulty_step: int = rule(10, 0, 100, H, "Difficulty each room deeper into a site adds")
     trap_strength: int = rule(40, 0, 100, H, "Strength of a trap laid in a room")

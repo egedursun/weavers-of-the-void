@@ -28,7 +28,6 @@ from aerona.domain.enums.cosmography import (
     WorldAge,
 )
 from aerona.domain.enums.environment import WeatherKind
-from aerona.domain.enums.faith import StratumKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import NaturalLaw
 
@@ -110,7 +109,7 @@ DIMENSION_KINDS: MappingProxyType[DimensionKind, KindSpec] = MappingProxyType(
         DimensionKind.DREAM: KindSpec("Dream dimension", "A dimension made of dreams."),
         DimensionKind.SHADOW: KindSpec("Shadow dimension", "A darker copy lying under the prime."),
         DimensionKind.SPIRIT: KindSpec("Spirit realm", "The realm where spirits dwell."),
-        DimensionKind.FEY: KindSpec("Fey realm", "A realm of old powers where time runs strangely."),
+        DimensionKind.FEY: KindSpec("Fey realm", "A realm of old powers where time runs otherwise."),
         DimensionKind.ELEMENTAL: KindSpec("Elemental plane", "A plane of one element."),
         DimensionKind.CELESTIAL: KindSpec("Celestial realm", "A realm of order and reward."),
         DimensionKind.INFERNAL: KindSpec("Infernal realm", "A realm of law and punishment."),
@@ -291,6 +290,7 @@ RIFT_CAUSE_LABELS: MappingProxyType[RiftCause, str] = MappingProxyType(
         RiftCause.BEING: "A cosmic being",
         RiftCause.PHENOMENON: "A phenomenon",
         RiftCause.CREATOR: "The Creator",
+        RiftCause.MADE_REALM_GATE: "The gate of a made realm",
     }
 )
 SCOPE_LABELS: MappingProxyType[RouteScope, str] = MappingProxyType(
@@ -467,15 +467,5 @@ SPIRAL_GALAXIES = frozenset(
         GalaxyType.CROWNED,
         GalaxyType.VEILED,
         GalaxyType.EMBER,
-    }
-)
-STRATUM_HOSTS: MappingProxyType[StratumKind, tuple[DimensionKind, ...]] = MappingProxyType(
-    {
-        StratumKind.PARADISE: (DimensionKind.CELESTIAL, DimensionKind.DIVINE_DOMAIN),
-        StratumKind.PLAIN: (DimensionKind.UNDERWORLD,),
-        StratumKind.TORMENT: (DimensionKind.INFERNAL, DimensionKind.ABYSSAL),
-        StratumKind.OBLIVION: (DimensionKind.LIMBO, DimensionKind.UNDERWORLD),
-        StratumKind.WARRIOR_HALL: (DimensionKind.CELESTIAL, DimensionKind.UNDERWORLD),
-        StratumKind.ANCESTOR_HALL: (DimensionKind.UNDERWORLD, DimensionKind.SPIRIT),
     }
 )

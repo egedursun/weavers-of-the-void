@@ -160,7 +160,7 @@ async def turn_company(ctx: TickContext, row: MercenaryContractRow, army: Entity
         await change_relation(ctx, row.company_entity_id, employer.id, -ctx.rules.war_finance.mercenary_loyalty_loss, MemoryKind.CHEATED_US, note="left unpaid")
     await ctx.chronicle(
         ChronicleKind.WAR,
-        f"{army.name}, left unpaid by {employer.name}, broke its contract and turned its swords elsewhere.",
+        f"{army.name}, left unpaid by {employer.name}, broke its contract and left.",
         template_key="war.mercenaries_turned",
         entity_ids=(army.id, employer.id),
         feed_category=FeedCategory.WAR,

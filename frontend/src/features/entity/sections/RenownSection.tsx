@@ -373,7 +373,7 @@ function StandingCard({ view, blocked, hold }: Props) {
               return (
                 <div
                   key={key}
-                  className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/10 p-3'
+                  className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'
                 >
                   <div className='flex min-w-0 items-center gap-2'>
                     <spec.icon
@@ -611,7 +611,7 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
         </>
       }
     >
-      <div className='flex min-w-0 flex-col divide-y rounded-md border bg-background'>
+      <div className='flex min-w-0 flex-col divide-y rounded-md border surface-sheen border-gild/60 bg-card'>
         {deed.claims.map((item) => (
           <div
             key={item.id}

@@ -20,7 +20,7 @@ async def test_the_faith_views_show_every_lever_field(api: ApiWorld) -> None:
                 cult_entity_id=cult.id, judgement=JudgementDoctrine.FAITH, orthodoxy=60, tithe_rate=10, treasury=5, clergy_count=3, clergy_quality=40, locked=[]
             )
         )
-        stratum = new_stratum(api.services.rules.current, core.regions[0], StratumKind.PARADISE)
+        stratum = new_stratum(api.services.rules.current, core.regions[0], StratumKind.REWARD)
         session.add(stratum)
         await session.flush()
         host = await entity(session, "Vessel", EntityType.MORTAL, MortalStats(age=30), world_id=core.world.id, location_id=core.regions[0].id)

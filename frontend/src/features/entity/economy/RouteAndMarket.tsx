@@ -37,12 +37,12 @@ import {
   IconStat,
   KpiTile,
   type KpiTone,
+  LoadingBlock,
   Medallion,
+  Paged,
   Section,
   Timeline,
   TimelineItem,
-  Paged,
-  LoadingBlock,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Stat, Text } from '@/components/typography'
@@ -108,7 +108,7 @@ function PriceCard({ series }: { series: Series }) {
   return (
     <li
       data-commodity={series.commodity}
-      className='flex h-full min-w-0 flex-col gap-2.5 rounded-lg border bg-background p-3'
+      className='flex h-full min-w-0 flex-col gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={spec.icon} tone={tone} size='sm' />
@@ -226,9 +226,9 @@ export function PriceBoard({ marketId }: { marketId: number }) {
           </Badge>
         </div>
         <ul className='grid min-w-0 grid-cols-1 gap-2 @md/market:grid-cols-2 @3xl/market:grid-cols-3'>
-          {series.map((row) => (
-            <PriceCard key={row.commodity} series={row} />
-          ))}
+          <Paged items={series} initial={12} as='li' noun={['good', 'goods']}>
+            {(row) => <PriceCard key={row.commodity} series={row} />}
+          </Paged>
         </ul>
         <PriceHolds marketId={marketId} />
       </div>
@@ -238,7 +238,7 @@ export function PriceBoard({ marketId }: { marketId: number }) {
 
 function TollStop({ toll }: { toll: Toll }) {
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={Landmark} tone='gold' size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -285,7 +285,7 @@ function TollEditor({
 }) {
   const [rate, setRate] = useState(String(toll.rate_pct))
   return (
-    <div className='grid min-w-0 grid-cols-1 items-end gap-2 rounded-lg border bg-background p-2.5 @md/route:grid-cols-3'>
+    <div className='grid min-w-0 grid-cols-1 items-end gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5 @md/route:grid-cols-3'>
       <div className='flex min-w-0 flex-col'>
         <Text weight='medium' truncate>
           {toll.region_name}
@@ -605,7 +605,7 @@ export function RouteBanner({ route }: { route: RouteView }) {
     names.data?.find((row) => row.kind === 'entity' && row.id === id)?.name ??
     fallback
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
       <div className='flex min-w-0 flex-wrap items-center gap-3'>
         <Medallion icon={mode.icon} tone={status.tone} />
         <div className='flex min-w-0 flex-1 basis-56 flex-col gap-0.5'>

@@ -63,6 +63,7 @@ async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> 
     "table.polity_profiles",
     "table.polity_regard",
     "table.polity_territories",
+    "table.relation_components",
     "table.relationships",
     "table.reputations",
     "table.ruler_currencies",

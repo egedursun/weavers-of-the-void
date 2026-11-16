@@ -53,7 +53,7 @@ class EssenceItem(StrEnum):
     OVERFLOW = "overflowing essence"
     TO_SONS = "overflow to the poorest sons"
     STOLEN = "stolen by rebel sons"
-    GNAWED = "gnawed by the godless"
+    GNAWED = "drained by the godless"
     CULT = "creator's cult"
 
 

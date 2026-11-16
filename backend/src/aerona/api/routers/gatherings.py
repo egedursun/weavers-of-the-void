@@ -22,10 +22,14 @@ from aerona.api.schemas.gatherings import (
     LifeLogEntry,
     LifeLogView,
     NodeGatheringsView,
+    PaletteWeightView,
+    RegionalTensionView,
     RoomView,
     SeasonOption,
     SiteView,
     StorytellerView,
+    SubsystemTensionView,
+    TargetPointView,
     TensionPoint,
 )
 from aerona.api.schemas.records import NodeRef
@@ -39,12 +43,14 @@ from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.sites import BattlefieldFeatureRow, ExcavationRow, ExcavationStageRow, RoomContentRow, SiteHolderRow, SiteRoomRow
 from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
+from aerona.db.tables.storyteller_depth import RegionalTensionRow, SubsystemTensionRow
 from aerona.db.tables.warfare import BattleRow
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.storyteller import SpontaneousKind, StorytellerProfile, TensionBand
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.sites.digs import diggable
 from aerona.engine.sites.rooms import layout_of
+from aerona.engine.storyteller.palette import BY_KEY
 
 router = APIRouter(tags=["gatherings"])
 Id = Annotated[int, Path(ge=1)]
@@ -301,6 +307,11 @@ async def storyteller(services: ServicesDep, world_id: Id) -> StorytellerView:
             await session.scalars(select(TensionRecordRow).where(TensionRecordRow.world_id == world_id).order_by(TensionRecordRow.epoch, TensionRecordRow.id))
         )
         spotlight = (await node_refs(session, [row.spotlight_entity_id])).get(row.spotlight_entity_id) if row is not None and row.spotlight_entity_id else None
+        regions = list(
+            await session.scalars(select(RegionalTensionRow).where(RegionalTensionRow.world_id == world_id).order_by(RegionalTensionRow.region_entity_id))
+        )
+        region_refs = await node_refs(session, [region.region_entity_id for region in regions])
+        parts = list(await session.scalars(select(SubsystemTensionRow).where(SubsystemTensionRow.world_id == world_id).order_by(SubsystemTensionRow.subsystem)))
         return StorytellerView(
             world_id=world_id,
             profile=row.profile if row is not None else StorytellerProfile.CYCLIC,
@@ -311,10 +322,33 @@ async def storyteller(services: ServicesDep, world_id: Id) -> StorytellerView:
             cycle_offset=row.cycle_offset if row is not None else 0,
             spotlight=spotlight,
             recent_kinds={SpontaneousKind(kind): count for kind, count in (row.recent_kinds or {}).items()} if row is not None else {},
+            palette=[
+                PaletteWeightView(key=key, subsystem=BY_KEY[key].subsystem, direction=BY_KEY[key].direction, weight_pct=weight)
+                for key, weight in sorted((row.palette or {}).items())
+                if key in BY_KEY
+            ]
+            if row is not None
+            else [],
             updated_epoch=row.updated_epoch if row is not None else 0,
             locked=list(row.locked or []) if row is not None else [],
             curve=[
                 TensionPoint(epoch=point.epoch, tension=point.tension, target=point.target, boost_pct=point.boost_pct, band=point.band) for point in records
+            ],
+            target_points=[TargetPointView(epoch=point[0], target=point[1]) for point in (row.target_points or [])] if row is not None else [],
+            regions=[
+                RegionalTensionView(
+                    region=region_refs[region.region_entity_id],
+                    tension=region.tension,
+                    crisis=region.crisis,
+                    updated_epoch=region.updated_epoch,
+                    locked=list(region.locked),
+                )
+                for region in regions
+                if region.region_entity_id in region_refs
+            ],
+            subsystems=[
+                SubsystemTensionView(subsystem=part.subsystem, tension=part.tension, updated_epoch=part.updated_epoch, locked=list(part.locked))
+                for part in parts
             ],
         )
 

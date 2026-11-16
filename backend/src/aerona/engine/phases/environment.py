@@ -58,7 +58,7 @@ from aerona.engine.environment.geomorph import course_of, desert_rainfall, deser
 from aerona.engine.environment.ley import LeyWeb, candidate_lines, cut_by_land, pair
 from aerona.engine.environment.ley_works import backfill_attunement, empower_works
 from aerona.engine.environment.long_seasons import winter_share
-from aerona.engine.environment.notable import backfill_notable_years
+from aerona.engine.environment.notable import backfill_notable_years, remember_years
 from aerona.engine.environment.place_backfill import ensure_profiles
 from aerona.engine.environment.places import place_kind_of
 from aerona.engine.environment.profile import (
@@ -493,6 +493,7 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.applied_fixups",
     "table.battles",
     "table.beast_profiles",
+    "table.bonds",
     "table.calendars",
     "table.climate_oscillations",
     "table.cosmic_features",
@@ -501,6 +502,7 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.districts",
     "table.dominions",
     "table.entity_flags",
+    "table.era_deeds",
     "table.forced_weather",
     "table.galactic_structures",
     "table.god_designs",
@@ -536,6 +538,7 @@ async def run_backfills(ctx: TickContext) -> None:
 )
 async def environment_survey(ctx: TickContext) -> None:
     ctx.count("notable_years_backfilled", await backfill_notable_years(ctx))
+    ctx.count("notable_years_remembered", await remember_years(ctx))
     moons = await moons_by_world(ctx)
     worlds = list(await ctx.session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)))
     calendars = 0
@@ -811,13 +814,13 @@ def land_turns(rules: Rules, env: RegionEnvironmentRow, before: LandMark) -> lis
     settings = rules.land_use
     turns: list[tuple[str, str]] = []
     if before.erosion < settings.erosion_noted <= env.erosion:
-        turns.append(("land.erosion", "Rains wash the cleared slopes of {region} down to the rivers; the hills are going bare."))
+        turns.append(("land.erosion", "The cleared land of {region} is eroding; its soil runs off to the rivers."))
     if before.farmed <= settings.overfarm_threshold < env.farmed:
-        turns.append(("land.overfarmed", "Every field of {region} is ploughed year after year and the earth is given no rest."))
+        turns.append(("land.overfarmed", "Every field of {region} is worked year after year without rest."))
     if before.soil >= settings.exhausted_soil_below > env.soil_fertility:
-        turns.append(("land.soil_exhausted", "The soil of {region} is worn out; seed goes in and little comes back."))
+        turns.append(("land.soil_exhausted", "The soil of {region} is worn out; it yields little."))
     if before.cleared > 0 == env.cleared:
-        turns.append(("land.rewilded", "Forest and scrub have taken back the empty fields of {region}."))
+        turns.append(("land.rewilded", "Wild growth has taken back the empty fields of {region}."))
     return turns
 
 
@@ -976,7 +979,7 @@ async def famine_event(ctx: TickContext, region: EntityRow, communities: list[En
             name=name[:1].upper() + name[1:],
             entity_type=EntityType.EVENT,
             stats=EventStats(severity=clamp_int(magnitude, 0, PERCENT)),
-            body=f"A year of empty granaries in {region.name}.",
+            body=f"A year of empty stores in {region.name}.",
             power=ctx.rules.harvest.famine_event_power,
             world_id=region.world_id,
             location_id=region.id,
@@ -1095,7 +1098,7 @@ async def plenty_year(ctx: TickContext, world: WorldRow, season: HarvestSeason) 
     region = await ctx.session.get(EntityRow, env.entity_id)
     if region is None:
         return 0
-    text = f"The granaries of {region.name} overflowed in the year {best.year}."
+    text = f"The stores of {region.name} overflowed in the year {best.year}."
     await record_notable(ctx, world, region, Notable(NotableYearKind.PLENTY, best, best.harvest - PERCENT, f"the Year of Plenty in {region.name}", text))
     return 1
 
@@ -1384,7 +1387,7 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
                 if entity is not None:
                     await ctx.chronicle(
                         ChronicleKind.CLIMATE,
-                        f"{degree[region_id]} ley lines meet at {entity.name}: a nexus of power, coveted by armies and priests.",
+                        f"{degree[region_id]} ley lines meet at {entity.name}: a nexus of power.",
                         template_key="environment.nexus_formed",
                         entity_ids=[entity.id, region_id],
                         world_id=entity.world_id,

@@ -22,12 +22,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90',
-        destructive:
-          'bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/30',
+        default: 'gilded-control font-display font-bold tracking-wide',
+        destructive: 'gilded-control font-display font-bold tracking-wide',
         outline:
-          'border-input bg-field shadow-xs hover:bg-field-hover hover:text-accent-foreground',
+          'border-gild/45 bg-plate text-plate-ink shadow-xs hover:border-gild/80 hover:bg-plate-hover',
+        field: 'well font-normal text-foreground',
         secondary:
           'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
@@ -37,14 +36,14 @@ const buttonVariants = cva(
         sm: [
           controlHeight.sm,
           controlIcon.sm,
-          'gap-1.5 px-3 has-[>svg]:px-2.5',
+          'gap-1.5 px-3.5 has-[>svg]:px-3',
         ],
         default: [
           controlHeight.default,
           controlIcon.default,
-          'px-4 has-[>svg]:px-3',
+          'px-5 has-[>svg]:px-4',
         ],
-        lg: [controlHeight.lg, controlIcon.lg, 'px-5 has-[>svg]:px-4'],
+        lg: [controlHeight.lg, controlIcon.lg, 'px-6 has-[>svg]:px-5'],
         'icon-sm': [controlSquare.sm, controlIcon.sm],
         icon: [controlSquare.default, controlIcon.default],
         'icon-lg': [controlSquare.lg, controlIcon.lg],
@@ -69,6 +68,24 @@ const buttonVariants = cva(
 )
 
 type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>['size']>
+
+const CARD_SIZES = new Set<ButtonSize>(['tile', 'figure', 'card'])
+
+const OWN_SURFACE = /(^|\s|:)bg-/
+
+function craftedPlate(
+  variant: ButtonProps['variant'],
+  size: ButtonSize,
+  className: string | undefined,
+  role: string | undefined
+) {
+  return (
+    variant === 'outline' &&
+    !CARD_SIZES.has(size) &&
+    role !== 'combobox' &&
+    !OWN_SURFACE.test(className ?? '')
+  )
+}
 
 const CONTROL_SIZE_OF: Record<ButtonSize, ControlSize> = {
   sm: 'sm',
@@ -111,12 +128,22 @@ function Button({
 }: ButtonProps) {
   const Comp = asChild ? Slot : 'button'
   const explained = Boolean(disabled && disabledReason)
+  const shape = size ?? 'default'
+  const crafted = craftedPlate(variant, shape, className, props.role)
   const button = (
     <Comp
       data-slot='button'
       data-control-size={CONTROL_SIZE_OF[size ?? 'default']}
       data-variant={variant ?? 'default'}
-      className={cn(buttonVariants({ variant, size, className }))}
+      data-shape={CARD_SIZES.has(shape) ? 'card' : 'plate'}
+      className={cn(
+        buttonVariants({ variant, size }),
+        crafted && 'gilded-control font-display font-semibold tracking-wide',
+        variant === 'outline' &&
+          CARD_SIZES.has(shape) &&
+          'surface-sheen border-gild/60 bg-card hover:bg-accent',
+        className
+      )}
       disabled={explained ? undefined : disabled}
       aria-disabled={explained ? true : undefined}
       aria-description={explained ? disabledReason : undefined}

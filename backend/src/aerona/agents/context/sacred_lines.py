@@ -2,7 +2,7 @@ from sqlalchemy import func, select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import several
+from aerona.core.grammar import an, several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sacred import (
@@ -35,7 +35,8 @@ async def mystic_lines(scope: Scope, me: EntityRow) -> list[str]:
     if row is None:
         return []
     return [
-        f"visions seize you ({words(row.state.value)} mystic): {several(row.visions, 'vision', 'visions')}, {several(row.followers, 'follower', 'followers')}; "
+        f"visions come to you ({words(row.state.value)} mystic): {several(row.visions, 'vision', 'visions')}, "
+        f"{several(row.followers, 'follower', 'followers')}; "
         f"reverence {row.reverence}, persecution {row.persecution}"
     ]
 
@@ -54,7 +55,7 @@ async def town_lines(scope: Scope, town: EntityRow) -> list[str]:
         select(GeniusLocusRow).where(GeniusLocusRow.community_entity_id == town.id).order_by(GeniusLocusRow.spirit_entity_id).limit(LIST_LINES)
     ):
         office = await session.get(SpiritOfficeRow, row.spirit_entity_id)
-        rank = f", an office of {office.rank.value} rank" if office is not None and not office.dismissed else ""
+        rank = f", an office of {words(office.rank.value)} rank" if office is not None and not office.dismissed else ""
         grievance = f", offended by {words(row.offended.value)}" if row.offended is not None else ""
         found.append(
             f"{await named(scope, row.spirit_entity_id)} (spirit {row.spirit_entity_id}) keeps your town{rank}: "
@@ -93,7 +94,7 @@ async def court_lines(scope: Scope, me: EntityRow) -> list[str]:
         system = await scope.session.get(DivinationSystemRow, reading.system_id)
         way = f" by {words(system.kind.value)}, trusted {system.trust}" if system is not None else ""
         heeded = "you heeded it" if reading.heeded else "you paid it little mind"
-        found.append(f"your diviners last read an {reading.verdict.value} omen on the {reading.question.value}{way}; {heeded}")
+        found.append(f"your diviners last read {an(words(reading.verdict.value))} omen on the {words(reading.question.value)}{way}; {heeded}")
     return found
 
 
@@ -105,7 +106,8 @@ async def foresight_lines(scope: Scope, me: EntityRow) -> list[str]:
         .limit(LIST_LINES)
     )
     return [
-        f"you foresee that {await named(scope, row.subject_node_id)} {row.predicate.value} by epoch {row.due_epoch} (certainty {row.certainty})" for row in rows
+        f"you foresee that {await named(scope, row.subject_node_id)} {words(row.predicate.value)} by epoch {row.due_epoch} (certainty {row.certainty})"
+        for row in rows
     ]
 
 
@@ -128,7 +130,9 @@ async def son_sacred_lines(scope: Scope, son: SonRow) -> list[str]:
     if feedings:
         drawn = sum(row.harvested for row in feedings)
         found.append(
-            "you feed on: " + ", ".join(f"{row.emotion.value} {row.weight}" for row in feedings) + f"; your faithful's feelings last gave you {drawn} essence"
+            "you feed on: "
+            + ", ".join(f"{words(row.emotion.value)} {row.weight}" for row in feedings)
+            + f"; your faithful's feelings last gave you {drawn} essence"
         )
     offices = list(await session.scalars(select(SpiritOfficeRow).where(SpiritOfficeRow.overseer_node_id == son.id, SpiritOfficeRow.dismissed.is_(False))))
     if offices:
@@ -136,7 +140,7 @@ async def son_sacred_lines(scope: Scope, son: SonRow) -> list[str]:
         found.append(f"spirit offices under your oversight: {len(offices)}, {len(corrupt)} gone rogue")
         for office in sorted(offices, key=lambda row: (-row.corruption, row.spirit_entity_id))[:LIST_LINES]:
             found.append(
-                f"{await named(scope, office.spirit_entity_id)} (spirit {office.spirit_entity_id}) holds an office of {office.rank.value} rank: "
+                f"{await named(scope, office.spirit_entity_id)} (spirit {office.spirit_entity_id}) holds an office of {words(office.rank.value)} rank: "
                 f"merit {office.merit}, corruption {office.corruption}"
             )
         waiting = await session.scalars(

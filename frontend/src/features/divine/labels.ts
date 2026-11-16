@@ -1,4 +1,7 @@
 import {
+  Split,
+  Link,
+  BatteryLow,
   Ban,
   BookMarked,
   Brain,
@@ -109,6 +112,19 @@ export const WOUND_KINDS: Record<Schema['DivineWoundKind'], Named> = {
     icon: CircleDashed,
     tone: 'danger',
   },
+  drained_essence: {
+    label: 'Drained essence',
+    icon: BatteryLow,
+    tone: 'danger',
+  },
+  lost_worshippers: {
+    label: 'Lost worshippers',
+    icon: Link2Off,
+    tone: 'danger',
+  },
+  bound: { label: 'Bound', icon: Link, tone: 'danger' },
+  split_aspect: { label: 'Split aspect', icon: Split, tone: 'danger' },
+  forgotten_name: { label: 'Forgotten name', icon: EyeOff, tone: 'danger' },
 }
 
 export const WOUND_CAUSES: Record<Schema['WoundCause'], string> = {
@@ -150,6 +166,83 @@ export const MOTIONS: Record<Schema['CouncilMotion'], Named> = {
     icon: Landmark,
     tone: 'gold',
   },
+  reassign_world: {
+    label: 'Give a world to another son',
+    icon: Orbit,
+    tone: 'info',
+  },
+  outlaw_power: {
+    label: "Outlaw a god's powers",
+    icon: Link2Off,
+    tone: 'warning',
+  },
+  outlaw_source: {
+    label: 'Close a source of power',
+    icon: ShieldAlert,
+    tone: 'warning',
+  },
+  admit_member: {
+    label: 'Admit a god to the council',
+    icon: Users,
+    tone: 'success',
+  },
+  expel_member: {
+    label: 'Put a god out of the council',
+    icon: Undo2,
+    tone: 'danger',
+  },
+  recognise_god: { label: 'Recognise a new god', icon: Star, tone: 'gold' },
+  essence_tithe: {
+    label: 'Levy a tithe of essence for a common work',
+    icon: Zap,
+    tone: 'warning',
+  },
+  set_council_rules: {
+    label: 'Change how the council decides',
+    icon: ScrollText,
+    tone: 'info',
+  },
+  regulate_made_minds: {
+    label: 'Regulate made minds',
+    icon: Brain,
+    tone: 'info',
+  },
+  regulate_powers: { label: 'Regulate powers', icon: Target, tone: 'info' },
+  regulate_living_craft: {
+    label: 'Regulate living craft',
+    icon: Layers,
+    tone: 'info',
+  },
+}
+
+export const VOTING_RULES: Record<Schema['VotingRule'], Named> = {
+  unanimity: { label: 'Every voice agrees', icon: Handshake, tone: 'gold' },
+  majority: { label: 'Most voices carry it', icon: Users, tone: 'info' },
+  weighted_by_standing: {
+    label: 'Voices weighed by standing',
+    icon: Trophy,
+    tone: 'gold',
+  },
+  weighted_by_rank: {
+    label: 'Voices weighed by rank',
+    icon: Crown,
+    tone: 'verdigris',
+  },
+}
+
+export const COUNCIL_SEATS: Record<Schema['CouncilSeat'], Named> = {
+  by_right: { label: 'Sits by right', icon: Crown, tone: 'gold' },
+  invited: { label: 'Invited', icon: Handshake, tone: 'info' },
+  by_pact: { label: 'Sits by a pact', icon: Link, tone: 'verdigris' },
+  recognised: { label: 'Recognised by the gods', icon: Star, tone: 'success' },
+}
+
+export const ESCALATION_STEPS: Record<Schema['EscalationStep'], Named> = {
+  censure: { label: 'Censure', icon: Gavel, tone: 'warning' },
+  sanction: { label: 'Sanction', icon: BatteryLow, tone: 'warning' },
+  exclusion: { label: 'Exclusion from the council', icon: Ban, tone: 'danger' },
+  duel: { label: 'A duel', icon: Swords, tone: 'danger' },
+  divine_war: { label: 'A war of gods', icon: Flame, tone: 'danger' },
 }
 
 export const PUNISHMENTS: Record<Schema['SonPunishment'], string> = {

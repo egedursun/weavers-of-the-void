@@ -299,10 +299,10 @@ export function RecordRow({
   children?: ReactNode
 }) {
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
-      <div className='flex min-w-0 items-center gap-2'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
+      <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Medallion icon={icon} tone={tone} size='sm' />
-        <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+        <div className='flex min-w-0 flex-1 basis-40 flex-col gap-0.5'>
           <Text as='span' weight='semibold' truncate>
             {title}
           </Text>
@@ -438,7 +438,7 @@ export function ForgeCard({
   return (
     <div
       data-surface='ForgeCard'
-      className='@container/forge flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-3 shadow-xs'
+      className='@container/forge flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion icon={icon} tone={tone} size='sm' />

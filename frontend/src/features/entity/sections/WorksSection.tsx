@@ -227,7 +227,7 @@ function MethodRow({
       }
       editLabel='the ways this work can be done'
       editor={
-        <div className='flex min-w-0 flex-col divide-y rounded-md border bg-background'>
+        <div className='flex min-w-0 flex-col divide-y rounded-md border surface-sheen border-gild/60 bg-card'>
           {row.options.map((option) => (
             <OptionRow
               key={option.method}

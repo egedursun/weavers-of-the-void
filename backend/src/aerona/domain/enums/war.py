@@ -112,14 +112,6 @@ class DebtStatus(StrEnum):
     FORGIVEN = "forgiven"
 
 
-class HeroQuestKind(StrEnum):
-    HUNT = "hunt"
-    THREAD = "thread"
-    RELIC = "relic"
-    KNOWLEDGE = "knowledge"
-    VENGEANCE = "vengeance"
-
-
 class HeroQuestStatus(StrEnum):
     ACTIVE = "active"
     SUCCEEDED = "succeeded"

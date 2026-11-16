@@ -100,7 +100,7 @@ function CommandSectionBlock({
       open={open}
       onOpenChange={onOpenChange}
       data-command-section={id}
-      className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <CollapsibleTrigger asChild>
         <Button variant='ghost' className='w-full justify-between'>

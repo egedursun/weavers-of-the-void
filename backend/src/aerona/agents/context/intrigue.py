@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.communication import CONTENT_LABELS, STATE_LABELS, SUBJECT_LABELS
 from aerona.catalog.intrigue import FAVOUR_LABELS, IDENTITY_LABELS, PHASE_LABELS, SCHEMES, SECRETS, belief_label
 from aerona.catalog.titles import RANK_WORDS
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyShareRow, EstateProfileRow
@@ -85,7 +85,7 @@ async def intrigue_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> 
         if me.id in row.known_by and row.bearer_node_id != me.id
     ][:cap]
     beliefs = [
-        f"{belief_label(row.attribute).lower()} of {await name_of(session, row.subject_node_id)} is about {row.value} ({row.confidence}% sure)"
+        f"{belief_label(row.attribute).lower()} of {await name_of(session, row.subject_node_id)} is about {spoken(row)} ({row.confidence}% sure)"
         for row in await session.scalars(select(BeliefRow).where(BeliefRow.holder_node_id == me.id).order_by(BeliefRow.confidence.desc()).limit(cap))
     ]
     return IntrigueBits(secrets, leverage[: cap * 2], mask, scheme, names, beliefs)

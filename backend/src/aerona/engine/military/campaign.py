@@ -18,6 +18,7 @@ from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind, WeatherKind
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.military import ArmyRole, CommanderTrait, MutinyOutcome, Stance, UnitFamily
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind, OfficeKind
@@ -27,6 +28,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.body.variants import fear_of, fear_of_id
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar
+from aerona.engine.folkways.biases import lean
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.clash import traits_of
 from aerona.engine.military.support import reluctance, support_of
@@ -241,11 +243,11 @@ async def mutiny(ctx: TickContext, army: EntityRow, row: ArmyRow, profile: ArmyP
 
 
 MUTINY_TEXT = {
-    MutinyOutcome.GRUMBLING: "The soldiers of {army} grumbled at their fires; the hunger and the empty purses of {owner} weighed on them.",
-    MutinyOutcome.REFUSAL: "{army} refused to march another step for {owner} and dug in where it stood.",
+    MutinyOutcome.GRUMBLING: "The soldiers of {army} grew restless; {owner} left them hungry and unpaid.",
+    MutinyOutcome.REFUSAL: "{army} refused to march further for {owner} and halted where it stood.",
     MutinyOutcome.DEPOSED: "The soldiers of {army} rose against their commander and cast them out.",
     MutinyOutcome.BANDITRY: "{army} turned to banditry and plundered the lands of {owner} it was raised to guard.",
-    MutinyOutcome.TURNCOAT: "{army} sold its swords to the enemy and turned on {owner}.",
+    MutinyOutcome.TURNCOAT: "{army} went over to the enemy and turned on {owner}.",
 }
 
 
@@ -350,7 +352,7 @@ async def choose_stance(
     ctx: TickContext, owner: EntityRow, army_row: ArmyRow, profile: ArmyProfileRow, *, attacking: bool, at_goal: bool, outnumbered: bool
 ) -> Stance:
     table = ctx.rules.campaign_depth
-    bold = await aggression(ctx, owner, army_row)
+    bold = round(await aggression(ctx, owner, army_row) / max(0.1, await lean(ctx, army_row.commander_entity_id, BiasedDecision.RETREAT)))
     if profile.supply_days <= 0 or (outnumbered and bold < table.cautious_strategy):
         return Stance.RETREAT
     if attacking:

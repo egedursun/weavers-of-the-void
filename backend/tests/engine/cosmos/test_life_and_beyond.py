@@ -9,15 +9,16 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LegendaryQuestRow, ThreadRow
 from aerona.db.tables.society import ArchiveHoldingRow, SoulRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import LegendaryQuestKind, LegendaryQuestOutcome
+from aerona.domain.enums.chronicle import LegendaryQuestOutcome
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.world import StarType, WorldType
 from aerona.domain.models.entity_stats import KnowledgeStats, MortalStats, PeopleStats, SpeciesStats, SpiritStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import merge_species, stowaway
-from aerona.engine.cosmos.quests import legendary_quests, open_quest, settle_quest
+from aerona.engine.cosmos.quests import LegendaryDraft, legendary_quests, open_quest, settle_quest
 from aerona.engine.phases.afterlife import archive_burned, cosmic_court, mirror_worlds, pursuit_of_immortality, soul_bind, soul_descent
 from aerona.engine.phases.creatures import _mutation_chance, danger_reversion, predation_pressure, predator_bonds, species_mutations, starving_predators
 from aerona.rules.registry import Rules
@@ -110,7 +111,7 @@ async def test_mirror_world_births_inverses(ctx: TickContext, cosmos: Cosmos) ->
 
 async def test_legendary_quest_lifecycle(ctx: TickContext, cosmos: Cosmos) -> None:
     cosmos.star.star_type = StarType.DEAD_STAR
-    quest = await open_quest(ctx, LegendaryQuestKind.DEAD_STAR, "Aeron", ActorKind.CREATOR)
+    quest = await open_quest(ctx, LegendaryDraft(QuestAim.RESTORE, QuestTargetKind.STAR), "Aeron", ActorKind.CREATOR)
     assert quest.target_star_id == cosmos.star.id
     cosmos.star.star_type = StarType.REBORN_STAR
     essence = cosmos.creator.essence
@@ -118,7 +119,7 @@ async def test_legendary_quest_lifecycle(ctx: TickContext, cosmos: Cosmos) -> No
     assert quest.outcome is LegendaryQuestOutcome.COMPLETED
     assert cosmos.creator.essence == essence + ctx.rules.beyond.expedition_reward_essence
     cosmos.star.star_type = StarType.BLACK_SUN
-    failing = await open_quest(ctx, LegendaryQuestKind.DEAD_STAR, "Fate", ActorKind.FATE)
+    failing = await open_quest(ctx, LegendaryDraft(QuestAim.RESTORE, QuestTargetKind.STAR), "Fate", ActorKind.FATE)
     late = tick(ctx.session, ctx.rules, epoch=failing.deadline_epoch)
     thread = await ctx.session.get(ThreadRow, failing.thread_id)
     assert thread is not None

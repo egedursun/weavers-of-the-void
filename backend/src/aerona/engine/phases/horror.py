@@ -1,41 +1,39 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import agree, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
-from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.foreign_gods import OuterBargainRow
-from aerona.db.tables.lore import LexemeRow
+from aerona.db.tables.horror import HorrorEventRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.travel import RouteClosure, TravelMethod
-from aerona.domain.enums.world import DARK_STAR_TYPES, Discovery, HorrorEventKind
-from aerona.domain.models.entity_stats import CultStats, KnowledgeStats, OuterBeingStats
+from aerona.domain.enums.travel import RouteClosure
+from aerona.domain.enums.world import Discovery
+from aerona.domain.models.entity_stats import CultStats, OuterBeingStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.horror_model import HorrorSpec, drawn_spec, horror_event, keep_horrors, raise_horror, unleash
 from aerona.engine.cosmos.leak import apply_leak, leak_cap, leak_delta, record_breakdown
 from aerona.engine.cosmos.phenomena import phenomenon_sanity
 from aerona.engine.cosmos.placement import world_pull
-from aerona.engine.cosmos.routes import open_alignment
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.world_views import view_of
@@ -46,25 +44,22 @@ from aerona.engine.environment.book import scar_region
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
-from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.doom import doom_share
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
-from aerona.engine.primitives.queries import BondIndex, canon, connect, flags_by_entity, subtree
+from aerona.engine.primitives.queries import BondIndex, canon, connect, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import POPULATION_KEY, scale_stat, stat, stat_or
+from aerona.engine.storyteller.pace import paced_key
 from aerona.rules.registry import Rules
 
 SANITY_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL, EntityType.CULT, EntityType.FACTION})
 LAND_COMMUNITIES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 OUTER_PREY_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.SPECIES})
-EYE_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL})
-VOID_GUARDS = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL})
 MADNESS_DOMAINS = frozenset({Domain.MADNESS, Domain.DREAM, Domain.SLEEP, Domain.SHADOW, Domain.LIES})
 INTEREST_KEY = "interest"
-WHISPERS_SUBTYPE = "whispers from beyond"
 
 
 class SanityBand(StrEnum):
@@ -259,9 +254,7 @@ async def _madness(ctx: TickContext, entity: EntityRow, outer_cults: set[int]) -
         return
     if stat(entity, POPULATION_KEY) is not None:
         scale_stat(ctx.rules, entity, POPULATION_KEY, (PERCENT - horror.madness_population_loss_pct) / PERCENT)
-        await note(
-            ctx, f"Madness epidemic in {entity.name}: people burned their homes and walked into the desert.", key="horror.madness_epidemic", ids=[entity.id]
-        )
+        await note(ctx, f"Madness epidemic in {entity.name}: people abandoned their homes.", key="horror.madness_epidemic", ids=[entity.id])
 
 
 async def update_sanity(ctx: TickContext, knowledge: KnowledgeMap) -> None:
@@ -274,7 +267,7 @@ async def update_sanity(ctx: TickContext, knowledge: KnowledgeMap) -> None:
         if entity.sanity != after:
             entity.sanity = after
         if before >= horror.clouding_threshold > after:
-            await note(ctx, f"{entity.name}'s mind is clouding: at night they speak in a language no one understands.", key="horror.clouding", ids=[entity.id])
+            await note(ctx, f"{entity.name}'s mind is failing; their speech no longer makes sense to others.", key="horror.clouding", ids=[entity.id])
         if after < horror.madness_threshold:
             await _madness(ctx, entity, outer_cults)
     await ctx.session.flush()
@@ -338,11 +331,14 @@ async def update_son_sanity(ctx: TickContext, knowledge: KnowledgeMap) -> int:
         changed += 1
         if before >= horror.son_madness_threshold > after:
             await ctx.chronicle(
-                ChronicleKind.HORROR, f"{son.name}'s mind broke: the things outside speak through them now.", template_key="horror.son_mad", son_id=son.id
+                ChronicleKind.HORROR,
+                f"{son.name}'s mind broke; what is outside the cosmos acts through them now.",
+                template_key="horror.son_mad",
+                son_id=son.id,
             )
         elif before >= horror.son_clouding_threshold > after:
             await ctx.chronicle(
-                ChronicleKind.HORROR, f"{son.name}'s mind is clouding; their words have begun to wander.", template_key="horror.son_clouded", son_id=son.id
+                ChronicleKind.HORROR, f"{son.name}'s mind is failing; their words have begun to wander.", template_key="horror.son_clouded", son_id=son.id
             )
     return changed
 
@@ -423,157 +419,20 @@ async def outer_influence(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-async def stars_align(ctx: TickContext, world: WorldRow) -> str:
-    horror = ctx.rules.cosmic_horror
-    await open_alignment(ctx, [TravelMethod.ANCIENT_GATE, TravelMethod.SLINGSHOT_ORBIT], danger_add=horror.alignment_route_danger)
-    for item in await WorldRepository(ctx.session).all_worlds():
-        item.leakage = min(PERCENT_MAX, item.leakage + horror.alignment_leak)
-    return "An alignment opened every ancient gate and slingshot route at once, and leakage rose in every world."
-
-
-async def eye_in_the_sky(ctx: TickContext, world: WorldRow) -> str:
-    loss = ctx.rules.cosmic_horror.sky_eye_sanity_loss
-    for entity in await canon(ctx.session, None, world.id):
-        if entity.sanity is not None or entity.entity_type in EYE_TYPES:
-            shift_sanity(ctx.rules, entity, -loss)
-    return f"An eye stayed open in {world.name}'s sky for a whole epoch. Nobody looked at it; but everyone knew they were being watched."
-
-
-async def wave_of_silence(ctx: TickContext, world: WorldRow) -> str:
-    rng = ctx.rng("silence")
-    forgotten = 0
-    for language in await canon(ctx.session, [EntityType.LANGUAGE], world.id):
-        words = list(await ctx.session.scalars(select(LexemeRow.id).where(LexemeRow.language_entity_id == language.id).order_by(LexemeRow.id)))
-        lost = rng.sample(words, len(words) * ctx.rules.cosmic_horror.silence_word_loss_pct // PERCENT)
-        if lost:
-            await ctx.session.execute(delete(LexemeRow).where(LexemeRow.id.in_(lost)))
-            forgotten += len(lost)
-    words_counted = several(forgotten, "word", "words")
-    return (
-        f"A wave of silence passed through {world.name}: {words_counted} {agree(forgotten, 'was', 'were')} forgotten; "
-        "people looked at things and could not remember their names."
-    )
-
-
-async def reverse_rain(ctx: TickContext, world: WorldRow) -> str:
-    souls = (await canon(ctx.session, [EntityType.SPIRIT], world.id))[: ctx.rules.cosmic_horror.reverse_rain_souls]
-    for soul in souls:
-        await retire(ctx.session, soul, ctx.epoch, f"Epoch {ctx.epoch}: rose to the sky with the reverse rain.")
-    names = ", ".join(soul.name for soul in souls)
-    gone = f"; {names} are no longer here" if names else ""
-    return f"Reverse rain fell on {world.name}: the dead rose to the sky{gone}."
-
-
-async def _void_candidate(ctx: TickContext, world: WorldRow) -> EntityRow | None:
-    regions = await canon(ctx.session, [EntityType.REGION], world.id)
-    places = await canon(ctx.session, [EntityType.PLACE], world.id)
-    hot = set(await hot_regions(ctx, world.id))
-    pool = sorted(places, key=lambda item: item.location_id not in hot) + (
-        sorted(regions, key=lambda item: item.id not in hot) if len(regions) >= ctx.rules.cosmic_horror.void_min_regions else []
-    )
-    for candidate in pool:
-        if not any(item.entity_type in VOID_GUARDS for item in await _subtree(ctx, candidate.id)):
-            return candidate
-    return None
-
-
-async def _subtree(ctx: TickContext, root_id: int) -> list[EntityRow]:
-    return await subtree(ctx.session, root_id)
-
-
-async def visit_of_the_void(ctx: TickContext, world: WorldRow) -> str | None:
-    target = await _void_candidate(ctx, world)
-    if target is None:
-        return None
-    for item in [target, *await _subtree(ctx, target.id)]:
-        await retire(ctx.session, item, ctx.epoch, f"Epoch {ctx.epoch}: erased by the Void.", status=EntityStatus.DESTROYED)
-    await EntityRepository(ctx.session).add_flag(target.id, EntityFlag.VOID, ctx.epoch)
-    return f"The Void visited {world.name}: {target.name} was erased from the map. In its place is a nothingness that tires the eye to look at."
-
-
-async def the_dimming(ctx: TickContext, world: WorldRow) -> str | None:
-    star = await ctx.session.get(StarRow, world.star_id) if world.star_id is not None else None
-    if star is None or star.star_type in DARK_STAR_TYPES or star.brightness <= 0:
-        return None
-    before = star.brightness
-    star.brightness = max(0, star.brightness - ctx.rules.cosmic_horror.dimming_brightness_loss)
-    await ctx.session.flush()
-    return (
-        f"Something drank from {star.name}: its light fell from {before} to {star.brightness}. "
-        f"{world.name} grew colder, and nobody could say what had stood between it and its sun."
-    )
-
-
-async def _whispered_knowledge(ctx: TickContext, world: WorldRow) -> EntityRow:
-    horror = ctx.rules.cosmic_horror
-    known = [item for item in await canon(ctx.session, [EntityType.KNOWLEDGE], world.id) if item.subtype == WHISPERS_SUBTYPE]
-    if known:
-        return known[0]
-    return await open_record(
-        ctx.session,
-        ctx.epoch,
-        RecordSpec(
-            name=f"Knowledge from Outside ({world.name})",
-            entity_type=EntityType.KNOWLEDGE,
-            body="Knowledge that came from outside the world.",
-            stats=KnowledgeStats(level=horror.whispers_knowledge_level, spread=0),
-            power=horror.whispers_knowledge_power,
-            world_id=world.id,
-            subtype=WHISPERS_SUBTYPE,
-            knowledge_branch=KnowledgeBranch.FORBIDDEN,
-        ),
-    )
-
-
-async def whispers_from_beyond(ctx: TickContext, world: WorldRow) -> str | None:
-    horror = ctx.rules.cosmic_horror
-    knowledge = await _whispered_knowledge(ctx, world)
-    heard = set(
-        await ctx.session.scalars(
-            select(BondRow.source_node_id).where(BondRow.target_node_id == knowledge.id, BondRow.kind == BondKind.KNOWS, BondRow.state == BondState.ACTIVE)
-        )
-    )
-    mortals = [item for item in await canon(ctx.session, [EntityType.MORTAL], world.id) if item.id not in heard]
-    communities = [item for item in await canon(ctx.session, COMMUNITY_TYPES, world.id) if item.id not in heard]
-    if mortals:
-        listener = max(mortals, key=lambda item: (stat_or(item, "intellect", 0), -item.id))
-    elif communities:
-        listener = max(communities, key=lambda item: (item.importance or 0, -item.id))
-    else:
-        return None
-    if not await teach(ctx, listener.id, knowledge, "learned it from outside the world"):
-        return None
-    shift_sanity(ctx.rules, listener, -horror.whispers_sanity_loss)
-    return f"{listener.name} in {world.name} gained knowledge from outside the world and lost sanity."
-
-
-async def horror_event(ctx: TickContext, kind: HorrorEventKind, world: WorldRow) -> str | None:
-    handlers = {
-        HorrorEventKind.STARS_ALIGN: stars_align,
-        HorrorEventKind.EYE_IN_THE_SKY: eye_in_the_sky,
-        HorrorEventKind.WAVE_OF_SILENCE: wave_of_silence,
-        HorrorEventKind.REVERSE_RAIN: reverse_rain,
-        HorrorEventKind.VISIT_OF_THE_VOID: visit_of_the_void,
-        HorrorEventKind.THE_DIMMING: the_dimming,
-        HorrorEventKind.WHISPERS_FROM_BEYOND: whispers_from_beyond,
-    }
-    text = await handlers[kind](ctx, world)
-    if text is not None:
-        await ctx.chronicle(ChronicleKind.HORROR, text, template_key=f"horror.{kind.value}", world_id=world.id, feed_category=FeedCategory.LEAK)
-    return text
-
-
 async def spontaneous_horror(ctx: TickContext) -> str | None:
     worlds = await WorldRepository(ctx.session).all_worlds()
     if not worlds:
         return None
     world = max(worlds, key=lambda item: (item.leakage, -item.id))
+    if held(world.id):
+        return None
     horror = ctx.rules.cosmic_horror
     chance = world.leakage / horror.horror_event_divisor + await doom_share(ctx.session, ctx.rules) / horror.apocalypse_event_divisor
+    chance = await paced_key(ctx, world.id, "outer_horror", chance)
     rng = ctx.rng("horror_event")
     if not rng.probability(chance):
         return None
-    return await horror_event(ctx, rng.pick(list(HorrorEventKind)), world)
+    return await horror_event(ctx, drawn_spec(ctx, world), world)
 
 
 @reads(
@@ -590,23 +449,36 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.holder_levels",
+    "table.horror_events",
+    "table.lexemes",
+    "table.memories",
     "table.nodes",
     "table.outer_bargains",
     "table.rifts",
     "table.routes",
+    "table.stars",
+    "table.storytellers",
     "table.world_domain_hooks",
     "table.world_type_profiles",
 )
 @writes(
     "people.population",
     "settlement.population",
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.horror_events",
     "table.incident_participants",
     "table.incidents",
+    "table.lexemes",
+    "table.memories",
+    "table.mortal_profiles",
+    "table.routes",
     "table.sons",
+    "table.stars",
     "table.world_leak_items",
     "table.worlds",
 )
@@ -620,6 +492,7 @@ async def horror_phase(ctx: TickContext) -> None:
     await update_son_sanity(ctx, knowledge)
     await outer_arrivals(ctx)
     await outer_influence(ctx)
+    ctx.count("horror_lingering", await keep_horrors(ctx))
     await spontaneous_horror(ctx)
     await ctx.session.flush()
 
@@ -633,12 +506,11 @@ async def _world(session: AsyncSession, world_id: int) -> WorldRow:
     return world
 
 
-async def order_horror_event(session: AsyncSession, rules: Rules, world_id: int, kind: HorrorEventKind) -> str:
-    ctx = await manual_context(session, "horror_event", rules, key=f"{world_id}:{kind.value}")
-    text = await horror_event(ctx, kind, await _world(session, world_id))
-    if text is None:
-        raise ValidationFailedError("Nothing in that world can be swallowed by the Void.")
-    return text
+async def order_horror_event(session: AsyncSession, rules: Rules, world_id: int, spec: HorrorSpec) -> tuple[HorrorEventRow, str]:
+    ctx = await manual_context(session, "horror_event", rules, key=f"{world_id}:{spec.target.value}:{spec.effect.value}")
+    world = await _world(session, world_id)
+    row = await raise_horror(ctx, world, spec)
+    return row, await unleash(ctx, world, row)
 
 
 async def order_outer_being(session: AsyncSession, rules: Rules, world_id: int) -> EntityRow:

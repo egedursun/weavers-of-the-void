@@ -71,6 +71,12 @@ class ServitorRules:
     command_loyalty: int = rule(3, 0, 100, D, "Loyalty a servitor loses each time its god gives it a new role or post")
     defeat_loyalty: int = rule(8, 0, 100, D, "Loyalty each servitor of the host loses when its god is overcome in a divine battle")
     judge_veneration: int = rule(5, 0, 100, D, "Veneration a judging servitor's god wins among the dead it judges each epoch")
+    agent_prosperity: int = rule(2, 0, 100, D, "Prosperity an agent servitor brings the town it is posted to each epoch")
+    avenger_scorn: int = rule(25, 0, 100, D, "Love below which a community scorns a god and its avenging servitors bring it fear")
+    avenger_fear: int = rule(4, 0, 100, D, "Fear an avenging servitor brings each scornful community of its god each epoch")
+    worshipper_awe: int = rule(2, 0, 100, D, "Awe a worshipping servitor adds in each faithful community of its god each epoch")
+    warden_order: int = rule(3, 0, 100, D, "Crime and unrest a warden servitor takes from the town it keeps each epoch")
+    scribe_love: int = rule(1, 0, 100, D, "Love a scribe servitor keeps alive among peoples who tell accounts of its god each epoch")
 
 
 @dataclass(frozen=True)

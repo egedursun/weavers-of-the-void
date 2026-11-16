@@ -12,6 +12,7 @@ from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.tables.gatherings import CollectionMemberRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.routes import RouteRow
@@ -350,6 +351,10 @@ async def dig_on(ctx: TickContext, dig: ExcavationRow, tally: DigTally) -> None:
     tally.risks += stage.risk is not ExcavationRisk.NONE
     found = await unearth(ctx, dig, stage, site, leader)
     tally.finds += bool(found)
+    if found and dig.collection_id is not None:
+        member = await ctx.session.get(CollectionMemberRow, (dig.collection_id, leader.id))
+        if member is not None:
+            member.role = CollectionRole.FINDER
     order = list(STAGE_ORDER)
     if dig.status is not ExcavationStatus.COLLAPSED:
         dig.progress = 0

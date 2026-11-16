@@ -166,7 +166,7 @@ REGIME_MECHANICS = (
         subsystem=S.POLITY,
         phases=("regimes",),
         surface=Surface(drawer=DRAWER),
-        backfill="regimes: tribal realms start as followings of big-men on the first epoch after the upgrade",
+        backfill="regimes: tribal realms start as followings of leaders who rule by renown on the first epoch after the upgrade",
         templates=("regime.fragmented", "regime.chiefdom"),
         tables=(RegimeRow.__tablename__,),
         exposure=Exposure.CONTEXT,

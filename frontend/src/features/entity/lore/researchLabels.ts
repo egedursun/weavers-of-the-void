@@ -55,7 +55,7 @@ export const BOOST_TRIGGERS: Record<Schemas['BoostTrigger'], LoreNamed> = {
     hint: 'A large loan was given or taken',
   },
   steppe_horses_at_war: {
-    label: 'Riders of the open plains at war',
+    label: 'Mounted peoples of the open plains at war',
     icon: Wind,
     tone: 'danger',
     hint: 'Mounts on the steppe while at war',

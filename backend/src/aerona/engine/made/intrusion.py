@@ -12,7 +12,8 @@ from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.minds import MindProfileRow, MindStateRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkOutageRow, NetworkProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.made import Attribution, Authenticity, DataContent, IntrusionAim, IntrusionApproach, IntrusionOutcome, IntrusionTarget
+from aerona.domain.enums.eras import TechFamily
+from aerona.domain.enums.made import Attribution, Authenticity, IntrusionAim, IntrusionApproach, IntrusionOutcome, IntrusionTarget
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.networks import OutageCause
 from aerona.engine.context import TickContext
@@ -20,11 +21,14 @@ from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.economy.routes import enemies_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import best_skill
+from aerona.engine.minds.kinds import seizure_holds
 from aerona.engine.minds.values import best_level
 from aerona.engine.networks.book import shake_ledger
+from aerona.engine.networks.kinds import ACCESS_GUARD, CONTENT_WORTH, TAKEN_CONTENT, TARGET_GUARD
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.services.community_relations import change_relation
+from aerona.engine.technology.profiles import family_level
 
 APPROACH_SKILLS = {
     IntrusionApproach.TECHNICAL: (SkillKind.COMPUTING, SkillKind.CRYPTOGRAPHY, SkillKind.ELECTRONICS),
@@ -51,14 +55,14 @@ async def security_of(ctx: TickContext, target: IntrusionTarget, node_id: int | 
         return 0
     if target is IntrusionTarget.NETWORK:
         network = await ctx.session.get(NetworkProfileRow, node_id)
-        return network.security if network is not None else 0
+        return network.security + ACCESS_GUARD[network.access] if network is not None else 0
     if target is IntrusionTarget.DATA_STORE:
         store = await ctx.session.get(DataStoreRow, node_id)
         return store.security if store is not None else 0
     node = await ctx.session.scalar(
         select(NetworkNodeRow.security).where(NetworkNodeRow.member_node_id == node_id).order_by(NetworkNodeRow.security.desc()).limit(1)
     )
-    return int(node or 0)
+    return int(node or 0) + TARGET_GUARD[target]
 
 
 async def edge_of(ctx: TickContext, attempt: Attempt) -> int:
@@ -66,7 +70,7 @@ async def edge_of(ctx: TickContext, attempt: Attempt) -> int:
         return 0
     table = ctx.rules.intrusion
     skill = await best_skill(ctx.session, attempt.actor_id, APPROACH_SKILLS[attempt.approach])
-    level = await best_level(ctx.session, attempt.actor_id)
+    level = await family_level(ctx.session, attempt.actor_id, TechFamily.COMPUTATION)
     spies = await ctx.session.scalar(
         select(SpyNetworkRow.depth).where(SpyNetworkRow.owner_entity_id == attempt.actor_id).order_by(SpyNetworkRow.depth.desc()).limit(1)
     )
@@ -88,6 +92,8 @@ async def deny(ctx: TickContext, network_id: int) -> None:
 async def seize(ctx: TickContext, attempt: Attempt) -> None:
     node_id = attempt.target_node_id
     if node_id is None or attempt.actor_id is None or held(node_id):
+        return
+    if await seizure_holds(ctx, node_id):
         return
     mind = await ctx.session.get(MindProfileRow, node_id)
     if attempt.target in {IntrusionTarget.MADE_MIND, IntrusionTarget.CONSTRUCT} and mind is not None and "made_by_node_id" not in mind.locked:
@@ -127,14 +133,20 @@ async def copy_contents(ctx: TickContext, store_id: int, actor_id: int) -> int:
         ctx.session.add(own)
         await ctx.session.flush()
     taken = 0
-    wanted = (DataContent.SECRET, DataContent.KNOWLEDGE, DataContent.IDENTITY)
+    worth = 0
     for row in list(
-        await ctx.session.scalars(select(DataStoreContentRow).where(DataStoreContentRow.store_id == store_id, DataStoreContentRow.content.in_(wanted)))
+        await ctx.session.scalars(
+            select(DataStoreContentRow).where(DataStoreContentRow.store_id == store_id, DataStoreContentRow.content.in_(list(TAKEN_CONTENT)))
+        )
     ):
+        worth += CONTENT_WORTH[row.content]
         ctx.session.add(
             DataStoreContentRow(store_id=own.id, content=row.content, subject_node_id=row.subject_node_id, reference=row.reference, epoch=ctx.epoch, locked=[])
         )
         taken += 1
+    actor = await ctx.session.get(EntityRow, actor_id)
+    if worth and actor is not None and not held(actor_id):
+        await give_coin(ctx.session, ctx.rules, actor, worth)
     return taken
 
 

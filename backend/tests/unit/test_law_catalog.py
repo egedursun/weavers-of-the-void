@@ -1,5 +1,6 @@
+from aerona.catalog.law_areas import LAW_AREAS
 from aerona.catalog.laws import LAW_EFFECTS, LAW_PARAMS, defaults_for, law_effect
-from aerona.domain.enums.polity import LAW_AREAS, LawKind, OfficeKind, OfficePower
+from aerona.domain.enums.polity import LawKind, OfficeKind, OfficePower
 from aerona.engine.polity.offices import DEFAULT_POWERS, POWER_SKILLS
 
 

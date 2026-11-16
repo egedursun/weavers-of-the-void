@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.quests import OBSTACLE_PENALTY
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
-from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import HeroQuestRow
@@ -17,7 +17,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import HERO_ROLES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mortal import DeathCause
-from aerona.domain.enums.war import HeroQuestKind, HeroQuestStatus
+from aerona.domain.enums.quests import QuestAim
+from aerona.domain.enums.war import HeroQuestStatus
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.body.book import factor
 from aerona.engine.body.hits import Harm
@@ -28,7 +29,7 @@ from aerona.engine.notes import note
 from aerona.engine.operations.expeditions import quest_expedition
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroism import encounter
-from aerona.engine.phases.society_support.knowledge import teach
+from aerona.engine.phases.society_support.quest_claims import CLAIMS, Claim, reward_hero
 from aerona.engine.phases.society_support.quests import QuestOption, QuestWorld, open_threads, quest_options
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import FaithIndex
@@ -105,7 +106,11 @@ async def start_quest(ctx: TickContext, hero: EntityRow, option: QuestOption) ->
     bond = await BondRepository(ctx.session).connect(BondDraft(hero.id, option.target_id, BondKind.PURSUES, ctx.epoch, option.description))
     quest = HeroQuestRow(
         hero_entity_id=hero.id,
-        kind=option.kind,
+        aim=option.aim,
+        target_kind=option.target_kind,
+        obstacle=option.obstacle,
+        reward=option.reward,
+        locked=[],
         target_node_id=option.target_id,
         thread_id=option.thread_id,
         bond_id=bond.id,
@@ -159,22 +164,13 @@ async def _reward(ctx: TickContext, hero: EntityRow, faith: FaithIndex) -> None:
 
 
 async def _claim_prize(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, target: EntityRow, world: HeroWorld) -> str:
-    if quest.kind is HeroQuestKind.RELIC:
-        await BondRepository(ctx.session).connect(BondDraft(hero.id, target.id, BondKind.OWNS, ctx.epoch, "found by quest"))
-        return f"{hero.name} found the lost {target.name} and took it up."
-    if quest.kind is HeroQuestKind.KNOWLEDGE:
-        side_id = world.quests.sides.side_of(hero) or hero.id
-        side = await ctx.session.get(EntityRow, side_id) or hero
-        await teach(ctx, side.id, target, f"{hero.name} recovered it from the ruins")
-        await EntityRepository(ctx.session).remove_flag(target.id, EntityFlag.LOST)
-        return f"{hero.name} found the forgotten {target.name} knowledge among the ruins and brought it back to {side.name}."
-    if quest.kind is HeroQuestKind.VENGEANCE:
-        await death_path(ctx, target, f"killed by {hero.name} avenging the blood feud", hero.id, "blood feud", harm=HarmCause.DUEL)
-        return f"{hero.name} took revenge for the blood feud: {target.name} is dead."
-    return f"{hero.name} found what they sought on the road taken {quest.description}: a hidden truth about {target.name} is now in their hands."
+    side_id = world.quests.sides.side_of(hero) or hero.id
+    side = await ctx.session.get(EntityRow, side_id) or hero
+    await reward_hero(ctx, hero, quest.reward, quest.scale)
+    return await CLAIMS[quest.aim](ctx, Claim(hero, quest, target, side))
 
 
-async def _quest_failed(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow) -> None:
+async def _quest_failed(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, *, beaten: bool = False) -> None:
     settings = ctx.rules.heroes
     rng = ctx.rng(f"quest_failure.{quest.id}")
     if rng.chance(settings.quest_death_chance):
@@ -182,6 +178,9 @@ async def _quest_failed(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow) 
         await fatal_injury(ctx, hero, Harm(settings.quest_epoch_hp_loss, HarmCause.QUEST, f"died on the road {quest.description}"))
         await death_path(ctx, hero, f"died on the road {quest.description}", manner=DeathCause.HARDSHIP)
         text, key = f"{hero.name} gave their life on the road {quest.description}.", "heroes.quest_death"
+    elif beaten:
+        await close_quest(ctx, quest, HeroQuestStatus.FAILED)
+        text, key = f"{hero.name} reached the end of the road {quest.description} and was beaten back.", "heroes.quest_failed"
     elif ctx.epoch - quest.started_epoch >= settings.quest_abandon_epochs:
         await close_quest(ctx, quest, HeroQuestStatus.ABANDONED)
         text, key = f"{hero.name} searched for years but came back empty-handed from the quest {quest.description}.", "heroes.quest_abandoned"
@@ -203,20 +202,22 @@ async def resolve_quest_now(ctx: TickContext, hero: EntityRow, quest: HeroQuestR
         return quest.status
     companions = await companions_of(ctx, hero)
     chance = success_chance(ctx.rules, hero, len(companions), hero.id in world.chosen, await factor(ctx.session, hero.id, Capacity.MOBILITY))
-    if await layout_of(ctx, target) is not None or await rooms_of(ctx, target.id):
+    chance = max(fraction(ctx.rules.heroes.quest_success_min_pct), chance - fraction(OBSTACLE_PENALTY[quest.obstacle]))
+    walked = await layout_of(ctx, target) is not None or bool(await rooms_of(ctx, target.id))
+    if walked:
         walk = await quest_expedition(ctx, hero, target, companions)
         succeeded = forced if forced is not None else walk.reached_heart
     else:
         succeeded = forced if forced is not None else ctx.rng(f"quest.{quest.id}").probability(chance)
     if not succeeded:
-        await _quest_failed(ctx, hero, quest)
+        await _quest_failed(ctx, hero, quest, beaten=walked)
         return quest.status
     await close_quest(ctx, quest, HeroQuestStatus.SUCCEEDED)
     await _reward(ctx, hero, world.faith)
     text = await _claim_prize(ctx, hero, quest, target, world)
     if companions:
         text = f"{text} {', '.join(companion.name for companion in companions)} were at their side."
-    await note(ctx, text, key=f"heroes.quest_{quest.kind.value}", ids=[hero.id, target.id, *[item.id for item in companions]], kind=ChronicleKind.ADVENTURE)
+    await note(ctx, text, key=f"heroes.quest_{quest.aim.value}", ids=[hero.id, target.id, *[item.id for item in companions]], kind=ChronicleKind.ADVENTURE)
     return quest.status
 
 
@@ -385,6 +386,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "species.strength",
     "table.afterlife_strata",
     "table.assistive_aids",
+    "table.augments",
     "table.avatars",
     "table.bodies",
     "table.body_customs",
@@ -603,7 +605,7 @@ async def raise_hero(ctx: TickContext, community_id: int) -> EntityRow:
     return await bear_hero(ctx, community)
 
 
-async def send_on_quest(ctx: TickContext, hero_id: int, kind: HeroQuestKind | None = None, target_id: int | None = None) -> HeroQuestRow:
+async def send_on_quest(ctx: TickContext, hero_id: int, aim: QuestAim | None = None, target_id: int | None = None) -> HeroQuestRow:
     hero = await require_mortal(ctx.session, hero_id)
     if await active_quest(ctx.session, hero.id) is not None:
         raise ValidationFailedError(f"{hero.name} is already on a quest.")
@@ -611,7 +613,7 @@ async def send_on_quest(ctx: TickContext, hero_id: int, kind: HeroQuestKind | No
     options = [
         option
         for option in quest_options(ctx.rules, world.quests, hero)
-        if (kind is None or option.kind is kind) and (target_id is None or option.target_id == target_id)
+        if (aim is None or option.aim is aim) and (target_id is None or option.target_id == target_id)
     ]
     option = choose_quest(ctx, options, f"manual_quest.{hero.id}")
     if option is None:

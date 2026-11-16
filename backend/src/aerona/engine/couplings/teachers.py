@@ -163,7 +163,7 @@ async def give_song(ctx: TickContext, sources: list[int], learner: EntityRow) ->
             .limit(1)
         )
         if song is not None and bond_fits(BondKind.TELLS_OF, learner.entity_type, EntityType.ARTWORK):
-            await connect(ctx.session, learner.id, song, BondKind.TELLS_OF, ctx.epoch, description="sung back to the living")
+            await connect(ctx.session, learner.id, song, BondKind.TELLS_OF, ctx.epoch, description="told back to the living")
             return song
     return None
 

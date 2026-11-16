@@ -193,6 +193,13 @@ class RiftState(StrEnum):
 OPEN_RIFT_STATES = frozenset({RiftState.OPENING, RiftState.OPEN, RiftState.CLOSING})
 
 
+class RiftWork(StrEnum):
+    NONE = "none"
+    SEALING = "sealing"
+    STABILISING = "stabilising"
+    GATE = "gate"
+
+
 class RiftCause(StrEnum):
     RITE_BACKLASH = "rite_backlash"
     LEAK_PEAK = "leak_peak"
@@ -201,6 +208,7 @@ class RiftCause(StrEnum):
     BEING = "being"
     PHENOMENON = "phenomenon"
     CREATOR = "creator"
+    MADE_REALM_GATE = "made_realm_gate"
 
 
 class RouteScope(StrEnum):

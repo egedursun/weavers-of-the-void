@@ -1,9 +1,11 @@
+from collections.abc import Mapping
 from types import MappingProxyType
 
 from aerona.core.total import total
 from aerona.domain.enums.body import BodyFunction
 from aerona.domain.enums.chronicle import PartOfSpeech, WritingSystem
 from aerona.domain.enums.tongues import LanguageModality, MorphologyType, NumberSystem, SoundChangeKind, WordOrder
+from aerona.domain.enums.world import LanguageTexture
 
 W = WritingSystem
 M = LanguageModality
@@ -57,10 +59,51 @@ MODALITY_ORDER = (M.VOCAL, M.SIGN, M.COLOUR, M.SCENT, M.TELEPATHIC)
 
 KIND_WEIGHTS = total(
     SoundChangeKind,
-    {SoundChangeKind.SHIFT: 3, SoundChangeKind.LENITION: 3, SoundChangeKind.VOWEL_SHIFT: 3, SoundChangeKind.MERGER: 1, SoundChangeKind.LOSS: 2},
+    {
+        SoundChangeKind.SHIFT: 3,
+        SoundChangeKind.LENITION: 3,
+        SoundChangeKind.VOWEL_SHIFT: 3,
+        SoundChangeKind.MERGER: 1,
+        SoundChangeKind.LOSS: 2,
+        SoundChangeKind.METATHESIS: 1,
+        SoundChangeKind.EPENTHESIS: 2,
+        SoundChangeKind.ASSIMILATION: 2,
+        SoundChangeKind.PALATALISATION: 2,
+        SoundChangeKind.TONOGENESIS: 1,
+    },
 )
 
+TEXTURE_LEAN: Mapping[LanguageTexture, SoundChangeKind | None] = total(
+    LanguageTexture,
+    {
+        LanguageTexture.FLOWING: SoundChangeKind.LENITION,
+        LanguageTexture.HARD: SoundChangeKind.SHIFT,
+        LanguageTexture.GUTTURAL: SoundChangeKind.MERGER,
+        LanguageTexture.SIBILANT: SoundChangeKind.PALATALISATION,
+        LanguageTexture.LONG: SoundChangeKind.EPENTHESIS,
+        LanguageTexture.FREE: None,
+        LanguageTexture.TONAL: SoundChangeKind.TONOGENESIS,
+        LanguageTexture.CLICKING: SoundChangeKind.ASSIMILATION,
+        LanguageTexture.WHISTLED: SoundChangeKind.LENITION,
+        LanguageTexture.NON_VOCAL: None,
+    },
+)
+TEXTURE_MODALITY: Mapping[LanguageTexture, LanguageModality] = {LanguageTexture.NON_VOCAL: LanguageModality.SIGN}
+TEXTURE_LEAN_WEIGHT = 3
+
 ORDERS = tuple(order for order in WordOrder if order is not WordOrder.FREE)
+HEAD_FIRST: Mapping[WordOrder, bool] = total(
+    WordOrder,
+    {
+        WordOrder.SOV: False,
+        WordOrder.SVO: True,
+        WordOrder.VSO: True,
+        WordOrder.VOS: True,
+        WordOrder.OVS: False,
+        WordOrder.OSV: False,
+        WordOrder.FREE: False,
+    },
+)
 
 LOAN_RULES = total(
     MorphologyType,

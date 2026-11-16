@@ -60,6 +60,7 @@ import {
   CLAIM_BASES,
   CLAUSES,
   OATHS,
+  OATH_PENALTIES,
   OATH_STATUSES,
   OFFICES,
   PARTY_ROLES,
@@ -140,8 +141,8 @@ function MemberCard({ member }: { member: Member }) {
     <li
       className={
         member.alive
-          ? 'flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
-          : 'flex min-w-0 flex-col gap-2 rounded-lg border border-dashed bg-muted/20 p-2'
+          ? 'flex min-w-0 flex-col gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
+          : 'flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'
       }
     >
       <div className='flex min-w-0 items-center gap-2'>
@@ -211,9 +212,9 @@ function FamilyTree({ members }: { members: Member[] }) {
                 <Label variant='overline'>{`Generation ${index + 1}`}</Label>
               </div>
               <ul className='grid min-w-0 grid-cols-1 gap-2 @xs/realm:grid-cols-2 @2xl/realm:grid-cols-3'>
-                {row.map((member) => (
-                  <MemberCard key={member.id} member={member} />
-                ))}
+                <Paged items={row} as='li'>
+                  {(member) => <MemberCard key={member.id} member={member} />}
+                </Paged>
               </ul>
             </div>
           )}
@@ -429,7 +430,7 @@ export function HouseSection({
                     {(claim) => (
                       <li
                         key={claim.id}
-                        className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
+                        className='flex min-w-0 flex-col gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                       >
                         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
                           <EntityLink
@@ -702,7 +703,7 @@ export function TreatySection({
                 {(party) => (
                   <li
                     key={party.id}
-                    className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+                    className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                   >
                     <Portrait name={party.name} size='sm' />
                     <div className='flex min-w-0 flex-1 flex-col gap-1'>
@@ -747,7 +748,7 @@ export function TreatySection({
                   return (
                     <li
                       key={clause.id}
-                      className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+                      className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                     >
                       <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
                       <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
@@ -919,7 +920,7 @@ function OathCard({
 }) {
   const kind = named(OATHS, oath.kind)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={kind.icon} tone={kind.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -953,19 +954,32 @@ function OathCard({
         )}
       </div>
       {oath.note && <Muted>{sentence(oath.note)}</Muted>}
-      {(oath.witness_son_id !== null || oath.status === 'sworn') && (
+      {(oath.witness_son_id !== null ||
+        oath.witness ||
+        oath.penalty ||
+        oath.status === 'sworn') && (
         <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
-          {oath.witness_son_id !== null ? (
-            <Tag
-              spec={{
-                label: 'Witnessed by a god',
-                icon: Sparkles,
-                tone: 'verdigris',
-              }}
-            />
-          ) : (
-            <span />
-          )}
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            {oath.witness_son_id !== null && (
+              <Tag
+                spec={{
+                  label: 'Witnessed by a god',
+                  icon: Sparkles,
+                  tone: 'verdigris',
+                }}
+              />
+            )}
+            {oath.witness && (
+              <Tag
+                spec={{
+                  label: `Witnessed by ${oath.witness}`,
+                  icon: Users,
+                  tone: 'info',
+                }}
+              />
+            )}
+            {oath.penalty && <Tag spec={OATH_PENALTIES[oath.penalty]} />}
+          </div>
           {oath.status === 'sworn' && (
             <div className='flex min-w-0 flex-wrap items-center gap-2'>
               <RowAction
@@ -978,6 +992,9 @@ function OathCard({
                   note: oath.note ?? '',
                   recipient_id: oath.recipient_id,
                   witness_son_id: oath.witness_son_id,
+                  witness_node_id: oath.witness_node_id ?? null,
+                  penalty: oath.penalty ?? null,
+                  clear_penalty: false,
                   clear_deadline: false,
                 }}
                 labels={{
@@ -986,10 +1003,19 @@ function OathCard({
                   note: 'Words of the oath',
                   recipient_id: 'Sworn to',
                   witness_son_id: 'Witnessing god',
+                  witness_node_id: 'Witnessed by',
+                  penalty: 'Penalty if broken',
+                  clear_penalty: 'No penalty',
                 }}
                 pickers={{
                   recipient_id: { source: 'entity' },
                   witness_son_id: { source: 'son', status: 'living' },
+                  witness_node_id: { source: 'entity' },
+                }}
+                choices={{
+                  penalty: Object.entries(OATH_PENALTIES).map(
+                    ([value, spec]) => ({ value, label: spec.label })
+                  ),
                 }}
                 multiline={['note']}
               />

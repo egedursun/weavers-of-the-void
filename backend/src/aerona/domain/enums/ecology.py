@@ -103,6 +103,13 @@ class SpeciesClass(StrEnum):
     PLANT = "plant"
     FUNGUS = "fungus"
     VERMIN = "vermin"
+    MICROBE = "microbe"
+    MINERAL = "mineral"
+    GASEOUS = "gaseous"
+    ENERGY = "energy"
+    MADE = "made"
+    COLONIAL = "colonial"
+    HYBRID = "hybrid"
 
 
 GROWN = frozenset({SpeciesClass.PLANT, SpeciesClass.FUNGUS})
@@ -156,35 +163,57 @@ class HerdTraining(StrEnum):
 
 
 class TissueMaterial(StrEnum):
-    FLESH = "flesh"
+    SOFT_TISSUE = "soft_tissue"
     HIDE = "hide"
-    SCALE = "scale"
-    CHITIN = "chitin"
-    FEATHER = "feather"
-    BONE = "bone"
-    WOOD = "wood"
-    STONE = "stone"
-    CRYSTAL = "crystal"
-    METAL = "metal"
-    ICE = "ice"
-    FIRE = "fire"
-    STEAM = "steam"
-    VOID_STUFF = "void_stuff"
+    PLATES = "plates"
+    SHELL = "shell"
+    PLUMAGE = "plumage"
+    RIGID = "rigid"
+    FIBROUS = "fibrous"
+    FROZEN = "frozen"
+    VAPOUR = "vapour"
+    MINERAL = "mineral"
+    METALLIC = "metallic"
+    CRYSTALLINE = "crystalline"
+    GEL = "gel"
+    ENERGY = "energy"
+    INSUBSTANTIAL = "insubstantial"
 
 
-class BreathKind(StrEnum):
-    FIRE = "fire"
-    FROST = "frost"
-    VENOM_GAS = "venom_gas"
-    WEB = "web"
-    STEAM = "steam"
+class AttackDelivery(StrEnum):
+    BREATH = "breath"
+    SPIT = "spit"
+    SPRAY = "spray"
+    EMANATION = "emanation"
+    GAZE = "gaze"
+    VOICE = "voice"
+    TOUCH = "touch"
+    SPORES = "spores"
+    BITE = "bite"
+    STING = "sting"
 
 
-class GazeKind(StrEnum):
-    TERROR = "terror"
-    PETRIFY = "petrify"
+class AttackEffect(StrEnum):
+    HEAT = "heat"
+    COLD = "cold"
+    CORROSION = "corrosion"
+    SHOCK = "shock"
+    VENOM = "venom"
+    FORCE = "force"
+    ENTANGLE = "entangle"
+    FEAR = "fear"
+    STILLNESS = "stillness"
     SLEEP = "sleep"
-    MADNESS = "madness"
+    CONFUSION = "confusion"
+    CHARM = "charm"
+    DRAIN = "drain"
+
+
+class AttackRange(StrEnum):
+    TOUCH = "touch"
+    NEAR = "near"
+    FAR = "far"
+    SIGHT = "sight"
 
 
 class Temperament(StrEnum):

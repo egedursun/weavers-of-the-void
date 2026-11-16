@@ -78,7 +78,7 @@ function BondChip({
 }) {
   const past = bond.state === 'past'
   return (
-    <li className='flex min-w-0 items-start gap-2 rounded-md border bg-card px-2.5 py-1.5'>
+    <li className='flex min-w-0 items-start gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-1.5'>
       <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
         <Text as='div' tone={past ? 'muted' : 'default'}>
           {past && (
@@ -118,7 +118,7 @@ function DebtCard({ bond, selfName }: { bond: BondView; selfName: string }) {
   const creditor = bond.outgoing ? (bond.other?.name ?? 'someone') : selfName
   const overdue = bond.debt_status === 'overdue'
   return (
-    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border px-3 py-2'>
+    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'>
       <Text as='span' className='min-w-0 flex-1'>
         {`${debtor} owes ${creditor} ${bond.debt_amount !== null ? formatInteger(bond.debt_amount) : ''} ${bond.debt_what ?? ''}`.trim()}
       </Text>

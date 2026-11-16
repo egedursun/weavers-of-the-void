@@ -10,10 +10,12 @@ from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import AccusationRow, MishapRow, WitchHuntRow
 from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.intrigue import BeliefRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.lore import ChronicleEntityRow
 from aerona.db.tables.mind import MemoryRow, TraitRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.sacred import DivinationSystemRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -44,6 +46,9 @@ from aerona.engine.services.war import ongoing_war_count
 
 GRIEVANCES = frozenset({MemoryKind.BETRAYED_ME, MemoryKind.ILL_WILL, MemoryKind.KILLED_KIN})
 PENALTY_OUTCOMES = {PunishmentKind.DEATH.value: AccusationOutcome.KILLED, PunishmentKind.EXILE.value: AccusationOutcome.EXILED}
+
+ECCENTRIC = frozenset({TraitKind.RECLUSIVE, TraitKind.SCATTERBRAINED, TraitKind.LITERAL_MINDED, TraitKind.AWKWARD, TraitKind.BLUNT})
+HOSTILE = "hostile"
 
 
 @dataclass
@@ -88,7 +93,7 @@ async def suspicion(ctx: TickContext, accuser: EntityRow | None, suspect: Entity
         score += table.caster_weight
     if suspect.location_id is not None and await rumoured(ctx, suspect.location_id, suspect.id):
         score += table.rumour_weight
-    return score
+    return score + await deeper_suspicion(ctx, accuser, suspect)
 
 
 async def rumoured(ctx: TickContext, town_id: int, suspect_id: int) -> bool:
@@ -346,3 +351,24 @@ async def keep_witchcraft(ctx: TickContext, tally: WitchTally) -> None:
     await stir_hunts(ctx, tally)
     await run_hunts(ctx, tally)
     await ctx.session.flush()
+
+
+async def deeper_suspicion(ctx: TickContext, accuser: EntityRow | None, suspect: EntityRow) -> float:
+    table = ctx.rules.witchcraft_depth
+    score = 0.0
+    traits = set(await ctx.session.scalars(select(TraitRow.trait).where(TraitRow.node_id == suspect.id)))
+    if traits & ECCENTRIC:
+        score += table.eccentric_weight
+    if accuser is None:
+        return score
+    known = await ctx.session.scalar(
+        select(RelationshipRow.id).where(RelationshipRow.holder_node_id == accuser.id, RelationshipRow.subject_node_id == suspect.id).limit(1)
+    )
+    if known is None:
+        score += table.distance_weight
+    believed = await ctx.session.scalar(
+        select(BeliefRow.value).where(BeliefRow.holder_node_id == accuser.id, BeliefRow.subject_node_id == suspect.id, BeliefRow.attribute == HOSTILE).limit(1)
+    )
+    if believed is not None and believed > PERCENT // 2:
+        score += table.belief_weight
+    return score

@@ -91,7 +91,7 @@ export function EntityRelations({ ctx }: { ctx: EntityContext }) {
               const spec = RELATION_KINDS[bond.kind]
               const other = bond.other
               return (
-                <li className='flex min-w-0 items-center gap-2 rounded-md border bg-card px-2.5 py-1.5'>
+                <li className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-1.5'>
                   <Badge
                     size='sm'
                     variant={bond.state === 'past' ? 'secondary' : spec.tone}

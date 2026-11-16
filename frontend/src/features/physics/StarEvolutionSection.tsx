@@ -3,6 +3,7 @@ import { type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { Facts, NodeLink, RecordEditor } from '@/features/cosmography/parts'
 import { STAR_TYPE_LABEL } from '@/features/cosmos/model/labels'
@@ -36,26 +37,28 @@ function Track({ view }: { view: StarPhysicsView }) {
       className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4'
       aria-label='Stages of its life'
     >
-      {view.stages.map((span) => {
-        const now = span.stage === view.age_stage
-        return (
-          <li
-            key={span.stage}
-            aria-current={now ? 'step' : undefined}
-            className={cn(
-              'flex min-w-0 flex-col gap-0.5 rounded-lg border p-2',
-              now ? 'border-primary bg-primary/10' : 'bg-muted/30'
-            )}
-          >
-            <Text as='span' weight='semibold'>
-              {STAR_STAGES[span.stage]}
-            </Text>
-            <Muted as='span' variant='caption'>
-              {`${plural(span.epochs, 'epoch', 'epochs')}`}
-            </Muted>
-          </li>
-        )
-      })}
+      <Paged items={view.stages} as='li'>
+        {(span) => {
+          const now = span.stage === view.age_stage
+          return (
+            <li
+              key={span.stage}
+              aria-current={now ? 'step' : undefined}
+              className={cn(
+                'flex min-w-0 flex-col gap-0.5 rounded-md border surface-sheen border-gild/60 bg-card p-2',
+                now ? 'border-primary bg-primary/10' : 'bg-muted/30'
+              )}
+            >
+              <Text as='span' weight='semibold'>
+                {STAR_STAGES[span.stage]}
+              </Text>
+              <Muted as='span' variant='caption'>
+                {`${plural(span.epochs, 'epoch', 'epochs')}`}
+              </Muted>
+            </li>
+          )
+        }}
+      </Paged>
     </ol>
   )
 }

@@ -1569,6 +1569,8 @@ Each entity in Parts 3–10 depends on these substrates. They are what turns iso
 - **Engine cost.** A cost budget (`engine_budget.max_sub_steps_per_epoch` [400]) caps the total of campaign seasons and sampled-year evaluations. When the cap is exceeded, fewer sampled years are used and the rest are extrapolated. A counter `ctx.count("sub_steps_extrapolated")` records this.
 - **Chronicle years.** The existing chronicle-year spreading (`time.year_pace_divisor`) is replaced by real years whenever an event comes from a sampled year or campaign season, so lines read "In the third winter of the war…".
 
+**Implemented as.** It runs in the `harvest`, `environment_survey`, `campaigns`, `dating_systems`, `population_growth`, `settlement_life`, `resource_economy`, `epidemics`, `markets` phases of the epoch. Rules namespaces: `dating`, `seasonal`. God levers: `year:force_notable`. Surfaces: `YearStrip`, `NotableYears`, `section-dating`, `chart-market-swing`.
+
 #### F1 reference pass 3: dating systems and calendars per culture
 
 - Each people, polity and cult may use its own **era system** (`dating_systems`: holder, kind, anchor incident, unit): regnal years ("year 34 of King X"), a founding era ("year 412 since the city's foundation"), a religious era ("since the god's descent"), or cycles of a celestial body (comet returns).
@@ -1898,6 +1900,8 @@ Three functions use the value space:
 - `value_reading(culture, act)` → how a culture judges an act (`ActKind`: execution, mutilation, betrayal, mercy to an enemy, human sacrifice, trade with outsiders, building temples, burning books…). This drives legitimacy, reputation and outrage.
 - `value_pressure(entity)` → drift toward neighbours, rulers, gods and experiences. A war makes a culture martial or pacifist depending on the outcome; plague raises piety or death acceptance; trade raises xenophilia and wealth; conquest by a foreign culture pulls toward it, or pushes away if resistance is high.
 
+**Implemented as.** It runs in the `mind_values`, `mind_survey`, `social_learning`, `mortal_minds` phases of the epoch. Rules namespaces: `social_learning`, `acts`. God levers: `mind:values`, `mind:lock`. Surfaces: `ValueRadar`, `section-norms`.
+
 #### F5.1 Traits (`TraitKind`, mortals and gods)
 
 There are about 40 traits, each with typed effects on capacities, decisions and opinion: brave, craven, wrathful, patient, cruel, kind, ambitious, content, greedy, generous, honest, deceitful, zealous, cynical, paranoid, trusting, lustful, chaste, gluttonous, ascetic, scholarly, illiterate-proud, gregarious, reclusive, vengeful, forgiving, stubborn, fickle, just, arbitrary, humble, proud, curious, incurious, melancholic, sanguine, iron-willed, impressionable, cunning-tactician, reckless.
@@ -1939,6 +1943,8 @@ Value drift (F5) is the aggregate of these individual copy events, so a single c
 - Skills decline with age past `aging.skill_decline_start_pct` [70%] of lifespan, and with conditions that remove the needed function.
 - **Roles become derived.** `mortal_role` is recomputed from the top skills and offices (Part 4.1). An injury that ends a warrior's career moves a mortal from warrior to, for example, teacher (tactics), beggar or priest, by skills, personality and community values. This is a behaviour change caused by injury.
 
+**Implemented as.** It runs in the `mind_skills`, `mind_survey`, `campaigns`, `body_healing`, `mortal_life_course`, `wizards` phases of the epoch. Rules namespace: `skills`. God levers: `mind:skill`, `mind:skill_remove`. Surfaces: `SkillsSection`. Agent tools: `produce_item`, `build_structure`, `develop_knowledge`.
+
 #### F6 reference pass: learning, rust and teaching
 
 - **Learning rate** per skill = base × the governing attributes (F13; for example blade uses agility and kinaesthetic sense, oratory uses linguistic ability and social awareness) × the teacher's skill gap × the practice volume.
@@ -1971,6 +1977,8 @@ components: trust, fear, respect, affection, grievance
 - **Memory inheritance.** On death, a mortal's strongest memories pass to their heirs at `memory.inherit_pct` [50%] (grudges are passed down), and to their people if the mortal was a ruler.
 - **Memory distortion.** Memories carried by legends (Part 8) distort over time, so a people may remember a betrayal that never happened as they tell it.
 
+**Implemented as.** It runs in the `mind_memories`, `mind_opinion`, `mind_survey`, `diplomacy`, `campaigns`, `prisoners`, `body_healing`, `mortal_wounds`, `legend_cycles` phases of the epoch. Rules namespaces: `memory`, `opinion`. God levers: `mind:memory`, `mind:memory_edit`, `mind:memory_remove`. Surfaces: `MemoriesSection`, `OpinionBreakdown`.
+
 ### F8. Needs and pressures
 
 **Mortal needs** (0–100 each): sustenance, safety, belonging, status, purpose, faith, plus a pleasure need only for some traits.
@@ -1982,6 +1990,8 @@ Needs and pressures drive three things:
 1. **Engine decisions.** Migration, uprising, war declarations, conversion, emigration through journeys and founding of factions all use pressure, not a single prosperity threshold.
 2. **Mortal agent selection.** A mortal under strong pressure is more likely to be picked as an LLM agent (`agents/mortal.py` scoring gains a `pressure` term).
 3. **LLM prompts.** Agent contexts include the top two pressures. The LLM acts on real state, not flavour.
+
+**Implemented as.** It runs in the `mind_needs`, `famine_aid`, `famine_migration`, `uprisings`, `religion_spread`, `diplomacy`, `factions`, `travel`, `tribute`, `espionage` phases of the epoch. Rules namespaces: `needs`, `needs_depth`, `needs_wider`. God levers: `mind:need`, `mind:pressure`, `mind:lock`. Surfaces: `MindSection`.
 
 ### F9. Modifier bus (the backbone of interconnection)
 
@@ -2019,6 +2029,8 @@ The causality log:
 - supports UI "story threads", an automatic causality graph view per entity;
 - feeds threads: the engine can open a thread from a chain of length ≥ `incidents.thread_chain_min` [4].
 
+**Implemented as.** It runs in the `incident_threads`, `event_collections` phases of the epoch. Rules namespaces: `incidents`, `collections`. God levers: `incident:annotate`, `incident:create`, `incident:edit`, `incident:roles`, `incident:link_cause`, `incident:unlink_cause`, `incident:delete`. Surfaces: `BiographySection`, `CausalChain`, `CausalityGraph`, `IncidentForge`.
+
 #### F10 reference pass: event collections
 
 Incidents group into **event collections** (`incident_collections`: kind, name, start, end, participants, places, parent collection). They are the legends-level view of history.
@@ -2039,6 +2051,8 @@ Rumours drive:
 - war readiness: a community that hears of an approaching army prepares, raising walls and calling allies;
 - the legend pipeline (Part 8): low-fidelity rumours that persist become legends.
 
+**Implemented as.** It runs in the `rumour_cycles` phase of the epoch. Rules namespace: `rumours`. God levers: `rumour:plant`, `rumour:edit`, `rumour:suppress`. Surfaces: `RumoursSection`, `RumourList`, `PlantRumour`.
+
 #### F11 reference pass 3: gossip networks
 
 Within a settlement, rumours move along the **social graph** (F18 relationships, circles and gatherings), not only along trade routes. Each telling passes through a teller with a gossip propensity (the facets friendliness and discretion), loses fidelity and can be **spun**: the teller's opinion of the subject biases the content. So the same scandal reaches the palace in one form and the docks in another, and reputations (F19) differ by social circle.
@@ -2050,6 +2064,8 @@ Named mortals are few (about 1,100 in the reference world). Populations are aggr
 - **Cohorts** (`community_cohorts`): per community, counts by class, age band (child, adult, elder), and condition (maimed, veteran, sick, enslaved, captive). Population changes always go through cohorts, so a famine kills children and elders first and a war kills young adult men first.
 - **Promotion.** When a cohort event is notable (a mass maiming at a battle, a plague's first victim, a famine orphan), the engine may **promote** an individual from the cohort into a named mortal with matching state (injury, condition, memory). The current `notables` birth path is generalised into this.
 - **No ceiling on named mortals (decision K.4).** Named mortals are never removed or merged back into cohorts. For performance only, a mortal of low importance who has been uninvolved for `cohorts.dormant_after_epochs` [6] becomes **dormant**. A dormant mortal still exists, ages, heals, can marry, have children and die, and can be picked by any mechanic. The engine only skips its expensive per-epoch choices (careers, needs and opinion recomputation), and any incident that touches the mortal wakes it at once. A loose safety threshold `cohorts.named_mortal_soft_limit_per_world` [10000] only lowers the promotion rate from cohorts when it is exceeded. It never deletes, merges or blocks births.
+
+**Implemented as.** It runs in the `cohort_upkeep`, `population_growth`, `epidemics`, `labour_allocation`, `generations` phases of the epoch. Rules namespaces: `generations`, `cohorts`, `maimed`. God levers: `cohort:move`, `cohort:set`, `mortal:dormancy`. Surfaces: `PopulationPyramid`, `section-demography`, `DormancyPanel`, `SickCohorts`, `section-generations`.
 
 
 #### F12 reference pass 3: generations
@@ -2099,6 +2115,8 @@ The first pass mixed three layers. They are now separate, and each has its own r
 
 These are used everywhere `value_distance` and `value_reading` are used. Mortals inherit beliefs from upbringing (parents, culture, teachers, cult). Long-term memories (F14) shift them.
 
+**Implemented as.** It runs in the `mind_survey`, `mind_split`, `mind_ideas` phases of the epoch. Tables: `mind_attributes`, `mind_facets`. Rules namespaces: `mind_split`, `belief_depth`. God levers: `mind:attributes`, `mind:facets`, `mind:lock`, `mind:unlock`. Surfaces: `MindSplitSection`, `section-mind-split`, `SplitControls`. Agent tools: `plant_idea`.
+
 #### F13 reference pass 5: internalising ideas
 
 When a mortal encounters an idea (a belief argument, an ideology, a theory, a doctrine tenet, a heretical book), it may enter an **incubation** (`incubating_ideas`: holder, idea, progress, side effects during incubation). Incubation takes seasons, scaled by curiosity and the idea's fit, and brings temporary effects (distraction, focus loss or obsession). At completion the idea is **internalised**: permanent belief shifts and a typed benefit and cost (a mortal who internalised a rationalist theory gains analysis and loses comfort in rites). Mortals can reject an idea mid-incubation. Disco Elysium's thought cabinet thereby becomes a general mechanism for how ideas change people.
@@ -2139,6 +2157,8 @@ When a mortal encounters an idea (a belief argument, an ideology, a theory, a do
 - Lifestyle quality (sleep, hygiene, comfort) is an aggregate from the dwelling (F29), wealth and the settlement's sanitation.
 - Unmet needs give thoughts with negative emotions; met needs give positive ones.
 
+**Implemented as.** It runs in the `mind_thoughts`, `mind_grief`, `mind_needs`, `mind_dreams`, `mortal_minds` phases of the epoch. Tables: `thoughts`, `griefs`, `needs`. Rules namespace: `fertility`. God levers: `thought:send`, `thought:edit`, `thought:remove`, `thought:mood`, `grief:start`, `grief:edit`, `grief:remove`, `mind:need`, `mind:lock`, `mind:unlock`. Surfaces: `FeelingsSection`, `section-feelings`. Agent tools: `send_dream`.
+
 #### F14 reference pass 4: dreams
 
 Every named mortal **dreams** in aggregate per sampled year (`dreams`: dreamer, kind, content refs, intensity, interpreted_as, by).
@@ -2164,6 +2184,8 @@ Every named mortal **dreams** in aggregate per sampled year (`dreams`: dreamer, 
   - trade preferences (merchants carry what the destination likes).
 - **Disgust preferences** create taboos (8.3) when they are culture-wide.
 
+**Implemented as.** It runs in the `mind_preferences`, `mind_thoughts`, `markets`, `artwork_cycles`, `glory_hunts` phases of the epoch. Tables: `preferences`. Rules namespaces: `preferences`, `preference_depth`. God levers: `preference:set`, `preference:remove`, `mind:lock`, `mind:unlock`. Surfaces: `TastesSection`, `section-tastes`.
+
 ### F16. Ethics tables
 
 `culture_ethics` table: culture or cult, act kind, stance.
@@ -2177,6 +2199,8 @@ Every named mortal **dreams** in aggregate per sampled year (`dreams`: dreamer, 
   - stress for the actor when it acts against its own ethics (guilt).
 - Ethics drift slowly with beliefs (F13) and doctrine (4.4), and can split a culture (an ethics schism, then a faction or ethnogenesis).
 - `value_reading(culture, act)` from the first pass is now a lookup in this table, modulated by the circumstance (war, famine, the victim's kinship).
+
+**Implemented as.** It runs in the `mind_ethics` phase of the epoch. Tables: `culture_ethics`. Rules namespace: `ethics`. God levers: `ethics:set`, `mind:lock`, `mind:unlock`. Surfaces: `EthicsSection`, `section-ethics`.
 
 #### F16 reference pass 4: honour and shame dynamics
 
@@ -2220,6 +2244,8 @@ Every named mortal **dreams** in aggregate per sampled year (`dreams`: dreamer, 
 - **Clubs and circles:** mortals with shared preferences and beliefs form **circles** (`social_circles`: a faction of scale band, kind social: drinking hall, poets' circle, hunting lodge, secret society seed). Circles raise friendship among members, are recruitment pools for factions and conspiracies, and spread ideologies.
 - **Jealousy and affairs:** romance outside marriage gives an affair secret (F20). Discovery leads to jealousy (an anger emotion), divorce (by the marriage law), a duel (in honour cultures) or a house feud.
 
+**Implemented as.** It runs in the `relations_social`, `relations_circles`, `mortal_kin`, `mind_opinion`, `factions`, `relations_passions`, `campaigns`, `mortal_minds`, `treaty_cycles`, `polity_cycles`, `relations_pecking`, `relations_contests` phases of the epoch. Tables: `relationships`, `social_circles`. Rules namespaces: `social`, `circles`, `passions`. God levers: `tie:set`, `tie:remove`, `circle:found`, `circle:edit`, `circle:member`, `circle:disband`, `mind:lock`, `mind:unlock`. Surfaces: `BondsSection`, `section-ties`. Agent tools: `stir_hearts`, `socialise`, `persuade`, `challenge_to_contest`.
+
 #### F18 reference pass 3: passions, persuasion and status
 
 - **Passions** (Pendragon-style) are intense directed attachments: love(person), loyalty(lord, house, realm, god), hatred(person, people), devotion(place, cause), with a strength of 0–100. Passions above [80] can be invoked for an **inspiration roll** in battle, duel, oath or crisis: success gives a large bonus, failure gives a break (madness or despair). The death or betrayal of a passion's object causes grief at full force and may begin a vengeance dream. Passions come from relationships, oaths, formative memories and upbringing. Sons already have passions; mortals now do too.
@@ -2260,6 +2286,8 @@ Every named mortal **dreams** in aggregate per sampled year (`dreams`: dreamer, 
   - **Tyranny**: accumulated unjust acts against the realm's own ethics; it lowers vassal opinion and raises faction pressure.
 - These are spendable. Prestige buys vassal acceptance of laws; piety buys clergy support; dread silences dissent for a while.
 
+**Implemented as.** It runs in the `renown_hearsay`, `ruler_currencies`, `relations_contests`, `campaigns`, `mind_aspirations`, `relations_social`, `factions`, `polity_cycles`, `lore_market`, `renown_claims` phases of the epoch. Tables: `reputations`, `ruler_currencies`. Rules namespaces: `local_renown`, `currencies`, `standing`. God levers: `renown:set`, `renown:remove`, `standing:set`, `standing:remove`. Surfaces: `RenownSection`, `section-renown`. Agent tools: `spread_word`, `trade_lore`.
+
 #### F19 reference pass 3: lore as currency
 
 Factions, cults, scholars and beasts **value specific knowledge**: secrets, lost techniques, true names, locations of sites, prophecies. Knowledge can be **traded** for favours, reputation and goods. "Telling a secret" is an interaction with a value set by how much the recipient wants it and how few already know it, and selling it lowers its future value. Caves of Qud's secret-trading becomes a general currency of information.
@@ -2294,6 +2322,8 @@ Reputation gains require that a deed be **credited**. Deeds have witnesses and e
 - **Outcomes** are incidents: deaths, injuries, captures, claims, hooks, scandals.
 - Faction actions (4.3) and spy operations (5.10) become scheme kinds under one system.
 
+**Implemented as.** It runs in the `intrigue_survey`, `intrigue`, `love_and_rivalry`, `couple_births`, `treaty_cycles`, `polity_cycles`, `house_cycles`, `rite_cycles` phases of the epoch. Rules namespace: `intrigue`. God levers: `secret:keep`, `secret:edit`, `secret:hold`, `secret:expose`, `secret:delete`, `hook:grant`, `hook:edit`, `hook:use`, `hook:delete`, `favour:owe`, `favour:edit`, `favour:call`, `favour:delete`, `identity:assume`, `identity:edit`, `identity:unmask`, `identity:delete`, `scheme:begin`, `scheme:edit`, `scheme:hold`, `scheme:delete`. Surfaces: `IntrigueSection`, `section-intrigue`. Agent tools: `plot_scheme`, `press_leverage`, `reveal_true_name`.
+
 #### F20 reference pass 3: true names
 
 Every son, foreign god, outer being and spirit, and some beasts, mortals, places and artifacts, has a **true name** (the existing son `true_name`, now typed: a lexeme in the being's sacred or original language, plus a `known_by` list).
@@ -2324,6 +2354,8 @@ Every son, foreign god, outer being and spirit, and some beasts, mortals, places
 
 - It is fed by experiences, reputations (F19), rumours, propaganda artworks, sermons (cult stance), heralds and criers (a polity office), broadsheets (printing technique), and censorship (a law that lowers the spread of contrary rumours but raises distrust when discovered).
 - **Effects:** approval of a war sets war support (5.8 reference pass); approval of the ruler feeds legitimacy and revolt pressure; approval of a law sets its enforcement.
+
+**Implemented as.** It runs in the `correspondence`, `public_opinion`, `intrigue`, `polity_cycles`, `treaty_cycles`, `war_upkeep` phases of the epoch. Rules namespace: `communication`. God levers: `dispatch:send`, `dispatch:edit`, `dispatch:hold`, `dispatch:delete`, `opinion:set`, `opinion:delete`. Surfaces: `CorrespondenceSection`, `section-correspondence`. Agent tools: `send_dispatch`.
 
 #### F21 reference pass 3: codes and ciphers
 
@@ -2371,6 +2403,8 @@ Every deciding actor (polity, faction, cult, house head, army commander, beast, 
 - **Treatment steps** (healers, F4.4): diagnosis (a skill check: misdiagnosis wastes treatment), clean, suture, set bone, splint, dress, amputate, cauterise. Each needs supplies (cloth, thread, splints, medicine commodity) and a technique level.
 - **Crutches** and **traction** restore part of a locomotion function during recovery.
 
+**Implemented as.** It runs in the `body_survey`, `body_healing`, `war_casualties`, `economy_survey` phases of the epoch. Tables: `bodies`, `injuries`, `world_materials`, `mortal_equipment`. Rules namespaces: `tissues`, `materials`, `armour`. God levers: `body:set`, `body:unlock`, `body:consciousness`, `body:digit`, `body:handedness`, `body:treat`, `body:injury`, `material:edit`, `material:hold`, `mortal:equip`, `mortal:equip_release`. Surfaces: `BodySection`, `MaterialsTab`, `section-gear`.
+
 ### F24. Production methods, quality, energy and pollution
 
 **Production methods** (`production_methods` catalog): every good has 1–6 alternative methods, each with:
@@ -2402,6 +2436,8 @@ Examples:
 
 **Tool wear:** production consumes tools (a commodity) at a rate per method. Tool quality sets productivity. A blockade on iron reaches farming through broken ploughs.
 
+**Implemented as.** It runs in the `industry_methods`, `industry_aftermath`, `refining`, `resource_economy`, `society_economy`, `deposit_finding`, `environment_derive`, `rite_cycles`, `markets` phases of the epoch. Rules namespaces: `methods`, `energy`, `food_chain`, `pollution`, `quality`, `stores`, `substitution`. God levers: `method:set`, `method:remove`, `industry:set`, `industry:remove`, `pollution:set`, `pollution:purify`, `pollution:remove`, `stock:set`. Surfaces: `WorksSection`, `section-works`. Agent tools: `choose_method`, `tend_land`.
+
 ### F25. Activities and gatherings
 
 `gatherings` table: host, kind, place, year and season, invitees, attendees, cost, outcome. Gatherings are event collections (F10 reference pass).
@@ -2412,6 +2448,8 @@ Examples:
   - Outcome rolls follow the kind: a tournament gives renown and injuries; a hunt may promote a beast encounter; a feast spends commodities for prestige and opinion; a summit negotiates treaties among several parties at once (simultaneous bargaining, 5.13 reference pass).
   - Gatherings can be targets: murder at the wedding, a massacre at a feast (with ethics readings: the hospitality-law tradition makes it unthinkable).
 - **Personal milestones** (births, comings of age, anniversaries) are household gatherings that produce thoughts and memories.
+
+**Implemented as.** It runs in the `gatherings` phase of the epoch. Rules namespace: `gatherings`. God levers: `gathering:convene`, `gathering:hold`, `gathering:edit`, `gathering:delete`, `gathering_guest:set`, `gathering_guest:remove`. Surfaces: `GatheringsSection`, `section-gatherings`. Agent tools: `hold_gathering`, `convene_gathering`.
 
 ### F26. Appearance and genetics
 
@@ -2433,6 +2471,8 @@ Examples:
 
 Peoples' biology (4.1) defines the allele pools and how they mix; cross-people children inherit from both pools.
 
+**Implemented as.** It runs in the `genetics_survey`, `bloodlines`, `couple_births`, `house_cycles` phases of the epoch. Rules namespaces: `genetics`, `gift`. God levers: `genome:found`, `genome:gene`, `genome:edit`, `genome:redraw`, `genome:remove`, `allele_pool:found`, `allele_pool:frequency`, `allele_pool:remove`, `resemblance:set`, `resemblance:remove`. Surfaces: `LineageSection`, `section-lineage`. Agent tools: `shape_blood`.
+
 #### F26 reference pass 8: the magical gift
 
 The genome (F26) carries **magical aptitude loci** per form (8.6 reference pass 3), so aptitude is heritable, with recessive and rare alleles.
@@ -2450,6 +2490,8 @@ A world-level **tension meter** tracks recent drama: incidents weighted by magni
 - **Spotlight:** the storyteller assigns attention to under-narrated regions and characters, which raises their agent-selection weight and the chronicler's sampling of them.
 - The existing `world_balance` revival of quiet worlds becomes one storyteller rule.
 
+**Implemented as.** It runs in the `storyteller` phase of the epoch. Rules namespace: `storyteller`. God levers: `storyteller:set`. Surfaces: `StorytellerSection`, `section-storyteller`.
+
 ### F28. Conservation and stock-flow invariants
 
 Every countable quantity is conserved by construction and checked by tests:
@@ -2461,6 +2503,8 @@ Every countable quantity is conserved by construction and checked by tests:
 - **Essence:** the existing essence ledger, extended with the domain-activity income (9.1).
 
 A `ConservationLedger` per tick records the flows. The invariant tests in J.6 assert a zero residual within rounding.
+
+**Implemented as.** Tables: `community_stocks`, `goods_flows`. Rules namespaces: `economy`, `markets`. God levers: `goods:add`, `goods:take`, `goods:move`. Surfaces: community stocks and the goods-flow log in the settlement drawer. Every change to a stock goes through the goods ledger (`goods_of(...).add`, `take`, `move`, `shift_lot`) and every coin amount through `engine/economy/purse.py`; `scripts/check_goods_ledger.py` and `scripts/check_coin_units.py` fail on any other path.
 
 ### F29. Households and dwellings
 
@@ -2477,6 +2521,8 @@ A `ConservationLedger` per tick records the flows. The invariant tests in J.6 as
 
 - Quality affects lifestyle needs (F14: comfort, beauty, status), mood, disease (squalor) and the prestige of houses.
 - Nobles' room demands (4.6 reference pass) are dwelling requirements.
+
+**Implemented as.** It runs in the `household_survey`, `households`, `mind_needs`, `natural_disasters` phases of the epoch. Rules namespaces: `households`, `genetics`. God levers: `household:found`, `household:edit`, `household:debt`, `household:hold`, `household:remove`, `household:member`, `household:release`, `dwelling:set`, `dwelling:remove`, `furnishing:add`, `furnishing:remove`, `household_aggregate:edit`, `household_aggregate:remove`. Surfaces: `HomeSection`, `section-home`. Agent tools: `tend_home`.
 
 ### F30. Effect packages (syndromes)
 
@@ -2498,6 +2544,8 @@ A `ConservationLedger` per tick records the flows. The invariant tests in J.6 as
   - drugs (luxury commodities with dependence);
   - trauma (F14).
 - **Visibility:** each package has a visibility level (obvious, noticeable, hidden). Hidden afflictions are secrets (F20).
+
+**Implemented as.** It runs in the `body_afflictions` phase of the epoch. Tables: `afflictions`. Rules namespace: `effect_packages`. God levers: `affliction:give`, `affliction:edit`, `affliction:hold`, `affliction:cure`, `affliction:delete`. Surfaces: `AfflictionsSection`.
 
 ### F31. Dominion and scales (the spatial presence of gods)
 
@@ -2529,6 +2577,8 @@ Scales are the most direct way a god changes the land in which mortals live, and
 - **Coupling:** dominion feeds region alignment (6.1 reference pass: a death-scaled god darkens a land), belief-shaped worlds (10.2 reference pass 3), afterlife strata (3.3: a realm's strata reflect the dominant god's scales) and son existence (dominion area is an existence anchor term).
 - **Misattribution:** where dominions overlap, F22 belief states decide which god a people credits for a miracle or blames for a disaster. Gods can gain or lose standing for each other's acts, a beyond-the-leader effect.
 
+**Implemented as.** It runs in the `dominion` phase of the epoch. Rules namespace: `dominion`. God levers: `dominion:set`, `dominion:delete`, `god_scale:set`, `god_scale:delete`. Surfaces: `DominionSection`, `section-dominion`, `GodDominionPanel`, `WorldDominionPanel`, `map-layer-dominion`.
+
 ### F32. Collective behaviour: crowds, mobs, panics and movements
 
 **Threshold model** (Granovetter-style): each mortal and cohort segment has a **participation threshold** for collective acts (riot, panic flight, lynching, mass conversion, joining a revolt, a strike, a procession). The threshold depends on facets (anger, anxiety, conformity), needs, pressures and relationships.
@@ -2542,6 +2592,8 @@ Scales are the most direct way a god changes the land in which mortals live, and
 - **Panics** (fire, plague rumour, beast attack, eclipse) cause flight (migration spikes), trampling deaths in crowded districts, and hoarding (F24, 6.4).
 - **Mass phenomena of faith:** revivals, flagellant-like processions and mass conversions are cascades with religious triggers (miracles, sermons, plagues).
 
+**Implemented as.** It runs in the `crowds`, `mobs`, `popular_movements` phases of the epoch. Rules namespace: `collective_behaviour`. God levers: `crowd_mood:set`, `crowd_mood:edit`, `crowd_mood:delete`, `cascade:spark`, `cascade:delete`, `mob:raise`, `mob:edit`, `mob:disperse`, `mob:delete`, `popular_movement:found`, `popular_movement:edit`, `popular_movement:delete`. Surfaces: `CrowdPanel`, `section-crowds`. Agent tools: `rouse_crowd`, `stir_crowd`.
+
 ### F33. Historiography and collective memory
 
 **Accounts** (`accounts`: author (mortal, cult, polity, people), kind (official chronicle, folk memory, foreign account, gospel, epic, inscription), subject (an event collection or figure), stance per participant (glorify, vilify, omit), fidelity, medium (artwork, book, oral legend, inscription on a structure), epoch).
@@ -2553,6 +2605,8 @@ Scales are the most direct way a god changes the land in which mortals live, and
 - **Commemoration calendar:** anniversaries of great collections (a victory, a massacre, a founding) are relived collectively (F14 reliving at cohort scale) through traditions and gatherings. They keep grievances and pride alive, and their neglect lets memory fade.
 - **Irredentism:** memories of lost lands (de jure titles, F33 accounts of the old borders) generate claims and movements centuries later. They are the historical root of many wars.
 - **The chronicle itself:** the in-app chronicle (spec 08/09) remains the player's ground truth. Accounts are the in-world view, readable side by side (J.9).
+
+**Implemented as.** It runs in the `historiography`, `founding_myths`, `commemorations`, `lost_lands` phases of the epoch. Rules namespace: `historiography`. God levers: `account:write`, `account:edit`, `account:revise`, `account:expose`, `account:delete`, `account_stance:set`, `account_stance:delete`, `memory_strike:set`, `memory_strike:edit`, `memory_strike:delete`, `founding_myth:set`, `founding_myth:edit`, `founding_myth:debunk`, `founding_myth:delete`, `commemoration:set`, `commemoration:edit`, `commemoration:relive`, `commemoration:delete`, `lost_land:set`, `lost_land:edit`, `lost_land:delete`. Surfaces: `HistoryPanel`, `section-history`. Agent tools: `commission_account`, `strike_memory`, `reveal_true_history`.
 
 ### F34. Storylets (typed event chains)
 
@@ -2569,6 +2623,8 @@ Examples: a stranger at the gate claiming to be the lost heir; a famine and a gr
 - **Resolution.** When a cast member is a selected LLM agent, the choice is offered to the agent as a typed tool call (the agent sees the situation in its context). Otherwise the engine chooses by the cast member's personality, beliefs, passions and belief state, so the same storylet branches differently for different characters.
 - **Chains.** Choices can schedule follow-ups for later epochs (archaeology chains, prophecies' fulfilment chains, the long return of the exiled heir). Chains are event collections (F10 reference pass).
 - **Emergence first.** Storylets are a narrative layer *on top of* the simulation. They never replace a mechanic: their effects are ordinary typed effects, and their preconditions read emergent state. They concentrate drama at the moments the simulation creates.
+
+**Implemented as.** It runs in the `storylets` phase of the epoch. Rules namespace: `storylets`. God levers: `storylet:open`, `storylet:edit`, `storylet:choose`, `storylet:delete`. Surfaces: `StoryletPanel`, `section-storylets`. Agent tools: `choose_storylet`, `set_storylet`.
 
 ### F35. Social norms and volition
 
@@ -2596,6 +2652,8 @@ Norms drift with culture (F5 reference pass 3) and are set by doctrine (4.4) and
 - **Ensemble counterpoint:** arcs of counterparts are kept in rhythm, so a rival's rise is timed against the hero's fall within the bounds of the simulation.
 - **Foreshadowing bookkeeping:** prophecies, omens, dreams and threads are logged as **setups**. The drama manager tracks open setups and favours their **payoffs** (fulfilment or subversion). The chronicler and the bard are told which incidents are payoffs of which setups, so the narrative reads as authored even though it emerged.
 
+**Implemented as.** It runs in the `arcs` phase of the epoch. Rules namespace: `arcs`. God levers: `arc:create`, `arc:press`, `arc:edit`, `arc:delete`, `arc_figure:create`, `arc_figure:edit`, `arc_figure:delete`, `arc_beat:create`, `arc_beat:edit`, `arc_beat:delete`, `setup:create`, `setup:edit`, `setup:delete`. Surfaces: `TalesPanel`, `SetupsPanel`, `section-tales`, `chart-arc-drama`, `chart-setups`. Agent tools: `press_tale`, `swear_vengeance`, `foreshadow`.
+
 ### F37. Structural-demographic and civilisational cycles
 
 The engine tracks the variables of structural-demographic theory per polity, derived from simulated state, not fitted:
@@ -2621,6 +2679,8 @@ The engine tracks the variables of structural-demographic theory per polity, der
 
 **Long plans:** polities, cults, orders and gods can hold **long plans** (`long_plans`: holder, goal (an ecological transformation, a bloodline, a conversion of a world, a wonder), steps per epoch, progress, secrecy). Plans outlive their authors and are carried by offices and orders, so centuries-long projects (Dune-style terraforming of a desert world, a breeding plan of a secret order) are typed, trackable and disruptable.
 
+**Implemented as.** It runs in the `structural_demography`, `asabiyya`, `challenge_response`, `long_plans` phases of the epoch. Rules namespaces: `structural_demography`, `asabiyya`, `challenge_response`, `long_plans`. God levers: `stress:set`, `stress:edit`, `stress:delete`, `stress_reading:set`, `stress_reading:edit`, `stress_reading:delete`, `asabiyya:set`, `asabiyya:edit`, `asabiyya:delete`, `challenge:strike`, `challenge:edit`, `challenge:delete`, `plan:create`, `plan:edit`, `plan:advance`, `plan:expose`, `plan:delete`. Surfaces: `StressPanel`, `SecularCycleChart`, `SolidarityPanel`, `FrontierMap`, `PlanPanel`, `section-cycles`, `cycles-psi-chart`, `cycles-frontier-map`. Agent tools: `try_realm`, `begin_long_plan`, `further_plan`, `begin_realm_plan`.
+
 ### F38. Reciprocity and gift exchange
 
 **Gift ledger** (`gifts`: giver, receiver, value (by the receiver's preferences, F15), occasion, returned (bool), epoch). Gifts create **obligations** under the culture's reciprocity norm (F35):
@@ -2635,6 +2695,8 @@ Gifts operate between households, houses, polities, cults and gods.
 - **Ceremonial circuits** (kula-like): valued items circulate along fixed circuits of communities, never stopping. Holding a famous item briefly gives prestige, and the circuit binds distant communities in peace (relation +) with obligations of hospitality.
 - **Sacrifice as exchange** (do ut des): offerings to gods are gifts that create a *divine* obligation in the doctrine. Gods who fail to return favour (unanswered prayers after sacrifices) lose standing faster (9.1), and gods who return generously gain it. Sons see their "gift debts" to peoples as a typed list in their context.
 - **Dowry, bride price and bride service** are marriage gifts (4.1 reference pass 4) with the same obligation logic.
+
+**Implemented as.** It runs in the `reciprocity` phase of the epoch. Rules namespaces: `reciprocity`, `potlatch`, `ceremonial_circuits`, `traditions`, `sacrifice_exchange`. God levers: `gift:give`, `gift:return`, `gift:refuse`, `gift:edit`, `gift:delete`, `circuit:create`, `circuit:edit`, `circuit:route`, `circuit:pass`, `circuit:delete`, `debt:set`, `debt:edit`, `debt:delete`. Surfaces: `GiftLedger`, `CircuitPanel`, `section-cycles`. Agent tools: `bestow_gift`, `give_gift`, `answer_gift`, `refuse_gift`, `make_offering`, `answer_offerings`, `set_circuit`.
 
 ### F39. Nutrition and diet quality
 
@@ -2689,6 +2751,8 @@ Biases make decisions fallible in characterful ways. Rulers lose wars they shoul
 - **Witch hunts** are collective behaviour cascades (F32) under stress (plague, famine, war, PSI) and with zealous authorities (cults, inquisitions). They are major incidents with memories, accounts and ghosts (wrongful deaths: vengeful ghosts, 3.3 reference pass).
 - **Real witches:** where rites (8.6) and curses (F30) exist, some accused may really be casters. The engine knows who is, and the player can see accurate and false accusations. This is a uniquely sharp beyond-the-leader effect: a world where magic is real makes the witch-hunt ambiguous rather than simply false.
 
+**Implemented as.** It runs in the `mishaps`, `witchcraft` phases of the epoch. Rules namespaces: `mishaps`, `witchcraft`, `divination`. God levers: `mishap:create`, `mishap:edit`, `mishap:delete`, `luck_belief:create`, `luck_belief:edit`, `luck_belief:delete`, `charm:set`, `charm:edit`, `charm:delete`, `accusation:create`, `accusation:edit`, `accusation:delete`, `witch_hunt:create`, `witch_hunt:edit`, `witch_hunt:delete`. Surfaces: `MishapPanel`, `WitchcraftPanel`, `section-folkways`, `chart-mishaps`, `chart-hunts`. Agent tools: `send_misfortune`, `bless_charm`, `make_charm`, `stir_witch_hunt`, `accuse_of_witchcraft`.
+
 ### F43. Identity layers and salience
 
 Every mortal and cohort holds several **identities** (`identities_held`: holder, layer, value, strength):
@@ -2720,6 +2784,8 @@ Every mortal and cohort holds several **identities** (`identities_held`: holder,
 - **Collective memory** (F33) is curated by identity groups, each telling its own history.
 
 Salience replaces ad-hoc "same god" and "same language" bonuses with one general mechanism, keeping them as special cases.
+
+**Implemented as.** It runs in the `belonging`, `polity_cycles`, `labour_allocation`, `historiography` phases of the epoch. Rules namespace: `identities`. God levers: `held_identity:set`, `held_identity:edit`, `held_identity:delete`, `belonging:run`. Surfaces: `IdentityPanel`, `section-belonging`, `chart-identities`. Agent tools: `stir_identity`.
 
 ### F44. The technology ceiling: advanced eras
 
@@ -4558,6 +4624,8 @@ An `oaths` table: swearer, recipient (mortal, god, polity), kind (fealty, vengea
 - Oaths give the existing OATHBREAKER flag a mechanical source.
 - Oath-domain sons gain a real role.
 
+**Implemented as.** It runs in the `treaty_cycles`, `polity_cycles`, `geasa` phases of the epoch. Rules namespaces: `oaths`, `geasa`. God levers: `oath:swear`, `oath:break`, `oath:edit`, `oath:release`. Surfaces: `Oaths`. Agent tools: `swear_oath`, `lay_geas`, `lift_geas`.
+
 #### Reference pass 3 (R9)
 
 **Geasa:** a geas is a personal taboo or obligation (never refuse hospitality, never eat a dog's flesh, never pass a burning house without helping) laid on a mortal at birth by a seer, by a god or by a rite, as an oath with a divine witness and no consent needed. Keeping it gives favour (dominion and standing with that god), and breaking it brings an F30 doom package (misfortune, wasting, death in battle). Enemies can engineer situations that force a geas conflict, a scheme kind `geas_trap`.
@@ -4570,6 +4638,8 @@ The audit noted that satisfaction feeds only revolts. With 4.1–4.6:
 - **Inequality** (Gini-like over class wealth) raises crime and revolt pressure, scaled by the culture's hierarchy value: hierarchical cultures tolerate more.
 - **Social mobility events:** a war hero is ennobled (class change → a house founded); a ruined merchant falls to the poor; a freed slave becomes free. Each is an incident and a memory.
 - **Slavery and serfdom** (law-gated): captives (Part 5.7), debtors (debt law) and conquered cohorts can be enslaved. They raise output in mines and fields, lower cohesion, raise revolt pressure, and lower opinion across xenophile cultures.
+
+**Implemented as.** It runs in the `society_mobility`, `society_economy`, `factions`, `labour_allocation`, `labour_regimes` phases of the epoch. Rules namespaces: `mobility`, `factions`, `corvee`, `labour_regimes`, `slave_markets`, `manumission`, `indenture`. God levers: `cohort:move`, `people:edit`, `class:standing`, `labour:corvee`, `mobility:ennoble`, `mobility:ruin`, `mobility:enslave`, `mobility:manumit`. Surfaces: `Demography`, `ClassWealth`, `MobilityHistory`, `section-mobility`. Agent tools: `free_bound`, `lay_corvee`.
 
 #### Reference pass 4 (R41)
 
@@ -5998,6 +6068,8 @@ New structure kinds of the cosmic scale, each with a section layout, a technique
 
 Uniqueness and races follow the wonder rules (7.2 reference pass R5). Each megastructure keeps its working state (`megastructure_states`: output, target orbit, epoch) which `megastructure:edit/delete` set and reset; the Sections tab shows it with its control core.
 
+**Implemented as.** It runs in the `megastructures` phase of the epoch. Rules namespace: `megastructures`. God levers: `megastructure:edit`, `megastructure:delete`, `record_row:create`, `record_row:edit`, `record_row:delete`. Agent tools: `draw_structure_type`, `shape_structure_type`.
+
 ### 7.11 Structure types and forms (W23+)
 
 **Current.** Structure designs exist (a named type on a base kind, made by sons) and building types appear in the Atlas, but peoples do not draw types of their own, the drawing of a building does not follow its type, and the list of kinds is short.
@@ -6494,6 +6566,8 @@ Noita-like composite effects come from typed state, not scripted combos.
 
 **Current.** severity only.
 
+**Implemented as.** It runs in the `event_phases`, `natural_disasters`, `settlement_life`, `campaigns` phases of the epoch. Rules namespace: `events`. God levers: `event:create`, `event:edit`, `event:phase`, `event:release`, `event:footprint`, `event:casualties`, `event:end`. Surfaces: `EventCard`, `EventsHere`. Agent tools: `send_disaster`.
+
 #### Attributes
 
 - `event_kind` (existing engine kind; extended: festival_of_note, coronation, wedding, massacre, sack, famine, flood, fire, eruption, riot, schism_council, eclipse_watch)
@@ -6712,6 +6786,8 @@ Votes weigh relations, goals and values. Results are binding rules for N epochs 
 
 ---
 
+**Implemented as.** It runs in the `council_rulings`, `pantheon`, `cosmic_offices`, `rite_cycles` phases of the epoch. Rules namespaces: `cosmic_offices`, `council`. God levers: `ruling:decree`, `ruling:edit`, `ruling:revoke`. Surfaces: `CouncilRulings`, `section-council-rulings`. Agent tools: `resign_office`.
+
 #### Reference pass (R6)
 
 Council motions are crises (4.6 reference pass) between gods: backers, favours (F20) and escalation, up to a divine war when they fail.
@@ -6756,6 +6832,8 @@ Natural laws can reference physical constants in 10.9 (gravity shift, seasons re
 ### 9.6 Outer being
 
 **Current.** size, interest and influence (size is never read).
+
+**Implemented as.** It runs in the `outer_hunger`, `horror` phases of the epoch. Rules namespace: `outer_beings`. God levers: `outer_profile:edit`, `breach:open`, `breach:edit`, `breach:close`, `son:outer_bargain`. Surfaces: `OuterProfile`, `section-outer-profile`. Agent tools: `ward_against_outer`, `bargain_with_outsider`, `open_breach`.
 
 #### Additions
 
@@ -6809,6 +6887,8 @@ Outer beings use F30 packages for their touch (void taint), F22 deception (whisp
 ### 10.2 World
 
 **Current.** Type, gravity, atmosphere, time factor, terrain, discovery, danger, leakage and climate era.
+
+**Implemented as.** It runs in the `world_lives`, `surveys`, `formation_history`, `long_seasons`, `eco_transformations` phases of the epoch. Rules namespaces: `world_life`, `formation`, `long_seasons`, `eco_transformations`. God levers: `world:edit`, `world:life`, `world:orbit`, `world_cycle:edit`, `world_cycle:reset`, `world_end:declare`, `world_end:edit`, `world_end:remove`. Surfaces: `section-world-life`, `section-surveys`, `chart-formation`, `chart-seasons`, `chart-transformation`. Agent tools: `unsettle_seasons`, `lengthen_winter`, `forecast_seasons`, `sabotage_remaking`.
 
 #### Attributes
 
@@ -6867,6 +6947,8 @@ Gates and routes to a world shift with its belief-drift (a route's danger and me
 - `visibility` (season-dependent)
 - `omen_reading` per culture (good, evil or neutral, from superstition and doctrine)
 
+**Implemented as.** It runs in the `celestial_omens` phase of the epoch. Rules namespace: `celestial_bodies`. God levers: `celestial_reading:set`. Surfaces: `CelestialReadingsSection`, `section-celestial-readings`.
+
 #### Reference pass (R2)
 
 **Periodic bodies:** celestial entities for comets and wandering stars get orbital elements (10.9), so their return year is computed. Omens and festivals are tied to returns, and prophecies can reference them.
@@ -6880,6 +6962,8 @@ Already deep. Additions:
 - `piracy_level` (void pirates, existing faction; now an actual per-journey encounter roll)
 - `seasonal_window` (slingshot alignment, existing; generalised to all methods: some gates open only at a solstice)
 - `wear` (gates degrade with traffic and need maintenance rites)
+
+**Implemented as.** It runs in the `cosmos` phase of the epoch. Rules namespaces: `launch_windows`, `cosmopolitan`. God levers: `route:open`, `route:danger`, `route:teach`, `route_flow:edit`. Surfaces: routes in the atlas and the world drawer. Agent tools: `join_road_folk`.
 
 #### Reference pass 5 (S-B, S-C, S-D Terra Invicta)
 
@@ -6895,6 +6979,8 @@ Already deep. Additions:
 - `convoy` (multiple vessels; escorts)
 - `encounters` (typed: piracy, storm, beast, outer touch, derelict found)
 - `memory_loss` (existing) is applied to passengers' memories and knowledge (F7, 8.4): colonists of the river of the dead arrive without their history, which seeds new legends.
+
+**Implemented as.** It runs in the `travel` phase of the epoch. Rules namespace: `journeys`. God levers: `journey:load`, `journey:release`, `journey:recall`. Surfaces: `JourneyLoadEditor`, `section-journey-load`.
 
 ### 10.6 Phenomenon (new type)
 
@@ -6944,6 +7030,8 @@ The star-god's corpse is a `system` phenomenon. A void storm along a route is a 
 - **Sons** (Storm, Sun, Ice domains) can push targets (existing imposition, now regional).
 - **Notable climate years** (F1) feed traditions and legends.
 
+**Implemented as.** It runs in the `regional_climate`, `regional_leak`, `cosmic_influence`, `climes`, `environment_survey`, `seafaring`, `terrain_hazards`, `trade_flow`, `resource_economy`, `rumour_cycles`, `foresight` phases of the epoch. Rules namespaces: `world_life`, `winds`, `monsoons`, `currents`, `rumours`, `oscillations`. God levers: `region_climate:turn`, `environment:set`, `environment:unlock`. Surfaces: `RegionClimateControl`, `section-region-climate`, `chart-winds`, `chart-monsoons`, `chart-oscillation`. Agent tools: `turn_region_climate`, `turn_wind`, `stir_monsoon`.
+
 #### Reference pass 5 (S-B)
 
 - **Atmospheric circulation:** each world's derived physics (10.9: rotation, insolation and tilt) gives **circulation bands** (trade-wind-like, westerly and polar bands analogues; one-cell or exotic circulation on slow-rotating or tidally locked worlds). Bands set the **prevailing winds** per region and season. These feed sailing routes (points of sail, 5.5 reference pass 4), fire spread, pollution transport (F24) and the rain side and dry side of mountain ranges.
@@ -6957,6 +7045,8 @@ The star-god's corpse is a `system` phenomenon. A void storm along a route is a 
 - The doom clock (existing) gains **typed contributors with provenance** through the modifier bus (F9). The doom UI explains its sources.
 - Regional leak (10.2) makes horror events target hot spots and creates phenomena at peaks.
 - **Apocalypse variants** become typed and depend on the dominant contributors: a war-dominated doom ends in a world war called by the Calling; a leak-dominated doom brings an outer-being descent; a godlessness-dominated one is a twilight of the gods (sons fade ×2).
+
+**Implemented as.** It runs in the `doom_clock`, `regional_leak`, `ages` phases of the epoch. Rules namespaces: `rifts`, `ages`. God levers: `apocalypse:variant`. Surfaces: `ApocalypseVariantPanel`, `section-region-leak`, `panel-apocalypse`, `chart-ages`. Agent tools: `echo_life`.
 
 
 #### Reference pass 4 (R34)
@@ -7104,6 +7194,8 @@ A rift is a tear between a region of a world and another dimension.
 
 **Tables:** `rifts`. **Rules namespace:** `rifts`.
 
+**Implemented as.** It runs in the `rift_cycles` phase of the epoch. Rules namespace: `rifts`. God levers: `rift:open`, `rift:edit`, `rift:seal`, `rift:delete`. Surfaces: `RiftsPanel`, `section-rifts`. Agent tools: `open_rift`, `seal_rift`.
+
 ### 10.15 Cosmic being (new entity type)
 
 Beings that live at the scale of galaxies or between dimensions. They are distinct from outer beings (9.6), which feed from beyond: a cosmic being is a native of a dimension or of the great dark, with a home, a reach and an aim.
@@ -7133,6 +7225,8 @@ Beings that live at the scale of galaxies or between dimensions. They are distin
 - **Faith:** stars, galaxies and dimensions can be worshipped (sun cults, sky cults, cults of a plane), with piety tracking the object's state.
 - **Doom:** open rifts, incursions, convergences, gamma-ray bursts and unmaking beings are typed doom contributors (10.8). Dimensional collapse is an apocalypse variant.
 - **Book and Codex:** the atlas of the heavens is ordered by the scale ladder, with every dimension, cluster, galaxy, structure, event, rift and being in its place.
+
+**Implemented as.** It runs in the `cosmic_influence` phase of the epoch. Rules namespaces: `couplings`, `cosmic_horror`. God levers: `modifier:create`, `modifier:edit`, `modifier:hold`, `modifier:release`, `modifier:remove`. Surfaces: `section-region-leak`.
 
 ### 10.9 Cosmic physics (derived, second pass)
 

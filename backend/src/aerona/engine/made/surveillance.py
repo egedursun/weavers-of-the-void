@@ -11,13 +11,13 @@ from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import polities, realm_towns
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.made.kinds import WATCHES
 from aerona.engine.made.trust import trust_of
 from aerona.engine.minds.values import liberty_of
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 
 WATCH_STEPS = ("forbidden", "warranted", "broad", "total")
-CRIME_FOCUS = frozenset({SurveillanceFocus.CRIME, SurveillanceFocus.EVERYTHING})
 
 
 async def capacity_of(ctx: TickContext, polity_id: int) -> int:
@@ -55,8 +55,7 @@ async def watch(ctx: TickContext, polity_id: int) -> int:
         profile = await ctx.session.get(SettlementProfileRow, town.id)
         if profile is None or held(town.id) or not row.reach_pct:
             continue
-        if row.focus in CRIME_FOCUS and "crime" not in profile.locked:
-            profile.crime = clamp_percent(profile.crime - round_half_up(table.crime_cut * row.reach_pct / PERCENT))
+        await WATCHES[row.focus](ctx, town, profile, row.reach_pct)
         if await liberty_of(ctx.session, town.id) > 0 and "unrest" not in profile.locked:
             profile.unrest = clamp_percent(profile.unrest + round_half_up(table.chill * row.reach_pct / PERCENT))
         trust = await trust_of(ctx, town.id)

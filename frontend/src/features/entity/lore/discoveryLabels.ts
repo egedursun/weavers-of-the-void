@@ -1,4 +1,12 @@
 import {
+  TrendingUp,
+  TrendingDown,
+  Shuffle,
+  Pause,
+  Network,
+  GitBranch,
+  Cog,
+  Bot,
   Brain,
   CircleAlert,
   Eye,
@@ -86,6 +94,11 @@ export const BLUEPRINT_LOOK: Record<Schemas['BlueprintKind'], LoreNamed> = {
     icon: Gem,
     tone: 'verdigris',
   },
+  made_body: { label: 'Made body', icon: Bot, tone: 'info' },
+  augment: { label: 'Augment', icon: Cog, tone: 'info' },
+  line: { label: 'Line', icon: GitBranch, tone: 'info' },
+  network: { label: 'Network', icon: Network, tone: 'info' },
+  rite_pattern: { label: 'Rite pattern', icon: Sparkles, tone: 'info' },
 }
 
 export const AGE_LOOK: Record<Schemas['AgeKind'], LoreNamed> = {
@@ -93,6 +106,10 @@ export const AGE_LOOK: Record<Schemas['AgeKind'], LoreNamed> = {
   golden: { label: 'A golden age', icon: Sun, tone: 'gold' },
   dark: { label: 'A dark age', icon: Moon, tone: 'danger' },
   heroic: { label: 'A heroic age', icon: Trophy, tone: 'success' },
+  rising: { label: 'Rising', icon: TrendingUp, tone: 'muted' },
+  declining: { label: 'Declining', icon: TrendingDown, tone: 'muted' },
+  transforming: { label: 'Transforming', icon: Shuffle, tone: 'muted' },
+  stagnant: { label: 'Stagnant', icon: Pause, tone: 'muted' },
 }
 
 export const THEORY_DOMAINS: Record<Schemas['TheoryDomain'], LoreNamed> = {

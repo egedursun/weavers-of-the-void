@@ -1,7 +1,7 @@
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.faction import FactionKind, FoundableFaction
-from aerona.domain.enums.war import HeroQuestKind
-from aerona.engine.phases.factions import decree_faction, dissolve_faction
+from aerona.domain.enums.faction import FoundableFaction
+from aerona.domain.enums.quests import QuestAim
+from aerona.engine.phases.factions import FOUNDED_AS, decree_faction, dissolve_faction
 from aerona.engine.phases.heroes import assign_apprentice, raise_hero, recall_hero, resolve_quest, send_on_quest
 from aerona.engine.phases.heroism import send_hero_to_hunt
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -13,7 +13,7 @@ class CommunityTarget(Command):
 
 class Quest(Command):
     hero_id: int
-    kind: HeroQuestKind | None = None
+    aim: QuestAim | None = None
     target_id: int | None = None
 
 
@@ -48,7 +48,7 @@ async def hero(scope: PlayerScope, command: CommunityTarget) -> Effect:
 
 @player_action("hero:quest", ActionKind.ADVENTURE)
 async def quest(scope: PlayerScope, command: Quest) -> Effect:
-    row = await send_on_quest(await scope.context("hero_quest"), command.hero_id, command.kind, command.target_id)
+    row = await send_on_quest(await scope.context("hero_quest"), command.hero_id, command.aim, command.target_id)
     return Effect(f"The hero set out: {row.description}.", command.hero_id, values={"quest_id": row.id})
 
 
@@ -81,7 +81,7 @@ async def hunt(scope: PlayerScope, command: Hunt) -> Effect:
 
 @player_action("faction:found", ActionKind.FOUND_FACTION)
 async def found_faction(scope: PlayerScope, command: Faction) -> Effect:
-    faction = await decree_faction(await scope.context("found_faction"), command.community_id, FactionKind(command.kind.value))
+    faction = await decree_faction(await scope.context("found_faction"), command.community_id, FOUNDED_AS[command.kind])
     return Effect(f"{faction.name} was founded.", faction.id, created_ids=(faction.id,))
 
 

@@ -1,5 +1,9 @@
+from collections.abc import Awaitable, Callable, Mapping
+
 from sqlalchemy import func, select
 
+from aerona.core.random import SeededRandom
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.write_guard import held as frozen
@@ -21,6 +25,7 @@ from aerona.engine.interconnect.causes import war_cause_incident
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.taboos import forbidden
 from aerona.engine.lore.traditions import keeps
+from aerona.engine.military.feud_acts import abduct, ambush, banned, call_allies, destroy_property, mediator_for, raise_level, seek_mediation
 from aerona.engine.military.feuds import active_feuds, head_of, peace_mediator, realm_party, sides_of, temper
 from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.mind.opinion import mortal_rulers
@@ -31,7 +36,7 @@ from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import move_stat, shift_stat, stat
 from aerona.engine.records import death_path
-from aerona.engine.services.community_relations import change_relation, end_blood_feud, open_feud, relation, start_blood_feud
+from aerona.engine.services.community_relations import change_relation, end_blood_feud, feud_between, open_feud, relation, start_blood_feud
 from aerona.engine.services.war import declare_war
 from aerona.engine.sites.rooms import delve, layout_of, rooms_of
 from aerona.engine.storyteller.pace import paced
@@ -68,16 +73,32 @@ async def choose(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> Feud
         return None
     if await law_param(ctx.session, avenger.id, LawKind.BLOOD_FEUD, "wergild_allowed") and rng.chance(table.wergild_chance):
         return FeudAction.DEMAND_WERGILD
-    if rng.chance(table.escalate_chance):
-        return FeudAction.ESCALATE
-    if rng.chance(table.assassinate_chance):
-        return FeudAction.ASSASSINATE
+    weighed = (
+        (FeudAction.SEEK_MEDIATION, table.seek_mediation_chance),
+        (FeudAction.ESCALATE, table.escalate_chance),
+        (FeudAction.CALL_ALLIES, table.allies_chance),
+        (FeudAction.ASSASSINATE, table.assassinate_chance),
+        (FeudAction.ABDUCT, table.abduct_chance),
+    )
+    chosen = next((action for action, chance in weighed if rng.chance(chance)), None)
+    return chosen if chosen is not None else await lesser_act(ctx, rng, avenger)
+
+
+async def lesser_act(ctx: TickContext, rng: SeededRandom, avenger: EntityRow) -> FeudAction:
+    table = ctx.rules.vendetta
+    if rng.chance(table.ambush_chance):
+        return FeudAction.AMBUSH
+    if rng.chance(table.property_chance):
+        return FeudAction.DESTROY_PROPERTY
     if rng.chance(await paced(ctx, avenger.world_id, SpontaneousKind.RAID, table.raid_chance)):
         return FeudAction.RAID
     return FeudAction.REST
 
 
 async def mediate(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str | None:
+    row = await feud_between(ctx.session, avenger.id, enemy.id)
+    if row is not None and "mediator_node_id" not in row.locked:
+        row.mediator_node_id = await mediator_for(ctx, avenger, enemy)
     await end_blood_feud(ctx.session, avenger.id, enemy.id, epoch=ctx.epoch, status=FeudStatus.MEDIATED)
     return f"Priests of {avenger.name} mediated an end to its blood feud with {enemy.name}."
 
@@ -85,7 +106,7 @@ async def mediate(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str
 async def wergild(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str | None:
     price = ctx.rules.treaties.wergild_value
     move_stat(enemy, avenger, "wealth", price // 10)
-    await end_blood_feud(ctx.session, avenger.id, enemy.id, epoch=ctx.epoch)
+    await end_blood_feud(ctx.session, avenger.id, enemy.id, epoch=ctx.epoch, status=FeudStatus.SETTLED)
     await change_relation(ctx, avenger.id, enemy.id, price // 3, MemoryKind.GIFTED_ME, note="wergild")
     return f"{enemy.name} paid {avenger.name} wergild and the blood feud was laid to rest."
 
@@ -134,13 +155,21 @@ async def rest(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str | 
     return None
 
 
-ACTIONS = {
-    FeudAction.DEMAND_WERGILD: wergild,
-    FeudAction.ESCALATE: escalate,
-    FeudAction.ASSASSINATE: assassinate,
-    FeudAction.RAID: raid,
-    FeudAction.REST: rest,
-}
+ACTIONS: Mapping[FeudAction, Callable[[TickContext, EntityRow, EntityRow], Awaitable[str | None]]] = total(
+    FeudAction,
+    {
+        FeudAction.DEMAND_WERGILD: wergild,
+        FeudAction.ESCALATE: escalate,
+        FeudAction.ASSASSINATE: assassinate,
+        FeudAction.RAID: raid,
+        FeudAction.REST: rest,
+        FeudAction.AMBUSH: ambush,
+        FeudAction.ABDUCT: abduct,
+        FeudAction.DESTROY_PROPERTY: destroy_property,
+        FeudAction.SEEK_MEDIATION: seek_mediation,
+        FeudAction.CALL_ALLIES: call_allies,
+    },
+)
 
 
 async def act(ctx: TickContext, action: FeudAction | None, avenger: EntityRow, enemy: EntityRow) -> str | None:
@@ -155,9 +184,13 @@ async def feuds(ctx: TickContext) -> int:
             break
         pair = await sides_of(ctx, row)
         if pair is None:
-            row.status, row.ended_epoch = FeudStatus.ENDED, ctx.epoch
+            row.status, row.ended_epoch = FeudStatus.EXTINGUISHED, ctx.epoch
             continue
         first, second = pair
+        if await banned(ctx, first, second) and "status" not in row.locked:
+            await end_blood_feud(ctx.session, first.id, second.id, epoch=ctx.epoch, status=FeudStatus.OUTLAWED)
+            await note(ctx, f"The law ended the feud between {first.name} and {second.name}.", key="vendetta.outlawed", ids=[first.id, second.id])
+            continue
         hatred = -await relation(ctx.session, ctx.rules, first.id, second.id) if row.party is FeudParty.COMMUNITY else row.grievance
         sides = [(await grief(ctx, first.id, second.id), first, second), (await grief(ctx, second.id, first.id), second, first)]
         pain, avenger, enemy = sorted(sides, key=lambda item: -item[0])[0]
@@ -171,6 +204,7 @@ async def feuds(ctx: TickContext) -> int:
         mediated = await peace_mediator(ctx, first, second) and ctx.rng(f"peace_tenet.{row.id}.{ctx.epoch}").chance(table.peace_tenet_mediation)
         action = None if mediated else await choose(ctx, avenger, enemy)
         row.last_action, row.last_epoch = (action.value if action is not None else "mediated"), ctx.epoch
+        raise_level(row, action, table.insult_below)
         text = await act(ctx, action, avenger, enemy)
         ctx.count(f"feud_{action.value if action is not None else 'mediated'}")
         if text is not None:
@@ -236,6 +270,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "table.applied_fixups",
     "table.army_officers",
     "table.assistive_aids",
+    "table.augments",
     "table.avatars",
     "table.beast_profiles",
     "table.bodies",
@@ -371,6 +406,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "table.mortal_profiles",
     "table.name_registry",
     "table.offices",
+    "table.passions",
     "table.peace_terms",
     "table.personality_values",
     "table.polity_profiles",

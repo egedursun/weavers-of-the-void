@@ -37,6 +37,11 @@ class NutritionRules:
     fertility_pct: int = rule(
         50, 0, 100, P, "Share of the chance of a birth lost for each point of the bearer's nutrition below being well fed, in hundredths (%)"
     )
+    lean_fresh_pct: int = rule(
+        40, 0, 100, P, "Share of the leanest season's shortfall of growth that it takes from a diet's fresh food, unless stores bridge it (%)"
+    )
+    fortify_per_level: int = rule(2, 0, 20, P, "Minerals a diet gains for each level of a people's medicine, from foods fortified with what bodies lack")
+    fast_energy: int = rule(10, 0, 100, P, "Energy a community that keeps a fast gives up from its diet")
 
 
 @dataclass(frozen=True)
@@ -46,6 +51,10 @@ class BiasRules:
     stress_pct: int = rule(20, 0, 100, M, "Bias weight added by each point of stress, in hundredths (%)")
     council_pct: int = rule(50, 0, 100, M, "Weight of the rest of a ruling council against its first ruler when their biases are combined (%)")
     skill_damp_pct: int = rule(8, 0, 100, M, "Share of every bias that each level of strategy or tactics takes off (%)")
+    knowledge_damp_pct: int = rule(30, 0, 100, M, "Share of every bias a holder who prizes knowledge to the full takes off (%)")
+    informed_damp_pct: int = rule(15, 0, 100, M, "Share of every bias taken off a holder with a network or spies of its own to tell it how things stand (%)")
+    isolation_pct: int = rule(20, 0, 100, M, "Share added to every bias of a holder with no friend to check it (%)")
+    dissent_damp_pct: int = rule(20, 0, 100, M, "Share of a ruling council's combined bias taken off by the dissent of its members (%)")
 
 
 @dataclass(frozen=True)
@@ -83,6 +92,7 @@ class PurityRules:
     )
     corpse_exposure_pct: int = rule(50, 0, 100, R, "Share by which a plague's chance of killing rises for one made unclean by handling the dead (%)")
     quarter_pct: int = rule(30, 0, 100, R, "Desirability a district gains or loses for each point of standing its caste holds above or below the middle (%)")
+    contact_pct: int = rule(20, 0, 100, R, "Chance that a newly impure being passes its impurity to each of its close kin who are pure (%)")
 
 
 @dataclass(frozen=True)
@@ -129,3 +139,19 @@ class WitchcraftRules:
     hunt_fade: int = rule(15, 0, 100, J, "Fervour a witch hunt loses each epoch")
     hunt_accusations: int = rule(2, 0, 50, J, "Accusations a witch hunt brings each epoch at full fervour")
     wrongful_unrest: int = rule(30, 0, 100, J, "Unrest the spirit of one killed for a witchcraft they did not do carries")
+
+
+@dataclass(frozen=True)
+class EverydayMishapRules:
+    small_per_epoch: int = rule(40, 0, 100, R, "Chance each epoch an adult of ordinary exposure suffers a small mishap (%)")
+    grave_per_mil: int = rule(50, 0, 1000, R, "Chance each epoch, per thousand, an adult of ordinary exposure suffers a grave mishap")
+    deadly_per_mil: int = rule(10, 0, 1000, R, "Chance each epoch, per thousand, an adult of ordinary exposure suffers a deadly mishap")
+    young_old_pct: int = rule(200, 0, 1000, R, "Rate of mishaps for children and the old against an adult (%)")
+    dangerous_work_pct: int = rule(300, 0, 1000, R, "Rate of mishaps for those whose work is dangerous against others (%)")
+    winter_pct: int = rule(130, 0, 1000, R, "Rate of mishaps in a cold season against a mild one (%)")
+    small_damage: int = rule(4, 0, 100, R, "Harm a small mishap does before armour and toughness")
+    grave_damage: int = rule(25, 0, 100, R, "Harm a grave mishap does before armour and toughness")
+    deadly_damage: int = rule(80, 0, 200, R, "Harm a deadly mishap does before armour and toughness")
+    small_stress: int = rule(3, 0, 100, R, "Stress a small mishap or a near miss lays on its victim")
+    loss_wealth: int = rule(2, 0, 100, R, "Wealth a mishap of loss takes from its victim")
+    cohort_rate_per_mil: int = rule(5, 0, 1000, R, "Accidental deaths each epoch per thousand of a town's people of ordinary exposure")

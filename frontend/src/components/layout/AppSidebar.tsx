@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { NAV_GROUPS } from '@/config/navigation'
 import { useLayout } from '@/context/layoutContext'
+import { FrameCorners } from '@/components/ui/ornate'
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +17,7 @@ export function AppSidebar({ footer }: { footer?: ReactNode }) {
   const { collapsible, variant } = useLayout()
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
+      {variant !== 'sidebar' && <FrameCorners frame='rail' />}
       <SidebarHeader>
         <BrandTitle />
       </SidebarHeader>

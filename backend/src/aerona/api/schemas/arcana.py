@@ -15,7 +15,6 @@ from aerona.domain.enums.mythic import (
     OfficeChoice,
     QuestTrial,
     ServitorOrigin,
-    ServitorRank,
     ServitorRole,
 )
 
@@ -135,7 +134,6 @@ class MantlingView(ApiModel):
 class ServitorView(ApiModel):
     spirit: NodeRef | None
     god: NodeRef | None
-    rank: ServitorRank
     origin: ServitorOrigin
     role: ServitorRole
     post: NodeRef | None

@@ -174,7 +174,7 @@ function TenetCard({
   return (
     <li
       data-surface='TenetCard'
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
@@ -311,7 +311,7 @@ function AddTenet({
           </div>
         )}
       </div>
-      <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+      <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
         <Medallion icon={look.icon} tone={look.tone} />
         <div className='flex min-w-0 flex-1 flex-col gap-1'>
           <Text weight='semibold'>{look.label}</Text>
@@ -487,7 +487,7 @@ function DoctrineForm({
             placeholder='None; it stands alone'
           />
         </div>
-        <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <div className='flex min-w-0 items-center gap-2'>
             <Medallion icon={UserX} tone='danger' size='sm' />
             <Text as='span' weight='medium'>
@@ -559,7 +559,7 @@ function DoctrineForm({
               }
             />
           ))}
-          <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'>
+          <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <div className='flex min-w-0 items-center gap-2.5'>
               <Medallion icon={Church} tone='gold' size='sm' />
               <div className='flex min-w-0 flex-col'>
@@ -684,7 +684,7 @@ function HeresyRow({
   })
   const busy = busyOf(blocked, judge.isPending)
   return (
-    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-background p-2'>
+    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <Medallion
         icon={GitBranch}
         tone={heresy.suppressed ? 'danger' : 'warning'}
@@ -752,7 +752,7 @@ function Heresies({
     >
       <div data-surface='HeresyTree' className='flex min-w-0 flex-col gap-2'>
         {doctrine.mother?.parent && (
-          <div className='flex min-w-0 items-center gap-2 rounded-lg border border-warning/40 bg-warning/5 p-2'>
+          <div className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-warning/40 bg-warning/5 p-2'>
             <Medallion icon={GitBranch} tone='warning' size='sm' />
             <div className='flex min-w-0 flex-1 flex-col'>
               <Label>This faith is a heresy of</Label>

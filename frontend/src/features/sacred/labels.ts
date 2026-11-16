@@ -184,8 +184,12 @@ export const PROTECTIONS: Record<Schema['SacramentProtection'], Named> = {
 export const AFTERLIVES: Record<Schema['AfterlifeModel'], Named> = {
   judged_realms: { label: 'Realms of judgement', icon: Scale, tone: 'gold' },
   common_realm: { label: 'A common realm', icon: Users, tone: 'muted' },
-  warrior_hall: { label: 'A hall of warriors', icon: Swords, tone: 'danger' },
-  ancestor_hall: { label: 'A hall of ancestors', icon: Home, tone: 'info' },
+  realm_by_death: {
+    label: 'A realm for those who die in battle',
+    icon: Swords,
+    tone: 'danger',
+  },
+  realm_of_line: { label: 'A realm of the line', icon: Home, tone: 'info' },
   rebirth: { label: 'Rebirth', icon: Repeat, tone: 'success' },
   wandering: {
     label: 'Wandering among the living',

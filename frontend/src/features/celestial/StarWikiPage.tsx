@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   EmptyState,
   EntityLink,
+  HeroFrame,
   MiniStat,
   PagedList,
   Portrait,
@@ -48,40 +49,46 @@ function StarHero({ wiki }: { wiki: StarWiki }) {
   const star = wiki.star
   const dead = DEAD_STAR_TYPES.has(star.star_type)
   return (
-    <header className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'>
-      <PortraitGenerateOverlay
-        nodeId={star.id}
-        name={star.name}
-        cover={wiki.cover ?? null}
-        placeholder={
-          <div className='flex size-portrait-xl shrink-0 items-center justify-center rounded-xl border bg-card'>
-            <StarDisc type={star.star_type} />
+    <HeroFrame>
+      <header className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'>
+        <PortraitGenerateOverlay
+          nodeId={star.id}
+          name={star.name}
+          cover={wiki.cover ?? null}
+          placeholder={
+            <div className='flex size-portrait-xl shrink-0 items-center justify-center rounded-md border surface-sheen border-gild/60 bg-card'>
+              <StarDisc type={star.star_type} />
+            </div>
+          }
+        />
+        <div className='flex min-w-0 flex-1 flex-col gap-2'>
+          <Label variant='overline'>{`Star · ${wiki.type_label}`}</Label>
+          <PageTitle truncate={2}>{star.name}</PageTitle>
+          {star.description && <Muted>{star.description}</Muted>}
+          <div className='flex min-w-0 flex-wrap gap-1.5'>
+            <Badge size='sm' variant={dead ? 'destructive' : 'default'}>
+              <Sun />
+              {dead ? 'Its light is gone' : 'Burning'}
+            </Badge>
+            <Badge size='sm' variant='outline'>
+              <CalendarDays />
+              {`Kindled in epoch ${star.created_epoch}`}
+            </Badge>
           </div>
-        }
-      />
-      <div className='flex min-w-0 flex-1 flex-col gap-2'>
-        <Label variant='overline'>{`Star · ${wiki.type_label}`}</Label>
-        <PageTitle truncate={2}>{star.name}</PageTitle>
-        {star.description && <Muted>{star.description}</Muted>}
-        <div className='flex min-w-0 flex-wrap gap-1.5'>
-          <Badge size='sm' variant={dead ? 'destructive' : 'default'}>
-            <Sun />
-            {dead ? 'Its light is gone' : 'Burning'}
-          </Badge>
-          <Badge size='sm' variant='outline'>
-            <CalendarDays />
-            {`Kindled in epoch ${star.created_epoch}`}
-          </Badge>
-        </div>
-        <div className='flex max-w-sm min-w-0 flex-col gap-1.5'>
-          <div className='flex min-w-0 items-center justify-between gap-2'>
-            <Label>Brightness</Label>
-            <Stat value={star.brightness} unit={`/ ${PERCENT}`} />
+          <div className='flex max-w-sm min-w-0 flex-col gap-1.5'>
+            <div className='flex min-w-0 items-center justify-between gap-2'>
+              <Label>Brightness</Label>
+              <Stat value={star.brightness} unit={`/ ${PERCENT}`} />
+            </div>
+            <Progress
+              size='sm'
+              value={star.brightness}
+              aria-label='Brightness'
+            />
           </div>
-          <Progress size='sm' value={star.brightness} aria-label='Brightness' />
         </div>
-      </div>
-    </header>
+      </header>
+    </HeroFrame>
   )
 }
 
@@ -112,7 +119,7 @@ function OrbitingWorlds({ wiki }: { wiki: StarWiki }) {
           itemKey={(item) => item.world.id}
         >
           {(item) => (
-            <li className='flex min-w-0 items-center gap-3 rounded-xl border bg-background p-3'>
+            <li className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
               <Portrait
                 name={item.world.name}
                 src={mediaUrl(item.cover)}
@@ -205,7 +212,7 @@ export function StarWikiView({ starId }: { starId: number }) {
             itemKey={(event) => event.id}
           >
             {(event) => (
-              <li className='flex min-w-0 items-start gap-2 rounded-lg border bg-muted/30 p-2'>
+              <li className='flex min-w-0 items-start gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
                 <Sparkles
                   aria-hidden='true'
                   className='size-icon-sm shrink-0 text-primary'

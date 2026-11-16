@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from aerona.catalog.carriers import CARRIERS
+from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.operations import (
     CarrierKind,
     CrewStation,
@@ -27,15 +29,14 @@ class TransportSpec:
 
 
 TRANSPORTS: dict[CarrierKind, TransportSpec] = {
-    spec.kind: spec
-    for spec in (
-        TransportSpec(CarrierKind.WAGONS, "Wagons", 10),
-        TransportSpec(CarrierKind.PACK_ANIMALS, "Pack animals", 4),
-        TransportSpec(CarrierKind.PORTERS, "Porters", 1),
-        TransportSpec(CarrierKind.BARGES, "River barges", 25, river_only=True),
-        TransportSpec(CarrierKind.SHIPS, "Supply ships", 60, sea_only=True),
-        TransportSpec(CarrierKind.SKY_BARGES, "Sky barges", 40),
+    kind: TransportSpec(
+        kind,
+        spec.label,
+        spec.capacity,
+        river_only=spec.modes == frozenset({TradeMode.RIVER}),
+        sea_only=spec.modes == frozenset({TradeMode.SEA}),
     )
+    for kind, spec in CARRIERS.items()
 }
 
 ECHELON_LABELS: dict[EchelonLevel, str] = {
@@ -51,6 +52,26 @@ SHOT_TARGETS: dict[ShotKind, tuple[VehicleSection, ...]] = {
     ShotKind.CHAIN: (V.RIGGING, V.MAST, V.SAILS, V.OARS, V.ENVELOPE, V.WINGS, V.ROTOR),
     ShotKind.GRAPE: (V.DECK, V.CREW_QUARTERS, V.BRIDGE, V.COCKPIT, V.TROOP_BAY),
     ShotKind.FIRE: (V.SAILS, V.RIGGING, V.DECK, V.FUEL_STORE, V.MAGAZINE, V.ENVELOPE),
+    ShotKind.SOLID: (V.HULL, V.KEEL, V.BOW, V.STERN, V.GUN_DECK),
+    ShotKind.SPREAD: (V.DECK, V.CREW_QUARTERS, V.BRIDGE, V.TROOP_BAY, V.RIGGING),
+    ShotKind.INCENDIARY: (V.DECK, V.FUEL_STORE, V.MAGAZINE, V.SAILS, V.ENVELOPE),
+    ShotKind.EXPLOSIVE: (V.HULL, V.GUN_DECK, V.HOLD, V.ENGINE, V.BOILER, V.MAGAZINE),
+    ShotKind.PIERCING: (V.ARMOUR_PLATING, V.ENGINE, V.BOILER, V.DRIVE, V.HULL),
+    ShotKind.GUIDED: (V.BRIDGE, V.ENGINE, V.MAGAZINE, V.COCKPIT, V.DRIVE),
+    ShotKind.ENERGY: (V.ARMOUR_PLATING, V.ENGINE, V.DRIVE, V.BRIDGE, V.HULL),
+}
+SHOT_WEIGHT: dict[ShotKind, int] = {
+    ShotKind.ROUND: 100,
+    ShotKind.CHAIN: 100,
+    ShotKind.GRAPE: 100,
+    ShotKind.FIRE: 100,
+    ShotKind.SOLID: 110,
+    ShotKind.SPREAD: 110,
+    ShotKind.INCENDIARY: 120,
+    ShotKind.EXPLOSIVE: 150,
+    ShotKind.PIERCING: 140,
+    ShotKind.GUIDED: 200,
+    ShotKind.ENERGY: 220,
 }
 
 RAKED_SECTIONS: tuple[VehicleSection, ...] = (V.BOW, V.STERN, V.RUDDER, V.STEERING, V.GUN_DECK)

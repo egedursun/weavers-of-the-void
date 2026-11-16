@@ -11,10 +11,8 @@ class EpochPhase(IntEnum):
 
 
 class EpochStepKind(StrEnum):
-    COMPLETION = "completion"
     BACKUP = "backup"
     DISTRIBUTION = "distribution"
-    NAMING = "naming"
     FATE_JUDGMENT = "fate_judgment"
     CHRONICLE = "chronicle"
     VOICES = "voices"

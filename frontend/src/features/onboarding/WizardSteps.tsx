@@ -23,7 +23,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { FormRow, Medallion, RangeField, RarityIcon } from '@/components/domain'
+import {
+  FormRow,
+  Medallion,
+  Paged,
+  RangeField,
+  RarityIcon,
+} from '@/components/domain'
 import {
   type Choice,
   ChoiceTiles,
@@ -37,6 +43,7 @@ import { Label, Muted, Text } from '@/components/typography'
 import { ImageStylePicker } from '@/features/images/ImageStylePicker'
 import { romanNumeral } from '@/features/pantheon/labels'
 import { Counter } from './Counter'
+import { TechnologyFamilyFields } from './TechnologyFamilyFields'
 import { CosmosFields, FirstWorldFields, MindsFields } from './WorldShapeFields'
 import {
   type LanguageTexture,
@@ -214,7 +221,7 @@ export function TemplateStep({
         ))}
       </div>
       {chosen && (
-        <div className='flex min-w-0 flex-col gap-1.5 rounded-lg border border-primary/30 bg-primary/5 p-4'>
+        <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-primary/30 bg-primary/5 p-4'>
           <Label variant='overline'>{`The seed of ${chosen.name}`}</Label>
           <Text italic variant='prose'>
             {chosen.seed}
@@ -429,6 +436,12 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           onChange={(value) => update({ technology: value })}
         />
       </SettingGroup>
+      <TechnologyFamilyFields
+        draft={draft}
+        update={update}
+        options={options}
+        peoplesMax={peoplesMax}
+      />
       <MindsFields
         draft={draft}
         update={update}
@@ -570,21 +583,23 @@ export function SonsStep({ draft, update, options }: StepProps) {
         }
       />
       <ul className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3'>
-        {sons.map((rarity, index) => (
-          <SonSlot
-            key={index}
-            index={index}
-            rarity={rarity}
-            rarities={rarities}
-            onChange={(value) =>
-              update({
-                firstSons: sons.map((item, at) =>
-                  at === index ? value : item
-                ),
-              })
-            }
-          />
-        ))}
+        <Paged items={sons} as='li'>
+          {(rarity, index) => (
+            <SonSlot
+              key={index}
+              index={index}
+              rarity={rarity}
+              rarities={rarities}
+              onChange={(value) =>
+                update({
+                  firstSons: sons.map((item, at) =>
+                    at === index ? value : item
+                  ),
+                })
+              }
+            />
+          )}
+        </Paged>
       </ul>
       <Muted variant='caption'>
         Creation is a language model job and takes from a few seconds to a few

@@ -3,6 +3,7 @@ import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useDoomForecast } from './api'
 
@@ -93,13 +94,13 @@ export function DoomBreakdown({ open }: { open: boolean }) {
         </Text>
       </div>
       <ul className='flex min-w-0 flex-col gap-2'>
-        {parts.map((part) => (
-          <PartRow key={part.key} part={part} scale={scale} />
-        ))}
+        <Paged items={parts} as='li'>
+          {(part) => <PartRow key={part.key} part={part} scale={scale} />}
+        </Paged>
       </ul>
       <div
         className={cn(
-          'flex min-w-0 flex-col gap-1 rounded-lg border p-2',
+          'flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card p-2',
           data.step > 0 ? 'border-destructive/40' : 'border-success/40'
         )}
       >

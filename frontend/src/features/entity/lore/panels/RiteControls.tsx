@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { PagedList } from '@/components/domain'
+import { Paged, PagedList } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { AdjustBlock, ChoicePicker, NamedChip, Who } from '../LoreFields'
 import { type LoreCard as LoreCardData } from '../api'
@@ -240,14 +240,16 @@ export function RiteControls({
       <Requirements id={id} card={card} blocked={blocked} />
       <AdjustBlock title='Shape its workings' icon={Shapes}>
         <ul className='flex min-w-0 flex-col gap-3'>
-          {card.effects.map((effect) => (
-            <EffectShape
-              key={effect.effect}
-              id={id}
-              effect={effect}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={card.effects} as='li'>
+            {(effect) => (
+              <EffectShape
+                key={effect.effect}
+                id={id}
+                effect={effect}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
         {card.effects.length === 0 && (
           <Muted variant='caption'>Give it a working first.</Muted>

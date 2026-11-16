@@ -130,7 +130,7 @@ export function LanguageShaper({
               id={id}
               value={draft.names}
               disabled={draft.forgetNames}
-              placeholder={'Velmora\nAshkar'}
+              placeholder='One name per line'
               onChange={(event) => update({ names: event.target.value })}
             />
           )}

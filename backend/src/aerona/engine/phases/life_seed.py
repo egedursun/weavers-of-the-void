@@ -55,10 +55,7 @@ async def native_people(ctx: TickContext, world: WorldRow, region: EntityRow) ->
         RecordSpec(
             entity_type=EntityType.PEOPLE,
             name=f"Natives of {region.name}",
-            body=(
-                f"In {world.name}, on the lands of {region.name}, a people no one created appeared: "
-                "they were born of the earth itself, of the long patience of water and light."
-            ),
+            body=(f"In {world.name}, on the lands of {region.name}, a people no one created appeared of its own accord."),
             stats=PeopleStats(
                 population=life.native_people_population + rng.die(life.native_people_population_die),
                 martiality=rolled(),

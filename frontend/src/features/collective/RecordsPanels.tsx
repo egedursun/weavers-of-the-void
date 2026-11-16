@@ -360,7 +360,7 @@ function PartRow({
   const busy = why(removing.busy, setting.isPending)
   const spec = PARTS[part.component]
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Chip icon={spec.icon}>{spec.label}</Chip>
         <Muted variant='caption'>{part.material_name ?? 'common stuff'}</Muted>

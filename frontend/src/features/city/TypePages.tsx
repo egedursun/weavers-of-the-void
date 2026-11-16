@@ -49,7 +49,7 @@ export function Preview({
     </div>
   )
   return (
-    <div className='relative min-w-0 overflow-hidden rounded-xl border bg-muted'>
+    <div className='relative min-w-0 overflow-hidden rounded-md border surface-well border-gild/45 bg-muted/70'>
       <div className='aspect-video w-full'>
         {hasWebGL2() ? (
           <Suspense fallback={still}>

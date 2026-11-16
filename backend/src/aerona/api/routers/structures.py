@@ -14,6 +14,7 @@ from aerona.api.schemas.structures import (
     StructureView,
 )
 from aerona.catalog.materials import MATERIALS
+from aerona.catalog.structure_effects import STRUCTURE_OWN_EFFECTS
 from aerona.catalog.structures import STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
@@ -134,6 +135,7 @@ async def structure_view(session: AsyncSession, rules: Rules, work: EntityRow, p
         on_ley_line=profile.on_ley_line,
         attuned=resolved.ley,
         anchor=profile.anchor,
+        own_effects=list(STRUCTURE_OWN_EFFECTS[profile.kind]),
         splendor=stat_or(work, "splendor", 0),
         function=stat_or(work, "function", 0),
         effect_pct=profile.effect_pct,

@@ -1,10 +1,11 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.catalog.backfill_words import ACT_WORDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow, CreatorRow
+from aerona.db.tables.creator_bonds import CreatorStandingRow
 from aerona.db.tables.divine import CreatorTabooRow, WorldAttentionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
@@ -88,6 +89,15 @@ async def acted_on(ctx: TickContext) -> dict[int, int]:
     return counts
 
 
+async def awe_by_world(ctx: TickContext) -> dict[int, float]:
+    rows = await ctx.session.execute(
+        select(EntityRow.world_id, func.avg(CreatorStandingRow.awe))
+        .join(EntityRow, EntityRow.id == CreatorStandingRow.people_entity_id)
+        .group_by(EntityRow.world_id)
+    )
+    return {world_id: float(awe) for world_id, awe in rows.all() if world_id is not None and awe is not None}
+
+
 async def tend_attention(ctx: TickContext) -> int:
     table = ctx.rules.creator
     creator = await creator_row(ctx.session)
@@ -99,10 +109,12 @@ async def tend_attention(ctx: TickContext) -> int:
     budget = creator.mood_interest * table.attention_budget_pct / PERCENT
     share = budget / len(watched) if watched else 0.0
     acts = await acted_on(ctx)
+    awe = await awe_by_world(ctx)
     for row in rows:
         if "attention" in row.locked:
             continue
-        pull = (share if row.watched else 0.0) + acts.get(row.world_id, 0) * table.world_attention_per_action
+        drawn = awe.get(row.world_id, 0.0) * ctx.rules.creator_bonds.awe_pull / PERCENT
+        pull = (share if row.watched else 0.0) + acts.get(row.world_id, 0) * table.world_attention_per_action + drawn
         row.attention = clamp_percent(row.attention * (PERCENT - table.attention_decay_pct) / PERCENT + pull)
         row.epoch = ctx.epoch
     await ctx.session.flush()

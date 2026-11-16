@@ -192,7 +192,7 @@ async def swallow_place(scope: PlayerScope, command: PlaceTarget) -> Effect:
     creator = await scope.creator()
     spent = guards.charge(creator, end_cost(scope.rules, place), "life_cycles.end_cost")
     await swallow_place_by_hand(await scope.context("swallow_place"), place.id)
-    return Effect(f"{place.name} was swallowed by the earth.", place.id, essence_spent=spent)
+    return Effect(f"{place.name} was unmade by the Creator's hand.", place.id, essence_spent=spent)
 
 
 class Schism(Command):

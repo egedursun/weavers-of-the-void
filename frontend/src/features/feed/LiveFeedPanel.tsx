@@ -10,8 +10,9 @@ import { ArrowDown, Eraser, Radio } from 'lucide-react'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { OrnateFrame } from '@/components/ui/ornate'
 import { EmptyState, Timeline } from '@/components/domain'
-import { Label, Muted } from '@/components/typography'
+import { Label, Muted, SectionTitle } from '@/components/typography'
 import { ImageQueueFeed } from '@/features/images/ImageQueueFeed'
 import { useImageGenStore } from '@/features/images/imageGenState'
 import { FeedFilters } from './FeedFilters'
@@ -85,21 +86,20 @@ export function LiveFeedPanel({
     if (sticky.current) setSeen(visible)
   }
 
-  return (
+  const panel = (
     <section
       aria-label='Live feed'
       data-feature='live-feed'
       className={cn(
         'flex min-h-0 min-w-0 flex-col gap-3',
-        layout === 'card' &&
-          'h-full rounded-xl border bg-card p-5 text-card-foreground shadow-xs',
+        layout === 'card' && 'h-full',
         layout === 'fill' && 'flex-1'
       )}
     >
-      {showHeader && <LiveFeedHeader />}
+      {showHeader && <LiveFeedHeader titled={layout !== 'card'} />}
       <div
         data-feature='live-feed-toolbar'
-        className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card/60 p-2'
+        className='flex min-w-0 flex-col gap-2 rounded-md plate-track p-2'
       >
         <FeedFilters categories={categories} />
         <div className='flex min-w-0 items-center justify-between gap-2 border-t pt-2'>
@@ -133,7 +133,7 @@ export function LiveFeedPanel({
       {imageLines > 0 && (
         <div
           data-feature='feed-image-queue'
-          className='flex min-w-0 flex-col gap-2 rounded-md border p-3'
+          className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
         >
           <Label variant='overline'>Images</Label>
           <ImageQueueFeed />
@@ -188,5 +188,19 @@ export function LiveFeedPanel({
         )}
       </div>
     </section>
+  )
+  if (layout !== 'card') return panel
+  return (
+    <OrnateFrame
+      footCrest
+      className='h-full px-5 pb-9 sm:px-9'
+      nameplate={
+        <SectionTitle level={2} truncate className='text-gilded'>
+          Live feed
+        </SectionTitle>
+      }
+    >
+      {panel}
+    </OrnateFrame>
   )
 }

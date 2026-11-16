@@ -132,6 +132,9 @@ class EvidenceRules:
     trace_reliability: int = rule(60, 0, 100, J, "Reliability of a trace found where a crime was done")
     witness_weight_pct: int = rule(100, 0, 400, J, "Scale of the weight evidence adds to a case (%)")
     forged_reliability: int = rule(50, 0, 100, J, "Reliability a forged document claims")
+    confession_chance: int = rule(15, 0, 100, J, "Chance the true culprit of a case confesses when it is opened (%)")
+    confession_reliability: int = rule(85, 0, 100, J, "Reliability of a confession")
+    divination_reliability: int = rule(40, 0, 100, J, "Reliability of a seer's reading of who did a crime")
 
 
 @dataclass(frozen=True)

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import SIGHT_PARTS, Part
+from aerona.catalog.medicine import MEDICINE, tier_of
 from aerona.catalog.mind import HEALING_SKILLS
 from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, FULL_COUNTS
 from aerona.constants.units import PERCENT
@@ -81,26 +82,12 @@ BLED_OUT = "bled to death from an open wound"
 PRECIOUS = frozenset({MaterialKind.SILVER, MaterialKind.GOLD, MaterialKind.STAR_METAL, MaterialKind.CRYSTAL, MaterialKind.DRAGONBONE, MaterialKind.SKYSTEEL})
 
 
-def tier_of(rules: HealingRules, medicine: int, magic: int, biomancy: bool) -> MedicineTier:
-    if biomancy or medicine >= rules.reattachment_level or magic >= rules.magic_reattachment_level:
-        return MedicineTier.REATTACHMENT
-    if medicine >= rules.prosthetics_level:
-        return MedicineTier.PROSTHETICS
-    if medicine >= rules.surgery_level:
-        return MedicineTier.SURGERY
-    if medicine >= rules.herbs_level:
-        return MedicineTier.HERBS
-    return MedicineTier.NONE
-
-
 async def known_tier(session: AsyncSession, holder_id: int | None, tier: MedicineTier) -> MedicineTier:
-    if tier is MedicineTier.NONE or tier_index(tier) > tier_index(MedicineTier.SURGERY):
-        return tier
-    if await lacks(session, holder_id, Technique.HERBALISM):
-        return MedicineTier.NONE
-    if tier is MedicineTier.SURGERY and await lacks(session, holder_id, Technique.SURGERY):
-        return MedicineTier.HERBS
-    return tier
+    for candidate in reversed(MEDICINE_ORDER[: tier_index(tier) + 1]):
+        technique = MEDICINE[candidate].technique
+        if technique is None or not await lacks(session, holder_id, technique):
+            return candidate
+    return MedicineTier.NONE
 
 
 def tier_index(tier: MedicineTier) -> int:
@@ -352,7 +339,7 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
         if isinstance(bearer, EntityRow):
             await note(
                 ctx,
-                f"{bearer.name} lost a festering {part.label.lower() if part else row.part} to the surgeon's saw and lived.",
+                f"{bearer.name} lost a festering {part.label.lower() if part else row.part} to surgery and lived.",
                 key="healing.amputated",
                 ids=[bearer.id],
             )
@@ -501,6 +488,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
             chance *= table.campaign_rest_pct / PERCENT if campaign else 1
             chance *= 1 + table.healer_heal_bonus_pct * skill / PERCENT / PERCENT
             chance *= 1 + table.divine_heal_bonus_pct / PERCENT if divine else 1
+            chance *= 1 + table.mind_care_pct / PERCENT if row.kind is InjuryKind.MIND_SCAR and MEDICINE[care.tier].mind_care else 1
             outcome.changed = await _progress(ctx, bearer, row, care, key, healed=rng.chance(chance)) or outcome.changed
     if isinstance(bearer, EntityRow):
         outcome.changed = await _restore(ctx, bearer, body, care) or outcome.changed

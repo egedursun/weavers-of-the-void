@@ -358,7 +358,7 @@ describe('health panel', () => {
     await expect.element(screen.getByText('Read-only')).toBeInTheDocument()
     const database = await miniStat('Database')
     await expect.element(database.getByText('4 KB')).toBeInTheDocument()
-    await database.hover()
+    ;(database.element() as HTMLElement).focus()
     await expect
       .element(screen.getByText('aerona.db with 1 KB of journal').first())
       .toBeVisible()
@@ -370,7 +370,7 @@ describe('health panel', () => {
       .toBeInTheDocument()
     const last = await miniStat('Last backup')
     await expect.element(last.getByText('5 min ago')).toBeInTheDocument()
-    await last.hover()
+    ;(last.element() as HTMLElement).focus()
     await expect.element(screen.getByText('epoch-3.db').first()).toBeVisible()
     await screen.getByRole('button', { name: 'Show the recent error' }).click()
     await expect.element(screen.getByText('12:00 · error')).toBeInTheDocument()

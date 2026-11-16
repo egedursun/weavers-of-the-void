@@ -78,7 +78,7 @@ async def soul_bind(ctx: TickContext, soul_id: int, target_id: int, by: str, bin
     if record is not None:
         record.bound_to_entity_id = target.id
     result = await _golem(ctx, soul, target, binder_id) if target.entity_type is EntityType.STRUCTURE else await _bind_object(ctx, target)
-    walked = "; the stone began to walk" if result.id != target.id else ""
+    walked = "; the work began to move" if result.id != target.id else ""
     await ctx.chronicle(
         ChronicleKind.SPIRIT, f"{by} bound {soul.name} to {target.name}{walked}.", template_key="beyond.soul_bound", entity_ids=[soul.id, target.id]
     )
@@ -94,7 +94,7 @@ async def _golem(ctx: TickContext, soul: EntityRow, work: EntityRow, binder_id: 
         RecordSpec(
             name=f"{work.name} Golem",
             entity_type=EntityType.SPECIES,
-            body=f"{soul.name} was bound to the stone of {work.name} and the stone began to walk.",
+            body=f"{soul.name} was bound to {work.name}, and the work began to move.",
             stats=SpeciesStats(
                 hp=beyond.golem_hp,
                 strength=clamp_percent(beyond.golem_strength_base + rng.die(beyond.golem_strength_die)),
@@ -311,7 +311,7 @@ async def raise_archive(ctx: TickContext) -> EntityRow | None:
         RecordSpec(
             name="Cosmic Archive",
             entity_type=EntityType.STRUCTURE,
-            body="A place that gathers the knowledge of all worlds by itself. Nobody knows who built it; the shelves grow a little longer every epoch.",
+            body="A place that gathers the knowledge of all worlds by itself. Nobody knows who made it; what it holds grows every epoch.",
             stats=StructureStats(splendor=beyond.archive_splendor, durability=beyond.archive_durability, function=beyond.archive_function),
             power=beyond.archive_power,
             world_id=region.world_id,
@@ -414,7 +414,7 @@ async def cosmic_plague(ctx: TickContext) -> int:
     count = 0
     for journey in list(await ctx.session.scalars(statement.order_by(JourneyRow.id))):
         place = await ctx.session.get(EntityRow, journey.result_entity_id)
-        if place is None or place.status is not EntityStatus.CANON or place.id in infected or not rng.chance(beyond.cosmic_plague_chance):
+        if place is None or place.status is not EntityStatus.CANON or place.id in infected or held(place.id) or not rng.chance(beyond.cosmic_plague_chance):
             continue
         await infect(ctx, place)
         infected.add(place.id)
@@ -455,7 +455,7 @@ async def void_storm(ctx: TickContext) -> str | None:
                 kind=SkyEventKind.VOID_STORM, epoch=ctx.epoch, until_epoch=result.severed_until - 1, world_id=world_id, route_id=route.id, text=result.text
             )
         )
-    text = "A void storm swallowed a hidden route but the route was revealed." if result.revealed else "A void storm swallowed a route."
+    text = "A void storm closed a hidden route, and the route was revealed." if result.revealed else "A void storm closed a route."
     await note(ctx, f"{text} {result.text}", key="beyond.void_storm", feed=FeedCategory.GATE)
     return result.text
 
@@ -559,7 +559,7 @@ async def make_immortal(ctx: TickContext, mortal: EntityRow) -> None:
     await EntityRepository(ctx.session).add_flag(mortal.id, EntityFlag.IMMORTAL, ctx.epoch)
     for son in await ctx.session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE)):
         son.wrath = min(PERCENT, son.wrath + ctx.rules.beyond.immortality_son_wrath)
-    text = f"{mortal.name} defeated death: they no longer age. The gods saw this as a threat."
+    text = f"{mortal.name} defeated death: they no longer age."
     await ctx.chronicle(ChronicleKind.IMMORTALITY, text, template_key="beyond.immortal", entity_ids=[mortal.id])
 
 

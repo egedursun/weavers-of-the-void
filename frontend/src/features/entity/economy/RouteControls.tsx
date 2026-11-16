@@ -132,7 +132,7 @@ export function RouteDangers({ route }: { route: Detail }) {
         note='Each danger takes its share of the losses; the worst season holds cargo back on every kind of way.'
       />
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/route:grid-cols-2'>
-        <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+        <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           {DANGER_KEYS.map((key) => {
             const spec = DANGERS[key]
             const named = culprits(route.losses, key)
@@ -184,7 +184,7 @@ export function RouteDangers({ route }: { route: Detail }) {
             hint={seasonWord(season)}
           />
           {route.chokepoint && (
-            <div className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-background p-3'>
+            <div className='flex min-w-0 items-center gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
               <Medallion icon={Mountain} tone='warning' size='sm' />
               <div className='flex min-w-0 flex-col'>
                 <Text weight='medium'>A chokepoint</Text>
@@ -564,7 +564,7 @@ export function TollControls({
             {(toll) => (
               <li
                 key={toll.region_id}
-                className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-background p-2.5'
+                className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'
               >
                 <Landmark
                   aria-hidden='true'
@@ -912,7 +912,7 @@ export function CommunityRoutes({ communityId }: { communityId: number }) {
                   <li
                     key={route.route_id}
                     data-route={route.route_id}
-                    className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
+                    className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
                   >
                     <div className='flex min-w-0 items-center gap-2.5'>
                       <Medallion

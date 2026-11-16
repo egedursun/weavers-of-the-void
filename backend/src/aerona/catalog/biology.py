@@ -59,7 +59,7 @@ BIOLOGY_VARIANTS: MappingProxyType[BiologyVariant, BiologySpec] = MappingProxyTy
             shifts={B.GROUPTHINK: 50, B.COLONY_RISK_AVERSION: 40},
             damped=frozenset({B.OVERCONFIDENCE}),
         ),
-        V.PLANT_LIKE: BiologySpec(food_need_pct=40, death_pct=70, disease_pct=110, fire_harm_pct=200, bleeds=False, tissue=TissueMaterial.WOOD),
+        V.PLANT_LIKE: BiologySpec(food_need_pct=40, death_pct=70, disease_pct=110, fire_harm_pct=200, bleeds=False, tissue=TissueMaterial.FIBROUS),
         V.CONSTRUCT: BiologySpec(
             food_need_pct=0,
             fertility_pct=30,
@@ -98,7 +98,7 @@ BIOLOGY_VARIANTS: MappingProxyType[BiologyVariant, BiologySpec] = MappingProxyTy
             drinks=False,
             bleeds=False,
             infects=False,
-            tissue=TissueMaterial.CRYSTAL,
+            tissue=TissueMaterial.CRYSTALLINE,
         ),
         V.UNDEAD: BiologySpec(
             food_need_pct=0,

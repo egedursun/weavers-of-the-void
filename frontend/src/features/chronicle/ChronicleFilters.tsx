@@ -57,7 +57,10 @@ export function ChronicleFilters({
   const isOn = (key: string) =>
     chosen ? chosen.has(key) : !DEFAULT_HIDDEN_KINDS.has(key)
   return (
-    <div data-chronicle-filters className='flex min-w-0 flex-col gap-3'>
+    <div
+      data-chronicle-filters
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
+    >
       <div className='flex min-w-0 flex-col gap-2 sm:flex-row'>
         <Input
           type='search'

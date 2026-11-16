@@ -76,7 +76,7 @@ function PreviewPane({ mode }: { mode: ResolvedTheme }) {
       </span>
       <span className='flex min-h-0 flex-1 gap-1'>
         <span className='w-2.5 rounded-sm bg-sidebar' />
-        <span className='flex flex-1 flex-col justify-end gap-0.5 rounded-sm border bg-card p-1'>
+        <span className='flex flex-1 flex-col justify-end gap-0.5 rounded-md border surface-sheen border-gild/60 bg-card p-1'>
           <span className='h-1 w-3/4 rounded-full bg-foreground/50' />
           <span className='h-1 w-1/2 rounded-full bg-primary' />
         </span>

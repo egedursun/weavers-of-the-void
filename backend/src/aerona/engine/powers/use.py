@@ -1,14 +1,19 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.powers import MagicSystemLinkRow, MagicSystemRow, PowerRestrictionRow, PowerRow, PowerSourceRow
+from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.fortune import FortuneSourceKind
+from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.polity import LawKind
@@ -20,18 +25,21 @@ from aerona.domain.enums.powers import (
     ResistanceKind,
     RestrictionKind,
     SourceLawLevel,
-    SystemRelation,
 )
 from aerona.engine.arcana.resistance import carries_iron, sanctity_at
 from aerona.engine.concealment.truths import overt_breach
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import points_of, shift_points
+from aerona.engine.fortune.profiles import shift_fortune
 from aerona.engine.mind.split import attribute
 from aerona.engine.mortal.standing import add_infamy, add_renown
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.powers import effects
 from aerona.engine.powers.devices import devices_of
-from aerona.engine.powers.sources import draw, hazard_of, knows_source, polity_of, resistances_of, source_level
+from aerona.engine.powers.kinds import SEASONS, access_refused, licence_refused, structure_holds, suffer, system_bond
+from aerona.engine.powers.sources import draw, drawn_from_land, hazard_of, knows_source, polity_of, resistances_of, source_level, tide_factor
+from aerona.engine.primitives.augment_bonus import bonus
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
@@ -68,23 +76,84 @@ async def dampened(ctx: TickContext, target: EntityRow | None, user: EntityRow) 
     return max(0.0, 1 - damp * ctx.rules.powers.device_pct / PERCENT)
 
 
+@dataclass(frozen=True)
+class Asked:
+    row: PowerRestrictionRow
+    power: PowerRow
+    user: EntityRow
+    target: EntityRow | None
+
+
+async def on_self(_ctx: TickContext, asked: Asked) -> bool:
+    return asked.target is None or asked.target.id == asked.user.id
+
+
+async def out_of_place(_ctx: TickContext, asked: Asked) -> bool:
+    return asked.row.ref_node_id is not None and asked.user.location_id != asked.row.ref_node_id
+
+
+async def wrong_target(_ctx: TickContext, asked: Asked) -> bool:
+    ref, target = asked.row.ref_node_id, asked.target
+    return ref is not None and (target is None or ref not in {target.id, target.affiliated_entity_id})
+
+
+async def out_of_reach(_ctx: TickContext, asked: Asked) -> bool:
+    return asked.target is not None and asked.target.location_id != asked.user.location_id
+
+
+async def unseen(ctx: TickContext, asked: Asked) -> bool:
+    return not await witnesses_of(ctx, asked.user)
+
+
+async def seen(ctx: TickContext, asked: Asked) -> bool:
+    return bool(await witnesses_of(ctx, asked.user))
+
+
+async def out_of_time(ctx: TickContext, asked: Asked) -> bool:
+    return not await in_its_time(ctx, asked.power)
+
+
+async def unpaid(ctx: TickContext, asked: Asked) -> bool:
+    if await points_of(ctx.session, asked.user) <= 0:
+        return True
+    await shift_points(ctx.session, asked.user, -1)
+    return False
+
+
+async def kept(_ctx: TickContext, _asked: Asked) -> bool:
+    return False
+
+
+BLOCKS: Mapping[RestrictionKind, Callable[[TickContext, Asked], Awaitable[bool]]] = total(
+    RestrictionKind,
+    {
+        RestrictionKind.NEVER_ON_SELF: on_self,
+        RestrictionKind.ONLY_IN_PLACE: out_of_place,
+        RestrictionKind.ONLY_AGAINST: wrong_target,
+        RestrictionKind.MUST_TOUCH: out_of_reach,
+        RestrictionKind.MUST_BE_SEEN: unseen,
+        RestrictionKind.MUST_BE_UNSEEN: seen,
+        RestrictionKind.ONLY_AT_TIME: out_of_time,
+        RestrictionKind.PRICE_EACH_USE: unpaid,
+        RestrictionKind.SPOKEN_VOW: kept,
+        RestrictionKind.FORBIDDEN_ACT: kept,
+    },
+)
+
+
 async def restriction_factor(ctx: TickContext, power: PowerRow, user: EntityRow, target: EntityRow | None) -> float | None:
     gain = 0
     for row in await ctx.session.scalars(select(PowerRestrictionRow).where(PowerRestrictionRow.power_id == power.id, PowerRestrictionRow.broken.is_(False))):
-        if row.kind is RestrictionKind.NEVER_ON_SELF and (target is None or target.id == user.id):
-            return None
-        if row.kind is RestrictionKind.ONLY_IN_PLACE and row.ref_node_id is not None and user.location_id != row.ref_node_id:
-            return None
-        if (
-            row.kind is RestrictionKind.ONLY_AGAINST
-            and row.ref_node_id is not None
-            and (target is None or row.ref_node_id not in {target.id, target.affiliated_entity_id})
-        ):
-            return None
-        if row.kind is RestrictionKind.MUST_TOUCH and target is not None and target.location_id != user.location_id:
+        if await BLOCKS[row.kind](ctx, Asked(row, power, user, target)):
             return None
         gain += row.strength_gain_pct
     return 1 + min(gain, ctx.rules.powers.restriction_cap_pct) / PERCENT
+
+
+async def in_its_time(ctx: TickContext, power: PowerRow) -> bool:
+    if power.source_id is None:
+        return ctx.epoch % SEASONS == 0
+    return await tide_factor(ctx, power.source_id) >= 1.0
 
 
 async def seated_apart(ctx: TickContext, target: EntityRow, power: PowerRow) -> bool:
@@ -93,9 +162,13 @@ async def seated_apart(ctx: TickContext, target: EntityRow, power: PowerRow) -> 
 
 
 async def resistance(ctx: TickContext, target: EntityRow | None, kinds: list[ResistanceKind], user: EntityRow) -> float:
-    if target is None or target.id == user.id or target.entity_type is not EntityType.MORTAL:
+    if target is None or target.id == user.id or target.entity_type is not EntityType.MORTAL or kinds == [ResistanceKind.NONE]:
         return 0.0
     total = 0
+    for kind in kinds:
+        total += await bonus(ctx.session, target.id, EffectTarget.RESISTANCE, kind.value)
+    if ResistanceKind.DAMPENER in kinds:
+        total += (await devices_of(ctx.session, [target.id])).count(PowerDeviceEffect.DAMPEN) * PERCENT // 4
     if ResistanceKind.WILL in kinds:
         total += await attribute(ctx.session, ctx.rules, target, Attribute.WILLPOWER) // 2
     if ResistanceKind.DISCIPLINE in kinds:
@@ -124,17 +197,19 @@ async def system_factor(ctx: TickContext, power: PowerRow, target: EntityRow | N
         return 1.0
     spread = (PERCENT - system.predictability) / PERCENT * ctx.rules.magic_systems.spread_pct / PERCENT
     factor = 1 + (ctx.rng(f"power.spread.{power.id}.{ctx.epoch}").random() * 2 - 1) * spread
+    factor *= await structure_holds(ctx, power)
     if target is None:
         return factor
     theirs = set(await ctx.session.scalars(select(PowerRow.system_id).where(PowerRow.holder_node_id == target.id, PowerRow.system_id.is_not(None))))
-    opposed = await ctx.session.scalar(
-        select(MagicSystemLinkRow.id).where(
-            MagicSystemLinkRow.relation == SystemRelation.OPPOSES,
+    links = await ctx.session.scalars(
+        select(MagicSystemLinkRow.relation).where(
             ((MagicSystemLinkRow.first_system_id == system.id) & MagicSystemLinkRow.second_system_id.in_(theirs))
             | ((MagicSystemLinkRow.second_system_id == system.id) & MagicSystemLinkRow.first_system_id.in_(theirs)),
         )
     )
-    return factor * (1 - ctx.rules.magic_systems.oppose_pct / PERCENT) if opposed is not None else factor
+    for relation in set(links):
+        factor *= await system_bond(ctx, relation)
+    return factor
 
 
 async def linked_strength(ctx: TickContext, user: EntityRow, power: PowerRow) -> float:
@@ -145,15 +220,25 @@ async def linked_strength(ctx: TickContext, user: EntityRow, power: PowerRow) ->
     return 1 + sum(joined) * ctx.rules.powers.link_pct / PERCENT / max(1, power.strength)
 
 
+async def source_refused(ctx: TickContext, user: EntityRow, source: PowerSourceRow) -> str | None:
+    refused = await access_refused(ctx, user, source)
+    if refused is not None:
+        return refused
+    polity = await polity_of(ctx.session, user.location_id)
+    level = await source_level(ctx.session, user.id, user.location_id, polity, source.id)
+    if level is SourceLawLevel.BANNED:
+        return f"drawing on {source.name} is banned here"
+    return await licence_refused(ctx, user, polity) if level is SourceLawLevel.LICENSED else None
+
+
 async def allowed(ctx: TickContext, user: EntityRow, power: PowerRow, source: PowerSourceRow | None) -> str | None:
     if power.state not in USABLE:
         return "the power is not awake"
     if source is not None and not await knows_source(ctx.session, [user.id, *([user.location_id] if user.location_id is not None else [])], source):
         return f"no one here knows how to draw on {source.name}"
     town = user.location_id
-    polity = await polity_of(ctx.session, town)
-    if source is not None and await source_level(ctx.session, user.id, town, polity, source.id) is SourceLawLevel.BANNED:
-        return f"drawing on {source.name} is banned here"
+    if source is not None and (refused := await source_refused(ctx, user, source)) is not None:
+        return refused
     if power.form.value in MIND_FORMS and town is not None and str(await law_param(ctx.session, town, LawKind.POWER_LAW, "mind_powers")) == "banned":
         return "powers over minds are banned here"
     return None
@@ -169,8 +254,8 @@ async def strain(ctx: TickContext, user: EntityRow, power: PowerRow, strength: i
         if "state" not in power.locked:
             power.state = PowerState.STRAINED
     if power.strain * PERCENT >= power.strain_cap * table.burnout_at_pct and "state" not in power.locked:
-        power.state = PowerState.BURNED_OUT
-        await note(ctx, f"The power of {user.name} gave out.", key="power.burned_out", ids=[user.id])
+        power.state = PowerState.EXHAUSTED
+        await note(ctx, f"The power of {user.name} gave out.", key="power.exhausted", ids=[user.id])
     return over
 
 
@@ -215,8 +300,13 @@ async def use(ctx: TickContext, power: PowerRow, user: EntityRow, target: Entity
     over = await strain(ctx, user, power, power.strength)
     if over and done is not None and rng.chance(table.growth_chance) and "strength" not in power.locked:
         power.strength = min(10, power.strength + 1)
-    if source is not None and await hazard_of(ctx, user, source) is PowerHazard.INJURY:
-        await effects.scar(ctx, user, table.scar_hp)
+    hazard = await hazard_of(ctx, user, source) if source is not None else None
+    if hazard is not None and await suffer(ctx, user, power, hazard) == PowerHazard.DEPLETION.value and source is not None:
+        await drawn_from_land(ctx, user, source, power.strength)
+    if done is not None and power.form is SpellForm.FATE:
+        await shift_fortune(
+            ctx, (aimed or user).id, magnitude // 4 if power.technique is not SpellTechnique.DESTROY else -magnitude // 4, FortuneSourceKind.FATE_POWER, user.id
+        )
     power.uses += 1
     power.last_used_epoch = ctx.epoch
     if done is not None and power.visibility is not PowerVisibility.HIDDEN:

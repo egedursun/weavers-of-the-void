@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from types import MappingProxyType
 
@@ -341,7 +342,9 @@ class FrameSpec:
 
     @property
     def kind(self) -> DesignKind:
-        return DESIGN_KINDS[self.domain] if self.family not in SIEGE_FAMILIES else DesignKind.SIEGE_ENGINE
+        if self.family in SIEGE_FAMILIES:
+            return DesignKind.WEAPON_SYSTEM if self.family is VehicleFamily.GUN and self.level >= WEAPON_SYSTEM_LEVEL else DesignKind.SIEGE_ENGINE
+        return FAMILY_DESIGNS.get(self.family, DESIGN_KINDS[self.domain])
 
     @property
     def sky(self) -> bool:
@@ -364,15 +367,29 @@ DESIGN_KIND_LABELS: MappingProxyType[DesignKind, str] = total(
         DesignKind.SIEGE_ENGINE: "Siege engine",
         DesignKind.LAND_VEHICLE: "Land vehicle",
         DesignKind.SPACECRAFT: "Spacecraft",
+        DesignKind.AIR_VEHICLE: "Air vehicle",
+        DesignKind.UNDERWATER_VESSEL: "Underwater vessel",
+        DesignKind.LIVING_VESSEL: "Living vessel",
+        DesignKind.MADE_BODY: "Made body",
+        DesignKind.WEAPON_SYSTEM: "Weapon system",
     },
 )
+WEAPON_SYSTEM_LEVEL = 6
+FAMILY_DESIGNS: Mapping[VehicleFamily, DesignKind] = {
+    VehicleFamily.LIVING: DesignKind.LIVING_VESSEL,
+    VehicleFamily.CONSTRUCT: DesignKind.MADE_BODY,
+    VehicleFamily.WALKER: DesignKind.MADE_BODY,
+    VehicleFamily.AIRCRAFT: DesignKind.AIR_VEHICLE,
+    VehicleFamily.ROTORCRAFT: DesignKind.AIR_VEHICLE,
+    VehicleFamily.SUBMARINE: DesignKind.UNDERWATER_VESSEL,
+}
 SIEGE_FAMILIES = frozenset({Y.RAM, Y.TOWER, Y.THROWER, Y.GUN})
 DESIGN_KINDS: MappingProxyType[VehicleDomain, DesignKind] = total(
     VehicleDomain,
     {
         D.LAND: DesignKind.LAND_VEHICLE,
         D.WATER: DesignKind.VESSEL,
-        D.UNDERWATER: DesignKind.VESSEL,
+        D.UNDERWATER: DesignKind.UNDERWATER_VESSEL,
         D.AIR: DesignKind.SKYSHIP,
         D.SPACE: DesignKind.SPACECRAFT,
         D.GAS_GIANT: DesignKind.SPACECRAFT,

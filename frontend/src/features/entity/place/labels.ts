@@ -1,4 +1,7 @@
 import {
+  DoorOpen,
+  Brain,
+  Users,
   Anchor,
   BookOpen,
   Castle,
@@ -310,6 +313,24 @@ export const SECRET: Record<string, Named & { hint: string }> = {
     icon: Skull,
     tone: 'danger',
     hint: 'Opened, the dead walk near it',
+  },
+  hidden_people: {
+    label: 'Hidden people',
+    icon: Users,
+    tone: 'info',
+    hint: "Found, a people comes into the finder's knowledge",
+  },
+  dormant_mind: {
+    label: 'Sleeping mind',
+    icon: Brain,
+    tone: 'verdigris',
+    hint: 'Found, a mind wakes steadier',
+  },
+  sealed_realm: {
+    label: 'Sealed realm',
+    icon: DoorOpen,
+    tone: 'warning',
+    hint: 'Found, a realm is unsealed',
   },
 }
 

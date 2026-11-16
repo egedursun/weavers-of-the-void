@@ -290,7 +290,7 @@ export function EntityMechanics({
           <ProfileValues nodeId={nodeId} blocked={needs(null)} />
         </div>
       )}
-      <div className='@container/mech flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
+      <div className='@container/mech flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
         <div className='flex min-w-0 flex-col gap-0.5'>
           <Text weight='semibold'>Bend the mechanics</Text>
           <Muted variant='caption'>

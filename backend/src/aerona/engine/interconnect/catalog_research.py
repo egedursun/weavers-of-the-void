@@ -99,7 +99,10 @@ RESEARCH_MECHANICS = (
         couplings=(
             Coupling(S.ECONOMY, "a great catch from the sea pushes sailing and map-making", E.TRIGGER, "research_depth.fishing_scale"),
             Coupling(
-                S.WAR, "a siege repulsed pushes fortification; riders of the plains at war push horse archery", E.TRIGGER, "research_depth.boost_progress"
+                S.WAR,
+                "a siege repulsed pushes fortification; mounted peoples of the plains at war push mounted archery",
+                E.TRIGGER,
+                "research_depth.boost_progress",
             ),
             Coupling(S.BODY, "an outbreak outlived pushes quarantine, herbal lore and hospitals", E.TRIGGER, "research_depth.boost_progress"),
             Coupling(S.COSMOS, "an eclipse watched from an observatory pushes the calendar", E.TRIGGER, "research_depth.boost_progress"),

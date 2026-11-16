@@ -166,6 +166,22 @@ class CommanderTrait(StrEnum):
     CAUTIOUS = "cautious"
     INSPIRING = "inspiring"
     BRUTAL = "brutal"
+    FOREST_FIGHTER = "forest_fighter"
+    DESERT_FIGHTER = "desert_fighter"
+    MARSH_FIGHTER = "marsh_fighter"
+    SKY_COMMANDER = "sky_commander"
+    SPACE_COMMANDER = "space_commander"
+    ARTILLERIST = "artillerist"
+    AMBUSHER = "ambusher"
+    LOGISTICIAN = "logistician"
+    UNDERGROUND_FIGHTER = "underground_fighter"
+    AMPHIBIOUS_COMMANDER = "amphibious_commander"
+    SIEGE_DEFENDER = "siege_defender"
+    SKIRMISHER = "skirmisher"
+    ARMOURED_COMMANDER = "armoured_commander"
+    DISCIPLINARIAN = "disciplinarian"
+    SIGNALS_COMMANDER = "signals_commander"
+    NIGHT_FIGHTER = "night_fighter"
 
 
 class CommandArea(StrEnum):
@@ -257,6 +273,14 @@ class SabotageKind(StrEnum):
     WALL_WEAKENING = "wall_weakening"
     POISON_WELLS = "poison_wells"
     ARSON = "arson"
+    NETWORK_ATTACK = "network_attack"
+    BRIDGE_DESTRUCTION = "bridge_destruction"
+    BLIGHT_RELEASE = "blight_release"
+    SUPPLY_THEFT = "supply_theft"
+    MUTINY_INCITEMENT = "mutiny_incitement"
+    RITE_DISRUPTION = "rite_disruption"
+    SOURCE_POISONING = "source_poisoning"
+    MACHINE_SEIZURE = "machine_seizure"
 
 
 class SpyCover(StrEnum):
@@ -272,6 +296,11 @@ class FeudAction(StrEnum):
     DEMAND_WERGILD = "demand_wergild"
     ESCALATE = "escalate"
     REST = "rest"
+    AMBUSH = "ambush"
+    ABDUCT = "abduct"
+    DESTROY_PROPERTY = "destroy_property"
+    SEEK_MEDIATION = "seek_mediation"
+    CALL_ALLIES = "call_allies"
 
 
 class ArmyRole(StrEnum):
@@ -335,6 +364,8 @@ class SpyOwnerKind(StrEnum):
     FACTION = "faction"
     CULT = "cult"
     COMMUNITY = "community"
+    COMPANY = "company"
+    MADE_MIND = "made_mind"
 
 
 class AgentStatus(StrEnum):
@@ -348,6 +379,14 @@ class AgentStatus(StrEnum):
 class FeudParty(StrEnum):
     HOUSE = "house"
     COMMUNITY = "community"
+    PEOPLE = "people"
+
+
+class FeudLevel(StrEnum):
+    INSULT = "insult"
+    BLOOD = "blood"
+    RAID = "raid"
+    WAR = "war"
 
 
 class FeudStatus(StrEnum):
@@ -355,6 +394,9 @@ class FeudStatus(StrEnum):
     MEDIATED = "mediated"
     FADED = "faded"
     ENDED = "ended"
+    SETTLED = "settled"
+    OUTLAWED = "outlawed"
+    EXTINGUISHED = "extinguished"
 
 
 class MutinyOutcome(StrEnum):

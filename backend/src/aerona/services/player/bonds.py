@@ -296,7 +296,7 @@ async def set_passion(scope: PlayerScope, command: SetPassion) -> Effect:
     await node(scope, command.object_id)
     row = await kindle(scope.session, holder.id, command.kind, command.object_id, strength=0, source=command.source, epoch=await scope.epoch())
     if row is None:
-        raise ValidationFailedError("That passion cannot be kindled.")
+        raise ValidationFailedError("That passion cannot be set.")
     row.strength, row.source = command.strength, command.source
     row.locked = held(row.locked, ["strength", "kind"], command.hold)
     await scope.session.flush()
@@ -327,7 +327,7 @@ async def remove_passion(scope: PlayerScope, command: PassionTarget) -> Effect:
     holder = row.holder_node_id
     await scope.session.delete(row)
     await scope.session.flush()
-    return Effect("The passion was quenched.", target_node_id=holder)
+    return Effect("The passion was ended.", target_node_id=holder)
 
 
 @player_action("rank:set", ActionKind.OTHER)

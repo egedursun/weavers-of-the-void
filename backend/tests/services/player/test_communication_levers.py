@@ -48,7 +48,7 @@ async def test_the_god_sets_opinions_ciphers_and_signal_links(scope: PlayerScope
     assert cipher.broken_by == []
     await communication.delete_cipher(scope, communication.CipherTarget(owner_id=town.id))
     built = await communication.build_signal(
-        scope, communication.BuildSignal(owner_id=town.id, kind=SignalKind.POST_STATION, from_region_id=world.region.id, to_region_id=far.id)
+        scope, communication.BuildSignal(owner_id=town.id, kind=SignalKind.COURIER_POST, from_region_id=world.region.id, to_region_id=far.id)
     )
     link = await session.get(SignalLinkRow, built.values["link_id"])
     assert link is not None and link.state is SignalState.ACTIVE

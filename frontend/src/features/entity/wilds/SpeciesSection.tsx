@@ -191,7 +191,7 @@ function Hero({ card }: { card: SpeciesCard }) {
   const social = named(SOCIALITY, card.sociality)
   const stage = named(STAGE, card.stage)
   return (
-    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={plan.icon} tone={plan.tone ?? 'gold'} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <Text weight='semibold'>{`${size.label} ${plan.label.toLowerCase()} creature`}</Text>
@@ -517,7 +517,7 @@ function Kin({
   empty: string
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-muted/30 p-2'>
+    <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 items-center gap-1.5'>
         <Icon
           aria-hidden='true'
@@ -713,7 +713,7 @@ function Taming({ id, card, blocked }: Blocked) {
               return (
                 <li
                   key={row.community?.id}
-                  className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                  className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
                 >
                   <Medallion icon={stage.icon} tone={stage.tone} size='sm' />
                   <div className='flex min-w-0 flex-1 flex-col gap-1'>
@@ -753,7 +753,7 @@ function Taming({ id, card, blocked }: Blocked) {
 function RangeCard({ row }: { row: Range }) {
   const trend = named(TREND, row.trend)
   return (
-    <li className='flex min-w-0 flex-col gap-2.5 rounded-lg border bg-muted/30 p-3'>
+    <li className='flex min-w-0 flex-col gap-2.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={MapPin} tone='info' size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -971,7 +971,7 @@ function RangeEditor({
   const put = (key: keyof typeof draft) => (value: string) =>
     setDraft((before) => ({ ...before, [key]: value }))
   return (
-    <li className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <li className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <MapPin aria-hidden='true' className='size-icon-sm text-info' />
         <div className='min-w-0 flex-1'>
@@ -1210,25 +1210,27 @@ function YieldControls({ id, card, blocked }: Blocked) {
     <div className='flex min-w-0 flex-col gap-3'>
       <Group title='Kept for' icon={Wheat}>
         <ul className='grid min-w-0 grid-cols-1 gap-2 @md/wild:grid-cols-2 @3xl/wild:grid-cols-4'>
-          {speciesUseValues.map((key) => {
-            const spec = named(USE, key)
-            return (
-              <li key={key}>
-                <label className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'>
-                  <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-                  <Text as='span' weight='medium' truncate className='flex-1'>
-                    {spec.label}
-                  </Text>
-                  <Switch
-                    checked={card.uses.includes(key)}
-                    disabled={busy !== null}
-                    aria-label={spec.label}
-                    onCheckedChange={(held) => use.mutate({ use: key, held })}
-                  />
-                </label>
-              </li>
-            )
-          })}
+          <Paged items={speciesUseValues} as='li'>
+            {(key) => {
+              const spec = named(USE, key)
+              return (
+                <li key={key}>
+                  <label className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
+                    <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+                    <Text as='span' weight='medium' truncate className='flex-1'>
+                      {spec.label}
+                    </Text>
+                    <Switch
+                      checked={card.uses.includes(key)}
+                      disabled={busy !== null}
+                      aria-label={spec.label}
+                      onCheckedChange={(held) => use.mutate({ use: key, held })}
+                    />
+                  </label>
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       </Group>
       <Group title='What it yields' icon={Package}>
@@ -1349,7 +1351,7 @@ function YieldRow({
   const goods = row.commodity ? COMMODITY[row.commodity] : null
   const label = titled(row.product)
   return (
-    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <Medallion icon={goods?.icon ?? Package} tone='gold' size='sm' />
       <div className='flex min-w-0 flex-1 basis-32 flex-col'>
         <Text as='span' weight='medium' truncate>

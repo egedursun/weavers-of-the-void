@@ -190,7 +190,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
                   {(row) => (
                     <li
                       key={row.id}
-                      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
+                      className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'
                     >
                       <div className='flex min-w-0 items-center gap-2'>
                         <Medallion icon={Zap} tone='warning' size='sm' />
@@ -299,7 +299,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
                   {(row) => (
                     <li
                       key={`${row.son.id}-${row.epoch}`}
-                      className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                      className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
                     >
                       <NodeName item={row.son} />
                       <Badge

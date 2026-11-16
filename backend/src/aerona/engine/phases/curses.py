@@ -23,7 +23,7 @@ from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
 HEADCOUNT_KEYS = ("population", "followers")
 DECAYING_KEYS = ("prosperity", "fertility", "abundance", "strength", "wealth")
 BLIGHTABLE = frozenset({EntityType.REGION, EntityType.PLACE})
-CURSE_DEATH = "melted away under the curse and died"
+CURSE_DEATH = "wasted away under the curse and died"
 
 
 async def cursed(ctx: TickContext) -> list[EntityRow]:
@@ -53,6 +53,7 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "settlement.prosperity",
     "settlement.wealth",
     "table.assistive_aids",
+    "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -150,6 +151,7 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "settlement.defense",
     "settlement.prosperity",
     "table.assistive_aids",
+    "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",

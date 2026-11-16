@@ -12,14 +12,14 @@ from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow, LegendaryQue
 from aerona.db.tables.mind import TraitRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.mythic import MantlingRow
-from aerona.db.tables.polity import HouseProfileRow, OfficeHistoryRow, OfficeRow, SentenceRow
+from aerona.db.tables.polity import HouseProfileRow, OathRow, OfficeHistoryRow, OfficeRow, SentenceRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import ArcOutcome, ArcRole, ArcStage, ArcTemplate
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.mortal import LifeStage
-from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.polity import OathStatus, OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
@@ -222,8 +222,22 @@ async def apotheosis(ctx: TickContext) -> list[Candidate]:
     ]
 
 
+async def betrayals(ctx: TickContext) -> list[Candidate]:
+    rows = await ctx.session.execute(
+        select(OathRow.swearer_entity_id, OathRow.recipient_node_id)
+        .where(OathRow.status == OathStatus.BROKEN, OathRow.recipient_node_id.is_not(None), OathRow.ended_epoch == ctx.epoch)
+        .order_by(OathRow.id)
+    )
+    found: list[Candidate] = []
+    for breaker, wronged in rows.all():
+        if wronged is not None and await living(ctx, wronged) and await living(ctx, breaker):
+            found.append(Candidate(wronged, ArcTemplate.REVENGE, ((breaker, ArcRole.BETRAYER),)))
+    return found
+
+
 DETECTORS: tuple[Callable[[TickContext], Awaitable[list[Candidate]]], ...] = (
     revenge,
+    betrayals,
     rivalry,
     apprenticeship,
     forbidden_love,

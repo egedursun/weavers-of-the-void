@@ -89,6 +89,14 @@ function MishapCard({ row, blocked }: { row: Mishap; blocked: string | null }) {
           types: [],
           kinds: ['entity', 'son', 'foreign_god'],
         },
+        {
+          key: 'severity',
+          label: 'Severity',
+          kind: 'number',
+          min: 0,
+          max: 100,
+        },
+        { key: 'died', label: 'Took a life', kind: 'pick', table: YES_NO },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -106,6 +114,16 @@ function MishapCard({ row, blocked }: { row: Mishap; blocked: string | null }) {
           [
             'Truly caused by',
             <Ref key='cause' node={row.cause} empty='no one' />,
+          ],
+          [
+            'Severity',
+            `${row.severity}${row.died ? ', and it took a life' : ''}`,
+          ],
+          [
+            'Seen by',
+            row.witnesses.length
+              ? row.witnesses.map((node) => node.name).join(', ')
+              : 'no one',
           ],
         ]}
       />

@@ -1,15 +1,18 @@
 from collections import Counter, defaultdict
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
+from aerona.core.total import total
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import PreparednessRow, ReconstructionRow, ReliefAidRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.law_depth import RegistryRow
 from aerona.db.tables.polity import HouseProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.write_guard import held
@@ -20,6 +23,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.intrigue import FavourOrigin
+from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.mind import HonourModel, MemoryKind
 from aerona.domain.enums.settlement import BuildMaterial, SizeTier, TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch
@@ -36,6 +40,7 @@ from aerona.engine.economy.purse import give_coin
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.intrigue.favours import owe
+from aerona.engine.lore.research import steal_technique
 from aerona.engine.mind.ethics import honour_of
 from aerona.engine.mortal.standing import add_honour
 from aerona.engine.notes import note
@@ -44,7 +49,7 @@ from aerona.engine.polity.governance import spend
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import patron_node
 from aerona.engine.primitives.knowledge import KnowledgeMap
-from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import top_region
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.services.community_relations import relation
@@ -55,7 +60,17 @@ K = PreparednessKind
 TIERS = tuple(SizeTier)
 MOST_LEVEL = 5
 RELIEVED = frozenset(
-    {EngineKind.EARTHQUAKE, EngineKind.FLOOD, EngineKind.PLAGUE, EngineKind.DROUGHT, EngineKind.STORM, EngineKind.ERUPTION, EngineKind.FIRE, EngineKind.FAMINE}
+    {
+        EngineKind.EARTHQUAKE,
+        EngineKind.FLOOD,
+        EngineKind.PLAGUE,
+        EngineKind.DROUGHT,
+        EngineKind.STORM,
+        EngineKind.ERUPTION,
+        EngineKind.FIRE,
+        EngineKind.FAMINE,
+        EngineKind.MAGIC_STORM,
+    }
 )
 SEIZING = frozenset({RebuildCause.FIRE, RebuildCause.SACK})
 
@@ -80,6 +95,12 @@ def wishes(kinds: Counter[EngineKind], land: RegionEnvironmentRow | None, fire_r
     wanted[K.DRILL] += kinds[EngineKind.EARTHQUAKE] + kinds[EngineKind.ERUPTION]
     wanted[K.STOCKPILE] += kinds[EngineKind.DROUGHT] + kinds[EngineKind.FAMINE]
     wanted[K.FIREBREAK] += kinds[EngineKind.FIRE] + (1 if fire_risk >= fire_at else 0)
+    wanted[K.QUARANTINE_PLAN] += kinds[EngineKind.PLAGUE]
+    wanted[K.SHELTERS] += kinds[EngineKind.EARTHQUAKE] + kinds[EngineKind.STORM]
+    wanted[K.EVACUATION_ROUTES] += kinds[EngineKind.ERUPTION] + kinds[EngineKind.FLOOD] // 2
+    wanted[K.WARNING_NETWORK] += kinds[EngineKind.STORM] // 2 + kinds[EngineKind.ERUPTION] // 2
+    wanted[K.RESERVES_OF_ENERGY] += kinds[EngineKind.DROUGHT] // 2
+    wanted[K.WARD] += kinds[EngineKind.MAGIC_STORM]
     return wanted
 
 
@@ -190,12 +211,35 @@ async def struck_towns(ctx: TickContext) -> list[tuple[EntityRow, EntityRow]]:
     return found
 
 
+EVENT_AID: Mapping[EngineKind, AidKind] = {
+    EngineKind.PLAGUE: AidKind.HEALERS,
+    EngineKind.FAMINE: AidKind.FOOD,
+    EngineKind.DROUGHT: AidKind.FOOD,
+    EngineKind.EARTHQUAKE: AidKind.SHELTER,
+    EngineKind.FLOOD: AidKind.SHELTER,
+    EngineKind.STORM: AidKind.SHELTER,
+    EngineKind.MAGIC_STORM: AidKind.SHELTER,
+    EngineKind.FIRE: AidKind.SHELTER,
+    EngineKind.ERUPTION: AidKind.SHELTER,
+    EngineKind.WAR: AidKind.SOLDIERS,
+    EngineKind.BATTLE: AidKind.SOLDIERS,
+    EngineKind.SIEGE: AidKind.SOLDIERS,
+    EngineKind.WARRIOR_BAND: AidKind.SOLDIERS,
+    EngineKind.ROUTE_RAIDERS: AidKind.SOLDIERS,
+}
+
+
 def aid_kind(event: EntityRow | None, rebuilding: bool, *, coin: bool) -> AidKind:
-    if event is not None and event.engine_kind is EngineKind.PLAGUE:
-        return AidKind.HEALERS
-    if rebuilding or not coin:
+    chosen = EVENT_AID.get(event.engine_kind) if event is not None and event.engine_kind is not None else None
+    if chosen is AidKind.HEALERS and coin:
+        return AidKind.MEDICINE
+    if chosen is not None:
+        return chosen
+    if rebuilding:
         return AidKind.LABOUR
-    return AidKind.GOODS
+    if not coin:
+        return AidKind.KNOWLEDGE if event is None else AidKind.CREDIT
+    return AidKind.MONEY if event is None else AidKind.GOODS
 
 
 async def refuse_aid(ctx: TickContext, giver: EntityRow, town: EntityRow, receiver: Realm | None) -> None:
@@ -209,22 +253,106 @@ async def refuse_aid(ctx: TickContext, giver: EntityRow, town: EntityRow, receiv
     await note(ctx, f"{town.name} turned away the aid of {giver.name}, a rival it would not owe.", key="relief.refused", ids=[town.id, giver.id])
 
 
-async def apply_aid(ctx: TickContext, town: EntityRow, kind: AidKind, amount: int, *, rebuild: ReconstructionRow | None, capital: int | None) -> None:
+@dataclass(frozen=True)
+class Aid:
+    giver: EntityRow
+    town: EntityRow
+    amount: int
+    rebuild: ReconstructionRow | None
+    capital: int | None
+
+
+async def send_grain(ctx: TickContext, aid: Aid) -> None:
+    if aid.capital is not None and aid.capital != aid.town.id:
+        stocks = goods_of(ctx.session, ctx.epoch)
+        moved = sum(lot.quantity for lot in await stocks.take(aid.capital, CommodityKind.GRAIN, ctx.rules.relief.grain, GoodsFlow.AID))
+        if moved > 0:
+            await stocks.add(aid.town.id, CommodityKind.GRAIN, moved, GoodsFlow.AID)
+
+
+async def aid_goods(ctx: TickContext, aid: Aid) -> None:
     table = ctx.rules.relief
-    if kind is AidKind.GOODS:
-        shift_stat(town, "prosperity", min(table.prosperity_cap, amount / table.coin_per_prosperity))
-        if capital is not None and capital != town.id:
-            stocks = goods_of(ctx.session, ctx.epoch)
-            moved = sum(lot.quantity for lot in await stocks.take(capital, CommodityKind.GRAIN, table.grain, GoodsFlow.AID))
-            if moved > 0:
-                await stocks.add(town.id, CommodityKind.GRAIN, moved, GoodsFlow.AID)
-    elif kind is AidKind.HEALERS:
-        region = await top_region(ctx.session, town)
-        land = await ctx.session.get(RegionEnvironmentRow, region.id) if region is not None and not held(region.id) else None
-        if land is not None:
-            shift(land, "disease_load", -table.healer_disease)
-    elif rebuild is not None:
-        shift(rebuild, "progress", table.labour_progress)
+    shift_stat(aid.town, "prosperity", min(table.prosperity_cap, aid.amount / table.coin_per_prosperity))
+    await send_grain(ctx, aid)
+
+
+async def aid_food(ctx: TickContext, aid: Aid) -> None:
+    await send_grain(ctx, aid)
+    await send_grain(ctx, aid)
+
+
+async def ease_land(ctx: TickContext, aid: Aid, amount: int) -> None:
+    region = await top_region(ctx.session, aid.town)
+    land = await ctx.session.get(RegionEnvironmentRow, region.id) if region is not None and not held(region.id) else None
+    if land is not None:
+        shift(land, "disease_load", -amount)
+
+
+async def aid_healers(ctx: TickContext, aid: Aid) -> None:
+    await ease_land(ctx, aid, ctx.rules.relief.healer_disease)
+
+
+async def aid_medicine(ctx: TickContext, aid: Aid) -> None:
+    await ease_land(ctx, aid, ctx.rules.relief.healer_disease * 2)
+
+
+async def aid_labour(ctx: TickContext, aid: Aid) -> None:
+    if aid.rebuild is not None:
+        shift(aid.rebuild, "progress", ctx.rules.relief.labour_progress)
+
+
+async def town_profile(ctx: TickContext, aid: Aid) -> SettlementProfileRow | None:
+    profile = await ctx.session.get(SettlementProfileRow, aid.town.id)
+    return profile if profile is not None and not held(aid.town.id) else None
+
+
+async def aid_money(ctx: TickContext, aid: Aid) -> None:
+    profile = await town_profile(ctx, aid)
+    if profile is not None and "treasury" not in profile.locked:
+        profile.treasury += aid.amount
+
+
+async def aid_credit(ctx: TickContext, aid: Aid) -> None:
+    await aid_money(ctx, aid)
+    row = RegistryRow(
+        holder_entity_id=aid.giver.id, kind=RegistryKind.DEBT, owner_entity_id=aid.giver.id, counterparty_entity_id=aid.town.id, amount=aid.amount
+    )
+    row.registered_epoch, row.locked = ctx.epoch, []
+    ctx.session.add(row)
+
+
+async def aid_shelter(ctx: TickContext, aid: Aid) -> None:
+    profile = await town_profile(ctx, aid)
+    if profile is not None and "unrest" not in profile.locked:
+        profile.unrest = clamp_int(profile.unrest - ctx.rules.relief.shelter_relief, 0, PERCENT)
+
+
+async def aid_soldiers(ctx: TickContext, aid: Aid) -> None:
+    profile = await town_profile(ctx, aid)
+    if profile is not None and "militia" not in profile.locked:
+        profile.militia += ctx.rules.relief.soldiers_sent
+
+
+async def aid_knowledge(ctx: TickContext, aid: Aid) -> None:
+    if not held(aid.town.id):
+        await steal_technique(ctx, aid.town.id, aid.giver.id)
+
+
+AID_EFFECTS: Mapping[AidKind, Callable[[TickContext, Aid], Awaitable[None]]] = total(
+    AidKind,
+    {
+        AidKind.GOODS: aid_goods,
+        AidKind.HEALERS: aid_healers,
+        AidKind.LABOUR: aid_labour,
+        AidKind.MONEY: aid_money,
+        AidKind.CREDIT: aid_credit,
+        AidKind.FOOD: aid_food,
+        AidKind.SHELTER: aid_shelter,
+        AidKind.MEDICINE: aid_medicine,
+        AidKind.SOLDIERS: aid_soldiers,
+        AidKind.KNOWLEDGE: aid_knowledge,
+    },
+)
 
 
 async def aid_from(
@@ -270,7 +398,7 @@ async def aid_from(
         return row
     if realm is not None and amount > 0:
         spend(ctx, realm, -amount, TreasuryEntry.RELIEF, f"aid to {town.name}")
-    await apply_aid(ctx, town, kind, amount, rebuild=rebuild, capital=realm.profile.capital_entity_id if realm is not None else None)
+    await AID_EFFECTS[kind](ctx, Aid(giver, town, amount, rebuild, realm.profile.capital_entity_id if realm is not None else None))
     debtor = receiver.ruler_id if receiver is not None and receiver.ruler_id is not None else town.id
     await owe(ctx, debtor, giver.id, FavourOrigin.RELIEF, table.favour)
     if god is not None:
@@ -370,7 +498,7 @@ async def finish(ctx: TickContext, row: ReconstructionRow, town: EntityRow, prof
         shift(profile, "fire_risk", -table.fire_cut)
         shift(built.infrastructure, "roads", 1, high=MOST_LEVEL)
     row.finished_epoch = ctx.epoch
-    how = "on a new plan, in stone and with wider streets" if row.plan is RebuildPlan.PLANNED else "in haste, as it stood before"
+    how = "on a new plan, sturdier and with wider streets" if row.plan is RebuildPlan.PLANNED else "in haste, as it stood before"
     await note(ctx, f"{town.name} was rebuilt {how}.", key=f"reconstruction.{row.plan.value}", ids=[town.id])
 
 

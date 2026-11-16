@@ -17,12 +17,15 @@ from aerona.domain.enums.divine import (
     LawScope,
     OuterHunger,
     SonPunishment,
+    VotingRule,
     WoundCause,
 )
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import PerceivedAlignment, WorshipMode
+from aerona.domain.enums.law_grammar import LawCondition, LawOperator, LawTarget
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.outer import OuterFate
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.son import ExistenceMode
 
@@ -154,6 +157,7 @@ class WorldAttentionRow(Base):
     attention: Mapped[int] = mapped_column(default=50)
     watched: Mapped[bool] = mapped_column(default=False)
     epoch: Mapped[int] = mapped_column(default=0)
+    far_epochs: Mapped[int] = mapped_column(default=0, server_default="0")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -168,6 +172,7 @@ class CouncilRulingRow(Base):
     world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
     school: Mapped[MagicSchool | None] = mapped_column(enum_type(MagicSchool, "school"))
     punishment: Mapped[SonPunishment | None] = mapped_column(enum_type(SonPunishment, "punishment"))
+    voting_rule: Mapped[VotingRule | None] = mapped_column(enum_type(VotingRule, "voting_rule"))
     epoch: Mapped[int] = mapped_column(default=0)
     until_epoch: Mapped[int | None]
     active: Mapped[bool] = mapped_column(default=True)
@@ -195,6 +200,13 @@ class NaturalLawProfileRow(Base):
     author_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     exception: Mapped[LawException] = mapped_column(enum_type(LawException, "exception"), default=LawException.NONE)
     contested: Mapped[bool] = mapped_column(default=False)
+    target: Mapped[LawTarget | None] = mapped_column(enum_type(LawTarget, "target"))
+    operator: Mapped[LawOperator | None] = mapped_column(enum_type(LawOperator, "operator"))
+    key: Mapped[str | None] = mapped_column(String(NAME_MAX_LENGTH))
+    value: Mapped[int] = mapped_column(default=100, server_default="100")
+    condition: Mapped[LawCondition] = mapped_column(enum_type(LawCondition, "condition"), default=LawCondition.ALWAYS, server_default="always")
+    until_epoch: Mapped[int | None]
+    suspended: Mapped[bool] = mapped_column(default=False, server_default="0")
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -207,6 +219,8 @@ class OuterBeingProfileRow(Base):
     hunger: Mapped[OuterHunger] = mapped_column(enum_type(OuterHunger, "hunger"))
     reach: Mapped[int] = mapped_column(default=1)
     fed: Mapped[int] = mapped_column(default=0)
+    unfed_epochs: Mapped[int] = mapped_column(default=0, server_default="0")
+    fate: Mapped[OuterFate] = mapped_column(enum_type(OuterFate, "fate"), default=OuterFate.ACTIVE, server_default="active")
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

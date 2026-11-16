@@ -13,6 +13,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.book import anatomy_for, ensure_body
 from aerona.engine.body.hits import Harm
@@ -27,9 +28,11 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.memories import remember
 from aerona.engine.phases.births import NOTABLE_ROLES, raise_notable
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import active_bonds, add_flag, living_entity, remove_flag
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.records import death_path
 
 MAIMED_KEY = "maimed"
 F = BodyFunction
@@ -134,8 +137,30 @@ async def first_sickness(ctx: TickContext, mortal: EntityRow, outbreak: Outbreak
     await lasting_illness(ctx, mortal, profile)
 
 
+async def starve_named(ctx: TickContext) -> int:
+    table = ctx.rules.cohorts
+    starved = 0
+    for community_id, count in sorted(famine_dead(ctx).items()):
+        if count < table.promotion_famine_dead_min or not ctx.rng(f"famine.named.{community_id}.{ctx.epoch}").chance(table.named_famine_pct):
+            continue
+        here = await present_among(ctx.session, [community_id])
+        folk = list(
+            await ctx.session.scalars(
+                select(EntityRow).where(here, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+            )
+        )
+        frail = [mortal for mortal in folk if not frozen(mortal.id)]
+        if not frail:
+            continue
+        victim = min(frail, key=lambda mortal: (stat_or(mortal, "hp", 0), mortal.id))
+        if await death_path(ctx, victim, "starved in the famine", manner=DeathCause.FAMINE):
+            starved += 1
+    return starved
+
+
 async def promote(ctx: TickContext) -> int:
     table = ctx.rules.cohorts
+    ctx.count("starved_named", await starve_named(ctx))
     over = await named_count(ctx) > table.named_mortal_soft_limit_per_world
     chance = table.promotion_chance * (table.promotion_over_limit_pct / 100 if over else 1)
     raised = 0

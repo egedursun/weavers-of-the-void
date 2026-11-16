@@ -3,21 +3,21 @@ from collections.abc import Iterable
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.cosmography import STRATUM_HOSTS
+from aerona.catalog.strata import hosts_for
 from aerona.db.tables.cosmography import DimensionRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.faith import AfterlifeStratumRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.faith import StratumKind
+from aerona.domain.enums.faith import StratumActivity, StratumValence
 
 STRATA_FIXUP = "cosmography.strata_hosts"
 DRAWING_DOMAINS = frozenset({Domain.DEATH, Domain.SLEEP})
 
 
-def host_for(dimensions: Iterable[DimensionRow], kind: StratumKind) -> DimensionRow | None:
-    hosts = STRATUM_HOSTS[kind]
+def host_for(dimensions: Iterable[DimensionRow], valence: StratumValence, activity: StratumActivity) -> DimensionRow | None:
+    hosts = hosts_for(valence, activity)
     fitting = sorted((row for row in dimensions if row.dimension_kind in hosts), key=lambda row: (hosts.index(row.dimension_kind), row.id))
     return next((row for row in fitting if not held(row.id)), None)
 
@@ -30,7 +30,7 @@ async def host_strata(session: AsyncSession) -> int:
     for row in await session.scalars(select(AfterlifeStratumRow).where(AfterlifeStratumRow.dimension_id.is_(None)).order_by(AfterlifeStratumRow.id)):
         if held(row.realm_entity_id):
             continue
-        host = host_for(dimensions, row.kind)
+        host = host_for(dimensions, row.valence, row.activity)
         if host is not None:
             row.dimension_id = host.id
             hosted += 1

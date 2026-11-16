@@ -33,8 +33,8 @@ from aerona.domain.enums.mind import (
     ValueHolder,
 )
 from aerona.domain.enums.polity import OathKind
+from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.society import Commodity
-from aerona.domain.enums.war import HeroQuestKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -67,7 +67,9 @@ from aerona.engine.mind.inspiration import resolute, tend_inspiration
 from aerona.engine.mind.memories import forget_faded, kin_of, remember, strength_of
 from aerona.engine.mind.needs import role_status, update_needs, update_pressures
 from aerona.engine.mind.opinion import OpinionContext
+from aerona.engine.mind.preference_depth import keep_tastes, seed_new_kinds
 from aerona.engine.mind.preferences import adopt_totem, grow, make_taboos, pull_culture, seed_culture, seed_mortal
+from aerona.engine.mind.relation_parts import keep_relation_components
 from aerona.engine.mind.skills import choose_career, left_to_beg, practise_any, seed_skills, teach_apprentices, weather_skills
 from aerona.engine.mind.space import value_reading
 from aerona.engine.mind.split import (
@@ -219,6 +221,7 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "settlement.prosperity",
     "table.afflictions",
     "table.applied_fixups",
+    "table.augments",
     "table.bonds",
     "table.class_standing",
     "table.community_industry",
@@ -250,18 +253,23 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.minds",
     "table.mortal_profiles",
     "table.needs",
+    "table.network_nodes",
     "table.nodes",
     "table.nutrition_scores",
+    "table.people_culture",
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
     "table.poor_relief",
     "table.preferences",
     "table.pressures",
+    "table.region_pollution",
+    "table.relation_components",
     "table.settlement_profiles",
     "table.skills",
     "table.sons",
     "table.species_ranges",
+    "table.time_budgets",
     "table.traits",
     "table.war_sides",
     "table.wars",
@@ -457,7 +465,7 @@ async def spar(ctx: TickContext, fighter: EntityRow) -> bool:
     await practise_any(ctx.session, ctx.rules, fighter.id, MELEE_SKILLS, skills.spar_xp, epoch=ctx.epoch)
     if not ctx.rng(f"spar.{fighter.id}").chance(skills.spar_injury_chance):
         return False
-    await apply_hits(ctx, fighter, Harm(skills.spar_hp, HarmCause.ACCIDENT, "hurt while sparring", severity=1), lethal=False)
+    await apply_hits(ctx, fighter, Harm(skills.spar_hp, HarmCause.ACCIDENT, "hurt while sparring"), lethal=False)
     return True
 
 
@@ -480,6 +488,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "mortal.willpower",
     "mortal.wisdom",
     "table.assistive_aids",
+    "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -556,7 +565,7 @@ async def mind_skills(ctx: TickContext) -> None:
                 mind.career_ended_epoch = ctx.epoch
             if move.new is MortalRole.COMMONER and await left_to_beg(ctx, mortal):
                 await EntityRepository(ctx.session).add_tags(mortal.id, [BEGGAR_TAG])
-                await note(ctx, f"With no calling left and no one to keep them, {mortal.name} begs at the gates.", key="skill.career_beggar", ids=[mortal.id])
+                await note(ctx, f"With no calling left and no one to keep them, {mortal.name} begs for a living.", key="skill.career_beggar", ids=[mortal.id])
         if is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)):
             text = (
                 f"{mortal.name} could no longer live as {an(move.old.value)} and became {an(move.new.value)}."
@@ -589,7 +598,7 @@ async def vengeance(ctx: TickContext) -> int:
         if not ctx.rng(seed_of("vengeance", row.id)).chance(table.vengeance_chance * drive):
             continue
         reason = row.note or MEMORIES[row.kind].label.lower()
-        await start_quest(ctx, avenger, QuestOption(HeroQuestKind.VENGEANCE, target.id, 1.0, f"to avenge {reason} on {target.name}"))
+        await start_quest(ctx, avenger, QuestOption(QuestAim.AVENGE, QuestTargetKind.PERSON, target.id, 1.0, f"to avenge {reason} on {target.name}"))
         await note(ctx, f"{avenger.name} swore vengeance on {target.name} for {reason}.", key="memory.vengeance", ids=[avenger.id, target.id])
         if ctx.rng(seed_of("vengeance_oath", row.id)).chance(ctx.rules.oaths.vengeance_chance):
             await swear(ctx, avenger, OathKind.VENGEANCE, recipient_id=target.id, note_text=reason)
@@ -641,23 +650,31 @@ async def mind_memories(ctx: TickContext) -> None:
     "table.entity_tags",
     "table.epoch_year_cursors",
     "table.gardens",
+    "table.gathering_guests",
+    "table.gatherings",
     "table.holder_levels",
     "table.household_members",
     "table.households",
     "table.injuries",
     "table.memories",
+    "table.mind_profiles",
     "table.minds",
     "table.mortal_profiles",
     "table.needs",
+    "table.network_nodes",
+    "table.people_culture",
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
     "table.poor_relief",
     "table.preferences",
     "table.pressures",
+    "table.region_environment",
+    "table.region_pollution",
     "table.settlement_profiles",
     "table.skills",
     "table.species_ranges",
+    "table.time_budgets",
     "table.traits",
     "table.war_sides",
     "table.wars",
@@ -700,14 +717,17 @@ async def mind_needs(ctx: TickContext) -> None:
     "table.bonds",
     "table.community_relations",
     "table.culture_values",
+    "table.feuds",
     "table.held_identities",
     "table.memories",
     "table.nodes",
     "table.personality_values",
+    "table.relation_components",
     "table.traits",
 )
-@writes("table.community_relations")
+@writes("table.community_relations", "table.relation_components")
 async def mind_opinion(ctx: TickContext) -> None:
+    ctx.count("relation_parts", await keep_relation_components(ctx))
     ctx.count("relations_refreshed", await refresh_relations(ctx.session, ctx.rules, ctx.epoch))
 
 
@@ -790,7 +810,9 @@ async def mind_split(ctx: TickContext) -> None:
     "table.knowledge",
     "table.mind_attributes",
     "table.mind_facets",
+    "table.mind_profiles",
     "table.minds",
+    "table.network_nodes",
     "table.nodes",
     "table.personality_values",
 )
@@ -812,6 +834,7 @@ async def mind_split(ctx: TickContext) -> None:
     "table.incubating_ideas",
     "table.mind_attributes",
     "table.mind_facets",
+    "table.mortal_profiles",
     "table.personality_values",
 )
 async def mind_ideas(ctx: TickContext) -> None:
@@ -1033,6 +1056,7 @@ async def peoples_and_members(ctx: TickContext) -> tuple[list[EntityRow], dict[i
     "table.bonds",
     "table.culture_values",
     "table.entity_flags",
+    "table.memories",
     "table.minds",
     "table.name_registry",
     "table.nodes",
@@ -1052,9 +1076,11 @@ async def mind_preferences(ctx: TickContext) -> None:
         taboos += await make_taboos(ctx, people)
         totems += 1 if await adopt_totem(ctx, people) else 0
         pulled += await pull_culture(ctx, people, members.get(people.id, []))
+        seeded += await seed_new_kinds(ctx, people)
     for mortal in mortals:
         seeded += await seed_mortal(ctx, mortal)
         grown += await grow(ctx, mortal)
+    grown += await keep_tastes(ctx, mortals)
     ctx.count("preferences_seeded", seeded)
     ctx.count("preferences_grown", grown)
     ctx.count("preference_taboos", taboos)

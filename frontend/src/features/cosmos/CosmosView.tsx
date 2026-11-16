@@ -200,7 +200,7 @@ export function CosmosView() {
             aria-label='Cosmos view'
             className='flex min-w-0 flex-col border-b lg:sticky lg:top-topbar lg:h-svh lg:flex-1 lg:border-r lg:border-b-0 lg:pb-topbar'
           >
-            <div className='relative h-96 min-w-0 sm:h-160 lg:h-auto lg:flex-1'>
+            <div className='scene-frame relative h-96 min-w-0 sm:h-160 lg:h-auto lg:flex-1'>
               {settings.view === '3d' ? (
                 <Suspense
                   fallback={<Skeleton className='h-full w-full rounded-none' />}

@@ -1,4 +1,7 @@
 import {
+  Sun,
+  Droplet,
+  Ear,
   ArrowDown,
   ArrowUp,
   Beaker,
@@ -56,6 +59,13 @@ export const TRAITS: Record<Schema['EvolvedTrait'], Named> = {
   intelligence: { label: 'Wits', icon: Brain, tone: 'gold' },
   fecundity: { label: 'Fecundity', icon: Heart, tone: 'success' },
   wariness: { label: 'Wariness', icon: Eye, tone: 'warning' },
+  heat_tolerance: { label: 'Heat tolerance', icon: Sun, tone: 'warning' },
+  drought_tolerance: {
+    label: 'Drought tolerance',
+    icon: Droplet,
+    tone: 'warning',
+  },
+  keen_senses: { label: 'Keen senses', icon: Ear, tone: 'info' },
 }
 
 export const KEYSTONES: Record<Schema['KeystoneRole'], Named> = {

@@ -1,13 +1,17 @@
+from collections.abc import Mapping
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.culture import CastingRow
 from aerona.db.tables.divine import AvatarRow, DivineWoundRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
@@ -18,14 +22,24 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, god_of, living_gods
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.queries import active_bonds
 
 W = DivineWoundKind
-WOUND_LABELS = {
-    W.SEVERED_DOMAIN: "Severed domain",
-    W.SHATTERED_MANIFESTATION: "Shattered manifestation",
-    W.STOLEN_NAME: "Stolen true name",
-    W.VOID_WOUND: "Wound of the void",
-}
+WOUND_LABELS: Mapping[DivineWoundKind, str] = total(
+    DivineWoundKind,
+    {
+        W.SEVERED_DOMAIN: "Severed domain",
+        W.SHATTERED_MANIFESTATION: "Shattered manifestation",
+        W.STOLEN_NAME: "Stolen true name",
+        W.VOID_WOUND: "Wound of the void",
+        W.DRAINED_ESSENCE: "Drained essence",
+        W.LOST_WORSHIPPERS: "Lost worshippers",
+        W.BOUND: "Binding",
+        W.SPLIT_ASPECT: "Split aspect",
+        W.FORGOTTEN_NAME: "Forgotten name",
+    },
+)
+STRUCK_KINDS = (W.SEVERED_DOMAIN, W.SHATTERED_MANIFESTATION, W.STOLEN_NAME, W.DRAINED_ESSENCE, W.LOST_WORSHIPPERS, W.BOUND, W.SPLIT_ASPECT, W.FORGOTTEN_NAME)
 
 
 async def open_wounds(session: AsyncSession, god_id: int, kind: DivineWoundKind | None = None) -> list[DivineWoundRow]:
@@ -86,6 +100,8 @@ async def inflict(
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    if kind is W.LOST_WORSHIPPERS:
+        await lose_worshippers(ctx, god, row.severity)
     if kind is W.SHATTERED_MANIFESTATION:
         for avatar in await ctx.session.scalars(select(AvatarRow).where(AvatarRow.god_node_id == god.id)):
             await ctx.session.delete(avatar)
@@ -107,9 +123,8 @@ async def strike(ctx: TickContext, loser: God, winner_id: int | None, cause: Wou
     rng = ctx.rng(f"divine_wound.{loser.id}.{winner_id}")
     if not rng.chance(table.wound_chance + margin * table.chance_per_margin):
         return None
-    kinds = [W.SEVERED_DOMAIN, W.SHATTERED_MANIFESTATION, W.STOLEN_NAME]
-    weights = [table.severed_weight, table.shattered_weight, table.name_weight]
-    kind = rng.weighted(kinds, weights)
+    weights = [table.severed_weight, table.shattered_weight, table.name_weight, *[table.wider_weight] * (len(STRUCK_KINDS) - 3)]
+    kind = rng.weighted(list(STRUCK_KINDS), weights)
     return await inflict(ctx, loser, kind, cause, severity=table.base_severity + margin * table.severity_per_margin, cause_node_id=winner_id)
 
 
@@ -150,8 +165,28 @@ async def sanity_ceiling(session: AsyncSession, god_id: int, pct: int) -> int:
     return clamp_int(PERCENT - await worst(session, god_id, W.VOID_WOUND) * pct / PERCENT, 0, PERCENT)
 
 
-async def manifestation_broken(session: AsyncSession, god_id: int) -> bool:
-    return await worst(session, god_id, W.SHATTERED_MANIFESTATION) > 0
+async def manifestation_broken(session: AsyncSession, god_id: int, split_at: int = PERCENT // 2) -> bool:
+    return await worst(session, god_id, W.SHATTERED_MANIFESTATION) > 0 or await worst(session, god_id, W.SPLIT_ASPECT) >= split_at
+
+
+async def bound_factor(session: AsyncSession, god_id: int) -> float:
+    return max(0.0, 1 - await worst(session, god_id, W.BOUND) / PERCENT)
+
+
+async def lose_worshippers(ctx: TickContext, god: God, severity: int) -> None:
+    lost = 0
+    for bond in await active_bonds(ctx.session, [BondKind.WORSHIPS], targets=[god.id]):
+        if lost * PERCENT >= severity * ctx.rules.divine_wounds.worshippers_per_severity or held(bond.source_node_id):
+            continue
+        bond.state, bond.closed_epoch, bond.closed_reason = BondState.PAST, ctx.epoch, "turned from a wounded god"
+        lost += 1
+
+
+def drain(god: God, amount: int) -> None:
+    if isinstance(god, SonRow):
+        god.essence = max(0, god.essence - amount)
+    else:
+        god.faith = max(0, god.faith - amount)
 
 
 async def devotion_rites(ctx: TickContext, god_id: int) -> int:
@@ -172,7 +207,11 @@ async def heal_wounds(ctx: TickContext) -> int:
         if not wounds or held(god.id):
             continue
         rites = await devotion_rites(ctx, god.id)
-        gain = god.faith / max(1, table.faith_per_heal) + rites * table.rite_heal + table.base_heal
+        remembered = 1 - await worst(ctx.session, god.id, W.FORGOTTEN_NAME) / PERCENT / 2
+        gain = (god.faith / max(1, table.faith_per_heal) + rites * table.rite_heal + table.base_heal) * remembered
+        drained = await worst(ctx.session, god.id, W.DRAINED_ESSENCE)
+        if drained:
+            drain(god, drained * table.drain_pct // PERCENT)
         for row in wounds:
             if "healed" in row.locked:
                 continue

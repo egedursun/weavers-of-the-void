@@ -11,6 +11,9 @@ class EvolvedTrait(StrEnum):
     INTELLIGENCE = "intelligence"
     FECUNDITY = "fecundity"
     WARINESS = "wariness"
+    HEAT_TOLERANCE = "heat_tolerance"
+    DROUGHT_TOLERANCE = "drought_tolerance"
+    KEEN_SENSES = "keen_senses"
 
 
 class KeystoneRole(StrEnum):

@@ -206,23 +206,18 @@ async def reward_streak(session: AsyncSession, son_id: int, epoch: int, window: 
     return int(await session.scalar(statement) or 0)
 
 
-REWARD_LINES = (
-    ("Fate gave {son} {fame} fame: {reason}", "Fate gave {son} {fame} fame."),
-    ("Fate weighed the work of {son} and gave {fame} fame. {reason}", "Fate weighed the work of {son} and gave {fame} fame."),
-    ("In the mouths of mortals Fate gave {son} {fame} fame — {reason}", "In the mouths of mortals Fate gave {son} {fame} fame."),
-    ("Fate made the name of {son} greater by {fame} fame; the witnesses tell it so: {reason}", "Fate made the name of {son} greater by {fame} fame."),
-)
+REWARD_WITH_REASON = "Fate gave {son} {fame} fame: {reason}"
+REWARD_BARE = "Fate gave {son} {fame} fame."
 
 
-def reward_line(index: int, son: str, fame: int, reason: str | None) -> str:
-    with_reason, bare = REWARD_LINES[index % len(REWARD_LINES)]
-    return with_reason.format(son=son, fame=fame, reason=reason) if reason else bare.format(son=son, fame=fame)
+def reward_line(son: str, fame: int, reason: str | None) -> str:
+    return REWARD_WITH_REASON.format(son=son, fame=fame, reason=reason) if reason else REWARD_BARE.format(son=son, fame=fame)
 
 
 async def apply_rewards(session: AsyncSession, rules: Rules, ruling: FateRuling, output: FateJudgmentOutput) -> None:
     fate = rules.fate
     cap = max(1, fate.reward_cap)
-    for index, item in enumerate(output.rewards):
+    for item in output.rewards:
         son = await session.get(SonRow, item.son_id)
         if son is None:
             continue
@@ -240,7 +235,7 @@ async def apply_rewards(session: AsyncSession, rules: Rules, ruling: FateRuling,
         xp = fame * fate.xp_per_renown
         reason = clean_fate_note(item.reason)
         session.add(FateRewardRow(son_id=son.id, epoch=ruling.epoch, fame=fame, xp=xp, reason=reason))
-        text = reward_line(index, son.name, fame, reason)
+        text = reward_line(son.name, fame, reason)
         await write_line(session, rules, ruling.epoch, ChronicleKind.FATE, text, key="fate.reward", son_id=son.id)
         await grant_progress(await manual_context(session, "fate_reward", rules, key=str(son.id)), son, xp=xp, fame=fame)
 

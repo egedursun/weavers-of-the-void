@@ -52,7 +52,7 @@ async def test_phase_listing_and_manual_run(empty_api: ApiWorld) -> None:
 async def test_integrity_tasks_can_be_listed_and_run(empty_api: ApiWorld) -> None:
     await _world(empty_api)
     tasks = (await empty_api.http.get("/api/integrity/tasks")).json()["tasks"]
-    assert {item["task"] for item in tasks} == {"dead_bonds", "checkpoint"}
+    assert {item["task"] for item in tasks} == {"dead_bonds", "checkpoint", "schema_checks"}
     swept = await empty_api.http.post("/api/integrity/dead_bonds")
     assert swept.status_code == 200, swept.text
     assert set(swept.json()["counters"]) == {"closed", "transferred"}

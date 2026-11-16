@@ -10,7 +10,7 @@ from aerona.catalog.lore import DESPERATE_SCHOOLS, DOMAIN_SCHOOLS, RITE_TEMPLATE
 from aerona.catalog.mythic import GEAS_ACTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import an, several
 from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
@@ -27,6 +27,7 @@ from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, CaptiveCohort
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import BattleRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
@@ -61,6 +62,7 @@ from aerona.domain.enums.mythic import GeasLayer, GeasMode
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import NaturalLaw
+from aerona.domain.enums.structure import ConstructionState
 from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import RiteStats, SpiritStats
 from aerona.engine.arcana.casting import corrupted_effect, shape_casting
@@ -93,6 +95,7 @@ from aerona.engine.environment.local import weather_here
 from aerona.engine.eras.effects import tech_relief
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
+from aerona.engine.faith.spirit_bonds import wider_binding
 from aerona.engine.folkways.purity import unclean
 from aerona.engine.genetics.genome import aptitude, gift_factors
 from aerona.engine.gods.interventions import apply_abundance
@@ -672,10 +675,25 @@ async def do_bind(ctx: TickContext, work: Working) -> str | None:
         if bound is not None:
             return f"bound {bound} to serve"
     spirit = await wandering_near(ctx, work.caster.location_id or 0)
-    if spirit is None:
+    if spirit is None or "binding" in spirit.locked:
         return None
-    if "binding" in spirit.locked:
-        return None
+    return await bind_wandering(ctx, work, spirit)
+
+
+async def bind_wandering(ctx: TickContext, work: Working, spirit: SpiritProfileRow) -> str:
+    keep = await ctx.session.scalar(
+        select(StructureProfileRow.structure_entity_id)
+        .where(StructureProfileRow.host_entity_id == work.caster.location_id, StructureProfileRow.construction_state == ConstructionState.COMPLETE)
+        .order_by(StructureProfileRow.level.desc(), StructureProfileRow.structure_entity_id)
+        .limit(1)
+    )
+    wider = await wider_binding(ctx, work.caster.id) if work.row.power >= ctx.rules.spirits.wide_bind_power else None
+    if wider is not None:
+        spirit.binding, spirit.bound_entity_id, spirit.alignment = wider[0], wider[1], SpiritAlignment.GUARDIAN
+        return f"bound a wandering spirit to keep {an(wider[0].value.replace('_', ' '))}"
+    if keep is not None:
+        spirit.binding, spirit.bound_entity_id, spirit.alignment = BindingKind.STRUCTURE, keep, SpiritAlignment.GUARDIAN
+        return "bound a wandering spirit to guard a building"
     spirit.binding, spirit.bound_entity_id, spirit.alignment = BindingKind.PLACE, work.caster.location_id, SpiritAlignment.GUARDIAN
     return "bound a wandering spirit as a guardian"
 

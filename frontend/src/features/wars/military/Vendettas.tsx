@@ -4,6 +4,7 @@ import {
   Flame,
   HeartCrack,
   Hourglass,
+  Scale,
   ScrollText,
   Skull,
   Swords,
@@ -22,7 +23,15 @@ import {
 import { Muted, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
 import { EntityPicker, Held, RecordButtons, TextField } from './controls'
-import { FEUD_PARTY, FEUD_STATUS, type Feud, nameOf, useFeuds } from './depth'
+import {
+  FEUD_ACTIONS,
+  FEUD_LEVEL,
+  FEUD_PARTY,
+  FEUD_STATUS,
+  type Feud,
+  nameOf,
+  useFeuds,
+} from './depth'
 import { PERCENT, busyOf, cardGrid } from './labels'
 import {
   Adjust,
@@ -61,7 +70,7 @@ function FeudCard({
       : (feud as unknown as Record<string, unknown>)[key]
   const status = nameOf(FEUD_STATUS, feud.status)
   return (
-    <li className='@container/mil flex min-w-0 flex-col gap-2.5 rounded-xl border bg-background p-3'>
+    <li className='@container/mil flex min-w-0 flex-col gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion
           icon={feud.intensity >= HOT ? Flame : Swords}
@@ -91,10 +100,14 @@ function FeudCard({
       <div className='flex min-w-0 flex-wrap gap-1'>
         <Tag item={status} />
         <Tag item={nameOf(FEUD_PARTY, feud.party)} />
+        <Tag item={nameOf(FEUD_LEVEL, feud.level)} />
         {feud.last_action && (
           <Plain
             icon={Swords}
-          >{`Last: ${humanize(feud.last_action)}${feud.last_epoch !== null ? `, epoch ${feud.last_epoch}` : ''}`}</Plain>
+          >{`Last: ${FEUD_ACTIONS[feud.last_action]?.label ?? humanize(feud.last_action)}${feud.last_epoch !== null ? `, epoch ${feud.last_epoch}` : ''}`}</Plain>
+        )}
+        {feud.mediator && (
+          <Plain icon={Scale}>{`Mediated by ${feud.mediator.name}`}</Plain>
         )}
       </div>
       {feud.cause && <Muted variant='caption'>{feud.cause}</Muted>}
@@ -150,6 +163,28 @@ function FeudCard({
               table={FEUD_PARTY}
               blocked={blocked}
               onPick={(next) => setDraft({ ...draft, party: next })}
+            />
+            <ChoiceField
+              label='How far it has gone'
+              icon={Flame}
+              value={String(value('level'))}
+              table={FEUD_LEVEL}
+              blocked={blocked}
+              onPick={(next) => setDraft({ ...draft, level: next })}
+            />
+            <EntityPicker
+              label='Mediator'
+              icon={Scale}
+              types={['mortal']}
+              value={
+                (value('mediator_node_id') as number | null | undefined) ??
+                feud.mediator?.id ??
+                null
+              }
+              onChange={(next) =>
+                setDraft({ ...draft, mediator_node_id: next })
+              }
+              blocked={blocked}
             />
             <NumberField
               label='Intensity'

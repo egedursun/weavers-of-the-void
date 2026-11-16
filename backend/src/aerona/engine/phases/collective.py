@@ -24,6 +24,7 @@ from aerona.engine.collective.designs import DesignTally, refit
 from aerona.engine.collective.generations import GenerationTally, keep_generations
 from aerona.engine.collective.heraldry import HeraldryTally, keep_heraldry
 from aerona.engine.collective.learning import LearningTally, learn_socially
+from aerona.engine.collective.norm_drift import keep_norm_drift
 from aerona.engine.collective.norms import NormTally, keep_norms
 from aerona.engine.collective.roles import RoleTally, keep_roles
 from aerona.engine.collective.storylets import StoryletTally, announce, open_storylets, settle_due
@@ -152,11 +153,20 @@ async def popular_movements(ctx: TickContext) -> None:
     count(ctx, "movement_armed", armed)
 
 
-@reads("table.bonds", "table.culture_values", "table.law_jurisdictions", "table.law_profiles", "table.polity_members", "table.social_norms")
+@reads(
+    "table.bonds",
+    "table.community_relations",
+    "table.culture_values",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.polity_members",
+    "table.social_norms",
+)
 @writes("table.norm_changes", "table.social_norms")
 async def social_norms(ctx: TickContext) -> None:
     tally = NormTally()
     await keep_norms(ctx, tally)
+    await keep_norm_drift(ctx, tally)
     count(ctx, "norm", tally)
 
 
@@ -167,6 +177,7 @@ async def social_norms(ctx: TickContext) -> None:
     "table.collection_members",
     "table.collection_places",
     "table.culture_values",
+    "table.data_stores",
     "table.epoch_year_cursors",
     "table.held_identities",
     "table.house_members",
@@ -201,7 +212,7 @@ async def historiography(ctx: TickContext) -> None:
     count(ctx, "history", tally)
 
 
-@reads("table.accounts", "table.epoch_year_cursors", "table.founding_myths", "table.polity_profiles", "table.settlement_profiles")
+@reads("table.accounts", "table.epoch_year_cursors", "table.founding_myths", "table.polity_members", "table.polity_profiles", "table.settlement_profiles")
 @writes(
     "table.account_stances",
     "table.accounts",
@@ -330,6 +341,7 @@ async def dating_systems(ctx: TickContext) -> None:
 @reads(
     "table.armies",
     "table.arms",
+    "table.company_profiles",
     "table.culture_values",
     "table.epoch_year_cursors",
     "table.faction_profiles",

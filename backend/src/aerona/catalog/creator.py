@@ -56,7 +56,7 @@ ACTION_PASSIONS: dict[ActionKind, frozenset[CreatorPassion]] = {
     A.TEACH_KNOWLEDGE: frozenset({P.KNOWLEDGE}),
     A.CHOOSE_PROPHET: frozenset({P.KNOWLEDGE}),
     A.SEAL_GATE: frozenset({P.ORDER}),
-    A.STITCH_ROUTE: frozenset({P.ORDER}),
+    A.REPAIR_ROUTE: frozenset({P.ORDER}),
     A.CLEANSE_LEAK: frozenset({P.ORDER}),
     A.COMMAND: frozenset({P.ORDER}),
     A.ABSOLUTE_COMMAND: frozenset({P.ORDER}),

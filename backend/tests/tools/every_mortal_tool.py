@@ -88,7 +88,7 @@ from tests.tools.every_setup_customs import long_foreigner, town_pool
 from tests.tools.every_setup_eras import skilled_for_programme
 from tests.tools.every_setup_folkways import impure_mortal, neighbour, owned_item
 from tests.tools.every_setup_lifecycle import name_keeper
-from tests.tools.every_setup_living import bank_held, bred_line, breeder, hosted, line_of_another, sickness_and_line
+from tests.tools.every_setup_living import bank_held, bred_line, breeder, founder, hosted, line_of_another, sickness_and_line
 from tests.tools.every_setup_means import money_changer
 from tests.tools.every_setup_minds import (
     borne_augment,
@@ -395,4 +395,6 @@ MORTAL_CASES: dict[str, Case] = {
     "raise_sapience": named(plain(line_id=created("line")), bred_line),
     "license_line": named(plain(line_id=created("line"), fee=0), line_of_another),
     "set_clone_law": named(plain(level="licensed"), ruled_realm),
+    "take_care": named(plain(), wealthy),
+    "found_faction": named(plain(kind="scholars_academy"), founder),
 }

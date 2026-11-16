@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.core.total import total
 from aerona.db.tables.communication import SignalLinkRow
 from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.polity import PolityProfileRow
@@ -16,10 +17,27 @@ from aerona.engine.primitives.naming import seed_of
 STATE = "state"
 CAPTURE_PCT = 50
 KIND_TECHNIQUES: tuple[tuple[SignalKind, Technique], ...] = (
-    (SignalKind.SENDING_STONE, Technique.ALCHEMY),
-    (SignalKind.MIRROR_TOWER, Technique.CRYPTOGRAPHY),
-    (SignalKind.POST_STATION, Technique.PAPER),
-    (SignalKind.FIRE_BEACON, Technique.ALPHABET),
+    (SignalKind.MIND_LINK_STATION, Technique.ARTIFICIAL_MINDS),
+    (SignalKind.GROWN_NODE, Technique.GENETIC_ENGINEERING),
+    (SignalKind.RADIO_STATION, Technique.RADIO),
+    (SignalKind.WIRE_STATION, Technique.TELEGRAPH),
+    (SignalKind.BOUND_PAIR, Technique.ALCHEMY),
+    (SignalKind.OPTICAL_RELAY, Technique.CRYPTOGRAPHY),
+    (SignalKind.COURIER_POST, Technique.PAPER),
+    (SignalKind.BEACON_CHAIN, Technique.ALPHABET),
+)
+CUT_WHEN_TAKEN = total(
+    SignalKind,
+    {
+        SignalKind.BEACON_CHAIN: False,
+        SignalKind.OPTICAL_RELAY: False,
+        SignalKind.COURIER_POST: True,
+        SignalKind.BOUND_PAIR: False,
+        SignalKind.WIRE_STATION: True,
+        SignalKind.RADIO_STATION: False,
+        SignalKind.MIND_LINK_STATION: False,
+        SignalKind.GROWN_NODE: True,
+    },
 )
 
 
@@ -65,7 +83,10 @@ async def fall_links(ctx: TickContext, tally: SignalTally) -> None:
         taker = occupied.get(link.to_region_id) or occupied.get(link.from_region_id)
         if taker is None or taker == link.owner_node_id:
             continue
-        if link.kind is SignalKind.SENDING_STONE or ctx.rng(seed_of("signal.fall", link.id, ctx.epoch)).chance(CAPTURE_PCT):
+        if link.kind is SignalKind.MIND_LINK_STATION:
+            continue
+        taken = link.kind is SignalKind.BOUND_PAIR or ctx.rng(seed_of("signal.fall", link.id, ctx.epoch)).chance(CAPTURE_PCT)
+        if taken and not CUT_WHEN_TAKEN[link.kind]:
             link.state, link.owner_node_id = SignalState.CAPTURED, taker
             tally.captured += 1
         else:

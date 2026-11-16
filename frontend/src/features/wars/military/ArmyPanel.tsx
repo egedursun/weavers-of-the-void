@@ -358,7 +358,7 @@ function StackCard({
     <li
       data-surface='ArmyStack'
       className={cn(
-        '@container/stack flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3',
+        '@container/stack flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         broken && 'border-dashed'
       )}
     >
@@ -452,7 +452,7 @@ function StackCard({
         <MiniStat label='Accuracy' value={stack.accuracy} icon={Target} />
         <MiniStat label='Piercing' value={stack.piercing} icon={Zap} />
       </div>
-      <div className='grid min-w-0 grid-cols-1 gap-2 rounded-lg border bg-muted/20 p-2 @xs/stack:grid-cols-2'>
+      <div className='grid min-w-0 grid-cols-1 gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2 @xs/stack:grid-cols-2'>
         <div className='flex min-w-0 items-center gap-2'>
           <TableTag table={ARMOUR} value={stack.armour} />
           <Pips
@@ -767,7 +767,7 @@ export function ArmyPanel({
   return (
     <div
       data-surface='ArmyCard'
-      className='@container/mil flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4'
+      className='@container/mil flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={stance.icon} tone={stance.tone ?? 'gold'} />
@@ -812,7 +812,7 @@ export function ArmyPanel({
           </div>
         </div>
       </div>
-      <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2'>
+      <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
         <Crown
           aria-hidden='true'
           className='size-icon-sm shrink-0 text-primary'

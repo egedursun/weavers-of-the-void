@@ -4,9 +4,22 @@ from pydantic import Field
 
 from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.faith import BindingKind, ClergyOffice, HoldingKind, SpiritAlignment, StratumKind, TenetKind
+from aerona.domain.enums.faith import (
+    BindingKind,
+    ClergyOffice,
+    HoldingKind,
+    SpiritAlignment,
+    StratumActivity,
+    StratumAdmission,
+    StratumContact,
+    StratumKind,
+    StratumPermanence,
+    StratumValence,
+    TenetKind,
+)
 from aerona.domain.models.faith import StratumCriteria
 from aerona.engine.faith import control
+from aerona.engine.faith.control import AxesChange
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
@@ -147,6 +160,12 @@ class SetStratum(Command):
     clear_links: bool = False
     dimension_id: int | None = None
     clear_dimension: bool = False
+    valence: StratumValence | None = None
+    permanence: StratumPermanence | None = None
+    admission: StratumAdmission | None = None
+    activity: StratumActivity | None = None
+    contact: StratumContact | None = None
+    ruler_id: int | None = None
     remove: bool = False
 
 
@@ -314,5 +333,6 @@ async def set_stratum(scope: PlayerScope, command: SetStratum) -> Effect:
         clear_links=command.clear_links,
         dimension_id=command.dimension_id,
         clear_dimension=command.clear_dimension,
+        axes=AxesChange(command.valence, command.permanence, command.admission, command.activity, command.contact, command.ruler_id),
     )
     return Effect(f"{row.name} is set." if row is not None else "The stratum is unmade.", command.realm_id)

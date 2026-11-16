@@ -54,7 +54,7 @@ function AgentCard({
   const status = nameOf(AGENT_STATUS, String(row.values.status))
   const mortal = row.refs.mortal_entity_id
   return (
-    <li className='@container/mil flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <li className='@container/mil flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion
           icon={nameOf(COVER, String(row.values.cover)).icon}

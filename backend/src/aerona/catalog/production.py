@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, HazardKind, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind
@@ -72,7 +73,8 @@ class ExtractionSpec:
     season_key: str | None
 
 
-EXTRACTION: MappingProxyType[ExtractionKind, ExtractionSpec] = MappingProxyType(
+EXTRACTION: MappingProxyType[ExtractionKind, ExtractionSpec] = total(
+    ExtractionKind,
     {
         ExtractionKind.MINING: ExtractionSpec(ExtractionKind.MINING, W.MINE, S.ENGINEERING, HazardKind.CAVE_IN, None),
         ExtractionKind.QUARRYING: ExtractionSpec(ExtractionKind.QUARRYING, W.MINE, S.MASONRY, HazardKind.CAVE_IN, None),
@@ -81,7 +83,18 @@ EXTRACTION: MappingProxyType[ExtractionKind, ExtractionSpec] = MappingProxyType(
         ExtractionKind.HERDING: ExtractionSpec(ExtractionKind.HERDING, None, S.BEAST_HANDLING, HazardKind.GORING, None),
         ExtractionKind.FARMING: ExtractionSpec(ExtractionKind.FARMING, None, S.FORAGING, None, None),
         ExtractionKind.GATHERING: ExtractionSpec(ExtractionKind.GATHERING, None, S.FORAGING, None, None),
-    }
+        ExtractionKind.DRILLING: ExtractionSpec(ExtractionKind.DRILLING, W.MINE, S.ENGINEERING, HazardKind.BLOWOUT, None),
+        ExtractionKind.PUMPING: ExtractionSpec(ExtractionKind.PUMPING, W.MINE, S.ENGINEERING, HazardKind.SUBSIDENCE, None),
+        ExtractionKind.DREDGING: ExtractionSpec(ExtractionKind.DREDGING, W.MASON_YARD, S.SAILING, HazardKind.DROWNING, "summer"),
+        ExtractionKind.DEEP_SEA: ExtractionSpec(ExtractionKind.DEEP_SEA, W.SHIPYARD, S.SAILING, HazardKind.DECOMPRESSION, None),
+        ExtractionKind.ATMOSPHERIC: ExtractionSpec(ExtractionKind.ATMOSPHERIC, W.MINE, S.ENGINEERING, HazardKind.EXPLOSION, None),
+        ExtractionKind.ASTEROID: ExtractionSpec(ExtractionKind.ASTEROID, W.MINE, S.ENGINEERING, HazardKind.DECOMPRESSION, None),
+        ExtractionKind.STELLAR: ExtractionSpec(ExtractionKind.STELLAR, W.MINE, S.ENGINEERING, HazardKind.RADIATION_EXPOSURE, None),
+        ExtractionKind.SOURCE_HARVEST: ExtractionSpec(ExtractionKind.SOURCE_HARVEST, W.ALCHEMIST, S.SPELLCRAFT, HazardKind.SOURCE_BACKLASH, None),
+        ExtractionKind.SALVAGE: ExtractionSpec(ExtractionKind.SALVAGE, W.FORGE, S.ENGINEERING, HazardKind.MACHINE_ACCIDENT, None),
+        ExtractionKind.LIVING_HARVEST: ExtractionSpec(ExtractionKind.LIVING_HARVEST, W.TANNERY, S.BEAST_HANDLING, HazardKind.BEAST_ATTACK, None),
+        ExtractionKind.DISTILLATION: ExtractionSpec(ExtractionKind.DISTILLATION, W.ALCHEMIST, S.ALCHEMY, HazardKind.TOXIC_RELEASE, None),
+    },
 )
 EXTRACTION_OF: MappingProxyType[CommodityKind, ExtractionKind] = MappingProxyType(
     {
@@ -100,6 +113,15 @@ EXTRACTION_OF: MappingProxyType[CommodityKind, ExtractionKind] = MappingProxyTyp
         C.DUNG: ExtractionKind.HERDING,
         C.COAL: ExtractionKind.MINING,
         C.PEAT: ExtractionKind.GATHERING,
+        C.FUEL: ExtractionKind.DRILLING,
+        C.MAGICAL_REAGENTS: ExtractionKind.SOURCE_HARVEST,
+        C.POISON: ExtractionKind.LIVING_HARVEST,
+        C.WOOL: ExtractionKind.HERDING,
+        C.EGGS: ExtractionKind.HERDING,
+        C.FIBRE: ExtractionKind.FARMING,
+        C.HERBS: ExtractionKind.GATHERING,
+        C.DYE: ExtractionKind.GATHERING,
+        C.INCENSE: ExtractionKind.DISTILLATION,
     }
 )
 WORKSHOP_LABELS: MappingProxyType[WorkshopKind, str] = MappingProxyType(

@@ -120,7 +120,7 @@ export function EpochTraces({
                 {tracked.map((view) => (
                   <div
                     key={view.son.id}
-                    className='flex min-w-0 flex-col gap-2 rounded-lg border p-3'
+                    className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
                   >
                     <EntityLink
                       kind='son'

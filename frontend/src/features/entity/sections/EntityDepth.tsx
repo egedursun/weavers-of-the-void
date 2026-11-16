@@ -109,7 +109,7 @@ export function EntityDepth({ entity, targets }: EntityDepthProps) {
                 itemKey={(_, index) => index}
               >
                 {(saying) => (
-                  <li className='flex min-w-0 flex-col gap-1 rounded-md border bg-card px-3 py-2'>
+                  <li className='flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'>
                     <Label>{humanize(saying.form)}</Label>
                     <ExpandableText italic lines={3}>
                       <MentionText

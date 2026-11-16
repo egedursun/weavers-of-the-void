@@ -241,7 +241,7 @@ function WearinessEditor({
   const busy = busyOf(blocked, save.isPending, allies.isPending)
   const side = named(SIDE, entry.side)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <div className='flex min-w-0 items-center gap-2'>
         <side.icon
           aria-hidden='true'
@@ -320,7 +320,7 @@ function AimEditor({
   const busy = busyOf(blocked, save.isPending, drop.isPending)
   const item = named(AIM, aim.kind)
   return (
-    <li className='@container/mil flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <li className='@container/mil flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <Tag item={item} />
         <Muted as='span' variant='caption' truncate>
@@ -491,7 +491,7 @@ function AimLine({ aim }: { aim: Room['aims'][number] }) {
   const names = useNameMap()
   const terms = aimParamText(aim.kind, aim.params ?? {}, names)
   return (
-    <li className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-background/70 p-2'>
+    <li className='flex min-w-0 items-center gap-2.5 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <Medallion icon={item.icon} tone={item.tone} size='sm' />
       <div className='flex min-w-0 flex-1 flex-col gap-1'>
         <div className='flex min-w-0 items-center gap-2'>
@@ -536,7 +536,7 @@ function SideCard({
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-1 flex-col gap-3 rounded-xl border p-3',
+        'flex min-w-0 flex-1 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         frameTone(item.tone)
       )}
     >
@@ -565,7 +565,7 @@ function SideCard({
               return (
                 <li
                   key={entry.id}
-                  className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background/70 p-2'
+                  className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                 >
                   <div className='flex min-w-0 items-center gap-2'>
                     {entry.id === victor && (
@@ -625,7 +625,7 @@ function Versus({ room }: { room: Room }) {
   return (
     <div
       data-surface='WarVersus'
-      className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 flex-col items-stretch gap-2 @xl/mil:flex-row'>
         <SideCard room={room} side='attacker' />
@@ -800,7 +800,7 @@ function SiegeCard({
   return (
     <li
       data-surface='SiegeTracker'
-      className='@container/siege flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'
+      className='@container/siege flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion icon={status.icon} tone={status.tone} />
@@ -879,7 +879,7 @@ function SiegeCard({
           tone={percentTone(siege.disease_outside, true)}
         />
       </div>
-      <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2'>
+      <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
         <Label>Walls</Label>
         <Pips
           value={siege.walls_level}
@@ -953,7 +953,7 @@ export function OccupationCard({
   return (
     <li
       data-surface='Occupation'
-      className='@container/occ flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'
+      className='@container/occ flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion icon={Flag} tone='warning' />
@@ -1074,7 +1074,7 @@ export function CohortCard({
   return (
     <li
       data-surface='CaptiveCohort'
-      className='@container/cohort flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'
+      className='@container/cohort flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion icon={item.icon} tone={item.tone} />
@@ -1242,7 +1242,7 @@ function PhaseChip({ phase }: { phase: BattleReport['phases'][number] }) {
           <span
             tabIndex={0}
             className={cn(
-              'flex h-badge-md min-w-0 items-center gap-1 rounded-md border px-2',
+              'flex h-badge-md min-w-0 items-center gap-1 rounded-md border surface-sheen border-gild/60 bg-card px-2',
               fallen > 0 ? frameTone(item.tone) : 'bg-muted/30'
             )}
           >

@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.agrarian import (
     BrandRow,
     CentralPlaceRow,
@@ -43,7 +43,7 @@ async def land_lines(scope: Scope, land: EntityRow) -> list[str]:
     if pressed is not None and pressed.intensity > 0:
         found.append(f"its farmers work it at intensity {pressed.intensity} under a pressure of {pressed.pressure}% on the land")
     for common in await session.scalars(select(CommonsRow).where(CommonsRow.region_entity_id == land.id).order_by(CommonsRow.id).limit(LIST_LINES)):
-        found.append(f"common {common.kind.value} (commons {common.id}), {common.rule.value}, condition {common.condition}")
+        found.append(f"common {spoken(common.kind)} (commons {common.id}), {spoken(common.rule)}, condition {common.condition}")
     for reserve in await session.scalars(select(GameReserveRow).where(GameReserveRow.region_entity_id == land.id).order_by(GameReserveRow.id).limit(1)):
         found.append(
             f"its game is reserved by {await named(scope, reserve.holder_node_id)} (reserve {reserve.id}), "
@@ -57,7 +57,7 @@ async def town_lines(scope: Scope, town: EntityRow) -> list[str]:
     found: list[str] = []
     place = await session.get(CentralPlaceRow, town.id)
     if place is not None:
-        found.append(f"{town.name} is a central place of {place.rank.value} goods, centrality {place.centrality}")
+        found.append(f"{town.name} is a central place of {spoken(place.rank)} goods, centrality {place.centrality}")
     works = list(await session.scalars(select(PreparednessRow).where(PreparednessRow.settlement_entity_id == town.id).order_by(PreparednessRow.kind)))
     if works:
         found.append(f"{town.name} stands ready with " + ", ".join(f"{words(work.kind.value)} level {work.level}" for work in works))
@@ -65,7 +65,7 @@ async def town_lines(scope: Scope, town: EntityRow) -> list[str]:
         select(ReconstructionRow).where(ReconstructionRow.settlement_entity_id == town.id, ReconstructionRow.finished_epoch.is_(None)).limit(1)
     )
     if rebuild is not None:
-        found.append(f"{town.name} is rebuilding after {an(rebuild.cause.value)}, {rebuild.plan.value}, {rebuild.progress}% done")
+        found.append(f"{town.name} is rebuilding after {an(rebuild.cause.value)}, {spoken(rebuild.plan)}, {rebuild.progress}% done")
     return found
 
 
@@ -73,7 +73,7 @@ async def holding_lines(scope: Scope, me: EntityRow) -> list[str]:
     session = scope.session
     found: list[str] = []
     for planting in await session.scalars(select(PerennialRow).where(PerennialRow.owner_node_id == me.id).order_by(PerennialRow.id).limit(LIST_LINES)):
-        found.append(f"your {planting.kind.value} in {await named(scope, planting.region_entity_id)} has grown {planting.maturity}%")
+        found.append(f"your {spoken(planting.kind)} in {await named(scope, planting.region_entity_id)} has grown {planting.maturity}%")
     for brand in await session.scalars(select(BrandRow).where(BrandRow.owner_node_id == me.id).order_by(BrandRow.id).limit(LIST_LINES)):
         found.append(f"you own the brand {definite(brand.name)}, reputation {brand.reputation}")
     people = await people_of(session, me)

@@ -1,4 +1,9 @@
 import {
+  Wrench,
+  Split,
+  Languages,
+  Eye,
+  AlertTriangle,
   Activity,
   ArrowDownUp,
   Baby,
@@ -93,6 +98,25 @@ export const CHALLENGES: Record<Schema['ChallengeKind'], Named> = {
   invasion: { label: 'Invasion', icon: Swords, tone: 'danger' },
   plague: { label: 'Plague', icon: Bug, tone: 'warning' },
   famine: { label: 'Famine', icon: Wheat, tone: 'warning' },
+  collapse: { label: 'Collapse', icon: TrendingDown, tone: 'danger' },
+  secession: { label: 'Secession', icon: Split, tone: 'danger' },
+  technological_shock: {
+    label: 'Technological shock',
+    icon: CloudLightning,
+    tone: 'danger',
+  },
+  source_depletion: {
+    label: 'Source depletion',
+    icon: CloudLightning,
+    tone: 'danger',
+  },
+  runaway: { label: 'Runaway', icon: AlertTriangle, tone: 'danger' },
+  revelation: { label: 'Revelation', icon: Eye, tone: 'danger' },
+  migration_wave: {
+    label: 'Migration wave',
+    icon: CloudLightning,
+    tone: 'danger',
+  },
 }
 
 export const RESPONSES: Record<Schema['ChallengeResponse'], Named> = {
@@ -115,6 +139,41 @@ export const PLAN_KINDS: Record<Schema['LongPlanKind'], Named> = {
   },
   wonder: { label: 'Raising a wonder', icon: Landmark, tone: 'gold' },
   forecast: { label: 'Steering a forecast', icon: Activity, tone: 'verdigris' },
+  network: {
+    label: 'Network',
+    icon: Mountain,
+    tone: 'verdigris',
+  },
+  megastructure: {
+    label: 'Megastructure',
+    icon: Mountain,
+    tone: 'verdigris',
+  },
+  programme: {
+    label: 'Programme',
+    icon: Mountain,
+    tone: 'verdigris',
+  },
+  realm: {
+    label: 'Realm',
+    icon: Mountain,
+    tone: 'verdigris',
+  },
+  line: {
+    label: 'Line',
+    icon: Mountain,
+    tone: 'verdigris',
+  },
+  reform: {
+    label: 'Reform',
+    icon: Mountain,
+    tone: 'verdigris',
+  },
+  exploration: {
+    label: 'Exploration',
+    icon: Mountain,
+    tone: 'verdigris',
+  },
 }
 
 export const PLAN_STATUSES: Record<Schema['LongPlanStatus'], Named> = {
@@ -276,6 +335,10 @@ export const LEGACIES: Record<Schema['LegacyKind'], Named> = {
   value: { label: 'Value', icon: Scale, tone: 'verdigris' },
   innovation: { label: 'Innovation', icon: Lightbulb, tone: 'info' },
   art_form: { label: 'Art form', icon: Palette, tone: 'gold' },
+  technique: { label: 'Technique', icon: Wrench, tone: 'danger' },
+  law: { label: 'Law', icon: Scale, tone: 'danger' },
+  institution: { label: 'Institution', icon: Landmark, tone: 'danger' },
+  language: { label: 'Language', icon: Languages, tone: 'danger' },
 }
 
 export const REGIMES: Record<Schema['LabourRegime'], Named> = {

@@ -26,7 +26,10 @@ export function GraphTimeSlider({
   }
   useEffect(() => () => window.clearTimeout(timer.current), [])
   return (
-    <div data-graph-time className='flex min-w-0 items-center gap-3'>
+    <div
+      data-graph-time
+      className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'
+    >
       <EpochSlider
         label='Time'
         value={draft}

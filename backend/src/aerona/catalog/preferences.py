@@ -3,13 +3,22 @@ from types import MappingProxyType
 from aerona.catalog.genetics import LOCI, LOOKS_LOCI
 from aerona.catalog.mind import SKILLS
 from aerona.core.total import partial
+from aerona.domain.enums.arcana import SpellForm
+from aerona.domain.enums.collective import DesignKind
+from aerona.domain.enums.crafts import GameKind
 from aerona.domain.enums.culture import ArtMedium, CalendarSlot
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
+from aerona.domain.enums.eras import TechFamily
+from aerona.domain.enums.living import CultivationMethod
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import PreferenceKind, SkillFamily, ValueAxis
+from aerona.domain.enums.networks import NetworkCarrier
+from aerona.domain.enums.place import PlaceKind
+from aerona.domain.enums.powers import SourceLocus
+from aerona.domain.enums.world import LanguageTexture
 
 P = PreferenceKind
 V = ValueAxis
@@ -32,6 +41,19 @@ PREFERENCE_LABELS: MappingProxyType[PreferenceKind, str] = MappingProxyType(
         P.CRAFT: "Craft",
         P.DEITY_ASPECT: "Aspect of the divine",
         P.LOOKS: "Looks",
+        P.TECHNOLOGY: "Technology",
+        P.MADE_THING: "Made thing",
+        P.POWER: "Power",
+        P.SOURCE: "Source of power",
+        P.LIVING_LINE: "Living craft",
+        P.NETWORK: "Network",
+        P.SOUND: "Sound",
+        P.SCENT: "Scent",
+        P.TEXTURE: "Texture",
+        P.STORY_FORM: "Shape of a story",
+        P.GAME: "Game",
+        P.PLACE_KIND: "Kind of place",
+        P.PROFESSION: "Profession",
     }
 )
 
@@ -52,6 +74,9 @@ SUBJECTS = (
 )
 LOOKS_TARGETS = tuple(f"{locus.value}:{allele}" for locus in LOOKS_LOCI for allele in LOCI[locus].keys)
 CRAFTS = tuple(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.CRAFT)
+SCENTS = ("sweet", "sharp", "mild", "strong", "bitter", "clean")
+TEXTURES = ("smooth", "rough", "soft", "hard", "fine", "coarse")
+STORY_FORMS = ("rise", "fall", "return", "quest", "reversal", "cycle")
 
 STATIC_TARGETS = partial(
     PreferenceKind,
@@ -70,6 +95,19 @@ STATIC_TARGETS = partial(
         P.CRAFT: tuple(craft.value for craft in CRAFTS),
         P.DEITY_ASPECT: tuple(domain.value for domain in Domain),
         P.LOOKS: LOOKS_TARGETS,
+        P.TECHNOLOGY: tuple(family.value for family in TechFamily),
+        P.MADE_THING: tuple(design.value for design in DesignKind),
+        P.POWER: tuple(form.value for form in SpellForm),
+        P.SOURCE: tuple(locus.value for locus in SourceLocus),
+        P.LIVING_LINE: tuple(method.value for method in CultivationMethod),
+        P.NETWORK: tuple(carrier.value for carrier in NetworkCarrier),
+        P.SOUND: tuple(texture.value for texture in LanguageTexture),
+        P.SCENT: SCENTS,
+        P.TEXTURE: TEXTURES,
+        P.STORY_FORM: STORY_FORMS,
+        P.GAME: tuple(game.value for game in GameKind),
+        P.PLACE_KIND: tuple(place.value for place in PlaceKind),
+        P.PROFESSION: tuple(role.value for role in MortalRole),
     },
     without={PreferenceKind.CREATURE, PreferenceKind.PLANT},
 )

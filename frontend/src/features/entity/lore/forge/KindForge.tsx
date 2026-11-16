@@ -5,7 +5,7 @@ import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState } from '@/components/domain'
+import { EmptyState, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -144,7 +144,7 @@ function KindEditor({
     save.isPending
   )
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border border-dashed p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md p-3 sealed-well'>
       <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
         <div className='flex min-w-0 flex-col gap-1'>
           <Label>Name</Label>
@@ -212,49 +212,53 @@ export function KindForge({ catalog }: { catalog: Catalog }) {
           />
         )}
         <ul className='flex min-w-0 flex-col gap-2'>
-          {rows.map((row) => (
-            <li key={row.id} className='flex min-w-0 flex-col gap-2'>
-              <div className='flex min-w-0 flex-wrap items-center gap-2'>
-                <Text weight='semibold'>{row.name}</Text>
-                <NamedChip spec={lookup(spec.bases, row.base)}>
-                  {`on ${lookup(spec.bases, row.base).label.toLowerCase()}`}
-                </NamedChip>
-                <ShiftChips
-                  entries={spec.summary(paramsOf(row.params))}
-                  table={spec.summaryTable}
-                  empty='As its base'
-                />
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  aria-label={`Reshape ${row.name}`}
-                  disabled={busy !== null}
-                  disabledReason={busy ?? undefined}
-                  onClick={() => setEditing(editing === row.id ? null : row.id)}
-                >
-                  <Pencil />
-                </Button>
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  aria-label={`Unmake ${row.name}`}
-                  disabled={busy !== null}
-                  disabledReason={busy ?? undefined}
-                  onClick={() => remove.mutate(row.id)}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-              {editing === row.id && (
-                <KindEditor
-                  catalog={catalog}
-                  kind={row}
-                  blocked={blocked}
-                  onDone={() => setEditing(null)}
-                />
-              )}
-            </li>
-          ))}
+          <Paged items={rows} as='li'>
+            {(row) => (
+              <li key={row.id} className='flex min-w-0 flex-col gap-2'>
+                <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                  <Text weight='semibold'>{row.name}</Text>
+                  <NamedChip spec={lookup(spec.bases, row.base)}>
+                    {`on ${lookup(spec.bases, row.base).label.toLowerCase()}`}
+                  </NamedChip>
+                  <ShiftChips
+                    entries={spec.summary(paramsOf(row.params))}
+                    table={spec.summaryTable}
+                    empty='As its base'
+                  />
+                  <Button
+                    size='icon'
+                    variant='ghost'
+                    aria-label={`Reshape ${row.name}`}
+                    disabled={busy !== null}
+                    disabledReason={busy ?? undefined}
+                    onClick={() =>
+                      setEditing(editing === row.id ? null : row.id)
+                    }
+                  >
+                    <Pencil />
+                  </Button>
+                  <Button
+                    size='icon'
+                    variant='ghost'
+                    aria-label={`Unmake ${row.name}`}
+                    disabled={busy !== null}
+                    disabledReason={busy ?? undefined}
+                    onClick={() => remove.mutate(row.id)}
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+                {editing === row.id && (
+                  <KindEditor
+                    catalog={catalog}
+                    kind={row}
+                    blocked={blocked}
+                    onDone={() => setEditing(null)}
+                  />
+                )}
+              </li>
+            )}
+          </Paged>
         </ul>
         {editing === 'new' ? (
           <KindEditor

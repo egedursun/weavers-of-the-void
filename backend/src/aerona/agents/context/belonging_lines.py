@@ -2,7 +2,7 @@ from sqlalchemy import func, select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.db.tables.belonging import HeldIdentityRow, PeerGroupRow, PeerMemberRow, SanctuaryRow, SatireRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow
@@ -25,7 +25,7 @@ async def identity_lines(scope: Scope, holder_id: int) -> list[str]:
     found = []
     for row in rows:
         value = await named(scope, row.value_node_id) if row.value_node_id is not None else words(row.value_label or "")
-        found.append(f"your {row.layer.value} ({value}) matters {row.salience} out of 100 to you")
+        found.append(f"your {spoken(row.layer)} ({value}) matters {row.salience} out of 100 to you")
     return found
 
 
@@ -75,5 +75,5 @@ async def son_belonging_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(HeldIdentityRow.salience.desc(), HeldIdentityRow.holder_entity_id)
         .limit(LIST_LINES)
     ):
-        found.append(f"{await named(scope, row.holder_entity_id)} cares most about its {row.layer.value} ({row.salience} out of 100)")
+        found.append(f"{await named(scope, row.holder_entity_id)} cares most about its {spoken(row.layer)} ({row.salience} out of 100)")
     return found

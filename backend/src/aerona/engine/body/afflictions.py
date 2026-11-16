@@ -1,8 +1,11 @@
+from collections.abc import Awaitable, Callable, Mapping
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.effect_packages import PACKAGES, PackageSpec, StageSpec
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import BodyRow, InjuryRow
@@ -10,11 +13,16 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.living import SymbiontRow
+from aerona.db.tables.made import AugmentRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.minds import MindProfileRow
+from aerona.db.tables.powers import PowerRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import HeroQuestRow
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, Visibility
+from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.body import HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -22,6 +30,8 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueHolder
+from aerona.domain.enums.minds import MindSeat
+from aerona.domain.enums.powers import PowerState
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import HeroQuestStatus
 from aerona.engine.body.book import ensure_body
@@ -33,9 +43,10 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import clamp_value, needs_of, stored_values, write_needs, write_values
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
+from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.folk import folk_of, present_among
 from aerona.engine.primitives.knowledge import known_levels
-from aerona.engine.primitives.queries import flags_by_entity, living_entity
+from aerona.engine.primitives.queries import active_bonds, flags_by_entity, living_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 
 AFFLICTION_KEY = "afflictions"
@@ -205,6 +216,43 @@ async def quested(ctx: TickContext, bearer: EntityRow, since: int) -> bool:
     return found is not None and since <= ctx.epoch
 
 
+async def divine_cure(ctx: TickContext, bearer: EntityRow) -> bool:
+    patron = await living_patron(ctx.session, bearer)
+    return patron is not None and bool(await active_bonds(ctx.session, [BondKind.WORSHIPS], sources=[bearer.id], targets=[patron.id]))
+
+
+async def power_cure(ctx: TickContext, bearer: EntityRow) -> bool:
+    near = [item.id for item in await neighbours(ctx, bearer)]
+    found = await ctx.session.scalar(
+        select(PowerRow.id)
+        .where(PowerRow.holder_node_id.in_(near), PowerRow.form.in_([SpellForm.BODY, SpellForm.SPIRIT]), PowerRow.state == PowerState.ACTIVE)
+        .limit(1)
+    )
+    return found is not None
+
+
+async def symbiont_cure(ctx: TickContext, bearer: EntityRow) -> bool:
+    return await ctx.session.scalar(select(SymbiontRow.id).where(SymbiontRow.host_node_id == bearer.id).limit(1)) is not None
+
+
+async def transfer_cure(ctx: TickContext, bearer: EntityRow) -> bool:
+    mind = await ctx.session.get(MindProfileRow, bearer.id)
+    return mind is not None and mind.seat is not MindSeat.BODY
+
+
+async def augment_cure(ctx: TickContext, bearer: EntityRow) -> bool:
+    return await ctx.session.scalar(select(AugmentRow.id).where(AugmentRow.bearer_node_id == bearer.id).limit(1)) is not None
+
+
+WIDER_CURES: Mapping[CureKind, Callable[[TickContext, EntityRow], Awaitable[bool]]] = {
+    CureKind.DIVINE: divine_cure,
+    CureKind.POWER: power_cure,
+    CureKind.SYMBIONT: symbiont_cure,
+    CureKind.TRANSFER: transfer_cure,
+    CureKind.AUGMENT: augment_cure,
+}
+
+
 async def try_cures(ctx: TickContext, bearer: EntityRow, row: AfflictionRow) -> CureKind | None:
     table = ctx.rules.effect_packages
     spec = spec_of(row)
@@ -219,9 +267,17 @@ async def try_cures(ctx: TickContext, bearer: EntityRow, row: AfflictionRow) -> 
         return CureKind.MEDICINE
     if CureKind.RITE in spec.cures and await has_role_near(ctx, bearer, MortalRole.PRIEST) and rng.chance(table.rite_pct):
         return CureKind.RITE
+    return await other_cures(ctx, bearer, spec, rng)
+
+
+async def other_cures(ctx: TickContext, bearer: EntityRow, spec: PackageSpec, rng: SeededRandom) -> CureKind | None:
+    table = ctx.rules.effect_packages
     herbal = bearer.location_id is not None and await knows_technique(ctx, bearer.location_id, Technique.HERBALISM)
     if CureKind.TECHNIQUE in spec.cures and herbal and rng.chance(table.technique_pct):
         return CureKind.TECHNIQUE
+    for kind, cured in WIDER_CURES.items():
+        if kind in spec.cures and await cured(ctx, bearer) and rng.chance(table.wider_cure_pct):
+            return kind
     return None
 
 

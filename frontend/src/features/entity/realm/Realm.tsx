@@ -353,27 +353,34 @@ function RealmSeat({ realm }: { realm: Realm }) {
           className='flex min-w-0 flex-col gap-3'
         >
           {groups.length === 0 && <Muted>Nothing weighs on it yet.</Muted>}
-          {groups.map(([group, parts]) => (
-            <div key={group} className='flex min-w-0 flex-col gap-1.5'>
-              <div className='flex min-w-0 items-center justify-between gap-2'>
-                <Label variant='overline'>{plain(REALM_FIELDS, group)}</Label>
-                <ChangeChip
-                  value={parts.reduce((sum, [, value]) => sum + value, 0)}
-                  label='Total'
-                />
+          <Paged items={groups}>
+            {([group, parts]) => (
+              <div key={group} className='flex min-w-0 flex-col gap-1.5'>
+                <div className='flex min-w-0 items-center justify-between gap-2'>
+                  <Label variant='overline'>{plain(REALM_FIELDS, group)}</Label>
+                  <ChangeChip
+                    value={parts.reduce((sum, [, value]) => sum + value, 0)}
+                    label='Total'
+                  />
+                </div>
+                <ul className='flex min-w-0 flex-col gap-1'>
+                  <Paged items={parts} as='li' noun={['part', 'parts']}>
+                    {([label, value]) => (
+                      <li
+                        key={label}
+                        className='flex min-w-0 items-center gap-2'
+                      >
+                        <Text as='span' className='min-w-0 flex-1' truncate>
+                          {sentence(label)}
+                        </Text>
+                        <ChangeChip value={value} />
+                      </li>
+                    )}
+                  </Paged>
+                </ul>
               </div>
-              <ul className='flex min-w-0 flex-col gap-1'>
-                {parts.map(([label, value]) => (
-                  <li key={label} className='flex min-w-0 items-center gap-2'>
-                    <Text as='span' className='min-w-0 flex-1' truncate>
-                      {sentence(label)}
-                    </Text>
-                    <ChangeChip value={value} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            )}
+          </Paged>
         </div>
       </Panel>
     </div>
@@ -387,8 +394,8 @@ function OfficeCard({ item }: { item: Realm['offices'][number] }) {
     <li
       className={
         item.holder_id
-          ? 'flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
-          : 'flex min-w-0 items-center gap-2 rounded-lg border border-dashed bg-muted/20 p-2'
+          ? 'flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
+          : 'flex min-w-0 items-center gap-2 rounded-md p-2 sealed-well'
       }
     >
       <Medallion
@@ -451,7 +458,7 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
       hint={`${filled} of ${plural(below.length, 'seat', 'seats')} filled`}
     >
       <div data-surface='OfficesChart' className='flex min-w-0 flex-col gap-3'>
-        <div className='flex min-w-0 items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3'>
+        <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-primary/30 bg-primary/5 p-3'>
           <Portrait name={ruler?.holder ?? realm.name} size='md' />
           <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
             <Label variant='overline'>Ruler</Label>
@@ -544,7 +551,7 @@ function Succession({ realm }: { realm: Realm }) {
         className='flex min-w-0 flex-col gap-3'
       >
         {realm.succession.length === 0 ? (
-          <div className='flex min-w-0 items-center gap-2 rounded-lg border border-dashed border-warning/40 bg-warning/5 p-2'>
+          <div className='flex min-w-0 items-center gap-2 rounded-md border-warning/40 bg-warning/5 p-2 sealed-well'>
             <Medallion icon={TriangleAlert} tone='warning' size='sm' />
             <Muted>
               No heir stands in line; the succession would be disputed or a
@@ -565,8 +572,8 @@ function Succession({ realm }: { realm: Realm }) {
                   <div
                     className={
                       index === 0
-                        ? 'flex min-w-0 items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-2'
-                        : 'flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+                        ? 'flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-primary/30 bg-primary/5 p-2'
+                        : 'flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                     }
                   >
                     <Badge
@@ -593,7 +600,7 @@ function Succession({ realm }: { realm: Realm }) {
                 {(claim) => (
                   <li
                     key={claim.id}
-                    className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
+                    className='flex min-w-0 flex-col gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                   >
                     <div className='flex min-w-0 flex-wrap items-center gap-2'>
                       <EntityLink kind='entity' id={String(claim.claimant_id)}>
@@ -771,7 +778,7 @@ function Dominion({ realm }: { realm: Realm }) {
 function TreatyRow({ item }: { item: Treaty }) {
   const kind = named(TREATY_KINDS, item.kind)
   return (
-    <li className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'>
+    <li className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <Medallion icon={kind.icon} tone={kind.tone} size='sm' />
       <div className='flex min-w-0 flex-1 flex-col'>
         <EntityLink kind='entity' id={String(item.id)}>
@@ -948,7 +955,7 @@ function LawCard({
   const busy = blocked ?? (save.isPending || repeal.isPending ? WORKING : null)
   const area = named(LAW_AREAS, law.area)
   return (
-    <li className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <li className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-start gap-2'>
         <Medallion icon={area.icon} tone={area.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col gap-1'>
@@ -1255,7 +1262,7 @@ function RealmForm({
           highLabel='Exhausted'
           onChange={(value) => set('war_weariness', value)}
         />
-        <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <div className='flex min-w-0 items-center gap-2.5'>
             <Medallion icon={Coins} tone='gold' size='sm' />
             <div className='flex min-w-0 flex-col'>

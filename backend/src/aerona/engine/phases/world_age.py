@@ -96,7 +96,7 @@ async def enter_golden_age(ctx: TickContext, world: WorldRow, communities: list[
         links = [community.id for community in communities[: rules.deep_life.golden_age_record_links]]
         await note(
             ctx,
-            f"{world.name} entered a golden age: wars are forgotten, granaries are full, masters are doing their finest work.",
+            f"{world.name} entered a golden age: prosperity grows.",
             key="world_age.golden_age",
             ids=links,
             kind=ChronicleKind.WORLD_AGE,
@@ -180,7 +180,7 @@ async def world_age(ctx: TickContext, new_epoch: int) -> WorldAge:
     if reading.turning:
         await note(
             ctx,
-            f"Epoch turning: the world entered its {ordinal(new_epoch)} epoch. The seers closed the old accounts; fears subsided for a while.",
+            f"Epoch turning: the world entered its {ordinal(new_epoch)} epoch.",
             key="world_age.epoch_turning",
             kind=ChronicleKind.WORLD_AGE,
         )
@@ -190,7 +190,7 @@ async def world_age(ctx: TickContext, new_epoch: int) -> WorldAge:
             epochs_counted = several(verdict.age, "epoch", "epochs")
             await note(
                 ctx,
-                f"{world.name} is {epochs_counted} old: its mountains have worn down, its rivers have changed their beds; it is an old world now.",
+                f"{world.name} is {epochs_counted} old; it is an old world now.",
                 key="world_age.old_world",
                 kind=ChronicleKind.WORLD_AGE,
                 world_id=world.id,

@@ -11,6 +11,7 @@ from aerona.domain.enums.polity import (
     LawKind,
     LegitimacyBasis,
     OathKind,
+    OathPenalty,
     OathStatus,
     OfficeKind,
     PartyRole,
@@ -292,6 +293,9 @@ class OathView(ApiModel):
     recipient_id: int | None
     recipient: str | None
     witness_son_id: int | None
+    witness_node_id: int | None = None
+    witness: str | None = None
+    penalty: OathPenalty | None = None
     sworn_epoch: int
     deadline_epoch: int | None
     ended_epoch: int | None

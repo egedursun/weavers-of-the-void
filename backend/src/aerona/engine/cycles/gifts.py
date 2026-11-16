@@ -36,6 +36,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.services.community_relations import relation
+from aerona.engine.unions.customs import payer, union_of
 
 COMPETITIVE = frozenset({GiftOccasion.FEAST})
 POTLATCH_FEASTS = frozenset({GatheringKind.FEAST, GatheringKind.FESTIVAL, GatheringKind.WEDDING, GatheringKind.FUNERAL})
@@ -380,6 +381,13 @@ async def kin_line(ctx: TickContext, mortal_id: int) -> int:
     return house if house is not None else mortal_id
 
 
+async def pay_union(ctx: TickContext, pair: tuple[EntityRow, EntityRow], value: int) -> bool:
+    paying, paid = await kin_line(ctx, pair[0].id), await kin_line(ctx, pair[1].id)
+    if paying == paid:
+        return False
+    return await give(ctx, paying, paid, value, GiftOccasion.MARRIAGE, obliging=False) is not None
+
+
 async def marriage_payments(ctx: TickContext, tally: GiftTally) -> None:
     marriages = await ctx.session.scalars(select(MarriageRow).where(MarriageRow.start_epoch == ctx.epoch).order_by(MarriageRow.id))
     for marriage in marriages:
@@ -388,7 +396,13 @@ async def marriage_payments(ctx: TickContext, tally: GiftTally) -> None:
         if first is None or second is None or held(first.id, second.id):
             continue
         people = await people_of(ctx.session, first)
+        custom = await union_of(ctx.session, first)
         system = await ctx.session.get(KinshipSystemRow, people.id) if people is not None else None
+        if custom is not None:
+            pair = payer(custom, first, second)
+            if pair is not None and await pay_union(ctx, pair, system.payment_value if system is not None else ctx.rules.kinship.union_payment):
+                tally.payments += 1
+            continue
         if system is None or system.payment is MarriagePayment.NONE:
             continue
         leaving, staying = await giver_and_taker(ctx, first, second, system)

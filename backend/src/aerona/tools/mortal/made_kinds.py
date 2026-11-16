@@ -8,7 +8,7 @@ from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.units import UNITS
 from aerona.constants.tool_inputs import NAME_MAX, NAME_MIN, SHORT_DESCRIPTION_MAX
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -135,7 +135,7 @@ async def forge_model(call: MortalCall, args: ForgeModelInput) -> str:
 async def create_dish(call: MortalCall, args: CreateDishInput) -> str:
     people = await own_people(call, MortalResult.DISH_REFUSED)
     if args.method not in known_methods(await KnowledgeMap.load(call.session), people.id):
-        fail(MortalResult.DISH_REFUSED, why=f"{people.name} does not yet cook food {args.method.value}")
+        fail(MortalResult.DISH_REFUSED, why=f"{people.name} does not yet cook food {spoken(args.method)}")
     foods = list(dict.fromkeys(food for food in args.ingredients if food in DISH_FOODS))
     if not foods:
         fail(MortalResult.DISH_REFUSED, why="none of those is food: " + ", ".join(food.value for food in DISH_FOODS))

@@ -38,7 +38,7 @@ export function WorldBorn({ state }: { state: WorldState }) {
     <section
       aria-label='The world is born'
       data-onboarding='born'
-      className='relative flex w-full max-w-2xl min-w-0 flex-col items-center gap-6 self-center overflow-hidden rounded-xl border border-primary/40 bg-card p-8 text-center shadow-lg'
+      className='relative flex w-full max-w-2xl min-w-0 flex-col items-center gap-6 self-center overflow-hidden rounded-md border surface-framed border-primary/40 bg-card p-8 text-center shadow-lg'
     >
       <span
         aria-hidden='true'

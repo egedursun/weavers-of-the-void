@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, Section } from '@/components/domain'
+import { EmptyState, Paged, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { ExpeditionNote } from '@/features/cosmos/ExpeditionCard'
 import { useExpeditionOfThread } from '@/features/cosmos/expeditionsApi'
@@ -103,9 +103,11 @@ export function ThreadCard({ thread }: { thread: ThreadRecord }) {
         {thread.closing_text && <Muted>{thread.closing_text}</Muted>}
         {(thread.related ?? []).length > 0 && (
           <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
-            {(thread.related ?? []).map((node) => (
-              <NodeLink key={`${node.kind}-${node.id}`} node={node} />
-            ))}
+            <Paged items={thread.related ?? []} noun={['name', 'names']}>
+              {(node) => (
+                <NodeLink key={`${node.kind}-${node.id}`} node={node} />
+              )}
+            </Paged>
           </div>
         )}
         {open && <CloseThread thread={thread} />}

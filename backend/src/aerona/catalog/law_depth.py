@@ -45,6 +45,14 @@ REGISTRY_TEXT = total(
         RegistryKind.SALE: "sale",
         RegistryKind.DOWRY: "dowry",
         RegistryKind.INDENTURE: "indenture",
+        RegistryKind.PATENT: "patent",
+        RegistryKind.PATTERN: "registered pattern",
+        RegistryKind.MIND_STATE: "registered state of a mind",
+        RegistryKind.LINE: "registered living line",
+        RegistryKind.COMPANY: "company charter",
+        RegistryKind.BIRTH: "birth",
+        RegistryKind.DEATH: "death",
+        RegistryKind.CITIZENSHIP: "citizenship",
     },
 )
 PAID_IN_WORK = frozenset({RegistryKind.INDENTURE})

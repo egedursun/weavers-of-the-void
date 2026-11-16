@@ -53,21 +53,70 @@ class HoldingKind(StrEnum):
     RELIC = "relic"
     HOLY_PLACE = "holy_place"
     MONASTERY = "monastery"
+    NETWORK = "network"
+    SHARES = "shares"
+    LINES = "lines"
 
 
 class FanaticismKind(StrEnum):
     INQUISITION = "inquisition"
     ICONOCLASM = "iconoclasm"
     CRUSADE = "crusade"
+    PURGE = "purge"
+    FORCED_CONVERSION = "forced_conversion"
+    MARTYRDOM = "martyrdom"
+    MORTIFICATION = "mortification"
+    BOOK_BURNING = "book_burning"
+    PERSECUTION = "persecution"
+    MILLENARIAN_FLIGHT = "millenarian_flight"
 
 
 class StratumKind(StrEnum):
-    PARADISE = "paradise"
-    PLAIN = "plain"
-    TORMENT = "torment"
-    OBLIVION = "oblivion"
-    WARRIOR_HALL = "warrior_hall"
-    ANCESTOR_HALL = "ancestor_hall"
+    REWARD = "reward"
+    COMMON = "common"
+    PUNISHMENT = "punishment"
+    DISSOLUTION = "dissolution"
+    BY_MANNER_OF_DEATH = "by_manner_of_death"
+    BY_LINE = "by_line"
+
+
+class StratumValence(StrEnum):
+    REWARD = "reward"
+    NEUTRAL = "neutral"
+    PUNISHMENT = "punishment"
+    MIXED = "mixed"
+
+
+class StratumPermanence(StrEnum):
+    ETERNAL = "eternal"
+    UNTIL_REBIRTH = "until_rebirth"
+    UNTIL_JUDGEMENT = "until_judgement"
+    FADING = "fading"
+
+
+class StratumAdmission(StrEnum):
+    BY_DEEDS = "by_deeds"
+    BY_FAITH = "by_faith"
+    BY_MANNER_OF_DEATH = "by_manner_of_death"
+    BY_LINE = "by_line"
+    BY_RITES = "by_rites"
+    BY_CHOICE = "by_choice"
+    ALL = "all"
+
+
+class StratumActivity(StrEnum):
+    REST = "rest"
+    SERVICE = "service"
+    STRUGGLE = "struggle"
+    REUNION = "reunion"
+    LEARNING = "learning"
+    DISSOLUTION = "dissolution"
+
+
+class StratumContact(StrEnum):
+    OPEN = "open"
+    BY_RITE = "by_rite"
+    CLOSED = "closed"
 
 
 class AfterlifeState(StrEnum):
@@ -92,6 +141,9 @@ class BindingKind(StrEnum):
     STRUCTURE = "structure"
     BEAST = "beast"
     PERSON = "person"
+    REALM = "realm"
+    NETWORK = "network"
+    LINE = "line"
 
 
 class ReincarnationGate(StrEnum):

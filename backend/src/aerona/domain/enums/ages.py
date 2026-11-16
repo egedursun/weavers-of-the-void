@@ -84,7 +84,7 @@ class SetupKind(StrEnum):
     OMEN = "omen"
     DREAM = "dream"
     FORESIGHT = "foresight"
-    THREAD = "thread"
+    INCIDENT_ARC = "incident_arc"
     PORTENT = "portent"
 
 

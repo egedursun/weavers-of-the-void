@@ -132,6 +132,10 @@ class NotableYearKind(StrEnum):
     PLENTY = "plenty"
     WEATHER = "weather"
     PESTILENCE = "pestilence"
+    DISASTER = "disaster"
+    DISCOVERY = "discovery"
+    CONTACT = "contact"
+    OMEN = "omen"
 
 
 class PlaceCover(StrEnum):

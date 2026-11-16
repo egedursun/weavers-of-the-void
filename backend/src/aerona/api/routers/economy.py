@@ -67,6 +67,7 @@ from aerona.domain.enums.economy import MaterialOrigin, WorkshopKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import Commodity
+from aerona.engine.economy.extraction import extraction_kind
 from aerona.engine.economy.materials import MaterialBook, MaterialProps, price_premium, worth_factor
 from aerona.engine.economy.money import owed
 from aerona.engine.economy.route_control import UNTOLLED
@@ -368,6 +369,7 @@ async def resource_profile(services: ServicesDep, resource_id: int = Path(ge=1))
             richness=profile.richness,
             regeneration=profile.regeneration,
             extraction_difficulty=profile.extraction_difficulty,
+            extraction=extraction_kind(profile),
             required_branch=profile.required_branch,
             required_level=profile.required_level,
             quality=profile.quality,

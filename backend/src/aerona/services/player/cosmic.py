@@ -13,18 +13,19 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind, LegendaryQuestKind
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestTargetKind
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, ClimateEra, Discovery, SkyEventKind, StarType
 from aerona.domain.models.profiles import TravelResource
 from aerona.engine.cosmos.actions import cleanse_leak as engine_cleanse_leak
 from aerona.engine.cosmos.actions import seal_gate as engine_seal_gate
-from aerona.engine.cosmos.quests import open_quest
+from aerona.engine.cosmos.quests import LegendaryDraft, legendary_name, open_quest
 from aerona.engine.cosmos.resources import define_cosmic_resource
-from aerona.engine.cosmos.routes import RouteSpec, reveal_hidden_route, sever_route, stitch_route
+from aerona.engine.cosmos.routes import RouteSpec, repair_route, reveal_hidden_route, sever_route
 from aerona.engine.cosmos.routes import open_route as engine_open_route
 from aerona.engine.cosmos.routes import recall_journey as engine_recall_journey
 from aerona.engine.cosmos.star_types import rekindle_cost
@@ -102,7 +103,10 @@ class SoulBind(Command):
 
 
 class LegendaryQuest(Command):
-    kind: LegendaryQuestKind
+    aim: QuestAim = QuestAim.RESTORE
+    target_kind: QuestTargetKind = QuestTargetKind.STAR
+    obstacle: QuestObstacle = QuestObstacle.DISTANCE
+    reward: QuestReward = QuestReward.RENOWN
 
 
 class SkyEvent(Command):
@@ -177,8 +181,8 @@ async def route_action(scope: PlayerScope, command: RouteCommand) -> Effect:
         return Effect(message, route.id, essence_spent=spent, kind=ActionKind.SEVER_ROUTE, tool=tool, values={"until": result.severed_until})
     if command.action is RouteAction.STITCH:
         spent = guards.charge(creator, scope.rules.beyond.reopen_route_cost, "beyond.reopen_route_cost")
-        message = await stitch_route(ctx, route.id, creator.name)
-        return Effect(message, route.id, essence_spent=spent, kind=ActionKind.STITCH_ROUTE, tool=tool)
+        message = await repair_route(ctx, route.id, creator.name)
+        return Effect(message, route.id, essence_spent=spent, kind=ActionKind.REPAIR_ROUTE, tool=tool)
     if route.known:
         raise ValidationFailedError("This route is not hidden.")
     spent = guards.charge(creator, scope.rules.travel.reveal_route_cost, "travel.reveal_route_cost")
@@ -226,7 +230,7 @@ async def hang_star(scope: PlayerScope, command: HangStar) -> Effect:
         ctx, name, command.star_type, creator.name, (command.description or "").strip() or None, galaxy_id=command.galaxy_id, world_id=command.world_id
     )
     (await scope.cosmos()).map_version += 1
-    return Effect(f"{star.name} now hangs in the sky.", star.id, essence_spent=spent, created_ids=(star.id,), values={"galaxy_id": star.galaxy_id})
+    return Effect(f"{star.name} now takes its place in the sky.", star.id, essence_spent=spent, created_ids=(star.id,), values={"galaxy_id": star.galaxy_id})
 
 
 @player_action("cosmic:seal_gate", ActionKind.SEAL_GATE)
@@ -288,8 +292,9 @@ async def bind_soul(scope: PlayerScope, command: SoulBind) -> Effect:
 async def legendary_quest(scope: PlayerScope, command: LegendaryQuest) -> Effect:
     creator = await scope.creator()
     spent = guards.charge(creator, scope.rules.cosmic_costs.legendary_expedition, "cosmic_costs.legendary_expedition")
-    quest = await open_quest(await scope.context("legendary_quest"), command.kind, creator.name, ActorKind.CREATOR)
-    return Effect(f"A legendary quest began: {command.kind.value.replace('_', ' ')}.", essence_spent=spent, values={"thread_id": quest.thread_id})
+    draft = LegendaryDraft(command.aim, command.target_kind, command.obstacle, command.reward)
+    quest = await open_quest(await scope.context("legendary_quest"), draft, creator.name, ActorKind.CREATOR)
+    return Effect(f"A legendary quest began: {legendary_name(quest)}.", essence_spent=spent, values={"thread_id": quest.thread_id})
 
 
 @player_action("cosmic:sky_event", ActionKind.SKY_EVENT)
@@ -507,7 +512,7 @@ async def edit_star(scope: PlayerScope, command: EditStar) -> Effect:
     return Effect(await tell(ctx, STAR_EDITED, kind=ChronicleKind.COSMIC, star=star.name), star.id)
 
 
-@player_action("route:open", ActionKind.STITCH_ROUTE)
+@player_action("route:open", ActionKind.REPAIR_ROUTE)
 async def open_route(scope: PlayerScope, command: OpenRoute) -> Effect:
     if command.first_world_id == command.second_world_id:
         raise ValidationFailedError("A road needs two different worlds.")

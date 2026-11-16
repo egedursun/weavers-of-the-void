@@ -112,7 +112,7 @@ export function WorldDivinityPanel({ worldId }: { worldId: number }) {
                   {(row) => (
                     <li
                       key={`${row.domain}-${row.hook}`}
-                      className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                      className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
                     >
                       <Badge size='sm' variant='outline'>
                         {words(row.domain)}

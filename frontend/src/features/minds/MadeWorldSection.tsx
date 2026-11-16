@@ -21,6 +21,7 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -638,9 +639,11 @@ function Store({ store, blocked }: { store: DataStoreView } & Blocked) {
       aside={<Ref node={store.owner} empty='owned by no one' />}
     >
       <ul className='flex min-w-0 flex-col gap-2'>
-        {store.contents.map((item) => (
-          <StoreContent key={item.id} item={item} blocked={blocked} />
-        ))}
+        <Paged items={store.contents} as='li'>
+          {(item) => (
+            <StoreContent key={item.id} item={item} blocked={blocked} />
+          )}
+        </Paged>
       </ul>
       <ForgeCard
         icon={Plus}
@@ -985,9 +988,11 @@ function Line({ line, blocked }: { line: ReplicatorLineView } & Blocked) {
         <Ref node={line.mind} empty='no mind runs it' />
       </div>
       <ul className='flex min-w-0 flex-col gap-2'>
-        {line.presences.map((presence) => (
-          <Presence key={presence.id} presence={presence} blocked={blocked} />
-        ))}
+        <Paged items={line.presences} as='li'>
+          {(presence) => (
+            <Presence key={presence.id} presence={presence} blocked={blocked} />
+          )}
+        </Paged>
       </ul>
       <ForgeCard
         icon={Sprout}

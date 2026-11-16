@@ -18,6 +18,7 @@ from aerona.engine.folkways.purity import caste_bars
 from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
+from aerona.engine.unions.customs import partners_allowed
 from aerona.rules.registry import Rules
 
 FEMALE = "female"
@@ -81,6 +82,7 @@ async def may_wed(session: AsyncSession, rules: Rules, first: EntityRow, second:
         or await caste_bars(session, first, second)
         or await too_young_to_wed(session, first, second)
         or await unwed_by_law(session, first, second)
+        or not await partners_allowed(session, first, second)
     ):
         return False
     return await breeds_or_weds(session, first, second)

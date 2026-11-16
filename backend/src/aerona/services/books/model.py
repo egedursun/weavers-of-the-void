@@ -35,6 +35,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import ClusterRow, CosmicBeingProfileRow, DimensionRow, GalaxyRow, RiftRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
+from aerona.db.tables.dimension_aspects import DimensionAspectRow
 from aerona.db.tables.entities import EntityRow, EntityTagRow
 from aerona.db.tables.epochs import EpochRow, EpochStatsRow, EpochWorldNarrativeRow
 from aerona.db.tables.faith import AfterlifeStratumRow
@@ -51,7 +52,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.son import Passion, SonStatus, Stat
 from aerona.domain.enums.war import WarSide, WarStatus
 from aerona.domain.enums.world import CosmosShape
-from aerona.domain.models.genesis import GenesisSettings
+from aerona.domain.models.genesis import TECH_LEVEL_CEILING, GenesisSettings
 from aerona.domain.models.profiles import EntityDepth
 from aerona.domain.models.records import EpochStatsData
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
@@ -734,13 +735,13 @@ class BookBuilder:
             for galaxy in sorted((row for row in ladder.galaxies.values() if row.cluster_id == cluster.id), key=lambda row: row.id):
                 await add_galaxy(galaxy, level + 1)
 
+        aspects: dict[int, list[DimensionAspectRow]] = {}
+        for aspect in await self.session.scalars(select(DimensionAspectRow).order_by(DimensionAspectRow.id)):
+            aspects.setdefault(aspect.dimension_id, []).append(aspect)
         for dimension in sorted(ladder.dimensions.values(), key=lambda row: row.id):
             facts = [
-                Labelled(
-                    "Kind",
-                    DIMENSION_KINDS[dimension.dimension_kind].label
-                    + (f" ({ELEMENT_LABELS[dimension.element].lower()})" if dimension.element is not None else ""),
-                ),
+                Labelled("Kind", DIMENSION_KINDS[dimension.dimension_kind].label),
+                Labelled("Aspects", aspect_words(aspects.get(dimension.id, [])) or "none"),
                 Labelled("Veil", f"{dimension.veil}/100"),
                 Labelled("Stability", f"{dimension.stability}/100"),
                 Labelled("Time", f"{dimension.time_factor:g} times the prime"),
@@ -1048,12 +1049,21 @@ def layer_fact(settings: GenesisSettings) -> str:
     return DIMENSION_KINDS[settings.layer_kind].label if settings.layer_kind is not None else SEED_CHOOSES
 
 
+def family_levels(settings: GenesisSettings) -> str:
+    if not settings.technology_levels:
+        return f"every family at the level of {TECHNOLOGY_LABELS[settings.technology].lower()}"
+    return "; ".join(f"{humanize(family.value)} {level}/{TECH_LEVEL_CEILING}" for family, level in sorted(settings.technology_levels.items()))
+
+
 def settings_facts(settings: GenesisSettings) -> list[Labelled]:
     return [
         Labelled("Template", TEMPLATES[settings.template].name if settings.template is not None else BLANK_CANVAS),
         Labelled("Magic", f"{settings.magic}/100"),
         Labelled("Danger", f"{settings.danger}/100"),
         Labelled("Technology", TECHNOLOGY_LABELS[settings.technology]),
+        Labelled("Technology by family", family_levels(settings)),
+        Labelled("Made minds", chosen(settings.made_minds, "/100")),
+        Labelled("Reach of information", chosen(settings.information_reach, "/100")),
         Labelled("Texture of the language", TEXTURE_LABELS[settings.language_texture]),
         Labelled("First peoples", str(settings.peoples)),
         Labelled("Cosmos size", COSMOS_LABELS[settings.cosmos_size]),
@@ -1172,3 +1182,8 @@ async def entry_chronicle(session: AsyncSession, *, son_id: int | None, entity_i
         statement = statement.where(ChronicleRow.son_id == son_id)
     rows = await session.scalars(statement.order_by(ChronicleRow.id))
     return [ChronicleLine(told_kind(row).value.replace("_", " "), row.year, clean_lore(row.text), row.son_id) for row in rows]
+
+
+def aspect_words(rows: list[DimensionAspectRow]) -> str:
+    named = [(ELEMENT_LABELS[row.element] if row.element is not None else (row.form.value if row.form is not None else "")).replace("_", " ") for row in rows]
+    return ", ".join(f"{name.lower()} {row.strength}/100" for name, row in zip(named, rows, strict=True))

@@ -27,12 +27,20 @@ class PerennialKind(StrEnum):
     VINEYARD = "vineyard"
     GROVE = "grove"
     TIMBER = "timber"
+    PLANTATION = "plantation"
+    FOREST_GARDEN = "forest_garden"
 
 
 class CommonsKind(StrEnum):
     PASTURE = "pasture"
     WOODS = "woods"
     FISHERY = "fishery"
+    WATER = "water"
+    HUNTING_GROUND = "hunting_ground"
+    QUARRY = "quarry"
+    SPECTRUM = "spectrum"
+    ORBITS = "orbits"
+    SOURCE_GROUND = "source_ground"
 
 
 class CommonsRule(StrEnum):
@@ -49,12 +57,25 @@ class PreparednessKind(StrEnum):
     DRILL = "drill"
     WATCHTOWER = "watchtower"
     SEAWALL = "seawall"
+    QUARANTINE_PLAN = "quarantine_plan"
+    SHELTERS = "shelters"
+    WARNING_NETWORK = "warning_network"
+    EVACUATION_ROUTES = "evacuation_routes"
+    WARD = "ward"
+    RESERVES_OF_ENERGY = "reserves_of_energy"
 
 
 class AidKind(StrEnum):
     GOODS = "goods"
     HEALERS = "healers"
     LABOUR = "labour"
+    MONEY = "money"
+    CREDIT = "credit"
+    FOOD = "food"
+    SHELTER = "shelter"
+    MEDICINE = "medicine"
+    SOLDIERS = "soldiers"
+    KNOWLEDGE = "knowledge"
 
 
 class RebuildPlan(StrEnum):

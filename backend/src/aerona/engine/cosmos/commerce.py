@@ -12,6 +12,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.travel import RouteClosure
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.routes import current_calendar, forgotten_world_ids, route_status
@@ -108,6 +109,8 @@ async def tend_route(ctx: TickContext, route: RouteRow, moved: int, lawful: int 
         route.piracy = clamp_percent(route.piracy + (table.piracy_growth if busy else -table.piracy_decay) - lawful * table.space_law_piracy)
     if "danger" not in route.locked and route.wear:
         route.danger = clamp_percent(max(route.danger, route.wear * table.wear_danger_pct // PERCENT))
+    if route.wear >= PERCENT and "active" not in route.locked:
+        route.active, route.closure = False, RouteClosure.WORN
 
 
 async def cosmic_trade(ctx: TickContext) -> int:

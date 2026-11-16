@@ -22,6 +22,8 @@ from aerona.engine.notes import note
 from aerona.engine.powers.control import PowerDraft, create_power
 from aerona.engine.primitives.numbers import clamp_percent
 
+FEED_OF = {Metabolism.FEEDING: CommodityKind.FODDER, Metabolism.CHEMICAL: CommodityKind.ORE}
+
 
 async def node_exists(ctx: TickContext, node_id: int | None, what: str) -> None:
     if node_id is not None and await ctx.session.get(NodeRow, node_id) is None:
@@ -42,7 +44,7 @@ async def give_life(ctx: TickContext, thing_id: int, *, line_id: int | None, met
         thing_node_id=thing.id,
         line_id=line.id if line is not None else None,
         metabolism=line.metabolism if line is not None else metabolism,
-        feed_commodity=CommodityKind.FODDER if metabolism is Metabolism.FEEDING else None,
+        feed_commodity=FEED_OF.get(metabolism),
         feed_per_season=1,
         growth_stage=GrowthStage.SEED,
         size_pct=20,

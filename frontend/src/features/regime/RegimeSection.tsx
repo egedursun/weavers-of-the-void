@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, LoadingBlock, Section } from '@/components/domain'
 import { useNodeKind } from '@/features/cycles/model'
+import { ConstitutionSection } from './ConstitutionSection'
 import { LearningPanel } from './LearningPanel'
 import { LineagePanel } from './LineagePanel'
 import { PatronagePanel } from './PatronagePanel'
@@ -116,6 +117,7 @@ export function RegimeSection({
                 data={query.data}
                 blocked={readOnlyReason}
               />
+              <ConstitutionSection nodeId={nodeId} blocked={readOnlyReason} />
             </TabsContent>
             <TabsContent value='patronage'>
               <PatronagePanel

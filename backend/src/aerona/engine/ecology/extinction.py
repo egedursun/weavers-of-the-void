@@ -89,7 +89,7 @@ async def sacred_crisis(ctx: TickContext, species: EntityRow) -> int:
                 town.unrest = clamp_int(town.unrest + table.sacred_unrest, 0, PERCENT)
         shaken += 1
     if shaken:
-        await note(ctx, f"The holy {species.name} is no more; its faithful ask what their god has forsaken.", key="ecology.sacred_lost", ids=[species.id])
+        await note(ctx, f"The holy {species.name} is no more; its faithful lose what they held sacred.", key="ecology.sacred_lost", ids=[species.id])
     return shaken
 
 

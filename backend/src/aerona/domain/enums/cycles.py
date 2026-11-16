@@ -21,6 +21,13 @@ class ChallengeKind(StrEnum):
     INVASION = "invasion"
     PLAGUE = "plague"
     FAMINE = "famine"
+    COLLAPSE = "collapse"
+    SECESSION = "secession"
+    TECHNOLOGICAL_SHOCK = "technological_shock"
+    SOURCE_DEPLETION = "source_depletion"
+    RUNAWAY = "runaway"
+    REVELATION = "revelation"
+    MIGRATION_WAVE = "migration_wave"
 
 
 class ChallengeResponse(StrEnum):
@@ -35,6 +42,13 @@ class LongPlanKind(StrEnum):
     CONVERSION = "conversion"
     WONDER = "wonder"
     FORECAST = "forecast"
+    NETWORK = "network"
+    MEGASTRUCTURE = "megastructure"
+    PROGRAMME = "programme"
+    REALM = "realm"
+    LINE = "line"
+    REFORM = "reform"
+    EXPLORATION = "exploration"
 
 
 class LongPlanStatus(StrEnum):
@@ -132,6 +146,10 @@ class LegacyKind(StrEnum):
     VALUE = "value"
     INNOVATION = "innovation"
     ART_FORM = "art_form"
+    TECHNIQUE = "technique"
+    LAW = "law"
+    INSTITUTION = "institution"
+    LANGUAGE = "language"
 
 
 class LabourRegime(StrEnum):

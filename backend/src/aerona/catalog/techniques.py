@@ -59,7 +59,7 @@ TECHNIQUES = MappingProxyType(
         spec.technique: spec
         for spec in (
             TechniqueSpec(T.PHALANX_DRILL, B.WARFARE, 1, "Phalanx drill", "Pike lines and shield walls hold their ground."),
-            TechniqueSpec(T.HORSE_ARCHERY, B.WARFARE, 2, "Horse archery", "Riders shoot from the saddle.", Gate(all_of=((B.AGRICULTURE, 1),))),
+            TechniqueSpec(T.HORSE_ARCHERY, B.WARFARE, 2, "Horse archery", "Mounted troops shoot on the move.", Gate(all_of=((B.AGRICULTURE, 1),))),
             TechniqueSpec(T.SIEGECRAFT, B.WARFARE, 2, "Siegecraft", "Sappers and engines take walls.", Gate(all_of=((B.ARCHITECTURE, 1),))),
             TechniqueSpec(T.FORTIFICATION, B.ARCHITECTURE, 2, "Fortification", "Walls rise higher and hold longer."),
             TechniqueSpec(T.LOGISTICS, B.WARFARE, 3, "Logistics", "Armies carry more and march farther.", Gate(all_of=((B.WRITING, 1),))),
@@ -114,8 +114,8 @@ TECHNIQUES = MappingProxyType(
             TechniqueSpec(T.WRITTEN_LAW, B.CIVICS, 2, "Written law", "Laws are written down and read aloud.", Gate(all_of=((B.WRITING, 1),))),
             TechniqueSpec(T.CODIFIED_LAW, B.CIVICS, 3, "Codified law", "The laws are gathered into one code.", Gate(all_of=((B.WRITING, 2),))),
             TechniqueSpec(T.BUREAUCRACY, B.CIVICS, 3, "Bureaucracy", "Clerks and offices run the realm.", Gate(all_of=((B.WRITING, 2),)), institution=True),
-            TechniqueSpec(T.CENSUS, B.CIVICS, 2, "Census", "Heads and hearths are counted."),
-            TechniqueSpec(T.POSTAL_SERVICE, B.CIVICS, 3, "Postal service", "Riders carry letters along set roads."),
+            TechniqueSpec(T.CENSUS, B.CIVICS, 2, "Census", "The people are counted."),
+            TechniqueSpec(T.POSTAL_SERVICE, B.CIVICS, 3, "Postal service", "Couriers carry letters along set roads."),
             TechniqueSpec(T.DIPLOMATIC_CORPS, B.CIVICS, 3, "Diplomatic corps", "Envoys are trained and kept abroad."),
             TechniqueSpec(T.STANDING_ARMY_ADMIN, B.CIVICS, 3, "Standing army administration", "Soldiers are paid and kept.", Gate(all_of=((B.WARFARE, 1),))),
             TechniqueSpec(T.DOUBLE_ENTRY, B.CIVICS, 3, "Double entry", "Every sum is booked twice and balanced.", Gate(all_of=((B.TRADE, 2),))),

@@ -43,6 +43,7 @@ from aerona.engine.phases.dominion import count
 )
 @writes(
     "settlement.defense",
+    "settlement.prosperity",
     "table.body_marks",
     "table.chronicle",
     "table.chronicle_entities",
@@ -103,6 +104,7 @@ async def town_life(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.bonds",
     "table.border_controls",
     "table.case_witnesses",
     "table.crime_cases",

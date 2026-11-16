@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.anatomy import anatomy_of
 from aerona.catalog.creature_anatomy import MONSTER_PLANS, MONSTER_SIZES
 from aerona.db.tables.afflictions import AfflictionRow
-from aerona.db.tables.anatomy import CreatureAnatomyRow
+from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.body import BodyRow, ConditionRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -22,13 +22,14 @@ from aerona.domain.enums.body import MADNESS_CONDITIONS, BodyPlan, ConditionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import MagicSchool, MagicSource
 from aerona.domain.enums.ecology import (
+    AttackDelivery,
+    AttackEffect,
+    AttackRange,
     Aversion,
     AwakeningTrigger,
     BeastTemper,
     Biochemistry,
-    BreathKind,
     Diet,
-    GazeKind,
     Habitat,
     SizeClass,
     SpeciesClass,
@@ -51,6 +52,7 @@ from aerona.engine.cosmos.routes import has_beast_mount
 from aerona.engine.ecology.anatomy import (
     BEAST_BODIES_FIXUP,
     armour_of,
+    attack_specs,
     body_might,
     ensure_anatomy,
     fit_beast_bodies,
@@ -60,7 +62,7 @@ from aerona.engine.ecology.anatomy import (
     repelled,
 )
 from aerona.engine.ecology.anatomy_control import edit_anatomy, reroll_anatomy
-from aerona.engine.ecology.beast_acts import carry_off, free_captives, gaze_strike, triggered, void_trophy
+from aerona.engine.ecology.beast_acts import carry_off, free_captives, sight_scale, strike, triggered, void_trophy
 from aerona.engine.ecology.beasts import profile_beast, raid
 from aerona.engine.ecology.monsters import emerge_from_deep, roam_void
 from aerona.engine.ecology.necromancy import necromancy
@@ -87,6 +89,12 @@ async def beast(ctx: TickContext, cosmos: Cosmos, region_id: int, name: str = "O
     return creature, row
 
 
+def attack(node_id: int, delivery: AttackDelivery, effect: AttackEffect, reach: AttackRange = AttackRange.NEAR) -> CreatureAttackRow:
+    row = CreatureAttackRow(node_id=node_id, delivery=delivery, effect=effect, range=reach, recharge=0, permanent=False)
+    row.locked = []
+    return row
+
+
 def anatomy(node_id: int, **values: object) -> CreatureAnatomyRow:
     row = CreatureAnatomyRow(node_id=node_id, generated_epoch=1, locked=[])
     for key, value in values.items():
@@ -97,18 +105,24 @@ def anatomy(node_id: int, **values: object) -> CreatureAnatomyRow:
 def test_bodies_follow_traits_and_chemistry_and_monsters_grow_strange(rules: Rules) -> None:
     traits = {CreatureTrait.FIRE_BREATHING, CreatureTrait.STONESKIN}
     plain = generate(rules, 11, BodyPlan.QUADRUPED, traits, Biochemistry.CARBON_WATER, aggression=10, fear=80, monster=False)
-    assert plain.breath is BreathKind.FIRE and plain.skin is TissueMaterial.STONE and plain.limbs >= 4
+    given = attack_specs(rules, 11, traits, monster=False)
+    assert given[0].delivery is AttackDelivery.BREATH and given[0].effect is AttackEffect.HEAT
+    assert plain.skin is TissueMaterial.MINERAL and plain.limbs >= 4
     assert plain.temperament is Temperament.SKITTISH
     again = generate(rules, 11, BodyPlan.QUADRUPED, traits, Biochemistry.CARBON_WATER, aggression=10, fear=80, monster=False)
-    assert (again.limbs, again.heads, again.skin, again.breath) == (plain.limbs, plain.heads, plain.skin, plain.breath)
+    assert (again.limbs, again.heads, again.skin) == (plain.limbs, plain.heads, plain.skin)
     void = generate(rules, 12, BodyPlan.AMORPHOUS, set(), Biochemistry.VOID, aggression=50, fear=50, monster=False)
-    assert void.habitat is Habitat.VOID and void.skin is TissueMaterial.VOID_STUFF
-    sure = tuned(rules, "creature_anatomy", exotic_tissue_pct=100, monster_breath_pct=100, gaze_pct=100, hoard_pct=100, abductor_pct=100, awakening_pct=100)
+    assert void.habitat is Habitat.VOID and void.skin is TissueMaterial.INSUBSTANTIAL
+    sure = tuned(
+        rules, "creature_anatomy", exotic_tissue_pct=100, monster_attack_pct=100, sight_attack_pct=100, hoard_pct=100, abductor_pct=100, awakening_pct=100
+    )
     monster = generate(sure, 13, BodyPlan.COLOSSAL, set(), Biochemistry.CARBON_WATER, aggression=50, fear=0, monster=True, deep=True)
-    assert monster.skin in {TissueMaterial.CRYSTAL, TissueMaterial.FIRE, TissueMaterial.STEAM, TissueMaterial.METAL}
-    assert monster.breath is not None and monster.gaze is not None and monster.hoards is not None and monster.awakening is not None
+    assert monster.skin in {TissueMaterial.CRYSTALLINE, TissueMaterial.ENERGY, TissueMaterial.VAPOUR, TissueMaterial.METALLIC, TissueMaterial.GEL}
+    deliveries = {spec.delivery for spec in attack_specs(sure, 13, set(), monster=True)}
+    assert AttackDelivery.GAZE in deliveries and len(deliveries) >= 2
+    assert monster.hoards is not None and monster.awakening is not None
     assert monster.temperament is Temperament.ABDUCTOR and monster.habitat is Habitat.DEEP
-    assert harm_factor(rules, monster, 4) > harm_factor(rules, plain, 4) >= 1.0
+    assert harm_factor(rules, monster, 4, 2) > harm_factor(rules, plain, 4) >= 1.0
     assert armour_of(monster) > 0 and armour_of(None) == 0
 
 
@@ -131,7 +145,8 @@ async def test_a_monster_hoards_bites_and_shuns_what_it_hates(ctx: TickContext, 
     hold = await town(ctx.session, cosmos, region.id)
     victim = await mortal(ctx.session, cosmos, hold.id)
     horror, row = await beast(ctx, cosmos, region.id)
-    ctx.session.add(anatomy(horror.id, breath=BreathKind.FIRE, hoards=MaterialKind.GOLD, bite=PackageKind.SNAKE_VENOM, hates=Aversion.FIRE))
+    ctx.session.add(anatomy(horror.id, hoards=MaterialKind.GOLD, bite=PackageKind.SNAKE_VENOM, hates=Aversion.FIRE))
+    ctx.session.add(attack(horror.id, AttackDelivery.BREATH, AttackEffect.HEAT))
     await GoodsLedger(ctx.session, ctx.epoch).add(hold.id, CommodityKind.LUXURIES, 20, GoodsFlow.PRODUCTION)
     await ctx.session.flush()
     await raid(ctx, horror, row, hold)
@@ -234,9 +249,9 @@ async def test_necromancers_raise_towers_and_hosts_and_besiege_towns(ctx: TickCo
 async def test_the_god_shapes_and_reshapes_a_body(ctx: TickContext, cosmos: Cosmos) -> None:
     region = await make_region(ctx.session, "Shape Vale", cosmos.home.id)
     horror, _ = await beast(ctx, cosmos, region.id)
-    row = await edit_anatomy(ctx, horror.id, {"heads": 3, "breath": "steam", "habitat": "void"}, release=[])
-    assert (row.heads, row.breath, row.habitat) == (3, BreathKind.STEAM, Habitat.VOID)
-    assert set(row.locked) == {"heads", "breath", "habitat"}
+    row = await edit_anatomy(ctx, horror.id, {"heads": 3, "skin": "vapour", "habitat": "void"}, release=[])
+    assert (row.heads, row.skin, row.habitat) == (3, TissueMaterial.VAPOUR, Habitat.VOID)
+    assert set(row.locked) == {"heads", "skin", "habitat"}
     fresh = await reroll_anatomy(ctx, horror.id)
     assert fresh.locked == [] and fresh.node_id == horror.id
     assert horror.status is EntityStatus.CANON
@@ -245,14 +260,14 @@ async def test_the_god_shapes_and_reshapes_a_body(ctx: TickContext, cosmos: Cosm
 def test_stone_skin_and_metal_bones_are_the_layers_a_blade_must_pass(rules: Rules) -> None:
     head = anatomy_of(BodyPlan.QUADRUPED).parts[0]
     flesh = tissue_hit(rules, BodyPlan.QUADRUPED, head, DamageType.CUT, 3)
-    stone = tissue_hit(rules, BodyPlan.QUADRUPED, head, DamageType.CUT, 3, hardness=Hardness(TissueMaterial.STONE))
-    metal = tissue_hit(rules, BodyPlan.QUADRUPED, head, DamageType.CUT, 3, hardness=Hardness(None, TissueMaterial.METAL))
+    stone = tissue_hit(rules, BodyPlan.QUADRUPED, head, DamageType.CUT, 3, hardness=Hardness(TissueMaterial.MINERAL))
+    metal = tissue_hit(rules, BodyPlan.QUADRUPED, head, DamageType.CUT, 3, hardness=Hardness(None, TissueMaterial.METALLIC))
     assert flesh.bone and flesh.organ
     assert stone.deepest is TissueKind.MUSCLE and not stone.bone
     assert metal.deepest is TissueKind.MUSCLE and not metal.bone
-    hard = anatomy(1, skin=TissueMaterial.STONE, bone=TissueMaterial.STONE)
-    assert hardness_of(hard) == Hardness(TissueMaterial.STONE, TissueMaterial.STONE) and hardness_of(None) == PLAIN
-    assert skin_kept(rules, hard) < skin_kept(rules, anatomy(2, skin=TissueMaterial.FLESH)) == 1.0 == skin_kept(rules, None)
+    hard = anatomy(1, skin=TissueMaterial.MINERAL, bone=TissueMaterial.MINERAL)
+    assert hardness_of(hard) == Hardness(TissueMaterial.MINERAL, TissueMaterial.MINERAL) and hardness_of(None) == PLAIN
+    assert skin_kept(rules, hard) < skin_kept(rules, anatomy(2, skin=TissueMaterial.SOFT_TISSUE)) == 1.0 == skin_kept(rules, None)
 
 
 async def test_a_beast_is_wounded_through_the_body_of_its_kind_and_a_lone_monster_through_its_own(ctx: TickContext, cosmos: Cosmos) -> None:
@@ -289,14 +304,16 @@ async def test_each_gaze_strikes_a_raided_town_its_own_way(ctx: TickContext, cos
     hold = await town(ctx.session, cosmos, region.id)
     folk = [await mortal(ctx.session, cosmos, hold.id, name) for name in ("Ari", "Bel")]
     horror, _ = await beast(ctx, cosmos, region.id, "Gazer")
-    assert await gaze_strike(ctx, horror, hold, None) == 1.0
-    assert await gaze_strike(ctx, horror, hold, anatomy(horror.id, gaze=GazeKind.SLEEP)) == 1 + rules.creature_anatomy.sleep_raid_pct / 100
-    assert await gaze_strike(ctx, horror, hold, anatomy(horror.id, gaze=GazeKind.TERROR)) == 1.0
+    lair = BeastProfileRow(beast_entity_id=horror.id)
+    assert await sight_scale(ctx, horror, hold, []) == 1.0
+    sleep = attack(horror.id, AttackDelivery.GAZE, AttackEffect.SLEEP, AttackRange.SIGHT)
+    assert await sight_scale(ctx, horror, hold, [sleep]) == 1 + rules.creature_anatomy.sleep_raid_pct / 100
+    await strike(ctx, horror, lair, hold, attack(horror.id, AttackDelivery.GAZE, AttackEffect.FEAR, AttackRange.SIGHT))
     for person in folk:
         profile = await ctx.session.get(MortalProfileRow, person.id)
         assert profile is not None and profile.stress > 0
-    await gaze_strike(ctx, horror, hold, anatomy(horror.id, gaze=GazeKind.PETRIFY))
-    await gaze_strike(ctx, horror, hold, anatomy(horror.id, gaze=GazeKind.MADNESS))
+    await strike(ctx, horror, lair, hold, attack(horror.id, AttackDelivery.GAZE, AttackEffect.STILLNESS, AttackRange.SIGHT))
+    await strike(ctx, horror, lair, hold, attack(horror.id, AttackDelivery.VOICE, AttackEffect.CONFUSION, AttackRange.FAR))
     kinds = set(await ctx.session.scalars(select(ConditionRow.kind).where(ConditionRow.bearer_node_id.in_([person.id for person in folk]))))
     assert ConditionKind.WITHERED_LIMB in kinds and kinds & set(MADNESS_CONDITIONS)
 
@@ -305,6 +322,7 @@ async def test_a_monsters_body_counts_against_heroes(ctx: TickContext, cosmos: C
     region = await make_region(ctx.session, "Might Vale", cosmos.home.id)
     horror, _ = await beast(ctx, cosmos, region.id, "Iron Wyrm")
     assert await body_might(ctx.session, rules, horror.id) == 1.0
-    ctx.session.add(anatomy(horror.id, skin=TissueMaterial.METAL, bone=TissueMaterial.METAL, breath=BreathKind.FIRE, limbs=4, heads=1))
+    ctx.session.add(anatomy(horror.id, skin=TissueMaterial.METALLIC, bone=TissueMaterial.METALLIC, limbs=4, heads=1))
+    ctx.session.add(attack(horror.id, AttackDelivery.BREATH, AttackEffect.HEAT))
     await ctx.session.flush()
     assert await body_might(ctx.session, rules, horror.id) > 1.0

@@ -94,7 +94,7 @@ function ForgetBelief({ view, god }: { view: FolkView; god: Believed }) {
 
 function BeliefCard({ view, god }: { view: FolkView; god: Believed }) {
   return (
-    <li className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-3'>
+    <li className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-wrap items-baseline gap-x-2'>
         <EntityLink kind='entity' id={String(view.people_id)}>
           {view.people_name}

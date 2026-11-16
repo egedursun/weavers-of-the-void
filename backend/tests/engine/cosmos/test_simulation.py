@@ -45,7 +45,7 @@ ORDER: tuple[tuple[Phase, ...], ...] = (
 )
 CERTAIN_NAMESPACES = ("travel", "exploration", "beyond", "creatures", "sky", "pantheon", "civilization", "cosmic_horror")
 CHANCE_SUFFIXES = ("_chance", "_pct")
-KEPT = frozenset({"colony_share_pct", "people_mutation_share_pct", "silence_word_loss_pct", "supernova_population_loss_pct", "madness_population_loss_pct"})
+KEPT = frozenset({"colony_share_pct", "people_mutation_share_pct", "language_loss_pct", "supernova_population_loss_pct", "madness_population_loss_pct"})
 
 
 def certain(rules: Rules) -> Rules:

@@ -163,7 +163,7 @@ export function BattleDepthPanel({
           {Object.entries(depth.morale).map(([side, parts]) => (
             <div
               key={side}
-              className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background p-2.5'
+              className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-2.5'
             >
               <Label variant='overline'>
                 {sides[side] ?? 'A side'}: morale
@@ -201,7 +201,7 @@ export function BattleDepthPanel({
               {(stack, index) => (
                 <div
                   key={`${stack.kind}.${index}`}
-                  className='flex min-w-0 flex-col gap-1 rounded-md border p-2'
+                  className='flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                 >
                   <div className='flex min-w-0 items-center gap-1.5'>
                     <Swords

@@ -2,7 +2,7 @@ from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHook, GodGoalKind, SonPunishment
+from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHook, GodGoalKind, SonPunishment, VotingRule
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.mind import ActKind
 from aerona.engine.divine import control
@@ -113,6 +113,7 @@ class RulingDraft(Command):
     world_id: int | None = None
     school: MagicSchool | None = None
     punishment: SonPunishment | None = None
+    voting_rule: VotingRule | None = None
 
 
 class RulingEdit(Edited):
@@ -270,6 +271,7 @@ async def decree(scope: PlayerScope, command: RulingDraft) -> Effect:
         world_id=command.world_id,
         school=command.school,
         punishment=command.punishment,
+        voting_rule=command.voting_rule,
     )
     return Effect("; ".join(lines) or "The ruling stands.", command.target_id, values={"ruling_id": row.id})
 

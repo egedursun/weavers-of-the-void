@@ -950,7 +950,7 @@ function JobTile({ row }: { row: Labour }) {
   const spec = JOB_SPEC[row.job]
   const tone = row.job === 'idle' ? 'muted' : outputTone(row.output_pct)
   return (
-    <div className='flex h-full min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2.5'>
+    <div className='flex h-full min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2.5'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={spec.icon} tone={tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>

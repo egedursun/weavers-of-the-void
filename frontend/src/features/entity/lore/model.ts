@@ -1,4 +1,8 @@
 import {
+  VolumeX,
+  Moon,
+  MapPin,
+  GitBranch,
   Move,
   Wind,
   FileSearch,
@@ -518,6 +522,22 @@ export const CURSES: Record<Schemas['CurseKind'], LoreNamed> = {
     tone: 'danger',
     hint: 'Its bearer is betrayed, or betrays.',
   },
+  barrenness: { label: 'Barrenness', icon: Ban, tone: 'success' },
+  transformation: {
+    label: 'Transformation',
+    icon: ShieldCheck,
+    tone: 'success',
+  },
+  sleep: { label: 'Sleep', icon: Moon, tone: 'success' },
+  silence: { label: 'Silence', icon: VolumeX, tone: 'success' },
+  hunger: { label: 'Hunger', icon: Utensils, tone: 'success' },
+  forgetting: { label: 'Forgetting', icon: EyeOff, tone: 'success' },
+  restlessness: { label: 'Restlessness', icon: Footprints, tone: 'success' },
+  line_curse: { label: 'Line curse', icon: GitBranch, tone: 'success' },
+  place_curse: { label: 'Place curse', icon: MapPin, tone: 'success' },
+  compulsion: { label: 'Compulsion', icon: Link, tone: 'success' },
+  aging: { label: 'Aging', icon: Hourglass, tone: 'success' },
+  exposure: { label: 'Exposure', icon: Eye, tone: 'success' },
 }
 
 export const DEEDS: Record<Schemas['ItemDeed'], LoreNamed> = {
@@ -623,6 +643,9 @@ export const FIELDS: Record<string, string> = {
   heretical: 'Heretical',
   predicate: 'Foretells',
   deadline_epoch: 'Deadline epoch',
+  retold: 'Times retold',
+  forged: 'Forged by a ruler',
+  rival_entity_id: 'Rival prophecy',
   pressure: 'Pressure',
   args: 'Terms',
   item_class: 'Class',

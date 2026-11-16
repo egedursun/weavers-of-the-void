@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.catalog.law_depth import COURT_TEXT, MOTIVE_TEXT, REGISTRY_TEXT, SYSTEM_TEXT
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import AppealRow, JurisdictionRow, LegalSystemRow, OutlawRow, PrisonerRow, PrisonRow, RegistryRow
@@ -25,7 +26,7 @@ async def realm_lines(scope: Scope, me: EntityRow) -> list[str]:
     for claim in await session.scalars(select(JurisdictionRow).where(JurisdictionRow.holder_entity_id == realm).order_by(JurisdictionRow.claimant_entity_id)):
         claimant = await session.get(EntityRow, claim.claimant_entity_id)
         if claimant is not None:
-            found.append(f"{claimant.name} claims {claim.claim.value} courts in your realm ({claim.strength})")
+            found.append(f"{claimant.name} claims {spoken(claim.claim)} courts in your realm ({claim.strength})")
     return found
 
 

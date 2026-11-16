@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.laws import law_effect
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
@@ -129,7 +130,7 @@ async def faction_lines(session: AsyncSession, mortal_id: int) -> list[str]:
         aims = [f"{words(goal.kind.value)} ({goal.progress}%)" for goal in goals]
         outlaw = ", outlawed" if profile.outlawed else ""
         found.append(
-            f"{membership.rank.value} of {faction.name} ({words(profile.kind.value)}{outlaw}; "
+            f"{spoken(membership.rank)} of {faction.name} ({words(profile.kind.value)}{outlaw}; "
             f"treasury {profile.treasury}, cohesion {profile.cohesion})" + (f", striving to {', '.join(aims)}" if aims else "")
         )
     return found

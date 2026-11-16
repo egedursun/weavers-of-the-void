@@ -41,6 +41,9 @@ export function useCosmosCycles() {
 }
 
 export type CycleAction =
+  | 'union:set'
+  | 'union:edit'
+  | 'union:delete'
   | 'stress:set'
   | 'stress:edit'
   | 'stress:delete'

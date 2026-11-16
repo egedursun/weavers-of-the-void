@@ -21,6 +21,7 @@ class ModifierSource(StrEnum):
     WEATHER = "weather"
     SEASON = "season"
     NATURAL_LAW = "natural_law"
+    LAW_GRAMMAR = "law_grammar"
     GOD_POWER = "god_power"
     BLESSING = "blessing"
     PERK = "perk"

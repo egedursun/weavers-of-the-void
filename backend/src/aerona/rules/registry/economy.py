@@ -40,15 +40,15 @@ class EconomyRules:
     market_reach: int = rule(6, 0, 1000, RuleGroup.ECONOMY, "Maximum communities a wandering market enlivens")
     market_prosperity: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Prosperity contribution of a wandering market to communities on its world")
     pirate_min_traffic: int = rule(2, 0, 1000, RuleGroup.ECONOMY, "Minimum journeys in recent epochs for pirates to spawn")
-    pirate_power: int = rule(4, 1, 12, RuleGroup.ECONOMY, "Power level of void pirates")
-    pirate_strength: int = rule(55, 0, 100, RuleGroup.ECONOMY, "Base strength of void pirates")
-    pirate_strength_die: int = rule(25, 1, 100, RuleGroup.ECONOMY, "Strength die of void pirates")
-    pirate_wealth: int = rule(40, 0, 100, RuleGroup.ECONOMY, "Wealth of void pirates")
-    pirate_sway: int = rule(30, 0, 100, RuleGroup.ECONOMY, "Sway of void pirates")
+    pirate_power: int = rule(4, 1, 12, RuleGroup.ECONOMY, "Power level of route raiders")
+    pirate_strength: int = rule(55, 0, 100, RuleGroup.ECONOMY, "Base strength of route raiders")
+    pirate_strength_die: int = rule(25, 1, 100, RuleGroup.ECONOMY, "Strength die of route raiders")
+    pirate_wealth: int = rule(40, 0, 100, RuleGroup.ECONOMY, "Wealth of route raiders")
+    pirate_sway: int = rule(30, 0, 100, RuleGroup.ECONOMY, "Sway of route raiders")
     pirate_route_danger: int = rule(2, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Danger pirates add to routes per epoch")
     pirate_route_danger_cap: int = rule(95, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Highest route danger pirates can cause")
     market_max: int = rule(1, 0, 20, RuleGroup.ECONOMY, "Maximum simultaneous wandering markets in the cosmos (0 disables)")
-    pirate_max: int = rule(1, 0, 20, RuleGroup.ECONOMY, "Maximum simultaneous void-pirate communities in the cosmos (0 disables)")
+    pirate_max: int = rule(1, 0, 20, RuleGroup.ECONOMY, "Maximum simultaneous route-raider communities in the cosmos (0 disables)")
     pirate_danger_decay: int = rule(
         1,
         0,

@@ -1,12 +1,26 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { OrnateFrame } from './ornate'
 
-function Card({ className, ...props }: React.ComponentProps<'div'>) {
+function Card({
+  className,
+  crest = true,
+  frame = 'card',
+  ...props
+}: React.ComponentProps<'div'> & {
+  crest?: boolean
+  frame?: 'card' | 'panel'
+}) {
+  const panel = frame === 'panel'
   return (
-    <div
+    <OrnateFrame
       data-slot='card'
+      frame={frame}
+      crest={crest}
+      footCrest={panel}
       className={cn(
-        'flex min-w-0 flex-col gap-4 rounded-xl border bg-card py-5 text-card-foreground shadow-xs',
+        'flex min-w-0 flex-col gap-4 text-card-foreground',
+        panel ? 'px-2 py-9 sm:px-4' : 'py-5',
         className
       )}
       {...props}
@@ -32,7 +46,10 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot='card-title'
       data-typography='section-title'
-      className={cn('min-w-0 font-display text-title font-semibold', className)}
+      className={cn(
+        'min-w-0 text-gilded font-display text-title font-semibold',
+        className
+      )}
       {...props}
     />
   )

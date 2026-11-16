@@ -145,7 +145,7 @@ export function PeaceTreaty({
             {(term) => (
               <li
                 key={term.id}
-                className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border p-2'
+                className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border surface-sheen border-gild/60 bg-card p-2'
               >
                 <Tag item={nameOf(TERM, term.kind)} />
                 {termParamText(term.kind, term.params, names) && (

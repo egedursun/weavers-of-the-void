@@ -2,7 +2,7 @@ import { Check, PenLine } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { FormRow, Medallion } from '@/components/domain'
+import { FormRow, Medallion, Picture } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { CUSTOM_STYLE_MAX, IMAGE_STYLES, type ImageStyle } from './imageStyles'
 
@@ -40,14 +40,14 @@ export function ImageStylePicker({
               className={cn(active && 'border-primary/60 bg-primary/10')}
             >
               {option.sample ? (
-                <img
+                <Picture
                   src={option.sample}
                   alt={`${option.label} sample`}
                   loading='lazy'
                   className='aspect-square w-full rounded-md bg-muted object-cover'
                 />
               ) : (
-                <span className='flex aspect-square w-full items-center justify-center rounded-md border border-dashed bg-muted'>
+                <span className='flex aspect-square w-full items-center justify-center rounded-md sealed-well'>
                   <Medallion icon={PenLine} tone={active ? 'gold' : 'muted'} />
                 </span>
               )}
@@ -82,7 +82,7 @@ export function ImageStylePicker({
                 id={id}
                 rows={3}
                 maxLength={CUSTOM_STYLE_MAX}
-                placeholder='For example: gouache poster art with flat shapes and a muted palette'
+                placeholder='Describe the look every image should have'
                 value={custom}
                 onChange={(event) => onCustomChange(event.target.value)}
               />

@@ -68,16 +68,16 @@ POWERS: dict[PowerEffect, PowerSpec] = {
             ),
         ),
         PowerSpec(
-            PowerEffect.DREAM_WHISPER,
+            PowerEffect.DREAM_SENDING,
             "Dream Whisper",
             None,
-            lambda rules: f"+{rules.son_tools.dream_whisper_bonus_pct}% success when sending dreams.",
+            lambda rules: f"+{rules.son_tools.dream_sending_bonus_pct}% success when sending dreams.",
         ),
         PowerSpec(
-            PowerEffect.WAR_FATHER,
-            "Warbringer",
+            PowerEffect.WAR_LEADER,
+            "War leader",
             None,
-            lambda rules: f"Contribution to the war strength of armies that worship this son x{rules.world_war_strength.war_father_mult}.",
+            lambda rules: f"Contribution to the war strength of armies that worship this son x{rules.world_war_strength.war_leader_mult}.",
         ),
         PowerSpec(
             PowerEffect.HARVESTER,

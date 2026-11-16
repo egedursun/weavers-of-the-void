@@ -2,7 +2,7 @@ import { useId } from 'react'
 import { ArrowRight, Route as RouteIcon, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EntityLink, PagedList } from '@/components/domain'
+import { EntityLink, Paged, PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { NodeOptions, NodePicker, type PickableNode } from './NodePicker'
 import { type PathResult, usePath } from './api'
@@ -81,25 +81,27 @@ function PathChain({
         )}
       </PagedList>
       <ol className='flex min-w-0 list-decimal flex-col gap-1.5 ps-5'>
-        {result.steps.map((step, index) => {
-          const [left, right] = step.forward
-            ? [step.source, step.target]
-            : [step.target, step.source]
-          return (
-            <li key={index} className='min-w-0'>
-              <Text as='span'>
-                {name(left)}{' '}
-                <Text as='span' weight='semibold'>
-                  {linkLabel({ kind: step.kind, past: false }, linkLabels)}
-                </Text>{' '}
-                {name(right)}
-                {step.description && (
-                  <Muted as='span'>{` — ${step.description}`}</Muted>
-                )}
-              </Text>
-            </li>
-          )
-        })}
+        <Paged items={result.steps} as='li'>
+          {(step, index) => {
+            const [left, right] = step.forward
+              ? [step.source, step.target]
+              : [step.target, step.source]
+            return (
+              <li key={index} className='min-w-0'>
+                <Text as='span'>
+                  {name(left)}{' '}
+                  <Text as='span' weight='semibold'>
+                    {linkLabel({ kind: step.kind, past: false }, linkLabels)}
+                  </Text>{' '}
+                  {name(right)}
+                  {step.description && (
+                    <Muted as='span'>{` — ${step.description}`}</Muted>
+                  )}
+                </Text>
+              </li>
+            )
+          }}
+        </Paged>
       </ol>
       <Muted variant='caption'>
         {result.steps.length === 0

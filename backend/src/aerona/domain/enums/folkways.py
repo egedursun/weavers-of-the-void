@@ -45,6 +45,13 @@ class BiasedDecision(StrEnum):
     CONVERSION = "conversion"
     MIGRATION = "migration"
     GOD_GOAL = "god_goal"
+    WAR = "war"
+    RETREAT = "retreat"
+    TRADE = "trade"
+    ALLIANCE = "alliance"
+    SUCCESSION = "succession"
+    LAW = "law"
+    RESEARCH = "research"
 
 
 class PurityState(StrEnum):
@@ -67,6 +74,8 @@ class ImpuritySource(StrEnum):
     MADE_THING = "made_thing"
     TABOO = "taboo"
     WOUND = "wound"
+    AUGMENT = "augment"
+    DESIGNED_BODY = "designed_body"
 
 
 class Purification(StrEnum):
@@ -87,6 +96,31 @@ class MishapKind(StrEnum):
     LIVESTOCK_DEATH = "livestock_death"
     ACCIDENT = "accident"
     BAD_LUCK = "bad_luck"
+    FALL = "fall"
+    CRUSH = "crush"
+    CUT = "cut"
+    BURN = "burn"
+    SCALD = "scald"
+    DROWNING = "drowning"
+    BEAST = "beast"
+    TOOL = "tool"
+    MACHINE = "machine"
+    VEHICLE = "vehicle"
+    COLLAPSE = "collapse"
+    HOUSE_FIRE = "house_fire"
+    POISONING = "poisoning"
+    CHOKING = "choking"
+    EXPOSURE = "exposure"
+    LIGHTNING = "lightning"
+    SPORT = "sport"
+    BRAWL = "brawl"
+    LOST_WAY = "lost_way"
+    STORES_SPOILED = "stores_spoiled"
+    GOODS_LOST = "goods_lost"
+    PURSE_LOST = "purse_lost"
+    THEFT_SUFFERED = "theft_suffered"
+    TOOL_BROKEN = "tool_broken"
+    NEAR_MISS = "near_miss"
 
 
 class MishapAttribution(StrEnum):
@@ -102,6 +136,8 @@ class MishapAttribution(StrEnum):
     ENEMY_SCHEME = "enemy_scheme"
     IMPURITY = "impurity"
     BROKEN_OATH = "broken_oath"
+    MADE_MIND = "made_mind"
+    HIDDEN_PEOPLE = "hidden_people"
 
 
 class MishapResponse(StrEnum):

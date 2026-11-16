@@ -16,6 +16,7 @@ from aerona.db.tables.cycles import DivineDebtRow, GiftRow, LongPlanRow
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.divine import DivineWoundRow, NaturalLawProfileRow
+from aerona.db.tables.divine_powers import DivinePowerRow
 from aerona.db.tables.dominion import DivineCreatureRow, DominionRow, MagicSiteRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
@@ -60,7 +61,7 @@ from aerona.domain.enums.culture import LegendArchetype, MagicSchool, Technique
 from aerona.domain.enums.cycles import GiftState, LongPlanKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector
-from aerona.domain.enums.divine import DivineWoundKind, WoundCause
+from aerona.domain.enums.divine import DivineCost, DivineMode, DivineObject, DivineScope, DivineVerb, DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import MagicSiteKind
 from aerona.domain.enums.ecology import Diet, DomesticationStage, SpeciesClass, SpeciesUse
@@ -73,7 +74,7 @@ from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import LegalSystem
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis, ValueHolder
 from aerona.domain.enums.mortal import CrimeKind
-from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRank, ServitorRole
+from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.operations import EchelonLevel, ExpeditionRole
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
@@ -680,7 +681,7 @@ async def hidden_magic(session: AsyncSession, realm: Realm) -> Ids:
 async def son_servitor(session: AsyncSession, realm: Realm) -> Ids:
     await rich_son(session, realm)
     spirit = await make_entity(session, "Watcher", EntityType.SPIRIT, world_id=realm.cosmos.world_id, location_id=realm.cosmos.place_id, stats=SpiritStats())
-    session.add(ServitorRow(spirit_entity_id=spirit.id, god_node_id=realm.son_id, rank=ServitorRank.HERALD, role=ServitorRole.MESSENGER, loyalty=80, locked=[]))
+    session.add(ServitorRow(spirit_entity_id=spirit.id, god_node_id=realm.son_id, role=ServitorRole.MESSENGER, loyalty=80, locked=[]))
     await session.flush()
     return {"servitor": spirit.id}
 
@@ -1092,6 +1093,31 @@ async def son_plan(session: AsyncSession, realm: Realm) -> Ids:
     session.add(plan)
     await session.flush()
     return {"plan": plan.id}
+
+
+async def son_divine_power(session: AsyncSession, realm: Realm) -> Ids:
+    row = DivinePowerRow(holder_node_id=realm.son_id, name="A Kind Hand", verb=DivineVerb.BLESS, object=DivineObject.STAT, scope=DivineScope.PERSON)
+    row.object_key, row.mode, row.cost, row.cost_amount, row.cooldown, row.strength, row.domains, row.locked = (
+        "prosperity",
+        DivineMode.ACTIVE,
+        DivineCost.ATTENTION,
+        1,
+        0,
+        20,
+        [],
+        [],
+    )
+    session.add(row)
+    await session.flush()
+    return {"divine_power": row.id}
+
+
+async def son_natural_law(session: AsyncSession, realm: Realm) -> Ids:
+    world = realm.cosmos.world_id
+    law = await make_entity(session, "The Even Hand", EntityType.NATURAL_LAW, world_id=world, stats=NaturalLawStats(), natural_law=NaturalLaw.BOUNTY)
+    session.add(NaturalLawProfileRow(law_entity_id=law.id, effect=NaturalLaw.BOUNTY, world_id=realm.cosmos.world_id, author_node_id=realm.son_id, locked=[]))
+    await session.flush()
+    return {"natural_law": law.id}
 
 
 async def wealthy(session: AsyncSession, realm: Realm) -> Ids:

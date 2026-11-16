@@ -280,7 +280,7 @@ function IdeaCard({
   const state = named(IDEA_STATES, idea.state)
   const source = named(IDEA_SOURCES, idea.source)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-md border bg-muted/20 p-2'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={spec.icon} size='sm' tone={state.tone} />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -480,7 +480,7 @@ function Ideas({ view }: { view: MindSplit }) {
           </Paged>
         </div>
       )}
-      <div className='flex min-w-0 flex-col gap-2 rounded-md border border-dashed p-2'>
+      <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
         <AddBar
           title='Plant an idea'
           action={

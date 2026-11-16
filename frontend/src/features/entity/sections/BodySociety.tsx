@@ -131,7 +131,7 @@ export function PeopleBodyCustoms({ peopleId }: { peopleId: number }) {
         />
       ) : (
         <div className='@container/customs flex min-w-0 flex-col gap-4'>
-          <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+          <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <Medallion
               icon={named(READINGS, customs.reading).icon}
               tone={named(READINGS, customs.reading).tone ?? 'gold'}
@@ -164,7 +164,7 @@ export function PeopleBodyCustoms({ peopleId }: { peopleId: number }) {
               </div>
             </div>
           </div>
-          <div className='flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
+          <div className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
             <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
               <div className='flex min-w-0 flex-col gap-0.5'>
                 <Text weight='semibold'>Set their customs</Text>
@@ -221,7 +221,7 @@ export function PeopleBodyCustoms({ peopleId }: { peopleId: number }) {
               {LAWS.map((law) => (
                 <label
                   key={law.key}
-                  className='flex min-w-0 items-start gap-3 rounded-lg border bg-background p-3'
+                  className='flex min-w-0 items-start gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
                 >
                   <Switch
                     checked={customs[law.key]}
@@ -357,7 +357,7 @@ export function CommunityMaimed({ communityId }: { communityId: number }) {
               return (
                 <div
                   key={key}
-                  className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'
+                  className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
                 >
                   <Medallion
                     icon={kind.icon}
@@ -383,7 +383,7 @@ export function CommunityMaimed({ communityId }: { communityId: number }) {
               No maimed veteran has come home yet. They fill after battles.
             </Muted>
           )}
-          <div className='flex min-w-0 flex-col gap-3 rounded-lg border border-dashed bg-muted/20 p-3'>
+          <div className='flex min-w-0 flex-col gap-3 rounded-md p-3 sealed-well'>
             <div className='flex min-w-0 items-center gap-2'>
               <PartyPopper
                 aria-hidden='true'

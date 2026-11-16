@@ -136,7 +136,7 @@ function Legend({
           </Button>
         )}
       </PagedList>
-      <div className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1'>
+      <div className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-1.5'>
         <Text as='span' variant='caption' tone='inherit' className='opacity-70'>
           Layers: dimensions with clusters of their own · orbs on the dashed
           ring: dimensions that hold none · dashed arcs: routes between galaxies
@@ -262,7 +262,7 @@ export function HeavensView({
         aria-label='Map of the heavens'
         className='relative flex min-w-0 flex-col border-b'
       >
-        <div className='relative h-scene min-w-0 bg-cosmos-void text-cosmos-label lg:h-scene-lg'>
+        <div className='scene-frame relative h-scene min-w-0 bg-cosmos-void text-cosmos-label lg:h-scene-lg'>
           {data.dimensions.length === 0 ? (
             <div className='flex h-full items-center justify-center p-6'>
               <EmptyState

@@ -43,7 +43,7 @@ def test_sectioned_budget_returns_everything_when_it_fits() -> None:
 
 def test_filters() -> None:
     assert mood_level(0) == "almost none"
-    assert mood_level(100) == "about to overflow"
+    assert mood_level(100) == "near its peak"
     assert degree(85, "dark") == "very dark"
     assert degree(5, "dark") == "hardly dark at all"
     assert share_of(15, 70) == 10

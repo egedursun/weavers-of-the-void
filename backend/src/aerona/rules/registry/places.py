@@ -22,6 +22,7 @@ class PlacesRules:
     pilgrim_piety: int = rule(2, 0, 100, G, "Piety a community gains each epoch it sends pilgrims to a sacred place")
     pilgrim_prosperity: int = rule(2, 0, 100, G, "Prosperity a community standing at a sacred place gains from pilgrims each epoch")
     secret_chance_pct: int = rule(40, 0, 100, G, "Chance at full mystery that a place hides a secret when it is first surveyed (%)")
+    woken_stability: int = rule(15, 0, 100, G, "Stability a sleeping mind gains when it is found and woken")
     secret_strength_min: int = rule(20, 0, 100, G, "Least strength of a secret the land hides")
     secret_strength_die: int = rule(60, 1, 100, G, "Strength swing of a secret the land hides")
     discover_base_pct: int = rule(2, 0, 100, G, "Base chance per epoch that a searcher finds a place's secret (%)")

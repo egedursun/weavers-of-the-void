@@ -415,7 +415,7 @@ async def strike_famine(ctx: TickContext, entity: EntityRow, society: Society) -
     multiple = society.prices[Commodity.FOOD] / PERCENT
     await note(
         ctx,
-        f"{entity.name}'s granaries emptied: bread now costs {multiple:.1f}x as much, the farmers are hungry.",
+        f"{entity.name}'s stores emptied: food now costs {multiple:.1f}x as much, and the hungry suffer.",
         key="society.famine",
         ids=[entity.id, *([entity.location_id] if entity.location_id else [])],
         feed=FeedCategory.DISASTER,
@@ -652,6 +652,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.applied_fixups",
     "table.army_profiles",
     "table.assistive_aids",
+    "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -849,7 +850,7 @@ async def set_stores(ctx: TickContext, entity_id: int, stocks: Mapping[Commodity
     for commodity, value in stocks.items():
         room = await storage_room(ctx, entity, commodity)
         if value < 0 or value > room:
-            raise ValidationFailedError(f"{commodity.value.capitalize()} stores must be between 0 and {room}, what the granaries and warehouses can hold.")
+            raise ValidationFailedError(f"{commodity.value.capitalize()} stores must be between 0 and {room}, what its stores can hold.")
     ledger = goods_of(ctx.session, ctx.epoch)
     for commodity, value in stocks.items():
         current = (await society_of(ctx.session, ctx.rules, entity_id)).stocks[commodity]
@@ -879,7 +880,7 @@ async def send_plenty(ctx: TickContext, entity_id: int) -> Society:
     society = await society_of(ctx.session, ctx.rules, entity_id)
     society.prices[Commodity.FOOD] = ctx.rules.markets.price_floor_pct
     await save_society(ctx.session, entity_id, society, stocks=False)
-    await note(ctx, f"Plenty filled the granaries of {entity.name}.", key="society.plenty", ids=[entity.id], kind=ChronicleKind.CREATOR_HAND)
+    await note(ctx, f"Plenty filled the stores of {entity.name}.", key="society.plenty", ids=[entity.id], kind=ChronicleKind.CREATOR_HAND)
     return society
 
 

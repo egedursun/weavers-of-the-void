@@ -118,7 +118,7 @@ function DreamCard({
             {dream.milestones.map((item) => (
               <div
                 key={item.at}
-                className='flex min-w-0 items-center gap-2 rounded-md border p-2'
+                className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
               >
                 {item.reached ? (
                   <Check
@@ -258,7 +258,7 @@ function WantsAndFears({
             {(item) => (
               <div
                 key={item.id}
-                className='flex min-w-0 items-center gap-2 rounded-md border p-2'
+                className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
               >
                 <Text weight='semibold' truncate className='flex-1'>
                   {item.label}
@@ -302,7 +302,7 @@ function WantsAndFears({
                 onClick={() => addWant.mutate()}
               >
                 <Plus />
-                Give
+                Give the want
               </Button>
             </div>
           }
@@ -361,7 +361,7 @@ function WantsAndFears({
                 onClick={() => addFear.mutate()}
               >
                 <Plus />
-                Give
+                Give the fear
               </Button>
             </div>
           }
@@ -440,7 +440,7 @@ function FocusCard({
           {view.perks.map((perk) => (
             <div
               key={perk.perk}
-              className='flex min-w-0 items-center gap-2 rounded-md border p-2'
+              className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
             >
               <div className='flex min-w-0 flex-1 flex-col'>
                 <Text weight='semibold' truncate>
@@ -526,7 +526,7 @@ function InspirationCard({
           {(item) => (
             <div
               key={item.id}
-              className='flex min-w-0 items-center gap-2 rounded-md border p-2'
+              className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
             >
               <Flame aria-hidden='true' className='size-icon-sm text-warning' />
               <div className='flex min-w-0 flex-1 flex-col'>

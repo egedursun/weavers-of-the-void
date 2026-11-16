@@ -9,7 +9,13 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CodeBlock, EmptyState, EntityLink, Section } from '@/components/domain'
+import {
+  CodeBlock,
+  EmptyState,
+  EntityLink,
+  Paged,
+  Section,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { type NaturalLaw, useWorldGeography, useWorldLaws } from './api'
 import { humanize } from './model/labels'
@@ -35,26 +41,28 @@ export function WorldLaws({ worldId }: { worldId: number }) {
           />
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {laws.data.map((law) => (
-              <li
-                key={law.entity.id}
-                className='flex min-w-0 flex-wrap items-center gap-2'
-              >
-                <EntityLink kind='entity' id={String(law.entity.id)}>
-                  {law.entity.name}
-                </EntityLink>
-                <Badge size='sm' variant='outline'>
-                  {law.entity.entity_type === 'natural_law'
-                    ? 'Natural law'
-                    : 'Law'}
-                </Badge>
-                {law.mechanic && law.mechanic !== NO_MECHANIC && (
-                  <Badge size='sm' variant='secondary'>
-                    {humanize(law.mechanic)}
+            <Paged items={laws.data} as='li' noun={['law', 'laws']}>
+              {(law) => (
+                <li
+                  key={law.entity.id}
+                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'
+                >
+                  <EntityLink kind='entity' id={String(law.entity.id)}>
+                    {law.entity.name}
+                  </EntityLink>
+                  <Badge size='sm' variant='outline'>
+                    {law.entity.entity_type === 'natural_law'
+                      ? 'Natural law'
+                      : 'Law'}
                   </Badge>
-                )}
-              </li>
-            ))}
+                  {law.mechanic && law.mechanic !== NO_MECHANIC && (
+                    <Badge size='sm' variant='secondary'>
+                      {humanize(law.mechanic)}
+                    </Badge>
+                  )}
+                </li>
+              )}
+            </Paged>
           </ul>
         ))}
     </Section>
@@ -68,7 +76,7 @@ export function WorldGeography({ worldId }: { worldId: number }) {
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className='flex min-w-0 flex-col gap-3 rounded-xl border p-4'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <CollapsibleTrigger asChild>
         <Button variant='ghost' className='w-full justify-between'>

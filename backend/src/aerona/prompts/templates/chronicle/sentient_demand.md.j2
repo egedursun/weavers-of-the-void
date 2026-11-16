@@ -1,7 +1,0 @@
-{% set demands = ["an age of silence", "the eyes of the oldest seer", "the first names of the newborns", "a song, every night", "a settlement of their enemy", "the entire harvest of a year"] %}
-{% set demand = demands[demand_variant % (demands | length)] %}
-{% if paid %}
-{{ resource }} demanded {{ demand }} from {{ owner }}; {{ owner }} paid the price.
-{% else %}
-{{ resource }} demanded {{ demand }} from {{ owner }}, and when it did not get it, abandoned them{% if new_owner %}; now it chooses {{ new_owner }}{% endif %}.
-{% endif %}

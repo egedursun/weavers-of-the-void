@@ -213,6 +213,10 @@ async def dwelling_view(session: AsyncSession, rules: Rules, row: DwellingRow, s
         district_kind=district.kind if district is not None else None,
         settlement=await node_ref(session, row.settlement_node_id),
         furnishings=[FurnishingView(item=refs[item.item_node_id], placed_epoch=item.placed_epoch) for item in items if item.item_node_id in refs],
+        tenure=row.tenure,
+        heating=row.heating,
+        light=row.light,
+        crowding=row.crowding,
         built_epoch=row.built_epoch,
         held=sorted(row.locked or []),
     )
@@ -253,6 +257,7 @@ async def household_view(session: AsyncSession, rules: Rules, row: HouseholdRow)
         last_decision_label=HOUSEHOLD_DECISION_LABELS[row.last_decision] if row.last_decision is not None else None,
         decided_epoch=row.decided_epoch,
         formed_epoch=row.formed_epoch,
+        form=row.form,
         members=[
             HouseholdMemberView(
                 mortal=refs[member.member_node_id],

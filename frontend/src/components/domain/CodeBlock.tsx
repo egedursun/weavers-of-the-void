@@ -34,7 +34,7 @@ export function CodeBlock({
         tabIndex={0}
         role='region'
         aria-label={label}
-        className='max-h-96 min-w-0 overflow-auto rounded-md border bg-muted p-3 font-mono whitespace-pre-wrap'
+        className='max-h-96 min-w-0 overflow-auto rounded-md border surface-well border-gild/20 bg-muted/60 p-3 font-mono whitespace-pre-wrap'
       >
         {text || empty}
       </Text>

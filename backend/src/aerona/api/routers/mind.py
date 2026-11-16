@@ -51,7 +51,7 @@ from aerona.api.schemas.mind import (
 from aerona.api.views.common import node_ref, node_refs
 from aerona.catalog.aspirations import FEARS, FOCUSES, GOALS, INSPIRATION_LABELS, PERKS, WANTS
 from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_ORDER, STANCE_READINGS
-from aerona.catalog.mind import FIXED_ROLES, MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
+from aerona.catalog.mind import FIXED_ROLES, MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAIT_FAMILY, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS, SKILL_ATTRIBUTES
 from aerona.catalog.preferences import PREFERENCE_LABELS, SPECIES_KINDS, STATIC_TARGETS, target_label
 from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, NEEDS, READING_LABELS, THOUGHTS
@@ -151,6 +151,7 @@ async def trait_views(session: AsyncSession, node_id: int) -> list[TraitView]:
         TraitView(
             trait=row.trait,
             label=TRAITS[row.trait].label,
+            family=TRAIT_FAMILY[row.trait],
             source=row.source,
             epoch=row.epoch,
             source_node=sources.get(row.source_node_id) if row.source_node_id is not None else None,

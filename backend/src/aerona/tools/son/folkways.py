@@ -136,7 +136,7 @@ async def stir_witch_hunt(call: SonCall, args: StirWitchHuntInput) -> str:
     town = await reached(call, args.town_id, TOWNS, SonResult.HUNT_REFUSED, "there is no such town")
     burning = await call.session.scalar(select(WitchHuntRow.id).where(WitchHuntRow.settlement_entity_id == town.id, WitchHuntRow.ended_epoch.is_(None)))
     if burning is not None:
-        fail(SonResult.HUNT_REFUSED, why="a witch hunt already burns there")
+        fail(SonResult.HUNT_REFUSED, why="a witch hunt already runs there")
     try:
         row = await control.start_hunt(call.tick, town.id, call.tick.rules.witchcraft.hunt_fervour)
     except ValidationFailedError as error:

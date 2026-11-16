@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BACKEND = ROOT / "backend/src/aerona"
 PROMPTS = BACKEND / "prompts"
+ENUMS = BACKEND / "domain/enums"
 FRONTEND = ROOT / "frontend/src"
 MODEL_FEEDING = (
     BACKEND / "catalog/genesis.py",
@@ -38,6 +39,8 @@ MORTAL_KINSHIP = re.compile(
 
 
 MEDIUM_RULE = "hardcoded image medium"
+GENERIC_MEN = "men for people"
+SEX_CONTEXT = re.compile(r"women|male|\(\?:")
 
 
 @dataclass(frozen=True)
@@ -48,9 +51,20 @@ class Pattern:
     prose_only: bool = False
     creation_only: bool = False
     image_only: bool = False
+    enum_only: bool = False
 
 
 PATTERNS = (
+    Pattern(
+        "borrowed role name",
+        re.compile(r"\b(angels?|angelic|choirs?|fury|furies|psychopomps?|valkyries?|eye in the sky|warrior halls?|ancestor halls?)\b", re.IGNORECASE),
+        enum_only=True,
+    ),
+    Pattern(
+        "borrowed imagery in a value",
+        re.compile(r"\b(threads?|webs?|woven|stitch(?:es|ed)?)\b", re.IGNORECASE),
+        enum_only=True,
+    ),
     Pattern(
         "gendered default",
         re.compile(
@@ -60,6 +74,15 @@ PATTERNS = (
             r"talisman|ottoman|german|hymen|cyclamen|dusman)s?\b)(?-i:[A-Za-z][a-z]*m[ae]n)\b",
             re.IGNORECASE,
         ),
+    ),
+    Pattern(
+        GENERIC_MEN,
+        re.compile(r"(?<![\w-])(?:big-)?men(?![\w-])", re.IGNORECASE),
+        prose_only=True,
+    ),
+    Pattern(
+        GENERIC_MEN,
+        re.compile(r"['\"`][^'\"`]*(?<![\w-])(?:big-)?men(?![\w-])[^'\"`]*['\"`]", re.IGNORECASE),
     ),
     Pattern(
         "forced conflict quota",
@@ -143,6 +166,16 @@ PATTERNS = (
         prose_only=True,
     ),
     Pattern(
+        "a place given a will or a mood",
+        re.compile(
+            r"\b(?:merciless|pitiless|cruel|angry|brooding|hungry|jealous) (?:sun|sky|sea|land|ground|desert|wind|winter)s?\b|"
+            r"\bcrowned by\b|\bhugging its (?:sun|star)\b|\bloud with life\b|\bsmothered by\b|\blakes? of light\b|"
+            r"\beye of (?:the )?storms?\b|\b(?:life|it|they) clings? to\b",
+            re.IGNORECASE,
+        ),
+        prose_only=True,
+    ),
+    Pattern(
         "canned afterlife name",
         re.compile(r"\b(?:blessed fields|the grey plain|the gray plain|the pits|the forgetting|hall of the fallen|house of the ancestors)\b", re.IGNORECASE),
         prose_only=True,
@@ -171,7 +204,10 @@ PATTERNS = (
             r"placeholder=['\"](?:[^'\":]*:\s*)?(?:(?!(?:a|an|the|its|their|your|one)\b)[a-z][\w'-]*(?: [\w'-]+)?, )+"
             r"(?!(?:a|an|the|its|their|your|one)\b)[a-z][\w'-]*(?: [\w'-]+)?…['\"]|"
             r"(?-i:placeholder=['\"][A-Z][\w'-]* (?:the|of) [A-Z][\w'-]*…['\"])|"
-            r"(?-i:placeholder=\{?['\"][a-z][^'\"]*['\"])",
+            r"(?-i:placeholder=\{?['\"][a-z][^'\"]*['\"])"
+            r"|(?-i:placeholder=\{?['\"](?:The |A |An )?(?!(?:The|A|An) )[A-Z][\w'-]+ (?:(?:of|the|and) )*[A-Z][\w'-]+(?: (?:(?:of|the|and) )*[A-Z][\w'-]+)*['\"])"
+            r"|placeholder=\{?['\"][^'\"]*\b(?:for example|e\.g\.|such as)\b[^'\"]*['\"]"
+            r"|placeholder=\{['\"][^'\"]*\\n[^'\"]*['\"]\}",
             re.IGNORECASE,
         ),
     ),
@@ -297,7 +333,7 @@ def prose(path: Path, value: str) -> str:
     return value if path.suffix == ".py" and any(character.isspace() for character in value.strip()) else ""
 
 
-def matches(path: Path, line: int, value: str, in_prompts: bool, creation: bool | None = None) -> list[Finding]:
+def matches(path: Path, line: int, value: str, in_prompts: bool, creation: bool | None = None, *, enum_value: bool = False) -> list[Finding]:
     if MORTAL_KINSHIP.search(value):
         return []
     creating = under(path, CREATION_TEXT) if creation is None else creation
@@ -308,14 +344,35 @@ def matches(path: Path, line: int, value: str, in_prompts: bool, creation: bool 
         if (in_prompts or not pattern.prompts_only)
         and (creating or not pattern.creation_only)
         and (imaging or not pattern.image_only)
+        and (enum_value or not pattern.enum_only)
         and not (pattern.rule == MEDIUM_RULE and path in STYLE_HOMES)
+        and not (pattern.rule == GENERIC_MEN and SEX_CONTEXT.search(value))
         for match in [pattern.regex.search(prose(path, value) if pattern.prose_only else value)]
         if match
     ]
 
 
+def enum_values(path: Path) -> list[tuple[int, str]]:
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    return [
+        (item.lineno, item.value.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ClassDef)
+        for item in node.body
+        if isinstance(item, ast.Assign) and isinstance(item.value, ast.Constant) and isinstance(item.value.value, str)
+    ]
+
+
+def enum_findings() -> list[Finding]:
+    found: list[Finding] = []
+    for path in sorted(ENUMS.glob("*.py")):
+        for line, value in enum_values(path):
+            found.extend(matches(path, line, value.replace("_", " "), True, False, enum_value=True))
+    return found
+
+
 def scan() -> list[Finding]:
-    findings: list[Finding] = []
+    findings: list[Finding] = enum_findings()
     for path in backend_targets():
         feeding = path.is_relative_to(PROMPTS) or under(path, MODEL_FEEDING)
         creating = under(path, CREATION_TEXT)

@@ -37,6 +37,7 @@ import {
   EmptyState,
   Medallion,
   MiniStat,
+  Paged,
 } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { Label, Muted, Text } from '@/components/typography'
@@ -107,7 +108,7 @@ function LedgerEntry({
     <li
       data-ledger-entry={entry.id}
       className={cn(
-        'flex min-w-0 gap-3 rounded-xl border bg-background p-3',
+        'flex min-w-0 gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         entry.undone && 'bg-muted/40'
       )}
     >
@@ -187,7 +188,7 @@ function LedgerEntry({
           </Text>
         )}
         {(result || (entry.undone && conflicts.length > 0)) && (
-          <div className='flex min-w-0 flex-col gap-1 rounded-lg border bg-card p-3'>
+          <div className='flex min-w-0 flex-col gap-1 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <Text variant='caption' weight='medium'>
               {undoMessage(
                 result?.applied?.length ?? entry.applied.length,
@@ -211,11 +212,13 @@ function LedgerEntry({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <ul className='flex min-w-0 flex-col gap-1 border-s ps-3 pt-1'>
-                {view.rows.map((row, position) => (
-                  <li key={`${row}-${position}`}>
-                    <Muted variant='caption'>{row}</Muted>
-                  </li>
-                ))}
+                <Paged items={view.rows} as='li'>
+                  {(row, position) => (
+                    <li key={`${row}-${position}`}>
+                      <Muted variant='caption'>{row}</Muted>
+                    </li>
+                  )}
+                </Paged>
               </ul>
             </CollapsibleContent>
           </Collapsible>
@@ -370,46 +373,48 @@ export function ActionLedger() {
                 <Progress size='sm' value={PERCENT} aria-label='All pages' />
               </Button>
             </li>
-            {epochs.map((item) => (
-              <li key={item.epoch} className='min-w-0'>
-                <Button
-                  variant='outline'
-                  size='tile'
-                  aria-pressed={query.epoch === item.epoch}
-                  onClick={() => patch({ epoch: item.epoch })}
-                  className={cn(
-                    'flex-col items-stretch',
-                    query.epoch === item.epoch &&
-                      'border-primary/50 bg-primary/10'
-                  )}
-                >
-                  <span className='flex min-w-0 items-center justify-between gap-1'>
-                    <Text as='span' weight='semibold'>
-                      {`Epoch ${item.epoch}`}
-                    </Text>
-                    {item.epoch === current && (
-                      <Badge size='sm' variant='default'>
-                        Now
-                      </Badge>
+            <Paged items={epochs} as='li'>
+              {(item) => (
+                <li key={item.epoch} className='min-w-0'>
+                  <Button
+                    variant='outline'
+                    size='tile'
+                    aria-pressed={query.epoch === item.epoch}
+                    onClick={() => patch({ epoch: item.epoch })}
+                    className={cn(
+                      'flex-col items-stretch',
+                      query.epoch === item.epoch &&
+                        'border-primary/50 bg-primary/10'
                     )}
-                  </span>
-                  <Muted as='span' variant='caption'>
-                    {item.undone > 0
-                      ? `${plural(item.entries, 'page')} · ${item.undone} torn`
-                      : plural(item.entries, 'page')}
-                  </Muted>
-                  <Progress
-                    size='sm'
-                    value={(item.entries / busiest) * PERCENT}
-                    aria-label={`Pages in epoch ${item.epoch}`}
-                  />
-                </Button>
-              </li>
-            ))}
+                  >
+                    <span className='flex min-w-0 items-center justify-between gap-1'>
+                      <Text as='span' weight='semibold'>
+                        {`Epoch ${item.epoch}`}
+                      </Text>
+                      {item.epoch === current && (
+                        <Badge size='sm' variant='default'>
+                          Now
+                        </Badge>
+                      )}
+                    </span>
+                    <Muted as='span' variant='caption'>
+                      {item.undone > 0
+                        ? `${plural(item.entries, 'page')} · ${item.undone} torn`
+                        : plural(item.entries, 'page')}
+                    </Muted>
+                    <Progress
+                      size='sm'
+                      value={(item.entries / busiest) * PERCENT}
+                      aria-label={`Pages in epoch ${item.epoch}`}
+                    />
+                  </Button>
+                </li>
+              )}
+            </Paged>
           </ul>
         </div>
       )}
-      <div className='flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3'>
+      <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <div className='min-w-0 flex-1'>
             <Input
@@ -524,20 +529,22 @@ export function ActionLedger() {
             </Muted>
           </div>
           <ol className='flex min-w-0 flex-col gap-2'>
-            {views.map((view) => (
-              <LedgerEntry
-                key={view.entry.id}
-                view={view}
-                index={index}
-                epochRunning={Boolean(state.data?.epoch_running)}
-                result={results.get(view.entry.id)}
-                onUndone={(result) =>
-                  setResults((current) =>
-                    new Map(current).set(view.entry.id, result)
-                  )
-                }
-              />
-            ))}
+            <Paged items={views} as='li'>
+              {(view) => (
+                <LedgerEntry
+                  key={view.entry.id}
+                  view={view}
+                  index={index}
+                  epochRunning={Boolean(state.data?.epoch_running)}
+                  result={results.get(view.entry.id)}
+                  onUndone={(result) =>
+                    setResults((current) =>
+                      new Map(current).set(view.entry.id, result)
+                    )
+                  }
+                />
+              )}
+            </Paged>
           </ol>
         </section>
       ))}

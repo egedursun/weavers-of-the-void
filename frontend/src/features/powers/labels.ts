@@ -235,7 +235,7 @@ export const STATES: Record<Schema['PowerState'], Named> = {
   emerging: { label: 'Emerging', icon: TrendingUp, tone: 'warning' },
   active: { label: 'Awake', icon: Zap, tone: 'success' },
   strained: { label: 'Strained', icon: Activity, tone: 'warning' },
-  burned_out: { label: 'Spent', icon: Flame, tone: 'danger' },
+  exhausted: { label: 'Spent', icon: Flame, tone: 'danger' },
   suppressed: { label: 'Stilled', icon: Ban, tone: 'warning' },
   lost: { label: 'Lost', icon: CircleOff, tone: 'muted' },
 }

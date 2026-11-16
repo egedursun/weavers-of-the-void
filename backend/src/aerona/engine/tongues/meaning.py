@@ -23,10 +23,10 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import canon, spoken_language
 from aerona.engine.primitives.stats import stat_or
-from aerona.engine.tongues.grammar import compounds
+from aerona.engine.tongues.grammar import compounds, head_first
 
 ALSO = "; also "
-DRIFTS = (SenseShift.BROADENED, SenseShift.NARROWED, SenseShift.PEJORATIVE, SenseShift.AMELIORATIVE)
+DRIFTS = (SenseShift.BROADENED, SenseShift.NARROWED, SenseShift.PEJORATIVE, SenseShift.AMELIORATIVE, SenseShift.RESTORED)
 PAIR = 2
 
 
@@ -80,6 +80,17 @@ async def shift_word(ctx: TickContext, language: EntityRow, tally: DriftTally) -
         if ALSO not in word.meaning:
             return None
         word.meaning = word.meaning.split(ALSO)[0]
+    elif shift is SenseShift.RESTORED:
+        archaic = list(
+            await ctx.session.scalars(
+                select(LexemeRow).where(LexemeRow.language_entity_id == language.id, LexemeRow.register == WordRegister.ARCHAIC).order_by(LexemeRow.id)
+            )
+        )
+        if not archaic:
+            return None
+        word = rng.pick(archaic)
+        old = word.meaning
+        word.register = WordRegister.COMMON
     tally.shifted += 1
     row = record(ctx, word, shift, old)
     if other is not None:
@@ -102,7 +113,8 @@ async def veil(ctx: TickContext, language: EntityRow, node_id: int, name: str) -
     if len(words) < PAIR or held(language.id):
         return None
     rng = ctx.rng(f"veil.{language.id}.{node_id}")
-    first, second = rng.sample(words, PAIR)
+    modifier, head = rng.sample(words, PAIR)
+    first, second = (head, modifier) if await head_first(ctx.session, language.id) else (modifier, head)
     joined = f"{first.word}{second.word.casefold()}" if await compounds(ctx.session, language.id) else f"{first.word} {second.word.casefold()}"
     gloss = clipped(f"the {first.meaning.split(ALSO)[0]} {second.meaning.split(ALSO)[0]}", LEXEME_TEXT_MAX_LENGTH)
     euphemism = LexemeRow(

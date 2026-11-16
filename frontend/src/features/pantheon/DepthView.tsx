@@ -76,7 +76,7 @@ export function DepthView({
         />
       )}
       {depth.hidden_truth && (
-        <div className='flex min-w-0 flex-col gap-1 rounded-lg border border-dashed p-3'>
+        <div className='flex min-w-0 flex-col gap-1 rounded-md p-3 sealed-well'>
           <Label variant='overline'>{hiddenLabel}</Label>
           <Muted>
             <MentionText text={depth.hidden_truth} />

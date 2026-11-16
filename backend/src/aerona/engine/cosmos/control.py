@@ -26,6 +26,7 @@ from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
+from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cosmography import (
     ApocalypseVariant,
@@ -52,6 +53,7 @@ from aerona.engine.cosmos import dimensions as planes
 from aerona.engine.cosmos import galaxies as heavens
 from aerona.engine.cosmos.beings import banish_being, bind_being, create_being
 from aerona.engine.cosmos.climate import ClimateTurn, turn_region
+from aerona.engine.cosmos.encounters import JourneyCounts
 from aerona.engine.cosmos.ladder import ClusterDraft, DimensionDraft, GalaxyDraft, create_cluster, create_dimension, create_galaxy, settle_star
 from aerona.engine.cosmos.phenomena import contain, form_phenomenon
 from aerona.engine.cosmos.placement import Cosmography
@@ -104,11 +106,18 @@ async def resettle(ctx: TickContext) -> None:
 
 
 async def new_dimension(
-    ctx: TickContext, name: str, kind: DimensionKind, *, parent_id: int | None, element: DimensionElement | None, description: str | None
+    ctx: TickContext,
+    name: str,
+    kind: DimensionKind,
+    *,
+    parent_id: int | None,
+    element: DimensionElement | None,
+    description: str | None,
+    form: SpellForm | None = None,
 ) -> DimensionRow:
     if parent_id is not None:
         await found(ctx, DimensionRow, parent_id, "dimension")
-    return await create_dimension(ctx.session, ctx.rules, DimensionDraft(name, kind, ctx.epoch, parent_id, element, description))
+    return await create_dimension(ctx.session, ctx.rules, DimensionDraft(name, kind, ctx.epoch, parent_id, element, description, form))
 
 
 async def edit_dimension(ctx: TickContext, dimension_id: int, values: Values, release: list[str]) -> DimensionRow:
@@ -123,8 +132,6 @@ async def edit_dimension(ctx: TickContext, dimension_id: int, values: Values, re
     if ruler is not None and await ctx.session.get(NodeRow, int(ruler)) is None:
         raise NotFoundError("No such ruler.")
     apply(row, rest, release)
-    if row.dimension_kind is not DimensionKind.ELEMENTAL:
-        row.element = None
     await ctx.session.flush()
     return row
 
@@ -475,7 +482,14 @@ async def edit_route_flow(ctx: TickContext, route_id: int, values: Values, relea
 
 
 async def load_journey(
-    ctx: TickContext, journey_id: int, *, convoy: int | None, escorts: int | None, cargo: list[CargoLine] | None, passengers: list[PassengerLine] | None
+    ctx: TickContext,
+    journey_id: int,
+    *,
+    convoy: int | None,
+    escorts: int | None,
+    cargo: list[CargoLine] | None,
+    passengers: list[PassengerLine] | None,
+    counts: JourneyCounts | None = None,
 ) -> JourneyRow:
     row = await found(ctx, JourneyRow, journey_id, "journey")
     locked = set(row.locked)
@@ -491,6 +505,9 @@ async def load_journey(
     if passengers is not None:
         row.passengers = passengers
         locked.add("passengers")
+    for field_name, amount in (counts.values() if counts is not None else {}).items():
+        setattr(row, field_name, amount)
+        locked.add(field_name)
     row.locked = sorted(locked)
     await ctx.session.flush()
     return row
@@ -503,7 +520,9 @@ async def release_journey(ctx: TickContext, journey_id: int, fields: list[str]) 
     return row
 
 
-async def set_reading(ctx: TickContext, celestial_id: int, people_id: int, reading: OmenReading | None) -> CelestialReadingRow | None:
+async def set_reading(
+    ctx: TickContext, celestial_id: int, people_id: int, reading: OmenReading | None, visible: bool | None = None
+) -> CelestialReadingRow | None:
     body = await living_entity(ctx.session, celestial_id)
     people = await living_entity(ctx.session, people_id)
     if body is None or body.entity_type is not EntityType.CELESTIAL or people is None or people.entity_type is not EntityType.PEOPLE:
@@ -519,6 +538,9 @@ async def set_reading(ctx: TickContext, celestial_id: int, people_id: int, readi
         ctx.session.add(row)
     row.reading = reading
     row.locked = ["reading"]
+    if visible is not None:
+        row.visible = visible
+        row.locked = ["reading", "visible"]
     await ctx.session.flush()
     return row
 

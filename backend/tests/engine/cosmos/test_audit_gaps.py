@@ -9,6 +9,7 @@ from aerona.cartography.biomes import Biome
 from aerona.constants.cartography import BIOME_COUNT
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.anatomy import CreatureAttackRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.divine import DivineWoundRow
 from aerona.db.tables.ecology import BeastProfileRow
@@ -24,7 +25,7 @@ from aerona.domain.enums.communication import SignalKind
 from aerona.domain.enums.cosmography import DimensionKind, RiftCause, RiftState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
-from aerona.domain.enums.ecology import BreathKind
+from aerona.domain.enums.ecology import AttackDelivery, AttackEffect, AttackRange
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
 from aerona.domain.enums.happening import RiverShiftCause
@@ -114,7 +115,7 @@ async def test_a_realm_of_alchemists_builds_sending_stones(ctx: TickContext, mon
         return technique is Technique.ALCHEMY
 
     monkeypatch.setattr(signals, "has_technique", knows)
-    assert await signals.known_kind(ctx, 1) is SignalKind.SENDING_STONE
+    assert await signals.known_kind(ctx, 1) is SignalKind.BOUND_PAIR
 
 
 async def test_a_chancellor_counsels_the_rulers_decision(ctx: TickContext, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -241,9 +242,16 @@ async def test_each_breath_strikes_in_its_own_way(ctx: TickContext, cosmos: Cosm
     monkeypatch.setattr(beast_acts, "afflict", poison)
     monkeypatch.setattr(beast_acts, "seize", snatch)
     lair = BeastProfileRow(beast_entity_id=beast.id)
-    for breath in (BreathKind.FIRE, BreathKind.FROST, BreathKind.VENOM_GAS, BreathKind.WEB):
-        await beast_acts.breathe(ctx, beast, lair, town, breath)
-    assert struck == [DamageType.FIRE, DamageType.COLD, Transmission.INHALATION, "caught in its web"]
+    for delivery, effect in (
+        (AttackDelivery.BREATH, AttackEffect.HEAT),
+        (AttackDelivery.BREATH, AttackEffect.COLD),
+        (AttackDelivery.BREATH, AttackEffect.VENOM),
+        (AttackDelivery.SPRAY, AttackEffect.ENTANGLE),
+    ):
+        attack = CreatureAttackRow(node_id=beast.id, delivery=delivery, effect=effect, range=AttackRange.NEAR, recharge=0, permanent=False)
+        attack.locked = []
+        await beast_acts.strike(ctx, beast, lair, town, attack)
+    assert struck == [DamageType.FIRE, DamageType.COLD, Transmission.INHALATION, "taken by the spray of " + beast.name]
 
 
 async def test_a_mortal_given_to_pleasure_takes_up_a_life_of_leisure(

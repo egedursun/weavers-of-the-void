@@ -2822,6 +2822,8 @@ Measurement (2026-11-14): `services/integrity` names 132 of 676 tables. The othe
 3. **Repair or report.** Each check either repairs (clamp, drop a dangling reference, re-derive a derived value) with a recorded change (W49 F58.5) or reports to the integrity screen with a god lever to resolve it, never silently.
 4. **Guard.** `scripts/check_integrity_coverage.py` fails when a table has no row in `catalog/invariants.py`. `tests/services/integrity/test_every_invariant.py` breaks each invariant on a seeded world and proves it is found.
 
+**Implemented as.** `catalog/invariants.py` names the generic checks (`GenericCheck`, each with its remedy) and the typed invariants (`TYPED`, keyed by table) with their texts; the catalogue layer cannot read the schema, so `services/integrity/invariants.py` `coverage()` walks every table of the metadata and gives it its typed invariants or the reason it needs none (a profile keyed by its thing, columns all covered by the generic checks, or a free-form JSON record kept by its writer), so a new table is covered on creation. The generic sweep clamps bounded columns, sets past epochs back to the present and drops lost node ids from `*_node_ids` lists, all as repairs run with the data repairs at startup and by the integrity task "Check every table"; enum values outside their lists and held names that are not columns are reported. References are kept by the database's foreign keys and treasury amounts by `scripts/check_coin_units.py`. Reported findings are listed on the engine page under "Findings that wait for your word" (`GET /integrity/findings`), each resolved by the god (`POST /integrity/findings/resolve`). The guard also fails when a typed invariant names a missing table, has no check, or is never broken in the test.
+
 ### 47.14 A full read of model-facing text
 
 Measurement (2026-11-14): 34,865 prose strings in 1,305 files and 194 templates reach the model or the chronicle; pattern guards cannot see images that use ordinary words. A lexicon sweep found 255 hits. Among them were the following images in our own wording, fixed with this audit:
@@ -2894,6 +2896,8 @@ W48 gives every world-content concept the two-layer model, gives every content e
 
 **Drinks** (`drink_kinds`): category `DrinkCategory` (`water`, `infusion`, `fermented`, `distilled`, `pressed`, `milk_based`, `broth`, `stimulant_brew`, `intoxicant`, `medicinal`, `ritual`, `synthesised`), strength (intoxication), stimulation, nourishment, **water safety** (boiled, fermented or treated drinks lower waterborne disease), keeps, prestige, social role (`DrinkRole`: `daily`, `hospitality`, `feast`, `rite`, `medicine`, `trade`, `bond_making`), dependence package (F30), legality. Drinking places (taverns, inns, circles) and drinking customs read them.
 
+**Rules namespaces.** `cuisine` (dish invention, fusion by contact, feast weights), `drink` (strength, dependence, water safety) and `nutrition` (nourishment per nutrient class), all extended, beside `kinds` (48.0). God levers and screens are those of F57 (48.13).
+
 ### 48.3 Clothing, adornment, colour and scent
 
 **Garments** (`garment_kinds`): category `GarmentCategory` (`body_wrap`, `upper`, `lower`, `full_body`, `outer_layer`, `head`, `face_covering`, `feet`, `hands`, `undergarment`, `fastening`, `ornament`, `uniform`, `ritual_dress`, `work_protection`, `environment_suit`, `body_marking` (paint and marks, W29)), materials (world materials), layer, warmth, protection, climate fit, cost, **status signal** (class, rank, office, faith), **modesty coverage** (read against the culture's norms), occasions, **wearing rule** (`WearingRule`: `anyone`, `by_role`, `by_class`, `by_age`, `by_faith`, `by_rank`, `by_gender_as_the_culture_holds`; the last is culture data only, never a default), colours, fashion cycle (novelty).
@@ -2905,6 +2909,8 @@ W48 gives every world-content concept the two-layer model, gives every content e
 **Scents** (`scent_kinds`): category `ScentUse` (`burned`, `worn`, `anointed`, `household`, `ritual`, `medicinal`, `signal` (for peoples with scent language)), materials, prestige, uses in rites and trade.
 
 **Emblems** (`emblem_systems` per culture: `EmblemSystem`: `heraldry` (the existing heraldic enums), `seal`, `banner`, `totem`, `badge`, `monogram`, `mark`, `glyph`), so heraldry is one emblem system among many.
+
+**Rules namespaces.** `fashion` (extended: diffusion by prestige and contact, novelty decline), `dress` (new: dress codes, sumptuary fines, climate fit), `colours` (new: term stages by language, dye prestige) and `scents` (new: prestige and rite use), beside `kinds` (48.0). God levers and screens are those of F57 (48.13).
 
 ### 48.4 Household goods, tools, instruments, games and substances
 

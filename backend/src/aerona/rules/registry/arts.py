@@ -15,6 +15,7 @@ S = RuleGroup.SKY
 class ArtMarketRules:
     collector_chance: int = rule(20, 0, 100, M, "Chance each epoch that a realm, noble house, church or merchant guild without a collection begins one (%)")
     collectors_per_epoch: int = rule(6, 0, 1000, M, "New collectors that may arise across the cosmos in one epoch")
+    connoisseur_at: int = rule(65, 0, 100, M, "Discernment at which a private collector is a connoisseur whose taste weighs more on the market")
     base_price: int = rule(20, 0, 100000, M, "Price in coin of a work of middling quality by an unknown hand")
     renown_pct: int = rule(100, 0, 1000, M, "Price a work gains at its maker's full renown (%)")
     canon_pct: int = rule(150, 0, 1000, M, "Price a work of the canon gains (%)")

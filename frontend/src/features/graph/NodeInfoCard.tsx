@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Medallion } from '@/components/domain'
+import { Medallion, Paged } from '@/components/domain'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Label, Muted, Text } from '@/components/typography'
@@ -161,23 +161,29 @@ export function NodeInfoCard({
           <div className='flex min-w-0 flex-col gap-1.5'>
             <Label variant='overline'>{`Ties · ${ties.length}`}</Label>
             <ul className='flex min-w-0 flex-col gap-1'>
-              {ties.slice(0, TIES_SHOWN).map((tie) => (
-                <li
-                  key={`${tie.id}-${tie.label}`}
-                  className='flex min-w-0 items-center gap-2 rounded-md border bg-muted/30 px-2 py-1'
-                >
-                  <Button
-                    variant='link'
-                    size='sm'
-                    onClick={() => onSelect(tie.id)}
+              <Paged items={ties.slice(0, TIES_SHOWN)} as='li'>
+                {(tie) => (
+                  <li
+                    key={`${tie.id}-${tie.label}`}
+                    className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 px-2 py-1'
                   >
-                    {tie.name}
-                  </Button>
-                  <Muted variant='caption' truncate className='flex-1 text-end'>
-                    {tie.label}
-                  </Muted>
-                </li>
-              ))}
+                    <Button
+                      variant='link'
+                      size='sm'
+                      onClick={() => onSelect(tie.id)}
+                    >
+                      {tie.name}
+                    </Button>
+                    <Muted
+                      variant='caption'
+                      truncate
+                      className='flex-1 text-end'
+                    >
+                      {tie.label}
+                    </Muted>
+                  </li>
+                )}
+              </Paged>
             </ul>
             {ties.length > TIES_SHOWN && (
               <Muted variant='caption'>{`${ties.length - TIES_SHOWN} more ties in the graph.`}</Muted>

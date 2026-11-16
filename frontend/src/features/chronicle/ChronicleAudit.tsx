@@ -46,7 +46,7 @@ function CoverageRow({
   children: ReactNode
 }) {
   return (
-    <li className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-lg border bg-muted/30 px-2 py-1'>
+    <li className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border surface-well border-gild/20 bg-muted/60 px-2 py-1'>
       <Badge size='sm' variant='outline'>
         {label}
       </Badge>
@@ -165,7 +165,7 @@ export function ChronicleAudit({
   const remaining = audit?.remaining ?? []
   const clean = audit !== null && audit !== undefined && remaining.length === 0
   return (
-    <Collapsible className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'>
+    <Collapsible className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-3'>
         <Medallion
           icon={!audit ? ScanSearch : clean ? ShieldCheck : TriangleAlert}
@@ -220,32 +220,34 @@ export function ChronicleAudit({
       </div>
       <CollapsibleContent className='flex min-w-0 flex-col gap-3'>
         <ul className='flex min-w-0 flex-col gap-1.5'>
-          {remaining.map((finding, index) => (
-            <li
-              key={`${finding.kind}-${finding.ref ?? index}`}
-              className='flex min-w-0 flex-col gap-1 rounded-lg border bg-muted/30 p-2'
-            >
-              <div className='flex min-w-0 flex-wrap items-center gap-2'>
-                <Badge size='sm' variant='warning'>
-                  {KIND_LABEL[finding.kind]}
-                </Badge>
-                {finding.name && <Label>{finding.name}</Label>}
-              </div>
-              {(finding.stated || finding.actual) && (
-                <Muted variant='caption'>
-                  {`Stated ${finding.stated ?? '—'} · actually ${finding.actual ?? '—'}`}
-                </Muted>
-              )}
-              {finding.sentence && (
-                <Text variant='caption' italic truncate={3}>
-                  {finding.sentence}
-                </Text>
-              )}
-              {finding.detail && (
-                <Muted variant='caption'>{finding.detail}</Muted>
-              )}
-            </li>
-          ))}
+          <Paged items={remaining} as='li'>
+            {(finding, index) => (
+              <li
+                key={`${finding.kind}-${finding.ref ?? index}`}
+                className='flex min-w-0 flex-col gap-1 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
+              >
+                <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                  <Badge size='sm' variant='warning'>
+                    {KIND_LABEL[finding.kind]}
+                  </Badge>
+                  {finding.name && <Label>{finding.name}</Label>}
+                </div>
+                {(finding.stated || finding.actual) && (
+                  <Muted variant='caption'>
+                    {`Stated ${finding.stated ?? '—'} · actually ${finding.actual ?? '—'}`}
+                  </Muted>
+                )}
+                {finding.sentence && (
+                  <Text variant='caption' italic truncate={3}>
+                    {finding.sentence}
+                  </Text>
+                )}
+                {finding.detail && (
+                  <Muted variant='caption'>{finding.detail}</Muted>
+                )}
+              </li>
+            )}
+          </Paged>
         </ul>
         {audit?.coverage && <CoverageList coverage={audit.coverage} />}
       </CollapsibleContent>

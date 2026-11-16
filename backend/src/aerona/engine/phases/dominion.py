@@ -48,6 +48,7 @@ async def thrones(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.community_stocks",
     "table.epoch_year_cursors",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
     "table.magic_sites",

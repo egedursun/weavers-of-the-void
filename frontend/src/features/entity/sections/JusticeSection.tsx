@@ -13,6 +13,7 @@ import {
   StatBar,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { CRIMES } from '@/features/entity/justice/crimes'
 import { COURTS } from '@/features/lawDepth/labels'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -36,7 +37,6 @@ import {
 import {
   BASES,
   CASE_ICON,
-  CRIMES,
   JUSTICE_ICON,
   PROPOSAL_EVENTS,
   PROPOSAL_ICON,

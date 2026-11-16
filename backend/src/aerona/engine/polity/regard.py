@@ -60,10 +60,13 @@ def borders(book: RealmBook, first: Realm, second: Realm) -> bool:
     return False
 
 
+UNKNOWN_DISTANCE = PERCENT // 2
+
+
 def value_distance(first: Values, second: Values) -> int:
     axes = set(first) | set(second)
     if not axes:
-        return 0
+        return UNKNOWN_DISTANCE
     return round_half_up(sum(abs(first.get(axis, 0) - second.get(axis, 0)) for axis in axes) / len(axes) / 2)
 
 

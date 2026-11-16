@@ -1,14 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.culture import HolderTechniqueRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.living import GeneBankRow, GeneBankSampleRow, LivingLineRow, LivingLineTraitRow, SymbiontRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.renown import ReputationRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.living import CultivationMethod, HostPlacement, HostRelation, LineTrait
 from aerona.domain.enums.mind import SkillKind, SkillSource
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.models.entity_stats import DiseaseStats
-from tests.tools.every_setup import second_mortal
+from tests.tools.every_setup import second_mortal, wealthy
 from tests.tools.factories import Realm, make_entity
 
 EPOCH = 1
@@ -106,3 +109,12 @@ async def line_of_another(session: AsyncSession, realm: Realm) -> dict[str, int]
 async def son_line(session: AsyncSession, realm: Realm) -> dict[str, int]:
     line = await held_line(session, realm.mortal_id, realm.species_id)
     return {"line": line.id}
+
+
+async def founder(session: AsyncSession, realm: Realm) -> dict[str, int]:
+    await wealthy(session, realm)
+    me = await session.get(EntityRow, realm.mortal_id)
+    assert me is not None
+    session.add(ReputationRow(subject_node_id=me.id, community_node_id=realm.settlement_id, axis=ReputationAxis.HONOUR, value=50, heard_epoch=0, locked=[]))
+    await session.flush()
+    return {}

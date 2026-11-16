@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { BookOpen, SearchX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { OrnateFrame } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, PagedList, Section } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
@@ -18,8 +19,10 @@ import { DedicationSection } from '@/features/foundations/DedicationSection'
 import { SiteSection } from '@/features/gatherings/SiteSection'
 import { Lightbox } from '@/features/images/Lightbox'
 import { useImageGenEvents } from '@/features/images/imageGenState'
+import { LawGrammarSection } from '@/features/lawGrammar/LawGrammarSection'
 import { MadeEntitySection } from '@/features/madeKinds/KindPages'
 import { MADE_ENTITY_TYPES } from '@/features/madeKinds/model'
+import { OuterAgencySection } from '@/features/outerAgency/OuterAgencySection'
 import { ObserverSurveySection } from '@/features/physics/SurveySection'
 import { CommunityRelations } from '@/features/relations/CommunityRelations'
 import { CommunityWars } from '@/features/wars/CommunityWars'
@@ -390,27 +393,33 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
           readOnlyReason={readOnly}
         />
         <SectionNav present={present} />
-        <EntityTimeline
-          lines={detail.chronicle}
-          birthEpoch={entity.birth_epoch}
-          currentEpoch={state.data?.world?.epoch ?? entity.birth_epoch}
-          onPick={pick}
-        />
-        {entity.fate_note && (
-          <blockquote className='flex min-w-0 flex-col gap-1 border-s-2 border-primary ps-4'>
-            <Text weight='semibold'>Fate</Text>
-            <Text italic>{entity.fate_note}</Text>
-          </blockquote>
-        )}
-        {entity.description && (
-          <Text variant='prose'>
-            <MentionText
-              text={entity.description}
-              targets={targets}
-              selfId={entity.id}
-            />
-          </Text>
-        )}
+        <OrnateFrame
+          frame='card'
+          crest
+          className='flex min-w-0 flex-col gap-4 p-5'
+        >
+          <EntityTimeline
+            lines={detail.chronicle}
+            birthEpoch={entity.birth_epoch}
+            currentEpoch={state.data?.world?.epoch ?? entity.birth_epoch}
+            onPick={pick}
+          />
+          {entity.fate_note && (
+            <blockquote className='flex min-w-0 flex-col gap-1 border-s-2 border-primary ps-4'>
+              <Text weight='semibold'>Fate</Text>
+              <Text italic>{entity.fate_note}</Text>
+            </blockquote>
+          )}
+          {entity.description && (
+            <Text variant='prose'>
+              <MentionText
+                text={entity.description}
+                targets={targets}
+                selfId={entity.id}
+              />
+            </Text>
+          )}
+        </OrnateFrame>
         <CanonFacts ctx={ctx} readOnlyReason={readOnly} />
         <EntityStats ctx={ctx} readOnlyReason={readOnly} />
         <SocietyEconomy detail={detail} />
@@ -479,8 +488,14 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         {entity.entity_type === 'natural_law' && (
           <LawProfileSection lawId={entity.id} />
         )}
+        {entity.entity_type === 'natural_law' && (
+          <LawGrammarSection lawId={entity.id} readOnlyReason={readOnly} />
+        )}
         {entity.entity_type === 'outer_being' && (
           <OuterProfileSection beingId={entity.id} />
+        )}
+        {entity.entity_type === 'outer_being' && (
+          <OuterAgencySection beingId={entity.id} readOnlyReason={readOnly} />
         )}
         {entity.entity_type === 'phenomenon' && (
           <PhenomenonSection entityId={entity.id} />

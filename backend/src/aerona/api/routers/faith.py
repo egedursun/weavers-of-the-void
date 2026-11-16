@@ -79,6 +79,12 @@ def stratum_view(row: AfterlifeStratumRow, souls: list[NodeRef], refs: Refs | No
     return StratumView(
         id=row.id,
         kind=row.kind,
+        valence=row.valence,
+        permanence=row.permanence,
+        admission=row.admission,
+        activity=row.activity,
+        contact=row.contact,
+        ruler=ref(known, row.ruler_node_id),
         name=row.name,
         criteria=StratumCriteria.read(row.criteria),
         population=row.population,
@@ -300,6 +306,7 @@ async def realm_of_dead(services: ServicesDep, entity_id: Id) -> RealmOfDeadView
                 *(soul.spirit_entity_id for soul in souls),
                 *(row.cult_entity_id for row in strata if row.cult_entity_id),
                 *(row.dimension_id for row in strata if row.dimension_id),
+                *(row.ruler_node_id for row in strata if row.ruler_node_id),
             ],
         )
         return RealmOfDeadView(

@@ -78,17 +78,15 @@ export function EpochArticle({
       id={`epoch-${epoch}`}
       data-epoch-article={epoch}
       className={cn(
-        'flex min-w-0 scroll-mt-16 flex-col gap-4 rounded-xl border bg-card p-4 text-card-foreground md:p-5',
+        'flex min-w-0 scroll-mt-16 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4 text-card-foreground md:p-5',
         ongoing && 'border-primary/40'
       )}
     >
       <header className='flex min-w-0 items-start gap-4'>
         <span
           className={cn(
-            'flex size-control-lg shrink-0 items-center justify-center rounded-full border-2',
-            ongoing
-              ? 'border-primary bg-primary/12 text-primary'
-              : 'border-border bg-background text-muted-foreground'
+            'medallion size-control-lg font-display',
+            ongoing ? 'gem-gold' : 'gem-muted'
           )}
         >
           <Stat value={epoch} />

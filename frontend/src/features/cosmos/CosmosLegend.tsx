@@ -18,7 +18,7 @@ export function CosmosLegend({ index }: { index: CosmosIndex }) {
     )
   return (
     <div
-      className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2'
+      className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-1.5'
       aria-label='Route legend'
     >
       <Text as='span' variant='caption' weight='medium' tone='inherit'>

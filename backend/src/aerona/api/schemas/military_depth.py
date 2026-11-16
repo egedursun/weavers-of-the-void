@@ -6,6 +6,7 @@ from aerona.domain.enums.collective import DesignComponentKind
 from aerona.domain.enums.integrity import Criticality, SectionHazard
 from aerona.domain.enums.military import (
     CasualtyFate,
+    FeudLevel,
     FeudParty,
     FeudStatus,
     Formation,
@@ -154,6 +155,8 @@ class FeudView(ApiModel):
     intensity: int
     grievance: int
     generations: int
+    level: FeudLevel
+    mediator: NodeRef | None
     status: FeudStatus
     cause: str | None
     since_epoch: int

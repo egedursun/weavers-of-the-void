@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -8,19 +9,24 @@ from aerona.catalog.ownership import GUILD_KINDS, OWNER_CLASS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.factions import FactionGoalRow, FactionProfileRow
 from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.ownership import SiteProfitRow
-from aerona.db.tables.polity import HouseProfileRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import HouseProfileRow, PolityMemberRow, PolityProfileRow, VassalageRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.faction import FactionGoalKind
+from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import OwnerClass
+from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.faith.book import patron_node
 from aerona.engine.finance.access import sold_share
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, subsidy_paid
 from aerona.engine.industry.methods import local_price
@@ -32,6 +38,15 @@ from aerona.engine.primitives.stats import stat
 
 THOUSAND = 1000
 HARVEST_STEP = "harvest"
+MADE_ORIGINS = frozenset({MindOrigin.MADE, MindOrigin.GROWN, MindOrigin.TRAINED, MindOrigin.COPIED})
+WIDER_OWNERS: dict[OwnerClass, tuple[OwnerClass, ...]] = {
+    OwnerClass.MERCHANTS: (OwnerClass.COMPANY, OwnerClass.INDIVIDUAL, OwnerClass.FOREIGN_POWER),
+    OwnerClass.GUILD: (OwnerClass.COOPERATIVE, OwnerClass.COMPANY, OwnerClass.MADE_MIND),
+    OwnerClass.HOUSE: (OwnerClass.INDIVIDUAL, OwnerClass.FOREIGN_POWER),
+    OwnerClass.COMMUNITY: (OwnerClass.COOPERATIVE, OwnerClass.INDIVIDUAL),
+    OwnerClass.CULT: (OwnerClass.GOD,),
+    OwnerClass.REALM: (OwnerClass.FOREIGN_POWER, OwnerClass.MADE_MIND),
+}
 
 
 @dataclass
@@ -58,8 +73,70 @@ class Ledger:
     upkeep: float = 0.0
 
 
+async def company_owner(session: AsyncSession, community: EntityRow) -> int | None:
+    query = select(CompanyProfileRow.faction_entity_id).where(CompanyProfileRow.headquarters_entity_id == community.id)
+    return await session.scalar(query.order_by(CompanyProfileRow.faction_entity_id).limit(1))
+
+
+async def cooperative_owner(session: AsyncSession, community: EntityRow) -> int | None:
+    query = select(FactionProfileRow.faction_entity_id).where(
+        FactionProfileRow.home_entity_id == community.id, FactionProfileRow.kind == FactionKind.WORKERS_UNION
+    )
+    return await session.scalar(query.order_by(FactionProfileRow.faction_entity_id).limit(1))
+
+
+async def individual_owner(session: AsyncSession, community: EntityRow) -> int | None:
+    query = (
+        select(MortalProfileRow.entity_id)
+        .join(EntityRow, EntityRow.id == MortalProfileRow.entity_id)
+        .where(EntityRow.location_id == community.id, EntityRow.status == EntityStatus.CANON)
+    )
+    return await session.scalar(query.order_by(MortalProfileRow.wealth.desc(), MortalProfileRow.entity_id).limit(1))
+
+
+async def made_mind_owner(session: AsyncSession, community: EntityRow) -> int | None:
+    here = select(EntityRow.id).where(EntityRow.location_id == community.id, EntityRow.status == EntityStatus.CANON)
+    query = select(MindProfileRow.node_id).where(MindProfileRow.node_id.in_(here), MindProfileRow.origin.in_(list(MADE_ORIGINS)))
+    return await session.scalar(query.order_by(MindProfileRow.node_id).limit(1))
+
+
+async def foreign_owner(session: AsyncSession, community: EntityRow) -> int | None:
+    realm = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community.id).limit(1))
+    subject = await session.get(VassalageRow, realm) if realm is not None else None
+    return subject.overlord_entity_id if subject is not None else None
+
+
+async def god_owner(session: AsyncSession, community: EntityRow) -> int | None:
+    return await patron_node(session, community.id)
+
+
+OWNER_FINDERS: Mapping[OwnerClass, Callable[[AsyncSession, EntityRow], Awaitable[int | None]]] = {
+    OwnerClass.COMPANY: company_owner,
+    OwnerClass.COOPERATIVE: cooperative_owner,
+    OwnerClass.INDIVIDUAL: individual_owner,
+    OwnerClass.MADE_MIND: made_mind_owner,
+    OwnerClass.FOREIGN_POWER: foreign_owner,
+    OwnerClass.GOD: god_owner,
+}
+
+
+async def wider_owner(ctx: TickContext, community: EntityRow, owner_class: OwnerClass) -> int | None:
+    find = OWNER_FINDERS.get(owner_class)
+    return await find(ctx.session, community) if find is not None else None
+
+
+async def regime_class(ctx: TickContext, community: EntityRow, base: OwnerClass) -> OwnerClass:
+    for wider in WIDER_OWNERS.get(base, ()):
+        if ctx.rng(f"owner.{community.id}.{wider.value}").chance(ctx.rules.ownership.wider_owner_pct) and await wider_owner(ctx, community, wider) is not None:
+            return wider
+    return base
+
+
 async def owner_for(ctx: TickContext, community: EntityRow, owner_class: OwnerClass) -> int:
     session = ctx.session
+    found_wider = await wider_owner(ctx, community, owner_class)
+    if found_wider is not None:
+        return found_wider
     if owner_class in GUILD_KINDS:
         found = await session.scalar(
             select(FactionProfileRow.faction_entity_id)
@@ -90,7 +167,8 @@ async def assign_owners(ctx: TickContext, book: EconomyBook, tally: ProfitTally)
         for workshop in book.workshops.get(community.id, {}).values():
             if workshop.owner_node_id is not None or workshop.held:
                 continue
-            workshop.owner_node_id = await owner_for(ctx, community, OWNER_CLASS.get(workshop.kind, OwnerClass.COMMUNITY))
+            base = OWNER_CLASS.get(workshop.kind, OwnerClass.COMMUNITY)
+            workshop.owner_node_id = await owner_for(ctx, community, await regime_class(ctx, community, base))
             tally.owned += 1
 
 

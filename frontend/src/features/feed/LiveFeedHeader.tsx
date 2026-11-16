@@ -16,12 +16,14 @@ type LiveFeedHeaderProps = {
   title?: ReactNode
   description?: ReactNode
   onClose?: () => void
+  titled?: boolean
 }
 
 export function LiveFeedHeader({
   title,
   description,
   onClose,
+  titled = true,
 }: LiveFeedHeaderProps) {
   const status = useRealtimeStatus()
   const total = useFeed((state) => state.lines.length)
@@ -33,11 +35,12 @@ export function LiveFeedHeader({
       <Medallion icon={Activity} />
       <div className='flex min-w-0 flex-1 flex-col'>
         <div className='flex min-w-0 items-center gap-2'>
-          {title ?? (
-            <Text as='span' weight='semibold' truncate>
-              Live feed
-            </Text>
-          )}
+          {titled &&
+            (title ?? (
+              <Text as='span' weight='semibold' truncate>
+                Live feed
+              </Text>
+            ))}
           <span
             className={cn(
               'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5',

@@ -3,6 +3,7 @@ from types import MappingProxyType
 from typing import Any
 
 from aerona.catalog.mind_split import fac
+from aerona.core.total import total
 from aerona.domain.enums.mind import Attribute, Facet, PreferenceKind, SkillKind, ThoughtKind, ValueAxis, WantKind
 from aerona.domain.enums.relations import (
     AppealKind,
@@ -191,7 +192,22 @@ CIRCLES: MappingProxyType[CircleKind, CircleSpec] = MappingProxyType(
 )
 
 PASSION_LABELS: MappingProxyType[PassionKind, str] = MappingProxyType(
-    {PassionKind.LOVE: "Love", PassionKind.LOYALTY: "Loyalty", PassionKind.HATRED: "Hatred", PassionKind.DEVOTION: "Devotion"}
+    {
+        PassionKind.LOVE: "Love",
+        PassionKind.LOYALTY: "Loyalty",
+        PassionKind.HATRED: "Hatred",
+        PassionKind.DEVOTION: "Devotion",
+        PassionKind.AMBITION: "Ambition",
+        PassionKind.ENVY: "Envy",
+        PassionKind.GRIEF: "Grief",
+        PassionKind.CURIOSITY: "Curiosity",
+        PassionKind.FEAR: "Fear",
+        PassionKind.SHAME: "Shame",
+        PassionKind.PRIDE: "Pride",
+        PassionKind.JEALOUSY: "Jealousy",
+        PassionKind.ADMIRATION: "Admiration",
+        PassionKind.OBSESSION: "Obsession",
+    }
 )
 PASSION_SOURCE_LABELS: MappingProxyType[PassionSource, str] = MappingProxyType(
     {
@@ -228,8 +244,18 @@ AIM_LABELS: MappingProxyType[PersuasionAim, str] = MappingProxyType(
         PersuasionAim.TREATY: "A treaty",
     }
 )
-GROUP_LABELS: MappingProxyType[GroupKind, str] = MappingProxyType(
-    {GroupKind.HOUSEHOLD: "Household", GroupKind.COURT: "Court", GroupKind.CIRCLE: "Circle", GroupKind.WARBAND: "Warband", GroupKind.CREW: "Crew"}
+GROUP_LABELS: MappingProxyType[GroupKind, str] = total(
+    GroupKind,
+    {
+        GroupKind.HOUSEHOLD: "Household",
+        GroupKind.COURT: "Court",
+        GroupKind.CIRCLE: "Circle",
+        GroupKind.WARBAND: "Warband",
+        GroupKind.CREW: "Crew",
+        GroupKind.CELL: "Cell",
+        GroupKind.BAND: "Band",
+        GroupKind.TEAM: "Team",
+    },
 )
 
 

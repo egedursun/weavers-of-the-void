@@ -123,7 +123,7 @@ export function SickCohorts({
                 return (
                   <li
                     key={item.outbreak_id}
-                    className='flex min-w-0 items-start gap-2.5 rounded-lg border bg-muted/30 p-2'
+                    className='flex min-w-0 items-start gap-2.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
                   >
                     <Medallion
                       icon={vector.icon}
@@ -175,7 +175,7 @@ export function SickCohorts({
           ].map((item) => (
             <div
               key={item.key}
-              className='flex min-w-0 items-center justify-between gap-2 rounded-lg border bg-card p-2'
+              className='flex min-w-0 items-center justify-between gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
             >
               <FieldLabel
                 htmlFor={`hold-${item.key}-${view.entity_id}`}
@@ -352,7 +352,7 @@ export function DormancyPanel({
               {(mortal) => (
                 <li
                   key={mortal.id}
-                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
                 >
                   <Medallion
                     icon={mortal.dormant ? Moon : Sun}

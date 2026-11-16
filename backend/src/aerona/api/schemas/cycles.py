@@ -22,6 +22,7 @@ from aerona.domain.enums.cycles import (
     ResidenceRule,
     StressComponent,
 )
+from aerona.domain.enums.unions import PartnerScope, UnionArrangement, UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionPurpose, UnionResidence
 
 
 class StressPartView(ApiModel):
@@ -136,6 +137,20 @@ class KinshipView(ApiModel):
     locked: list[str]
 
 
+class UnionView(ApiModel):
+    form: UnionForm
+    purpose: UnionPurpose
+    residence: UnionResidence
+    descent: UnionDescent
+    exchange: UnionExchange
+    arrangement: UnionArrangement
+    dissolution: UnionDissolution
+    endogamy: PartnerScope
+    exogamy: PartnerScope
+    term_epochs: int
+    locked: list[str]
+
+
 class AllianceView(ApiModel):
     giver: NodeRef
     taker: NodeRef
@@ -235,6 +250,7 @@ class CyclesView(ApiModel):
     debts: list[OfferingLedgerView]
     circuits: list[CircuitView]
     kinship: KinshipView | None
+    union: UnionView | None
     alliances: list[AllianceView]
     reproduction: ReproductionView | None
     caste: CasteView | None

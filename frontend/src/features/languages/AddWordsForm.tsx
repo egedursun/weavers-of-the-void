@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Section } from '@/components/domain'
+import { Paged, Section } from '@/components/domain'
 import { useLoreGate } from '@/features/entity/actions/gate'
 import { humanize } from '@/features/entity/actions/schema'
 import { useLoreMutation } from '@/features/entity/api/mutations'
@@ -67,67 +67,69 @@ export function AddWordsForm({
       level={3}
     >
       <ul className='flex min-w-0 flex-col gap-2'>
-        {rows.map((row, index) => (
-          <li
-            key={row.key}
-            className='grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-4'
-          >
-            <Input
-              aria-label={`Word ${index + 1}`}
-              placeholder='Word'
-              maxLength={WORD_MAX}
-              value={row.word}
-              onChange={(event) =>
-                update(row.key, { word: event.target.value })
-              }
-            />
-            <Input
-              aria-label={`Meaning ${index + 1}`}
-              placeholder='Meaning'
-              maxLength={MEANING_MAX}
-              value={row.meaning}
-              className='sm:col-span-2'
-              onChange={(event) =>
-                update(row.key, { meaning: event.target.value })
-              }
-            />
-            <div className='flex min-w-0 items-center gap-2'>
-              <Select
-                value={row.kind}
-                onValueChange={(kind) => update(row.key, { kind })}
-              >
-                <SelectTrigger
-                  className='min-w-0 flex-1'
-                  aria-label={`Kind of word ${index + 1}`}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ANY_KIND}>Any kind</SelectItem>
-                  {wordKindValues.map((kind) => (
-                    <SelectItem key={kind} value={kind}>
-                      {humanize(kind)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant='ghost'
-                size='icon'
-                aria-label={`Remove word ${index + 1}`}
-                disabled={rows.length === 1}
-                disabledReason='At least one row stays.'
-                onClick={() =>
-                  setRows((current) =>
-                    current.filter((item) => item.key !== row.key)
-                  )
+        <Paged items={rows} as='li'>
+          {(row, index) => (
+            <li
+              key={row.key}
+              className='grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-4'
+            >
+              <Input
+                aria-label={`Word ${index + 1}`}
+                placeholder='Word'
+                maxLength={WORD_MAX}
+                value={row.word}
+                onChange={(event) =>
+                  update(row.key, { word: event.target.value })
                 }
-              >
-                <X />
-              </Button>
-            </div>
-          </li>
-        ))}
+              />
+              <Input
+                aria-label={`Meaning ${index + 1}`}
+                placeholder='Meaning'
+                maxLength={MEANING_MAX}
+                value={row.meaning}
+                className='sm:col-span-2'
+                onChange={(event) =>
+                  update(row.key, { meaning: event.target.value })
+                }
+              />
+              <div className='flex min-w-0 items-center gap-2'>
+                <Select
+                  value={row.kind}
+                  onValueChange={(kind) => update(row.key, { kind })}
+                >
+                  <SelectTrigger
+                    className='min-w-0 flex-1'
+                    aria-label={`Kind of word ${index + 1}`}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ANY_KIND}>Any kind</SelectItem>
+                    {wordKindValues.map((kind) => (
+                      <SelectItem key={kind} value={kind}>
+                        {humanize(kind)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  aria-label={`Remove word ${index + 1}`}
+                  disabled={rows.length === 1}
+                  disabledReason='At least one row stays.'
+                  onClick={() =>
+                    setRows((current) =>
+                      current.filter((item) => item.key !== row.key)
+                    )
+                  }
+                >
+                  <X />
+                </Button>
+              </div>
+            </li>
+          )}
+        </Paged>
       </ul>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button

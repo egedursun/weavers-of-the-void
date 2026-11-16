@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
 from itertools import pairwise
 
@@ -14,6 +15,7 @@ from aerona.db.tables.relations import GroupRankRow, SocialCircleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import Facet, ThoughtKind
 from aerona.domain.enums.relations import GroupKind, InteractionKind
 from aerona.engine.body.book import effective
@@ -28,7 +30,14 @@ from aerona.engine.relations.book import WARLIKE, ensure_relation, shift
 from aerona.engine.relations.interactions import SocialTally, interact, load_scene
 
 FACET_SPAN = 50
-LEADING = frozenset({GroupKind.CIRCLE, GroupKind.WARBAND})
+LEADING = frozenset({GroupKind.CIRCLE, GroupKind.WARBAND, GroupKind.BAND, GroupKind.CELL})
+FACTION_GROUPS: Mapping[GroupKind, frozenset[FactionKind]] = {
+    GroupKind.CELL: frozenset({FactionKind.SECRET_SOCIETY, FactionKind.ASSASSINS, FactionKind.REBELS}),
+    GroupKind.BAND: frozenset(
+        {FactionKind.BANDITS, FactionKind.ROUTE_RAIDERS, FactionKind.CRIME_FAMILY, FactionKind.THIEVES_GUILD, FactionKind.SMUGGLING_RING}
+    ),
+    GroupKind.TEAM: frozenset({FactionKind.CHARTERED_COMPANY, FactionKind.ENGINEERS_SOCIETY, FactionKind.SCHOLARS_ACADEMY, FactionKind.CLUB}),
+}
 
 
 @dataclass
@@ -63,6 +72,12 @@ async def groups(session: AsyncSession) -> dict[tuple[int, GroupKind], set[int]]
         found[(faction, GroupKind.WARBAND)].add(mortal)
     for bond in await active_bonds(session, [BondKind.CAPTAIN_OF, BondKind.PASSENGER_OF]):
         found[(bond.target_node_id, GroupKind.CREW)].add(bond.source_node_id)
+    for kind, factions in FACTION_GROUPS.items():
+        chosen = select(FactionProfileRow.faction_entity_id).where(FactionProfileRow.kind.in_(list(factions)))
+        for faction, mortal in await session.execute(
+            select(FactionMembershipRow.faction_entity_id, FactionMembershipRow.mortal_entity_id).where(FactionMembershipRow.faction_entity_id.in_(chosen))
+        ):
+            found[(faction, kind)].add(mortal)
     return found
 
 

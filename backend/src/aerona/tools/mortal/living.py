@@ -7,6 +7,7 @@ from sqlalchemy import select
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.ecology import SpeciesYieldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.living import GeneBankRow, GeneBankSampleRow, LivingLineRow, SymbiontRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -41,7 +42,7 @@ from aerona.tools.mortal.ruler import enact_law
 PERCENT = 100
 Name = Field(min_length=1, max_length=120)
 SAMPLE_SKILLS = (SkillKind.SCIENCE, SkillKind.MEDICINE, SkillKind.FORAGING, SkillKind.BEAST_HANDLING)
-LivingMethod = Literal["cultured_crops", "grown_timber", "spun_fibre", "vat_culture", "bioreactor"]
+LivingMethod = Literal["cultured_crops", "grown_timber", "fibre_from_life", "vat_culture", "bioreactor"]
 
 
 class TraitPick(ToolInput):
@@ -191,7 +192,8 @@ async def plant_line(call: MortalCall, args: LineInput) -> str:
     if region is None or held(region):
         fail(MortalResult.PLANTING_DECLINED, why="you have no land to plant in")
     yields = set(await call.session.scalars(select(SpeciesYieldRow.commodity).where(SpeciesYieldRow.species_entity_id == line.species_entity_id)))
-    kind = kind_of({commodity for commodity in yields if commodity is not None})
+    land = await call.session.get(RegionEnvironmentRow, region)
+    kind = kind_of({commodity for commodity in yields if commodity is not None}, land, call.rules.commons.woods_forest)
     row = await attempt(
         MortalResult.PLANTING_DECLINED,
         plant(call.tick, region, kind, species_id=line.species_entity_id, owner_id=call.me.id, area=call.rules.perennials.area, line_id=line.id),

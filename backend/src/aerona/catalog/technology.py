@@ -1,0 +1,66 @@
+from collections.abc import Mapping
+
+from aerona.core.total import total
+from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.eras import TechFamily
+from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.world import TechnologyEra
+
+F = TechFamily
+B = KnowledgeBranch
+T = Technique
+E = TechnologyEra
+
+FAMILY_BRANCHES: Mapping[TechFamily, tuple[KnowledgeBranch, ...]] = total(
+    TechFamily,
+    {
+        F.AGRICULTURE: (B.AGRICULTURE,),
+        F.MATERIALS: (B.METALLURGY,),
+        F.ENERGY: (B.METALLURGY, B.MAGIC),
+        F.TRANSPORT: (B.SHIPBUILDING, B.SEAFARING, B.PATHFINDING),
+        F.COMMUNICATION: (B.WRITING,),
+        F.MEDICINE: (B.MEDICINE,),
+        F.WARFARE: (B.WARFARE,),
+        F.COMPUTATION: (B.ASTRONOMY, B.WRITING),
+        F.LIFE: (B.BIOMANCY, B.AGRICULTURE),
+        F.CONSTRUCTION: (B.ARCHITECTURE,),
+        F.ADMINISTRATION: (B.CIVICS, B.TRADE),
+        F.SPACE: (B.SKY_NAVIGATION, B.ASTRONOMY, B.GATE_LORE),
+        F.MIND: (B.MAGIC, B.FORBIDDEN),
+    },
+)
+FAMILY_TECHNIQUES: Mapping[TechFamily, tuple[Technique, ...]] = total(
+    TechFamily,
+    {
+        F.AGRICULTURE: (T.PLOUGH, T.CROP_ROTATION, T.IRRIGATION, T.GREEN_REVOLUTION),
+        F.MATERIALS: (T.BRONZE, T.IRON, T.STEEL, T.COKE_SMELTING, T.INDUSTRIAL_CHEMISTRY),
+        F.ENERGY: (T.STEAM_POWER, T.ELECTRICITY, T.COMBUSTION_ENGINE, T.NUCLEAR_POWER),
+        F.TRANSPORT: (T.SAILING, T.RAILWAYS, T.STEAMSHIPS, T.AVIATION),
+        F.COMMUNICATION: (T.ALPHABET, T.PRINTING_PRESS, T.TELEGRAPH, T.RADIO, T.MASS_MEDIA),
+        F.MEDICINE: (T.HERBALISM, T.SURGERY, T.VACCINES, T.ANTIBIOTICS),
+        F.WARFARE: (T.PHALANX_DRILL, T.GUNPOWDER, T.FIREARMS, T.NUCLEAR_WEAPONS),
+        F.COMPUTATION: (T.DOUBLE_ENTRY, T.COMPUTATION),
+        F.LIFE: (T.SELECTIVE_BREEDING, T.GENETIC_ENGINEERING),
+        F.CONSTRUCTION: (T.ARCH, T.DOME, T.AQUEDUCT, T.MACHINE_TOOLS),
+        F.ADMINISTRATION: (T.WRITTEN_LAW, T.BUREAUCRACY, T.CENSUS, T.EXAMINATIONS),
+        F.SPACE: (T.ASTRONOMY_INSTRUMENTS, T.ROCKETRY),
+        F.MIND: (T.LOGIC, T.ARTIFICIAL_MINDS),
+    },
+)
+ERA_LEVEL: Mapping[TechnologyEra, int] = total(
+    TechnologyEra,
+    {
+        E.STONE: 0,
+        E.BRONZE: 1,
+        E.IRON: 2,
+        E.MEDIEVAL: 3,
+        E.GUNPOWDER: 4,
+        E.RENAISSANCE: 4,
+        E.STEAM: 5,
+        E.ELECTRICAL: 6,
+        E.INFORMATION: 7,
+        E.ADVANCED: 8,
+        E.INTERSTELLAR: 9,
+        E.BEYOND: 10,
+    },
+)

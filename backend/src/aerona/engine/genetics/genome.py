@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.effect_packages import PACKAGES
-from aerona.catalog.genetics import GIFT_LOCI_ORDER, HARMFUL, LOCI, LOOKS_LOCI, VISIBLE_LOCI, LocusSpec
+from aerona.catalog.genetics import GIFT_LOCI_ORDER, HARMFUL, LOCI, LOOKS_LOCI, SCHOOL_OF_LOCUS, VISIBLE_LOCI, LocusSpec
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.afflictions import AfflictionRow
@@ -12,7 +12,7 @@ from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES, InjuryKind, InjuryState
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.genetics import SCHOOL_OF_LOCUS, Locus
+from aerona.domain.enums.genetics import Locus
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.mortal import Ability
 from aerona.engine.mortal.kin import parents_of

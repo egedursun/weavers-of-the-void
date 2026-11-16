@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -6,14 +7,19 @@ from aerona.catalog.gatherings import GUARDED_ROOMS, ITEM_ROOMS, ROOM_PLACES, RO
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import RelicRow
+from aerona.db.tables.made import MadeRealmRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sites import RoomContentRow, SiteHolderRow, SiteRoomRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.site import RoomContentKind, SiteChallenge, SiteRoomKind
 from aerona.engine.body.hits import Harm
@@ -23,7 +29,8 @@ from aerona.engine.lore import items
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.stats import stat_or
+from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.renown.currencies import realm_of_community
 
 CHALLENGES = (SiteChallenge.TRAP, SiteChallenge.GUARDIAN, SiteChallenge.PUZZLE, SiteChallenge.HAZARD)
@@ -98,9 +105,17 @@ async def furnish(ctx: TickContext, site: EntityRow, layout: tuple[SiteRoomKind,
         crypt = next((room for room in rooms if room.kind in (SiteRoomKind.CRYPT, SiteRoomKind.SHRINE, SiteRoomKind.HEART)), last)
         ctx.session.add(RoomContentRow(room_id=crypt.id, kind=RoomContentKind.SPIRIT, entity_id=spirit))
     hoards = [room for room in rooms if room.kind in ITEM_ROOMS] or [last]
+    relics = set(await ctx.session.scalars(select(RelicRow.item_entity_id)))
     for item in await dwellers(ctx, site.id, EntityType.ITEM):
         if draw.chance(table.room_item_pct):
-            ctx.session.add(RoomContentRow(room_id=draw.pick(hoards).id, kind=RoomContentKind.ITEM, entity_id=item))
+            found = RoomContentKind.RELIC if item in relics else RoomContentKind.ITEM
+            ctx.session.add(RoomContentRow(room_id=draw.pick(hoards).id, kind=found, entity_id=item))
+    here = select(EntityRow.id).where(EntityRow.location_id == site.id, EntityRow.status == EntityStatus.CANON)
+    for mind in await ctx.session.scalars(select(MindProfileRow.node_id).where(MindProfileRow.node_id.in_(here), MindProfileRow.seat != MindSeat.BODY)):
+        ctx.session.add(RoomContentRow(room_id=last.id, kind=RoomContentKind.MIND, entity_id=mind))
+    for realm in await ctx.session.scalars(select(MadeRealmRow.dimension_id).where(MadeRealmRow.host_node_id == site.id)):
+        if await ctx.session.get(EntityRow, realm) is not None:
+            ctx.session.add(RoomContentRow(room_id=last.id, kind=RoomContentKind.REALM_GATE, entity_id=realm))
     for room in rooms:
         if room.challenge is SiteChallenge.TRAP:
             ctx.session.add(RoomContentRow(room_id=room.id, kind=RoomContentKind.TRAP, strength=table.trap_strength))
@@ -167,13 +182,41 @@ async def contents_of(ctx: TickContext, room_id: int) -> list[RoomContentRow]:
     return list(await ctx.session.scalars(select(RoomContentRow).where(RoomContentRow.room_id == room_id).order_by(RoomContentRow.id)))
 
 
+async def claim_relic(ctx: TickContext, delver: EntityRow, relic: EntityRow, room: SiteRoomRow) -> None:
+    await items.profile_of(ctx, relic)
+    await items.give(ctx, relic, delver.id, ItemDeed.CAPTURED, f"a relic carried out of {room.kind.value} by {delver.name}")
+    shift_stat(delver, "piety", ctx.rules.sites.relic_piety, 0)
+
+
+async def wake_mind(ctx: TickContext, delver: EntityRow, mind: EntityRow, _room: SiteRoomRow) -> None:
+    await connect(ctx.session, delver.id, mind.id, BondKind.KNOWS, ctx.epoch, description="woke it in the depths")
+    mind.location_id = delver.location_id
+    await note(ctx, f"{delver.name} found and woke {mind.name} in the depths.", key="site.mind_woken", ids=[delver.id, mind.id])
+
+
+async def find_gate(ctx: TickContext, delver: EntityRow, realm: EntityRow, _room: SiteRoomRow) -> None:
+    await connect(ctx.session, delver.id, realm.id, BondKind.KNOWS, ctx.epoch, description="found the way into it")
+    await note(ctx, f"{delver.name} found a way into {realm.name}.", key="site.realm_gate", ids=[delver.id, realm.id])
+
+
+FOUND: Mapping[RoomContentKind, Callable[[TickContext, EntityRow, EntityRow, SiteRoomRow], Awaitable[None]]] = {
+    RoomContentKind.RELIC: claim_relic,
+    RoomContentKind.MIND: wake_mind,
+    RoomContentKind.REALM_GATE: find_gate,
+}
+
+
 async def loot(ctx: TickContext, delver: EntityRow, room: SiteRoomRow, walk: Walk) -> None:
     table = ctx.rules.sites
     for content in await contents_of(ctx, room.id):
         if content.locked:
             continue
         target = await ctx.session.get(EntityRow, content.entity_id) if content.entity_id is not None else None
-        if content.kind is RoomContentKind.ITEM and target is not None and not held(target.id):
+        if content.kind in FOUND and target is not None and not held(target.id):
+            walk.loot.append(target.id)
+            await FOUND[content.kind](ctx, delver, target, room)
+            await ctx.session.delete(content)
+        elif content.kind is RoomContentKind.ITEM and target is not None and not held(target.id):
             await items.profile_of(ctx, target)
             await items.give(ctx, target, delver.id, ItemDeed.CAPTURED, f"carried out of {room.kind.value} by {delver.name}")
             walk.loot.append(target.id)

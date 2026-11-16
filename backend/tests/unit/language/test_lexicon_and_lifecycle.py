@@ -73,7 +73,7 @@ def test_language_vitality_transitions() -> None:
     assert died is not None
     assert died.change is VitalityChange.DIED
     assert died.decipherable
-    assert "script waits" in vitality_note("Tirun", died)
+    assert "script survives" in vitality_note("Tirun", died)
     revived = assess_vitality(grace + 1, 3, True, False, RULES)
     assert revived is not None
     assert revived.change is VitalityChange.REVIVED

@@ -26,8 +26,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, MiniStat, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
+import { FAMILIES } from '@/features/technology/labels'
 import {
   type SavedGenesis,
+  type TechFamily,
   type WizardOptions,
   useSavedGenesis,
   useWizardOptions,
@@ -41,9 +43,19 @@ function percentOr(value: number | null | undefined): string {
     : `${formatInteger(value)}%`
 }
 
+function familyLevels(
+  levels: Partial<Record<TechFamily, number>> | undefined
+): string {
+  const set = Object.entries(levels ?? {}) as [TechFamily, number][]
+  if (!set.length) return 'Every family at the level of its age'
+  return set
+    .map(([family, level]) => `${FAMILIES[family].label} ${level}`)
+    .join(', ')
+}
+
 function Quoted({ label, text }: { label: string; text: string | null }) {
   return (
-    <div className='flex min-w-0 flex-col gap-1 rounded-xl border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-1 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Label variant='overline'>{label}</Label>
       {text ? (
         <div className='flex min-w-0 items-start gap-2'>
@@ -141,6 +153,12 @@ function GenesisBody({
               icon={Cog}
               label='Technology'
               value={humanize(settings.technology)}
+              tone='muted'
+            />
+            <MiniStat
+              icon={Cog}
+              label='Technology by family'
+              value={familyLevels(settings.technology_levels)}
               tone='muted'
             />
             <MiniStat

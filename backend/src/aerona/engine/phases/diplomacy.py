@@ -12,6 +12,7 @@ from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, RegionalStanding, TreatyKind, TreatyStatus
@@ -20,6 +21,7 @@ from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import blockade_pressure
+from aerona.engine.folkways.biases import lean_community
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.intrigue.beliefs import daring
 from aerona.engine.mind.drives import betrayal_drive, closeness, war_drive
@@ -141,10 +143,7 @@ async def _fade_grudges(ctx: TickContext, candidates: list[tuple[int, int, int]]
             text = f"The old grudge between {first.name} and {second.name} has faded; no one remembers why they called each other enemies."
             await _note(ctx, text, "diplomacy.grudge_faded", (first_id, second_id))
         else:
-            text = (
-                f"The grudge between {first.name} and {second.name} lasted {several(age, 'epoch', 'epochs')} without a blow struck and was forgotten; "
-                "only the elders remember the enmity."
-            )
+            text = f"The grudge between {first.name} and {second.name} lasted {several(age, 'epoch', 'epochs')} without a blow struck and was forgotten."
             await _note(ctx, text, "diplomacy.grudge_forgotten", (first_id, second_id))
     ctx.count("grudges_faded", len(faded))
     return faded
@@ -239,7 +238,7 @@ async def betray(ctx: TickContext, first: EntityRow, second: EntityRow, neighbou
     await abandon_mid_war(ctx, traitor, victim)
     if war_roll:
         await declare_war(ctx, traitor.id, victim.id, "betrayal", cause=WarCause.BETRAYAL)
-    text = f"{traitor.name} stabbed its ally {victim.name} in the back; the oath was broken."
+    text = f"{traitor.name} betrayed its ally {victim.name} in the back; the oath was broken."
     await _note(ctx, text, "diplomacy.betrayal", (traitor.id, victim.id))
     await cosmic_court(ctx, traitor.id, victim.id)
     ctx.count("betrayals")
@@ -370,7 +369,9 @@ async def _neighbour_pair(
         and not ally
         and value >= rules.alliance_threshold
         and counters.alliances < rules.alliance_cap
-        and rng.chance(min(PERCENT, rules.alliance_chance * pair.alliance_weight(first.id, second.id)))
+        and rng.chance(
+            min(PERCENT, rules.alliance_chance * pair.alliance_weight(first.id, second.id) * await lean_community(ctx, first.id, BiasedDecision.ALLIANCE))
+        )
     ):
         marriage = (
             bool(_marriageable(ctx, sides, first.id))
@@ -441,6 +442,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "settlement.population",
     "table.armies",
     "table.army_units",
+    "table.bias_weights",
     "table.body_customs",
     "table.bonds",
     "table.captive_cohorts",
@@ -464,6 +466,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.mind_profiles",
     "table.minds",
     "table.name_registry",
+    "table.network_nodes",
     "table.nodes",
     "table.offices",
     "table.personality_values",
@@ -471,12 +474,15 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.polity_profiles",
     "table.polity_territories",
     "table.pressures",
+    "table.relation_components",
     "table.relationships",
     "table.reputations",
     "table.routes",
     "table.ruler_currencies",
     "table.sieges",
+    "table.skills",
     "table.speaker_cohorts",
+    "table.spy_networks",
     "table.storytellers",
     "table.trade_route_profiles",
     "table.tradition_profiles",
@@ -496,6 +502,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "settlement.population",
     "table.armies",
     "table.army_units",
+    "table.bias_weights",
     "table.body_customs",
     "table.bonds",
     "table.chronicle",

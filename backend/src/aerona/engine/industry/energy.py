@@ -4,18 +4,22 @@ from sqlalchemy import func, or_, select
 
 from aerona.catalog.methods import COLD, FUEL_HEAT
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow
 from aerona.db.tables.industry import ENERGY_COLUMNS, CommunityIndustryRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.ecology import SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand, WeatherEffect
+from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand, TerrainKind, WeatherEffect
 from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import kept_for
 from aerona.engine.economy.book import EconomyBook
@@ -128,15 +132,61 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
     wind *= 1 + weather_wind(ctx, book, community) * table.weather_wind_pct / PERCENT / PERCENT
     shrine = book.workshop(community.id, WorkshopKind.SHRINE_WORKSHOP)
     divine = (shrine.level if shrine is not None else 0) * table.divine_per_shrine + clergy_of(book, community) * table.divine_per_100_clergy / PERCENT
-    supply = {
-        EnergyKind.MUSCLE: round_half_up(muscle),
-        EnergyKind.WATER: water,
-        EnergyKind.WIND: round_half_up(wind),
-        EnergyKind.HEAT: max(0, burnable - need),
-        EnergyKind.MAGIC: round_half_up(magic),
-        EnergyKind.DIVINE: round_half_up(divine),
-    }
-    return supply, need
+    plants = await power_levels(ctx, community, POWER_PLANTS)
+    collectors = await world_collectors(ctx, community)
+    world = await ctx.session.get(WorldRow, community.world_id) if community.world_id is not None else None
+    electric = plants * table.electric_per_level
+    supply = total(
+        EnergyKind,
+        {
+            EnergyKind.MUSCLE: round_half_up(muscle),
+            EnergyKind.WATER: water,
+            EnergyKind.WIND: round_half_up(wind),
+            EnergyKind.HEAT: max(0, burnable - need),
+            EnergyKind.MAGIC: round_half_up(magic),
+            EnergyKind.DIVINE: round_half_up(divine),
+            EnergyKind.FUEL: held.get(CommodityKind.FUEL, 0) * table.fuel_engine,
+            EnergyKind.ELECTRIC: electric,
+            EnergyKind.STORED: electric * table.stored_pct // PERCENT,
+            EnergyKind.SOLAR: table.solar_base if region is not None and region.dominant_terrain is not TerrainKind.UNDERGROUND else 0,
+            EnergyKind.GEOTHERMAL: table.geothermal_volcanic if region is not None and region.dominant_terrain is TerrainKind.VOLCANIC else 0,
+            EnergyKind.TIDAL: table.tidal_coast if region is not None and region.coast_kind is not CoastKind.NONE else 0,
+            EnergyKind.FISSION: held.get(CommodityKind.ORE, 0) * table.fission_per_10_ore // 10,
+            EnergyKind.FUSION: table.fusion_base if plants > 0 else 0,
+            EnergyKind.STELLAR: collectors * table.stellar_per_collector,
+            EnergyKind.SOURCE: round_half_up(region.magic_density * table.source_density_pct / PERCENT) if region is not None else 0,
+            EnergyKind.FEED: (beasts + draught) * table.feed_per_10_beasts // 10,
+            EnergyKind.BELIEF: round_half_up(clergy_of(book, community) * table.belief_per_100_clergy / PERCENT),
+            EnergyKind.VOID: (world.leakage if world is not None else 0) * table.void_leak_pct // PERCENT,
+        },
+    )
+    return dict(supply), need
+
+
+POWER_PLANTS = frozenset({StructureKind.POWER_PLANT, StructureKind.DAM, StructureKind.STAR_COLLECTOR})
+
+
+async def power_levels(ctx: TickContext, community: EntityRow, kinds: frozenset[StructureKind]) -> int:
+    found = await ctx.session.scalar(
+        select(func.coalesce(func.sum(StructureProfileRow.level), 0)).where(
+            StructureProfileRow.host_entity_id == community.id,
+            StructureProfileRow.kind.in_(list(kinds)),
+            StructureProfileRow.construction_state == ConstructionState.COMPLETE,
+        )
+    )
+    return int(found or 0)
+
+
+async def world_collectors(ctx: TickContext, community: EntityRow) -> int:
+    if community.world_id is None:
+        return 0
+    hosts = select(EntityRow.id).where(EntityRow.world_id == community.world_id)
+    found = await ctx.session.scalar(
+        select(func.count())
+        .select_from(StructureProfileRow)
+        .where(StructureProfileRow.kind == StructureKind.STAR_COLLECTOR, StructureProfileRow.host_entity_id.in_(hosts))
+    )
+    return int(found or 0)
 
 
 def industry_row(ctx: TickContext, book: EconomyBook, community_id: int) -> CommunityIndustryRow:

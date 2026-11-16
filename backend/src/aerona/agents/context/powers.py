@@ -1,6 +1,11 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.powers import POWERS
 from aerona.catalog.stats import STATS
+from aerona.core.grammar import spoken
+from aerona.db.tables.divine_powers import DivinePowerRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import PowerLine, PowersContext
@@ -41,3 +46,17 @@ def power_lines(rules: Rules, son: SonRow, powers: list[SonPowerRow]) -> list[Po
 
 def powers_text(rules: Rules, son: SonRow, powers: list[SonPowerRow]) -> str:
     return render(PromptId.POWERS, PowersContext(powers=power_lines(rules, son, powers)))
+
+
+async def divine_power_lines(session: AsyncSession, holder_id: int, epoch: int) -> list[str]:
+    rows = await session.scalars(select(DivinePowerRow).where(DivinePowerRow.holder_node_id == holder_id).order_by(DivinePowerRow.id))
+    found = []
+    for row in rows:
+        key = f" ({row.object_key.replace('_', ' ')})" if row.object_key else ""
+        ready = row.last_used_epoch is None or epoch - row.last_used_epoch >= row.cooldown
+        state = "ready" if ready else f"resting until epoch {(row.last_used_epoch or 0) + row.cooldown}"
+        found.append(
+            f"{row.name} (power_id {row.id}): {spoken(row.verb)} {row.object.value.replace('_', ' ')}{key}, reaching {spoken(row.scope)}, "
+            f"acting {spoken(row.mode)}, strength {row.strength}, costing {row.cost_amount} {spoken(row.cost)}; {state}"
+        )
+    return found

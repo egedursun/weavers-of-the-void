@@ -260,7 +260,7 @@ async def settle(ctx: TickContext, bout: Bout, row: ContestRow, winner: EntityRo
     label = CONTESTS[bout.kind].label.lower()
     if row.famous:
         tally.famous += 1
-        await note(ctx, f"{winner.name} bested {loser.name} in {an(label)} that was sung of long after.", key="contest.famous", ids=[winner.id, loser.id])
+        await note(ctx, f"{winner.name} bested {loser.name} in {an(label)} that was told of long after.", key="contest.famous", ids=[winner.id, loser.id])
     elif bout.stake in NOTED:
         stake = STAKE_LABELS[bout.stake].lower()
         await note(ctx, f"{winner.name} bested {loser.name} in {an(label)} for {stake}.", key="contest.won", ids=[winner.id, loser.id])

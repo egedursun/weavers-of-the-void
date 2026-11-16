@@ -1,17 +1,23 @@
+from collections.abc import Mapping
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.demography import CohortRow, PeopleCultureRow
 from aerona.db.tables.economy import NodeMaterialRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.estates import CompanyProfileRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.domain.enums.demography import Aesthetic, AgeBand, CohortCondition
 from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.structure import STANDING_STATES, BuilderKind, ConstructionState, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.economy.materials import MaterialProps, from_row, from_spec, set_node_material
@@ -31,6 +37,32 @@ BUILDER_KINDS = {
     EntityType.PEOPLE: BuilderKind.COMMUNITY,
 }
 LIVING_ADULTS = (CohortCondition.NONE, CohortCondition.VETERAN, CohortCondition.ENSLAVED)
+
+
+BUILDER_CONDITION: Mapping[BuilderKind, int] = total(
+    BuilderKind,
+    {
+        BuilderKind.COMMUNITY: 0,
+        BuilderKind.POLITY: 0,
+        BuilderKind.FACTION: 0,
+        BuilderKind.CULT: 0,
+        BuilderKind.PATRON: 0,
+        BuilderKind.GOD: 20,
+        BuilderKind.COMPANY: 5,
+        BuilderKind.MADE_MIND: 10,
+    },
+)
+MADE_ORIGINS = frozenset({MindOrigin.MADE, MindOrigin.GROWN, MindOrigin.TRAINED, MindOrigin.COPIED})
+
+
+async def builder_kind_found(session: AsyncSession, builder: EntityRow | SonRow | None) -> BuilderKind | None:
+    if isinstance(builder, EntityRow):
+        if await session.get(CompanyProfileRow, builder.id) is not None:
+            return BuilderKind.COMPANY
+        mind = await session.get(MindProfileRow, builder.id)
+        if mind is not None and mind.origin in MADE_ORIGINS:
+            return BuilderKind.MADE_MIND
+    return builder_kind_of(builder)
 
 
 def builder_kind_of(builder: EntityRow | SonRow | None) -> BuilderKind | None:
@@ -233,19 +265,20 @@ async def ensure_profile(
     standing = state in STANDING_STATES
     if stat(structure, "durability") is None or (standing and material is not None):
         set_stats(structure, durability=durability_from(rules, props))
+    built_by = await builder_kind_found(session, builder)
     profile = StructureProfileRow(
         structure_entity_id=structure.id,
         kind=kind,
         design_id=design_id,
         level=level,
         capacity=0,
-        condition=stat_or(structure, "durability", PERCENT),
+        condition=clamp_int(stat_or(structure, "durability", PERCENT) + (BUILDER_CONDITION[built_by] if built_by is not None else 0), 0, PERCENT),
         construction_state=state,
         progress=PERCENT if standing else 0,
         fire_resistance=fire_resistance_from(rules, props),
         host_entity_id=host.id if host is not None else None,
         builder_entity_id=builder.id if builder is not None else None,
-        builder_kind=builder_kind_of(builder),
+        builder_kind=built_by,
         architect_entity_id=architect_id,
         dedicated_son_id=son_id,
         aesthetic=await aesthetic_for(session, community),

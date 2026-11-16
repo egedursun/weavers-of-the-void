@@ -6,6 +6,7 @@ from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.economy import (
     CommodityKind,
+    ExtractionKind,
     GoodsFlow,
     LoanStatus,
     MaterialFamily,
@@ -201,6 +202,7 @@ class ResourceProfileRow(Base):
     sealed_until_epoch: Mapped[int | None]
     last_output: Mapped[int] = mapped_column(default=0)
     held: Mapped[bool] = mapped_column(default=False)
+    extraction: Mapped[ExtractionKind | None] = mapped_column(enum_type(ExtractionKind, "extraction"))
 
 
 class ResourceWorkerRow(Base):

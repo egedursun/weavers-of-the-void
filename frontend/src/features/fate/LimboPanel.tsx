@@ -9,7 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { EmptyState, EntityLink, Medallion, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  Medallion,
+  Paged,
+  Section,
+} from '@/components/domain'
 import { SettingRow } from '@/components/domain/SettingsKit'
 import { Label, Muted, Text } from '@/components/typography'
 import { fixedCost } from '@/features/entity/actions/gate'
@@ -40,7 +46,7 @@ function LimboRow({
   return (
     <li
       data-limbo={record.entity_id}
-      className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-warning/30 bg-warning/5 p-3'
+      className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-md border surface-framed border-warning/30 bg-warning/5 p-3'
     >
       <Medallion icon={Hourglass} tone='warning' size='sm' />
       <div className='flex min-w-0 flex-1 basis-60 flex-col gap-1'>
@@ -179,21 +185,23 @@ export function LimboPanel({ limbo }: LimboPanelProps) {
         />
       ) : (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {limbo.map((record) => (
-            <LimboRow
-              key={record.entity_id}
-              record={record}
-              cost={cost}
-              blocked={blocked}
-              onChoose={(choice) =>
-                setTarget({
-                  entityId: record.entity_id,
-                  name: record.name,
-                  choice,
-                })
-              }
-            />
-          ))}
+          <Paged items={limbo} as='li'>
+            {(record) => (
+              <LimboRow
+                key={record.entity_id}
+                record={record}
+                cost={cost}
+                blocked={blocked}
+                onChoose={(choice) =>
+                  setTarget({
+                    entityId: record.entity_id,
+                    name: record.name,
+                    choice,
+                  })
+                }
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <OverruleAnyRecord cost={cost} blocked={blocked} onChoose={setTarget} />

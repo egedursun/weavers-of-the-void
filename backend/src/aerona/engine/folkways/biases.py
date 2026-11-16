@@ -4,21 +4,25 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import BiasWeightRow
+from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.mind import FACET_MAX, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.networks import NetworkNodeRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
+from aerona.db.tables.relations import RelationshipRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.folkways import BiasedDecision, DecisionBias
-from aerona.domain.enums.mind import Facet, SkillKind
+from aerona.domain.enums.mind import Facet, SkillKind, ValueAxis
 from aerona.engine.body.variants import ORDINARY, bias_target, folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import living_gods
-from aerona.engine.mind.book import load_holder
+from aerona.engine.mind.book import load_holder, values_for
 from aerona.engine.mind.drives import rulers_of
 from aerona.engine.mind.split import culture_mean, facets_of, has_facets
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -29,7 +33,7 @@ SOURCES: Mapping[DecisionBias, tuple[tuple[Facet, int], ...]] = {
     DecisionBias.OVERCONFIDENCE: ((Facet.VANITY, 1), (Facet.AMBITION, 1), (Facet.MODESTY, -1)),
     DecisionBias.SUNK_COST: ((Facet.PERSEVERANCE, 1), (Facet.ABSTRACTION, -1)),
     DecisionBias.LOSS_AVERSION: ((Facet.ANXIETY, 1), (Facet.CAUTION, 1), (Facet.EXCITEMENT_SEEKING, -1)),
-    DecisionBias.CONFIRMATION: ((Facet.CURIOSITY, -1), (Facet.TOLERANCE_OF_STRANGENESS, -1)),
+    DecisionBias.CONFIRMATION: ((Facet.CURIOSITY, -1), (Facet.TOLERANCE_OF_DIFFERENCE, -1)),
     DecisionBias.RECENCY: ((Facet.ACTIVITY_LEVEL, 1), (Facet.DISCIPLINE, -1)),
     DecisionBias.GROUPTHINK: ((Facet.COOPERATION, 1), (Facet.POLITENESS, 1), (Facet.ASSERTIVENESS, -1)),
     DecisionBias.HOSTILE_ATTRIBUTION: ((Facet.ANGER, 1), (Facet.TRUST, -1)),
@@ -37,7 +41,7 @@ SOURCES: Mapping[DecisionBias, tuple[tuple[Facet, int], ...]] = {
     DecisionBias.STATUS_QUO: ((Facet.ORDERLINESS, 1), (Facet.IMAGINATION, -1)),
     DecisionBias.AVAILABILITY: ((Facet.VULNERABILITY, 1), (Facet.THOROUGHNESS, -1)),
     DecisionBias.ANCHORING: ((Facet.SELF_CONSCIOUSNESS, 1), (Facet.ABSTRACTION, -1)),
-    DecisionBias.IN_GROUP_FAVOUR: ((Facet.GREGARIOUSNESS, 1), (Facet.TOLERANCE_OF_STRANGENESS, -1), (Facet.ALTRUISM, -1)),
+    DecisionBias.IN_GROUP_FAVOUR: ((Facet.GREGARIOUSNESS, 1), (Facet.TOLERANCE_OF_DIFFERENCE, -1), (Facet.ALTRUISM, -1)),
     DecisionBias.AUTHORITY_DEFERENCE: ((Facet.SENSE_OF_DUTY, 1), (Facet.ASSERTIVENESS, -1)),
     DecisionBias.SCARCITY_PANIC: ((Facet.GREED, 1), (Facet.ANXIETY, 1), (Facet.EMOTIONAL_STABILITY, -1)),
     DecisionBias.FATALISM: ((Facet.DEPRESSION, 1), (Facet.ACTIVITY_LEVEL, -1)),
@@ -49,71 +53,127 @@ SOURCES: Mapping[DecisionBias, tuple[tuple[Facet, int], ...]] = {
     DecisionBias.COLONY_RISK_AVERSION: (),
 }
 
-PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = {
-    BiasedDecision.RAID: {
-        DecisionBias.OVERCONFIDENCE: 1,
-        DecisionBias.RISK_SEEKING: 1,
-        DecisionBias.LOSS_AVERSION: -1,
-        DecisionBias.OPTIMISM: 1,
-        DecisionBias.HOSTILE_ATTRIBUTION: 1,
-        DecisionBias.COLONY_RISK_AVERSION: -1,
+PUSHES: Mapping[BiasedDecision, Mapping[DecisionBias, int]] = total(
+    BiasedDecision,
+    {
+        BiasedDecision.RAID: {
+            DecisionBias.OVERCONFIDENCE: 1,
+            DecisionBias.RISK_SEEKING: 1,
+            DecisionBias.LOSS_AVERSION: -1,
+            DecisionBias.OPTIMISM: 1,
+            DecisionBias.HOSTILE_ATTRIBUTION: 1,
+            DecisionBias.COLONY_RISK_AVERSION: -1,
+        },
+        BiasedDecision.PEACE: {
+            DecisionBias.SUNK_COST: -1,
+            DecisionBias.OVERCONFIDENCE: -1,
+            DecisionBias.LOSS_AVERSION: 1,
+            DecisionBias.FATALISM: 1,
+            DecisionBias.OPTIMISM: -1,
+            DecisionBias.ANCHORING: -1,
+            DecisionBias.GROUPTHINK: -1,
+            DecisionBias.LITERALISM: -1,
+            DecisionBias.COLONY_RISK_AVERSION: 1,
+        },
+        BiasedDecision.SURRENDER: {
+            DecisionBias.SUNK_COST: -1,
+            DecisionBias.FATALISM: 1,
+            DecisionBias.SCARCITY_PANIC: 1,
+            DecisionBias.PLANNING_FALLACY: -1,
+            DecisionBias.AUTHORITY_DEFERENCE: -1,
+            DecisionBias.LITERALISM: -1,
+        },
+        BiasedDecision.SCHEME: {
+            DecisionBias.HOSTILE_ATTRIBUTION: 1,
+            DecisionBias.RECENCY: 1,
+            DecisionBias.PROJECTION: 1,
+            DecisionBias.HALO: -1,
+        },
+        BiasedDecision.BELIEF: {
+            DecisionBias.AVAILABILITY: 1,
+            DecisionBias.AUTHORITY_DEFERENCE: 1,
+            DecisionBias.GROUPTHINK: 1,
+            DecisionBias.RECENCY: 1,
+            DecisionBias.CONFIRMATION: -1,
+        },
+        BiasedDecision.CONVERSION: {
+            DecisionBias.LITERALISM: -1,
+            DecisionBias.STATUS_QUO: -1,
+            DecisionBias.IN_GROUP_FAVOUR: -1,
+            DecisionBias.CONFIRMATION: -1,
+            DecisionBias.AUTHORITY_DEFERENCE: 1,
+            DecisionBias.HALO: 1,
+        },
+        BiasedDecision.MIGRATION: {
+            DecisionBias.COLONY_RISK_AVERSION: -1,
+            DecisionBias.STATUS_QUO: -1,
+            DecisionBias.LOSS_AVERSION: -1,
+            DecisionBias.SCARCITY_PANIC: 1,
+            DecisionBias.OPTIMISM: 1,
+            DecisionBias.RISK_SEEKING: 1,
+        },
+        BiasedDecision.GOD_GOAL: {
+            DecisionBias.OVERCONFIDENCE: 1,
+            DecisionBias.PLANNING_FALLACY: 1,
+            DecisionBias.SUNK_COST: 1,
+            DecisionBias.ANCHORING: 1,
+            DecisionBias.IN_GROUP_FAVOUR: 1,
+        },
+        BiasedDecision.WAR: {
+            DecisionBias.OVERCONFIDENCE: 1,
+            DecisionBias.HOSTILE_ATTRIBUTION: 1,
+            DecisionBias.OPTIMISM: 1,
+            DecisionBias.IN_GROUP_FAVOUR: 1,
+            DecisionBias.GROUPTHINK: 1,
+            DecisionBias.LOSS_AVERSION: -1,
+            DecisionBias.STATUS_QUO: -1,
+        },
+        BiasedDecision.RETREAT: {
+            DecisionBias.SUNK_COST: -1,
+            DecisionBias.OVERCONFIDENCE: -1,
+            DecisionBias.LOSS_AVERSION: 1,
+            DecisionBias.SCARCITY_PANIC: 1,
+            DecisionBias.FATALISM: 1,
+            DecisionBias.RISK_SEEKING: -1,
+        },
+        BiasedDecision.TRADE: {
+            DecisionBias.STATUS_QUO: -1,
+            DecisionBias.IN_GROUP_FAVOUR: -1,
+            DecisionBias.HOSTILE_ATTRIBUTION: -1,
+            DecisionBias.OPTIMISM: 1,
+            DecisionBias.ANCHORING: -1,
+            DecisionBias.AVAILABILITY: 1,
+        },
+        BiasedDecision.ALLIANCE: {
+            DecisionBias.HALO: 1,
+            DecisionBias.PROJECTION: 1,
+            DecisionBias.IN_GROUP_FAVOUR: -1,
+            DecisionBias.HOSTILE_ATTRIBUTION: -1,
+            DecisionBias.RECENCY: 1,
+        },
+        BiasedDecision.SUCCESSION: {
+            DecisionBias.STATUS_QUO: 1,
+            DecisionBias.AUTHORITY_DEFERENCE: 1,
+            DecisionBias.HALO: 1,
+            DecisionBias.IN_GROUP_FAVOUR: 1,
+            DecisionBias.ANCHORING: 1,
+        },
+        BiasedDecision.LAW: {
+            DecisionBias.STATUS_QUO: -1,
+            DecisionBias.CONFIRMATION: 1,
+            DecisionBias.GROUPTHINK: 1,
+            DecisionBias.AUTHORITY_DEFERENCE: 1,
+            DecisionBias.LITERALISM: -1,
+        },
+        BiasedDecision.RESEARCH: {
+            DecisionBias.PLANNING_FALLACY: 1,
+            DecisionBias.OPTIMISM: 1,
+            DecisionBias.SUNK_COST: 1,
+            DecisionBias.STATUS_QUO: -1,
+            DecisionBias.AVAILABILITY: 1,
+        },
     },
-    BiasedDecision.PEACE: {
-        DecisionBias.SUNK_COST: -1,
-        DecisionBias.OVERCONFIDENCE: -1,
-        DecisionBias.LOSS_AVERSION: 1,
-        DecisionBias.FATALISM: 1,
-        DecisionBias.OPTIMISM: -1,
-        DecisionBias.ANCHORING: -1,
-        DecisionBias.GROUPTHINK: -1,
-        DecisionBias.LITERALISM: -1,
-        DecisionBias.COLONY_RISK_AVERSION: 1,
-    },
-    BiasedDecision.SURRENDER: {
-        DecisionBias.SUNK_COST: -1,
-        DecisionBias.FATALISM: 1,
-        DecisionBias.SCARCITY_PANIC: 1,
-        DecisionBias.PLANNING_FALLACY: -1,
-        DecisionBias.AUTHORITY_DEFERENCE: -1,
-        DecisionBias.LITERALISM: -1,
-    },
-    BiasedDecision.SCHEME: {
-        DecisionBias.HOSTILE_ATTRIBUTION: 1,
-        DecisionBias.RECENCY: 1,
-        DecisionBias.PROJECTION: 1,
-        DecisionBias.HALO: -1,
-    },
-    BiasedDecision.BELIEF: {
-        DecisionBias.AVAILABILITY: 1,
-        DecisionBias.AUTHORITY_DEFERENCE: 1,
-        DecisionBias.GROUPTHINK: 1,
-        DecisionBias.RECENCY: 1,
-        DecisionBias.CONFIRMATION: -1,
-    },
-    BiasedDecision.CONVERSION: {
-        DecisionBias.LITERALISM: -1,
-        DecisionBias.STATUS_QUO: -1,
-        DecisionBias.IN_GROUP_FAVOUR: -1,
-        DecisionBias.CONFIRMATION: -1,
-        DecisionBias.AUTHORITY_DEFERENCE: 1,
-        DecisionBias.HALO: 1,
-    },
-    BiasedDecision.MIGRATION: {
-        DecisionBias.COLONY_RISK_AVERSION: -1,
-        DecisionBias.STATUS_QUO: -1,
-        DecisionBias.LOSS_AVERSION: -1,
-        DecisionBias.SCARCITY_PANIC: 1,
-        DecisionBias.OPTIMISM: 1,
-        DecisionBias.RISK_SEEKING: 1,
-    },
-    BiasedDecision.GOD_GOAL: {
-        DecisionBias.OVERCONFIDENCE: 1,
-        DecisionBias.PLANNING_FALLACY: 1,
-        DecisionBias.SUNK_COST: 1,
-        DecisionBias.ANCHORING: 1,
-        DecisionBias.IN_GROUP_FAVOUR: 1,
-    },
-}
+)
 
 COUNTERS = (SkillKind.STRATEGY, SkillKind.TACTICS)
 DECIDING = frozenset({BondKind.RULES, BondKind.COMMANDS})
@@ -166,6 +226,28 @@ async def derive(ctx: TickContext, node_id: int, tally: BiasTally) -> dict[Decis
     return found
 
 
+async def informed(ctx: TickContext, node_id: int) -> bool:
+    linked = await ctx.session.scalar(select(NetworkNodeRow.id).where(NetworkNodeRow.member_node_id == node_id).limit(1))
+    spies = await ctx.session.scalar(select(SpyNetworkRow.id).where(SpyNetworkRow.owner_entity_id == node_id).limit(1))
+    return linked is not None or spies is not None
+
+
+async def isolated(ctx: TickContext, node_id: int) -> bool:
+    close = select(RelationshipRow.id).where(RelationshipRow.holder_node_id == node_id, RelationshipRow.friendship > 0).limit(1)
+    return await ctx.session.scalar(close) is None
+
+
+async def damping(ctx: TickContext, node_id: int) -> float:
+    table = ctx.rules.biases
+    learned = max(0, (await values_for(ctx.session, node_id)).get(ValueAxis.KNOWLEDGE, 0))
+    damp = 1 - await counter_of(ctx, node_id) * table.skill_damp_pct / PERCENT - learned * table.knowledge_damp_pct / PERCENT / PERCENT
+    if await informed(ctx, node_id):
+        damp -= table.informed_damp_pct / PERCENT
+    if await isolated(ctx, node_id):
+        damp += table.isolation_pct / PERCENT
+    return max(0.0, damp)
+
+
 async def lean(ctx: TickContext, node_id: int | None, decision: BiasedDecision) -> float:
     if node_id is None:
         return 1.0
@@ -173,7 +255,7 @@ async def lean(ctx: TickContext, node_id: int | None, decision: BiasedDecision) 
     if not rows:
         return 1.0
     table = ctx.rules.biases
-    damp = max(0.0, 1 - await counter_of(ctx, node_id) * table.skill_damp_pct / PERCENT)
+    damp = await damping(ctx, node_id)
     total = 0.0
     strongest: tuple[float, BiasWeightRow] | None = None
     for bias, sign in PUSHES[decision].items():
@@ -210,7 +292,8 @@ async def lean_community(ctx: TickContext, community_id: int, decision: BiasedDe
     if not council:
         return first
     share = ctx.rules.biases.council_pct / PERCENT
-    return first * (1 - share) + sum(council) / len(council) * share
+    combined = first * (1 - share) + sum(council) / len(council) * share
+    return 1 + (combined - 1) * (1 - ctx.rules.biases.dissent_damp_pct / PERCENT)
 
 
 async def deciders(ctx: TickContext) -> list[int]:

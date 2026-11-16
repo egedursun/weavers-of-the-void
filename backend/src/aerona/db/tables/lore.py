@@ -19,7 +19,6 @@ from aerona.domain.enums.agent import MessageIntent, PrayerRequest
 from aerona.domain.enums.chronicle import (
     ChronicleKind,
     FeedCategory,
-    LegendaryQuestKind,
     LegendaryQuestOutcome,
     PartOfSpeech,
     ThreadLinkRole,
@@ -28,6 +27,7 @@ from aerona.domain.enums.chronicle import (
 from aerona.domain.enums.communication import DispatchContent, DispatchState, EnvoyFate, Medium
 from aerona.domain.enums.dominion import PrayerTone
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestScale, QuestTargetKind
 from aerona.domain.enums.tongues import WordRegister
 from aerona.domain.models.records import CouncilMinutes
 
@@ -147,7 +147,12 @@ class LegendaryQuestRow(Base):
     __tablename__ = "legendary_quests"
 
     thread_id: Mapped[int] = mapped_column(ForeignKey("threads.id", ondelete="CASCADE"), primary_key=True)
-    kind: Mapped[LegendaryQuestKind] = mapped_column(enum_type(LegendaryQuestKind, "kind"))
+    aim: Mapped[QuestAim] = mapped_column("kind", enum_type(QuestAim, "kind"))
+    target_kind: Mapped[QuestTargetKind] = mapped_column(enum_type(QuestTargetKind, "target_kind"), default=QuestTargetKind.STAR, server_default="star")
+    obstacle: Mapped[QuestObstacle] = mapped_column(enum_type(QuestObstacle, "obstacle"), default=QuestObstacle.DISTANCE, server_default="distance")
+    reward: Mapped[QuestReward] = mapped_column(enum_type(QuestReward, "reward"), default=QuestReward.RENOWN, server_default="renown")
+    scale: Mapped[QuestScale] = mapped_column(enum_type(QuestScale, "scale"), default=QuestScale.LEGENDARY, server_default="legendary")
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     target_star_id: Mapped[int | None] = mapped_column(ForeignKey("stars.id", ondelete="SET NULL"))
     target_route_id: Mapped[int | None] = mapped_column(ForeignKey("routes.id", ondelete="SET NULL"))
     target_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

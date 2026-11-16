@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.carriers import CARRIERS
 from aerona.catalog.operations import TRANSPORTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -10,7 +11,7 @@ from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.operations import ArmyOperationRow, DepotRow, SupplyFlowRow, TheatreRow, TransportAssetRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode
 from aerona.domain.enums.environment import RiverClass, TerrainKind
 from aerona.domain.enums.military import RESTING, CommandArea, Stance
 from aerona.domain.enums.operations import CarrierKind, EchelonOrder
@@ -18,6 +19,7 @@ from aerona.engine.agrarian.rings import eased_regions
 from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, lots_of
+from aerona.engine.lore.research import has_technique
 from aerona.engine.military.command import command_areas
 from aerona.engine.military.logistics import March
 from aerona.engine.military.units import stacks_of
@@ -79,11 +81,21 @@ async def soldiers_of(ctx: TickContext, owner_id: int) -> int:
     return total
 
 
+async def carriers_known(ctx: TickContext, owner_id: int) -> list[CarrierKind]:
+    found: list[CarrierKind] = []
+    for kind, spec in CARRIERS.items():
+        if spec.capacity > 0 and (spec.technique is None or await has_technique(ctx.session, owner_id, spec.technique)):
+            found.append(kind)
+    return found
+
+
 async def raise_train(ctx: TickContext, owner: EntityRow, tally: SupplyTally) -> None:
     if held(owner.id) or await train_of(ctx, owner.id):
         return
     wagons = max(1, await soldiers_of(ctx, owner.id) * ctx.rules.supply_network.assets_per_thousand // 1000)
-    for kind, count in ((CarrierKind.WAGONS, wagons), (CarrierKind.PACK_ANIMALS, max(1, wagons // 2))):
+    known = [kind for kind in await carriers_known(ctx, owner.id) if TradeMode.ROAD in CARRIERS[kind].modes]
+    best = sorted(known, key=lambda kind: (-CARRIERS[kind].capacity, kind.value))[:2] or [CarrierKind.PACK_ANIMALS]
+    for kind, count in zip(best, (wagons, max(1, wagons // 2)), strict=False):
         ctx.session.add(TransportAssetRow(owner_entity_id=owner.id, kind=kind, count=count, capacity=TRANSPORTS[kind].capacity, locked=[]))
     tally.trains += 1
 

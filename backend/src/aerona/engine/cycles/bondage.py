@@ -49,7 +49,7 @@ from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.structures.construction import finish
 from aerona.engine.structures.spec import resolve
 
-MARKET_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS})
+MARKET_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY})
 GREAT_SCALES = frozenset({BuildScale.GRAND, BuildScale.WONDER})
 HALF = PERCENT // 2
 
@@ -479,7 +479,7 @@ async def slave_risings(ctx: TickContext, tally: BondageTally) -> None:
         await record_manumission(ctx, town, freed, ManumissionPath.REVOLT)
         sync_bound_share(await ctx.session.get(CommunitySocietyRow, town.id), rows)
         tally.revolts += freed
-        await note(ctx, f"The rising of {faction.name} broke the chains of {freed} in {town.name}.", key="manumission.revolt", ids=[faction.id, town.id])
+        await note(ctx, f"The rising of {faction.name} freed the bound of {freed} in {town.name}.", key="manumission.revolt", ids=[faction.id, town.id])
 
 
 async def raise_freed(ctx: TickContext, tally: BondageTally) -> None:

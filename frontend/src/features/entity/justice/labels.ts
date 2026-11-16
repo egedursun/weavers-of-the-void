@@ -1,18 +1,15 @@
 import {
+  HeartHandshake,
+  Sparkles,
   Ban,
-  Brain,
-  Copy,
   Cpu,
-  Wrench,
   CheckCircle2,
   Eye,
   EyeOff,
   Flame,
   Footprints,
   Gavel,
-  Ghost,
   Hand,
-  HandCoins,
   Handshake,
   Landmark,
   Megaphone,
@@ -22,13 +19,13 @@ import {
   Search,
   ShieldCheck,
   ShieldX,
-  Skull,
   Swords,
   Users,
   Vote,
   Wind,
   XCircle,
 } from 'lucide-react'
+import type { components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
 
 export const JUSTICE_ICON = Scale
@@ -77,11 +74,19 @@ export const STAGES: Record<string, Named> = {
   closed: { label: 'Closed', icon: CheckCircle2, tone: 'muted' },
 }
 
-export const TRIALS: Record<string, Named> = {
+export const TRIALS: Record<components['schemas']['TrialKind'], Named> = {
   judge: { label: 'Before a judge', icon: Gavel, tone: 'info' },
   jury: { label: 'Before a jury', icon: Users, tone: 'verdigris' },
   combat: { label: 'By combat', icon: Swords, tone: 'danger' },
   ordeal: { label: 'By ordeal', icon: Flame, tone: 'warning' },
+  council: { label: 'Before a council', icon: Landmark, tone: 'info' },
+  arbitration: { label: 'By arbitration', icon: Handshake, tone: 'success' },
+  oracle: { label: 'By an oracle', icon: Eye, tone: 'verdigris' },
+  divine_judgement: { label: 'Before a god', icon: Sparkles, tone: 'gold' },
+  assembly: { label: 'Before the assembled people', icon: Vote, tone: 'info' },
+  inquisition: { label: 'By inquisition', icon: Search, tone: 'danger' },
+  mediation: { label: 'By mediation', icon: HeartHandshake, tone: 'success' },
+  made_judge: { label: 'Before a made judge', icon: Cpu, tone: 'verdigris' },
 }
 
 export const VERDICTS: Record<string, Named> = {
@@ -95,42 +100,6 @@ export const TESTIMONIES: Record<string, Named> = {
   accuses: { label: 'Accuses', icon: Hand, tone: 'danger' },
   shields: { label: 'Shields', icon: ShieldCheck, tone: 'success' },
   silent: { label: 'Silent', icon: EyeOff, tone: 'muted' },
-}
-
-export const CRIMES: Record<string, Named> = {
-  theft: { label: 'Theft', icon: HandCoins, tone: 'warning' },
-  murder: { label: 'Murder', icon: Skull, tone: 'danger' },
-  treason: { label: 'Treason', icon: Landmark, tone: 'danger' },
-  blasphemy: { label: 'Blasphemy', icon: Flame, tone: 'warning' },
-  desertion: { label: 'Desertion', icon: Wind, tone: 'warning' },
-  witchcraft: { label: 'Witchcraft', icon: Ghost, tone: 'danger' },
-  mind_theft: { label: 'Theft of a mind', icon: Brain, tone: 'danger' },
-  unlicensed_copying: {
-    label: 'Copying a mind without leave',
-    icon: Copy,
-    tone: 'warning',
-  },
-  forced_edit: {
-    label: 'Editing a mind by force',
-    icon: Wrench,
-    tone: 'danger',
-  },
-  erasure: { label: 'Ending a mind', icon: Skull, tone: 'danger' },
-  machine_seizure: {
-    label: 'Seizing a made thing',
-    icon: Cpu,
-    tone: 'warning',
-  },
-  impersonation: {
-    label: 'Passing as another by a copy',
-    icon: Users,
-    tone: 'warning',
-  },
-  mind_compulsion: {
-    label: 'Bending a mind by a power',
-    icon: Brain,
-    tone: 'danger',
-  },
 }
 
 export function labelTable(

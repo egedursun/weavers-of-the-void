@@ -63,6 +63,7 @@ from aerona.rules.registry.body import (
     BodyCustomsRules,
     CapacityRules,
     ConditionRules,
+    HarmBandRules,
     HealingRules,
     InjuryRules,
     MaimedRules,
@@ -205,12 +206,15 @@ from aerona.rules.registry.disasters import DisastersRules
 from aerona.rules.registry.discovery import DiscoveryRules
 from aerona.rules.registry.divine import (
     AvatarRules,
+    CreatorBondRules,
+    DivineGrammarRules,
     DivineStandingRules,
     DivineWoundRules,
     DomainRules,
     GodRelationRules,
     NaturalLawRules,
     OuterBeingRules,
+    PantheonLifeRules,
     SonGoalRules,
 )
 from aerona.rules.registry.doctrine import (
@@ -281,7 +285,7 @@ from aerona.rules.registry.finance import AccessRules, ArbitrageRules, CreditRul
 from aerona.rules.registry.flora import FloraRules
 from aerona.rules.registry.folk import BiologyRules, CustomsRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
-from aerona.rules.registry.folkways import BiasRules, MishapRules, NutritionRules, PurityRules, WitchcraftRules
+from aerona.rules.registry.folkways import BiasRules, EverydayMishapRules, MishapRules, NutritionRules, PurityRules, WitchcraftRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
 from aerona.rules.registry.fossils import FossilRules
 from aerona.rules.registry.gardens import GardenRules
@@ -345,6 +349,7 @@ from aerona.rules.registry.link_graph import LinkGraphRules
 from aerona.rules.registry.living import (
     CloneRules,
     DesignedDiseaseRules,
+    FortuneRules,
     GenomeDesignRules,
     LivingMethodRules,
     LivingProductionRules,
@@ -454,7 +459,7 @@ from aerona.rules.registry.monsters import CreatureAnatomyRules, MonstersRules
 from aerona.rules.registry.mortal_acts import ActsRules, EthnicRules, LoyaltyRules
 from aerona.rules.registry.mortal_agents import MortalAgentsRules
 from aerona.rules.registry.mortal_life import AgingRules, EducationRules, FertilityRules, KinshipRules
-from aerona.rules.registry.mortal_standing import EquipmentRules, PunishmentRules, StandingRules
+from aerona.rules.registry.mortal_standing import EquipmentRules, PunishmentRules, SentenceRules, StandingRules
 from aerona.rules.registry.mortal_tools import MortalToolsRules
 from aerona.rules.registry.museums import MuseumRules
 from aerona.rules.registry.mythic import (
@@ -579,9 +584,19 @@ from aerona.rules.registry.statecraft import StatecraftRules
 from aerona.rules.registry.storyteller import StorytellerRules
 from aerona.rules.registry.stress import StressRules
 from aerona.rules.registry.strike import StrikeRules
-from aerona.rules.registry.structures import ConstructionRules, StructureFunctionsRules, UpkeepRules
+from aerona.rules.registry.structures import ConstructionRules, StructureEffectRules, StructureFunctionsRules, UpkeepRules
 from aerona.rules.registry.summoning import SummoningRules
 from aerona.rules.registry.theories import ArtFormsRules, NameMeaningsRules, TheoriesRules
+from aerona.rules.registry.thin_b import (
+    BeliefDepthRules,
+    NeedsWiderRules,
+    NormDepthRules,
+    PreferenceDepthRules,
+    RiftControlRules,
+    StorytellerDepthRules,
+    WitchcraftDepthRules,
+)
+from aerona.rules.registry.thin_sections import CommunityRelationRules
 from aerona.rules.registry.time import TimeRules
 from aerona.rules.registry.tissues import TissueRules
 from aerona.rules.registry.titles import TitleRules
@@ -741,6 +756,13 @@ class Rules:
     mind_split: MindSplitRules = field(default_factory=MindSplitRules)
     ideas: IdeasRules = field(default_factory=IdeasRules)
     needs_depth: NeedsDepthRules = field(default_factory=NeedsDepthRules)
+    needs_wider: NeedsWiderRules = field(default_factory=NeedsWiderRules)
+    preference_depth: PreferenceDepthRules = field(default_factory=PreferenceDepthRules)
+    belief_depth: BeliefDepthRules = field(default_factory=BeliefDepthRules)
+    storyteller_depth: StorytellerDepthRules = field(default_factory=StorytellerDepthRules)
+    rift_control: RiftControlRules = field(default_factory=RiftControlRules)
+    norm_depth: NormDepthRules = field(default_factory=NormDepthRules)
+    witchcraft_depth: WitchcraftDepthRules = field(default_factory=WitchcraftDepthRules)
     thoughts: ThoughtsRules = field(default_factory=ThoughtsRules)
     grief: GriefRules = field(default_factory=GriefRules)
     dreams: DreamRules = field(default_factory=DreamRules)
@@ -975,6 +997,9 @@ class Rules:
     son_goals: SonGoalRules = field(default_factory=SonGoalRules)
     divine_standing: DivineStandingRules = field(default_factory=DivineStandingRules)
     divine_wounds: DivineWoundRules = field(default_factory=DivineWoundRules)
+    divine_grammar: DivineGrammarRules = field(default_factory=DivineGrammarRules)
+    creator_bonds: CreatorBondRules = field(default_factory=CreatorBondRules)
+    pantheon_life: PantheonLifeRules = field(default_factory=PantheonLifeRules)
     avatars: AvatarRules = field(default_factory=AvatarRules)
     god_relations: GodRelationRules = field(default_factory=GodRelationRules)
     natural_laws: NaturalLawRules = field(default_factory=NaturalLawRules)
@@ -1003,6 +1028,7 @@ class Rules:
     stress: StressRules = field(default_factory=StressRules)
     standing: StandingRules = field(default_factory=StandingRules)
     punishment: PunishmentRules = field(default_factory=PunishmentRules)
+    sentences: SentenceRules = field(default_factory=SentenceRules)
     enactment: EnactmentRules = field(default_factory=EnactmentRules)
     trials: TrialRules = field(default_factory=TrialRules)
     statecraft: StatecraftRules = field(default_factory=StatecraftRules)
@@ -1079,6 +1105,9 @@ class Rules:
     clones: CloneRules = field(default_factory=CloneRules)
     designed_disease: DesignedDiseaseRules = field(default_factory=DesignedDiseaseRules)
     living_production: LivingProductionRules = field(default_factory=LivingProductionRules)
+    fortune: FortuneRules = field(default_factory=FortuneRules)
+    harm_bands: HarmBandRules = field(default_factory=HarmBandRules)
+    everyday_mishaps: EverydayMishapRules = field(default_factory=EverydayMishapRules)
     fossils: FossilRules = field(default_factory=FossilRules)
     museums: MuseumRules = field(default_factory=MuseumRules)
     gardens: GardenRules = field(default_factory=GardenRules)
@@ -1294,6 +1323,7 @@ class Rules:
     world_life: WorldLifeRules = field(default_factory=WorldLifeRules)
     celestial_bodies: CelestialBodyRules = field(default_factory=CelestialBodyRules)
     journeys: JourneyRules = field(default_factory=JourneyRules)
+    community_relations: CommunityRelationRules = field(default_factory=CommunityRelationRules)
     galaxy_types: GalaxyTypeRules = field(default_factory=GalaxyTypeRules)
     cluster_kinds: ClusterKindRules = field(default_factory=ClusterKindRules)
     dimension_kinds: DimensionKindRules = field(default_factory=DimensionKindRules)
@@ -1323,4 +1353,5 @@ class Rules:
     realm_loyalty: RealmLoyaltyRules = field(default_factory=RealmLoyaltyRules)
     construction: ConstructionRules = field(default_factory=ConstructionRules)
     structure_functions: StructureFunctionsRules = field(default_factory=StructureFunctionsRules)
+    structure_effects: StructureEffectRules = field(default_factory=StructureEffectRules)
     upkeep: UpkeepRules = field(default_factory=UpkeepRules)

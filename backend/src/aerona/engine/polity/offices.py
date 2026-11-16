@@ -24,6 +24,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.collective import RoleKind
 from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
@@ -38,6 +39,7 @@ from aerona.engine.collective.roles import RANK_PREFERRED, freed_rank, role_rank
 from aerona.engine.context import TickContext
 from aerona.engine.customs.rights import has_right
 from aerona.engine.cycles.book import stress_factor
+from aerona.engine.folkways.biases import lean
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.loops.delay import lagged
@@ -459,10 +461,17 @@ async def divine_favour(ctx: TickContext, realm: Realm, people: list[EntityRow])
     return favour
 
 
+async def favoured_heir(ctx: TickContext, ruler_id: int, line: list[EntityRow]) -> EntityRow | None:
+    if len(line) < 2:
+        return line[0] if line else None
+    swayed = max(0.0, 1 - await lean(ctx, ruler_id, BiasedDecision.SUCCESSION))
+    return line[1] if ctx.rng(f"heir_sway.{ruler_id}.{ctx.epoch}").chance(round(swayed * PERCENT)) else line[0]
+
+
 async def name_heir(ctx: TickContext, realm: Realm, line: list[EntityRow]) -> EntityRow | None:
     if realm.ruler_id is None or "heir" in realm.profile.locked:
         return None
-    heir = line[0] if line else None
+    heir = await favoured_heir(ctx, realm.ruler_id, line)
     await ctx.session.execute(delete(DesignatedHeirRow).where(DesignatedHeirRow.ruler_entity_id == realm.ruler_id))
     designate = next((row for row in realm.offices if row.kind is OfficeKind.HEIR_DESIGNATE), None)
     if heir is None:

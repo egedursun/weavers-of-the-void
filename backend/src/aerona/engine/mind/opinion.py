@@ -158,6 +158,7 @@ def compose(
     subject_values: Mapping[ValueAxis, int],
     holder_traits: Iterable[TraitKind],
     memories: Iterable[MemoryRow],
+    subject_traits: Iterable[TraitKind] = (),
     facts: PairFacts,
 ) -> Opinion:
     table = rules.opinion
@@ -168,6 +169,9 @@ def compose(
     trust = round(trait_effect(holder_traits, TraitEffect.TRUST, rules.traits.effect_scale_pct) * table.trait_trust_pct / PERCENT)
     if trust:
         terms.append(OpinionTerm("temperament", trust))
+    charm = round(trait_effect(subject_traits, TraitEffect.CHARM, rules.traits.effect_scale_pct) * table.trait_charm_pct / PERCENT)
+    if charm:
+        terms.append(OpinionTerm("manner", charm))
     total = sum(item.contribution for item in weighed) + alignment + sum(term.value for term in terms)
     return Opinion(
         holder_id,
@@ -299,6 +303,7 @@ async def composed_from(session: AsyncSession, rules: Rules, epoch: int, holder_
         holder_values=mine.values,
         subject_values=theirs.values,
         holder_traits=mine.traits,
+        subject_traits=theirs.traits,
         memories=await memories_about(session, holder_id, subject_id),
         facts=await facts_between(session, holder_id, subject_id, mine, theirs),
     )
@@ -405,6 +410,7 @@ class OpinionContext:
             holder_values=self.values.of(holder_id),
             subject_values=self.values.of(subject_id),
             holder_traits=self.traits.get(holder_id, set()),
+            subject_traits=self.traits.get(subject_id, set()),
             memories=self.memories.get((holder_id, subject_id), []),
             facts=self.facts(holder_id, subject_id),
         )

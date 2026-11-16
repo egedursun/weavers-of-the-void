@@ -114,7 +114,7 @@ const FACTION_KINDS: Record<string, Named> = {
     tone: 'info',
   },
   wandering_market: { label: 'Wandering market', icon: Store, tone: 'success' },
-  void_pirates: { label: 'Void pirates', icon: Ship, tone: 'danger' },
+  route_raiders: { label: 'Route raiders', icon: Ship, tone: 'danger' },
   social_circle: { label: 'Social circle', icon: Users, tone: 'success' },
   mage_order: { label: 'Mage order', icon: Sparkles, tone: 'verdigris' },
   estate: { label: 'Estate of the realm', icon: Landmark, tone: 'gold' },
@@ -260,7 +260,7 @@ function AgendaCard({
             return (
               <div
                 key={goal.id}
-                className='flex min-w-0 flex-col gap-1.5 rounded-md border p-2'
+                className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-sheen border-gild/60 bg-card p-2'
               >
                 <div className='flex min-w-0 items-center gap-2'>
                   <Medallion icon={spec.icon} tone={spec.tone} size='sm' />

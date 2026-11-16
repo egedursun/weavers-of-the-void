@@ -47,9 +47,11 @@ from tests.tools.every_setup import (
     sickness,
     sky_son,
     son_creature,
+    son_divine_power,
     son_enchantment,
     son_geas,
     son_legend,
+    son_natural_law,
     son_office,
     son_plan,
     son_servitor,
@@ -218,7 +220,18 @@ SON_CASES: dict[str, Case] = {
     "utter_prophecy": Case(creation("The Lantern Sign")),
     "start_event": Case(creation("The Lamp Fair", location_id=settlement)),
     "create_vessel": Case(creation("Road Barge", location_id=settlement)),
-    "raise_beast": Case(creation("Old Greyback", species_id=species, location_id=region, breath="frost", temperament="abductor", habitat="deep")),
+    "raise_beast": Case(
+        creation(
+            "Old Greyback",
+            species_id=species,
+            location_id=region,
+            attack_delivery="breath",
+            attack_effect="cold",
+            attack_range="near",
+            temperament="abductor",
+            habitat="deep",
+        )
+    ),
     "decree_natural_law": Case(creation("Law of Lamps")),
     "harvest_resource": Case(plain(resource_id=resource)),
     "open_cosmic_bed": Case(plain(region_id=region, reason=REASON), travel_resource),
@@ -246,7 +259,7 @@ SON_CASES: dict[str, Case] = {
     "teach_creature": Case(plain(creature_id=created("creature"), deed="tend_fields", lesson="reward", reason=REASON), son_creature),
     "release_creature": Case(plain(creature_id=created("creature"), reason=REASON), son_creature),
     "shape_image": Case(plain(stance="embrace", reason=REASON)),
-    "make_servitor": Case(plain(name="Watcher of the Gate", rank="guardian", role="guard", post_id=place, reason=REASON), rich_son),
+    "make_servitor": Case(plain(name="Watcher of the Gate", role="guard", post_id=place, reason=REASON), rich_son),
     "command_servitor": Case(plain(servitor_id=created("servitor"), role="judge", reason=REASON), son_servitor),
     "release_servitor": Case(plain(servitor_id=created("servitor"), reason=REASON), son_servitor),
     "lay_geas": Case(plain(bearer_id=mortal, mode="taboo", act="theft", reason=REASON)),
@@ -354,7 +367,10 @@ SON_CASES: dict[str, Case] = {
     "create_galaxy": Case(plain(name="Second Wheel", galaxy_type="spiral", description="A wide galaxy far from the first.")),
     "create_cluster": Case(plain(name="Far Gathering", kind="filament", dimension_id=created("prime"), description="A long line of galaxies."), heavens),
     "create_dimension": Case(
-        plain(name="Quiet Deep", kind="astral", parent_dimension_id=created("prime"), description="A still place beside the first."), heavens
+        plain(
+            name="Quiet Deep", kind="astral", parent_dimension_id=created("prime"), element="earth", form="time", description="A still place beside the first."
+        ),
+        heavens,
     ),
     "shape_galactic_structure": Case(plain(galaxy_id=created("galaxy"), kind="dark_nebula", name="Dark Lane", reason=REASON), heavens),
     "stir_galaxy": Case(plain(galaxy_id=created("galaxy"), kind="starburst", reason=REASON), heavens),
@@ -390,6 +406,21 @@ SON_CASES: dict[str, Case] = {
     "shape_kinship": Case(
         plain(people_id=people, descent="matrilineal", residence="matrilocal", preference="cross_cousin", payment="bride_price", reason=REASON)
     ),
+    "shape_unions": Case(
+        plain(
+            people_id=people,
+            form="serial",
+            purpose="faith",
+            residence="with_first_family",
+            descent="through_second",
+            exchange="to_one_family",
+            arrangement="arranged",
+            dissolution="by_court",
+            endogamy="people",
+            exogamy="house",
+            reason=REASON,
+        )
+    ),
     "shape_reproduction": Case(plain(people_id=people, system="sequential", reason=REASON)),
     "try_realm": Case(plain(polity_id=created("polity"), kind="famine", severity=30, reason=REASON), ruled_realm),
     "set_circuit": Case(plain(name="The First Round", stop_ids=lambda realm, ids: [realm.settlement_id, ids["settlement"]], reason=REASON), second_settlement),
@@ -406,7 +437,7 @@ SON_CASES: dict[str, Case] = {
     "limit_fleets": Case(plain(first_id=created("polity"), second_id=created("rival"), tonnage=200, reason=REASON), rival_realm),
     "bind_genius_locus": Case(plain(place_id=place, reason=REASON)),
     "judge_petition": Case(plain(petition_id=created("petition"), granted=True, reason=REASON), spirit_office),
-    "appoint_spirit": Case(plain(spirit_id=created("spirit"), rank="province", reason=REASON), spirit_office),
+    "appoint_spirit": Case(plain(spirit_id=created("spirit"), reason=REASON), spirit_office),
     "answer_mystic": Case(plain(mortal_id=mortal, reason=REASON)),
     "ease_theodicy": Case(plain(crisis_id=created("crisis"), reason=REASON), faith_crisis),
     "teach_sacrament": Case(plain(cult_id=cult, kind="birth_blessing", protection="possession", reason=REASON)),
@@ -476,4 +507,8 @@ SON_CASES: dict[str, Case] = {
     "hide_truth": Case(plain(title="those who walk unseen", subject_id=people, kind="presence", reason=REASON)),
     "bless_line": Case(plain(line_id=created("line"), reason=REASON), son_line),
     "curse_line": Case(plain(line_id=created("line"), reason=REASON), son_line),
+    "wield_power": Case(plain(power_id=created("divine_power"), target_id=mortal, reason=REASON), son_divine_power),
+    "set_natural_law": Case(plain(law_id=created("natural_law"), operator="multiply", value=140, condition="always", reason=REASON), son_natural_law),
+    "bless_fortune": Case(plain(target_id=mortal, reason=REASON)),
+    "curse_fortune": Case(plain(target_id=mortal, reason=REASON)),
 }

@@ -2,23 +2,25 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.civics import TAX_GATES
+from aerona.catalog.taxes import TAXES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.affairs import TaxPolicyRow
 from aerona.db.tables.culture import IdeologyTenetRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import IdeologyTenet, Technique
-from aerona.domain.enums.mind import TraitKind
+from aerona.domain.enums.mind import TraitKind, ValueAxis
 from aerona.domain.enums.settlement import DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.statecraft import TaxKind
 from aerona.engine.context import TickContext
+from aerona.engine.law.records import records_of
 from aerona.engine.lore.civics import realm_allows
-from aerona.engine.mind.book import traits_of
+from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import LawBook
@@ -29,14 +31,6 @@ from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.regime.book import corruption_pull, extraction_of
 
 C = SocialClass
-BURDENS: dict[TaxKind, frozenset[SocialClass]] = {
-    TaxKind.LAND: frozenset({C.FARMER, C.NOBLE}),
-    TaxKind.POLL: frozenset({C.FARMER, C.ARTISAN, C.SERF_OR_SLAVE, C.WARRIOR}),
-    TaxKind.TRADE: frozenset({C.MERCHANT, C.ARTISAN}),
-    TaxKind.CONSUMPTION: frozenset({C.NOBLE, C.MERCHANT}),
-    TaxKind.TITHE: frozenset(SocialClass),
-}
-DEFAULT_RATES: dict[TaxKind, int] = {TaxKind.LAND: 5, TaxKind.POLL: 0, TaxKind.TRADE: 5, TaxKind.CONSUMPTION: 0, TaxKind.TITHE: 0}
 CLEAN_CREEDS = frozenset({IdeologyTenet.LEGALISM, IdeologyTenet.ASCETICISM})
 RATE_UNIT = 10
 CORRUPTION = "corruption"
@@ -55,7 +49,7 @@ async def policies_of(ctx: TickContext, realm: Realm) -> dict[TaxKind, TaxPolicy
     rows = {row.kind: row for row in await ctx.session.scalars(select(TaxPolicyRow).where(TaxPolicyRow.polity_entity_id == realm.entity.id))}
     for kind in TaxKind:
         if kind not in rows:
-            rate = DEFAULT_RATES[kind] if kind is not TaxKind.TITHE or realm.profile.state_religion_id is not None else 0
+            rate = TAXES[kind].rate if kind is not TaxKind.TITHE or realm.profile.state_religion_id is not None else 0
             row = TaxPolicyRow(polity_entity_id=realm.entity.id, kind=kind, rate=rate, epoch=ctx.epoch, locked=[])
             ctx.session.add(row)
             rows[kind] = row
@@ -112,16 +106,40 @@ async def trade_points(ctx: TickContext, realm: Realm) -> int:
     return routes + markets
 
 
+async def kept_share(ctx: TickContext, realm: Realm, kind: TaxKind) -> float:
+    spec = TAXES[kind]
+    records = min(ctx.rules.registries.records_cap, await records_of(ctx, realm.entity.id))
+    cost = spec.collection * (PERCENT - min(PERCENT, realm.profile.administration)) / PERCENT * (PERCENT - records) / PERCENT
+    lawful = (await values_for(ctx.session, realm.entity.id)).get(ValueAxis.LAW, 0)
+    evaded = spec.evasion * (PERCENT - lawful) / (2 * PERCENT)
+    return max(0.0, (PERCENT - cost) / PERCENT * (PERCENT - evaded) / PERCENT * spec.take_pct / PERCENT)
+
+
+async def company_points(ctx: TickContext, realm: Realm) -> int:
+    return len(list(await ctx.session.scalars(select(CompanyProfileRow.faction_entity_id).where(CompanyProfileRow.polity_entity_id == realm.entity.id))))
+
+
+SHARE_TAXES = frozenset({TaxKind.INCOME, TaxKind.PROPERTY, TaxKind.WEALTH, TaxKind.IN_KIND, TaxKind.POLLUTION, TaxKind.EXCISE})
+HEAD_TAXES = frozenset({TaxKind.POLL, TaxKind.LABOUR_LEVY, TaxKind.INHERITANCE})
+
+
 async def base_of(ctx: TickContext, book: RealmBook, realm: Realm, kind: TaxKind) -> float:
     table = ctx.rules.affairs
-    if kind is TaxKind.TRADE:
+    if kind in {TaxKind.TRADE, TaxKind.SEIGNIORAGE}:
         return float(await trade_points(ctx, realm) * table.trade_take)
+    if kind is TaxKind.COMPANY:
+        return float(await company_points(ctx, realm) * table.trade_take)
+    if kind is TaxKind.LICENCE:
+        return float((await trade_points(ctx, realm) + await company_points(ctx, realm)) * table.trade_take) / 2
     total = 0.0
     for member in book.members(realm):
         shares = await class_shares(ctx.session, ctx.rules, member.id)
         prosperity = stat_or(member, "prosperity", PERCENT // 2)
-        if kind is TaxKind.POLL:
+        if kind in HEAD_TAXES:
             total += (stat(member, "population") or 0) / 1000 * table.poll_take
+        elif kind in SHARE_TAXES:
+            payers = sum(shares.get(social_class, 0.0) for social_class in TAXES[kind].classes)
+            total += prosperity * payers / PERCENT * table.consumption_take / RATE_UNIT
         elif kind is TaxKind.CONSUMPTION:
             spenders = shares.get(C.NOBLE, 0.0) + shares.get(C.MERCHANT, 0.0) + shares.get(C.PROFESSIONAL, 0.0) + shares.get(C.CITIZEN, 0.0)
             total += prosperity * spenders / PERCENT * table.consumption_take / RATE_UNIT
@@ -133,14 +151,14 @@ async def base_of(ctx: TickContext, book: RealmBook, realm: Realm, kind: TaxKind
 
 
 async def burden(ctx: TickContext, book: RealmBook, realm: Realm, row: TaxPolicyRow) -> None:
-    loss = round_half_up(ctx.rules.affairs.tax_burden * row.rate / 5)
+    loss = round_half_up(ctx.rules.affairs.tax_burden * row.rate / 5 * TAXES[row.kind].unrest / PERCENT)
     if loss <= 0:
         return
     for member in book.members(realm):
         society = await ctx.session.get(CommunitySocietyRow, member.id)
         if society is None or held(member.id):
             continue
-        for social_class in BURDENS[row.kind]:
+        for social_class in TAXES[row.kind].classes:
             key = f"satisfaction_{social_class.value}"
             setattr(society, key, clamp_int(getattr(society, key) - loss, 0, PERCENT))
         if row.farmed:
@@ -155,8 +173,9 @@ async def levy(ctx: TickContext, book: RealmBook, realm: Realm, row: TaxPolicyRo
         order = [town.public_order for member in realm.members if (town := await ctx.session.get(SettlementProfileRow, member)) is not None]
         mean_order = sum(order) / len(order) if order else PERCENT / 2
         row.efficiency = clamp_int((min(PERCENT, realm.profile.administration) + mean_order + PERCENT - realm.profile.corruption) / 3, 0, PERCENT)
-    rate = row.rate if "rate" in row.locked or await realm_allows(ctx.session, realm, TAX_GATES.get(row.kind)) else 0
+    rate = row.rate if "rate" in row.locked or await realm_allows(ctx.session, realm, TAXES[row.kind].gate) else 0
     take = await base_of(ctx, book, realm, row.kind) * rate / RATE_UNIT * row.efficiency / PERCENT * await extraction_of(ctx.session, realm.entity.id)
+    take *= await kept_share(ctx, realm, row.kind)
     if row.farmed:
         take *= 1 + table.farm_take_pct / PERCENT
         tally.farmed += 1

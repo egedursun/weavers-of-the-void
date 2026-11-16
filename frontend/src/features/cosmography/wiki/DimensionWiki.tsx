@@ -19,6 +19,7 @@ import {
   EmptyState,
   EntityLink,
   MiniStat,
+  Paged,
   PagedList,
   Section,
 } from '@/components/domain'
@@ -38,7 +39,7 @@ import {
   runCosmography,
 } from '../api'
 import { CreateClusterStudio, CreateGalaxyStudio } from '../create/CreateStudio'
-import { CAUSALITIES, ELEMENTS } from '../labels'
+import { CAUSALITIES } from '../labels'
 import { type Ladder, nameTable } from '../ladder'
 import { Chip, Facts, Meter, NodeLink, RecordEditor } from '../parts'
 import { ClusterThumb, DimensionThumb } from '../visual/ScaleThumbs'
@@ -102,11 +103,6 @@ function DimensionHero({
           <Badge size='sm' variant='outline'>
             {CAUSALITIES[dimension.causality]}
           </Badge>
-          {dimension.element && (
-            <Badge size='sm' variant='outline'>
-              {ELEMENTS[dimension.element]}
-            </Badge>
-          )}
           {dimension.parent_dimension_id !== null && (
             <Badge size='sm' variant='outline'>
               <Layers />
@@ -266,39 +262,41 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
             <>
               {clusters.length > 0 && (
                 <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
-                  {clusters.map((row) => (
-                    <li
-                      key={row.id}
-                      className='flex min-w-0 items-center gap-3 rounded-xl border bg-background p-2'
-                    >
-                      <ClusterThumb
-                        cluster={{
-                          id: row.id,
-                          kind: row.cluster_kind,
-                          galaxies: ladder.galaxiesIn(row.id).length,
-                          heat: row.medium_heat,
-                        }}
-                        label={row.name}
-                        className='size-portrait-lg shrink-0'
-                      />
-                      <span className='flex min-w-0 flex-col gap-1'>
-                        <EntityLink kind='cluster' id={String(row.id)}>
-                          {row.name}
-                        </EntityLink>
-                        <span className='flex min-w-0 flex-wrap gap-1.5'>
-                          <Chip>
-                            {catalogLabel(
-                              catalog.cluster_kinds,
-                              row.cluster_kind
-                            )}
-                          </Chip>
-                          <Chip
-                            icon={Orbit}
-                          >{`${plural(ladder.galaxiesIn(row.id).length, 'galaxy', 'galaxies')}`}</Chip>
+                  <Paged items={clusters} as='li'>
+                    {(row) => (
+                      <li
+                        key={row.id}
+                        className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'
+                      >
+                        <ClusterThumb
+                          cluster={{
+                            id: row.id,
+                            kind: row.cluster_kind,
+                            galaxies: ladder.galaxiesIn(row.id).length,
+                            heat: row.medium_heat,
+                          }}
+                          label={row.name}
+                          className='size-portrait-lg shrink-0'
+                        />
+                        <span className='flex min-w-0 flex-col gap-1'>
+                          <EntityLink kind='cluster' id={String(row.id)}>
+                            {row.name}
+                          </EntityLink>
+                          <span className='flex min-w-0 flex-wrap gap-1.5'>
+                            <Chip>
+                              {catalogLabel(
+                                catalog.cluster_kinds,
+                                row.cluster_kind
+                              )}
+                            </Chip>
+                            <Chip
+                              icon={Orbit}
+                            >{`${plural(ladder.galaxiesIn(row.id).length, 'galaxy', 'galaxies')}`}</Chip>
+                          </span>
                         </span>
-                      </span>
-                    </li>
-                  ))}
+                      </li>
+                    )}
+                  </Paged>
                 </ul>
               )}
               {loose.length > 0 && (
@@ -351,7 +349,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
             itemKey={(row) => row.world_id}
           >
             {(row) => (
-              <li className='flex min-w-0 items-center justify-between gap-2 rounded-xl border bg-background p-3'>
+              <li className='flex min-w-0 items-center justify-between gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
                 <EntityLink kind='world' id={String(row.world_id)}>
                   {ladder.data.world_names[String(row.world_id)] ?? 'A world'}
                 </EntityLink>
@@ -367,26 +365,31 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
       {inner.length > 0 && (
         <Section title='Dimensions within it' icon={Layers} tone='info'>
           <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
-            {inner.map((row) => (
-              <li
-                key={row.id}
-                className='flex min-w-0 items-center gap-3 rounded-xl border bg-background p-2'
-              >
-                <DimensionThumb
-                  dimension={stateOf(row)}
-                  label={row.name}
-                  className='size-portrait-lg shrink-0'
-                />
-                <span className='flex min-w-0 flex-col gap-1'>
-                  <EntityLink kind='dimension' id={String(row.id)}>
-                    {row.name}
-                  </EntityLink>
-                  <Chip>
-                    {catalogLabel(catalog.dimension_kinds, row.dimension_kind)}
-                  </Chip>
-                </span>
-              </li>
-            ))}
+            <Paged items={inner} as='li'>
+              {(row) => (
+                <li
+                  key={row.id}
+                  className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'
+                >
+                  <DimensionThumb
+                    dimension={stateOf(row)}
+                    label={row.name}
+                    className='size-portrait-lg shrink-0'
+                  />
+                  <span className='flex min-w-0 flex-col gap-1'>
+                    <EntityLink kind='dimension' id={String(row.id)}>
+                      {row.name}
+                    </EntityLink>
+                    <Chip>
+                      {catalogLabel(
+                        catalog.dimension_kinds,
+                        row.dimension_kind
+                      )}
+                    </Chip>
+                  </span>
+                </li>
+              )}
+            </Paged>
           </ul>
         </Section>
       )}
@@ -452,12 +455,6 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
                 label: 'Kind',
                 kind: 'pick',
                 table: catalogTable(catalog.dimension_kinds),
-              },
-              {
-                key: 'element',
-                label: 'Element',
-                kind: 'pick',
-                table: ELEMENTS,
               },
               {
                 key: 'causality',
@@ -563,14 +560,16 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
           />
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {beings.map((row) => (
-              <BeingCard
-                key={row.entity_id}
-                being={row}
-                ladder={ladder}
-                catalog={catalog}
-              />
-            ))}
+            <Paged items={beings} as='li'>
+              {(row) => (
+                <BeingCard
+                  key={row.entity_id}
+                  being={row}
+                  ladder={ladder}
+                  catalog={catalog}
+                />
+              )}
+            </Paged>
           </ul>
         )}
       </Section>

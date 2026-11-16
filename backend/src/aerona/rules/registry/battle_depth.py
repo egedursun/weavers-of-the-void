@@ -8,7 +8,7 @@ W = RuleGroup.WAR_AND_DIPLOMACY
 
 @dataclass(frozen=True)
 class BattleDepthRules:
-    organisation_loss_pct: int = rule(150, 0, 500, W, "Organisation a stack loses for each share of its men it loses, before discipline (%)")
+    organisation_loss_pct: int = rule(150, 0, 500, W, "Organisation a stack loses for each share of its soldiers it loses, before discipline (%)")
     shock_organisation_pct: int = rule(60, 0, 300, W, "Organisation a stack loses for each point of morale shock, before discipline (%)")
     discipline_guard_pct: int = rule(70, 0, 100, W, "Share of organisation loss a fully disciplined stack is spared (%)")
     disorganised_at: int = rule(0, 0, 50, W, "Organisation at or below which a stack can no longer fight and routs")
@@ -25,7 +25,7 @@ class BattleDepthRules:
     wavering_pct: int = rule(60, 0, 100, W, "Strength a wavering stack keeps, defending only (%)")
     rally_chance: int = rule(30, 0, 100, W, "Chance a routing stack rallies each phase at full leadership with its standard and priests (%)")
     rally_morale: int = rule(35, 0, 100, W, "Morale a rallied stack returns with")
-    suppression_pct: int = rule(4, 0, 100, W, "Share of a stack's men lost to volleys in one phase that pins it in place (%)")
+    suppression_pct: int = rule(4, 0, 100, W, "Share of a stack's soldiers lost to volleys in one phase that pins it in place (%)")
     width_scale: int = rule(10, 1, 100, W, "Soldiers each point of battlefield width holds in the front line")
     fog_width_pct: int = rule(60, 0, 100, W, "Battlefield width that fog leaves (%)")
     reserve_commit_pct: int = rule(40, 0, 100, W, "Chance per phase at full tactics skill that a commander commits the reserves well (%)")

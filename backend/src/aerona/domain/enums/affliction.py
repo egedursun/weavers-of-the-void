@@ -43,3 +43,8 @@ class CureKind(StrEnum):
     MEDICINE = "medicine"
     TIME = "time"
     QUEST = "quest"
+    DIVINE = "divine"
+    POWER = "power"
+    SYMBIONT = "symbiont"
+    TRANSFER = "transfer"
+    AUGMENT = "augment"

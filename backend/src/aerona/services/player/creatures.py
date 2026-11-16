@@ -72,7 +72,7 @@ async def split(scope: PlayerScope, command: PeopleTarget) -> Effect:
     return Effect(f"{offshoot.name} split away.", offshoot.id, created_ids=(offshoot.id,))
 
 
-@player_action("species:chimera", ActionKind.WEAVE_CHIMERA)
+@player_action("species:chimera", ActionKind.MAKE_CHIMERA)
 async def chimera(scope: PlayerScope, command: Chimera) -> Effect:
     woven = await cross_species(scope.session, scope.rules, command.first_id, command.second_id, command.weaver_id)
     return Effect(f"{woven.name} was made.", woven.id, created_ids=(woven.id,))
@@ -112,4 +112,4 @@ async def introduce(scope: PlayerScope, command: Introduction) -> Effect:
 @player_action("species:seed", ActionKind.CREATE_ENTITY)
 async def seed(scope: PlayerScope, command: LifeSeed) -> Effect:
     born = await seed_life(await scope.context("seed_life"), command.world_id, command.people)
-    return Effect(f"{born.name} took root by the Creator's hand.", born.id, created_ids=(born.id,))
+    return Effect(f"{born.name} took hold by the Creator's hand.", born.id, created_ids=(born.id,))

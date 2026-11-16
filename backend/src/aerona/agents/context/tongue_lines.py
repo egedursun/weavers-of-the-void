@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import agree, an, several
+from aerona.core.grammar import agree, an, several, spoken
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
@@ -36,7 +36,7 @@ async def mortal_tongue_lines(scope: Scope, me: EntityRow) -> list[str]:
     profile = await session.get(LanguageProfileRow, tongue.id) if tongue is not None else None
     if tongue is not None and profile is not None:
         written = f"written in {an(profile.writing_system.value)} script" if profile.writing_system is not None else "unwritten"
-        kind = "" if profile.modality is LanguageModality.VOCAL else f" ({profile.modality.value})"
+        kind = "" if profile.modality is LanguageModality.VOCAL else f" ({spoken(profile.modality)})"
         stage = "" if profile.stage is LanguageStage.NATURAL else f", {an(profile.stage.value)}"
         found.append(f"your people speak {tongue.name}{kind}{stage}, {written}")
         for policy in await session.scalars(
@@ -44,7 +44,7 @@ async def mortal_tongue_lines(scope: Scope, me: EntityRow) -> list[str]:
         ):
             holder = await session.get(EntityRow, policy.holder_entity_id)
             if holder is not None:
-                found.append(f"{holder.name} holds {tongue.name} {policy.policy.value} ({policy.strength})")
+                found.append(f"{holder.name} holds {tongue.name} {spoken(policy.policy)} ({policy.strength})")
     sacred = select(DivineTongueRow.language_entity_id)
     for language_id in await session.scalars(
         select(SkillRow.subject_node_id).where(SkillRow.holder_node_id == me.id, SkillRow.skill == SkillKind.LANGUAGES, SkillRow.subject_node_id.in_(sacred))

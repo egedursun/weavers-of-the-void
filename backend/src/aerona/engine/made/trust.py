@@ -51,6 +51,10 @@ async def find_forgeries(ctx: TickContext, town: EntityRow, accounts: list[Accou
         return 0
     found = 0
     for account in accounts:
+        if account.authenticity is Authenticity.UNKNOWN and "authenticity" not in account.locked:
+            if ctx.rng(f"verify.{account.id}.{ctx.epoch}").chance(table.detection_chance):
+                account.authenticity = Authenticity.GENUINE
+            continue
         if account.authenticity in FALSE and account.credence > 0 and ctx.rng(f"forgery.{account.id}.{ctx.epoch}").chance(table.detection_chance):
             if "credence" not in account.locked:
                 account.credence = 0

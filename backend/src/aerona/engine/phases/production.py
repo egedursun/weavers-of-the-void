@@ -254,7 +254,7 @@ async def _god_remains(ctx: TickContext) -> int:
             ctx,
             Deposit(
                 name=f"Godflesh of {corpse.name}",
-                body=f"The flesh of the dead god at {corpse.name} can be cut and carried away.",
+                body=f"The remains of the dead god at {corpse.name} can be taken and carried away.",
                 place=corpse,
                 commodity=CommodityKind.ORE,
                 material=MaterialKind.GODFLESH,

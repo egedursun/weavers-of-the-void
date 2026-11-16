@@ -52,7 +52,7 @@ class DepotEdit(Edited):
 
 class TransportDraft(Command):
     owner_id: int
-    kind: CarrierKind = CarrierKind.WAGONS
+    kind: CarrierKind = CarrierKind.ANIMAL_CARTS
     count: int = Field(default=10, ge=1, le=MANY)
     depot_id: int | None = None
 

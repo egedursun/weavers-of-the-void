@@ -1,8 +1,10 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import Select, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.total import total
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.ecology import BeastProfileRow
@@ -155,6 +157,29 @@ async def world_of(session: AsyncSession, node_id: int) -> int | None:
         return entity.world_id
     world = await session.get(WorldRow, node_id)
     return world.id if world is not None else None
+
+
+ORIGIN_LAW: Mapping[MindOrigin, MadeMindsLaw] = total(
+    MindOrigin,
+    {
+        MindOrigin.BORN: MadeMindsLaw.WILL_MAY_EMERGE,
+        MindOrigin.GROWN: MadeMindsLaw.WILL_MAY_EMERGE,
+        MindOrigin.MADE: MadeMindsLaw.INSTRUCTED_ONLY,
+        MindOrigin.TRAINED: MadeMindsLaw.INSTRUCTED_ONLY,
+        MindOrigin.COPIED: MadeMindsLaw.WILL_MAY_EMERGE,
+        MindOrigin.TRANSFERRED: MadeMindsLaw.WILL_MAY_EMERGE,
+        MindOrigin.AWAKENED: MadeMindsLaw.WILL_MAY_EMERGE,
+        MindOrigin.SUMMONED: MadeMindsLaw.WILL_MAY_EMERGE,
+        MindOrigin.MERGED: MadeMindsLaw.WILL_MAY_EMERGE,
+        MindOrigin.DIVIDED: MadeMindsLaw.WILL_MAY_EMERGE,
+        MindOrigin.GRANTED: MadeMindsLaw.WILL_MAY_EMERGE,
+    },
+)
+
+
+async def law_for(session: AsyncSession, world_id: int | None, origin: MindOrigin) -> MadeMindsLaw:
+    law = await law_of(session, world_id)
+    return ORIGIN_LAW[origin] if law is MadeMindsLaw.WILL_BY_MAKE else law
 
 
 def will_allowed(law: MadeMindsLaw, will: MindWill) -> bool:

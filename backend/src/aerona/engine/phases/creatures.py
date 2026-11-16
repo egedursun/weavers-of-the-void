@@ -308,7 +308,7 @@ async def megafauna_trail(ctx: TickContext, beast: EntityRow) -> EntityRow | Non
         RecordSpec(
             name=f"{beast.name} Trail",
             entity_type=EntityType.RESOURCE,
-            body=f"The ground changed where {beast.name} passed; a valuable and strange trail remained.",
+            body=f"The ground changed where {beast.name} passed; a trail of value remained.",
             stats=ResourceStats(
                 abundance=creatures.trace_abundance,
                 value=clamp_percent(creatures.trace_value_base + rng.die(creatures.trace_value_die)),
@@ -323,7 +323,7 @@ async def megafauna_trail(ctx: TickContext, beast: EntityRow) -> EntityRow | Non
     )
     await set_mechanics(ctx.session, trail, [ResourceMechanic.ADDICTIVE] if cosmic else [ResourceMechanic.DECAYING])
     await set_resource_yield(ctx.session, ctx.rules, trail.id, CommodityKind.MAGICAL_REAGENTS)
-    await note(ctx, f"Where {beast.name} passed, a strange trail remained: {trail.name}.", key="creatures.megafauna_trail", ids=[beast.id, trail.id])
+    await note(ctx, f"Where {beast.name} passed, a trail remained: {trail.name}.", key="creatures.megafauna_trail", ids=[beast.id, trail.id])
     return trail
 
 
@@ -338,7 +338,7 @@ async def megafauna(ctx: TickContext) -> int:
             continue
         if beast.id not in tagged:
             await repository.add_flag(beast.id, EntityFlag.MEGAFAUNA, ctx.epoch)
-            await note(ctx, f"{beast.name} grew so large it is now as old and big as a world itself: a megafauna.", key="creatures.megafauna", ids=[beast.id])
+            await note(ctx, f"{beast.name} grew into a megafauna.", key="creatures.megafauna", ids=[beast.id])
         if beast.location_id is not None and rng.chance(creatures.megafauna_trace_chance):
             await megafauna_trail(ctx, beast)
             trails += 1
@@ -681,7 +681,7 @@ async def spare_soul(session: AsyncSession, rules: Rules, soul_id: int, spared: 
         return await repository.remove_flag(soul.id, EntityFlag.SPARED_SOUL)
     changed = await repository.add_flag(soul.id, EntityFlag.SPARED_SOUL, ctx.epoch)
     if changed:
-        await note(ctx, f"The Creator spared {soul.name}; no hunger may swallow it.", key="creatures.soul_spared", ids=[soul.id])
+        await note(ctx, f"The Creator spared {soul.name}; nothing may feed on it.", key="creatures.soul_spared", ids=[soul.id])
     return changed
 
 

@@ -6,7 +6,7 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.db.types import PydanticJSON
 from aerona.domain.enums.cosmography import RouteScope
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.travel import HorizonStatus, JourneyIntent, JourneyStatus, RouteClosure, TravelMethod
+from aerona.domain.enums.travel import ArrivalOutcome, HorizonStatus, JourneyIntent, JourneyStatus, RouteClosure, TravelMethod
 from aerona.domain.models.records import CargoLine, JourneyEvent, PassengerLine
 
 
@@ -88,6 +88,10 @@ class JourneyRow(Base):
     convoy: Mapped[int] = mapped_column(default=1)
     escorts: Mapped[int] = mapped_column(default=0)
     scope: Mapped[RouteScope | None] = mapped_column(enum_type(RouteScope, "scope"))
+    supplies: Mapped[int] = mapped_column(default=100, server_default="100")
+    births: Mapped[int] = mapped_column(default=0, server_default="0")
+    deaths: Mapped[int] = mapped_column(default=0, server_default="0")
+    arrival: Mapped[ArrivalOutcome | None] = mapped_column(enum_type(ArrivalOutcome, "arrival"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

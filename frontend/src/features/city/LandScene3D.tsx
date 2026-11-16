@@ -275,7 +275,7 @@ export default function LandScene3D({
         />
         {hover && (
           <Html position={[hover.x, 1.8, hover.z]} center zIndexRange={[20, 0]}>
-            <div className='pointer-events-none rounded-md border bg-popover px-2 py-1 whitespace-nowrap text-popover-foreground shadow-sm'>
+            <div className='pointer-events-none rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1 whitespace-nowrap text-popover-foreground'>
               {hover.text}
             </div>
           </Html>

@@ -2,12 +2,13 @@ from sqlalchemy import select
 
 from aerona.agents.context.divine_lines import divine_lines
 from aerona.agents.context.intrigue import name_knowers, names_known
-from aerona.agents.context.powers import powers_text
+from aerona.agents.context.powers import divine_power_lines, powers_text
 from aerona.agents.context.reputation_line import reputation_line
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.sky_calendar import sky_calendar
 from aerona.agents.context.son_faith import son_faith
 from aerona.agents.context.son_memory import son_memory
+from aerona.agents.context.thin_b_lines import son_depth_lines
 from aerona.agents.context.transform_lines import prospect_lines
 from aerona.agents.context.world_summary import world_summary
 from aerona.agents.turns.ports import ToolCatalogue
@@ -129,6 +130,8 @@ async def son_system_context(scope: Scope, son: SonRow, points: int, catalogue: 
         shrines=await shrine_lines(scope, son),
         incitements=await incitement_lines(scope, son),
         powers=powers_text(rules, son, powers),
+        divine_powers=await divine_power_lines(scope.session, son.id, scope.epoch),
+        trust_and_tension=await son_depth_lines(scope.session, son.id, son.current_world_id),
         action_points=points,
         paid_tools=catalogue.paid,
         free_tools=catalogue.free,

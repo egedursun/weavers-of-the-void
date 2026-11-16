@@ -130,7 +130,7 @@ export function ImageStyleSettings() {
           onChange={(style) => setDraft({ ...current, style })}
           onCustomChange={(custom) => setDraft({ ...current, custom })}
         />
-        <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/40 p-3'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
           <Text weight='medium'>
             {offStyle > 0
               ? `${formatInteger(offStyle)} generated images are in another style`

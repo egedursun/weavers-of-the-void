@@ -25,7 +25,7 @@ export function ShowMore<T>({
   return (
     <div
       data-domain='show-more'
-      className='flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed bg-muted/30 px-3 py-1.5'
+      className='flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md px-3 py-1.5 sealed-well'
     >
       <Muted as='span' variant='caption'>
         {`Showing ${formatInteger(shown)} of ${counted(state.total, noun)}`}

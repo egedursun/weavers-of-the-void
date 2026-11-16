@@ -1,4 +1,8 @@
 import {
+  ListChecks,
+  Sun,
+  EyeOff,
+  Package,
   ShieldOff,
   Anvil,
   ArrowRightLeft,
@@ -219,6 +223,42 @@ export const TRAIT: Record<Schemas['CommanderTrait'], Named> = {
   cautious: { label: 'Cautious', icon: Hourglass, tone: 'muted' },
   inspiring: { label: 'Inspiring', icon: Megaphone, tone: 'gold' },
   brutal: { label: 'Brutal', icon: Skull, tone: 'danger' },
+  forest_fighter: { label: 'Forest fighter', icon: Trees, tone: 'success' },
+  desert_fighter: { label: 'Desert fighter', icon: Sun, tone: 'warning' },
+  marsh_fighter: { label: 'Marsh fighter', icon: Waves, tone: 'info' },
+  sky_commander: { label: 'Commander of fliers', icon: Plane, tone: 'info' },
+  space_commander: {
+    label: 'Commander in space',
+    icon: Rocket,
+    tone: 'verdigris',
+  },
+  artillerist: { label: 'Artillerist', icon: Crosshair, tone: 'danger' },
+  ambusher: { label: 'Ambusher', icon: EyeOff, tone: 'muted' },
+  logistician: { label: 'Logistician', icon: Package, tone: 'gold' },
+  underground_fighter: {
+    label: 'Fighter below ground',
+    icon: Pickaxe,
+    tone: 'muted',
+  },
+  amphibious_commander: {
+    label: 'Commander of landings',
+    icon: Anchor,
+    tone: 'info',
+  },
+  siege_defender: { label: 'Defender of walls', icon: Castle, tone: 'success' },
+  skirmisher: { label: 'Skirmisher', icon: Wind, tone: 'info' },
+  armoured_commander: {
+    label: 'Commander of armour',
+    icon: Truck,
+    tone: 'warning',
+  },
+  disciplinarian: { label: 'Disciplinarian', icon: ListChecks, tone: 'muted' },
+  signals_commander: {
+    label: 'Commander of signals',
+    icon: RadioTower,
+    tone: 'verdigris',
+  },
+  night_fighter: { label: 'Night fighter', icon: Moon, tone: 'muted' },
 }
 
 export const FAMILY: Record<Schemas['UnitFamily'], Named> = {

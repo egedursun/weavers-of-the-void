@@ -31,7 +31,7 @@ from aerona.engine.living.profiles import refuses
 from aerona.engine.mind.hooks import judged
 from aerona.engine.minds.crimes import erasure_crime, mind_crime
 from aerona.engine.minds.phase import change_will
-from aerona.engine.minds.profiles import law_of, profile_of, will_allowed
+from aerona.engine.minds.profiles import law_for, profile_of, will_allowed
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -86,6 +86,9 @@ async def holder_of(ctx: TickContext, rules: InstructionSetRow) -> int | None:
         return await owner_of_item(ctx, rules.token_entity_id)
     if rules.command_token is CommandToken.OFFICE:
         return await ruler_of(ctx.session, rules.token_entity_id)
+    if rules.command_token is CommandToken.NONE:
+        owner = await living_entity(ctx.session, rules.owner_entity_id)
+        return owner.id if owner is not None else None
     current = await ctx.session.get(EntityRow, rules.holder_node_id) if rules.holder_node_id is not None else None
     if rules.command_token is CommandToken.BLOODLINE and current is not None and await living_entity(ctx.session, current.id) is None:
         heir = await heir_of(ctx.session, current)
@@ -116,9 +119,10 @@ async def holds(ctx: TickContext, charge: Charge) -> bool:
         town = await town_of(ctx.session, ward) if ward is not None else None
         realm = await realm_of_town(ctx.session, town.id) if town is not None else None
         return realm is not None and await at_war(ctx.session, realm)
-    if rules.holder_node_id is None or charge.holder is None:
-        return False
-    return await town_of(ctx.session, charge.holder) == await town_of(ctx.session, charge.construct)
+    shown = rules.holder_node_id is not None and charge.holder is not None
+    if order.condition is OrderCondition.WHEN_TOKEN_SHOWN and shown and charge.holder is not None:
+        return await town_of(ctx.session, charge.holder) == await town_of(ctx.session, charge.construct)
+    return False
 
 
 def lapses(ctx: TickContext, order: InstructionOrderRow, maker_alive: bool) -> bool:
@@ -367,7 +371,7 @@ async def grow_will(ctx: TickContext, construct: EntityRow, row: ConstructRow, t
     if not ctx.rng(f"construct.will.{construct.id}.{ctx.epoch}").chance(ctx.rules.constructs.will_chance):
         return
     grown = WILL_LADDER[WILL_LADDER.index(profile.will) + 1]
-    if not will_allowed(await law_of(ctx.session, construct.world_id), grown):
+    if not will_allowed(await law_for(ctx.session, construct.world_id, profile.origin), grown):
         return
     change_will(ctx, profile, grown, WillCause.GIFT)
     tally.woke += 1

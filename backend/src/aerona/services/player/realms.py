@@ -9,6 +9,7 @@ from aerona.domain.enums.polity import (
     LawKind,
     LegitimacyBasis,
     OathKind,
+    OathPenalty,
     OfficeKind,
     PartyRole,
     TreatyKind,
@@ -16,6 +17,7 @@ from aerona.domain.enums.polity import (
 )
 from aerona.domain.enums.statecraft import SubjectKind
 from aerona.engine.polity import control
+from aerona.engine.polity.oath_terms import OathTerms
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
@@ -585,7 +587,7 @@ async def create_vassalage(scope: PlayerScope, command: CreateVassalage) -> Effe
     row = await control.create_vassalage(
         await scope.context("vassal_create"), command.vassal_id, command.overlord_id, tribute_pct=command.tribute_pct, levy_pct=command.levy_pct
     )
-    return Effect("The lesser realm bends the knee.", command.vassal_id, created_ids=(row.treaty_entity_id,) if row.treaty_entity_id else ())
+    return Effect("The lesser realm submits.", command.vassal_id, created_ids=(row.treaty_entity_id,) if row.treaty_entity_id else ())
 
 
 @player_action("vassal:edit", ActionKind.EDIT_RECORD)
@@ -638,6 +640,9 @@ class EditOath(Command):
     note: str | None = Field(default=None, max_length=120)
     recipient_id: int | None = None
     witness_son_id: int | None = None
+    witness_node_id: int | None = None
+    penalty: OathPenalty | None = None
+    clear_penalty: bool = False
 
 
 @player_action("house:edit", ActionKind.EDIT_RECORD)
@@ -651,7 +656,7 @@ async def house_member(scope: PlayerScope, command: HouseMember) -> Effect:
     count = await control.house_member(
         await scope.context("house_member"), command.house_id, command.mortal_id, remove=command.remove, by_marriage=command.by_marriage
     )
-    return Effect(f"The house counts {count} of its blood.", command.house_id)
+    return Effect(f"The house counts {count} of its line.", command.house_id)
 
 
 @player_action("house:heirloom", ActionKind.EDIT_RECORD)
@@ -670,6 +675,7 @@ async def edit_oath(scope: PlayerScope, command: EditOath) -> Effect:
         recipient_id=command.recipient_id,
         witness_son_id=command.witness_son_id,
         clear_deadline=command.clear_deadline,
+        terms=OathTerms(witness_node_id=command.witness_node_id, penalty=command.penalty, clear_penalty=command.clear_penalty),
     )
     return Effect("The oath now binds as you set it.", oath.swearer_entity_id)
 

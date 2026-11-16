@@ -1,9 +1,10 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.divine import GodGoalRow
 from aerona.db.tables.dominion import GodDesignRow, ThroneRow
@@ -236,6 +237,12 @@ async def target_name(ctx: TickContext, goal: GodGoalRow) -> str | None:
     return goal.domain.value if goal.domain is not None else None
 
 
+CLOSED_AS: Mapping[GoalState, str] = total(
+    GoalState,
+    {GoalState.ACTIVE: "still pursued", GoalState.DONE: "reached", GoalState.FAILED: "failed", GoalState.DROPPED: "given up"},
+)
+
+
 async def close(ctx: TickContext, god: God, goal: GodGoalRow, state: GoalState) -> None:
     table = ctx.rules.son_goals
     goal.state, goal.closed_epoch = state, ctx.epoch
@@ -251,8 +258,7 @@ async def close(ctx: TickContext, god: God, goal: GodGoalRow, state: GoalState) 
                 god.rebel = False
         else:
             god.power = min(PERCENT, god.power + table.foreign_power)
-    verb = "reached" if state is GoalState.DONE else "gave up"
-    text = f"{goal_text(god, goal, await target_name(ctx, goal))} — {verb}."
+    text = f"{goal_text(god, goal, await target_name(ctx, goal))} — {CLOSED_AS[state]}."
     await note(ctx, text, key=f"divine.goal_{state.value}", son_id=god.id if isinstance(god, SonRow) else None, kind=ChronicleKind.ASCENSION)
 
 
@@ -275,7 +281,7 @@ async def measure(ctx: TickContext, god: God, goal: GodGoalRow) -> None:
     if reading.state is not GoalState.ACTIVE and "state" not in goal.locked:
         await close(ctx, god, goal, reading.state)
     elif expired and "state" not in goal.locked:
-        await close(ctx, god, goal, GoalState.FAILED)
+        await close(ctx, god, goal, GoalState.DROPPED)
 
 
 async def rivals_of(ctx: TickContext, god: God) -> list[God]:

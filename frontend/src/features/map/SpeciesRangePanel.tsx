@@ -35,7 +35,7 @@ export function SpeciesRangePanel({
   return (
     <div
       data-surface='map-layer-species-range'
-      className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-wrap items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <Medallion icon={PawPrint} tone='success' size='sm' />
       <div className='flex min-w-0 flex-1 basis-60 flex-col gap-1'>

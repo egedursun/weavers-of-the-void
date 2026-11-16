@@ -114,7 +114,7 @@ function MapLoading() {
   return (
     <div
       role='status'
-      className='flex min-h-120 min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border bg-card'
+      className='flex min-h-120 min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card'
     >
       <Medallion icon={Compass} />
       <Text as='span' weight='medium'>
@@ -537,7 +537,7 @@ function MapScreen({
       <div className='flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:flex-row'>
         <div
           data-map-frame
-          className='relative min-h-120 min-w-0 flex-1 overflow-hidden rounded-lg border md:min-h-160'
+          className='scene-frame relative min-h-120 min-w-0 flex-1 overflow-hidden rounded-md md:min-h-160'
         >
           <MapCanvas
             view={view}

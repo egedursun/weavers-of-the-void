@@ -44,5 +44,5 @@ export const FOREIGN_EFFECT_LABEL: Record<ForeignPowerEffect, string> = {
   fertile: 'Fertile: worshippers prosper',
   reviving: 'Reviving: wakes sooner after defeat',
   deathless: 'Deathless: costs twice as much to kill',
-  sharp_tongued: 'Sharp-tongued: hard to talk down',
+  persuasion: 'Persuasive: hard to talk down',
 }

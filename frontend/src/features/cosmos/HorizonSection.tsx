@@ -17,7 +17,7 @@ import { formatDecimal } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EntityLink, Section } from '@/components/domain'
+import { EntityLink, Paged, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { NamedRecord } from '@/features/entity/NamedRecord'
 import { CosmicActionButton } from './CosmicActionButton'
@@ -83,95 +83,103 @@ function SensedBirths() {
         </Muted>
       )}
       <ul className='flex min-w-0 flex-col gap-1.5'>
-        {open.map((step) => (
-          <li
-            key={step.id}
-            className='flex min-w-0 flex-wrap items-center gap-2'
-          >
-            <Hourglass
-              aria-hidden='true'
-              className='size-icon-sm shrink-0 text-primary'
-            />
-            <Text as='span' variant='caption'>
-              {step.seeker ? `Sensed by ${step.seeker.name}` : 'A sensed world'}
-              {` · epoch ${step.epoch}${step.attempts ? ` · ${plural(step.attempts, 'attempt')}` : ''}`}
-            </Text>
-            <Badge
-              size='sm'
-              variant={step.status === 'failed' ? 'destructive' : 'outline'}
+        <Paged items={open} as='li'>
+          {(step) => (
+            <li
+              key={step.id}
+              className='flex min-w-0 flex-wrap items-center gap-2'
             >
-              {STEP_STATUS[step.status] ?? step.status}
-            </Badge>
-            {step.result_world !== null && (
+              <Hourglass
+                aria-hidden='true'
+                className='size-icon-sm shrink-0 text-primary'
+              />
               <Text as='span' variant='caption'>
-                {'Became '}
-                <NamedRecord id={step.result_world} fallback='a world' />
+                {step.seeker
+                  ? `Sensed by ${step.seeker.name}`
+                  : 'A sensed world'}
+                {` · epoch ${step.epoch}${step.attempts ? ` · ${plural(step.attempts, 'attempt')}` : ''}`}
               </Text>
-            )}
-            {(step.status === 'pending' || step.status === 'held') && (
+              <Badge
+                size='sm'
+                variant={step.status === 'failed' ? 'destructive' : 'outline'}
+              >
+                {STEP_STATUS[step.status] ?? step.status}
+              </Badge>
+              {step.result_world !== null && (
+                <Text as='span' variant='caption'>
+                  {'Became '}
+                  <NamedRecord id={step.result_world} fallback='a world' />
+                </Text>
+              )}
+              {(step.status === 'pending' || step.status === 'held') && (
+                <CosmicActionButton
+                  actionId='sensed_world:hold'
+                  label={step.status === 'held' ? 'Release' : 'Hold'}
+                  icon={step.status === 'held' ? Play : Pause}
+                  variant='ghost'
+                  size='sm'
+                  pending={hold.isPending && hold.variables?.stepId === step.id}
+                  onRun={() =>
+                    hold.mutate({
+                      stepId: step.id,
+                      value: step.status !== 'held',
+                    })
+                  }
+                />
+              )}
+              {step.status === 'failed' && (
+                <CosmicActionButton
+                  actionId='sensed_world:retry'
+                  label='Try again'
+                  icon={RotateCcw}
+                  variant='ghost'
+                  size='sm'
+                  pending={retry.isPending && retry.variables === step.id}
+                  onRun={() => retry.mutate(step.id)}
+                />
+              )}
+              {step.status !== 'running' && (
+                <CosmicActionButton
+                  actionId='sensed_world:cancel'
+                  label='Call off'
+                  icon={X}
+                  variant='ghost'
+                  size='sm'
+                  pending={cancel.isPending && cancel.variables === step.id}
+                  onRun={() => cancel.mutate(step.id)}
+                />
+              )}
+            </li>
+          )}
+        </Paged>
+        <Paged items={unqueued} as='li'>
+          {(item) => (
+            <li
+              key={`intuition-${item.id}`}
+              className='flex min-w-0 flex-wrap items-center gap-2'
+            >
+              <Telescope
+                aria-hidden='true'
+                className='size-icon-sm shrink-0 text-muted-foreground'
+              />
+              <Text as='span' variant='caption'>
+                {item.seeker
+                  ? `Sensed by ${item.seeker.name}`
+                  : 'A sensed world'}
+                {` · epoch ${item.epoch}`}
+              </Text>
               <CosmicActionButton
-                actionId='sensed_world:hold'
-                label={step.status === 'held' ? 'Release' : 'Hold'}
-                icon={step.status === 'held' ? Play : Pause}
+                actionId='sensed_world:request'
+                label='Bring it to birth'
+                icon={Sparkles}
                 variant='ghost'
                 size='sm'
-                pending={hold.isPending && hold.variables?.stepId === step.id}
-                onRun={() =>
-                  hold.mutate({
-                    stepId: step.id,
-                    value: step.status !== 'held',
-                  })
-                }
+                pending={request.isPending && request.variables === item.id}
+                onRun={() => request.mutate(item.id)}
               />
-            )}
-            {step.status === 'failed' && (
-              <CosmicActionButton
-                actionId='sensed_world:retry'
-                label='Try again'
-                icon={RotateCcw}
-                variant='ghost'
-                size='sm'
-                pending={retry.isPending && retry.variables === step.id}
-                onRun={() => retry.mutate(step.id)}
-              />
-            )}
-            {step.status !== 'running' && (
-              <CosmicActionButton
-                actionId='sensed_world:cancel'
-                label='Call off'
-                icon={X}
-                variant='ghost'
-                size='sm'
-                pending={cancel.isPending && cancel.variables === step.id}
-                onRun={() => cancel.mutate(step.id)}
-              />
-            )}
-          </li>
-        ))}
-        {unqueued.map((item) => (
-          <li
-            key={`intuition-${item.id}`}
-            className='flex min-w-0 flex-wrap items-center gap-2'
-          >
-            <Telescope
-              aria-hidden='true'
-              className='size-icon-sm shrink-0 text-muted-foreground'
-            />
-            <Text as='span' variant='caption'>
-              {item.seeker ? `Sensed by ${item.seeker.name}` : 'A sensed world'}
-              {` · epoch ${item.epoch}`}
-            </Text>
-            <CosmicActionButton
-              actionId='sensed_world:request'
-              label='Bring it to birth'
-              icon={Sparkles}
-              variant='ghost'
-              size='sm'
-              pending={request.isPending && request.variables === item.id}
-              onRun={() => request.mutate(item.id)}
-            />
-          </li>
-        ))}
+            </li>
+          )}
+        </Paged>
       </ul>
     </div>
   )
@@ -272,70 +280,74 @@ export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
         <Muted>No land has been discovered in this world yet.</Muted>
       ) : (
         <ul className='flex min-w-0 flex-col gap-1.5'>
-          {found.map((place) => (
-            <li
-              key={place.id}
-              className='flex min-w-0 flex-wrap items-center gap-2'
-            >
-              <Mountain
-                aria-hidden='true'
-                className='size-icon-sm shrink-0 text-muted-foreground'
-              />
-              <EntityLink kind='entity' id={String(place.id)}>
-                {place.name}
-              </EntityLink>
-              <Muted as='span' variant='caption'>
-                {`${place.entity_type === 'region' ? 'Region' : 'Place'} · epoch ${place.birth_epoch}`}
-              </Muted>
-              {place.pending_name && (
-                <Badge size='sm' variant='secondary'>
-                  Fate will name it
-                </Badge>
-              )}
-            </li>
-          ))}
+          <Paged items={found} as='li'>
+            {(place) => (
+              <li
+                key={place.id}
+                className='flex min-w-0 flex-wrap items-center gap-2'
+              >
+                <Mountain
+                  aria-hidden='true'
+                  className='size-icon-sm shrink-0 text-muted-foreground'
+                />
+                <EntityLink kind='entity' id={String(place.id)}>
+                  {place.name}
+                </EntityLink>
+                <Muted as='span' variant='caption'>
+                  {`${place.entity_type === 'region' ? 'Region' : 'Place'} · epoch ${place.birth_epoch}`}
+                </Muted>
+                {place.pending_name && (
+                  <Badge size='sm' variant='secondary'>
+                    Fate will name it
+                  </Badge>
+                )}
+              </li>
+            )}
+          </Paged>
         </ul>
       )}
       {sensed.length > 0 && (
         <ul className='flex min-w-0 flex-col gap-1.5'>
-          {sensed.map((item) => (
-            <li
-              key={item.id}
-              className='flex min-w-0 flex-wrap items-center gap-2'
-            >
-              <Telescope
-                aria-hidden='true'
-                className='size-icon-sm shrink-0 text-primary'
-              />
-              <Text as='span' variant='caption'>
-                {'Sensed by '}
-                <EntityLink kind='entity' id={String(item.mortal_entity_id)}>
-                  {index.entityName(item.mortal_entity_id) ?? 'a mortal'}
-                </EntityLink>
-                {` in epoch ${item.epoch}${item.how ? `: ${item.how}` : ''}`}
-              </Text>
-              <Badge size='sm' variant='outline'>
-                {HORIZON_STATUS_LABEL[item.status]}
-              </Badge>
-              {item.result_world_id !== null && (
-                <Text as='span' variant='caption'>
-                  {'Found as '}
-                  <NamedRecord id={item.result_world_id} fallback='a world' />
-                </Text>
-              )}
-              {item.status === 'pending' && (
-                <CosmicActionButton
-                  actionId='intuition:discard'
-                  label='Let it go'
-                  icon={Wind}
-                  variant='ghost'
-                  size='sm'
-                  pending={discard.isPending && discard.variables === item.id}
-                  onRun={() => discard.mutate(item.id)}
+          <Paged items={sensed} as='li'>
+            {(item) => (
+              <li
+                key={item.id}
+                className='flex min-w-0 flex-wrap items-center gap-2'
+              >
+                <Telescope
+                  aria-hidden='true'
+                  className='size-icon-sm shrink-0 text-primary'
                 />
-              )}
-            </li>
-          ))}
+                <Text as='span' variant='caption'>
+                  {'Sensed by '}
+                  <EntityLink kind='entity' id={String(item.mortal_entity_id)}>
+                    {index.entityName(item.mortal_entity_id) ?? 'a mortal'}
+                  </EntityLink>
+                  {` in epoch ${item.epoch}${item.how ? `: ${item.how}` : ''}`}
+                </Text>
+                <Badge size='sm' variant='outline'>
+                  {HORIZON_STATUS_LABEL[item.status]}
+                </Badge>
+                {item.result_world_id !== null && (
+                  <Text as='span' variant='caption'>
+                    {'Found as '}
+                    <NamedRecord id={item.result_world_id} fallback='a world' />
+                  </Text>
+                )}
+                {item.status === 'pending' && (
+                  <CosmicActionButton
+                    actionId='intuition:discard'
+                    label='Let it go'
+                    icon={Wind}
+                    variant='ghost'
+                    size='sm'
+                    pending={discard.isPending && discard.variables === item.id}
+                    onRun={() => discard.mutate(item.id)}
+                  />
+                )}
+              </li>
+            )}
+          </Paged>
         </ul>
       )}
       <SensedBirths />

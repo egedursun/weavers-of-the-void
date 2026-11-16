@@ -48,7 +48,7 @@ export function Bars({
   return (
     <div
       data-chart={chart}
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <Label variant='overline'>{title}</Label>
       <PagedList

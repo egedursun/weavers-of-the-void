@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.structure_sections import FORMS, TALL_FORMS
 from aerona.catalog.structures import STRUCTURES
+from aerona.db.tables.cycles import CampRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.sons import SonRow
@@ -18,6 +19,8 @@ from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, Bu
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.embodied import embody
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.nomads import MOVING
+from aerona.engine.primitives.folk import homes_for
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.queries import living_entity
@@ -84,6 +87,9 @@ async def draw_structure_type(
     return row
 
 
+ROAMING_KINDS = frozenset({StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MARKET, StructureKind.TAVERN, StructureKind.STABLES})
+
+
 async def cultural_form(ctx: TickContext, origin: EntityRow | None, kind: StructureKind) -> BuildingForm:
     base = FORMS[kind]
     if origin is None or base in FIXED_FORMS:
@@ -93,7 +99,13 @@ async def cultural_form(ctx: TickContext, origin: EntityRow | None, kind: Struct
     table = ctx.rules.integrity
     group = STRUCTURES[kind].group
     level = levels.get
+    homes = sorted(await homes_for(ctx.session, [origin.id]) | {origin.id})
+    roaming = (
+        await ctx.session.scalar(select(CampRow.settlement_entity_id).where(CampRow.settlement_entity_id.in_(homes), CampRow.mode.in_(list(MOVING))).limit(1))
+        is not None
+    )
     ladder = (
+        (roaming and kind in DWELLING_KINDS | ROAMING_KINDS, BuildingForm.TENT),
         (group is StructureGroup.DEFENCE and level(KnowledgeBranch.WARFARE, 0) >= table.bunker_level, BuildingForm.BUNKER),
         (level(KnowledgeBranch.BIOMANCY, 0) >= table.grown_level, BuildingForm.GROWN),
         (home is not None and home.dominant_terrain in CARVED_GROUND, BuildingForm.CARVED),

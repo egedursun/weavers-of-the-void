@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Wrench } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, Section } from '@/components/domain'
+import { EmptyState, Paged, Section } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { JobRunRow } from './JobRunRow'
@@ -82,35 +82,37 @@ export function MaintenanceTasksPanel() {
       )}
       {tasks.data && tasks.data.length > 0 && (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {tasks.data.map((task) => (
-            <JobRunRow
-              key={task.task}
-              id={task.task}
-              title={task.title}
-              description={task.description}
-              note={`Runs by itself: ${task.automatic.toLowerCase()}.`}
-              badges={<TaskBadges task={task} />}
-              label='Run now'
-              icon={Wrench}
-              blocked={blockedFor(task)}
-              pending={run.isPending && run.variables === task.task}
-              error={errors[task.task] ?? null}
-              jobId={jobs[task.task] ?? null}
-              confirm={
-                CONFIRMED_TASKS.has(task.task)
-                  ? {
-                      title: `${task.title}?`,
-                      description: `${task.description} This cannot be undone.`,
-                      confirmLabel: 'Run now',
-                    }
-                  : undefined
-              }
-              onRun={() => start(task)}
-              onDismiss={() =>
-                setJobs((current) => ({ ...current, [task.task]: undefined }))
-              }
-            />
-          ))}
+          <Paged items={tasks.data} as='li' noun={['task', 'tasks']}>
+            {(task) => (
+              <JobRunRow
+                key={task.task}
+                id={task.task}
+                title={task.title}
+                description={task.description}
+                note={`Runs by itself: ${task.automatic.toLowerCase()}.`}
+                badges={<TaskBadges task={task} />}
+                label='Run now'
+                icon={Wrench}
+                blocked={blockedFor(task)}
+                pending={run.isPending && run.variables === task.task}
+                error={errors[task.task] ?? null}
+                jobId={jobs[task.task] ?? null}
+                confirm={
+                  CONFIRMED_TASKS.has(task.task)
+                    ? {
+                        title: `${task.title}?`,
+                        description: `${task.description} This cannot be undone.`,
+                        confirmLabel: 'Run now',
+                      }
+                    : undefined
+                }
+                onRun={() => start(task)}
+                onDismiss={() =>
+                  setJobs((current) => ({ ...current, [task.task]: undefined }))
+                }
+              />
+            )}
+          </Paged>
         </ul>
       )}
     </Section>

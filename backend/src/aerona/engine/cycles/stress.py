@@ -29,7 +29,7 @@ from aerona.engine.regime.book import graduates
 from aerona.rules.registry import Rules
 
 LOWER = (SocialClass.FARMER, SocialClass.ARTISAN, SocialClass.SERF_OR_SLAVE, SocialClass.OUTCAST)
-URBAN = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS})
+URBAN = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY})
 
 
 @dataclass

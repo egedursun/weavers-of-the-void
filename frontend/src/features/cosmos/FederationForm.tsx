@@ -4,7 +4,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { FormRow } from '@/components/domain'
+import { FormRow, Paged } from '@/components/domain'
 import { MultiSelect } from '@/components/domain/MultiSelect'
 import { Muted, Text } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
@@ -49,21 +49,23 @@ export function FederationForm({ index }: { index: CosmosIndex }) {
           <div className='flex min-w-0 flex-1 flex-col gap-2'>
             {members.length > 0 && (
               <ul className='flex min-w-0 flex-col gap-1'>
-                {members.map((id) => (
-                  <li key={id} className='flex min-w-0 items-center gap-2'>
-                    <Text as='span' truncate className='flex-1'>
-                      {byId.get(id)?.name ?? 'Unnamed'}
-                    </Text>
-                    <Button
-                      variant='ghost'
-                      size='icon-sm'
-                      aria-label={`Remove ${byId.get(id)?.name ?? id}`}
-                      onClick={() => toggle(id)}
-                    >
-                      <X />
-                    </Button>
-                  </li>
-                ))}
+                <Paged items={members} as='li'>
+                  {(id) => (
+                    <li key={id} className='flex min-w-0 items-center gap-2'>
+                      <Text as='span' truncate className='flex-1'>
+                        {byId.get(id)?.name ?? 'Unnamed'}
+                      </Text>
+                      <Button
+                        variant='ghost'
+                        size='icon-sm'
+                        aria-label={`Remove ${byId.get(id)?.name ?? id}`}
+                        onClick={() => toggle(id)}
+                      >
+                        <X />
+                      </Button>
+                    </li>
+                  )}
+                </Paged>
               </ul>
             )}
             <MultiSelect
@@ -92,7 +94,7 @@ export function FederationForm({ index }: { index: CosmosIndex }) {
             id={id}
             value={name}
             maxLength={NAME_MAX}
-            placeholder='Northern Federation'
+            placeholder='The name of the federation'
             onChange={(event) => setName(event.target.value)}
           />
         )}

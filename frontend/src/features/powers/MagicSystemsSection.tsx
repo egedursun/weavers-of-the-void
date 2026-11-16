@@ -5,6 +5,7 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -279,50 +280,58 @@ function System({
         <Muted variant='caption'>{system.description}</Muted>
       ) : null}
       <ul className='flex min-w-0 flex-col gap-2'>
-        {system.sources.map((row) => (
-          <Part
-            key={`s${row.id}`}
-            kind='source'
-            id={row.id}
-            title={`Draws on ${row.source_name}`}
-            caption='A source of this system'
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
-        {system.links.map((row) => (
-          <Part
-            key={`l${row.id}`}
-            kind='link'
-            id={row.id}
-            title={`${SYSTEM_RELATIONS[row.relation].label} ${row.other_name}`}
-            caption='How the two systems stand'
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
-        {system.grammar.map((row) => (
-          <Part
-            key={`g${row.id}`}
-            kind='grammar'
-            id={row.id}
-            title={`Allows ${row.technique ? TECHNIQUES[row.technique].label.toLowerCase() : 'any working'} on ${row.form ? FORMS[row.form].label.toLowerCase() : 'anything'}`}
-            caption='A working this system allows'
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
-        {system.restrictions.map((row) => (
-          <Part
-            key={`r${row.id}`}
-            kind='restriction'
-            id={row.id}
-            title={RESTRICTIONS[row.kind].label}
-            caption={row.detail ?? 'no words given'}
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
+        <Paged items={system.sources} as='li'>
+          {(row) => (
+            <Part
+              key={`s${row.id}`}
+              kind='source'
+              id={row.id}
+              title={`Draws on ${row.source_name}`}
+              caption='A source of this system'
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
+        <Paged items={system.links} as='li'>
+          {(row) => (
+            <Part
+              key={`l${row.id}`}
+              kind='link'
+              id={row.id}
+              title={`${SYSTEM_RELATIONS[row.relation].label} ${row.other_name}`}
+              caption='How the two systems stand'
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
+        <Paged items={system.grammar} as='li'>
+          {(row) => (
+            <Part
+              key={`g${row.id}`}
+              kind='grammar'
+              id={row.id}
+              title={`Allows ${row.technique ? TECHNIQUES[row.technique].label.toLowerCase() : 'any working'} on ${row.form ? FORMS[row.form].label.toLowerCase() : 'anything'}`}
+              caption='A working this system allows'
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
+        <Paged items={system.restrictions} as='li'>
+          {(row) => (
+            <Part
+              key={`r${row.id}`}
+              kind='restriction'
+              id={row.id}
+              title={RESTRICTIONS[row.kind].label}
+              caption={row.detail ?? 'no words given'}
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
       </ul>
       <ForgeCard
         icon={CirclePlus}

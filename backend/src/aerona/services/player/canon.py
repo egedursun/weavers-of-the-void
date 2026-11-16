@@ -393,7 +393,7 @@ async def _bond_end(scope: PlayerScope, node_id: int) -> str:
     return await NodeRepository(scope.session).name_of(node_id) or str(node_id)
 
 
-@player_action("bond:add", ActionKind.WEAVE_BOND)
+@player_action("bond:add", ActionKind.MAKE_BOND)
 async def add_bond(scope: PlayerScope, command: AddBond) -> Effect:
     if command.kind is BondKind.INSIDE:
         raise ValidationFailedError(f'Invalid bond type: {command.kind.value}. "Inside" is location; it changes by moving.')
@@ -414,7 +414,7 @@ async def add_bond(scope: PlayerScope, command: AddBond) -> Effect:
     return Effect(message, command.source_id, created_ids=(bond.id,))
 
 
-@player_action("bond:remove", ActionKind.WEAVE_BOND)
+@player_action("bond:remove", ActionKind.MAKE_BOND)
 async def remove_bond(scope: PlayerScope, command: BondTarget) -> Effect:
     bond = await scope.session.get(BondRow, command.bond_id)
     if bond is None:

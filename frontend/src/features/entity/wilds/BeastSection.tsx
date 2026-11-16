@@ -146,7 +146,7 @@ function BeastHero({ card }: { card: BeastCard }) {
   const size = named(SIZE, card.size_class)
   const plan = card.body_plan ? named(PLANS, card.body_plan) : null
   return (
-    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={temper.icon} tone={temper.tone ?? 'warning'} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <Text weight='semibold'>
@@ -264,7 +264,7 @@ function Domain({ card }: { card: BeastCard }) {
           {(row) => (
             <li
               key={row.label}
-              className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+              className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
             >
               <Medallion icon={row.icon} tone='info' size='sm' />
               <div className='flex min-w-0 flex-1 flex-col'>
@@ -344,7 +344,7 @@ function Wounds({ card }: { card: BeastCard }) {
                   return (
                     <li
                       key={`${row.part}.${index}`}
-                      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'
+                      className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
                     >
                       <div className='flex min-w-0 items-center gap-2'>
                         <Medallion
@@ -750,7 +750,7 @@ function HerdCard({
   return (
     <li
       data-surface='HerdRow'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={spec.icon} tone={spec.tone ?? 'gold'} size='sm' />
@@ -1019,7 +1019,7 @@ export function FoodWebSection({ regionId }: { regionId: number }) {
               return (
                 <li
                   key={node.species.id}
-                  className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'
+                  className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'
                 >
                   <div className='flex min-w-0 items-center gap-2'>
                     <Medallion icon={diet.icon} tone={diet.tone} size='sm' />

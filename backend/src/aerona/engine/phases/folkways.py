@@ -38,6 +38,7 @@ from aerona.engine.phases.dominion import count
     "table.famine_lore",
     "table.genomes",
     "table.holder_levels",
+    "table.holder_techniques",
     "table.injuries",
     "table.irregular_seasons",
     "table.item_profiles",
@@ -51,8 +52,10 @@ from aerona.engine.phases.dominion import count
     "table.nutrition_scores",
     "table.pressures",
     "table.prostheses",
+    "table.technology_profiles",
     "table.thoughts",
     "table.tradition_profiles",
+    "table.world_seasons",
 )
 @writes(
     "mortal.endurance",
@@ -89,6 +92,7 @@ async def biases(ctx: TickContext) -> None:
 
 
 @reads("table.culture_values", "table.districts", "table.impurity_sources", "table.purity_ranks")
+@writes("table.impurity_sources", "table.purity", "table.purity_ranks")
 async def purity(ctx: TickContext) -> None:
     tally = PurityTally()
     await keep_purity(ctx, tally)
@@ -96,26 +100,93 @@ async def purity(ctx: TickContext) -> None:
 
 
 @reads(
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
+    "table.augments",
+    "table.bodies",
+    "table.bonds",
     "table.castings",
     "table.charms",
+    "table.conditions",
+    "table.cult_tenets",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.fortune_laws",
+    "table.fortune_profiles",
     "table.goods_flows",
+    "table.hidden_truths",
     "table.holder_levels",
     "table.impurity_sources",
+    "table.incubating_ideas",
+    "table.injuries",
+    "table.item_profiles",
     "table.luck_beliefs",
+    "table.mind_attributes",
+    "table.mind_profiles",
     "table.mishaps",
     "table.mortal_profiles",
     "table.notable_years",
     "table.outbreaks",
+    "table.prostheses",
+    "table.tradition_profiles",
     "table.war_sides",
 )
-@writes("table.mishaps", "table.mortal_profiles")
+@writes(
+    "mortal.hp",
+    "table.bodies",
+    "table.body_customs",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.mishaps",
+    "table.mortal_profiles",
+)
 async def mishaps(ctx: TickContext) -> None:
     tally = MishapTally()
     await keep_mishaps(ctx, tally)
     count(ctx, "mishaps", tally)
 
 
-@reads("table.accusations", "table.mishaps", "table.witch_hunts")
+@reads(
+    "table.accusations",
+    "table.beliefs",
+    "table.castings",
+    "table.divination_systems",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.memories",
+    "table.mishaps",
+    "table.offices",
+    "table.polity_members",
+    "table.relationships",
+    "table.traits",
+    "table.witch_hunts",
+)
+@writes(
+    "table.accusations",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.crime_cases",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
 async def witchcraft(ctx: TickContext) -> None:
     tally = WitchTally()
     await keep_witchcraft(ctx, tally)

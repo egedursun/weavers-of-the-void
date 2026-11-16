@@ -48,7 +48,7 @@ export function CreatorCult({
           itemKey={(member) => member.id}
         >
           {(member) => (
-            <li className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2'>
+            <li className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
               <Medallion icon={Users} size='sm' />
               <span className='min-w-0 flex-1 truncate'>
                 <EntityLink kind='entity' id={String(member.id)}>

@@ -307,7 +307,7 @@ async def distribute_sons(scope: PlayerScope, ctx: TickContext) -> int:
 
 
 async def auto_distribute(scope: PlayerScope, ctx: TickContext) -> int:
-    if (await scope.cosmos()).son_distribution is not SonDistribution.AUTO:
+    if (await scope.cosmos()).son_distribution is SonDistribution.MANUAL:
         return 0
     return await distribute_sons(scope, ctx) + await balance_sons(ctx)
 

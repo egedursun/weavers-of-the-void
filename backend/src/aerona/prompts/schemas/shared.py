@@ -65,12 +65,12 @@ class SonProfileOutput(OutputModel):
     )
     domain_1: Domain
     domain_2: Domain
-    appearance: str = Field(description="Detailed physical appearance: body, face, material, clothing, marks (3 to 4 sentences)")
+    appearance: str = Field(description="Detailed appearance: form, material, surface and marks, whatever this god has (3 to 4 sentences)")
     temperament: str
     obsession: str
     fear: str
     speech_style: str = Field(description="How they speak: word choice, rhythm, tics")
-    secret: str = Field(description="A secret nobody knows; a seed that will produce lore later")
+    secret: str = Field(description="What this god keeps to itself, if anything, from its own nature and history")
     strengths: list[Stat] = Field(min_length=STRENGTHS_PER_SON, max_length=STRENGTHS_PER_SON)
     weakness: Stat
     passions: PassionsOutput
@@ -82,7 +82,7 @@ class SonProfileOutput(OutputModel):
     existence: ExistenceOutput
     design: DesignOutput = Field(default_factory=DesignOutput, description="How this god spends its design budget across its dominion, magic, body and scales")
     image_prompt: str = Field(
-        description="English, detailed full-length portrait prompt: body, face, material, clothing, lighting, background, composition. {{ image_prompt_rules }}"
+        description="English, detailed full-length portrait prompt: form, material, surface, marks, lighting, background, composition. {{ image_prompt_rules }}"
     )
 
 

@@ -4,6 +4,7 @@ from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
 from aerona.catalog.genesis import TECHNOLOGY_LABELS
 from aerona.catalog.techniques import TECHNIQUES
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.sons import SonRow
@@ -16,7 +17,7 @@ LIST_LINES = 3
 
 def programme_line(row: TechProgrammeRow, realm: str) -> str:
     label = TECHNIQUES[row.technique].label.lower()
-    return f"{realm} runs a programme toward {label} (programme {row.id}, {row.stage.value}, {row.progress} of 100)"
+    return f"{realm} runs a programme toward {label} (programme {row.id}, {spoken(row.stage)}, {row.progress} of 100)"
 
 
 async def mortal_era_lines(scope: Scope, me: EntityRow) -> list[str]:

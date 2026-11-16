@@ -15,8 +15,6 @@ import { unwrap } from '@/api/errors'
 import {
   aversionValues,
   awakeningTriggerValues,
-  breathKindValues,
-  gazeKindValues,
   habitatValues,
   materialKindValues,
   temperamentValues,
@@ -37,8 +35,6 @@ import {
   AVERSION,
   AWAKENING,
   BITE,
-  BREATH,
-  GAZE,
   HABITAT,
   TEMPERAMENT_KIND,
   TISSUE,
@@ -212,7 +208,7 @@ export function AnatomyCard({
               value={`+${row.harm_pct}%`}
               icon={Swords}
               tone='danger'
-              hint='From its breath, its heads, its limbs and the stuff it is made of; it also counts against heroes'
+              hint='From its attacks, its heads, its limbs and the tissue it is made of; it also counts against heroes'
             />
           </div>
           <TileGrid>
@@ -223,16 +219,7 @@ export function AnatomyCard({
               spec={named(TEMPERAMENT_KIND, row.temperament)}
               caption={TEMPERAMENT_KIND[row.temperament]?.hint ?? 'Temperament'}
             />
-            {row.breath && (
-              <Tile spec={named(BREATH, row.breath)} caption='Breath' />
-            )}
             {row.bite && <Tile spec={named(BITE, row.bite)} caption='Bite' />}
-            {row.gaze && (
-              <Tile
-                spec={named(GAZE, row.gaze)}
-                caption={GAZE[row.gaze]?.hint ?? 'Gaze'}
-              />
-            )}
             {row.hoards && (
               <Tile
                 spec={{
@@ -302,25 +289,11 @@ export function AnatomyCard({
                 onPick={(value) => set('temperament', value)}
               />
               <MindPicker
-                label='Breath'
-                value={row.breath ?? NONE}
-                table={tableOf(breathKindValues, BREATH, 'No breath')}
-                blocked={busy}
-                onPick={(value) => set('breath', value)}
-              />
-              <MindPicker
                 label='Bite'
                 value={row.bite ?? NONE}
                 table={tableOf(BITES, BITE, 'An ordinary bite')}
                 blocked={busy}
                 onPick={(value) => set('bite', value)}
-              />
-              <MindPicker
-                label='Gaze'
-                value={row.gaze ?? NONE}
-                table={tableOf(gazeKindValues, GAZE, 'No gaze')}
-                blocked={busy}
-                onPick={(value) => set('gaze', value)}
               />
               <MindPicker
                 label='Hoards'

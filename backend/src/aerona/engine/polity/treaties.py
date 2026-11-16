@@ -535,7 +535,7 @@ async def vassal_duties(ctx: TickContext, book: RealmBook) -> dict[str, int]:
         patron = await new_overlord(ctx, book, vassal, overlord)
         if patron is not None and ctx.rng(f"switch.{vassal_id}.{ctx.epoch}").chance(table.switch_chance):
             if treaty is not None and treaty.status is TreatyStatus.IN_FORCE:
-                await breach(ctx, treaty, vassal_core.id, clause=None, reason="it bent the knee to another lord")
+                await breach(ctx, treaty, vassal_core.id, clause=None, reason="it submitted to another lord")
             patron_core = patron.profile.core_entity_id
             if patron_core is not None:
                 await sign(

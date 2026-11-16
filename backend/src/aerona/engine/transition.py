@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.stats import max_essence
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import agree, several
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
@@ -29,9 +29,7 @@ from aerona.engine.primitives.ledger import EssenceItem, LedgerKey, read, record
 from aerona.engine.primitives.queries import flags_by_entity
 from aerona.rules.registry import Rules
 
-CALLING_TEXT = (
-    "DOOM BECAME A CALLING: {world}'s sky opened and the things outside were called by their names. The world was not destroyed; but it is no longer alone."
-)
+CALLING_TEXT = "DOOM BECAME A CALLING: {world} opened to what lies outside the cosmos. The world was not destroyed, but beings from outside can now reach it."
 
 
 async def cosmos_of(session: AsyncSession) -> CosmosRow:
@@ -175,7 +173,8 @@ async def pour_essence(ctx: TickContext, amount: int) -> Overflow:
     result = await overflow_to_land(ctx.session, ctx.rules, amount)
     await note(
         ctx,
-        f"The Creator poured {amount} essence into the land; {several(result.given, 'measure', 'measures')} of fertility rose in the most barren regions.",
+        f"The Creator poured {amount} essence into the land; {several(result.given, 'measure', 'measures')} of fertility "
+        f"{agree(result.given, 'was', 'were')} given to the most barren regions.",
         key="essence.poured",
         ids=list(result.regions),
     )

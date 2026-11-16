@@ -22,7 +22,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.services.community_relations import change_relation
 
-LIVING_METHODS = frozenset({MethodKind.CULTURED_CROPS, MethodKind.GROWN_TIMBER, MethodKind.SPUN_FIBRE, MethodKind.VAT_CULTURE, MethodKind.BIOREACTOR})
+LIVING_METHODS = frozenset({MethodKind.CULTURED_CROPS, MethodKind.GROWN_TIMBER, MethodKind.FIBRE_FROM_LIFE, MethodKind.VAT_CULTURE, MethodKind.BIOREACTOR})
 
 
 def plain_method(process: ProcessKind) -> MethodKind | None:

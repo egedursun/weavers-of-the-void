@@ -417,7 +417,7 @@ async def react(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
             if hearer is not None and foe is not None:
                 await note(
                     ctx,
-                    f"Word reached {hearer.name} that the host of {foe.name} was near; they manned the walls and called on their friends.",
+                    f"Word reached {hearer.name} that the host of {foe.name} was near; they made ready and called on their friends.",
                     key="rumour.alarm",
                     ids=[hearer.id, foe.id],
                 )

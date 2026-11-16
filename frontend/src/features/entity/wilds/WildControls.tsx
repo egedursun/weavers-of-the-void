@@ -73,7 +73,7 @@ function PreyRow({
   onSet: (link: Link) => void
 }) {
   return (
-    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <Medallion
         icon={link === 'barred' ? Ban : link === 'pinned' ? Pin : Crosshair}
         tone={
@@ -153,15 +153,17 @@ export function FoodLinkControls({ id, card, blocked }: Blocked) {
           />
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {prey.map((item) => (
-              <PreyRow
-                key={item?.id}
-                prey={item}
-                link={linkOf(card, item?.id ?? 0)}
-                busy={busy}
-                onSet={(link) => set.mutate({ prey: item?.id ?? 0, link })}
-              />
-            ))}
+            <Paged items={prey} as='li'>
+              {(item) => (
+                <PreyRow
+                  key={item?.id}
+                  prey={item}
+                  link={linkOf(card, item?.id ?? 0)}
+                  busy={busy}
+                  onSet={(link) => set.mutate({ prey: item?.id ?? 0, link })}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         <div className='flex min-w-0 flex-wrap items-end gap-2'>
@@ -264,7 +266,7 @@ export function HostControls({ id, card, blocked }: Blocked) {
               return (
                 <li
                   key={disease}
-                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
                 >
                   <Medallion
                     icon={row.immune ? ShieldCheck : Biohazard}
@@ -392,7 +394,7 @@ function KindRow({
   const [base, setBase] = useState<string>(kind.base_use)
   const spec = named(USE, kind.base_use)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -539,26 +541,28 @@ export function KeepingControls({ id, card, blocked }: Blocked) {
         <Muted>No way of keeping has been devised yet.</Muted>
       ) : (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {(kinds.data ?? []).map((kind) => (
-            <KindRow
-              key={`${kind.id}-${kind.output_pct}-${kind.base_use}`}
-              kind={kind}
-              held={mine.has(kind.id)}
-              busy={busy}
-              onToggle={(held) => toggle.mutate({ kind: kind.id, held })}
-              onSave={(values) =>
-                edit.mutate({ kind: kind.id, values, release: [] })
-              }
-              onRelease={() =>
-                edit.mutate({
-                  kind: kind.id,
-                  values: {},
-                  release: [...kind.locked],
-                })
-              }
-              onDrop={() => drop.mutate(kind.id)}
-            />
-          ))}
+          <Paged items={kinds.data ?? []} as='li'>
+            {(kind) => (
+              <KindRow
+                key={`${kind.id}-${kind.output_pct}-${kind.base_use}`}
+                kind={kind}
+                held={mine.has(kind.id)}
+                busy={busy}
+                onToggle={(held) => toggle.mutate({ kind: kind.id, held })}
+                onSave={(values) =>
+                  edit.mutate({ kind: kind.id, values, release: [] })
+                }
+                onRelease={() =>
+                  edit.mutate({
+                    kind: kind.id,
+                    values: {},
+                    release: [...kind.locked],
+                  })
+                }
+                onDrop={() => drop.mutate(kind.id)}
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <div className='grid min-w-0 grid-cols-1 items-end gap-2 @md/wild:grid-cols-4'>

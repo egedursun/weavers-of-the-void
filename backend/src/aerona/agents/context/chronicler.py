@@ -14,6 +14,7 @@ from aerona.agents.context.scope import Scope
 from aerona.agents.context.world_header import world_header
 from aerona.agents.text import sentences
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import EpochRow
 from aerona.db.tables.lore import ChronicleEntityRow
@@ -44,7 +45,7 @@ def fold_key(text: str) -> str:
 
 def row_fold_key(row: ChronicleRecord, entity_ids: tuple[int, ...]) -> str:
     if row.kind in CREATOR_FOLD_KINDS and row.template_key:
-        return f"{row.kind.value}|{row.template_key}|{row.son_id or ''}|{entity_ids}"
+        return f"{spoken(row.kind)}|{row.template_key}|{row.son_id or ''}|{entity_ids}"
     return fold_key(row.text)
 
 

@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.core.grammar import several
+from aerona.db.tables.unions import UNION_TERM_MAX
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.cycles import (
     ChallengeKind,
@@ -20,6 +21,7 @@ from aerona.domain.enums.cycles import (
     ReproductiveSystem,
     ResidenceRule,
 )
+from aerona.domain.enums.unions import PartnerScope, UnionArrangement, UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionPurpose, UnionResidence
 from aerona.engine.cycles import control
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -183,6 +185,20 @@ class KinshipDraft(Command):
     payment_value: int = Field(default=10, ge=0, le=MANY)
     levirate: bool = False
     sororate: bool = False
+
+
+class UnionDraft(Command):
+    people_id: int
+    form: UnionForm = UnionForm.PAIR
+    purpose: UnionPurpose = UnionPurpose.KINSHIP
+    residence: UnionResidence = UnionResidence.NEW_HOUSEHOLD
+    descent: UnionDescent = UnionDescent.THROUGH_BOTH
+    exchange: UnionExchange = UnionExchange.NONE
+    arrangement: UnionArrangement = UnionArrangement.BOTH_CONSENT
+    dissolution: UnionDissolution = UnionDissolution.BY_CUSTOM
+    endogamy: PartnerScope = PartnerScope.NONE
+    exogamy: PartnerScope = PartnerScope.NONE
+    term_epochs: int = Field(default=4, ge=1, le=UNION_TERM_MAX)
 
 
 class PeopleTarget(Command):
@@ -553,6 +569,25 @@ async def kinship_edit(scope: PlayerScope, command: PeopleEdit) -> Effect:
 async def kinship_delete(scope: PlayerScope, command: PeopleTarget) -> Effect:
     await control.delete_record(await scope.context("kinship_delete"), "kinship", command.people_id)
     return Effect("Their ways of kin will be read anew from their customs.", command.people_id)
+
+
+@player_action("union:set", ActionKind.EDIT_RECORD)
+async def union_set(scope: PlayerScope, command: UnionDraft) -> Effect:
+    values = command.model_dump(exclude={"people_id"}, mode="json")
+    await control.set_union(await scope.context("union_set"), command.people_id, values)
+    return Effect("Their customs of union are set.", command.people_id)
+
+
+@player_action("union:edit", ActionKind.EDIT_RECORD)
+async def union_edit(scope: PlayerScope, command: PeopleEdit) -> Effect:
+    await control.edit_record(await scope.context("union_edit"), "union", command.people_id, command.values, command.release)
+    return Effect("Their customs of union are set so.", command.people_id)
+
+
+@player_action("union:delete", ActionKind.EDIT_RECORD)
+async def union_delete(scope: PlayerScope, command: PeopleTarget) -> Effect:
+    await control.delete_record(await scope.context("union_delete"), "union", command.people_id)
+    return Effect("Their customs of union will be read anew from their ways.", command.people_id)
 
 
 @player_action("alliance:set", ActionKind.EDIT_RECORD)

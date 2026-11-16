@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.carriers import CARRIER_OF, CARRIERS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.discovery import ArtFormPractitionerRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow
@@ -26,6 +27,7 @@ from aerona.engine.economy.purse import take_coin
 from aerona.engine.factions.privateers import privateers_against
 from aerona.engine.intrigue.beliefs import DEFENCE, believe
 from aerona.engine.lore.art_forms import practise
+from aerona.engine.lore.research import has_technique
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -36,8 +38,7 @@ from aerona.rules.registry import Rules
 
 WEALTH = "wealth"
 
-VEHICLE_OF = {TradeMode.SEA: TransportKind.SHIPS, TradeMode.RIVER: TransportKind.RIVER_BOATS, TradeMode.ROAD: TransportKind.WAGONS}
-ANIMAL_KINDS = frozenset({TransportKind.PACK_ANIMALS})
+ANIMAL_KINDS = frozenset(kind for kind in TransportKind if CARRIERS[CARRIER_OF[kind]].upkeep == "feed" and CARRIERS[CARRIER_OF[kind]].capacity <= 10)
 OPEN = (ConvoyStatus.LOADING, ConvoyStatus.TRAVELLING, ConvoyStatus.DELAYED)
 SICK_SEVERITY = 20
 MIGRANTS = "migrants"
@@ -57,7 +58,7 @@ class ConvoyTally:
 
 
 def fleet_capacity(rules: Rules, fleet: FleetRow) -> int:
-    each = rules.convoys.per_animal if fleet.kind in ANIMAL_KINDS else rules.convoys.per_vehicle
+    each = rules.convoys.per_animal if fleet.kind in ANIMAL_KINDS else rules.convoys.per_vehicle * max(1, CARRIERS[CARRIER_OF[fleet.kind]].capacity) // 10
     kept = rules.fleets.worn_pct / PERCENT + (1 - rules.fleets.worn_pct / PERCENT) * fleet.condition / PERCENT
     return round_half_up(fleet.count * each * kept)
 
@@ -78,8 +79,17 @@ async def harbour_limit(session: AsyncSession, rules: Rules, profile: TradeRoute
     return min(limits) if limits else None
 
 
+async def vehicle_for(ctx: TickContext, owner_id: int, mode: TradeMode) -> TransportKind:
+    fitting = []
+    for kind in TransportKind:
+        spec = CARRIERS[CARRIER_OF[kind]]
+        if spec.capacity > 0 and mode in spec.modes and (spec.technique is None or await has_technique(ctx.session, owner_id, spec.technique)):
+            fitting.append(kind)
+    return max(fitting, key=lambda kind: (CARRIERS[CARRIER_OF[kind]].capacity, kind.value), default=TransportKind.PACK_ANIMALS)
+
+
 async def fleet_of(ctx: TickContext, owner_id: int, mode: TradeMode, capacity: int) -> FleetRow:
-    kind = VEHICLE_OF.get(mode, TransportKind.PACK_ANIMALS)
+    kind = await vehicle_for(ctx, owner_id, mode)
     fleet = await ctx.session.get(FleetRow, (owner_id, kind))
     if fleet is None:
         each = ctx.rules.convoys.per_animal if kind in ANIMAL_KINDS else ctx.rules.convoys.per_vehicle

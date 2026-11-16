@@ -18,6 +18,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import FolkBeliefRow, MessageRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
+from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.engine.gods.devotion import resurrection_state
@@ -30,6 +31,7 @@ from aerona.services.state import son_views
 router = APIRouter(tags=["sons"])
 
 NO_SON = "No such son."
+CHAT_TOOL = "son:chat"
 NOT_DEAD = "That son is not dead."
 CHAT_MAX_LENGTH = 20000
 
@@ -230,7 +232,10 @@ async def read_chat(services: ServicesDep, son_id: int = Path(ge=1)) -> list[Mes
 @router.post("/sons/{son_id}/chat", response_model=ChatReply)
 async def chat(request: ChatRequest, services: ServicesDep, son_id: int = Path(ge=1)) -> ChatReply:
     require_llm(services, "Speaking with a son")
-    return await chat_with_son(services.agents, son_id, request.text)
+    reply = await chat_with_son(services.agents, son_id, request.text)
+    async with services.database.write() as session, services.application.ledger.creator_action(session, CHAT_TOOL, ActionKind.CHAT, {"son_id": son_id}):
+        pass
+    return reply
 
 
 @router.post("/sons/{son_id}/act", response_model=JobAccepted, status_code=status.HTTP_202_ACCEPTED)

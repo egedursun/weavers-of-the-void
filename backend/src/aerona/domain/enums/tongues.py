@@ -7,6 +7,11 @@ class SoundChangeKind(StrEnum):
     VOWEL_SHIFT = "vowel_shift"
     MERGER = "merger"
     LOSS = "loss"
+    METATHESIS = "metathesis"
+    EPENTHESIS = "epenthesis"
+    ASSIMILATION = "assimilation"
+    PALATALISATION = "palatalisation"
+    TONOGENESIS = "tonogenesis"
 
 
 class SoundEnvironment(StrEnum):

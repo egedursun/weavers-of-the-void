@@ -12,6 +12,9 @@ class UrbanRules:
     town_population: int = rule(2000, 1, 10000000, G, "People that make a village a town (it also needs roads)")
     city_population: int = rule(10000, 1, 100000000, G, "People that make a town a city (it also needs a cistern or better and a granary)")
     metropolis_population: int = rule(50000, 1, 1000000000, G, "People that make a city a metropolis (it also needs an aqueduct and sewers)")
+    megalopolis_population: int = rule(1000000, 0, 100000000, G, "People at which a metropolis grows into a megalopolis")
+    world_city_population: int = rule(10000000, 0, 1000000000, G, "People at which a megalopolis becomes a world city")
+    world_city_roads: int = rule(3, 0, 10, G, "Road network a world city needs")
     district_slots_per_tier: int = rule(2, 0, 20, G, "District slots a settlement gains per size tier above hamlet")
     district_cost: int = rule(400, 0, 100000000, G, "Treasury and investment a district level costs")
     district_labour: int = rule(200, 0, 10000000, G, "Builders' work a district level needs")
@@ -75,6 +78,7 @@ class TaxationRules:
 @dataclass(frozen=True)
 class CrimeRules:
     poverty_pct: int = rule(40, 0, 300, G, "Crime from poverty at no wealth (%)")
+    offence_pct: int = rule(5, 0, 100, G, "Chance per point of town crime that a mortal there commits an everyday offence (% of a percent)")
     outcast_pct: int = rule(100, 0, 500, G, "Crime per share of outcasts (%)")
     disorder_pct: int = rule(30, 0, 300, G, "Crime from a lack of order (%)")
     bandit_crime: int = rule(10, 0, 100, G, "Crime added by each bandit or rebel band in the land of a settlement")

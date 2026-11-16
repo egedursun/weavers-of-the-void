@@ -109,13 +109,13 @@ async def shape_stores(scope: PlayerScope, command: Stores) -> Effect:
 @player_action("society:famine", ActionKind.DISASTER)
 async def famine(scope: PlayerScope, command: SocietyTarget) -> Effect:
     society = await send_famine(await scope.context("famine"), command.entity_id)
-    return Effect("Famine struck the granaries.", command.entity_id, values=_society_values(society))
+    return Effect("Famine struck the stores.", command.entity_id, values=_society_values(society))
 
 
 @player_action("society:plenty", ActionKind.MIRACLE)
 async def plenty(scope: PlayerScope, command: SocietyTarget) -> Effect:
     society = await send_plenty(await scope.context("plenty"), command.entity_id)
-    return Effect("Plenty filled the granaries.", command.entity_id, values=_society_values(society))
+    return Effect("Plenty filled the stores.", command.entity_id, values=_society_values(society))
 
 
 @player_action("society:forge", ActionKind.PRODUCE)

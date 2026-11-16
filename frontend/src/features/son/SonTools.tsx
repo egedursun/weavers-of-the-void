@@ -123,7 +123,7 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
                     {(tool) => (
                       <div
                         key={tool.name}
-                        className='flex min-w-0 items-center justify-between gap-2 rounded-md border border-dashed px-2.5 py-1.5'
+                        className='flex min-w-0 items-center justify-between gap-2 rounded-md px-2.5 py-1.5 sealed-well'
                       >
                         <Text as='span' truncate>
                           {toolTitle(tool.name)}

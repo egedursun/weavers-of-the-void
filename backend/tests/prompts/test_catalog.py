@@ -107,7 +107,7 @@ def test_world_header_hides_mood_and_doom_when_short_or_calm() -> None:
     assert "DOOM CLOCK" not in short
     assert "PROHIBITIONS" in short
     full = render(PromptId.WORLD_HEADER, context)
-    assert "about to overflow" in full
+    assert "near its peak" in full
     assert "30% cheaper" in full
 
 

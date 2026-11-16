@@ -72,7 +72,7 @@ export function StandingRow({
   const nothing =
     Object.keys(changed).length === 0 ? 'Change a value first' : null
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <NodeName item={focus === 'god' ? row.community : row.god} />
         <Muted variant='caption'>{`since epoch ${row.epoch}`}</Muted>
@@ -280,7 +280,7 @@ export function RegardForm({
         ? 'Set at least one value'
         : null
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md p-3 sealed-well'>
       <Label variant='overline'>Set a community’s regard</Label>
       <EntityPicker
         types={COMMUNITY_TYPES}

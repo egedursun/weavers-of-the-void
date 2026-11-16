@@ -25,7 +25,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHook, GoalSource, GoalState, GodGoalKind, SonPunishment, WoundCause
+from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHook, GoalSource, GoalState, GodGoalKind, SonPunishment, VotingRule, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.lifecycle_end import LifecycleState
@@ -38,8 +38,9 @@ from aerona.engine.divine.foreign import seal_pact
 from aerona.engine.divine.goals import SON_ONLY, TARGET_TYPES
 from aerona.engine.divine.gods import God, divine_of, god_of
 from aerona.engine.divine.laws import profile_for
+from aerona.engine.divine.motions import Motion
 from aerona.engine.divine.outer import outer_profile
-from aerona.engine.divine.rulings import Motion, enact, record
+from aerona.engine.divine.rulings import enact, record
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.divine.wounds import gather, inflict
 from aerona.engine.lifecycle.states import state_of
@@ -279,10 +280,11 @@ async def decree(
     world_id: int | None = None,
     school: MagicSchool | None = None,
     punishment: SonPunishment | None = None,
+    voting_rule: VotingRule | None = None,
 ) -> tuple[CouncilRulingRow, list[str]]:
     if motion is CouncilMotion.NONE:
         raise ValidationFailedError("Choose a decision for the council to carry.")
-    row = await record(ctx, Motion(motion, target_id, world_id, school, punishment), council_id=None, note_text="by the Creator's word")
+    row = await record(ctx, Motion(motion, target_id, world_id, school, punishment, voting_rule), council_id=None, note_text="by the Creator's word")
     members = list(await ctx.session.scalars(select(SonRow).order_by(SonRow.id)))
     return row, await enact(ctx, row, members)
 

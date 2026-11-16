@@ -9,8 +9,8 @@ from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import LegendaryQuestKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import ClimateEra, Discovery, SkyEventKind, StarType
 from aerona.domain.models.entity_stats import ItemStats, RegionStats, SpiritStats
@@ -38,7 +38,7 @@ async def test_route_actions_cost_and_effect(scope: PlayerScope, session: AsyncS
     assert route.active
     with pytest.raises(ValidationFailedError):
         await cosmic.route_action(scope, cosmic.RouteCommand(route_id=route.id, action=cosmic.RouteAction.REVEAL))
-    assert await action_kinds(session) == [ActionKind.STITCH_ROUTE, ActionKind.SEVER_ROUTE, ActionKind.STITCH_ROUTE]
+    assert await action_kinds(session) == [ActionKind.REPAIR_ROUTE, ActionKind.SEVER_ROUTE, ActionKind.REPAIR_ROUTE]
 
 
 async def test_hang_seal_cleanse_and_rekindle(scope: PlayerScope, session: AsyncSession, world: PlayerWorld, rules: Rules) -> None:
@@ -73,11 +73,11 @@ async def test_soul_bind_quest_and_sky(scope: PlayerScope, session: AsyncSession
     await cosmic.bind_soul(scope, cosmic.SoulBind(soul_id=soul.id, target_id=sword.id))
     assert soul.status is not EntityStatus.CANON
     with pytest.raises(ValidationFailedError):
-        await cosmic.legendary_quest(scope, cosmic.LegendaryQuest(kind=LegendaryQuestKind.ARCHIVE))
+        await cosmic.legendary_quest(scope, cosmic.LegendaryQuest(aim=QuestAim.FIND, target_kind=QuestTargetKind.KNOWLEDGE))
     sun = await session.get(StarRow, world.world.star_id)
     assert sun is not None
     sun.star_type = StarType.DEAD_STAR
-    quest = await cosmic.legendary_quest(scope, cosmic.LegendaryQuest(kind=LegendaryQuestKind.DEAD_STAR))
+    quest = await cosmic.legendary_quest(scope, cosmic.LegendaryQuest(aim=QuestAim.RESTORE, target_kind=QuestTargetKind.STAR))
     assert isinstance(quest.values["thread_id"], int)
     with pytest.raises(ValidationFailedError):
         await cosmic.order_sky_event(scope, cosmic.SkyEvent(kind=SkyEventKind.ECLIPSE))

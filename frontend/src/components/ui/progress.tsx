@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const progressVariants = cva(
-  'relative w-full min-w-0 overflow-hidden rounded-full bg-muted',
+  'relative w-full min-w-0 overflow-hidden rounded-full meter-track',
   {
     variants: {
       size: {
@@ -19,7 +19,7 @@ const progressVariants = cva(
 )
 
 const indicatorVariants = cva(
-  'h-full w-full flex-1 rounded-full transition-transform',
+  'h-full w-full flex-1 rounded-full meter-shine transition-transform',
   {
     variants: {
       tone: {

@@ -1,10 +1,12 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog import god_lines
 from aerona.core.errors import ValidationFailedError
-from aerona.db.tables.cosmos import CreatorMoodInputRow
+from aerona.core.total import total
+from aerona.db.tables.cosmos import CreatorMoodInputRow, CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import MessageRow
 from aerona.domain.enums.action import ActionKind
@@ -12,7 +14,8 @@ from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.creator import CreatorMoodLabel, CreatorSignKind
 from aerona.domain.enums.entity import EntityStatus
-from aerona.engine.context import Publisher
+from aerona.engine.context import Publisher, TickContext
+from aerona.engine.divine.creator_bonds import WIDER_SIGNS
 from aerona.engine.gods.mood import MoodState, last_breakdown, mood_label, mood_of, store_breakdown, store_mood
 from aerona.engine.gods.signs import grace_sign, lonely_dream, silence, wrath_sign
 from aerona.engine.gods.stats import Trait, add_trait, set_trait, trait
@@ -57,6 +60,24 @@ async def read_cult(session: AsyncSession, rules: Rules) -> CultView:
     return CultView(tuple(await creator_worshippers(session)), await cult_effect(session, rules))
 
 
+async def silent_sign(ctx: TickContext, creator: CreatorRow, _target: EntityRow | None) -> EntityRow | None:
+    await silence(ctx, creator, announce=True)
+    return None
+
+
+Sign = Callable[[TickContext, CreatorRow, EntityRow | None], Awaitable[EntityRow | None]]
+SIGNS: Mapping[CreatorSignKind, tuple[Sign, ActionKind]] = total(
+    CreatorSignKind,
+    {
+        CreatorSignKind.WRATH: (wrath_sign, ActionKind.DISASTER),
+        CreatorSignKind.GRACE: (grace_sign, ActionKind.MIRACLE),
+        CreatorSignKind.SILENCE: (silent_sign, ActionKind.OTHER),
+        CreatorSignKind.DREAM: (lonely_dream, ActionKind.DREAM),
+        **{kind: (sign, ActionKind.MIRACLE) for kind, sign in WIDER_SIGNS.items()},
+    },
+)
+
+
 async def trigger_sign(
     session: AsyncSession, rules: Rules, kind: CreatorSignKind, target_id: int | None = None, publish: Publisher | None = None
 ) -> EntityRow | None:
@@ -65,19 +86,8 @@ async def trigger_sign(
     target = require(await session.get(EntityRow, target_id), "record") if target_id is not None else None
     if target is not None and target.status is not EntityStatus.CANON:
         raise ValidationFailedError(f"{target.name} is not in the world.")
-    if kind is CreatorSignKind.WRATH:
-        result = await wrath_sign(ctx, creator, target)
-        action = ActionKind.DISASTER
-    elif kind is CreatorSignKind.GRACE:
-        result = await grace_sign(ctx, creator, target)
-        action = ActionKind.MIRACLE
-    elif kind is CreatorSignKind.SILENCE:
-        await silence(ctx, creator, announce=True)
-        result = None
-        action = ActionKind.OTHER
-    else:
-        result = await lonely_dream(ctx, creator, target)
-        action = ActionKind.DREAM
+    sign, action = SIGNS[kind]
+    result = await sign(ctx, creator, target)
     if kind is not CreatorSignKind.SILENCE and result is None:
         raise ValidationFailedError("There is no place or mortal for this sign to reach.")
     await record_action(ctx, action, result.id if result is not None else None)

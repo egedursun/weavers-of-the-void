@@ -119,8 +119,8 @@ async def wandering_market(scope: PlayerScope, command: RegionTarget) -> Effect:
 
 
 @player_action("pirates:spawn", ActionKind.SPAWN_PIRATES)
-async def void_pirates(scope: PlayerScope, command: RegionTarget) -> Effect:
-    band = await cosmic_economy.spawn_void_pirates(scope.session, scope.rules, command.region_id)
+async def route_raiders(scope: PlayerScope, command: RegionTarget) -> Effect:
+    band = await cosmic_economy.spawn_route_raiders(scope.session, scope.rules, command.region_id)
     return Effect(f"{band.name} took to the void.", band.id, created_ids=(band.id,))
 
 

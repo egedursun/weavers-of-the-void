@@ -1,0 +1,513 @@
+@utility surface-ornate {
+  border-width: 1px;
+  border-color: color-mix(in oklch, var(--gild) 42%, transparent);
+  background:
+    radial-gradient(
+      ellipse 90% 60% at 50% 0%,
+      color-mix(in oklch, var(--frame-glow) 70%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(180deg, var(--frame-hi), var(--frame-lo));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--gild-deep) 30%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--gild-hi) 22%, transparent),
+    0 18px 48px -18px color-mix(in oklch, black 70%, transparent),
+    0 0 24px -10px color-mix(in oklch, var(--gem-lo) 60%, transparent);
+}
+
+@utility well {
+  border-width: 1px;
+  border-color: color-mix(in oklch, var(--gild) 30%, transparent);
+  background-color: var(--field);
+  box-shadow:
+    inset 0 2px 6px -2px color-mix(in oklch, black 45%, transparent),
+    inset 0 0 0 1px color-mix(in oklch, var(--gild-deep) 18%, transparent);
+  &:hover {
+    border-color: color-mix(in oklch, var(--gild) 50%, transparent);
+  }
+  &:focus-visible,
+  &:focus-within {
+    border-color: var(--gild);
+    box-shadow:
+      inset 0 2px 6px -2px color-mix(in oklch, black 45%, transparent),
+      0 0 0 3px color-mix(in oklch, var(--gild) 22%, transparent),
+      0 0 16px -4px color-mix(in oklch, var(--gild) 50%, transparent);
+  }
+}
+
+@utility plate-track {
+  border-width: 1px;
+  border-color: color-mix(in oklch, var(--gild) 38%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--plate-lo) 78%, black),
+    var(--plate-lo)
+  );
+  box-shadow: inset 0 2px 6px -3px color-mix(in oklch, black 55%, transparent);
+}
+
+@utility plate-active {
+  border-color: color-mix(in oklch, var(--gild) 70%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--gild-hi) 16%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
+  color: var(--plate-ink);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklch, var(--gild-hi) 30%, transparent),
+    0 0 12px -4px color-mix(in oklch, var(--gild) 55%, transparent);
+}
+
+@utility key-cap {
+  border-width: 1px;
+  border-bottom-width: 2px;
+  border-color: color-mix(in oklch, var(--gild) 40%, transparent);
+  background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
+  color: var(--plate-ink);
+}
+
+@utility meter-track {
+  border-width: 1px;
+  border-color: color-mix(in oklch, var(--gild) 35%, transparent);
+  background: color-mix(in oklch, var(--frame-lo) 85%, black);
+  box-shadow: inset 0 1px 3px color-mix(in oklch, black 55%, transparent);
+}
+
+@utility meter-shine {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklch, white 40%, transparent) 0%,
+    transparent 55%
+  );
+  box-shadow: 0 0 8px -1px currentColor;
+}
+
+@utility gold-rule {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gild-lo) 12%,
+    var(--gild-hi) 50%,
+    var(--gild-lo) 88%,
+    transparent
+  );
+}
+
+body {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      var(--app-glow),
+      transparent 70%
+    ),
+    radial-gradient(1px 1px at 20% 30%, var(--frame-dust), transparent 70%),
+    radial-gradient(1px 1px at 70% 12%, var(--frame-dust), transparent 70%),
+    radial-gradient(1px 1px at 86% 64%, var(--frame-dust), transparent 70%),
+    linear-gradient(
+      180deg,
+      var(--background),
+      color-mix(in oklch, var(--background) 92%, var(--gem-lo))
+    );
+  background-attachment: fixed;
+}
+
+.dark body {
+  background-image:
+    radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      var(--app-glow),
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--background) 50%, transparent),
+      color-mix(in oklch, var(--background) 78%, transparent)
+    ),
+    url('../assets/ornate/nebula.webp');
+  background-size: auto, auto, cover;
+  background-position: center top;
+}
+
+* {
+  scrollbar-color: color-mix(in oklch, var(--gild) 40%, transparent) transparent;
+}
+
+[data-slot='sidebar-inner'] {
+  position: relative;
+  background:
+    radial-gradient(
+      ellipse 120% 40% at 0% 0%,
+      color-mix(in oklch, var(--frame-glow) 80%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 120% 40% at 100% 100%,
+      color-mix(in oklch, var(--frame-glow) 60%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(180deg, var(--frame-hi), var(--frame-lo));
+}
+
+[data-slot='sidebar-inner']::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    var(--gild-lo),
+    var(--gild-hi) 18%,
+    var(--gild) 50%,
+    var(--gild-hi) 82%,
+    var(--gild-lo)
+  );
+  box-shadow: 0 0 10px color-mix(in oklch, var(--gild) 35%, transparent);
+  pointer-events: none;
+}
+
+[data-variant='floating'] [data-slot='sidebar-inner'],
+[data-variant='inset'] [data-slot='sidebar-inner'] {
+  border-color: color-mix(in oklch, var(--gild) 55%, transparent);
+}
+
+[data-variant='floating'] [data-slot='sidebar-inner']::after,
+[data-variant='inset'] [data-slot='sidebar-inner']::after {
+  display: none;
+}
+
+[data-slot='sidebar-group-label'] {
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: var(--text-overline);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gild-text-lo);
+}
+
+[data-slot='sidebar-group-label']::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  flex-shrink: 0;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, var(--gild-hi), var(--gild-lo));
+}
+
+[data-slot='sidebar-group-label']::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--gild) 55%, transparent),
+    transparent
+  );
+}
+
+[data-slot='sidebar-menu-button'],
+[data-slot='sidebar-menu-sub-button'] {
+  position: relative;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+[data-slot='sidebar-menu-button']:hover,
+[data-slot='sidebar-menu-sub-button']:hover {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--gem-lo) 28%, transparent),
+    transparent
+  );
+}
+
+[data-slot='sidebar-menu-button'][data-active='true'],
+[data-slot='sidebar-menu-sub-button'][data-active='true'] {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--gild) 22%, transparent),
+    color-mix(in oklch, var(--gem-lo) 22%, transparent) 55%,
+    transparent
+  );
+  color: var(--plate-ink);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklch, var(--gild) 30%, transparent),
+    inset 0 -1px 0 color-mix(in oklch, var(--gild) 18%, transparent);
+}
+
+[data-slot='sidebar-menu-button'][data-active='true']::before,
+[data-slot='sidebar-menu-sub-button'][data-active='true']::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.3rem;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, var(--gild-hi), var(--gild-lo));
+  box-shadow: 0 0 8px var(--gild);
+}
+
+[data-slot='sidebar-menu-button'][data-active='true'] > svg,
+[data-slot='sidebar-menu-sub-button'][data-active='true'] > svg {
+  color: var(--gild);
+  filter: drop-shadow(
+    0 0 4px color-mix(in oklch, var(--gild) 60%, transparent)
+  );
+}
+
+[data-layout='top-bar'] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--frame-hi) 92%, transparent),
+    color-mix(in oklch, var(--frame-lo) 88%, transparent)
+  );
+}
+
+[data-layout='top-bar-cluster'] {
+  border-color: color-mix(in oklch, var(--gild) 38%, transparent);
+  background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklch, var(--gild-hi) 18%, transparent),
+    0 4px 14px -8px color-mix(in oklch, black 70%, transparent);
+}
+
+[data-slot='sidebar-inset'] {
+  background: transparent;
+}
+
+[data-layout='top-bar']::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gild-lo) 10%,
+    var(--gild-hi) 50%,
+    var(--gild-lo) 90%,
+    transparent
+  );
+  box-shadow: 0 0 12px color-mix(in oklch, var(--gild) 40%, transparent);
+  pointer-events: none;
+}
+
+[data-variant='floating'] [data-slot='sidebar-header'],
+[data-variant='inset'] [data-slot='sidebar-header'] {
+  padding: 0.85rem 0.25rem 0.25rem;
+}
+
+[data-variant='floating'] [data-slot='sidebar-inner'] {
+  border-width: 1.5px;
+  border-color: var(--gild-lo);
+  box-shadow:
+    0 0 0 1px var(--gild-deep),
+    inset 0 0 0 3px color-mix(in oklch, var(--gild-deep) 40%, transparent),
+    0 0 24px -8px color-mix(in oklch, var(--gild) 30%, transparent);
+}
+
+@utility sealed-well {
+  border: 1px dashed color-mix(in oklch, var(--gild) 38%, transparent);
+  background:
+    radial-gradient(
+      ellipse 60% 70% at 50% 40%,
+      color-mix(in oklch, var(--gem-lo) 22%, transparent),
+      transparent 75%
+    ),
+    color-mix(in oklch, var(--frame-lo) 55%, transparent);
+  box-shadow: inset 0 2px 10px -4px color-mix(in oklch, black 50%, transparent);
+}
+
+@utility surface-framed {
+  --corner: 1.75rem;
+  border-width: 1.5px;
+  background-image:
+    url('../assets/ornate/frame-tl.webp'),
+    url('../assets/ornate/frame-tr.webp'),
+    url('../assets/ornate/frame-bl.webp'),
+    url('../assets/ornate/frame-br.webp'),
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--gild-hi) 9%, transparent),
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse 90% 70% at 50% 0%,
+      color-mix(in oklch, var(--gem-hi) 16%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(
+      color-mix(in oklch, var(--card) 84%, transparent),
+      color-mix(in oklch, var(--card) 84%, transparent)
+    );
+  background-size:
+    var(--corner) var(--corner),
+    var(--corner) var(--corner),
+    var(--corner) var(--corner),
+    var(--corner) var(--corner),
+    auto,
+    auto,
+    auto;
+  background-position:
+    top -2px left -2px,
+    top -2px right -2px,
+    bottom -2px left -2px,
+    bottom -2px right -2px,
+    center,
+    center,
+    center;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--gild-deep) 80%, transparent),
+    inset 0 0 0 3px color-mix(in oklch, var(--frame-lo) 70%, transparent),
+    inset 0 0 0 4px color-mix(in oklch, var(--gild) 40%, transparent),
+    inset 0 1px 12px -4px color-mix(in oklch, var(--gem-hi) 30%, transparent),
+    0 14px 30px -18px color-mix(in oklch, black 85%, transparent),
+    0 0 20px -10px color-mix(in oklch, var(--gild) 35%, transparent);
+}
+
+@utility surface-sheen {
+  --corner: 1.25rem;
+  border-width: 1.5px;
+  background-image:
+    url('../assets/ornate/frame-tl.webp'),
+    url('../assets/ornate/frame-tr.webp'),
+    url('../assets/ornate/frame-bl.webp'),
+    url('../assets/ornate/frame-br.webp'),
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--gild-hi) 9%, transparent),
+      transparent 45%
+    ),
+    linear-gradient(
+      color-mix(in oklch, var(--card) 84%, transparent),
+      color-mix(in oklch, var(--card) 84%, transparent)
+    );
+  background-size:
+    var(--corner) var(--corner),
+    var(--corner) var(--corner),
+    var(--corner) var(--corner),
+    var(--corner) var(--corner),
+    auto,
+    auto;
+  background-position:
+    top -2px left -2px,
+    top -2px right -2px,
+    bottom -2px left -2px,
+    bottom -2px right -2px,
+    center,
+    center;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--gild-deep) 70%, transparent),
+    inset 0 0 0 2px color-mix(in oklch, var(--frame-lo) 70%, transparent),
+    inset 0 0 0 3px color-mix(in oklch, var(--gild) 30%, transparent),
+    0 10px 22px -16px color-mix(in oklch, black 85%, transparent);
+}
+
+@utility surface-well {
+  --corner: 1rem;
+  border-width: 1.5px;
+  background-image:
+    url('../assets/ornate/frame-tl.webp'),
+    url('../assets/ornate/frame-tr.webp'),
+    url('../assets/ornate/frame-bl.webp'),
+    url('../assets/ornate/frame-br.webp');
+  background-size:
+    var(--corner) var(--corner),
+    var(--corner) var(--corner),
+    var(--corner) var(--corner),
+    var(--corner) var(--corner);
+  background-position:
+    top -1px left -1px,
+    top -1px right -1px,
+    bottom -1px left -1px,
+    bottom -1px right -1px;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--gild-deep) 50%, transparent),
+    inset 0 2px 8px -3px color-mix(in oklch, black 55%, transparent),
+    inset 0 0 0 2px color-mix(in oklch, var(--frame-lo) 60%, transparent),
+    inset 0 0 0 3px color-mix(in oklch, var(--gild) 22%, transparent);
+}
+
+[data-layout='drawer'] {
+  border-inline-start: 0;
+}
+
+[data-layout='drawer']::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    var(--gild-lo),
+    var(--gild-hi) 18%,
+    var(--gild) 50%,
+    var(--gild-hi) 82%,
+    var(--gild-lo)
+  );
+  box-shadow: 0 0 12px color-mix(in oklch, var(--gild) 40%, transparent);
+  pointer-events: none;
+}
+
+[data-layout='drawer-header'] {
+  background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
+}
+
+[data-layout='drawer-header']::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gild-lo) 10%,
+    var(--gild-hi) 50%,
+    var(--gild-lo) 90%,
+    transparent
+  );
+  box-shadow: 0 0 10px color-mix(in oklch, var(--gild) 35%, transparent);
+  pointer-events: none;
+}
+
+[data-slot='skeleton'] {
+  background-color: color-mix(in oklch, var(--plate-hi) 55%, transparent);
+  border: 1px solid color-mix(in oklch, var(--gild) 14%, transparent);
+}
+
+@utility scene-frame {
+  isolation: isolate;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    pointer-events: none;
+    border: 2px solid var(--gild-lo);
+    border-radius: inherit;
+    background:
+      url('../assets/ornate/frame-tl.webp') top left / 2.75rem no-repeat,
+      url('../assets/ornate/frame-tr.webp') top right / 2.75rem no-repeat,
+      url('../assets/ornate/frame-bl.webp') bottom left / 2.75rem no-repeat,
+      url('../assets/ornate/frame-br.webp') bottom right / 2.75rem no-repeat;
+    box-shadow:
+      inset 0 0 0 1px var(--gild-deep),
+      inset 0 0 0 4px color-mix(in oklch, var(--frame-lo) 60%, transparent),
+      inset 0 0 0 5px color-mix(in oklch, var(--gild) 45%, transparent),
+      inset 0 0 40px -10px color-mix(in oklch, black 70%, transparent);
+  }
+}

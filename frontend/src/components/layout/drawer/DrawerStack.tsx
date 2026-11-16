@@ -1,6 +1,7 @@
 import { type ComponentType, Suspense, useRef } from 'react'
 import { ArrowLeft, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FrameCorners } from '@/components/ui/ornate'
 import {
   Sheet,
   SheetClose,
@@ -9,6 +10,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DRAWER_KIND_ICON, Medallion } from '@/components/domain'
 import { Label } from '@/components/typography'
 import {
   DRAWER_KIND_LABEL,
@@ -49,7 +51,11 @@ export function DrawerStack({ pages }: { pages: DrawerPages }) {
           bodyRef.current?.focus()
         }}
       >
-        <div className='flex h-topbar shrink-0 items-center gap-2 border-b px-3'>
+        <FrameCorners frame='rail' />
+        <div
+          data-layout='drawer-header'
+          className='relative flex h-topbar shrink-0 items-center gap-3 px-3'
+        >
           {depth > 1 && (
             <Button
               variant='ghost'
@@ -60,8 +66,15 @@ export function DrawerStack({ pages }: { pages: DrawerPages }) {
               <ArrowLeft />
             </Button>
           )}
+          {top && (
+            <Medallion
+              icon={DRAWER_KIND_ICON[top.kind]}
+              tone='gold'
+              size='sm'
+            />
+          )}
           <div className='flex min-w-0 flex-1 flex-col'>
-            <SheetTitle className='min-w-0 truncate'>
+            <SheetTitle className='min-w-0 truncate text-gilded'>
               {top ? DRAWER_KIND_LABEL[top.kind] : ''}
             </SheetTitle>
             <SheetDescription className='sr-only'>

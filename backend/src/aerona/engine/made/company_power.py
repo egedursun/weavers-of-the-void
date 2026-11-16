@@ -1,5 +1,9 @@
+from collections.abc import Mapping
+
 from sqlalchemy import func, select
 
+from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.made import CompanyHoldingRow, CompanyPresenceRow, EnclaveRow
@@ -7,7 +11,7 @@ from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.made import CompanyCharter
+from aerona.domain.enums.made import CompanyCharter, CompanyHoldingKind
 from aerona.domain.enums.polity import GovernmentKind
 from aerona.engine.context import TickContext
 from aerona.engine.factions.companies import realm_of
@@ -15,18 +19,39 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 
-SOVEREIGN_CHARTERS = frozenset({CompanyCharter.CHARTERED, CompanyCharter.FREE})
+HOLDING_WEIGHT: Mapping[CompanyHoldingKind, int] = total(
+    CompanyHoldingKind,
+    {
+        CompanyHoldingKind.STRUCTURE: 100,
+        CompanyHoldingKind.NETWORK: 150,
+        CompanyHoldingKind.DATA_STORE: 120,
+        CompanyHoldingKind.MADE_MIND: 130,
+        CompanyHoldingKind.FABRICATOR: 140,
+        CompanyHoldingKind.LIVING_LINE: 110,
+        CompanyHoldingKind.ROUTE: 160,
+        CompanyHoldingKind.ENCLAVE: 200,
+    },
+)
+CHARTER_REACH: Mapping[CompanyCharter, tuple[bool, bool]] = total(
+    CompanyCharter,
+    {
+        CompanyCharter.CHARTERED: (True, True),
+        CompanyCharter.FREE: (True, True),
+        CompanyCharter.STATE_OWNED: (False, False),
+        CompanyCharter.COOPERATIVE: (False, True),
+    },
+)
 
 
-async def holding_places(ctx: TickContext, company_id: int) -> list[int]:
-    places: list[int] = []
+async def holding_places(ctx: TickContext, company_id: int) -> list[tuple[int, int]]:
+    places: list[tuple[int, int]] = []
     for holding in await ctx.session.scalars(select(CompanyHoldingRow).where(CompanyHoldingRow.company_entity_id == company_id).order_by(CompanyHoldingRow.id)):
         thing = await ctx.session.get(EntityRow, holding.holding_node_id)
         if thing is None:
             continue
         town = thing if thing.entity_type is EntityType.SETTLEMENT else await ctx.session.get(EntityRow, thing.location_id) if thing.location_id else None
         if town is not None and town.entity_type is EntityType.SETTLEMENT:
-            places.append(town.id)
+            places.append((town.id, HOLDING_WEIGHT[holding.kind]))
     return places
 
 
@@ -70,26 +95,28 @@ async def secede(ctx: TickContext, company: EntityRow) -> int:
 
 async def grow(ctx: TickContext, company: EntityRow, row: CompanyProfileRow) -> None:
     table = ctx.rules.company_power
-    places = await holding_places(ctx, company.id)
+    held_places = await holding_places(ctx, company.id)
+    places = [town for town, _weight in held_places]
+    captures, secedes = CHARTER_REACH[row.charter]
     realms: dict[int, int] = {}
-    for town in places:
+    for town, weight in held_places:
         realm = await realm_of(ctx, town)
         if realm is not None:
-            realms[realm] = realms.get(realm, 0) + 1
-    for realm, count in realms.items():
+            realms[realm] = realms.get(realm, 0) + weight
+    for realm, weight in realms.items():
         presence = await presence_in(ctx, company.id, realm)
         if "influence" not in presence.locked:
-            gain = count * table.influence_per_holding if presence.licensed else 0
+            gain = weight * table.influence_per_holding // PERCENT if presence.licensed else 0
             presence.influence = clamp_percent(presence.influence + gain - table.influence_decay)
         if presence.influence >= table.enclave_influence:
             for town in places:
                 if await realm_of(ctx, town) == realm:
                     await take_enclave(ctx, company, town)
-        if presence.influence >= table.capture_influence:
+        if captures and presence.influence >= table.capture_influence:
             await capture(ctx, company, realm)
     await ctx.session.flush()
     enclaves = int(await ctx.session.scalar(select(func.count()).where(EnclaveRow.company_entity_id == company.id)) or 0)
-    if enclaves >= table.sovereignty_enclaves and row.charter in SOVEREIGN_CHARTERS:
+    if secedes and enclaves >= table.sovereignty_enclaves:
         await secede(ctx, company)
 
 

@@ -1,4 +1,4 @@
-from aerona.core.grammar import several
+from aerona.core.grammar import agree, several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.creator import CreatorSignKind
 from aerona.engine.transition import pour_essence
@@ -43,7 +43,9 @@ class FirstFaith(Command):
 async def pour(scope: PlayerScope, command: Pour) -> Effect:
     result = await pour_essence(await scope.context("pour_essence"), command.amount)
     return Effect(
-        f"{several(result.given, 'measure', 'measures')} of fertility rose in the barren lands.", essence_spent=command.amount, values={"given": result.given}
+        f"{several(result.given, 'measure', 'measures')} of fertility {agree(result.given, 'was', 'were')} given to the barren lands.",
+        essence_spent=command.amount,
+        values={"given": result.given},
     )
 
 
@@ -52,7 +54,7 @@ async def sign(scope: PlayerScope, command: Sign) -> Effect:
     reached = await creator_mood.trigger_sign(scope.session, scope.rules, command.kind, command.target_id, scope.publish)
     if reached is None:
         return Effect("The Creator fell silent.")
-    return Effect(f"A sign of {command.kind.value} reached {reached.name}.", reached.id)
+    return Effect(f"A sign of {command.kind.value.replace('_', ' ')} reached {reached.name}.", reached.id)
 
 
 @player_action("mortal:protect", ActionKind.EDIT_RECORD)

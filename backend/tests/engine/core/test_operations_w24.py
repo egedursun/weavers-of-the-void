@@ -178,7 +178,7 @@ async def test_supply_flows_from_stocks_through_a_depot_and_what_arrives_is_what
     session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.GRAIN, quantity=400))
     depot = DepotRow(owner_entity_id=realm.id, region_entity_id=world.regions[0].id, capacity=500, locked=[])
     session.add(depot)
-    session.add(TransportAssetRow(owner_entity_id=realm.id, kind=CarrierKind.WAGONS, count=10, capacity=10, locked=[]))
+    session.add(TransportAssetRow(owner_entity_id=realm.id, kind=CarrierKind.ANIMAL_CARTS, count=10, capacity=10, locked=[]))
     army = await host(session, world, realm, 2)
     profile = await session.get(ArmyProfileRow, army.id)
     assert profile is not None
@@ -419,7 +419,7 @@ async def test_field_depots_are_abandoned_at_peace_and_an_enemy_army_on_the_line
     await open_war(ctx, realm, rival)
     depot = DepotRow(owner_entity_id=realm.id, region_entity_id=world.regions[0].id, supplies=200, locked=[])
     session.add(depot)
-    session.add(TransportAssetRow(owner_entity_id=realm.id, kind=CarrierKind.WAGONS, count=10, capacity=10, locked=[]))
+    session.add(TransportAssetRow(owner_entity_id=realm.id, kind=CarrierKind.ANIMAL_CARTS, count=10, capacity=10, locked=[]))
     army = await host(session, world, realm, 2)
     profile = await session.get(ArmyProfileRow, army.id)
     assert profile is not None

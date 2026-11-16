@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.bonds import endpoints_valid
-from aerona.catalog.cosmography import STRATUM_HOSTS
+from aerona.catalog.strata import hosts_for
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -126,14 +126,14 @@ async def test_the_central_galaxy_of_a_cluster_draws_its_neighbours_into_mergers
 async def test_strata_lie_in_the_dimension_their_kind_fits_and_a_death_ruler_draws_the_dead(ctx: TickContext, cosmos: Cosmos) -> None:
     await ensure_ladder(ctx.session, ctx.rules)
     realm = await make_region(ctx.session, "Hall of Shades", cosmos.home.id)
-    unhosted = AfterlifeStratumRow(realm_entity_id=realm.id, kind=StratumKind.PLAIN, name="Old Plain", criteria={})
+    unhosted = AfterlifeStratumRow(realm_entity_id=realm.id, kind=StratumKind.COMMON, name="Old Plain", criteria={})
     ctx.session.add(unhosted)
     await ctx.session.flush()
     below = await create_dimension(ctx.session, ctx.rules, DimensionDraft("The Below", DimensionKind.UNDERWORLD, ctx.epoch))
     assert unhosted.dimension_id == below.id
     strata = await strata_of(ctx, realm, set())
-    plain = next(row for row in strata if row.kind is StratumKind.PLAIN)
-    assert plain.dimension_id == below.id and DimensionKind.UNDERWORLD in STRATUM_HOSTS[StratumKind.PLAIN]
+    plain = next(row for row in strata if row.kind is StratumKind.COMMON)
+    assert plain.dimension_id == below.id and DimensionKind.UNDERWORLD in hosts_for(plain.valence, plain.activity)
     son = await make_son(ctx.session, "Morrow", cosmos.home.id, domains=(Domain.DEATH, Domain.SEA))
     below.ruler_node_id = son.id
     await ctx.session.flush()

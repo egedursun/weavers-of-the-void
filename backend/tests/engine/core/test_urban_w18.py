@@ -211,7 +211,7 @@ async def test_convoys_carry_their_route_and_fleets_wear(session: AsyncSession, 
     assert fate_of(ctx.rules, convoy, profile, 0.0) is ConvoyStatus.RAIDED
     convoy.guards = 1000
     assert fate_of(ctx.rules, convoy, profile, 0.0) is ConvoyStatus.ARRIVED
-    fleet = await session.get(FleetRow, (first.id, TransportKind.WAGONS))
+    fleet = await session.get(FleetRow, (first.id, TransportKind.ANIMAL_CARTS))
     assert fleet is not None
     before = fleet_capacity(ctx.rules, fleet)
     await wear_fleets(ctx, tally)

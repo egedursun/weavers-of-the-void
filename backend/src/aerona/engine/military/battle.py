@@ -73,6 +73,17 @@ TRAIT_TACTICS: dict[CommanderTrait, tuple[Tactic, ...]] = {
     CommanderTrait.DEFENSIVE_GENIUS: (Tactic.HOLD_LINE, Tactic.RIVER_DEFENCE, Tactic.SHIELD_WALL),
     CommanderTrait.CAVALRY_MASTER: (Tactic.FLANK_CAVALRY, Tactic.FEIGNED_RETREAT),
     CommanderTrait.SIEGE_EXPERT: (Tactic.SIEGE_ASSAULT,),
+    CommanderTrait.SKY_COMMANDER: (Tactic.AIR_SUPERIORITY,),
+    CommanderTrait.SPACE_COMMANDER: (Tactic.ORBITAL_BOMBARDMENT, Tactic.DROP_ASSAULT),
+    CommanderTrait.ARTILLERIST: (Tactic.ARTILLERY_BARRAGE, Tactic.MISSILE_ATTRITION),
+    CommanderTrait.AMBUSHER: (Tactic.AMBUSH, Tactic.NIGHT_RAID, Tactic.GUERRILLA),
+    CommanderTrait.FOREST_FIGHTER: (Tactic.AMBUSH, Tactic.SKIRMISH_HARASS),
+    CommanderTrait.SKIRMISHER: (Tactic.SKIRMISH_HARASS, Tactic.FEINT),
+    CommanderTrait.ARMOURED_COMMANDER: (Tactic.ARMOURED_THRUST,),
+    CommanderTrait.DISCIPLINARIAN: (Tactic.HOLD_LINE, Tactic.SHIELD_WALL),
+    CommanderTrait.SIGNALS_COMMANDER: (Tactic.ELECTRONIC_WARFARE,),
+    CommanderTrait.SIEGE_DEFENDER: (Tactic.HOLD_LINE,),
+    CommanderTrait.NIGHT_FIGHTER: (Tactic.NIGHT_RAID,),
 }
 Streams = Callable[[str], SeededRandom]
 
@@ -145,6 +156,7 @@ class Side:
     traits: set[CommanderTrait]
     intel: int = 0
     watch: float = 0.0
+    fortune: int = 0
     veteran: float = 0.0
     leadership: int = 0
     tactic: Tactic = Tactic.HOLD_LINE
@@ -461,6 +473,7 @@ def cast_luck(rules: Rules, streams: Streams, *sides: Side) -> None:
     table = rules.campaigns
     for side in sides:
         side.luck = 1 + streams(f"luck.{side.entity.id}").die(table.battle_die) * table.battle_die_mult / PERCENT
+        side.luck *= 1 + side.fortune / PERCENT * rules.fortune.draw_cap_pct / PERCENT
 
 
 def strength(rules: Rules, side: Side, ground: Field) -> float:
@@ -1132,7 +1145,7 @@ def fighting(rules: Rules, streams: Streams, attacker: Side, defender: Side, gro
         phases.append(flank)
     dealt_a, taken_a = charge(rules, streams, attacker, defender, ground)
     dealt_d, taken_d = charge(rules, streams, defender, attacker, ground)
-    phases.append(PhaseLog(BattlePhase.CHARGE, taken_a + dealt_d, dealt_a + taken_d, "the horse and the beasts struck"))
+    phases.append(PhaseLog(BattlePhase.CHARGE, taken_a + dealt_d, dealt_a + taken_d, "the mounted troops and the beasts struck"))
     shaken(rules, attacker, streams, phase="charge")
     shaken(rules, defender, streams, phase="charge")
     for index in range(rules.tactics.melee_rounds):

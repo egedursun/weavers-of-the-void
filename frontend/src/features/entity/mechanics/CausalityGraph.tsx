@@ -121,7 +121,7 @@ export function CausalityGraph({ nodeId }: { nodeId: number }) {
   const selected = chosen !== null ? at.get(chosen)?.node : undefined
   return (
     <div data-surface='CausalityGraph' className='flex min-w-0 flex-col gap-2'>
-      <div className='min-w-0 overflow-x-auto rounded-lg border bg-background'>
+      <div className='min-w-0 overflow-x-auto rounded-md border surface-sheen border-gild/60 bg-card'>
         <svg
           role='img'
           aria-label='Causality graph'
@@ -227,7 +227,7 @@ export function CausalityGraph({ nodeId }: { nodeId: number }) {
         epochs. Pick an incident to read it.
       </Muted>
       {selected && (
-        <div className='flex min-w-0 items-start gap-2 rounded-lg border bg-background p-2'>
+        <div className='flex min-w-0 items-start gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
           <Medallion
             icon={GitBranch}
             tone={selected.own ? 'gold' : 'info'}

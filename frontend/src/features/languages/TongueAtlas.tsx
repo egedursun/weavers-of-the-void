@@ -18,10 +18,11 @@ import {
   EntityLink,
   IconStat,
   type KpiTone,
+  LoadingBlock,
   Medallion,
   MiniStat,
+  Paged,
   Section,
-  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { RegisterList } from '@/features/entity/lore/RegisterParts'
@@ -65,7 +66,7 @@ function RankToken({ index }: { index: number }) {
   if (podium)
     return <Medallion icon={podium.icon} tone={podium.tone} size='sm' />
   return (
-    <span className='flex size-control-sm shrink-0 items-center justify-center rounded-full border bg-muted text-muted-foreground'>
+    <span className='flex size-control-sm shrink-0 items-center justify-center rounded-full border surface-well border-gild/20 bg-muted/60 text-muted-foreground'>
       <Stat value={index + 1} />
     </span>
   )
@@ -73,7 +74,7 @@ function RankToken({ index }: { index: number }) {
 
 function RankRow({ row, index }: { row: Rank; index: number }) {
   return (
-    <li className='flex min-w-0 items-center gap-3 rounded-lg border bg-background px-2.5 py-2 @3xl/atlas:last:odd:col-span-2'>
+    <li className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-2 @3xl/atlas:last:odd:col-span-2'>
       <RankToken index={index} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <div className='flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1'>
@@ -162,9 +163,11 @@ function Ranking({ atlas }: { atlas: Atlas }) {
         data-surface='PrestigeRanking'
         className='grid min-w-0 grid-cols-1 gap-2 @3xl/atlas:grid-cols-2'
       >
-        {ranking.map((row, index) => (
-          <RankRow key={row.language.id} row={row} index={index} />
-        ))}
+        <Paged items={ranking} as='li'>
+          {(row, index) => (
+            <RankRow key={row.language.id} row={row} index={index} />
+          )}
+        </Paged>
       </ol>
     </div>
   )
@@ -190,7 +193,7 @@ function Heatmap({ atlas }: { atlas: Atlas }) {
       </div>
       <div
         data-surface='IntelligibilityHeatmap'
-        className='min-w-0 overflow-x-auto rounded-lg border bg-background'
+        className='min-w-0 overflow-x-auto rounded-md border surface-sheen border-gild/60 bg-card'
       >
         <table className='border-separate border-spacing-0.5 p-1'>
           <thead>

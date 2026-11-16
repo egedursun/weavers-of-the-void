@@ -308,7 +308,7 @@ export function WorldPlacementSection({ world }: { world: WorldRecord }) {
             value={world.biosphere_health}
             tone='success'
           />
-          <div className='flex min-w-0 items-center justify-between gap-2 rounded-lg border bg-background p-2'>
+          <div className='flex min-w-0 items-center justify-between gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
             <Muted as='span' variant='caption'>
               Mood toward its peoples
             </Muted>

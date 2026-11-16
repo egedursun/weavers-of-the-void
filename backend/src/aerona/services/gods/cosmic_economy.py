@@ -65,8 +65,8 @@ async def found_wandering_market(session: AsyncSession, rules: Rules, region_id:
     return await _found(session, rules, region_id, EngineKind.WANDERING_MARKET)
 
 
-async def spawn_void_pirates(session: AsyncSession, rules: Rules, region_id: int) -> EntityRow:
-    return await _found(session, rules, region_id, EngineKind.VOID_PIRATES)
+async def spawn_route_raiders(session: AsyncSession, rules: Rules, region_id: int) -> EntityRow:
+    return await _found(session, rules, region_id, EngineKind.ROUTE_RAIDERS)
 
 
 async def _found(session: AsyncSession, rules: Rules, region_id: int, kind: EngineKind) -> EntityRow:
@@ -82,7 +82,7 @@ async def _found(session: AsyncSession, rules: Rules, region_id: int, kind: Engi
 async def disband_faction(session: AsyncSession, rules: Rules, faction_id: int) -> EntityRow:
     ctx = await manual_context(session, "disband", rules)
     faction = require(await session.get(EntityRow, faction_id), "record")
-    if faction.engine_kind not in (EngineKind.WANDERING_MARKET, EngineKind.VOID_PIRATES) or faction.status is not EntityStatus.CANON:
+    if faction.engine_kind not in (EngineKind.WANDERING_MARKET, EngineKind.ROUTE_RAIDERS) or faction.status is not EntityStatus.CANON:
         raise ValidationFailedError("Only a living wandering market or pirate band can be disbanded.")
     await EntityRepository(session).set_status(faction, EntityStatus.DESTROYED, ctx.epoch)
     await record_action(ctx, ActionKind.DESTROY, faction.id)

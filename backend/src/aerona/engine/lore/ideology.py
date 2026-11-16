@@ -24,6 +24,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
 from aerona.engine.lifecycle.states import ended_ids
 from aerona.engine.lore.civics import holders_know
+from aerona.engine.lore.creed_change import media_factor
 from aerona.engine.lore.items import profile_of
 from aerona.engine.lore.printing import banned_for, printed, read_in_secret
 from aerona.engine.lore.research import institutions
@@ -125,7 +126,7 @@ async def emerge(ctx: TickContext) -> EntityRow | None:
     for mortal in unheld(scholars):
         if mortal.id in founders or (stat(mortal, "intellect") or 0) < FOUNDER_INTELLECT:
             continue
-        if ctx.rng(f"creed.{mortal.id}.{ctx.epoch}").chance(ctx.rules.ideologies.emergence_chance):
+        if ctx.rng(f"creed.{mortal.id}.{ctx.epoch}").chance(ctx.rules.ideologies.emergence_chance * await media_factor(ctx, mortal)):
             return await found(ctx, mortal)
     return None
 

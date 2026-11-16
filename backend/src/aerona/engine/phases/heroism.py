@@ -193,7 +193,7 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
             ctx,
             name=f"The Fall of {monster.name}",
             subtype=EPIC_SUBTYPE,
-            body=f"{hero.name} slew {monster.name}, as old as the world. This death was the end of an age.",
+            body=f"{hero.name} slew {monster.name}, as old as the world; its death closed an age.",
             power=hunt.epic_power,
             spread=hunt.epic_spread,
             subjects=[hero, monster],
@@ -201,7 +201,7 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
         await carry_legend(ctx, hero, epic, "tells their epic")
         await note(
             ctx,
-            f"{hero.name} slew the megafauna {monster.name}. The balance of the world changed; nothing will be the same again.",
+            f"{hero.name} slew the megafauna {monster.name}. The balance of its world changed.",
             key="heroism.age_change",
             ids=[hero.id, monster.id, epic.id],
             kind=ChronicleKind.AGE_CHANGE,
@@ -394,6 +394,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.cosmos",
     "table.creator_taboos",
     "table.creature_anatomy",
+    "table.creature_attacks",
     "table.crime_cases",
     "table.cult_doctrines",
     "table.cult_offices",

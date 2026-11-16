@@ -5,7 +5,14 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, EntityLink, MiniStat, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  MiniStat,
+  Paged,
+  Picture,
+  Section,
+} from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
 import { Muted, Text } from '@/components/typography'
@@ -41,14 +48,14 @@ function Card({
   return (
     <li
       className={cn(
-        'group relative flex min-w-0 flex-col overflow-hidden rounded-xl border bg-background',
+        'group relative flex min-w-0 flex-col overflow-hidden rounded-md border surface-sheen border-gild/60 bg-card',
         pinned && 'border-primary/40'
       )}
     >
       <div className='relative aspect-square w-full overflow-hidden bg-muted'>
         {card.cover ? (
-          <img
-            src={mediaUrl(card.cover, COVER_WIDTH) ?? undefined}
+          <Picture
+            src={mediaUrl(card.cover, COVER_WIDTH)}
             alt={entity.name}
             loading='lazy'
             decoding='async'
@@ -108,15 +115,19 @@ function CardGrid({
 }) {
   return (
     <ul className='grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6'>
-      {cards.map((card) => (
-        <Card
-          key={card.entity.id}
-          card={card}
-          pinned={pinned}
-          busy={toggle.isPending && toggle.variables?.id === card.entity.id}
-          onToggle={() => toggle.mutate({ id: card.entity.id, next: !pinned })}
-        />
-      ))}
+      <Paged items={cards} as='li'>
+        {(card) => (
+          <Card
+            key={card.entity.id}
+            card={card}
+            pinned={pinned}
+            busy={toggle.isPending && toggle.variables?.id === card.entity.id}
+            onToggle={() =>
+              toggle.mutate({ id: card.entity.id, next: !pinned })
+            }
+          />
+        )}
+      </Paged>
     </ul>
   )
 }

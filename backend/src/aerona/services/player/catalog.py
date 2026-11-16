@@ -34,10 +34,12 @@ from aerona.services.player import (
     cosmic,
     cosmic_orders,
     cosmography,
+    council_order,
     couplings,
     crafts,
     creation,
     creator,
+    creator_bonds,
     creatures,
     culture,
     culture_mind,
@@ -49,6 +51,7 @@ from aerona.services.player import (
     discovery,
     disease,
     divine,
+    divine_powers,
     divinity,
     dominion,
     economy,
@@ -66,6 +69,7 @@ from aerona.services.player import (
     flora,
     folkways,
     foreign_gods,
+    fortune,
     fossils,
     foundations,
     gatherings,
@@ -86,6 +90,7 @@ from aerona.services.player import (
     language_contact,
     languages,
     law_depth,
+    law_grammar,
     levers,
     life_cycles,
     lifecycle_ends,
@@ -111,7 +116,9 @@ from aerona.services.player import (
     nature,
     operations,
     orders,
+    outer_agency,
     pantheon,
+    pantheon_ties,
     peoples,
     physics,
     places,
@@ -135,10 +142,14 @@ from aerona.services.player import (
     son_tools,
     statecraft,
     structures,
+    technology,
     theories,
+    thin_b,
+    thin_sections,
     titles,
     tongues,
     transform,
+    typed_models,
     urban,
     urban_depth,
     variants,
@@ -486,12 +497,13 @@ INTERVENTION_ACTIONS = (
         ("ACT-002",),
     ),
     _sync(
-        Meta("intervene", "Miracle, disaster, teaching or curse", G.INTERVENTIONS),
+        Meta("intervene", "Miracle, disaster, teaching, curse or a verb of power", G.INTERVENTIONS),
         interventions.intervene,
         interventions.Intervene,
         lambda rules: (
             f"miracle {rules.intervention_costs.miracle}, disaster {rules.intervention_costs.disaster}, "
-            f"teaching {rules.intervention_costs.teach_knowledge}, curse {rules.intervention_costs.curse} essence"
+            f"teaching {rules.intervention_costs.teach_knowledge}, curse {rules.intervention_costs.curse}, "
+            f"verb of power {rules.intervention_costs.verb_act} essence"
         ),
         (
             "ACT-062",
@@ -879,7 +891,7 @@ COSMIC_ORDER_ACTIONS = (
     _sync(Meta("foreign_god:raise_land", "Let a foreign god raise land", G.FOREIGN_GODS), cosmic_orders.raise_land, cosmic_orders.ForeignGodTarget, free, ()),
     _sync(Meta("deposit:owner", "Give a cosmic deposit an owner", G.COSMOS), cosmic_orders.deposit_owner, cosmic_orders.DepositOwner, free, ()),
     _sync(Meta("market:found", "Found a wandering market", G.COSMOS), cosmic_orders.wandering_market, cosmic_orders.RegionTarget, free, ()),
-    _sync(Meta("pirates:spawn", "Loose void pirates", G.COSMOS), cosmic_orders.void_pirates, cosmic_orders.RegionTarget, free, ()),
+    _sync(Meta("pirates:spawn", "Loose route raiders", G.COSMOS), cosmic_orders.route_raiders, cosmic_orders.RegionTarget, free, ()),
     _sync(Meta("market:disband", "Disband a market or pirate band", G.COSMOS), cosmic_orders.disband, cosmic_orders.FactionTarget, free, ()),
     _sync(Meta("route:danger", "Set a road's danger", G.COSMOS), cosmic_orders.route_danger, cosmic_orders.RouteDanger, free, ()),
     _sync(
@@ -1363,7 +1375,7 @@ LIFE_CYCLE_ACTIONS = (
     _sync(Meta("cult:merge", "Merge a cult into another", G.SOCIETY), life_cycles.merge_cult, life_cycles.Union, free, ()),
     _sync(Meta("cult:schism", "Split a sect from a cult", G.SOCIETY), life_cycles.schism, life_cycles.Schism, free, ("ENG-035",)),
     _sync(Meta("people:unite", "Unite two peoples", G.SOCIETY), life_cycles.unite, life_cycles.Union, free, ()),
-    _sync(Meta("place:swallow", "Let the earth swallow a place", G.WORLDS), life_cycles.swallow_place, life_cycles.PlaceTarget, end_cost_text, ()),
+    _sync(Meta("place:swallow", "Sink a place into the ground", G.WORLDS), life_cycles.swallow_place, life_cycles.PlaceTarget, end_cost_text, ()),
 )
 
 BODY_ACTIONS = (
@@ -1586,11 +1598,11 @@ ECONOMY_ACTIONS = (
     _sync(Meta("indicator:edit", "Rewrite a record of the economy", G.SOCIETY), finance.edit_indicator, finance.EditIndicator, free, ("S6.4/RP2",)),
     _sync(Meta("indicator:remove", "Strike a record of the economy", G.SOCIETY), finance.remove_indicator, finance.IndicatorTarget, free, ("S6.4/RP2",)),
     _sync(Meta("genome:found", "Write down the genome of a mortal", G.ENTITIES), genetics.found, genetics.GenomeTarget, free, ("F26",)),
-    _sync(Meta("genome:gene", "Set and hold a pair of alleles in a mortal's blood", G.ENTITIES), genetics.set_gene, genetics.SetGene, free, ("F26",)),
+    _sync(Meta("genome:gene", "Set and hold a pair of alleles in a mortal's genome", G.ENTITIES), genetics.set_gene, genetics.SetGene, free, ("F26",)),
     _sync(
-        Meta("genome:edit", "Set and hold beauty, inbreeding, recognisability and divine blood", G.ENTITIES), genetics.edit, genetics.EditGenome, free, ("F26",)
+        Meta("genome:edit", "Set and hold beauty, inbreeding, recognisability and divine line", G.ENTITIES), genetics.edit, genetics.EditGenome, free, ("F26",)
     ),
-    _sync(Meta("genome:redraw", "Draw a mortal's blood anew from the pool of its people", G.ENTITIES), genetics.redraw, genetics.GenomeTarget, free, ("F26",)),
+    _sync(Meta("genome:redraw", "Draw a mortal's genome anew from its people's pool", G.ENTITIES), genetics.redraw, genetics.GenomeTarget, free, ("F26",)),
     _sync(Meta("genome:remove", "Strike a mortal's written genome", G.ENTITIES), genetics.remove, genetics.GenomeTarget, free, ("F26",)),
     _sync(Meta("allele_pool:found", "Write down the allele pool of a people", G.SOCIETY), genetics.found_pool, genetics.PoolTarget, free, ("F26",)),
     _sync(
@@ -3581,7 +3593,7 @@ ROUTE_ACTIONS = (
 
 
 RUMOUR_ACTIONS = (
-    _sync(Meta("rumour:plant", "Whisper a rumour into a community", G.MEMORY), rumours.plant_rumour, rumours.PlantRumour, free, ("F11",)),
+    _sync(Meta("rumour:plant", "Spread a rumour in a community", G.MEMORY), rumours.plant_rumour, rumours.PlantRumour, free, ("F11",)),
     _sync(Meta("rumour:edit", "Set how true a rumour runs, or let it fade", G.MEMORY), rumours.edit_rumour, rumours.EditRumour, free, ("F11",)),
     _sync(Meta("rumour:suppress", "Silence a rumour", G.MEMORY), rumours.suppress_rumour, rumours.SuppressRumour, free, ("F11",)),
 )
@@ -3673,6 +3685,9 @@ CYCLE_ACTIONS = (
     _sync(Meta("kinship:set", "Set a people's ways of kin", G.SOCIETY), cycles.kinship_set, cycles.KinshipDraft, free, ("S4.1/RP4",)),
     _sync(Meta("kinship:edit", "Edit a people's ways of kin", G.SOCIETY), cycles.kinship_edit, cycles.PeopleEdit, free, ("S4.1/RP4",)),
     _sync(Meta("kinship:delete", "Let a people's ways of kin be read anew", G.SOCIETY), cycles.kinship_delete, cycles.PeopleTarget, free, ("S4.1/RP4",)),
+    _sync(Meta("union:set", "Set a people's customs of union", G.SOCIETY), cycles.union_set, cycles.UnionDraft, free, ("S47.3.4",)),
+    _sync(Meta("union:edit", "Edit a people's customs of union", G.SOCIETY), cycles.union_edit, cycles.PeopleEdit, free, ("S47.3.4",)),
+    _sync(Meta("union:delete", "Let a people's customs of union be read anew", G.SOCIETY), cycles.union_delete, cycles.PeopleTarget, free, ("S47.3.4",)),
     _sync(Meta("alliance:set", "Set a marriage alliance between two lines", G.SOCIETY), cycles.alliance_set, cycles.AllianceDraft, free, ("S4.1/RP4",)),
     _sync(Meta("alliance:edit", "Edit a marriage alliance", G.SOCIETY), cycles.alliance_edit, cycles.AllianceEdit, free, ("S4.1/RP4",)),
     _sync(Meta("alliance:delete", "Strike a marriage alliance", G.SOCIETY), cycles.alliance_delete, cycles.AllianceTarget, free, ("S4.1/RP4",)),
@@ -4156,13 +4171,17 @@ CUSTOMS_ACTIONS = (
     _sync(Meta("revival:edit", "Edit a movement", G.SOCIETY), customs.revival_edit, customs.RevivalEdit, free, ("S4.1/RP5",)),
     _sync(Meta("revival:delete", "Strike a movement", G.SOCIETY), customs.revival_delete, customs.RevivalTarget, free, ("S4.1/RP5",)),
     _sync(
-        Meta("intoxicant_custom:set", "Set a intoxicant custom", G.SOCIETY), customs.intoxicant_custom_set, customs.IntoxicantCustomDraft, free, ("S4.1/RP5",)
+        Meta("intoxicant_custom:set", "Set an intoxicant custom", G.SOCIETY), customs.intoxicant_custom_set, customs.IntoxicantCustomDraft, free, ("S4.1/RP5",)
     ),
     _sync(
-        Meta("intoxicant_custom:edit", "Edit a intoxicant custom", G.SOCIETY), customs.intoxicant_custom_edit, customs.IntoxicantCustomEdit, free, ("S4.1/RP5",)
+        Meta("intoxicant_custom:edit", "Edit an intoxicant custom", G.SOCIETY),
+        customs.intoxicant_custom_edit,
+        customs.IntoxicantCustomEdit,
+        free,
+        ("S4.1/RP5",),
     ),
     _sync(
-        Meta("intoxicant_custom:delete", "Strike a intoxicant custom", G.SOCIETY),
+        Meta("intoxicant_custom:delete", "Strike an intoxicant custom", G.SOCIETY),
         customs.intoxicant_custom_delete,
         customs.IntoxicantCustomTarget,
         free,
@@ -4183,13 +4202,13 @@ CUSTOMS_ACTIONS = (
     _sync(Meta("name_form:set", "Set a name", G.SOCIETY), customs.name_form_set, customs.NameFormDraft, free, ("S4.1/RP5",)),
     _sync(Meta("name_form:edit", "Edit a name", G.SOCIETY), customs.name_form_edit, customs.NameFormEdit, free, ("S4.1/RP5",)),
     _sync(Meta("name_form:delete", "Strike a name", G.SOCIETY), customs.name_form_delete, customs.NameFormTarget, free, ("S4.1/RP5",)),
-    _sync(Meta("age_set:create", "Make a age-set", G.SOCIETY), customs.age_set_create, customs.AgeSetDraft, free, ("S4.1/RP5",)),
-    _sync(Meta("age_set:edit", "Edit a age-set", G.SOCIETY), customs.age_set_edit, customs.AgeSetEdit, free, ("S4.1/RP5",)),
-    _sync(Meta("age_set:delete", "Strike a age-set", G.SOCIETY), customs.age_set_delete, customs.AgeSetTarget, free, ("S4.1/RP5",)),
-    _sync(Meta("age_set_member:set", "Set a age-set membership", G.SOCIETY), customs.age_set_member_set, customs.AgeSetMemberDraft, free, ("S4.1/RP5",)),
-    _sync(Meta("age_set_member:edit", "Edit a age-set membership", G.SOCIETY), customs.age_set_member_edit, customs.AgeSetMemberEdit, free, ("S4.1/RP5",)),
+    _sync(Meta("age_set:create", "Make an age-set", G.SOCIETY), customs.age_set_create, customs.AgeSetDraft, free, ("S4.1/RP5",)),
+    _sync(Meta("age_set:edit", "Edit an age-set", G.SOCIETY), customs.age_set_edit, customs.AgeSetEdit, free, ("S4.1/RP5",)),
+    _sync(Meta("age_set:delete", "Strike an age-set", G.SOCIETY), customs.age_set_delete, customs.AgeSetTarget, free, ("S4.1/RP5",)),
+    _sync(Meta("age_set_member:set", "Set an age-set membership", G.SOCIETY), customs.age_set_member_set, customs.AgeSetMemberDraft, free, ("S4.1/RP5",)),
+    _sync(Meta("age_set_member:edit", "Edit an age-set membership", G.SOCIETY), customs.age_set_member_edit, customs.AgeSetMemberEdit, free, ("S4.1/RP5",)),
     _sync(
-        Meta("age_set_member:delete", "Strike a age-set membership", G.SOCIETY), customs.age_set_member_delete, customs.AgeSetMemberTarget, free, ("S4.1/RP5",)
+        Meta("age_set_member:delete", "Strike an age-set membership", G.SOCIETY), customs.age_set_member_delete, customs.AgeSetMemberTarget, free, ("S4.1/RP5",)
     ),
     _sync(Meta("tavern:set", "Set a tavern", G.SOCIETY), customs.tavern_set, customs.TavernDraft, free, ("S4.2/RP5",)),
     _sync(Meta("tavern:edit", "Edit a tavern", G.SOCIETY), customs.tavern_edit, customs.TavernEdit, free, ("S4.2/RP5",)),
@@ -5567,7 +5586,229 @@ LIVING_ACTIONS = (
     _sync(Meta("symbiont:remove", "Take out what lives within a host", G.CREATURES), living.symbiont_delete, living.SymbiontTarget, free, ("S46.10",)),
 )
 
+COUNCIL_ORDER_ACTIONS = (
+    _sync(Meta("council_procedure:edit", "Set council procedure", G.CREATOR), council_order.procedure_edit, council_order.ProcedureEdit, free, ("S47.5.5",)),
+    _sync(
+        Meta("council_procedure:reset", "Reset council procedure", G.CREATOR), council_order.procedure_reset, council_order.ProcedureReset, free, ("S47.5.5",)
+    ),
+    _sync(Meta("divine_seat:set", "Seat a god on the council", G.CREATOR), council_order.seat_set, council_order.SeatSet, free, ("S47.5.5",)),
+    _sync(Meta("divine_seat:edit", "Set a council seat", G.CREATOR), council_order.seat_edit, council_order.SeatEdit, free, ("S47.5.5",)),
+    _sync(Meta("divine_seat:delete", "Unseat a god", G.CREATOR), council_order.seat_delete, council_order.SeatTarget, free, ("S47.5.5",)),
+    _sync(Meta("council_violation:create", "Charge a breach", G.CREATOR), council_order.violation_create, council_order.ViolationMake, free, ("S47.5.5",)),
+    _sync(Meta("council_violation:edit", "Set a breach of a ruling", G.CREATOR), council_order.violation_edit, council_order.ViolationEdit, free, ("S47.5.5",)),
+    _sync(Meta("council_violation:delete", "Strike a breach", G.CREATOR), council_order.violation_delete, council_order.ViolationTarget, free, ("S47.5.5",)),
+    _sync(
+        Meta("council:veto", "Veto a ruling", G.CREATOR),
+        council_order.veto,
+        council_order.VetoTarget,
+        lambda rules: essence(rules.council.veto_attention),
+        ("S47.5.5",),
+    ),
+)
+
+THIN_SECTION_ACTIONS = (
+    _sync(Meta("relation_component:set", "Set a part of a relation", G.DIPLOMACY), thin_sections.component_set, thin_sections.ComponentSet, free, ("S47.8.8",)),
+    _sync(Meta("relation_component:edit", "Edit a relation part", G.DIPLOMACY), thin_sections.component_edit, thin_sections.ComponentEdit, free, ("S47.8.8",)),
+    _sync(Meta("relation_component:delete", "Strike a relation part", G.DIPLOMACY), thin_sections.component_delete, thin_sections.PartKey, free, ("S47.8.8",)),
+    _sync(Meta("constitution:write", "Set a constitution", G.SOCIETY), thin_sections.constitution_write, thin_sections.ConstitutionWrite, free, ("S47.8.4",)),
+    _sync(Meta("constitution:edit", "Edit a constitution", G.SOCIETY), thin_sections.constitution_edit, thin_sections.ConstitutionEdit, free, ("S47.8.4",)),
+    _sync(Meta("constitution:delete", "Tear up a constitution", G.SOCIETY), thin_sections.constitution_delete, thin_sections.CharterKey, free, ("S47.8.4",)),
+    _sync(Meta("journey_encounter:create", "Add an encounter", G.COSMOS), thin_sections.encounter_create, thin_sections.EncounterMake, free, ("S47.8.12",)),
+    _sync(Meta("journey_encounter:edit", "Edit a road encounter", G.COSMOS), thin_sections.encounter_edit, thin_sections.EncounterEdit, free, ("S47.8.12",)),
+    _sync(Meta("journey_encounter:delete", "Strike an encounter", G.COSMOS), thin_sections.encounter_delete, thin_sections.EncounterKey, free, ("S47.8.12",)),
+    _sync(Meta("ideology:split", "Split a creed", G.SOCIETY), thin_sections.creed_split, thin_sections.CreedSplit, free, ("S47.8.4",)),
+    _sync(Meta("ideology:merge", "Merge two creeds", G.SOCIETY), thin_sections.creed_merge, thin_sections.CreedMerge, free, ("S47.8.4",)),
+)
+
+TYPED_MODEL_ACTIONS = (
+    _sync(Meta("horror_event:edit", "Set a horror", G.BEYOND), typed_models.horror_edit, typed_models.HorrorEdit, free, ("S47.6.1",)),
+    _sync(Meta("horror_event:delete", "Undo a horror", G.BEYOND), typed_models.horror_delete, typed_models.HorrorTarget, free, ("S47.6.1",)),
+    _sync(Meta("legendary_quest:edit", "Set a legendary quest", G.BEYOND), typed_models.legendary_edit, typed_models.LegendaryQuestEdit, free, ("S47.6.2",)),
+    _sync(Meta("hero_quest:edit", "Set a hero's quest", G.CREATOR), typed_models.hero_quest_edit, typed_models.HeroQuestEdit, free, ("S47.6.2",)),
+    _sync(Meta("creature_attack:create", "Give a creature an attack", G.CREATOR), typed_models.attack_create, typed_models.AttackMake, free, ("S47.6.3",)),
+    _sync(Meta("creature_attack:edit", "Set a creature's attack", G.CREATOR), typed_models.attack_edit, typed_models.AttackEdit, free, ("S47.6.3",)),
+    _sync(Meta("creature_attack:delete", "Take a creature's attack", G.CREATOR), typed_models.attack_delete, typed_models.AttackTarget, free, ("S47.6.3",)),
+    _sync(Meta("storyteller:palette", "Weigh a storyteller event", G.CREATOR), typed_models.palette_set, typed_models.PaletteSet, free, ("S47.6.5",)),
+    _sync(Meta("dimension_aspect:create", "Give a dimension an aspect", G.COSMOS), typed_models.aspect_create, typed_models.AspectMake, free, ("S47.6.7",)),
+    _sync(Meta("dimension_aspect:edit", "Set a dimension aspect", G.COSMOS), typed_models.aspect_edit, typed_models.AspectEdit, free, ("S47.6.7",)),
+    _sync(Meta("dimension_aspect:delete", "Take a dimension aspect", G.COSMOS), typed_models.aspect_delete, typed_models.AspectTarget, free, ("S47.6.7",)),
+)
+
+PANTHEON_TIE_ACTIONS = (
+    _sync(Meta("pantheon:edit", "Set a world's pantheon", G.GOD_POWER), pantheon_ties.pantheon_edit, pantheon_ties.PantheonEdit, free, ("S47.5.4",)),
+    _sync(Meta("pantheon_tie:set", "Tie two gods", G.GOD_POWER), pantheon_ties.tie_set, pantheon_ties.TieSet, free, ("S47.5.4",)),
+    _sync(Meta("pantheon_tie:edit", "Set a tie of gods", G.GOD_POWER), pantheon_ties.tie_edit, pantheon_ties.TieEdit, free, ("S47.5.4",)),
+    _sync(Meta("pantheon_tie:delete", "Undo a tie of gods", G.GOD_POWER), pantheon_ties.tie_delete, pantheon_ties.TieTarget, free, ("S47.5.4",)),
+    _sync(
+        Meta("syncretism:create", "Join two gods in worship", G.GOD_POWER), pantheon_ties.syncretism_create, pantheon_ties.SyncretismMake, free, ("S47.5.4",)
+    ),
+    _sync(Meta("syncretism:edit", "Set a joined worship", G.GOD_POWER), pantheon_ties.syncretism_edit, pantheon_ties.SyncretismEdit, free, ("S47.5.4",)),
+    _sync(Meta("syncretism:delete", "Hold two gods apart", G.GOD_POWER), pantheon_ties.syncretism_delete, pantheon_ties.SyncretismTarget, free, ("S47.5.4",)),
+)
+
+LAW_OUTER_ACTIONS = (
+    _sync(Meta("law_grammar:set", "Set how a natural law works", G.COSMOS), law_grammar.grammar_set, law_grammar.GrammarSet, free, ("S47.5.6",)),
+    _sync(
+        Meta("law_exception:create", "Spare someone from a natural law", G.COSMOS),
+        law_grammar.exception_create,
+        law_grammar.ExceptionMake,
+        free,
+        ("S47.5.6",),
+    ),
+    _sync(Meta("law_exception:edit", "Set an exception to a natural law", G.COSMOS), law_grammar.exception_edit, law_grammar.ExceptionEdit, free, ("S47.5.6",)),
+    _sync(
+        Meta("law_exception:delete", "Remove an exception to a natural law", G.COSMOS),
+        law_grammar.exception_delete,
+        law_grammar.ExceptionTarget,
+        free,
+        ("S47.5.6",),
+    ),
+    _sync(Meta("law_theory:create", "Give a theory of a natural law", G.COSMOS), law_grammar.theory_create, law_grammar.TheoryMake, free, ("S47.5.6",)),
+    _sync(Meta("law_theory:edit", "Set a theory of a natural law", G.COSMOS), law_grammar.theory_edit, law_grammar.TheoryEdit, free, ("S47.5.6",)),
+    _sync(Meta("law_theory:delete", "Erase a theory of a natural law", G.COSMOS), law_grammar.theory_delete, law_grammar.TheoryTarget, free, ("S47.5.6",)),
+    _sync(Meta("outer_plan:set", "Set an outer being's aim", G.BEYOND), outer_agency.plan_set, outer_agency.PlanSet, free, ("S47.5.7",)),
+    _sync(Meta("outer_plan:edit", "Set an outer being's plan", G.BEYOND), outer_agency.plan_edit, outer_agency.PlanEdit, free, ("S47.5.7",)),
+    _sync(Meta("outer_plan:delete", "Undo an outer being's plan", G.BEYOND), outer_agency.plan_delete, outer_agency.PlanTarget, free, ("S47.5.7",)),
+    _sync(Meta("outer_herald:bind", "Bind a herald to an outer being", G.BEYOND), outer_agency.herald_bind, outer_agency.HeraldBind, free, ("S47.5.7",)),
+    _sync(Meta("outer_herald:edit", "Set a herald", G.BEYOND), outer_agency.herald_edit, outer_agency.HeraldEdit, free, ("S47.5.7",)),
+    _sync(Meta("outer_herald:release", "Free a herald", G.BEYOND), outer_agency.herald_release, outer_agency.HeraldTarget, free, ("S47.5.7",)),
+    _sync(Meta("outer_incursion:open", "Open an incursion", G.BEYOND), outer_agency.incursion_open, outer_agency.IncursionOpen, free, ("S47.5.7",)),
+    _sync(Meta("outer_incursion:edit", "Set an incursion", G.BEYOND), outer_agency.incursion_edit, outer_agency.IncursionEdit, free, ("S47.5.7",)),
+    _sync(Meta("outer_incursion:end", "Drive back an incursion", G.BEYOND), outer_agency.incursion_end, outer_agency.IncursionTarget, free, ("S47.5.7",)),
+    _sync(Meta("outer_pact:strike", "Strike a bargain with an outer being", G.BEYOND), outer_agency.pact_strike, outer_agency.PactStrike, free, ("S47.5.7",)),
+    _sync(Meta("outer_pact:edit", "Set a bargain with an outer being", G.BEYOND), outer_agency.pact_edit, outer_agency.PactEdit, free, ("S47.5.7",)),
+    _sync(Meta("outer_pact:void", "Void a bargain with an outer being", G.BEYOND), outer_agency.pact_void, outer_agency.PactTarget, free, ("S47.5.7",)),
+    _sync(Meta("outer_relation:set", "Set how outer beings stand", G.BEYOND), outer_agency.relation_set, outer_agency.RelationSet, free, ("S47.5.7",)),
+    _sync(Meta("outer_relation:edit", "Set a relation of outer beings", G.BEYOND), outer_agency.relation_edit, outer_agency.RelationEdit, free, ("S47.5.7",)),
+    _sync(
+        Meta("outer_relation:delete", "Undo a relation of outer beings", G.BEYOND),
+        outer_agency.relation_delete,
+        outer_agency.RelationTarget,
+        free,
+        ("S47.5.7",),
+    ),
+    _sync(Meta("outer_seal:set", "Seal or banish an outer being", G.BEYOND), outer_agency.seal_set, outer_agency.SealSet, free, ("S47.5.7",)),
+    _sync(Meta("outer_seal:edit", "Set a seal", G.BEYOND), outer_agency.seal_edit, outer_agency.SealEdit, free, ("S47.5.7",)),
+    _sync(Meta("outer_seal:break", "Break a seal", G.BEYOND), outer_agency.seal_break, outer_agency.SealTarget, free, ("S47.5.7",)),
+    _sync(
+        Meta("outer:destroy", "Destroy an outer being", G.BEYOND),
+        outer_agency.destroy,
+        outer_agency.BeingTarget,
+        lambda rules: essence(rules.outer_beings.destroy_essence),
+        ("S47.5.7",),
+    ),
+)
+
+CREATOR_BOND_ACTIONS = (
+    _sync(
+        Meta("creator_standing:edit", "Set a people's view of the Creator", G.CREATOR),
+        creator_bonds.standing_edit,
+        creator_bonds.StandingEdit,
+        free,
+        ("S47.5.3",),
+    ),
+    _sync(Meta("covenant:offer", "Offer a people a covenant", G.CREATOR), creator_bonds.covenant_offer, creator_bonds.CovenantOffer, free, ("S47.5.3",)),
+    _sync(Meta("covenant:edit", "Set the terms of a covenant", G.CREATOR), creator_bonds.covenant_edit, creator_bonds.CovenantEdit, free, ("S47.5.3",)),
+    _sync(Meta("covenant:delete", "Strike a covenant", G.CREATOR), creator_bonds.covenant_delete, creator_bonds.CovenantTarget, free, ("S47.5.3",)),
+    _sync(Meta("chosen:choose", "Choose a favoured one", G.CREATOR), creator_bonds.chosen_choose, creator_bonds.ChosenPick, free, ("S47.5.3",)),
+    _sync(Meta("chosen:edit", "Set the favour of the chosen", G.CREATOR), creator_bonds.chosen_edit, creator_bonds.ChosenEdit, free, ("S47.5.3",)),
+    _sync(Meta("chosen:release", "Release one of the chosen", G.CREATOR), creator_bonds.chosen_release, creator_bonds.ChosenTarget, free, ("S47.5.3",)),
+    _sync(
+        Meta("depiction:edit", "Set a people's image of the Creator", G.CREATOR),
+        creator_bonds.depiction_edit,
+        creator_bonds.DepictionEdit,
+        free,
+        ("S47.5.3",),
+    ),
+)
+
+DIVINE_POWER_ACTIONS = (
+    _sync(Meta("divine_power:create", "Grant a divine power", G.GOD_POWER), divine_powers.power_create, divine_powers.DivinePowerCreate, free, ("S47.5.1",)),
+    _sync(Meta("divine_power:edit", "Shape a divine power", G.GOD_POWER), divine_powers.power_edit, divine_powers.DivinePowerEdit, free, ("S47.5.1",)),
+    _sync(Meta("divine_power:delete", "Revoke a divine power", G.GOD_POWER), divine_powers.power_delete, divine_powers.DivinePowerTarget, free, ("S47.5.1",)),
+    _sync(
+        Meta("divine_power:domains", "Link a power to domains", G.GOD_POWER),
+        divine_powers.power_domains,
+        divine_powers.DivinePowerDomains,
+        free,
+        ("S47.5.1",),
+    ),
+    _sync(Meta("divine_power:use", "Wield a divine power", G.GOD_POWER), divine_powers.power_use, divine_powers.DivinePowerUse, free, ("S47.5.1",)),
+)
+
+TECHNOLOGY_ACTIONS = (
+    _sync(
+        Meta("technology:set", "Set and hold a level of technology", G.SOCIETY),
+        technology.technology_set,
+        technology.TechSet,
+        free,
+        ("S47.2.1",),
+    ),
+    _sync(
+        Meta("technology:release", "Let a level follow what is known", G.SOCIETY),
+        technology.technology_release,
+        technology.TechTarget,
+        free,
+        ("S47.2.1",),
+    ),
+    _sync(
+        Meta("technology:delete", "Strike an own level of technology", G.SOCIETY),
+        technology.technology_delete,
+        technology.TechTarget,
+        free,
+        ("S47.2.1",),
+    ),
+)
+
+FORTUNE_ACTIONS = (
+    _sync(Meta("fortune:edit", "Set the fortune of a thing and hold it", G.FATE), fortune.fortune_edit, fortune.FortuneEdit, free, ("S47.10",)),
+    _sync(Meta("fortune_source:create", "Turn the fortune of a thing by a source", G.FATE), fortune.source_create, fortune.SourceCreate, free, ("S47.10",)),
+    _sync(Meta("fortune_source:edit", "Set a source of fortune", G.FATE), fortune.source_edit, fortune.SourceEdit, free, ("S47.10",)),
+    _sync(Meta("fortune_source:delete", "Take a source of fortune away", G.FATE), fortune.source_delete, fortune.SourceTarget, free, ("S47.10",)),
+    _sync(Meta("fortune_law:set", "Set how fortune runs in a world", G.FATE), fortune.law_set, fortune.LawSet, free, ("S47.10",)),
+    _sync(Meta("mishap:trigger", "Let a mishap befall a thing", G.FATE), fortune.mishap_trigger, fortune.MishapTrigger, free, ("S47.10",)),
+)
+
+THIN_B_ACTIONS = (
+    _sync(
+        Meta("storyteller_points:set", "Set the points of tension a storyteller follows", G.FATE), thin_b.points_set, thin_b.TargetPoints, free, ("S47.8.19",)
+    ),
+    _sync(Meta("regional_tension:set", "Set the tension of a region", G.FATE), thin_b.region_tension_set, thin_b.RegionTensionSet, free, ("S47.8.19",)),
+    _sync(Meta("regional_tension:edit", "Edit the tension of a region", G.FATE), thin_b.region_tension_edit, thin_b.RegionTensionEdit, free, ("S47.8.19",)),
+    _sync(Meta("regional_tension:delete", "Measure a region afresh", G.FATE), thin_b.region_tension_delete, thin_b.RegionTarget, free, ("S47.8.19",)),
+    _sync(
+        Meta("subsystem_tension:edit", "Set the tension of a part of a world", G.FATE),
+        thin_b.subsystem_tension_edit,
+        thin_b.SubsystemTensionEdit,
+        free,
+        ("S47.8.19",),
+    ),
+    _sync(
+        Meta("subsystem_tension:delete", "Measure a part of a world afresh", G.FATE),
+        thin_b.subsystem_tension_delete,
+        thin_b.SubsystemTarget,
+        free,
+        ("S47.8.19",),
+    ),
+    _sync(Meta("source_trust:set", "Set how far a thing trusts a source", G.MEMORY), thin_b.trust_set, thin_b.TrustSet, free, ("S47.8.17",)),
+    _sync(Meta("source_trust:edit", "Edit trust in a source", G.MEMORY), thin_b.trust_edit, thin_b.TrustEdit, free, ("S47.8.17",)),
+    _sync(Meta("source_trust:delete", "Forget trust in a source", G.MEMORY), thin_b.trust_delete, thin_b.TrustTarget, free, ("S47.8.17",)),
+    _sync(Meta("rift_control:set", "Set who holds a rift and to what work", G.BEYOND), thin_b.rift_control_set, thin_b.RiftControlSet, free, ("S47.8.13",)),
+    _sync(Meta("rift_control:edit", "Edit the hold on a rift", G.BEYOND), thin_b.rift_control_edit, thin_b.RiftControlEdit, free, ("S47.8.13",)),
+    _sync(Meta("rift_control:delete", "Free a rift from its holder", G.BEYOND), thin_b.rift_control_delete, thin_b.RiftTarget, free, ("S47.8.13",)),
+)
+
 ACTIONS: tuple[ActionSpec, ...] = (
+    *THIN_B_ACTIONS,
+    *COUNCIL_ORDER_ACTIONS,
+    *THIN_SECTION_ACTIONS,
+    *PANTHEON_TIE_ACTIONS,
+    *TYPED_MODEL_ACTIONS,
+    *LAW_OUTER_ACTIONS,
+    *CREATOR_BOND_ACTIONS,
+    *DIVINE_POWER_ACTIONS,
+    *TECHNOLOGY_ACTIONS,
+    *FORTUNE_ACTIONS,
     *LIVING_ACTIONS,
     *POWER_ACTIONS,
     *CYCLE_ACTIONS,

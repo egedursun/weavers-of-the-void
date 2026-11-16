@@ -18,6 +18,7 @@ import {
   KpiTile,
   Medallion,
   PageHeader,
+  PanelGrid,
   Section,
   ShowMore,
   useShowMore,
@@ -64,7 +65,7 @@ function CurrentRun({ state }: { state: WorldState }) {
       {timing.active ? (
         <EpochProgress />
       ) : (
-        <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+        <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <Medallion
             icon={half ? PauseCircle : CircleDashed}
             tone={half ? 'warning' : 'muted'}
@@ -288,17 +289,13 @@ export function EpochControlScreen() {
       )}
       {state.data?.world && (
         <>
-          <div className='grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-2'>
-            <div className='flex min-w-0 flex-col gap-6'>
-              <CurrentRun state={state.data} />
-              <TurnOrderPanel state={state.data} />
-            </div>
-            <div className='flex min-w-0 flex-col gap-6'>
-              <SonTurnControl state={state.data} />
-              <LastRun />
-              <PhaseStarts />
-            </div>
-          </div>
+          <PanelGrid>
+            <CurrentRun state={state.data} />
+            <SonTurnControl state={state.data} />
+            <TurnOrderPanel state={state.data} />
+            <LastRun />
+            <PhaseStarts />
+          </PanelGrid>
           <FateStatusCard />
           <EpochBreakdownPanel state={state.data} />
         </>

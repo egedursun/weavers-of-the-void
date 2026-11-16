@@ -28,10 +28,12 @@ from aerona.engine.factions.guilds import enrol_apprentice
 from aerona.engine.folkways.biases import lean
 from aerona.engine.genetics.genome import body_marks
 from aerona.engine.households.formation import OLD, YOUNG, found_household, join_household
+from aerona.engine.households.forms import inherit, keep_form
 from aerona.engine.households.homes import district_for, dwelling_of, expectation, home_quality, starting_quality
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.ethics import ethic_reading
 from aerona.engine.mind.hooks import judged
+from aerona.engine.mind.preference_depth import place_pull, shared_taste
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import children_of, spouses_of
 from aerona.engine.mortal.kinship import marry
@@ -317,12 +319,13 @@ async def richer_place(ctx: TickContext, household: HouseholdRow) -> EntityRow |
         .where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == here.location_id)
         .order_by(EntityRow.id)
     )
-    best = max(
-        (town for town in towns if town.id != here.id and (stat(town, "prosperity") or 0) > prosperity),
-        key=lambda town: stat(town, "prosperity") or 0,
-        default=None,
-    )
-    return best if best is not None and not held(best.id) else None
+    scored = [
+        ((stat(town, "prosperity") or 0) + await place_pull(ctx.session, ctx.rules, household.head_node_id, town), town)
+        for town in towns
+        if town.id != here.id and (stat(town, "prosperity") or 0) > prosperity
+    ]
+    best = max(scored, key=lambda item: (item[0], -item[1].id), default=None)
+    return best[1] if best is not None and not held(best[1].id) else None
 
 
 async def migrate(
@@ -385,7 +388,9 @@ async def match(ctx: TickContext, household: HouseholdRow, members: list[Member]
                 or not await may_wed(ctx.session, ctx.rules, single.mortal, candidate.mortal)
             ):
                 continue
-            bonus = await preference_bonus(ctx.session, ctx.rules, single.mortal, candidate.mortal)
+            bonus = await preference_bonus(ctx.session, ctx.rules, single.mortal, candidate.mortal) + await shared_taste(
+                ctx.session, ctx.rules, single.mortal.id, candidate.mortal.id
+            )
             if best is None or bonus > best[0]:
                 best = (bonus, other, candidate)
     if best is None:
@@ -572,6 +577,15 @@ async def house_prestige(ctx: TickContext, household: HouseholdRow, quality: int
     house.prestige = max(0, house.prestige + swing)
 
 
+async def succeed_head(ctx: TickContext, household: HouseholdRow, members: list[Member]) -> None:
+    if household.head_node_id is None or MEMBERS in (household.locked or []) or any(member.mortal.id == household.head_node_id for member in members):
+        return
+    dead = await ctx.session.get(EntityRow, household.head_node_id)
+    heir = await inherit(ctx, household, [member.row for member in members], dead) if dead is not None else None
+    if heir is not None:
+        household.head_node_id = heir
+
+
 async def tend_household(ctx: TickContext, household: HouseholdRow, laws: LawBook, tally: HouseholdTally) -> None:
     state = inspect(household)
     if state.deleted or state.was_deleted or state.detached:
@@ -584,10 +598,12 @@ async def tend_household(ctx: TickContext, household: HouseholdRow, laws: LawBoo
     if household.head_node_id is not None and held(household.head_node_id):
         return
     dwelling = await dwelling_of(ctx.session, household.id)
+    await succeed_head(ctx, household, members)
     await assign_roles(ctx, household, members)
     await keep_purse(ctx, household, members, dwelling, laws)
     await pay_debts(ctx, household)
     await bear_burden(ctx, household, members)
+    await keep_form(ctx, household, [member.row for member in members], dwelling)
     await decide(ctx, household, members, dwelling, tally)
     quality = await judge_home(ctx, household, members, dwelling, tally)
     await house_prestige(ctx, household, quality)

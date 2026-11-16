@@ -24,6 +24,19 @@ class UrbanService(StrEnum):
     SCHOOL = "school"
     BATH = "bath"
     FIRE = "fire"
+    SANITATION = "sanitation"
+    TRANSPORT = "transport"
+    COMMUNICATION = "communication"
+    POWER = "power"
+    COURTS = "courts"
+    WELFARE = "welfare"
+    GRANARY = "granary"
+    PARKS = "parks"
+    LIBRARY = "library"
+    BURIAL = "burial"
+    DEPOT = "depot"
+    ADMINISTRATION = "administration"
+    ENTERTAINMENT = "entertainment"
 
 
 class Morphology(StrEnum):
@@ -42,6 +55,13 @@ class RacketKind(StrEnum):
     FENCING = "fencing"
     KIDNAPPING = "kidnapping"
     COUNTERFEITING = "counterfeiting"
+    FRAUD = "fraud"
+    EXTORTION = "extortion"
+    TRAFFICKING = "trafficking"
+    INTOXICANTS = "intoxicants"
+    DATA_THEFT = "data_theft"
+    LOAN_SHARKING = "loan_sharking"
+    ARMS = "arms"
 
 
 class OrderLaw(StrEnum):
@@ -68,10 +88,21 @@ class ConvoyStatus(StrEnum):
 
 
 class TransportKind(StrEnum):
+    PORTERS = "porters"
     PACK_ANIMALS = "pack_animals"
-    WAGONS = "wagons"
-    RIVER_BOATS = "river_boats"
-    SHIPS = "ships"
+    ANIMAL_CARTS = "animal_carts"
+    RAIL = "rail"
+    ROAD_MOTOR = "road_motor"
+    RIVER_AND_CANAL = "river_and_canal"
+    SEA = "sea"
+    AIR = "air"
+    PIPELINE = "pipeline"
+    ORBITAL_LIFT = "orbital_lift"
+    SPACE = "space"
+    TELEPORT = "teleport"
+    LIVING = "living"
+    RITE = "rite"
+    NETWORK = "network"
 
 
 class CargoClass(StrEnum):
@@ -79,6 +110,13 @@ class CargoClass(StrEnum):
     LIVESTOCK = "livestock"
     BULK = "bulk"
     FINE = "fine"
+    LIQUID = "liquid"
+    GAS = "gas"
+    HAZARDOUS = "hazardous"
+    PASSENGERS = "passengers"
+    LIVING = "living"
+    SAVED_MINDS = "saved_minds"
+    RELICS = "relics"
 
 
 class Preservation(StrEnum):
@@ -106,6 +144,9 @@ class ZoneKind(StrEnum):
     AGRICULTURAL = "agricultural"
     CIVIC = "civic"
     GREEN = "green"
+    TRANSPORT = "transport"
+    MILITARY = "military"
+    RESEARCH = "research"
 
 
 class CivicService(StrEnum):
@@ -114,6 +155,25 @@ class CivicService(StrEnum):
     SPORTS = "sports"
     CULTURE = "culture"
     SOCIAL = "social"
+    ADMINISTRATION = "administration"
+    SAFETY = "safety"
+    SANITATION = "sanitation"
+    TRANSPORT = "transport"
+    COMMUNICATION = "communication"
+    RECREATION = "recreation"
+    JUSTICE = "justice"
+    WORSHIP = "worship"
+    RESEARCH = "research"
+    COMMERCE = "commerce"
+    ENERGY = "energy"
+    WATER = "water"
+    RECORDS = "records"
+    HOUSING = "housing"
+    FUNERARY = "funerary"
+    EMERGENCY = "emergency"
+    FOOD_SUPPLY = "food_supply"
+    CARE = "care"
+    DEFENCE = "defence"
 
 
 class LandGround(StrEnum):

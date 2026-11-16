@@ -25,6 +25,7 @@ from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCaus
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.afflictions import afflict
+from aerona.engine.body.bands import banded
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.hits import Harm
@@ -253,7 +254,7 @@ async def flee(ctx: TickContext, mortal: EntityRow) -> str:
 
 async def rage(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
     enemy = await worst_enemy(ctx, mortal)
-    await gain_condition(ctx, mortal, ConditionKind.RAGE, HarmCause.ACCIDENT, severity=2)
+    await gain_condition(ctx, mortal, ConditionKind.RAGE, HarmCause.ACCIDENT, severity=banded(ctx, ctx.rules.harm_bands.rage, mortal.id))
     if enemy is None:
         return f"{mortal.name} broke under the strain and raged at the world."
     harm = Harm(ctx.rules.skills.spar_hp, HarmCause.DUEL, f"attacked by {mortal.name} in a rage", killer_id=mortal.id)
@@ -267,7 +268,7 @@ async def flight(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow,
 
 async def despair(ctx: TickContext, mortal: EntityRow, rng: SeededRandom) -> bool:
     table = ctx.rules.stress
-    await gain_condition(ctx, mortal, ConditionKind.MELANCHOLY, HarmCause.ACCIDENT, severity=2)
+    await gain_condition(ctx, mortal, ConditionKind.MELANCHOLY, HarmCause.ACCIDENT, severity=banded(ctx, ctx.rules.harm_bands.despair, mortal.id))
     if table.despair_suicide and rng.chance(table.despair_suicide_chance):
         await die(ctx, mortal, cause="took their own life in despair", manner=DeathCause.DESPAIR, forced=True)
         return True
@@ -297,7 +298,7 @@ async def vice(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, r
 
 
 async def revelation(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
-    await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.GOD, severity=1)
+    await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.GOD, severity=banded(ctx, ctx.rules.harm_bands.revelation, mortal.id))
     seer = ctx.rules.stress.revelation_seer_chance * (1 + (ability(mortal, Ability.WISDOM) - FULL // 2) / PERCENT)
     if rng.chance(seer) and not await role_locked(ctx, mortal):
         mortal.mortal_role = MortalRole.SEER

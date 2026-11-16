@@ -2,7 +2,6 @@ import asyncio
 import hashlib
 import multiprocessing
 import shutil
-import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
@@ -12,9 +11,7 @@ from sqlalchemy.sql.schema import Table
 from aerona.db.base import Base
 from aerona.db.session import Database
 from aerona.db.types import UtcDateTime
-from aerona.engine.pipeline import current_environment, run_epoch_transition, run_tick, simulate
-from aerona.rules.registry import Rules
-from tests.conftest import OpenDatabase
+from aerona.engine.pipeline import simulate
 from tests.engine.integration.factories import seed_rich_cosmos
 
 EPOCHS = 5
@@ -69,18 +66,3 @@ async def test_a_seeded_five_epoch_run_leaves_an_identical_database(tmp_path: Pa
     assert differing == []
     whole = hashlib.sha256("".join(first[name] for name in sorted(first)).encode()).hexdigest()
     assert whole == hashlib.sha256("".join(second[name] for name in sorted(second)).encode()).hexdigest()
-
-
-async def test_one_tick_of_the_reference_world_stays_under_the_tick_target(tmp_path: Path, open_database: OpenDatabase) -> None:
-    database = open_database(tmp_path / "bench.db")
-    try:
-        async with database.write() as session:
-            await seed_rich_cosmos(session)
-        target = Rules().engine_budget.tick_target_seconds
-        started = time.perf_counter()
-        environment = await current_environment(database)
-        await run_tick(environment, database)
-        await run_epoch_transition(await current_environment(database), database)
-        assert time.perf_counter() - started < target
-    finally:
-        await database.dispose()

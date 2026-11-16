@@ -98,10 +98,8 @@ function Row({
     <li className='flex min-w-0 flex-col gap-1.5'>
       <div
         className={cn(
-          'flex min-w-0 items-center gap-2 rounded-lg border p-1.5 transition-colors',
-          chosen
-            ? 'border-primary bg-primary/10'
-            : 'bg-background hover:bg-muted/40'
+          'flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-1.5 transition-colors',
+          chosen ? 'border-primary bg-primary/10' : 'bg-card hover:bg-muted/40'
         )}
       >
         <div className='min-w-0 flex-1'>
@@ -235,35 +233,37 @@ export function ScaleNavigator({
       aria-label='The scale of the cosmos'
       className='flex min-w-0 flex-col gap-1.5'
     >
-      {ladder.data.dimensions.map((dimension) => {
-        return (
-          <Row
-            key={dimension.id}
-            kind='dimension'
-            id={dimension.id}
-            name={dimension.name}
-            detail={`${catalogLabel(catalog.dimension_kinds, dimension.dimension_kind)} · time ×${dimension.time_factor}`}
-            emblem={
-              <DimensionThumb
-                dimension={stateOf(dimension)}
-                label={dimension.name}
-                className='size-portrait-md shrink-0 rounded-md'
-              />
-            }
-            selection={selection}
-            onSelect={onSelect}
-          >
-            <Members
-              clusters={ladder.clustersIn(dimension.id)}
-              galaxies={ladder.looseGalaxies(dimension.id)}
-              ladder={ladder}
-              catalog={catalog}
+      <Paged items={ladder.data.dimensions} as='li'>
+        {(dimension) => {
+          return (
+            <Row
+              key={dimension.id}
+              kind='dimension'
+              id={dimension.id}
+              name={dimension.name}
+              detail={`${catalogLabel(catalog.dimension_kinds, dimension.dimension_kind)} · time ×${dimension.time_factor}`}
+              emblem={
+                <DimensionThumb
+                  dimension={stateOf(dimension)}
+                  label={dimension.name}
+                  className='size-portrait-md shrink-0 rounded-md'
+                />
+              }
               selection={selection}
               onSelect={onSelect}
-            />
-          </Row>
-        )
-      })}
+            >
+              <Members
+                clusters={ladder.clustersIn(dimension.id)}
+                galaxies={ladder.looseGalaxies(dimension.id)}
+                ladder={ladder}
+                catalog={catalog}
+                selection={selection}
+                onSelect={onSelect}
+              />
+            </Row>
+          )
+        }}
+      </Paged>
     </ul>
   )
 }

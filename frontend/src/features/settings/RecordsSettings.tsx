@@ -35,7 +35,7 @@ function BookPdfCard() {
   const running = Boolean(data?.job_id) || print.isPending
   const progress = Math.round((data?.progress ?? 0) * PERCENT)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-4'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion
           icon={FileText}

@@ -185,7 +185,7 @@ function PrayerCard({
         </div>
       </CardHeader>
       <CardContent className='flex flex-col gap-4'>
-        <div className='flex min-w-0 items-start gap-2 rounded-xl rounded-tl-sm border bg-muted/30 p-3'>
+        <div className='flex min-w-0 items-start gap-2 rounded-md rounded-tl-sm border surface-well border-gild/20 bg-muted/60 p-3'>
           <Quote
             aria-hidden='true'
             className='size-icon-sm shrink-0 text-primary'

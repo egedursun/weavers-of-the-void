@@ -429,6 +429,10 @@ NOTABLE_NAMES: dict[NotableYearKind, str] = {
     NotableYearKind.PLENTY: "the Year of Plenty in {place}",
     NotableYearKind.WEATHER: "the Year of {weather}",
     NotableYearKind.PESTILENCE: "the Year of Pestilence in {place}",
+    NotableYearKind.DISASTER: "the Year of Ruin in {place}",
+    NotableYearKind.DISCOVERY: "the Year of Finding in {place}",
+    NotableYearKind.CONTACT: "the Year of Meeting in {place}",
+    NotableYearKind.OMEN: "the Year of the Sign over {place}",
 }
 
 

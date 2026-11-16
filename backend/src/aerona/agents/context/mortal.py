@@ -18,6 +18,7 @@ from aerona.agents.context.entity_line import line_items
 from aerona.agents.context.era_lines import mortal_era_lines
 from aerona.agents.context.evolution_lines import mortal_evolution_lines
 from aerona.agents.context.folkways_lines import mortal_folkways_lines
+from aerona.agents.context.fortune_lines import mortal_fortune_lines
 from aerona.agents.context.gatherings import gathering_lines, site_lines
 from aerona.agents.context.geography import environment_facts, region_records, weather_words
 from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_lines, title_lines
@@ -40,6 +41,7 @@ from aerona.agents.context.sacred_lines import mortal_sacred_lines
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.society import home_for
 from aerona.agents.context.statecraft import affairs_lines, statecraft_lines
+from aerona.agents.context.thin_b_lines import mortal_depth_lines
 from aerona.agents.context.tongue_lines import mortal_tongue_lines
 from aerona.agents.context.transform_lines import mantling_line, prospect_lines
 from aerona.agents.context.urban_lines import mortal_urban_lines
@@ -236,6 +238,8 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "made_world": await mortal_minds_lines(scope, me),
             "powers": await mortal_power_lines(scope, me),
             "living": await mortal_living_lines(scope, me),
+            "fortune": await mortal_fortune_lines(scope, me),
+            "home_and_trust": await mortal_depth_lines(scope.session, me),
         }
     )
 

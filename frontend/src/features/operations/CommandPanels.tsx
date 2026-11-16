@@ -3,6 +3,7 @@ import { Flag, Gauge, Radar, ShieldAlert, Swords, Users } from 'lucide-react'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
@@ -219,42 +220,44 @@ function Overview({ echelons }: { echelons: Echelon[] }) {
   return (
     <div
       data-chart='chart-order-of-battle'
-      className='flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-1 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <Label variant='overline'>The order of battle at a glance</Label>
       <ul className='flex min-w-0 flex-col gap-1' aria-label='Order of battle'>
-        {treeOrder(echelons).map(([item, depth]) => {
-          const level = ECHELONS[item.level]
-          const order = ORDERS[item.order]
-          return (
-            <li
-              key={item.id}
-              className={`flex min-w-0 flex-wrap items-center gap-1.5 ${INDENT[Math.min(depth, INDENT.length - 1)]}`}
-            >
-              <Tag item={level} text={level.label} />
-              <Text as='span' variant='caption' className='min-w-0 truncate'>
-                {item.name}
-              </Text>
-              <Tag item={order} />
-              {!item.in_range && (
-                <Badge size='sm' variant='warning'>
-                  <Radar aria-hidden='true' />
-                  Out of range
-                </Badge>
-              )}
-              {item.level === 'brigade' ? (
-                <Muted as='span' variant='caption'>
-                  {item.stacks} stacks
-                </Muted>
-              ) : (
-                <Muted as='span' variant='caption'>
-                  {Math.max(0, item.command_points - item.points_spent)} of{' '}
-                  {item.command_points} points left
-                </Muted>
-              )}
-            </li>
-          )
-        })}
+        <Paged items={treeOrder(echelons)} as='li'>
+          {([item, depth]) => {
+            const level = ECHELONS[item.level]
+            const order = ORDERS[item.order]
+            return (
+              <li
+                key={item.id}
+                className={`flex min-w-0 flex-wrap items-center gap-1.5 ${INDENT[Math.min(depth, INDENT.length - 1)]}`}
+              >
+                <Tag item={level} text={level.label} />
+                <Text as='span' variant='caption' className='min-w-0 truncate'>
+                  {item.name}
+                </Text>
+                <Tag item={order} />
+                {!item.in_range && (
+                  <Badge size='sm' variant='warning'>
+                    <Radar aria-hidden='true' />
+                    Out of range
+                  </Badge>
+                )}
+                {item.level === 'brigade' ? (
+                  <Muted as='span' variant='caption'>
+                    {item.stacks} stacks
+                  </Muted>
+                ) : (
+                  <Muted as='span' variant='caption'>
+                    {Math.max(0, item.command_points - item.points_spent)} of{' '}
+                    {item.command_points} points left
+                  </Muted>
+                )}
+              </li>
+            )
+          }}
+        </Paged>
       </ul>
     </div>
   )
@@ -313,7 +316,7 @@ function StackRow({
     assigning.isPending
   )
   return (
-    <div className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border bg-background p-2.5'>
+    <div className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <div className='flex min-w-0 flex-1 flex-wrap items-center gap-2'>
         <Tag
           item={{
@@ -524,7 +527,7 @@ function TheatreCard({
       caption={`${row.war?.name ?? 'A war'} · read in epoch ${row.updated_epoch}`}
       removeLabel='Let the front be drawn anew'
       editTitle='Set the theatre'
-      note='The marshal shares the realm’s reserves, levies and transport between its fronts by how great each threat looks. A marshal with little strategy misreads the threats, and a misjudged front starves the one that needed the men; the share sent reinforces that front’s army each epoch.'
+      note='The marshal shares the realm’s reserves, levies and transport between its fronts by how great each threat looks. A marshal with little strategy misreads the threats, and a misjudged front starves the one that needed the soldiers; the share sent reinforces that front’s army each epoch.'
       fields={[
         {
           key: 'front_region_entity_id',

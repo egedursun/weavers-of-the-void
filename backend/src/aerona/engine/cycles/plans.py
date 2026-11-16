@@ -1,8 +1,10 @@
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from aerona.core.grammar import agree, several
+from aerona.core.total import total
 from aerona.db.tables.cycles import LongPlanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -18,6 +20,7 @@ from aerona.domain.enums.polity import HouseTrait
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.collective.book import ruler_id, shift
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.plan_works import fulfil_exploration, fulfil_line, fulfil_megastructure, fulfil_network, fulfil_programme, fulfil_realm, fulfil_reform
 from aerona.engine.divine.gods import divine_of
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.genetics.pools import shifted_gift
@@ -217,29 +220,59 @@ async def raise_wonder(ctx: TickContext, plan: LongPlanRow) -> EntityRow | None:
     return work
 
 
+async def fulfil_ecology(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> str:
+    changed = await transform_land(ctx, plan)
+    return f"{several(changed, 'land', 'lands')} {agree(changed, 'was', 'were')} remade"
+
+
+async def fulfil_bloodline(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> str:
+    trait = await breed(ctx, plan)
+    found = trait.value.replace("_", " ") if trait is not None else "richer in the gift" if await breed_people(ctx, plan) else "nothing new"
+    return f"the line was bred to be {found}"
+
+
+async def fulfil_conversion(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None) -> str:
+    converted = await convert(ctx, plan, holder)
+    return f"{several(converted, 'town', 'towns')} turned to a new worship"
+
+
+async def fulfil_wonder(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> str:
+    work = await raise_wonder(ctx, plan)
+    return f"{work.name if work else 'no site'} rose from its saving"
+
+
+async def fulfil_forecast(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> str:
+    lifted = await steer_forecast(ctx, plan.id)
+    return f"the realm's stress eased by {lifted}"
+
+
+Fulfil = Callable[[TickContext, LongPlanRow, EntityRow | None], Awaitable[str]]
+FULFIL: Mapping[LongPlanKind, Fulfil] = total(
+    LongPlanKind,
+    {
+        LongPlanKind.ECOLOGICAL_TRANSFORMATION: fulfil_ecology,
+        LongPlanKind.BLOODLINE: fulfil_bloodline,
+        LongPlanKind.CONVERSION: fulfil_conversion,
+        LongPlanKind.WONDER: fulfil_wonder,
+        LongPlanKind.FORECAST: fulfil_forecast,
+        LongPlanKind.NETWORK: fulfil_network,
+        LongPlanKind.MEGASTRUCTURE: fulfil_megastructure,
+        LongPlanKind.PROGRAMME: fulfil_programme,
+        LongPlanKind.REALM: fulfil_realm,
+        LongPlanKind.LINE: fulfil_line,
+        LongPlanKind.REFORM: fulfil_reform,
+        LongPlanKind.EXPLORATION: fulfil_exploration,
+    },
+)
+
+
 async def complete(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None, tally: PlanTally) -> None:
     plan.status = LongPlanStatus.COMPLETED
     plan.finished_epoch = ctx.epoch
     tally.completed += 1
     ids = [plan.holder_node_id, *([plan.target_node_id] if plan.target_node_id is not None else [])]
-    if plan.kind is LongPlanKind.ECOLOGICAL_TRANSFORMATION:
-        changed = await transform_land(ctx, plan)
-        await note(
-            ctx, f"{plan.name} was fulfilled: {several(changed, 'land', 'lands')} {agree(changed, 'was', 'were')} remade.", key="plans.completed", ids=ids
-        )
-    elif plan.kind is LongPlanKind.BLOODLINE:
-        trait = await breed(ctx, plan)
-        found = trait.value.replace("_", " ") if trait is not None else "richer in the gift" if await breed_people(ctx, plan) else "nothing new"
-        await note(ctx, f"{plan.name} was fulfilled: the line was bred to be {found}.", key="plans.completed", ids=ids)
-    elif plan.kind is LongPlanKind.CONVERSION:
-        converted = await convert(ctx, plan, holder)
-        await note(ctx, f"{plan.name} was fulfilled: {several(converted, 'town', 'towns')} turned to a new worship.", key="plans.completed", ids=ids)
-    elif plan.kind is LongPlanKind.FORECAST:
-        lifted = await steer_forecast(ctx, plan.id)
-        await note(ctx, f"{plan.name} was fulfilled: the realm's stress eased by {lifted}.", key="plans.completed", ids=ids)
-    else:
-        work = await raise_wonder(ctx, plan)
-        await note(ctx, f"{plan.name} was fulfilled: {work.name if work else 'no site'} rose from its saving.", key="plans.completed", ids=ids)
+    told = await FULFIL[plan.kind](ctx, plan, holder)
+    await note(ctx, f"{plan.name} was fulfilled: {told}.", key="plans.completed", ids=ids)
 
 
 async def advance_plans(ctx: TickContext, tally: PlanTally) -> None:

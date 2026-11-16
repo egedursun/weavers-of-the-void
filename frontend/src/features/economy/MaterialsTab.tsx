@@ -298,7 +298,7 @@ function MaterialCard({
   return (
     <li
       data-material={material.kind ?? material.world_material_id ?? undefined}
-      className='@container/card flex h-full min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'
+      className='@container/card flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={look.icon} tone={look.tone} />
@@ -704,7 +704,7 @@ export function DepositForge({
         <TextField
           label='Deposit name'
           value={name}
-          placeholder='The Red Seam'
+          placeholder='Its name in this world’s own words'
           onChange={setName}
         />
         <ChoiceSelect
@@ -865,7 +865,7 @@ export function MaterialsBrowser({ worldId }: { worldId: number }) {
         itemKey={(good) => good.kind}
       >
         {(good) => (
-          <div className='flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-2'>
+          <div className='flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
             <div className='flex min-w-0 items-center justify-between gap-2'>
               <Text as='span' weight='semibold' truncate>
                 {good.label}

@@ -43,7 +43,7 @@ export function IconStat({
           data-domain='icon-stat'
           tabIndex={0}
           aria-label={`${label} ${value}`}
-          className='inline-flex h-badge-md min-w-0 shrink-0 items-center gap-1.5 rounded-md border bg-muted/40 px-2'
+          className='inline-flex h-badge-md min-w-0 shrink-0 items-center gap-1.5 rounded-md border surface-well border-gild/20 bg-muted/60 px-2'
         >
           <Icon
             aria-hidden='true'
@@ -88,7 +88,7 @@ export function AttributeTile({
           data-domain='attribute-tile'
           tabIndex={0}
           aria-label={`${label} ${value}`}
-          className='flex min-w-0 flex-col gap-1.5 rounded-md border bg-muted/30 px-2 py-1.5'
+          className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-well border-gild/20 bg-muted/60 px-2 py-1.5'
         >
           <div className='flex min-w-0 items-center gap-1.5'>
             <Icon
@@ -169,14 +169,14 @@ export function MiniStat({
     <div
       data-domain='mini-stat'
       tabIndex={hint ? 0 : undefined}
-      className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-background p-2'
+      className='flex min-w-0 items-center gap-2.5 rounded-md border surface-sheen border-gild/60 bg-card p-2'
     >
       <Medallion icon={icon} tone={tone} size='sm' />
       <div className='flex min-w-0 flex-1 flex-col'>
         <Stat
           value={value}
           title={String(value)}
-          className='block min-w-0 truncate'
+          className='block min-w-0 truncate data-[fit=1]:text-caption data-[fit=1]:whitespace-nowrap data-[fit=2]:text-caption data-[fit=2]:whitespace-nowrap data-[fit=3]:text-caption data-[fit=3]:whitespace-nowrap'
         />
         <Label truncate>{label}</Label>
       </div>

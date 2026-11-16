@@ -193,7 +193,7 @@ function DesignCard({
   return (
     <li
       data-surface='UnitDesign'
-      className='@container/mil flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'
+      className='@container/mil flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion

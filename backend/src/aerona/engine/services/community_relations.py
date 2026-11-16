@@ -13,6 +13,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import FeudRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.society import CommunityRelationRow
+from aerona.db.tables.thin_sections import RelationComponentRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.military import FeudParty, FeudStatus
@@ -107,7 +108,9 @@ async def refresh_relation(session: AsyncSession, rules: Rules, epoch: int, firs
     if first == second:
         return RELATION_MAX
     row = await _ensure_row(session, rules, first, second)
-    row.value = await pair_relation(session, rules, epoch, first, second)
+    row.value = clamp_int(
+        await pair_relation(session, rules, epoch, first, second) + await held_offset(session, rules, first, second), RELATION_MIN, RELATION_MAX
+    )
     return row.value
 
 
@@ -167,6 +170,17 @@ async def set_relation(ctx: TickContext, first: int, second: int, value: int, no
     return current
 
 
+async def party_of(session: AsyncSession, first: int, second: int) -> FeudParty:
+    kinds = {row.entity_type for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_([first, second])))}
+    return FeudParty.PEOPLE if kinds == {EntityType.PEOPLE} else FeudParty.COMMUNITY
+
+
+async def held_offset(session: AsyncSession, rules: Rules, first: int, second: int) -> int:
+    low, high = pair_key(first, second)
+    rows = await session.scalars(select(RelationComponentRow).where(RelationComponentRow.entity_a_id == low, RelationComponentRow.entity_b_id == high))
+    return sum(row.value for row in rows if "value" in row.locked) * rules.community_relations.held_pct // PERCENT
+
+
 async def start_blood_feud(ctx: TickContext, first: int, second: int, reason: str) -> int:
     session, rules, epoch = ctx.session, ctx.rules, ctx.epoch
     if first == second:
@@ -174,7 +188,7 @@ async def start_blood_feud(ctx: TickContext, first: int, second: int, reason: st
     row = await _ensure_row(session, rules, first, second)
     if row.blood_feud_since_epoch is None:
         row.blood_feud_since_epoch = epoch
-    await open_feud(session, rules, first, second, epoch=epoch, cause=reason, party=FeudParty.COMMUNITY)
+    await open_feud(session, rules, first, second, epoch=epoch, cause=reason, party=await party_of(session, first, second))
     decay = rules.memory.feud_decay_pct
     for holder, subject in ((first, second), (second, first)):
         await remember(
@@ -298,7 +312,9 @@ async def refresh_relations(session: AsyncSession, rules: Rules, epoch: int) -> 
     context = await OpinionContext.load(session, rules, epoch, [node for row in rows for node in (row.entity_a_id, row.entity_b_id)], values)
     changed = 0
     for row in rows:
-        value = context.relation(row.entity_a_id, row.entity_b_id)
+        value = clamp_int(
+            context.relation(row.entity_a_id, row.entity_b_id) + await held_offset(session, rules, row.entity_a_id, row.entity_b_id), RELATION_MIN, RELATION_MAX
+        )
         if value != row.value:
             row.value = value
             changed += 1

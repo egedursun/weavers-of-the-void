@@ -32,6 +32,8 @@ import {
   MiniStat,
   PageHeader,
   Section,
+  ShowMore,
+  useShowMore,
 } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Muted, Text } from '@/components/typography'
@@ -62,6 +64,8 @@ import {
   divineRank,
   sortImages,
 } from './galleryModel'
+
+const HALL_SHOWN = 8
 
 const ITEM = navItem('gallery')
 const PAGE = { roomy: 48, dense: 96 } as const
@@ -100,6 +104,8 @@ export function GalleryScreen() {
         ),
     [all]
   )
+  const hallPage = useShowMore(hall, HALL_SHOWN)
+
   const categories = useMemo(() => countBy(all, categoryOf), [all])
   const needle = query.trim().toLowerCase()
   const filtered = useMemo(
@@ -203,13 +209,14 @@ export function GalleryScreen() {
               level={3}
             >
               <GalleryGrid
-                items={hall}
+                page={hallPage.visible}
                 density='roomy'
                 veiledOf={veiled}
                 worldOf={worldOf}
                 onOpen={(index) => setOpened({ list: 'hall', index })}
                 readOnlyReason={readOnly}
               />
+              <ShowMore state={hallPage} noun={['likeness', 'likenesses']} />
             </Section>
           )}
           <Section
@@ -222,7 +229,7 @@ export function GalleryScreen() {
             }
             level={3}
           >
-            <div className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-3'>
+            <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
                 <div className='min-w-0 flex-1'>
                   <Input
@@ -363,7 +370,7 @@ export function GalleryScreen() {
               />
             ) : (
               <GalleryGrid
-                items={page}
+                page={page}
                 density={density}
                 veiledOf={veiled}
                 worldOf={worldOf}

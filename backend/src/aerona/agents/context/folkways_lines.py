@@ -2,6 +2,8 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
+from aerona.agents.context.thin_lines import mortal_thin_lines, son_thin_lines
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import (
     AccusationRow,
@@ -37,7 +39,7 @@ async def body_lines(scope: Scope, me: EntityRow) -> list[str]:
             found.append(f"your rank: {rank.name}")
         if purity.state is not PurityState.PURE:
             source = f" by {words(purity.source.value)}" if purity.source is not None else ""
-            found.append(f"your purity: {purity.state.value}{source}; gatherings and unions are closed to you until you purify")
+            found.append(f"your purity: {spoken(purity.state)}{source}; gatherings and unions are closed to you until you purify")
     return found
 
 
@@ -48,17 +50,17 @@ async def luck_lines(scope: Scope, me: EntityRow) -> list[str]:
         for belief in await scope.session.scalars(
             select(LuckBeliefRow).where(LuckBeliefRow.people_entity_id == folk.id).order_by(LuckBeliefRow.id).limit(LIST_LINES)
         ):
-            found.append(f"your people hold {belief.name} for {belief.reach.value}")
+            found.append(f"your people hold {belief.name} for {spoken(belief.reach)}")
     owned = await scope.session.scalars(
         select(CharmRow).where(CharmRow.item_entity_id.in_(select(EntityRow.id).where(EntityRow.location_id == me.id))).limit(LIST_LINES)
     )
     for charm in owned:
-        found.append(f"you carry {await named(scope, charm.item_entity_id)}, a charm of {charm.power.value}")
+        found.append(f"you carry {await named(scope, charm.item_entity_id)}, a charm of {spoken(charm.power)}")
     town = await town_of(scope.session, me)
     if town is not None:
         hunt = await scope.session.scalar(select(WitchHuntRow).where(WitchHuntRow.settlement_entity_id == town.id, WitchHuntRow.ended_epoch.is_(None)))
         if hunt is not None:
-            found.append(f"a witch hunt burns in {town.name} at fervour {hunt.fervour}")
+            found.append(f"a witch hunt runs in {town.name} at fervour {hunt.fervour}")
         for mishap in await scope.session.scalars(
             select(MishapRow).where(MishapRow.settlement_entity_id == town.id).order_by(MishapRow.id.desc()).limit(LIST_LINES)
         ):
@@ -73,7 +75,7 @@ async def luck_lines(scope: Scope, me: EntityRow) -> list[str]:
 
 
 async def mortal_folkways_lines(scope: Scope, me: EntityRow) -> list[str]:
-    return [*await body_lines(scope, me), *await luck_lines(scope, me)]
+    return [*await body_lines(scope, me), *await luck_lines(scope, me), *await mortal_thin_lines(scope, me)]
 
 
 async def son_folkways_lines(scope: Scope, son: SonRow) -> list[str]:
@@ -82,13 +84,14 @@ async def son_folkways_lines(scope: Scope, son: SonRow) -> list[str]:
         if abs(row.weight - MIDDLE) >= STRONG:
             lean = "strong" if row.weight > MIDDLE else "faint"
             found.append(f"your {words(row.bias.value)} runs {lean} ({row.weight})")
+    found.extend(await son_thin_lines(scope, son))
     if son.current_world_id is None:
         return found
     towns = select(EntityRow.id).where(EntityRow.world_id == son.current_world_id)
     for hunt in await scope.session.scalars(
         select(WitchHuntRow).where(WitchHuntRow.settlement_entity_id.in_(towns), WitchHuntRow.ended_epoch.is_(None)).order_by(WitchHuntRow.id).limit(LIST_LINES)
     ):
-        found.append(f"a witch hunt burns in {await named(scope, hunt.settlement_entity_id)} at fervour {hunt.fervour}")
+        found.append(f"a witch hunt runs in {await named(scope, hunt.settlement_entity_id)} at fervour {hunt.fervour}")
     for mishap in await scope.session.scalars(
         select(MishapRow)
         .where(MishapRow.settlement_entity_id.in_(towns), MishapRow.epoch >= scope.cosmos.epoch - 1)

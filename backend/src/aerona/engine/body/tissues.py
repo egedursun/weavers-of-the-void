@@ -46,10 +46,24 @@ def hardness_of(creature: CreatureAnatomyRow | None) -> Hardness:
     return Hardness(creature.skin, creature.bone) if creature is not None else PLAIN
 
 
-def skin_kept(rules: Rules, creature: CreatureAnatomyRow | None) -> float:
+def property_kept(skin: TissueMaterial, damage_type: DamageType | None) -> float:
+    spec = MATERIALS[skin]
+    if damage_type is DamageType.ELECTRIC:
+        return 1 + spec.conductivity / PERCENT / 2
+    if damage_type in (DamageType.FIRE, DamageType.COLD):
+        return 1 - spec.heat_resistance / PERCENT / 2
+    if damage_type is DamageType.BLUNT:
+        return 1 - spec.flexibility / PERCENT / 4
+    if damage_type in CUTTING:
+        return 1 - spec.hardness / PERCENT / 4
+    return 1.0
+
+
+def skin_kept(rules: Rules, creature: CreatureAnatomyRow | None, damage_type: DamageType | None = None) -> float:
     if creature is None:
         return 1.0
-    return max(0.0, 1 - MATERIALS[creature.skin].armour_pct * rules.creature_anatomy.skin_damage_pct / PERCENT / PERCENT)
+    armour = max(0.0, 1 - MATERIALS[creature.skin].armour_pct * rules.creature_anatomy.skin_damage_pct / PERCENT / PERCENT)
+    return max(0.0, armour * property_kept(creature.skin, damage_type))
 
 
 def bleed_rate(rules: Rules, part: Part, severity: int) -> int:

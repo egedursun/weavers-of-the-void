@@ -1,6 +1,5 @@
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
@@ -20,7 +19,6 @@ from aerona.domain.enums.agent import CouncilCaller, CouncilVote
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.divine import CouncilMotion, GoalState, SonPunishment
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
@@ -31,7 +29,19 @@ from aerona.domain.models.records import CouncilBallot, CouncilMinutes
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.worlds import declare_holy_world
+from aerona.engine.divine.council_order import (
+    ORDER_ENACTMENTS,
+    ORDER_LASTING,
+    carried,
+    excluded,
+    foreign_members,
+    foreign_vote,
+    order_motion,
+    procedure_of,
+    weight_of,
+)
 from aerona.engine.divine.decrees import active_rulings, assigned_world
+from aerona.engine.divine.motions import Motion
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mythic.offices import appoint, vacant_office
 from aerona.engine.notes import note
@@ -41,7 +51,7 @@ from aerona.engine.services.conflict import foreign_god_war
 from aerona.engine.transform.run import order
 
 M = CouncilMotion
-LASTING = frozenset({M.COSMIC_TRUCE, M.OUTLAW_RITE, M.PUNISH_SON, M.DIVIDE_WORLDS, M.HOLY_WORLD})
+LASTING = frozenset({M.COSMIC_TRUCE, M.OUTLAW_RITE, M.PUNISH_SON, M.DIVIDE_WORLDS, M.HOLY_WORLD}) | ORDER_LASTING
 MOTION_LABELS = {
     M.NONE: "No motion",
     M.AGAINST_DOOMSDAY: "Stand against the doom",
@@ -57,16 +67,18 @@ MOTION_LABELS = {
     M.COSMIC_TRUCE: "Set a cosmic truce",
     M.PETITION_CREATOR: "Petition the Creator",
     M.APPOINT_OFFICE: "Appoint a holder to a cosmic office",
+    M.REASSIGN_WORLD: "Give a world to another son",
+    M.OUTLAW_POWER: "Outlaw a god's powers",
+    M.OUTLAW_SOURCE: "Close a source of power",
+    M.ADMIT_MEMBER: "Admit a god to the council",
+    M.EXPEL_MEMBER: "Put a god out of the council",
+    M.RECOGNISE_GOD: "Recognise a new god",
+    M.ESSENCE_TITHE: "Levy a tithe of essence for a common work",
+    M.SET_COUNCIL_RULES: "Change how the council decides",
+    M.REGULATE_MADE_MINDS: "Regulate made minds",
+    M.REGULATE_POWERS: "Regulate powers",
+    M.REGULATE_LIVING_CRAFT: "Regulate living craft",
 }
-
-
-@dataclass(frozen=True)
-class Motion:
-    motion: CouncilMotion
-    target_node_id: int | None = None
-    world_id: int | None = None
-    school: MagicSchool | None = None
-    punishment: SonPunishment | None = None
 
 
 async def divide(ctx: TickContext) -> list[str]:
@@ -184,6 +196,7 @@ ENACTMENTS: dict[CouncilMotion, Enactment] = {
     M.COSMIC_TRUCE: enact_truce,
     M.OUTLAW_RITE: enact_outlaw,
     M.APPOINT_OFFICE: enact_appointment,
+    **ORDER_ENACTMENTS,
 }
 
 
@@ -206,7 +219,8 @@ async def record(ctx: TickContext, motion: Motion, *, council_id: int | None, no
         school=motion.school,
         punishment=motion.punishment,
         epoch=ctx.epoch,
-        until_epoch=ctx.epoch + ctx.rules.council.ruling_epochs if motion.motion in LASTING else None,
+        until_epoch=ctx.epoch + (await procedure_of(ctx)).term_epochs if motion.motion in LASTING else None,
+        voting_rule=motion.voting_rule,
         active=True,
         enacted=False,
         note=note_text,
@@ -296,7 +310,7 @@ async def engine_motion(ctx: TickContext, members: list[SonRow]) -> Motion:
     if await vacant_office(ctx) is not None and members:
         chosen = max(members, key=lambda son: (son.level, son.fame, -son.id))
         return Motion(M.APPOINT_OFFICE, target_node_id=chosen.id)
-    return Motion(M.PETITION_CREATOR)
+    return await order_motion(ctx, members) or Motion(M.PETITION_CREATOR)
 
 
 async def engine_council(ctx: TickContext) -> CouncilRow | None:
@@ -306,11 +320,18 @@ async def engine_council(ctx: TickContext) -> CouncilRow | None:
     )
     if len(members) < council.min_members:
         return None
+    members = [son for son in members if not await excluded(ctx, son.id)]
+    if len(members) < council.min_members:
+        return None
     motion = await engine_motion(ctx, members)
     votes = await engine_votes(ctx, members, motion)
-    yes = sum(1 for vote in votes.values() if vote)
-    passed = yes > len(votes) - yes
-    ballots = tuple(CouncilBallot(son_id=son.id, name=son.name, vote=CouncilVote.YES if votes[son.id] else CouncilVote.NO) for son in members)
+    guests = await foreign_members(ctx)
+    procedure = await procedure_of(ctx)
+    weights = {son.id: (weight_of(procedure.voting_rule, son), votes[son.id]) for son in members}
+    weights |= {god.id: (weight_of(procedure.voting_rule, god), foreign_vote(god, motion.motion, motion.target_node_id)) for god in guests}
+    yes = sum(1 for _, vote in weights.values() if vote)
+    passed = carried(procedure, weights, len(members) + len(guests))
+    ballots = tuple(CouncilBallot(son_id=god.id, name=god.name, vote=CouncilVote.YES if weights[god.id][1] else CouncilVote.NO) for god in [*members, *guests])
     label = MOTION_LABELS[motion.motion]
     row = CouncilRow(
         epoch=ctx.epoch,
@@ -335,7 +356,7 @@ async def engine_council(ctx: TickContext) -> CouncilRow | None:
     tail = f" {'; '.join(notes)}." if notes else ""
     await note(
         ctx,
-        f"The Council of the Gods met on the motion: {label.lower()} — {verdict} ({yes} yes, {len(votes) - yes} no).{tail}",
+        f"The Council of the Gods met on the motion: {label.lower()} — {verdict} ({yes} yes, {len(weights) - yes} no).{tail}",
         key="council.engine_held",
         kind=ChronicleKind.COUNCIL,
     )

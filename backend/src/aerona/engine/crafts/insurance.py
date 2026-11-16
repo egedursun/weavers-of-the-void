@@ -148,7 +148,7 @@ async def judge(ctx: TickContext, row: InsurerRow, claims: int, tally: Insurance
         if not held(holder_id):
             await change_relation(ctx, holder_id, row.insurer_entity_id, -table.ruin_opinion, MemoryKind.ILL_WILL, note="could not pay what it had promised")
     if insurer is not None:
-        await note(ctx, f"Claims beyond its means ruined {insurer.name}; what it insured stands bare.", key="insurance.ruined", ids=[insurer.id])
+        await note(ctx, f"Claims beyond its means ruined {insurer.name}; what it insured is left unprotected.", key="insurance.ruined", ids=[insurer.id])
 
 
 async def claims_total(ctx: TickContext, insurer_id: int) -> int:

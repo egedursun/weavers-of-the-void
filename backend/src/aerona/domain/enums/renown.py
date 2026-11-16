@@ -37,6 +37,10 @@ class LoreKind(StrEnum):
     SITE = "site"
     MAP = "map"
     PROPHECY = "prophecy"
+    TRUE_NAME = "true_name"
+    WEAKNESS = "weakness"
+    PATTERN = "pattern"
+    SOURCE = "source"
 
 
 class LorePrice(StrEnum):

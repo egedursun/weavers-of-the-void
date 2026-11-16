@@ -8,6 +8,7 @@ from aerona.catalog.gatherings import CONTEST_KINDS, GATHERING_COLLECTIONS, GATH
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an, several
 from aerona.core.random import SeededRandom
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
@@ -20,6 +21,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
@@ -34,6 +36,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.customs.time_budgets import leisure_odds
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.economy.stocks import GoodsLedger
+from aerona.engine.faith.book import patron_node
 from aerona.engine.folkways.purity import apart_at_table, unclean
 from aerona.engine.gatherings.occasions import Guest, Occasion, household_of
 from aerona.engine.happenings.profile import season_for, year_at
@@ -145,6 +148,16 @@ async def candidates(ctx: TickContext, row: GatheringRow) -> list[Guest]:
             .order_by(EntityRow.id)
         )
         found.extend(Guest(int(node), GuestRole.GUEST, AttendanceReason.NEIGHBOUR) for node in neighbours)
+    patron = await patron_node(ctx.session, place) if place is not None else None
+    if patron is not None:
+        faithful = await ctx.session.scalars(
+            select(BondRow.source_node_id)
+            .join(EntityRow, EntityRow.id == BondRow.source_node_id)
+            .where(BondRow.target_node_id == patron, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, EntityRow.world_id == row.world_id)
+            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+            .order_by(BondRow.source_node_id)
+        )
+        found.extend(Guest(int(node), GuestRole.GUEST, AttendanceReason.FAITH) for node in faithful)
     return found
 
 

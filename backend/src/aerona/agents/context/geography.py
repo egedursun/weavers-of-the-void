@@ -7,7 +7,7 @@ from aerona.cartography.model import RegionRecord
 from aerona.catalog.dangers import DANGERS, MEMORY_LABELS
 from aerona.constants.agents import LARGE_REGION_RATIO, SMALL_REGION_RATIO
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -52,7 +52,7 @@ def environment_facts(rules: Rules, ground: RegionEnvironmentRow | None) -> dict
     return {
         "land": words(ground.dominant_terrain.value),
         "soil": words(ground.soil.value),
-        "climate": f"{ground.temperature_band.value}, rainfall {ground.rainfall}",
+        "climate": f"{spoken(ground.temperature_band)}, rainfall {ground.rainfall}",
         "river": f"{words(ground.river_class.value)}" if ground.river_class is not RiverClass.NONE else None,
         "scars": [words(kind) for kind, depth in sorted(ground.scars.items()) if depth >= settings.scar_shown_depth],
         "harvest": harvest,
@@ -165,7 +165,7 @@ async def long_day_words(scope: Scope, world_id: int) -> str | None:
     world = await scope.session.get(WorldRow, world_id)
     if not long_days(scope.rules.seasonal.long_day_hours, world) or world is None:
         return None
-    return f"A day lasts {several(world.day_length_hours, 'hour', 'hours')}: folk rest at noon in the heat or keep vigil through the long night."
+    return f"A day lasts {several(world.day_length_hours, 'hour', 'hours')}."
 
 
 async def terrain_facts(scope: Scope, region_ids: set[int], grounds: dict[int, RegionEnvironmentRow]) -> dict[int, dict[str, Any]]:

@@ -12,6 +12,7 @@ from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
@@ -277,7 +278,11 @@ async def scapegoat(ctx: TickContext, town: EntityRow) -> EntityRow | None:
     candidates = [row for row in rows if not held(row.id)]
     if not candidates:
         return None
-    return max(candidates, key=lambda row: (stat_or(row, "infamy", 0), -stat_or(row, "charisma", 0), -row.id))
+    infamy = {
+        row.entity_id: row.infamy
+        for row in await ctx.session.scalars(select(MortalProfileRow).where(MortalProfileRow.entity_id.in_([row.id for row in candidates])))
+    }
+    return max(candidates, key=lambda row: (infamy.get(row.id, 0), -stat_or(row, "charisma", 0), -row.id))
 
 
 async def leader_in(ctx: TickContext, town: EntityRow) -> int | None:

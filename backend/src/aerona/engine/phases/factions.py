@@ -1,23 +1,25 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import FACTION_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.core.grammar import an
+from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import unheld
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.faction import FactionKind, FoundableFaction
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
@@ -44,6 +46,37 @@ from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
 
 K = FactionKind
+FF = FoundableFaction
+FOUNDED_AS: Mapping[FoundableFaction, FactionKind] = total(
+    FoundableFaction,
+    {
+        FF.MERCHANT_GUILD: K.MERCHANT_GUILD,
+        FF.CRAFT_GUILD: K.CRAFT_GUILD,
+        FF.PRIESTHOOD: K.PRIESTHOOD,
+        FF.WARRIOR_ORDER: K.WARRIOR_ORDER,
+        FF.NOBLE_COUNCIL: K.NOBLE_COUNCIL,
+        FF.PEASANT_LEAGUE: K.PEASANT_LEAGUE,
+        FF.REBELS: K.REBELS,
+        FF.BANDITS: K.BANDITS,
+        FF.PIRATES: K.PIRATES,
+        FF.ASSASSINS: K.ASSASSINS,
+        FF.SCHOLARS_ACADEMY: K.SCHOLARS_ACADEMY,
+        FF.SECRET_SOCIETY: K.SECRET_SOCIETY,
+        FF.MERCENARY_COMPANY: K.MERCENARY_COMPANY,
+        FF.INTERWORLD_FEDERATION: K.INTERWORLD_FEDERATION,
+        FF.WANDERING_MARKET: K.WANDERING_MARKET,
+        FF.ROUTE_RAIDERS: K.ROUTE_RAIDERS,
+        FF.SOCIAL_CIRCLE: K.SOCIAL_CIRCLE,
+        FF.CRIME_FAMILY: K.CRIME_FAMILY,
+        FF.THIEVES_GUILD: K.THIEVES_GUILD,
+        FF.SMUGGLING_RING: K.SMUGGLING_RING,
+        FF.PIRATE_CONFEDERACY: K.PIRATE_CONFEDERACY,
+        FF.WORKERS_UNION: K.WORKERS_UNION,
+        FF.ENGINEERS_SOCIETY: K.ENGINEERS_SOCIETY,
+        FF.FINANCIERS: K.FINANCIERS,
+        FF.VETERANS: K.VETERANS,
+    },
+)
 
 
 @dataclass(frozen=True)
@@ -77,7 +110,7 @@ BLUEPRINTS = (
     FactionBlueprint(K.MERCENARY_COMPANY, "free company", "Free Company", "sellswords"),
     FactionBlueprint(K.INTERWORLD_FEDERATION, "interworld federation", "Federation", "envoys"),
     FactionBlueprint(K.WANDERING_MARKET, "wandering market", "Caravan", "traders"),
-    FactionBlueprint(K.VOID_PIRATES, "void pirates", "Void Raiders", "void-robbers"),
+    FactionBlueprint(K.ROUTE_RAIDERS, "route raiders", "Raiders", "raiders"),
     FactionBlueprint(K.SOCIAL_CIRCLE, "social circle", "Circle", "companions"),
     FactionBlueprint(K.CRIME_FAMILY, "crime family", "Family", "members"),
     FactionBlueprint(K.THIEVES_GUILD, "thieves' guild", "Thieves' Guild", "thieves"),
@@ -124,7 +157,7 @@ async def disband_uprisings(ctx: TickContext) -> int:
             continue
         await retire_in(ctx, faction, "the uprising died out; the rebels dispersed or melted back into the people", close_bonds=True)
         if disbanded < rules.revolt_disband_note_cap:
-            await _note(ctx, f"{faction.name} died out; the rebels buried their weapons and went home.", "faction.uprising_disbanded", (faction.id,))
+            await _note(ctx, f"{faction.name} died out; the rebels dispersed and went home.", "faction.uprising_disbanded", (faction.id,))
         disbanded += 1
     return disbanded
 
@@ -186,7 +219,48 @@ async def eligible_kinds(ctx: TickContext, community: EntityRow) -> list[Faction
             select(DistrictRow.id).where(DistrictRow.settlement_entity_id == community.id, DistrictRow.kind == DistrictKind.HARBOUR).limit(1)
         )
         kinds.append(K.PIRATES if harbour else K.BANDITS)
+    kinds += await wider_kinds(ctx, community, shares, trade=trade, at_war=at_war)
     return [kind for kind in kinds if not await _existing(ctx, community.id, kind)]
+
+
+async def foreign_trade(ctx: TickContext, community: EntityRow) -> bool:
+    partners = select(BondRow.target_node_id).where(
+        BondRow.source_node_id == community.id, BondRow.kind == BondKind.TRADES_WITH, BondRow.state == BondState.ACTIVE
+    )
+    other = await ctx.session.scalar(select(EntityRow.id).where(EntityRow.id.in_(partners), EntityRow.world_id != community.world_id).limit(1))
+    return other is not None
+
+
+async def pirate_bands(ctx: TickContext, community: EntityRow) -> int:
+    found = await ctx.session.scalar(
+        select(func.count())
+        .select_from(FactionProfileRow)
+        .join(EntityRow, EntityRow.id == FactionProfileRow.faction_entity_id)
+        .where(FactionProfileRow.kind == K.PIRATES, EntityRow.world_id == community.world_id, EntityRow.status == EntityStatus.CANON)
+    )
+    return int(found or 0)
+
+
+async def wider_kinds(ctx: TickContext, community: EntityRow, shares: Mapping[SocialClass, float], *, trade: bool, at_war: bool) -> list[FactionKind]:
+    rules = ctx.rules.factions
+    town = await ctx.session.get(SettlementProfileRow, community.id)
+    crime = town.crime if town is not None else 0
+    unrest = town.unrest if town is not None else 0
+    prosperity = stat(community, "prosperity") or 0
+    outcasts = shares[SocialClass.OUTCAST]
+    wanted = (
+        (K.REBELS, unrest >= rules.secret_unrest and at_war),
+        (K.THIEVES_GUILD, crime >= rules.assassins_crime and shares[SocialClass.MERCHANT] >= rules.guild_min_merchant_pct),
+        (K.SMUGGLING_RING, crime >= rules.bandits_crime and trade),
+        (K.CRIME_FAMILY, crime >= rules.assassins_crime and prosperity >= rules.guild_min_prosperity),
+        (K.SOCIAL_CIRCLE, shares[SocialClass.NOBLE] >= rules.noble_min_pct and prosperity >= rules.guild_min_prosperity),
+        (K.WANDERING_MARKET, community.entity_type is EntityType.PEOPLE and shares[SocialClass.MERCHANT] >= rules.guild_min_merchant_pct and trade),
+        (K.VETERANS, not at_war and shares[SocialClass.WARRIOR] >= rules.order_min_warrior_pct),
+        (K.INTERWORLD_FEDERATION, await foreign_trade(ctx, community)),
+        (K.ROUTE_RAIDERS, outcasts >= rules.bandits_outcast_pct and crime >= rules.bandits_crime and trade),
+        (K.PIRATE_CONFEDERACY, await pirate_bands(ctx, community) >= 2),
+    )
+    return [kind for kind, fits in wanted if fits]
 
 
 async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKind) -> EntityRow:

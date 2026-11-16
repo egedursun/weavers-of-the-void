@@ -54,7 +54,7 @@ EMOTIONS: MappingProxyType[Emotion, EmotionSpec] = MappingProxyType(
         E.GUILT: EmotionSpec("Guilt", -1, amp(self_consciousness=1, sense_of_duty=1)),
         E.ENVY: EmotionSpec("Envy", -1, amp(envy=1)),
         E.JEALOUSY: EmotionSpec("Jealousy", -1, amp(envy=1, trust=-1)),
-        E.DISGUST: EmotionSpec("Disgust", -1, amp(tolerance_of_strangeness=-1)),
+        E.DISGUST: EmotionSpec("Disgust", -1, amp(tolerance_of_difference=-1)),
         E.LONELINESS: EmotionSpec("Loneliness", -1, amp(gregariousness=1)),
         E.BOREDOM: EmotionSpec("Boredom", -1, amp(excitement_seeking=1, activity_level=1)),
         E.DESPAIR: EmotionSpec("Despair", -1, amp(depression=1, vulnerability=1)),
@@ -154,6 +154,16 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.PRAYED_IN_PEACE: th(E.CONTENTMENT, 20, "Prayed in peace"),
         T.FAITH_UNMET: th(E.LONGING, 30, "Longed for something to believe"),
         T.LEARNED_NOTHING: th(E.BOREDOM, 25, "Learned nothing new"),
+        T.FELT_FREE: th(E.CONTENTMENT, 30, "Free to choose their own way", {"hierarchy": -4}),
+        T.FELT_CONSTRAINED: th(E.ANGER, 35, "Kept from choosing their own way", {"hierarchy": -3}),
+        T.FOUND_ANSWERS: th(E.JOY, 30, "Found what they wanted to know", {"knowledge": 4}),
+        T.KEPT_IN_IGNORANCE: th(E.LONGING, 30, "Kept from what they wanted to know", {"knowledge": 3}),
+        T.FELT_STIMULATED: th(E.AMUSEMENT, 25, "Had much to see and do"),
+        T.FELT_DULLED: th(E.BOREDOM, 30, "Had nothing new to see or do"),
+        T.FELT_LASTING: th(E.RELIEF, 30, "Sure of going on"),
+        T.FEARED_ENDING: th(E.FEAR, 45, "Feared their own ending"),
+        T.WELL_KEPT: th(E.CONTENTMENT, 25, "Kept in good repair"),
+        T.NEGLECTED: th(E.SADNESS, 35, "Left without upkeep"),
         T.MADE_SOMETHING: th(E.PRIDE, 25, "Made something"),
         T.NOTHING_MADE: th(E.BOREDOM, 25, "Made nothing"),
         T.SAW_BEAUTY: th(E.AWE, 25, "Saw something beautiful"),
@@ -163,7 +173,7 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.HAD_ADVENTURE: th(E.JOY, 30, "Had an adventure"),
         T.RESTLESS: th(E.BOREDOM, 30, "Felt restless"),
         T.TESTED_IN_COMBAT: th(E.PRIDE, 30, "Was tested in combat"),
-        T.BLADE_RUSTING: th(E.BOREDOM, 25, "Felt their blade rusting"),
+        T.BLADE_RUSTING: th(E.BOREDOM, 25, "Missed being tested in combat"),
         T.PROSPERED: th(E.CONTENTMENT, 25, "Prospered"),
         T.WANTED_FOR_MONEY: th(E.ANXIETY, 35, "Wanted for money"),
         T.ENJOYED_LEISURE: th(E.AMUSEMENT, 20, "Enjoyed some leisure"),
@@ -257,7 +267,7 @@ NEEDS: MappingProxyType[NeedKind, NeedSpec] = MappingProxyType(
             G.SPIRIT, "Creation", T.MADE_SOMETHING, T.NOTHING_MADE, {"imagination": 30, "artistic_inclination": 30}, beliefs={"craftsmanship": 30}
         ),
         N.BEAUTY: need(G.SPIRIT, "Beauty", T.SAW_BEAUTY, T.SURROUNDED_BY_UGLINESS, {"artistic_inclination": 50}, beliefs={"artwork": 40}),
-        N.NATURE: need(G.SPIRIT, "Nature", T.WALKED_IN_NATURE, T.CUT_OFF_FROM_NATURE, {"tolerance_of_strangeness": 10}, beliefs={"nature": 50}),
+        N.NATURE: need(G.SPIRIT, "Nature", T.WALKED_IN_NATURE, T.CUT_OFF_FROM_NATURE, {"tolerance_of_difference": 10}, beliefs={"nature": 50}),
         N.ADVENTURE: need(G.ACTION, "Adventure", T.HAD_ADVENTURE, T.RESTLESS, {"excitement_seeking": 50, "caution": -20}, beliefs={"xenophilia": 20}),
         N.FIGHTING: need(
             G.ACTION, "Combat", T.TESTED_IN_COMBAT, T.BLADE_RUSTING, {"anger": 20, "assertiveness": 20, "excitement_seeking": 20}, beliefs={"martial": 40}
@@ -265,6 +275,11 @@ NEEDS: MappingProxyType[NeedKind, NeedSpec] = MappingProxyType(
         N.WEALTH: need(G.ACTION, "Wealth", T.PROSPERED, T.WANTED_FOR_MONEY, {"greed": 50}, beliefs={"wealth": 40}),
         N.PLEASURE: need(G.ACTION, "Leisure", T.ENJOYED_LEISURE, T.BORED, {"excitement_seeking": 20, "discipline": -30, "humour": 15}, beliefs={"leisure": 40}),
         N.ORDER: need(G.ACTION, "Order", T.LIVED_IN_ORDER, T.LIVED_IN_DISORDER, {"orderliness": 50}, beliefs={"law": 40, "tradition": 15}),
+        N.AUTONOMY: need(G.SOCIAL, "Autonomy", T.FELT_FREE, T.FELT_CONSTRAINED, {"assertiveness": 30, "cooperation": -15}, beliefs={"hierarchy": -40}),
+        N.KNOWLEDGE: need(G.SPIRIT, "Knowledge", T.FOUND_ANSWERS, T.KEPT_IN_IGNORANCE, {"curiosity": 60}, beliefs={"knowledge": 30}),
+        N.STIMULATION: need(G.ACTION, "Stimulation", T.FELT_STIMULATED, T.FELT_DULLED, {"excitement_seeking": 40, "activity_level": 20}),
+        N.CONTINUITY: need(G.SPIRIT, "Continuity", T.FELT_LASTING, T.FEARED_ENDING, {"anxiety": 30, "vulnerability": 20}),
+        N.UPKEEP: need(G.BODY, "Upkeep", T.WELL_KEPT, T.NEGLECTED, {"orderliness": 15}),
     }
 )
 

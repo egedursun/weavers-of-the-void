@@ -8,6 +8,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.faith.spirit_bonds import keep_bound_spirits
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.means.water import lifted_water
 from aerona.engine.notes import note
@@ -43,8 +44,10 @@ from aerona.engine.settlement.life import (
     sanitation,
     stir_unrest,
     urban_drift,
+    warded,
     wear,
 )
+from aerona.engine.structures.own_effects import act_own_effects
 from aerona.engine.structures.settlement import serve_town
 
 JUSTICE_FULL = 100
@@ -92,9 +95,11 @@ JUSTICE_FULL = 100
     "table.mortal_profiles",
     "table.name_registry",
     "table.natural_law_profiles",
+    "table.network_outages",
     "table.nodes",
     "table.occupations",
     "table.offices",
+    "table.outbreaks",
     "table.outlaws",
     "table.people_culture",
     "table.place_environment",
@@ -112,6 +117,7 @@ JUSTICE_FULL = 100
     "table.settlement_profiles",
     "table.sieges",
     "table.sky_events",
+    "table.spirit_profiles",
     "table.structure_profiles",
     "table.trade_flows",
     "table.traits",
@@ -148,11 +154,14 @@ JUSTICE_FULL = 100
     "table.event_casualties",
     "table.event_footprints",
     "table.event_profiles",
+    "table.house_profiles",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.network_outages",
+    "table.polity_profiles",
     "table.reconstructions",
     "table.region_environment",
     "table.sentences",
@@ -160,6 +169,7 @@ JUSTICE_FULL = 100
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.settlement_treasury",
+    "table.structure_profiles",
     "table.workshops",
 )
 async def settlement_life(ctx: TickContext) -> None:
@@ -198,6 +208,8 @@ async def settlement_life(ctx: TickContext) -> None:
         ctx.count("fires", burned)
         sanitation(ctx, town, knowledge, lifted=await lifted_water(ctx, town.entity.id))
         hallow(ctx, town)
+        await warded(ctx, town)
+        ctx.count("structure_effects", await act_own_effects(ctx, town.entity, town.profile))
         await endure_siege(ctx, town, values)
         await prestige(ctx, town)
         ctx.count("structures_serving", await serve_town(ctx, settlement, town.profile, town.infrastructure, fires=burned))
@@ -212,6 +224,7 @@ async def settlement_life(ctx: TickContext) -> None:
             )
         town.profile.updated_epoch = ctx.epoch
         remember(ctx, town)
+    ctx.count("bound_spirits_kept", await keep_bound_spirits(ctx))
     await ctx.session.flush()
 
 

@@ -264,8 +264,20 @@ describe('notifications screen', () => {
       routes
     )
     await expect
-      .element(screen.getByText('That is everything.'))
+      .element(screen.getByText('Prayer number 5'))
       .toBeInTheDocument()
+    await expect
+      .poll(
+        () => {
+          const older = Array.from(document.querySelectorAll('button')).find(
+            (button) => button.textContent === 'Show older notifications'
+          )
+          older?.click()
+          return document.body.textContent?.includes('That is everything.')
+        },
+        { timeout: 10000 }
+      )
+      .toBe(true)
     for (const id of [5, 4, 3, 2, 1]) {
       await expect
         .element(screen.getByText(`Prayer number ${id}`))

@@ -66,6 +66,8 @@ class AccountKind(StrEnum):
     INSCRIPTION = "inscription"
     FOUNDING_MYTH = "founding_myth"
     ELDER_MEMORY = "elder_memory"
+    RECORD = "record"
+    TESTIMONY = "testimony"
 
 
 class AccountStance(StrEnum):
@@ -80,6 +82,9 @@ class AccountMedium(StrEnum):
     BOOK = "book"
     ORAL = "oral"
     INSCRIPTION = "inscription"
+    RECORD = "record"
+    PERFORMANCE = "performance"
+    MIND_STATE = "mind_state"
 
 
 class StoryletId(StrEnum):
@@ -148,8 +153,15 @@ class NormSituation(StrEnum):
     HOSPITALITY = "hospitality"
     MOURNING = "mourning"
     SACRED_DAY = "sacred_day"
-    STRANGER = "stranger"
+    OUTSIDER = "outsider"
     SUPERIOR = "superior"
+    NETWORK_SPACE = "network_space"
+    REALM = "realm"
+    WORKPLACE = "workplace"
+    COUNCIL = "council"
+    ENCOUNTER_WITH_MADE_MIND = "encounter_with_made_mind"
+    ENCOUNTER_WITH_GIFTED = "encounter_with_gifted"
+    ENCOUNTER_WITH_HIDDEN = "encounter_with_hidden"
 
 
 class NormBehaviour(StrEnum):
@@ -166,6 +178,10 @@ class NormBehaviour(StrEnum):
     PLAIN_SPEECH = "plain_speech"
     FORBIDDEN_FOOD = "forbidden_food"
     SECRETS = "secrets"
+    AUGMENT_DISPLAY = "augment_display"
+    POWER_DISPLAY = "power_display"
+    DATA_SHARING = "data_sharing"
+    COPY_DISCLOSURE = "copy_disclosure"
 
 
 class SocialBias(StrEnum):
@@ -182,6 +198,15 @@ class FormativeKind(StrEnum):
     FAMINE = "famine"
     GOLDEN_AGE = "golden_age"
     CONQUEST = "conquest"
+    REVOLUTION = "revolution"
+    MIGRATION = "migration"
+    FOUNDING = "founding"
+    REVELATION = "revelation"
+    COLLAPSE = "collapse"
+    CONTACT = "contact"
+    DISASTER = "disaster"
+    LIBERATION = "liberation"
+    SCHISM = "schism"
 
 
 class RoleKind(StrEnum):
@@ -205,6 +230,9 @@ class DatingSystemKind(StrEnum):
     FOUNDING = "founding"
     RELIGIOUS = "religious"
     CELESTIAL_CYCLE = "celestial_cycle"
+    CREATION = "creation"
+    EVENT = "event"
+    CYCLE_COUNT = "cycle_count"
 
 
 class Tincture(StrEnum):
@@ -490,6 +518,9 @@ class HeraldryHolderKind(StrEnum):
     TITLE = "title"
     ARMY = "army"
     GUILD = "guild"
+    COMPANY = "company"
+    ORDER = "order"
+    PEOPLE = "people"
 
 
 class DesignKind(StrEnum):
@@ -498,6 +529,11 @@ class DesignKind(StrEnum):
     SIEGE_ENGINE = "siege_engine"
     LAND_VEHICLE = "land_vehicle"
     SPACECRAFT = "spacecraft"
+    AIR_VEHICLE = "air_vehicle"
+    UNDERWATER_VESSEL = "underwater_vessel"
+    LIVING_VESSEL = "living_vessel"
+    MADE_BODY = "made_body"
+    WEAPON_SYSTEM = "weapon_system"
 
 
 class DesignComponentKind(StrEnum):

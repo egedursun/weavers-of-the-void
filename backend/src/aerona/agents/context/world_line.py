@@ -19,7 +19,7 @@ from aerona.catalog.cosmography import (
 )
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import CelestialReadingRow, CosmicBeingProfileRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
@@ -101,7 +101,7 @@ async def body_lines(scope: Scope, world_id: int) -> list[str]:
             lines.append(f"the next great eclipse darkens its sky at age {next_epoch(scope.epoch, period, world.id)}")
     life = await scope.session.get(WorldLifeRow, world_id)
     if life is not None:
-        lines.append(f"life: {life.complexity.value}")
+        lines.append(f"life: {spoken(life.complexity)}")
     pending = select(ImpactEventRow).where(ImpactEventRow.world_id == world_id, ImpactEventRow.outcome == ImpactOutcome.PENDING)
     for impact in await scope.session.scalars(pending.order_by(ImpactEventRow.due_epoch, ImpactEventRow.id)):
         region = await scope.session.get(EntityRow, impact.region_entity_id) if impact.region_entity_id is not None else None

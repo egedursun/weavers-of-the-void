@@ -83,7 +83,10 @@ export function MapTimeSlider({ current, shown, onShow }: MapTimeSliderProps) {
   }
 
   return (
-    <div data-map-time className='flex min-w-0 items-center gap-3'>
+    <div
+      data-map-time
+      className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'
+    >
       <Button
         size='icon-sm'
         variant='outline'

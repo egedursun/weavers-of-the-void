@@ -248,7 +248,7 @@ async def cults(ctx: TickContext) -> int:
         orphaned = board.gods.get(cult.id) is None or (home is not None and home.status is not EntityStatus.CANON)
         if not ctx.rng(f"cult_disband.{cult.id}").chance(cycles.cult_disband_chance + (cycles.cult_godless_bonus if orphaned else 0)):
             continue
-        reason = "it had no god or home left to worship" if orphaned else "its last followers went to other doors"
+        reason = "it had no god or home left to worship" if orphaned else "its last followers went to other faiths"
         await end_record(ctx, cult, EntityFlag.DISBANDED, f"disbanded; {reason}")
         ended.add(cult.id)
         disbanded += 1
@@ -353,7 +353,7 @@ async def peoples(ctx: TickContext) -> int:
         text = (
             f"{people.name} and {largest.name} married into each other and joined their homelands: one people now, called {largest.name}."
             if union
-            else f"Over the generations {people.name} melted into {largest.name}; its tongue and name live on only in songs."
+            else f"Over the generations {people.name} melted into {largest.name}; its tongue and name live on only in what others remember."
         )
         await note(ctx, text, key="institutions.people_union" if union else "institutions.people_assimilated", ids=[people.id, largest.id])
     ctx.count("peoples_joined", done)
@@ -436,7 +436,7 @@ async def works(ctx: TickContext) -> int:
             continue
         await end_record(ctx, work, EntityFlag.FORGOTTEN, "no one was left to sing, keep or remember it; forgotten")
         forgotten += 1
-        tail = "its last copy was lost too" if written else "the last mouth that knew it fell silent"
+        tail = "its last copy was lost too" if written else "the last who knew it died"
         await note(ctx, f"{work.name} was forgotten; {tail}.", key="institutions.work_forgotten", ids=[work.id])
     ctx.count("works_forgotten", forgotten)
     return forgotten

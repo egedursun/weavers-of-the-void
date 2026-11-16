@@ -294,3 +294,44 @@ def test_gendered_defaults_for_designed_beings_are_caught() -> None:
     for text in ("The android greets you and she bows.", "clones of her line", "a fembot of the old courts"):
         assert "designed being gender" in rules_hit(module, PROMPT, text), text
     assert "designed being gender" not in rules_hit(module, PROMPT, "The made mind greets you and names its maker.")
+
+
+def test_men_for_people_is_caught_and_a_sex_context_is_not() -> None:
+    module = checker()
+    engine_line = REPOSITORY_ROOT / "backend/src/aerona/engine/interconnect/sample.py"
+    for text in ("armies lose men to the land and its ambushes", "battles and levies take young men first", "tribal realms follow big-men"):
+        assert "men for people" in rules_hit(module, engine_line, text), text
+    assert "men for people" not in rules_hit(module, engine_line, "Grown men per hundred grown women")
+    assert "men for people" not in rules_hit(module, engine_line, "Share of a lifespan past which male bodies no longer sire")
+
+
+def test_enum_values_reach_the_bias_gate() -> None:
+    module = checker()
+    enums = module.ENUMS / "sample.py"
+    for value in ("war_father", "thread", "web", "fury", "choir", "angel", "eye_in_the_sky"):
+        hits = {finding.rule for finding in module.matches(enums, 1, value.replace("_", " "), True, False, enum_value=True)}
+        assert hits, value
+    assert not {finding.rule for finding in module.matches(enums, 1, "guide of souls", True, False, enum_value=True)}
+    assert not module.enum_findings()
+
+
+def test_a_proper_name_or_example_placeholder_is_caught() -> None:
+    module = checker()
+    screen = REPOSITORY_ROOT / "frontend/src/features/sample/Form.tsx"
+    for text in (
+        "placeholder='Silver Crowns'",
+        "placeholder='The Kingdom of the Salt Coast'",
+        "placeholder='A motif, for example weeping moon'",
+        "placeholder={'Velmora\\nAshkar'}",
+    ):
+        assert "example placeholder" in rules_hit(module, screen, text), text
+    for text in ("placeholder='The Creator'", "placeholder='The name of the realm'", "placeholder='One name per line'"):
+        assert "example placeholder" not in rules_hit(module, screen, text), text
+
+
+def test_a_place_given_a_will_or_a_mood_is_caught() -> None:
+    module = checker()
+    rule = "a place given a will or a mood"
+    for text in ("Dunes and dried seas under a merciless sun.", "A world wrapped in rainforest, loud with life.", "a world crowned by rings"):
+        assert rule in rules_hit(module, PROMPT, text), text
+    assert rule not in rules_hit(module, PROMPT, "A dry world of sand and stone with little water.")

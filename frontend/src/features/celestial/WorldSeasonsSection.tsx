@@ -114,7 +114,7 @@ function ClimateAge({
     (invalid ? 'Write a whole number of epochs.' : null) ??
     (command.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion icon={age?.icon ?? CloudSun} tone={age?.tone ?? 'muted'} />
         <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
@@ -253,7 +253,7 @@ function SeasonCard({
   const earlier = busy ?? (index === 0 ? FIRST : null)
   const later = busy ?? (index === seasons.length - 1 ? LAST : null)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <span className='flex size-control-sm shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/12 text-primary'>
           <Text as='span' weight='semibold'>
@@ -358,7 +358,7 @@ function CalendarCard({
       ? 'These are the present names.'
       : null)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={BookOpen} tone='verdigris' size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -666,7 +666,7 @@ function YearControls({ data }: { data: WorldSeasons }) {
     )
   }
   return (
-    <div className='flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
+    <div className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
       <div className='flex min-w-0 flex-col gap-0.5'>
         <Text weight='semibold'>Shape the year</Text>
         <Muted variant='caption'>

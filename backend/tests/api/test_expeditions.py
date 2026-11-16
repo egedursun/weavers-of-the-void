@@ -1,6 +1,7 @@
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow, LegendaryQuestRow, ThreadRow
-from aerona.domain.enums.chronicle import ChronicleKind, LegendaryQuestKind, LegendaryQuestOutcome, ThreadStatus
+from aerona.domain.enums.chronicle import ChronicleKind, LegendaryQuestOutcome, ThreadStatus
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from tests.api.conftest import ApiWorld, seeded
 
 
@@ -16,14 +17,18 @@ async def test_great_expeditions_report_countdown_and_declarer(api: ApiWorld) ->
             [
                 LegendaryQuestRow(
                     thread_id=open_thread.id,
-                    kind=LegendaryQuestKind.DEAD_STAR,
+                    aim=QuestAim.RESTORE,
+                    target_kind=QuestTargetKind.STAR,
+                    locked=[],
                     opened_by=ActorKind.FATE,
                     opened_epoch=1,
                     deadline_epoch=1 + rules.beyond.expedition_epochs,
                 ),
                 LegendaryQuestRow(
                     thread_id=closed_thread.id,
-                    kind=LegendaryQuestKind.ARCHIVE,
+                    aim=QuestAim.FIND,
+                    target_kind=QuestTargetKind.KNOWLEDGE,
+                    locked=[],
                     opened_by=ActorKind.CREATOR,
                     opened_epoch=1,
                     deadline_epoch=2,
@@ -32,7 +37,7 @@ async def test_great_expeditions_report_countdown_and_declarer(api: ApiWorld) ->
             ]
         )
     everything = (await api.http.get("/api/expeditions")).json()
-    assert [item["kind"] for item in everything] == ["archive", "dead_star"]
+    assert [item["aim"] for item in everything] == ["find", "restore"]
     live = (await api.http.get("/api/expeditions", params={"open_only": True})).json()
     assert len(live) == 1
     assert live[0]["declared_by"] == "fate"

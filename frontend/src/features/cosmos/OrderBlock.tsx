@@ -9,7 +9,7 @@ type OrderBlockProps = {
 
 export function OrderBlock({ title, description, children }: OrderBlockProps) {
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-col gap-0.5'>
         <Text weight='medium'>{title}</Text>
         <Muted variant='caption'>{description}</Muted>

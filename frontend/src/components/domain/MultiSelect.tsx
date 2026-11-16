@@ -59,7 +59,7 @@ export function MultiSelect({
       <PopoverTrigger asChild>
         <Button
           id={id}
-          variant='outline'
+          variant='field'
           size={size}
           aria-haspopup='dialog'
           aria-expanded={open}

@@ -4,7 +4,7 @@ import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, Section } from '@/components/domain'
+import { EmptyState, Paged, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { Highlight } from '@/features/atlas/Highlight'
 import { SEARCH_MIN_LENGTH, type SearchHit, useWorldSearch } from './api'
@@ -55,48 +55,55 @@ export function ChronicleSearchResults({
           description='No record of the chronicle holds these words.'
         />
       )}
-      {groups.map(([epoch, hits]) => (
-        <div key={epoch} className='flex min-w-0 flex-col gap-2'>
-          <div className='flex min-w-0 items-center gap-2'>
-            <Label
-              variant='overline'
-              className='flex-1'
-            >{`Epoch ${formatInteger(epoch)}`}</Label>
-            <Button variant='ghost' size='sm' onClick={() => onGo(epoch)}>
-              Go to epoch
-              <ArrowRight />
-            </Button>
-          </div>
-          <ul className='flex min-w-0 flex-col gap-1'>
-            {hits.map((hit) => (
-              <li
-                key={`${hit.category}-${hit.id}`}
-                className='flex min-w-0 items-start gap-2'
-              >
-                <Text as='div' className='min-w-0 flex-1'>
-                  <Highlight text={hit.snippet ?? hit.title} query={query} />
-                  {hit.subtitle && (
-                    <Muted
-                      as='span'
-                      variant='caption'
-                    >{` · ${hit.subtitle}`}</Muted>
-                  )}
-                </Text>
-                {hit.category === 'chronicle' && (
-                  <Button
-                    variant='ghost'
-                    size='icon-sm'
-                    aria-label='Go to this record'
-                    onClick={() => onGo(epoch, hit.id)}
+      <Paged items={groups}>
+        {([epoch, hits]) => (
+          <div key={epoch} className='flex min-w-0 flex-col gap-2'>
+            <div className='flex min-w-0 items-center gap-2'>
+              <Label
+                variant='overline'
+                className='flex-1'
+              >{`Epoch ${formatInteger(epoch)}`}</Label>
+              <Button variant='ghost' size='sm' onClick={() => onGo(epoch)}>
+                Go to epoch
+                <ArrowRight />
+              </Button>
+            </div>
+            <ul className='flex min-w-0 flex-col gap-1'>
+              <Paged items={hits} as='li' noun={['line', 'lines']}>
+                {(hit) => (
+                  <li
+                    key={`${hit.category}-${hit.id}`}
+                    className='flex min-w-0 items-start gap-2'
                   >
-                    <ArrowRight />
-                  </Button>
+                    <Text as='div' className='min-w-0 flex-1'>
+                      <Highlight
+                        text={hit.snippet ?? hit.title}
+                        query={query}
+                      />
+                      {hit.subtitle && (
+                        <Muted
+                          as='span'
+                          variant='caption'
+                        >{` · ${hit.subtitle}`}</Muted>
+                      )}
+                    </Text>
+                    {hit.category === 'chronicle' && (
+                      <Button
+                        variant='ghost'
+                        size='icon-sm'
+                        aria-label='Go to this record'
+                        onClick={() => onGo(epoch, hit.id)}
+                      >
+                        <ArrowRight />
+                      </Button>
+                    )}
+                  </li>
                 )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+              </Paged>
+            </ul>
+          </div>
+        )}
+      </Paged>
     </Section>
   )
 }

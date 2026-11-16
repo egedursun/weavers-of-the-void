@@ -22,7 +22,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat_or
 
-MARKET_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS})
+MARKET_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY})
 MARKET_RANKS = frozenset({CentralityRank.WEEKLY, CentralityRank.RARE})
 RING_ORDER = (LandUseRing.GARDENS, LandUseRing.FORESTRY, LandUseRing.GRAIN, LandUseRing.RANCHING, LandUseRing.WILDS)
 UNREACHED = 99_999

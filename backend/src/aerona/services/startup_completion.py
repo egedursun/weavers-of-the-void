@@ -24,7 +24,7 @@ from aerona.services.player.ports import ContentJob, ContentJobKind, RevelationR
 
 logger = logging.getLogger(__name__)
 
-FIRST_STAR_CONTENT = "The first light that hangs over the world and marks its first age."
+FIRST_STAR_CONTENT = "The first body in the world's sky, which marks its first age."
 CELESTIAL = EntityType.CELESTIAL.value
 
 

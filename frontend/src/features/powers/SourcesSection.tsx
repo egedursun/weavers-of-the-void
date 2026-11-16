@@ -5,6 +5,7 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -360,65 +361,75 @@ function Source({
         <Muted variant='caption'>{source.description}</Muted>
       ) : null}
       <ul className='flex min-w-0 flex-col gap-2'>
-        {source.costs.map((row) => (
-          <Part
-            key={`c${row.id}`}
-            kind='cost'
-            id={row.id}
-            title={`Costs ${COSTS[row.cost].label.toLowerCase()}`}
-            caption={`weight ${row.weight}`}
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
-        {source.resistances.map((row) => (
-          <Part
-            key={`r${row.id}`}
-            kind='resistance'
-            id={row.id}
-            title={`Resisted by ${RESISTANCES[row.resistance].label.toLowerCase()}`}
-            caption={
-              row.material
-                ? `the material ${row.material.replaceAll('_', ' ')}`
-                : 'no material named'
-            }
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
-        {source.hazards.map((row) => (
-          <Part
-            key={`h${row.id}`}
-            kind='hazard'
-            id={row.id}
-            title={`Risks ${HAZARDS[row.hazard].label.toLowerCase()}`}
-            caption={`weight ${row.weight}`}
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
-        {source.tides.map((row) => (
-          <Part
-            key={`t${row.id}`}
-            kind='tide'
-            id={row.id}
-            title={`Waxes and wanes with ${CYCLES[row.cycle].label.toLowerCase()}`}
-            caption={`every ${row.period} epochs, swinging ${row.amplitude}, from step ${row.phase}`}
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
-        {source.interactions.map((row) => (
-          <Part
-            key={`i${row.id}`}
-            kind='interaction'
-            id={row.id}
-            title={`${RELATIONS[row.relation].label} ${row.other_name}`}
-            caption={`strength ${row.strength}`}
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
+        <Paged items={source.costs} as='li'>
+          {(row) => (
+            <Part
+              key={`c${row.id}`}
+              kind='cost'
+              id={row.id}
+              title={`Costs ${COSTS[row.cost].label.toLowerCase()}`}
+              caption={`weight ${row.weight}`}
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
+        <Paged items={source.resistances} as='li'>
+          {(row) => (
+            <Part
+              key={`r${row.id}`}
+              kind='resistance'
+              id={row.id}
+              title={`Resisted by ${RESISTANCES[row.resistance].label.toLowerCase()}`}
+              caption={
+                row.material
+                  ? `the material ${row.material.replaceAll('_', ' ')}`
+                  : 'no material named'
+              }
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
+        <Paged items={source.hazards} as='li'>
+          {(row) => (
+            <Part
+              key={`h${row.id}`}
+              kind='hazard'
+              id={row.id}
+              title={`Risks ${HAZARDS[row.hazard].label.toLowerCase()}`}
+              caption={`weight ${row.weight}`}
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
+        <Paged items={source.tides} as='li'>
+          {(row) => (
+            <Part
+              key={`t${row.id}`}
+              kind='tide'
+              id={row.id}
+              title={`Waxes and wanes with ${CYCLES[row.cycle].label.toLowerCase()}`}
+              caption={`every ${row.period} epochs, swinging ${row.amplitude}, from step ${row.phase}`}
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
+        <Paged items={source.interactions} as='li'>
+          {(row) => (
+            <Part
+              key={`i${row.id}`}
+              kind='interaction'
+              id={row.id}
+              title={`${RELATIONS[row.relation].label} ${row.other_name}`}
+              caption={`strength ${row.strength}`}
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
       </ul>
       <ForgeCard
         icon={CirclePlus}
@@ -694,42 +705,48 @@ export function SourcesSection({
               />
             )}
             <ul className='flex min-w-0 flex-col gap-2'>
-              {query.data.densities.map((row) => (
-                <Density key={row.id} row={row} blocked={blocked} />
-              ))}
-              {query.data.knowledge.map((row) => (
-                <Held
-                  key={`k${row.id}`}
-                  table='power_source_knowledge'
-                  row={row}
-                  title={`Knows ${row.source_name}`}
-                  caption={`${row.level} of 100, since epoch ${row.learned_epoch}`}
-                  fields={KNOWLEDGE_FIELDS}
-                  blocked={blocked}
-                />
-              ))}
-              {query.data.laws.map((row) => (
-                <Held
-                  key={`l${row.id}`}
-                  table='source_laws'
-                  row={row}
-                  title={`Law: drawing on ${row.source_name} is ${SOURCE_LAWS[row.level].label.toLowerCase()}`}
-                  caption='Named in the law of this realm'
-                  fields={LAW_FIELDS}
-                  blocked={blocked}
-                />
-              ))}
-              {query.data.stances.map((row) => (
-                <Held
-                  key={`s${row.id}`}
-                  table='source_stances'
-                  row={row}
-                  title={`The faith holds ${row.source_name} ${STANCES[row.stance].label.toLowerCase()}`}
-                  caption='A stance of this faith'
-                  fields={STANCE_FIELDS}
-                  blocked={blocked}
-                />
-              ))}
+              <Paged items={query.data.densities} as='li'>
+                {(row) => <Density key={row.id} row={row} blocked={blocked} />}
+              </Paged>
+              <Paged items={query.data.knowledge} as='li'>
+                {(row) => (
+                  <Held
+                    key={`k${row.id}`}
+                    table='power_source_knowledge'
+                    row={row}
+                    title={`Knows ${row.source_name}`}
+                    caption={`${row.level} of 100, since epoch ${row.learned_epoch}`}
+                    fields={KNOWLEDGE_FIELDS}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
+              <Paged items={query.data.laws} as='li'>
+                {(row) => (
+                  <Held
+                    key={`l${row.id}`}
+                    table='source_laws'
+                    row={row}
+                    title={`Law: drawing on ${row.source_name} is ${SOURCE_LAWS[row.level].label.toLowerCase()}`}
+                    caption='Named in the law of this realm'
+                    fields={LAW_FIELDS}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
+              <Paged items={query.data.stances} as='li'>
+                {(row) => (
+                  <Held
+                    key={`s${row.id}`}
+                    table='source_stances'
+                    row={row}
+                    title={`The faith holds ${row.source_name} ${STANCES[row.stance].label.toLowerCase()}`}
+                    caption='A stance of this faith'
+                    fields={STANCE_FIELDS}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
             </ul>
             {query.data.power_stance ? (
               <RecordRow

@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.epochs import EpochEnginePhaseRow, EpochRunRow, EpochStepRow
@@ -32,7 +32,7 @@ async def step_settled(session: AsyncSession, epoch: int, step: EpochStepKind) -
 
 
 async def attempted(session: AsyncSession, epoch: int, step: EpochStepKind) -> bool:
-    return await step_status(session, epoch, step) is not None
+    return await step_status(session, epoch, step) not in {None, EpochStepStatus.PENDING}
 
 
 async def mark_step(session: AsyncSession, epoch: int, step: EpochStepKind, status: EpochStepStatus, error: str | None = None) -> None:
@@ -51,7 +51,19 @@ async def raise_phase(session: AsyncSession, epoch: int, phase: EpochPhase) -> N
     run.phase = max(run.phase, int(phase))
 
 
+async def plan_steps(session: AsyncSession, epoch: int) -> int:
+    known = set(await session.scalars(select(EpochStepRow.step).where(EpochStepRow.epoch == epoch)))
+    planned = [step for step in EpochStepKind if step not in known]
+    for step in planned:
+        session.add(EpochStepRow(epoch=epoch, step=step, status=EpochStepStatus.PENDING, error=None))
+    await session.flush()
+    return len(planned)
+
+
 async def finish_run(session: AsyncSession, epoch: int) -> None:
+    await session.execute(
+        update(EpochStepRow).where(EpochStepRow.epoch == epoch, EpochStepRow.status == EpochStepStatus.PENDING).values(status=EpochStepStatus.SKIPPED)
+    )
     run = await require_run(session, epoch)
     run.phase = max(run.phase, int(EpochPhase.TRANSITION))
     run.finished = True

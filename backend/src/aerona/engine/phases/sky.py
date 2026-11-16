@@ -145,7 +145,7 @@ async def _eclipse(ctx: TickContext, world: WorldRow) -> str:
         ),
     )
     await eclipse_seers(ctx, prophecy, world)
-    return f"In {world.name} an eclipse lasted the whole epoch, and its seers foretold the same prophecy."
+    return f"In {world.name} an eclipse lasted the whole epoch, and a prophecy was made under it."
 
 
 async def _comet(ctx: TickContext, world: WorldRow) -> str:
@@ -157,7 +157,7 @@ async def _comet(ctx: TickContext, world: WorldRow) -> str:
         RecordSpec(
             name=f"The Comet in {world.name}'s Sky",
             entity_type=EntityType.CELESTIAL,
-            body=f"A tailed light split {world.name}'s sky.",
+            body=f"A comet crossed {world.name}'s sky.",
             stats=CelestialStats(
                 brightness=clamp_percent(sky.comet_brightness_base + rng.die(sky.comet_brightness_die)),
                 influence=clamp_percent(sky.comet_influence_base + rng.die(sky.comet_influence_die)),
@@ -317,8 +317,8 @@ async def _transit(ctx: TickContext, world: WorldRow) -> str:
         if not held(community.id):
             shift_bounded(ctx.rules, community, PIETY_KEY, ctx.rules.orbits.transit_piety)
     if inner is None:
-        return f"A dark body crossed the face of the star in {world.name}'s sky."
-    return f"{inner.name} crossed the face of the star in {world.name}'s sky."
+        return f"A dark body crossed in front of the star in {world.name}'s sky."
+    return f"{inner.name} crossed in front of the star in {world.name}'s sky."
 
 
 async def calendar_signs(ctx: TickContext) -> int:
@@ -389,7 +389,7 @@ async def _time_traveller(ctx: TickContext, thread: ThreadRow, place: EntityRow)
         RecordSpec(
             name=f"The Traveller who came to {place.name}",
             entity_type=EntityType.MORTAL,
-            body=("Someone who came from the end of this story, from the future. They cannot fully tell what they saw; but they seem to know how it will end."),
+            body=("Someone who came from the future of this story; they seem to know how it will end."),
             stats=MortalStats(
                 hp=sky.traveler_hp,
                 strength=clamp_percent(sky.traveler_strength_base + rng.die(sky.traveler_strength_die)),
@@ -425,7 +425,7 @@ async def _echo_prophecy(ctx: TickContext, thread: ThreadRow) -> EntityRow:
         RecordSpec(
             name=f"The Word that Fell Back (story {thread.id})",
             entity_type=EntityType.PROPHECY,
-            body="The word of something not yet lived fell into the past; it was found on old stones, as if written before this epoch.",
+            body="The word of something not yet lived fell into the past; it was found in an old record, as if written before this epoch.",
             stats=ProphecyStats(certainty=clamp_percent(sky.echo_certainty_base + rng.die(sky.echo_certainty_die))),
             power=sky.echo_prophecy_power,
             subtype="prophecy leaked into the past",
@@ -434,7 +434,7 @@ async def _echo_prophecy(ctx: TickContext, thread: ThreadRow) -> EntityRow:
     )
     ctx.session.add(ThreadLinkRow(thread_id=thread.id, entity_id=prophecy.id, role=ThreadLinkRole.RELATED, epoch=ctx.epoch))
     await note(
-        ctx, f"The prophecy of something that has not happened yet was found on old stones (story#{thread.id}).", key="sky.echo_prophecy", ids=[prophecy.id]
+        ctx, f"The prophecy of something that has not happened yet was found in an old record (story#{thread.id}).", key="sky.echo_prophecy", ids=[prophecy.id]
     )
     return prophecy
 

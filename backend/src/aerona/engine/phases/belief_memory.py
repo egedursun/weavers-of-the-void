@@ -385,7 +385,7 @@ async def fairy_tales(ctx: TickContext) -> None:
         if not rng.chance(ctx.rules.deep_world.fairy_tale_chance):
             continue
         await add_flag(ctx.session, legend.id, EntityFlag.FAIRY_TALE, ctx.epoch)
-        await note(ctx, f"{legend.name} is now only a fairy tale told to children; adults no longer believe it.", key="memory.fairy_tale", ids=[legend.id])
+        await note(ctx, f"{legend.name} is now only a tale told to the young; the grown no longer believe it.", key="memory.fairy_tale", ids=[legend.id])
 
 
 @reads(
@@ -451,7 +451,7 @@ async def revive_legend(ctx: TickContext, legend_id: int) -> EntityRow:
         legend.end_epoch = None
     await remove_flag(ctx.session, legend.id, EntityFlag.FAIRY_TALE)
     set_stats(legend, spread=max(stat(legend, "spread") or 0, ctx.rules.deep_life.legend_default_spread))
-    await note(ctx, f"{legend.name} is told again around the fires.", key="memory.legend_revived", ids=[legend.id])
+    await note(ctx, f"{legend.name} is told again.", key="memory.legend_revived", ids=[legend.id])
     return legend
 
 

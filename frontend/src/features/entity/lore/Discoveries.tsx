@@ -41,7 +41,7 @@ import { useLoreAction } from './panels/controlParts'
 type Key = Record<string, string | number>
 const GRID = 'grid min-w-0 grid-cols-1 gap-2 @md/lore:grid-cols-2'
 const TILE =
-  'flex h-full min-w-0 flex-col gap-2 rounded-lg border p-3 @md/lore:last:odd:col-span-2'
+  'flex h-full min-w-0 flex-col gap-2 rounded-md border p-3 @md/lore:last:odd:col-span-2 border-gild/70 bg-card surface-framed'
 
 function useRowEdit() {
   return useLoreAction(

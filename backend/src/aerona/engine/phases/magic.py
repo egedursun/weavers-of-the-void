@@ -128,6 +128,7 @@ async def enemy_in_reach(ctx: TickContext, mortal: EntityRow, row: RiteProfileRo
 @reads(
     "mortal.intellect",
     "settlement.prosperity",
+    "table.augments",
     "table.bonds",
     "table.cult_doctrines",
     "table.cult_tenets",

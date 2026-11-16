@@ -86,7 +86,7 @@ async def use_power_tool(call: MortalCall, args: UsePowerInput) -> str:
 
 async def train_power(call: MortalCall, args: PowerInput) -> str:
     power = await my_power(call, args.power_id, MortalResult.POWER_TRAINING_DECLINED)
-    if power.state in {PowerState.LOST, PowerState.BURNED_OUT}:
+    if power.state in {PowerState.LOST, PowerState.EXHAUSTED}:
         fail(MortalResult.POWER_TRAINING_DECLINED, why="that power is lost or spent")
     if "control" not in power.locked:
         power.control = clamp_percent(power.control + call.rules.powers.control_gain * TRAINING)

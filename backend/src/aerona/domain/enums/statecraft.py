@@ -9,6 +9,9 @@ class SubjectKind(StrEnum):
     CLIENT = "client"
     COLONY = "colony"
     PROTECTORATE = "protectorate"
+    ENCLAVE = "enclave"
+    MANDATE = "mandate"
+    ASSOCIATED_STATE = "associated_state"
 
 
 class CrisisDemand(StrEnum):
@@ -45,6 +48,17 @@ class TaxKind(StrEnum):
     TRADE = "trade"
     CONSUMPTION = "consumption"
     TITHE = "tithe"
+    INCOME = "income"
+    PROPERTY = "property"
+    INHERITANCE = "inheritance"
+    WEALTH = "wealth"
+    COMPANY = "company"
+    LABOUR_LEVY = "labour_levy"
+    IN_KIND = "in_kind"
+    LICENCE = "licence"
+    SEIGNIORAGE = "seigniorage"
+    POLLUTION = "pollution"
+    EXCISE = "excise"
 
 
 class MandateKind(StrEnum):

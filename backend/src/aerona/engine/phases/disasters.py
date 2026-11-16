@@ -589,7 +589,7 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
             world.struck += 1
             await note(
                 ctx,
-                f"Nature raged over {region.name}: {DISASTERS[disaster].label.lower()}.{_sentence(impact)}",
+                f"Disaster struck {region.name}: {DISASTERS[disaster].label.lower()}.{_sentence(impact)}",
                 key=f"disasters.{disaster.value}",
                 ids=[region.id, event.id],
                 feed=FeedCategory.DISASTER,
@@ -752,6 +752,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "settlement.population",
     "settlement.prosperity",
     "table.assistive_aids",
+    "table.augments",
     "table.avatars",
     "table.bodies",
     "table.body_customs",

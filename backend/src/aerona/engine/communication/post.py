@@ -1,8 +1,10 @@
+from collections.abc import Mapping
 from typing import Any
 
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.communication import CipherRow, SignalLinkRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import WorldSeasonRow
@@ -13,14 +15,29 @@ from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.communication import DispatchContent, DispatchState, Medium, SignalState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.eras import EraChannel
+from aerona.domain.enums.networks import NetworkCarrier
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.lore.civics import holders_know
-from aerona.engine.networks.book import message_epochs
+from aerona.engine.networks.book import message_epochs, shared_networks
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import spoken_language
 
-INSTANT = frozenset({Medium.DREAM, Medium.MAGIC_SENDING})
+INSTANT = frozenset({Medium.DREAM, Medium.MAGIC_SENDING, Medium.MIND_LINK, Medium.BROADCAST})
+OPEN_MEDIA = frozenset({Medium.HERALD, Medium.BROADCAST})
+CARRIER_MEDIUM: Mapping[NetworkCarrier, Medium] = total(
+    NetworkCarrier,
+    {
+        NetworkCarrier.RELAY: Medium.NETWORK,
+        NetworkCarrier.WIRED: Medium.NETWORK,
+        NetworkCarrier.BROADCAST: Medium.BROADCAST,
+        NetworkCarrier.MESH: Medium.NETWORK,
+        NetworkCarrier.MIND_LINK: Medium.MIND_LINK,
+        NetworkCarrier.RITE_LINK: Medium.NETWORK,
+        NetworkCarrier.GROWN_LINK: Medium.NETWORK,
+    },
+)
+MEDIUM_RANK = (Medium.MIND_LINK, Medium.BROADCAST, Medium.NETWORK)
 OVERLAND = frozenset({Medium.ENVOY, Medium.LETTER, Medium.HERALD})
 SPEED_RULES = {
     Medium.ENVOY: "envoy_hops",
@@ -97,6 +114,13 @@ async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_
     return epochs
 
 
+async def upgraded(ctx: TickContext, sender_id: int, recipient_id: int, medium: Medium) -> Medium:
+    if medium is not Medium.LETTER:
+        return medium
+    offered = {CARRIER_MEDIUM[row.carrier] for row in await shared_networks(ctx.session, sender_id, recipient_id, ctx.epoch) if row.carries_messages}
+    return next((item for item in MEDIUM_RANK if item in offered), medium)
+
+
 async def send(
     ctx: TickContext,
     sender_id: int,
@@ -113,6 +137,7 @@ async def send(
     if held(sender_id) or sender_id == recipient_id:
         return None
     atlas = atlas or await RegionAtlas.load(ctx.session)
+    medium = await upgraded(ctx, sender_id, recipient_id, medium)
     language = await spoken_language(ctx.session, sender_id)
     cipher = await ctx.session.get(CipherRow, sender_id)
     row = MessageRow(
@@ -129,7 +154,7 @@ async def send(
         payload=payload or {},
         arrival_epoch=ctx.epoch + await delay(ctx, atlas, origin_id or sender_id, recipient_id, medium=medium, owner_id=sender_id),
         forged=forged,
-        enciphered=cipher is not None and medium is not Medium.HERALD,
+        enciphered=cipher is not None and medium not in OPEN_MEDIA,
         locked=[],
     )
     ctx.session.add(row)

@@ -194,7 +194,6 @@ async def servitor_views(session: AsyncSession, rows: list[ServitorRow]) -> list
         ServitorView(
             spirit=at(refs, row.spirit_entity_id),
             god=at(refs, row.god_node_id),
-            rank=row.rank,
             origin=row.origin,
             role=row.role,
             post=at(refs, row.post_entity_id),

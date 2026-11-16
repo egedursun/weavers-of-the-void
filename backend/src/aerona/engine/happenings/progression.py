@@ -1,19 +1,23 @@
 from collections import Counter
+from collections.abc import Mapping
 
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.happenings import EventProfileRow
 from aerona.db.tables.warfare import SiegeRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.happening import EventPhase
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
-from aerona.engine.happenings.effects import aftermath, famine_onset, peak_harm, plague_active, siege_over, siege_peaked
+from aerona.engine.happenings.effects import aftermath, famine_onset, peak_harm, plague_active, siege_over, siege_peaked, struck_communities
 from aerona.engine.happenings.profile import (
     MULTI_SEASON,
     Happening,
@@ -25,37 +29,30 @@ from aerona.engine.happenings.profile import (
     open_profile,
     siege_for,
 )
+from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.stats import stat
 
-PHASE_LINES: dict[EngineKind, dict[str, str]] = {
-    EngineKind.FAMINE: {
-        EventPhase.PEAK.value: "{name} deepened into the worst of its hunger.",
-        EventPhase.AFTERMATH.value: "The worst of {name} has passed; the granaries slowly fill again.",
-        "over": "{name} is over at last; the hungry years are counted and set down.",
+PHASE_LINES: Mapping[EventPhase, str] = total(
+    EventPhase,
+    {
+        EventPhase.ONSET: "{name} began.",
+        EventPhase.PEAK: "{name} reached its height.",
+        EventPhase.AFTERMATH: "{name} passed its height; its aftermath began.",
+        EventPhase.MEMORY: "{name} is over and passes into memory.",
     },
-    EngineKind.PLAGUE: {
-        EventPhase.PEAK.value: "{name} raged at its height; the dead outnumbered those who could bury them.",
-        EventPhase.AFTERMATH.value: "{name} burned itself out; the survivors count the empty houses.",
-        "over": "{name} is remembered now, no longer feared.",
-    },
-    EngineKind.SIEGE: {
-        EventPhase.PEAK.value: "Hunger gripped the besieged in {name}.",
-        EventPhase.AFTERMATH.value: "{name} has ended; the walls stand silent.",
-        "over": "The scars of {name} begin to heal.",
-    },
-}
-OVER = "over"
+)
 PHASE_HOLD = "phase"
 
 
-async def phase_line(ctx: TickContext, event: EntityRow, step: str) -> None:
-    lines = PHASE_LINES.get(event.engine_kind) if event.engine_kind is not None else None
-    if lines is None or event.engine_kind is None:
+async def phase_line(ctx: TickContext, event: EntityRow, step: EventPhase) -> None:
+    if event.engine_kind is None:
         return
     await ctx.chronicle(
         ChronicleKind.DISASTER if event.engine_kind is not EngineKind.SIEGE else ChronicleKind.WAR,
-        lines[step].format(name=event.name),
-        template_key=f"event.phase.{event.engine_kind.value}.{step}",
+        PHASE_LINES[step].format(name=event.name),
+        template_key=f"event.phase.{event.engine_kind.value}.{step.value}",
         entity_ids=[event.id],
         world_id=event.world_id,
         feed_category=FeedCategory.DISASTER,
@@ -103,8 +100,8 @@ PROGRESSIONS = {EngineKind.FAMINE: famine_next, EngineKind.PLAGUE: plague_next, 
 
 async def next_phase(ctx: TickContext, event: EntityRow, profile: EventProfileRow) -> EventPhase:
     step = PROGRESSIONS.get(event.engine_kind) if event.engine_kind is not None else None
-    if profile.phase is EventPhase.AFTERMATH or step is None:
-        return EventPhase.AFTERMATH
+    if profile.phase in {EventPhase.AFTERMATH, EventPhase.MEMORY} or step is None:
+        return profile.phase if profile.phase is EventPhase.MEMORY else EventPhase.AFTERMATH
     return await step(ctx, event, profile)
 
 
@@ -112,9 +109,31 @@ async def turn(ctx: TickContext, event: EntityRow, profile: EventProfileRow, pha
     profile.phase = phase
     profile.phase_epoch = ctx.epoch
     if event.engine_kind in MULTI_SEASON:
-        await phase_line(ctx, event, phase.value)
+        await phase_line(ctx, event, phase)
     if phase is EventPhase.AFTERMATH:
         await aftermath(ctx, event, profile, atlas)
+
+
+async def memorialise(ctx: TickContext, event: EntityRow, atlas: RegionAtlas) -> int:
+    weight = clamp_int(stat(event, "severity") or 0, 0, PERCENT) * ctx.rules.events.memory_pct // PERCENT
+    if weight <= 0:
+        return 0
+    kept = 0
+    for community in await struck_communities(ctx, event, atlas):
+        if held(community.id):
+            continue
+        await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=community.id,
+            subject_id=event.id,
+            kind=MemoryKind.LAMENTED,
+            magnitude=-weight,
+            epoch=ctx.epoch,
+            note="an event kept in memory",
+        )
+        kept += 1
+    return kept
 
 
 async def advance(ctx: TickContext, atlas: RegionAtlas) -> Counter[str]:
@@ -130,9 +149,11 @@ async def advance(ctx: TickContext, atlas: RegionAtlas) -> Counter[str]:
                 await turn(ctx, event, profile, wanted, atlas)
                 counts[f"to_{wanted.value}"] += 1
             elif profile.phase is EventPhase.AFTERMATH and ctx.epoch - profile.phase_epoch >= ctx.rules.events.aftermath_epochs:
+                profile.phase, profile.phase_epoch = EventPhase.MEMORY, ctx.epoch
+                await memorialise(ctx, event, atlas)
                 await close_profile(ctx, profile)
                 if event.engine_kind in MULTI_SEASON:
-                    await phase_line(ctx, event, OVER)
+                    await phase_line(ctx, event, EventPhase.MEMORY)
                 counts["ended"] += 1
         if profile.phase is EventPhase.PEAK and profile.end_epoch is None and event.engine_kind in MULTI_SEASON:
             counts["peak_dead"] += await peak_harm(ctx, event, profile, atlas)

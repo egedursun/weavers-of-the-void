@@ -1,10 +1,12 @@
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
+from aerona.core.total import total
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import CommonsRow, GameReserveRow, IntensificationRow, PerennialRow
 from aerona.db.tables.ecology import SpeciesRangeRow, SpeciesYieldRow
@@ -17,6 +19,7 @@ from aerona.db.tables.regime import RegimeRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import CommonsKind, CommonsRule, PerennialKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.ecology import SOWN, GrowthCycle
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -35,6 +38,7 @@ from aerona.engine.cycles.standing import regard
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.living.traits import eased, traits_of
+from aerona.engine.lore.civics import holders_know
 from aerona.engine.mind.hooks import judged
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
@@ -47,7 +51,8 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat_or
 
 LONG_LIVED = frozenset({GrowthCycle.PERENNIAL, GrowthCycle.TREE})
-CITY_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS})
+CITY_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY})
+CASH_CROPS = frozenset({CommodityKind.FIBRE, CommodityKind.DYE, CommodityKind.LUXURIES, CommodityKind.INCENSE, CommodityKind.HERBS})
 YIELD_KINDS: tuple[tuple[CommodityKind, PerennialKind], ...] = (
     (CommodityKind.TIMBER, PerennialKind.TIMBER),
     (CommodityKind.BREW_BASE, PerennialKind.VINEYARD),
@@ -103,16 +108,38 @@ async def holdings(ctx: TickContext) -> Holdings:
 
 def mature_epochs(ctx: TickContext, kind: PerennialKind) -> int:
     table = ctx.rules.perennials
-    return {
-        PerennialKind.ORCHARD: table.orchard_epochs,
-        PerennialKind.VINEYARD: table.vineyard_epochs,
-        PerennialKind.GROVE: table.grove_epochs,
-        PerennialKind.TIMBER: table.timber_epochs,
-    }[kind]
+    return total(
+        PerennialKind,
+        {
+            PerennialKind.ORCHARD: table.orchard_epochs,
+            PerennialKind.VINEYARD: table.vineyard_epochs,
+            PerennialKind.GROVE: table.grove_epochs,
+            PerennialKind.TIMBER: table.timber_epochs,
+            PerennialKind.PLANTATION: table.plantation_epochs,
+            PerennialKind.FOREST_GARDEN: table.forest_garden_epochs,
+        },
+    )[kind]
 
 
-def kind_of(yields: set[CommodityKind]) -> PerennialKind:
+def kind_of(yields: set[CommodityKind], land: RegionEnvironmentRow | None, forest: int) -> PerennialKind:
+    if yields & CASH_CROPS:
+        return PerennialKind.PLANTATION
+    if land is not None and land.forest_cover >= forest and CommodityKind.FRUIT in yields:
+        return PerennialKind.FOREST_GARDEN
     return next((kind for commodity, kind in YIELD_KINDS if commodity in yields), PerennialKind.GROVE)
+
+
+KIND_TOLL: Mapping[PerennialKind, tuple[int, str, int]] = total(
+    PerennialKind,
+    {
+        PerennialKind.ORCHARD: (100, "soil_fertility", 0),
+        PerennialKind.VINEYARD: (110, "soil_fertility", 0),
+        PerennialKind.GROVE: (90, "soil_fertility", 0),
+        PerennialKind.TIMBER: (100, "forest_cover", 1),
+        PerennialKind.PLANTATION: (150, "soil_fertility", -1),
+        PerennialKind.FOREST_GARDEN: (70, "forest_cover", 1),
+    },
+)
 
 
 async def plant(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
@@ -134,7 +161,7 @@ async def plant(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
             continue
         if not ctx.rng(f"perennials.{region_id}.{plant_id}.{ctx.epoch}").chance(table.plant_pct):
             continue
-        kind = kind_of(yields.get(plant_id, set()))
+        kind = kind_of(yields.get(plant_id, set()), lands.lands.get(region_id), ctx.rules.commons.woods_forest)
         epochs = mature_epochs(ctx, kind)
         ctx.session.add(
             PerennialRow(
@@ -182,7 +209,12 @@ async def grow(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
         owner = await ctx.session.get(EntityRow, row.owner_node_id) if row.owner_node_id is not None else None
         if owner is not None and not held(owner.id):
             bred = PERCENT + traits.get(LineTrait.YIELD, 0) * ctx.rules.living_production.yield_pct // PERCENT
-            await give_coin(ctx.session, ctx.rules, owner, round_half_up(row.area * table.coin_per_area * row.condition / PERCENT * max(0, bred) / PERCENT))
+            coin_pct, field, toll = KIND_TOLL[row.kind]
+            earned = row.area * table.coin_per_area * row.condition / PERCENT * max(0, bred) / PERCENT * coin_pct / PERCENT
+            await give_coin(ctx.session, ctx.rules, owner, round_half_up(earned))
+            land = lands.lands.get(row.region_entity_id)
+            if toll and land is not None and field not in land.locked:
+                setattr(land, field, clamp_int(getattr(land, field) + toll, 0, PERCENT))
     for region_id, count in sorted(bearing.items()):
         for town in lands.towns.get(region_id, []):
             if not held(town.id):
@@ -206,7 +238,7 @@ async def replant(ctx: TickContext, row: PerennialRow) -> None:
     )
 
 
-def commons_kinds(ctx: TickContext, land: RegionEnvironmentRow) -> list[CommonsKind]:
+async def commons_kinds(ctx: TickContext, land: RegionEnvironmentRow, towns: list[EntityRow]) -> list[CommonsKind]:
     table = ctx.rules.commons
     kinds: list[CommonsKind] = []
     if land.grazed >= table.pasture_grazed:
@@ -215,7 +247,45 @@ def commons_kinds(ctx: TickContext, land: RegionEnvironmentRow) -> list[CommonsK
         kinds.append(CommonsKind.WOODS)
     if land.coast_kind is not CoastKind.NONE or land.river_class is not RiverClass.NONE:
         kinds.append(CommonsKind.FISHERY)
+    if land.river_class is not RiverClass.NONE or land.rainfall >= table.water_rain:
+        kinds.append(CommonsKind.WATER)
+    if land.forest_cover >= table.woods_forest and land.built < table.wild_built:
+        kinds.append(CommonsKind.HUNTING_GROUND)
+    if land.mined > 0 or land.mineral_layers:
+        kinds.append(CommonsKind.QUARRY)
+    if land.magic_density >= table.source_density:
+        kinds.append(CommonsKind.SOURCE_GROUND)
+    holders = [town.id for town in towns]
+    if await holders_know(ctx.session, holders, Technique.RADIO):
+        kinds.append(CommonsKind.SPECTRUM)
+    if await holders_know(ctx.session, holders, Technique.ROCKETRY):
+        kinds.append(CommonsKind.ORBITS)
     return kinds
+
+
+COMMONS_BOON: Mapping[CommonsKind, tuple[str, int]] = total(
+    CommonsKind,
+    {
+        CommonsKind.PASTURE: ("prosperity", 1),
+        CommonsKind.WOODS: ("construction_capacity", 2),
+        CommonsKind.FISHERY: ("prosperity", 1),
+        CommonsKind.WATER: ("sanitation", 1),
+        CommonsKind.HUNTING_GROUND: ("prosperity", 1),
+        CommonsKind.QUARRY: ("construction_capacity", 3),
+        CommonsKind.SPECTRUM: ("prestige", 1),
+        CommonsKind.ORBITS: ("prestige", 2),
+        CommonsKind.SOURCE_GROUND: ("public_order", 1),
+    },
+)
+
+
+def bestow(row: CommonsRow, town: EntityRow, profile: SettlementProfileRow | None) -> None:
+    field, amount = COMMONS_BOON[row.kind]
+    gain = amount * row.condition // PERCENT
+    if field == "prosperity":
+        shift_stat(town, field, gain)
+    elif profile is not None and field not in profile.locked:
+        setattr(profile, field, clamp_int(getattr(profile, field) + gain, 0, PERCENT * 100 if field == "construction_capacity" else PERCENT))
 
 
 def wear_share(ctx: TickContext, rule: CommonsRule) -> int:
@@ -230,7 +300,7 @@ async def seed_commons(ctx: TickContext, lands: Holdings, rows: list[CommonsRow]
         steward = lands.largest(region_id)
         if land is None or steward is None or held(region_id):
             continue
-        for kind in commons_kinds(ctx, land):
+        for kind in await commons_kinds(ctx, land, lands.towns.get(region_id, [])):
             if (region_id, kind) not in known:
                 row = CommonsRow(region_entity_id=region_id, kind=kind, steward_entity_id=steward.id, since_epoch=ctx.epoch, locked=[])
                 ctx.session.add(row)
@@ -323,6 +393,7 @@ async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> 
             for town in lands.towns.get(row.region_entity_id, []):
                 if not held(town.id):
                     shift_stat(town, "prosperity", (row.condition - HALF) / HALF * table.prosperity_weight)
+                    bestow(row, town, lands.profiles.get(town.id))
         steward = lands.profiles.get(row.steward_entity_id) if row.steward_entity_id is not None else None
         if (
             row.rule in (CommonsRule.OPEN, CommonsRule.CUSTOMARY)

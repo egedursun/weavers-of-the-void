@@ -1,4 +1,5 @@
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import SIZE_ORDER, Diet, SizeClass
 from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, SuccessionStage, TrophicLevel
@@ -87,24 +88,45 @@ def keystone_of(plan: BodyPlan, diet: Diet, size: SizeClass, traits: set[Creatur
     return None
 
 
-def seeded_trait(trait: EvolvedTrait, *, size: SizeClass, traits: set[CreatureTrait], cold_floor: int, intelligence: int, litter: int, fear: int) -> int:
-    high = {
-        EvolvedTrait.ARMOUR: bool(traits & {T.ARMOURED, T.STONESKIN}),
-        EvolvedTrait.VENOM: T.VENOMOUS in traits,
-        EvolvedTrait.CAMOUFLAGE: bool(traits & {T.CAMOUFLAGE, T.MIMIC}),
-        EvolvedTrait.SPEED: T.FLYING in traits,
-    }
-    if trait in high:
-        return SEEDED_HIGH if high[trait] else SEEDED_LOW
-    if trait is EvolvedTrait.SIZE:
-        return round(SIZE_ORDER.index(size) * PERCENT / (len(SIZE_ORDER) - 1))
-    if trait is EvolvedTrait.COLD_TOLERANCE:
-        return max(0, min(PERCENT, NEUTRAL - cold_floor * 2))
-    if trait is EvolvedTrait.INTELLIGENCE:
-        return max(0, min(PERCENT, intelligence))
-    if trait is EvolvedTrait.FECUNDITY:
-        return max(0, min(PERCENT, litter * 10))
-    return max(0, min(PERCENT, fear))
+HOT = 30
+
+
+def seeded_trait(
+    trait: EvolvedTrait,
+    *,
+    size: SizeClass,
+    traits: set[CreatureTrait],
+    cold_floor: int,
+    intelligence: int,
+    litter: int,
+    fear: int,
+    heat_ceiling: int = HOT,
+    water_need: int = NEUTRAL,
+) -> int:
+    def high(flag: bool) -> int:
+        return SEEDED_HIGH if flag else SEEDED_LOW
+
+    def bounded(value: float) -> int:
+        return max(0, min(PERCENT, round(value)))
+
+    seeds = total(
+        EvolvedTrait,
+        {
+            EvolvedTrait.SIZE: round(SIZE_ORDER.index(size) * PERCENT / (len(SIZE_ORDER) - 1)),
+            EvolvedTrait.SPEED: high(T.FLYING in traits),
+            EvolvedTrait.ARMOUR: high(bool(traits & {T.ARMOURED, T.STONESKIN})),
+            EvolvedTrait.VENOM: high(T.VENOMOUS in traits),
+            EvolvedTrait.CAMOUFLAGE: high(bool(traits & {T.CAMOUFLAGE, T.MIMIC})),
+            EvolvedTrait.COLD_TOLERANCE: bounded(NEUTRAL - cold_floor * 2),
+            EvolvedTrait.INTELLIGENCE: bounded(intelligence),
+            EvolvedTrait.FECUNDITY: bounded(litter * 10),
+            EvolvedTrait.WARINESS: bounded(fear),
+            EvolvedTrait.HEAT_TOLERANCE: bounded(NEUTRAL + (heat_ceiling - HOT) * 2),
+            EvolvedTrait.DROUGHT_TOLERANCE: bounded(PERCENT - water_need),
+            EvolvedTrait.KEEN_SENSES: SEEDED_HIGH if traits & {T.ECHOLOCATION, T.SPIRIT_SIGHT, T.MIND_READER} else NEUTRAL,
+        },
+    )
+    return seeds[trait]
 
 
 def lean(value: int | None) -> float:

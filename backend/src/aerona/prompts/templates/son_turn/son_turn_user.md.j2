@@ -2,7 +2,7 @@
 {% set trim = c.budget_trim_min_chars %}
 {% set tail %}
 {% if action_points > 0 %}
-First inspect if needed (inspect_entity, search_entities, inspect_sibling), then use your {{ action_points }} actions; actions you do not use do not carry over to the next age, they burn. Take the ids of the entities you bind your creations to from the list above.
+First inspect if needed (inspect_entity, search_entities, inspect_sibling), then use your {{ action_points }} actions; actions you do not use do not carry over to the next age; they are lost. Take the ids of the entities you bind your creations to from the list above.
 {% else %}
 You have no actions left; you can use the free tools, then say your word inside «…».
 {% endif %}
@@ -22,7 +22,7 @@ Age {{ age }} has begun and it is your turn.
 
 {% if order and absolute_order %}
 THE CREATOR'S ABSOLUTE DECREE: "{{ order }}"
-This is not a suggestion; it is the creator's decree, which cannot be refused. You cannot oppose it, postpone it or twist it; your first action this age must be to carry it out. Whatever stirs inside you, your hand does what the Creator says.
+This is not a suggestion; it is the creator's decree, which cannot be refused. You cannot oppose it, postpone it or twist it; your first action this age must be to carry it out. Whatever you feel, you do what the Creator says.
 {% elif order %}
 THE CREATOR'S COMMAND: "{{ order }}"
 {% else %}

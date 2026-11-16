@@ -25,9 +25,10 @@ import {
   CodeBlock,
   EmptyState,
   KeyValueList,
+  Paged,
   Section,
-  ToolList,
   type ToolCardData,
+  ToolList,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import {
@@ -81,26 +82,28 @@ function PromptList({
 }) {
   return (
     <ul className='flex min-w-0 flex-col'>
-      {prompts.map((entry) => (
-        <li
-          key={entry.prompt_id}
-          data-prompt={entry.prompt_id}
-          className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b py-2 last:border-b-0'
-        >
-          <Button
-            variant={entry.prompt_id === selected ? 'secondary' : 'ghost'}
-            size='sm'
-            className='font-mono'
-            aria-pressed={entry.prompt_id === selected}
-            onClick={() => onSelect(entry.prompt_id)}
+      <Paged items={prompts} as='li'>
+        {(entry) => (
+          <li
+            key={entry.prompt_id}
+            data-prompt={entry.prompt_id}
+            className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b py-2 last:border-b-0'
           >
-            {entry.prompt_id}
-          </Button>
-          <Muted as='span' variant='caption' truncate className='flex-1'>
-            {`${AREA_LABEL[entry.area]} · ${formatInteger(entry.variables.length)} variable${entry.variables.length === 1 ? '' : 's'}${entry.output ? ` · ${entry.output}` : ''}`}
-          </Muted>
-        </li>
-      ))}
+            <Button
+              variant={entry.prompt_id === selected ? 'secondary' : 'ghost'}
+              size='sm'
+              className='font-mono'
+              aria-pressed={entry.prompt_id === selected}
+              onClick={() => onSelect(entry.prompt_id)}
+            >
+              {entry.prompt_id}
+            </Button>
+            <Muted as='span' variant='caption' truncate className='flex-1'>
+              {`${AREA_LABEL[entry.area]} · ${formatInteger(entry.variables.length)} variable${entry.variables.length === 1 ? '' : 's'}${entry.output ? ` · ${entry.output}` : ''}`}
+            </Muted>
+          </li>
+        )}
+      </Paged>
     </ul>
   )
 }

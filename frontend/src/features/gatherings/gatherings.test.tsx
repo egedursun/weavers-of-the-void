@@ -178,12 +178,16 @@ describe('gatherings, histories, the storyteller and sites', () => {
       cycle_offset: 3,
       spotlight: HOST,
       recent_kinds: { raid: 2 },
+      palette: [],
       updated_epoch: 6,
       locked: [],
       curve: [
         { epoch: 5, tension: 50, target: 40, boost_pct: 0, band: 'in_band' },
         { epoch: 6, tension: 64, target: 40, boost_pct: -12, band: 'heated' },
       ],
+      target_points: [],
+      regions: [],
+      subsystems: [],
     })
     onApi('POST', '/api/actions/storyteller:set', ACCEPTED_ACTION)
     const { screen } = await renderApp(<StorytellerSection worldId={1} />)

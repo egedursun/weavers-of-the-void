@@ -105,7 +105,7 @@ TENET_EFFECTS = MappingProxyType(
         T.SACRED_SUFFERING: "The maimed are honoured among the faithful.",
         T.PURITY_OF_BODY: "The maimed are unclean among the faithful.",
         T.ANCESTOR_VENERATION: "Ancestor spirits are fed with offerings and guard their people.",
-        T.HUMAN_SACRIFICE: "Captives are given to the god; other peoples are appalled.",
+        T.HUMAN_SACRIFICE: "Captives are given to the god; other peoples hold it against the faith.",
         T.ANIMAL_SACRIFICE: "Livestock is offered to the god each epoch.",
         T.CELIBATE_CLERGY: "The clergy found no houses.",
         T.PROSELYTISM: "Missionaries travel the roads and convert harder.",
@@ -117,7 +117,7 @@ TENET_EFFECTS = MappingProxyType(
         T.JUDGEMENT_BY_DEEDS: "The dead are judged by what they did.",
         T.JUDGEMENT_BY_FAITH: "The dead are judged by what they believed.",
         T.REINCARNATION: "Exceptional souls may be born again.",
-        T.MARTYRDOM_GLORY: "Martyrs stir the faith and the fallen go to a warrior hall.",
+        T.MARTYRDOM_GLORY: "Martyrs stir the faith and the fallen go to the realm that takes those who die in battle.",
         T.DIVINE_KINGSHIP: "Rulers are the god's own and draw legitimacy from the faith.",
         T.DIETARY_LAW: "One food is forbidden to the faithful.",
         T.SACRED_SPECIES: "One beast is sacred; its hunters are hated.",
@@ -132,23 +132,12 @@ TENET_EFFECTS = MappingProxyType(
 
 STRATUM_NAMES = MappingProxyType(
     {
-        StratumKind.PARADISE: "the paradise",
-        StratumKind.PLAIN: "the middle realm",
-        StratumKind.TORMENT: "the torment",
-        StratumKind.OBLIVION: "the oblivion",
-        StratumKind.WARRIOR_HALL: "the rest of warriors",
-        StratumKind.ANCESTOR_HALL: "the rest of ancestors",
-    }
-)
-
-STRATUM_PRIORITY = MappingProxyType(
-    {
-        StratumKind.OBLIVION: 0,
-        StratumKind.WARRIOR_HALL: 10,
-        StratumKind.PARADISE: 20,
-        StratumKind.TORMENT: 30,
-        StratumKind.ANCESTOR_HALL: 40,
-        StratumKind.PLAIN: 90,
+        StratumKind.REWARD: "the realm of reward",
+        StratumKind.COMMON: "the common realm",
+        StratumKind.PUNISHMENT: "the realm of punishment",
+        StratumKind.DISSOLUTION: "the realm where souls dissolve",
+        StratumKind.BY_MANNER_OF_DEATH: "the realm of those who die in battle",
+        StratumKind.BY_LINE: "the realm of the line",
     }
 )
 

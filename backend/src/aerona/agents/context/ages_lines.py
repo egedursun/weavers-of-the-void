@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import spoken
 from aerona.db.tables.ages import ArcFigureRow, ArcRow, IrregularSeasonRow, SetupRow, WinterForecastRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
@@ -32,7 +33,7 @@ async def tale_lines(scope: Scope, node_id: int) -> list[str]:
         select(ArcRow).where(ArcRow.subject_node_id == node_id, ArcRow.outcome == ArcOutcome.OPEN).order_by(ArcRow.id).limit(LIST_LINES)
     ):
         figures = list(await session.scalars(select(ArcFigureRow).where(ArcFigureRow.arc_id == arc.id).order_by(ArcFigureRow.node_id)))
-        parts = [f"{await named(scope, figure.node_id)} as your {figure.role.value}" for figure in figures]
+        parts = [f"{await named(scope, figure.node_id)} as your {spoken(figure.role)}" for figure in figures]
         cast = f", with {', '.join(parts)}" if parts else ""
         found.append(f"your life follows a tale of {words(arc.template.value)}, now at {STAGE_WORDS[arc.stage]}{cast}")
     for figure, arc in await session.execute(
@@ -42,7 +43,7 @@ async def tale_lines(scope: Scope, node_id: int) -> list[str]:
         .order_by(ArcRow.id)
         .limit(LIST_LINES)
     ):
-        found.append(f"in the tale of {words(arc.template.value)} of {await named(scope, arc.subject_node_id)} your part is {figure.role.value}")
+        found.append(f"in the tale of {words(arc.template.value)} of {await named(scope, arc.subject_node_id)} your part is {spoken(figure.role)}")
     return found
 
 
@@ -89,5 +90,5 @@ async def son_ages_lines(scope: Scope, son: SonRow) -> list[str]:
         select(SetupRow).where(SetupRow.subject_node_id.in_(subjects), SetupRow.payoff == PayoffKind.OPEN).order_by(SetupRow.id).limit(LIST_LINES)
     ):
         about = await named(scope, setup.subject_node_id) if setup.subject_node_id is not None else "no one"
-        found.append(f"what was set up in epoch {setup.opened_epoch} ({setup.kind.value}) about {about} waits to be paid off")
+        found.append(f"what was set up in epoch {setup.opened_epoch} ({spoken(setup.kind)}) about {about} waits to be paid off")
     return found

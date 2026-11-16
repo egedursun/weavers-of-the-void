@@ -30,6 +30,7 @@ import {
   EntityLink,
   Medallion,
   MiniStat,
+  Paged,
   Section,
 } from '@/components/domain'
 import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
@@ -91,7 +92,7 @@ function NoteCard({
   action?: ReactNode
 }) {
   return (
-    <li className='flex min-w-0 gap-3 rounded-xl border bg-background p-3'>
+    <li className='flex min-w-0 gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={icon} tone={tone} size='sm' />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <div className='flex min-w-0 items-start gap-2'>
@@ -118,7 +119,7 @@ function SelfNoteForm() {
   const empty = title.trim() === ''
   return (
     <form
-      className='flex min-w-0 flex-col gap-2 rounded-xl border border-dashed bg-card p-3'
+      className='flex min-w-0 flex-col gap-2 rounded-md p-3 sealed-well'
       onSubmit={(event) => {
         event.preventDefault()
         if (empty) return
@@ -185,33 +186,35 @@ function SelfNotes() {
       )}
       {items.length > 0 && (
         <ul className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'>
-          {items.map((note) => (
-            <NoteCard
-              key={note.id}
-              icon={StickyNote}
-              tone='gold'
-              title={
-                <Text weight='semibold' truncate={2}>
-                  {note.title}
-                </Text>
-              }
-              body={note.body}
-              badges={
-                <>
-                  {note.epoch !== null && (
+          <Paged items={items} as='li'>
+            {(note) => (
+              <NoteCard
+                key={note.id}
+                icon={StickyNote}
+                tone='gold'
+                title={
+                  <Text weight='semibold' truncate={2}>
+                    {note.title}
+                  </Text>
+                }
+                body={note.body}
+                badges={
+                  <>
+                    {note.epoch !== null && (
+                      <Badge size='sm' variant='outline'>
+                        <CalendarDays />
+                        {`Epoch ${note.epoch}`}
+                      </Badge>
+                    )}
                     <Badge size='sm' variant='outline'>
-                      <CalendarDays />
-                      {`Epoch ${note.epoch}`}
+                      <Clock />
+                      {dateTime.format(new Date(note.created_at))}
                     </Badge>
-                  )}
-                  <Badge size='sm' variant='outline'>
-                    <Clock />
-                    {dateTime.format(new Date(note.created_at))}
-                  </Badge>
-                </>
-              }
-            />
-          ))}
+                  </>
+                }
+              />
+            )}
+          </Paged>
         </ul>
       )}
     </Section>
@@ -252,40 +255,42 @@ function RecordNotes() {
       )}
       {items.length > 0 && (
         <ul className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'>
-          {items.map((note) => (
-            <NoteCard
-              key={note.entity_id}
-              icon={ENTITY_TYPE_ICON[note.entity_type]}
-              tone='verdigris'
-              title={
-                <EntityLink kind='entity' id={String(note.entity_id)}>
-                  {note.entity_name}
-                </EntityLink>
-              }
-              body={note.text}
-              badges={
-                <>
-                  <Badge size='sm' variant='outline'>
-                    {humanize(note.entity_type)}
-                  </Badge>
-                  <Badge size='sm' variant='outline'>
-                    <Globe2 />
-                    {worlds.get(note.world_id) ?? `World #${note.world_id}`}
-                  </Badge>
-                </>
-              }
-              action={
-                <Button
-                  variant='ghost'
-                  size='icon-sm'
-                  aria-label={`Delete the note on ${note.entity_name}`}
-                  onClick={() => setPending(note)}
-                >
-                  <Trash2 />
-                </Button>
-              }
-            />
-          ))}
+          <Paged items={items} as='li'>
+            {(note) => (
+              <NoteCard
+                key={note.entity_id}
+                icon={ENTITY_TYPE_ICON[note.entity_type]}
+                tone='verdigris'
+                title={
+                  <EntityLink kind='entity' id={String(note.entity_id)}>
+                    {note.entity_name}
+                  </EntityLink>
+                }
+                body={note.text}
+                badges={
+                  <>
+                    <Badge size='sm' variant='outline'>
+                      {humanize(note.entity_type)}
+                    </Badge>
+                    <Badge size='sm' variant='outline'>
+                      <Globe2 />
+                      {worlds.get(note.world_id) ?? `World #${note.world_id}`}
+                    </Badge>
+                  </>
+                }
+                action={
+                  <Button
+                    variant='ghost'
+                    size='icon-sm'
+                    aria-label={`Delete the note on ${note.entity_name}`}
+                    onClick={() => setPending(note)}
+                  >
+                    <Trash2 />
+                  </Button>
+                }
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <ConfirmDialog
@@ -335,43 +340,45 @@ function MapNotes() {
       )}
       {items.length > 0 && (
         <ul className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'>
-          {items.map((note) => (
-            <NoteCard
-              key={note.id}
-              icon={MapPin}
-              tone='info'
-              title={
-                <Text weight='semibold' truncate={2}>
-                  {worlds.get(note.world_id) ?? `World #${note.world_id}`}
-                </Text>
-              }
-              body={note.text}
-              badges={
-                <>
-                  <Badge size='sm' variant='outline'>
-                    <Clock />
-                    {dateTime.format(new Date(note.created_at))}
-                  </Badge>
-                  <Button variant='link' size='sm' asChild>
-                    <Link to='/map'>
-                      <ExternalLink />
-                      On the map
-                    </Link>
+          <Paged items={items} as='li'>
+            {(note) => (
+              <NoteCard
+                key={note.id}
+                icon={MapPin}
+                tone='info'
+                title={
+                  <Text weight='semibold' truncate={2}>
+                    {worlds.get(note.world_id) ?? `World #${note.world_id}`}
+                  </Text>
+                }
+                body={note.text}
+                badges={
+                  <>
+                    <Badge size='sm' variant='outline'>
+                      <Clock />
+                      {dateTime.format(new Date(note.created_at))}
+                    </Badge>
+                    <Button variant='link' size='sm' asChild>
+                      <Link to='/map'>
+                        <ExternalLink />
+                        On the map
+                      </Link>
+                    </Button>
+                  </>
+                }
+                action={
+                  <Button
+                    variant='ghost'
+                    size='icon-sm'
+                    aria-label='Delete this map note'
+                    onClick={() => setPending(note.id)}
+                  >
+                    <Trash2 />
                   </Button>
-                </>
-              }
-              action={
-                <Button
-                  variant='ghost'
-                  size='icon-sm'
-                  aria-label='Delete this map note'
-                  onClick={() => setPending(note.id)}
-                >
-                  <Trash2 />
-                </Button>
-              }
-            />
-          ))}
+                }
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <ConfirmDialog

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Medallion, Section } from '@/components/domain'
+import { Medallion, Paged, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { useRuleValue } from '@/features/world-rules/api'
 import {
@@ -44,60 +44,62 @@ export function NotificationSettings({ list }: NotificationSettingsProps) {
       level={3}
     >
       <ul className='@container/notify flex min-w-0 flex-col gap-1.5'>
-        {ordered.map((info) => {
-          const on = draft[info.category] ?? info.enabled_by_default
-          const id = `notify-${info.category}`
-          return (
-            <li
-              key={info.category}
-              className={cn(
-                'flex min-w-0 items-center gap-3 rounded-lg border p-2',
-                on ? 'bg-background' : 'bg-muted/40'
-              )}
-            >
-              <div className='hidden shrink-0 @3xs/notify:block'>
-                <Medallion
-                  icon={CATEGORY_ICON[info.category]}
-                  tone={on ? CATEGORY_TONE[info.category] : 'muted'}
-                  size='sm'
+        <Paged items={ordered} as='li'>
+          {(info) => {
+            const on = draft[info.category] ?? info.enabled_by_default
+            const id = `notify-${info.category}`
+            return (
+              <li
+                key={info.category}
+                className={cn(
+                  'flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2',
+                  on ? 'bg-card' : 'bg-muted/40'
+                )}
+              >
+                <div className='hidden shrink-0 @3xs/notify:block'>
+                  <Medallion
+                    icon={CATEGORY_ICON[info.category]}
+                    tone={on ? CATEGORY_TONE[info.category] : 'muted'}
+                    size='sm'
+                  />
+                </div>
+                <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                  <FieldLabel
+                    htmlFor={id}
+                    className='block min-w-0 wrap-break-word'
+                  >
+                    {info.label}
+                  </FieldLabel>
+                  <span
+                    className='flex items-center gap-0.5'
+                    aria-label={`Importance ${info.severity} of 4`}
+                    title={`Importance ${info.severity} of 4`}
+                  >
+                    {SEVERITY_STEPS.map((step) => (
+                      <span
+                        key={step}
+                        className={cn(
+                          'h-1 w-3 rounded-full',
+                          step <= info.severity ? 'bg-primary' : 'bg-muted'
+                        )}
+                      />
+                    ))}
+                  </span>
+                </div>
+                <Switch
+                  id={id}
+                  checked={on}
+                  onCheckedChange={(checked) =>
+                    setDraft((current) => ({
+                      ...current,
+                      [info.category]: checked,
+                    }))
+                  }
                 />
-              </div>
-              <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                <FieldLabel
-                  htmlFor={id}
-                  className='block min-w-0 wrap-break-word'
-                >
-                  {info.label}
-                </FieldLabel>
-                <span
-                  className='flex items-center gap-0.5'
-                  aria-label={`Importance ${info.severity} of 4`}
-                  title={`Importance ${info.severity} of 4`}
-                >
-                  {SEVERITY_STEPS.map((step) => (
-                    <span
-                      key={step}
-                      className={cn(
-                        'h-1 w-3 rounded-full',
-                        step <= info.severity ? 'bg-primary' : 'bg-muted'
-                      )}
-                    />
-                  ))}
-                </span>
-              </div>
-              <Switch
-                id={id}
-                checked={on}
-                onCheckedChange={(checked) =>
-                  setDraft((current) => ({
-                    ...current,
-                    [info.category]: checked,
-                  }))
-                }
-              />
-            </li>
-          )
-        })}
+              </li>
+            )
+          }}
+        </Paged>
       </ul>
       {threshold !== null && (
         <Muted variant='caption'>

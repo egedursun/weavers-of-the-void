@@ -10,6 +10,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mortal import MarriageEnd, MarriageKind
 from aerona.engine.primitives.queries import connect
+from aerona.engine.unions.customs import kept_past_death
 
 KIN_FIXUP = "mortal.typed_kin"
 MARRIED_BY = ("arranged marriage", "marriage by treaty", "marriage alliance")
@@ -76,8 +77,10 @@ async def end_marriage(session: AsyncSession, row: MarriageRow, epoch: int, caus
 async def widow(session: AsyncSession, dead_id: int, epoch: int) -> list[int]:
     survivors: list[int] = []
     for row in await marriages_of(session, dead_id, ended=False):
-        await end_marriage(session, row, epoch, MarriageEnd.DEATH)
-        survivors.append(row.second_id if row.first_id == dead_id else row.first_id)
+        survivor = row.second_id if row.first_id == dead_id else row.first_id
+        survivors.append(survivor)
+        if not await kept_past_death(session, survivor):
+            await end_marriage(session, row, epoch, MarriageEnd.DEATH)
     return survivors
 
 

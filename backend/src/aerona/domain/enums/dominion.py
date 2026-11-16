@@ -44,6 +44,8 @@ class MagicSiteKind(StrEnum):
     SCHOOL_SEAT = "school_seat"
     WARD = "ward"
     GATEWAY = "gateway"
+    TIDE_POINT = "tide_point"
+    DEPLETION_SCAR = "depletion_scar"
 
 
 class CreatureDeed(StrEnum):

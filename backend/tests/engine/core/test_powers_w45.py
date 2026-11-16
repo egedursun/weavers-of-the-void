@@ -77,7 +77,7 @@ async def test_a_power_pushed_past_its_strain_scars_its_user_and_gives_out(sessi
     await session.flush()
     outcome = await use(ctx, power, user, foe)
     assert outcome.done is not None and outcome.strained
-    assert power.state is PowerState.BURNED_OUT
+    assert power.state is PowerState.EXHAUSTED
 
 
 async def test_a_latent_power_wakes_under_stress(session: AsyncSession, world: CoreWorld) -> None:

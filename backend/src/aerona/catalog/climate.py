@@ -1,6 +1,7 @@
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from aerona.core.total import total
 from aerona.domain.enums.world import ClimateEra, WorldType
 from aerona.rules.registry import Rules
 
@@ -27,51 +28,86 @@ class ClimateProfile:
     weight: int
 
 
-CLIMATES: dict[ClimateEra, ClimateSpec] = {
-    spec.era: spec
-    for spec in (
-        ClimateSpec(
-            ClimateEra.TEMPERATE,
-            "Temperate age",
-            "The seasons keep their places.",
-            lambda rules: rules.climate_effects.temperate_temperature,
-            lambda rules: rules.climate_effects.temperate_rain,
-            lambda rules: rules.climate_effects.temperate_weight,
-        ),
-        ClimateSpec(
-            ClimateEra.DROUGHT,
-            "Drought century",
-            "Rivers recede and the interiors scorch.",
-            lambda rules: rules.climate_effects.drought_century_temperature,
-            lambda rules: rules.climate_effects.drought_century_rain,
-            lambda rules: rules.climate_effects.drought_century_weight,
-        ),
-        ClimateSpec(
-            ClimateEra.RAIN,
-            "Rain age",
-            "Rain without end: floods on the coasts, plenty in the plains.",
-            lambda rules: rules.climate_effects.rain_age_temperature,
-            lambda rules: rules.climate_effects.rain_age_rain,
-            lambda rules: rules.climate_effects.rain_age_weight,
-        ),
-        ClimateSpec(
-            ClimateEra.ICE_AGE,
-            "Ice age",
-            "Winters lengthen and mountain passes close.",
-            lambda rules: rules.climate_effects.ice_age_temperature,
-            lambda rules: rules.climate_effects.ice_age_rain,
-            lambda rules: rules.climate_effects.ice_age_weight,
-        ),
-        ClimateSpec(
-            ClimateEra.SCORCHING,
-            "Scorching age",
-            "The sun has lowered; disease and anger rise.",
-            lambda rules: rules.climate_effects.scorching_age_temperature,
-            lambda rules: rules.climate_effects.scorching_age_rain,
-            lambda rules: rules.climate_effects.scorching_age_weight,
-        ),
-    )
-}
+CLIMATES: Mapping[ClimateEra, ClimateSpec] = total(
+    ClimateEra,
+    {
+        spec.era: spec
+        for spec in (
+            ClimateSpec(
+                ClimateEra.TEMPERATE,
+                "Temperate age",
+                "Warmth and rain hold near their usual measure.",
+                lambda rules: rules.climate_effects.temperate_temperature,
+                lambda rules: rules.climate_effects.temperate_rain,
+                lambda rules: rules.climate_effects.temperate_weight,
+            ),
+            ClimateSpec(
+                ClimateEra.DROUGHT,
+                "Drought century",
+                "Less rain and more heat: rivers shrink and the dry inland suffers.",
+                lambda rules: rules.climate_effects.drought_century_temperature,
+                lambda rules: rules.climate_effects.drought_century_rain,
+                lambda rules: rules.climate_effects.drought_century_weight,
+            ),
+            ClimateSpec(
+                ClimateEra.RAIN,
+                "Rain age",
+                "More rain: floods on the coasts and plenty on the lowlands.",
+                lambda rules: rules.climate_effects.rain_age_temperature,
+                lambda rules: rules.climate_effects.rain_age_rain,
+                lambda rules: rules.climate_effects.rain_age_weight,
+            ),
+            ClimateSpec(
+                ClimateEra.ICE_AGE,
+                "Ice age",
+                "Colder years: winters lengthen and high ground grows hard to cross.",
+                lambda rules: rules.climate_effects.ice_age_temperature,
+                lambda rules: rules.climate_effects.ice_age_rain,
+                lambda rules: rules.climate_effects.ice_age_weight,
+            ),
+            ClimateSpec(
+                ClimateEra.SCORCHING,
+                "Scorching age",
+                "The world grows hot: disease spreads more often.",
+                lambda rules: rules.climate_effects.scorching_age_temperature,
+                lambda rules: rules.climate_effects.scorching_age_rain,
+                lambda rules: rules.climate_effects.scorching_age_weight,
+            ),
+            ClimateSpec(
+                ClimateEra.HOTHOUSE,
+                "Hothouse age",
+                "Heat and rain both rise far above their measure: cold lands thaw and the warm lands grow hard to bear.",
+                lambda rules: rules.climate_effects.hothouse_temperature,
+                lambda rules: rules.climate_effects.hothouse_rain,
+                lambda rules: rules.climate_effects.hothouse_weight,
+            ),
+            ClimateSpec(
+                ClimateEra.SNOWBALL,
+                "Snowball age",
+                "Cold reaches nearly every land and rain falls little: only the warmest places stay open.",
+                lambda rules: rules.climate_effects.snowball_temperature,
+                lambda rules: rules.climate_effects.snowball_rain,
+                lambda rules: rules.climate_effects.snowball_weight,
+            ),
+            ClimateSpec(
+                ClimateEra.VARIABLE,
+                "Variable age",
+                "The climate changes again within an epoch or two, so no season can be counted on.",
+                lambda rules: rules.climate_effects.variable_temperature,
+                lambda rules: rules.climate_effects.variable_rain,
+                lambda rules: rules.climate_effects.variable_weight,
+            ),
+            ClimateSpec(
+                ClimateEra.WET_COLD,
+                "Wet and cold age",
+                "Cooler years with more rain: fields lie wet and growing seasons shorten.",
+                lambda rules: rules.climate_effects.wet_cold_temperature,
+                lambda rules: rules.climate_effects.wet_cold_rain,
+                lambda rules: rules.climate_effects.wet_cold_weight,
+            ),
+        )
+    },
+)
 
 WORLD_CLIMATE_MULTIPLIERS: dict[tuple[WorldType, ClimateEra], Callable[[Rules], int]] = {
     (WorldType.OCEAN, ClimateEra.ICE_AGE): lambda rules: rules.climate_world_type.ocean_ice_age,

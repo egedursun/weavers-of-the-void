@@ -122,7 +122,7 @@ export function ModifierCard({
       ? 'Another change is being applied.'
       : undefined)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={spec.icon} tone={spec.tone ?? 'gold'} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -195,7 +195,7 @@ export function ModifierCard({
         </div>
       </div>
       {editing && (
-        <div className='@container/edit grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-dashed bg-muted/20 p-2 @md/edit:grid-cols-3'>
+        <div className='@container/edit grid min-w-0 grid-cols-1 gap-2 rounded-md p-2 sealed-well @md/edit:grid-cols-3'>
           <NumberField
             label={modifier.op === 'multiply' ? 'Factor' : 'Amount'}
             value={magnitude}
@@ -283,7 +283,7 @@ export function ModifierForge({
   return (
     <div
       data-surface='ModifierForge'
-      className='@container/forge flex min-w-0 flex-col gap-3 rounded-lg border border-dashed bg-muted/20 p-3'
+      className='@container/forge flex min-w-0 flex-col gap-3 rounded-md p-3 sealed-well'
     >
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={Anvil} tone='gold' size='sm' />

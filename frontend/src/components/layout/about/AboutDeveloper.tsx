@@ -63,7 +63,7 @@ export function AboutDeveloper() {
             {DEVELOPER_STAT_TILES.map((stat) => (
               <div
                 key={stat.label}
-                className='flex flex-col items-center gap-0.5 rounded-lg border border-brand-gold/25 bg-background/40 px-2 py-3 text-center'
+                className='flex flex-col items-center gap-0.5 rounded-md border surface-sheen border-brand-gold/25 bg-card px-2 py-3 text-center'
               >
                 <dd className='font-brand text-title text-brand-gold'>
                   {stat.value}

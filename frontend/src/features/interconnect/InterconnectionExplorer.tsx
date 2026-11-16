@@ -36,9 +36,9 @@ const HEAT = [
   'bg-primary/25',
   'bg-primary/50',
 ] as const
-const CARRIER_PAGE = 24
-const LINK_PAGE = 20
-const MECHANIC_PAGE = 30
+const CARRIER_PAGE = 12
+const LINK_PAGE = 12
+const MECHANIC_PAGE = 12
 const MECHANIC_KEY_PAGE = 8
 
 function SubsystemTag({ value }: { value: string }) {
@@ -225,7 +225,7 @@ function LinkDetail({
   return (
     <div
       data-surface='SubsystemLink'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <SubsystemTag value={link.source} />
@@ -281,7 +281,7 @@ function MechanicDetail({
   return (
     <div
       data-surface='MechanicLinks'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion
@@ -311,7 +311,7 @@ function MechanicDetail({
           return (
             <li
               key={`${link.direction}-${link.other}-${link.kind}`}
-              className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border p-2'
+              className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
             >
               <Icon
                 aria-hidden='true'

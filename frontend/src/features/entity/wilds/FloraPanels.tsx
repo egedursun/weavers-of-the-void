@@ -196,7 +196,7 @@ export function FloraCard({ card }: { card: SpeciesCard }) {
               {(row) => (
                 <li
                   key={row.region?.id}
-                  className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'
+                  className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
                 >
                   <div className='flex min-w-0 items-center gap-2'>
                     <Medallion icon={Wheat} tone='success' size='sm' />
@@ -642,7 +642,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                     row.region && (
                       <div
                         key={row.region.id}
-                        className='flex min-w-0 flex-col gap-2 rounded-lg border p-2'
+                        className='flex min-w-0 flex-col gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                       >
                         <div className='flex min-w-0 items-center gap-2'>
                           <div className='min-w-0 flex-1'>
@@ -791,7 +791,7 @@ function CropRow({
   if (!row.plant) return null
   const plant = row.plant
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion
           icon={stage?.icon ?? Sprout}
@@ -1045,7 +1045,7 @@ export function WorldLifeSection({ worldId }: { worldId: number }) {
               <div
                 key={row.biochemistry}
                 className={cn(
-                  'flex min-w-0 items-center gap-2 rounded-lg border p-2',
+                  'flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2',
                   row.borne || row.anywhere
                     ? 'bg-muted/30'
                     : 'border-dashed opacity-70'

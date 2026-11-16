@@ -480,7 +480,7 @@ export default function CityScene3D({
         {labels && <SceneLabels labels={names} />}
         {hover && (
           <Html position={[hover.x, 2, hover.z]} center zIndexRange={[20, 0]}>
-            <div className='pointer-events-none rounded-md border bg-popover px-2 py-1 whitespace-nowrap text-popover-foreground shadow-md'>
+            <div className='pointer-events-none rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1 whitespace-nowrap text-popover-foreground'>
               <Text as='span' variant='caption' tone='inherit'>
                 {hover.text}
               </Text>

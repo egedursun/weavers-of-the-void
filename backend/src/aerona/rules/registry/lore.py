@@ -168,6 +168,14 @@ class IdeologiesRules:
     persecution_chance: int = rule(15, 0, 100, C, "A faith persecutes the creed that defies its tenets (%)")
     value_pressure: int = rule(2, 0, 100, C, "Values a creed pushes on its adherents each epoch")
     cap: int = rule(4, 0, 100, C, "Most creed events in an epoch")
+    media_pct: int = rule(15, 0, 300, C, "Chance a learned mortal founds a creed gains for each level of the communication their people commands (%)")
+    split_distance: int = rule(60, 0, 400, C, "How far two followers of a creed must stand apart on the values its tenets touch before it may split")
+    split_chance: int = rule(10, 0, 100, C, "A creed whose followers stand that far apart splits in an epoch (%)")
+    merge_shared: int = rule(2, 1, 13, C, "Tenets two creeds must share, and a follower in common, before they may merge")
+    merge_chance: int = rule(10, 0, 100, C, "Two creeds that close merge into one in an epoch (%)")
+    constitution_rights: int = rule(50, 0, 100, C, "Breadth of rights a constitution written by a creed starts from, before its tenets")
+    rights_per_tenet: int = rule(15, 0, 100, C, "Rights each tenet that widens or narrows them adds to or takes from a constitution")
+    constitution_drift: int = rule(10, 0, 100, C, "Share of the gap to its constitution's rights that a realm's public share closes each epoch (%)")
 
 
 @dataclass(frozen=True)
@@ -224,6 +232,15 @@ class ProphecyRules:
     consequence_unrest: int = rule(10, 0, 100, R, "Defence lost by a city foretold to fall, and ill will toward a foretold enemy, when it comes true")
     consequence_harm: int = rule(30, 0, 1000, R, "Harm doom deals the one foretold to die when the sign is met")
     infanticide_grudge: int = rule(30, 0, 100, R, "Grief a house holds for the ruler who moved against its foretold child")
+    retell_chance: int = rule(10, 0, 100, R, "A believed prophecy is retold and changed in the telling in an epoch (%)")
+    retell_epochs: int = rule(2, 0, 50, R, "Epochs a retelling may move a prophecy's deadline, earlier or later")
+    rival_pressure: int = rule(10, 0, 100, R, "Pressure two rival prophecies take from each other each epoch")
+    tradition_gain: int = rule(5, 0, 100, R, "Zeal a seer's cult gains when its prophecy comes true over a rival")
+    forge_legitimacy: int = rule(30, 0, 100, R, "Legitimacy below which a ruler may forge a prophecy that names it")
+    forge_chance: int = rule(5, 0, 100, R, "A ruler that weak forges a prophecy in an epoch (%)")
+    forge_gain: int = rule(8, 0, 100, R, "Legitimacy a forged prophecy lends its ruler while it is believed")
+    exposure_chance: int = rule(10, 0, 100, R, "A forged prophecy is exposed in an epoch (%)")
+    exposure_loss: int = rule(15, 0, 100, R, "Legitimacy a ruler loses when its forged prophecy is exposed")
 
 
 @dataclass(frozen=True)
@@ -283,6 +300,10 @@ class ItemCursesRules:
     bloodthirst_pct: int = rule(5, 0, 100, H, "Martial lust a bloodthirsty curse stirs in its bearer each epoch (% of the curse)")
     misfortune_pct: int = rule(5, 0, 100, H, "Prosperity a curse of misfortune takes from its bearer's home each epoch (% of the curse)")
     betrayal_pct: int = rule(10, 0, 100, H, "A betraying curse slips from its bearer's hand each epoch (% of the curse)")
+    wider_pct: int = rule(
+        8, 0, 100, H, "What a curse of barrenness, sleep, silence, forgetting, restlessness, a line, a place or compulsion takes each epoch (% of the curse)"
+    )
+    aging_years: int = rule(2, 0, 100, H, "Years an aging curse adds to its bearer each epoch")
 
 
 @dataclass(frozen=True)

@@ -375,7 +375,7 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             son,
             OpenRoadInput,
             ToolMeta(
-                ActionKind.STITCH_ROUTE,
+                ActionKind.REPAIR_ROUTE,
                 lambda rules: rules.son_tools.open_road_ap,
                 essence_cost=lambda rules: rules.son_tools.open_road_essence,
                 rarity_gate=gate(Gate.ROAD_OPENING),

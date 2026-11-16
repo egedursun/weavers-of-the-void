@@ -34,16 +34,22 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.services.war import ongoing_wars
 
-OUTLAW_KINDS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, *sorted(CRIME_KINDS))
+OUTLAW_KINDS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, *sorted(CRIME_KINDS))
 MERCHANT_GUILDS = (FactionKind.MERCHANT_GUILD, FactionKind.WANDERING_MARKET)
 NOTE_CAP = 4
 ALLIANCES = (TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.ALLIANCE_OFFENSIVE)
+
+
+BARRING = frozenset({TradePolicyKind.EMBARGO, TradePolicyKind.SANCTION})
 
 
 @dataclass(frozen=True)
 class Terms:
     tariff_pct: int = 0
     subsidy_pct: int = 0
+    quota_pct: int = 0
+    licence_pct: int = 0
+    price_cap_pct: int = 0
     embargo: bool = False
     illegal: bool = False
     access: float = 1.0
@@ -117,23 +123,43 @@ class PolicyBook:
         if issuer is None:
             return 0
         rates = [
-            row.rate_pct if kind is not TradePolicyKind.EMBARGO else PERCENT
+            row.rate_pct if kind not in BARRING else PERCENT
             for row in self.policies.get(issuer, [])
             if row.kind is kind and row.commodity in (None, commodity) and row.partner_node_id in (None, partner)
         ]
         return max(rates, default=0)
 
+    def sanctioned(self, realm: int | None, commodity: CommodityKind) -> int:
+        if realm is None:
+            return 0
+        return max(
+            (
+                row.rate_pct
+                for rows in self.policies.values()
+                for row in rows
+                if row.kind is TradePolicyKind.SANCTION and row.partner_node_id == realm and row.commodity in (None, commodity)
+            ),
+            default=0,
+        )
+
     def terms(self, seller: int, buyer: int, commodity: CommodityKind) -> Terms:
         seller_realm, buyer_realm = self.realm_of(seller), self.realm_of(buyer)
         foreign = seller_realm != buyer_realm
-        tariff = self.rate(buyer_realm, TradePolicyKind.TARIFF, commodity, seller_realm) if foreign else 0
+        free = foreign and (
+            self.rate(buyer_realm, TradePolicyKind.FREE_TRADE, commodity, seller_realm) > 0
+            and self.rate(seller_realm, TradePolicyKind.FREE_TRADE, commodity, buyer_realm) > 0
+        )
+        tariff = self.rate(buyer_realm, TradePolicyKind.TARIFF, commodity, seller_realm) if foreign and not free else 0
         embargo = foreign and (
-            self.rate(buyer_realm, TradePolicyKind.EMBARGO, commodity, seller_realm) > 0
-            or self.rate(seller_realm, TradePolicyKind.EMBARGO, commodity, buyer_realm) > 0
+            any(self.rate(buyer_realm, kind, commodity, seller_realm) > 0 or self.rate(seller_realm, kind, commodity, buyer_realm) > 0 for kind in BARRING)
+            or self.rate(seller_realm, TradePolicyKind.EXPORT_BAN, commodity, None) > 0
         )
         return Terms(
-            tariff_pct=tariff,
+            tariff_pct=tariff + self.sanctioned(seller_realm, commodity),
             subsidy_pct=self.rate(seller_realm, TradePolicyKind.SUBSIDY, commodity, None),
+            quota_pct=self.rate(buyer_realm, TradePolicyKind.QUOTA, commodity, seller_realm) if foreign and not free else 0,
+            licence_pct=self.rate(buyer_realm, TradePolicyKind.LICENCE, commodity, seller_realm) if foreign and not free else 0,
+            price_cap_pct=self.rate(buyer_realm, TradePolicyKind.PRICE_CONTROL, commodity, None),
             embargo=embargo,
             illegal=commodity in self.illegal.get(buyer, set()),
             access=self.access.get(seller, PERCENT) / PERCENT,

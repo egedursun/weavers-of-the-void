@@ -24,6 +24,7 @@ import {
   EntityLink,
   FormRow,
   Medallion,
+  Paged,
   PagedList,
   Section,
 } from '@/components/domain'
@@ -59,7 +60,7 @@ function ThreadCard({
   return (
     <li
       className={cn(
-        'flex min-w-0 flex-col gap-2.5 rounded-xl border bg-card p-3',
+        'flex min-w-0 flex-col gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3',
         open ? 'border-primary/30' : 'opacity-85'
       )}
     >
@@ -254,14 +255,16 @@ export function ChronicleThreads() {
       )}
       {open.length > 0 && (
         <ul className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-          {open.map((thread) => (
-            <ThreadCard
-              key={thread.id}
-              thread={thread}
-              blocked={blocked}
-              onClose={() => setClosing(thread)}
-            />
-          ))}
+          <Paged items={open} as='li'>
+            {(thread) => (
+              <ThreadCard
+                key={thread.id}
+                thread={thread}
+                blocked={blocked}
+                onClose={() => setClosing(thread)}
+              />
+            )}
+          </Paged>
         </ul>
       )}
       {closed.length > 0 && (
@@ -273,9 +276,15 @@ export function ChronicleThreads() {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <ul className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-              {closed.map((thread) => (
-                <ThreadCard key={thread.id} thread={thread} blocked={blocked} />
-              ))}
+              <Paged items={closed} as='li'>
+                {(thread) => (
+                  <ThreadCard
+                    key={thread.id}
+                    thread={thread}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
             </ul>
           </CollapsibleContent>
         </Collapsible>

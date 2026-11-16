@@ -16,6 +16,7 @@ from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.culture import RiteEffectKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.minds import MindOrigin, MindSeat
+from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.powers import PowerDeviceEffect, PowerOrigin, PowerState, PowerTrigger, PowerVisibility
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.body.book import species_of, species_traits
@@ -25,6 +26,7 @@ from aerona.engine.minds.profiles import profile_of
 from aerona.engine.notes import note
 from aerona.engine.powers.backfill import keep_power_kinds, legacy_backfill
 from aerona.engine.powers.devices import devices_of
+from aerona.engine.powers.kinds import triggered
 from aerona.engine.powers.sources import keep_density, keep_knowledge
 from aerona.engine.powers.use import use
 from aerona.engine.primitives.distance import RegionAtlas
@@ -33,7 +35,13 @@ from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import set_stats, stat_or
 
 E = RiteEffectKind
-QUIET = frozenset({PowerState.LATENT, PowerState.BURNED_OUT, PowerState.SUPPRESSED, PowerState.LOST})
+QUIET = frozenset({PowerState.LATENT, PowerState.EXHAUSTED, PowerState.SUPPRESSED, PowerState.LOST})
+GROWN = frozenset({LifeStage.ADULT, LifeStage.ELDER, LifeStage.ANCIENT})
+
+
+async def grown(ctx: TickContext, holder: EntityRow) -> bool:
+    profile = await ctx.session.get(MortalProfileRow, holder.id)
+    return profile is None or profile.life_stage in GROWN
 
 
 async def trigger_present(ctx: TickContext, power: PowerRow, holder: EntityRow) -> bool:
@@ -46,6 +54,8 @@ async def trigger_present(ctx: TickContext, power: PowerRow, holder: EntityRow) 
         return True
     if PowerTrigger.DANGER in triggers and stat_or(holder, "hp", PERCENT) < PERCENT // 3:
         return True
+    if await triggered(ctx, holder, triggers):
+        return True
     if PowerTrigger.PLACE in triggers and holder.location_id is not None:
         dense = await ctx.session.scalar(
             select(SourceDensityRow.id).where(SourceDensityRow.region_entity_id == holder.location_id, SourceDensityRow.density >= PERCENT * 3 // 4).limit(1)
@@ -55,7 +65,7 @@ async def trigger_present(ctx: TickContext, power: PowerRow, holder: EntityRow) 
         near = select(EntityRow.id).where(EntityRow.location_id == holder.location_id, EntityRow.id != holder.id)
         other = await ctx.session.scalar(select(PowerRow.id).where(PowerRow.holder_node_id.in_(near), PowerRow.state == PowerState.ACTIVE).limit(1))
         return other is not None
-    return PowerTrigger.TIME in triggers and stat_or(holder, "age", 0) >= stat_or(holder, "age_of_majority", 16)
+    return PowerTrigger.TIME in triggers and await grown(ctx, holder)
 
 
 async def awaken(ctx: TickContext, power: PowerRow, holder: EntityRow) -> None:
@@ -89,7 +99,7 @@ async def recover(ctx: TickContext, power: PowerRow) -> None:
         power.strain = max(0, power.strain - table.rest_recovery)
     if power.state is PowerState.STRAINED and power.strain < power.strain_cap:
         power.state = PowerState.ACTIVE
-    if power.state is PowerState.BURNED_OUT and ctx.rng(f"power.return.{power.id}.{ctx.epoch}").chance(table.burnout_recovery_chance):
+    if power.state is PowerState.EXHAUSTED and ctx.rng(f"power.return.{power.id}.{ctx.epoch}").chance(table.burnout_recovery_chance):
         power.state, power.strain = PowerState.ACTIVE, 0
 
 
@@ -276,6 +286,7 @@ async def train(ctx: TickContext, power: PowerRow) -> None:
     "table.ley_lines",
     "table.magic_system_links",
     "table.magic_systems",
+    "table.memories",
     "table.mind_profiles",
     "table.mortal_profiles",
     "table.phenomenon_footprints",

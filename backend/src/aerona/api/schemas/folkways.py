@@ -100,6 +100,9 @@ class MishapView(ApiModel):
     explained: bool
     attribution: MishapAttribution | None
     response: MishapResponse | None
+    severity: int
+    died: bool
+    witnesses: list[NodeRef]
     epoch: int
     locked: list[str]
 

@@ -65,7 +65,7 @@ class RewardOutput(OutputModel):
 
 class FactOutput(OutputModel):
     subject_id: int
-    relation: str = Field(description="Short predicate: 'forbids', 'opens only in winter', 'is made of', 'is immortal', 'descends from'")
+    relation: str = Field(description="Short predicate: the relation or property the fact states, in a few words")
     object_id: int | None = Field(default=None, description="if the object is an entity")
     object: str | None = Field(default=None, description="if the object is plain text")
 
@@ -109,7 +109,7 @@ class ChroniclerIdentityOutput(OutputModel):
     who: str = Field(description="Who they are: their name, their people, their trade and their link to the previous voice")
 
 
-SUMMARY = "One but full sentence (at least {{ rules.fate.summary_min_chars }} characters): who, what, where, and what it cost, with a concrete loss or consequence and without using the word 'price'"
+SUMMARY = "One but full sentence (at least {{ rules.fate.summary_min_chars }} characters): who, what, where, and its concrete consequence"
 
 
 class WorldSectionOutput(OutputModel):

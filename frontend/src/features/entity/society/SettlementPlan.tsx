@@ -123,7 +123,7 @@ const CIVIC = [
 ] as const
 const COFFERS = [
   { key: 'treasury', icon: Coins, max: HUGE, unit: 'coin' },
-  { key: 'militia', icon: Shield, max: HUGE, unit: 'men' },
+  { key: 'militia', icon: Shield, max: HUGE, unit: 'soldiers' },
   { key: 'investment_pool', icon: Sparkles, max: HUGE, unit: 'coin' },
   { key: 'construction_capacity', icon: Hammer, max: HUGE, unit: 'work' },
   { key: 'hauling_capacity', icon: Truck, max: HUGE, unit: 'loads' },
@@ -185,7 +185,7 @@ function DistrictTile({
   const busy = blocked ?? (raze.isPending || edit.isPending ? WORKING : null)
   const conditionTone = goodTone(district.condition, 80, 40)
   return (
-    <li className='flex h-full min-w-0 flex-col gap-3 rounded-lg border bg-muted/30 p-3'>
+    <li className='flex h-full min-w-0 flex-col gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -302,7 +302,7 @@ function DistrictTile({
 
 function OpenPlots({ count }: { count: number }) {
   return (
-    <li className='flex h-full min-h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-background p-3 text-center'>
+    <li className='flex h-full min-h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-md p-3 text-center sealed-well'>
       <Medallion icon={LandPlot} tone='muted' size='sm' />
       <Text as='span' weight='medium'>
         {count === 1 ? 'One open plot' : `${count} open plots`}
@@ -321,7 +321,7 @@ function CityHero({ plan }: { plan: Plan }) {
   const size = SIZE_SPEC[plan.size_tier]
   const water = WATER_SPEC[plan.infrastructure.water]
   return (
-    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={size.icon} tone={size.tone} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
@@ -952,7 +952,7 @@ function PlanControls({
       <EditorGroup title='Order and standing' icon={Gavel}>
         {CIVIC.map((item) => editor({ ...item, max: PERCENT }))}
       </EditorGroup>
-      <EditorGroup title='Coffers and men' icon={Coins}>
+      <EditorGroup title='Coffers and militia' icon={Coins}>
         {COFFERS.map(editor)}
       </EditorGroup>
       <EditorGroup title='Siege stores' icon={Castle}>

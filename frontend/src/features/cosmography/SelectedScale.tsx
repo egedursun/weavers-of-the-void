@@ -52,7 +52,7 @@ function Frame({
   onClear: () => void
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card/95 p-3 text-card-foreground shadow-lg backdrop-blur'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3 text-card-foreground shadow-lg backdrop-blur'>
       <div className='flex min-w-0 items-start gap-3'>
         {emblem}
         <div className='flex min-w-0 flex-1 flex-col gap-1'>

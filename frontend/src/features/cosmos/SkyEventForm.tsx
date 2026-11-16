@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { FormRow } from '@/components/domain'
+import { FormRow, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
 import { StarOptions } from './StarOptions'
@@ -218,18 +218,20 @@ function SkyHistory({ index }: { index: CosmosIndex }) {
     return <Muted variant='caption'>The sky has been quiet so far.</Muted>
   return (
     <ul className='flex min-w-0 flex-col gap-1.5'>
-      {events.map((event) => (
-        <li key={event.id} className='flex min-w-0 flex-col gap-0.5'>
-          <Text variant='caption' weight='medium'>
-            {`Epoch ${event.epoch} · ${SKY_EVENT_LABEL[event.kind]}${event.until_epoch ? ` until epoch ${event.until_epoch}` : ''}${event.world_id ? ` · ${index.worldName(event.world_id)}` : ''}${event.star_id ? ` · ${index.star(event.star_id)?.name ?? 'a star'}` : ''}`}
-          </Text>
-          {event.text && (
-            <Muted variant='caption' truncate={2}>
-              {event.text}
-            </Muted>
-          )}
-        </li>
-      ))}
+      <Paged items={events} as='li'>
+        {(event) => (
+          <li key={event.id} className='flex min-w-0 flex-col gap-0.5'>
+            <Text variant='caption' weight='medium'>
+              {`Epoch ${event.epoch} · ${SKY_EVENT_LABEL[event.kind]}${event.until_epoch ? ` until epoch ${event.until_epoch}` : ''}${event.world_id ? ` · ${index.worldName(event.world_id)}` : ''}${event.star_id ? ` · ${index.star(event.star_id)?.name ?? 'a star'}` : ''}`}
+            </Text>
+            {event.text && (
+              <Muted variant='caption' truncate={2}>
+                {event.text}
+              </Muted>
+            )}
+          </li>
+        )}
+      </Paged>
     </ul>
   )
 }

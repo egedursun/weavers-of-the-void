@@ -46,6 +46,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.unions import UNION_FIELDS, UnionCustomRow
 from aerona.domain.enums.cycles import (
     ChallengeKind,
     GiftOccasion,
@@ -243,6 +244,14 @@ async def set_kinship(ctx: TickContext, people_id: int, values: Values) -> Kinsh
     if row is None:
         row = await saved(ctx, KinshipSystemRow(people_entity_id=people_id, locked=[]))
     return await put_values(ctx, row, values, KINSHIP_FIELDS, "kinship system")
+
+
+async def set_union(ctx: TickContext, people_id: int, values: Values) -> UnionCustomRow:
+    await of_type(ctx, people_id, PEOPLES, "a people")
+    row = await ctx.session.get(UnionCustomRow, people_id)
+    if row is None:
+        row = await saved(ctx, UnionCustomRow(people_entity_id=people_id, locked=[]))
+    return await put_values(ctx, row, values, UNION_FIELDS, "union custom")
 
 
 async def set_alliance(ctx: TickContext, giver_id: int, taker_id: int, values: Values) -> MarriageAllianceRow:
@@ -446,6 +455,7 @@ EDITABLE: dict[str, tuple[type[Base], tuple[str, ...], str]] = {
     "circuit": (CircuitRow, CIRCUIT_FIELDS, "circuit"),
     "debt": (DivineDebtRow, DEBT_FIELDS, "gift debt"),
     "kinship": (KinshipSystemRow, KINSHIP_FIELDS, "kinship system"),
+    "union": (UnionCustomRow, UNION_FIELDS, "union custom"),
     "alliance": (MarriageAllianceRow, ALLIANCE_FIELDS, "marriage alliance"),
     "reproduction": (PeopleReproductionRow, REPRODUCTION_FIELDS, "reproductive system"),
     "caste": (MortalCasteRow, CASTE_FIELDS, "caste"),

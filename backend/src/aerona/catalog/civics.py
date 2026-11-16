@@ -7,7 +7,6 @@ from aerona.domain.enums.faction import EstatePrivilege
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import GovernmentKind, LawKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.domain.enums.statecraft import TaxKind
 
 T = Technique
 B = KnowledgeBranch
@@ -28,7 +27,7 @@ TRIGGERS: MappingProxyType[BoostTrigger, TriggerSpec] = total(
         BoostTrigger.ECLIPSE_OBSERVED: TriggerSpec("An eclipse seen from an observatory", (T.ECLIPSE_PREDICTION, T.CALENDAR)),
         BoostTrigger.GREAT_TRIAL: TriggerSpec("A great trial", (T.WRITTEN_LAW, T.CODIFIED_LAW)),
         BoostTrigger.GREAT_DEBT: TriggerSpec("A great debt", (T.BANKING, T.DOUBLE_ENTRY)),
-        BoostTrigger.STEPPE_HORSES_AT_WAR: TriggerSpec("Riders of the open plains at war", (T.HORSE_ARCHERY,)),
+        BoostTrigger.STEPPE_HORSES_AT_WAR: TriggerSpec("Mounted peoples of the open plains at war", (T.HORSE_ARCHERY,)),
     },
 )
 
@@ -95,14 +94,6 @@ LAW_GATES: MappingProxyType[LawKind, Technique] = MappingProxyType(
         LawKind.FRANCHISE: T.HUMANIST_IDEALS,
         LawKind.CENSORSHIP: T.WRITTEN_LAW,
         LawKind.DEBT_LAW: T.BANKING,
-    }
-)
-TAX_GATES: MappingProxyType[TaxKind, Technique] = MappingProxyType(
-    {
-        TaxKind.POLL: T.CENSUS,
-        TaxKind.TRADE: T.COINAGE,
-        TaxKind.CONSUMPTION: T.DOUBLE_ENTRY,
-        TaxKind.TITHE: T.ORGANISED_CLERGY,
     }
 )
 PRIVILEGE_GATES: MappingProxyType[EstatePrivilege, Technique] = MappingProxyType(

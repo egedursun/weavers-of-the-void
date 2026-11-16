@@ -1,7 +1,7 @@
 import { Copy, Hash, ShieldAlert, Sparkle, TriangleAlert } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, KpiTile, Medallion } from '@/components/domain'
+import { EmptyState, KpiTile, Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useNameReport } from './api'
 
@@ -60,26 +60,38 @@ export function NameHealth() {
         />
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2'>
-          {data.worlds.map((world) => {
-            const tone =
-              world.misfit_pct >= BAD_PCT
-                ? 'danger'
-                : world.misfit_pct >= WARN_PCT
-                  ? 'warning'
-                  : 'success'
-            return (
-              <li
-                key={world.world_id}
-                className='flex min-w-0 items-center gap-3 rounded-xl border bg-background p-3'
-              >
-                <Medallion icon={TriangleAlert} tone={tone} size='sm' />
-                <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
-                  <div className='flex min-w-0 items-center justify-between gap-2'>
-                    <Text as='span' weight='medium' truncate>
-                      {world.world_name}
-                    </Text>
-                    <Stat
-                      value={`${world.misfit_pct}%`}
+          <Paged items={data.worlds} as='li'>
+            {(world) => {
+              const tone =
+                world.misfit_pct >= BAD_PCT
+                  ? 'danger'
+                  : world.misfit_pct >= WARN_PCT
+                    ? 'warning'
+                    : 'success'
+              return (
+                <li
+                  key={world.world_id}
+                  className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
+                >
+                  <Medallion icon={TriangleAlert} tone={tone} size='sm' />
+                  <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+                    <div className='flex min-w-0 items-center justify-between gap-2'>
+                      <Text as='span' weight='medium' truncate>
+                        {world.world_name}
+                      </Text>
+                      <Stat
+                        value={`${world.misfit_pct}%`}
+                        tone={
+                          tone === 'danger'
+                            ? 'destructive'
+                            : tone === 'warning'
+                              ? 'warning'
+                              : 'success'
+                        }
+                      />
+                    </div>
+                    <Progress
+                      size='sm'
                       tone={
                         tone === 'danger'
                           ? 'destructive'
@@ -87,25 +99,15 @@ export function NameHealth() {
                             ? 'warning'
                             : 'success'
                       }
+                      value={Math.min(PERCENT, world.misfit_pct)}
+                      aria-label={`Misfit share in ${world.world_name}`}
                     />
+                    <Label>{`${world.misfits} of ${world.named} names misfit`}</Label>
                   </div>
-                  <Progress
-                    size='sm'
-                    tone={
-                      tone === 'danger'
-                        ? 'destructive'
-                        : tone === 'warning'
-                          ? 'warning'
-                          : 'success'
-                    }
-                    value={Math.min(PERCENT, world.misfit_pct)}
-                    aria-label={`Misfit share in ${world.world_name}`}
-                  />
-                  <Label>{`${world.misfits} of ${world.named} names misfit`}</Label>
-                </div>
-              </li>
-            )
-          })}
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       )}
     </div>

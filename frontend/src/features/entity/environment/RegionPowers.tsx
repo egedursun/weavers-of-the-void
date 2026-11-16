@@ -85,7 +85,7 @@ export function ForgeLey({
       {forged.map((line) => (
         <div
           key={line.id}
-          className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
+          className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
         >
           <Medallion icon={Waypoints} tone='verdigris' size='sm' />
           <Text className='min-w-0 flex-1'>
@@ -207,7 +207,7 @@ export function HoldWeather({
         {(item) => (
           <div
             key={item.id}
-            className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
+            className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
           >
             <Medallion
               icon={named(WEATHER, item.kind).icon}

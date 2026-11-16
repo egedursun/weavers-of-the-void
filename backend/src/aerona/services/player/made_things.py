@@ -68,7 +68,7 @@ async def remove_deed(scope: PlayerScope, command: DeedTarget) -> Effect:
 @player_action("item:content", ActionKind.EDIT_RECORD)
 async def set_content(scope: PlayerScope, command: BookContent) -> Effect:
     row = await made_control.set_content(await scope.context("item_content"), command.book_id, command.knowledge_id, command.fidelity)
-    return Effect(f"It holds that knowledge {row.fidelity}% true." if row is not None else "That knowledge is scraped from its pages.", command.book_id)
+    return Effect(f"It holds that knowledge {row.fidelity}% true." if row is not None else "That knowledge is taken out of it.", command.book_id)
 
 
 @player_action("art:commission", ActionKind.OTHER)

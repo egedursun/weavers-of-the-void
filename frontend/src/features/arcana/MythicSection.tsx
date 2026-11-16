@@ -54,7 +54,6 @@ import {
   MYTH_ICON,
   ORIGINS,
   QUEST_STATES,
-  RANKS,
   REALMS,
   ROLES,
   SERVANT_ICON,
@@ -529,14 +528,13 @@ function ServitorCard({
     'The servitor is released'
   )
   const busy = why(blocked, edit.isPending, release.isPending)
-  const rank = RANKS[servitor.rank]
   const role = ROLES[servitor.role]
   return (
     <RecordRow
-      icon={rank.icon}
-      tone={rank.tone}
+      icon={role.icon}
+      tone={role.tone}
       title={<Ref node={servitor.spirit} empty='a vanished spirit' />}
-      caption={`${rank.label} of ${servitor.god?.name ?? 'a god'} · ${ORIGINS[servitor.origin].label.toLowerCase()} · since epoch ${servitor.since_epoch}`}
+      caption={`${role.label} of ${servitor.god?.name ?? 'a god'} · ${ORIGINS[servitor.origin].label.toLowerCase()} · since epoch ${servitor.since_epoch}`}
       aside={
         <Button
           size='sm'
@@ -576,7 +574,6 @@ function ServitorCard({
             kind: 'number',
             min: 1,
           },
-          { key: 'rank', label: 'Rank', kind: 'pick', table: table(RANKS) },
           {
             key: 'origin',
             label: 'Origin',
@@ -616,7 +613,6 @@ function ServitorForm({
   blocked: string | null
 }) {
   const [name, setName] = useState('')
-  const [rank, setRank] = useState('')
   const [role, setRole] = useState('')
   const [post, setPost] = useState<number | null>(null)
   const make = useArcanaAction(
@@ -624,7 +620,6 @@ function ServitorForm({
     (_: void) => ({
       god_id: godId,
       name: name.trim(),
-      rank: rank as ServitorView['rank'],
       role: role as ServitorView['role'],
       post_id: post,
     }),
@@ -634,18 +629,16 @@ function ServitorForm({
   const missing =
     name.trim() === ''
       ? 'Name the servitor'
-      : rank === ''
-        ? 'Choose its rank'
-        : role === ''
-          ? 'Choose its role'
-          : null
+      : role === ''
+        ? 'Choose its role'
+        : null
   return (
     <ForgeCard
       icon={Ghost}
       tone='verdigris'
       title='Make a servitor'
-      note='Messengers carry dreams further, guards turn back those who raze holy places and thrones, judges win veneration among the dead, and the host fights in divine battles.'
-      columns={4}
+      note='Each servitor does one work: messengers carry dreams, guards turn back desecrators, judges win veneration among the dead, the host fights divine battles, spies watch, agents work at their post, avengers bring fear to the scornful, guides lead the dead to their place, worshippers deepen awe, wardens keep order and scribes keep accounts alive.'
+      columns={3}
       action={
         <Button
           size='sm'
@@ -663,13 +656,6 @@ function ServitorForm({
         value={name}
         disabled={busy !== null}
         onChange={setName}
-      />
-      <MindPicker
-        label='Rank'
-        value={rank}
-        table={table(RANKS)}
-        blocked={busy}
-        onPick={setRank}
       />
       <MindPicker
         label='Role'

@@ -1,5 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { Section, ServerLineList, revealTool } from '@/components/domain'
+import { Paged, revealTool, Section, ServerLineList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useSonOpportunities } from './api'
 
@@ -27,11 +27,13 @@ export function SonOpportunities({
     >
       {statusLines.length > 0 && (
         <ul className='flex min-w-0 flex-col gap-1'>
-          {statusLines.map((line) => (
-            <li key={line}>
-              <Text>{line}</Text>
-            </li>
-          ))}
+          <Paged items={statusLines} as='li'>
+            {(line) => (
+              <li key={line}>
+                <Text>{line}</Text>
+              </li>
+            )}
+          </Paged>
         </ul>
       )}
       {query.isPending ? (

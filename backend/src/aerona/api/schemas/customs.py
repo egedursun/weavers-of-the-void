@@ -62,6 +62,9 @@ class TimeBudgetView(ApiModel):
     leisure: int
     travel: int
     service: int
+    learning: int
+    care: int
+    art: int
     locked: list[str]
 
 

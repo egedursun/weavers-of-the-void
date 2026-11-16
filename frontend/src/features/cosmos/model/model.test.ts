@@ -152,6 +152,9 @@ function journey(
     passengers: [],
     convoy: 1,
     escorts: 0,
+    supplies: 0,
+    births: 0,
+    deaths: 0,
     ...overrides,
   }
 }
@@ -330,8 +333,8 @@ describe('cosmos index', () => {
 
   it('knows which legendary quests have no target', () => {
     const blockers = questBlockers(indexCosmos(cosmos()))
-    expect(blockers.dead_star).toBeUndefined()
-    expect(blockers.sealed_gate).toBe('No sealed route')
+    expect(blockers.star).toBeUndefined()
+    expect(blockers.route).toBe('No sealed route')
   })
 })
 

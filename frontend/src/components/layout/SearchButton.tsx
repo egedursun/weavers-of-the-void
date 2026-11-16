@@ -22,8 +22,8 @@ export function SearchButton() {
         <SearchIcon />
       </Button>
       <Button
-        variant='outline'
-        className='hidden w-full max-w-md justify-start rounded-lg font-normal text-muted-foreground @4xl/topbar:inline-flex'
+        variant='field'
+        className='hidden w-full max-w-md justify-start text-muted-foreground hover:text-foreground @4xl/topbar:inline-flex'
         aria-keyshortcuts='Meta+K Control+K'
         onClick={() => setOpen(true)}
       >

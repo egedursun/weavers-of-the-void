@@ -118,7 +118,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
             ),
             CommoditySpec(
                 C.MOUNTS,
-                "Horses and mounts",
+                "Mounts",
                 F.STRATEGIC,
                 Commodity.GOODS,
                 260,

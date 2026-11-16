@@ -25,7 +25,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Progress } from '@/components/ui/progress'
-import { EntityLink, type KpiTone, Medallion } from '@/components/domain'
+import { EntityLink, type KpiTone, Medallion, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { JourneyLoadEditor } from '@/features/cosmography/FlowEditors'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
@@ -101,7 +101,7 @@ export function VoyageCard({ journey, index }: VoyageCardProps) {
   return (
     <article
       data-journey-id={journey.id}
-      className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Medallion
@@ -228,13 +228,15 @@ export function VoyageCard({ journey, index }: VoyageCardProps) {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <ul className='flex min-w-0 flex-col gap-1 pt-1'>
-              {journey.events.map((event, position) => (
-                <li key={`${event.epoch}-${position}`}>
-                  <Muted variant='caption'>
-                    {`Epoch ${event.epoch}: ${event.text}${event.loss > 0 ? ` (−${formatInteger(event.loss)})` : ''}`}
-                  </Muted>
-                </li>
-              ))}
+              <Paged items={journey.events} as='li'>
+                {(event, position) => (
+                  <li key={`${event.epoch}-${position}`}>
+                    <Muted variant='caption'>
+                      {`Epoch ${event.epoch}: ${event.text}${event.loss > 0 ? ` (−${formatInteger(event.loss)})` : ''}`}
+                    </Muted>
+                  </li>
+                )}
+              </Paged>
             </ul>
           </CollapsibleContent>
         </Collapsible>

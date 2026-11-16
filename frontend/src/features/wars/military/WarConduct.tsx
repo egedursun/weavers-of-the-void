@@ -49,7 +49,7 @@ export function WarCause({ room }: { room: Room }) {
   return (
     <div
       data-surface='WarCause'
-      className='flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3'
+      className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion
@@ -151,7 +151,7 @@ function SideConduct({
         ? 'It has already left the war'
         : undefined)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <div className='flex min-w-0 items-center gap-2'>
         <Text as='span' weight='medium' truncate className='min-w-0 flex-1'>
           {row.entity?.name ?? 'A people'}

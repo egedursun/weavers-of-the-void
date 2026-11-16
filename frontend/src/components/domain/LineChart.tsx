@@ -1,4 +1,11 @@
-import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type PointerEvent,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { formatCompact, formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Label, Muted, SectionTitle, Stat } from '@/components/typography'
@@ -12,16 +19,17 @@ import {
   xLabelIndices,
   xScale,
   yCeiling,
+  gridFractions,
   yScale,
 } from './lineChartModel'
 
 export type { ChartPoint, ChartSeries } from './lineChartModel'
 
 const FALLBACK_WIDTH = 280
-const GRID_FRACTIONS = [0, 0.25, 0.5, 0.75, 1]
 const END_DOT_RADIUS = 4
 const END_DOT_RING = 2
-const LINE_WIDTH = 2
+const LINE_WIDTH = 2.25
+const GRID_DASH = '2 5'
 const TICK_OFFSET = 6
 const LABEL_BASELINE = 4
 const DIRECT_LABEL_OFFSET = 8
@@ -79,6 +87,7 @@ export function LineChart({
   bare = false,
 }: LineChartProps) {
   const { ref, width } = useWidth()
+  const areaId = `area-${useId().replace(/:/g, '')}`
   const [hover, setHover] = useState<number | null>(null)
   const shown = useMemo(
     () => series.filter((item) => item.points.length > 0),
@@ -127,32 +136,33 @@ export function LineChart({
             height={frame.height}
             className='block overflow-visible text-caption tabular-nums'
           >
-            {GRID_FRACTIONS.map((fraction) => {
-              const y = toY(ceiling * fraction)
-              return (
-                <g key={fraction}>
-                  <line
-                    x1={frame.left}
-                    x2={frame.width - frame.right}
-                    y1={y}
-                    y2={y}
-                    className={
-                      fraction === 0
-                        ? 'stroke-muted-foreground/50'
-                        : 'stroke-border'
-                    }
-                  />
-                  <text
-                    x={frame.left - TICK_OFFSET}
-                    y={y + LABEL_BASELINE}
-                    textAnchor='end'
-                    className='fill-muted-foreground'
-                  >
-                    {axisFormat(ceiling * fraction)}
-                  </text>
-                </g>
-              )
-            })}
+            {gridFractions(frame.height - frame.top - frame.bottom).map(
+              (fraction) => {
+                const y = toY(ceiling * fraction)
+                return (
+                  <g key={fraction}>
+                    <line
+                      x1={frame.left}
+                      x2={frame.width - frame.right}
+                      y1={y}
+                      y2={y}
+                      strokeDasharray={fraction === 0 ? undefined : GRID_DASH}
+                      className={
+                        fraction === 0 ? 'stroke-gild/60' : 'stroke-gild/15'
+                      }
+                    />
+                    <text
+                      x={frame.left - TICK_OFFSET}
+                      y={y + LABEL_BASELINE}
+                      textAnchor='end'
+                      className='fill-muted-foreground'
+                    >
+                      {axisFormat(ceiling * fraction)}
+                    </text>
+                  </g>
+                )
+              }
+            )}
             {labelIndices.map((index) => (
               <line
                 key={`grid-${xs[index]}`}
@@ -161,9 +171,22 @@ export function LineChart({
                 x2={toX(xs[index])}
                 y1={frame.top}
                 y2={frame.height - frame.bottom}
-                className='stroke-border'
+                strokeDasharray={GRID_DASH}
+                className='stroke-gild/10'
               />
             ))}
+            {single && (
+              <defs>
+                <linearGradient id={areaId} x1='0' y1='0' x2='0' y2='1'>
+                  <stop
+                    offset='0'
+                    stopColor={single.color}
+                    stopOpacity={0.42}
+                  />
+                  <stop offset='1' stopColor={single.color} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+            )}
             {single && (
               <polygon
                 data-chart-area
@@ -174,8 +197,7 @@ export function LineChart({
                   ),
                   `${toX(single.points[single.points.length - 1].x)},${toY(0)}`,
                 ].join(' ')}
-                fill={single.color}
-                fillOpacity={0.12}
+                fill={`url(#${areaId})`}
               />
             )}
             {labelIndices.map((index) => (
@@ -198,7 +220,8 @@ export function LineChart({
                 x2={toX(hoverX)}
                 y1={frame.top}
                 y2={frame.height - frame.bottom}
-                className='stroke-muted-foreground'
+                strokeDasharray={GRID_DASH}
+                className='stroke-gild/70'
               />
             )}
             {shown.map((item) => (
@@ -210,6 +233,7 @@ export function LineChart({
                 strokeWidth={LINE_WIDTH}
                 strokeLinejoin='round'
                 strokeLinecap='round'
+                className='chart-glow'
                 points={item.points
                   .map((point) => `${toX(point.x)},${toY(point.y)}`)
                   .join(' ')}
@@ -225,7 +249,7 @@ export function LineChart({
                   r={END_DOT_RADIUS}
                   fill={item.color}
                   strokeWidth={END_DOT_RING}
-                  className='stroke-card'
+                  className='chart-glow stroke-gild-hi'
                 />
               )
             })}
@@ -257,7 +281,7 @@ export function LineChart({
           <div
             role='tooltip'
             className={cn(
-              'pointer-events-none absolute top-0 flex min-w-0 flex-col gap-1 rounded-md border bg-popover px-2 py-1 text-popover-foreground shadow-md',
+              'pointer-events-none absolute top-0 flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1 text-popover-foreground',
               toX(hoverX) > frame.width / 2 && '-translate-x-full'
             )}
             style={{

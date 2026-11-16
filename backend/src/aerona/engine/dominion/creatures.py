@@ -7,6 +7,7 @@ from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.dominion import FEEDING_DEEDS, HARMFUL_DEEDS, HELPFUL_DEEDS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.core.total import total
 from aerona.db.tables.dominion import CreatureLessonRow, DivineCreatureRow, DominionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -56,8 +57,11 @@ async def raise_creature(ctx: TickContext, god_id: int, *, name: str, descriptio
     return row
 
 
+LESSON_SIGN = total(CreatureLesson, {CreatureLesson.REWARD: 1, CreatureLesson.PUNISH: -1})
+
+
 def taught(rules_shift: int, weights: dict[str, int], deed: CreatureDeed, lesson: CreatureLesson, *, low: int, high: int) -> dict[str, int]:
-    step = rules_shift if lesson is CreatureLesson.REWARD else -rules_shift
+    step = rules_shift * LESSON_SIGN[lesson]
     current = dict(weights) or default_weights()
     current[deed.value] = clamp_int(current.get(deed.value, START_WEIGHT) + step, low, high)
     return current

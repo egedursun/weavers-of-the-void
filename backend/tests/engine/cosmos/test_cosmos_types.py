@@ -12,9 +12,10 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
-from aerona.domain.enums.world import HorrorEventKind, SkyEventKind, StarType, WorldType
+from aerona.domain.enums.world import SkyEventKind, StarType, WorldType
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.horror_model import HORROR_PRESETS
 from aerona.engine.cosmos.leak import leak_delta
 from aerona.engine.cosmos.orbits import eclipse_period
 from aerona.engine.cosmos.routes import RouteBook, RouteSpec, can_use_route, open_route, sky_calendar
@@ -142,20 +143,23 @@ async def test_a_magnetar_makes_its_light_sails_dangerous(ctx: TickContext, cosm
 
 async def test_the_dimming_drinks_the_light_of_the_star(ctx: TickContext, cosmos: Cosmos) -> None:
     before = cosmos.star.brightness
-    text = await horror_event(ctx, HorrorEventKind.THE_DIMMING, cosmos.home)
-    assert text is not None and cosmos.star.brightness == before - ctx.rules.cosmic_horror.dimming_brightness_loss
+    text = await horror_event(ctx, HORROR_PRESETS["light_suppressed"], cosmos.home)
+    dimmed = before - ctx.rules.cosmic_horror.light_loss
+    assert text and cosmos.star.brightness == dimmed
     cosmos.star.star_type = StarType.DEAD_STAR
-    assert await horror_event(ctx, HorrorEventKind.THE_DIMMING, cosmos.home) is None
+    await horror_event(ctx, HORROR_PRESETS["light_suppressed"], cosmos.home)
+    assert cosmos.star.brightness == dimmed
 
 
 async def test_whispers_from_beyond_teach_forbidden_knowledge(ctx: TickContext, cosmos: Cosmos) -> None:
     sage = await make_entity(ctx.session, "Ilsa", EntityType.MORTAL, MortalStats(intellect=90), world_id=cosmos.home.id)
     await make_entity(ctx.session, "Bram", EntityType.MORTAL, MortalStats(intellect=20), world_id=cosmos.home.id)
-    text = await horror_event(ctx, HorrorEventKind.WHISPERS_FROM_BEYOND, cosmos.home)
-    assert text is not None and "Ilsa" in text
+    text = await horror_event(ctx, HORROR_PRESETS["minds_revealed"], cosmos.home)
+    assert "Ilsa" in text
     knowledge = await KnowledgeMap.load(ctx.session)
     assert knowledge.knows(sage.id, KnowledgeBranch.FORBIDDEN)
-    assert sage.sanity == ctx.rules.cosmic_horror.default_sanity - ctx.rules.cosmic_horror.whispers_sanity_loss
+    horror = ctx.rules.cosmic_horror
+    assert sage.sanity == horror.default_sanity - horror.revealed_sanity_loss - horror.horror_sanity_cost
 
 
 async def test_a_wormhole_throat_opens_and_shuts(ctx: TickContext, cosmos: Cosmos) -> None:
@@ -207,9 +211,9 @@ async def test_a_collapsing_bridge_takes_its_travellers(ctx: TickContext, cosmos
 async def test_whispers_find_a_new_listener_each_time(ctx: TickContext, cosmos: Cosmos) -> None:
     sage = await make_entity(ctx.session, "Ilsa", EntityType.MORTAL, MortalStats(intellect=90), world_id=cosmos.home.id)
     pupil = await make_entity(ctx.session, "Bram", EntityType.MORTAL, MortalStats(intellect=20), world_id=cosmos.home.id)
-    await horror_event(ctx, HorrorEventKind.WHISPERS_FROM_BEYOND, cosmos.home)
-    second = await horror_event(ctx, HorrorEventKind.WHISPERS_FROM_BEYOND, cosmos.home)
-    assert second is not None and "Bram" in second
+    await horror_event(ctx, HORROR_PRESETS["minds_revealed"], cosmos.home)
+    second = await horror_event(ctx, HORROR_PRESETS["minds_revealed"], cosmos.home)
+    assert "Bram" in second
     knowledge = await KnowledgeMap.load(ctx.session)
     assert knowledge.knows(sage.id, KnowledgeBranch.FORBIDDEN) and knowledge.knows(pupil.id, KnowledgeBranch.FORBIDDEN)
     bonds = list(await ctx.session.scalars(select(BondRow).where(BondRow.source_node_id == sage.id, BondRow.kind == BondKind.KNOWS)))

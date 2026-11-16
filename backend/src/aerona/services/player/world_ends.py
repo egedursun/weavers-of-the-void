@@ -2,6 +2,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
 from aerona.engine.cosmos import world_end_control as control
+from aerona.engine.cosmos.world_ends import CAUSE_END
 from aerona.services.player import guards
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -9,8 +10,8 @@ from aerona.services.player.scope import Command, Effect, PlayerScope, player_ac
 
 class WorldEndDeclare(Command):
     world_id: int
-    state: WorldEnd
     cause: WorldEndCause
+    state: WorldEnd | None = None
     new_type: WorldType | None = None
 
 
@@ -26,7 +27,9 @@ class WorldEndTarget(Command):
 async def world_end_declare(scope: PlayerScope, command: WorldEndDeclare) -> Effect:
     creator = await scope.creator()
     guards.charge(creator, scope.rules.world_ends.end_cost, "world_ends.end_cost")
-    row = await control.declare_end(await scope.context("world_end_declare"), command.world_id, command.state, command.cause, command.new_type)
+    row = await control.declare_end(
+        await scope.context("world_end_declare"), command.world_id, command.state or CAUSE_END[command.cause], command.cause, command.new_type
+    )
     return Effect(f"The world is {row.state.value.replace('_', ' ')}.", target_node_id=command.world_id, essence_spent=scope.rules.world_ends.end_cost)
 
 

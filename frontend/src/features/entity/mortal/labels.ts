@@ -1,4 +1,10 @@
 import {
+  ZapOff,
+  Ship,
+  Home,
+  Ban,
+  Link,
+  Hammer,
   Baby,
   Backpack,
   Bomb,
@@ -10,7 +16,6 @@ import {
   CircuitBoard,
   Coins,
   Compass,
-  Copy,
   Cpu,
   Crown,
   Eye,
@@ -23,7 +28,6 @@ import {
   Gem,
   Ghost,
   GraduationCap,
-  HandCoins,
   HandHeart,
   Heart,
   HeartCrack,
@@ -227,11 +231,15 @@ export const MARRIAGE_KINDS: Record<string, Named> = {
   political: { label: 'Political', icon: Crown, tone: 'info' },
 }
 
-export const MARRIAGE_ENDS: Record<string, Named> = {
+export const MARRIAGE_ENDS: Record<
+  components['schemas']['MarriageEnd'],
+  Named
+> = {
   death: { label: 'Death', icon: Skull, tone: 'muted' },
   divorce: { label: 'Divorce', icon: HeartCrack, tone: 'warning' },
   annulment: { label: 'Annulment', icon: Scroll, tone: 'info' },
   war: { label: 'War', icon: Swords, tone: 'danger' },
+  term: { label: 'Its term ended by custom', icon: Hourglass, tone: 'info' },
 }
 
 export const SLOTS: Record<string, Named> = {
@@ -256,42 +264,6 @@ export const SLOT_TYPES: Record<string, readonly string[]> = {
   focus: ['item'],
 }
 
-export const CRIMES: Record<string, Named> = {
-  theft: { label: 'Theft', icon: HandCoins, tone: 'warning' },
-  blasphemy: { label: 'Blasphemy', icon: Flame, tone: 'danger' },
-  treason: { label: 'Treason', icon: Crown, tone: 'danger' },
-  murder: { label: 'Murder', icon: Skull, tone: 'danger' },
-  desertion: { label: 'Desertion', icon: Wind, tone: 'warning' },
-  witchcraft: { label: 'Witchcraft', icon: Ghost, tone: 'danger' },
-  mind_theft: { label: 'Theft of a mind', icon: Brain, tone: 'danger' },
-  unlicensed_copying: {
-    label: 'Copying a mind without leave',
-    icon: Copy,
-    tone: 'warning',
-  },
-  forced_edit: {
-    label: 'Editing a mind by force',
-    icon: Wrench,
-    tone: 'danger',
-  },
-  erasure: { label: 'Ending a mind', icon: Skull, tone: 'danger' },
-  machine_seizure: {
-    label: 'Seizing a made thing',
-    icon: Cpu,
-    tone: 'warning',
-  },
-  impersonation: {
-    label: 'Passing as another by a copy',
-    icon: Users,
-    tone: 'warning',
-  },
-  mind_compulsion: {
-    label: 'Bending a mind by a power',
-    icon: Brain,
-    tone: 'danger',
-  },
-}
-
 export const PUNISHMENTS: Record<
   components['schemas']['PunishmentKind'],
   Named
@@ -313,6 +285,59 @@ export const PUNISHMENTS: Record<
     tone: 'warning',
   },
   forced_edit: { label: 'Mind edited by force', icon: Wrench, tone: 'danger' },
+  restitution: {
+    label: 'Restoring what was taken',
+    icon: Coins,
+    tone: 'muted',
+  },
+  compensation: {
+    label: 'A price paid to the wronged',
+    icon: Coins,
+    tone: 'muted',
+  },
+  penal_labour: {
+    label: 'Labour under sentence',
+    icon: Hammer,
+    tone: 'warning',
+  },
+  servitude: { label: 'Bound into servitude', icon: Link, tone: 'danger' },
+  outlawry: { label: 'Outside the law', icon: Ban, tone: 'danger' },
+  confiscation: {
+    label: 'Goods taken by the law',
+    icon: Coins,
+    tone: 'warning',
+  },
+  loss_of_rank: { label: 'Stripped of rank', icon: Crown, tone: 'warning' },
+  excommunication: {
+    label: 'Cast out of the faith',
+    icon: Ban,
+    tone: 'warning',
+  },
+  penance: { label: 'A penance', icon: Sparkles, tone: 'muted' },
+  banishment_from_place: {
+    label: 'Banished from the place',
+    icon: Compass,
+    tone: 'warning',
+  },
+  house_arrest: {
+    label: 'Kept at home under arrest',
+    icon: Home,
+    tone: 'muted',
+  },
+  probation: { label: 'Free under watch', icon: Eye, tone: 'muted' },
+  reeducation: { label: 'Taught anew', icon: BookOpen, tone: 'warning' },
+  transportation: {
+    label: 'Carried off to a far settlement',
+    icon: Ship,
+    tone: 'warning',
+  },
+  community_work: {
+    label: 'Work for the community',
+    icon: Hammer,
+    tone: 'muted',
+  },
+  dampening: { label: 'Powers dampened', icon: ZapOff, tone: 'warning' },
+
   seat_confinement: {
     label: 'Confined to its seat',
     icon: Lock,

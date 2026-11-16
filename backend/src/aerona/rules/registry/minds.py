@@ -17,6 +17,7 @@ class MindRules:
     unkept_stability_loss: int = rule(6, 0, 100, M, "Stability a made seat loses each epoch its upkeep goes unpaid")
     kept_stability_gain: int = rule(2, 0, 100, M, "Stability a kept made seat regains each epoch")
     upkeep_prosperity: int = rule(25, 0, 100, M, "Prosperity of the seat's town at or above which a made mind's upkeep is paid")
+    vis_density: int = rule(25, 0, 100, M, "Density of a source of power in a region at or above which a mind kept by it is kept there")
     storage_upkeep: int = rule(1, 0, 100, M, "Wealth a held saved state costs its owner each epoch")
     copy_cap_per_mind: int = rule(3, 0, 100, M, "Most running copies one mind may have; more exist only as saved states")
     copy_cap_per_world: int = rule(40, 0, 10000, M, "Most running copies on one world")

@@ -7,6 +7,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "backend" / "src" / "aerona"
 SKIPPED = (SOURCE / "db" / "alembic",)
 SENTENCE_WORDS = 4
+PHRASE_WORDS = 3
+VARIANTS = 3
 POOL_SIZE = 2
 PICKERS = frozenset({"pick", "choice", "choices", "sample", "weighted"})
 
@@ -18,10 +20,27 @@ class Pool:
     name: str
 
 
+def is_sentence(item: ast.expr) -> bool:
+    if isinstance(item, ast.Constant) and isinstance(item.value, str):
+        return len(item.value.split()) >= SENTENCE_WORDS
+    return isinstance(item, (ast.Tuple, ast.List)) and bool(item.elts) and all(is_sentence(inner) for inner in item.elts)
+
+
+def variant_tuple(item: ast.expr) -> bool:
+    phrases = (
+        [inner for inner in item.elts if isinstance(inner, ast.Constant) and isinstance(inner.value, str)] if isinstance(item, (ast.Tuple, ast.List)) else []
+    )
+    return len(phrases) >= VARIANTS and len(phrases) == len(item.elts) and all(len(inner.value.split()) >= PHRASE_WORDS for inner in phrases)
+
+
+def variant_dict(node: ast.expr) -> bool:
+    return isinstance(node, ast.Dict) and sum(1 for value in node.values if variant_tuple(value)) >= POOL_SIZE
+
+
 def sentences(node: ast.expr) -> int:
     if not isinstance(node, (ast.Tuple, ast.List, ast.Set)):
         return 0
-    prose = sum(1 for item in node.elts if isinstance(item, ast.Constant) and isinstance(item.value, str) and len(item.value.split()) >= SENTENCE_WORDS)
+    prose = sum(1 for item in node.elts if is_sentence(item))
     lines = sum(1 for item in node.elts if isinstance(item, ast.Call) and isinstance(item.func, ast.Name) and item.func.id == "Line")
     return max(prose, lines)
 
@@ -32,7 +51,7 @@ def pools(files: dict[Path, str]) -> list[Pool]:
         tree = ast.parse(text)
         for node in tree.body:
             value = node.value if isinstance(node, (ast.Assign, ast.AnnAssign)) else None
-            if value is not None and sentences(value) >= POOL_SIZE:
+            if value is not None and (sentences(value) >= POOL_SIZE or variant_dict(value)):
                 target = node.targets[0] if isinstance(node, ast.Assign) else node.target
                 found.append(Pool(path, node.lineno, ast.unparse(target)))
         for call in ast.walk(tree):

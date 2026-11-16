@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Medallion, ShowMore, useShowMore } from '@/components/domain'
 import { type KpiTone } from '@/components/domain/KpiTile'
 import { Label, Muted, Text } from '@/components/typography'
+import { FORMS, table } from '@/features/arcana/labels'
 import { CosmicActionButton } from '@/features/cosmos/CosmicActionButton'
 import { useRuleBook } from '@/features/cosmos/model/rules'
 import { MindPicker } from '@/features/entity/mind/parts'
@@ -161,7 +162,7 @@ function Studio({
   return (
     <section
       id={id}
-      className='@container/studio flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4'
+      className='@container/studio flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={icon} tone={tone} />
@@ -493,6 +494,7 @@ export function CreateDimensionStudio({
   const [name, setName] = useState('')
   const [parent, setParent] = useState('')
   const [element, setElement] = useState('')
+  const [form, setForm] = useState('')
   const rules = useRuleBook()
   const create = useCosmographyAction(
     'dimension:create',
@@ -500,10 +502,10 @@ export function CreateDimensionStudio({
       name: name.trim(),
       kind: kind as ActionBody<'dimension:create'>['kind'],
       parent_dimension_id: parent ? Number(parent) : null,
-      element:
-        kind === 'elemental' && element
-          ? (element as ActionBody<'dimension:create'>['element'])
-          : null,
+      element: element
+        ? (element as ActionBody<'dimension:create'>['element'])
+        : null,
+      form: form ? (form as ActionBody<'dimension:create'>['form']) : null,
     }),
     'A new dimension came into being'
   )
@@ -582,16 +584,18 @@ export function CreateDimensionStudio({
             onPick={setParent}
           />
           <MindPicker
-            label='Element'
+            label='A matter it is made of'
             value={element}
             table={ELEMENTS}
-            blocked={
-              busy ??
-              (kind === 'elemental'
-                ? null
-                : 'Only an elemental plane has an element')
-            }
+            blocked={busy}
             onPick={setElement}
+          />
+          <MindPicker
+            label='A form of the world it is made of'
+            value={form}
+            table={table(FORMS)}
+            blocked={busy}
+            onPick={setForm}
           />
         </div>
       }

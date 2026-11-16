@@ -64,7 +64,7 @@ export const ACTION_ICON: Partial<Record<ActionKind, LucideIcon>> = {
   rekindle_star: Star,
   extinguish_star: Star,
   reveal_route: Route,
-  stitch_route: Route,
+  repair_route: Route,
   sever_route: Route,
   cleanse_leak: Wand2,
   miracle: Wand2,

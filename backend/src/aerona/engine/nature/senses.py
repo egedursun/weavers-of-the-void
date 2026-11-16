@@ -16,6 +16,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.demography import NaturalTrait
 from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.nature import SenseKind, Thermoregulation
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.belonging.values import own_people
@@ -23,6 +24,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.demography.biology import natures
+from aerona.engine.primitives.augment_bonus import lifts_of
 
 S = SenseKind
 AGENTS = "agents"
@@ -75,7 +77,9 @@ async def sense_score(session: AsyncSession, node_id: int | None, purpose: str) 
     if holder is None:
         return 0.0
     known = await senses_of(session, holder)
-    return sum(weight * known.get(sense, 0) for sense, weight in PURPOSES[purpose].items()) / PERCENT
+    extra = await lifts_of(session, node_id, EffectTarget.SENSE) if node_id is not None and node_id != holder else {}
+    lifted = {sense: known.get(sense, 0) + extra.get(sense.value, 0) for sense in PURPOSES[purpose]}
+    return sum(weight * lifted[sense] for sense, weight in PURPOSES[purpose].items()) / PERCENT
 
 
 def born_species(base: int, gift: int, profile: SpeciesProfileRow, traits: set[CreatureTrait]) -> dict[SenseKind, int]:

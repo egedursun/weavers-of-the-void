@@ -347,7 +347,7 @@ async def prophecy_card(session: AsyncSession, entity_id: int) -> ProphecyCard |
     row = await session.get(ProphecyConditionRow, entity_id)
     if row is None:
         return None
-    refs = await node_refs(session, [*row.audience, *(item for item in (row.seer_entity_id, row.consequence_entity_id) if item)])
+    refs = await node_refs(session, [*row.audience, *(item for item in (row.seer_entity_id, row.consequence_entity_id, row.rival_entity_id) if item)])
     return ProphecyCard(
         predicate=row.predicate,
         args=row.args,
@@ -360,6 +360,9 @@ async def prophecy_card(session: AsyncSession, entity_id: int) -> ProphecyCard |
         consequence_kind=row.consequence_kind,
         consequence=ref(refs, row.consequence_entity_id),
         locked=row.locked,
+        retold=row.retold,
+        forged=row.forged,
+        rival=ref(refs, row.rival_entity_id),
     )
 
 

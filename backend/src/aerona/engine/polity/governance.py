@@ -30,6 +30,7 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind, OfficePower, SuccessionRule
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
@@ -40,6 +41,7 @@ from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import INHERITANCE_RULES
 from aerona.engine.factions.balance import faction_pull
+from aerona.engine.folkways.biases import lean_community
 from aerona.engine.industry.pollution import worst
 from aerona.engine.lore.research import lacks
 from aerona.engine.mind.book import traits_of
@@ -47,6 +49,7 @@ from aerona.engine.mind.ethics import ethics_of, honour_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.enactment import propose
+from aerona.engine.polity.law_areas import area_order, lobbies_of, pressed
 from aerona.engine.polity.law_effects import jubilee, levy_terms, standing_soldiers, tenure_and_serfdom
 from aerona.engine.polity.laws import LawBook, discord, enact, repeal, settle_justice, validate
 from aerona.engine.polity.living_laws import living_world_laws
@@ -189,7 +192,9 @@ async def outraged_laws(ctx: TickContext, realm: Realm, laws: LawBook, values: d
         if crime is None or row.stance not in severe or PENALTY_CRUELTY.get(str(harsher.get(crime)), 0) >= table.law_cruelty:
             continue
         harsher[crime] = "death" if values.get(ValueAxis.MERCY, 0) < 0 else "exile"
-    if harsher == code.params or not ctx.rng(f"outrage.{realm.entity.id}.{ctx.epoch}").chance(table.law_chance):
+    if harsher == code.params or not ctx.rng(f"outrage.{realm.entity.id}.{ctx.epoch}").chance(
+        table.law_chance * await lean_community(ctx, realm.entity.id, BiasedDecision.LAW)
+    ):
         return []
     return [(LawKind.PENAL_CODE, harsher)]
 
@@ -775,6 +780,7 @@ async def enforce(ctx: TickContext, realm: Realm, laws: LawBook) -> int:
         judge_skill = (stat(mortal, "intellect") or 0) if mortal is not None else 0
     values = await culture_of(ctx.session, realm.profile.core_entity_id) if realm.profile.core_entity_id is not None else {}
     unrest = 0
+    lobbies = await lobbies_of(ctx, list(realm.members))
     for law_id in laws.by_node.get(realm.entity.id, []):
         profile = laws.profiles.get(law_id)
         law = laws.laws.get(law_id)
@@ -782,11 +788,12 @@ async def enforce(ctx: TickContext, realm: Realm, laws: LawBook) -> int:
             continue
         if "enforcement" not in profile.locked:
             gap = discord(profile.kind, profile.params, values)
-            base = order * table.enforcement_order_pct / PERCENT + judge_skill * table.enforcement_judge_pct / PERCENT
+            base = order * table.enforcement_order_pct / PERCENT * area_order(profile.area) + judge_skill * table.enforcement_judge_pct / PERCENT
             voice = await mean_approval(ctx, list(realm.members), law_id) * ctx.rules.communication.enforcement_pct / PERCENT
             eroded = realm.profile.corruption * ctx.rules.affairs.enforcement_loss_pct / PERCENT / PERCENT
             profile.enforcement = clamp_int((base - gap / 2 + voice) * (1 - eroded), 0, PERCENT)
-        profile.conflict = max(0, profile.conflict - table.conflict_decay)
+        if "conflict" not in profile.locked:
+            profile.conflict = clamp_int(profile.conflict - table.conflict_decay + pressed(ctx.rules, profile.area, lobbies), 0, PERCENT)
         if discord(profile.kind, profile.params, values) >= table.discord_distance:
             unrest += table.discord_unrest
         unrest += round_half_up(profile.conflict * table.conflict_unrest_pct / PERCENT)

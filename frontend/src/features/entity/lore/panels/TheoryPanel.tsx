@@ -273,7 +273,7 @@ export function TheoryPanel({
                 {(row) => (
                   <li
                     key={`shift-${row.id}`}
-                    className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1.5'
+                    className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-primary/40 bg-primary/5 px-2.5 py-1.5'
                   >
                     <Medallion icon={ArrowRightLeft} tone='gold' size='sm' />
                     <Who item={row.community} />
@@ -301,7 +301,7 @@ export function TheoryPanel({
                   return (
                     <li
                       key={`anomaly-${row.id}`}
-                      className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border px-2.5 py-1.5'
+                      className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-1.5'
                     >
                       <Medallion icon={look.icon} tone={look.tone} size='sm' />
                       <Text as='span' className='min-w-0 flex-1' truncate>

@@ -10,8 +10,7 @@ const badgeVariants = cva(
       variant: {
         default:
           'border-primary/35 bg-primary/12 text-primary [a&]:hover:bg-primary/20',
-        secondary:
-          'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
+        secondary: 'plate-chip text-plate-ink [a&]:hover:brightness-110',
         destructive:
           'border-destructive/35 bg-destructive/12 text-destructive [a&]:hover:bg-destructive/20',
         success:
@@ -21,8 +20,7 @@ const badgeVariants = cva(
         info: 'border-info/35 bg-info/12 text-info [a&]:hover:bg-info/20',
         solid:
           'border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
-        outline:
-          'border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
+        outline: 'plate-chip text-plate-ink [a&]:hover:brightness-110',
       },
       size: {
         sm: 'h-badge-sm px-1.5',

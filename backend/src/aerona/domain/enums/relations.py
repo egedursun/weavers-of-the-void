@@ -62,6 +62,16 @@ class PassionKind(StrEnum):
     LOYALTY = "loyalty"
     HATRED = "hatred"
     DEVOTION = "devotion"
+    AMBITION = "ambition"
+    ENVY = "envy"
+    GRIEF = "grief"
+    CURIOSITY = "curiosity"
+    FEAR = "fear"
+    SHAME = "shame"
+    PRIDE = "pride"
+    JEALOUSY = "jealousy"
+    ADMIRATION = "admiration"
+    OBSESSION = "obsession"
 
 
 class PassionSource(StrEnum):
@@ -94,6 +104,9 @@ class GroupKind(StrEnum):
     CIRCLE = "circle"
     WARBAND = "warband"
     CREW = "crew"
+    CELL = "cell"
+    BAND = "band"
+    TEAM = "team"
 
 
 class ContestKind(StrEnum):

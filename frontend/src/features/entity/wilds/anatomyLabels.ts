@@ -1,14 +1,13 @@
 import {
+  Bone,
   Anchor,
   Bird,
-  Bone,
   Brain,
   Church,
   CloudFog,
   Cog,
   Droplet,
   Eclipse,
-  Eye,
   Feather,
   Flame,
   Footprints,
@@ -24,38 +23,29 @@ import {
   Shield,
   Smile,
   Snowflake,
-  Sparkles,
   Swords,
   TreeDeciduous,
   Volume2,
-  Wind,
   Zap,
 } from 'lucide-react'
 import { type Named } from './labels'
 
 export const TISSUE: Record<string, Named> = {
-  flesh: { label: 'Flesh', icon: Hand, tone: 'muted' },
+  soft_tissue: { label: 'Soft tissue', icon: Hand, tone: 'muted' },
   hide: { label: 'Hide', icon: Layers, tone: 'warning' },
-  scale: { label: 'Scale', icon: Shield, tone: 'verdigris' },
-  chitin: { label: 'Chitin', icon: Shield, tone: 'warning' },
-  feather: { label: 'Feather', icon: Feather, tone: 'info' },
-  bone: { label: 'Bone', icon: Bone, tone: 'muted' },
-  wood: { label: 'Wood', icon: TreeDeciduous, tone: 'success' },
-  stone: { label: 'Stone', icon: Mountain, tone: 'muted' },
-  crystal: { label: 'Crystal', icon: Gem, tone: 'gold' },
-  metal: { label: 'Metal', icon: Cog, tone: 'info' },
-  ice: { label: 'Ice', icon: Snowflake, tone: 'info' },
-  fire: { label: 'Fire', icon: Flame, tone: 'danger' },
-  steam: { label: 'Steam', icon: CloudFog, tone: 'muted' },
-  void_stuff: { label: 'Void', icon: Eclipse, tone: 'muted' },
-}
-
-export const BREATH: Record<string, Named> = {
-  fire: { label: 'Fire', icon: Flame, tone: 'danger' },
-  frost: { label: 'Frost', icon: Snowflake, tone: 'info' },
-  venom_gas: { label: 'Venom gas', icon: CloudFog, tone: 'success' },
-  web: { label: 'Web', icon: Sparkles, tone: 'muted' },
-  steam: { label: 'Steam', icon: Wind, tone: 'warning' },
+  plates: { label: 'Plates', icon: Shield, tone: 'verdigris' },
+  shell: { label: 'Shell', icon: Shield, tone: 'warning' },
+  plumage: { label: 'Plumage', icon: Feather, tone: 'info' },
+  rigid: { label: 'Rigid frame', icon: Bone, tone: 'muted' },
+  fibrous: { label: 'Fibrous', icon: TreeDeciduous, tone: 'success' },
+  frozen: { label: 'Frozen', icon: Snowflake, tone: 'info' },
+  vapour: { label: 'Vapour', icon: CloudFog, tone: 'muted' },
+  mineral: { label: 'Mineral', icon: Mountain, tone: 'muted' },
+  metallic: { label: 'Metallic', icon: Cog, tone: 'info' },
+  crystalline: { label: 'Crystalline', icon: Gem, tone: 'gold' },
+  gel: { label: 'Gel', icon: Droplet, tone: 'success' },
+  energy: { label: 'Energy', icon: Zap, tone: 'danger' },
+  insubstantial: { label: 'Insubstantial', icon: Ghost, tone: 'muted' },
 }
 
 export const BITE: Record<string, Named> = {
@@ -63,33 +53,6 @@ export const BITE: Record<string, Named> = {
   lycanthropy: { label: 'Were-curse', icon: MoonStar, tone: 'warning' },
   vampirism: { label: 'Blood-curse', icon: Droplet, tone: 'danger' },
   void_taint: { label: 'Void taint', icon: Eclipse, tone: 'muted' },
-}
-
-export const GAZE: Record<string, Named & { hint: string }> = {
-  terror: {
-    label: 'Terror',
-    icon: Eye,
-    tone: 'danger',
-    hint: 'Lays stress on every mortal of a town it raids',
-  },
-  petrify: {
-    label: 'Turns to stone',
-    icon: Mountain,
-    tone: 'muted',
-    hint: 'Turns a limb of someone in a town it raids to stone',
-  },
-  sleep: {
-    label: 'Sleep',
-    icon: MoonStar,
-    tone: 'info',
-    hint: 'Lulls the watch, so its raids cut deeper',
-  },
-  madness: {
-    label: 'Madness',
-    icon: Brain,
-    tone: 'verdigris',
-    hint: 'Drives someone in a town it raids mad',
-  },
 }
 
 export const TEMPERAMENT_KIND: Record<string, Named & { hint: string }> = {

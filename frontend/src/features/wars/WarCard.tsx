@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Medallion } from '@/components/domain'
+import { Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { DivergingBar } from '@/features/pantheon/DivergingBar'
 import { ArmiesList, BattlesList, Ref, SiegesList } from './WarsTables'
@@ -44,7 +44,7 @@ function SideColumn({
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-1 flex-col gap-2 rounded-lg border p-3',
+        'flex min-w-0 flex-1 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3',
         tone === 'attacker'
           ? 'border-destructive/30 bg-destructive/5'
           : 'border-info/30 bg-info/5'
@@ -55,35 +55,37 @@ function SideColumn({
         <Muted variant='caption'>No one stands here.</Muted>
       ) : (
         <ul className='flex min-w-0 flex-col gap-1'>
-          {sides.map((side) => (
-            <li
-              key={side.entity?.id ?? side.joined_epoch}
-              className='flex min-w-0 items-center gap-1.5'
-            >
-              {side.entity?.id === victorId ? (
-                <Crown
-                  aria-label='Victor'
-                  className='size-icon-xs shrink-0 text-primary'
-                />
-              ) : (
-                <Shield
-                  aria-hidden='true'
-                  className={cn(
-                    'size-icon-xs shrink-0',
-                    tone === 'attacker' ? 'text-destructive' : 'text-info'
-                  )}
-                />
-              )}
-              <span className='min-w-0 truncate'>
-                <Ref node={side.entity} />
-              </span>
-              {side.left_epoch !== null && (
-                <Muted as='span' variant='caption'>
-                  {`left ${side.left_epoch}`}
-                </Muted>
-              )}
-            </li>
-          ))}
+          <Paged items={sides} as='li'>
+            {(side) => (
+              <li
+                key={side.entity?.id ?? side.joined_epoch}
+                className='flex min-w-0 items-center gap-1.5'
+              >
+                {side.entity?.id === victorId ? (
+                  <Crown
+                    aria-label='Victor'
+                    className='size-icon-xs shrink-0 text-primary'
+                  />
+                ) : (
+                  <Shield
+                    aria-hidden='true'
+                    className={cn(
+                      'size-icon-xs shrink-0',
+                      tone === 'attacker' ? 'text-destructive' : 'text-info'
+                    )}
+                  />
+                )}
+                <span className='min-w-0 truncate'>
+                  <Ref node={side.entity} />
+                </span>
+                {side.left_epoch !== null && (
+                  <Muted as='span' variant='caption'>
+                    {`left ${side.left_epoch}`}
+                  </Muted>
+                )}
+              </li>
+            )}
+          </Paged>
         </ul>
       )}
     </div>
@@ -106,7 +108,7 @@ export function WarCard({
     <article
       data-war={war.id}
       className={cn(
-        'flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground',
+        'flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-5 text-card-foreground',
         ongoing && 'border-destructive/40'
       )}
     >

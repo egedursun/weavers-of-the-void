@@ -253,7 +253,7 @@ async def remember_the_fall(ctx: TickContext, world: WorldRow, region: EntityRow
     if not years:
         return None
     sampled = years[0]
-    name = f"the Year the Sky Fell on {region.name if region is not None else world.name}"
+    name = f"the year of the impact on {region.name if region is not None else world.name}"
     return await record_notable(
         ctx,
         world,

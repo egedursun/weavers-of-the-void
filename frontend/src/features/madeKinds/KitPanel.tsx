@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Package, Plus, Swords } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Medallion } from '@/components/domain'
+import { Medallion, Paged } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { Held, Listed } from '@/features/collective/parts'
 import { ForgeCard } from '@/features/cosmography/parts'
@@ -159,7 +159,7 @@ function StackKit({
       .map((item) => [String(item.id), `${item.name} (${item.family_label})`])
   )
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={unitIcon(stack.kind, Swords)} tone='gold' size='sm' />
         <Label>{`${stack.count} ${stack.design_name ?? sectionLabel(stack.kind).toLowerCase()}`}</Label>
@@ -170,14 +170,16 @@ function StackKit({
         </Muted>
       ) : (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {stack.carried.map((item) => (
-            <CarriedCard
-              key={item.model_id}
-              row={item}
-              stack={stack}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={stack.carried} as='li'>
+            {(item) => (
+              <CarriedCard
+                key={item.model_id}
+                row={item}
+                stack={stack}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <div className='@container/form min-w-0'>
@@ -327,14 +329,16 @@ export function KitPanel({
             </Muted>
           ) : (
             <ul className='flex min-w-0 flex-col gap-2'>
-              {data.stacks.map((stack) => (
-                <StackKit
-                  key={stack.unit_id}
-                  stack={stack}
-                  models={models}
-                  blocked={blocked}
-                />
-              ))}
+              <Paged items={data.stacks} as='li'>
+                {(stack) => (
+                  <StackKit
+                    key={stack.unit_id}
+                    stack={stack}
+                    models={models}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
             </ul>
           )}
         </>

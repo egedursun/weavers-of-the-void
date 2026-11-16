@@ -30,11 +30,13 @@ import { Label as FieldLabel } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import {
+  AsideLayout,
   EmptyState,
   Medallion,
   MiniStat,
-  PageHeader,
+  Paged,
   PagedList,
+  PageHeader,
   Section,
 } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
@@ -167,8 +169,8 @@ function SingleCard({
       data-notification={item.id}
       data-read={item.is_read || undefined}
       className={cn(
-        'flex min-w-0 gap-3 rounded-xl border p-3',
-        item.is_read ? 'bg-background' : 'border-primary/40 bg-primary/5'
+        'flex min-w-0 gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
+        item.is_read ? 'bg-card' : 'border-primary/40 bg-primary/5'
       )}
     >
       <Medallion
@@ -237,8 +239,8 @@ function GroupCard({ group }: { group: NotificationGroup }) {
   return (
     <li
       className={cn(
-        'flex min-w-0 gap-3 rounded-xl border p-3',
-        unread > 0 ? 'border-warning/40 bg-warning/5' : 'bg-background'
+        'flex min-w-0 gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
+        unread > 0 ? 'border-warning/40 bg-warning/5' : 'bg-card'
       )}
     >
       <Medallion
@@ -312,7 +314,8 @@ export function NotificationsScreen() {
   const pages = useNotificationPages(category, unreadOnly, pageSize, exclude)
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = pages
   const loadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) void fetchNextPage()
+    if (hasNextPage && !isFetchingNextPage)
+      void fetchNextPage({ cancelRefetch: false })
   }, [fetchNextPage, hasNextPage, isFetchingNextPage])
   const sentinel = useAutoLoad(Boolean(hasNextPage), loadMore)
   const mark = useMarkRead()
@@ -396,7 +399,7 @@ export function NotificationsScreen() {
         <div
           data-notification-errors
           className={cn(
-            'flex min-w-0 flex-wrap items-center gap-3 rounded-xl border p-3',
+            'flex min-w-0 flex-wrap items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
             errors.unread > 0 ? 'border-warning/40 bg-warning/5' : 'bg-muted/30'
           )}
         >
@@ -486,9 +489,8 @@ export function NotificationsScreen() {
                 </span>
               </Button>
             </li>
-            {counts
-              .filter((count) => count.total > 0)
-              .map((count) => {
+            <Paged items={counts.filter((count) => count.total > 0)} as='li'>
+              {(count) => {
                 const Icon = CATEGORY_ICON[count.category]
                 const active = category === count.category
                 return (
@@ -524,88 +526,98 @@ export function NotificationsScreen() {
                     </Button>
                   </li>
                 )
-              })}
+              }}
+            </Paged>
           </ul>
         </div>
       )}
-      <div className='grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-3'>
-        <div className='flex min-w-0 flex-col xl:col-span-2'>
-          <Section
-            title={
-              category
-                ? (labels.get(category) ?? category)
-                : 'News from the world'
-            }
-            description='Deaths, rebellions, prophecies, cosmic events and the prayers made to you collect here.'
-            surface='card'
-            actions={
-              <div className='flex min-w-0 flex-wrap items-center gap-3'>
-                <div className='flex items-center gap-2'>
-                  <Switch
-                    id='only-unread'
-                    checked={unreadOnly}
-                    onCheckedChange={setUnreadOnly}
-                  />
-                  <FieldLabel htmlFor='only-unread'>Only unread</FieldLabel>
-                </div>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  disabled={unreadHere === 0 || mark.isPending}
-                  disabledReason={
-                    unreadHere === 0 ? 'Nothing is unread' : 'Saving'
-                  }
-                  onClick={markAll}
-                >
-                  <CheckCheck />
-                  {category ? 'Mark these read' : 'Mark all read'}
-                </Button>
-              </div>
-            }
-          >
-            {(pages.isPending || summary.isPending) && (
-              <Skeleton className='h-48 w-full' />
-            )}
-            {pages.isError && (
-              <Text tone='destructive'>{pages.error.message}</Text>
-            )}
-            {pages.data && items.length === 0 && (
-              <EmptyState
-                size='compact'
-                icon={Bell}
-                title={unreadOnly ? 'Nothing unread here' : 'No news here yet'}
-                description='Pick another kind of news, or turn off Only unread.'
+      <AsideLayout
+        aside={
+          <>
+            <SelfNoteForm />
+            {list && (
+              <NotificationSettings
+                key={JSON.stringify(list.settings)}
+                list={list}
               />
             )}
-            {epochs.map(([key, groups]) => (
-              <section
-                key={key}
-                aria-label={
-                  key === 'none' ? 'Outside the epochs' : `Epoch ${key}`
+          </>
+        }
+      >
+        <Section
+          title={
+            category
+              ? (labels.get(category) ?? category)
+              : 'News from the world'
+          }
+          description='Deaths, rebellions, prophecies, cosmic events and the prayers made to you collect here.'
+          surface='card'
+          actions={
+            <div className='flex min-w-0 flex-wrap items-center gap-3'>
+              <div className='flex items-center gap-2'>
+                <Switch
+                  id='only-unread'
+                  checked={unreadOnly}
+                  onCheckedChange={setUnreadOnly}
+                />
+                <FieldLabel htmlFor='only-unread'>Only unread</FieldLabel>
+              </div>
+              <Button
+                variant='outline'
+                size='sm'
+                disabled={unreadHere === 0 || mark.isPending}
+                disabledReason={
+                  unreadHere === 0 ? 'Nothing is unread' : 'Saving'
                 }
-                className='flex min-w-0 flex-col gap-2'
+                onClick={markAll}
               >
-                <div className='flex min-w-0 items-center gap-2 border-b pb-1.5'>
-                  <CalendarDays
-                    aria-hidden='true'
-                    className='size-icon-sm text-primary'
-                  />
-                  <Text as='span' weight='semibold'>
-                    {key === 'none' ? 'Outside the epochs' : `Epoch ${key}`}
-                  </Text>
-                  <Muted as='span' variant='caption'>
-                    {`${plural(
-                      groups.reduce(
-                        (sum, group) => sum + group.items.length,
-                        0
-                      ),
-                      'notice',
-                      'notices'
-                    )}`}
-                  </Muted>
-                </div>
-                <ol className='flex min-w-0 flex-col gap-2'>
-                  {groups.map((group) =>
+                <CheckCheck />
+                {category ? 'Mark these read' : 'Mark all read'}
+              </Button>
+            </div>
+          }
+        >
+          {(pages.isPending || summary.isPending) && (
+            <Skeleton className='h-48 w-full' />
+          )}
+          {pages.isError && (
+            <Text tone='destructive'>{pages.error.message}</Text>
+          )}
+          {pages.data && items.length === 0 && (
+            <EmptyState
+              size='compact'
+              icon={Bell}
+              title={unreadOnly ? 'Nothing unread here' : 'No news here yet'}
+              description='Pick another kind of news, or turn off Only unread.'
+            />
+          )}
+          {epochs.map(([key, groups]) => (
+            <section
+              key={key}
+              aria-label={
+                key === 'none' ? 'Outside the epochs' : `Epoch ${key}`
+              }
+              className='flex min-w-0 flex-col gap-2'
+            >
+              <div className='flex min-w-0 items-center gap-2 border-b pb-1.5'>
+                <CalendarDays
+                  aria-hidden='true'
+                  className='size-icon-sm text-primary'
+                />
+                <Text as='span' weight='semibold'>
+                  {key === 'none' ? 'Outside the epochs' : `Epoch ${key}`}
+                </Text>
+                <Muted as='span' variant='caption'>
+                  {`${plural(
+                    groups.reduce((sum, group) => sum + group.items.length, 0),
+                    'notice',
+                    'notices'
+                  )}`}
+                </Muted>
+              </div>
+              <ol className='flex min-w-0 flex-col gap-2'>
+                <Paged items={groups} as='li'>
+                  {(group) =>
                     group.items.length > 1 ? (
                       <GroupCard key={group.key} group={group} />
                     ) : (
@@ -619,27 +631,28 @@ export function NotificationsScreen() {
                         index={index}
                       />
                     )
-                  )}
-                </ol>
-              </section>
-            ))}
-            <div ref={sentinel} aria-hidden='true' />
-            {pages.isFetchingNextPage && <Skeleton className='h-24 w-full' />}
-            {pages.data && !pages.hasNextPage && items.length > 0 && (
-              <Muted variant='caption'>That is everything.</Muted>
-            )}
-          </Section>
-        </div>
-        <div className='flex min-w-0 flex-col gap-6 xl:sticky xl:top-topbar'>
-          <SelfNoteForm />
-          {list && (
-            <NotificationSettings
-              key={JSON.stringify(list.settings)}
-              list={list}
-            />
+                  }
+                </Paged>
+              </ol>
+            </section>
+          ))}
+          <div ref={sentinel} aria-hidden='true' />
+          {pages.isFetchingNextPage && <Skeleton className='h-24 w-full' />}
+          {hasNextPage && !isFetchingNextPage && (
+            <Button
+              variant='outline'
+              className='self-center'
+              onClick={loadMore}
+            >
+              <ChevronDown />
+              Show older notifications
+            </Button>
           )}
-        </div>
-      </div>
+          {pages.data && !pages.hasNextPage && items.length > 0 && (
+            <Muted variant='caption'>That is everything.</Muted>
+          )}
+        </Section>
+      </AsideLayout>
     </>
   )
 }

@@ -612,7 +612,7 @@ function RowEditor({
           </div>
         </DialogHeader>
         {row !== null && keys.length > 0 && (
-          <div className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border bg-muted/30 p-2'>
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
             <Label variant='overline'>Row</Label>
             {keys.map((column) => (
               <Badge key={column.name} size='sm' variant='outline'>
@@ -648,7 +648,7 @@ function RowEditor({
           </div>
         )}
         {row !== null && fields.length > 0 && (
-          <label className='flex min-w-0 items-start gap-3 rounded-md border p-3'>
+          <label className='flex min-w-0 items-start gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <Switch
               checked={hold}
               onCheckedChange={setHold}
@@ -779,7 +779,7 @@ function RowCard({
   )
   const blank = shown.length - filled.length
   return (
-    <li className='flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-3 shadow-xs'>
+    <li className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={look.icon} tone={look.tone} size='sm' />
         <Text as='span' weight='semibold'>{`Row ${index + 1}`}</Text>
@@ -811,8 +811,8 @@ function RowCard({
               key={column.name}
               className={
                 held
-                  ? 'flex min-w-0 flex-col gap-1 rounded-md border border-warning/50 bg-warning/10 px-2.5 py-2'
-                  : 'flex min-w-0 flex-col gap-1 rounded-md border bg-muted/30 px-2.5 py-2'
+                  ? 'flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-warning/50 bg-warning/10 px-2.5 py-2'
+                  : 'flex min-w-0 flex-col gap-1 rounded-md border surface-well border-gild/20 bg-muted/60 px-2.5 py-2'
               }
             >
               <Label as='dt' variant='overline' truncate>
@@ -974,7 +974,7 @@ function MakeRecord({
   const [open, setOpen] = useState(false)
   const table = tables.find((item) => item.table === picked)
   return (
-    <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-lg border border-dashed p-3'>
+    <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-md p-3 sealed-well'>
       <Medallion icon={Plus} tone='gold' size='sm' />
       <div className='flex min-w-0 flex-1 basis-60 flex-col gap-1.5'>
         <Text as='span' weight='medium'>

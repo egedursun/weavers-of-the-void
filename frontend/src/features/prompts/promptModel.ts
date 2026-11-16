@@ -57,7 +57,6 @@ export const AREA_LABEL: Record<PromptArea, string> = {
   mortal: 'Mortal',
   opportunities: 'Opportunities',
   agent: 'Agent',
-  chronicle: 'Chronicle',
   localisation: 'Localisation',
 }
 

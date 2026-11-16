@@ -120,7 +120,7 @@ function SettlementRow({
       ? 'Nothing has changed.'
       : null)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Name item={{ id: item.settlement_id, name: item.name }} />
         {item.harbour && (
@@ -199,7 +199,7 @@ function LeyWorkRow({
   })
   const busy = blocked ?? (tie.isPending || release.isPending ? WORKING : null)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Name item={{ id: item.structure_id, name: item.name }} />
         {item.function !== null && item.function !== undefined && (
@@ -272,7 +272,7 @@ function LeyLineRow({
       : null) ??
     (parsed === line.strength ? 'This is the present strength.' : null)
   return (
-    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <Text weight='medium' className='flex-1 basis-32' truncate>
         {`To ${line.other_region_name}`}
       </Text>
@@ -344,7 +344,7 @@ function ForcedRow({
       : null) ??
     (save.isPending ? WORKING : null)
   return (
-    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 flex-col gap-1'>
         <Label>Weather</Label>
         <Select value={kind} onValueChange={setKind}>

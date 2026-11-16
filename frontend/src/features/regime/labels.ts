@@ -1,4 +1,5 @@
 import {
+  Trophy,
   Award,
   BookOpenCheck,
   Building2,
@@ -57,6 +58,9 @@ export const LEGITIMACY_KINDS: Record<Schema['LegitimacyType'], Named> = {
   traditional: { label: 'Custom and descent', icon: ScrollText, tone: 'gold' },
   charismatic: { label: 'Charisma', icon: Sparkles, tone: 'verdigris' },
   rational: { label: 'Law and office', icon: Landmark, tone: 'info' },
+  divine_mandate: { label: 'Divine mandate', icon: Sparkles, tone: 'gold' },
+  popular: { label: 'Popular', icon: Users, tone: 'gold' },
+  performance: { label: 'Performance', icon: Trophy, tone: 'gold' },
 }
 
 export const ROUTINISATION: Record<Schema['Routinisation'], Named> = {

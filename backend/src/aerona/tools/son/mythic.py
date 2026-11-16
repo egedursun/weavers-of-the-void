@@ -14,7 +14,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind
-from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, ServitorRank, ServitorRole
+from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, ServitorRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.arcana.enchantments import lay_enchantment as lay_law
 from aerona.engine.mythic.geasa import lay_geas as lay
@@ -36,7 +36,6 @@ STRENGTH_MAX = 100
 
 class MakeServitorInput(ToolInput):
     name: Annotated[str, Field(min_length=1, max_length=NAME_MAX_LENGTH)]
-    rank: ServitorRank
     role: ServitorRole
     post_id: int | None = None
     reason: Reason
@@ -104,12 +103,11 @@ async def make_servitor(call: SonCall, args: MakeServitorInput) -> str:
     post = await require_canon(call.session, args.post_id) if args.post_id is not None else None
     if post is not None:
         await ensure_in_reach(call, post)
-    row = await make(
-        call.tick, call.son.id, name=args.name, rank=args.rank, role=args.role, post_id=post.id if post else None, world_id=call.son.current_world_id
-    )
+    row = await make(call.tick, call.son.id, name=args.name, role=args.role, post_id=post.id if post else None, world_id=call.son.current_world_id)
     call.spend_essence(cost)
     call.target(row.spirit_entity_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.MAKE_SERVITOR, entity_ids=[row.spirit_entity_id], son=call.son.name, name=args.name, rank=args.rank.value)
+    role = args.role.value.replace("_", " ")
+    await call.chronicle(ChronicleKind.WORLD, lines.MAKE_SERVITOR, entity_ids=[row.spirit_entity_id], son=call.son.name, name=args.name, role=role)
     return result(SonResult.SERVITOR_MADE, name=args.name, id=row.spirit_entity_id)
 
 

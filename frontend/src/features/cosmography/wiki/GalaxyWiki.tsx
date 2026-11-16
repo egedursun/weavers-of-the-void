@@ -30,6 +30,7 @@ import {
   EntityLink,
   Medallion,
   MiniStat,
+  Paged,
   PagedList,
   Section,
 } from '@/components/domain'
@@ -260,7 +261,7 @@ function PickedCard({
         ? ladder.data.star_names[String(placement.star_id)]
         : undefined
     return (
-      <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-xl border bg-card p-3'>
+      <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
         <Medallion icon={Globe2} tone='verdigris' />
         <div className='flex min-w-0 flex-1 flex-col gap-1'>
           <EntityLink kind='world' id={String(world.id)}>
@@ -278,7 +279,7 @@ function PickedCard({
         </div>
         <Button variant='ghost' size='sm' onClick={onClear}>
           <X />
-          Clear
+          Clear the world
         </Button>
       </div>
     )
@@ -289,7 +290,7 @@ function PickedCard({
     const zone = ZONES[star.galactic_zone]
     const age = STAR_AGES[star.age_stage]
     return (
-      <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-xl border bg-card p-3'>
+      <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
         <StarDisc type={star.star_type} />
         <div className='flex min-w-0 flex-1 flex-col gap-1'>
           <EntityLink kind='star' id={String(star.id)}>
@@ -304,7 +305,7 @@ function PickedCard({
         </div>
         <Button variant='ghost' size='sm' onClick={onClear}>
           <X />
-          Clear
+          Clear the star
         </Button>
       </div>
     )
@@ -313,7 +314,7 @@ function PickedCard({
   if (!structure) return null
   const kind = STRUCTURES[structure.kind]
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-xl border bg-card p-3'>
+    <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-1 flex-col gap-1'>
         <Text weight='semibold'>{structure.name}</Text>
         <div className='flex min-w-0 flex-wrap gap-1.5'>
@@ -327,7 +328,7 @@ function PickedCard({
       </div>
       <Button variant='ghost' size='sm' onClick={onClear}>
         <X />
-        Clear
+        Clear the structure
       </Button>
     </div>
   )
@@ -376,7 +377,7 @@ function StructureForm({
     )
   )
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-xl border border-dashed bg-muted/20 p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md p-3 sealed-well'>
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
         <div className='flex min-w-0 flex-col gap-0.5'>
           <Text weight='semibold'>Shape a new structure</Text>
@@ -686,7 +687,7 @@ function StarsSection({
               (place) => place.star_id === row.id
             ).length
             return (
-              <li className='flex min-w-0 items-center gap-3 rounded-xl border bg-background p-3'>
+              <li className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
                 <StarDisc type={row.star_type} />
                 <span className='flex min-w-0 flex-1 flex-col gap-1'>
                   <EntityLink kind='star' id={String(row.id)}>
@@ -941,14 +942,16 @@ export function GalaxyView({ galaxyId }: { galaxyId: number }) {
           />
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {beings.map((row) => (
-              <BeingCard
-                key={row.entity_id}
-                being={row}
-                ladder={ladder}
-                catalog={catalog}
-              />
-            ))}
+            <Paged items={beings} as='li'>
+              {(row) => (
+                <BeingCard
+                  key={row.entity_id}
+                  being={row}
+                  ladder={ladder}
+                  catalog={catalog}
+                />
+              )}
+            </Paged>
           </ul>
         )}
       </Section>

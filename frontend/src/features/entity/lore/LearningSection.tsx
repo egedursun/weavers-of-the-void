@@ -93,7 +93,7 @@ function BranchRow({ row }: { row: Level }) {
     <li
       data-surface='HolderLevel'
       className={cn(
-        'flex min-w-0 items-center gap-3 rounded-lg border bg-muted/30 p-2.5 @xl/lore:last:odd:col-span-2',
+        'flex min-w-0 items-center gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-2.5 @xl/lore:last:odd:col-span-2',
         !row.open && 'border-warning/40'
       )}
     >
@@ -167,7 +167,7 @@ function TechniqueTile({
       data-surface='TechniqueNode'
       data-state={row.known ? 'known' : open ? 'reachable' : 'locked'}
       className={cn(
-        'flex h-full min-w-0 flex-col gap-2 rounded-lg border p-3 @md/lore:last:odd:col-span-2',
+        'flex h-full min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3 @md/lore:last:odd:col-span-2',
         row.known &&
           'border-primary/50 bg-primary/8 shadow-md ring-1 shadow-primary/10 ring-primary/20',
         open && 'border-info/40 bg-info/5',
@@ -293,7 +293,7 @@ function TechniqueGroup({
   return (
     <div
       data-surface='TechniqueBranch'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />

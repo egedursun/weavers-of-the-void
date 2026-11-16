@@ -54,7 +54,7 @@ export function HoardControl({
   return (
     <div
       data-surface='HoardControl'
-      className='@container/hoard flex min-w-0 flex-col gap-4 rounded-xl border bg-background p-4'
+      className='@container/hoard flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={Gem} tone='gold' />

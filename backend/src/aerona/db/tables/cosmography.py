@@ -16,7 +16,6 @@ from aerona.domain.enums.cosmography import (
     Causality,
     ClusterKind,
     DimensionalEventKind,
-    DimensionElement,
     DimensionKind,
     GalacticEventKind,
     GalacticNucleus,
@@ -46,13 +45,11 @@ class DimensionRow(NodeRow):
         at_least("sanity_drain", 0),
         CheckConstraint("time_factor > 0", name="time_factor_positive"),
         CheckConstraint("parent_dimension_id IS NULL OR parent_dimension_id <> id", name="not_own_parent"),
-        CheckConstraint("element IS NULL OR dimension_kind = 'elemental'", name="element_on_elemental"),
     )
     __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.DIMENSION})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     dimension_kind: Mapped[DimensionKind] = mapped_column(enum_type(DimensionKind, "dimension_kind"))
-    element: Mapped[DimensionElement | None] = mapped_column(enum_type(DimensionElement, "element"))
     parent_dimension_id: Mapped[int | None] = mapped_column(ForeignKey("dimensions.id", ondelete="SET NULL"), index=True)
     veil: Mapped[int] = mapped_column(default=80)
     stability: Mapped[int] = mapped_column(default=80)
@@ -289,5 +286,6 @@ class CelestialReadingRow(Base):
     celestial_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     reading: Mapped[OmenReading] = mapped_column(enum_type(OmenReading, "reading"))
+    visible: Mapped[bool] = mapped_column(default=True, server_default="1")
     epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

@@ -295,7 +295,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           id={`order-${sonId}`}
           value={order}
           disabled={dead}
-          placeholder="Send a plague to your sibling's city."
+          placeholder='What you command, in your own words'
           onChange={(event) => setOrder(event.target.value)}
         />
         {son.order_absolute && (

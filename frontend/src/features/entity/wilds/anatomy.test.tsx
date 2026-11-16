@@ -17,7 +17,7 @@ vi.mock('@/api/client', async () => {
 describe('creature anatomy', () => {
   beforeEach(resetApi)
 
-  it('shows a monster’s body and nature and reshapes its breath', async () => {
+  it('shows a monster’s body and nature and reshapes its skin', async () => {
     serveBasics()
     onApi('GET', '/api/entities/9/beast', BEAST)
     onApi('POST', '/api/actions/anatomy:edit', ACCEPTED_ACTION)
@@ -25,14 +25,14 @@ describe('creature anatomy', () => {
     await expect.element(screen.getByText('Body and nature')).toBeVisible()
     await expect.element(screen.getByText('Abductor').first()).toBeVisible()
     await expect.element(screen.getByText('Deep mining').first()).toBeVisible()
-    await screen.getByRole('combobox', { name: 'Breath' }).click()
-    await screen.getByRole('option', { name: 'Fire' }).click()
+    await screen.getByRole('combobox', { name: 'Skin' }).click()
+    await screen.getByRole('option', { name: 'Hide' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/anatomy:edit'))
       .toHaveLength(1)
     expect(callsTo('POST', '/api/actions/anatomy:edit')[0].body).toEqual({
       node_id: 9,
-      values: { breath: 'fire' },
+      values: { skin: 'hide' },
       release: [],
     })
   })

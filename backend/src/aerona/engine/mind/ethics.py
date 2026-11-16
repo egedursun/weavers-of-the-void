@@ -248,7 +248,7 @@ def model_for(values: Values) -> HonourModel:
         return HonourModel.HONOUR
     if hierarchy > law and hierarchy > 0:
         return HonourModel.FACE
-    return HonourModel.DIGNITY
+    return HonourModel.NONE if max(honour, hierarchy, law) < 0 else HonourModel.DIGNITY
 
 
 async def seed_honour(ctx: TickContext, culture: EntityRow) -> bool:
@@ -295,7 +295,7 @@ async def spread_shame(ctx: TickContext, mortal: EntityRow) -> int:
 async def restore(ctx: TickContext, mortal: EntityRow) -> int:
     culture = await culture_of(ctx.session, mortal.id)
     model = await honour_of(ctx.session, culture.id if culture else None)
-    if model is HonourModel.DIGNITY:
+    if model in {HonourModel.DIGNITY, HonourModel.NONE}:
         return 0
     table = ctx.rules.ethics
     grievances = list(

@@ -20,14 +20,14 @@ Deepen this {{ kind }}. The output consists of SEPARATE KEYS; never write one in
 {% if kind == "world" %}
 - history: how this world was shaped and what its ages brought (2 to 4 paragraphs of prose; NO headings inside it)
 - rumours: array; each item one rumour its peoples or travellers tell about the world
-- sayings: array; each item { kind, text } spoken about the world, its sky or its seasons
-- details: array; each item one concrete detail of its land, sky, sea, seasons or light
-- hidden_truth: a single paragraph about what the world hides beneath its known face, only if it hides something; otherwise leave it empty
+- sayings: array; each item { kind, text } spoken about the world
+- details: array; each item one concrete detail of the world as the canon above gives it
+- hidden_truth: a single paragraph about what the world hides that its peoples do not know, only if it hides something; otherwise leave it empty
 {% elif kind == "star" %}
-- history: how this star was kindled and what it has seen (2 to 4 paragraphs of prose; NO headings inside it)
-- rumours: array; each item one rumour told about the star under its light
-- sayings: array; each item { kind, text } spoken about the star, its light or its omens
-- details: array; each item one concrete detail of its colour, light, motion or the way it is seen
+- history: how this star came to be and what its ages brought (2 to 4 paragraphs of prose; NO headings inside it)
+- rumours: array; each item one rumour told about the star
+- sayings: array; each item { kind, text } spoken about the star
+- details: array; each item one concrete detail of the star as the canon above gives it
 - hidden_truth: a single paragraph about what the star truly is or hides, only if it hides something; otherwise leave it empty
 {% else %}
 - history: how this {{ kind }} came to be and what its ages brought (2 to 4 paragraphs of prose; NO headings inside it)

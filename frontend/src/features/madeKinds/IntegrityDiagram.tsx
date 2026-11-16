@@ -1080,7 +1080,7 @@ export function IntegrityDiagram({
           return (
             <div
               key={part.key}
-              className='flex min-w-0 items-center gap-1.5 rounded-md border bg-background px-2 py-1'
+              className='flex min-w-0 items-center gap-1.5 rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1'
               aria-label={describe(part)}
             >
               <Icon

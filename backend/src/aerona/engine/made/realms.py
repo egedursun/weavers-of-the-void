@@ -10,11 +10,12 @@ from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import ENDED_STATUSES, EntityStatus, EntityType
-from aerona.domain.enums.made import RealmPurpose
+from aerona.domain.enums.made import RealmEntry, RealmPurpose
 from aerona.domain.enums.minds import MindSeat, MindUpkeep
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.made.kinds import AWARE_ESCAPE, PURPOSES, entry_refused
 from aerona.engine.minds.profiles import profile_of
 from aerona.engine.minds.seat_loss import lose_seat
 from aerona.engine.networks.book import running
@@ -74,6 +75,9 @@ async def enter_realm(ctx: TickContext, mind_id: int, realm_id: int) -> MindProf
     realm = await realm_of(ctx, realm_id)
     if held(mind_id):
         raise ValidationFailedError("That mind is held against the world.")
+    refused = await entry_refused(ctx, realm, mind_id)
+    if refused is not None:
+        raise ValidationFailedError(f"{refused[0].upper()}{refused[1:]}.")
     mind = await profile_of(ctx.session, ctx.rules, mind_id, ctx.epoch)
     mind.seat, mind.seat_node_id = MindSeat.REALM, realm.dimension_id
     if realm.host_node_id is not None and realm.host_node_id != mind_id:
@@ -103,10 +107,30 @@ async def escapes(ctx: TickContext, realm: MadeRealmRow, minds: list[MindProfile
     if realm.realm_purpose is not RealmPurpose.CONFINEMENT or realm.sealed:
         return
     for mind in minds:
-        if held(mind.node_id) or not ctx.rng(f"realm.escape.{mind.node_id}.{ctx.epoch}").chance(ctx.rules.made_realms.escape_pct):
+        chance = ctx.rules.made_realms.escape_pct * AWARE_ESCAPE[realm.aware_inside] // PERCENT
+        if held(mind.node_id) or not ctx.rng(f"realm.escape.{mind.node_id}.{ctx.epoch}").chance(chance):
             continue
         mind.seat, mind.seat_node_id = MindSeat.BODY, mind.node_id
         await note(ctx, "A mind got out of the realm it was confined in.", key="realm.escape", ids=[mind.node_id, realm.dimension_id])
+
+
+async def admit_by_entry(ctx: TickContext, realm: MadeRealmRow, keeper: EntityRow | None) -> int:
+    if keeper is None or realm.entry not in {RealmEntry.DEATH, RealmEntry.BIRTH}:
+        return 0
+    kin = (EntityRow.entity_type == EntityType.MORTAL, EntityRow.affiliated_entity_id == keeper.id)
+    if realm.entry is RealmEntry.BIRTH:
+        found = select(EntityRow.id).where(*kin, EntityRow.birth_epoch == ctx.epoch, EntityRow.status == EntityStatus.CANON)
+    else:
+        found = select(EntityRow.id).where(*kin, EntityRow.status == EntityStatus.DEAD, EntityRow.end_epoch == ctx.epoch)
+    admitted = 0
+    for being in list(await ctx.session.scalars(found)):
+        if held(being):
+            continue
+        mind = await profile_of(ctx.session, ctx.rules, being, ctx.epoch)
+        if mind.seat is not MindSeat.REALM:
+            mind.seat, mind.seat_node_id = MindSeat.REALM, realm.dimension_id
+            admitted += 1
+    return admitted
 
 
 async def keep_realm(ctx: TickContext, realm: MadeRealmRow) -> None:
@@ -133,6 +157,9 @@ async def keep_realm(ctx: TickContext, realm: MadeRealmRow) -> None:
         if "speed_pct" not in mind.locked:
             mind.speed_pct = clamp_int(ratio, 1, SPEED_MAX)
     await escapes(ctx, realm, minds)
+    await admit_by_entry(ctx, realm, keeper)
+    if not frozen:
+        await PURPOSES[realm.realm_purpose](ctx, realm, minds, keeper)
     working = sum(1 for mind in minds if not mind.dormant)
     if realm.realm_purpose is RealmPurpose.LABOUR and keeper is not None and not frozen and working and not held(keeper.id):
         await shift_points(ctx.session, keeper, round_half_up(table.labour_yield * working * ratio / PERCENT))

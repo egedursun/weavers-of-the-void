@@ -16,6 +16,10 @@ class AgeKind(StrEnum):
     GOLDEN = "golden"
     DARK = "dark"
     HEROIC = "heroic"
+    RISING = "rising"
+    DECLINING = "declining"
+    TRANSFORMING = "transforming"
+    STAGNANT = "stagnant"
 
 
 class EraDeed(StrEnum):
@@ -26,6 +30,11 @@ class EraDeed(StrEnum):
     GREAT_PERSON = "great_person"
     DEFEAT = "defeat"
     FAMINE = "famine"
+    FIRST_NETWORK = "first_network"
+    FIRST_MADE_MIND = "first_made_mind"
+    FIRST_LINE = "first_line"
+    REVELATION = "revelation"
+    COLLAPSE = "collapse"
 
 
 class ResearchIncident(StrEnum):
@@ -74,6 +83,11 @@ class BlueprintKind(StrEnum):
     SIEGE_ENGINE = "siege_engine"
     STRUCTURE = "structure"
     ARTIFACT_PATTERN = "artifact_pattern"
+    MADE_BODY = "made_body"
+    AUGMENT = "augment"
+    LINE = "line"
+    NETWORK = "network"
+    RITE_PATTERN = "rite_pattern"
 
 
 class BlueprintSource(StrEnum):

@@ -20,6 +20,10 @@ class TraitEvolutionRules:
     escape_pct: int = rule(30, 0, 100, E, "How much a prey's speed and camouflage spare it from its hunters at full measure (%)")
     wariness_pct: int = rule(30, 0, 100, E, "How much wariness spares a species from hunting at full measure (%)")
     cold_reach: int = rule(10, 0, 50, E, "Degrees below its usual coldest a species can bear at full cold tolerance")
+    heat_reach: int = rule(10, 0, 50, E, "Degrees above its usual hottest a species can bear at full heat tolerance")
+    drought_reach: int = rule(20, 0, 100, E, "Moisture below its need a species can bear at full drought tolerance")
+    drought_pressure: int = rule(2, 0, 20, E, "How far a land drier than a species needs moves its drought tolerance each epoch")
+    senses_pct: int = rule(20, 0, 100, E, "How much keen senses spare a species from its hunters at full measure (%)")
     fecundity_pct: int = rule(20, 0, 100, E, "Extra growth a species of full fecundity gains (%)")
     per_epoch: int = rule(400, 0, 100000, E, "Species ranges whose traits move each epoch at most")
 

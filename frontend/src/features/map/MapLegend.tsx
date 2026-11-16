@@ -17,7 +17,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Switch } from '@/components/ui/switch'
-import { EntityLink } from '@/components/domain'
+import { EntityLink, Paged } from '@/components/domain'
 import { type ThemeColorName } from '@/components/domain/useThemeColors'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { ALL_FAMILIES, familyOf } from '@/features/graph/families'
@@ -193,23 +193,27 @@ function PoliticalRows({
   }
   return (
     <ul className='flex min-w-0 flex-col gap-2'>
-      {palette.categories.map((category) => {
-        const id = Number(category.key.split(':')[1])
-        const entry = byRuler.get(id)
-        return (
-          <Row
-            key={category.key}
-            icon={<ColorSwatch token={category.token} color={category.color} />}
-          >
-            <div className='flex min-w-0 flex-col'>
-              <EntityLink kind='entity' id={String(id)}>
-                {entry?.name ?? category.label}
-              </EntityLink>
-              <Muted variant='caption'>{entry?.regions.join(', ')}</Muted>
-            </div>
-          </Row>
-        )
-      })}
+      <Paged items={palette.categories} as='li'>
+        {(category) => {
+          const id = Number(category.key.split(':')[1])
+          const entry = byRuler.get(id)
+          return (
+            <Row
+              key={category.key}
+              icon={
+                <ColorSwatch token={category.token} color={category.color} />
+              }
+            >
+              <div className='flex min-w-0 flex-col'>
+                <EntityLink kind='entity' id={String(id)}>
+                  {entry?.name ?? category.label}
+                </EntityLink>
+                <Muted variant='caption'>{entry?.regions.join(', ')}</Muted>
+              </div>
+            </Row>
+          )
+        }}
+      </Paged>
     </ul>
   )
 }
@@ -217,17 +221,19 @@ function PoliticalRows({
 function CategoryRows({ palette }: { palette: LayerPalette }) {
   return (
     <ul className='flex min-w-0 flex-col gap-1.5'>
-      {palette.categories.map((category) => (
-        <Row
-          key={category.key}
-          icon={<ColorSwatch token={category.token} color={category.color} />}
-        >
-          <Text as='span' truncate className='flex-1'>
-            {category.label}
-          </Text>
-          <Stat value={category.count} />
-        </Row>
-      ))}
+      <Paged items={palette.categories} as='li'>
+        {(category) => (
+          <Row
+            key={category.key}
+            icon={<ColorSwatch token={category.token} color={category.color} />}
+          >
+            <Text as='span' truncate className='flex-1'>
+              {category.label}
+            </Text>
+            <Stat value={category.count} />
+          </Row>
+        )}
+      </Paged>
     </ul>
   )
 }
@@ -354,20 +360,22 @@ export function MapLegend({
       )}
       <Block title='The land' defaultOpen={false}>
         <ul className='flex min-w-0 flex-col gap-1.5'>
-          {view.geometry.palette.biome_names.map((name, index) => (
-            <Row
-              key={name}
-              icon={
-                <ColorSwatch
-                  color={view.geometry.palette.biome_colours[index]}
-                />
-              }
-            >
-              <Text as='span' truncate className='flex-1'>
-                {name.replaceAll('_', ' ')}
-              </Text>
-            </Row>
-          ))}
+          <Paged items={view.geometry.palette.biome_names} as='li'>
+            {(name, index) => (
+              <Row
+                key={name}
+                icon={
+                  <ColorSwatch
+                    color={view.geometry.palette.biome_colours[index]}
+                  />
+                }
+              >
+                <Text as='span' truncate className='flex-1'>
+                  {name.replaceAll('_', ' ')}
+                </Text>
+              </Row>
+            )}
+          </Paged>
         </ul>
       </Block>
       <Block title='Markers' defaultOpen={!layerTitle}>
@@ -386,32 +394,37 @@ export function MapLegend({
           </div>
         )}
         <ul className='flex min-w-0 flex-col gap-1.5'>
-          {families.map((family) => (
-            <li key={family.key} className='flex min-w-0 flex-col gap-1'>
-              <Label variant='overline'>{family.label}</Label>
-              <ul className='flex min-w-0 flex-col gap-1'>
-                {family.types
-                  .filter((type) =>
-                    markers.some((point) => point.type === type)
-                  )
-                  .map((type) => (
-                    <TypeRow
-                      key={type}
-                      type={type}
-                      token={
-                        type === 'settlement' ? 'brand-gold' : family.token
-                      }
-                      label={typeName(type, typeLabels)}
-                      count={
-                        markers.filter((point) => point.type === type).length
-                      }
-                      shown={!filter.hiddenTypes.has(type)}
-                      onToggle={onToggleType}
-                    />
-                  ))}
-              </ul>
-            </li>
-          ))}
+          <Paged items={families} as='li'>
+            {(family) => (
+              <li key={family.key} className='flex min-w-0 flex-col gap-1'>
+                <Label variant='overline'>{family.label}</Label>
+                <ul className='flex min-w-0 flex-col gap-1'>
+                  <Paged
+                    items={family.types.filter((type) =>
+                      markers.some((point) => point.type === type)
+                    )}
+                    as='li'
+                  >
+                    {(type) => (
+                      <TypeRow
+                        key={type}
+                        type={type}
+                        token={
+                          type === 'settlement' ? 'brand-gold' : family.token
+                        }
+                        label={typeName(type, typeLabels)}
+                        count={
+                          markers.filter((point) => point.type === type).length
+                        }
+                        shown={!filter.hiddenTypes.has(type)}
+                        onToggle={onToggleType}
+                      />
+                    )}
+                  </Paged>
+                </ul>
+              </li>
+            )}
+          </Paged>
           {markers.length > 1 && (
             <Row icon={<ClusterMarker />}>
               <Muted variant='caption'>
@@ -457,39 +470,43 @@ export function MapLegend({
               <Text as='span'>Population falling</Text>
             </Row>
           )}
-          {eventKinds.map((kind) => (
-            <Row
-              key={kind}
-              icon={
-                <IconMarker
-                  icon={EVENT_ICON[kind] ?? EVENT_ICON.event}
-                  token={
-                    (EVENT_TOKEN[kind] as ThemeColorName | null) ??
-                    'muted-foreground'
-                  }
-                />
-              }
-            >
-              <Text as='span'>{EVENT_KIND_LABEL[kind] ?? kind}</Text>
-            </Row>
-          ))}
-          {lines.map((kind) => (
-            <Row
-              key={kind}
-              icon={
-                <LineMarker
-                  token={LINE_TOKEN[kind]}
-                  width={LINE_STYLE[kind].main.width}
-                  dash={LINE_STYLE[kind].main.dash?.join(' ')}
-                />
-              }
-            >
-              <Text as='span'>{LINE_LABEL[kind]}</Text>
-              {LINE_NOTE[kind] && (
-                <Muted variant='caption'>{LINE_NOTE[kind]}</Muted>
-              )}
-            </Row>
-          ))}
+          <Paged items={eventKinds} as='li'>
+            {(kind) => (
+              <Row
+                key={kind}
+                icon={
+                  <IconMarker
+                    icon={EVENT_ICON[kind] ?? EVENT_ICON.event}
+                    token={
+                      (EVENT_TOKEN[kind] as ThemeColorName | null) ??
+                      'muted-foreground'
+                    }
+                  />
+                }
+              >
+                <Text as='span'>{EVENT_KIND_LABEL[kind] ?? kind}</Text>
+              </Row>
+            )}
+          </Paged>
+          <Paged items={lines} as='li'>
+            {(kind) => (
+              <Row
+                key={kind}
+                icon={
+                  <LineMarker
+                    token={LINE_TOKEN[kind]}
+                    width={LINE_STYLE[kind].main.width}
+                    dash={LINE_STYLE[kind].main.dash?.join(' ')}
+                  />
+                }
+              >
+                <Text as='span'>{LINE_LABEL[kind]}</Text>
+                {LINE_NOTE[kind] && (
+                  <Muted variant='caption'>{LINE_NOTE[kind]}</Muted>
+                )}
+              </Row>
+            )}
+          </Paged>
           {overlays.wars && view.wars.length > 0 && (
             <>
               <Row icon={<IconMarker icon={Swords} token='destructive' />}>

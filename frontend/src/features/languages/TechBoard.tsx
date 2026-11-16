@@ -41,7 +41,7 @@ export function TechBoard({
   }, [layout.links, selected])
   const middle = TECH_NODE.height / 2
   return (
-    <div className='max-h-200 min-w-0 overflow-auto rounded-xl border bg-muted/30'>
+    <div className='max-h-200 min-w-0 overflow-auto rounded-md border surface-well border-gild/45 bg-muted/70'>
       <svg
         role='group'
         aria-label='Knowledge tree'

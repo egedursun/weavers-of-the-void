@@ -16,6 +16,7 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -602,13 +603,15 @@ export function NetworkSection({
                 </ul>
                 <ShowMore state={members} />
                 <ul className='flex min-w-0 flex-col gap-2'>
-                  {query.data.gateways.map((gateway) => (
-                    <Gateway
-                      key={gateway.id}
-                      gateway={gateway}
-                      blocked={readOnlyReason}
-                    />
-                  ))}
+                  <Paged items={query.data.gateways} as='li'>
+                    {(gateway) => (
+                      <Gateway
+                        key={gateway.id}
+                        gateway={gateway}
+                        blocked={readOnlyReason}
+                      />
+                    )}
+                  </Paged>
                 </ul>
                 <ul className='flex min-w-0 flex-col gap-2'>
                   {outages.visible.map((outage) => (

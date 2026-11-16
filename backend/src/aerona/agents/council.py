@@ -36,7 +36,9 @@ from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.models.records import CouncilBallot, CouncilMinutes, CouncilSpeech
-from aerona.engine.divine.rulings import MOTION_LABELS, Motion, enact, leaning, record
+from aerona.engine.divine.council_order import carried, foreign_members, foreign_vote, procedure_of, read_procedure, weight_of
+from aerona.engine.divine.motions import Motion
+from aerona.engine.divine.rulings import MOTION_LABELS, enact, leaning, record
 from aerona.engine.primitives.doom import step_doom
 from aerona.engine.primitives.manual import manual_context
 from aerona.events.kinds import EventKind
@@ -134,6 +136,15 @@ async def covenant_between(scope: Scope, first: int, second: int) -> list[BondRo
     return await BondRepository(scope.session).active_between(first, second, [BondKind.ALLY])
 
 
+async def procedure_line(scope: Scope) -> str:
+    procedure = await read_procedure(scope.session, scope.rules)
+    veto = "may veto a ruling" if procedure.creator_veto else "has no veto"
+    return (
+        f"{procedure.quorum_pct}% of the seats must vote; a motion carries by {procedure.voting_rule.value.replace('_', ' ')}; "
+        f"a lasting ruling holds {procedure.term_epochs} epochs; the Creator {veto}."
+    )
+
+
 async def session_context(scope: Scope, members: list[SonRow], topic: str, god_asked: bool) -> CouncilSessionContext:
     rules = scope.rules
     relations: list[CouncilRelation] = []
@@ -164,6 +175,8 @@ async def session_context(scope: Scope, members: list[SonRow], topic: str, god_a
         ],
         worlds=[CouncilTarget(id=world.id, name=world.name) for world in await scope.session.scalars(select(WorldRow).order_by(WorldRow.id))],
         rulings=[await ruling_line(scope, row) for row in await scope.session.scalars(select(CouncilRulingRow).where(CouncilRulingRow.active.is_(True)))],
+        procedure=await procedure_line(scope),
+        seated_gods=[god.name for god in await foreign_members(await manual_context(scope.session, "council_seats", scope.rules, key=str(scope.epoch)))],
     )
 
 
@@ -242,7 +255,7 @@ async def apply_decision(scope: Scope, members: list[SonRow], output: CouncilOut
             notes.append(peace)
     elif decision is not CouncilMotion.NONE:
         ctx = await manual_context(scope.session, "council", scope.rules, key=str(scope.epoch))
-        motion = Motion(decision, output.target_id, output.world_id, output.school, output.punishment or SonPunishment.CHAIN)
+        motion = Motion(decision, output.target_id, output.world_id, output.school, output.punishment or SonPunishment.CHAIN, output.voting_rule)
         ruling = await record(ctx, motion, council_id=council_id, note_text=sanitize(output.motion)[:NAME_MAX_LENGTH])
         notes.extend(await enact(ctx, ruling, members))
 
@@ -262,12 +275,25 @@ async def weighed_votes(scope: Scope, members: list[SonRow], output: CouncilOutp
     return weighed
 
 
+async def carried_by_procedure(scope: Scope, members: list[SonRow], output: CouncilOutput, votes: dict[int, VoteOutput]) -> bool:
+    ctx = await manual_context(scope.session, "council_procedure", scope.rules, key=str(scope.epoch))
+    procedure = await procedure_of(ctx)
+    guests = await foreign_members(ctx)
+    cast = {
+        son.id: (weight_of(procedure.voting_rule, son), votes[son.id].vote is CouncilVote.YES)
+        for son in members
+        if son.id in votes and votes[son.id].vote is not CouncilVote.ABSTAIN
+    }
+    cast |= {god.id: (weight_of(procedure.voting_rule, god), foreign_vote(god, output.decision, output.target_id)) for god in guests}
+    return carried(procedure, cast, len(members) + len(guests))
+
+
 async def apply_council(scope: Scope, members: list[SonRow], output: CouncilOutput, topic: str, *, caller: CouncilCaller, god_asked: bool) -> CouncilResult:
     names = {son.id: son.name for son in members}
     votes = await weighed_votes(scope, members, output, await tally(scope, names, output))
     yes = sum(1 for vote in votes.values() if vote.vote is CouncilVote.YES)
     no = sum(1 for vote in votes.values() if vote.vote is CouncilVote.NO)
-    passed = yes > no
+    passed = await carried_by_procedure(scope, members, output, votes)
     notes: list[str] = []
     await apply_alliances(scope, names, output, notes)
     held_row = CouncilRow(epoch=scope.epoch, topic=topic, minutes=CouncilMinutes(topic=topic, convened_by=caller), passed=passed)

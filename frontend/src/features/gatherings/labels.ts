@@ -1,4 +1,5 @@
 import {
+  Brain,
   ScanSearch,
   Sunrise,
   Activity,
@@ -70,6 +71,9 @@ import {
   Briefcase,
   Rocket,
   RadioTower,
+  Network,
+  Orbit,
+  Clapperboard,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -104,6 +108,22 @@ export const GATHERING_KINDS: Record<Schema['GatheringKind'], Named> = {
   launch: { label: 'Launch', icon: Rocket, tone: 'gold' },
   broadcast: { label: 'Broadcast', icon: RadioTower, tone: 'info' },
   testing: { label: 'Testing for gifts', icon: ScanSearch, tone: 'verdigris' },
+  exhibition: { label: 'Exhibition', icon: Landmark, tone: 'info' },
+  trade_fair: { label: 'Trade fair', icon: Store, tone: 'gold' },
+  summit_of_gods: { label: 'Summit of the gods', icon: Sparkles, tone: 'gold' },
+  network_gathering: {
+    label: 'Gathering through a network',
+    icon: Network,
+    tone: 'verdigris',
+  },
+  realm_gathering: {
+    label: 'Gathering in a made realm',
+    icon: Orbit,
+    tone: 'verdigris',
+  },
+  mourning: { label: 'Mourning', icon: HeartCrack, tone: 'muted' },
+  initiation: { label: 'Initiation', icon: KeyRound, tone: 'info' },
+  sport_match: { label: 'Match', icon: Trophy, tone: 'warning' },
 }
 
 export const GATHERING_STATUSES: Record<Schema['GatheringStatus'], Named> = {
@@ -247,6 +267,18 @@ export const STORYTELLER_PROFILES: Record<
     tone: 'danger',
     hint: 'The aim jumps without warning.',
   },
+  slow_burn: {
+    label: 'Slow burn',
+    icon: Flame,
+    tone: 'warning',
+    hint: 'The aim starts low and climbs a little every epoch.',
+  },
+  episodic: {
+    label: 'Episodic',
+    icon: Clapperboard,
+    tone: 'info',
+    hint: 'Quiet stretches broken by a sharp peak at the end of each episode.',
+  },
 }
 
 export const TENSION_BANDS: Record<Schema['TensionBand'], Named> = {
@@ -298,6 +330,9 @@ export const CONTENT_KINDS: Record<Schema['RoomContentKind'], Named> = {
   spirit: { label: 'Spirit', icon: Ghost, tone: 'info' },
   beast: { label: 'Beast', icon: Footprints, tone: 'danger' },
   trap: { label: 'Trap', icon: Zap, tone: 'warning' },
+  mind: { label: 'Mind', icon: Brain, tone: 'gold' },
+  relic: { label: 'Relic', icon: Gem, tone: 'gold' },
+  realm_gate: { label: 'Realm gate', icon: DoorOpen, tone: 'gold' },
 }
 
 export const DIG_STAGES: Record<Schema['ExcavationStage'], Named> = {

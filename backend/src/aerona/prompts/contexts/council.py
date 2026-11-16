@@ -71,6 +71,8 @@ class CouncilSessionContext(LoreRulesContext):
     foreign_gods: list[CouncilTarget] = Field(default_factory=list)
     worlds: list[CouncilTarget] = Field(default_factory=list)
     rulings: list[str] = Field(default_factory=list)
+    procedure: str = ""
+    seated_gods: list[str] = Field(default_factory=list)
 
 
 class ChatLine(ContextItem):

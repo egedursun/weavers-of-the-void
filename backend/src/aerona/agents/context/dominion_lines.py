@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.catalog.dominion import SCALE_POLES
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.dominion import DivineCreatureRow, DominionRow, GodDesignRow, GodImageRow, GodScaleRow, MagicSiteRow, RegionDominionRow, ThroneRow
 from aerona.db.tables.entities import EntityRow
@@ -10,10 +10,6 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
-
-
-def spoken(value: str) -> str:
-    return value.replace("_", " ")
 
 
 async def place_name(scope: Scope, entity_id: int | None) -> str:
@@ -58,8 +54,8 @@ async def shape_lines(scope: Scope, son: SonRow) -> list[str]:
     if image is not None:
         domain = f", a god of {spoken(image.believed_domain.value)}" if image.believed_domain is not None else ""
         found.append(
-            f"Your peoples believe you {image.believed_alignment.value}{domain}, seen as {spoken(image.manifestation.value)}; "
-            f"their belief pulls you {image.pull}% an age and you {image.stance.value} it"
+            f"Your peoples believe you {spoken(image.believed_alignment)}{domain}, seen as {spoken(image.manifestation.value)}; "
+            f"their belief pulls you {image.pull}% an age and you {spoken(image.stance)} it"
         )
     return found
 
@@ -114,8 +110,8 @@ async def worship_lines(scope: Scope, me: EntityRow) -> list[str]:
     ):
         if standing.perceived is None:
             continue
-        mode = f" and worship it in {standing.mode.value}" if standing.mode is not None else ""
-        found.append(f"your people hold {await god_called(scope, standing.god_node_id)} {standing.perceived.value}{mode}")
+        mode = f" and worship it in {spoken(standing.mode)}" if standing.mode is not None else ""
+        found.append(f"your people hold {await god_called(scope, standing.god_node_id)} {spoken(standing.perceived)}{mode}")
     return found
 
 

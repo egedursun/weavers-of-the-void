@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.urban import RACKETS_OF
+from aerona.catalog.urban import RACKET_TOLL, RACKETS_OF
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -67,9 +67,15 @@ async def keep_rackets(ctx: TickContext, faction: EntityRow, profile: FactionPro
         ctx.session.add(RacketRow(faction_entity_id=faction.id, settlement_entity_id=town_id, racket=missing[0], income=0, since_epoch=ctx.epoch, locked=[]))
         tally.rackets += 1
         await ctx.session.flush()
+    town = await ctx.session.get(SettlementProfileRow, town_id)
     for racket in await ctx.session.scalars(select(RacketRow).where(RacketRow.faction_entity_id == faction.id, RacketRow.settlement_entity_id == town_id)):
+        share, field, toll = RACKET_TOLL[racket.racket]
         if "income" not in racket.locked:
-            racket.income = round_half_up(turf * table.income_per_turf / PERCENT)
+            racket.income = round_half_up(turf * table.income_per_turf / PERCENT * share / PERCENT)
+        if town is not None and not held(town_id) and field not in town.locked:
+            ceiling = None if field in {"treasury", "admin_capacity"} else PERCENT
+            moved = getattr(town, field) + toll
+            setattr(town, field, max(0, moved) if ceiling is None else clamp_int(moved, 0, ceiling))
         if "treasury" not in profile.locked:
             profile.treasury += racket.income
         tally.income += racket.income

@@ -87,6 +87,11 @@ class WorshipViewRules:
 @dataclass(frozen=True)
 class GodImageRules:
     base_pull: int = rule(10, 0, 100, D, "Pull of the believed image on a god's temperament at full belief, share, crisis and malleability")
+    stern_gap: int = rule(15, 0, 100, D, "Lead of believed wrath over believed mercy at which a god neither loved nor hated is seen as stern")
+    yield_pull_pct: int = rule(100, 0, 400, D, "Share of the pull of its believed image a son that yields to it takes on (%)")
+    manifest_order: int = rule(
+        2, 0, 100, D, "Unrest the way a god is seen moves in its faithful towns each epoch: a stern god quiets them, a dreadful one unsettles them"
+    )
     domain_pressure_at: int = rule(100, 1, 10000, D, "Pressure of a believed domain at which a god's second domain turns to it")
     domain_pressure_gain: int = rule(10, 0, 1000, D, "Pressure a believed domain the god lacks gains each epoch at full pull")
     resist_cost: int = rule(15, 0, 10000, P, "Essence a son spends each epoch to resist the image its peoples hold of it")

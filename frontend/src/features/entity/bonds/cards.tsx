@@ -650,7 +650,7 @@ function CircleRow({
           {(item) => (
             <div
               key={item.id}
-              className='flex min-w-0 items-center gap-1 rounded-full border bg-background py-0.5 pr-0.5 pl-3'
+              className='flex min-w-0 items-center gap-1 rounded-full border surface-sheen border-gild/60 bg-card py-0.5 pr-0.5 pl-3'
             >
               {circle.leader?.id === item.id && (
                 <Star

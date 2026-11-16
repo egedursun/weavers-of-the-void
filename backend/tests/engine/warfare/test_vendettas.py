@@ -22,7 +22,18 @@ from aerona.engine.services.war import open_war
 from aerona.rules.registry import Rules
 from tests.engine.warfare.factories import bond, make, make_ctx, tune
 
-NEVER = {"mediation_chance": 0, "wergild_chance": 0, "escalate_chance": 0, "assassinate_chance": 0, "raid_chance": 0}
+NEVER = {
+    "mediation_chance": 0,
+    "wergild_chance": 0,
+    "escalate_chance": 0,
+    "assassinate_chance": 0,
+    "raid_chance": 0,
+    "seek_mediation_chance": 0,
+    "allies_chance": 0,
+    "abduct_chance": 0,
+    "ambush_chance": 0,
+    "property_chance": 0,
+}
 
 
 def only(action: str) -> Rules:
@@ -88,7 +99,7 @@ async def test_wergild_moves_wealth_and_lays_the_feud_to_rest(session: AsyncSess
     text = await act(ctx, FeudAction.DEMAND_WERGILD, first, second)
     assert text is not None and "wergild" in text
     assert (stat(first, "wealth") or 0) > (stat(second, "wealth") or 0)
-    assert feud.status is FeudStatus.ENDED
+    assert feud.status is FeudStatus.SETTLED
 
 
 async def test_mediation_ends_the_feud_as_mediated(session: AsyncSession, world_id: int) -> None:
@@ -187,7 +198,7 @@ async def test_a_cold_feud_fades_and_a_feud_with_a_lost_side_ends(session: Async
     third.status, third.end_epoch = EntityStatus.DESTROYED, ctx.epoch
     await session.flush()
     assert await feuds(ctx) == 0
-    assert cold.status is FeudStatus.FADED and lost.status is FeudStatus.ENDED
+    assert cold.status is FeudStatus.FADED and lost.status is FeudStatus.EXTINGUISHED
 
 
 async def test_an_insulted_mortal_of_honour_calls_a_duel(session: AsyncSession, world_id: int) -> None:

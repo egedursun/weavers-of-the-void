@@ -26,7 +26,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { EntityLink, Medallion, PagedList, Portrait } from '@/components/domain'
+import {
+  EntityLink,
+  Medallion,
+  Paged,
+  PagedList,
+  Portrait,
+} from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { MOTIONS, type Named } from '@/features/divine/labels'
 import { type SonPublic, useSons } from '@/features/pantheon/api'
@@ -150,7 +156,7 @@ export function CouncilRecord({
       defaultOpen={defaultOpen}
       data-council={council.id}
       className={cn(
-        'flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4',
+        'flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4',
         council.passed ? 'border-success/30' : 'border-destructive/30'
       )}
     >
@@ -193,39 +199,41 @@ export function CouncilRecord({
         <div className='flex min-w-0 flex-col gap-2'>
           <Label variant='overline'>The debate</Label>
           <ul className='flex min-w-0 flex-col gap-3'>
-            {minutes.speeches.map((speech, index) => {
-              const view = sonOf(speech.son_id)
-              const vote = voteOf(speech.son_id)
-              return (
-                <li
-                  key={`${speech.son_id}-${index}`}
-                  className='flex min-w-0 items-start gap-3'
-                >
-                  <Portrait
-                    name={speech.name}
-                    src={mediaUrl(view?.cover)}
-                    size='md'
-                    rarity={view?.son.rarity}
-                  />
-                  <div className='flex min-w-0 flex-1 flex-col gap-1.5 rounded-xl rounded-tl-sm border bg-muted/30 p-3'>
-                    <div className='flex min-w-0 flex-wrap items-center gap-2'>
-                      <EntityLink
-                        kind='son'
-                        id={String(speech.son_id)}
-                        rarity={view?.son.rarity}
-                      >
-                        {speech.name}
-                      </EntityLink>
-                      {vote && <VoteBadge vote={vote} />}
+            <Paged items={minutes.speeches} as='li'>
+              {(speech, index) => {
+                const view = sonOf(speech.son_id)
+                const vote = voteOf(speech.son_id)
+                return (
+                  <li
+                    key={`${speech.son_id}-${index}`}
+                    className='flex min-w-0 items-start gap-3'
+                  >
+                    <Portrait
+                      name={speech.name}
+                      src={mediaUrl(view?.cover)}
+                      size='md'
+                      rarity={view?.son.rarity}
+                    />
+                    <div className='flex min-w-0 flex-1 flex-col gap-1.5 rounded-md rounded-tl-sm border surface-well border-gild/20 bg-muted/60 p-3'>
+                      <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                        <EntityLink
+                          kind='son'
+                          id={String(speech.son_id)}
+                          rarity={view?.son.rarity}
+                        >
+                          {speech.name}
+                        </EntityLink>
+                        {vote && <VoteBadge vote={vote} />}
+                      </div>
+                      <Text italic>{speech.words}</Text>
                     </div>
-                    <Text italic>{speech.words}</Text>
-                  </div>
-                </li>
-              )
-            })}
+                  </li>
+                )
+              }}
+            </Paged>
           </ul>
         </div>
-        <div className='flex min-w-0 items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3'>
+        <div className='flex min-w-0 items-start gap-3 rounded-md border surface-framed border-primary/30 bg-primary/5 p-3'>
           <Medallion icon={ScrollText} size='sm' />
           <div className='flex min-w-0 flex-1 flex-col gap-1'>
             <Label variant='overline'>The motion</Label>
@@ -240,7 +248,7 @@ export function CouncilRecord({
               return (
                 <div
                   key={vote}
-                  className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
+                  className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
                 >
                   <div className='flex min-w-0 items-center gap-2'>
                     <Icon
@@ -274,40 +282,42 @@ export function CouncilRecord({
             })}
           </div>
           <ul className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2'>
-            {minutes.ballots.map((ballot) => {
-              const view = sonOf(ballot.son_id)
-              return (
-                <li
-                  key={ballot.son_id}
-                  className='flex min-w-0 items-start gap-3 rounded-lg border bg-background p-2'
-                >
-                  <Portrait
-                    name={ballot.name}
-                    src={mediaUrl(view?.cover)}
-                    size='sm'
-                    rarity={view?.son.rarity}
-                  />
-                  <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                    <div className='flex min-w-0 items-center gap-2'>
-                      <span className='min-w-0 flex-1 truncate'>
-                        <EntityLink kind='son' id={String(ballot.son_id)}>
-                          {ballot.name}
-                        </EntityLink>
-                      </span>
-                      <VoteBadge vote={ballot.vote} />
+            <Paged items={minutes.ballots} as='li'>
+              {(ballot) => {
+                const view = sonOf(ballot.son_id)
+                return (
+                  <li
+                    key={ballot.son_id}
+                    className='flex min-w-0 items-start gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'
+                  >
+                    <Portrait
+                      name={ballot.name}
+                      src={mediaUrl(view?.cover)}
+                      size='sm'
+                      rarity={view?.son.rarity}
+                    />
+                    <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                      <div className='flex min-w-0 items-center gap-2'>
+                        <span className='min-w-0 flex-1 truncate'>
+                          <EntityLink kind='son' id={String(ballot.son_id)}>
+                            {ballot.name}
+                          </EntityLink>
+                        </span>
+                        <VoteBadge vote={ballot.vote} />
+                      </div>
+                      {ballot.reason && (
+                        <Muted variant='caption'>{ballot.reason}</Muted>
+                      )}
                     </div>
-                    {ballot.reason && (
-                      <Muted variant='caption'>{ballot.reason}</Muted>
-                    )}
-                  </div>
-                </li>
-              )
-            })}
+                  </li>
+                )
+              }}
+            </Paged>
           </ul>
         </div>
         <div
           className={cn(
-            'flex min-w-0 items-start gap-3 rounded-xl border p-3',
+            'flex min-w-0 items-start gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
             council.passed
               ? 'border-success/40 bg-success/5'
               : 'border-destructive/40 bg-destructive/5'
@@ -325,17 +335,19 @@ export function CouncilRecord({
             {decision && <DecisionBadge decision={decision} />}
             {minutes.notes.length > 0 && (
               <ul className='flex min-w-0 list-disc flex-col gap-1 pl-5'>
-                {minutes.notes.map((note, index) => (
-                  <Text as='li' key={index}>
-                    {note}
-                  </Text>
-                ))}
+                <Paged items={minutes.notes} as='li'>
+                  {(note, index) => (
+                    <Text as='li' key={index}>
+                      {note}
+                    </Text>
+                  )}
+                </Paged>
               </ul>
             )}
           </div>
         </div>
         {minutes.summary && (
-          <div className='flex min-w-0 items-start gap-3 rounded-xl border border-dashed p-3'>
+          <div className='flex min-w-0 items-start gap-3 rounded-md p-3 sealed-well'>
             <Medallion icon={ScrollText} tone='muted' size='sm' />
             <div className='flex min-w-0 flex-1 flex-col gap-1'>
               <Label variant='overline'>Minutes · from a seer's dream</Label>

@@ -27,7 +27,7 @@ export function GraphHoverOverlay({
   return (
     <div
       role='tooltip'
-      className='pointer-events-none absolute flex max-w-72 min-w-0 flex-col gap-0.5 rounded-md border bg-popover px-3 py-2 text-popover-foreground shadow-md'
+      className='pointer-events-none absolute flex max-w-72 min-w-0 flex-col gap-0.5 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2 text-popover-foreground'
       style={{
         left: flip ? undefined : x + OFFSET,
         right: flip ? width - x + OFFSET : undefined,

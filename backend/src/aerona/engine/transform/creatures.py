@@ -159,6 +159,6 @@ async def colossal_remains(ctx: TickContext, beast: EntityRow, profile: BeastPro
         ),
     )
     await bind(ctx, ledger, (place.id, beast.id, BondKind.TELLS_OF), f"the remains of {beast.name}")
-    await bind(ctx, ledger, (shade.id, place.id, BondKind.LIVES_IN), f"haunts the remains of {beast.name}")
+    await bind(ctx, ledger, (shade.id, place.id, BondKind.PART_OF), f"haunts the remains of {beast.name}")
     await record_transformation(ctx, TransformKind.COLOSSAL_CORPSE, beast.id, place.id, ledger=ledger)
     return place

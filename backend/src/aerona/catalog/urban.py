@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.catalog.structures import acting, acting_set
@@ -18,23 +20,67 @@ SERVICE_OF: MappingProxyType[StructureKind, UrbanService] = acting(
     {
         K.AQUEDUCT: V.WATER,
         K.FOUNTAIN: V.WATER,
+        K.CISTERN: V.WATER,
+        K.RESERVOIR: V.WATER,
         K.TEMPLE: V.FAITH,
         K.SHRINE: V.FAITH,
         K.MONASTERY: V.FAITH,
         K.WATCHTOWER: V.WATCH,
         K.FORT: V.WATCH,
         K.CITADEL: V.WATCH,
-        K.COURT: V.WATCH,
+        K.BARRACKS: V.WATCH,
         K.HOSPITAL: V.HEALING,
+        K.APOTHECARY: V.HEALING,
+        K.QUARANTINE_HOUSE: V.HEALING,
+        K.ASYLUM: V.HEALING,
         K.MARKET: V.MARKET,
         K.CARAVANSERAI: V.MARKET,
+        K.MARKET_HALL: V.MARKET,
         K.SCHOOL: V.SCHOOL,
         K.ACADEMY: V.SCHOOL,
-        K.LIBRARY: V.SCHOOL,
+        K.UNIVERSITY: V.SCHOOL,
         K.BATHHOUSE: V.BATH,
         K.FIREHOUSE: V.FIRE,
-        K.APOTHECARY: V.HEALING,
-        K.BARRACKS: V.WATCH,
+        K.SEWER: V.SANITATION,
+        K.WATER_PURIFICATION: V.SANITATION,
+        K.RECYCLING_PLANT: V.SANITATION,
+        K.ROAD: V.TRANSPORT,
+        K.BRIDGE: V.TRANSPORT,
+        K.RAIL_STATION: V.TRANSPORT,
+        K.TUNNEL: V.TRANSPORT,
+        K.SIGNAL_TOWER: V.COMMUNICATION,
+        K.BROADCAST_TOWER: V.COMMUNICATION,
+        K.POWER_PLANT: V.POWER,
+        K.STAR_COLLECTOR: V.POWER,
+        K.DAM: V.POWER,
+        K.COURT: V.COURTS,
+        K.COURTHOUSE: V.COURTS,
+        K.ALMSHOUSE: V.WELFARE,
+        K.ORPHANAGE: V.WELFARE,
+        K.GRANARY: V.GRANARY,
+        K.SILO: V.GRANARY,
+        K.PARK: V.PARKS,
+        K.PLAZA: V.PARKS,
+        K.BOTANICAL_GARDEN: V.PARKS,
+        K.LIBRARY: V.LIBRARY,
+        K.ARCHIVE: V.LIBRARY,
+        K.PRINTING_HOUSE: V.LIBRARY,
+        K.COSMIC_ARCHIVE: V.LIBRARY,
+        K.DATA_CENTRE: V.LIBRARY,
+        K.CEMETERY: V.BURIAL,
+        K.NECROPOLIS: V.BURIAL,
+        K.TOMB: V.BURIAL,
+        K.WAREHOUSE: V.DEPOT,
+        K.STABLES: V.DEPOT,
+        K.KONTOR: V.DEPOT,
+        K.TOWN_HALL: V.ADMINISTRATION,
+        K.PALACE: V.ADMINISTRATION,
+        K.OFFICE_TOWER: V.ADMINISTRATION,
+        K.THEATRE: V.ENTERTAINMENT,
+        K.ARENA: V.ENTERTAINMENT,
+        K.TAVERN: V.ENTERTAINMENT,
+        K.STADIUM: V.ENTERTAINMENT,
+        K.OPERA_HOUSE: V.ENTERTAINMENT,
     }
 )
 AMENITIES = acting_set(
@@ -225,25 +271,75 @@ HOUSING_RULE = {
 
 PERISHABLES = frozenset({C.FISH, C.BREAD, C.MEAT, C.MILK, C.CHEESE, C.FRUIT, C.EGGS, C.HERBS})
 WALKING = frozenset({C.LIVESTOCK, C.MOUNTS})
-BULK = frozenset({C.GRAIN, C.FODDER, C.TIMBER, C.FUEL, C.ORE, C.STONE, C.COAL, C.PEAT, C.DUNG, C.TUBERS, C.SIEGE_MATERIEL})
+BULK = frozenset({C.GRAIN, C.FODDER, C.TIMBER, C.ORE, C.STONE, C.COAL, C.PEAT, C.DUNG, C.TUBERS, C.SIEGE_MATERIEL})
+LIQUIDS = frozenset({C.FUEL, C.BREW_BASE})
+HAZARDS = frozenset({C.POISON, C.MAGICAL_REAGENTS})
+RELIC_GOODS = frozenset({C.SACRED_GOODS})
 
 
 def cargo_class(commodity: CommodityKind) -> CargoClass:
-    if commodity in PERISHABLES:
-        return CargoClass.PERISHABLE
-    if commodity in WALKING:
-        return CargoClass.LIVESTOCK
-    if commodity in BULK:
-        return CargoClass.BULK
-    return CargoClass.FINE
+    found = (
+        (PERISHABLES, CargoClass.PERISHABLE),
+        (WALKING, CargoClass.LIVESTOCK),
+        (BULK, CargoClass.BULK),
+        (LIQUIDS, CargoClass.LIQUID),
+        (HAZARDS, CargoClass.HAZARDOUS),
+        (RELIC_GOODS, CargoClass.RELICS),
+    )
+    return next((kind for group, kind in found if commodity in group), CargoClass.FINE)
+
+
+@dataclass(frozen=True)
+class CargoSpec:
+    heavy: bool
+    loss_key: str | None
+    perishes: bool
+
+
+CARGO: Mapping[CargoClass, CargoSpec] = total(
+    CargoClass,
+    {
+        CargoClass.PERISHABLE: CargoSpec(False, "perishable_loss", True),
+        CargoClass.LIVESTOCK: CargoSpec(False, "livestock_loss", False),
+        CargoClass.BULK: CargoSpec(True, None, False),
+        CargoClass.FINE: CargoSpec(False, None, False),
+        CargoClass.LIQUID: CargoSpec(True, "spill_loss", False),
+        CargoClass.GAS: CargoSpec(True, "spill_loss", False),
+        CargoClass.HAZARDOUS: CargoSpec(False, "hazard_loss", False),
+        CargoClass.PASSENGERS: CargoSpec(False, None, False),
+        CargoClass.LIVING: CargoSpec(False, "livestock_loss", False),
+        CargoClass.SAVED_MINDS: CargoSpec(False, None, False),
+        CargoClass.RELICS: CargoSpec(False, None, False),
+    },
+)
 
 
 RACKETS_OF: MappingProxyType[FactionKind, tuple[RacketKind, ...]] = MappingProxyType(
     {
-        FactionKind.CRIME_FAMILY: (RacketKind.PROTECTION, RacketKind.GAMBLING, RacketKind.KIDNAPPING),
-        FactionKind.THIEVES_GUILD: (RacketKind.FENCING, RacketKind.PROTECTION),
-        FactionKind.SMUGGLING_RING: (RacketKind.SMUGGLING, RacketKind.COUNTERFEITING),
-        FactionKind.PIRATE_CONFEDERACY: (RacketKind.SMUGGLING, RacketKind.KIDNAPPING),
+        FactionKind.CRIME_FAMILY: (RacketKind.PROTECTION, RacketKind.GAMBLING, RacketKind.KIDNAPPING, RacketKind.EXTORTION, RacketKind.LOAN_SHARKING),
+        FactionKind.THIEVES_GUILD: (RacketKind.FENCING, RacketKind.PROTECTION, RacketKind.FRAUD),
+        FactionKind.SMUGGLING_RING: (RacketKind.SMUGGLING, RacketKind.COUNTERFEITING, RacketKind.INTOXICANTS, RacketKind.ARMS),
+        FactionKind.PIRATE_CONFEDERACY: (RacketKind.SMUGGLING, RacketKind.KIDNAPPING, RacketKind.TRAFFICKING),
+        FactionKind.ASSASSINS: (RacketKind.EXTORTION, RacketKind.DATA_THEFT),
+        FactionKind.BANDITS: (RacketKind.PROTECTION, RacketKind.TRAFFICKING),
     }
+)
+RACKET_TOLL: Mapping[RacketKind, tuple[int, str, int]] = total(
+    RacketKind,
+    {
+        RacketKind.PROTECTION: (100, "unrest", 1),
+        RacketKind.SMUGGLING: (120, "treasury", -2),
+        RacketKind.GAMBLING: (90, "public_order", -1),
+        RacketKind.FENCING: (80, "crime", 1),
+        RacketKind.KIDNAPPING: (130, "public_order", -2),
+        RacketKind.COUNTERFEITING: (110, "treasury", -3),
+        RacketKind.FRAUD: (100, "treasury", -2),
+        RacketKind.EXTORTION: (110, "unrest", 2),
+        RacketKind.TRAFFICKING: (140, "public_order", -2),
+        RacketKind.INTOXICANTS: (120, "sanitation", -1),
+        RacketKind.DATA_THEFT: (130, "admin_capacity", -2),
+        RacketKind.LOAN_SHARKING: (100, "unrest", 1),
+        RacketKind.ARMS: (150, "crime", 2),
+    },
 )
 MERCHANT_HOUSES = frozenset({FactionKind.CHARTERED_COMPANY, FactionKind.MERCHANT_GUILD, FactionKind.WANDERING_MARKET})

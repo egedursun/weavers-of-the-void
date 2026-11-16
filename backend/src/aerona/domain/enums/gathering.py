@@ -28,6 +28,14 @@ class GatheringKind(StrEnum):
     LAUNCH = "launch"
     BROADCAST = "broadcast"
     TESTING = "testing"
+    EXHIBITION = "exhibition"
+    TRADE_FAIR = "trade_fair"
+    SUMMIT_OF_GODS = "summit_of_gods"
+    NETWORK_GATHERING = "network_gathering"
+    REALM_GATHERING = "realm_gathering"
+    MOURNING = "mourning"
+    INITIATION = "initiation"
+    SPORT_MATCH = "sport_match"
 
 
 class GatheringStatus(StrEnum):

@@ -86,7 +86,7 @@ function ScaleRow({
   const pole = leaning(row.scale, row.value)
   const spec = SCALES[row.scale]
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <Chip icon={spec.icon}>{spec.label}</Chip>
         <Muted variant='caption'>against</Muted>

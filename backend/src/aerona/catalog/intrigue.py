@@ -1,5 +1,7 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
+from aerona.core.total import total
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin, HookDemand, HookSource, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
 from aerona.domain.enums.mind import ActKind
@@ -125,15 +127,24 @@ BELIEF_ATTRIBUTE_LABELS: dict[str, str] = {
     "soldiers": "Soldiers in the field",
     "secret_severity": "Weight of a secret",
 }
-BELIEF_SOURCE_LABELS: dict[BeliefSource, str] = {
-    BeliefSource.OBSERVATION: "Seen with their own eyes",
-    BeliefSource.MESSAGE: "Told in a message",
-    BeliefSource.RUMOUR: "Heard as rumour",
-    BeliefSource.SPY: "Reported by spies",
-    BeliefSource.SCOUT: "Reported by scouts",
-    BeliefSource.RECORDS: "Read in records",
-    BeliefSource.DECEPTION: "Planted by a deceiver",
-}
+BELIEF_SOURCE_LABELS: Mapping[BeliefSource, str] = total(
+    BeliefSource,
+    {
+        BeliefSource.OBSERVATION: "Seen with their own eyes",
+        BeliefSource.MESSAGE: "Told in a message",
+        BeliefSource.RUMOUR: "Heard as rumour",
+        BeliefSource.SPY: "Reported by spies",
+        BeliefSource.SCOUT: "Reported by scouts",
+        BeliefSource.RECORDS: "Read in records",
+        BeliefSource.DECEPTION: "Planted by a deceiver",
+        BeliefSource.NETWORK: "Passed along a network",
+        BeliefSource.FORESIGHT: "Foreseen",
+        BeliefSource.MIND_READING: "Read in a mind",
+        BeliefSource.INTRUSION: "Taken by intrusion",
+        BeliefSource.SURVEILLANCE: "Reported by watchers",
+        BeliefSource.MADE_MIND_REPORT: "Reported by a made mind",
+    },
+)
 PRICE_PREFIX = "price."
 
 

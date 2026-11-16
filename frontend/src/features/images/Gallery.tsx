@@ -3,7 +3,7 @@ import { Star, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ConfirmDialog, Paged } from '@/components/domain'
+import { ConfirmDialog, Paged, Picture } from '@/components/domain'
 import { type ImageRecord, deleteImage, setCover, useImageAction } from './api'
 import { mediaUrl } from './media'
 
@@ -44,7 +44,7 @@ export function Gallery({
           {(image, index) => (
             <li
               key={image.id}
-              className='group relative min-w-0 overflow-hidden rounded-md border bg-muted'
+              className='group relative min-w-0 overflow-hidden rounded-md border surface-well border-gild/45 bg-muted/70'
             >
               <a
                 href={mediaUrl(image.file_name) ?? undefined}
@@ -59,8 +59,8 @@ export function Gallery({
                 }
                 className='block outline-none focus-visible:ring-2 focus-visible:ring-ring'
               >
-                <img
-                  src={mediaUrl(image.file_name, 320) ?? undefined}
+                <Picture
+                  src={mediaUrl(image.file_name, 320)}
                   alt={image.caption ?? title}
                   loading='lazy'
                   className={cn(

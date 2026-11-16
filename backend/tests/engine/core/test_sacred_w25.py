@@ -331,7 +331,7 @@ async def test_a_soul_meeting_another_afterlife_than_taught_is_shocked_and_align
     session.add(CultTenetRow(cult_entity_id=cult.id, tenet=TenetKind.ANCESTOR_VENERATION, since_epoch=0))
     dead = await mortal(session, "Corvin", world, town.id)
     realm = await entity(session, "The Far Halls", EntityType.REGION, RegionStats(), world_id=world.world.id)
-    stratum = AfterlifeStratumRow(realm_entity_id=realm.id, kind=StratumKind.PARADISE, name="The Bright Field", son_id=world.son.id)
+    stratum = AfterlifeStratumRow(realm_entity_id=realm.id, kind=StratumKind.REWARD, name="The Bright Field", son_id=world.son.id)
     session.add(stratum)
     spirit = await entity(session, "Shade of Corvin", EntityType.SPIRIT, SpiritStats(strength=30, unrest=10), world_id=world.world.id)
     await session.flush()
@@ -341,13 +341,13 @@ async def test_a_soul_meeting_another_afterlife_than_taught_is_shocked_and_align
     tally = RiteTally()
     await keep_afterlife_belief(await at(session, 4), tally)
     taught = await session.get(DoctrineAfterlifeRow, cult.id)
-    assert taught is not None and taught.model is AfterlifeModel.ANCESTOR_HALL
+    assert taught is not None and taught.model is AfterlifeModel.REALM_OF_LINE
     assert taught.shocks == 1 and stat_or(spirit, "unrest", 0) > 10
     world.son.essence = 500
     aligned = await control.align(await at(session, 4), cult.id, world.son.id, charge=True)
     assert aligned.aligned and world.son.essence == 500 - tuned_rules().afterlife_belief.align_cost
     kinds = set(await session.scalars(select(AfterlifeStratumRow.kind).where(AfterlifeStratumRow.realm_entity_id == realm.id)))
-    assert StratumKind.ANCESTOR_HALL in kinds
+    assert StratumKind.BY_LINE in kinds
 
 
 async def test_literacy_and_silence_pull_a_town_into_godlessness_and_miracles_bring_it_back(session: AsyncSession, world: CoreWorld) -> None:
@@ -628,4 +628,4 @@ async def test_a_doom_near_its_end_stirs_the_faithful_to_await_it(session: Async
 
 def test_afterlife_strata_take_plain_names_from_their_kind() -> None:
     assert all("Blessed" not in name and "Pits" not in name for name in STRATUM_NAMES.values())
-    assert STRATUM_NAMES[StratumKind.PARADISE] == "the paradise"
+    assert STRATUM_NAMES[StratumKind.REWARD] == "the realm of reward"

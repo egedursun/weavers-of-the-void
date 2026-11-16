@@ -23,7 +23,7 @@ from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import TechnologyEra
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.routes import RouteSpec, open_route
+from aerona.engine.cosmos.routes import RouteSpec, can_reach, open_route
 from aerona.engine.economy.purse import coin_of, take_coin
 from aerona.engine.eras.effects import channel_value, era_techniques, held_by, world_start
 from aerona.engine.lore.research import gate_open
@@ -165,7 +165,13 @@ async def launch_route(ctx: TickContext, realm: EntityRow) -> None:
     joined = set(
         await ctx.session.scalars(select(RouteRow.world_b_id).where(RouteRow.world_a_id == from_world, RouteRow.method == TravelMethod.ROCKETRY))
     ) | set(await ctx.session.scalars(select(RouteRow.world_a_id).where(RouteRow.world_b_id == from_world, RouteRow.method == TravelMethod.ROCKETRY)))
-    target = await ctx.session.scalar(select(WorldRow.id).where(WorldRow.id != from_world, WorldRow.id.not_in(joined or {0})).order_by(WorldRow.id).limit(1))
+    home = await ctx.session.get(WorldRow, from_world)
+    others = await ctx.session.scalars(select(WorldRow).where(WorldRow.id != from_world, WorldRow.id.not_in(joined or {0})).order_by(WorldRow.id))
+    target = None
+    for world in list(others):
+        if home is not None and await can_reach(ctx.session, home, world, TravelMethod.ROCKETRY):
+            target = world.id
+            break
     if target is None:
         return
     spec = RouteSpec(first_world_id=from_world, second_world_id=target, method=TravelMethod.ROCKETRY, controller_id=realm.id)

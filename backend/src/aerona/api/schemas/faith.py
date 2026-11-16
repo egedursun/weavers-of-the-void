@@ -11,7 +11,12 @@ from aerona.domain.enums.faith import (
     RebirthPath,
     ReincarnationGate,
     SpiritAlignment,
+    StratumActivity,
+    StratumAdmission,
+    StratumContact,
     StratumKind,
+    StratumPermanence,
+    StratumValence,
     TenetKind,
 )
 from aerona.domain.models.faith import StratumCriteria
@@ -106,6 +111,12 @@ class DoctrineView(ApiModel):
 class StratumView(ApiModel):
     id: int
     kind: StratumKind
+    valence: StratumValence
+    permanence: StratumPermanence
+    admission: StratumAdmission
+    activity: StratumActivity
+    contact: StratumContact
+    ruler: NodeRef | None = None
     name: str
     criteria: StratumCriteria
     population: int

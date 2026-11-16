@@ -40,10 +40,10 @@ function Summary({ scene }: { scene: LandScene }) {
         to='/cities'
         search={{ view: 'land', region: scene.region.id }}
         aria-label={`Walk the land of ${scene.region.name}`}
-        className='group relative block min-w-0 overflow-hidden rounded-xl border bg-muted/30 p-3 transition-colors hover:border-primary'
+        className='group relative block min-w-0 overflow-hidden rounded-md border surface-well border-gild/20 bg-muted/60 p-3 transition-colors hover:border-primary'
       >
         <LandPlan2D scene={scene} selected={null} onPick={() => undefined} />
-        <div className='pointer-events-none absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full border bg-popover/90 px-3 py-1 text-popover-foreground shadow-sm backdrop-blur-sm'>
+        <div className='pointer-events-none absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full border surface-sheen border-gild/60 bg-card px-3 py-1 text-popover-foreground backdrop-blur-sm'>
           <Maximize2 className='size-icon-xs' />
           <Text as='span' variant='caption' tone='inherit'>
             Walk the land

@@ -84,7 +84,7 @@ async def build(ctx: TickContext, town: EntityRow, owner: EntityRow, design: Des
     count = min(count, taken // max(1, design.structure // 10))
     if count <= 0 or not await take_coin(ctx.session, ctx.rules, owner, design.cost * count // max(1, table.coin_share)):
         return points
-    await add_vehicles(ctx.session, owner.id, design, count, epoch=ctx.epoch, region_id=town.location_id)
+    await add_vehicles(ctx.session, owner.id, design, count, epoch=ctx.epoch, region_id=town.location_id, building=True)
     tally.built += count
     return points - count * each
 
@@ -188,6 +188,8 @@ async def keep_fleets(ctx: TickContext, tally: WorksTally) -> None:
         holder = await ctx.session.get(EntityRow, group.holder_node_id)
         if holder is None or held(group.holder_node_id) or holder.status is not EntityStatus.CANON:
             continue
+        if group.status in {VehicleStatus.BUILDING, VehicleStatus.ENGAGED} and group.built_epoch < ctx.epoch and "status" not in (group.locked or []):
+            group.status = VehicleStatus.READY
         army = await ctx.session.get(ArmyRow, holder.id)
         payer = await living_entity(ctx.session, army.owner_entity_id) if army is not None else holder
         if payer is None:

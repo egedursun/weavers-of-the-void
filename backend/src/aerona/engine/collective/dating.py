@@ -1,9 +1,11 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.grammar import several
+from aerona.core.total import total
 from aerona.db.tables.collective import DatingSystemRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
@@ -28,7 +30,18 @@ SINGLETON = 1
 CYCLE_YEARS = 60
 DISPUTE_HOSTILITY = -10
 HOLDER_KINDS = {EntityType.POLITY: D.REGNAL, EntityType.CULT: D.RELIGIOUS, EntityType.PEOPLE: D.FOUNDING}
-REFORMS = {D.REGNAL: D.FOUNDING, D.FOUNDING: D.CELESTIAL_CYCLE, D.RELIGIOUS: D.CELESTIAL_CYCLE, D.CELESTIAL_CYCLE: D.FOUNDING}
+REFORMS: Mapping[DatingSystemKind, DatingSystemKind] = total(
+    DatingSystemKind,
+    {
+        D.REGNAL: D.FOUNDING,
+        D.FOUNDING: D.EVENT,
+        D.RELIGIOUS: D.CREATION,
+        D.CELESTIAL_CYCLE: D.CYCLE_COUNT,
+        D.CREATION: D.FOUNDING,
+        D.EVENT: D.CELESTIAL_CYCLE,
+        D.CYCLE_COUNT: D.CREATION,
+    },
+)
 
 
 @dataclass
@@ -37,6 +50,19 @@ class DatingTally:
     regnal: int = 0
     reforms: int = 0
     disputes: int = 0
+
+
+CYCLED: Mapping[DatingSystemKind, str] = {
+    D.CELESTIAL_CYCLE: "the {within} year of the {cycle} cycle",
+    D.CYCLE_COUNT: "the {cycle} cycle",
+}
+COUNTED: Mapping[DatingSystemKind, str] = {
+    D.REGNAL: "the {year} year of the reign of {label}",
+    D.FOUNDING: "the {year} year since the founding of {label}",
+    D.RELIGIOUS: "the {year} year of {label}",
+    D.CREATION: "the {year} year since the making of the world",
+    D.EVENT: "the {year} year since the great turning of {label}",
+}
 
 
 async def current_year(session: AsyncSession) -> int:
@@ -56,17 +82,13 @@ async def render_date(session: AsyncSession, holder_id: int | None, year: int) -
     label_row = await session.get(EntityRow, row.label_node_id) if row.label_node_id is not None else None
     label = label_row.name if label_row is not None else "the era"
     count = year - row.anchor_year + 1
-    if row.kind is D.CELESTIAL_CYCLE:
-        span = max(1, row.cycle_years)
-        cycle, within = divmod(max(0, year - row.anchor_year), span)
-        return f"the {ordinal(within + 1)} year of the {ordinal(cycle + 1)} cycle"
+    span = max(1, row.cycle_years)
+    cycle, within = divmod(max(0, year - row.anchor_year), span)
+    if row.kind in CYCLED:
+        return CYCLED[row.kind].format(within=ordinal(within + 1), cycle=ordinal(cycle + 1))
     if count < 1:
         return f"{several(1 - count, 'year', 'years')} before {label}"
-    if row.kind is D.REGNAL:
-        return f"the {ordinal(count)} year of the reign of {label}"
-    if row.kind is D.FOUNDING:
-        return f"the {ordinal(count)} year since the founding of {label}"
-    return f"the {ordinal(count)} year of {label}"
+    return COUNTED[row.kind].format(year=ordinal(count), label=label)
 
 
 async def ruler_since(ctx: TickContext, polity_id: int) -> OfficeRow | None:
@@ -128,6 +150,10 @@ async def reform(ctx: TickContext, holder: EntityRow, row: DatingSystemRow, year
         return
     old = row.kind
     row.kind, row.reformed_epoch = REFORMS[old], ctx.epoch
+    if row.kind is D.CREATION:
+        row.anchor_year = 0
+    elif row.kind is D.EVENT:
+        row.anchor_year = year
     if row.kind is D.FOUNDING:
         row.label_node_id = row.anchor_node_id = holder.id
         row.anchor_year = max(0, year - (ctx.epoch - holder.birth_epoch) * ctx.rules.time.years_per_epoch)

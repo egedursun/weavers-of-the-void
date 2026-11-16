@@ -6,7 +6,7 @@ from aerona.agents.context.military import army_sheet, fleet_sheet, grievance_sh
 from aerona.agents.context.realm import statecraft
 from aerona.agents.context.society_depth import depth_lines
 from aerona.agents.context.wilds import crop_lines, pet_lines, wild_lines
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseProfileRow, EndemicDiseaseRow, OutbreakRow
@@ -140,7 +140,7 @@ async def sickness_lines(session: AsyncSession, home: EntityRow, region: int | N
 async def disease_traits(session: AsyncSession, profile: DiseaseProfileRow | None) -> str:
     if profile is None:
         return ""
-    parts = [f"spread by {profile.vector.value}", f"strikes {', '.join(words(item) for item in profile.target_functions)}"]
+    parts = [f"spread by {spoken(profile.vector)}", f"strikes {', '.join(words(item) for item in profile.target_functions)}"]
     if profile.incubation:
         parts.append(f"hides {several(profile.incubation, 'year', 'years')} before it shows")
     host = await session.get(EntityRow, profile.host_species_id) if profile.host_species_id is not None else None

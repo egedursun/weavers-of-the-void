@@ -211,10 +211,7 @@ async def reveal_previous_creation(ctx: TickContext, world: WorldRow) -> EntityR
         RecordSpec(
             name=f"Ruins beneath {region.name}",
             entity_type=EntityType.PLACE,
-            body=(
-                f"Beneath {region.name} were found the remains of a civilization that {maker} created and forgot before this cosmos. "
-                "Its writing resembles no language of this age, but the creator's name is written there in another form."
-            ),
+            body=f"Beneath {region.name} were found the remains of a civilization that {maker} created and forgot before this cosmos.",
             stats=PlaceStats(
                 danger=clamp_percent(civ.relic_site_danger + rng.die(civ.relic_site_danger_die)),
                 fertility=civ.relic_site_fertility,
@@ -232,7 +229,7 @@ async def reveal_previous_creation(ctx: TickContext, world: WorldRow) -> EntityR
     await BondRepository(ctx.session).connect(BondDraft(ruin.id, knowledge.id, BondKind.SOURCE_OF, ctx.epoch, "hidden in the ruins"))
     thread = ThreadRow(
         epoch=ctx.epoch,
-        text=f"Ruins of a previous creation were found in {world.name}. What did {maker} create before this cosmos, and why did they forget it?",
+        text=f"Ruins of a previous creation were found in {world.name}. What they hold is not yet known.",
         status=ThreadStatus.OPEN,
     )
     ctx.session.add(thread)
@@ -256,7 +253,7 @@ async def _relic(ctx: TickContext, region: EntityRow, ruin: EntityRow) -> Entity
         RecordSpec(
             name=f"{region.name} Relic",
             entity_type=EntityType.ITEM,
-            body="In the deepest part of the ruins, a powerful but cursed object from the hands of a forgotten civilization.",
+            body="An object of a forgotten civilization, found in the ruins; it carries a curse.",
             stats=ItemStats(
                 damage=clamp_percent(civ.heirloom_damage + dice.die(civ.heirloom_damage_die)),
                 protection=clamp_percent(civ.heirloom_protection + dice.die(civ.heirloom_protection_die)),
@@ -374,7 +371,7 @@ async def late_debts(ctx: TickContext) -> int:
         await change_relation(ctx, creditor.id, debtor.id, -ctx.rules.civilization.loan_default_relation, MemoryKind.CHEATED_US, note="unpaid debt")
         bond.debt_status = DebtStatus.OVERDUE
         debt = f"{bond.debt_amount} {bond.debt_what or SILVER}"
-        text = f"{debtor.name} did not pay its debt ({debt}) to {creditor.name} on time (Epoch {bond.debt_due_epoch}); coldness fell between them."
+        text = f"{debtor.name} did not pay its debt ({debt}) to {creditor.name} on time (Epoch {bond.debt_due_epoch}); relations between them cooled."
         await ctx.chronicle(ChronicleKind.DEBT, text, template_key="civilization.debt_late", entity_ids=[debtor.id, creditor.id])
         marked += 1
     return marked
@@ -649,6 +646,7 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "table.nodes",
     "table.personality_values",
     "table.region_environment",
+    "table.relation_components",
     "table.relationships",
     "table.reputations",
     "table.resource_profiles",

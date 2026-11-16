@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Cpu, ImageIcon, Images } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { MiniStat } from '@/components/domain'
-import { Muted } from '@/components/typography'
+import { IntroNote, MiniStat } from '@/components/domain'
 import { MissingImages } from '@/features/gallery/MissingImages'
 import { useWorldState } from '@/features/overview/api'
 import { BulkImageGenPanel } from './BulkImageGenPanel'
@@ -16,11 +15,11 @@ export function ImagesSettingsPage() {
   const configured = health.data?.image_worker_configured ?? false
   return (
     <div className='flex min-w-0 flex-col gap-6'>
-      <Muted>
+      <IntroNote>
         Choose how the world is painted, paint every record that still has no
         image, watch the queue and see which records are missing one. New
         records are also painted by themselves at the end of every epoch.
-      </Muted>
+      </IntroNote>
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
         <MiniStat
           icon={Cpu}

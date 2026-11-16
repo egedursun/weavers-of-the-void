@@ -46,7 +46,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { EmptyState, MiniStat, PagedList, Section } from '@/components/domain'
+import {
+  EmptyState,
+  MiniStat,
+  Paged,
+  PagedList,
+  Section,
+} from '@/components/domain'
 import { Muted, Stat, Text } from '@/components/typography'
 import { useEpochTiming } from '@/features/epoch/useEpochTiming'
 import { type LlmCall, type ModelMetricsView, useModelMetrics } from './api'
@@ -101,30 +107,32 @@ function CallList({
 }) {
   return (
     <ul className='flex min-w-0 flex-col gap-1'>
-      {calls.map((call) => (
-        <li
-          key={call.id}
-          className='flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-0.5'
-        >
-          <Muted as='span' variant='caption'>
-            {call.epoch !== null ? `Epoch ${call.epoch}` : 'Outside epochs'}
-          </Muted>
-          <Text
-            as='span'
-            variant='caption'
-            weight='medium'
-            truncate
-            className='min-w-0 flex-1'
+      <Paged items={calls} as='li'>
+        {(call) => (
+          <li
+            key={call.id}
+            className='flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-0.5'
           >
-            {call.role ? `${call.job} · ${call.role}` : call.job}
-          </Text>
-          <Text as='span' variant='caption' tone={tone}>
-            {tone === 'destructive'
-              ? (call.error ?? 'Failed')
-              : `${formatMilliseconds(call.duration_ms)}${call.cost_usd > 0 ? ` · $${formatDecimal(call.cost_usd, 4)}` : ''}`}
-          </Text>
-        </li>
-      ))}
+            <Muted as='span' variant='caption'>
+              {call.epoch !== null ? `Epoch ${call.epoch}` : 'Outside epochs'}
+            </Muted>
+            <Text
+              as='span'
+              variant='caption'
+              weight='medium'
+              truncate
+              className='min-w-0 flex-1'
+            >
+              {call.role ? `${call.job} · ${call.role}` : call.job}
+            </Text>
+            <Text as='span' variant='caption' tone={tone}>
+              {tone === 'destructive'
+                ? (call.error ?? 'Failed')
+                : `${formatMilliseconds(call.duration_ms)}${call.cost_usd > 0 ? ` · $${formatDecimal(call.cost_usd, 4)}` : ''}`}
+            </Text>
+          </li>
+        )}
+      </Paged>
     </ul>
   )
 }

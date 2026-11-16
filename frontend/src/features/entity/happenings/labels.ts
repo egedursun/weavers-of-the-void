@@ -2,6 +2,7 @@ import {
   Activity,
   Ban,
   Biohazard,
+  BookMarked,
   CircleDot,
   CloudLightning,
   CloudRain,
@@ -146,8 +147,19 @@ export const PHASE_SPEC: Record<EventPhase, Spec> = {
     tone: 'success',
     hint: 'The worst is over; its traces remain',
   },
+  memory: {
+    label: 'Memory',
+    icon: BookMarked,
+    tone: 'muted',
+    hint: 'It is over; the communities it struck keep it',
+  },
 }
-export const PHASE_ORDER: EventPhase[] = ['onset', 'peak', 'aftermath']
+export const PHASE_ORDER: EventPhase[] = [
+  'onset',
+  'peak',
+  'aftermath',
+  'memory',
+]
 
 export const SOIL_SPEC: Record<SoilKind, Spec> = {
   thin: { label: 'Thin soil', icon: Mountain, tone: 'muted' },

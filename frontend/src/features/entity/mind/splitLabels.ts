@@ -1,4 +1,6 @@
 import {
+  Cpu,
+  Network,
   Activity,
   Atom,
   BatteryCharging,
@@ -125,6 +127,8 @@ export const IDEA_SOURCES: Record<string, Named> = {
   teacher: { label: 'From a teacher', icon: Glasses, tone: 'verdigris' },
   divine: { label: 'Planted by a god', icon: Sparkles, tone: 'gold' },
   player: { label: 'Planted by the Creator', icon: Sparkles, tone: 'gold' },
+  network: { label: 'Carried by a network', icon: Network, tone: 'info' },
+  made_mind: { label: 'From a made mind', icon: Cpu, tone: 'verdigris' },
 }
 
 export const IDEA_STATES: Record<string, Named> = {

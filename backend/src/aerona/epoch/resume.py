@@ -9,7 +9,7 @@ from aerona.db.tables.epochs import EpochRunRow
 from aerona.db.tables.routes import HorizonIntuitionRow
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.enums.travel import HorizonStatus
-from aerona.epoch.state import require_run, run_of
+from aerona.epoch.state import plan_steps, require_run, run_of
 
 
 @dataclass(frozen=True)
@@ -50,6 +50,7 @@ async def begin_run(session: AsyncSession) -> RunStart:
         run.phase = EpochPhase.NOT_STARTED
         run.started = False
     run = await require_run(session, cosmos.epoch)
+    await plan_steps(session, cosmos.epoch)
     run.resumed = run.resumed or resuming
     if run.started_at is None:
         run.started_at = datetime.now(UTC)

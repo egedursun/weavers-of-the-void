@@ -118,6 +118,7 @@ async def mortal_survey(ctx: TickContext) -> None:
     "mortal.wisdom",
     "table.age_set_members",
     "table.assistive_aids",
+    "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -208,6 +209,7 @@ async def mortal_life_course(ctx: TickContext) -> None:
     "table.ruler_currencies",
     "table.traits",
     "table.wants",
+    "table.war_sides",
 )
 @writes(
     "table.bonds",
@@ -312,6 +314,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
+    "table.examinations",
     "table.genomes",
     "table.held_identities",
     "table.holder_levels",

@@ -68,6 +68,8 @@ class SonTurnSystemContext(LoreRulesContext):
     shrines: list[AnchorLine] = Field(default_factory=list)
     incitements: list[str] = Field(default_factory=list)
     powers: str
+    divine_powers: list[str] = Field(default_factory=list)
+    trust_and_tension: list[str] = Field(default_factory=list)
     action_points: int
     paid_tools: list[str] = Field(default_factory=list)
     free_tools: list[str] = Field(default_factory=list)

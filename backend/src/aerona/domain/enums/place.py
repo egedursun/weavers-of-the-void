@@ -61,6 +61,9 @@ class SecretKind(StrEnum):
     LOST_KNOWLEDGE = "lost_knowledge"
     LOST_RITE = "lost_rite"
     UNDERWORLD_ENTRANCE = "underworld_entrance"
+    HIDDEN_PEOPLE = "hidden_people"
+    DORMANT_MIND = "dormant_mind"
+    SEALED_REALM = "sealed_realm"
 
 
 class DiscoveryMode(StrEnum):

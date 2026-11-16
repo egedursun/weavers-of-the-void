@@ -41,6 +41,9 @@ ZONE_INK: dict[ZoneKind, str] = {
     ZoneKind.AGRICULTURAL: "#b5b85a",
     ZoneKind.CIVIC: "#4f9fa6",
     ZoneKind.GREEN: "#4f9a5a",
+    ZoneKind.TRANSPORT: "#7a8a96",
+    ZoneKind.MILITARY: "#a0524a",
+    ZoneKind.RESEARCH: "#6a7fc0",
 }
 GROUND_INK: dict[LandGround, str] = {
     LandGround.WATER: WATER,

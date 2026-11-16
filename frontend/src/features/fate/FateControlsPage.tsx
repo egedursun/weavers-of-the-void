@@ -9,8 +9,8 @@ import {
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, MiniStat, Section } from '@/components/domain'
-import { Muted, Text } from '@/components/typography'
+import { EmptyState, IntroNote, MiniStat, Section } from '@/components/domain'
+import { Text } from '@/components/typography'
 import { FateJobRow } from './FateJobRow'
 import { FateStepList } from './FateStepList'
 import { HistorianViewsPanel } from './HistorianViewsPanel'
@@ -101,11 +101,11 @@ export function FateControlsPage() {
   const controls = useFateControls()
   return (
     <div className='flex min-w-0 flex-col gap-6'>
-      <Muted>
+      <IntroNote>
         Fate judges every creation when an epoch ends; then the chronicler and
         the voices of the peoples write. Here you see what they left undone, run
         it again, and overrule Fate yourself.
-      </Muted>
+      </IntroNote>
       {controls.isPending && <Skeleton className='h-textarea w-full' />}
       {controls.isError && (
         <Text tone='destructive'>{controls.error.message}</Text>

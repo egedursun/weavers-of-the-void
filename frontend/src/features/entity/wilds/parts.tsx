@@ -81,7 +81,7 @@ export function Card({
   return (
     <div
       className={cn(
-        '@container/card flex h-full min-w-0 flex-col gap-3 rounded-lg border bg-background p-3',
+        '@container/card flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         wide && '@xl/wild:col-span-2'
       )}
     >
@@ -118,7 +118,7 @@ export function Tile({
   return (
     <div
       className={cn(
-        'flex min-w-0 items-center gap-2 rounded-lg border p-2',
+        'flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2',
         dim ? 'border-dashed bg-transparent opacity-55' : 'bg-muted/30'
       )}
     >
@@ -327,7 +327,7 @@ export function AdjustPanel({
   children: ReactNode
 }) {
   return (
-    <Collapsible className='flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
+    <Collapsible className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
         <div className='flex min-w-0 flex-1 basis-60 flex-col gap-0.5'>
           <Text weight='semibold'>{title}</Text>
@@ -428,7 +428,7 @@ export function Group({
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3',
+        'flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         wide && '@xl/wild:col-span-2'
       )}
     >
@@ -485,7 +485,7 @@ export function ShareEditor({
             return (
               <li
                 key={key}
-                className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
               >
                 <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
                 <Text as='span' weight='medium' truncate className='flex-1'>

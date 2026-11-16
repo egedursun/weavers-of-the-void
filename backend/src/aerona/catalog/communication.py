@@ -9,6 +9,8 @@ MEDIUM_LABELS: dict[Medium, str] = {
     Medium.BIRD: "Messenger bird",
     Medium.MAGIC_SENDING: "Magic sending",
     Medium.NETWORK: "By network",
+    Medium.MIND_LINK: "By a link between minds",
+    Medium.BROADCAST: "By broadcast",
 }
 CONTENT_LABELS: dict[DispatchContent, str] = {
     DispatchContent.PROPOSAL: "A proposal",
@@ -41,10 +43,14 @@ SUBJECT_LABELS: dict[OpinionSubject, str] = {
     OpinionSubject.IDEOLOGY: "Creed",
 }
 SIGNAL_LABELS: dict[SignalKind, str] = {
-    SignalKind.FIRE_BEACON: "Fire beacons",
-    SignalKind.MIRROR_TOWER: "Mirror towers",
-    SignalKind.POST_STATION: "Post stations",
-    SignalKind.SENDING_STONE: "Sending stones",
+    SignalKind.BEACON_CHAIN: "Beacon chains",
+    SignalKind.OPTICAL_RELAY: "Optical relays",
+    SignalKind.COURIER_POST: "Courier posts",
+    SignalKind.BOUND_PAIR: "Bound pairs",
+    SignalKind.WIRE_STATION: "Wire stations",
+    SignalKind.RADIO_STATION: "Radio stations",
+    SignalKind.MIND_LINK_STATION: "Mind-link stations",
+    SignalKind.GROWN_NODE: "Grown nodes",
 }
 SIGNAL_STATE_LABELS: dict[SignalState, str] = {
     SignalState.ACTIVE: "Standing",

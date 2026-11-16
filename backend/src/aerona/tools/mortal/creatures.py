@@ -242,7 +242,7 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
         ToolSpec(MortalToolId.TAME_SPECIES, mortal, TameInput, ToolMeta(ActionKind.TAME, standard), tame_species),
         ToolSpec(MortalToolId.KEEP_PET, mortal, KeepPetInput, ToolMeta(ActionKind.TAME, no_cost), keep_pet),
         ToolSpec(MortalToolId.TRAIN_HERD, mortal, TrainHerdInput, ToolMeta(ActionKind.TAME, standard), train_herd),
-        ToolSpec(MortalToolId.MERGE_SPECIES, mortal, ChimeraInput, ToolMeta(ActionKind.WEAVE_CHIMERA, standard), merge_species),
+        ToolSpec(MortalToolId.MERGE_SPECIES, mortal, ChimeraInput, ToolMeta(ActionKind.MAKE_CHIMERA, standard), merge_species),
         ToolSpec(MortalToolId.BIND_SPIRIT, mortal, BindSpiritInput, ToolMeta(ActionKind.BIND_SPIRIT, standard), bind_spirit),
         ToolSpec(MortalToolId.SEARCH_RUINS, mortal, RuinsInput, ToolMeta(ActionKind.SEARCH_RUINS, standard), search_ruins),
     ]

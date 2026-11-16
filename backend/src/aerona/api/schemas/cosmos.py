@@ -1,8 +1,9 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import EntitySummary, ForeignGodRecord, JourneyRecord, NodeRef, RouteRecord, StarRecord, WorldRecord
 from aerona.cartography.palette import WorldPalette
-from aerona.domain.enums.chronicle import LegendaryQuestKind, LegendaryQuestOutcome, ThreadStatus
+from aerona.domain.enums.chronicle import LegendaryQuestOutcome, ThreadStatus
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestScale, QuestTargetKind
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.travel import HorizonStatus, TravelMethod
 from aerona.domain.enums.world import Discovery, SkyEventKind, WorldType
@@ -138,7 +139,12 @@ class EpochStarView(ApiModel):
 
 class GreatExpedition(ApiModel):
     thread_id: int
-    kind: LegendaryQuestKind
+    aim: QuestAim
+    target_kind: QuestTargetKind
+    obstacle: QuestObstacle
+    reward: QuestReward
+    scale: QuestScale
+    locked: list[str]
     name: str
     text: str
     declared_by: ActorKind

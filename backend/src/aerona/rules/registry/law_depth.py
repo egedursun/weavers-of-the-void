@@ -43,6 +43,9 @@ class AppealRules:
 @dataclass(frozen=True)
 class RegistryRules:
     title_pct: int = rule(30, 0, 100, P, "Chance each epoch a town under a written code registers its ruler's title (%)")
+    records_cap: int = rule(
+        30, 0, 100, P, "Most a realm's registers of births, deaths, citizens, charters, patents and the like cut the cost of collecting its taxes (%)"
+    )
     enforce_pct: int = rule(40, 0, 100, P, "Share of a registered debt a court makes the debtor pay each epoch (%)")
     unregistered_pct: int = rule(30, 0, 100, P, "Chance an unregistered debt is paid when the lender is stronger (%)")
     dispute_unrest: int = rule(5, 0, 100, P, "Unrest a land dispute raises in its town")

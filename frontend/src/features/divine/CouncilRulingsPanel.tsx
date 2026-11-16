@@ -20,13 +20,33 @@ import {
   SwitchField,
 } from '@/features/entity/wilds/parts'
 import { useGodGate } from '@/features/pantheon/gate'
+import { VetoButton } from './CouncilOrderPanel'
 import { type RulingView, useDivineAction, useRulings } from './api'
-import { MOTIONS, PUNISHMENTS, SCHOOLS, heldLabel } from './labels'
+import {
+  MOTIONS,
+  PUNISHMENTS,
+  SCHOOLS,
+  VOTING_RULES,
+  heldLabel,
+} from './labels'
 import { useGodTable } from './model'
 import { NodeName, PickRow } from './parts'
 
-const GOD_TARGETS = new Set(['war_on_foreign_god', 'punish_son', 'holy_world'])
+const GOD_TARGETS = new Set([
+  'war_on_foreign_god',
+  'punish_son',
+  'holy_world',
+  'reassign_world',
+  'outlaw_power',
+  'admit_member',
+  'expel_member',
+  'recognise_god',
+])
 const HERO_TARGETS = new Set(['bless_hero'])
+const WORLD_TARGETS = new Set(['holy_world', 'reassign_world', 'outlaw_source'])
+const RULE_NAMES = Object.fromEntries(
+  Object.entries(VOTING_RULES).map(([key, value]) => [key, value.label])
+)
 
 function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
   const edit = useDivineAction(
@@ -43,7 +63,7 @@ function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
   const spec = MOTIONS[row.motion]
   const pending = busyOf(busy, edit.isPending, revoke.isPending)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion
           icon={spec.icon}
@@ -67,6 +87,11 @@ function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
                 variant='outline'
               >{`${SCHOOLS[row.school]} rites`}</Badge>
             )}
+            {row.voting_rule && (
+              <Badge size='sm' variant='outline'>
+                {VOTING_RULES[row.voting_rule].label}
+              </Badge>
+            )}
             {row.punishment && row.motion === 'punish_son' && (
               <Badge size='sm' variant='outline'>
                 {PUNISHMENTS[row.punishment]}
@@ -75,6 +100,7 @@ function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
           </div>
           <Muted variant='caption'>{`Laid down in epoch ${row.epoch}${row.until_epoch ? `, holds until epoch ${row.until_epoch}` : ''}${row.note ? ` — ${row.note}` : ''}`}</Muted>
         </div>
+        <VetoButton ruling={row} busy={pending} />
         <Button
           size='sm'
           variant='ghost'
@@ -142,6 +168,7 @@ export function CouncilRulingsPanel() {
   const [world, setWorld] = useState<number | null>(null)
   const [school, setSchool] = useState('')
   const [punishment, setPunishment] = useState('chain')
+  const [rule, setRule] = useState('majority')
   const decree = useDivineAction('ruling:decree', (_: void) => ({
     motion: motion as ActionBody<'ruling:decree'>['motion'],
     target_id: HERO_TARGETS.has(motion)
@@ -156,6 +183,10 @@ export function CouncilRulingsPanel() {
       motion === 'punish_son'
         ? (punishment as ActionBody<'ruling:decree'>['punishment'])
         : null,
+    voting_rule:
+      motion === 'set_council_rules'
+        ? (rule as ActionBody<'ruling:decree'>['voting_rule'])
+        : null,
   }))
   const busy = busyOf(reason(), decree.isPending)
   const motions = Object.fromEntries(
@@ -168,7 +199,7 @@ export function CouncilRulingsPanel() {
         ? 'Choose the god it names'
         : HERO_TARGETS.has(motion) && hero === null
           ? 'Choose the hero'
-          : motion === 'holy_world' && world === null
+          : WORLD_TARGETS.has(motion) && world === null
             ? 'Choose the world'
             : motion === 'outlaw_rite' && school === ''
               ? 'Choose the school of rites'
@@ -177,7 +208,7 @@ export function CouncilRulingsPanel() {
     <Section
       id='section-council-rulings'
       title='Rulings of the council'
-      description='Typed decisions of the Council of the Gods that bind the engine for a number of epochs: truces, outlawed rites, punishments, holy worlds, the division of worlds, wars on foreign gods, blessings and petitions.'
+      description='Typed decisions of the Council of the Gods that bind the engine for a number of epochs: truces, outlawed rites, powers and sources, punishments, holy worlds, the division and giving of worlds, wars on foreign gods, members admitted, put out or recognised, tithes, the rules of the council itself, regulations of made minds, powers and living craft, blessings and petitions.'
       icon={Scale}
       tone='gold'
     >
@@ -256,6 +287,17 @@ export function CouncilRulingsPanel() {
                   motion === 'punish_son' ? busy : 'Only a punishment names one'
                 }
                 onPick={setPunishment}
+              />
+              <PickRow
+                label='How the council decides'
+                table={RULE_NAMES}
+                value={rule}
+                blocked={
+                  motion === 'set_council_rules'
+                    ? busy
+                    : 'Only a change of council rules names one'
+                }
+                onPick={setRule}
               />
             </div>
             <Button

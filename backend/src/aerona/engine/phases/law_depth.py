@@ -46,7 +46,18 @@ async def appeals(ctx: TickContext) -> None:
     count(ctx, "appeal", tally)
 
 
-@reads("table.holder_techniques", "table.polity_members", "table.registries")
+@reads(
+    "table.blueprints",
+    "table.company_profiles",
+    "table.designs",
+    "table.holder_techniques",
+    "table.living_lines",
+    "table.memberships",
+    "table.mind_profiles",
+    "table.mortal_profiles",
+    "table.polity_members",
+    "table.registries",
+)
 @writes("table.registries")
 async def registries(ctx: TickContext) -> None:
     tally = RegistryTally()

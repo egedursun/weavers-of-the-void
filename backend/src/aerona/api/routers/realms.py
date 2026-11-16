@@ -32,6 +32,7 @@ from aerona.api.schemas.realms import (
     VassalView,
     WhyPart,
 )
+from aerona.catalog.law_areas import LAW_AREAS
 from aerona.catalog.laws import LAW_PARAMS, law_effect
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
@@ -60,7 +61,6 @@ from aerona.db.tables.polity import (
 from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.polity import LAW_AREAS
 from aerona.engine.factions.balance import power_balance
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
@@ -440,6 +440,9 @@ def oath_view(row: OathRow, names: dict[int, str]) -> OathView:
         recipient_id=row.recipient_node_id,
         recipient=names.get(row.recipient_node_id) if row.recipient_node_id else None,
         witness_son_id=row.witness_son_id,
+        witness_node_id=row.witness_node_id,
+        witness=names.get(row.witness_node_id) if row.witness_node_id else None,
+        penalty=row.penalty,
         sworn_epoch=row.sworn_epoch,
         deadline_epoch=row.deadline_epoch,
         ended_epoch=row.ended_epoch,
@@ -452,9 +455,9 @@ async def oaths(services: ServicesDep, entity_id: int = Path(ge=1)) -> OathsView
     async with reader(services) as session:
         sworn = list(await session.scalars(select(OathRow).where(OathRow.swearer_entity_id == entity_id).order_by(OathRow.sworn_epoch, OathRow.id)))
         received = list(await session.scalars(select(OathRow).where(OathRow.recipient_node_id == entity_id).order_by(OathRow.sworn_epoch, OathRow.id)))
-        names = await names_of(
-            session, {*(row.swearer_entity_id for row in [*sworn, *received]), *(row.recipient_node_id for row in [*sworn, *received] if row.recipient_node_id)}
-        )
+        every = [*sworn, *received]
+        ids = {*(row.swearer_entity_id for row in every), *(node for row in every for node in (row.recipient_node_id, row.witness_node_id) if node)}
+        names = await names_of(session, ids)
         return OathsView(entity_id=entity_id, sworn=[oath_view(row, names) for row in sworn], received=[oath_view(row, names) for row in received])
 
 

@@ -1,4 +1,15 @@
 import {
+  Sparkle,
+  Circle,
+  Bomb,
+  ArrowRight,
+  TrainFront,
+  Car,
+  Cable,
+  ArrowUpFromLine,
+  Rocket,
+  PawPrint,
+  Network,
   Anchor,
   Backpack,
   BookOpen,
@@ -42,7 +53,6 @@ import {
   Truck,
   Users,
   Utensils,
-  Waves,
   Wind,
   Zap,
 } from 'lucide-react'
@@ -70,12 +80,25 @@ export const ORDERS: Record<Schema['EchelonOrder'], Named> = {
 }
 
 export const TRANSPORTS: Record<Schema['CarrierKind'], Named> = {
-  wagons: { label: 'Wagons', icon: Truck, tone: 'gold' },
-  pack_animals: { label: 'Pack animals', icon: Footprints, tone: 'success' },
   porters: { label: 'Porters', icon: Backpack, tone: 'muted' },
-  barges: { label: 'River barges', icon: Waves, tone: 'info' },
-  ships: { label: 'Supply ships', icon: Ship, tone: 'verdigris' },
-  sky_barges: { label: 'Sky barges', icon: Plane, tone: 'warning' },
+  pack_animals: { label: 'Pack animals', icon: Footprints, tone: 'success' },
+  animal_carts: { label: 'Animal carts', icon: Truck, tone: 'gold' },
+  rail: { label: 'Rail', icon: TrainFront, tone: 'info' },
+  road_motor: { label: 'Motor transport', icon: Car, tone: 'info' },
+  river_and_canal: {
+    label: 'River and canal boats',
+    icon: Sailboat,
+    tone: 'info',
+  },
+  sea: { label: 'Sea ships', icon: Ship, tone: 'verdigris' },
+  air: { label: 'Aircraft', icon: Plane, tone: 'warning' },
+  pipeline: { label: 'Pipelines', icon: Cable, tone: 'muted' },
+  orbital_lift: { label: 'Orbital lifts', icon: ArrowUpFromLine, tone: 'gold' },
+  space: { label: 'Space freighters', icon: Rocket, tone: 'gold' },
+  teleport: { label: 'Teleport', icon: Zap, tone: 'verdigris' },
+  living: { label: 'Living carriers', icon: PawPrint, tone: 'success' },
+  rite: { label: 'Bound conveyance', icon: Sparkles, tone: 'verdigris' },
+  network: { label: 'Networks', icon: Network, tone: 'info' },
 }
 
 export const SHOTS: Record<Schema['ShotKind'], Named> = {
@@ -83,6 +106,13 @@ export const SHOTS: Record<Schema['ShotKind'], Named> = {
   chain: { label: 'Chain shot', icon: Link2, tone: 'warning' },
   grape: { label: 'Grapeshot', icon: Crosshair, tone: 'gold' },
   fire: { label: 'Fire', icon: Flame, tone: 'danger' },
+  solid: { label: 'Solid', icon: Circle, tone: 'danger' },
+  spread: { label: 'Spread', icon: Sparkle, tone: 'danger' },
+  incendiary: { label: 'Incendiary', icon: Flame, tone: 'danger' },
+  explosive: { label: 'Explosive', icon: Bomb, tone: 'danger' },
+  piercing: { label: 'Piercing', icon: ArrowRight, tone: 'danger' },
+  guided: { label: 'Guided', icon: Target, tone: 'danger' },
+  energy: { label: 'Energy', icon: Zap, tone: 'danger' },
 }
 
 export const POINTS_OF_SAIL: Record<Schema['PointOfSail'], Named> = {

@@ -5,6 +5,7 @@ from aerona.catalog.civics import CAPABILITIES, TRIGGERS
 from aerona.catalog.discovery import AGES, FIELDS, INCIDENTS
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.catalog.theories import DISCIPLINES, DOMAINS
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.culture import InstitutionRow, ResearchBoostRow, ResearchFocusRow
 from aerona.db.tables.discovery import (
@@ -46,7 +47,7 @@ async def research_for(session: AsyncSession, me: EntityRow) -> ResearchLine | N
         community=home.name,
         current=TECHNIQUES[focus.technique].label if focus is not None else "",
         chooser=CHOOSERS[focus.chooser] if focus is not None else "",
-        choices=[f"{item.value} ({TECHNIQUES[item].label})" for item in choices],
+        choices=[f"{spoken(item)} ({TECHNIQUES[item].label})" for item in choices],
         institutions=[f"{TECHNIQUES[row.technique].label} ({'embraced' if row.embraced else 'refused'})" for row in founded],
         boosts=[f"{TECHNIQUES[row.technique].label} +{row.progress}% from {TRIGGERS[row.trigger].label.lower()}" for row in boosts],
         capabilities=[CAPABILITIES[item].label for item in await capabilities_of(session, home.id)],

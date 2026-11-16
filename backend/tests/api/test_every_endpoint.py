@@ -26,6 +26,7 @@ FIXED: Mapping[str, Any] = {
     "prompt_id": next(iter(PromptId)).value,
 }
 SECOND = frozenset({"other_id"})
+NAMED_TABLES: Mapping[str, str] = {"collection_id": "incident_collection_id"}
 
 
 def api_paths() -> dict[str, dict[str, Any]]:
@@ -78,7 +79,7 @@ async def filled(services: Any, path: str) -> str:
             if name in FIXED:
                 values[name] = FIXED[name]
                 continue
-            found = await pick(session, kind_of("mortal_id" if name in SECOND else name), 1 if name in SECOND else 0)
+            found = await pick(session, kind_of("mortal_id" if name in SECOND else NAMED_TABLES.get(name, name)), 1 if name in SECOND else 0)
             values[name] = found if found is not None else 0
     return PARAM.sub(lambda match: str(values[match.group(1)]), path)
 

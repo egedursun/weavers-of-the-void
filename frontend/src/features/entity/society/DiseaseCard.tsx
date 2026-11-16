@@ -261,7 +261,7 @@ function Row({
   aside?: ReactNode
 }) {
   return (
-    <li className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 items-center gap-2.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <Medallion icon={icon} tone={tone} size='sm' />
       <div className='flex min-w-0 flex-1 flex-col gap-1'>{children}</div>
       {aside}
@@ -782,7 +782,7 @@ export function DiseaseSection({
           data-surface='DiseaseCard'
           className='@container/sick flex min-w-0 flex-col gap-4'
         >
-          <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+          <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <Medallion icon={vector.icon} tone={vector.tone} />
             <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
               <Text weight='semibold' className='first-letter:uppercase'>

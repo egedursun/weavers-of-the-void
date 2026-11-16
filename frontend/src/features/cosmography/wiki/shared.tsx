@@ -4,7 +4,12 @@ import { type ActionBody } from '@/api/actions'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ConfirmDialog, EmptyState, Section } from '@/components/domain'
+import {
+  ConfirmDialog,
+  EmptyState,
+  HeroFrame,
+  Section,
+} from '@/components/domain'
 import { Label, Muted, PageTitle } from '@/components/typography'
 import { CelestialTimeline } from '@/features/celestial/WorldWikiPage'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
@@ -74,28 +79,30 @@ export function WikiHero({
   meter?: ReactNode
 }) {
   return (
-    <header className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'>
-      <PortraitGenerateOverlay
-        nodeId={nodeId}
-        name={name}
-        cover={cover}
-        placeholder={emblem}
-      />
-      <div className='flex min-w-0 flex-1 flex-col gap-2'>
-        <Label variant='overline'>{overline}</Label>
-        <PageTitle truncate={2}>{name}</PageTitle>
-        {description ? (
-          <Muted>{description}</Muted>
-        ) : (
-          <Muted variant='caption'>
-            No account of it is written yet; write one under Shape, or let the
-            chroniclers find it.
-          </Muted>
-        )}
-        <div className='flex min-w-0 flex-wrap gap-1.5'>{badges}</div>
-        {meter}
-      </div>
-    </header>
+    <HeroFrame>
+      <header className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'>
+        <PortraitGenerateOverlay
+          nodeId={nodeId}
+          name={name}
+          cover={cover}
+          placeholder={emblem}
+        />
+        <div className='flex min-w-0 flex-1 flex-col gap-2'>
+          <Label variant='overline'>{overline}</Label>
+          <PageTitle truncate={2}>{name}</PageTitle>
+          {description ? (
+            <Muted>{description}</Muted>
+          ) : (
+            <Muted variant='caption'>
+              No account of it is written yet; write one under Shape, or let the
+              chroniclers find it.
+            </Muted>
+          )}
+          <div className='flex min-w-0 flex-wrap gap-1.5'>{badges}</div>
+          {meter}
+        </div>
+      </header>
+    </HeroFrame>
   )
 }
 

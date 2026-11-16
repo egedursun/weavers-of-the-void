@@ -149,45 +149,49 @@ export function StrikesPanel({ view }: { view: Disease }) {
       hint='The body functions it wounds, the work the sick lose and whether they can still be levied'
     >
       <ul className='flex min-w-0 flex-col gap-2'>
-        {view.target_functions.map((target) => {
-          const spec = TARGET_SPEC[target]
-          const jobs = TARGET_JOBS[target]
-          return (
-            <li
-              key={target}
-              className='flex min-w-0 items-start gap-2.5 rounded-lg border bg-muted/30 p-2'
-            >
-              <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-              <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                <Text weight='medium'>{spec.label}</Text>
-                <Muted variant='caption'>{spec.hint}</Muted>
-                <div className='flex min-w-0 flex-wrap gap-1'>
-                  {jobs.length === JOB_ORDER.length && (
-                    <Badge size='sm' variant='secondary'>
-                      <Hammer />
-                      Every kind of work
-                    </Badge>
-                  )}
-                  {(jobs.length === JOB_ORDER.length ? [] : jobs).map((job) => {
-                    const work = JOB_SPEC[job]
-                    return (
-                      <Badge key={job} size='sm' variant='secondary'>
-                        <work.icon />
-                        {work.label}
+        <Paged items={view.target_functions} as='li'>
+          {(target) => {
+            const spec = TARGET_SPEC[target]
+            const jobs = TARGET_JOBS[target]
+            return (
+              <li
+                key={target}
+                className='flex min-w-0 items-start gap-2.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
+              >
+                <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+                <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                  <Text weight='medium'>{spec.label}</Text>
+                  <Muted variant='caption'>{spec.hint}</Muted>
+                  <div className='flex min-w-0 flex-wrap gap-1'>
+                    {jobs.length === JOB_ORDER.length && (
+                      <Badge size='sm' variant='secondary'>
+                        <Hammer />
+                        Every kind of work
                       </Badge>
-                    )
-                  })}
-                  {LEVY_TARGETS.has(target) && (
-                    <Badge size='sm' variant='destructive'>
-                      <Swords />
-                      No levy
-                    </Badge>
-                  )}
+                    )}
+                    {(jobs.length === JOB_ORDER.length ? [] : jobs).map(
+                      (job) => {
+                        const work = JOB_SPEC[job]
+                        return (
+                          <Badge key={job} size='sm' variant='secondary'>
+                            <work.icon />
+                            {work.label}
+                          </Badge>
+                        )
+                      }
+                    )}
+                    {LEVY_TARGETS.has(target) && (
+                      <Badge size='sm' variant='destructive'>
+                        <Swords />
+                        No levy
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </li>
-          )
-        })}
+              </li>
+            )
+          }}
+        </Paged>
       </ul>
       <Muted variant='caption'>
         {`Survivors may keep a lasting weakness there: ${view.chronic_rate} in 100 carry it for life.`}
@@ -253,7 +257,7 @@ export function HostsPanel({ view }: { view: Disease }) {
             {(host) => (
               <li
                 key={host.species_id}
-                className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-muted/30 p-2'
+                className='flex min-w-0 items-center gap-2.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
               >
                 <Medallion
                   icon={host.immune ? ShieldCheck : Bug}
@@ -961,7 +965,7 @@ export function ForgeDisease({
   const spec = VECTOR_SPEC[vector]
   return (
     <div data-surface='ForgeDisease' className='flex min-w-0 flex-col gap-3'>
-      <div className='flex min-w-0 items-center gap-2.5 rounded-lg border border-primary/30 bg-primary/5 p-3'>
+      <div className='flex min-w-0 items-center gap-2.5 rounded-md border surface-framed border-primary/30 bg-primary/5 p-3'>
         <Medallion icon={Wand2} tone='gold' />
         <div className='flex min-w-0 flex-1 flex-col'>
           <Text weight='semibold'>Forge a new sickness</Text>

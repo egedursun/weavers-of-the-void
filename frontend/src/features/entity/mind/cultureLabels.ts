@@ -22,6 +22,14 @@ import {
   ThumbsUp,
   Utensils,
   Wine,
+  Cpu,
+  Network,
+  Music,
+  Hand,
+  BookOpen,
+  Dice5,
+  MapPin,
+  Briefcase,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -45,6 +53,19 @@ export const PREFERENCE_KINDS: Record<string, Named> = {
   craft: { label: 'Craft', icon: Hammer, tone: 'warning' },
   deity_aspect: { label: 'Aspect of the divine', icon: Sparkles, tone: 'gold' },
   looks: { label: 'Looks', icon: Gem, tone: 'gold' },
+  technology: { label: 'Technology', icon: Cpu, tone: 'info' },
+  made_thing: { label: 'Made thing', icon: Hammer, tone: 'warning' },
+  power: { label: 'Power', icon: Sparkles, tone: 'gold' },
+  source: { label: 'Source of power', icon: Sun, tone: 'gold' },
+  living_line: { label: 'Living craft', icon: Leaf, tone: 'success' },
+  network: { label: 'Network', icon: Network, tone: 'info' },
+  sound: { label: 'Sound', icon: Music, tone: 'verdigris' },
+  scent: { label: 'Scent', icon: Flower2, tone: 'success' },
+  texture: { label: 'Texture', icon: Hand, tone: 'muted' },
+  story_form: { label: 'Shape of a story', icon: BookOpen, tone: 'verdigris' },
+  game: { label: 'Game', icon: Dice5, tone: 'warning' },
+  place_kind: { label: 'Kind of place', icon: MapPin, tone: 'info' },
+  profession: { label: 'Profession', icon: Briefcase, tone: 'muted' },
 }
 
 export const STANCES: Record<string, Named> = {

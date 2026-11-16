@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -8,6 +9,8 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.made import MadeRealmRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -16,6 +19,7 @@ from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.place import DiscoveryMode, SecretKind, SecretOrigin
 from aerona.domain.enums.society import KnowledgeBranch
@@ -42,6 +46,9 @@ SECRET_LABELS: dict[SecretKind, str] = {
     SecretKind.LOST_KNOWLEDGE: "lost knowledge",
     SecretKind.LOST_RITE: "a lost rite",
     SecretKind.UNDERWORLD_ENTRANCE: "a way down to the underworld",
+    SecretKind.HIDDEN_PEOPLE: "a hidden people",
+    SecretKind.DORMANT_MIND: "a sleeping mind",
+    SecretKind.SEALED_REALM: "a sealed realm",
 }
 MODE_VERBS: dict[DiscoveryMode, str] = {
     DiscoveryMode.EXPLORER: "searching",
@@ -272,6 +279,38 @@ async def underworld_of(ctx: TickContext, world_id: int | None) -> EntityRow | N
     )
 
 
+async def hidden_people(ctx: TickContext, place: EntityRow) -> EntityRow | None:
+    return await ctx.session.scalar(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.location_id == place.id, EntityRow.status == EntityStatus.CANON).limit(1)
+    )
+
+
+async def sleeping_mind(ctx: TickContext, place: EntityRow) -> EntityRow | None:
+    here = select(EntityRow.id).where(EntityRow.location_id == place.id, EntityRow.status == EntityStatus.CANON)
+    mind = await ctx.session.scalar(select(MindProfileRow).where(MindProfileRow.node_id.in_(here), MindProfileRow.seat != MindSeat.BODY).limit(1))
+    if mind is None:
+        return None
+    if "stability" not in mind.locked:
+        mind.stability = clamp_int(mind.stability + ctx.rules.places.woken_stability, 0, PERCENT)
+    return await ctx.session.get(EntityRow, mind.node_id)
+
+
+async def sealed_realm(ctx: TickContext, place: EntityRow) -> EntityRow | None:
+    realm = await ctx.session.scalar(select(MadeRealmRow).where(MadeRealmRow.host_node_id == place.id).limit(1))
+    if realm is None:
+        return None
+    if "sealed" not in realm.locked:
+        realm.sealed = False
+    return await ctx.session.get(EntityRow, realm.dimension_id)
+
+
+UNCOVERED: dict[SecretKind, Callable[[TickContext, EntityRow], Awaitable[EntityRow | None]]] = {
+    SecretKind.HIDDEN_PEOPLE: hidden_people,
+    SecretKind.DORMANT_MIND: sleeping_mind,
+    SecretKind.SEALED_REALM: sealed_realm,
+}
+
+
 async def reveal(
     ctx: TickContext, secret: PlaceSecretRow, mode: DiscoveryMode, finder: EntityRow | None, region: RegionEnvironmentRow | None
 ) -> EntityRow | None:
@@ -291,6 +330,8 @@ async def reveal(
         result = await recover_knowledge(ctx, secret, place, learner)
     elif secret.kind is SecretKind.LOST_RITE:
         result = await recover_rite(ctx, secret, place, finder or learner)
+    elif secret.kind in UNCOVERED:
+        result = await UNCOVERED[secret.kind](ctx, place)
     elif secret.kind is SecretKind.UNDERWORLD_ENTRANCE:
         result = await underworld_of(ctx, place.world_id)
         if result is not None:

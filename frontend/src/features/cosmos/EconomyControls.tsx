@@ -14,7 +14,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EntityLink, Section } from '@/components/domain'
+import { EntityLink, Paged, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { RowAction } from '@/features/entity/actions/RowAction'
 import { COMMUNITY_TYPES } from '@/features/entity/constants'
@@ -82,56 +82,58 @@ export function ImmunityList({
 }) {
   return (
     <ul className='flex min-w-0 flex-col gap-2'>
-      {immunities.map((item) => {
-        const pair = {
-          entity_id: item.community.id,
-          resource_id: item.resource.id,
-        }
-        return (
-          <li
-            key={`${item.community.id}-${item.resource.id}`}
-            className='flex min-w-0 flex-wrap items-center gap-2'
-          >
-            <ShieldCheck
-              aria-hidden='true'
-              className='size-icon-xs text-success'
-            />
-            {showCommunity && (
-              <EntityLink kind='entity' id={String(item.community.id)}>
-                {item.community.name}
+      <Paged items={immunities} as='li'>
+        {(item) => {
+          const pair = {
+            entity_id: item.community.id,
+            resource_id: item.resource.id,
+          }
+          return (
+            <li
+              key={`${item.community.id}-${item.resource.id}`}
+              className='flex min-w-0 flex-wrap items-center gap-2'
+            >
+              <ShieldCheck
+                aria-hidden='true'
+                className='size-icon-xs text-success'
+              />
+              {showCommunity && (
+                <EntityLink kind='entity' id={String(item.community.id)}>
+                  {item.community.name}
+                </EntityLink>
+              )}
+              <Text as='span'>
+                {showCommunity ? 'is immune to' : 'Immune to'}
+              </Text>
+              <EntityLink kind='entity' id={String(item.resource.id)}>
+                {item.resource.name}
               </EntityLink>
-            )}
-            <Text as='span'>
-              {showCommunity ? 'is immune to' : 'Immune to'}
-            </Text>
-            <EntityLink kind='entity' id={String(item.resource.id)}>
-              {item.resource.name}
-            </EntityLink>
-            <Muted as='span' variant='caption'>
-              {`since epoch ${item.recovered_epoch}`}
-            </Muted>
-            <RowAction
-              path='/api/actions/addiction:immunity'
-              icon={Pencil}
-              label='Change when they were freed'
-              iconOnly
-              fixed={{ ...pair, immune: true }}
-              defaults={{ recovered_epoch: item.recovered_epoch }}
-              labels={CRAVING_LABELS}
-            />
-            <RowAction
-              path='/api/actions/addiction:immunity'
-              icon={ShieldOff}
-              label='Take the immunity away'
-              iconOnly
-              destructive
-              fixed={{ ...pair, immune: false }}
-              hide={['recovered_epoch']}
-              confirm='They can be hooked by it again.'
-            />
-          </li>
-        )
-      })}
+              <Muted as='span' variant='caption'>
+                {`since epoch ${item.recovered_epoch}`}
+              </Muted>
+              <RowAction
+                path='/api/actions/addiction:immunity'
+                icon={Pencil}
+                label='Change when they were freed'
+                iconOnly
+                fixed={{ ...pair, immune: true }}
+                defaults={{ recovered_epoch: item.recovered_epoch }}
+                labels={CRAVING_LABELS}
+              />
+              <RowAction
+                path='/api/actions/addiction:immunity'
+                icon={ShieldOff}
+                label='Take the immunity away'
+                iconOnly
+                destructive
+                fixed={{ ...pair, immune: false }}
+                hide={['recovered_epoch']}
+                confirm='They can be hooked by it again.'
+              />
+            </li>
+          )
+        }}
+      </Paged>
     </ul>
   )
 }
@@ -157,101 +159,103 @@ export function AddictionList({
   const cure = useCureAddiction()
   return (
     <ul className='flex min-w-0 flex-col gap-2'>
-      {addictions.map((item) => {
-        const key = `${item.community.id}-${item.resource.id}`
-        const pair = {
-          entity_id: item.community.id,
-          resource_id: item.resource.id,
-        }
-        const busy =
-          cure.isPending &&
-          cure.variables?.entityId === item.community.id &&
-          cure.variables.resourceId === item.resource.id
-        return (
-          <li key={key} className='flex min-w-0 flex-wrap items-center gap-2'>
-            {showCommunity && (
-              <EntityLink kind='entity' id={String(item.community.id)}>
-                {item.community.name}
+      <Paged items={addictions} as='li'>
+        {(item) => {
+          const key = `${item.community.id}-${item.resource.id}`
+          const pair = {
+            entity_id: item.community.id,
+            resource_id: item.resource.id,
+          }
+          const busy =
+            cure.isPending &&
+            cure.variables?.entityId === item.community.id &&
+            cure.variables.resourceId === item.resource.id
+          return (
+            <li key={key} className='flex min-w-0 flex-wrap items-center gap-2'>
+              {showCommunity && (
+                <EntityLink kind='entity' id={String(item.community.id)}>
+                  {item.community.name}
+                </EntityLink>
+              )}
+              <Text as='span'>{showCommunity ? 'craves' : 'Craves'}</Text>
+              <EntityLink kind='entity' id={String(item.resource.id)}>
+                {item.resource.name}
               </EntityLink>
-            )}
-            <Text as='span'>{showCommunity ? 'craves' : 'Craves'}</Text>
-            <EntityLink kind='entity' id={String(item.resource.id)}>
-              {item.resource.name}
-            </EntityLink>
-            <Muted as='span' variant='caption'>
-              {item.withdrawal_since_epoch !== null
-                ? `in withdrawal since epoch ${item.withdrawal_since_epoch}`
-                : `addicted since epoch ${item.addicted_since_epoch ?? '?'}`}
-            </Muted>
-            {item.held && (
-              <Badge size='sm' variant='warning'>
-                <Lock />
-                Held
-              </Badge>
-            )}
-            <CosmicActionButton
-              actionId='addiction:cure'
-              label='Cure'
-              icon={Pill}
-              size='sm'
-              pending={busy}
-              onRun={() =>
-                cure.mutate({
-                  entityId: item.community.id,
-                  resourceId: item.resource.id,
-                })
-              }
-            />
-            <RowAction
-              path='/api/actions/addiction:set'
-              icon={Pencil}
-              label='Reshape the craving'
-              iconOnly
-              fixed={pair}
-              hide={['remove', 'hold']}
-              defaults={{
-                addicted_since_epoch: item.addicted_since_epoch,
-                withdrawal_since_epoch: item.withdrawal_since_epoch,
-                owned_epochs: item.owned_epochs,
-              }}
-              labels={CRAVING_LABELS}
-            />
-            <RowAction
-              path='/api/actions/addiction:set'
-              icon={item.held ? Unlock : Lock}
-              label={item.held ? 'Let it change again' : 'Hold it as it is'}
-              iconOnly
-              fixed={{
-                ...pair,
-                hold: !item.held,
-                addicted_since_epoch: item.addicted_since_epoch,
-                withdrawal_since_epoch: item.withdrawal_since_epoch,
-              }}
-              hide={['remove', 'owned_epochs']}
-              confirm={
-                item.held
-                  ? 'The craving may deepen, ease or pass again.'
-                  : 'Neither withdrawal nor recovery will touch it until you release it.'
-              }
-            />
-            <RowAction
-              path='/api/actions/addiction:set'
-              icon={Trash2}
-              label='Unmake the craving'
-              iconOnly
-              destructive
-              fixed={{ ...pair, remove: true }}
-              hide={[
-                'addicted_since_epoch',
-                'withdrawal_since_epoch',
-                'owned_epochs',
-                'hold',
-              ]}
-              confirm='Unmake it as if it never was; no immunity is left behind.'
-            />
-          </li>
-        )
-      })}
+              <Muted as='span' variant='caption'>
+                {item.withdrawal_since_epoch !== null
+                  ? `in withdrawal since epoch ${item.withdrawal_since_epoch}`
+                  : `addicted since epoch ${item.addicted_since_epoch ?? '?'}`}
+              </Muted>
+              {item.held && (
+                <Badge size='sm' variant='warning'>
+                  <Lock />
+                  Held
+                </Badge>
+              )}
+              <CosmicActionButton
+                actionId='addiction:cure'
+                label='Cure'
+                icon={Pill}
+                size='sm'
+                pending={busy}
+                onRun={() =>
+                  cure.mutate({
+                    entityId: item.community.id,
+                    resourceId: item.resource.id,
+                  })
+                }
+              />
+              <RowAction
+                path='/api/actions/addiction:set'
+                icon={Pencil}
+                label='Reshape the craving'
+                iconOnly
+                fixed={pair}
+                hide={['remove', 'hold']}
+                defaults={{
+                  addicted_since_epoch: item.addicted_since_epoch,
+                  withdrawal_since_epoch: item.withdrawal_since_epoch,
+                  owned_epochs: item.owned_epochs,
+                }}
+                labels={CRAVING_LABELS}
+              />
+              <RowAction
+                path='/api/actions/addiction:set'
+                icon={item.held ? Unlock : Lock}
+                label={item.held ? 'Let it change again' : 'Hold it as it is'}
+                iconOnly
+                fixed={{
+                  ...pair,
+                  hold: !item.held,
+                  addicted_since_epoch: item.addicted_since_epoch,
+                  withdrawal_since_epoch: item.withdrawal_since_epoch,
+                }}
+                hide={['remove', 'owned_epochs']}
+                confirm={
+                  item.held
+                    ? 'The craving may deepen, ease or pass again.'
+                    : 'Neither withdrawal nor recovery will touch it until you release it.'
+                }
+              />
+              <RowAction
+                path='/api/actions/addiction:set'
+                icon={Trash2}
+                label='Unmake the craving'
+                iconOnly
+                destructive
+                fixed={{ ...pair, remove: true }}
+                hide={[
+                  'addicted_since_epoch',
+                  'withdrawal_since_epoch',
+                  'owned_epochs',
+                  'hold',
+                ]}
+                confirm='Unmake it as if it never was; no immunity is left behind.'
+              />
+            </li>
+          )
+        }}
+      </Paged>
     </ul>
   )
 }

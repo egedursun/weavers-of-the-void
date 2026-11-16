@@ -87,7 +87,7 @@ function OptionTile({
       data-surface='ResearchOption'
       data-state={current ? 'chosen' : 'drawn'}
       className={cn(
-        'flex h-full min-w-0 flex-col gap-2 rounded-lg border p-3 @md/lore:last:odd:col-span-2',
+        'flex h-full min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3 @md/lore:last:odd:col-span-2',
         current
           ? 'border-primary/50 bg-primary/8 shadow-md ring-1 shadow-primary/10 ring-primary/20'
           : 'border-info/40 bg-info/5'
@@ -173,7 +173,7 @@ function FocusCard({
     >
       <div data-surface='ResearchFocus' className='flex min-w-0 flex-col gap-3'>
         {focus && current ? (
-          <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-muted/30 p-3'>
+          <div className='flex min-w-0 items-center gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
             <Medallion icon={branchOf(current.branch).icon} tone='gold' />
             <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
@@ -337,7 +337,7 @@ function InstitutionTile({
       data-surface='InstitutionCard'
       data-state={row.embraced ? 'embraced' : 'refused'}
       className={cn(
-        'flex h-full min-w-0 flex-col gap-3 rounded-lg border p-3 @md/lore:last:odd:col-span-2',
+        'flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3 @md/lore:last:odd:col-span-2',
         row.embraced ? 'border-success/40 bg-success/5' : 'border-warning/40'
       )}
     >
@@ -561,7 +561,7 @@ function BoostTile({
   return (
     <li
       data-surface='ResearchBoost'
-      className='flex h-full min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3 @md/lore:last:odd:col-span-2'
+      className='flex h-full min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3 @md/lore:last:odd:col-span-2'
     >
       <div className='flex min-w-0 items-start gap-2.5'>
         <Medallion icon={trigger.icon} tone={trigger.tone} size='sm' />
@@ -709,7 +709,7 @@ function CapabilitiesCard({ card }: { card: LearningCard }) {
                 key={row.capability}
                 data-state={row.held ? 'held' : 'locked'}
                 className={cn(
-                  'flex min-w-0 items-start gap-2.5 rounded-lg border p-3 @md/lore:last:odd:col-span-2',
+                  'flex min-w-0 items-start gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3 @md/lore:last:odd:col-span-2',
                   row.held
                     ? 'border-primary/50 bg-primary/8'
                     : 'border-dashed bg-muted/20'

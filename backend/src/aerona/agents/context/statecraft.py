@@ -2,7 +2,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.intrigue import name_of
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.affairs import CouncilSeatRow, CourtPositionRow, CourtRow, MandateRow, NobleDemandRow, ResolutionRow, TaxPolicyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -85,7 +85,7 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
         found.append(f"office #{office.id} ({office.kind.value.replace('_', ' ')}) works at {task}, diligence {office.diligence}")
     for tax in await session.scalars(select(TaxPolicyRow).where(TaxPolicyRow.polity_entity_id == realm, TaxPolicyRow.rate > 0).order_by(TaxPolicyRow.kind)):
         farmed = ", farmed out" if tax.farmed else ""
-        found.append(f"the {tax.kind.value} tax stands at {tax.rate}{farmed}, bringing {tax.take}")
+        found.append(f"the {spoken(tax.kind)} tax stands at {tax.rate}{farmed}, bringing {tax.take}")
     for mandate in await session.scalars(
         select(MandateRow).where(MandateRow.polity_entity_id == realm, MandateRow.state == MandateState.ACTIVE).order_by(MandateRow.id)
     ):
@@ -94,7 +94,7 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
         found.append(f"{await name_of(session, seat.holder_node_id)} holds {several(seat.seats, 'council seat', 'council seats')}")
     court = await session.get(CourtRow, realm)
     if court is not None:
-        found.append(f"your court shines at grandeur {court.grandeur} with {several(court.courtiers, 'courtier', 'courtiers')}")
+        found.append(f"your court stands at grandeur {court.grandeur} with {several(court.courtiers, 'courtier', 'courtiers')}")
     for position in await session.scalars(
         select(CourtPositionRow).where(CourtPositionRow.polity_entity_id == realm, CourtPositionRow.holder_entity_id.is_not(None))
     ):

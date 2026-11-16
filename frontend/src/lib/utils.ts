@@ -48,6 +48,7 @@ const twMerge = extendTailwindMerge({
     },
     classGroups: {
       'font-size': [{ text: [...TEXT_ROLES] }],
+      'text-color': [{ text: ['gilded'] }],
     },
   },
 })

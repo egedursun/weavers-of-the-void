@@ -4,10 +4,14 @@ from aerona.agents.context.naming import naming_item, world_naming
 from aerona.agents.context.scope import Scope
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.domains import DOMAIN_LABELS
+from aerona.catalog.law_grammar import LEGACY_GRAMMAR, Grammar, working_text
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import WorldSeasonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.law_grammar import LawCondition
+from aerona.domain.enums.society import NaturalLaw
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import AgeStar, ClimateLine, CreatorMood, EpicSummary, LawLine, SeasonLine, WorldHeaderContext
 
@@ -53,7 +57,18 @@ async def laws(scope: Scope, world: WorldRow | None) -> list[LawLine]:
         .where(EntityRow.entity_type == EntityType.NATURAL_LAW, EntityRow.status == EntityStatus.CANON, EntityRow.world_id == world.id)
         .order_by(EntityRow.id)
     )
-    return [LawLine(id=law.id, name=law.name, description=law.description) for law in await scope.session.scalars(statement)]
+    found = list(await scope.session.scalars(statement))
+    profiles = {
+        row.law_entity_id: row
+        for row in await scope.session.scalars(select(NaturalLawProfileRow).where(NaturalLawProfileRow.law_entity_id.in_([law.id for law in found])))
+    }
+    return [LawLine(id=law.id, name=law.name, description=law.description, working=working(law, profiles.get(law.id))) for law in found]
+
+
+def working(law: EntityRow, row: NaturalLawProfileRow | None) -> str:
+    if row is not None and row.target is not None and row.operator is not None and row.key is not None:
+        return working_text(Grammar(row.target, row.operator, row.key, row.value), row.condition)
+    return working_text(LEGACY_GRAMMAR[law.natural_law or NaturalLaw.NONE], LawCondition.ALWAYS)
 
 
 async def world_header_context(scope: Scope, world_id: int | None = None, short: bool = False) -> WorldHeaderContext:

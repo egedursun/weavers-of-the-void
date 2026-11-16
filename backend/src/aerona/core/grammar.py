@@ -97,3 +97,7 @@ def ordinal_word(number: int) -> str:
     if TEEN_LOW <= number % HUNDRED <= TEEN_HIGH:
         return f"{number}th"
     return f"{number}{ORDINAL_SUFFIXES.get(number % TEN, 'th')}"
+
+
+def spoken(value: object) -> str:
+    return str(getattr(value, "value", value)).replace("_", " ")

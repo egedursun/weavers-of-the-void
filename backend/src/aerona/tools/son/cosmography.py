@@ -11,6 +11,7 @@ from aerona.db.tables.cosmography import ClusterRow, CosmicBeingProfileRow, Dime
 from aerona.db.tables.physics import ImpactEventRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingKind, ClusterKind, DimensionElement, DimensionKind, GalaxyType, RiftCause
 from aerona.domain.enums.entity import EntityType
@@ -97,6 +98,7 @@ class CreateDimensionInput(ToolInput):
     name: Name
     kind: DimensionKind
     element: DimensionElement | None = None
+    form: SpellForm | None = None
     parent_dimension_id: int | None = None
     description: Description
 
@@ -340,7 +342,9 @@ async def create_dimension(call: SonCall, args: CreateDimensionInput) -> str:
         await ensure_reaches(call, await home_of(call, None, args.parent_dimension_id))
     cost = call.rules.dimensions.create_essence
     require_essence(call, cost)
-    dimension = await control.new_dimension(call.tick, name, args.kind, parent_id=args.parent_dimension_id, element=args.element, description=args.description)
+    dimension = await control.new_dimension(
+        call.tick, name, args.kind, parent_id=args.parent_dimension_id, element=args.element, description=args.description, form=args.form
+    )
     dimension.ruler_node_id = call.son.id
     call.spend_essence(cost)
     await call.chronicle(ChronicleKind.COSMIC, lines.CREATE_DIMENSION, son=call.son.name, dimension=dimension.name, description=args.description)

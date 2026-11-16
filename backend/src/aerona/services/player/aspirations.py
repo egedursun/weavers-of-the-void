@@ -275,7 +275,7 @@ async def remove_inspiration(scope: PlayerScope, command: InspirationTarget) -> 
     holder = row.holder_node_id
     await scope.session.delete(row)
     await scope.session.flush()
-    return Effect("The inspiration was quenched.", target_node_id=holder)
+    return Effect("The inspiration was ended.", target_node_id=holder)
 
 
 @player_action("aspiration:conviction", ActionKind.OTHER)

@@ -3,7 +3,7 @@ import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ConfirmDialog } from '@/components/domain'
+import { ConfirmDialog, Picture } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import {
   type ImageListView,
@@ -45,7 +45,7 @@ function Tile({
   const Icon = CATEGORY_ICON[category] ?? FALLBACK_ICON
   const name = item.target_name ?? 'Unknown record'
   return (
-    <li className='group relative min-w-0 overflow-hidden rounded-xl border bg-muted'>
+    <li className='group relative min-w-0 overflow-hidden rounded-md border surface-well border-gild/45 bg-muted/70'>
       <a
         href={mediaUrl(item.image.file_name)}
         aria-label={`${name}, ${categoryLabel(category)}`}
@@ -55,7 +55,7 @@ function Tile({
         }}
         className='block outline-none focus-visible:ring-2 focus-visible:ring-ring'
       >
-        <img
+        <Picture
           src={mediaUrl(item.image.file_name, TILE_WIDTH[density])}
           alt={item.image.caption ?? name}
           loading='lazy'
@@ -103,14 +103,14 @@ function Tile({
 }
 
 export function GalleryGrid({
-  items,
+  page,
   density,
   veiledOf,
   worldOf,
   onOpen,
   readOnlyReason = null,
 }: {
-  items: ImageListView[]
+  page: readonly ImageListView[]
   density: GalleryDensity
   veiledOf: (item: ImageListView) => boolean
   worldOf: (item: ImageListView) => string | null
@@ -131,7 +131,7 @@ export function GalleryGrid({
             : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8'
         )}
       >
-        {items.map((item, index) => (
+        {page.map((item, index) => (
           <Tile
             key={item.image.id}
             item={item}

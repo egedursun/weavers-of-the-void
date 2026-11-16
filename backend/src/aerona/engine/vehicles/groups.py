@@ -38,7 +38,7 @@ async def groups_of(session: AsyncSession, holder_id: int) -> list[VehicleGroupR
 
 async def read(session: AsyncSession, group: VehicleGroupRow) -> GroupReading | None:
     design = await session.get(DesignRow, group.design_id)
-    if design is None or group.count <= 0:
+    if design is None or group.count <= 0 or group.status is VehicleStatus.BUILDING:
         return None
     crewed = min(1.0, group.crewed / group.count) if group.count else 0.0
     weapons = await function_share(session, group, C.WEAPON)
@@ -59,7 +59,15 @@ async def read(session: AsyncSession, group: VehicleGroupRow) -> GroupReading | 
 
 
 async def add_vehicles(
-    session: AsyncSession, holder_id: int, design: DesignRow, count: int, *, epoch: int, crewed: int = 0, region_id: int | None = None
+    session: AsyncSession,
+    holder_id: int,
+    design: DesignRow,
+    count: int,
+    *,
+    epoch: int,
+    crewed: int = 0,
+    region_id: int | None = None,
+    building: bool = False,
 ) -> VehicleGroupRow | None:
     if count <= 0 or held(holder_id):
         return None
@@ -75,7 +83,7 @@ async def add_vehicles(
             crewed=0,
             condition=PERCENT,
             fuel=0,
-            status=VehicleStatus.READY,
+            status=VehicleStatus.BUILDING if building else VehicleStatus.READY,
             region_entity_id=region_id,
             built_epoch=epoch,
             locked=[],

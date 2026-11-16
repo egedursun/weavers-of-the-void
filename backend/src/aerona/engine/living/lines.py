@@ -245,6 +245,8 @@ async def run_wild(ctx: TickContext, line: LivingLineRow) -> bool:
             )
         )
     line.escaped = True
+    if "outcome" not in line.locked:
+        line.outcome = LineOutcome.ESCAPED
     await note(ctx, f"{line.name} got loose into the wild.", key="living.escaped", ids=[region])
     return True
 

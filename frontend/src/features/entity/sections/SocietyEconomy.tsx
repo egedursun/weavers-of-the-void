@@ -84,53 +84,55 @@ export function SocietyEconomy({ detail }: { detail: EntityDetail }) {
       )}
       {classes.length > 0 && (
         <ul className='flex min-w-0 flex-col gap-3'>
-          {classes.map((name) => {
-            const share = society.shares[name] ?? 0
-            const content = society.satisfaction[name]
-            return (
-              <li
-                key={name}
-                className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4'
-              >
-                <div className='flex min-w-0 flex-col gap-1'>
-                  <div className='flex min-w-0 items-center gap-2'>
-                    <Label className='flex-1' truncate>
-                      {humanize(name)}
-                    </Label>
-                    <Stat
-                      value={`${formatDecimal(share, 1)}%`}
-                      tone={share > 0 ? 'inherit' : 'muted'}
-                    />
-                  </div>
-                  <Progress
-                    value={Math.min(PERCENT_MAX, share)}
-                    size='sm'
-                    aria-label={`${humanize(name)} share`}
-                  />
-                </div>
-                {content !== undefined && (
+          <Paged items={classes} as='li'>
+            {(name) => {
+              const share = society.shares[name] ?? 0
+              const content = society.satisfaction[name]
+              return (
+                <li
+                  key={name}
+                  className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4'
+                >
                   <div className='flex min-w-0 flex-col gap-1'>
                     <div className='flex min-w-0 items-center gap-2'>
-                      <Label className='flex-1'>Contentment</Label>
-                      <Stat value={content} />
+                      <Label className='flex-1' truncate>
+                        {humanize(name)}
+                      </Label>
+                      <Stat
+                        value={`${formatDecimal(share, 1)}%`}
+                        tone={share > 0 ? 'inherit' : 'muted'}
+                      />
                     </div>
                     <Progress
-                      value={content}
+                      value={Math.min(PERCENT_MAX, share)}
                       size='sm'
-                      tone={
-                        content >= HALF
-                          ? 'success'
-                          : unhappiest === name
-                            ? 'destructive'
-                            : 'warning'
-                      }
-                      aria-label={`${humanize(name)} contentment`}
+                      aria-label={`${humanize(name)} share`}
                     />
                   </div>
-                )}
-              </li>
-            )
-          })}
+                  {content !== undefined && (
+                    <div className='flex min-w-0 flex-col gap-1'>
+                      <div className='flex min-w-0 items-center gap-2'>
+                        <Label className='flex-1'>Contentment</Label>
+                        <Stat value={content} />
+                      </div>
+                      <Progress
+                        value={content}
+                        size='sm'
+                        tone={
+                          content >= HALF
+                            ? 'success'
+                            : unhappiest === name
+                              ? 'destructive'
+                              : 'warning'
+                        }
+                        aria-label={`${humanize(name)} contentment`}
+                      />
+                    </div>
+                  )}
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       )}
       {Object.keys(society.stocks).length > 0 && (

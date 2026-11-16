@@ -1,4 +1,8 @@
 import {
+  SprayCan,
+  Sprout,
+  Dna,
+  Cpu,
   Moon,
   Accessibility,
   BatteryLow,
@@ -313,7 +317,10 @@ export const CONDITIONS: Record<string, Named> = {
   },
 }
 
-export const MEDICINE: Record<string, Named & { hint: string }> = {
+export const MEDICINE: Record<
+  components['schemas']['MedicineTier'],
+  Named & { hint: string }
+> = {
   none: {
     label: 'No medicine',
     icon: Frown,
@@ -343,6 +350,60 @@ export const MEDICINE: Record<string, Named & { hint: string }> = {
     icon: Zap,
     tone: 'verdigris',
     hint: 'Lost parts can be made whole again.',
+  },
+  antisepsis: {
+    label: 'Antisepsis',
+    icon: SprayCan,
+    tone: 'info',
+    hint: 'Clean hands and tools keep wounds from festering.',
+  },
+  anaesthesia: {
+    label: 'Anaesthesia',
+    icon: Moon,
+    tone: 'info',
+    hint: 'Deep cuts can be made without the shock that kills.',
+  },
+  immunisation: {
+    label: 'Immunisation',
+    icon: Syringe,
+    tone: 'success',
+    hint: 'Folk are guarded against sicknesses before they come.',
+  },
+  antimicrobials: {
+    label: 'Antimicrobials',
+    icon: Pill,
+    tone: 'success',
+    hint: 'Festering and plague can be driven out of the body.',
+  },
+  transplantation: {
+    label: 'Transplantation',
+    icon: HeartPulse,
+    tone: 'gold',
+    hint: 'Failed organs can be replaced from another body.',
+  },
+  mind_medicine: {
+    label: 'Medicine of the mind',
+    icon: Brain,
+    tone: 'verdigris',
+    hint: 'Harm to the mind is treated and heals faster.',
+  },
+  regeneration: {
+    label: 'Regeneration',
+    icon: Sprout,
+    tone: 'verdigris',
+    hint: 'The body regrows what it lost.',
+  },
+  genome_repair: {
+    label: 'Genome repair',
+    icon: Dna,
+    tone: 'gold',
+    hint: 'Flaws carried in the blood are mended.',
+  },
+  cellular_machines: {
+    label: 'Cellular machines',
+    icon: Cpu,
+    tone: 'gold',
+    hint: 'Minute machines repair the body from within.',
   },
 }
 

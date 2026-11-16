@@ -1,4 +1,8 @@
 import {
+  Plus,
+  Merge,
+  AudioWaveform,
+  ArrowLeftRight,
   FlaskConical,
   Binary,
   ArrowRightLeft,
@@ -54,6 +58,15 @@ export const CHANGE_KINDS: Record<Schema['SoundChangeKind'], Named> = {
   vowel_shift: { label: 'Vowel shift', icon: Waves, tone: 'info' },
   merger: { label: 'Merger', icon: GitMerge, tone: 'warning' },
   loss: { label: 'Loss', icon: Minus, tone: 'danger' },
+  metathesis: { label: 'Metathesis', icon: ArrowLeftRight, tone: 'info' },
+  epenthesis: { label: 'Epenthesis', icon: Plus, tone: 'info' },
+  assimilation: { label: 'Assimilation', icon: Merge, tone: 'info' },
+  palatalisation: {
+    label: 'Palatalisation',
+    icon: ArrowRightLeft,
+    tone: 'info',
+  },
+  tonogenesis: { label: 'Tonogenesis', icon: AudioWaveform, tone: 'info' },
 }
 
 export const ENVIRONMENTS: Record<Schema['SoundEnvironment'], Named> = {

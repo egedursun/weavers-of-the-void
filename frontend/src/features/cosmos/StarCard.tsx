@@ -147,7 +147,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
           </PagedList>
         )}
       </Section>
-      <Collapsible className='flex min-w-0 flex-col gap-4 rounded-xl border p-4'>
+      <Collapsible className='flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4'>
         <CollapsibleTrigger asChild>
           <Button variant='ghost' className='justify-start'>
             Edit the star

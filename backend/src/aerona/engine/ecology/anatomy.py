@@ -1,11 +1,11 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.creature_anatomy import EXOTIC_TISSUES, HOARDED, LIFE_SKIN, PLAN_LIMBS, PLAN_SKIN, TISSUES, TRAIT_BREATH, TRAIT_SKIN
+from aerona.catalog.creature_anatomy import EXOTIC_TISSUES, HOARDED, LIFE_SKIN, PLAN_LIMBS, PLAN_SKIN, TISSUES, TRAIT_ATTACKS, TRAIT_SKIN, AttackSpec
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.core.random import RandomKey, SeededRandom
-from aerona.db.tables.anatomy import CreatureAnatomyRow
+from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow
@@ -17,11 +17,12 @@ from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import (
     GROWN,
+    AttackDelivery,
+    AttackEffect,
+    AttackRange,
     Aversion,
     AwakeningTrigger,
     Biochemistry,
-    BreathKind,
-    GazeKind,
     Habitat,
     Temperament,
     TissueMaterial,
@@ -41,15 +42,12 @@ from aerona.rules.registry import Rules
 
 T = CreatureTrait
 BEAST_BODIES_FIXUP = "creature_anatomy.beast_bodies"
-GAZE_VERBS = {
-    GazeKind.TERROR: "terrifies a town it raids",
-    GazeKind.PETRIFY: "turns a limb to stone",
-    GazeKind.SLEEP: "puts the watch to sleep",
-    GazeKind.MADNESS: "drives a mortal mad",
-}
+TOWN_DELIVERIES = (AttackDelivery.BREATH, AttackDelivery.SPIT, AttackDelivery.SPRAY, AttackDelivery.EMANATION, AttackDelivery.VOICE, AttackDelivery.SPORES)
+CLOSE_DELIVERIES = (AttackDelivery.TOUCH, AttackDelivery.BITE, AttackDelivery.STING)
+MIND_EFFECTS = (AttackEffect.FEAR, AttackEffect.STILLNESS, AttackEffect.SLEEP, AttackEffect.CONFUSION, AttackEffect.CHARM)
 FLYERS = frozenset({BodyPlan.AVIAN})
 HOLY_KINDS = frozenset({StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MONASTERY})
-BONE_OF = {TissueMaterial.STONE: TissueMaterial.STONE, TissueMaterial.CRYSTAL: TissueMaterial.CRYSTAL, TissueMaterial.METAL: TissueMaterial.METAL}
+BONE_OF = {material: material for material in (TissueMaterial.MINERAL, TissueMaterial.CRYSTALLINE, TissueMaterial.METALLIC)}
 TEMPERAMENTS = (Temperament.PLACID, Temperament.SKITTISH, Temperament.CURIOUS, Temperament.FIERCE, Temperament.CUNNING)
 
 
@@ -99,9 +97,6 @@ def generate(
     skin = next((TRAIT_SKIN[trait] for trait in TRAIT_SKIN if trait in traits), None) or LIFE_SKIN.get(biochemistry) or PLAN_SKIN[plan]
     if monster and rng.chance(table.exotic_tissue_pct):
         skin = rng.pick(list(EXOTIC_TISSUES))
-    breath = next((TRAIT_BREATH[trait] for trait in TRAIT_BREATH if trait in traits), None)
-    if breath is None and rng.chance(table.monster_breath_pct if monster else table.breath_pct):
-        breath = rng.pick(list(BreathKind))
     bite = PackageKind.SNAKE_VENOM if T.VENOMOUS in traits else None
     if bite is None and rng.chance(table.monster_bite_pct if monster else table.bite_pct):
         bite = rng.pick([PackageKind.SNAKE_VENOM, PackageKind.LYCANTHROPY, PackageKind.VAMPIRISM, PackageKind.VOID_TAINT])
@@ -115,10 +110,8 @@ def generate(
         wings=wings,
         tails=1 if rng.chance(table.tail_pct) else 0,
         skin=skin,
-        bone=BONE_OF.get(skin, TissueMaterial.BONE),
-        breath=breath,
+        bone=BONE_OF.get(skin, TissueMaterial.RIGID),
         bite=bite,
-        gaze=rng.pick(list(GazeKind)) if monster and rng.chance(table.gaze_pct) else None,
         temperament=temperament,
         hoards=rng.pick(list(HOARDED)) if monster and rng.chance(table.hoard_pct) else None,
         hates=rng.pick(list(Aversion)) if rng.chance(table.hate_pct) else None,
@@ -142,6 +135,32 @@ async def unique_kind(session: AsyncSession, beast: BeastProfileRow) -> bool:
     return int(kin or 0) <= 1 and abundance <= 0
 
 
+def attack_specs(rules: Rules, node_id: int, traits: set[CreatureTrait], *, monster: bool, epoch: int = 0) -> list[AttackSpec]:
+    table = rules.creature_anatomy
+    rng = SeededRandom(RandomKey(node_id, epoch, "attacks"))
+    specs = [TRAIT_ATTACKS[trait] for trait in TRAIT_ATTACKS if trait in traits]
+    if not specs and rng.chance(table.monster_attack_pct if monster else table.attack_pct):
+        effect = rng.pick([effect for effect in AttackEffect if effect not in MIND_EFFECTS])
+        specs.append(AttackSpec(rng.pick(list(TOWN_DELIVERIES)), effect, rng.pick([AttackRange.NEAR, AttackRange.FAR])))
+    if monster and rng.chance(table.sight_attack_pct):
+        effect = rng.pick(list(MIND_EFFECTS))
+        specs.append(AttackSpec(AttackDelivery.GAZE, effect, AttackRange.SIGHT, permanent=effect is AttackEffect.STILLNESS))
+    if monster and rng.chance(table.monster_bite_pct):
+        specs.append(AttackSpec(rng.pick(list(CLOSE_DELIVERIES)), rng.pick([AttackEffect.VENOM, AttackEffect.DRAIN, AttackEffect.FORCE]), AttackRange.TOUCH))
+    return specs
+
+
+def attack_row(node_id: int, spec: AttackSpec) -> CreatureAttackRow:
+    row = CreatureAttackRow(node_id=node_id, delivery=spec.delivery, effect=spec.effect, range=spec.range, recharge=0, permanent=spec.permanent)
+    row.locked = []
+    return row
+
+
+async def give_attacks(ctx: TickContext, node_id: int, specs: list[AttackSpec]) -> None:
+    for spec in specs:
+        ctx.session.add(attack_row(node_id, spec))
+
+
 async def species_anatomy(ctx: TickContext, species: EntityRow, profile: SpeciesProfileRow) -> CreatureAnatomyRow:
     traits = await traits_of(ctx.session, species.id)
     row = generate(
@@ -156,6 +175,7 @@ async def species_anatomy(ctx: TickContext, species: EntityRow, profile: Species
         epoch=ctx.epoch,
     )
     ctx.session.add(row)
+    await give_attacks(ctx, species.id, attack_specs(ctx.rules, species.id, traits, monster=False, epoch=ctx.epoch))
     return row
 
 
@@ -216,12 +236,17 @@ async def beast_anatomy(ctx: TickContext, beast: EntityRow, row: BeastProfileRow
         deep=deep,
         epoch=ctx.epoch,
     )
+    monster = deep or await unique_kind(ctx.session, row)
+    specs = attack_specs(ctx.rules, beast.id, traits, monster=monster, epoch=ctx.epoch)
     inherited = await ctx.session.get(CreatureAnatomyRow, row.species_entity_id) if row.species_entity_id is not None else None
     if inherited is not None and not deep:
         anatomy.skin, anatomy.bone, anatomy.habitat = inherited.skin, inherited.bone, inherited.habitat
-        anatomy.breath = anatomy.breath or inherited.breath
         anatomy.bite = anatomy.bite or inherited.bite
+        if not specs and row.species_entity_id is not None:
+            kin = await ctx.session.scalars(select(CreatureAttackRow).where(CreatureAttackRow.node_id == row.species_entity_id).order_by(CreatureAttackRow.id))
+            specs = [AttackSpec(item.delivery, item.effect, item.range, item.permanent) for item in kin]
     ctx.session.add(anatomy)
+    await give_attacks(ctx, beast.id, specs)
     return anatomy
 
 
@@ -246,12 +271,12 @@ async def ensure_anatomy(ctx: TickContext) -> int:
     return made
 
 
-def harm_factor(rules: Rules, anatomy: CreatureAnatomyRow | None, plan_limbs: int) -> float:
+def harm_factor(rules: Rules, anatomy: CreatureAnatomyRow | None, plan_limbs: int, attacks: int = 0) -> float:
     if anatomy is None:
         return 1.0
     table = rules.creature_anatomy
     extra = (
-        (table.breath_harm_pct if anatomy.breath is not None else 0)
+        attacks * table.attack_harm_pct
         + max(0, anatomy.heads - 1) * table.head_harm_pct
         + max(0, anatomy.limbs - plan_limbs) * table.limb_harm_pct
         + TISSUES[anatomy.skin].harm_pct
@@ -268,7 +293,8 @@ async def body_might(session: AsyncSession, rules: Rules, node_id: int) -> float
     if anatomy is None:
         return 1.0
     guard = 1 + armour_of(anatomy) * rules.creature_anatomy.armour_power_pct / PERCENT / PERCENT
-    return harm_factor(rules, anatomy, await plan_limbs(session, node_id)) * guard
+    attacks = len(list(await session.scalars(select(CreatureAttackRow.id).where(CreatureAttackRow.node_id == node_id))))
+    return harm_factor(rules, anatomy, await plan_limbs(session, node_id), attacks) * guard
 
 
 async def repelled(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, aversion: Aversion | None) -> bool:
@@ -301,10 +327,10 @@ async def anatomy_lines(session: AsyncSession, node_id: int) -> list[str]:
     if row.tails:
         parts.append("a tail")
     lines = [f"body: {', '.join(parts)}; skin of {words(row.skin.value)}, bones of {words(row.bone.value)}; lives in the {words(row.habitat.value)}"]
+    attacks = await session.scalars(select(CreatureAttackRow).where(CreatureAttackRow.node_id == node_id).order_by(CreatureAttackRow.id))
     weapons = [
-        f"breathes {words(row.breath.value)}" if row.breath else "",
+        *(f"{words(item.delivery.value)} of {words(item.effect.value)}, reaching {words(item.range.value)}" for item in attacks),
         f"its bite carries {words(row.bite.value)}" if row.bite else "",
-        f"its gaze {GAZE_VERBS[row.gaze]}" if row.gaze else "",
     ]
     if any(weapons):
         lines.append(f"attacks: {'; '.join(item for item in weapons if item)}")

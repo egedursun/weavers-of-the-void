@@ -150,9 +150,7 @@ async def bind_first_faith(ctx: TickContext, entity: EntityRow, atlas: RegionAtl
         await connect(ctx.session, entity.id, god.id, BondKind.WORSHIPS, ctx.epoch, description="first faith")
         return FaithBinding(god.id, seeking=False)
     if rng.chance(ctx.rules.deep_world.new_people_worship_creator_chance) and await worship_creator(ctx.session, entity, ctx.epoch, "first faith"):
-        await note(
-            ctx, f"{entity.name} began praying directly to the creator in the sky.", key="settling.creator_faith", ids=[entity.id], kind=ChronicleKind.WORSHIP
-        )
+        await note(ctx, f"{entity.name} began praying directly to the creator.", key="settling.creator_faith", ids=[entity.id], kind=ChronicleKind.WORSHIP)
         return FaithBinding(await patron_node(ctx.session, entity), seeking=False)
     await add_flag(ctx.session, entity.id, EntityFlag.SEEKING_GOD, ctx.epoch)
     await note(

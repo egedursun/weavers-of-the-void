@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
+import { Paged } from '@/components/domain'
 import { Label } from '@/components/typography'
 import { kindTone } from '@/features/chronicle/chronicleKinds'
 import { type ChronicleLine } from '../api/types'
@@ -43,50 +44,52 @@ export function EntityTimeline({
   return (
     <nav aria-label='Timeline' className='min-w-0 overflow-x-auto'>
       <ol className='flex min-w-max items-end gap-1 pb-1'>
-        {columns.map((column) => (
-          <li
-            key={column.epoch}
-            className='flex w-control-sm flex-col items-center gap-1'
-          >
-            <a
-              href={`#epoch-${column.epoch}`}
-              aria-label={`Epoch ${column.epoch}: ${plural(column.count, 'record', 'records')}`}
-              title={`Epoch ${column.epoch}: ${plural(column.count, 'record', 'records')}`}
-              onClick={(event) => {
-                event.preventDefault()
-                if (column.count > 0) onPick(column.epoch)
-              }}
-              className={cn(
-                'flex size-control-sm items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                column.count === 0 && 'pointer-events-none'
-              )}
+        <Paged items={columns} as='li'>
+          {(column) => (
+            <li
+              key={column.epoch}
+              className='flex w-control-sm flex-col items-center gap-1'
             >
-              {column.kind ? (
-                <span
-                  className={cn(
-                    'rounded-full',
-                    DOT_SIZE[
-                      Math.min(
-                        DOT_SIZE.length - 1,
-                        Math.floor(column.count / DOT_STEP)
-                      )
-                    ],
-                    DOT_TONE[kindTone(column.kind)]
-                  )}
-                />
-              ) : (
-                <span className='h-1 w-1 rounded-full bg-border' />
-              )}
-            </a>
-            <Label
-              className={
-                column.epoch === birthEpoch ? 'text-primary' : undefined
-              }
-            >
-              {String(column.epoch)}
-            </Label>
-          </li>
-        ))}
+              <a
+                href={`#epoch-${column.epoch}`}
+                aria-label={`Epoch ${column.epoch}: ${plural(column.count, 'record', 'records')}`}
+                title={`Epoch ${column.epoch}: ${plural(column.count, 'record', 'records')}`}
+                onClick={(event) => {
+                  event.preventDefault()
+                  if (column.count > 0) onPick(column.epoch)
+                }}
+                className={cn(
+                  'flex size-control-sm items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  column.count === 0 && 'pointer-events-none'
+                )}
+              >
+                {column.kind ? (
+                  <span
+                    className={cn(
+                      'rounded-full',
+                      DOT_SIZE[
+                        Math.min(
+                          DOT_SIZE.length - 1,
+                          Math.floor(column.count / DOT_STEP)
+                        )
+                      ],
+                      DOT_TONE[kindTone(column.kind)]
+                    )}
+                  />
+                ) : (
+                  <span className='h-1 w-1 rounded-full bg-border' />
+                )}
+              </a>
+              <Label
+                className={
+                  column.epoch === birthEpoch ? 'text-primary' : undefined
+                }
+              >
+                {String(column.epoch)}
+              </Label>
+            </li>
+          )}
+        </Paged>
       </ol>
     </nav>
   )

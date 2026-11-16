@@ -17,6 +17,9 @@ class LegitimacyType(StrEnum):
     TRADITIONAL = "traditional"
     CHARISMATIC = "charismatic"
     RATIONAL = "rational"
+    DIVINE_MANDATE = "divine_mandate"
+    POPULAR = "popular"
+    PERFORMANCE = "performance"
 
 
 class Routinisation(StrEnum):

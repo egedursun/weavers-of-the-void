@@ -6,6 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.intrigue import FavourRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow
 from aerona.db.tables.regime import CoalitionMemberRow, PatronageTieRow, PowerBaseRow, RegimeRow, VenalOfficeRow
@@ -13,6 +14,7 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.mind import ActKind, TraitKind
 from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import OfficeKind, OfficePower
@@ -84,6 +86,15 @@ async def bind_clients(ctx: TickContext, book: RealmBook, tally: PatronageTally)
     )
     for favour, client in favours.all():
         await tie(ctx, favour.owed_to_node_id, client.id, role=ClientRole.RETAINER, strength=favour.magnitude, tally=tally)
+    servants = await ctx.session.execute(
+        select(HouseholdRow.head_node_id, HouseholdMemberRow.member_node_id)
+        .join(HouseholdMemberRow, HouseholdMemberRow.household_id == HouseholdRow.id)
+        .where(HouseholdMemberRow.role == HouseholdRole.SERVANT, HouseholdRow.head_node_id.is_not(None))
+        .order_by(HouseholdMemberRow.member_node_id)
+    )
+    for head, servant in servants.all():
+        if head is not None and head != servant:
+            await tie(ctx, head, servant, role=ClientRole.HOUSEHOLD, strength=table.office_strength, tally=tally)
     for realm in book.realms.values():
         for office in realm.offices:
             if office.holder_entity_id is None or office.appointed_by_entity_id is None:

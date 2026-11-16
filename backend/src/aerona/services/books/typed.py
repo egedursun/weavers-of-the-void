@@ -7,7 +7,7 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, Select, select
+from sqlalchemy import JSON, Boolean, Date, DateTime, Select, inspect, select
 from sqlalchemy import column as loose_column
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapper
@@ -66,6 +66,7 @@ INDEXED_LISTS: dict[str, list[str]] = {"biome_mix": [biome.name.lower().replace(
 ID_LISTS = frozenset(
     {
         "witness_node_ids",
+        "witnesses",
         "excommunicated",
         "prior_journey_ids",
         "migration_path",
@@ -199,6 +200,10 @@ def words(key: str) -> str:
             break
     text = text.replace("_pct", " percent").replace("_", " ").replace(".", " ").strip()
     return text[:1].upper() + text[1:]
+
+
+def attribute_of(row: Any, column: KeyedColumnElement[Any]) -> Any:
+    return getattr(row, inspect(row).mapper.get_property_by_column(column).key)
 
 
 def title_of(table: str) -> str:
@@ -352,7 +357,7 @@ class TypedIndex:
         columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS or column.primary_key]
         table = RecordTable(title_of(table_name(mapper)), [words(column.key) for column in columns])
         for row in rows:
-            table.rows.append([self.value(column, getattr(row, column.key)) for column in columns])
+            table.rows.append([self.value(column, attribute_of(row, column)) for column in columns])
         filled = [index for index in range(len(columns)) if any(row[index] for row in table.rows)]
         if table.rows and filled:
             table.headers = [table.headers[index] for index in filled]
@@ -362,10 +367,10 @@ class TypedIndex:
     def _section(self, table: str, columns: list[KeyedColumnElement[Any]], rows: list[Any], single: bool) -> TypedSection:
         section = TypedSection(title_of(table))
         if single and len(rows) == 1:
-            section.facts = [TypedFact(words(column.key), text) for column in columns if (text := self.value(column, getattr(rows[0], column.key)))]
+            section.facts = [TypedFact(words(column.key), text) for column in columns if (text := self.value(column, attribute_of(rows[0], column)))]
             return section
         for row in rows:
-            parts = [f"{words(column.key)}: {text}" for column in columns if (text := self.value(column, getattr(row, column.key)))]
+            parts = [f"{words(column.key)}: {text}" for column in columns if (text := self.value(column, attribute_of(row, column)))]
             if parts:
                 section.rows.append(" · ".join(parts))
         return section

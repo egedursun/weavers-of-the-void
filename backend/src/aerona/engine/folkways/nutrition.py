@@ -2,7 +2,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ages import IrregularSeasonRow
@@ -11,15 +11,18 @@ from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.folkways import DietRow, NutrientNeedRow, NutritionScoreRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import SeasonSpell
 from aerona.domain.enums.body import ConditionKind, HarmCause
+from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.demography import FolkDiet
 from aerona.domain.enums.ecology import Biochemistry
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.folkways import Nutrient
 from aerona.domain.enums.mind import Attribute, PressureKind
 from aerona.domain.enums.mortal import LifeStage
@@ -27,12 +30,14 @@ from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.customs import people_id_of, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.lore.traditions import keeps
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.split import MIDPOINT, attributes_of, has_attributes, store_attributes
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.knowledge import branch_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.technology.profiles import family_level
 
 SHARES = ("staple", "protein", "fat", "fresh", "mineral")
 GROUPS: Mapping[str, frozenset[CommodityKind]] = {
@@ -113,8 +118,24 @@ async def derive_diet(ctx: TickContext, town: EntityRow, row: DietRow) -> None:
     if "special" not in row.locked:
         row.special = clamp_int(round_half_up(sum(goods.get(kind, 0) for kind in SPECIAL) * PERCENT / food) if food else 0, 0, PERCENT)
     if "energy" not in row.locked:
-        row.energy = clamp_int(PERCENT - (await pressures_of(ctx.session, town.id)).get(PressureKind.HUNGER, 0), 0, PERCENT)
+        fasting = ctx.rules.nutrition.fast_energy if await keeps(ctx, town.id, TraditionKind.FAST) else 0
+        row.energy = clamp_int(PERCENT - (await pressures_of(ctx.session, town.id)).get(PressureKind.HUNGER, 0) - fasting, 0, PERCENT)
+    await season_and_craft(ctx, town, row)
     row.updated_epoch = ctx.epoch
+
+
+async def lean_season(ctx: TickContext, world_id: int) -> int:
+    leanest = await ctx.session.scalar(select(func.min(WorldSeasonRow.growth)).where(WorldSeasonRow.world_id == world_id))
+    return 0 if leanest is None else max(0, PERCENT // 2 - int(leanest))
+
+
+async def season_and_craft(ctx: TickContext, town: EntityRow, row: DietRow) -> None:
+    table = ctx.rules.nutrition
+    if "fresh" not in row.locked:
+        cut = await lean_season(ctx, town.world_id) * table.lean_fresh_pct // PERCENT
+        row.fresh = clamp_int(row.fresh - max(0, cut - row.preserved), 0, PERCENT)
+    if "mineral" not in row.locked:
+        row.mineral = clamp_int(row.mineral + await family_level(ctx.session, town.id, TechFamily.MEDICINE) * table.fortify_per_level, 0, PERCENT)
 
 
 async def light_of(ctx: TickContext, world_id: int) -> int:

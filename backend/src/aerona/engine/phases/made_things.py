@@ -6,14 +6,17 @@ from aerona.db.tables.polity import PolityProfileRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.culture import CurseKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.mind import MemoryKind, TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.economy.materials import MaterialBook
+from aerona.engine.fortune.profiles import shift_fortune
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import art, items, typed_backfill
+from aerona.engine.lore.curse_kinds import WIDER_CURSES, Cursed
 from aerona.engine.mind.book import add_trait, stored_values, write_values
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
@@ -71,7 +74,7 @@ async def bloodthirst(ctx: TickContext, item: EntityRow, bearer: EntityRow, stre
             kind=MemoryKind.HUMILIATED_ME,
             magnitude=-ctx.rules.item_powers.provocation,
             epoch=ctx.epoch,
-            note=f"{item.name} thirsts for a fight",
+            note=f"{item.name} drives its bearer to fight",
         )
 
 
@@ -115,9 +118,12 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     elif row.curse is CurseKind.BLOODTHIRST:
         await bloodthirst(ctx, item, bearer, strength)
     elif row.curse is CurseKind.MISFORTUNE:
+        await shift_fortune(ctx, bearer.id, -ctx.rules.fortune.curse_strength, FortuneSourceKind.CURSE, item.id)
         home = await living_entity(ctx.session, bearer.location_id) if mortal is not None else bearer
         if home is not None and stat(home, "prosperity") is not None:
             shift_stat(home, "prosperity", -round_half_up(strength * table.misfortune_pct / PERCENT))
+    elif row.curse in WIDER_CURSES:
+        await WIDER_CURSES[row.curse](ctx, Cursed(item, bearer, strength))
     elif row.curse is not CurseKind.BETRAYAL or not await betrayal(ctx, realms, item, bearer, strength):
         return None
     return row.curse.value

@@ -26,6 +26,7 @@ from aerona.engine.phases.dominion import count
     "table.incorporeal_rights",
     "table.insurance_policies",
     "table.insurers",
+    "table.offices",
     "table.public_clocks",
     "table.resource_profiles",
     "table.species_ranges",

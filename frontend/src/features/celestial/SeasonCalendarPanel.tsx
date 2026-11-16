@@ -247,7 +247,7 @@ function HolyDayRow({
     (name.trim() === '' ? 'Write a name.' : null) ??
     (unchanged ? 'Nothing has changed.' : null)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Text weight='medium' className='flex-1' truncate>
           {day.name}
@@ -365,7 +365,7 @@ function NewHolyDay({
     (name.trim() === '' ? 'Name the holy day.' : null) ??
     (add.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border border-dashed p-2'>
+    <div className='flex min-w-0 flex-wrap items-end gap-2 rounded-md p-2 sealed-well'>
       <div className='flex min-w-0 flex-1 basis-40 flex-col gap-1'>
         <Label as='label' htmlFor={`holy-new-${calendar.knowledge_id}`}>
           New holy day
@@ -373,7 +373,7 @@ function NewHolyDay({
         <Input
           id={`holy-new-${calendar.knowledge_id}`}
           value={name}
-          placeholder='Feast of the First Light'
+          placeholder='The name of the holy day'
           onChange={(event) => setName(event.target.value)}
         />
       </div>
@@ -547,7 +547,7 @@ function SeasonRow({
   const removeReason =
     busy ?? (last ? 'A world keeps at least one season.' : null)
   return (
-    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <Text weight='medium' className='flex-1' truncate>
         {season.name}
       </Text>
@@ -632,7 +632,7 @@ function NewSeason({
       : null) ??
     (add.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed p-2'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
       <div className='flex min-w-0 flex-col gap-1'>
         <Label as='label' htmlFor={`season-new-${data.world_id}`}>
           Add a season
@@ -640,7 +640,7 @@ function NewSeason({
         <Input
           id={`season-new-${data.world_id}`}
           value={name}
-          placeholder='The Burning'
+          placeholder='The name of the season'
           onChange={(event) => setName(event.target.value)}
         />
       </div>
@@ -783,7 +783,7 @@ function NotableRow({
       : null)
   const kind = named(NOTABLE, year.kind)
   return (
-    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <Badge
         size='sm'
         variant='secondary'
@@ -864,14 +864,16 @@ export function SeasonCalendarPanel({ data }: { data: WorldSeasons }) {
         label='Seasons and moons'
       >
         <ul className='flex min-w-0 flex-col gap-2'>
-          {data.seasons.map((season) => (
-            <SeasonRow
-              key={season.id}
-              season={season}
-              last={data.seasons.length <= 1}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={data.seasons} as='li'>
+            {(season) => (
+              <SeasonRow
+                key={season.id}
+                season={season}
+                last={data.seasons.length <= 1}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
         <NewSeason data={data} blocked={blocked} />
         <MoonsAndTides

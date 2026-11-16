@@ -15,11 +15,13 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.folkways import IdeaStrain
+from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.mind import Attribute, Facet, IdeaState, SkillKind, TraitKind, TraitSource, ValueHolder
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR
 from aerona.engine.body.customs import people_of
 from aerona.engine.folkways.fed import healing_charm, underfed
 from aerona.engine.mind.book import Values, add_trait, is_locked, mind_of, stored_values, traits_of
+from aerona.engine.primitives.augment_bonus import lifts_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import base_stat, set_base_stats, stat
 from aerona.rules.registry import Rules
@@ -246,6 +248,10 @@ async def effective_attributes(session: AsyncSession, rules: Rules, node: Bodied
     if hunger:
         for member in FED_ATTRIBUTES:
             found[member] = clamp_attribute(found.get(member, MIDPOINT) - hunger * rules.nutrition.immunity_pct / PERCENT)
+    for key, lift in (await lifts_of(session, node.id, EffectTarget.ATTRIBUTE)).items():
+        if key in Attribute:
+            member = Attribute(key)
+            found[member] = clamp_attribute(found.get(member, MIDPOINT) + lift)
     return found
 
 

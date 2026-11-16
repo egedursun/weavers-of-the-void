@@ -124,7 +124,7 @@ async def set_corvee(scope: PlayerScope, command: SetCorvee) -> Effect:
     row = await control.set_corvee(await scope.context("labour_corvee"), command.community_id, command.share_pct, command.polity_id, command.work_id)
     if row is None:
         return Effect("The corvee was lifted.", command.community_id)
-    return Effect(f"A corvee of {row.share_pct}% of the farmhands was laid on the great works.", command.community_id, values={"share_pct": row.share_pct})
+    return Effect(f"A corvee of {row.share_pct}% of the workers was laid on the great works.", command.community_id, values={"share_pct": row.share_pct})
 
 
 @player_action("loyalty:edit", ActionKind.EDIT_RECORD)

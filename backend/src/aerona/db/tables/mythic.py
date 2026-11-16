@@ -16,7 +16,6 @@ from aerona.domain.enums.mythic import (
     MythicRealm,
     OfficeChoice,
     ServitorOrigin,
-    ServitorRank,
     ServitorRole,
 )
 
@@ -36,7 +35,7 @@ HEROQUEST_FIELDS = (
     "end_epoch",
 )
 MANTLING_FIELDS = ("god_node_id", "deeds", "worship", "progress", "state", "blocked", "notified")
-SERVITOR_FIELDS = ("god_node_id", "rank", "origin", "role", "post_entity_id", "loyalty", "fallen_to_node_id")
+SERVITOR_FIELDS = ("god_node_id", "origin", "role", "post_entity_id", "loyalty", "fallen_to_node_id")
 GEAS_FIELDS = ("layer_node_id", "layer", "mode", "act", "state", "favour", "laid_epoch", "last_kept_epoch", "broken_epoch")
 OFFICE_FIELDS = ("holder_node_id", "chosen_by", "neglect", "duty")
 
@@ -107,7 +106,6 @@ class ServitorRow(Base):
 
     spirit_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     god_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
-    rank: Mapped[ServitorRank] = mapped_column(enum_type(ServitorRank, "rank"), default=ServitorRank.HERALD)
     origin: Mapped[ServitorOrigin] = mapped_column(enum_type(ServitorOrigin, "origin"), default=ServitorOrigin.MADE)
     role: Mapped[ServitorRole] = mapped_column(enum_type(ServitorRole, "role"), default=ServitorRole.MESSENGER)
     post_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

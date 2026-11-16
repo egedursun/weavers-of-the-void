@@ -27,7 +27,7 @@ export function DesignScreen() {
         <div
           key={theme.id}
           data-theme-panel={theme.id}
-          className={`${theme.id} flex min-w-0 flex-col gap-8 rounded-xl border bg-background p-4 text-foreground md:p-6`}
+          className={`${theme.id} flex min-w-0 flex-col gap-8 rounded-md border surface-framed border-gild/30 bg-background p-4 text-foreground md:p-6`}
         >
           <Label variant='overline'>{theme.title}</Label>
           <BrandSpecimens />

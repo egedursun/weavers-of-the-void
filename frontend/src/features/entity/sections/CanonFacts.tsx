@@ -45,7 +45,7 @@ function FactRow({
 }) {
   const subject = fact.subject
   return (
-    <li className='flex min-w-0 items-center gap-2 rounded-md border px-3 py-2'>
+    <li className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'>
       <Text as='div' className='min-w-0 flex-1'>
         {subject && subject.id !== selfId ? (
           <EntityLink kind='entity' id={String(subject.id)}>

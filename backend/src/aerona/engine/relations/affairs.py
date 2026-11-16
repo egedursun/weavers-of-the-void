@@ -8,7 +8,7 @@ from aerona.db.tables.relations import RelationshipRow
 from aerona.db.write_guard import held, write_blocked
 from aerona.domain.enums.mind import ActKind, Emotion, HonourModel, MemoryKind, ThoughtKind
 from aerona.domain.enums.mortal import MarriageEnd
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.relations import RelationType
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.talk import affair_secret
@@ -20,11 +20,12 @@ from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.mortal.kinship import end_marriage, marriage_between
 from aerona.engine.notes import note
-from aerona.engine.polity.laws import law_param
+from aerona.engine.polity.oaths import break_on
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.relations.book import RELATIONS_KEY, ensure_relation, relation, shift
 from aerona.engine.relations.passions import betrayed
+from aerona.engine.unions.customs import divorce_rule
 
 
 @dataclass
@@ -53,8 +54,7 @@ async def flag_lovers(ctx: TickContext, row: RelationshipRow) -> bool:
 
 
 async def divorce_allowed(ctx: TickContext, spouse: EntityRow) -> str:
-    found = await law_param(ctx.session, spouse.location_id, LawKind.MARRIAGE_LAW, "divorce") if spouse.location_id is not None else None
-    return str(found) if found is not None else "for_cause"
+    return await divorce_rule(ctx.session, spouse)
 
 
 async def consequences(ctx: TickContext, cheat: EntityRow, lover: EntityRow, spouse: EntityRow, tally: AffairTally) -> list[str]:
@@ -68,6 +68,7 @@ async def consequences(ctx: TickContext, cheat: EntityRow, lover: EntityRow, spo
         )
         tally.challenges += 1
         told.append(f"{spouse.name} swore to answer {lover.name} with steel")
+    await break_on(ctx, [cheat.id], OathKind.FIDELITY, "lay with another against the vow")
     custom = await divorce_allowed(ctx, spouse)
     marriage = await marriage_between(ctx.session, cheat.id, spouse.id)
     odds = table.affair_divorce_pct * (2 if custom == "free" else 1)

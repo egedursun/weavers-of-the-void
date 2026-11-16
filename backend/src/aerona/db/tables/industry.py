@@ -6,7 +6,27 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.industry import MethodKind, ProcessKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
-ENERGY_COLUMNS = ("muscle", "water", "wind", "heat", "magic", "divine")
+ENERGY_COLUMNS = (
+    "muscle",
+    "water",
+    "wind",
+    "heat",
+    "magic",
+    "divine",
+    "fuel",
+    "electric",
+    "stored",
+    "solar",
+    "geothermal",
+    "tidal",
+    "fission",
+    "fusion",
+    "stellar",
+    "source",
+    "feed",
+    "belief",
+    "void",
+)
 POLLUTION_COLUMNS = ("air", "water", "soil")
 
 
@@ -51,6 +71,19 @@ class CommunityIndustryRow(Base):
     heat: Mapped[int] = mapped_column(default=0)
     magic: Mapped[int] = mapped_column(default=0)
     divine: Mapped[int] = mapped_column(default=0)
+    fuel: Mapped[int] = mapped_column(default=0, server_default="0")
+    electric: Mapped[int] = mapped_column(default=0, server_default="0")
+    stored: Mapped[int] = mapped_column(default=0, server_default="0")
+    solar: Mapped[int] = mapped_column(default=0, server_default="0")
+    geothermal: Mapped[int] = mapped_column(default=0, server_default="0")
+    tidal: Mapped[int] = mapped_column(default=0, server_default="0")
+    fission: Mapped[int] = mapped_column(default=0, server_default="0")
+    fusion: Mapped[int] = mapped_column(default=0, server_default="0")
+    stellar: Mapped[int] = mapped_column(default=0, server_default="0")
+    source: Mapped[int] = mapped_column(default=0, server_default="0")
+    feed: Mapped[int] = mapped_column(default=0, server_default="0")
+    belief: Mapped[int] = mapped_column(default=0, server_default="0")
+    void: Mapped[int] = mapped_column(default=0, server_default="0")
     spent: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     short: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     heat_need: Mapped[int] = mapped_column(default=0)

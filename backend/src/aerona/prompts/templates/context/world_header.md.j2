@@ -7,7 +7,7 @@ GOD'S TEMPERAMENT: {{ god_temperament }}
 THE GOD'S OWN WORD (canon): {{ god_note }}
 {% endif %}
 {% if not short and mood %}
-CREATOR'S MOOD (sensed from the sky; not a number, an intuition): contentment {{ mood.contentment | mood_level }}, anger {{ mood.anger | mood_level }}, attention {{ mood.attention | mood_level }}, loneliness {{ mood.loneliness | mood_level }}. If the creator's anger overflows, punishment falls on godless and cursed lands; if the creator is content, favour falls on the creator's worshippers; if the creator is silent, each child reads that silence in their own way.
+CREATOR'S MOOD (sensed, not a number): contentment {{ mood.contentment | mood_level }}, anger {{ mood.anger | mood_level }}, attention {{ mood.attention | mood_level }}, loneliness {{ mood.loneliness | mood_level }}. If the creator's anger runs high, punishment falls on godless and cursed lands; if the creator is content, favour falls on the creator's worshippers; if the creator is silent, each child reads that silence in their own way.
 {% endif %}
 {% if not short and epic %}
 THE GOD'S EPIC: "{{ epic.title }}" — its best-known line: {{ epic.line }}
@@ -28,7 +28,7 @@ NAMING LANGUAGE ({{ dialect_world.name }} dialect; the main world's rule does no
 NAMING LANGUAGE: {{ naming_rule_text(naming_rule) }}
 {% endif %}
 {% if doom > 0 and doom * 100 >= doom_threshold * rules.context.apocalypse_warning_pct %}
-DOOM CLOCK: {{ doom }}/{{ doom_threshold }}. Godlessness, rebellion, curses, restless spirits and wars advance it; faith and miracles push it back. At {{ doom_threshold }} the world is torn apart by catastrophes.
+DOOM CLOCK: {{ doom }}/{{ doom_threshold }}. Godlessness, rebellion, curses, restless spirits and wars advance it; faith and miracles push it back. At {{ doom_threshold }} the apocalypse comes.
 {% endif %}
 {% if climate %}
 CLIMATE: {{ climate.name }} (since Age {{ climate.since_age }}; {{ climate.description }}).
@@ -43,7 +43,7 @@ STAR OF THE AGE{% if age_star.sky_world %} ({{ age_star.sky_world }} sky){% endi
 {% if laws %}
 LAWS OF NATURE (inviolable):
 {% for law in laws %}
-- #{{ law.id }} {{ law.name }}: {{ law.description }}
+- #{{ law.id }} {{ law.name }}: {{ law.description }}{% if law.working %} {{ law.working }}{% endif %}
 {% endfor %}
 {% else %}
 LAWS OF NATURE: not yet laid down.

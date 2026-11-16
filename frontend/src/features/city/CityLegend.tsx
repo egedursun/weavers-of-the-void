@@ -20,7 +20,7 @@ export function CityLegend({
       initial={7}
       noun={['zone', 'zones']}
       as='div'
-      className='flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1'
+      className='flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'
       listProps={{ role: 'list', 'aria-label': 'Zones of the city' }}
       itemKey={(row) => row.zone}
     >

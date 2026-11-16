@@ -1,7 +1,7 @@
 import { LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Medallion } from '@/components/domain'
+import { Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { type GoalCategory } from './api'
 import { CATEGORY_ICON, CATEGORY_TONE } from './goalIcons'
@@ -47,9 +47,8 @@ export function CategoryFilter({
             </span>
           </Button>
         </li>
-        {counts
-          .filter((item) => item.total > 0)
-          .map((item) => {
+        <Paged items={counts.filter((item) => item.total > 0)} as='li'>
+          {(item) => {
             const active = value === item.category
             return (
               <li key={item.category} className='min-w-0'>
@@ -79,7 +78,8 @@ export function CategoryFilter({
                 </Button>
               </li>
             )
-          })}
+          }}
+        </Paged>
       </ul>
     </div>
   )

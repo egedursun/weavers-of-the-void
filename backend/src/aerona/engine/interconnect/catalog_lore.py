@@ -641,6 +641,23 @@ CURSE_RULES = {
     CurseKind.WASTING: "item_curses.wasting_pct",
     CurseKind.MADNESS: "item_curses.madness_pct",
     CurseKind.BETRAYAL: "item_curses.betrayal_pct",
+    **dict.fromkeys(
+        (
+            CurseKind.BARRENNESS,
+            CurseKind.TRANSFORMATION,
+            CurseKind.SLEEP,
+            CurseKind.SILENCE,
+            CurseKind.FORGETTING,
+            CurseKind.RESTLESSNESS,
+            CurseKind.LINE_CURSE,
+            CurseKind.PLACE_CURSE,
+            CurseKind.COMPULSION,
+            CurseKind.EXPOSURE,
+        ),
+        "item_curses.wider_pct",
+    ),
+    CurseKind.HUNGER: "item_curses.wasting_pct",
+    CurseKind.AGING: "item_curses.aging_years",
 }
 
 

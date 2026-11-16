@@ -158,7 +158,7 @@ class SonToolsRules:
     miracle_renown: int = rule(2, 0, 100, RuleGroup.SON_TOOLS, "Renown of a miracle")
     dream_base_pct: int = rule(45, 0, 100, RuleGroup.SON_TOOLS, "Dream success chance: base (%)")
     dream_default_rival_charisma: int = rule(30, 0, 100, RuleGroup.SON_TOOLS, "Dream: rival charisma assumed if the target has no god")
-    dream_whisper_bonus_pct: int = rule(25, 0, 100, RuleGroup.SON_TOOLS, "Bonus of the Whisper power to dream chance (%)")
+    dream_sending_bonus_pct: int = rule(25, 0, 100, RuleGroup.SON_TOOLS, "Bonus of the Dream sending power to dream chance (%)")
     dream_zealotry_divisor: int = rule(4, 1, 1000, RuleGroup.SON_TOOLS, "Dream chance: \u2212 target's zealotry / this number")
     dream_min_pct: int = rule(5, 0, 100, RuleGroup.SON_TOOLS, "Lowest dream success chance (%)")
     dream_max_pct: int = rule(95, 0, 100, RuleGroup.SON_TOOLS, "Highest dream success chance (%)")

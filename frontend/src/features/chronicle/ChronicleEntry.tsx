@@ -12,11 +12,11 @@ import { useLinkTargets } from './linkTargets'
 const CAST_SHOWN = 4
 
 const TONE_CLASS = {
-  default: 'bg-muted text-muted-foreground',
-  primary: 'bg-primary/15 text-primary',
-  success: 'bg-success/15 text-success',
-  warning: 'bg-warning/15 text-warning',
-  destructive: 'bg-destructive/15 text-destructive',
+  default: 'gem-muted',
+  primary: 'gem-gold',
+  success: 'gem-success',
+  warning: 'gem-warning',
+  destructive: 'gem-danger',
 } as const
 
 type ChronicleEntryProps = {
@@ -56,7 +56,7 @@ export function ChronicleEntry({
     >
       <span
         className={cn(
-          'flex size-control-sm shrink-0 items-center justify-center rounded-full',
+          'medallion size-control-sm',
           TONE_CLASS[kindTone(line.kind)]
         )}
       >

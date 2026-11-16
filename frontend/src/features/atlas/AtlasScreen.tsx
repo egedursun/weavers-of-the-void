@@ -3,6 +3,7 @@ import { getRouteApi } from '@tanstack/react-router'
 import { navItem } from '@/config/navigation'
 import { BookOpen, ChevronsDownUp, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { OrnateFrame } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, PageHeader } from '@/components/domain'
 import {
@@ -238,83 +239,91 @@ export function AtlasScreen() {
           <div className='grid min-w-0 grid-cols-1 gap-6 @3xl/atlas:grid-cols-5'>
             <aside
               aria-label='Atlas index'
-              className='@container/pane flex min-w-0 flex-col gap-4 @3xl/atlas:col-span-2'
+              className='@container/pane flex min-w-0 flex-col @3xl/atlas:col-span-2'
             >
-              <TypeChips
-                types={types}
-                counts={typeCounts}
-                active={search.type ?? null}
-                onPick={(type) =>
-                  change({ type: type ?? undefined, page: undefined })
-                }
-              />
-              <AtlasFilters
-                search={search}
-                onChange={change}
-                types={types}
-                typeCounts={typeCounts}
-                matches={matching.length}
-                view={view}
-              />
-              {entities.isPending ? (
-                <div className='flex flex-col gap-2'>
-                  <Skeleton className='h-control-sm w-full' />
-                  <Skeleton className='h-control-sm w-5/6' />
-                  <Skeleton className='h-control-sm w-4/6' />
-                </div>
-              ) : view === 'tree' ? (
-                <AtlasTree
-                  nodes={shownTree}
-                  open={open}
-                  onToggle={branches.toggle}
-                  selected={selected}
-                  onSelect={(node) => show(node.key, drawerFor(node))}
-                  onActivate={activate}
-                  query={filters.q}
-                  imageWorkerOn={health.data?.image_worker_configured ?? false}
+              <OrnateFrame
+                frame='card'
+                crest
+                className='flex min-w-0 flex-col gap-4 px-5 py-6'
+              >
+                <TypeChips
+                  types={types}
+                  counts={typeCounts}
+                  active={search.type ?? null}
+                  onPick={(type) =>
+                    change({ type: type ?? undefined, page: undefined })
+                  }
                 />
-              ) : (
-                <AtlasList
-                  items={sorted}
-                  sort={search.sort ?? 'name'}
-                  descending={search.desc ?? false}
-                  onSort={(sort) =>
-                    change(
-                      sort === (search.sort ?? 'name')
-                        ? { desc: search.desc ? undefined : true }
-                        : { sort, desc: undefined }
-                    )
-                  }
-                  page={search.page ?? 1}
-                  onPage={(page) =>
-                    change({ page: page > 1 ? page : undefined })
-                  }
-                  selected={
-                    selected?.startsWith('entity:')
-                      ? Number(selected.slice('entity:'.length))
-                      : null
-                  }
-                  onSelect={(entity: EntitySummary) =>
-                    show(`entity:${entity.id}`, {
-                      kind: 'entity',
-                      id: String(entity.id),
-                    })
-                  }
-                  typeLabel={typeLabel}
-                  locationName={(id) =>
-                    id !== null ? (byId.get(id)?.name ?? null) : null
-                  }
-                  query={filters.q}
+                <AtlasFilters
+                  search={search}
+                  onChange={change}
+                  types={types}
+                  typeCounts={typeCounts}
+                  matches={matching.length}
+                  view={view}
                 />
-              )}
-              {entities.isSuccess && matching.length === 0 && filtering && (
-                <EmptyState
-                  size='compact'
-                  icon={BookOpen}
-                  title='Nothing matches'
-                  description='Loosen the search or the filters.'
-                />
-              )}
+                {entities.isPending ? (
+                  <div className='flex flex-col gap-2'>
+                    <Skeleton className='h-control-sm w-full' />
+                    <Skeleton className='h-control-sm w-5/6' />
+                    <Skeleton className='h-control-sm w-4/6' />
+                  </div>
+                ) : view === 'tree' ? (
+                  <AtlasTree
+                    nodes={shownTree}
+                    open={open}
+                    onToggle={branches.toggle}
+                    selected={selected}
+                    onSelect={(node) => show(node.key, drawerFor(node))}
+                    onActivate={activate}
+                    query={filters.q}
+                    imageWorkerOn={
+                      health.data?.image_worker_configured ?? false
+                    }
+                  />
+                ) : (
+                  <AtlasList
+                    items={sorted}
+                    sort={search.sort ?? 'name'}
+                    descending={search.desc ?? false}
+                    onSort={(sort) =>
+                      change(
+                        sort === (search.sort ?? 'name')
+                          ? { desc: search.desc ? undefined : true }
+                          : { sort, desc: undefined }
+                      )
+                    }
+                    page={search.page ?? 1}
+                    onPage={(page) =>
+                      change({ page: page > 1 ? page : undefined })
+                    }
+                    selected={
+                      selected?.startsWith('entity:')
+                        ? Number(selected.slice('entity:'.length))
+                        : null
+                    }
+                    onSelect={(entity: EntitySummary) =>
+                      show(`entity:${entity.id}`, {
+                        kind: 'entity',
+                        id: String(entity.id),
+                      })
+                    }
+                    typeLabel={typeLabel}
+                    locationName={(id) =>
+                      id !== null ? (byId.get(id)?.name ?? null) : null
+                    }
+                    query={filters.q}
+                  />
+                )}
+                {entities.isSuccess && matching.length === 0 && filtering && (
+                  <EmptyState
+                    size='compact'
+                    icon={BookOpen}
+                    title='Nothing matches'
+                    description='Loosen the search or the filters.'
+                  />
+                )}
+              </OrnateFrame>
             </aside>
             <section
               aria-label='Record'

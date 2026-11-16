@@ -247,15 +247,15 @@ async def canon(session: AsyncSession, kind: EntityType, skip: int) -> int | Non
 TABLES = {mapper.class_.__tablename__: mapper.class_ for mapper in Base.registry.mappers}
 
 
-def exact_table(name: str) -> Any:
+def exact_table(name: str, *, strict: bool = False) -> Any:
     for table in (f"{name}s", f"{name}es", f"{name[:-1]}ies" if name.endswith("y") else "", f"{name[:-2]}es" if name.endswith("is") else "", name):
         found = TABLES.get(table)
         if found is not None and "id" in found.__table__.c:
             return found
-    for table, found in TABLES.items():
-        if table.endswith(f"_{name}s") and "id" in found.__table__.c:
-            return found
-    return None
+    endings = [found for table, found in TABLES.items() if table.endswith(f"_{name}s") and "id" in found.__table__.c]
+    if strict and len(endings) > 1:
+        raise LookupError(f"{name} names more than one table: {sorted(found.__tablename__ for found in endings)}; name the table in full")
+    return endings[0] if endings else None
 
 
 async def row_id(session: AsyncSession, name: str, skip: int) -> int | None:
@@ -363,7 +363,7 @@ PLAIN_VALUES: Mapping[Any, Any] = {bool: True, float: 1.0}
 async def newest(session: AsyncSession, kind: EntityType | str) -> int | None:
     if isinstance(kind, EntityType):
         return await session.scalar(select(EntityRow.id).where(EntityRow.entity_type == kind).order_by(EntityRow.id.desc()).limit(1))
-    found = exact_table(kind)
+    found = exact_table(kind, strict=True)
     return await session.scalar(select(found.id).order_by(found.id.desc()).limit(1)) if found is not None else None
 
 
@@ -431,7 +431,6 @@ ITEM_DEED = ("item:deed", {"item_id": Pick(EntityType.ITEM), "deed": "battle"})
 REPUTATION = ("renown:set", {"subject_id": Pick(MORTAL), "community_id": Pick(TOWN), "axis": "heroism", "value": 60})
 CONTEST = ("contest:hold", {"challenger_id": Pick(MORTAL), "defender_id": Pick(MORTAL, 1), "kind": "riddle_game"})
 DISEASE = ("disease:create", {"region_id": Pick(EntityType.REGION), "name": "Grey Cough"})
-FOREIGN = ("foreign_god:place", {"world_id": Pick("world"), "name": "Ussamar"})
 
 
 async def route_region(session: AsyncSession) -> int:
@@ -830,6 +829,9 @@ async def foreign_god(session: AsyncSession) -> None:
 async def natural_law(session: AsyncSession) -> int:
     world = await session.scalar(select(WorldRow.id).order_by(WorldRow.id).limit(1))
     assert world is not None
+    known = await session.scalar(select(EntityRow.id).where(EntityRow.name == "The Long Summer", EntityRow.entity_type == EntityType.NATURAL_LAW))
+    if known is not None:
+        return known
     law = await EntityRepository(session).create(
         EntityDraft(
             name="The Long Summer",
@@ -936,7 +938,7 @@ TRIAL = ("tribunal:convene", {"faction_id": Newest(EntityType.FACTION), "law": "
 POST = ("trading_post:open", {"owner_id": Newest(EntityType.FACTION), "host_id": Pick(TOWN)})
 SERVICE_SET = ("district_service:set", {"district_id": DISTRICT, "service": "watch", "coverage": 60})
 CONVOY = ("convoy:send", {"route_id": Pick(EntityType.TRADE_ROUTE)})
-FLEET = ("fleet:set", {"owner_id": Pick(TOWN), "kind": "wagons", "count": 12})
+FLEET = ("fleet:set", {"owner_id": Pick(TOWN), "kind": "animal_carts", "count": 12})
 CONVICTION = Computed(convicted_case)
 PRISON = Computed(town_prison)
 SYSTEM = ("legal_system:set", {"holder_id": Pick(REALM), "system": "precedent"})
@@ -1597,7 +1599,9 @@ LEVERS: dict[str, Lever] = {
     ),
     "cosmic:forget_world": given(world_id=Pick("world", 1)),
     "cosmic:rekindle_star": after(("cosmic:extinguish_star", {"star_id": Pick("star")}), star_id=Pick("star")),
-    "cosmic:legendary_quest": after(("cosmic:extinguish_star", {"star_id": Pick("star")}), kind="dead_star"),
+    "cosmic:legendary_quest": after(
+        ("cosmic:extinguish_star", {"star_id": Pick("star")}), aim="restore", target_kind="star", obstacle="riddle", reward="peace"
+    ),
     "cosmic:sky_event": given(world_id=Pick("world")),
     "cosmic:soul_bind": after(("soul:raise", {"mortal_id": DEAD}), soul_id=Newest(EntityType.SPIRIT), target_id=Pick(EntityType.ITEM)),
     "cosmos:deposit": after(("cosmos:resource", {"name": "Starsalt"}), place_id=Pick(EntityType.PLACE)),
@@ -1702,7 +1706,7 @@ LEVERS: dict[str, Lever] = {
     "soul:harvest": after(("soul:raise", {"mortal_id": DEAD}), cult_id=Pick(EntityType.CULT), soul_id=Newest(EntityType.SPIRIT)),
     "soul:judge": after(
         ("soul:raise", {"mortal_id": DEAD}),
-        ("afterlife:stratum", {"realm_id": Pick(REALM), "kind": "plain", "name": "The Grey Field"}),
+        ("afterlife:stratum", {"realm_id": Pick(REALM), "kind": "common", "name": "The Grey Field"}),
         spirit_id=Newest(EntityType.SPIRIT),
         stratum_id=Newest("afterlife_strata"),
     ),
@@ -1720,7 +1724,7 @@ LEVERS: dict[str, Lever] = {
     "scenario:hold": after(("scenario:start", {"key": "doom_far"}), scenario_id=Newest("scenario"), held=True),
     "scenario:delete": after(("scenario:start", {"key": "doom_far"}), scenario_id=Newest("scenario")),
     "quest:abandon": after(
-        ("cosmic:extinguish_star", {"star_id": Pick("star")}), ("cosmic:legendary_quest", {"kind": "dead_star"}), thread_id=Newest("thread")
+        ("cosmic:extinguish_star", {"star_id": Pick("star")}), ("cosmic:legendary_quest", {"aim": "restore", "target_kind": "star"}), thread_id=Newest("thread")
     ),
     **{name: Lever(values={"knowledge_id": Pick(EntityType.KNOWLEDGE)}, setup=astronomy) for name in ("calendar:adopt",)},
     **{
@@ -1819,7 +1823,7 @@ LEVERS: dict[str, Lever] = {
         values={"species_id": Pick(EntityType.SPECIES)}, before=(("soul:raise", {"mortal_id": DEAD, "place_id": Computed(soul_range)}),), setup=soul_eating
     ),
     **{name: after(PROPHECY, prophecy_id=Newest(EntityType.PROPHECY)) for name in ("prophecy:forget", "prophecy:fulfil", "prophecy:resolve")},
-    "dimension:create": Lever(values={"name": "Shadow Deep", "kind": "shadow"}, setup=rich_creator),
+    "dimension:create": Lever(values={"name": "Shadow Deep", "kind": "shadow", "element": "shadow", "form": "image"}, setup=rich_creator),
     "dimension:bind_law": given(dimension_id=Computed(prime_dimension), law_id=Computed(natural_law)),
     "dimension:release_law": Lever(values={"law_id": Newest(EntityType.NATURAL_LAW)}, setup=bound_law),
     "heavens:worship": given(community_id=Pick(EntityType.PEOPLE), sky="dimension", worships=True, dimension_id=Computed(prime_dimension)),
@@ -1977,8 +1981,8 @@ LEVERS: dict[str, Lever] = {
     **{name: after(HOUSE, POST, structure_id=Newest(EntityType.STRUCTURE)) for name in ("trading_post:edit", "trading_post:close")},
     "convoy:send": given(route_id=Pick(EntityType.TRADE_ROUTE)),
     **{name: after(CONVOY, convoy_id=Newest("convoy")) for name in ("convoy:edit", "convoy:delete")},
-    "fleet:set": given(owner_id=Pick(TOWN), kind="wagons", count=12),
-    **{name: after(FLEET, owner_id=Pick(TOWN), kind="wagons") for name in ("fleet:edit", "fleet:delete")},
+    "fleet:set": given(owner_id=Pick(TOWN), kind="animal_carts", count=12),
+    **{name: after(FLEET, owner_id=Pick(TOWN), kind="animal_carts") for name in ("fleet:edit", "fleet:delete")},
     "market_play:set": after(HOUSE, holder_id=Newest(EntityType.FACTION), settlement_id=Pick(TOWN), commodity="grain", play="corner"),
     **{
         name: after(HOUSE, PLAY, holder_id=Newest(EntityType.FACTION), settlement_id=Pick(TOWN), commodity="grain", play="corner")
@@ -2045,11 +2049,9 @@ LEVERS: dict[str, Lever] = {
     },
     "mantling:edit": given(mortal_id=Pick(MORTAL)),
     "mantling:delete": after(("mantling:edit", {"mortal_id": Pick(MORTAL), "values": {"progress": 30}}), mortal_id=Pick(MORTAL)),
-    "servitor:make": given(god_id=Pick("son"), name="Watcher", rank="guardian", role="guard"),
+    "servitor:make": given(god_id=Pick("son"), name="Watcher", role="guard"),
     **{
-        name: after(
-            ("servitor:make", {"god_id": Pick("son"), "name": "Watcher", "rank": "guardian", "role": "guard"}), spirit_id=Where("servitors", "spirit_entity_id")
-        )
+        name: after(("servitor:make", {"god_id": Pick("son"), "name": "Watcher", "role": "guard"}), spirit_id=Where("servitors", "spirit_entity_id"))
         for name in ("servitor:edit", "servitor:release")
     },
     "geas:lay": given(bearer_id=Pick(MORTAL), mode="taboo", act="theft"),
@@ -2101,12 +2103,21 @@ LEVERS: dict[str, Lever] = {
         for name, extra in (
             (
                 "journey:load",
-                {"convoy": 3, "escorts": 2, "cargo": [{"commodity": "grain", "amount": 50}], "passengers": [{"social_class": "farmer", "count": 40}]},
+                {
+                    "convoy": 3,
+                    "escorts": 2,
+                    "cargo": [{"commodity": "grain", "amount": 50}],
+                    "passengers": [{"social_class": "farmer", "count": 40}],
+                    "supplies": 70,
+                    "births": 2,
+                    "deaths": 1,
+                    "arrival": "settlers",
+                },
             ),
             ("journey:release", {"fields": ["convoy", "cargo"]}),
         )
     },
-    "celestial_reading:set": setup_then(heavens, celestial_id=Newest(EntityType.CELESTIAL), people_id=Pick(EntityType.PEOPLE), reading="evil"),
+    "celestial_reading:set": setup_then(heavens, celestial_id=Newest(EntityType.CELESTIAL), people_id=Pick(EntityType.PEOPLE), reading="evil", visible=False),
     "apocalypse:variant": given(variant="galactic_death"),
     "region_climate:turn": given(region_id=Pick(EntityType.REGION), turn="drier"),
     "body:prosthesis": after(("body:maim", {"bearer_id": Pick(MORTAL), "part": "left_arm", "severity": 5, "lethal": False}), material="wood", quality=40),
@@ -2505,6 +2516,7 @@ CYCLE_EDITS: Mapping[str, Mapping[str, Any]] = {
     "gift:edit": {"value": 25, "occasion": "feast", "item_entity_id": Pick(EntityType.ITEM), "state": "returned", "due_epoch": 5},
     "circuit:edit": {"name": "The Second Round", "item_entity_id": Pick(EntityType.ITEM), "position": 1, "passes": 3},
     "debt:edit": {"offered": 50, "answered": 20},
+    "union:edit": {"form": "plural", "purpose": "alliance", "residence": "with_second_family", "dissolution": "none", "endogamy": "faith", "term_epochs": 6},
     "kinship:edit": {
         "descent": "matrilineal",
         "residence": "matrilocal",
@@ -2546,7 +2558,7 @@ LEVERS.update(
         "challenge:strike": given(polity_id=Pick(REALM)),
         **{name: after(CHALLENGE, challenge_id=Newest("challenge")) for name in ("challenge:edit", "challenge:delete")},
         "plan:create": given(holder_id=Pick(REALM), kind="wonder", name="The Long Work", target_id=Pick(TOWN)),
-        **{name: after(PLAN, plan_id=Newest("plan")) for name in ("plan:edit", "plan:advance", "plan:expose", "plan:delete")},
+        **{name: after(PLAN, plan_id=Newest("long_plan")) for name in ("plan:edit", "plan:advance", "plan:expose", "plan:delete")},
         "gift:give": setup_then(full_treasuries, giver_id=Pick(REALM), receiver_id=Pick(REALM, 1), value=10),
         **{name: setup_then(full_treasuries, GIFT, gift_id=GIFT_ID) for name in ("gift:return", "gift:refuse", "gift:edit", "gift:delete")},
         "circuit:create": given(name="The First Round", stops=[Pick(TOWN), Pick(TOWN, 1)]),
@@ -2555,6 +2567,8 @@ LEVERS.update(
         "debt:set": given(god_id=Pick("son"), community_id=Pick(TOWN)),
         **{name: after(DEBT, god_id=Pick("son"), community_id=Pick(TOWN)) for name in ("debt:edit", "debt:delete")},
         "kinship:set": given(people_id=Pick(PEOPLE)),
+        "union:set": given(people_id=Pick(PEOPLE), form="contract", purpose="love", descent="by_house_rule", exchange="mutual", exogamy="house"),
+        **{name: after(("union:set", {"people_id": Pick(PEOPLE)}), people_id=Pick(PEOPLE)) for name in ("union:edit", "union:delete")},
         **{name: after(KIN, people_id=Pick(PEOPLE)) for name in ("kinship:edit", "kinship:delete")},
         "alliance:set": given(giver_id=Pick(EntityType.HOUSE), taker_id=Pick(EntityType.HOUSE, 1)),
         **{name: after(ALLIANCE, giver_id=Pick(EntityType.HOUSE), taker_id=Pick(EntityType.HOUSE, 1)) for name in ("alliance:edit", "alliance:delete")},
@@ -2759,7 +2773,7 @@ KEYSTONE = (
 BRAND = ("brand:found", {"workshop_id": WORKSHOP, "name": "The First Brand"})
 AGRARIAN_EDITS: Mapping[str, Mapping[str, Any]] = {
     "land_ring:edit": {"market_entity_id": Pick(TOWN), "ring": "ranching", "distance": 200, "by_water": True, "gap": 30},
-    "central_place:edit": {"rank": "rare", "catchment": 9000, "served_by_entity_id": Pick(TOWN, 1), "centrality": 80},
+    "central_place:edit": {"catchment": 9000, "served_by_entity_id": Pick(TOWN, 1), "centrality": 80},
     "soil_nutrient:edit": {"stock": 35, "trend": -2},
     "intensification:edit": {"pressure": 120, "intensity": 50, "research_boost": 30},
     "perennial:edit": {
@@ -2985,7 +2999,7 @@ async def supply_flow(session: AsyncSession) -> None:
 ARMY_UP = ("army:raise", {"community_id": Pick(TOWN), "size": 200, "war_id": Newest("war")})
 ECHELON = ("echelon:create", {"owner_id": Pick(TOWN), "level": "brigade", "name": "Brigade 1", "army_id": Newest(EntityType.ARMY)})
 DEPOT = ("depot:create", {"owner_id": Pick(TOWN), "region_id": Pick(LAND)})
-TRANSPORT = ("transport:create", {"owner_id": Pick(TOWN), "kind": "wagons", "count": 5})
+TRANSPORT = ("transport:create", {"owner_id": Pick(TOWN), "kind": "animal_carts", "count": 5})
 THEATRE = ("theatre:set", {"owner_id": Pick(TOWN), "war_id": Newest("war"), "priority": 60})
 OPERATION = ("army_operation:set", {"army_id": Newest(EntityType.ARMY)})
 SHIP = ("ship_state:set", {"vessel_id": VESSEL})
@@ -3086,7 +3100,7 @@ LEVERS.update(
         "echelon:assign": after(WAR, ARMY_UP, ECHELON, stack_id=Newest("army_unit"), echelon_id=Newest("echelon")),
         "depot:create": given(owner_id=Pick(TOWN), region_id=Pick(LAND)),
         **{name: after(DEPOT, depot_id=Newest("depot")) for name in ("depot:edit", "depot:delete")},
-        "transport:create": given(owner_id=Pick(TOWN), kind="wagons", count=5),
+        "transport:create": given(owner_id=Pick(TOWN), kind="animal_carts", count=5),
         **{name: after(TRANSPORT, transport_id=Newest("transport_asset")) for name in ("transport:edit", "transport:delete")},
         **{
             name: Lever(values={"flow_id": Newest("supply_flow")}, before=(WAR, ARMY_UP), then=supply_flow)
@@ -3254,7 +3268,7 @@ SACRED_EDITS: Mapping[str, Mapping[str, Any]] = {
     },
     "doctrine_sacrament:edit": {"protection": "routing", "strength": 70},
     "sacrament:edit": {"kind": "marriage", "cult_entity_id": CHURCH, "priest_entity_id": Pick(MORTAL, 1), "missed": True},
-    "doctrine_afterlife:edit": {"model": "warrior_hall", "aligned": True, "aligned_by_node_id": Pick("son"), "shocks": 2, "testimonies": 1, "doubt": 20},
+    "doctrine_afterlife:edit": {"model": "realm_by_death", "aligned": True, "aligned_by_node_id": Pick("son"), "shocks": 2, "testimonies": 1, "doubt": 20},
     "faith_climate:edit": {
         "piety_drift": -3,
         "literacy_pull": -10,
@@ -3307,7 +3321,7 @@ LEVERS.update(
         "bless": Lever(setup=drained_sons),
         "genius_locus:create": given(place_id=FREE_PLACE, kind="grove"),
         **{name: after(SPIRIT_UP, spirit_id=NEW_SPIRIT) for name in ("genius_locus:edit", "genius_locus:delete")},
-        "spirit_office:set": after(SPIRIT_UP, spirit_id=NEW_SPIRIT, rank="province", overseer_id=Pick("son"), jurisdiction_id=Pick(TOWN)),
+        "spirit_office:set": after(SPIRIT_UP, spirit_id=NEW_SPIRIT, overseer_id=Pick("son"), jurisdiction_id=Pick(TOWN)),
         **{name: after(SPIRIT_UP, OFFICE_UP, spirit_id=NEW_SPIRIT) for name in ("spirit_office:edit", "spirit_office:delete")},
         "petition:create": after(SPIRIT_UP, petitioner_id=Pick(MORTAL), office_id=NEW_SPIRIT, kind="prosperity", bribe=2),
         **{name: after(SPIRIT_UP, PETITION_UP, petition_id=Newest("petition")) for name in ("petition:edit", "petition:delete")},
@@ -3327,7 +3341,7 @@ LEVERS.update(
         },
         "sacrament:create": setup_then(churched_town, mortal_id=Pick(MORTAL), kind="birth_blessing", priest_id=Pick(MORTAL, 1)),
         **{name: setup_then(churched_town, SACRAMENT_UP, sacrament_id=Newest("sacrament")) for name in ("sacrament:edit", "sacrament:delete")},
-        "doctrine_afterlife:set": setup_then(churched_town, cult_id=CHURCH, model="ancestor_hall"),
+        "doctrine_afterlife:set": setup_then(churched_town, cult_id=CHURCH, model="realm_of_line"),
         **{name: setup_then(churched_town, AFTERLIFE_UP, cult_id=CHURCH) for name in ("doctrine_afterlife:edit", "doctrine_afterlife:delete")},
         "doctrine_afterlife:align": setup_then(churched_town, AFTERLIFE_UP, cult_id=CHURCH, god_id=Pick("son")),
         "faith_climate:set": given(town_id=Pick(TOWN)),
@@ -3563,7 +3577,7 @@ async def newest_eco_plan(session: AsyncSession) -> int | None:
 
 WORLD = Pick("world")
 ECO_PLAN = ("plan:create", {"holder_id": Pick(REALM), "kind": "ecological_transformation", "name": "The Green Work", "target_id": Pick(EntityType.REGION)})
-ECO_UP = ("eco_transformation:set", {"plan_id": Newest("plan"), "target_moisture": 70})
+ECO_UP = ("eco_transformation:set", {"plan_id": Newest("long_plan"), "target_moisture": 70})
 SEASON_UP = ("irregular_season:create", {"world_id": WORLD})
 FORMATION_UP = ("formation:read", {"world_id": WORLD, "reshape": False})
 FORECAST_UP = ("winter_forecast:set", {"world_id": WORLD, "people_id": Pick(EntityType.PEOPLE), "predicted_end_epoch": 9})
@@ -3603,7 +3617,7 @@ LEVERS.update(
         **{name: after(SEASON_UP, world_id=WORLD) for name in ("irregular_season:forecast", "irregular_season:edit", "irregular_season:delete")},
         "winter_forecast:set": given(world_id=WORLD, people_id=Pick(EntityType.PEOPLE), predicted_end_epoch=8, heeded=True),
         **{name: after(FORECAST_UP, forecast_id=Newest("winter_forecast")) for name in ("winter_forecast:edit", "winter_forecast:delete")},
-        "eco_transformation:set": after(ECO_PLAN, plan_id=Newest("plan"), target_moisture=80, target_forest=60, target_fertility=70),
+        "eco_transformation:set": after(ECO_PLAN, plan_id=Newest("long_plan"), target_moisture=80, target_forest=60, target_fertility=70),
         **{name: after(ECO_PLAN, ECO_UP, plan_id=Computed(newest_eco_plan)) for name in ("eco_transformation:edit", "eco_transformation:delete")},
         "age:cycle": given(cycle="cyclic"),
         "age:turn": setup_then(cyclic_cosmos),
@@ -4584,5 +4598,267 @@ LEVERS.update(
         "symbiont:host": given(host_id=Pick(MORTAL), placement="blood", relation="mutual"),
         "symbiont:edit": after(HOST_UP, symbiont_id=Newest("symbionts"), values=LIVING_EDITS["symbiont:edit"], release=[]),
         "symbiont:remove": after(HOST_UP, symbiont_id=Newest("symbionts")),
+    }
+)
+FORTUNE_SOURCE_UP = ("fortune_source:create", {"holder_id": Pick(MORTAL), "kind": "blessing", "strength": 15, "epochs": 4})
+FORTUNE_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "fortune:edit": {"fortune": 25, "streak": 3},
+    "fortune_source:edit": {"strength": 20, "kind": "charm"},
+}
+EDITS = {**EDITS, **FORTUNE_EDITS}
+LEVERS.update(
+    {
+        "fortune:edit": given(node_id=Pick(MORTAL), values=FORTUNE_EDITS["fortune:edit"], release=[]),
+        "fortune_source:create": given(holder_id=Pick(MORTAL), kind="blessing", strength=15, epochs=4),
+        "fortune_source:edit": after(FORTUNE_SOURCE_UP, source_id=Newest("fortune_sources"), values=FORTUNE_EDITS["fortune_source:edit"], release=[]),
+        "fortune_source:delete": after(FORTUNE_SOURCE_UP, source_id=Newest("fortune_sources")),
+        "fortune_law:set": given(world_id=Pick("world"), law="divine"),
+        "mishap:trigger": given(victim_id=Pick(MORTAL), kind="fall", level=1),
+    }
+)
+TECH_UP = ("technology:set", {"node_id": Pick("world"), "family": "medicine", "level": 4, "hold": True})
+LEVERS.update(
+    {
+        "technology:set": given(node_id=Pick("world"), family="medicine", level=4, hold=True),
+        "technology:release": after(TECH_UP, node_id=Pick("world"), family="medicine"),
+        "technology:delete": after(TECH_UP, node_id=Pick("world"), family="medicine"),
+    }
+)
+DIVINE_POWER = ("divine_power:create", {"holder_id": Pick(EntityType.MORTAL), "name": "A Kind Hand", "mode": "active", "cost": "attention", "cost_amount": 1})
+LEVERS.update(
+    {
+        "divine_power:create": given(
+            holder_id=Pick(EntityType.MORTAL), name="A Kind Hand", verb="heal", object="stat", object_key="hp", scope="person", domains=[]
+        ),
+        **{name: after(DIVINE_POWER, power_id=Newest("divine_powers")) for name in ("divine_power:delete", "divine_power:use")},
+        "divine_power:edit": after(DIVINE_POWER, power_id=Newest("divine_powers"), values={"strength": 30, "verb": "protect", "scope": "community"}),
+    }
+)
+EDITS = {**EDITS, "divine_power:edit": {"strength": 30, "verb": "protect", "scope": "community", "cooldown": 1}}
+LEVERS.update({"divine_power:domains": after(DIVINE_POWER, power_id=Newest("divine_powers"), domains=["war", "harvest"])})
+COVENANT_UP = ("covenant:offer", {"people_id": Pick(EntityType.PEOPLE), "duty": "peace", "promise": "plenty", "epochs": 4})
+CHOSEN_UP = ("chosen:choose", {"node_id": Pick(EntityType.MORTAL), "favour": "gift"})
+EDITS = {
+    **EDITS,
+    "creator_standing:edit": {"awe": 40, "love": 30, "stance": "reverence", "heresy": "absent_creator"},
+    "covenant:edit": {"duty": "offerings", "promise": "guidance", "state": "sealed", "breaches": 1},
+    "chosen:edit": {"favour": "foresight"},
+    "depiction:edit": {"name": "The One Before", "nature": "unknowable", "aspect": "time"},
+}
+LEVERS.update(
+    {
+        "creator_standing:edit": given(people_id=Pick(EntityType.PEOPLE), values=EDITS["creator_standing:edit"], release=[]),
+        "covenant:offer": given(people_id=Pick(EntityType.PEOPLE), duty="worship", promise="protection", epochs=3),
+        "covenant:edit": after(COVENANT_UP, covenant_id=Newest("covenants"), values=EDITS["covenant:edit"], release=[]),
+        "covenant:delete": after(COVENANT_UP, covenant_id=Newest("covenants")),
+        "chosen:choose": given(node_id=Pick(EntityType.MORTAL), favour="protection"),
+        "chosen:edit": after(CHOSEN_UP, node_id=Pick(EntityType.MORTAL), values=EDITS["chosen:edit"], release=[]),
+        "chosen:release": after(CHOSEN_UP, node_id=Pick(EntityType.MORTAL)),
+        "depiction:edit": given(people_id=Pick(EntityType.PEOPLE), values=EDITS["depiction:edit"], release=[]),
+    }
+)
+TIE_UP = ("pantheon_tie:set", {"god_id": Pick("son"), "other_id": Pick("foreign_god"), "tie": "partner"})
+SYNCRETISM_UP = ("syncretism:create", {"foreign_god_id": Pick("foreign_god"), "son_id": Pick("son"), "people_id": Pick(EntityType.PEOPLE)})
+EDITS = {
+    **EDITS,
+    "pantheon:edit": {"structure": "court"},
+    "pantheon_tie:edit": {"tie": "elder"},
+    "syncretism:edit": {"dominant_node_id": Pick("son")},
+}
+LEVERS.update(
+    {
+        "pantheon:edit": given(world_id=Pick("world"), values=EDITS["pantheon:edit"], release=[]),
+        "pantheon_tie:set": setup_then(foreign_god, god_id=Pick("son"), other_id=Pick("foreign_god"), tie="rival"),
+        "pantheon_tie:edit": setup_then(foreign_god, TIE_UP, god_id=Pick("son"), other_id=Pick("foreign_god"), values=EDITS["pantheon_tie:edit"], release=[]),
+        "pantheon_tie:delete": setup_then(foreign_god, TIE_UP, god_id=Pick("son"), other_id=Pick("foreign_god")),
+        "syncretism:create": setup_then(foreign_god, foreign_god_id=Pick("foreign_god"), son_id=Pick("son"), people_id=Pick(EntityType.PEOPLE)),
+        "syncretism:edit": setup_then(foreign_god, SYNCRETISM_UP, syncretism_id=Newest("syncretisms"), values=EDITS["syncretism:edit"], release=[]),
+        "syncretism:delete": setup_then(foreign_god, SYNCRETISM_UP, syncretism_id=Newest("syncretisms")),
+    }
+)
+SEAT_UP = ("divine_seat:set", {"god_id": Pick("son"), "seat": "invited"})
+VIOLATION_UP = ("council_violation:create", {"ruling_id": Newest("council_rulings"), "violator_id": Pick("son"), "step": "censure"})
+EDITS = {
+    **EDITS,
+    "council_procedure:edit": {"quorum_pct": 40, "voting_rule": "weighted_by_rank", "creator_veto": True, "term_epochs": 8},
+    "divine_seat:edit": {"seat": "recognised", "excluded_until": 3},
+    "council_violation:edit": {"step": "duel"},
+}
+LEVERS.update(
+    {
+        "council_procedure:edit": given(values=EDITS["council_procedure:edit"], release=[]),
+        "council_procedure:reset": after(("council_procedure:edit", {"values": {"quorum_pct": 60}, "release": []})),
+        "divine_seat:set": given(god_id=Pick("son"), seat="by_pact"),
+        "divine_seat:edit": after(SEAT_UP, god_id=Pick("son"), values=EDITS["divine_seat:edit"], release=[]),
+        "divine_seat:delete": after(SEAT_UP, god_id=Pick("son")),
+        "council_violation:create": after(DECREE, ruling_id=Newest("council_rulings"), violator_id=Pick("son"), step="sanction"),
+        "council_violation:edit": after(DECREE, VIOLATION_UP, violation_id=Newest("council_violations"), values=EDITS["council_violation:edit"], release=[]),
+        "council_violation:delete": after(DECREE, VIOLATION_UP, violation_id=Newest("council_violations")),
+        "council:veto": after(DECREE, ruling_id=Newest("council_rulings")),
+    }
+)
+
+
+async def second_outer_being(session: AsyncSession) -> int:
+    first = await outer_being(session)
+    others = select(EntityRow.id).where(EntityRow.entity_type == EntityType.OUTER_BEING, EntityRow.id != first)
+    found = await session.scalar(others.order_by(EntityRow.id).limit(1))
+    if found is not None:
+        return found
+    world = await session.scalar(select(WorldRow.id).order_by(WorldRow.id).limit(1))
+    assert world is not None
+    being = await EntityRepository(session).create(
+        EntityDraft(
+            name="The Second Listener",
+            entity_type=EntityType.OUTER_BEING,
+            description="From further outside.",
+            stats=OuterBeingStats(size=20, interest=40, influence=20),
+            power_level=3,
+            origin=EntityOrigin.CREATOR,
+            birth_epoch=1,
+            world_id=world,
+        )
+    )
+    await session.flush()
+    return being.id
+
+
+THE_LAW = Computed(natural_law)
+THE_BEING = Computed(outer_being)
+EXCEPTION_UP = ("law_exception:create", {"law_id": THE_LAW, "kind": "person", "node_id": Pick(MORTAL)})
+THEORY_UP = ("law_theory:create", {"law_id": THE_LAW, "holder_id": Pick(EntityType.PEOPLE), "believed_operator": "set", "believed_value": 80})
+PLAN_UP = ("outer_plan:set", {"being_id": THE_BEING, "goal": "gain_name", "progress": 20})
+HERALD_UP = ("outer_herald:bind", {"being_id": THE_BEING, "herald_id": Pick(MORTAL, 1), "zeal": 70})
+INCURSION_UP = ("outer_incursion:open", {"being_id": THE_BEING, "region_id": Pick(EntityType.REGION)})
+PACT_UP = ("outer_pact:strike", {"being_id": THE_BEING, "holder_id": Pick(MORTAL, 2), "price": "offering"})
+RELATION_UP = ("outer_relation:set", {"being_id": THE_BEING, "other_id": Computed(second_outer_being), "relation": "rival"})
+SEAL_UP = ("outer_seal:set", {"being_id": THE_BEING, "kind": "seal", "strength": 70})
+EDITS = {
+    **EDITS,
+    "law_exception:edit": {"kind": "kind", "entity_type": "mortal"},
+    "law_theory:edit": {"believed_value": 90, "confidence": 60, "adapted_epochs": 3},
+    "outer_plan:edit": {"progress": 50, "stage": 2},
+    "outer_herald:edit": {"zeal": 80},
+    "outer_incursion:edit": {"strength": 55, "stage": "breach"},
+    "outer_pact:edit": {"price": "years", "paid": True},
+    "outer_relation:edit": {"relation": "feeds_on"},
+    "outer_seal:edit": {"strength": 40, "kind": "banish"},
+}
+LEVERS.update(
+    {
+        "law_grammar:set": given(law_id=THE_LAW, target="stat", operator="multiply", key="prosperity", value=120, condition="at_peace"),
+        "law_exception:create": given(law_id=THE_LAW, kind="kind", entity_type="mortal"),
+        "law_exception:edit": after(EXCEPTION_UP, exception_id=Newest("natural_law_exceptions"), values=EDITS["law_exception:edit"], release=[]),
+        "law_exception:delete": after(EXCEPTION_UP, exception_id=Newest("natural_law_exceptions")),
+        "law_theory:create": given(law_id=THE_LAW, holder_id=Pick(EntityType.PEOPLE), believed_operator="multiply", believed_value=60),
+        "law_theory:edit": after(THEORY_UP, theory_id=Newest("law_theories"), values=EDITS["law_theory:edit"], release=[]),
+        "law_theory:delete": after(THEORY_UP, theory_id=Newest("law_theories")),
+        "outer_plan:set": given(being_id=THE_BEING, goal="open_rift", progress=10),
+        "outer_plan:edit": after(PLAN_UP, plan_id=Newest("outer_plans"), values=EDITS["outer_plan:edit"], release=[]),
+        "outer_plan:delete": after(PLAN_UP, plan_id=Newest("outer_plans")),
+        "outer_herald:bind": given(being_id=THE_BEING, herald_id=Pick(MORTAL, 1), zeal=60),
+        "outer_herald:edit": after(HERALD_UP, herald_id=Pick(MORTAL, 1), values=EDITS["outer_herald:edit"], release=[]),
+        "outer_herald:release": after(HERALD_UP, herald_id=Pick(MORTAL, 1)),
+        "outer_incursion:open": given(being_id=THE_BEING, region_id=Pick(EntityType.REGION)),
+        "outer_incursion:edit": after(INCURSION_UP, incursion_id=Newest("outer_incursions"), values=EDITS["outer_incursion:edit"], release=[]),
+        "outer_incursion:end": after(INCURSION_UP, incursion_id=Newest("outer_incursions")),
+        "outer_pact:strike": given(being_id=THE_BEING, holder_id=Pick(MORTAL, 2), price="sanity"),
+        "outer_pact:edit": after(PACT_UP, pact_id=Newest("outer_pacts"), values=EDITS["outer_pact:edit"], release=[]),
+        "outer_pact:void": after(PACT_UP, pact_id=Newest("outer_pacts")),
+        "outer_relation:set": given(being_id=THE_BEING, other_id=Computed(second_outer_being), relation="ignore"),
+        "outer_relation:edit": after(RELATION_UP, being_id=THE_BEING, other_id=Computed(second_outer_being), values=EDITS["outer_relation:edit"], release=[]),
+        "outer_relation:delete": after(RELATION_UP, being_id=THE_BEING, other_id=Computed(second_outer_being)),
+        "outer_seal:set": given(being_id=THE_BEING, kind="banish", strength=60),
+        "outer_seal:edit": after(SEAL_UP, seal_id=Newest("outer_seals"), values=EDITS["outer_seal:edit"], release=[]),
+        "outer_seal:break": after(SEAL_UP, seal_id=Newest("outer_seals")),
+        "outer:destroy": Lever(values={"being_id": THE_BEING}, setup=rich_creator),
+    }
+)
+SECOND_IDEOLOGY = ("lore:create", {"entity_type": "ideology", "name": "The Long Ledger", "world_id": Pick("world"), "values": {"tenets": ["legalism"]}})
+FOLLOWED = ("creed:adherent", {"ideology_id": Newest(EntityType.IDEOLOGY), "community_id": Pick(TOWN), "strength": 60})
+PART_UP = ("relation_component:set", {"first_id": Pick(TOWN), "second_id": Pick(TOWN, 1), "component": "trade", "value": 20})
+CHARTER_UP = ("constitution:write", {"polity_id": Pick(REALM)})
+ENCOUNTER_UP = ("journey_encounter:create", {"environment": "land", "effect": "attack", "weight": 40, "loss_pct": 12})
+EDITS = {
+    **EDITS,
+    "relation_component:edit": {"value": -30},
+    "constitution:edit": {"rights": 70, "offices": 4, "selectorate": "citizens"},
+    "journey_encounter:edit": {"weight": 60, "loss_pct": 5, "effect": "delay"},
+}
+LEVERS.update(
+    {
+        "relation_component:set": given(first_id=Pick(TOWN), second_id=Pick(TOWN, 1), component="faith", value=-15),
+        "relation_component:edit": after(
+            PART_UP, first_id=Pick(TOWN), second_id=Pick(TOWN, 1), component="trade", values=EDITS["relation_component:edit"], release=[]
+        ),
+        "relation_component:delete": after(PART_UP, first_id=Pick(TOWN), second_id=Pick(TOWN, 1), component="trade"),
+        "constitution:write": given(polity_id=Pick(REALM)),
+        "constitution:edit": after(CHARTER_UP, polity_id=Pick(REALM), values=EDITS["constitution:edit"], release=[]),
+        "constitution:delete": after(CHARTER_UP, polity_id=Pick(REALM)),
+        "journey_encounter:create": given(environment="sea", effect="find", weight=30, loss_pct=0),
+        "journey_encounter:edit": after(ENCOUNTER_UP, encounter_id=Newest("journey_encounters"), values=EDITS["journey_encounter:edit"], release=[]),
+        "journey_encounter:delete": after(ENCOUNTER_UP, encounter_id=Newest("journey_encounters")),
+        "ideology:split": after(IDEOLOGY, FOLLOWED, ideology_id=Newest(EntityType.IDEOLOGY), community_id=Pick(TOWN), added="rationalism"),
+        "ideology:merge": after(IDEOLOGY, SECOND_IDEOLOGY, keeper_id=Pick(EntityType.IDEOLOGY), absorbed_id=Newest(EntityType.IDEOLOGY)),
+    }
+)
+REGION_TENSION_UP = ("regional_tension:set", {"region_id": Pick(EntityType.REGION), "tension": 40})
+SUBSYSTEM_UP = ("subsystem_tension:edit", {"world_id": Pick("world"), "subsystem": "war", "values": {"tension": 30}, "release": []})
+TRUST_UP = ("source_trust:set", {"holder_id": Pick(EntityType.MORTAL), "source": "rumour", "trust": 50})
+RIFT_CONTROL_UP = ("rift_control:set", {"rift_id": Newest("rift"), "work": "stabilising", "toll": 1})
+EDITS = {
+    **EDITS,
+    "regional_tension:edit": {"tension": 75},
+    "subsystem_tension:edit": {"tension": 45},
+    "source_trust:edit": {"trust": 20},
+    "rift_control:edit": {"work": "sealing", "toll": 3, "adapted": 40},
+}
+LEVERS.update(
+    {
+        "storyteller_points:set": given(world_id=Pick("world"), points=[{"epoch": 2, "target": 30}, {"epoch": 8, "target": 70}]),
+        "regional_tension:set": given(region_id=Pick(EntityType.REGION), tension=65),
+        "regional_tension:edit": after(REGION_TENSION_UP, region_id=Pick(EntityType.REGION), values=EDITS["regional_tension:edit"], release=[]),
+        "regional_tension:delete": after(REGION_TENSION_UP, region_id=Pick(EntityType.REGION)),
+        "subsystem_tension:edit": given(world_id=Pick("world"), subsystem="war", values=EDITS["subsystem_tension:edit"], release=[]),
+        "subsystem_tension:delete": after(SUBSYSTEM_UP, world_id=Pick("world"), subsystem="war"),
+        "source_trust:set": given(holder_id=Pick(EntityType.MORTAL), source="spy", trust=70),
+        "source_trust:edit": after(TRUST_UP, holder_id=Pick(EntityType.MORTAL), source="rumour", values=EDITS["source_trust:edit"], release=[]),
+        "source_trust:delete": after(TRUST_UP, holder_id=Pick(EntityType.MORTAL), source="rumour"),
+        "rift_control:set": setup_then(heavens, rift_id=Newest("rift"), work="gate", toll=2, claimant_id=Pick(EntityType.POLITY)),
+        "rift_control:edit": setup_then(heavens, RIFT_CONTROL_UP, rift_id=Newest("rift"), values=EDITS["rift_control:edit"], release=[]),
+        "rift_control:delete": setup_then(heavens, RIFT_CONTROL_UP, rift_id=Newest("rift")),
+    }
+)
+HORROR_UP = ("horror:event", {"world_id": Pick("world"), "target": "light", "effect": "suppress", "scope": "world", "sense": "seen", "source": "unknown"})
+ATTACK_UP = ("creature_attack:create", {"node_id": Pick(EntityType.SPECIES), "delivery": "spit", "effect": "corrosion", "range": "near"})
+ASPECT_UP = ("dimension_aspect:create", {"dimension_id": Computed(prime_dimension), "form": "time", "strength": 40})
+QUEST_UP = ("hero:quest", {"hero_id": Pick(MORTAL)})
+LEGEND_UP = ("cosmic:legendary_quest", {"aim": "restore", "target_kind": "star"})
+EDITS = {
+    **EDITS,
+    "horror_event:edit": {"name": "The Long Hush", "target": "sound", "effect": "take", "sanity_cost": 7},
+    "creature_attack:edit": {"delivery": "voice", "effect": "fear", "range": "far", "recharge": 2, "permanent": True},
+    "dimension_aspect:edit": {"strength": 70},
+    "hero_quest:edit": {"obstacle": "guardian", "reward": "office", "scale": "legendary"},
+    "legendary_quest:edit": {"obstacle": "law", "reward": "knowledge"},
+}
+LEVERS.update(
+    {
+        "horror:event": given(world_id=Pick("world"), target="minds", effect="mark", scope="world", sense="heard", source="phenomenon"),
+        "horror_event:edit": after(HORROR_UP, horror_id=Newest("horror_events"), values=EDITS["horror_event:edit"], release=[]),
+        "horror_event:delete": after(HORROR_UP, horror_id=Newest("horror_events")),
+        "creature_attack:create": given(node_id=Pick(EntityType.SPECIES), delivery="sting", effect="venom", range="touch", recharge=1),
+        "creature_attack:edit": after(ATTACK_UP, attack_id=Newest("creature_attacks"), values=EDITS["creature_attack:edit"], release=[]),
+        "creature_attack:delete": after(ATTACK_UP, attack_id=Newest("creature_attacks")),
+        "dimension_aspect:create": Lever(values={"dimension_id": Computed(prime_dimension), "element": "earth", "strength": 60}, setup=rich_creator),
+        "dimension_aspect:edit": Lever(
+            values={"aspect_id": Newest("dimension_aspects"), "values": EDITS["dimension_aspect:edit"], "release": []}, before=(ASPECT_UP,), setup=rich_creator
+        ),
+        "dimension_aspect:delete": Lever(values={"aspect_id": Newest("dimension_aspects")}, before=(ASPECT_UP,), setup=rich_creator),
+        "hero_quest:edit": after(QUEST_UP, quest_id=Newest("hero_quests"), values=EDITS["hero_quest:edit"], release=[]),
+        "legendary_quest:edit": after(
+            ("cosmic:extinguish_star", {"star_id": Pick("star")}), LEGEND_UP, thread_id=Newest("thread"), values=EDITS["legendary_quest:edit"], release=[]
+        ),
+        "storyteller:palette": given(world_id=Pick("world"), key="raid", weight_pct=150),
     }
 )

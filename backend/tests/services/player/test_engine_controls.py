@@ -127,7 +127,7 @@ ENGINE_MANUAL_FUNCTIONS = (
     "order_foreign_god_land",
     "set_deposit_owner",
     "found_wandering_market",
-    "spawn_void_pirates",
+    "spawn_route_raiders",
     "disband_faction",
     "set_route_danger",
     "pour_essence",

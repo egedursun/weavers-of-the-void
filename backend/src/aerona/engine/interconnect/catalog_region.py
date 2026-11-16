@@ -69,7 +69,7 @@ REGION_MECHANICS = (
         targets=("region", "army", "trade_route", "mortal"),
         couplings=(
             Coupling(S.DEMOGRAPHY, "travellers set out into dangerous land", EdgeKind.MODIFIER, "regional_danger.traveller_risk_pct"),
-            Coupling(S.WAR, "armies lose men to the land and its ambushes", EdgeKind.FLOW, "regional_danger.army_attrition_pct"),
+            Coupling(S.WAR, "armies lose soldiers to the land and its ambushes", EdgeKind.FLOW, "regional_danger.army_attrition_pct"),
             Coupling(S.ECONOMY, "merchants avoid dangerous roads", EdgeKind.MODIFIER, "regional_danger.merchant_route_pct"),
         ),
     ),

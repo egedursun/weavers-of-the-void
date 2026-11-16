@@ -1,4 +1,7 @@
 import {
+  Drill,
+  Droplets,
+  Recycle,
   Anchor,
   Anvil,
   Apple,
@@ -852,4 +855,36 @@ export function premiumTone(pct: number): KpiTone {
   if (pct > 100) return 'gold'
   if (pct < 100) return 'muted'
   return 'info'
+}
+
+export const EXTRACTIONS: Record<
+  components['schemas']['ExtractionKind'],
+  Named
+> = {
+  mining: { label: 'Mining', icon: Pickaxe, tone: 'muted' },
+  quarrying: { label: 'Quarrying', icon: Mountain, tone: 'muted' },
+  logging: { label: 'Logging', icon: Trees, tone: 'success' },
+  fishing: { label: 'Fishing', icon: Fish, tone: 'info' },
+  herding: { label: 'Herding', icon: PawPrint, tone: 'gold' },
+  farming: { label: 'Farming', icon: Wheat, tone: 'success' },
+  gathering: { label: 'Gathering', icon: Leaf, tone: 'success' },
+  drilling: { label: 'Drilling', icon: Drill, tone: 'warning' },
+  pumping: { label: 'Pumping', icon: Droplets, tone: 'info' },
+  dredging: { label: 'Dredging', icon: Waves, tone: 'info' },
+  deep_sea: { label: 'Deep-sea working', icon: Anchor, tone: 'info' },
+  atmospheric: { label: 'Drawing from the air', icon: Wind, tone: 'muted' },
+  asteroid: { label: 'Asteroid mining', icon: Orbit, tone: 'verdigris' },
+  stellar: { label: 'Star collection', icon: Sun, tone: 'gold' },
+  source_harvest: {
+    label: 'Harvest of a source',
+    icon: Sparkles,
+    tone: 'verdigris',
+  },
+  salvage: { label: 'Salvage', icon: Recycle, tone: 'muted' },
+  living_harvest: {
+    label: 'Harvest from living things',
+    icon: Sprout,
+    tone: 'success',
+  },
+  distillation: { label: 'Distillation', icon: FlaskConical, tone: 'info' },
 }

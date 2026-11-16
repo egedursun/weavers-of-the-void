@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, Telescope } from 'lucide-react'
+import { Eye, EyeOff, Telescope } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -14,7 +14,7 @@ import { OMENS } from './labels'
 import { ForgeCard, RecordPick, RecordRow } from './parts'
 
 type Omen = keyof typeof OMENS
-type Order = { people_id: number; reading: Omen | null }
+type Order = { people_id: number; reading: Omen | null; visible?: boolean }
 
 const OMEN_NAMES = Object.fromEntries(
   Object.entries(OMENS).map(([key, value]) => [key, value.label])
@@ -82,23 +82,41 @@ export function CelestialReadingsSection({
                         'A people'}
                     </EntityLink>
                   }
-                  caption={`${omen.label} since epoch ${row.epoch}${row.locked.length > 0 ? ' · held' : ''}`}
+                  caption={`${omen.label} since epoch ${row.epoch}${row.visible ? '' : ', hidden from them by cloud, latitude or the lack of a sky'}${row.locked.length > 0 ? ' · held' : ''}`}
                   aside={
-                    <Button
-                      size='sm'
-                      variant='ghost'
-                      disabled={busy !== null}
-                      disabledReason={busy ?? undefined}
-                      onClick={() =>
-                        set.mutate({
-                          people_id: row.people_entity_id,
-                          reading: null,
-                        })
-                      }
-                    >
-                      <Eye />
-                      Let them read it again
-                    </Button>
+                    <div className='flex min-w-0 flex-wrap gap-1'>
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        disabled={busy !== null}
+                        disabledReason={busy ?? undefined}
+                        onClick={() =>
+                          set.mutate({
+                            people_id: row.people_entity_id,
+                            reading: row.reading,
+                            visible: !row.visible,
+                          })
+                        }
+                      >
+                        {row.visible ? <EyeOff /> : <Eye />}
+                        {row.visible ? 'Hide it from them' : 'Let them see it'}
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        disabled={busy !== null}
+                        disabledReason={busy ?? undefined}
+                        onClick={() =>
+                          set.mutate({
+                            people_id: row.people_entity_id,
+                            reading: null,
+                          })
+                        }
+                      >
+                        <Eye />
+                        Let them read it again
+                      </Button>
+                    </div>
                   }
                 />
               )

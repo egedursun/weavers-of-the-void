@@ -24,6 +24,7 @@ import {
   StatBar,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { CRIMES } from '@/features/entity/justice/crimes'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { type ActionResponse } from '@/features/pantheon/api'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -59,7 +60,6 @@ import {
   ABILITIES,
   BREAKS,
   CAREERS,
-  CRIMES,
   DEATHS,
   GEAR_ICON,
   HELD_LABELS,
@@ -501,7 +501,7 @@ function LifeControls({
         note='Every value runs from 0 to 100.'
         run={run}
       />
-      <div className='flex min-w-0 flex-col gap-2 rounded-md border p-3'>
+      <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
         <Text weight='semibold'>Judgement</Text>
         <Muted variant='caption'>
           Sentence this mortal under the law, or pardon an exile. Maiming and
@@ -814,32 +814,34 @@ export function KinSection({
                     {generationLabel(row[0]?.generation ?? 0)}
                   </Label>
                   <ul className='grid min-w-0 grid-cols-1 gap-2 @md/kin:grid-cols-2 @2xl/kin:grid-cols-3'>
-                    {row.map((person) => (
-                      <li
-                        key={person.id}
-                        className='flex min-w-0 items-center gap-2 rounded-md border bg-background px-2 py-1.5'
-                      >
-                        <span className='min-w-0 flex-1 truncate'>
-                          <RefLink
-                            node={{
-                              id: person.id,
-                              kind: 'entity',
-                              name: person.name,
-                            }}
-                          />
-                        </span>
-                        {person.sex && (
-                          <Badge size='sm' variant='outline'>
-                            {named(SEXES, person.sex).label}
-                          </Badge>
-                        )}
-                        {!person.living && (
-                          <Badge size='sm' variant='secondary'>
-                            Dead
-                          </Badge>
-                        )}
-                      </li>
-                    ))}
+                    <Paged items={row} as='li'>
+                      {(person) => (
+                        <li
+                          key={person.id}
+                          className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1.5'
+                        >
+                          <span className='min-w-0 flex-1 truncate'>
+                            <RefLink
+                              node={{
+                                id: person.id,
+                                kind: 'entity',
+                                name: person.name,
+                              }}
+                            />
+                          </span>
+                          {person.sex && (
+                            <Badge size='sm' variant='outline'>
+                              {named(SEXES, person.sex).label}
+                            </Badge>
+                          )}
+                          {!person.living && (
+                            <Badge size='sm' variant='secondary'>
+                              Dead
+                            </Badge>
+                          )}
+                        </li>
+                      )}
+                    </Paged>
                   </ul>
                 </div>
               )}
@@ -978,7 +980,7 @@ export function EquipmentSection({
                 return (
                   <li
                     key={entry.slot}
-                    className='flex min-w-0 items-center gap-2 rounded-md border bg-background p-2'
+                    className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
                   >
                     <spec.icon
                       aria-hidden='true'

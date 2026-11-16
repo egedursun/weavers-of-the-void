@@ -115,7 +115,16 @@ STATUS_LABELS: MappingProxyType[ClaimStatus, str] = MappingProxyType(
     {ClaimStatus.STANDING: "Believed", ClaimStatus.VERIFIED: "Proven", ClaimStatus.EXPOSED: "Exposed"}
 )
 LORE_LABELS: MappingProxyType[LoreKind, str] = MappingProxyType(
-    {LoreKind.TECHNIQUE: "A technique", LoreKind.SITE: "A hidden site", LoreKind.MAP: "Knowledge of a land", LoreKind.PROPHECY: "A prophecy"}
+    {
+        LoreKind.TECHNIQUE: "A technique",
+        LoreKind.SITE: "A hidden site",
+        LoreKind.MAP: "Knowledge of a land",
+        LoreKind.PROPHECY: "A prophecy",
+        LoreKind.TRUE_NAME: "A true name",
+        LoreKind.WEAKNESS: "A weakness",
+        LoreKind.PATTERN: "A pattern of a made thing",
+        LoreKind.SOURCE: "Where a source of power lies",
+    }
 )
 PRICE_LABELS: MappingProxyType[LorePrice, str] = MappingProxyType({LorePrice.WEALTH: "Wealth", LorePrice.FAVOUR: "A favour", LorePrice.RENOWN: "Renown"})
 
@@ -125,12 +134,15 @@ FACTION_LORE: MappingProxyType[FactionKind, frozenset[LoreKind]] = MappingProxyT
         FactionKind.CRAFT_GUILD: frozenset({LoreKind.TECHNIQUE}),
         FactionKind.MERCHANT_GUILD: frozenset({LoreKind.MAP, LoreKind.SITE}),
         FactionKind.WANDERING_MARKET: frozenset({LoreKind.MAP}),
-        FactionKind.SECRET_SOCIETY: frozenset({LoreKind.SITE, LoreKind.PROPHECY}),
+        FactionKind.SECRET_SOCIETY: frozenset({LoreKind.SITE, LoreKind.PROPHECY, LoreKind.TRUE_NAME}),
+        FactionKind.MAGE_ORDER: frozenset({LoreKind.SOURCE, LoreKind.TRUE_NAME}),
+        FactionKind.ENGINEERS_SOCIETY: frozenset({LoreKind.PATTERN, LoreKind.TECHNIQUE}),
+        FactionKind.CHARTERED_COMPANY: frozenset({LoreKind.PATTERN, LoreKind.MAP}),
         FactionKind.PRIESTHOOD: frozenset({LoreKind.PROPHECY}),
         FactionKind.BANDITS: frozenset({LoreKind.SITE, LoreKind.MAP}),
         FactionKind.PIRATES: frozenset({LoreKind.MAP}),
         FactionKind.REBELS: frozenset({LoreKind.MAP, LoreKind.SITE}),
-        FactionKind.ASSASSINS: frozenset({LoreKind.SITE}),
+        FactionKind.ASSASSINS: frozenset({LoreKind.SITE, LoreKind.WEAKNESS}),
         FactionKind.MERCENARY_COMPANY: frozenset({LoreKind.MAP}),
         FactionKind.WARRIOR_ORDER: frozenset({LoreKind.TECHNIQUE}),
     }

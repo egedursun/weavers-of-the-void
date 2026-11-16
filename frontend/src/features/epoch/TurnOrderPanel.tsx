@@ -4,7 +4,13 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
-import { EmptyState, EntityLink, Portrait, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  Paged,
+  Portrait,
+  Section,
+} from '@/components/domain'
 import { Label, Stat } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { type SonRecord, type WorldState } from '@/features/pantheon/api'
@@ -40,10 +46,10 @@ function TurnRankRow({ son, cover, position, places }: TurnRankRowProps) {
       : null
   const pinned = typeof son.turn_rank === 'number'
   return (
-    <li className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2'>
+    <li className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <span
         className={cn(
-          'flex size-control-sm shrink-0 items-center justify-center rounded-full border',
+          'flex size-control-sm shrink-0 items-center justify-center rounded-full border surface-sheen border-gild/60 bg-card',
           pinned
             ? 'border-primary/40 bg-primary/12 text-primary'
             : 'border-border bg-muted text-muted-foreground'
@@ -118,15 +124,17 @@ export function TurnOrderPanel({ state }: { state: WorldState }) {
         />
       ) : (
         <ol className='flex min-w-0 flex-col gap-2'>
-          {sons.map((son, index) => (
-            <TurnRankRow
-              key={`${son.id}:${son.turn_rank ?? 'free'}`}
-              son={son}
-              cover={covers.get(son.id) ?? null}
-              position={index + 1}
-              places={sons.length}
-            />
-          ))}
+          <Paged items={sons} as='li'>
+            {(son, index) => (
+              <TurnRankRow
+                key={`${son.id}:${son.turn_rank ?? 'free'}`}
+                son={son}
+                cover={covers.get(son.id) ?? null}
+                position={index + 1}
+                places={sons.length}
+              />
+            )}
+          </Paged>
         </ol>
       )}
     </Section>

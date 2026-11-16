@@ -40,7 +40,7 @@ function EthicRow({
 }) {
   const spec = named(STANCES, item.stance)
   return (
-    <div className='flex min-w-0 items-end gap-2 rounded-md border bg-muted/20 p-2'>
+    <div className='flex min-w-0 items-end gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <Medallion icon={spec.icon} size='sm' tone={spec.tone} />
       <div className='flex min-w-0 flex-1 flex-col'>
         <Text weight='semibold' truncate>

@@ -58,6 +58,10 @@ class HeroesRules:
     quest_strong_item_power: int = rule(5, 0, 12, RuleGroup.HEROES_AND_MORTALS, "Power level of a lost item counted as strong")
     quest_weight_strong_item_bonus: int = rule(2, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Quest selection: extra weight of a strong lost item")
     quest_weight_lost_knowledge: int = rule(2, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Quest selection: lost-knowledge weight")
+    quest_weight_lost_place: int = rule(2, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Quest selection: weight of a lost place to reach")
+    legendary_quest_reward_pct: int = rule(
+        200, 100, 1000, RuleGroup.HEROES_AND_MORTALS, "What a hero gains from a quest of legendary scale, against a personal one (%)"
+    )
     quest_weight_vengeance: int = rule(3, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Quest selection: blood-feud vengeance weight")
     quest_success_divisor: int = rule(300, 1, 10000, RuleGroup.HEROES_AND_MORTALS, "Quest success: (strength + agility + intellect) / this number")
     quest_companion_bonus_pct: int = rule(10, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Contribution of each companion to quest success (%)")

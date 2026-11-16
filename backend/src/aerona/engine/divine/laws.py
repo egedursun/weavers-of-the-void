@@ -21,6 +21,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.divine.gods import god_of
+from aerona.engine.divine.law_grammar import spared, tend_grammar
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import footprint
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
@@ -57,9 +58,9 @@ async def drafted_profile(session: AsyncSession, rules: Rules, law: EntityRow, e
 
 
 async def profile_for(ctx: TickContext, law: EntityRow) -> NaturalLawProfileRow | None:
-    if law.natural_law is None or law.natural_law is NaturalLaw.NONE:
-        return None
     row = await ctx.session.get(NaturalLawProfileRow, law.id)
+    if law.natural_law is None or law.natural_law is NaturalLaw.NONE:
+        return row if row is not None and row.target is not None else None
     if row is not None:
         row.effect = law.natural_law
         return row
@@ -105,6 +106,7 @@ async def contest(ctx: TickContext, rows: list[NaturalLawProfileRow]) -> int:
     for row in rows:
         if "contested" not in row.locked:
             row.contested = False
+    rows = [row for row in rows if row.effect is not NaturalLaw.NONE]
     for index, first in enumerate(rows):
         for second in rows[index + 1 :]:
             if frozenset({first.effect, second.effect}) not in CONTRADICTIONS or not overlap(first, second, footprints):
@@ -123,6 +125,8 @@ async def contest(ctx: TickContext, rows: list[NaturalLawProfileRow]) -> int:
             weaker = second if gap > 0 else first
             if "stability" not in weaker.locked:
                 weaker.stability = clamp_int(weaker.stability - table.contest_erosion, 0, PERCENT)
+            if "suspended" not in weaker.locked:
+                weaker.suspended = True
     return clashes
 
 
@@ -149,18 +153,22 @@ async def tend_laws(ctx: TickContext) -> int:
                 law.status, law.end_epoch = EntityStatus.DESTROYED, ctx.epoch
                 await note(
                     ctx,
-                    f"{law.name} was unmade: {NATURAL_LAWS[row.effect].label.lower()} no longer holds.",
+                    f"{law.name} was unmade: {NATURAL_LAWS[row.effect].label.lower() if row.effect is not NaturalLaw.NONE else 'its working'} no longer holds.",
                     key="divine.law_unmade",
                     ids=[law.id],
                     kind=ChronicleKind.COSMIC_LAW,
                 )
         row.updated_epoch = ctx.epoch
+    await tend_grammar(ctx, [row for row in rows if row.strength > 0])
     await contest(ctx, [row for row in rows if row.strength > 0])
     await ctx.session.flush()
     return len(rows)
 
 
 async def exempt(ctx: TickContext, entity: EntityRow, law: NaturalLaw) -> bool:
+    for law_id in list(await ctx.session.scalars(select(NaturalLawProfileRow.law_entity_id).where(NaturalLawProfileRow.effect == law))):
+        if await spared(ctx, law_id, entity):
+            return True
     rows = await ctx.session.scalars(
         select(NaturalLawProfileRow).where(NaturalLawProfileRow.effect == law, NaturalLawProfileRow.exception != LawException.NONE)
     )

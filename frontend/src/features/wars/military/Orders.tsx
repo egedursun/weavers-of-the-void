@@ -170,7 +170,7 @@ function SiegeDepthCard({
     ? String(siege.values.wall_material)
     : null
   return (
-    <div className='flex min-w-0 flex-col gap-2.5 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <Text as='span' weight='medium' truncate>
           {city}

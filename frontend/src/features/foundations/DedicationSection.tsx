@@ -78,7 +78,7 @@ export function DedicationSection({
           data-surface='StructureDedication'
           className='flex min-w-0 flex-col gap-4'
         >
-          <div className='flex min-w-0 items-center gap-3 rounded-xl border bg-card p-4'>
+          <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
             <Medallion
               icon={data.son ? Church : Sparkles}
               tone={data.son ? 'gold' : 'muted'}
@@ -132,7 +132,7 @@ export function DedicationSection({
                   disabled={busy !== null}
                 />
               </div>
-              <label className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2.5'>
+              <label className='flex min-w-0 items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
                 <Switch
                   checked={hold}
                   onCheckedChange={setHold}

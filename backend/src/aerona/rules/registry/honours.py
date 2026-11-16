@@ -28,6 +28,7 @@ class VeteranRules:
     colony_veterans: int = rule(50, 0, 100000, W, "Veterans a realm needs to found a colony of them")
     colony_loyalty: int = rule(20, 0, 100, W, "Loyalty a veteran colony holds to the ruler who granted it")
     pension_cost: int = rule(1, 0, 100, W, "Coin each veteran's pension costs the treasury each epoch")
+    ungranted_unrest: int = rule(2, 0, 100, W, "Unrest that veterans a realm could grant nothing add to its towns each epoch while their claim stands")
     pension_years: int = rule(5, 1, 100, W, "Epochs a pension is paid")
     unpaid_grievance: int = rule(10, 0, 100, W, "Relation each town of a realm loses with it when its veterans' pensions go unpaid")
     association_from: int = rule(30, 0, 100000, W, "Veterans of a town from which they band into an association")

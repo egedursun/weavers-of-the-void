@@ -116,7 +116,7 @@ function GameLore() {
         {GAME_PILLARS.map(({ title, body, icon: Icon }) => (
           <li
             key={title}
-            className='group flex items-start gap-3 rounded-lg border border-brand-violet/30 bg-card/50 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-brand-gold/50 hover:shadow-lg hover:shadow-brand-violet/20'
+            className='group flex items-start gap-3 rounded-md border surface-framed border-brand-violet/30 bg-card p-4 transition duration-200 hover:-translate-y-0.5 hover:border-brand-gold/50 hover:shadow-lg hover:shadow-brand-violet/20'
           >
             <span className='flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-violet/20 text-brand-gold transition group-hover:scale-110'>
               <Icon className='size-icon-md' aria-hidden />
@@ -191,7 +191,7 @@ function RarityLadder() {
             <li
               key={rarity}
               className={cn(
-                'group flex flex-col items-center gap-2 rounded-xl border bg-card/50 px-2 py-4 text-center transition duration-200 hover:-translate-y-1 hover:shadow-lg',
+                'group flex flex-col items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card px-2 py-4 text-center transition duration-200 hover:-translate-y-1 hover:shadow-lg',
                 tone.border,
                 tone.glow,
                 index >= RARITIES.length - 2 && 'card-foil'
@@ -230,7 +230,7 @@ function TechRunes() {
         {TECH_RUNES.map(({ name, role, icon: Icon }) => (
           <li
             key={name}
-            className='group flex items-center gap-3 rounded-lg border border-border/60 bg-card/40 px-3 py-2.5 transition duration-200 hover:border-brand-gold/50'
+            className='group flex items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2.5 transition duration-200 hover:border-brand-gold/50'
           >
             <Icon
               className='size-icon-md shrink-0 text-brand-gold transition group-hover:rotate-12'

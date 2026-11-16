@@ -216,7 +216,7 @@ async def hoard_create(scope: PlayerScope, command: HoardDraft) -> Effect:
         {},
         {"place_entity_id": command.place_id, "holder_node_id": command.holder_id, "amount": command.amount, "state": command.state},
     )
-    return Effect("The hoard is buried.", values={"record_id": getattr(row, "id", 0)})
+    return Effect("The hoard is put away.", values={"record_id": getattr(row, "id", 0)})
 
 
 @player_action("hoard:edit", ActionKind.EDIT_RECORD)

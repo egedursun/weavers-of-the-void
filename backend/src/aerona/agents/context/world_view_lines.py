@@ -1,5 +1,6 @@
 from aerona.agents.context.scope import Scope
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.world_view import BindingNeed, SettleMode, WarTerrain, WorldLight
@@ -18,20 +19,16 @@ SHARES = (
 )
 
 
-def spoken(value: str) -> str:
-    return value.replace("_", " ")
-
-
 def view_lines(view: WorldView) -> list[str]:
     found = []
     if view.light is not WorldLight.STAR:
         found.append(f"its light comes from {spoken(view.light.value)}")
     if view.need is not BindingNeed.NONE:
-        found.append(f"its towns are bound to {view.need.value}")
+        found.append(f"its towns are bound to {spoken(view.need)}")
     if view.settle is not SettleMode.GROUND:
         found.append(f"its towns stand {spoken(view.settle.value)}")
     if view.war is not WarTerrain.LAND:
-        found.append(f"its wars are fought {view.war.value}")
+        found.append(f"its wars are fought {spoken(view.war)}")
     found.extend(
         text
         for flag, text in (

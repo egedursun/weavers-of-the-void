@@ -87,7 +87,7 @@ function RouteCard({ route }: { route: TradeRoute }) {
   return (
     <li
       data-route={route.route_id}
-      className='flex h-full min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'
+      className='flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={mode.icon} tone={status.tone} size='sm' />
@@ -204,7 +204,7 @@ function RoutesList({ routes }: { routes: TradeRoute[] | undefined }) {
   )
   return (
     <div data-surface='RoutesList' className='flex min-w-0 flex-col gap-4'>
-      <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
+      <div className='flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-md border surface-sheen border-gild/60 bg-card px-4 py-2'>
         <Muted variant='caption'>
           Every route, its dangers by source and its worst season. Open one to
           command it.
@@ -267,7 +267,7 @@ function MarketsList({ worldId }: { worldId: number }) {
   const id = chosen in table ? chosen : String(markets.data[0].id)
   return (
     <div className='flex min-w-0 flex-col gap-4'>
-      <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-xl border bg-background p-4'>
+      <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
         <Medallion icon={Store} tone='gold' />
         <div className='flex min-w-0 flex-1 basis-56 flex-col'>
           <MindPicker

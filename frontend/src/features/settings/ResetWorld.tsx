@@ -17,7 +17,7 @@ export function ResetWorld({ hasWorld, readOnly }: ResetWorldProps) {
   const reset = useResetWorld()
   const [open, setOpen] = useState(false)
   return (
-    <div className='rounded-xl border border-destructive/40 bg-destructive/5 p-5'>
+    <div className='rounded-md border surface-framed border-destructive/40 bg-destructive/5 p-5'>
       <Section
         title='Danger zone: reset the world'
         description='The world, its sons, its chronicle and its images are removed. A safety backup is taken first, so this too can be restored.'

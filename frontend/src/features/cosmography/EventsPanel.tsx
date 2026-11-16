@@ -227,7 +227,7 @@ function TriggerForm({
             onClick={() => galactic.mutate()}
           >
             <Sparkles />
-            Bring it about
+            Bring about the galactic event
           </Button>
         }
       >
@@ -276,7 +276,7 @@ function TriggerForm({
             onClick={() => planar.mutate()}
           >
             <Zap />
-            Bring it about
+            Bring about the planar event
           </Button>
         }
       >

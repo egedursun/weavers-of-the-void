@@ -78,7 +78,7 @@ export function HarshnessDial() {
   return (
     <div
       data-surface='HarshnessDial'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={HeartPulse} tone={current?.tone ?? 'gold'} size='sm' />
@@ -127,7 +127,7 @@ export function HarshnessDial() {
             return (
               <li
                 key={scale.key}
-                className='flex min-w-0 flex-col rounded-md border px-2 py-1'
+                className='flex min-w-0 flex-col rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1'
               >
                 <Muted variant='caption' truncate>
                   {scale.label}

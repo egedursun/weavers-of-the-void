@@ -28,6 +28,7 @@ from aerona.engine.phases.dominion import count
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.unions.keep import keep_unions
 
 
 async def counter_elites(ctx: TickContext, polity: EntityRow, capital_id: int | None, overproduction: int, tally: StressTally) -> None:
@@ -149,12 +150,17 @@ async def asabiyya(ctx: TickContext) -> None:
     "region.fertility",
     "settlement.population",
     "table.asabiyya",
+    "table.bonds",
     "table.epoch_year_cursors",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.living_lines",
     "table.place_environment",
+    "table.polity_members",
     "table.polity_profiles",
     "table.polity_stress",
+    "table.power_sources",
+    "table.public_knowledge",
     "table.research_focus",
     "table.research_progress",
 )
@@ -220,6 +226,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
+    "table.relation_components",
     "table.relationships",
     "table.reputations",
     "table.ruler_currencies",
@@ -267,15 +274,28 @@ async def reciprocity(ctx: TickContext) -> None:
     "table.marriages",
     "table.memories",
     "table.minds",
+    "table.people_culture",
+    "table.relation_components",
     "table.relationships",
     "table.reputations",
     "table.ruler_currencies",
     "table.speaker_cohorts",
     "table.traits",
+    "table.union_customs",
 )
-@writes("table.bonds", "table.community_relations", "table.entities", "table.house_profiles", "table.marriage_alliances", "table.marriages", "table.memories")
+@writes(
+    "table.bonds",
+    "table.community_relations",
+    "table.entities",
+    "table.house_profiles",
+    "table.marriage_alliances",
+    "table.marriages",
+    "table.memories",
+    "table.union_customs",
+)
 async def kinship_systems(ctx: TickContext) -> None:
     tally = KinshipTally()
+    await keep_unions(ctx)
     await keep_kinship(ctx, tally)
     count(ctx, "kinship", tally)
 
@@ -312,6 +332,7 @@ async def reproduction_systems(ctx: TickContext) -> None:
     "table.polity_members",
     "table.polity_profiles",
     "table.region_environment",
+    "table.relation_components",
     "table.relationships",
     "table.reputations",
     "table.ruler_currencies",

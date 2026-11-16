@@ -1,9 +1,10 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.affairs import CourtPositionRow, CourtRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import DwellingRow, HouseholdMemberRow
@@ -138,13 +139,17 @@ async def chronicler(ctx: TickContext, seat: Seat) -> None:
     await add_renown(ctx.session, seat.ruler.id, ctx.rules.affairs.chronicler_renown, ctx.epoch, rules=ctx.rules)
 
 
-DUTIES: dict[CourtPosition, Callable[[TickContext, Seat], Awaitable[None]]] = {
-    CourtPosition.STEWARD: steward,
-    CourtPosition.CHAMPION: champion,
-    CourtPosition.PHYSICIAN: physician,
-    CourtPosition.TUTOR: tutor,
-    CourtPosition.CHRONICLER: chronicler,
-}
+DUTIES: Mapping[CourtPosition, Callable[[TickContext, Seat], Awaitable[None]]] = partial(
+    CourtPosition,
+    {
+        CourtPosition.STEWARD: steward,
+        CourtPosition.CHAMPION: champion,
+        CourtPosition.PHYSICIAN: physician,
+        CourtPosition.TUTOR: tutor,
+        CourtPosition.CHRONICLER: chronicler,
+    },
+    without={CourtPosition.MASTER_OF_REVELS},
+)
 
 
 async def grandeur_parts(ctx: TickContext, ruler: EntityRow, capital: int, courtiers: int, seats: dict[CourtPosition, CourtPositionRow]) -> dict[str, int]:

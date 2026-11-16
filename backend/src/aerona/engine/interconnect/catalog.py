@@ -39,11 +39,13 @@ from aerona.engine.interconnect.catalog_climes import CLIMES_MECHANICS
 from aerona.engine.interconnect.catalog_collective import COLLECTIVE_MECHANICS
 from aerona.engine.interconnect.catalog_communication import COMMUNICATION_MECHANICS
 from aerona.engine.interconnect.catalog_cosmography import COSMOGRAPHY_MECHANICS
+from aerona.engine.interconnect.catalog_council_order import COUNCIL_ORDER_MECHANICS
 from aerona.engine.interconnect.catalog_couplings import COUPLING_MECHANICS
 from aerona.engine.interconnect.catalog_crafts import CRAFTS_MECHANICS
 from aerona.engine.interconnect.catalog_customs import CUSTOMS_MECHANICS
 from aerona.engine.interconnect.catalog_cycles import CYCLE_MECHANICS
 from aerona.engine.interconnect.catalog_divine import DIVINE_MECHANICS
+from aerona.engine.interconnect.catalog_divine_powers import CREATOR_BOND_MECHANICS, DIVINE_POWER_MECHANICS, PANTHEON_MECHANICS
 from aerona.engine.interconnect.catalog_dominion import DOMINION_MECHANICS
 from aerona.engine.interconnect.catalog_economy import ECONOMY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_eras import ERAS_MECHANICS
@@ -52,12 +54,14 @@ from aerona.engine.interconnect.catalog_evolution import EVOLUTION_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
 from aerona.engine.interconnect.catalog_folkways import FOLKWAYS_MECHANICS
+from aerona.engine.interconnect.catalog_fortune import FORTUNE_MECHANICS
 from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
 from aerona.engine.interconnect.catalog_gatherings import GATHERING_MECHANICS
 from aerona.engine.interconnect.catalog_industry import INDUSTRY_MECHANICS
 from aerona.engine.interconnect.catalog_intrigue import INTRIGUE_MECHANICS
 from aerona.engine.interconnect.catalog_justice import JUSTICE_MECHANICS
 from aerona.engine.interconnect.catalog_law_depth import LAW_MECHANICS
+from aerona.engine.interconnect.catalog_law_outer import LAW_OUTER_MECHANICS
 from aerona.engine.interconnect.catalog_lifecycle import LIFECYCLE_MECHANICS
 from aerona.engine.interconnect.catalog_lineage import LINEAGE_MECHANICS
 from aerona.engine.interconnect.catalog_living import LIVING_MECHANICS
@@ -91,8 +95,12 @@ from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
 from aerona.engine.interconnect.catalog_society_depth import SOCIETY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_statecraft import STATECRAFT_MECHANICS
 from aerona.engine.interconnect.catalog_structures import STRUCTURE_MECHANICS
+from aerona.engine.interconnect.catalog_technology import TECHNOLOGY_MECHANICS
+from aerona.engine.interconnect.catalog_thin_a import THIN_A_MECHANICS
+from aerona.engine.interconnect.catalog_thin_b import THIN_B_MECHANICS
 from aerona.engine.interconnect.catalog_titles import TITLE_MECHANICS
 from aerona.engine.interconnect.catalog_tongues import TONGUE_MECHANICS
+from aerona.engine.interconnect.catalog_typed_models import TYPED_MODEL_MECHANICS
 from aerona.engine.interconnect.catalog_urban_depth import URBAN_MECHANICS
 from aerona.engine.interconnect.catalog_war_conduct import WAR_CONDUCT_MECHANICS
 from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
@@ -450,7 +458,7 @@ CORE_MECHANICS = (
         tables=(BodyRow.__tablename__,),
         targets=("mortal", "son", "foreign_god"),
         couplings=(
-            Coupling(Subsystem.KNOWLEDGE, "metallurgy gives helmets; a people without them breeds one-eyed veterans"),
+            Coupling(Subsystem.KNOWLEDGE, "metallurgy gives helmets; a people without them takes more wounds to the head"),
             Coupling(Subsystem.ECOLOGY, "flying beasts strike heads, giants trample legs"),
         ),
     ),
@@ -688,7 +696,7 @@ CORE_MECHANICS = (
                 "materials.damage_edge_pct",
             ),
             Coupling(Subsystem.MAGIC, "conductivity caps enchantment and corruption brings curses", EdgeKind.MODIFIER, "materials.enchant_conductivity_pct"),
-            Coupling(Subsystem.FAITH, "holy materials make temples shine and ward off restless spirits", EdgeKind.MODIFIER, "materials.sanctity_ward_pct"),
+            Coupling(Subsystem.FAITH, "holy materials strengthen temples and ward off restless spirits", EdgeKind.MODIFIER, "materials.sanctity_ward_pct"),
             Coupling(Subsystem.COSMOS, "corrupt materials held in a world draw the outer beings", EdgeKind.FLOW, "materials.corruption_lure_pct"),
             Coupling(Subsystem.BODY, "a keen blade cuts and a heavy one crushes", EdgeKind.MODIFIER),
             Coupling(
@@ -1035,6 +1043,16 @@ BUILT_IN = (
     *MINDS_MECHANICS,
     *POWER_MECHANICS,
     *LIVING_MECHANICS,
+    *FORTUNE_MECHANICS,
+    *TECHNOLOGY_MECHANICS,
+    *DIVINE_POWER_MECHANICS,
+    *CREATOR_BOND_MECHANICS,
+    *PANTHEON_MECHANICS,
+    *TYPED_MODEL_MECHANICS,
+    *THIN_A_MECHANICS,
+    *THIN_B_MECHANICS,
+    *COUNCIL_ORDER_MECHANICS,
+    *LAW_OUTER_MECHANICS,
     *AGES_MECHANICS,
     *FOLKWAYS_MECHANICS,
     *CRAFTS_MECHANICS,
@@ -1367,7 +1385,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         ("danger",),
         Subsystem.ECOLOGY,
         "mining_hazards.cavern_chance",
-        "something comes out of the dark",
+        "something below is let loose",
     ),
     (
         "decaying_reserve",
@@ -1475,7 +1493,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         ("reserve",),
         Subsystem.COSMOS,
         "materials.world_material_star_chance",
-        "the sky drops metal",
+        "comets and dead stars leave metal behind",
     ),
     (
         "void_glass",
@@ -1511,7 +1529,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         ("status", "last_traffic_epoch"),
         Subsystem.ECONOMY,
         "trade_routes.decay_epochs",
-        "grass grows over a dead road",
+        "an unused road falls out of use",
     ),
     (
         "route_capacity",
@@ -1703,7 +1721,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         ("volume",),
         Subsystem.DEMOGRAPHY,
         "trade_routes.diffusion_pct",
-        "disease rides with the cargo",
+        "disease travels with the cargo",
     ),
     (
         "resource_value",
@@ -1727,7 +1745,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         ("abundance", "reserve"),
         Subsystem.ECONOMY,
         "market.refill_abundance",
-        "the veins that ran dry give once more",
+        "an exhausted resource yields once more",
     ),
     (
         "seam_wear",

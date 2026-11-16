@@ -18,6 +18,7 @@ import {
   ConfirmDialog,
   EmptyState,
   MiniStat,
+  Paged,
   Section,
 } from '@/components/domain'
 import { Muted, Stat, Text } from '@/components/typography'
@@ -53,18 +54,24 @@ function BulkLog({ lines }: { lines: LogLine[] }) {
   return (
     <ol
       aria-label='Deepening log'
-      className='flex max-h-64 min-w-0 flex-col gap-1 overflow-y-auto rounded-md border bg-background p-3'
+      className='flex max-h-64 min-w-0 flex-col gap-1 overflow-y-auto rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
-      {lines.slice(-LOG_SHOWN).map((line, index) => (
-        <li key={`${line.at}-${index}`} className='flex min-w-0 gap-2'>
-          <Muted as='span' variant='caption' className='shrink-0 tabular-nums'>
-            {clock.format(new Date(line.at))}
-          </Muted>
-          <Text as='span' variant='caption' tone={LEVEL_TONE[line.level]}>
-            {line.text}
-          </Text>
-        </li>
-      ))}
+      <Paged items={lines.slice(-LOG_SHOWN)} as='li'>
+        {(line, index) => (
+          <li key={`${line.at}-${index}`} className='flex min-w-0 gap-2'>
+            <Muted
+              as='span'
+              variant='caption'
+              className='shrink-0 tabular-nums'
+            >
+              {clock.format(new Date(line.at))}
+            </Muted>
+            <Text as='span' variant='caption' tone={LEVEL_TONE[line.level]}>
+              {line.text}
+            </Text>
+          </li>
+        )}
+      </Paged>
     </ol>
   )
 }

@@ -1,8 +1,19 @@
 import { Compass } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Label, Muted, Text } from '@/components/typography'
+import { table } from '@/features/arcana/labels'
+import { Chip, type Field, RecordEditor } from '@/features/cosmography/parts'
 import { NamedRecord } from '@/features/entity/NamedRecord'
+import { useMadeAction } from '@/features/minds/api'
+import {
+  AIMS,
+  OBSTACLES,
+  QUEST_TARGETS,
+  REWARDS,
+  SCALES,
+} from '@/features/typedModels/labels'
 import { useCosmos } from './api'
 import {
   OUTCOME_LABEL,
@@ -58,6 +69,48 @@ function ExpeditionAim({ expedition }: { expedition: GreatExpedition }) {
   )
 }
 
+const QUEST_FIELDS: readonly Field[] = [
+  { key: 'aim', label: 'Aim', kind: 'pick', table: table(AIMS) },
+  {
+    key: 'target_kind',
+    label: 'What it seeks',
+    kind: 'pick',
+    table: table(QUEST_TARGETS),
+  },
+  {
+    key: 'obstacle',
+    label: 'What stands in the way',
+    kind: 'pick',
+    table: table(OBSTACLES),
+  },
+  { key: 'reward', label: 'Reward', kind: 'pick', table: table(REWARDS) },
+  { key: 'scale', label: 'Scale', kind: 'pick', table: table(SCALES) },
+]
+
+function QuestEditor({ expedition }: { expedition: GreatExpedition }) {
+  const editing = useMadeAction(
+    'legendary_quest:edit',
+    (vars: { values: EditValues; release: string[] }) => ({
+      thread_id: expedition.thread_id,
+      values: vars.values,
+      release: vars.release,
+      hold: true,
+    }),
+    'The legendary quest is set so'
+  )
+  return (
+    <RecordEditor
+      title='Set the legendary quest'
+      note='Values you set are held against the engine until you release them.'
+      fields={QUEST_FIELDS}
+      locked={expedition.locked}
+      busy={editing.isPending ? 'Working on it.' : null}
+      onSave={(values) => editing.mutate({ values, release: [] })}
+      onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
+    />
+  )
+}
+
 export function ExpeditionCard({
   expedition,
 }: {
@@ -67,7 +120,7 @@ export function ExpeditionCard({
   return (
     <article
       data-expedition-id={expedition.thread_id}
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'
+      className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Compass
@@ -96,6 +149,21 @@ export function ExpeditionCard({
       </div>
       <Muted variant='caption'>{expedition.text}</Muted>
       <ExpeditionAim expedition={expedition} />
+      <div className='flex min-w-0 flex-wrap gap-1.5'>
+        <Chip
+          icon={AIMS[expedition.aim].icon}
+        >{`${AIMS[expedition.aim].label} ${QUEST_TARGETS[expedition.target_kind].label.toLowerCase()}`}</Chip>
+        <Chip
+          icon={OBSTACLES[expedition.obstacle].icon}
+        >{`In the way: ${OBSTACLES[expedition.obstacle].label.toLowerCase()}`}</Chip>
+        <Chip
+          icon={REWARDS[expedition.reward].icon}
+        >{`Reward: ${REWARDS[expedition.reward].label.toLowerCase()}`}</Chip>
+        <Chip icon={SCALES[expedition.scale].icon}>
+          {SCALES[expedition.scale].label}
+        </Chip>
+      </div>
+      <QuestEditor expedition={expedition} />
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Badge
           size='sm'

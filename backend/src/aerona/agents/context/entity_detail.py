@@ -9,6 +9,7 @@ from aerona.agents.context.society import people_facts
 from aerona.agents.context.wilds import nature_lines
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.core.grammar import spoken
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -115,7 +116,7 @@ async def material_lines(session: AsyncSession, entity: EntityRow) -> list[str]:
         if props is not None:
             held = ", held by the Creator" if row.held else ""
             found.append(
-                f"{row.slot.value} of {props.label.lower()}: hardness {props.hardness}, toughness {props.toughness}, "
+                f"{spoken(row.slot)} of {props.label.lower()}: hardness {props.hardness}, toughness {props.toughness}, "
                 f"sanctity {props.sanctity}, corruption {props.corruption}, rarity {props.rarity}, decay {props.decay}{held}"
             )
     return found

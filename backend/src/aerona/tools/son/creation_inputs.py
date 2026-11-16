@@ -19,12 +19,13 @@ from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
 from aerona.domain.enums.ecology import (
+    AttackDelivery,
+    AttackEffect,
+    AttackRange,
     AwakeningTrigger,
     BeastTemper,
     Biochemistry,
-    BreathKind,
     Diet,
-    GazeKind,
     GrowthCycle,
     Habitat,
     PlantYield,
@@ -134,8 +135,9 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "perception": (Annotated[int, Field(ge=0, le=100)] | None, None),
             "willpower": (Annotated[int, Field(ge=0, le=100)] | None, None),
             "intelligence": (Annotated[int, Field(ge=0, le=100)] | None, None),
-            "breath": (BreathKind | None, None),
-            "gaze": (GazeKind | None, None),
+            "attack_delivery": (AttackDelivery | None, None),
+            "attack_effect": (AttackEffect | None, None),
+            "attack_range": (AttackRange | None, None),
             "temperament": (Temperament | None, None),
             "habitat": (Habitat | None, None),
             "awakening": (AwakeningTrigger | None, None),

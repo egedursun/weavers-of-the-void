@@ -104,6 +104,7 @@ async def node_folkways(services: ServicesDep, node_id: NodeId) -> FolkwaysNodeV
                 node_id,
                 people,
                 *(item for row in mishaps for item in (row.settlement_entity_id, row.victim_node_id, row.cause_node_id)),
+                *(node for row in mishaps for node in row.witnesses),
                 *(row.item_entity_id for row in charms),
                 *(item for row in accusations for item in (row.settlement_entity_id, row.accuser_node_id, row.accused_node_id)),
             ],
@@ -130,6 +131,9 @@ async def node_folkways(services: ServicesDep, node_id: NodeId) -> FolkwaysNodeV
                 explained=row.explained,
                 attribution=row.attribution,
                 response=row.response,
+                severity=row.severity,
+                died=row.died,
+                witnesses=[refs[node] for node in row.witnesses if node in refs],
                 epoch=row.epoch,
                 locked=row.locked,
             )

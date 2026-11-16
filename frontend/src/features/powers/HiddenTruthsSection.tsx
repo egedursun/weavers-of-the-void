@@ -13,6 +13,7 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -318,48 +319,54 @@ function Truth({
         <Muted variant='caption'>{truth.description}</Muted>
       ) : null}
       <ul className='flex min-w-0 flex-col gap-2'>
-        {truth.keepers.map((row) => (
-          <Row
-            key={`k${row.id}`}
-            table='truth_keepers'
-            id={row.id}
-            icon={KEEPER_ROLES[row.role].icon}
-            tone='info'
-            title={`${row.keeper.name} keeps it`}
-            caption={KEEPER_ROLES[row.role].label}
-            fields={KEEPER_FIELDS}
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
-        {truth.seekers.map((row) => (
-          <Row
-            key={`s${row.id}`}
-            table='truth_seekers'
-            id={row.id}
-            icon={Search}
-            tone='warning'
-            title={`${row.seeker.name} seeks it, ${AIMS[row.aim].label.toLowerCase()}`}
-            caption={`${row.progress} of 100 of the way, since epoch ${row.began_epoch}`}
-            fields={SEEKER_FIELDS}
-            locked={row.locked}
-            blocked={blocked}
-          />
-        ))}
-        {truth.knowledge.map((row) => (
-          <Known key={`p${row.id}`} row={row} blocked={blocked} />
-        ))}
-        {truth.breaches.map((row) => (
-          <RecordRow
-            key={`b${row.id}`}
-            icon={BREACH_CAUSES[row.cause].icon}
-            tone='warning'
-            title={`It showed itself in epoch ${row.epoch}: ${BREACH_CAUSES[row.cause].label.toLowerCase()}`}
-            caption={`spread ${row.spread}, answered by ${RESPONSES[row.response].label.toLowerCase()}${row.witnesses.length ? `, seen by ${row.witnesses.map((node) => node.name).join(', ')}` : ''}`}
-          >
-            <Ref node={row.place} empty='in no named place' />
-          </RecordRow>
-        ))}
+        <Paged items={truth.keepers} as='li'>
+          {(row) => (
+            <Row
+              key={`k${row.id}`}
+              table='truth_keepers'
+              id={row.id}
+              icon={KEEPER_ROLES[row.role].icon}
+              tone='info'
+              title={`${row.keeper.name} keeps it`}
+              caption={KEEPER_ROLES[row.role].label}
+              fields={KEEPER_FIELDS}
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
+        <Paged items={truth.seekers} as='li'>
+          {(row) => (
+            <Row
+              key={`s${row.id}`}
+              table='truth_seekers'
+              id={row.id}
+              icon={Search}
+              tone='warning'
+              title={`${row.seeker.name} seeks it, ${AIMS[row.aim].label.toLowerCase()}`}
+              caption={`${row.progress} of 100 of the way, since epoch ${row.began_epoch}`}
+              fields={SEEKER_FIELDS}
+              locked={row.locked}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
+        <Paged items={truth.knowledge} as='li'>
+          {(row) => <Known key={`p${row.id}`} row={row} blocked={blocked} />}
+        </Paged>
+        <Paged items={truth.breaches} as='li'>
+          {(row) => (
+            <RecordRow
+              key={`b${row.id}`}
+              icon={BREACH_CAUSES[row.cause].icon}
+              tone='warning'
+              title={`It showed itself in epoch ${row.epoch}: ${BREACH_CAUSES[row.cause].label.toLowerCase()}`}
+              caption={`spread ${row.spread}, answered by ${RESPONSES[row.response].label.toLowerCase()}${row.witnesses.length ? `, seen by ${row.witnesses.map((node) => node.name).join(', ')}` : ''}`}
+            >
+              <Ref node={row.place} empty='in no named place' />
+            </RecordRow>
+          )}
+        </Paged>
       </ul>
       <ForgeCard
         icon={Shield}
@@ -616,9 +623,9 @@ export function HiddenTruthsSection({
             />
             {query.data.known_here.length ? (
               <ul className='flex min-w-0 flex-col gap-2'>
-                {query.data.known_here.map((row) => (
-                  <Known key={row.id} row={row} blocked={blocked} />
-                ))}
+                <Paged items={query.data.known_here} as='li'>
+                  {(row) => <Known key={row.id} row={row} blocked={blocked} />}
+                </Paged>
               </ul>
             ) : null}
             <ForgeCard

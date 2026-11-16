@@ -11,7 +11,6 @@ from aerona.domain.enums.cosmography import (
     Causality,
     ClusterKind,
     DimensionalEventKind,
-    DimensionElement,
     DimensionKind,
     GalacticEventKind,
     GalacticNucleus,
@@ -39,7 +38,6 @@ class DimensionRecord(ApiModel):
     id: int
     name: str
     dimension_kind: DimensionKind
-    element: DimensionElement | None
     parent_dimension_id: int | None
     veil: int
     stability: int
@@ -206,6 +204,7 @@ class CelestialReadingRecord(ApiModel):
     celestial_entity_id: int
     people_entity_id: int
     reading: OmenReading
+    visible: bool = True
     epoch: int
     locked: list[str]
 

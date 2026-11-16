@@ -254,7 +254,7 @@ async def send_dream(call: SonCall, args: DreamInput) -> str:
     if patron_id == call.son.id:
         fail(SonResult.ALREADY_YOURS, name=target.name)
     old = await call.session.get(SonRow, patron_id) if patron_id is not None else None
-    whisper = tools.dream_whisper_bonus_pct if await call.has_power(PowerEffect.DREAM_WHISPER) else 0
+    whisper = tools.dream_sending_bonus_pct if await call.has_power(PowerEffect.DREAM_SENDING) else 0
     rival = old.charisma if old is not None else tools.dream_default_rival_charisma
     heralds = await herald_bonus(call.session, call.rules, call.son.id)
     raw = (

@@ -90,7 +90,7 @@ async def mock_prophecy(ctx: TickContext, prophecy: EntityRow) -> None:
     tail = f"; the word of {son.name} lost its weight" if son is not None else ""
     await note(
         ctx,
-        f"{prophecy.name} has gone unfulfilled for ages; now it is spoken of with mockery in the streets{tail}.",
+        f"{prophecy.name} has gone unfulfilled for ages; now it is mocked{tail}.",
         key="living_stats.mocked",
         ids=[prophecy.id],
         son_id=son.id if son else None,

@@ -15,6 +15,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import MovementMode
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import WarCause
@@ -24,6 +25,7 @@ from aerona.engine.economy.money import MINTERS, MoneyTally, adopt, coin_metal, 
 from aerona.engine.economy.routes import Link, link_weight, trade_links
 from aerona.engine.economy.stocks import epoch_need, holding
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.folkways.biases import lean_community
 from aerona.engine.industry.owners import owners_starved
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -170,7 +172,8 @@ async def _seize(ctx: TickContext, hungry: EntityRow, holder: EntityRow, resourc
     if held(hungry.id, holder.id, resource.id):
         return False
     pressed = 1 + await owners_starved(ctx.session, hungry.id) * ctx.rules.ownership.war_owner_pct / PERCENT
-    if not ctx.rng(f"seize.{hungry.id}.{holder.id}.{ctx.epoch}").chance(ctx.rules.trade.rivalry_war_chance * pressed):
+    leaning = await lean_community(ctx, hungry.id, BiasedDecision.WAR)
+    if not ctx.rng(f"seize.{hungry.id}.{holder.id}.{ctx.epoch}").chance(ctx.rules.trade.rivalry_war_chance * pressed * leaning):
         return False
     if not await declare_war(ctx, hungry.id, holder.id, f"to seize {resource.name}", cause=WarCause.RESOURCE):
         return False
@@ -186,7 +189,7 @@ async def _seize(ctx: TickContext, hungry: EntityRow, holder: EntityRow, resourc
 
 
 async def _barter(ctx: TickContext, first: EntityRow, second: EntityRow, entities: Mapping[int, EntityRow], goods: tuple[set[int], set[int]]) -> bool:
-    if held(first.id, second.id) or not ctx.rng("barter").chance(ctx.rules.trade.barter_chance):
+    if held(first.id, second.id) or not ctx.rng("barter").chance(ctx.rules.trade.barter_chance * await lean_community(ctx, first.id, BiasedDecision.TRADE)):
         return False
     offered = ", ".join(entities[item].name for item in sorted(goods[0]))
     wanted = ", ".join(entities[item].name for item in sorted(goods[1]))
@@ -227,17 +230,32 @@ async def _seize_from_neighbours(
     "people.population",
     "settlement.defense",
     "settlement.population",
+    "table.bias_weights",
     "table.bonds",
     "table.community_societies",
     "table.community_stocks",
     "table.epoch_year_cursors",
     "table.holder_levels",
+    "table.network_nodes",
     "table.nodes",
+    "table.offices",
+    "table.polity_members",
+    "table.relationships",
     "table.resource_profiles",
+    "table.skills",
+    "table.spy_networks",
     "table.workshops",
     "table.world_maps",
 )
-@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
+@writes(
+    "table.bias_weights",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
 async def barter_and_rivalry(ctx: TickContext) -> None:
     session = ctx.session
     entities = {entity.id: entity for entity in await canon(session)}

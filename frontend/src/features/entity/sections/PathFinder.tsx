@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, Route, Waypoints } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EntityLink, FormRow, Section } from '@/components/domain'
+import { EntityLink, FormRow, Paged, Section } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
 import { drawerKindOf } from '@/features/chronicle/linkTargets'
@@ -120,41 +120,47 @@ export function PathFinder({ fromId, fromName }: PathFinderProps) {
       )}
       {result?.found && (
         <ol aria-label='Bond chain' className='flex min-w-0 flex-col gap-2'>
-          {result.path.map((nodeId, position) => {
-            const step = result.steps[position]
-            const name = result.names[String(nodeId)] ?? `Node ${nodeId}`
-            return (
-              <Fragment key={`${nodeId}-${position}`}>
-                <li className='flex min-w-0 items-center gap-2'>
-                  <Route
-                    aria-hidden='true'
-                    className='size-icon-sm shrink-0 text-muted-foreground'
-                  />
-                  <NodeName id={nodeId} name={name} entry={index.get(nodeId)} />
-                </li>
-                {step && (
-                  <li className='flex min-w-0 items-center gap-2 ps-6'>
-                    {step.forward ? (
-                      <ArrowRight
-                        aria-hidden='true'
-                        className='size-icon-xs shrink-0 text-muted-foreground'
-                      />
-                    ) : (
-                      <ArrowLeft
-                        aria-hidden='true'
-                        className='size-icon-xs shrink-0 text-muted-foreground'
-                      />
-                    )}
-                    <Muted as='span' variant='caption' truncate>
-                      {step.description
-                        ? `${labelOf(step.kind)} · ${step.description}`
-                        : labelOf(step.kind)}
-                    </Muted>
+          <Paged items={result.path} as='li'>
+            {(nodeId, position) => {
+              const step = result.steps[position]
+              const name = result.names[String(nodeId)] ?? `Node ${nodeId}`
+              return (
+                <Fragment key={`${nodeId}-${position}`}>
+                  <li className='flex min-w-0 items-center gap-2'>
+                    <Route
+                      aria-hidden='true'
+                      className='size-icon-sm shrink-0 text-muted-foreground'
+                    />
+                    <NodeName
+                      id={nodeId}
+                      name={name}
+                      entry={index.get(nodeId)}
+                    />
                   </li>
-                )}
-              </Fragment>
-            )
-          })}
+                  {step && (
+                    <li className='flex min-w-0 items-center gap-2 ps-6'>
+                      {step.forward ? (
+                        <ArrowRight
+                          aria-hidden='true'
+                          className='size-icon-xs shrink-0 text-muted-foreground'
+                        />
+                      ) : (
+                        <ArrowLeft
+                          aria-hidden='true'
+                          className='size-icon-xs shrink-0 text-muted-foreground'
+                        />
+                      )}
+                      <Muted as='span' variant='caption' truncate>
+                        {step.description
+                          ? `${labelOf(step.kind)} · ${step.description}`
+                          : labelOf(step.kind)}
+                      </Muted>
+                    </li>
+                  )}
+                </Fragment>
+              )
+            }}
+          </Paged>
         </ol>
       )}
     </Section>

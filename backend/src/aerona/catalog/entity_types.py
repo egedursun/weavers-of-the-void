@@ -35,7 +35,6 @@ class EntityTypeSpec:
     containers: frozenset[EntityType]
     location_required: bool
     stats: tuple[StatField, ...]
-    examples: tuple[str, ...]
     engine_kinds: frozenset[EngineKind] = frozenset()
 
     @property
@@ -67,7 +66,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset({REGION}),
             False,
             _percent(("breadth", "Breadth"), ("danger", "Danger"), ("fertility", "Fertility"), ("magic", "Magic density")),
-            ("continent", "inland sea", "desert belt", "archipelago", "underworld"),
         ),
         EntityTypeSpec(
             PLACE,
@@ -78,7 +76,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             LAND,
             True,
             _percent(("danger", "Danger"), ("fertility", "Fertility"), ("mystery", "Mystery")),
-            ("mountain", "forest", "river", "lake", "cave", "ruin", "island", "swamp", "pass", "well"),
             frozenset({EngineKind.GOD_CORPSE}),
         ),
         EntityTypeSpec(
@@ -90,7 +87,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             LAND,
             True,
             _percent(("abundance", "Abundance"), ("value", "Value"), ("might", "Might")),
-            ("ore vein", "magical substance", "healing herb", "sacred spring", "rare crystal", "clay pit"),
             frozenset({EngineKind.COSMIC_TRAVEL_RESOURCE}),
         ),
         EntityTypeSpec(
@@ -108,7 +104,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("piety", "Piety"),
                 StatField("wealth", "Wealth"),
             ),
-            ("village", "port city", "castle", "monastery", "nomad camp", "capital"),
             frozenset({EngineKind.COLONY}),
         ),
         EntityTypeSpec(
@@ -127,7 +122,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("danger", "Danger"),
                 StatField("abundance", "Abundance"),
             ),
-            ("animal", "plant", "fungus", "monster", "spirit species"),
             frozenset({EngineKind.GOLEM, EngineKind.CHIMERA, EngineKind.DOMESTICATED}),
         ),
         EntityTypeSpec(
@@ -145,7 +139,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("craft", "Craft"),
                 StatField("piety", "Piety"),
             ),
-            ("race", "tribe", "caste", "mortal lineage"),
         ),
         EntityTypeSpec(
             EntityType.MORTAL,
@@ -164,7 +157,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("age", "Age", 0, lambda rules: rules.deep_life.lifespan_cap),
                 StatField("lifespan", "Lifespan", 1, lambda rules: rules.deep_life.lifespan_cap),
             ),
-            ("hero", "king", "seer", "bandit", "artisan", "saint"),
             frozenset({EngineKind.MIRROR_BIRTH, EngineKind.APPRENTICE}),
         ),
         EntityTypeSpec(
@@ -176,7 +168,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             INHABITED,
             False,
             _percent(("damage", "Damage"), ("protection", "Protection"), ("might", "Might"), ("curse", "Curse")),
-            ("weapon", "armour", "shield", "crown", "mirror", "book", "seal", "instrument", "tool", "holy relic"),
             frozenset({EngineKind.CURRENCY}),
         ),
         EntityTypeSpec(
@@ -188,7 +179,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             INHABITED,
             True,
             _percent(("splendor", "Splendor"), ("durability", "Durability"), ("function", "Function")),
-            ("temple", "tower", "bridge", "wall", "monument", "tomb", "observatory", "harbour", "mine", "library"),
             frozenset(
                 {
                     EngineKind.TEMPLE,
@@ -210,7 +200,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("spread", "Spread"), ("complexity", "Complexity"), ("sacredness", "Sacredness")),
-            ("spoken language", "sacred language", "script", "sign language", "merchant cant", "court language"),
             frozenset({EngineKind.DIALECT, EngineKind.PRIMITIVE_LANGUAGE}),
         ),
         EntityTypeSpec(
@@ -222,7 +211,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("spread", "Spread")),
-            ("lullaby", "taboo", "proverb", "founding myth", "ghost story"),
             frozenset({EngineKind.ASCENSION_MYTH}),
         ),
         EntityTypeSpec(
@@ -234,7 +222,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("spread", "Spread"), ("rigidity", "Rigidity")),
-            ("festival", "taboo", "funeral rite", "initiation", "oath ceremony", "seasonal offering"),
         ),
         EntityTypeSpec(
             EntityType.CULT,
@@ -250,7 +237,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("influence", "Influence"),
                 StatField("devotion", "Devotion", 0, lambda rules: rules.death.devotion_cap),
             ),
-            ("temple order", "secret sect", "priest caste"),
             frozenset({EngineKind.RESURRECTION_ORDER}),
         ),
         EntityTypeSpec(
@@ -262,7 +248,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             INHABITED,
             True,
             _percent(("strength", "Military strength"), ("wealth", "Wealth"), ("sway", "Sway")),
-            ("kingdom", "guild", "knightly order", "pirate league", "dynasty"),
             frozenset(
                 {
                     EngineKind.REBELS,
@@ -271,7 +256,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                     EngineKind.WARRIOR_BAND,
                     EngineKind.INTERWORLD_FEDERATION,
                     EngineKind.WANDERING_MARKET,
-                    EngineKind.VOID_PIRATES,
+                    EngineKind.ROUTE_RAIDERS,
                 }
             ),
         ),
@@ -284,7 +269,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("brightness", "Brightness"), ("influence", "Influence")),
-            ("star", "constellation", "moon", "comet", "wandering light", "second sun"),
             frozenset({EngineKind.COMET}),
         ),
         EntityTypeSpec(
@@ -296,7 +280,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             INHABITED,
             False,
             _percent(("renown", "Renown"), ("influence", "Influence")),
-            ("folk song", "epic", "statue", "fresco", "play", "book", "dance", "lament", "mosaic"),
         ),
         EntityTypeSpec(
             EntityType.LAW,
@@ -307,7 +290,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             INHABITED,
             False,
             _percent(("rigidity", "Rigidity"), ("justice", "Justice")),
-            ("penal code", "inheritance rule", "trade law", "worship ban", "blood-feud custom"),
         ),
         EntityTypeSpec(
             EntityType.SPIRIT,
@@ -318,7 +300,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             INHABITED,
             False,
             _percent(("strength", "Strength"), ("unrest", "Unrest")),
-            ("ghost", "ancestor spirit", "haunt", "guardian spirit", "lost soul"),
             frozenset({EngineKind.DESCENDED_SOUL, EngineKind.GOD_SHADE}),
         ),
         EntityTypeSpec(
@@ -330,7 +311,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             (StatField("level", "Level", 1, lambda rules: rules.mortal_tools.knowledge_level_cap), StatField("spread", "Spread")),
-            ("agriculture", "metallurgy", "seafaring", "writing", "architecture", "medicine", "school of magic", "art of war", "astronomy"),
         ),
         EntityTypeSpec(
             EntityType.PROPHECY,
@@ -341,7 +321,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("certainty", "Certainty")),
-            ("prophecy", "omen", "promise"),
             frozenset({EngineKind.ECLIPSE_PROPHECY}),
         ),
         EntityTypeSpec(
@@ -353,7 +332,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             INHABITED,
             False,
             _percent(("severity", "Severity")),
-            ("war", "festival", "discovery", "flood", "migration", "founding", "coronation"),
             frozenset(
                 {
                     EngineKind.WAR,
@@ -396,7 +374,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("armor", "Armour"),
                 StatField("strangeness", "Strangeness"),
             ),
-            ("light-sailer", "sailing ship", "generation ship", "ancient gate", "cosmic mount", "divine bridge"),
             frozenset({EngineKind.GHOST_SHIP}),
         ),
         EntityTypeSpec(
@@ -408,7 +385,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             LAND,
             False,
             _percent(("size", "Size"), ("interest", "Interest"), ("influence", "Influence")),
-            ("something from outside the cosmos", "the unnamed thing"),
         ),
         EntityTypeSpec(
             EntityType.ARMY,
@@ -424,7 +400,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("equipment", "Equipment"),
                 StatField("experience", "Experience"),
             ),
-            ("army", "legion", "raider band", "holy guard", "fleet"),
             frozenset({EngineKind.PEOPLES_ARMY, EngineKind.HOLY_GUARD, EngineKind.MERCENARY_ARMY}),
         ),
         EntityTypeSpec(
@@ -441,7 +416,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("renown", "Renown"),
                 StatField("culture", "Carried culture"),
             ),
-            ("trade road", "caravan way", "sea lane", "river route", "sky lane"),
         ),
         EntityTypeSpec(
             EntityType.DISEASE,
@@ -457,7 +431,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("infected", "Infected", lambda rules: 0, lambda rules: rules.limits.people_population_cap),
                 StatField("dead", "Dead", lambda rules: 0, lambda rules: rules.limits.people_population_cap),
             ),
-            ("plague", "wasting fever", "river flux", "rot of the lungs", "spirit sickness", "void blight"),
         ),
         EntityTypeSpec(
             EntityType.POLITY,
@@ -473,7 +446,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("subjects", "Subjects", lambda rules: 0, lambda rules: rules.limits.people_population_cap),
                 StatField("territory", "Lands held", lambda rules: 0, lambda rules: 100000),
             ),
-            ("kingdom", "chiefdom", "republic", "empire", "theocracy", "merchant league"),
         ),
         EntityTypeSpec(
             EntityType.HOUSE,
@@ -488,7 +460,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("members", "Living members", lambda rules: 0, lambda rules: 100000),
                 StatField("wealth", "Wealth"),
             ),
-            ("royal house", "noble line", "clan", "merchant dynasty", "priestly lineage"),
         ),
         EntityTypeSpec(
             EntityType.TREATY,
@@ -502,7 +473,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("parties", "Parties", lambda rules: 0, lambda rules: 1000),
                 StatField("trust", "Trust"),
             ),
-            ("peace", "alliance", "vassal oath", "marriage pact", "trade pact"),
         ),
         EntityTypeSpec(
             EntityType.TITLE,
@@ -516,7 +486,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("prestige", "Prestige"),
                 StatField("territory", "De jure lands", lambda rules: 0, lambda rules: 10000),
             ),
-            ("lordship", "county", "duchy", "kingdom", "empire", "see", "archsee", "high seat", "captaincy", "guildmastership"),
         ),
         EntityTypeSpec(
             EntityType.IDEOLOGY,
@@ -530,7 +499,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("adherents", "Adherents", lambda rules: 0, lambda rules: 100000),
                 StatField("appeal", "Appeal"),
             ),
-            ("egalitarian creed", "doctrine of divine right", "school of reason", "mercantile creed", "godless creed"),
         ),
         EntityTypeSpec(
             EntityType.THEORY,
@@ -544,7 +512,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("adherents", "Adherents", lambda rules: 0, lambda rules: 100000),
                 StatField("explanatory", "Explanatory power"),
             ),
-            ("account of sickness", "account of the heavens", "account of matter", "account of the mind", "account of the past"),
         ),
         EntityTypeSpec(
             EntityType.ART_FORM,
@@ -558,7 +525,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("practitioners", "Practitioners", lambda rules: 0, lambda rules: 100000),
                 StatField("prestige", "Prestige"),
             ),
-            ("form of music", "form of verse", "form of dance", "school of painting", "style of building"),
         ),
         EntityTypeSpec(
             EntityType.RITE,
@@ -572,7 +538,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("power", "Power", lambda rules: 1, lambda rules: 10),
                 StatField("castings", "Castings", lambda rules: 0, lambda rules: 100000),
             ),
-            ("blessing of the harvest", "rain summoning", "warding of the walls", "healing of the sick", "reading of omens"),
         ),
         EntityTypeSpec(
             EntityType.BEAST,
@@ -591,7 +556,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("renown", "Renown"),
                 StatField("terror", "Terror"),
             ),
-            ("great predator", "sea creature", "flying beast", "burrowing creature", "herd giant"),
         ),
         EntityTypeSpec(
             EntityType.PHENOMENON,
@@ -602,7 +566,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             LAND,
             True,
             _percent(("danger", "Danger"), ("renown", "Renown")),
-            ("a lasting change over a region", "a force that holds a land"),
         ),
         EntityTypeSpec(
             EntityType.COSMIC_BEING,
@@ -613,7 +576,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             LAND,
             False,
             _percent(("size", "Size"), ("interest", "Interest"), ("renown", "Renown")),
-            ("a being from another dimension", "a being of the scale of a galaxy"),
         ),
         EntityTypeSpec(
             EntityType.VEHICLE_TYPE,
@@ -624,7 +586,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("renown", "Renown")),
-            (),
         ),
         EntityTypeSpec(
             EntityType.UNIT_TYPE,
@@ -635,7 +596,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("renown", "Renown")),
-            (),
         ),
         EntityTypeSpec(
             EntityType.EQUIPMENT_MODEL,
@@ -646,7 +606,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("renown", "Renown")),
-            (),
         ),
         EntityTypeSpec(
             EntityType.DISH,
@@ -657,7 +616,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("renown", "Renown")),
-            (),
         ),
         EntityTypeSpec(
             EntityType.BUILDING_TYPE,
@@ -668,7 +626,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("renown", "Renown")),
-            (),
         ),
         EntityTypeSpec(
             EntityType.NETWORK,
@@ -679,7 +636,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset({EntityType.REGION, EntityType.SETTLEMENT, EntityType.STRUCTURE}),
             False,
             (StatField("reach", "Members reached", lambda rules: 0, lambda rules: 100000),),
-            (),
         ),
         EntityTypeSpec(
             EntityType.NATURAL_LAW,
@@ -690,7 +646,6 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             (),
-            ("order of the seasons", "how magic works", "what follows death"),
         ),
     )
 }

@@ -62,7 +62,7 @@ function Bubble({
       {!mine && <Portrait name={name} src={cover} size='sm' />}
       <div
         className={cn(
-          'flex max-w-reading min-w-0 flex-col gap-1 rounded-lg border p-3',
+          'flex max-w-reading min-w-0 flex-col gap-1 rounded-md border surface-framed border-gild/70 bg-card p-3',
           mine ? 'bg-primary/10' : 'bg-muted',
           pending && 'opacity-70'
         )}
@@ -162,7 +162,7 @@ export function SonChat({
           className='flex min-w-0 flex-col gap-3'
         >
           {hidden > 0 && (
-            <li className='flex min-w-0 flex-wrap items-center justify-center gap-1 rounded-lg border border-dashed bg-muted/30 px-3 py-1.5'>
+            <li className='flex min-w-0 flex-wrap items-center justify-center gap-1 rounded-md px-3 py-1.5 sealed-well'>
               <Muted as='span' variant='caption'>
                 {`${hidden} earlier ${hidden === 1 ? 'message' : 'messages'}`}
               </Muted>

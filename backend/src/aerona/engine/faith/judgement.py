@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.peoples import FAITH_RITES
-from aerona.catalog.tenets import STRATUM_NAMES, STRATUM_PRIORITY
+from aerona.catalog.strata import ADMISSION_PRIORITY, STRATUM_AXES, StratumAxes
+from aerona.catalog.tenets import STRATUM_NAMES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
@@ -17,7 +19,18 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.faith import AfterlifeState, FuneralRite, JudgementDoctrine, SpiritAlignment, StratumKind, TenetKind
+from aerona.domain.enums.faith import (
+    AfterlifeState,
+    FuneralRite,
+    JudgementDoctrine,
+    SpiritAlignment,
+    StratumActivity,
+    StratumAdmission,
+    StratumContact,
+    StratumKind,
+    StratumValence,
+    TenetKind,
+)
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.models.faith import StratumCriteria
@@ -135,17 +148,33 @@ def score_of(table: AfterlifeRules, deeds: dict[str, int], doctrine: JudgementDo
     return table.neutral_score
 
 
-def default_criteria(table: AfterlifeRules, kind: StratumKind) -> StratumCriteria:
-    priority = STRATUM_PRIORITY[kind]
-    if kind is StratumKind.OBLIVION:
-        return StratumCriteria(priority=priority, no_god=True)
-    if kind is StratumKind.WARRIOR_HALL:
+def valence_bounds(table: AfterlifeRules, valence: StratumValence) -> dict[str, int]:
+    if valence is StratumValence.REWARD:
+        return {"score_at_least": table.paradise_score}
+    if valence is StratumValence.PUNISHMENT:
+        return {"score_below": table.torment_score}
+    if valence is StratumValence.MIXED:
+        return {"score_at_least": table.torment_score, "score_below": table.paradise_score}
+    return {}
+
+
+def admission_bounds(table: AfterlifeRules, axes: StratumAxes) -> dict[str, int | bool]:
+    if axes.admission is StratumAdmission.BY_FAITH:
+        return {"faith_at_least": table.paradise_score}
+    if axes.admission is StratumAdmission.BY_RITES:
+        return {"needs_rite": True}
+    if axes.admission is StratumAdmission.BY_DEEDS:
+        return {**valence_bounds(table, axes.valence)}
+    return {}
+
+
+def axes_criteria(table: AfterlifeRules, axes: StratumAxes) -> StratumCriteria:
+    priority = ADMISSION_PRIORITY[axes.admission]
+    if axes.activity is StratumActivity.DISSOLUTION:
+        return StratumCriteria(priority=priority // 10, no_god=True)
+    if axes.admission is StratumAdmission.BY_MANNER_OF_DEATH:
         return StratumCriteria(priority=priority, violence_at_least=table.warrior_violence, tenets_any=tuple(sorted(WARLIKE)))
-    if kind is StratumKind.PARADISE:
-        return StratumCriteria(priority=priority, score_at_least=table.paradise_score)
-    if kind is StratumKind.TORMENT:
-        return StratumCriteria(priority=priority, score_below=table.torment_score)
-    if kind is StratumKind.ANCESTOR_HALL:
+    if axes.admission is StratumAdmission.BY_LINE:
         return StratumCriteria(
             priority=priority,
             needs_rite=True,
@@ -153,22 +182,36 @@ def default_criteria(table: AfterlifeRules, kind: StratumKind) -> StratumCriteri
             score_below=table.paradise_score,
             tenets_any=(TenetKind.ANCESTOR_VENERATION,),
         )
-    return StratumCriteria(priority=priority)
+    return StratumCriteria(priority=priority, **admission_bounds(table, axes))
+
+
+def default_criteria(table: AfterlifeRules, kind: StratumKind) -> StratumCriteria:
+    return axes_criteria(table, STRATUM_AXES[kind])
+
+
+def axes_of(row: AfterlifeStratumRow) -> StratumAxes:
+    return StratumAxes(row.valence, row.permanence, row.admission, row.activity, row.contact)
 
 
 def wanted_strata(tenets: set[TenetKind]) -> list[StratumKind]:
-    wanted = [StratumKind.PARADISE, StratumKind.PLAIN, StratumKind.TORMENT, StratumKind.OBLIVION]
+    wanted = [StratumKind.REWARD, StratumKind.COMMON, StratumKind.PUNISHMENT, StratumKind.DISSOLUTION]
     if tenets & WARLIKE:
-        wanted.append(StratumKind.WARRIOR_HALL)
+        wanted.append(StratumKind.BY_MANNER_OF_DEATH)
     if TenetKind.ANCESTOR_VENERATION in tenets:
-        wanted.append(StratumKind.ANCESTOR_HALL)
+        wanted.append(StratumKind.BY_LINE)
     return wanted
 
 
 def new_stratum(rules: Rules, realm: EntityRow, kind: StratumKind) -> AfterlifeStratumRow:
+    axes = STRATUM_AXES[kind]
     return AfterlifeStratumRow(
         realm_entity_id=realm.id,
         kind=kind,
+        valence=axes.valence,
+        permanence=axes.permanence,
+        admission=axes.admission,
+        activity=axes.activity,
+        contact=axes.contact,
         name=f"{STRATUM_NAMES[kind]} of {realm.name}",
         criteria=default_criteria(rules.afterlife, kind).stored(),
         population=0,
@@ -183,7 +226,7 @@ async def strata_of(ctx: TickContext, realm: EntityRow, tenets: set[TenetKind]) 
     dimensions = list(await ctx.session.scalars(select(DimensionRow).order_by(DimensionRow.id))) if missing else []
     for kind in missing:
         row = new_stratum(ctx.rules, realm, kind)
-        host = host_for(dimensions, kind)
+        host = host_for(dimensions, row.valence, row.activity)
         row.dimension_id = host.id if host is not None else None
         ctx.session.add(row)
         rows.append(row)
@@ -294,6 +337,13 @@ async def recount(ctx: TickContext, stratum_ids: set[int] | None = None) -> None
         row.population = int(counts.get(row.id, 0))
 
 
+async def reaches_living(session: AsyncSession, profile: SpiritProfileRow) -> bool:
+    stratum = await session.get(AfterlifeStratumRow, profile.stratum_id) if profile.stratum_id is not None else None
+    if stratum is None or stratum.contact is StratumContact.OPEN:
+        return True
+    return stratum.contact is StratumContact.BY_RITE and profile.rite is not FuneralRite.NONE
+
+
 async def leave_realm(ctx: TickContext, profile: SpiritProfileRow, state: AfterlifeState) -> None:
     old = profile.stratum_id
     profile.state = state
@@ -346,11 +396,11 @@ async def judge(ctx: TickContext, spirit: EntityRow, mortal: EntityRow, realm: E
     if stratum is None:
         stratum = route(strata, score=score, deeds=profile.deeds, god=son, rite=profile.rite, tenets=tenets, cults=cults)
     await place(ctx, profile, stratum)
-    kind = stratum.kind if stratum is not None else None
+    valence = stratum.valence if stratum is not None else None
     if "alignment" not in profile.locked:
-        if kind is StratumKind.TORMENT:
+        if valence is StratumValence.PUNISHMENT:
             profile.alignment = SpiritAlignment.VENGEFUL
-        elif kind in {StratumKind.ANCESTOR_HALL, StratumKind.PARADISE}:
+        elif valence is StratumValence.REWARD:
             profile.alignment = SpiritAlignment.GUARDIAN
     where = stratum.name if stratum is not None else "no stratum that would take it"
     reason = f"judged by {doctrine.value.replace('_', ' ')}: score {score}, sent to {where}"

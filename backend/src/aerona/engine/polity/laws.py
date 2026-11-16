@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.backfill_words import LAW_WORDS
+from aerona.catalog.law_areas import LAW_AREAS
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for, law_terms, penal_cruelty, term_text
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -18,7 +19,7 @@ from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow, PolityMem
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.polity import LAW_AREAS, Jurisdiction, LawKind, LegitimacyBasis
+from aerona.domain.enums.polity import Jurisdiction, LawKind, LegitimacyBasis
 from aerona.domain.models.entity_stats import LawStats
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int

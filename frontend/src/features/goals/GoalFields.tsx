@@ -102,7 +102,7 @@ export function QuotePreview({
   return (
     <div
       data-goal-quote
-      className='flex min-w-0 items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3'
+      className='flex min-w-0 items-start gap-3 rounded-md border surface-framed border-primary/30 bg-primary/5 p-3'
     >
       <Medallion icon={Trophy} />
       <div className='flex min-w-0 flex-1 flex-col gap-1'>

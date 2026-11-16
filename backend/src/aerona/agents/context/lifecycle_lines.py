@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.fossils import FossilBedRow
@@ -23,7 +24,7 @@ async def son_lifecycle_lines(scope: Scope, son: SonRow) -> list[str]:
             .order_by(EntityRow.id)
         )
     ).all()
-    shown = [f"{entity.name} (id {entity.id}, {row.kind.value.replace('_', ' ')}, {row.state.value})" for entity, row in rows]
+    shown = [f"{entity.name} (id {entity.id}, {row.kind.value.replace('_', ' ')}, {spoken(row.state)})" for entity, row in rows]
     return [f"Lore and powers of the world you walk that have come to an end or lie dormant: {', '.join(shown)}."] if shown else []
 
 

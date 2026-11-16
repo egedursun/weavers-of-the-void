@@ -325,6 +325,18 @@ class CurseKind(StrEnum):
     WASTING = "wasting"
     MADNESS = "madness"
     BETRAYAL = "betrayal"
+    BARRENNESS = "barrenness"
+    TRANSFORMATION = "transformation"
+    SLEEP = "sleep"
+    SILENCE = "silence"
+    HUNGER = "hunger"
+    FORGETTING = "forgetting"
+    RESTLESSNESS = "restlessness"
+    LINE_CURSE = "line_curse"
+    PLACE_CURSE = "place_curse"
+    COMPULSION = "compulsion"
+    AGING = "aging"
+    EXPOSURE = "exposure"
 
 
 class ItemDeed(StrEnum):
@@ -411,6 +423,12 @@ class SummonForm(StrEnum):
     SPIRIT = "spirit"
     BEAST = "beast"
     UNDEAD = "undead"
+    PERSON = "person"
+    MADE_THING = "made_thing"
+    OUTER_BEING = "outer_being"
+    ASPECT = "aspect"
+    PHENOMENON = "phenomenon"
+    DOUBLE = "double"
 
 
 class CustomCatalog(StrEnum):

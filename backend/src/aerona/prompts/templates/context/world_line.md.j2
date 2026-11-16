@@ -1,4 +1,4 @@
-YOUR CURRENT WORLD: world#{{ id }} {{ name }} — {{ type_label }}{% if star_name %}, orbiting {{ star_name }}{% if star_type %} ({{ star_type }}){% endif %}{% endif %}; gravity {{ gravity }}, atmosphere {{ atmosphere }}, time ×{{ "%g" | format(time_factor) }}{% if leak > 0 %}; LEAK {{ leak }}/100 (something is seeping in from outside){% endif %}.
+YOUR CURRENT WORLD: world#{{ id }} {{ name }} — {{ type_label }}{% if star_name %}, orbiting {{ star_name }}{% if star_type %} ({{ star_type }}){% endif %}{% endif %}; gravity {{ gravity }}, atmosphere {{ atmosphere }}, time ×{{ "%g" | format(time_factor) }}{% if leak > 0 %}; LEAK {{ leak }}/100 (the world lies open to what is outside it){% endif %}.
 {% if galaxy_name or dimension_name %}PLACE IN THE COSMOS: {% if galaxy_name %}{{ zone_label or "in" }} of {{ galaxy_name }}{% if galaxy_type %} ({{ galaxy_type }}){% endif %}{% if structure_name %}, within {{ structure_name }}{% endif %}{% if cluster_name %}, in {{ cluster_name }}{% endif %}{% endif %}{% if dimension_name %}{% if galaxy_name %}; {% endif %}dimension {{ dimension_name }}{% if dimension_kind %} ({{ dimension_kind }}){% endif %}{% endif %}.
 {% endif %}
 {% if star_age or world_age or biosphere < 100 or radiation > 0 %}LIFE OF THE WORLD:{% if star_age %} its star is {{ star_age }};{% endif %}{% if world_age %} the world is {{ world_age }};{% endif %} biosphere {{ biosphere }}/100{% if radiation > 0 %}, radiation {{ radiation }}/100{% endif %}.
@@ -14,7 +14,7 @@ YOUR CURRENT WORLD: world#{{ id }} {{ name }} — {{ type_label }}{% if star_nam
 {% for line in heavens %}- {{ line }}
 {% endfor %}{% endif %}
 {% if golden_age_epochs is not none %}
-GOLDEN AGE: since age {{ golden_age_since }} ({{ golden_age_epochs }} ages); prosperity grows by {{ golden_age_gain }} each age{% if golden_age_soft %}, but long ease has made its peoples soft: their warriors and walls are wearing thin{% endif %}.
+GOLDEN AGE: since age {{ golden_age_since }} ({{ golden_age_epochs }} ages); prosperity grows by {{ golden_age_gain }} each age{% if golden_age_soft %}, but long ease has lowered its peoples' readiness: their armies and defences weaken{% endif %}.
 {% endif %}
 {% if cosmology %}
 THIS WORLD'S COSMOLOGY: {{ cosmology }}

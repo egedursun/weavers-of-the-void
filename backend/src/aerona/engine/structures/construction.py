@@ -296,7 +296,7 @@ async def advance(ctx: TickContext, construction: ConstructionRow, *, active: in
         construction.generations = generations
         await note(
             ctx,
-            f"Another generation of {site.name} carries stones to {work.name}; it is {profile.progress}% raised.",
+            f"Another generation of {site.name} works on {work.name}; it is {profile.progress}% raised.",
             key="structures.generation",
             ids=[site.id, work.id],
             kind=ChronicleKind.CONSTRUCTION,
@@ -388,7 +388,7 @@ async def abandon(ctx: TickContext, construction: ConstructionRow, reason: str) 
             RecordSpec(
                 entity_type=EntityType.LEGEND,
                 name=f"The Unfinished {resolved.label} of {work.name}",
-                body=f"They say {work.name} was left {percent}% raised because {reason}, and that whoever finishes it will be remembered forever.",
+                body=f"They say {work.name} was left {percent}% raised because {reason}.",
                 stats=LegendStats(spread=clamp_int(percent // 2 + scale_index(resolved.scale) * 10, 0, PERCENT)),
                 power=LEGEND_POWER,
                 location_id=work.location_id,

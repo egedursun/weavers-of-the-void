@@ -42,10 +42,14 @@ function toneOf(
   const friend = rule('core_rules.relation_friend')
   const enemy = rule('core_rules.relation_enemy')
   const cold = rule('core_rules.relation_cold')
-  if (close !== undefined && value >= close) return 'bg-success/30'
-  if (friend !== undefined && value >= friend) return 'bg-success/15'
-  if (enemy !== undefined && value <= -enemy) return 'bg-destructive/30'
-  if (cold !== undefined && value <= -cold) return 'bg-destructive/15'
+  if (close !== undefined && value >= close)
+    return 'border-success/70 bg-success/40 text-foreground'
+  if (friend !== undefined && value >= friend)
+    return 'border-success/40 bg-success/20 text-foreground'
+  if (enemy !== undefined && value <= -enemy)
+    return 'border-destructive/70 bg-destructive/40 text-foreground'
+  if (cold !== undefined && value <= -cold)
+    return 'border-destructive/40 bg-destructive/20 text-foreground'
   return ''
 }
 

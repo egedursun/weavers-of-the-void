@@ -94,7 +94,7 @@ const VOICE = [
 
 function SwatchTile({ name, token, className }: Swatch) {
   return (
-    <div className='flex min-w-0 flex-col overflow-hidden rounded-lg border bg-card'>
+    <div className='flex min-w-0 flex-col overflow-hidden rounded-md border surface-sheen border-gild/60 bg-card'>
       <span className={`h-control-lg w-full border-b ${className}`} />
       <span className='grid min-w-0 gap-1 p-3'>
         <Text as='span' weight='medium' truncate>
@@ -147,10 +147,10 @@ export function BrandSpecimens() {
               <Label variant='overline'>{APP_SUBTITLE}</Label>
             </span>
           </div>
-          <div className='dark flex items-center justify-center rounded-xl border bg-brand-night p-4'>
+          <div className='dark flex items-center justify-center rounded-md border surface-framed border-gild/70 bg-brand-night p-4'>
             <Logo className='size-portrait-xl' size='md' />
           </div>
-          <div className='light flex items-center justify-center rounded-xl border bg-brand-gold-light p-4'>
+          <div className='light flex items-center justify-center rounded-md border surface-framed border-gild/70 bg-brand-gold-light p-4'>
             <Logo className='size-portrait-xl' size='md' />
           </div>
         </div>
@@ -178,7 +178,7 @@ export function BrandSpecimens() {
           {RARITIES.map((rarity) => (
             <div
               key={rarity}
-              className={`flex min-w-0 flex-col items-center gap-3 rounded-xl border bg-card p-4 ${RARITY_CLASS[rarity]}`}
+              className={`flex min-w-0 flex-col items-center gap-3 rounded-md border surface-framed bg-card p-4 ${RARITY_CLASS[rarity]}`}
             >
               <RarityIcon rarity={rarity} className='size-portrait-lg' />
               <RarityBadge rarity={rarity} size='sm' />
@@ -201,7 +201,7 @@ export function BrandSpecimens() {
           {RADII.map((radius) => (
             <div
               key={radius.name}
-              className={`flex size-portrait-xl items-end border bg-card p-2 ${radius.className}`}
+              className={`flex size-portrait-xl items-end border surface-sheen border-gild/30 bg-card p-2 ${radius.className}`}
             >
               <Label truncate>{radius.name}</Label>
             </div>
@@ -213,7 +213,7 @@ export function BrandSpecimens() {
           {ELEVATIONS.map((elevation) => (
             <div
               key={elevation.name}
-              className={`flex size-portrait-xl items-end rounded-lg border p-2 ${elevation.className}`}
+              className={`flex size-portrait-xl items-end rounded-md border surface-sheen border-gild/60 bg-card p-2 ${elevation.className}`}
             >
               <Label truncate>{elevation.name}</Label>
             </div>

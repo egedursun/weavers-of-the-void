@@ -54,8 +54,8 @@ export function JobRunRow({
     <li
       data-job-row={id}
       className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-xl border p-3',
-        blocked === null ? 'bg-background' : 'bg-muted/30'
+        'flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
+        blocked === null ? 'bg-card' : 'bg-muted/30'
       )}
     >
       <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2'>

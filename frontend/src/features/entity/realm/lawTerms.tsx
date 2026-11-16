@@ -21,7 +21,7 @@ export function ParamField({
   const label = plain(LAW_PARAMS, spec.key)
   if (spec.kind === 'bool')
     return (
-      <label className='flex min-w-0 items-center gap-2 self-end rounded-lg border bg-background p-2'>
+      <label className='flex min-w-0 items-center gap-2 self-end rounded-md border surface-sheen border-gild/60 bg-card p-2'>
         <Switch
           checked={Boolean(value)}
           disabled={blocked !== null}

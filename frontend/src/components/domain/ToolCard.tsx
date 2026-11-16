@@ -28,7 +28,7 @@ export function ToolCard({ tool }: { tool: ToolCardData }) {
     <article
       id={toolAnchor(tool.name)}
       data-domain='tool-card'
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'
+      className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-start gap-2.5'>
         <span className='flex size-control-sm shrink-0 items-center justify-center rounded-md border border-primary/25 bg-primary/10 text-primary'>
@@ -89,7 +89,7 @@ export function ToolCard({ tool }: { tool: ToolCardData }) {
             {open ? <ChevronUp /> : <ChevronDown />}
           </Button>
           {open && (
-            <dl className='flex min-w-0 flex-col gap-2 rounded-md border bg-muted/30 p-2.5'>
+            <dl className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2.5'>
               {fields.map(([field, text]) => (
                 <div key={field} className='flex min-w-0 flex-col gap-0.5'>
                   <Label as='dt' variant='overline' truncate>

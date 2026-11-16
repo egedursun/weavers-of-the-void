@@ -1,23 +1,25 @@
 import hashlib
-from collections.abc import Collection, Iterable, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import FOOD_KINDS
-from aerona.catalog.cosmography import SCOPE_LABELS
+from aerona.catalog.cosmography import SCOPE_LABELS, SCOPE_ORDER
 from aerona.catalog.travel import METHOD_REACH, TRAVEL_METHODS, travel_method_profile
 from aerona.constants.cosmos import JOURNEY_EVENT_LIMIT, NUMBER_WORDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import agree, several
 from aerona.core.random import SeededRandom
+from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmography import RiftRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTraitRow
@@ -27,7 +29,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.cosmography import ClusterKind, RouteScope
+from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, ClusterKind, RouteScope
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.ecology import BeastTemper, Habitat, SizeClass
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
@@ -50,6 +53,7 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.engine.folkways.fed import KEEPING_FOODS
 from aerona.engine.gods.economy import spend_cosmic_resource
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.research import has_technique
 from aerona.engine.primitives.knowledge import branch_level, knows
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import class_shares
@@ -148,19 +152,35 @@ def _shut_until(route: RouteRow) -> tuple[RouteState, str, int | None] | None:
     return RouteState.SEVERED, f"A storm severed the route; it reopens at the start of Epoch {until}.", until
 
 
+CLOSED_AS: Mapping[RouteClosure, tuple[RouteState, str]] = total(
+    RouteClosure,
+    {
+        RouteClosure.SEALED: (
+            RouteState.SEALED,
+            "The route is sealed; only an alignment (temporarily), the creator's hand, or a legendary quest breaks the seal.",
+        ),
+        RouteClosure.SEVERED: (RouteState.SEVERED, "A storm severed the route."),
+        RouteClosure.FORGOTTEN: (RouteState.FORGOTTEN, "The world at the end of the route was forgotten; the route is closed."),
+        RouteClosure.WORN: (RouteState.WORN, "The route wore away under long use without mending; it stays shut until it is restored."),
+        RouteClosure.COLLAPSED: (RouteState.COLLAPSED, "The divine bridge collapsed when its builder fell."),
+        RouteClosure.SNAPPED: (RouteState.SNAPPED, "The light sail snapped when the star lighting the route died."),
+        RouteClosure.SCORCHED: (RouteState.SCORCHED, "A stellar flare scorched the sail route shut."),
+    },
+)
+
+
 def _closed_status(route: RouteRow, forgotten: Collection[int]) -> tuple[RouteState, str, int | None] | None:
     if route.world_a_id in forgotten or route.world_b_id in forgotten:
-        return RouteState.FORGOTTEN, "The world at the end of the route was forgotten; the route is closed.", None
+        state, text = CLOSED_AS[RouteClosure.FORGOTTEN]
+        return state, text, None
     if route.active:
         return None
     shut = _shut_until(route)
     if shut is not None:
         return shut
-    if route.closure is RouteClosure.SNAPPED:
-        return RouteState.SNAPPED, "The light sail snapped when the star lighting the route died.", None
-    if route.closure is RouteClosure.COLLAPSED or (route.method is TravelMethod.DIVINE_BRIDGE and route.builder_son_id is not None):
-        return RouteState.COLLAPSED, "The divine bridge collapsed when its builder fell.", None
-    return RouteState.SEALED, "The route is sealed; only an alignment (temporarily), the creator's hand, or a legendary quest breaks the seal.", None
+    fallen = route.method is TravelMethod.DIVINE_BRIDGE and route.builder_son_id is not None
+    state, text = CLOSED_AS[route.closure or (RouteClosure.COLLAPSED if fallen else RouteClosure.SEALED)]
+    return state, text, None
 
 
 def _cycle_status(route: RouteRow, calendar: SkyCalendar, aligned: bool | None, hidden: bool) -> RouteStatus | None:
@@ -277,6 +297,23 @@ async def _star_of(session: AsyncSession, world: WorldRow) -> int | None:
             break
         current = parent
     return current.star_id
+
+
+async def can_reach(session: AsyncSession, first: WorldRow, second: WorldRow, method: TravelMethod) -> bool:
+    if Discovery.FORGOTTEN in (first.discovery, second.discovery):
+        return False
+    if method is TravelMethod.FILAMENT_LANE:
+        ladder = await cosmography_of(session)
+        return on_filament(ladder, first) and on_filament(ladder, second) and within_reach(ladder.scope(first, second), METHOD_REACH[method])
+    return within_reach((await cosmography_of(session)).scope(first, second), METHOD_REACH[method])
+
+
+async def reaching(session: AsyncSession, first: WorldRow, second: WorldRow, preferred: TravelMethod) -> TravelMethod | None:
+    scope = (await cosmography_of(session)).scope(first, second)
+    if preferred is not TravelMethod.FILAMENT_LANE and within_reach(scope, METHOD_REACH[preferred]):
+        return preferred
+    fits = [method for method in TRAVEL_METHODS if method is not TravelMethod.FILAMENT_LANE and within_reach(scope, METHOD_REACH[method])]
+    return min(fits, key=lambda method: (SCOPE_ORDER.index(METHOD_REACH[method]), method.value), default=None)
 
 
 async def open_route(session: AsyncSession, rules: Rules, rng: SeededRandom, epoch: int, spec: RouteSpec) -> RouteRow:
@@ -454,12 +491,36 @@ async def _knowledge_problem(session: AsyncSession, rules: Rules, traveller: Ent
     return f'{spec.label} requires the "{branch}" knowledge (or trade with the route\'s controller).'
 
 
+VEHICLE_TECHNIQUES: Mapping[VehicleKind, Technique | None] = total(
+    VehicleKind,
+    {
+        VehicleKind.GATE: None,
+        VehicleKind.SHIP: None,
+        VehicleKind.MOUNT: None,
+        VehicleKind.BRIDGE: None,
+        VehicleKind.RAIL: Technique.RAILWAYS,
+        VehicleKind.ROAD_VEHICLE: Technique.COMBUSTION_ENGINE,
+        VehicleKind.AIRCRAFT: Technique.AVIATION,
+        VehicleKind.TELEPORT: Technique.ARTIFICIAL_MINDS,
+        VehicleKind.LIVING: Technique.GENETIC_ENGINEERING,
+        VehicleKind.RIFT: None,
+        VehicleKind.ON_FOOT: None,
+    },
+)
+
+
 async def _vehicle_problem(session: AsyncSession, traveller: EntityRow, route: RouteRow) -> str | None:
     vehicle = TRAVEL_METHODS[route.method].required_vehicle
     if vehicle is VehicleKind.MOUNT and not await has_tamed_mount(session, traveller.id):
         return "For a cosmic mount you must have tamed a flying or giant creature."
     if vehicle is VehicleKind.SHIP and not await owned_vessels(session, traveller.id, VehicleKind.SHIP):
         return "You need to own a ship for this route."
+    if vehicle is VehicleKind.RIFT:
+        open_rift = await session.scalar(select(RiftRow.id).where(RiftRow.world_id == traveller.world_id, RiftRow.state.in_(list(OPEN_RIFT_STATES))).limit(1))
+        return None if open_rift is not None else "This way opens only through a rift, and none is open on your world."
+    technique = VEHICLE_TECHNIQUES[vehicle] if vehicle is not None else None
+    if technique is not None and not await has_technique(session, traveller.id, technique):
+        return f"This way needs the technique of {technique.value.replace('_', ' ')}."
     return None
 
 
@@ -734,7 +795,9 @@ async def connect_world(ctx: TickContext, world: WorldRow, target_id: int | None
             ranked.append((0 if same_star else 1, -await _community_count(session, other.id), other.id, other))
         ranked.sort(key=lambda item: item[:3])
         chosen = ranked[0][3]
-    method = hidden_route_method(world.world_type, chosen.world_type)
+    method = await reaching(session, world, chosen, hidden_route_method(world.world_type, chosen.world_type))
+    if method is None:
+        return None
     return await open_route(
         session,
         ctx.rules,
@@ -762,7 +825,8 @@ async def connect_all_worlds(ctx: TickContext) -> int:
         if world.id in linked:
             continue
         partner = _best_partner(world, worlds, stars, communities)
-        if partner is None:
+        method = await reaching(session, world, partner, hidden_route_method(world.world_type, partner.world_type)) if partner is not None else None
+        if partner is None or method is None:
             continue
         await open_route(
             session,
@@ -772,7 +836,7 @@ async def connect_all_worlds(ctx: TickContext) -> int:
             RouteSpec(
                 partner.id,
                 world.id,
-                hidden_route_method(world.world_type, partner.world_type),
+                method,
                 known=False,
                 description="A passage the cosmos opened by itself, known to nobody yet.",
             ),
@@ -875,7 +939,7 @@ async def sever_route(
         if rng.chance(rules.beyond.storm_loss_chance):
             journey.status = JourneyStatus.LOST
             journey.end_epoch = ctx.epoch
-            add_event(journey, ctx.epoch, JourneyEventKind.VOID_STORM, "the void storm swallowed the expedition")
+            add_event(journey, ctx.epoch, JourneyEventKind.VOID_STORM, "the void storm destroyed the expedition")
             lost += 1
         else:
             journey.status = JourneyStatus.WAITING
@@ -890,7 +954,7 @@ async def sever_route(
         text += f"; of the {under} under way, {several(lost, 'was', 'were')} lost, {waiting} survived and wait for it to reopen"
     text += "."
     if revealed:
-        text += " As the route snapped, light leaking through the crack betrayed it: it is no longer hidden; it can be used again once the storm calms."
+        text += " When the route broke it was revealed: it is no longer hidden; it can be used again once the storm calms."
     if write:
         kind = ChronicleKind.COSMIC if by else ChronicleKind.HORROR
         await ctx.chronicle(kind, text, template_key="travel.route_severed", feed_category=FeedCategory.GATE)
@@ -898,7 +962,7 @@ async def sever_route(
     return SeverResult(route.id, ctx.epoch + span, span, lost, waiting, revealed, text)
 
 
-async def stitch_route(ctx: TickContext, route_id: int, by: str) -> str:
+async def repair_route(ctx: TickContext, route_id: int, by: str) -> str:
     session = ctx.session
     route = await session.get(RouteRow, route_id)
     if route is None:

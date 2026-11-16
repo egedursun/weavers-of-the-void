@@ -91,7 +91,7 @@ async def fund(scope: PlayerScope, command: FundFaction) -> Effect:
 @player_action("faction:outlaw", ActionKind.EDIT_RECORD)
 async def outlaw(scope: PlayerScope, command: OutlawFaction) -> Effect:
     await control.outlaw(await scope.context("faction_outlaw"), command.faction_id, outlawed=command.outlawed)
-    return Effect("The faction is outlawed; every hand is against it." if command.outlawed else "The faction is lawful again.", command.faction_id)
+    return Effect("The faction is outlawed." if command.outlawed else "The faction is lawful again.", command.faction_id)
 
 
 @player_action("faction:charter", ActionKind.EDIT_RECORD)

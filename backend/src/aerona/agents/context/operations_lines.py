@@ -3,7 +3,7 @@ from sqlalchemy import select
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
 from aerona.catalog.operations import GROUND_LABELS, QUIRKS, RESOLVE_EFFECTS
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.operations import (
@@ -50,7 +50,7 @@ async def expedition_lines(scope: Scope, me: EntityRow) -> list[str]:
             f"provisions {row.provisions}, light {row.light}, darkness {row.darkness}, medicine {row.medicine}"
         )
         found.append(
-            f"you go as its {member.role.value}; stress {member.stress}, you {RESOLVE_EFFECTS[member.resolve]} ({member.resolve.value}); "
+            f"you go as its {spoken(member.role)}; stress {member.stress}, you {RESOLVE_EFFECTS[member.resolve]} ({spoken(member.resolve)}); "
             f"cold {member.cold}, wet {member.wet}, hunger {member.hunger}, fatigue {member.fatigue}"
         )
     return found
@@ -76,7 +76,7 @@ async def command_lines(scope: Scope, me: EntityRow) -> list[str]:
             state = "its offensive has culminated" if operation.culminated else f"{several(operation.offensive_seasons, 'season', 'seasons')} on the offensive"
             found.append(f"it needs {operation.need} supply a season and received {operation.delivered}; {state}")
     for row in await session.scalars(select(EchelonRow).where(EchelonRow.commander_entity_id == me.id).order_by(EchelonRow.id).limit(LIST_LINES)):
-        found.append(f"you command {row.name} (formation {row.id}), {an(words(row.level.value))} on {row.order.value} orders")
+        found.append(f"you command {row.name} (formation {row.id}), {an(words(row.level.value))} on {spoken(row.order)} orders")
     return found
 
 
@@ -114,7 +114,7 @@ async def ship_lines(scope: Scope, me: EntityRow) -> list[str]:
     ):
         found.append(
             f"your ship {await named(scope, vessel.entity_id)} sails {words(state.point_of_sail.value)}, leaks {state.leak}, burns {state.fire}, "
-            f"fires {state.shot.value} shot at a rate of {state.rate_of_fire}"
+            f"fires {spoken(state.shot)} shot at a rate of {state.rate_of_fire}"
         )
     return found
 

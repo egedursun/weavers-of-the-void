@@ -1,7 +1,7 @@
 from sqlalchemy import or_, select
 
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.cycles import (
     AsabiyyaRow,
     CampRow,
@@ -21,6 +21,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.domain.enums.cycles import CyclePhase, LongPlanStatus, ReproductiveSystem
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.body.customs import people_of
@@ -53,11 +54,28 @@ async def gift_lines(scope: Scope, me: EntityRow) -> list[str]:
         if gift.receiver_node_id == me.id:
             due = f" by epoch {gift.due_epoch}" if gift.due_epoch is not None else ""
             found.append(
-                f"gift {gift.id}: you owe {await named(scope, gift.giver_node_id)} a return for {an(words(gift.occasion.value))} gift worth {gift.value}{due}"
+                f"gift {gift.id}: you owe {await named(scope, gift.giver_node_id)} a return for {an(words(gift.occasion.value))} gift worth {spoken(gift)}{due}"
             )
         else:
-            found.append(f"{await named(scope, gift.receiver_node_id)} owes you a return for your gift worth {gift.value}")
+            found.append(f"{await named(scope, gift.receiver_node_id)} owes you a return for your gift worth {spoken(gift)}")
     return found
+
+
+def union_line(people: str, union: UnionCustomRow) -> str:
+    parts = [
+        f"form {words(union.form.value)}",
+        f"made for {words(union.purpose.value)}",
+        f"the joined live {words(union.residence.value)}",
+        f"descent {words(union.descent.value)}",
+        "no exchange" if union.exchange.value == "none" else f"exchange {words(union.exchange.value)}",
+        f"{words(union.arrangement.value)}",
+        "never ended" if union.dissolution.value == "none" else f"ended {words(union.dissolution.value)}",
+    ]
+    if union.endogamy.value != "none":
+        parts.append(f"partners from the same {words(union.endogamy.value)}")
+    if union.exogamy.value != "none":
+        parts.append(f"partners from another {words(union.exogamy.value)}")
+    return f"the customs of union of {people}: {', '.join(parts)}"
 
 
 async def people_lines(scope: Scope, me: EntityRow) -> list[str]:
@@ -76,15 +94,18 @@ async def people_lines(scope: Scope, me: EntityRow) -> list[str]:
         if kin.levirate or kin.sororate:
             customs.append("the widowed wed the kin of the dead")
         found.append(f"the ways of kin of {people.name}: {', '.join(customs)}")
+    union = await session.get(UnionCustomRow, people.id)
+    if union is not None:
+        found.append(union_line(people.name, union))
     birth = await session.get(PeopleReproductionRow, people.id)
     if birth is not None and birth.system is not ReproductiveSystem.TWO_SEX:
         found.append(f"{people.name} bear their young by the {words(birth.system.value)} way")
     caste = await session.get(MortalCasteRow, me.id)
     if caste is not None:
-        found.append(f"your caste: {caste.caste.value}")
+        found.append(f"your caste: {spoken(caste.caste)}")
     solidarity = await session.get(AsabiyyaRow, people.id)
     if solidarity is not None:
-        found.append(f"the solidarity of {people.name} stands at {solidarity.value}, {solidarity.frontier} frontier lands")
+        found.append(f"the solidarity of {people.name} stands at {spoken(solidarity)}, {solidarity.frontier} frontier lands")
     for legacy in await session.scalars(select(LegacyTraitRow).where(LegacyTraitRow.people_entity_id == people.id).limit(DEBT_LINES)):
         found.append(f"{people.name} keep the {words(legacy.kind.value)} of {await named(scope, legacy.predecessor_entity_id)}")
     return found

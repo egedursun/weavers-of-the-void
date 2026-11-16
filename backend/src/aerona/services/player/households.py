@@ -16,7 +16,8 @@ from aerona.db.tables.households import (
 from aerona.db.tables.settlement import DistrictRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.genetics import DwellingKind, HouseholdRole
+from aerona.domain.enums.genetics import DwellingKind, DwellingTenure, HouseholdForm, HouseholdRole
+from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.households.formation import found_household
 from aerona.engine.primitives.manual import manual_context
@@ -48,6 +49,7 @@ class EditHousehold(Command):
     dependents: int | None = Field(default=None, ge=0)
     burden: int | None = Field(default=None, ge=0, le=SPAN)
     formed_epoch: int | None = Field(default=None, ge=0)
+    form: HouseholdForm | None = None
     head_id: int | None = None
     hold: bool = True
 
@@ -83,6 +85,10 @@ class SetDwelling(Command):
     quality: int | None = Field(default=None, ge=0, le=SPAN)
     rooms: int | None = Field(default=None, ge=1)
     district_id: int | None = None
+    tenure: DwellingTenure | None = None
+    heating: EnergyKind | None = None
+    light: EnergyKind | None = None
+    crowding: int | None = Field(default=None, ge=0, le=1000)
     clear_district: bool = False
     hold: bool = True
 
@@ -150,7 +156,7 @@ async def found(scope: PlayerScope, command: FoundHousehold) -> Effect:
 @player_action("household:edit", ActionKind.EDIT_RECORD)
 async def edit(scope: PlayerScope, command: EditHousehold) -> Effect:
     home = await household(scope, command.household_id)
-    touched = [name for name in (*HOUSEHOLD_FIELDS, *PLAIN_FIELDS) if getattr(command, name) is not None]
+    touched = [name for name in (*HOUSEHOLD_FIELDS, *PLAIN_FIELDS, "form") if getattr(command, name) is not None]
     for name in touched:
         setattr(home, name, getattr(command, name))
     if command.head_id is not None:
@@ -185,7 +191,7 @@ async def set_debt(scope: PlayerScope, command: SetDebt) -> Effect:
 @player_action("household:hold", ActionKind.EDIT_RECORD)
 async def hold(scope: PlayerScope, command: HoldHousehold) -> Effect:
     home = await household(scope, command.household_id)
-    allowed = {*HOUSEHOLD_FIELDS, "debts", "decisions", MEMBERS}
+    allowed = {*HOUSEHOLD_FIELDS, "debts", "decisions", "form", MEMBERS}
     unknown = [name for name in command.fields if name not in allowed]
     if unknown:
         raise ValidationFailedError(f"Unknown field: {', '.join(unknown)}.")
@@ -251,7 +257,7 @@ async def set_dwelling(scope: PlayerScope, command: SetDwelling) -> Effect:
         )
         scope.session.add(row)
     touched: list[str] = []
-    for name in ("kind", "quality", "rooms", "district_id"):
+    for name in ("kind", "quality", "rooms", "district_id", "tenure", "heating", "light", "crowding"):
         value = getattr(command, name)
         if value is not None:
             setattr(row, name, value)

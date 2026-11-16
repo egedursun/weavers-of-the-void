@@ -32,6 +32,7 @@ import {
   EntityLink,
   type KpiTone,
   Medallion,
+  Paged,
   PagedList,
 } from '@/components/domain'
 import { Label, Muted, SectionTitle, Stat, Text } from '@/components/typography'
@@ -151,7 +152,7 @@ export function MeterRow({
   children?: ReactNode
 }) {
   return (
-    <li className='flex min-w-0 flex-col gap-1.5 rounded-md border bg-muted/30 px-2.5 py-2 @xl/lore:last:odd:col-span-2'>
+    <li className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-well border-gild/20 bg-muted/60 px-2.5 py-2 @xl/lore:last:odd:col-span-2'>
       <div className='flex min-w-0 items-center gap-2'>
         <Icon
           aria-hidden='true'
@@ -225,7 +226,7 @@ export function LoreHero({
   return (
     <div
       data-surface='LoreHero'
-      className='relative flex min-w-0 items-start gap-3 overflow-hidden rounded-xl border bg-background p-4'
+      className='relative flex min-w-0 items-start gap-3 overflow-hidden rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <Medallion icon={spec.icon} tone={spec.tone} />
       <div className='flex min-w-0 flex-1 flex-col gap-2'>
@@ -258,7 +259,7 @@ export function RefChip({
     <Text
       as='span'
       variant='caption'
-      className='inline-flex h-badge-md max-w-full min-w-0 items-center gap-1.5 rounded-md border bg-muted/40 px-2'
+      className='inline-flex h-badge-md max-w-full min-w-0 items-center gap-1.5 rounded-md border surface-well border-gild/20 bg-muted/60 px-2'
     >
       <Icon
         aria-hidden='true'
@@ -289,7 +290,7 @@ export function LoreCard({
     <div
       data-surface='LoreCard'
       className={cn(
-        'flex h-full min-w-0 flex-col gap-3 rounded-lg border bg-background p-3',
+        'flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         wide && '@xl/lore:col-span-2'
       )}
     >
@@ -480,7 +481,7 @@ export function AdjustBlock({
   children: ReactNode
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Icon
           aria-hidden='true'
@@ -517,7 +518,7 @@ export function AdjustPanel({
         </CollapsibleTrigger>
         {status}
       </div>
-      <CollapsibleContent className='flex min-w-0 flex-col gap-3 rounded-lg border border-dashed bg-muted/20 p-3'>
+      <CollapsibleContent className='flex min-w-0 flex-col gap-3 rounded-md p-3 sealed-well'>
         <div className='flex min-w-0 flex-col gap-0.5'>
           <Text weight='semibold'>{title}</Text>
           <Muted variant='caption'>{note}</Muted>
@@ -727,7 +728,7 @@ export function LoreFields({
           {flags.map((spec) => (
             <label
               key={spec.key}
-              className='flex min-w-0 items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2'
+              className='flex min-w-0 items-center justify-between gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 px-3 py-2'
             >
               <Text as='span'>{fieldLabel(spec.key)}</Text>
               <Switch
@@ -915,50 +916,52 @@ export function DictField({
     >
       {rows.length === 0 && <Muted>Nothing is set yet.</Muted>}
       <ul className='grid min-w-0 grid-cols-1 gap-2 @lg/lore:grid-cols-2'>
-        {rows.map(([key, value], index) => {
-          const named = lookup(known, key)
-          const Icon = named.icon
-          return (
-            <li
-              key={key}
-              className='flex min-w-0 items-center gap-2 rounded-md border bg-muted/30 p-1.5 pl-2.5'
-            >
-              <Icon
-                aria-hidden='true'
-                className='size-icon-sm shrink-0 text-muted-foreground'
-              />
-              <Text as='span' className='min-w-0 flex-1' truncate>
-                {named.label}
-              </Text>
-              <Input
-                className='w-20 shrink-0'
-                value={value}
-                aria-label={named.label}
-                onChange={(event) =>
-                  setRows((before) =>
-                    before.map((row, at) =>
-                      at === index ? [row[0], event.target.value] : row
-                    )
-                  )
-                }
-              />
-              <Button
-                size='icon-sm'
-                variant='ghost'
-                aria-label={`Remove ${named.label}`}
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() => {
-                  const next = rows.filter((_, at) => at !== index)
-                  setRows(next)
-                  save(next)
-                }}
+        <Paged items={rows} as='li'>
+          {([key, value], index) => {
+            const named = lookup(known, key)
+            const Icon = named.icon
+            return (
+              <li
+                key={key}
+                className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-1.5 pl-2.5'
               >
-                <Trash2 />
-              </Button>
-            </li>
-          )
-        })}
+                <Icon
+                  aria-hidden='true'
+                  className='size-icon-sm shrink-0 text-muted-foreground'
+                />
+                <Text as='span' className='min-w-0 flex-1' truncate>
+                  {named.label}
+                </Text>
+                <Input
+                  className='w-20 shrink-0'
+                  value={value}
+                  aria-label={named.label}
+                  onChange={(event) =>
+                    setRows((before) =>
+                      before.map((row, at) =>
+                        at === index ? [row[0], event.target.value] : row
+                      )
+                    )
+                  }
+                />
+                <Button
+                  size='icon-sm'
+                  variant='ghost'
+                  aria-label={`Remove ${named.label}`}
+                  disabled={busy !== null}
+                  disabledReason={busy ?? undefined}
+                  onClick={() => {
+                    const next = rows.filter((_, at) => at !== index)
+                    setRows(next)
+                    save(next)
+                  }}
+                >
+                  <Trash2 />
+                </Button>
+              </li>
+            )
+          }}
+        </Paged>
       </ul>
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
         <div className='min-w-0 flex-1 basis-48'>

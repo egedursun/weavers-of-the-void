@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { EmptyState, FormRow, Medallion } from '@/components/domain'
+import { EmptyState, FormRow, Medallion, Paged } from '@/components/domain'
 import { Label, Text } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
@@ -221,7 +221,7 @@ function RunningGoal({
       data-running={item.key}
       data-held={item.held || undefined}
       className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-xl border p-4',
+        'flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4',
         failed && 'border-destructive/40 bg-destructive/5',
         !failed && item.held && 'border-dashed bg-muted/30',
         !failed && !item.held && 'border-info/40 bg-info/5'
@@ -335,16 +335,20 @@ export function RunningGoals({ data }: { data: GoalsOverview }) {
         />
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-          {data.running.map((item) => (
-            <RunningGoal
-              key={item.id}
-              item={item}
-              epoch={data.epoch}
-              targetMax={
-                item.key === 'custom' ? customMax : (limits.get(item.key) ?? 1)
-              }
-            />
-          ))}
+          <Paged items={data.running} as='li'>
+            {(item) => (
+              <RunningGoal
+                key={item.id}
+                item={item}
+                epoch={data.epoch}
+                targetMax={
+                  item.key === 'custom'
+                    ? customMax
+                    : (limits.get(item.key) ?? 1)
+                }
+              />
+            )}
+          </Paged>
         </ul>
       )}
     </div>

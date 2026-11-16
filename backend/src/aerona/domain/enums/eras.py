@@ -27,3 +27,19 @@ class ProgrammeStage(StrEnum):
     TESTING = "testing"
     COMPLETE = "complete"
     ABANDONED = "abandoned"
+
+
+class TechFamily(StrEnum):
+    AGRICULTURE = "agriculture"
+    MATERIALS = "materials"
+    ENERGY = "energy"
+    TRANSPORT = "transport"
+    COMMUNICATION = "communication"
+    MEDICINE = "medicine"
+    WARFARE = "warfare"
+    COMPUTATION = "computation"
+    LIFE = "life"
+    CONSTRUCTION = "construction"
+    ADMINISTRATION = "administration"
+    SPACE = "space"
+    MIND = "mind"

@@ -23,6 +23,7 @@ import {
   EmptyState,
   Medallion,
   MiniStat,
+  Paged,
   Section,
 } from '@/components/domain'
 import { type Choice, ChoiceTiles } from '@/components/domain/SettingsKit'
@@ -31,6 +32,7 @@ import { READ_ONLY_REASON } from '@/features/entity/actions/gate'
 import { useWorldState } from '@/features/overview/api'
 import { DeepTimePanel } from '@/features/prehistory/DeepTimePanel'
 import { TransformTimelinePanel } from '@/features/transform/TransformTimelinePanel'
+import { IntegrityFindings } from './IntegrityFindings'
 import { IntegrityPanel } from './IntegrityPanel'
 import { PhaseRow } from './PhaseRow'
 import { SeedPanel } from './SeedPanel'
@@ -219,7 +221,7 @@ export function EnginePage() {
               type='search'
               leadingIcon={Search}
               aria-label='Search engine steps'
-              placeholder='Search steps, for example war, plague or migration'
+              placeholder='Search steps by name'
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -249,19 +251,26 @@ export function EnginePage() {
               tone='verdigris'
             >
               <ul className='grid min-w-0 grid-cols-1 gap-2 xl:grid-cols-2'>
-                {shown.map((phase) => (
-                  <PhaseRow
-                    key={phase.name}
-                    phase={phase}
-                    order={order.get(phase.name) ?? 0}
-                    busy={busy}
-                    readOnlyReason={readOnlyReason}
-                    onToggle={onToggle}
-                    onRun={(item) =>
-                      item.heavy ? setPending(item) : execute(item)
-                    }
-                  />
-                ))}
+                <Paged
+                  items={shown}
+                  initial={12}
+                  as='li'
+                  noun={['step', 'steps']}
+                >
+                  {(phase) => (
+                    <PhaseRow
+                      key={phase.name}
+                      phase={phase}
+                      order={order.get(phase.name) ?? 0}
+                      busy={busy}
+                      readOnlyReason={readOnlyReason}
+                      onToggle={onToggle}
+                      onRun={(item) =>
+                        item.heavy ? setPending(item) : execute(item)
+                      }
+                    />
+                  )}
+                </Paged>
               </ul>
             </Section>
           )
@@ -274,6 +283,7 @@ export function EnginePage() {
         />
       )}
       <IntegrityPanel readOnlyReason={readOnlyReason} />
+      <IntegrityFindings readOnlyReason={readOnlyReason} />
       <DeepTimePanel readOnlyReason={readOnlyReason} />
       <TransformTimelinePanel readOnlyReason={readOnlyReason} />
       <SeedPanel />

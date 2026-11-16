@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import { Boxes, Gauge, Plus, Trash2, Users } from 'lucide-react'
+import {
+  Boxes,
+  Gauge,
+  Home,
+  Plus,
+  Swords,
+  Tent,
+  Trash2,
+  Users,
+} from 'lucide-react'
 import { type EditValues } from '@/api/actions'
 import type { components } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
@@ -13,9 +22,11 @@ import { Switch } from '@/components/ui/switch'
 import { PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { COMMODITY, MATERIAL_LABEL } from '@/features/entity/economy/labels'
+import { type Named } from '@/features/entity/environment/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { CLASS_SPEC } from '@/features/entity/society/labels'
 import { NumberField } from '@/features/entity/wilds/parts'
+import { ChoiceField } from '@/features/wars/military/parts'
 import {
   type JourneyRecord,
   type RouteRecord,
@@ -30,11 +41,23 @@ type CommodityKind = components['schemas']['CommodityKind']
 type MaterialKind = components['schemas']['MaterialKind']
 type SocialClass = components['schemas']['SocialClass']
 type Edit = { values: EditValues; release: string[] }
+type Arrival = components['schemas']['ArrivalOutcome']
+
 type Load = {
   convoy?: number
   escorts?: number
   cargo?: Cargo[]
   passengers?: Passenger[]
+  supplies?: number
+  births?: number
+  deaths?: number
+  arrival?: Arrival
+}
+
+export const ARRIVALS: Record<Arrival, Named> = {
+  settlers: { label: 'As settlers', icon: Home, tone: 'success' },
+  refugees: { label: 'As refugees', icon: Tent, tone: 'warning' },
+  invaders: { label: 'As invaders', icon: Swords, tone: 'danger' },
 }
 
 const COMMODITY_NAMES = Object.fromEntries(
@@ -134,7 +157,7 @@ export function RouteFlowEditor({ route }: { route: RouteRecord }) {
             onSave={(values) => edit.mutate({ values, release: [] })}
             onRelease={(release) => edit.mutate({ values: {}, release })}
           />
-          <div className='flex min-w-0 flex-col items-stretch gap-2 rounded-lg border bg-muted/20 p-3'>
+          <div className='flex min-w-0 flex-col items-stretch gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
             <RecordPick
               label='Toll keeper'
               types={['polity', 'people', 'organization', 'company']}
@@ -289,6 +312,79 @@ function PassengerForm({
   )
 }
 
+function JourneyCounts({
+  journey,
+  busy,
+  onSave,
+}: {
+  journey: JourneyRecord
+  busy: string | null
+  onSave: (load: Load) => void
+}) {
+  const [supplies, setSupplies] = useState(String(journey.supplies ?? 100))
+  const [births, setBirths] = useState(String(journey.births ?? 0))
+  const [deaths, setDeaths] = useState(String(journey.deaths ?? 0))
+  const [arrival, setArrival] = useState<Arrival>(journey.arrival ?? 'settlers')
+  const values = [Number(supplies), Number(births), Number(deaths)]
+  const invalid =
+    values.some((value) => !Number.isInteger(value) || value < 0) ||
+    Number(supplies) > 100
+      ? 'Supplies run from 0 to 100; births and deaths are whole numbers from 0'
+      : null
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Muted variant='caption'>{`On the way: supplies ${journey.supplies ?? 100}, ${plural(journey.births ?? 0, 'birth')}, ${plural(journey.deaths ?? 0, 'death')}${journey.arrival ? `, arriving ${ARRIVALS[journey.arrival].label.toLowerCase()}` : ''}`}</Muted>
+      <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-4'>
+        <NumberField
+          label='Supplies'
+          value={supplies}
+          min={0}
+          max={100}
+          disabled={busy !== null}
+          onChange={setSupplies}
+        />
+        <NumberField
+          label='Born on the way'
+          value={births}
+          min={0}
+          disabled={busy !== null}
+          onChange={setBirths}
+        />
+        <NumberField
+          label='Died on the way'
+          value={deaths}
+          min={0}
+          disabled={busy !== null}
+          onChange={setDeaths}
+        />
+        <ChoiceField
+          label='Arriving'
+          value={arrival}
+          table={ARRIVALS}
+          blocked={busy}
+          onPick={(next) => setArrival(next as Arrival)}
+        />
+      </div>
+      <Button
+        size='sm'
+        className='self-start'
+        disabled={busy !== null || invalid !== null}
+        disabledReason={busy ?? invalid ?? undefined}
+        onClick={() =>
+          onSave({
+            supplies: values[0],
+            births: values[1],
+            deaths: values[2],
+            arrival,
+          })
+        }
+      >
+        Hold the journey's toll
+      </Button>
+    </div>
+  )
+}
+
 export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
   const [convoy, setConvoy] = useState(String(journey.convoy))
   const [escorts, setEscorts] = useState(String(journey.escorts))
@@ -359,6 +455,11 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
               Hold the convoy
             </Button>
           </div>
+          <JourneyCounts
+            journey={journey}
+            busy={busy}
+            onSave={(vars) => load.mutate(vars)}
+          />
           <div className='flex min-w-0 flex-col gap-2'>
             <Muted variant='caption'>Cargo</Muted>
             {cargo.length === 0 ? (

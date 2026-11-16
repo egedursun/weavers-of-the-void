@@ -9,6 +9,7 @@ W = RuleGroup.WAR_AND_DIPLOMACY
 @dataclass(frozen=True)
 class StatecraftRules:
     conquest_threat: int = rule(25, 0, 100, W, "Threat a conquest of land stirs in the realms that hear of it")
+    associated_distance: int = rule(10, 0, 200, W, "Distance of values below which a subject realm is freely associated with its overlord")
     war_threat: int = rule(12, 0, 100, W, "Threat a war declared without a claim stirs in the realms that hear of it")
     breach_threat: int = rule(10, 0, 100, W, "Threat a broken treaty stirs in the realms that hear of it")
     far_threat_pct: int = rule(40, 0, 100, W, "Share of threat a realm feels when the aggressor does not border it (%)")

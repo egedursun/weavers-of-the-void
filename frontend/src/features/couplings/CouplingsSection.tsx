@@ -18,6 +18,7 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -525,9 +526,11 @@ function Registers({ view, blocked }: Props) {
       <ShowMore state={page} />
       {view.signs.length ? (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {view.signs.map((row) => (
-            <Sign key={row.language.id} row={row} blocked={blocked} />
-          ))}
+          <Paged items={view.signs} as='li'>
+            {(row) => (
+              <Sign key={row.language.id} row={row} blocked={blocked} />
+            )}
+          </Paged>
         </ul>
       ) : null}
       <ForgeCard
@@ -1300,9 +1303,9 @@ function Seals({ view, blocked }: Props) {
       />
       {view.seals.length ? (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {view.seals.map((row) => (
-            <Seal key={row.id} row={row} blocked={blocked} />
-          ))}
+          <Paged items={view.seals} as='li'>
+            {(row) => <Seal key={row.id} row={row} blocked={blocked} />}
+          </Paged>
         </ul>
       ) : (
         <EmptyState
@@ -1462,15 +1465,17 @@ function OfficesMade({ view }: { view: View }) {
       />
       {view.sinecures.length ? (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {view.sinecures.map((row) => (
-            <RecordRow
-              key={row.id}
-              icon={Landmark}
-              tone='gold'
-              title={row.holder?.name ?? 'Vacant'}
-              caption={`Made in epoch ${row.since_epoch}`}
-            />
-          ))}
+          <Paged items={view.sinecures} as='li'>
+            {(row) => (
+              <RecordRow
+                key={row.id}
+                icon={Landmark}
+                tone='gold'
+                title={row.holder?.name ?? 'Vacant'}
+                caption={`Made in epoch ${row.since_epoch}`}
+              />
+            )}
+          </Paged>
         </ul>
       ) : (
         <EmptyState

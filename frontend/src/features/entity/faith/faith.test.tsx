@@ -131,7 +131,13 @@ const SOUL = {
 
 const STRATUM = {
   id: 7,
-  kind: 'paradise',
+  kind: 'reward',
+  valence: 'reward',
+  permanence: 'eternal',
+  admission: 'by_deeds',
+  activity: 'rest',
+  contact: 'closed',
+  ruler: null,
   name: 'Hall of Heroes',
   criteria: { priority: 5, renown_at_least: 70, tenets_any: ['holy_war'] },
   population: 3,

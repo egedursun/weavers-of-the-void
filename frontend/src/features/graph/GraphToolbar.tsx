@@ -84,7 +84,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
   return (
     <div
       data-graph-toolbar
-      className='flex min-w-0 flex-wrap items-center gap-2'
+      className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <ToggleGroup
         type='single'

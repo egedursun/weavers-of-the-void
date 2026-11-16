@@ -6,8 +6,9 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.warfare import HeroQuestRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.quests import QuestAim
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.domain.enums.war import HeroQuestKind, HeroQuestStatus
+from aerona.domain.enums.war import HeroQuestStatus
 from aerona.domain.models.entity_stats import ItemStats, SpeciesStats
 from aerona.engine.phases.heroes import (
     assign_apprentice,
@@ -69,7 +70,7 @@ async def test_knowledge_quest_starts_and_succeeds(realm: Realm) -> None:
     start = tuned(heroes={"quest_chance": 100})
     await heroes(context(realm.session, start, epoch=3))
     quest = await realm.session.scalar(select(HeroQuestRow).where(HeroQuestRow.hero_entity_id == hero.id))
-    assert quest is not None and quest.kind is HeroQuestKind.KNOWLEDGE
+    assert quest is not None and quest.aim is QuestAim.LEARN
     assert await bonded(realm.session, hero.id, lore.id, BondKind.PURSUES)
     finish = tuned(heroes={"quest_success_min_pct": 100, "quest_chance": 0})
     await heroes(context(realm.session, finish, epoch=4))
@@ -120,7 +121,7 @@ async def test_manual_hero_controls(realm: Realm) -> None:
     with pytest.raises(ValidationFailedError):
         await send_on_quest(ctx, hero.id)
     await lost_lore(realm)
-    quest = await send_on_quest(ctx, hero.id, kind=HeroQuestKind.KNOWLEDGE)
+    quest = await send_on_quest(ctx, hero.id, aim=QuestAim.LEARN)
     with pytest.raises(ValidationFailedError):
         await send_on_quest(ctx, hero.id)
     recalled = await recall_hero(ctx, hero.id)
@@ -138,7 +139,7 @@ async def test_hunt_quest_ends_in_an_encounter(realm: Realm) -> None:
     )
     ctx = context(realm.session, epoch=3)
     quest = await send_on_quest(ctx, hero.id, target_id=beast.id)
-    assert quest.kind is HeroQuestKind.HUNT
+    assert quest.aim is QuestAim.HUNT
     status = await resolve_quest(context(realm.session, epoch=4), hero.id)
     assert status is HeroQuestStatus.SUCCEEDED
     assert quest.ended_epoch == 4
@@ -153,8 +154,8 @@ async def test_vengeance_quest_kills_the_feud_enemy(realm: Realm) -> None:
     await link(realm.session, victim.id, foes.id, BondKind.PROTECTS)
     ctx = context(realm.session, tuned(heroes={"quest_success_min_pct": 100}), epoch=3)
     await start_blood_feud(ctx, home.id, foes.id, "an old killing")
-    quest = await send_on_quest(ctx, hero.id, kind=HeroQuestKind.VENGEANCE)
+    quest = await send_on_quest(ctx, hero.id, aim=QuestAim.AVENGE)
     assert quest.target_node_id == victim.id
     assert await resolve_quest(context(realm.session, ctx.rules, epoch=4), hero.id) is HeroQuestStatus.SUCCEEDED
     assert victim.status is EntityStatus.DEAD
-    assert "heroes.quest_vengeance" in await chronicle_keys(realm.session)
+    assert "heroes.quest_avenge" in await chronicle_keys(realm.session)

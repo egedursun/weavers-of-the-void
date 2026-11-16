@@ -47,7 +47,7 @@ export function SonPowers({ view }: { view: SonPublic }) {
   return (
     <Section title='Powers' level={3} actions={<ForgePower view={view} />}>
       {view.powers.length === 0 ? (
-        <div className='flex min-w-0 items-center gap-2 rounded-lg border border-dashed p-3'>
+        <div className='flex min-w-0 items-center gap-2 rounded-md p-3 sealed-well'>
           <Lock
             aria-hidden='true'
             className='size-icon-sm text-muted-foreground'
@@ -71,7 +71,7 @@ export function SonPowers({ view }: { view: SonPublic }) {
                 <li
                   key={power.slot}
                   className={cn(
-                    'flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3',
+                    'flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3',
                     locked && 'border-dashed opacity-70'
                   )}
                 >

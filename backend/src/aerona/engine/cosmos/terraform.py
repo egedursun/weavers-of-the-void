@@ -36,8 +36,8 @@ AIM_LABELS: dict[TerraformAim, str] = {
     TerraformAim.COOL: "cool it",
     TerraformAim.WATER: "give it water",
     TerraformAim.DRY: "dry it",
-    TerraformAim.BRIGHTEN: "brighten its face",
-    TerraformAim.DARKEN: "darken its face",
+    TerraformAim.BRIGHTEN: "raise its brightness",
+    TerraformAim.DARKEN: "lower its brightness",
 }
 
 

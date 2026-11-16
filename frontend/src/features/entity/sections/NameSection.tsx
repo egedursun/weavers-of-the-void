@@ -122,7 +122,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
       )}
       {card && (
         <div data-surface='NameMeaning' className='flex min-w-0 flex-col gap-4'>
-          <div className='flex min-w-0 items-start gap-3 rounded-lg border bg-muted/30 p-3'>
+          <div className='flex min-w-0 items-start gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
             <Medallion icon={BookA} tone='gold' />
             <div className='flex min-w-0 flex-1 flex-col gap-1'>
               <Text as='span' weight='semibold'>
@@ -234,7 +234,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
                   {(row) => (
                     <li
                       key={row.language.id}
-                      className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border px-2.5 py-1.5'
+                      className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-1.5'
                     >
                       <Medallion icon={Globe2} tone='info' size='sm' />
                       <Text as='span' weight='medium'>
@@ -331,7 +331,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
               </Muted>
             ) : card.epithet ? (
               <div className='flex min-w-0 flex-col gap-2'>
-                <div className='flex min-w-0 items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1.5'>
+                <div className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-primary/40 bg-primary/5 px-2.5 py-1.5'>
                   <Medallion icon={Quote} tone='gold' size='sm' />
                   <Text as='span' weight='semibold'>
                     {card.epithet.epithet}

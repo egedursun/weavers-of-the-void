@@ -234,7 +234,8 @@ async def feuds(services: ServicesDep, entity_id: Annotated[int | None, Query(ge
         if entity_id is not None:
             statement = statement.where(or_(FeudRow.first_entity_id == entity_id, FeudRow.second_entity_id == entity_id))
         rows = list(await session.scalars(statement.order_by(FeudRow.status, FeudRow.intensity.desc(), FeudRow.id)))
-        refs = await node_refs(session, {item for row in rows for item in (row.first_entity_id, row.second_entity_id)})
+        named = {item for row in rows for item in (row.first_entity_id, row.second_entity_id, row.mediator_node_id) if item is not None}
+        refs = await node_refs(session, named)
         return [
             FeudView(
                 id=row.id,
@@ -244,6 +245,8 @@ async def feuds(services: ServicesDep, entity_id: Annotated[int | None, Query(ge
                 intensity=row.intensity,
                 grievance=row.grievance,
                 generations=row.generations,
+                level=row.level,
+                mediator=refs.get(row.mediator_node_id) if row.mediator_node_id is not None else None,
                 status=row.status,
                 cause=row.cause,
                 since_epoch=row.since_epoch,

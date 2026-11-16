@@ -104,6 +104,9 @@ ARMS_TYPES = {
     HeraldryHolderKind.POLITY: EntityType.POLITY,
     HeraldryHolderKind.ARMY: EntityType.ARMY,
     HeraldryHolderKind.GUILD: EntityType.FACTION,
+    HeraldryHolderKind.COMPANY: EntityType.FACTION,
+    HeraldryHolderKind.ORDER: EntityType.FACTION,
+    HeraldryHolderKind.PEOPLE: EntityType.PEOPLE,
 }
 
 

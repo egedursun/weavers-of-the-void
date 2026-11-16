@@ -4,22 +4,27 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.customs import BorderControlRow, EvidenceRow, MeasureStandardRow, MembershipCategoryRow, MembershipRow, PoorReliefRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.customs import EvidenceKind, MemberRight, Membership, Naturalisation, ReliefKind
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.justice import CaseStage, Deposition
 from aerona.domain.enums.mind import PressureKind, Profession
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.faith.book import patron_node
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.polity.trials import report_crime
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.renown.currencies import members_of, ruler_of_realm
@@ -42,6 +47,41 @@ class CivicsTally:
     relieved: int = 0
     frauds: int = 0
     borders: int = 0
+
+
+async def read_and_confess(ctx: TickContext, case: CrimeCaseRow) -> list[EvidenceRow]:
+    table = ctx.rules.evidence
+    found: list[EvidenceRow] = []
+    rng = ctx.rng(seed_of("evidence.read", case.id, ctx.epoch))
+    if case.culprit_entity_id is not None and case.culprit_entity_id == case.accused_entity_id and rng.chance(table.confession_chance):
+        found.append(
+            EvidenceRow(
+                case_id=case.id,
+                kind=EvidenceKind.CONFESSION,
+                points_to_node_id=case.culprit_entity_id,
+                reliability=table.confession_reliability,
+                found_epoch=ctx.epoch,
+                locked=[],
+            )
+        )
+    if case.settlement_entity_id is not None:
+        here = await present_among(ctx.session, [case.settlement_entity_id])
+        seer = await ctx.session.scalar(
+            select(EntityRow.id).where(here, EntityRow.mortal_role == MortalRole.SEER, EntityRow.status == EntityStatus.CANON).limit(1)
+        )
+        if seer is not None:
+            named = case.culprit_entity_id if case.culprit_entity_id is not None and rng.chance(table.divination_reliability) else case.accused_entity_id
+            found.append(
+                EvidenceRow(
+                    case_id=case.id,
+                    kind=EvidenceKind.DIVINATION,
+                    points_to_node_id=named,
+                    reliability=table.divination_reliability,
+                    found_epoch=ctx.epoch,
+                    locked=[],
+                )
+            )
+    return found
 
 
 async def gather_evidence(ctx: TickContext, tally: CivicsTally) -> None:
@@ -90,6 +130,7 @@ async def gather_evidence(ctx: TickContext, tally: CivicsTally) -> None:
                         locked=[],
                     )
                 )
+            rows += await read_and_confess(ctx, case)
             ctx.session.add_all(rows)
             tally.evidence += len(rows)
         else:
@@ -113,6 +154,31 @@ async def core_people(ctx: TickContext, realm_id: int) -> int | None:
     ruling = await ctx.session.get(EntityRow, ruler) if ruler is not None else None
     folk = await people_of(ctx.session, ruling) if ruling is not None else None
     return folk.id if folk is not None else None
+
+
+SERVING = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.CAPTAIN})
+PATH_WAIT: Mapping[Naturalisation, int] = total(
+    Naturalisation,
+    {
+        Naturalisation.DESCENT: 0,
+        Naturalisation.BIRTHPLACE: 0,
+        Naturalisation.RESIDENCE: 100,
+        Naturalisation.CONVERSION: 50,
+        Naturalisation.SERVICE: 50,
+        Naturalisation.PURCHASE: 0,
+        Naturalisation.GRANT: 0,
+    },
+)
+
+
+async def path_for(ctx: TickContext, mortal: EntityRow, realm: EntityRow) -> Naturalisation:
+    if mortal.mortal_role in SERVING:
+        return Naturalisation.SERVICE
+    capital = await ctx.session.get(PolityProfileRow, realm.id)
+    patron = await patron_node(ctx.session, capital.capital_entity_id) if capital is not None and capital.capital_entity_id is not None else None
+    if patron is not None and await BondRepository(ctx.session).exists_between(mortal.id, patron, BondKind.WORSHIPS):
+        return Naturalisation.CONVERSION
+    return Naturalisation.RESIDENCE
 
 
 async def keep_memberships(ctx: TickContext, tally: CivicsTally) -> None:
@@ -155,12 +221,13 @@ async def keep_memberships(ctx: TickContext, tally: CivicsTally) -> None:
                 tally.members += 1
                 continue
             foreign = row.category is Membership.RESIDENT_FOREIGNER and "category" not in row.locked
+            path = await path_for(ctx, mortal, realm)
             if (
                 foreign
-                and ctx.epoch - row.since_epoch >= table.residence_epochs
+                and ctx.epoch - row.since_epoch >= table.residence_epochs * PATH_WAIT[path] // PERCENT
                 and ctx.rng(seed_of("naturalise", mortal.id, ctx.epoch)).chance(table.naturalise_chance)
             ):
-                row.category, row.path, row.since_epoch = Membership.CITIZEN, Naturalisation.RESIDENCE, ctx.epoch
+                row.category, row.path, row.since_epoch = Membership.CITIZEN, path, ctx.epoch
                 tally.naturalised += 1
 
 

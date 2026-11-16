@@ -44,6 +44,7 @@ import {
   NodePicker,
 } from '../mind/parts'
 import { DISTRICT_SPEC } from '../society/labels'
+import { DwellingTenureCard, HouseholdFormCard } from './HomeForms'
 
 const SPAN = 100
 const WORKING = 'Working on it.'
@@ -310,6 +311,12 @@ function DwellingCard({
               aria-label={`Home quality ${dwelling.effective_quality}`}
             />
           </div>
+          <DwellingTenureCard
+            household={household}
+            dwelling={dwelling}
+            blocked={ctx.blocked}
+            hold={ctx.hold}
+          />
           <Paged
             items={dwelling.furnishings}
             initial={4}
@@ -648,6 +655,11 @@ function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
             }
           />
         }
+      />
+      <HouseholdFormCard
+        household={household}
+        blocked={ctx.blocked}
+        hold={ctx.hold}
       />
       <DebtsCard household={household} ctx={ctx} />
       <Paged items={household.members} initial={6} noun={['member', 'members']}>

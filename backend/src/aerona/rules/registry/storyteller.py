@@ -22,6 +22,10 @@ class StorytellerRules:
     band: int = rule(12, 0, 100, F, "Distance from the aim within which tension counts as on course")
     boost_max_pct: int = rule(50, 0, 100, F, "Most the storyteller raises or lowers spontaneous disruptions (%)")
     boost_per_point_pct: int = rule(3, 0, 100, F, "Change to spontaneous rates for each point of tension off course (%)")
+    palette_rest_pct: int = rule(30, 0, 300, F, "Most the storyteller raises the chances of events from a subsystem that has not acted lately (%)")
+    palette_lean_pct: int = rule(
+        100, 0, 1000, F, "How far a quiet world leans toward disruptions and a heated one toward recoveries, per point of an event's weight (%)"
+    )
     variety_window: int = rule(4, 1, 100, F, "Epochs the storyteller remembers which kinds of disruption struck")
     variety_pct: int = rule(40, 0, 100, F, "Most a recently repeated kind of disruption is made less likely (%)")
     variety_decay_pct: int = rule(50, 0, 100, F, "Share of a disruption kind's recent count forgotten each epoch (%)")

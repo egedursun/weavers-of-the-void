@@ -11,13 +11,16 @@ from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyProfileRow, It
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.mind import IdeaRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.networks import NetworkNodeRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import IdeologyTenet, ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.folkways import IdeaStrain
 from aerona.domain.enums.mind import Facet, IdeaKind, IdeaSource, IdeaState, ThoughtKind, ValueHolder
+from aerona.domain.enums.minds import MindOrigin
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import Holder, Values, clamp_value, is_locked, mind_of, stored_values, write_values
@@ -43,6 +46,7 @@ IDEA_LOCK = "ideas"
 TEXT_CLASSES = frozenset({ItemClass.BOOK, ItemClass.SCROLL, ItemClass.PRAYER_BOOK})
 FULL = 100
 STRAIN_FROM = 15
+MADE_ORIGINS = frozenset({MindOrigin.MADE, MindOrigin.GROWN, MindOrigin.TRAINED, MindOrigin.COPIED})
 
 
 @dataclass(frozen=True)
@@ -152,6 +156,36 @@ async def teacher_encounters(session: AsyncSession, mortal: EntityRow) -> list[E
     return found
 
 
+async def network_encounters(session: AsyncSession, mortal: EntityRow) -> list[Encounter]:
+    if mortal.location_id is None:
+        return []
+    joined = select(NetworkNodeRow.network_entity_id).where(NetworkNodeRow.member_node_id == mortal.location_id)
+    places = await session.scalars(
+        select(NetworkNodeRow.member_node_id)
+        .where(NetworkNodeRow.network_entity_id.in_(joined), NetworkNodeRow.member_node_id != mortal.location_id)
+        .distinct()
+    )
+    found: list[Encounter] = []
+    for place in list(places):
+        dominant = idea_for_beliefs(await stored_values(session, ValueHolder.COMMUNITY, place))
+        if dominant is not None:
+            found.append(Encounter(dominant, IdeaSource.NETWORK, place))
+    return found
+
+
+async def made_mind_encounters(session: AsyncSession, mortal: EntityRow) -> list[Encounter]:
+    if mortal.location_id is None:
+        return []
+    near = select(EntityRow.id).where(EntityRow.location_id == mortal.location_id, EntityRow.id != mortal.id, EntityRow.status == EntityStatus.CANON)
+    minds = await session.scalars(select(MindProfileRow.node_id).where(MindProfileRow.node_id.in_(near), MindProfileRow.origin.in_(list(MADE_ORIGINS))))
+    found: list[Encounter] = []
+    for mind in list(minds):
+        for row in await ideas_of(session, mind):
+            if row.state is IdeaState.INTERNALISED:
+                found.append(Encounter(row.idea, IdeaSource.MADE_MIND, mind))
+    return found
+
+
 async def encounters(session: AsyncSession, mortal: EntityRow, knowledge: KnowledgeMap) -> tuple[list[Encounter], list[Encounter]]:
     people = await people_of(session, mortal)
     holders = [mortal.id, *([people.id] if people is not None else []), *([mortal.location_id] if mortal.location_id is not None else [])]
@@ -161,6 +195,8 @@ async def encounters(session: AsyncSession, mortal: EntityRow, knowledge: Knowle
         *await doctrine_encounters(session, mortal),
         *theory_encounters(knowledge, holders),
         *await book_encounters(session, mortal),
+        *await network_encounters(session, mortal),
+        *await made_mind_encounters(session, mortal),
     ]
     return taught, met
 

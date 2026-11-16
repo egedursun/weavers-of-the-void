@@ -138,7 +138,7 @@ function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
     (edit.isPending || release.isPending || remove.isPending ? WORKING : null)
   const spec = named(DANGER_SOURCE, danger.source)
   return (
-    <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-lg border bg-background p-2'>
+    <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <div className='flex min-w-40 flex-1 items-center gap-2'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <Text as='span' weight='medium' truncate>
@@ -369,7 +369,7 @@ function MemoryRow({ memory, busy }: { memory: Memory; busy: string | null }) {
   })
   const blocked = busy ?? (edit.isPending || remove.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-lg border bg-background p-2'>
+    <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <Text as='span' weight='medium' className='min-w-40 flex-1' truncate>
         {memory.title}
       </Text>
@@ -543,7 +543,7 @@ function SanctityControls({
             id={`memory-title-${regionId}`}
             value={title}
             maxLength={200}
-            placeholder='The Burning of the Fords'
+            placeholder='The name of the happening'
             disabled={blocked !== null}
             onChange={(event) => setTitle(event.target.value)}
           />
@@ -678,7 +678,7 @@ function KnowledgeRow({
     { known: row.minerals, icon: Gem, label: 'seams' },
   ]
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 px-2 py-1.5'>
+    <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 px-2 py-1.5'>
       <div className='min-w-32 flex-1 truncate'>
         <Name item={{ id: row.polity_id, name: row.polity_name }} />
       </div>

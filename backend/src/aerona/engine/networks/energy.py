@@ -16,12 +16,12 @@ CARRIER_ENERGY = total(
     NetworkCarrier,
     {
         NetworkCarrier.RELAY: EnergyKind.MUSCLE,
-        NetworkCarrier.WIRED: EnergyKind.HEAT,
-        NetworkCarrier.BROADCAST: EnergyKind.HEAT,
-        NetworkCarrier.MESH: EnergyKind.HEAT,
+        NetworkCarrier.WIRED: EnergyKind.ELECTRIC,
+        NetworkCarrier.BROADCAST: EnergyKind.ELECTRIC,
+        NetworkCarrier.MESH: EnergyKind.ELECTRIC,
         NetworkCarrier.MIND_LINK: EnergyKind.MAGIC,
         NetworkCarrier.RITE_LINK: EnergyKind.MAGIC,
-        NetworkCarrier.GROWN_LINK: EnergyKind.MUSCLE,
+        NetworkCarrier.GROWN_LINK: EnergyKind.FEED,
     },
 )
 

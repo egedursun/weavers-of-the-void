@@ -25,12 +25,12 @@ LINEAGE_MECHANICS: tuple[Mechanic, ...] = (
         tools=("shape_blood",),
         targets=("mortal", "people", "house"),
         couplings=(
-            Coupling(S.DEMOGRAPHY, "fertile or barren blood moves the chance of children", E.MODIFIER, "genetics.fertility_pct"),
-            Coupling(S.BODY, "long-lived, brief-lived and cursed blood lengthen or shorten a life", E.MODIFIER, "genetics.longevity_pct"),
-            Coupling(S.BODY, "hardy or frail blood moves the chance of catching a sickness", E.MODIFIER, "genetics.disease_pct"),
-            Coupling(S.MIND, "blood prone to madness breaks a mind sooner under strain", E.MODIFIER, "genetics.madness_pct"),
+            Coupling(S.DEMOGRAPHY, "fertile or barren lines move the chance of children", E.MODIFIER, "genetics.fertility_pct"),
+            Coupling(S.BODY, "long-lived, brief-lived and cursed lines lengthen or shorten a life", E.MODIFIER, "genetics.longevity_pct"),
+            Coupling(S.BODY, "hardy or frail lines move the chance of catching a sickness", E.MODIFIER, "genetics.disease_pct"),
+            Coupling(S.MIND, "a line prone to madness breaks a mind sooner under strain", E.MODIFIER, "genetics.madness_pct"),
             Coupling(S.SOCIAL, "beauty, read by the people's tastes in looks, feeds presence", E.MODIFIER, "genetics.presence_beauty_pct"),
-            Coupling(S.POLITY, "a house is known by the look most of its blood shares, and houses weigh kin matches by their ethics", E.TRIGGER),
+            Coupling(S.POLITY, "a house is known by the look most of its line shares, and houses weigh kin matches by their ethics", E.TRIGGER),
             Coupling(S.CULTURE, "portraits keep the same face, drawn from the looks, scars and marks of afflictions", E.FLOW),
         ),
     ),
@@ -38,7 +38,7 @@ LINEAGE_MECHANICS: tuple[Mechanic, ...] = (
         key="magical_gift",
         spec_item="F26/RP8",
         title=(
-            "Aptitude for each form of magic is carried in the blood; peoples read the gift by their ethics and law, "
+            "Aptitude for each form of magic is inherited; peoples read the gift by their ethics and law, "
             "persecution thins it, natural laws move it and mage orders test children"
         ),
         subsystem=S.MAGIC,

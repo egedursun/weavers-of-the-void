@@ -95,7 +95,7 @@ export function MapNoteOverlay({
     <div
       role='dialog'
       aria-label={popup.kind === 'new' ? 'New note' : 'Your note'}
-      className='absolute flex max-h-full w-72 max-w-full min-w-0 flex-col gap-3 overflow-y-auto rounded-lg border bg-popover p-3 text-popover-foreground shadow-lg'
+      className='absolute flex max-h-full w-72 max-w-full min-w-0 flex-col gap-3 overflow-y-auto rounded-md border surface-framed border-gild/70 bg-card p-3 text-popover-foreground shadow-lg'
       style={{ left, ...place }}
     >
       <div className='flex min-w-0 items-center gap-2'>

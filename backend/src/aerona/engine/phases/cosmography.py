@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.db.tables.celestial import StarRow
 from aerona.db.write_guard import held
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.aspects import seed_aspects_once
 from aerona.engine.cosmos.beings import being_cycles
 from aerona.engine.cosmos.climate import regional_climate
 from aerona.engine.cosmos.commerce import cosmic_trade
@@ -13,7 +14,7 @@ from aerona.engine.cosmos.ladder import ensure_ladder, place_free_worlds, settle
 from aerona.engine.cosmos.omens import celestial_omens
 from aerona.engine.cosmos.phenomena import phenomena_cycles
 from aerona.engine.cosmos.placement import Cosmography
-from aerona.engine.cosmos.rifts import rift_cycles
+from aerona.engine.cosmos.rift_control import rifts_and_control
 from aerona.engine.cosmos.starlife import star_lives
 from aerona.engine.cosmos.strata import host_strata_once
 from aerona.engine.cosmos.worldlife import regional_leak, world_lives
@@ -22,10 +23,19 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases import physics
 
 
-@reads("table.afterlife_strata", "table.applied_fixups", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.name_registry")
+@reads(
+    "table.afterlife_strata",
+    "table.applied_fixups",
+    "table.cosmos",
+    "table.dimension_aspects",
+    "table.dimensional_events",
+    "table.galactic_structures",
+    "table.name_registry",
+)
 @writes(
     "table.afterlife_strata",
     "table.applied_fixups",
+    "table.dimension_aspects",
     "table.dimensions",
     "table.galactic_structures",
     "table.galaxies",
@@ -37,6 +47,7 @@ async def scale_ladder(ctx: TickContext) -> None:
     ctx.count("stars_placed", await ensure_ladder(ctx.session, ctx.rules))
     ctx.count("free_worlds_placed", await place_free_worlds(ctx.session))
     ctx.count("strata_hosted", await host_strata_once(ctx.session))
+    ctx.count("aspects_seeded", await seed_aspects_once(ctx.session, ctx.rules))
     cosmography = await Cosmography.load(ctx.session)
     for star in await ctx.session.scalars(select(StarRow).order_by(StarRow.id)):
         if not held(star.id):
@@ -90,7 +101,7 @@ PHASES = (
     Phase("star_lives", star_lives),
     *physics.LATE,
     Phase("dimension_cycles", dimension_cycles),
-    Phase("rift_cycles", rift_cycles),
+    Phase("rift_cycles", rifts_and_control),
     Phase("cosmic_beings", being_cycles),
     Phase("phenomena", phenomena_cycles),
     Phase("regional_leak", leak_by_region),

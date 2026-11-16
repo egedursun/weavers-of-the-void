@@ -155,10 +155,10 @@ function GoalCard({
       data-scenario={scenario.key}
       data-status={running ? 'running' : (last?.status ?? 'open')}
       className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-xl border p-4',
+        'flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4',
         running && 'border-info/40 bg-info/5',
         !running && completed > 0 && 'border-success/40 bg-success/5',
-        !running && completed === 0 && 'bg-background'
+        !running && completed === 0 && 'bg-card'
       )}
     >
       <div className='flex min-w-0 items-start gap-3'>

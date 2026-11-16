@@ -246,7 +246,7 @@ export function SonSiblings({
           itemKey={(sibling) => sibling.son.id}
         >
           {(sibling) => (
-            <li className='grid min-w-0 grid-cols-1 items-center gap-2 rounded-lg border bg-card p-2.5 sm:grid-cols-3'>
+            <li className='grid min-w-0 grid-cols-1 items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5 sm:grid-cols-3'>
               <div className='flex min-w-0 items-center gap-2'>
                 <Portrait
                   name={sibling.son.name}

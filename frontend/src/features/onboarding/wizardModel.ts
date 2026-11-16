@@ -14,6 +14,7 @@ import {
   type Rarity,
   type AgeCycle,
   type StorytellerProfile,
+  type TechFamily,
   type TechnologyEra,
   type WizardTemplate,
   type WorldAge,
@@ -46,6 +47,7 @@ export type WizardDraft = {
   magic: number
   danger: number
   technology: TechnologyEra
+  technologyLevels: Partial<Record<TechFamily, number>>
   language: LanguageTexture
   cosmos: CosmosSize
   shape: CosmosShape
@@ -83,6 +85,7 @@ export function initialDraft(defaults: WizardDefaults): WizardDraft {
     magic: defaults.magic,
     danger: defaults.danger,
     technology: 'iron',
+    technologyLevels: {},
     language: 'free',
     cosmos: 'single',
     shape: 'one_sun',
@@ -129,6 +132,7 @@ export function applyTemplate(
     magic: template.magic,
     danger: template.danger,
     technology: template.technology,
+    technologyLevels: {},
     language: template.language,
     cosmos: template.cosmos,
     shape: template.shape,
@@ -246,6 +250,7 @@ export function toRequest(
       magic: draft.magic,
       danger: draft.danger,
       technology: draft.technology,
+      technology_levels: draft.technologyLevels,
       language: draft.language,
       cosmos: draft.cosmos,
       shape: effectiveShape(draft),

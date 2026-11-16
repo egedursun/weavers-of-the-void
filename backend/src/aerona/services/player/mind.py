@@ -31,6 +31,7 @@ from aerona.domain.enums.folkways import IdeaStrain
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import (
     Attribute,
+    CareerChange,
     Facet,
     IdeaKind,
     IdeaSource,
@@ -41,6 +42,7 @@ from aerona.domain.enums.mind import (
     PressureKind,
     SkillKind,
     SkillSource,
+    ThoughtKind,
     TraitKind,
     TraitSource,
     ValueAxis,
@@ -63,8 +65,8 @@ from aerona.engine.mind.book import (
 )
 from aerona.engine.mind.ideas import Encounter, internalise, reject, take_up
 from aerona.engine.mind.memories import remember
-from aerona.engine.mind.needs import NEED_LOCK
-from aerona.engine.mind.skills import ROLE_LOCK
+from aerona.engine.mind.needs import NEED_LOCK, role_status
+from aerona.engine.mind.skills import ROLE_LOCK, CareerMove
 from aerona.engine.mind.split import (
     ATTRIBUTE_LOCK,
     FACET_LOCK,
@@ -78,7 +80,9 @@ from aerona.engine.mind.split import (
     store_attributes,
     write_facets,
 )
+from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.values import VALUE_LOCK
+from aerona.engine.notes import note
 from aerona.engine.services.community_relations import refresh_relation
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -409,8 +413,15 @@ async def set_role(scope: PlayerScope, command: SetRole) -> Effect:
     node = await holder_of(scope, command.node_id)
     if not isinstance(node, EntityRow) or node.entity_type is not EntityType.MORTAL:
         raise ValidationFailedError("Only mortals follow a calling.")
+    move = CareerMove(node.mortal_role or MortalRole.COMMONER, command.role, CareerChange.PLAYER)
     node.mortal_role = command.role
     await hold(scope, node, ROLE_LOCK, command.lock)
+    if move.old is not move.new:
+        ctx = await scope.context("mind_role")
+        rose = role_status(scope.rules, move.new) >= role_status(scope.rules, move.old)
+        await think(scope.session, scope.rules, node.id, ThoughtKind.ROSE_IN_RANK if rose else ThoughtKind.FELL_IN_RANK, ctx.epoch)
+        text = f"By a god's hand {node.name} left the life of {an(label(move.old.value))} to become {an(label(move.new.value))}."
+        await note(ctx, text, key=f"skill.career_{move.reason.value}", ids=[node.id])
     return Effect(f"{node.name} is now {an(label(command.role.value))}.", target_node_id=node.id)
 
 

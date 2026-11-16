@@ -141,7 +141,7 @@ function ColumnRow({
       </div>
     )
   return (
-    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-background p-2'>
+    <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <div className='flex min-w-0 flex-1 flex-col'>
         <Text weight='medium' truncate>
           {humanize(column.name)}
@@ -197,7 +197,7 @@ function TableCard({
     (column) => column.held || column.pinned
   ).length
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/10 p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={Table2} tone='verdigris' size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>

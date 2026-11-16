@@ -15,7 +15,7 @@ from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.eras import EraChannel, ProgrammeStage
+from aerona.domain.enums.eras import EraChannel, ProgrammeStage, TechFamily
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import TechnologyEra
 from aerona.engine.belonging.values import own_people
@@ -115,6 +115,12 @@ async def world_start(session: AsyncSession) -> TechnologyEra:
     cosmos = await CosmosRepository(session).get()
     settings = cosmos.genesis_settings if cosmos is not None else None
     return settings.technology if settings is not None else TechnologyEra.IRON
+
+
+async def chosen_levels(session: AsyncSession) -> dict[TechFamily, int]:
+    cosmos = await CosmosRepository(session).get()
+    settings = cosmos.genesis_settings if cosmos is not None else None
+    return dict(settings.technology_levels) if settings is not None else {}
 
 
 def era_of(known: Iterable[Technique], floor: TechnologyEra = TechnologyEra.STONE) -> TechnologyEra:

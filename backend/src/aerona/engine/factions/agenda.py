@@ -76,7 +76,7 @@ GOAL_PLANS: dict[FactionKind, tuple[FactionGoalKind, ...]] = {
     FactionKind.REBELS: (G.INDEPENDENCE, G.INSTALL_CLAIMANT),
     FactionKind.BANDITS: (G.LOOT,),
     FactionKind.PIRATES: (G.LOOT,),
-    FactionKind.VOID_PIRATES: (G.LOOT,),
+    FactionKind.ROUTE_RAIDERS: (G.LOOT,),
     FactionKind.SOCIAL_CIRCLE: (),
     FactionKind.ASSASSINS: (G.INSTALL_CLAIMANT, G.LOOT),
     FactionKind.SCHOLARS_ACADEMY: (G.ENACT_LAW, G.PROTECT_CRAFT),

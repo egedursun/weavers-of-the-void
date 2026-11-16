@@ -1,3 +1,5 @@
+from collections.abc import Callable, Mapping
+
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
@@ -7,16 +9,18 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.living import GeneBankRow, GeneBankSampleRow, LivingLineRow, SymbiontRow
+from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.living import HostPlacement, HostRelation
-from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mind import MemoryKind, SkillSource
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
+from aerona.engine.mind.book import set_skill
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import present_among
@@ -25,8 +29,18 @@ from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.services.community_relations import change_relation
+from aerona.rules.registry.living import SymbiontRules
 
 CLONE_POWER = 1
+HOST_HEALTH: Mapping[HostRelation, Callable[[SymbiontRules], int]] = total(
+    HostRelation,
+    {
+        HostRelation.MUTUAL: lambda table: table.mutual_gain,
+        HostRelation.COMMENSAL: lambda _table: 0,
+        HostRelation.PARASITIC: lambda table: -table.parasite_harm,
+        HostRelation.CONTROLLING: lambda table: -table.parasite_harm,
+    },
+)
 DEPTH = total(HostPlacement, {HostPlacement.SKIN: 1, HostPlacement.BLOOD: 2, HostPlacement.ORGAN: 3, HostPlacement.NERVE: 4, HostPlacement.MIND: 5})
 
 
@@ -56,10 +70,7 @@ async def keep_banks(ctx: TickContext) -> int:
 
 async def host_effects(ctx: TickContext, row: SymbiontRow, host: EntityRow) -> None:
     table = ctx.rules.symbionts
-    if row.relation is HostRelation.MUTUAL:
-        shift_stat(host, "hp", table.mutual_gain, 0)
-    elif row.relation in {HostRelation.PARASITIC, HostRelation.CONTROLLING}:
-        shift_stat(host, "hp", -table.parasite_harm, 0)
+    shift_stat(host, "hp", HOST_HEALTH[row.relation](table), 0)
     if row.relation is HostRelation.CONTROLLING and row.mind_node_id is not None:
         await change_relation(ctx, host.id, row.mind_node_id, table.control_pull, MemoryKind.GOODWILL, note="steered by what lives within")
     if row.mind_node_id is not None:
@@ -165,6 +176,10 @@ async def clone(ctx: TickContext, source_id: int, maker_id: int | None, *, force
     genome = await ctx.session.get(GenomeRow, source.id)
     if genome is not None:
         ctx.session.add(GenomeRow(holder_node_id=copy.id, genes=dict(genome.genes), potential=dict(genome.potential), beauty=genome.beauty, epoch=ctx.epoch))
+    for skill in list(await ctx.session.scalars(select(SkillRow).where(SkillRow.holder_node_id == source.id, SkillRow.subject_node_id.is_(None)))):
+        born = skill.level * table.born_skill_pct // PERCENT
+        if born > 0:
+            await set_skill(ctx.session, copy.id, skill.skill, born, epoch=ctx.epoch, source=SkillSource.BIRTH)
     await connect(ctx.session, copy.id, source.id, BondKind.CLONE_OF, ctx.epoch, description="grown from this body")
     if maker_id is not None:
         await connect(ctx.session, maker_id, copy.id, BondKind.PRODUCED, ctx.epoch, description="grew this clone")

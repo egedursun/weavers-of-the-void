@@ -31,10 +31,11 @@ import {
   EmptyState,
   EntityLink,
   IconStat,
+  LoadingBlock,
   Medallion,
   MiniStat,
+  Paged,
   PagedList,
-  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import {
@@ -190,7 +191,7 @@ function CurrencyCard({
   )
   const debased = currency.debased_epoch !== null
   return (
-    <li className='@container/coin flex h-full min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'>
+    <li className='@container/coin flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={Coins} tone={debased ? 'danger' : 'gold'} />
         <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
@@ -402,7 +403,7 @@ export function CoinForge({
         <TextField
           label='Coin name'
           value={name}
-          placeholder='Silver Crowns'
+          placeholder='The name of the coin'
           onChange={setName}
         />
         <ChoiceSelect
@@ -467,13 +468,15 @@ export function CurrencyCards({ worldId }: { worldId: number | null }) {
           data-surface='CurrencyCards'
           className='grid min-w-0 grid-cols-1 gap-3 @3xl/eco:grid-cols-2'
         >
-          {view.data.map((currency) => (
-            <CurrencyCard
-              key={`${currency.id}-${currency.held}-${currency.name}-${currency.metal}`}
-              currency={currency}
-              worldId={worldId}
-            />
-          ))}
+          <Paged items={view.data} as='li'>
+            {(currency) => (
+              <CurrencyCard
+                key={`${currency.id}-${currency.held}-${currency.name}-${currency.metal}`}
+                currency={currency}
+                worldId={worldId}
+              />
+            )}
+          </Paged>
         </ul>
       )}
     </div>
@@ -564,7 +567,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
   return (
     <li
       data-loan={loan.id}
-      className='@container/loan flex h-full min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'
+      className='@container/loan flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={Landmark} tone={status.tone} size='sm' />
@@ -854,7 +857,7 @@ function DebtCard({
   const remedy = debt.remedy ? DEBT_REMEDY[debt.remedy] : null
   const what = debt.currency_name ?? plainWords(debt.what)
   return (
-    <li className='flex h-full min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <li className='flex h-full min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={Scale} tone='warning' size='sm' />
       <div className='flex min-w-0 flex-1 flex-col gap-1'>
         <Parties
@@ -924,7 +927,7 @@ function DebtLawCard({ law }: { law: DebtLaw }) {
   return (
     <li
       data-law={law.law_id}
-      className='@container/law flex h-full min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'
+      className='@container/law flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={spec.icon} tone={spec.tone} />
@@ -1113,12 +1116,14 @@ export function DebtLaws() {
         />
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-3 @2xl/eco:grid-cols-2'>
-          {view.data.map((law) => (
-            <DebtLawCard
-              key={`${law.law_id}-${law.remedy}-${law.jubilee_epochs}`}
-              law={law}
-            />
-          ))}
+          <Paged items={view.data} as='li'>
+            {(law) => (
+              <DebtLawCard
+                key={`${law.law_id}-${law.remedy}-${law.jubilee_epochs}`}
+                law={law}
+              />
+            )}
+          </Paged>
         </ul>
       )}
     </div>

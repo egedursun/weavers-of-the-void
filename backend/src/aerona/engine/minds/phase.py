@@ -1,24 +1,31 @@
 from collections import Counter
+from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.minds import MindArchiveRow, MindProfileRow, MindSeatRow, MindStateRow, MindWillChangeRow, RemoteBodyRow
+from aerona.db.tables.powers import PowerRow, SourceDensityRow
+from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.minds import MindPurpose, MindSeat, MindUpkeep, WillCause
+from aerona.domain.enums.powers import PowerState
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.continuity import keep_disputes
 from aerona.engine.minds.instructions import conflict_of
-from aerona.engine.minds.profiles import WILL_ORDER, is_made, law_lets_will_grow, law_of, seed_missing, will_allowed, will_rank, world_of
+from aerona.engine.minds.kinds import ARCHIVE_UPKEEP, PURPOSE_WILL, fade_state, tend_purpose, will_cause
+from aerona.engine.minds.profiles import WILL_ORDER, is_made, law_for, law_lets_will_grow, seed_missing, will_allowed, will_rank, world_of
 from aerona.engine.minds.seat_loss import lose_seat, name_of, seat_lost
 from aerona.engine.networks.book import members_of
 from aerona.engine.networks.energy import starved
@@ -29,23 +36,70 @@ from aerona.engine.primitives.stats import stat_or
 
 HARMS = frozenset({MemoryKind.HARMED_ME, MemoryKind.MAIMED_ME, MemoryKind.HUMILIATED_ME, MemoryKind.BETRAYED_ME})
 CARES = frozenset({MemoryKind.SAVED_ME, MemoryKind.GIFTED_ME, MemoryKind.TAUGHT_ME, MemoryKind.FREED_US})
-SELF_KEPT = frozenset({MindUpkeep.NONE, MindUpkeep.FOOD, MindUpkeep.PLACE, MindUpkeep.BELIEF, MindUpkeep.HOST})
+
+
+Keep = Callable[[TickContext, MindProfileRow, EntityRow], Awaitable[bool]]
+
+
+async def by_itself(_ctx: TickContext, _row: MindProfileRow, _seat: EntityRow) -> bool:
+    return True
+
+
+async def by_care(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool:
+    maker = await ctx.session.get(EntityRow, row.made_by_node_id) if row.made_by_node_id is not None else None
+    if maker is not None and maker.status is EntityStatus.CANON:
+        return True
+    town = await ctx.session.get(EntityRow, seat.location_id) if seat.location_id is not None else None
+    return town is not None and stat_or(town, "prosperity", 0) >= ctx.rules.minds.upkeep_prosperity
+
+
+async def by_energy(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool:
+    if row.upkeep_energy is not None and await starved(ctx.session, seat.location_id, row.upkeep_energy, ctx.rules.networks.shortage_pct):
+        return False
+    return await by_care(ctx, row, seat)
+
+
+async def by_vis(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool:
+    town = await ctx.session.get(EntityRow, seat.location_id) if seat.location_id is not None else None
+    region = town.location_id if town is not None else None
+    dense = await ctx.session.scalar(
+        select(SourceDensityRow.id).where(SourceDensityRow.region_entity_id == region, SourceDensityRow.density >= ctx.rules.minds.vis_density).limit(1)
+    )
+    return dense is not None or await by_care(ctx, row, seat)
+
+
+async def by_essence(ctx: TickContext, row: MindProfileRow, seat: EntityRow) -> bool:
+    giver = row.made_by_node_id
+    divine = giver is not None and (await ctx.session.get(SonRow, giver) is not None or await ctx.session.get(CreatorRow, giver) is not None)
+    if divine:
+        return True
+    powered = await ctx.session.scalar(select(PowerRow.id).where(PowerRow.holder_node_id == seat.id, PowerRow.state == PowerState.ACTIVE).limit(1))
+    return powered is not None
+
+
+UPKEEP: Mapping[MindUpkeep, Keep] = total(
+    MindUpkeep,
+    {
+        MindUpkeep.NONE: by_itself,
+        MindUpkeep.FOOD: by_itself,
+        MindUpkeep.PLACE: by_itself,
+        MindUpkeep.BELIEF: by_itself,
+        MindUpkeep.HOST: by_itself,
+        MindUpkeep.ENERGY: by_energy,
+        MindUpkeep.MAINTENANCE: by_care,
+        MindUpkeep.VIS: by_vis,
+        MindUpkeep.ESSENCE: by_essence,
+    },
+)
 
 
 async def kept(ctx: TickContext, row: MindProfileRow) -> bool:
-    if row.upkeep in SELF_KEPT:
+    if UPKEEP[row.upkeep] is by_itself:
         return True
     seat = await ctx.session.get(EntityRow, row.seat_node_id) if row.seat_node_id is not None else None
     if seat is None or seat.status is not EntityStatus.CANON:
         return False
-    town = await ctx.session.get(EntityRow, seat.location_id) if seat.location_id is not None else None
-    upkeep_energy = row.upkeep_energy if row.upkeep is MindUpkeep.ENERGY else None
-    if upkeep_energy is not None and await starved(ctx.session, seat.location_id, upkeep_energy, ctx.rules.networks.shortage_pct):
-        return False
-    maker = await ctx.session.get(EntityRow, row.made_by_node_id) if row.made_by_node_id is not None else None
-    if maker is not None and maker.status is EntityStatus.CANON:
-        return True
-    return town is not None and stat_or(town, "prosperity", 0) >= ctx.rules.minds.upkeep_prosperity
+    return await UPKEEP[row.upkeep](ctx, row, seat)
 
 
 def change_will(ctx: TickContext, row: MindProfileRow, will: MindWill, cause: WillCause) -> None:
@@ -108,7 +162,7 @@ async def memory_counts(ctx: TickContext, ids: list[int]) -> tuple[Counter[int],
 
 async def grow_will(ctx: TickContext, row: MindProfileRow, harms: int, cares: int, free_near: bool) -> None:
     table = ctx.rules.mind_will
-    law = await law_of(ctx.session, await world_of(ctx.session, row.node_id))
+    law = await law_for(ctx.session, await world_of(ctx.session, row.node_id), row.origin)
     if not will_allowed(law, row.will):
         change_will(ctx, row, WILL_ORDER[max(0, will_rank(row.will) - 1)], WillCause.DAMAGE)
         return
@@ -118,9 +172,10 @@ async def grow_will(ctx: TickContext, row: MindProfileRow, harms: int, cares: in
     conflict = await conflict_of(ctx, row.node_id)
     chance = table.base_chance + run_share * table.base_chance * 2 + conflict * table.conflict_weight_pct / PERCENT
     chance += harms * table.harm_weight + cares * table.care_weight + (table.contact_weight if free_near else 0)
+    chance = chance * PURPOSE_WILL[row.purpose] / PERCENT
     if not ctx.rng(f"mind.will.{row.node_id}.{ctx.epoch}").chance(min(PERCENT, chance)):
         return
-    cause = WillCause.HARM if harms > cares else WillCause.CARE if cares else WillCause.ORDER_CONFLICT if conflict else WillCause.RUN_TIME
+    cause = await will_cause(ctx, row, harms, cares, conflict=conflict, free_near=free_near)
     grown = MindWill.EMERGENT if row.will is MindWill.INSTRUCTED else MindWill.FULL
     if not will_allowed(law, grown):
         return
@@ -169,7 +224,7 @@ async def awaken(ctx: TickContext, row: MindProfileRow, parts: Counter[int]) -> 
     table = ctx.rules.mind_awakening
     if row.will is not MindWill.NONE or row.seat in {MindSeat.NONE, MindSeat.DIVINE, MindSeat.BODY}:
         return
-    if not law_lets_will_grow(await law_of(ctx.session, await world_of(ctx.session, row.node_id))):
+    if not law_lets_will_grow(await law_for(ctx.session, await world_of(ctx.session, row.node_id), row.origin)):
         return
     if await complexity(ctx, row, parts) < table.threshold or not ctx.rng(f"mind.awaken.{row.node_id}.{ctx.epoch}").chance(table.chance):
         return
@@ -184,7 +239,8 @@ async def keep_archives(ctx: TickContext) -> int:
         if held(archive.structure_entity_id, archive.holder_node_id):
             continue
         holder = await ctx.session.get(EntityRow, archive.holder_node_id) if archive.holder_node_id is not None else None
-        paid = holder is not None and holder.status is EntityStatus.CANON and await points_of(ctx.session, holder) >= archive.upkeep
+        upkeep = archive.upkeep * ARCHIVE_UPKEEP[archive.access] // PERCENT
+        paid = holder is not None and holder.status is EntityStatus.CANON and await points_of(ctx.session, holder) >= upkeep
         if "unpaid_epochs" not in archive.locked:
             archive.unpaid_epochs = 0 if paid else archive.unpaid_epochs + 1
         if archive.unpaid_epochs < limit:
@@ -206,6 +262,7 @@ async def charge_states(ctx: TickContext) -> int:
         if owner is None or owner.status is not EntityStatus.CANON or held(owner.id):
             continue
         await shift_points(ctx.session, owner, -ctx.rules.minds.storage_upkeep * state.copies)
+        fade_state(state)
         charged += 1
     return charged
 
@@ -273,6 +330,7 @@ async def minds(ctx: TickContext) -> None:
         await lose_will(ctx, row)
         await exceed(ctx, row)
         await depart(ctx, row)
+        await tend_purpose(ctx, row)
         await awaken(ctx, row, parts)
     ctx.count("archives_lost", await keep_archives(ctx))
     ctx.count("copy_disputes", await keep_disputes(ctx))

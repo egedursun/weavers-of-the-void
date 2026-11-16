@@ -29,6 +29,12 @@ class EnactmentRules:
 @dataclass(frozen=True)
 class TrialRules:
     witnesses: int = rule(3, 0, 20, P, "Witnesses an investigation hears for each crime")
+    arbitration_ease: int = rule(5, 0, 100, P, "Evidence an arbiter needs less than a judge to settle against the accused")
+    renown_sway_pct: int = rule(30, 0, 100, P, "Share of the accused's renown that sways an assembly to acquit (%)")
+    inquisition_stress: int = rule(15, 0, 100, P, "Stress an inquisition lays on the accused")
+    inquisition_bias: int = rule(15, 0, 100, P, "Evidence an inquisition presumes against the accused")
+    made_judge_precision: int = rule(5, 0, 100, P, "Evidence a made judge reads from the record beyond a mortal judge")
+    fitting_evidence: int = rule(8, 0, 100, P, "Evidence each found proof of a kind that fits the crime adds to a case")
     witness_reliability: int = rule(60, 0, 100, P, "Reliability of an unbiased witness")
     speak_pct: int = rule(60, 0, 100, P, "Chance an indifferent witness speaks against the culprit (%)")
     friend_at: int = rule(30, 0, 100, P, "Friendship at which a witness shields the accused")

@@ -27,7 +27,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.services.community_relations import change_relation
-from aerona.engine.tongues.grammar import compounds, misread_factor
+from aerona.engine.tongues.grammar import compounds, head_first, misread_factor
 from aerona.language.generator import NameKind
 
 TOKEN = re.compile(r"[^\W\d_]+", re.UNICODE)
@@ -103,7 +103,9 @@ async def coined(ctx: TickContext, language: EntityRow, token: str, entity: Enti
     compound = await compounds(ctx.session, language.id) and len(token) >= COMPOUND_LENGTH
     if compound and ctx.rng(f"name.compound.{entity.id}").chance(ctx.rules.grammar.compound_pct):
         half = len(token) // 2
-        return [await coin(ctx, language, token[:half], feature), await coin(ctx, language, token[half:], entity.entity_type.value.replace("_", " "))]
+        kind_word = entity.entity_type.value.replace("_", " ")
+        head, modifier = (token[:half], token[half:]) if await head_first(ctx.session, language.id) else (token[half:], token[:half])
+        return [await coin(ctx, language, modifier, feature), await coin(ctx, language, head, kind_word)]
     return [await coin(ctx, language, token, feature)]
 
 

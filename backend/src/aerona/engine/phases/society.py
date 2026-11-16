@@ -5,16 +5,13 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
-from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.polity import OathKind, RevoltKind
-from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
@@ -26,9 +23,9 @@ from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
 from aerona.engine.polity.oaths import break_on
-from aerona.engine.polity.revolts import REVOLT_AIMS, seed_aims
+from aerona.engine.polity.revolt_causes import revolt_kind
+from aerona.engine.polity.revolts import REVOLTS, seed_aims
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
@@ -71,26 +68,6 @@ def _just_law_present(book: CommunityBook, settlement: EntityRow, threshold: int
     return any(value >= threshold for value in book.justice_values(settlement.id))
 
 
-async def revolt_kind(ctx: TickContext, settlement: EntityRow) -> RevoltKind:
-    table = ctx.rules.revolts
-    society = await ctx.session.get(CommunitySocietyRow, settlement.id)
-    member = await ctx.session.scalar(select(PolityMemberRow).where(PolityMemberRow.member_entity_id == settlement.id).limit(1))
-    if society is not None and society.share(SocialClass.SERF_OR_SLAVE) >= table.slave_share_pct:
-        return RevoltKind.SLAVE
-    if member is not None and member.autonomy >= table.secession_autonomy:
-        return RevoltKind.SECESSION
-    if society is not None and society.share(SocialClass.NOBLE) > 0 and society.satisfaction(SocialClass.NOBLE) < table.noble_bitter:
-        return RevoltKind.NOBLE
-    profile = await ctx.session.get(PolityProfileRow, member.polity_entity_id) if member is not None else None
-    if profile is not None and profile.state_religion_id is not None:
-        patron = await living_patron(ctx.session, settlement)
-        cult = await ctx.session.get(EntityRow, profile.state_religion_id)
-        faith = await living_patron(ctx.session, cult) if cult is not None else None
-        if patron is not None and faith is not None and faith.id != patron.id:
-            return RevoltKind.RELIGIOUS
-    return RevoltKind.PEASANT
-
-
 async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityBook, entities: dict[int, EntityRow]) -> EntityRow:
     settings = ctx.rules.society
     rng = ctx.rng(f"rebels.{settlement.id}")
@@ -106,13 +83,13 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
                 wealth=clamp_int(settings.rebel_wealth_base + rng.die(settings.rebel_wealth_die), 0, PERCENT),
                 sway=clamp_int(settings.rebel_sway_base + rng.die(settings.rebel_sway_die), 0, PERCENT),
             ),
-            body=f"Poverty and crowding in {settlement.name} gave birth to an uprising.",
+            body=f"{REVOLTS[kind].text.capitalize()} in {settlement.name} gave birth to an uprising.",
             power=settings.rebel_power,
             world_id=settlement.world_id,
             location_id=settlement.id,
             subtype=REBELS_SUBTYPE if kind is RevoltKind.PEASANT else f"{kind.value} revolt",
             engine_kind=EngineKind.REBELS,
-            social_class=SocialClass.SERF_OR_SLAVE if kind is RevoltKind.SLAVE else SocialClass.NOBLE if kind is RevoltKind.NOBLE else None,
+            social_class=REVOLTS[kind].rising,
             affiliated_entity_id=settlement.id,
         ),
     )
@@ -125,9 +102,9 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
         )
     )
     await break_on(ctx, sworn, OathKind.FEALTY, f"{settlement.name} rose in revolt")
-    cause = WarCause.INDEPENDENCE if kind is RevoltKind.SECESSION else WarCause.UPRISING
+    cause = REVOLTS[kind].cause
     if await declare_war(ctx, rebels.id, target.id, f"{kind.value} revolt", cause=cause, world_cap=False):
-        await seed_aims(ctx, rebels.id, target.id, REVOLT_AIMS[kind])
+        await seed_aims(ctx, rebels.id, target.id, REVOLTS[kind].aims)
     language = await spoken_language(ctx.session, settlement.id)
     if language is not None:
         await BondRepository(ctx.session).connect(BondDraft(rebels.id, language.id, BondKind.SPEAKS, ctx.epoch, "the tongue of the city"))
@@ -154,6 +131,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "settlement.prosperity",
     "table.bonds",
     "table.ciphers",
+    "table.claims",
     "table.community_societies",
     "table.creator_taboos",
     "table.culture_ethics",
@@ -166,6 +144,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.holder_levels",
     "table.incident_participants",
     "table.memories",
+    "table.mind_profiles",
     "table.minds",
     "table.mortal_profiles",
     "table.name_registry",
@@ -175,14 +154,18 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
+    "table.polity_territories",
+    "table.power_registry",
     "table.pressures",
     "table.reputations",
     "table.secrets",
     "table.settlement_profiles",
     "table.signal_links",
+    "table.tax_policies",
     "table.tradition_profiles",
     "table.traits",
     "table.tributes",
+    "table.vassalages",
     "table.war_aims",
     "table.war_sides",
     "table.wars",
@@ -258,6 +241,7 @@ async def uprisings(ctx: TickContext) -> None:
     "table.people_culture",
     "table.people_reproduction",
     "table.purity",
+    "table.union_customs",
 )
 @writes(
     "table.bonds", "table.chronicle", "table.chronicle_entities", "table.entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents"
@@ -294,7 +278,7 @@ async def love_and_rivalry(ctx: TickContext) -> None:
                         war_cause=None if love else WarCause.RIVALRY,
                     )
                 )
-                text = f"Love blossomed between {first.name} and {second.name}." if love else f"A rivalry began between {first.name} and {second.name}."
+                text = f"Love grew between {first.name} and {second.name}." if love else f"A rivalry began between {first.name} and {second.name}."
                 await note(ctx, text, key="society.love" if love else "society.rivalry", ids=[first.id, second.id], kind=ChronicleKind.LINEAGE)
                 formed += 1
     ctx.count("pairs", formed)

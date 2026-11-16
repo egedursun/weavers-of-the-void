@@ -4,7 +4,7 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { PagedList } from '@/components/domain'
+import { Paged, PagedList } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
 
@@ -92,7 +92,7 @@ export function MapStackOverlay({
       role='dialog'
       aria-label={popup.title}
       data-map-stack
-      className='absolute flex w-84 max-w-full min-w-0 flex-col gap-3 overflow-hidden rounded-lg border bg-popover p-3 text-popover-foreground shadow-lg'
+      className='absolute flex w-84 max-w-full min-w-0 flex-col gap-3 overflow-hidden rounded-md border surface-framed border-gild/70 bg-card p-3 text-popover-foreground shadow-lg'
       style={{ left, top, maxHeight }}
     >
       <div className='flex min-w-0 items-start gap-2'>
@@ -141,44 +141,46 @@ export function MapStackOverlay({
       )}
       <div className='flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain'>
         {sections.length === 0 && <Muted>Nothing here matches.</Muted>}
-        {sections.map((section) => (
-          <div key={section.title} className='flex min-w-0 flex-col gap-1.5'>
-            <Label variant='overline'>{`${section.title} · ${section.items.length.toLocaleString('en-US')}`}</Label>
-            <PagedList
-              items={section.items}
-              initial={INITIAL}
-              step={STEP}
-              noun={['record', 'records']}
-              className='flex min-w-0 flex-col gap-0.5'
-              itemKey={(item) => item.id}
-            >
-              {(item) => (
-                <li className='min-w-0'>
-                  <Button
-                    variant='ghost'
-                    size='tile'
-                    onClick={() => onOpen(item.id)}
-                  >
-                    <NodeAvatar id={item.id} name={item.name} />
-                    <span className='flex min-w-0 flex-1 flex-col'>
-                      <Text as='span' weight='medium' truncate>
-                        {item.name}
-                      </Text>
-                      <Muted as='span' variant='caption' truncate={2}>
-                        {item.detail}
-                      </Muted>
-                    </span>
-                    {item.dead && (
-                      <Badge size='sm' variant='secondary'>
-                        Fallen
-                      </Badge>
-                    )}
-                  </Button>
-                </li>
-              )}
-            </PagedList>
-          </div>
-        ))}
+        <Paged items={sections}>
+          {(section) => (
+            <div key={section.title} className='flex min-w-0 flex-col gap-1.5'>
+              <Label variant='overline'>{`${section.title} · ${section.items.length.toLocaleString('en-US')}`}</Label>
+              <PagedList
+                items={section.items}
+                initial={INITIAL}
+                step={STEP}
+                noun={['record', 'records']}
+                className='flex min-w-0 flex-col gap-0.5'
+                itemKey={(item) => item.id}
+              >
+                {(item) => (
+                  <li className='min-w-0'>
+                    <Button
+                      variant='ghost'
+                      size='tile'
+                      onClick={() => onOpen(item.id)}
+                    >
+                      <NodeAvatar id={item.id} name={item.name} />
+                      <span className='flex min-w-0 flex-1 flex-col'>
+                        <Text as='span' weight='medium' truncate>
+                          {item.name}
+                        </Text>
+                        <Muted as='span' variant='caption' truncate={2}>
+                          {item.detail}
+                        </Muted>
+                      </span>
+                      {item.dead && (
+                        <Badge size='sm' variant='secondary'>
+                          Fallen
+                        </Badge>
+                      )}
+                    </Button>
+                  </li>
+                )}
+              </PagedList>
+            </div>
+          )}
+        </Paged>
       </div>
     </div>
   )

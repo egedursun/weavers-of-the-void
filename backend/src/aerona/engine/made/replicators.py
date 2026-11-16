@@ -1,9 +1,11 @@
 from collections import defaultdict
+from collections.abc import Mapping
 
 from sqlalchemy import select
 
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import ReplicatorLineRow, ReplicatorPresenceRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -17,7 +19,7 @@ from aerona.domain.models.entity_stats import PhenomenonStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.minds.profiles import law_lets_will_grow, law_of, profile_of
+from aerona.engine.minds.profiles import law_for, law_lets_will_grow, profile_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
@@ -49,6 +51,12 @@ async def towns_by_region(ctx: TickContext, atlas: RegionAtlas) -> dict[int, lis
         if region is not None:
             found[region].append(town)
     return found
+
+
+SCALE_REACH: Mapping[ReplicatorScale, int] = total(
+    ReplicatorScale,
+    {ReplicatorScale.MINUTE: 3, ReplicatorScale.MACHINE: 1, ReplicatorScale.WORKS: 1, ReplicatorScale.VESSEL: 1},
+)
 
 
 async def feed(ctx: TickContext, line: ReplicatorLineRow, towns: list[EntityRow], wanted: int) -> int:
@@ -106,15 +114,17 @@ async def spread(
             line.owner_node_id = None
         await note(ctx, f"{line.name} crossed to another world and slipped its makers' hands.", key="replicator.voyage", ids=[far])
         return 1
+    share = presence.mass // (4 * max(1, SCALE_REACH[line.scale]))
     for region in atlas.neighbours(presence.place_node_id):
+        if seeded >= SCALE_REACH[line.scale] or share <= 0:
+            break
         if region in here or held(region):
             continue
-        ctx.session.add(ReplicatorPresenceRow(line_id=line.id, place_node_id=region, mass=presence.mass // 4, growth=presence.growth, locked=[]))
+        ctx.session.add(ReplicatorPresenceRow(line_id=line.id, place_node_id=region, mass=share, growth=presence.growth, locked=[]))
         here.add(region)
         seeded += 1
-        break
     if seeded:
-        presence.mass -= presence.mass // 4
+        presence.mass -= share * seeded
         await note(ctx, f"{line.name} spread into a neighbouring land.", key="replicator.spread", ids=[presence.place_node_id])
     return seeded
 
@@ -165,7 +175,7 @@ async def wake_swarm(ctx: TickContext, line: ReplicatorLineRow, presences: list[
     if line.mind_node_id is not None or "mind_node_id" in line.locked or not presences or sum(row.mass for row in presences) < table.wake_mass:
         return None
     land = await ctx.session.get(EntityRow, presences[0].place_node_id)
-    if land is None or not law_lets_will_grow(await law_of(ctx.session, land.world_id)):
+    if land is None or not law_lets_will_grow(await law_for(ctx.session, land.world_id, MindOrigin.MADE)):
         return None
     rng = ctx.rng(f"replicator.wake.{line.id}.{ctx.epoch}")
     if not rng.chance(table.wake_chance):

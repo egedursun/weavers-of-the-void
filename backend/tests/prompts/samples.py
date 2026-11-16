@@ -9,7 +9,6 @@ from aerona.domain.enums.world import LoreLanguage
 from aerona.prompts.contexts import (
     agent,
     blocks,
-    chronicle,
     chronicler,
     cosmos,
     council,
@@ -1082,8 +1081,6 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
     P.ENTITY_STATE_REASON: lambda: agent.EntityStateContext(kind=agent.EntityStateKind.DEAD, id=12, name="Vesh Hollow", age=4),
     P.FIELD_ERROR: lambda: agent.FieldErrorContext(kind=agent.FieldErrorKind.TOO_BIG, field="power_level", limit=10, given="12"),
     P.PER_EPOCH_LIMIT: lambda: agent.PerEpochLimitContext(rule_path="son_tools.gift_per_epoch", value=1),
-    P.CREATOR_SIGN: lambda: chronicle.CreatorSignContext(kind=chronicle.SignKind.WRATH, variant=5, creator="Ul", place="Orrun", disaster="a flood"),
-    P.SENTIENT_DEMAND: lambda: chronicle.SentientDemandContext(resource="Tear Pearl", owner="Kael", demand_variant=7, paid=False, new_owner="Vor"),
 }
 
 

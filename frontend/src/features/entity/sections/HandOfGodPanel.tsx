@@ -6,6 +6,7 @@ import {
   Lightbulb,
   Moon,
   Send,
+  Wand2,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -15,6 +16,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog, FormRow, Section, Paged } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted } from '@/components/typography'
+import { ForgeCard } from '@/features/cosmography/parts'
+import { StepButton } from '@/features/cycles/parts'
+import { OBJECTS, VERBS } from '@/features/divinePowers/labels'
+import { why } from '@/features/dominion/model'
+import { ChoiceField } from '@/features/wars/military/parts'
 import { CostChip } from '../actions/ActionCard'
 import { type EntityContext, isThinking } from '../actions/context'
 import { fixedCost, useLoreGate } from '../actions/gate'
@@ -37,6 +43,9 @@ import {
 } from './handOfGod'
 
 type InterveneBody = components['schemas']['PostEntitiesEntityIdInterveneBody']
+const ACT_VERBS = Object.fromEntries(
+  Object.entries(VERBS).filter(([key]) => key !== 'curse')
+)
 
 export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
   const catalogue = useCatalogue()
@@ -45,6 +54,8 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
   const gate = useLoreGate()
   const [knowledge, setKnowledge] = useState<number | null>(null)
   const [dream, setDream] = useState('')
+  const [verb, setVerb] = useState<string>('bless')
+  const [verbObject, setVerbObject] = useState<string>('stat')
   const [pending, setPending] = useState<{
     kind: Intervention
     option?: string
@@ -88,16 +99,22 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
     if (kind === 'miracle')
       intervene.mutate({
         action: kind,
+        object: 'stat',
         miracle: option as InterveneBody['miracle'],
       })
     else if (kind === 'disaster')
       intervene.mutate({
         action: kind,
+        object: 'stat',
         disaster: option as InterveneBody['disaster'],
       })
     else if (kind === 'teach_knowledge' && knowledge !== null)
-      intervene.mutate({ action: kind, knowledge_id: knowledge })
-    else intervene.mutate({ action: kind })
+      intervene.mutate({
+        action: kind,
+        object: 'stat',
+        knowledge_id: knowledge,
+      })
+    else intervene.mutate({ action: kind, object: 'stat' })
   }
   const costText = (kind: Intervention) => {
     const amount = interventionCost(item?.cost, kind)
@@ -230,6 +247,45 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
             }
           </FormRow>
         )}
+      <ForgeCard
+        icon={Wand2}
+        tone='gold'
+        title='Act by a verb of divine power'
+        note={`Bless, heal, reveal, bind, erase or any other verb, upon the measure, minds, laws, works or goods of ${ctx.entity.name}.`}
+        columns={2}
+        action={
+          <StepButton
+            icon={Wand2}
+            label='Act'
+            variant='default'
+            busy={why(
+              gate.reason({ cost: interventionCost(item?.cost, 'miracle') }),
+              intervene.isPending
+            )}
+            onClick={() =>
+              intervene.mutate({
+                action: verb as InterveneBody['action'],
+                object: verbObject as InterveneBody['object'],
+              })
+            }
+          />
+        }
+      >
+        <ChoiceField
+          label='Verb'
+          value={verb}
+          table={ACT_VERBS}
+          blocked={null}
+          onPick={setVerb}
+        />
+        <ChoiceField
+          label='Upon'
+          value={verbObject}
+          table={OBJECTS}
+          blocked={null}
+          onPick={setVerbObject}
+        />
+      </ForgeCard>
       {thinking && (
         <div className='flex min-w-0 flex-col gap-2'>
           <div className='flex min-w-0 items-center gap-2'>

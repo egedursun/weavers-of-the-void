@@ -7,12 +7,10 @@ from aerona.domain.enums.ecology import (
     AwakeningTrigger,
     BeastTemper,
     Biochemistry,
-    BreathKind,
     Cultivation,
     Diet,
     DomesticationStage,
     FoodLink,
-    GazeKind,
     GrowthCycle,
     Habitat,
     HerdTraining,
@@ -308,9 +306,7 @@ class AnatomyView(ApiModel):
     tails: int
     skin: TissueMaterial
     bone: TissueMaterial
-    breath: BreathKind | None
     bite: PackageKind | None
-    gaze: GazeKind | None
     temperament: Temperament
     hoards: MaterialKind | None
     hates: Aversion | None

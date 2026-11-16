@@ -19,4 +19,4 @@ async def write_off(scope: PlayerScope, command: DebtTarget) -> Effect:
 @player_action("market:run", ActionKind.OTHER)
 async def run_now(scope: PlayerScope, command: Empty) -> Effect:
     await run_market(scope.session, scope.rules)
-    return Effect("The markets of the world opened: goods moved, debts came due and veins ran thin.")
+    return Effect("The markets of the world opened: goods moved, debts came due and deposits ran down.")

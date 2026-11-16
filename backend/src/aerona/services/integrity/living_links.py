@@ -64,6 +64,9 @@ async def mend_living_links(session: AsyncSession, rules: Rules, epoch: int) -> 
                 update(LivingProfileRow)
                 .where(LivingProfileRow.metabolism == Metabolism.FEEDING, LivingProfileRow.feed_commodity.is_(None))
                 .values(feed_commodity=CommodityKind.FODDER),
+                update(LivingProfileRow)
+                .where(LivingProfileRow.metabolism == Metabolism.CHEMICAL, LivingProfileRow.feed_commodity.is_(None))
+                .values(feed_commodity=CommodityKind.ORE),
                 update(LivingProfileRow).where(LivingProfileRow.line_id.is_not(None), LivingProfileRow.line_id.not_in(lines)).values(line_id=None),
                 delete(SymbiontRow).where(SymbiontRow.host_node_id.in_(bodiless)),
             ],

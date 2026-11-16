@@ -15,6 +15,8 @@ const SIZE_CLASS: Record<PortraitSize, string> = {
   xl: 'size-portrait-xl',
 }
 
+const COMPACT = new Set<PortraitSize>(['xs', 'sm'])
+
 const INITIALS_CLASS: Record<PortraitSize, string> = {
   xs: 'text-overline font-semibold',
   sm: 'text-caption font-semibold',
@@ -48,7 +50,9 @@ export function Portrait({
         SIZE_CLASS[size],
         rounded,
         'aspect-square bg-muted',
-        rarity && ['border-2 p-0.5', RARITY_BORDER_CLASS[rarity]]
+        rarity
+          ? ['border-2 p-0.5', RARITY_BORDER_CLASS[rarity]]
+          : 'gilded-portrait'
       )}
     >
       {src && !failed && (
@@ -63,14 +67,19 @@ export function Portrait({
         className={cn(
           rounded,
           'bg-muted text-muted-foreground select-none',
-          INITIALS_CLASS[size]
+          INITIALS_CLASS[size],
+          !rarity && !COMPACT.has(size) && 'font-display'
         )}
         aria-label={name}
       >
         {rarity ? (
           <Sigil seed={name} rarity={rarity} />
         ) : (
-          getDisplayNameInitials(name)
+          <span className='text-gilded'>
+            {COMPACT.has(size)
+              ? getDisplayNameInitials(name).slice(0, 1)
+              : getDisplayNameInitials(name)}
+          </span>
         )}
       </AvatarFallback>
     </Avatar>

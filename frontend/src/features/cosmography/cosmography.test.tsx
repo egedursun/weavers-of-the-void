@@ -275,7 +275,7 @@ describe('the heavens', () => {
           {
             id: 5,
             name: 'Grey Field',
-            kind: 'plain',
+            kind: 'common',
             population: 12,
             realm: { id: 88, kind: 'entity', name: 'Hall of Shades' },
           },

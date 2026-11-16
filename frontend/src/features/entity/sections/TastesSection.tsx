@@ -51,7 +51,7 @@ function TasteChip({
 }) {
   const loved = item.strength > 0
   return (
-    <div className='flex min-w-0 items-center gap-1 rounded-md border bg-muted/20 px-2 py-1'>
+    <div className='flex min-w-0 items-center gap-1 rounded-md border surface-well border-gild/20 bg-muted/60 px-2 py-1'>
       <Badge
         variant={loved ? 'default' : 'outline'}
       >{`${item.strength > 0 ? '+' : ''}${item.strength}`}</Badge>
@@ -114,7 +114,7 @@ function KindCard({
 }) {
   const spec = named(PREFERENCE_KINDS, kind)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-md border p-2'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={spec.icon} size='sm' tone={spec.tone} />
         <Label variant='overline'>{spec.label}</Label>

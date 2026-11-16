@@ -101,7 +101,7 @@ export function ShareWorld({ hasWorld, readOnly }: ShareWorldProps) {
       tone='info'
     >
       <div className='grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3'>
-        <div className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'>
+        <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
           <div className='flex min-w-0 items-center gap-3'>
             <Medallion icon={PackageOpen} tone='gold' size='sm' />
             <div className='flex min-w-0 flex-col'>
@@ -175,7 +175,7 @@ export function ShareWorld({ hasWorld, readOnly }: ShareWorldProps) {
           </Button>
         </div>
         <form
-          className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-4 xl:col-span-2'
+          className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4 xl:col-span-2'
           onSubmit={(event) => {
             event.preventDefault()
             if (!file) return

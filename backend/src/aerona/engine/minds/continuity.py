@@ -181,6 +181,8 @@ async def carry_soul(ctx: TickContext, source: MindProfileRow, copy: MindProfile
         source.souled, copy.souled = False, True
     if rule is SoulContinuity.NONE:
         source.souled = False
+    if rule is SoulContinuity.STAYS_WITH_BODY and source.seat is not MindSeat.BODY:
+        source.souled = False
 
 
 async def save_mind(ctx: TickContext, mind_id: int, holder_id: int | None, owner_id: int | None, medium: StateMedium, *, forced: bool = False) -> MindStateRow:

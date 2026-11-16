@@ -19,13 +19,14 @@ from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import take_coin
+from aerona.engine.economy.purse import coin_of, take_coin
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 from aerona.engine.phases.births import homeland_rule
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.naming import Namer, seed_of
+from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.services.community_relations import change_relation
@@ -109,7 +110,8 @@ async def grant(ctx: TickContext, war: WarRow, realm: EntityRow, tally: VeteranT
     martial = (await stored_values(ctx.session, ValueHolder.CULTURE, folk.id)).get(ValueAxis.MARTIAL, 0) if folk is not None else 0
     region = await frontier_of(ctx, war, realm.id) if martial >= table.land_martial_from and veterans >= table.colony_veterans else None
     colony = await found_colony(ctx, realm, region, veterans) if region is not None else None
-    kind = VeteranGrant.LAND if colony is not None else VeteranGrant.PENSION
+    afford = await coin_of(ctx.session, ctx.rules, realm) >= veterans * table.pension_cost
+    kind = VeteranGrant.LAND if colony is not None else VeteranGrant.PENSION if afford else VeteranGrant.NONE
     ctx.session.add(
         VeteranGrantRow(
             polity_entity_id=realm.id,
@@ -123,7 +125,7 @@ async def grant(ctx: TickContext, war: WarRow, realm: EntityRow, tally: VeteranT
     )
     tally.granted += 1
     tally.colonies += colony is not None
-    what = f"land in {region.name}" if colony is not None and region is not None else "pensions"
+    what = f"land in {region.name}" if colony is not None and region is not None else "pensions" if kind is VeteranGrant.PENSION else "nothing"
     await note(ctx, f"{realm.name} granted its veterans {what}.", key="veterans.granted", ids=[realm.id, *([colony.id] if colony is not None else [])])
 
 
@@ -188,8 +190,20 @@ async def band_veterans(ctx: TickContext, tally: VeteranTally) -> None:
         await note(ctx, f"The veterans of {town.name} banded into {faction.name}.", key="veterans.association", ids=[faction.id, town.id])
 
 
+async def bitter_veterans(ctx: TickContext, tally: VeteranTally) -> None:
+    table = ctx.rules.veterans
+    unpaid = select(VeteranGrantRow).where(VeteranGrantRow.kind == VeteranGrant.NONE, VeteranGrantRow.epoch > ctx.epoch - table.pension_years)
+    for row in list(await ctx.session.scalars(unpaid.order_by(VeteranGrantRow.id))):
+        for town_id in await members_of(ctx, row.polity_entity_id):
+            town = await ctx.session.get(SettlementProfileRow, town_id)
+            if town is not None and not held(town_id) and "unrest" not in town.locked:
+                town.unrest = clamp_percent(town.unrest + table.ungranted_unrest)
+        tally.unpaid += 1
+
+
 async def keep_veterans(ctx: TickContext, tally: VeteranTally) -> None:
     await grant_after_wars(ctx, tally)
     await pay_pensions(ctx, tally)
+    await bitter_veterans(ctx, tally)
     await band_veterans(ctx, tally)
     await ctx.session.flush()

@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './theme.css';
+@import './ornate.css';
+@import './chrome.css';
 
 @custom-variant dark (&:is(.dark *):not(.dark .light *));
 

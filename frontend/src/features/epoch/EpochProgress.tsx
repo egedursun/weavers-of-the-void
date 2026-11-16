@@ -17,7 +17,8 @@ export function EpochProgress({ framed = false }: EpochProgressProps) {
       data-feature='epoch-progress'
       className={cn(
         'flex min-w-0 flex-col gap-2',
-        framed && 'rounded-xl border bg-card p-5 text-card-foreground shadow-xs'
+        framed &&
+          'rounded-md border surface-framed border-gild/70 bg-card p-5 text-card-foreground'
       )}
     >
       <div className='flex min-w-0 items-center gap-2'>

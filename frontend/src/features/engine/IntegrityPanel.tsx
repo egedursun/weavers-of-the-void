@@ -3,7 +3,7 @@ import { Database, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ConfirmDialog, Medallion, Section } from '@/components/domain'
+import { ConfirmDialog, Medallion, Paged, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { type IntegrityTask, useIntegrityTasks, useRunIntegrity } from './api'
 
@@ -35,35 +35,37 @@ export function IntegrityPanel({ readOnlyReason }: IntegrityPanelProps) {
       {tasks.isError && <Text tone='destructive'>{tasks.error.message}</Text>}
       {tasks.data && (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {tasks.data.tasks.map((task) => (
-            <li
-              key={task.task}
-              data-integrity={task.task}
-              className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-background p-3'
-            >
-              <Medallion
-                icon={task.changes_world ? ShieldCheck : Database}
-                tone={task.changes_world ? 'warning' : 'info'}
-                size='sm'
-              />
-              <div className='flex min-w-0 flex-1 basis-60 flex-col gap-0.5'>
-                <Text weight='medium'>{task.title}</Text>
-                <Muted variant='caption'>{task.description}</Muted>
-              </div>
-              <Button
-                variant='outline'
-                size='sm'
-                disabled={run.isPending || readOnlyReason !== null}
-                disabledReason={readOnlyReason ?? 'Working'}
-                onClick={() =>
-                  task.changes_world ? setPending(task) : execute(task)
-                }
+          <Paged items={tasks.data.tasks} as='li'>
+            {(task) => (
+              <li
+                key={task.task}
+                data-integrity={task.task}
+                className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
               >
-                {task.changes_world ? <ShieldCheck /> : <Database />}
-                Run now
-              </Button>
-            </li>
-          ))}
+                <Medallion
+                  icon={task.changes_world ? ShieldCheck : Database}
+                  tone={task.changes_world ? 'warning' : 'info'}
+                  size='sm'
+                />
+                <div className='flex min-w-0 flex-1 basis-60 flex-col gap-0.5'>
+                  <Text weight='medium'>{task.title}</Text>
+                  <Muted variant='caption'>{task.description}</Muted>
+                </div>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={run.isPending || readOnlyReason !== null}
+                  disabledReason={readOnlyReason ?? 'Working'}
+                  onClick={() =>
+                    task.changes_world ? setPending(task) : execute(task)
+                  }
+                >
+                  {task.changes_world ? <ShieldCheck /> : <Database />}
+                  Run now
+                </Button>
+              </li>
+            )}
+          </Paged>
         </ul>
       )}
       <ConfirmDialog

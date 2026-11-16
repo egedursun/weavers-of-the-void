@@ -135,13 +135,13 @@ async def immunity(scope: PlayerScope, command: Immunity) -> Effect:
 @player_action("outbreak:end", ActionKind.OTHER)
 async def end_outbreak(scope: PlayerScope, command: OutbreakTarget) -> Effect:
     row = await control.end_outbreak(await scope.context("outbreak_end"), command.outbreak_id)
-    return Effect("The outbreak burned itself out.", row.region_entity_id)
+    return Effect("The outbreak ended on its own.", row.region_entity_id)
 
 
 @player_action("outbreak:edit", ActionKind.EDIT_RECORD)
 async def edit_outbreak(scope: PlayerScope, command: EditOutbreak) -> Effect:
     row = await control.edit_outbreak(await scope.context("outbreak_edit"), command.outbreak_id, command.values, release=command.release, hold=command.hold)
-    return Effect(f"The outbreak now rages at {row.severity}, {row.infected} sick and {row.dead} dead.", row.region_entity_id)
+    return Effect(f"The outbreak now stands at {row.severity}, {row.infected} sick and {row.dead} dead.", row.region_entity_id)
 
 
 @player_action("endemic:set", ActionKind.EDIT_RECORD)

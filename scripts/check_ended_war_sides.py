@@ -25,7 +25,12 @@ def reads_ended_wars(function: ast.AST) -> bool:
         if isinstance(node, ast.Compare) and ended_column(node.left):
             if not all(isinstance(comparator, ast.Constant) and comparator.value is None for comparator in node.comparators):
                 return True
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and ended_column(node.func.value) and node.func.attr in {"in_", "is_not", "isnot"}:
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and ended_column(node.func.value)
+            and node.func.attr in {"in_", "is_not", "isnot"}
+        ):
             return True
     return False
 

@@ -14,7 +14,7 @@ from aerona.db.tables.vehicles import VehicleGroupRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import CivilizationTier
 from aerona.domain.enums.military import UnitKind
-from aerona.domain.enums.vehicles import VehicleDomain, VehicleFamily, VehicleFrame, VehicleSize
+from aerona.domain.enums.vehicles import VehicleDomain, VehicleFamily, VehicleFrame, VehicleSize, VehicleStatus
 from aerona.engine.collective.designs import draw_design
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.tiers import tier_of
@@ -203,6 +203,8 @@ async def batter_groups(
             hits = 1
         result = await strike_group(ctx, reading.group, hits, slot)
         lost += result.lost
+        if reading.group.status is not VehicleStatus.WRECKED and "status" not in (reading.group.locked or []):
+            reading.group.status = VehicleStatus.ENGAGED
         struck.append(reading.group)
     return lost, struck
 

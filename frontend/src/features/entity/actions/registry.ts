@@ -1450,7 +1450,7 @@ export const RECORD_ACTIONS: readonly RecordActionSpec[] = [
     icon: Ship,
     applies: canonOf(is('region')),
     destructive: true,
-    confirm: () => 'Void pirates will haunt this land.',
+    confirm: () => 'Route raiders will haunt this land.',
   },
   {
     id: 'legend:forget',

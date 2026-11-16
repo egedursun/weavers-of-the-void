@@ -1,12 +1,21 @@
 import { useState } from 'react'
 import {
+  BookOpen,
   CloudLightning,
   Droplets,
+  Eye,
+  Footprints,
+  Gift,
+  Handshake,
   Hourglass,
   type LucideIcon,
   Moon,
+  Scale,
   Sparkles,
+  Stamp,
   Sun,
+  TriangleAlert,
+  Undo2,
   VolumeX,
   Zap,
 } from 'lucide-react'
@@ -37,25 +46,85 @@ const SIGNS: {
     key: 'wrath',
     label: 'Wrath',
     icon: Zap,
-    hint: 'Storms and dread over the godless.',
+    hint: 'Harms those who do not worship you and raises their dread.',
   },
   {
     key: 'grace',
     label: 'Grace',
     icon: Sun,
-    hint: 'A blessing falls on your worshippers.',
+    hint: 'A blessing falls on those who worship you.',
   },
   {
     key: 'silence',
     label: 'Silence',
     icon: VolumeX,
-    hint: 'The heavens go quiet for a while.',
+    hint: 'You send nothing for a while; the world notices the quiet.',
   },
   {
     key: 'dream',
     label: 'Dream',
     icon: Moon,
-    hint: 'Your light enters the dreams of seers.',
+    hint: 'Those who listen for you receive a dream.',
+  },
+  {
+    key: 'omen',
+    label: 'Omen',
+    icon: Eye,
+    hint: 'A sign they read as yours: awe rises and ignorance of you falls.',
+  },
+  {
+    key: 'warning',
+    label: 'Warning',
+    icon: TriangleAlert,
+    hint: 'A sign of what you may do: dread rises, with some awe.',
+  },
+  {
+    key: 'revelation',
+    label: 'Revelation',
+    icon: BookOpen,
+    hint: 'You show them much of what you are: ignorance falls far and awe rises.',
+  },
+  {
+    key: 'visitation',
+    label: 'Visitation',
+    icon: Footprints,
+    hint: 'You come among them: love, awe and piety rise.',
+  },
+  {
+    key: 'mark',
+    label: 'Mark',
+    icon: Stamp,
+    hint: 'One of them is marked as your chosen.',
+  },
+  {
+    key: 'wonder',
+    label: 'Wonder',
+    icon: Sparkles,
+    hint: 'Something they cannot explain: awe, gratitude and prestige rise.',
+  },
+  {
+    key: 'withdrawal',
+    label: 'Withdrawal',
+    icon: Undo2,
+    hint: 'You turn away from them: resentment and ignorance rise and love falls.',
+  },
+  {
+    key: 'test',
+    label: 'Test',
+    icon: Scale,
+    hint: 'A hardship that tries them: prosperity falls and piety rises.',
+  },
+  {
+    key: 'reward',
+    label: 'Reward',
+    icon: Gift,
+    hint: 'You reward them: prosperity, gratitude and love rise.',
+  },
+  {
+    key: 'covenant_offer',
+    label: 'Covenant offer',
+    icon: Handshake,
+    hint: 'Their people are offered a covenant: worship for your protection.',
   },
 ]
 
@@ -216,7 +285,7 @@ export function GodPanel({ doom }: { doom: number }) {
         <div
           role='radiogroup'
           aria-label='Sign'
-          className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4'
+          className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7'
         >
           {SIGNS.map((item) => {
             const Icon = item.icon

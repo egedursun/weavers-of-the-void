@@ -150,12 +150,18 @@ async def seed_mortal(ctx: TickContext, mortal: EntityRow) -> int:
     people = await people_of(ctx.session, mortal)
     rng = ctx.rng(f"prefs.{mortal.id}")
     made = 0
+    if write_blocked(mortal.id, PREFERENCES_KEY):
+        return 0
     for row in await rows_of(ctx.session, people.id) if people is not None else []:
         if not rng.chance(table.personal_share_pct):
             continue
-        strength = row.strength + rng.integer(-table.personal_deviation, table.personal_deviation)
-        await write_pref(ctx.session, mortal.id, row.kind, row.target, strength, target_node_id=row.target_node_id)
+        strength = clamp_int(row.strength + rng.integer(-table.personal_deviation, table.personal_deviation), -STRENGTH_SPAN, STRENGTH_SPAN)
+        ctx.session.add(
+            PreferenceRow(holder_node_id=mortal.id, kind=row.kind, target=row.target, target_node_id=row.target_node_id, strength=strength, locked=[])
+        )
         made += 1
+    if made:
+        await ctx.session.flush()
     return made
 
 

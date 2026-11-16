@@ -312,7 +312,7 @@ async def birth_local_god(ctx: TickContext, world: WorldRow, people: EntityRow) 
             world_id=world.id,
             domains=(domains[0], domains[1]),
             title=title,
-            description=f"{SLEEPING_PREFIX.capitalize()}god of {world.name}, dreaming beneath the land of the {people.name}.",
+            description=f"{SLEEPING_PREFIX.capitalize()}god of {world.name}, asleep in the land of the {people.name}.",
             power=rules.agents.local_god_strength,
             status=ForeignGodStatus.ASLEEP,
         ),

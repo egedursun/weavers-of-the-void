@@ -11,7 +11,7 @@ from aerona.prompts.tools.text import ToolText
 T = SonToolId
 
 CREATION_DESCRIPTION = (
-    "Creates {{ entity.label | an }} ({{ entity.examples | join(', ') }}). "
+    "Creates {{ entity.label | an }}. "
     "{% if entity.type in living_types and rules.son_tools.free_living_creation > 0 %}"
     "Living creation: the first living creation each age does NOT spend an action; later ones cost 1 action."
     "{% elif entity.type in land_types %}"
@@ -27,7 +27,7 @@ CREATION_DESCRIPTION = (
 
 CREATION_FIELDS: dict[str, str] = {
     "name": "A proper name in the world's naming language.",
-    "subtype": "What it is, e.g.: {{ entity.examples | join(', ') }}",
+    "subtype": "What it is, in this world's own terms",
     "description": "3 to 7 sentences. Concrete, sensory details of its own; how it was born, what it is connected with, how mortals know it.",
     "domain": "If empty, your first domain. The domain used in this creation; one of: {{ domains | join(', ') }}. Your own domains are cheap.",
     "power_level": "From 1 up to your power ceiling{% if context.power_ceiling %}, which is {{ context.power_ceiling }}{% endif %}. Increases the cost.",
@@ -55,8 +55,8 @@ PREDICATES = ", ".join(item.value for item in ProphecyPredicate)
 CONSEQUENCES = ", ".join(item.value for item in ProphecyConsequence)
 SKY_KINDS = ", ".join(item.value for item in SkyEventKind)
 TABOO_ACTS = ", ".join(item.value for item in ActKind)
-LEGEND_CATEGORY_FIELD = "What the legend would become if belief ever made it walk the world: {{ legend_categories | join(', ') }}; creature for a beast or monster, spirit for a ghost or soul, resource for a sacred spring or vein, relic for a weapon or treasure"
-COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore feeds forges and coin, grain, livestock and fish feed mouths, timber feeds fuel and ships"
+LEGEND_CATEGORY_FIELD = "What the legend would become if belief ever made it walk the world: {{ legend_categories | join(', ') }}"
+COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore goes to smithing and coin, grain, livestock and fish to food, timber to fuel and building"
 MATERIAL_FIELD = "What it is made of or yields, if a material: {{ materials | join(', ') }}; it sets hardness, edge, weight, holiness and taint"
 
 CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
@@ -82,17 +82,17 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "traits": "The creature's traits (at most {{ rules.son_tools.creature_max_traits }}): {{ creature_traits }}",
         "body_plan": "The creature's body: {{ body_plans }}; its wounds, armour and fighting follow this body",
         "size_class": "How big one of them stands: {{ size_classes | join(', ') }}; it sets what it can hunt, its lifespan, litters and whether it can be ridden",
-        "diet": "What it feeds on: {{ diets | join(', ') }}; soul eaters swallow the dead, mineral eaters gnaw ore, void eaters need nothing living",
+        "diet": "What it feeds on: {{ diets | join(', ') }}; soul eaters feed on the dead, mineral eaters on ore, void eaters on nothing living",
         "sociality": "How it lives with its kind: {{ socialities | join(', ') }}; packs hunt harder, herds and hives shield their numbers",
         "nocturnal": "True if it wakes at night; night kinds escape hunters more often",
         "migratory": "True if its herds move between lands with the seasons",
-        "products": "What it yields beyond meat, hide and bone, if anything: {{ yield_products | join(', ') }}; silk and venom feed crafts, dragonbone feeds forges",
+        "products": "What it yields beyond meat, hide and bone, if anything: {{ yield_products | join(', ') }}; silk and venom go to crafts, dragonbone to smithing",
         "species_class": "What kind of life it is: {{ species_classes | join(', ') }}; plants and fungi are gathered, sown and harvested, vermin spoil stores",
         "biochemistry": "What its life is built on: {{ biochemistries | join(', ') }}; it lives only on worlds that bear that kind of life, though void and spirit life live anywhere",
         "growth_cycle": "For a plant or fungus, how it grows: {{ growth_cycles | join(', ') }}",
         "plant_yields": "For a plant or fungus, what its harvest gives: {{ plant_yields | join(', ') }}",
         "dormancy": "Whether it sleeps through a season: {{ dormancies | join(', ') }}; a sleeping kind neither raids nor feeds hunters then",
-        "thermoregulation": "Its blood: {{ thermoregulations | join(', ') }}; cold-blooded kinds slow in the cold, warm-blooded ones eat more in it",
+        "thermoregulation": "How it keeps its warmth: {{ thermoregulations | join(', ') }}; cold-blooded kinds slow in the cold, warm-blooded ones eat more in it",
         "plant_defence": "For a plant or fungus, how it defends itself: {{ plant_defences | join(', ') }}",
         "defence_potency": "For a plant or fungus with a defence, how strong it is, 0 to 100",
     },
@@ -104,8 +104,9 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "perception": "0-100: how easily disturbance wakes it and how little thieves take from its hoard",
         "willpower": "0-100: how hard it is to tame and how seldom it rests after a hunt",
         "intelligence": "0-100: at {{ rules.mortal_agents.creature_min_intelligence }} or more it speaks, bargains and acts by itself",
-        "breath": "A breath it attacks with, if any: {{ breath_kinds | join(', ') }}; it adds to the harm of its raids",
-        "gaze": "A gaze it attacks with, if any: {{ gaze_kinds | join(', ') }}; each raid makes it more dreaded",
+        "attack_delivery": "How an attack of its own reaches its victims, if it has one: {{ attack_deliveries | join(', ') }}; each attack adds to the harm of its raids",
+        "attack_effect": "What that attack does: {{ attack_effects | join(', ') }}; give it with attack_delivery",
+        "attack_range": "How far that attack reaches: {{ attack_ranges | join(', ') }}; far and sight reach a whole town, sight attacks make it more dreaded",
         "temperament": "Its temperament: {{ temperaments | join(', ') }}; an abductor carries people off to its lair instead of killing them",
         "habitat": "Where it lives: {{ habitats | join(', ') }}; a creature of the void roams the roads between worlds",
         "awakening": "If it sleeps until something wakes it: {{ awakening_triggers | join(', ') }}",
@@ -136,7 +137,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "item_class": "What kind of thing it is; this decides how it is used and what it does in the world: " + ITEM_CLASSES,
         "material": "What it is made of: {{ materials | join(', ') }}; sets its edge, guard, worth, rot and holy harm to the undead. Empty: its makers choose",
         "world_material_id": "Or a substance of this world by its id (see the world's materials); overrides material",
-        "secondary_materials": "Other materials worked into it (inlays, bindings, hilts): {{ materials | join(', ') }}",
+        "secondary_materials": "Other materials worked into it: {{ materials | join(', ') }}",
     },
     EntityType.ARTWORK: {
         "medium": "What kind of work it is; performed works live only while someone can perform them: " + ART_MEDIA,
@@ -148,21 +149,21 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "second_id": "For war_between: the second side",
         "archetype": "For ruler_of: the kind of legend the coming ruler must fit (" + ARCHETYPES + ")",
         "sky_kind": "For sky_event: the sign in the sky (" + SKY_KINDS + ")",
-        "event_kind": "For within_epochs: the kind of happening foretold (a war, a birth, a flood, a crowning...)",
+        "event_kind": "For within_epochs: the kind of happening foretold",
         "within_epochs": "In how many ages it must come true; if it does not, the seer is mocked",
         "consequence": "What it means when it comes true: " + CONSEQUENCES,
-        "consequence_id": "Whom the consequence touches (the one who will rule, the city that will fall)",
+        "consequence_id": "Whom the consequence touches",
     },
     EntityType.STRUCTURE: {
         "structure_kind": "What it is and what it does: {{ structure_kinds }}",
-        "material": "What it is built of: {{ materials | join(', ') }}; stone lasts and resists fire, holy stone makes a temple shine, wood rots and burns. Empty: its builders choose",
+        "material": "What it is built of: {{ materials | join(', ') }}; stone lasts and resists fire, holy stone strengthens a temple, wood rots and burns. Empty: its builders choose",
         "world_material_id": "Or a substance of this world by its id; overrides material",
         "level": "Its size, 1 to 5",
         "design_id": "A structure design of the same kind to build to, if one exists",
     },
     EntityType.FACTION: {
         **WORSHIPPED_SON_FIELD,
-        "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market, void_pirates, social_circle, crime_family, thieves_guild, smuggling_ring, pirate_confederacy, workers_union, engineers_society or financiers, veterans; its kind decides what it strives for and how it acts",
+        "faction_kind": "What it is: {{ faction_kinds }}; its kind decides what it strives for and how it acts",
     },
     EntityType.LAW: {
         "law_kind": "What the law rules; one of: {{ law_kinds }}",
@@ -177,7 +178,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     EntityType.MORTAL: {
         "title": "Their nickname or title, drawn from their own deeds or nature; do not bury it in the name, write it here",
         "sex": "female, male or other",
-        "traits": "Up to five typed traits of temper, such as brave, cruel, scholarly or zealous",
+        "traits": "Up to five typed traits of temper",
     },
     EntityType.EVENT: {
         "effects": "How the event is reflected on the stats of affected entities (at most {{ rules.son_tools.event_max_effects }}; e.g. war lowers population). The same stat of the same entity counts once; touching a sibling's creation angers its maker",
@@ -200,7 +201,7 @@ ESSENCE_GIFT_CAP = "{{ rules.son_tools.gift_max_essence }}"
 
 SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.COMMISSION_ARTWORK: ToolText(
-        "You commission a work of art: a song, epic, statue, fresco... It presses its message on those who keep it, remembers whom it portrays,"
+        "You commission a work of art. It presses its message on those who keep it, remembers whom it portrays,"
         " and a realm or town pays for it from its treasury. 1 action.",
         {
             "name": "A proper name for it, in the world's naming language",
@@ -261,7 +262,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.MY_MEMORY: ToolText(
         "Shows your plan, words said to you, your creations, your worshippers, your memories and what concerns you; the full version of the truncated memory in the prompt. Free."
     ),
-    T.INSPECT_SIBLING: ToolText("Shows a sibling's visible face, powers, creations and relationship with you. Free.", {"son_id": "The sibling's id"}),
+    T.INSPECT_SIBLING: ToolText("Shows a sibling's visible form, powers, creations and relationship with you. Free.", {"son_id": "The sibling's id"}),
     T.WRITE_PLAN: ToolText(
         "You write or update your long-term plan. It appears in your memory in future ages; it lets you build a coherent story across ages. Free.",
         {"plan": "How you pursue your aim over several ages, and your next steps"},
@@ -353,7 +354,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"impact_id": "The id of the coming impact", "reason": "Why you turn it aside"},
     ),
     T.TERRAFORM_WORLD: ToolText(
-        "You begin to reshape a world over several epochs: its air, its warmth, its water or how much light its face throws back. "
+        "You begin to reshape a world over several epochs: its air, its warmth, its water or how much light it reflects. "
         "Native life of another chemistry may suffer from the change. {{ rules.terraforming.essence }} essence, 1 action.",
         {"world_id": "The id of the world", "aim": "What you change about it", "reason": "Why you reshape it"},
     ),
@@ -424,7 +425,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "name": "The dimension's name",
             "kind": "Dimension kind: {{ dimension_kinds }}",
-            "element": "Its element, for an elemental dimension only",
+            "element": "A matter it is made of, if any: {{ dimension_elements }}; each aspect pulls the dimension's values every epoch",
+            "form": "A form of the world it is made of, if any: {{ spell_forms }}; each aspect pulls the dimension's values every epoch",
             "parent_dimension_id": "The id of the dimension it lies inside",
             "description": "What the dimension is like",
         },
@@ -570,13 +572,13 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"star_id": "The id of the star", "reason": "Why you claim it"},
     ),
     T.SHAPE_BLOOD: ToolText(
-        "You work an allele into both halves of a living mortal's blood: any locus of looks, of predisposition, of divine blood or of aptitude "
-        "for a form of magic. Their children inherit it as blood is inherited. "
+        "You work an allele into both inherited copies of a living mortal: any locus of looks, of predisposition, of divine descent or of "
+        "aptitude for a form of magic. Their children inherit it as such traits are inherited. "
         "Costs {{ rules.costs.influence }} essence and one action.",
         {
-            "mortal_id": "The mortal whose blood you shape",
+            "mortal_id": "The mortal whose inheritance you shape",
             "locus": "The locus to set",
-            "allele": "The allele both halves of that locus will carry",
+            "allele": "The allele both copies of that locus will carry",
             "reason": "Why you shape it",
         },
     ),
@@ -612,10 +614,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.STIR_HEARTS: ToolText(
-        "You stir what one living mortal feels toward another: warm them into friendship, kindle romance, set them at odds as rivals, "
+        "You stir what one living mortal feels toward another: turn them toward friendship or romance, set them at odds as rivals, "
         "or plant a passion of love, loyalty, hatred or devotion for the other. Costs {{ rules.costs.influence }} essence and one action.",
         {
-            "first_id": "The mortal whose heart you stir",
+            "first_id": "The mortal whose feelings you stir",
             "second_id": "The one they come to feel for",
             "stir": "What to stir: friendship, romance, rivalry, love, loyalty, hatred or devotion",
             "reason": "Why you stir it",
@@ -680,7 +682,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     **{tool: creation_text(entity_type) for tool, entity_type in CREATION_TOOLS.items()},
     T.AFFECT_ENTITY: ToolText(
-        "You change the stats of an existing entity (enrich a city, make a species ferocious). Touching someone else's creation is "
+        "You change the stats of an existing entity. Touching someone else's creation is "
         "{{ rules.son_tools.influence_foreign_cost_mult }} times as expensive and angers its creator. Lifespan, age and knowledge level do not change this way; each stat once per call; "
         "the same entity at most {{ rules.son_tools.affect_per_target }} time(s) per age. Cost {{ rules.costs.influence }} + power level essence. 1 action.",
         {
@@ -688,16 +690,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "changes": "The stats to change (at most {{ rules.son_tools.influence_max_stats }})",
             "changes.stat": "The stat's key",
             "changes.percent": "Between -{{ rules.son_tools.influence_max_change_pct }} and +{{ rules.son_tools.influence_max_change_pct }}",
-            "reason": "Why your hand passes over it",
+            "reason": "Why you change it",
         },
     ),
     T.DECLARE_CHOSEN: ToolText(
-        "You declare a mortal your chosen one: their strength and charisma rise, they worship you, and your hand is with them in their heroic deeds. "
+        "You declare a mortal your chosen one: their strength and charisma rise, they worship you, and you favour them in their deeds. "
         "{{ rules.costs.declare_chosen }} essence, 1 action.",
         {"mortal_id": "The living mortal's id", "boon": "The grace, sign or burden you give them"},
     ),
     T.CURSE: ToolText(
-        "You curse an entity: its stats fall and it rots a little more every age until the curse is lifted. Its creator is angered. "
+        "You curse an entity: its stats fall and it weakens further every age until the curse is lifted. Its creator is angered. "
         "{{ rules.costs.curse }}+{{ rules.son_tools.curse_cost_per_power }} x power essence, 1 action.",
         {
             "entity_id": "The entity's id",
@@ -709,7 +711,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You take the life of a named mortal. It is very expensive, and the more important the victim the costlier and harder: cost {{ rules.death.take_life_base_cost }} + "
         "{{ rules.death.take_life_cost_per_power }} x power level + importance/{{ rules.death.take_life_cost_importance_divisor }} essence "
         "(+{{ rules.death.take_life_notable_surcharge }} if ruler, hero, chosen or titled). Success depends on dice (base {{ rules.death.take_life_base_success }}%): "
-        "a sibling patron, worshipping the creator, being protected or chosen, and importance protect them. If it fails the essence burns, the victim becomes a legend who "
+        "a sibling patron, worshipping the creator, being protected or chosen, and importance protect them. If it fails the essence is lost, the victim becomes a legend who "
         "returned from death, and their protector is angered with you. The dead one's creator and patron are also angered; what they ruled passes to their heir. "
         "1 action, {{ rules.death.take_life_per_epoch }} per age.",
         {"entity_id": "The named mortal whose life is taken", "how": "How you send death"},
@@ -724,7 +726,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"son_id": "The dead sibling's id", "path": "rite, descent or bargain"},
     ),
     T.SCATTER_BONES: ToolText(
-        "You scatter a dead sibling's bones: the devotion of those awaiting their return falls by {{ rules.death.scatter_bones_devotion_loss }}, the resurrection is delayed. "
+        "You scatter a dead sibling's remains: the devotion of those awaiting their return falls by {{ rules.death.scatter_bones_devotion_loss }}, the resurrection is delayed. "
         "Resurrection cults become your enemies. {{ rules.death.scatter_bones_cost }} essence, 1 action, {{ rules.death.sibling_intrigues_per_epoch }} per age "
         "(shared with the resurrection plot).",
         {"son_id": "The dead sibling's id"},
@@ -796,8 +798,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"region_id": "The land whose fields it is sown in", "plant_id": "The plant or fungus kind (species id) to sow"},
     ),
     T.INCITE_WAR: ToolText(
-        "You sow the seed of enmity between two communities (faction, people or settlement). If it takes hold, war may break out between them; the world's flow resolves "
-        "the war. {{ rules.costs.incite_war }} essence, 1 action.",
+        "You stir enmity between two communities (faction, people or settlement). If it takes hold, war may break out between them; the "
+        "world's course decides the war. {{ rules.costs.incite_war }} essence, 1 action.",
         {"a_id": "The first community", "b_id": "The second community", "pretext": "The pretext of the enmity"},
     ),
     T.TRANSFORM: ToolText(
@@ -862,7 +864,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.TEACH_CREATURE: ToolText(
         "You reward or punish your divine creature for one kind of deed; rewarded deeds it does more often, punished ones less. "
-        "Left without lessons for {{ rules.divine_creatures.neglect_epochs }} epochs it follows its own hunger. {{ rules.divine_creatures.teach_cost }} essence, 1 action.",
+        "Left without lessons for {{ rules.divine_creatures.neglect_epochs }} epochs it follows its own leanings. {{ rules.divine_creatures.teach_cost }} essence, 1 action.",
         {"creature_id": "Your creature", "deed": "The deed you reward or punish", "lesson": "reward or punish", "reason": "Why"},
     ),
     T.RELEASE_CREATURE: ToolText(
@@ -871,15 +873,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"creature_id": "Your creature", "reason": "Why you set it free"},
     ),
     T.MAKE_SERVITOR: ToolText(
-        "You make a servitor, a spirit in your service of the rank you choose. Messengers carry your dreams further, guards turn back those who "
-        "would raze your holy places and thrones, judges win you veneration among the dead and the host fights for you in divine battles. "
+        "You make a servitor, a spirit in your service, for the work you choose. Messengers carry your dreams further, guards turn back those who "
+        "would raze your holy places and thrones, judges win you veneration among the dead, the host fights for you in divine battles, spies watch "
+        "a place, agents work your will in their post, avengers bring fear to those who scorn you, guides of souls lead your dead to their place, "
+        "worshippers deepen the awe of your faithful, wardens keep order at their post and scribes keep your accounts alive among your peoples. "
         "Its loyalty follows how your peoples regard you and how you treat it: each new command and each defeat of its host wears on it, and a disloyal "
         "servitor may fall to another master. {{ rules.servitors.make_cost }} essence, 1 action.",
         {
             "name": "Its name",
-            "rank": "Its rank: {{ servitor_ranks }}",
             "role": "What it does: {{ servitor_roles }}",
-            "post_id": "The holy place, throne or place it guards (an id), if any",
+            "post_id": "The holy place, throne, town or place it keeps (an id), if any",
             "reason": "Why you make it",
         },
     ),
@@ -1115,14 +1118,14 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"spirit_id": "The free spirit's id", "target_id": "The item, vessel or monument"},
     ),
     T.HANG_STAR: ToolText(
-        "You hang a new star in the sky, in a galaxy or in the sky of a world you reach; new worlds may be born around it. {{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_hang_star_pct) }} essence, "
+        "You place a new star in a galaxy or in the sky of a world you reach; new worlds may be born around it. {{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_hang_star_pct) }} essence, "
         "{{ rules.son_tools.hang_star_ap }} actions.",
         {
             "name": "The star's name",
             "type": "Star type: {{ star_types }}",
             "description": "What the star is like",
-            "galaxy_id": "The id of the galaxy it hangs in",
-            "world_id": "The id of a world whose sky it hangs in; a world without a star comes to circle it",
+            "galaxy_id": "The id of the galaxy it lies in",
+            "world_id": "The id of a world in whose sky it appears; a world without a star comes to circle it",
         },
     ),
     T.EXTINGUISH_STAR: ToolText(
@@ -1152,7 +1155,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.BLESS_BLOODLINE: ToolText(
-        "You mark a noble house's blood with a lasting gift or curse (long_lived, giant_blooded, god_blooded, cursed, fertile, seer_gift); every child born to it carries it. "
+        "You mark a noble house's line with a lasting gift or curse (long_lived, giant_blooded, god_blooded, cursed, fertile, seer_gift); every child born to it carries it. "
         "A god-blooded house anchors your existence while it lives. Costs essence.",
         {"house_id": "The house", "trait": "The bloodline trait", "revoke": "True to lift it instead"},
     ),
@@ -1293,7 +1296,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "community_id": "The settlement or people that builds it",
             "structure_kind": "What it is: {{ structure_kinds }}",
             "level": "Its size, 1 to 5",
-            "material": "What it is built of (stone, wood, bronze...); by default what its builders know",
+            "material": "What it is built of; by default what its builders know",
             "design_id": "A structure design of that kind to build to, if one exists",
             "name": "Its name, if you give one",
         },
@@ -1324,7 +1327,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"army_id": "The army to disband", "reason": "Why it goes home"},
     ),
     T.LAY_SIEGE: ToolText(
-        "You set an army of one side of a war against a settlement of the other: it encamps, digs its works and starves the walls. "
+        "You set an army of one side of a war against a settlement of the other: it encamps and cuts the settlement off. "
         "{{ rules.son_military.siege_cost }} essence, 1 action.",
         {"war_id": "The war", "army_id": "The besieging army", "settlement_id": "The settlement to besiege"},
     ),
@@ -1411,6 +1414,26 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you reshape it",
         },
     ),
+    T.SHAPE_UNIONS: ToolText(
+        "You change the customs of union of a people in your reach: the form a union takes ({{ union_forms }}), what unions are for "
+        "({{ union_purposes }}), where the joined live ({{ union_residences }}), through whom descent runs ({{ union_descents }}), what passes "
+        "between families ({{ union_exchanges }}), who arranges a union ({{ union_arrangements }}), how a union ends ({{ union_dissolutions }}) "
+        "and the circle partners must come from or go outside of ({{ partner_scopes }}). First and second are the two sides of a union as the "
+        "people names them. Matches, households, payments, partings and lines follow. 1 action.",
+        {
+            "people_id": "The people",
+            "form": "The form a union takes",
+            "purpose": "What unions are made for",
+            "residence": "Where the joined live",
+            "descent": "Through whom descent runs",
+            "exchange": "What passes between the families",
+            "arrangement": "Who arranges a union",
+            "dissolution": "How a union may end",
+            "endogamy": "The circle partners must share",
+            "exogamy": "The circle partners must come from outside of",
+            "reason": "Why you reshape it",
+        },
+    ),
     T.SHAPE_REPRODUCTION: ToolText(
         "You change how a people in your reach bears its young ({{ reproductive_systems }}); births, the sexes of the newborn, castes, "
         "marriage and growth follow. 1 action.",
@@ -1428,7 +1451,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SHAPE_RULE: ToolText(
         "You reshape who chooses the rulers of a realm in your reach ({{ selectorates }}) and how much of its spending goes to public goods; "
-        "small circles of choosers buy loyalty with private gifts, wide ones with roads, granaries and courts. 1 action.",
+        "small circles of choosers buy loyalty with private gifts, wide ones with public works. 1 action.",
         {
             "polity_id": "The realm",
             "selectorate": "Who has a say in choosing its ruler",
@@ -1661,8 +1684,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"mortal_id": "The mortal", "dreaded": "True for a dreaded sign, false for a kindly one", "reason": "Why you mark it"},
     ),
     T.UNSETTLE_SEASONS: ToolText(
-        "You unsettle the seasons of the world you walk: from now its summers and winters run for spells of no set length, and a long "
-        "winter eats the food of every town unless its people heeded a forecast. 1 action.",
+        "You unsettle the seasons of the world you walk: from now its summers and winters run for spells of no set length, and a long winter uses up the food of every town unless its people heeded a forecast. 1 action.",
         {"world_id": "The world you walk", "reason": "Why you unsettle them"},
     ),
     T.LENGTHEN_WINTER: ToolText(
@@ -1752,9 +1774,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"subject_id": "Whom or what it is about", "reason": "What you set up"},
     ),
     T.ECHO_LIFE: ToolText(
-        "In a cosmos that turns in ages, you mark the life of a mortal whose tale was told to echo into the next age: a newborn of that "
+        "In a cosmos that turns in ages, you mark the life of a mortal whose tale was told to carry into the next age: a newborn of that "
         "age may take up the same tale. 1 action.",
-        {"mortal_id": "The mortal", "reason": "Why that life should echo"},
+        {"mortal_id": "The mortal", "reason": "Why that life should carry on"},
     ),
     T.NUDGE_BIAS: ToolText(
         "You sway how a mortal within your reach decides: one leaning of their mind (overconfidence, sunk cost, loss aversion, confirmation, "
@@ -1956,5 +1978,29 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.CURSE_LINE: ToolText(
         "You curse a living line in your world: it unsteadies and its living things, plantings and symbionts sicken. 1 action.",
         {"line_id": "The line", "reason": "Why"},
+    ),
+    T.WIELD_POWER: ToolText(
+        "You wield one of your divine powers: what it does is set by its verb, its object and its scope, on the target you name or on your "
+        "faithful. It costs what the power costs and must rest for its cooldown. 1 action.",
+        {"power_id": "Which of your powers", "target_id": "Whom or what it acts on, if not your faithful", "reason": "Why"},
+    ),
+    T.SET_NATURAL_LAW: ToolText(
+        "You reshape how a natural law in your reach works: what it does to the thing it governs, the amount, and when it holds. "
+        "A law you did not write costs essence to take up and becomes yours to keep. 1 action.",
+        {
+            "law_id": "The natural law",
+            "operator": "What the law does to the thing it governs",
+            "value": "The amount it works with, where 100 leaves the thing as it is",
+            "condition": "When the law holds",
+            "reason": "Why",
+        },
+    ),
+    T.BLESS_FORTUNE: ToolText(
+        "You turn the fortune of someone in your reach toward good for a while. 1 action.",
+        {"target_id": "Whom", "reason": "Why"},
+    ),
+    T.CURSE_FORTUNE: ToolText(
+        "You turn the fortune of someone in your reach toward ill for a while. 1 action.",
+        {"target_id": "Whom", "reason": "Why"},
     ),
 }

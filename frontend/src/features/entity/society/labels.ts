@@ -265,6 +265,8 @@ export const SIZE_SPEC: Record<SizeTier, Spec & { rank: number }> = {
   town: { label: 'Town', icon: Building, tone: 'info', rank: 3 },
   city: { label: 'City', icon: Castle, tone: 'gold', rank: 4 },
   metropolis: { label: 'Metropolis', icon: Landmark, tone: 'gold', rank: 5 },
+  megalopolis: { label: 'Megalopolis', icon: Building2, tone: 'gold', rank: 6 },
+  world_city: { label: 'World city', icon: Globe, tone: 'gold', rank: 7 },
 }
 export const SIZE_ORDER = Object.keys(SIZE_SPEC) as SizeTier[]
 

@@ -32,7 +32,7 @@ async def leak(ctx: TickContext, feud: Feud, first: EntityRow, second: EntityRow
     if not await declare_war(ctx, first.id, second.id, reason, cause=WarCause.DIVINE_GRUDGE):
         return False
     if holy:
-        text = f"The grudge between {feud.gods} turned into a holy war: {first.name} and {second.name} drew swords on each other."
+        text = f"The grudge between {feud.gods} turned into a holy war: {first.name} and {second.name} came to blows."
     else:
         text = f"The grudge between {feud.gods} leaked to the mortals: {first.name} and {second.name} became enemies."
     await note(ctx, text, key="grudges.holy_war" if holy else "grudges.enmity", ids=[first.id, second.id])

@@ -109,8 +109,8 @@ class SacramentProtection(StrEnum):
 class AfterlifeModel(StrEnum):
     JUDGED_REALMS = "judged_realms"
     COMMON_REALM = "common_realm"
-    WARRIOR_HALL = "warrior_hall"
-    ANCESTOR_HALL = "ancestor_hall"
+    REALM_BY_DEATH = "realm_by_death"
+    REALM_OF_LINE = "realm_of_line"
     REBIRTH = "rebirth"
     WANDERING = "wandering"
     UNION = "union"

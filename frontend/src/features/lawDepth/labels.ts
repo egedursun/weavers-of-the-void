@@ -1,4 +1,9 @@
 import {
+  Shapes,
+  GitBranch,
+  FileBadge,
+  BadgeCheck,
+  Baby,
   Anchor,
   BookMarked,
   BookOpen,
@@ -65,6 +70,14 @@ export const REGISTRY_KINDS: Record<Schema['RegistryKind'], Named> = {
   sale: { label: 'Sale', icon: HandCoins, tone: 'info' },
   dowry: { label: 'Dowry', icon: Heart, tone: 'verdigris' },
   indenture: { label: 'Indenture', icon: Hammer, tone: 'muted' },
+  patent: { label: 'Patent', icon: FileBadge, tone: 'gold' },
+  pattern: { label: 'Pattern', icon: Shapes, tone: 'gold' },
+  mind_state: { label: 'Mind state', icon: Brain, tone: 'gold' },
+  line: { label: 'Line', icon: GitBranch, tone: 'gold' },
+  company: { label: 'Company', icon: Coins, tone: 'gold' },
+  birth: { label: 'Birth', icon: Baby, tone: 'gold' },
+  death: { label: 'Death', icon: Skull, tone: 'gold' },
+  citizenship: { label: 'Citizenship', icon: BadgeCheck, tone: 'gold' },
 }
 
 export const CLAIMS: Record<Schema['JurisdictionClaim'], Named> = {

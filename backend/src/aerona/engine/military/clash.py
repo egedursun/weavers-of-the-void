@@ -49,6 +49,7 @@ from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import ancestral_site, guardians_of
 from aerona.engine.folkways.fed import battle_luck
+from aerona.engine.fortune.profiles import fortune_of
 from aerona.engine.honours.units import esprit_morale
 from aerona.engine.intrigue.beliefs import beliefs_of
 from aerona.engine.intrigue.sources import cowardice
@@ -82,6 +83,15 @@ INSPIRING_CHARISMA = 70
 CAVALRY_SHARE = 0.4
 HILLS = frozenset({TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
 WINTER = frozenset({WeatherKind.SNOW, WeatherKind.BLIZZARD})
+WOODS = frozenset({TerrainKind.FOREST, TerrainKind.JUNGLE})
+DRYLANDS = frozenset({TerrainKind.DESERT, TerrainKind.STEPPE, TerrainKind.CANYON})
+WETLANDS = frozenset({TerrainKind.MARSH, TerrainKind.RIVER_VALLEY})
+HIDDEN_TACTICS = frozenset({Tactic.AMBUSH, Tactic.NIGHT_RAID, Tactic.GUERRILLA, Tactic.INFILTRATION})
+GUNS_TACTICS = frozenset({Tactic.ARTILLERY_BARRAGE, Tactic.MISSILE_ATTRITION})
+LARGE_HOST = 5000
+SHORES = frozenset({TerrainKind.COAST, TerrainKind.ISLAND})
+SKIRMISH_TACTICS = frozenset({Tactic.SKIRMISH_HARASS, Tactic.FEINT})
+LINE_TACTICS = frozenset({Tactic.HOLD_LINE, Tactic.SHIELD_WALL})
 Armies = list[tuple[EntityRow, ArmyRow]]
 
 
@@ -294,6 +304,7 @@ async def side_of(
         wing_bonus=await sub_commander_bonus(ctx, [item.id for item, _ in armies]),
         medicine=clamp_int(medicine, 0, PERCENT),
         watch=await watchfulness(ctx, row.commander_entity_id),
+        fortune=await fortune_of(ctx, row.commander_entity_id or community.id),
         planned=not defending and await planned(ctx, profile, community, enemy),
         deceiver=await skill_level(ctx, commander, SkillKind.DECEPTION) >= table.battle_depth.deceiver_skill,
         standard=await standard_borne(ctx, [item.id for item, _ in armies]),
@@ -472,6 +483,10 @@ def log_phases(ctx: TickContext, battle_id: int, result: BattleResult) -> None:
 
 def wanted_traits(side: Side, *, won: bool, result: BattleResult, ground: Field, charisma: int) -> list[CommanderTrait]:
     mounted = sum(stack.start for stack in side.stacks if stack.spec.family in {UnitFamily.MOUNTED, UnitFamily.BEAST}) / max(1, side.start)
+    fliers = sum(stack.start for stack in side.stacks if stack.spec.family is UnitFamily.AIR) / max(1, side.start)
+    voidborne = sum(stack.start for stack in side.stacks if stack.spec.family is UnitFamily.SPACE) / max(1, side.start)
+    armoured = sum(stack.start for stack in side.stacks if stack.spec.family is UnitFamily.VEHICLE) / max(1, side.start)
+    signals = sum(stack.start for stack in side.stacks if stack.spec.family is UnitFamily.ELECTRONIC) / max(1, side.start)
     assaulting = side.tactic in {Tactic.FRONTAL_ASSAULT, Tactic.WEDGE}
     checks = (
         (won and side.defending and result.outcome in {OutcomeClass.DECISIVE, OutcomeClass.VICTORY}, CommanderTrait.DEFENSIVE_GENIUS),
@@ -482,6 +497,22 @@ def wanted_traits(side: Side, *, won: bool, result: BattleResult, ground: Field,
         (not won and assaulting, CommanderTrait.RECKLESS),
         (won and result.outcome is OutcomeClass.MASSACRE, CommanderTrait.BRUTAL),
         (charisma >= INSPIRING_CHARISMA, CommanderTrait.INSPIRING),
+        (won and ground.terrain in WOODS, CommanderTrait.FOREST_FIGHTER),
+        (won and ground.terrain in DRYLANDS, CommanderTrait.DESERT_FIGHTER),
+        (won and ground.terrain in WETLANDS, CommanderTrait.MARSH_FIGHTER),
+        (won and fliers >= CAVALRY_SHARE, CommanderTrait.SKY_COMMANDER),
+        (won and voidborne >= CAVALRY_SHARE, CommanderTrait.SPACE_COMMANDER),
+        (won and side.tactic in GUNS_TACTICS, CommanderTrait.ARTILLERIST),
+        (won and side.tactic in HIDDEN_TACTICS, CommanderTrait.AMBUSHER),
+        (won and side.start >= LARGE_HOST, CommanderTrait.LOGISTICIAN),
+        (won and ground.terrain is TerrainKind.UNDERGROUND, CommanderTrait.UNDERGROUND_FIGHTER),
+        (won and ground.terrain in SHORES, CommanderTrait.AMPHIBIOUS_COMMANDER),
+        (won and side.defending and ground.earthworks > 0, CommanderTrait.SIEGE_DEFENDER),
+        (won and ground.night, CommanderTrait.NIGHT_FIGHTER),
+        (won and side.tactic in SKIRMISH_TACTICS, CommanderTrait.SKIRMISHER),
+        (won and (armoured >= CAVALRY_SHARE or side.tactic is Tactic.ARMOURED_THRUST), CommanderTrait.ARMOURED_COMMANDER),
+        (won and side.tactic in LINE_TACTICS and result.outcome is not OutcomeClass.MASSACRE, CommanderTrait.DISCIPLINARIAN),
+        (won and (signals >= CAVALRY_SHARE or side.tactic is Tactic.ELECTRONIC_WARFARE), CommanderTrait.SIGNALS_COMMANDER),
     )
     return [trait for hit, trait in checks if hit]
 

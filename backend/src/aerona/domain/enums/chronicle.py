@@ -117,13 +117,6 @@ class ThreadLinkRole(StrEnum):
     ADVANCED = "advanced"
 
 
-class LegendaryQuestKind(StrEnum):
-    DEAD_STAR = "dead_star"
-    SEALED_GATE = "sealed_gate"
-    ARCHIVE = "archive"
-    EXPEL_OUTER = "expel_outer"
-
-
 class LegendaryQuestOutcome(StrEnum):
     COMPLETED = "completed"
     FAILED = "failed"

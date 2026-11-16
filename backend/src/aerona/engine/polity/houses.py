@@ -12,6 +12,7 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import ClaimRow, HeirloomRow, HouseMemberRow, HouseProfileRow, OfficeRow, SentenceRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.tables.warfare import WarRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
@@ -23,9 +24,11 @@ from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClaimBasis, GenderRule, HouseTrait, LawKind, OathKind, OfficeKind, OfficePower
+from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.war import HeroQuestKind, WarEnding
+from aerona.domain.enums.unions import UnionArrangement
+from aerona.domain.enums.war import WarEnding
 from aerona.domain.models.entity_stats import HouseStats
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
@@ -43,7 +46,7 @@ from aerona.engine.mind.ethics import ethic_reading
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import value_distance
 from aerona.engine.mortal.kin import children_of, parents_of, spouses_of
-from aerona.engine.mortal.kinship import marry
+from aerona.engine.mortal.kinship import marriages_of, marry
 from aerona.engine.notes import note
 from aerona.engine.phases.heroes import active_quest, start_quest
 from aerona.engine.phases.society_support.quests import QuestOption
@@ -57,6 +60,8 @@ from aerona.engine.primitives.queries import add_flag, connect, has_flag, living
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.unions.customs import CONSENTS_NEEDED, line_house, taken_by, union_of
+from aerona.engine.unions.purpose import purpose_gain
 from aerona.rules.registry import Rules
 
 TWENTY = 20
@@ -155,16 +160,16 @@ async def bless(ctx: TickContext, profile: HouseProfileRow | None, mortal: Entit
 
 
 MOTTOS: dict[ValueAxis, str] = {
-    ValueAxis.HONOUR: "Our word is iron",
-    ValueAxis.MARTIAL: "By the blade we stand",
+    ValueAxis.HONOUR: "Our word holds",
+    ValueAxis.MARTIAL: "We stand and fight",
     ValueAxis.PIETY: "The gods before all",
     ValueAxis.WEALTH: "What we gather, we keep",
-    ValueAxis.KINSHIP: "Blood answers blood",
+    ValueAxis.KINSHIP: "Kin answers kin",
     ValueAxis.TRADITION: "As our ancestors did",
     ValueAxis.KNOWLEDGE: "We remember",
     ValueAxis.MERCY: "Mercy is strength",
     ValueAxis.HIERARCHY: "Born to rule",
-    ValueAxis.XENOPHILIA: "Every road is ours",
+    ValueAxis.XENOPHILIA: "The world is open to us",
     ValueAxis.SUPERSTITION: "The signs are ours to read",
     ValueAxis.PURITY: "Unbroken and unbowed",
 }
@@ -216,6 +221,18 @@ async def seed_houses(ctx: TickContext, book: HouseBook, realms: RealmBook) -> i
     return founded
 
 
+async def claimed_elsewhere(ctx: TickContext, book: HouseBook, child_id: int, house_id: int) -> bool:
+    parents = await parents_of(ctx.session, child_id)
+    if len(parents) < 2:
+        return False
+    marriage = next((row for row in await marriages_of(ctx.session, parents[0]) if parents[1] in {row.first_id, row.second_id}), None)
+    if marriage is None:
+        return False
+    prestige = {house: profile.prestige for house, profile in book.profiles.items()}
+    line = await line_house(ctx.session, marriage, prestige, child_id)
+    return line is not None and line != house_id and line in book.houses
+
+
 async def gather_kin(ctx: TickContext, book: HouseBook) -> int:
     joined = 0
     for house_id, members in list(book.members.items()):
@@ -223,6 +240,8 @@ async def gather_kin(ctx: TickContext, book: HouseBook) -> int:
             up, down, spouses = await kin_ids(ctx, member_id)
             for child_id in down | up:
                 child = await living_entity(ctx.session, child_id)
+                if child_id in down and await claimed_elsewhere(ctx, book, child_id, house_id):
+                    continue
                 if child is not None and child.entity_type is EntityType.MORTAL and child.id not in book.house_of:
                     await join(ctx, book, house_id, child, by_marriage=False)
                     await inherit_claims(ctx, child, member_id)
@@ -254,7 +273,7 @@ async def inherit_claims(ctx: TickContext, child: EntityRow, parent_id: int) -> 
     table = ctx.rules.houses
     house = await ctx.session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == child.id).limit(1))
     throne = await ctx.session.scalar(select(OfficeRow).where(OfficeRow.holder_entity_id == parent_id, OfficeRow.kind == OfficeKind.RULER).limit(1))
-    if throne is not None:
+    if throne is not None and not held(child.id, throne.polity_entity_id):
         rule = await law_param(ctx.session, throne.polity_entity_id, LawKind.SUCCESSION_RULE, "gender")
         share = gender_share(str(rule) if rule is not None else None, child)
         if share > 0:
@@ -427,10 +446,10 @@ async def earn(ctx: TickContext, profile: HouseProfileRow, alive: list[EntityRow
 
 TRAIT_SOURCES: dict[HouseTrait, str] = {
     HouseTrait.SEER_GIFT: "a seer was born to the line",
-    HouseTrait.GIANT_BLOODED: "the line bred giants",
-    HouseTrait.LONG_LIVED: "its elders outlived their years",
-    HouseTrait.FERTILE: "its cradles were never empty",
-    HouseTrait.CURSED: "a curse fell upon the blood",
+    HouseTrait.GIANT_BLOODED: "the line bore giants",
+    HouseTrait.LONG_LIVED: "its elders lived long",
+    HouseTrait.FERTILE: "its line was fertile",
+    HouseTrait.CURSED: "a curse fell on the line",
 }
 
 
@@ -463,7 +482,7 @@ async def gain_traits(ctx: TickContext, book: HouseBook, profile: HouseProfileRo
             continue
         profile.traits = [*profile.traits, trait]
         house = book.houses.get(profile.house_entity_id)
-        why = TRAIT_SOURCES.get(trait, "a god's blood ran in its veins")
+        why = TRAIT_SOURCES.get(trait, "it carries a god's descent")
         if house is not None:
             await note(
                 ctx,
@@ -675,7 +694,7 @@ async def relic_quest(ctx: TickContext, item: EntityRow, house: EntityRow) -> No
     )
     seeker = next(iter(seekers), None)
     if seeker is not None and not await active_quest(ctx.session, seeker.id):
-        await start_quest(ctx, seeker, QuestOption(HeroQuestKind.RELIC, item.id, 1.0, f"to find {item.name}, lost with {house.name}"))
+        await start_quest(ctx, seeker, QuestOption(QuestAim.FIND, QuestTargetKind.ITEM, item.id, 1.0, f"to find {item.name}, lost with {house.name}"))
         await note(
             ctx, f"{seeker.name} set out to find {item.name}, lost when {house.name} died out.", key="houses.relic_quest", ids=[seeker.id, item.id, house.id]
         )
@@ -745,17 +764,19 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
                 + match_bonus(ctx.rules, await terms_of(ctx.session, mortal), await terms_of(ctx.session, other))
                 + await preference_bonus(ctx.session, ctx.rules, mortal, other)
                 + await claim_weight(ctx, other) * table.claim_weight_pct / PERCENT
+                + await purpose_gain(ctx, mortal, other, book.profiles[other_house].prestige)
             )
             if best is None or gain > best[0]:
                 best = (gain, other)
-        if best is None or not await willing_match(ctx, mortal, mine, best[1]):
+        union = await union_of(ctx.session, mortal)
+        if best is None or not await consents(ctx, union, (mortal, mine), best[1]):
             continue
         spouse = best[1]
         await marry(ctx.session, mortal, spouse, ctx.epoch, kind=MarriageKind.POLITICAL, description="arranged marriage")
         await marriage_claims(ctx, mortal, spouse)
         await dowry(ctx, book, house_id, spouse)
         await break_celibacy(ctx, mortal, spouse)
-        taken |= wed(custom, mortal, spouse)
+        taken |= taken_by(union, mortal, spouse) or wed(custom, mortal, spouse)
         made.append((mortal, spouse))
     return made
 
@@ -764,6 +785,14 @@ async def willing_match(ctx: TickContext, mortal: EntityRow, mine: dict[ValueAxi
     if value_distance(mine, await values_of(ctx, spouse)) <= FIT_DISTANCE:
         return True
     return await leaned_on(ctx, mortal.id, spouse.id, HookDemand.MARRIAGE)
+
+
+async def consents(ctx: TickContext, union: UnionCustomRow | None, mine: tuple[EntityRow, dict[ValueAxis, int]], spouse: EntityRow) -> bool:
+    mortal, values = mine
+    needed = CONSENTS_NEEDED[union.arrangement] if union is not None else 1
+    if needed >= 1 and not await willing_match(ctx, mortal, values, spouse):
+        return False
+    return needed < CONSENTS_NEEDED[UnionArrangement.BOTH_CONSENT] or await willing_match(ctx, spouse, await values_of(ctx, spouse), mortal)
 
 
 async def suitable(

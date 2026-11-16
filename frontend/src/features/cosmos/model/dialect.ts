@@ -11,6 +11,10 @@ export const TEXTURE_LABEL: Record<LanguageTexture, string> = {
   sibilant: 'Sibilant',
   long: 'Long',
   free: 'Free',
+  tonal: 'Tonal',
+  clicking: 'Clicking',
+  whistled: 'Whistled',
+  non_vocal: 'Non vocal',
 }
 
 const LIST_SEPARATOR = ', '

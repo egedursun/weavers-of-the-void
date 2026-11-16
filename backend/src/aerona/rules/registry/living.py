@@ -96,8 +96,24 @@ class LivingProductionRules:
 class CloneRules:
     health_pct: int = rule(85, 0, 100, C, "Share of the source's lifespan a clone lives (%)")
     generation_loss: int = rule(5, 0, 100, C, "Further lifespan a clone of a clone loses (%)")
+    born_skill_pct: int = rule(20, 0, 100, C, "Share of each of its source's skills a clone is born with as aptitude (%)")
     people_at: int = rule(12, 2, 1000, P, "Clones of one line at which they form a people")
     movement_gap: int = rule(2, 1, 4, P, "Steps of standing below what their people's mercy calls for at which clones and designed peoples rise")
     movement_chance: int = rule(10, 0, 100, P, "Chance each epoch such a rising forms")
     bond_by_status: int = rule(5, 0, 100, P, "Regard clones and designed peoples lose for their realm when held too low")
     stance_regard: int = rule(5, 0, 100, P, "Regard a faith gives or takes from clones and makers by its stance on living craft")
+
+
+@dataclass(frozen=True)
+class FortuneRules:
+    source_epochs: int = rule(4, 1, 100, C, "Epochs a fortune source lasts unless it says otherwise")
+    streak_step: int = rule(5, 0, 15, C, "Largest step the personal streak takes each season")
+    streak_cap: int = rule(15, 0, 50, C, "Largest the personal streak may grow either way")
+    streak_halflife: int = rule(4, 1, 40, C, "Seasons over which the streak halves back toward nothing")
+    draw_cap_pct: int = rule(20, 0, 50, C, "Most that fortune moves any single draw, as a share of its base (%)")
+    curse_strength: int = rule(20, 0, 100, C, "Fortune a curse of misfortune takes from its bearer")
+    blessing_strength: int = rule(15, 0, 100, C, "Fortune a god's blessing gives")
+    oath_strength: int = rule(10, 0, 100, C, "Fortune keeping or breaking an oath gives or takes where a law binds oaths")
+    charm_pct: int = rule(30, 0, 100, C, "Share of a real charm of luck's strength it adds to its bearer's fortune (%)")
+    care_cost: int = rule(1, 0, 100, C, "Wealth a mortal spends to take care for a season")
+    care_strength: int = rule(10, 0, 100, C, "Fortune care gives against mishaps for the epoch it is taken")

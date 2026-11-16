@@ -109,7 +109,7 @@ export function Panel({
   children: ReactNode
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-4'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion icon={icon} tone={tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -197,7 +197,8 @@ function FieldTile({
     <div
       className={cn(
         'flex min-w-0 flex-col justify-between gap-1.5',
-        framed && 'rounded-lg border bg-background p-2.5'
+        framed &&
+          'rounded-md border surface-framed border-gild/70 bg-card p-2.5'
       )}
     >
       <div className='flex min-w-0 items-center gap-1.5'>
@@ -313,8 +314,8 @@ export function ToggleField({
   return (
     <label
       className={cn(
-        'flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border p-2.5 transition-colors',
-        checked ? frameTone(item.tone) : 'bg-background'
+        'flex min-w-0 cursor-pointer items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2.5 transition-colors',
+        checked ? frameTone(item.tone) : 'bg-card'
       )}
     >
       <Icon
@@ -440,7 +441,7 @@ export function Steps({
             key={key}
             aria-current={index === reached ? 'step' : undefined}
             className={cn(
-              'flex h-badge-md min-w-0 items-center gap-1 rounded-md border px-2',
+              'flex h-badge-md min-w-0 items-center gap-1 rounded-md border surface-sheen border-gild/60 bg-card px-2',
               on ? frameTone(item.tone) : 'border-dashed'
             )}
           >
@@ -473,7 +474,7 @@ export function Quiet({
 }) {
   if (items.length === 0) return null
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-dashed p-3'>
+    <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-md p-3 sealed-well'>
       <Label variant='overline'>Quiet</Label>
       {items.map((item) => (
         <Plain key={item.text} icon={item.icon}>

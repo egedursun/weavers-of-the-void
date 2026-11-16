@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import delete, select
 
+from aerona.catalog.law_areas import LAW_AREAS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.economy import LoanRow
@@ -30,7 +31,6 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.polity import (
-    LAW_AREAS,
     ClaimBasis,
     ClauseKind,
     DecisionRule,
@@ -55,6 +55,7 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.formation import found_polity, refresh_realms
 from aerona.engine.polity.houses import HouseBook, extinguish, found_house, join
 from aerona.engine.polity.laws import edit_law, enact, ensure_profile, jurisdiction_of, repeal, validate
+from aerona.engine.polity.oath_terms import OathTerms
 from aerona.engine.polity.oaths import break_oath, keep, swear
 from aerona.engine.polity.offices import DEFAULT_POWERS, appoint
 from aerona.engine.polity.repute import repute_of
@@ -943,7 +944,15 @@ async def house_heirloom(ctx: TickContext, house_id: int, item_id: int, *, remov
 
 
 async def edit_oath(
-    ctx: TickContext, oath_id: int, *, deadline_epoch: int | None, note: str | None, recipient_id: int | None, witness_son_id: int | None, clear_deadline: bool
+    ctx: TickContext,
+    oath_id: int,
+    *,
+    deadline_epoch: int | None,
+    note: str | None,
+    recipient_id: int | None,
+    witness_son_id: int | None,
+    clear_deadline: bool,
+    terms: OathTerms | None = None,
 ) -> OathRow:
     oath = await ctx.session.get(OathRow, oath_id)
     if oath is None:
@@ -958,6 +967,13 @@ async def edit_oath(
         oath.recipient_node_id = recipient_id or None
     if witness_son_id is not None:
         oath.witness_son_id = witness_son_id or None
+    if terms is not None:
+        if terms.witness_node_id is not None:
+            oath.witness_node_id = terms.witness_node_id or None
+        if terms.penalty is not None:
+            oath.penalty = terms.penalty
+        if terms.clear_penalty:
+            oath.penalty = None
     await ctx.session.flush()
     return oath
 

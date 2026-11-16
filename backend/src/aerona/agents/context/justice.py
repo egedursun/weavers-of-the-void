@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.intrigue import name_of
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow, LawProposalRow, ProposalStanceRow
 from aerona.domain.enums.justice import CaseStage, ProposalState
@@ -26,7 +27,7 @@ async def proposal_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     )
     for stance, row in stances:
         hooked = ", bound by a hook" if stance.hooked else ""
-        found.append(f"you {stance.stance.value} {law_title(row.kind)} in {await name_of(session, row.polity_entity_id)}{hooked}")
+        found.append(f"you {spoken(stance.stance)} {law_title(row.kind)} in {await name_of(session, row.polity_entity_id)}{hooked}")
     return found
 
 
@@ -38,7 +39,7 @@ async def case_lines(session: AsyncSession, me: EntityRow, epoch: int) -> list[s
             how = TRIAL_TEXT[case.trial] if case.trial is not None else "soon"
             found.append(f"you stand accused of {crime} in {await name_of(session, case.settlement_entity_id)}, to be tried {how}")
         elif case.verdict is not None and case.closed_epoch is not None and case.closed_epoch >= epoch - RECENT:
-            found.append(f"you were {case.verdict.value} of {crime}")
+            found.append(f"you were {spoken(case.verdict)} of {crime}")
     witnessed = await session.execute(
         select(CaseWitnessRow, CrimeCaseRow)
         .join(CrimeCaseRow, CrimeCaseRow.id == CaseWitnessRow.case_id)
@@ -46,7 +47,9 @@ async def case_lines(session: AsyncSession, me: EntityRow, epoch: int) -> list[s
         .order_by(CrimeCaseRow.id)
     )
     for witness, case in witnessed:
-        found.append(f"you bear witness and {witness.testimony.value} {await name_of(session, case.accused_entity_id)} on a charge of {CRIME_TEXT[case.crime]}")
+        found.append(
+            f"you bear witness and {spoken(witness.testimony)} {await name_of(session, case.accused_entity_id)} on a charge of {CRIME_TEXT[case.crime]}"
+        )
     judging = select(CrimeCaseRow).where(CrimeCaseRow.judge_entity_id == me.id, CrimeCaseRow.stage == CaseStage.TRIAL).order_by(CrimeCaseRow.id)
     for case in await session.scalars(judging):
         found.append(f"you will judge {await name_of(session, case.accused_entity_id)} for {CRIME_TEXT[case.crime]}, on evidence of {case.evidence}")

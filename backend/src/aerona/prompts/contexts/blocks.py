@@ -50,6 +50,7 @@ class LawLine(ContextItem):
     id: int
     name: str
     description: str
+    working: str = ""
 
 
 class WorldHeaderContext(RulesContext):

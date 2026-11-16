@@ -35,7 +35,7 @@ SIGHT_KINDS: MappingProxyType[StructureKind, TouristSight] = MappingProxyType(
         StructureKind.MONASTERY: TouristSight.SACRED,
     }
 )
-GREAT_CITIES = (SizeTier.CITY, SizeTier.METROPOLIS)
+GREAT_CITIES = (SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY)
 SICK_SEVERITY = 20
 
 

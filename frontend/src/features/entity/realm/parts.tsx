@@ -15,6 +15,7 @@ import {
   EntityLink,
   type KpiTone,
   Medallion,
+  Paged,
   PagedList,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
@@ -46,7 +47,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3',
+        'flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         className
       )}
     >
@@ -92,7 +93,7 @@ export function Hero({
   children?: ReactNode
 }) {
   return (
-    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={icon} tone={tone ?? 'gold'} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <div className='flex min-w-0 flex-col'>
@@ -212,14 +213,16 @@ export function RecordField({
 export function WhyList({ parts }: { parts: [string, number][] }) {
   return (
     <ul className='flex min-w-0 flex-col gap-1.5'>
-      {parts.map(([label, value]) => (
-        <li key={label} className='flex min-w-0 items-center gap-2'>
-          <Text as='span' className='min-w-0 flex-1' truncate>
-            {plain({}, label)}
-          </Text>
-          <ChangeChip value={value} />
-        </li>
-      ))}
+      <Paged items={parts} as='li'>
+        {([label, value]) => (
+          <li key={label} className='flex min-w-0 items-center gap-2'>
+            <Text as='span' className='min-w-0 flex-1' truncate>
+              {plain({}, label)}
+            </Text>
+            <ChangeChip value={value} />
+          </li>
+        )}
+      </Paged>
     </ul>
   )
 }
@@ -256,9 +259,9 @@ export function ChoiceCard({
         pick()
       }}
       className={cn(
-        'flex min-w-0 items-center gap-2 rounded-lg border p-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        'flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
         disabled === null ? 'cursor-pointer hover:bg-accent/40' : 'opacity-60',
-        selected ? 'border-primary/50 bg-primary/8' : 'bg-background'
+        selected ? 'border-primary/50 bg-primary/8' : 'bg-card'
       )}
     >
       <Medallion icon={spec.icon} tone={spec.tone ?? 'gold'} size='sm' />

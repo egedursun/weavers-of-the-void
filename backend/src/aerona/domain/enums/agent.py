@@ -52,7 +52,7 @@ class TurnCounter(StrEnum):
     WORDS_COINED = "words_coined"
     GIFTS = "gifts"
     HOLY_WORLD = "holy_world"
-    LEAK_STITCHED = "leak_stitched"
+    LEAK_CLOSED = "leak_closed"
     TAKE_LIFE = "take_life"
     INTRIGUE = "intrigue"
     OUTER_BARGAIN = "outer_bargain"

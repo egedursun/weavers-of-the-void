@@ -90,7 +90,7 @@ async def language_death(ctx: TickContext) -> None:
         if assessment.change is VitalityChange.DIED and await liturgical(ctx, language.id):
             await add_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE, ctx.epoch)
             ctx.count("kept_in_liturgy")
-            text = f"No one is raised speaking {language.name} any more, yet the priests still chant in it."
+            text = f"No one is raised speaking {language.name} any more, yet it lives on in its liturgy."
             await note(ctx, text, key="languages.liturgical", ids=[language.id])
             continue
         kind = TransformKind.LANGUAGE_DEATH if assessment.change is VitalityChange.DIED else TransformKind.LANGUAGE_REVIVAL

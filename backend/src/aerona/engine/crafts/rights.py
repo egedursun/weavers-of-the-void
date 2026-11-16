@@ -7,7 +7,7 @@ from aerona.db.tables.culture import ArtworkProfileRow, RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseMemberRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.crafts import RightKind
+from aerona.domain.enums.crafts import RightAcquired, RightKind
 from aerona.domain.enums.culture import ArtMedium
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
@@ -18,6 +18,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.sacred.places import ruler_of
 from aerona.engine.services.community_relations import change_relation
 
 MEDIUM_RIGHTS = {
@@ -66,7 +67,13 @@ async def claim_works(ctx: TickContext, tally: RightsTally) -> None:
         holder = await house_of(ctx, profile.author_entity_id)
         ctx.session.add(
             IncorporealRightRow(
-                holder_node_id=holder, kind=MEDIUM_RIGHTS[profile.medium], subject_node_id=work.id, name=work.name, since_epoch=ctx.epoch, locked=[]
+                holder_node_id=holder,
+                kind=MEDIUM_RIGHTS[profile.medium],
+                subject_node_id=work.id,
+                name=work.name,
+                acquired=RightAcquired.CREATED,
+                since_epoch=ctx.epoch,
+                locked=[],
             )
         )
         tally.claimed += 1
@@ -84,8 +91,52 @@ async def claim_works(ctx: TickContext, tally: RightsTally) -> None:
             continue
         holder = await house_of(ctx, known.inventor_entity_id)
         ctx.session.add(
-            IncorporealRightRow(holder_node_id=holder, kind=RightKind.RITE, subject_node_id=rite.id, name=rite.name, since_epoch=ctx.epoch, locked=[])
+            IncorporealRightRow(
+                holder_node_id=holder,
+                kind=RightKind.RITE,
+                subject_node_id=rite.id,
+                name=rite.name,
+                acquired=RightAcquired.CREATED,
+                since_epoch=ctx.epoch,
+                locked=[],
+            )
         )
+        tally.claimed += 1
+        budget -= 1
+    await claim_names(ctx, tally, held_subjects, budget)
+
+
+async def claim_names(ctx: TickContext, tally: RightsTally, held_subjects: set[int | None], budget: int) -> None:
+    houses = await ctx.session.scalars(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.HOUSE, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    )
+    realms = list(
+        await ctx.session.scalars(
+            select(EntityRow).where(EntityRow.entity_type == EntityType.POLITY, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+        )
+    )
+    claims = [(house.id, RightKind.NAME, house) for house in houses]
+    for realm in realms:
+        ruler = await ruler_of(ctx.session, realm.id)
+        if ruler is not None:
+            claims.append((ruler, RightKind.TITLE, realm))
+    for holder, kind, subject in claims:
+        if budget <= 0:
+            return
+        if subject.id in held_subjects or held(holder):
+            continue
+        ctx.session.add(
+            IncorporealRightRow(
+                holder_node_id=holder,
+                kind=kind,
+                subject_node_id=subject.id,
+                name=subject.name,
+                acquired=RightAcquired.CREATED,
+                since_epoch=ctx.epoch,
+                locked=[],
+            )
+        )
+        held_subjects.add(subject.id)
         tally.claimed += 1
         budget -= 1
 
@@ -130,6 +181,18 @@ async def infringe(ctx: TickContext, row: IncorporealRightRow, tally: RightsTall
     tally.infringed += 1
     if row.kind in COPIED:
         await report_crime(ctx, town, culprit.id, CrimeKind.THEFT)
+        if rng.chance(table.steal_chance):
+            ctx.session.add(
+                IncorporealRightRow(
+                    holder_node_id=culprit.id,
+                    kind=row.kind,
+                    subject_node_id=row.subject_node_id,
+                    name=row.name,
+                    acquired=RightAcquired.STOLEN,
+                    since_epoch=ctx.epoch,
+                    locked=[],
+                )
+            )
     await note(
         ctx, f"{culprit.name} took up {row.name} without leave, to the anger of its holders.", key="rights.infringed", ids=[culprit.id, row.holder_node_id]
     )
@@ -147,9 +210,39 @@ async def collect_licence(ctx: TickContext, row: IncorporealRightRow, tally: Rig
         if "licensed_to_node_id" not in row.locked:
             row.licensed_to_node_id = None
         return
+    price = ctx.rules.incorporeal.buy_price
+    if await points_of(ctx.session, holder) < fee and await points_of(ctx.session, licensee) >= price and "holder_node_id" not in row.locked:
+        await shift_points(ctx.session, licensee, -price)
+        await shift_points(ctx.session, holder, price)
+        row.holder_node_id, row.acquired, row.licensed_to_node_id = licensee.id, RightAcquired.BOUGHT, None
+        await note(ctx, f"{licensee.name} bought {row.name} outright from {holder.name}.", key="rights.bought", ids=[licensee.id, holder.id])
+        return
     await shift_points(ctx.session, licensee, -fee)
     await shift_points(ctx.session, holder, fee)
+    await licensed_copy(ctx, row, licensee.id)
     tally.licensed += 1
+
+
+async def licensed_copy(ctx: TickContext, row: IncorporealRightRow, licensee_id: int) -> None:
+    found = await ctx.session.scalar(
+        select(IncorporealRightRow.id).where(
+            IncorporealRightRow.holder_node_id == licensee_id,
+            IncorporealRightRow.subject_node_id == row.subject_node_id,
+            IncorporealRightRow.acquired == RightAcquired.LICENSED,
+        )
+    )
+    if found is None and not held(licensee_id):
+        ctx.session.add(
+            IncorporealRightRow(
+                holder_node_id=licensee_id,
+                kind=row.kind,
+                subject_node_id=row.subject_node_id,
+                name=row.name,
+                acquired=RightAcquired.LICENSED,
+                since_epoch=ctx.epoch,
+                locked=[],
+            )
+        )
 
 
 async def keep_rights(ctx: TickContext, tally: RightsTally) -> None:

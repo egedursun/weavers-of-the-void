@@ -4,6 +4,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.economy import (
     CommodityFamily,
     CommodityKind,
+    ExtractionKind,
     FoeNature,
     GoodsFlow,
     LoanStatus,
@@ -176,6 +177,7 @@ class ResourceProfileView(ApiModel):
     richness: int
     regeneration: int
     extraction_difficulty: int
+    extraction: ExtractionKind
     required_branch: KnowledgeBranch | None
     required_level: int
     quality: int

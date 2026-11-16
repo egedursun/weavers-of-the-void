@@ -90,7 +90,7 @@ function GuestRow({
   const role = GUEST_ROLES[guest.role]
   const reason = ATTENDANCE_REASONS[guest.reason]
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <role.icon
           aria-hidden='true'

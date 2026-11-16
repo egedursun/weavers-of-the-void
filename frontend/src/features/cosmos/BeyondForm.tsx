@@ -11,7 +11,6 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import { horrorEventKindValues } from '@/api/generated/schema'
 import {
   Select,
   SelectContent,
@@ -20,22 +19,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { OuterBargainForm } from '@/features/son/OuterBargainForm'
+import { ChoiceField } from '@/features/wars/military/parts'
 import { CosmicActionButton } from './CosmicActionButton'
 import { EntityPicker } from './EntityPicker'
 import { OrderBlock, OrderFields } from './OrderBlock'
-import {
-  type ActionResponse,
-  type HorrorEventKind,
-  useCosmosState,
-} from './api'
+import { type ActionResponse, useCosmosState } from './api'
+import { HORROR_DEFAULT, HORROR_PARTS, type HorrorSpec } from './horrorParts'
 import { type CosmosIndex } from './model/cosmosModel'
-import { humanize } from './model/labels'
 import { useCosmicAction } from './useCosmicAction'
 
 const COMMUNITY_TYPES = ['people', 'settlement', 'cult', 'faction'] as const
 const PLACE_TYPES = ['region', 'place'] as const
 const CULT_TYPES = ['cult'] as const
-const HORROR_KINDS: readonly HorrorEventKind[] = horrorEventKindValues
 
 type BeyondFormProps = { index: CosmosIndex; worldId: number | undefined }
 
@@ -48,7 +43,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
   const [reader, setReader] = useState<number | null>(null)
   const [plagueAt, setPlagueAt] = useState<number | null>(null)
   const [horrorWorld, setHorrorWorld] = useState('')
-  const [horror, setHorror] = useState<HorrorEventKind>('eye_in_the_sky')
+  const [horror, setHorror] = useState<HorrorSpec>(HORROR_DEFAULT)
   const [seeded, setSeeded] = useState<number | null>(null)
   const [cult, setCult] = useState<number | null>(null)
   const [thread, setThread] = useState('')
@@ -142,7 +137,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
       </OrderBlock>
       <OrderBlock
         title='Order a horror'
-        description='Something from outside touches a world: the sanity of mortals and sons frays.'
+        description='A horror touches one thing a world holds and does one thing to it; those who perceive it lose sanity while it lingers.'
       >
         <OrderFields>
           <Select value={world} onValueChange={setHorrorWorld}>
@@ -157,21 +152,16 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
               ))}
             </SelectContent>
           </Select>
-          <Select
-            value={horror}
-            onValueChange={(value) => setHorror(value as HorrorEventKind)}
-          >
-            <SelectTrigger aria-label='Horror' className='w-full'>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {HORROR_KINDS.map((kind) => (
-                <SelectItem key={kind} value={kind}>
-                  {humanize(kind)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {HORROR_PARTS.map((part) => (
+            <ChoiceField
+              key={part.key}
+              label={part.label}
+              value={horror[part.key]}
+              table={part.table}
+              blocked={null}
+              onPick={(value) => setHorror({ ...horror, [part.key]: value })}
+            />
+          ))}
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
@@ -185,7 +175,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
               order.mutate(() =>
                 unwrap(
                   api.POST('/api/actions/horror:event', {
-                    body: { world_id: Number(world), kind: horror },
+                    body: { world_id: Number(world), ...horror },
                   })
                 )
               )

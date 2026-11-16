@@ -60,7 +60,7 @@ function TodoRow({
   action?: ReactNode
 }) {
   return (
-    <li className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2'>
+    <li className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <Medallion icon={icon} tone={tone} size='sm' />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>{children}</div>
       {action}

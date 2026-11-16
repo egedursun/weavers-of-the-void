@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.catalog.mythic import QUEST_PARTY_MAX
 from aerona.constants.schema import NAME_MAX_LENGTH
+from aerona.core.grammar import spoken
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -63,7 +64,7 @@ async def take_longevity(call: MortalCall, args: LongevityInput) -> str:
     if await vis_of(call.tick, call.me.id, args.form) <= 0:
         community = await community_of(call.session, call.me)
         if community is None or await vis_of(call.tick, community.id, args.form) <= 0:
-            fail(MortalResult.LONGEVITY_REFUSED, why=f"you hold no {args.form.value} vis to pay for it")
+            fail(MortalResult.LONGEVITY_REFUSED, why=f"you hold no {spoken(args.form)} vis to pay for it")
     row = await begin_longevity(call.tick, call.me, args.form)
     if row is None:
         fail(MortalResult.LONGEVITY_REFUSED, why="your body will not take it")

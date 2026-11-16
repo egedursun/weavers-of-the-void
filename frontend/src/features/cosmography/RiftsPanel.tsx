@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { MindPicker } from '@/features/entity/mind/parts'
+import { RiftControl, useRiftControls } from './RiftControl'
 import { type RiftRecord, useCosmography, useCosmographyAction } from './api'
 import { RIFT_CAUSES, RIFT_STATES } from './labels'
 import { type Ladder, ladderOf, nameTable } from './ladder'
@@ -45,6 +46,7 @@ function RiftRow({
     (_: void) => ({ rift_id: rift.id }),
     'The rift is gone from the record'
   )
+  const controls = useRiftControls()
   const busy =
     edit.isPending || seal.isPending || remove.isPending ? 'Working' : null
   const state = RIFT_STATES[rift.state]
@@ -128,6 +130,11 @@ function RiftRow({
         busy={busy}
         onSave={(values) => edit.mutate({ values, release: [] })}
         onRelease={(release) => edit.mutate({ values: {}, release })}
+      />
+      <RiftControl
+        riftId={rift.id}
+        control={controls.data?.controls.find((row) => row.rift_id === rift.id)}
+        blocked={busy}
       />
     </RecordRow>
   )

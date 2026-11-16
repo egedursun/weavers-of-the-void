@@ -24,7 +24,7 @@ NAMING LANGUAGES (each world has its own sound system; a record is named and jud
 {% macro society_lines(society) -%}
 {% set lines = [] %}
 {% if society.tier_label %}{% set _ = lines.append("Civilization tier: " ~ society.tier_label) %}{% endif %}
-{% if society.sanity is not none %}{% set _ = lines.append("Sanity: " ~ society.sanity ~ "/100" ~ (" — THEIR MINDS ARE CLOUDED: erratic rites, voices, misread signs" if society.clouded else "")) %}{% endif %}
+{% if society.sanity is not none %}{% set _ = lines.append("Sanity: " ~ society.sanity ~ "/100" ~ (" — THEIR MINDS ARE UNSOUND: their judgement is erratic" if society.clouded else "")) %}{% endif %}
 {% if society.classes %}{% set _ = lines.append("Society: " ~ society_classes(society.classes)) %}{% endif %}
 {% if society.relations %}{% set _ = lines.append("Relations with communities: " ~ community_relations(society.relations)) %}{% endif %}
 {% if society.wars %}{% set _ = lines.append("Ongoing wars: " ~ war_lines(society.wars)) %}{% endif %}
@@ -59,7 +59,7 @@ story#{{ thread.id }} (Age {{ thread.age }}{% if thread.worlds %}, {{ thread.wor
 {%- endmacro %}
 {% macro economy_block(e) -%}
 {% if e.settlement %}{% set s = e.settlement %}
-Settlement: {{ s.tier | an }}; treasury {{ s.treasury }}, tax {{ s.tax_rate }}%, order {{ s.order }}, crime {{ s.crime }}, unrest {{ s.unrest }}, sanitation {{ s.sanitation }}, fire risk {{ s.fire_risk }}, prestige {{ s.prestige }}, militia {{ s.militia }}{% if s.free_city %}, a free city{% endif %}{% if s.rationing %}, rationing bread{% endif %}
+Settlement: {{ s.tier | an }}; treasury {{ s.treasury }}, tax {{ s.tax_rate }}%, order {{ s.order }}, crime {{ s.crime }}, unrest {{ s.unrest }}, sanitation {{ s.sanitation }}, fire risk {{ s.fire_risk }}, prestige {{ s.prestige }}, militia {{ s.militia }}{% if s.free_city %}, a free city{% endif %}{% if s.rationing %}, rationing food{% endif %}
 
 {% if s.districts %}Districts: {{ s.districts | join("; ") }}
 {% endif %}{% if s.infrastructure %}Works: {{ s.infrastructure | join(", ") }}

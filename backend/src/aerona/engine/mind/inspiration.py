@@ -1,3 +1,5 @@
+from collections.abc import Awaitable, Callable, Mapping
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,6 +8,7 @@ from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import InspirationRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.economy import GoodsFlow
@@ -14,18 +17,22 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import InspirationKind, InspirationState, MoodState, PreferenceKind, SkillFamily, ThoughtKind
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.models.entity_stats import ItemStats
+from aerona.engine.body.bands import banded
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.gods.queries import community_of
 from aerona.engine.lore.items import profile_of
+from aerona.engine.lore.research_depth import add_progress, research_choices
 from aerona.engine.mind.preferences import favourite
 from aerona.engine.mind.thoughts import think
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.renown.deeds import acclaim_deed, best_craft
 
+SEERS = frozenset({MortalRole.PRIEST, MortalRole.SAGE})
 FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER, MortalRole.OFFICER, MortalRole.PILOT})
 FEVER_MATERIALS = (MaterialKind.GOLD, MaterialKind.SILVER, MaterialKind.IRON, MaterialKind.BRONZE, MaterialKind.STONE, MaterialKind.WOOD, MaterialKind.GLASS)
 ITEM_POWER = 3
@@ -51,6 +58,16 @@ async def kind_for(ctx: TickContext, mortal: EntityRow) -> InspirationKind | Non
         return InspirationKind.RESEARCH_INSIGHT
     if mortal.mortal_role in FIGHTERS:
         return InspirationKind.HEROIC_RESOLVE
+    return await other_kind(ctx, mortal, floor)
+
+
+async def other_kind(ctx: TickContext, mortal: EntityRow, floor: int) -> InspirationKind | None:
+    if mortal.mortal_role is MortalRole.ENGINEER:
+        return InspirationKind.TECHNICAL_BREAKTHROUGH
+    if mortal.mortal_role in SEERS or await best_in(ctx.session, mortal.id, SkillFamily.FAITH) >= floor:
+        return InspirationKind.SPIRITUAL_INSIGHT
+    if await best_in(ctx.session, mortal.id, SkillFamily.SOCIAL) >= floor:
+        return InspirationKind.ARTISTIC_VISION
     return None
 
 
@@ -71,6 +88,41 @@ async def insight(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> N
         target.progress += ctx.rules.aspirations.insight_progress
         row.result_node_id = holder
     row.state = InspirationState.FULFILLED
+
+
+async def breakthrough(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> None:
+    community = await community_of(ctx.session, mortal)
+    holder = community.id if community is not None else mortal.id
+    choices = await research_choices(ctx.session, holder)
+    if choices:
+        await add_progress(ctx, holder, choices[0], ctx.rules.aspirations.breakthrough_progress)
+        row.result_node_id = holder
+    row.state = InspirationState.FULFILLED
+
+
+async def vision(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> None:
+    shift_stat(mortal, "renown", ctx.rules.aspirations.vision_renown, 0)
+    community = await community_of(ctx.session, mortal)
+    if community is not None and not held(community.id):
+        shift_stat(community, "prestige", ctx.rules.aspirations.vision_renown // 2, 0)
+        row.result_node_id = community.id
+    row.state = InspirationState.FULFILLED
+
+
+async def revelation(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> None:
+    shift_stat(mortal, "piety", ctx.rules.aspirations.vision_renown, 0)
+    community = await community_of(ctx.session, mortal)
+    if community is not None and not held(community.id):
+        shift_stat(community, "piety", ctx.rules.aspirations.vision_renown // 2, 0)
+        row.result_node_id = community.id
+    row.state = InspirationState.FULFILLED
+
+
+SUDDEN: Mapping[InspirationKind, Callable[[TickContext, EntityRow, InspirationRow], Awaitable[None]]] = {
+    InspirationKind.TECHNICAL_BREAKTHROUGH: breakthrough,
+    InspirationKind.ARTISTIC_VISION: vision,
+    InspirationKind.SPIRITUAL_INSIGHT: revelation,
+}
 
 
 async def make_masterwork(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> bool:
@@ -129,6 +181,9 @@ async def kindle(ctx: TickContext, mortal: EntityRow) -> str | None:
     if kind is InspirationKind.RESEARCH_INSIGHT:
         await insight(ctx, mortal, row)
         return "insight"
+    if kind in SUDDEN:
+        await SUDDEN[kind](ctx, mortal, row)
+        return kind.value
     return "seized"
 
 
@@ -138,7 +193,7 @@ async def expire(ctx: TickContext, mortal: EntityRow, row: InspirationRow) -> st
         return "resolve_spent"
     row.state = InspirationState.FAILED
     await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.INSPIRATION_LOST, ctx.epoch)
-    await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.ACCIDENT, severity=2)
+    await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.ACCIDENT, severity=banded(ctx, ctx.rules.harm_bands.failed_inspiration, mortal.id))
     return "failed"
 
 

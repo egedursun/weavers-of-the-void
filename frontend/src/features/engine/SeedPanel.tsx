@@ -37,7 +37,7 @@ export function SeedPanel() {
       {seed.data && (
         <div className='flex min-w-0 flex-col gap-3'>
           <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
-            <div className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-background p-2'>
+            <div className='flex min-w-0 items-center gap-2.5 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
               <Medallion icon={Sprout} tone='gold' size='sm' />
               <div className='flex min-w-0 flex-1 flex-col'>
                 <Text as='span' weight='medium' className='font-mono break-all'>

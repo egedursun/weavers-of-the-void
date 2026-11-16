@@ -5,7 +5,7 @@ LORE_LANGUAGE_NAMES: dict[LoreLanguage, str] = {
     LoreLanguage.TURKISH: "Turkish",
 }
 
-MOOD_LEVELS: tuple[str, ...] = ("almost none", "low", "moderate", "high", "about to overflow")
+MOOD_LEVELS: tuple[str, ...] = ("almost none", "low", "moderate", "high", "near its peak")
 
 DEGREE_BANDS: tuple[tuple[float, str], ...] = (
     (80, "very {adjective}"),

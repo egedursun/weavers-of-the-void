@@ -521,7 +521,7 @@ export function SealTreaty({
             return (
               <div
                 key={`${clause.kind}-${index}`}
-                className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border p-2'
+                className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
               >
                 <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
                 <Badge size='sm' variant='secondary'>

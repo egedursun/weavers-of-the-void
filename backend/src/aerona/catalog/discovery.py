@@ -47,14 +47,14 @@ FIELDS: MappingProxyType[GreatField, FieldSpec] = total(
             (K.TACTICS, K.STRATEGY, K.LEADERSHIP, K.LOGISTICS),
             SocialClass.WARRIOR,
             (S.FORT, S.CITADEL, S.TOWER),
-            "a campaign fires the morale of the realm's armies",
+            "a campaign raises the morale of the realm's armies",
         ),
         GreatField.PROPHET: FieldSpec(
             "Great prophet",
             (K.THEOLOGY, K.PROPHECY, K.RITUAL, K.ORATORY),
             SocialClass.PRIEST,
             (S.TEMPLE, S.SHRINE, S.MONASTERY),
-            "a doctrine kindles the zeal of their faith",
+            "a doctrine raises the zeal of their faith",
         ),
         GreatField.ENGINEER: FieldSpec(
             "Great engineer",
@@ -82,7 +82,16 @@ FIELDS: MappingProxyType[GreatField, FieldSpec] = total(
 
 AGES: MappingProxyType[AgeKind, str] = total(
     AgeKind,
-    {AgeKind.NORMAL: "An ordinary age", AgeKind.GOLDEN: "A golden age", AgeKind.DARK: "A dark age", AgeKind.HEROIC: "A heroic age"},
+    {
+        AgeKind.NORMAL: "An ordinary age",
+        AgeKind.GOLDEN: "A golden age",
+        AgeKind.DARK: "A dark age",
+        AgeKind.HEROIC: "A heroic age",
+        AgeKind.RISING: "A rising age",
+        AgeKind.DECLINING: "A declining age",
+        AgeKind.TRANSFORMING: "An age of change",
+        AgeKind.STAGNANT: "A still age",
+    },
 )
 
 DEEDS: MappingProxyType[EraDeed, str] = total(
@@ -95,6 +104,11 @@ DEEDS: MappingProxyType[EraDeed, str] = total(
         EraDeed.GREAT_PERSON: "A great person rose",
         EraDeed.DEFEAT: "Lost a war",
         EraDeed.FAMINE: "Famine in its lands",
+        EraDeed.FIRST_NETWORK: "First to join its lands by a network",
+        EraDeed.FIRST_MADE_MIND: "First to make a mind",
+        EraDeed.FIRST_LINE: "First to shape a living line",
+        EraDeed.REVELATION: "A hidden truth came to light",
+        EraDeed.COLLAPSE: "Its order collapsed",
     },
 )
 
@@ -195,6 +209,11 @@ BLUEPRINT_KINDS: MappingProxyType[BlueprintKind, str] = total(
         BlueprintKind.SIEGE_ENGINE: "Siege engine design",
         BlueprintKind.STRUCTURE: "Building plan",
         BlueprintKind.ARTIFACT_PATTERN: "Pattern of a crafted thing",
+        BlueprintKind.MADE_BODY: "Design of a made body",
+        BlueprintKind.AUGMENT: "Design of an augment",
+        BlueprintKind.LINE: "Pattern of a living line",
+        BlueprintKind.NETWORK: "Plan of a network",
+        BlueprintKind.RITE_PATTERN: "Pattern of a rite",
     },
 )
 BLUEPRINT_SOURCES: MappingProxyType[BlueprintSource, str] = total(

@@ -1,8 +1,10 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.affairs import CourtRow
 from aerona.db.tables.arts import ArtPriceRow, ArtSaleRow, CanonWorkRow, CollectorRow
 from aerona.db.tables.bonds import BondRow
@@ -31,6 +33,11 @@ COLLECTOR_ROLES = {
     EntityType.CULT: ArtMarketRole.COLLECTOR,
     EntityType.FACTION: ArtMarketRole.DEALER,
 }
+
+ROLE_WEIGHT: Mapping[ArtMarketRole, int] = total(
+    ArtMarketRole,
+    {ArtMarketRole.COLLECTOR: 1, ArtMarketRole.DEALER: 2, ArtMarketRole.PATRON: 2, ArtMarketRole.CONNOISSEUR: 3},
+)
 
 
 @dataclass
@@ -81,11 +88,15 @@ async def gather_collectors(ctx: TickContext, tally: MarketTally) -> None:
 
 async def start_collection(ctx: TickContext, holder: EntityRow, taste: int | None) -> CollectorRow:
     rng = ctx.rng(f"collector.taste.{holder.id}")
+    discernment = rng.integer(MIDDLING // 2, PERCENT - MIDDLING // 2)
+    role = COLLECTOR_ROLES.get(holder.entity_type, ArtMarketRole.COLLECTOR)
+    if role is ArtMarketRole.COLLECTOR and discernment >= ctx.rules.art_markets.connoisseur_at:
+        role = ArtMarketRole.CONNOISSEUR
     row = CollectorRow(
         holder_entity_id=holder.id,
-        role=COLLECTOR_ROLES.get(holder.entity_type, ArtMarketRole.COLLECTOR),
+        role=role,
         taste_form_entity_id=taste,
-        connoisseurship=rng.integer(MIDDLING // 2, PERCENT - MIDDLING // 2),
+        connoisseurship=discernment,
         since_epoch=ctx.epoch,
         locked=[],
     )
@@ -106,9 +117,10 @@ async def start_collection(ctx: TickContext, holder: EntityRow, taste: int | Non
 async def interest_in(ctx: TickContext, profile: ArtworkProfileRow) -> int:
     if profile.art_form_entity_id is None:
         return 0
-    wanting = await ctx.session.scalar(select(func.count()).select_from(CollectorRow).where(CollectorRow.taste_form_entity_id == profile.art_form_entity_id))
-    total = await ctx.session.scalar(select(func.count()).select_from(CollectorRow))
-    return clamp_int(round_half_up(int(wanting or 0) * PERCENT / max(1, int(total or 0))), 0, PERCENT)
+    roles = list(await ctx.session.execute(select(CollectorRow.role, CollectorRow.taste_form_entity_id)))
+    wanting = sum(ROLE_WEIGHT[role] for role, form in roles if form == profile.art_form_entity_id)
+    every = sum(ROLE_WEIGHT[role] for role, _ in roles)
+    return clamp_int(round_half_up(wanting * PERCENT / max(1, every)), 0, PERCENT)
 
 
 async def appraise(ctx: TickContext, artwork: EntityRow, profile: ArtworkProfileRow) -> ArtPriceRow:

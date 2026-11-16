@@ -48,7 +48,7 @@ async def patron_bonus(session: AsyncSession, rules: Rules, entity: EntityRow) -
     if patron is None:
         return PatronBonus(None, 0)
     strength = rules.world_war_strength
-    multiplier = strength.war_father_mult if await has_power(session, patron.id, PowerEffect.WAR_FATHER) else 1
+    multiplier = strength.war_leader_mult if await has_power(session, patron.id, PowerEffect.WAR_LEADER) else 1
     return PatronBonus(patron, round_half_up(patron.strength / strength.patron_strength_divisor * multiplier))
 
 

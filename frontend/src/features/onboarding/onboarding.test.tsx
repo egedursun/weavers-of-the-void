@@ -207,6 +207,8 @@ describe('creation screen', () => {
 
 const WIZARD_OPTIONS = {
   technology: { iron: 'Iron age', bronze: 'Bronze age' },
+  technology_levels: { iron: 3, bronze: 2 },
+  technology_level_max: 10,
   language: { free: 'Free', sibilant: 'Sibilant' },
   cosmos: [
     { size: 'single', label: 'Single world', worlds: 1 },

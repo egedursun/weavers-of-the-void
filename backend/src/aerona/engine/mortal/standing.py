@@ -2,7 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.domain.enums.mind import ThoughtKind
+from aerona.domain.enums.mind import ThoughtKind, TraitEffect
+from aerona.engine.mind.book import effect_of
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.numbers import clamp_int
@@ -41,4 +42,6 @@ async def add_wealth(session: AsyncSession, mortal_id: int, amount: float, epoch
 
 
 async def add_stress(session: AsyncSession, mortal_id: int, amount: float, epoch: int) -> MortalProfileRow:
+    if amount > 0:
+        amount *= max(0.0, 1 - await effect_of(session, mortal_id, TraitEffect.RESILIENCE) / PERCENT)
     return await shift(session, mortal_id, "stress", amount, epoch)

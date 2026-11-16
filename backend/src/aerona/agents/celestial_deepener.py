@@ -123,7 +123,7 @@ async def _star_lines(scope: Scope, star: StarRow) -> tuple[list[str], list[str]
     details = [
         f"Kind: {STAR_TYPE_LABELS[star.star_type]} ({STAR_TYPES[star.star_type].description})",
         f"Brightness: {star.brightness}/100",
-        f"Kindled in age {star.created_epoch}",
+        f"Came to be in age {star.created_epoch}",
     ]
     if star.description:
         details.append(f"Description: {star.description}")

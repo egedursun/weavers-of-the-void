@@ -230,7 +230,7 @@ function MemoryItem({
 
 export function OpinionBreakdown({ opinion }: { opinion: MindOpinion }) {
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         {opinion.holder && <Text weight='semibold'>{opinion.holder.name}</Text>}
         <Muted variant='caption'>regards</Muted>

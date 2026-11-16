@@ -24,12 +24,12 @@ from aerona.engine.cosmos.routes import (
     open_alignment,
     open_route,
     recall_journey,
+    repair_route,
     route_status,
     sever_route,
     sky_calendar,
     snap_sail_routes,
     start_journey,
-    stitch_route,
 )
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_world, teach, tick, tuned
@@ -120,7 +120,7 @@ async def test_sever_and_stitch(ctx: TickContext, cosmos: Cosmos) -> None:
     result = await sever_route(storm_ctx, route.id, duration=3, by="The Creator")
     assert result.revealed and route.known and not route.active and result.waiting == 1
     assert route.temp_closed_until_epoch == ctx.epoch + 3
-    text = await stitch_route(ctx, route.id, "The Creator")
+    text = await repair_route(ctx, route.id, "The Creator")
     assert route.active and "reopened the severed route" in text
 
 

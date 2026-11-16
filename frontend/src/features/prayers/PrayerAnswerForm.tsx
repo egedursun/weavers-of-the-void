@@ -46,7 +46,7 @@ export function PrayerAnswerForm({ messageId, mortal }: PrayerAnswerFormProps) {
   const textId = `prayer-text-${messageId}`
   const essenceId = `prayer-essence-${messageId}`
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
         <div className='flex min-w-0 flex-col gap-1 sm:col-span-2'>
           <FieldLabel htmlFor={textId}>

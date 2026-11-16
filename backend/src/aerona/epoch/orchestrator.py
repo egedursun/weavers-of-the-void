@@ -64,7 +64,8 @@ class EpochOrchestrator:
         if self.jobs is None:
             raise ValidationFailedError("No job manager is available.")
         await self.require_world()
-        return await self.jobs.submit(JobKind.EPOCH, self.handler, exclusive_group=WORLD_GROUP)
+        kind = JobKind.EPOCH if self.runtime.llm_enabled else JobKind.SIMULATION
+        return await self.jobs.submit(kind, self.handler, exclusive_group=WORLD_GROUP)
 
     async def submit_son_turn(self, son_id: int) -> str:
         if self.jobs is None:

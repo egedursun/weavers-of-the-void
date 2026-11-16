@@ -34,8 +34,19 @@ import {
 } from './labels'
 import { clamp, LINE_TYPES, MANY, SPAN, useRow } from './model'
 import { TextField } from './parts'
+import {
+  PARTNER_SCOPES,
+  UNION_ARRANGEMENTS,
+  UNION_DESCENTS,
+  UNION_DISSOLUTIONS,
+  UNION_EXCHANGES,
+  UNION_FORMS,
+  UNION_PURPOSES,
+  UNION_RESIDENCES,
+} from './unionLabels'
 
 type Kinship = NonNullable<CyclesView['kinship']>
+type Union = NonNullable<CyclesView['union']>
 type Reproduction = NonNullable<CyclesView['reproduction']>
 type Caste = NonNullable<CyclesView['caste']>
 type Alliance = CyclesView['alliances'][number]
@@ -213,6 +224,268 @@ function KinshipForge({
         table={table(PAYMENTS)}
         blocked={busy}
         onPick={(value) => setPayment(value as keyof typeof PAYMENTS)}
+      />
+    </ForgeCard>
+  )
+}
+
+const UNION_NOTE =
+  'First and second are the two sides of a union as the people names them. The form and circles allow or bar each match; the purpose weighs what a match is sought for; the joined move as residence says; the exchange passes as a gift; lines run as descent says; partings follow the way unions end; a term union ends when its term is out.'
+
+function UnionCard({
+  peopleId,
+  row,
+  blocked,
+}: {
+  peopleId: number
+  row: Union
+  blocked: string | null
+}) {
+  const action = useRow(
+    'union:edit',
+    'union:delete',
+    { people_id: peopleId },
+    blocked
+  )
+  const form = UNION_FORMS[row.form]
+  return (
+    <Held
+      icon={form.icon}
+      tone={form.tone ?? 'info'}
+      title={`Unions: ${form.label.toLowerCase()}`}
+      caption={`${UNION_PURPOSES[row.purpose].label} · ${UNION_RESIDENCES[row.residence].label}`}
+      removeLabel='Read anew from their ways'
+      editTitle='Set their customs of union'
+      note={UNION_NOTE}
+      fields={[
+        {
+          key: 'form',
+          label: 'Form of a union',
+          kind: 'pick',
+          table: table(UNION_FORMS),
+        },
+        {
+          key: 'purpose',
+          label: 'What unions are for',
+          kind: 'pick',
+          table: table(UNION_PURPOSES),
+        },
+        {
+          key: 'residence',
+          label: 'Where the joined live',
+          kind: 'pick',
+          table: table(UNION_RESIDENCES),
+        },
+        {
+          key: 'descent',
+          label: 'Through whom lines run',
+          kind: 'pick',
+          table: table(UNION_DESCENTS),
+        },
+        {
+          key: 'exchange',
+          label: 'What passes between families',
+          kind: 'pick',
+          table: table(UNION_EXCHANGES),
+        },
+        {
+          key: 'arrangement',
+          label: 'Who arranges a union',
+          kind: 'pick',
+          table: table(UNION_ARRANGEMENTS),
+        },
+        {
+          key: 'dissolution',
+          label: 'How a union ends',
+          kind: 'pick',
+          table: table(UNION_DISSOLUTIONS),
+        },
+        {
+          key: 'endogamy',
+          label: 'Partners share their',
+          kind: 'pick',
+          table: table(PARTNER_SCOPES),
+        },
+        {
+          key: 'exogamy',
+          label: 'Partners come from another',
+          kind: 'pick',
+          table: table(PARTNER_SCOPES),
+        },
+        {
+          key: 'term_epochs',
+          label: 'Epochs a term union lasts',
+          kind: 'number',
+          min: 1,
+          max: 100,
+        },
+      ]}
+      locked={row.locked}
+      blocked={action.busy}
+      onEdit={action.onEdit}
+      onRemove={action.onRemove}
+      extra={
+        <>
+          <Chip icon={UNION_DESCENTS[row.descent].icon}>
+            Lines run {UNION_DESCENTS[row.descent].label.toLowerCase()}
+          </Chip>
+          <Chip icon={UNION_EXCHANGES[row.exchange].icon}>
+            {UNION_EXCHANGES[row.exchange].label}
+          </Chip>
+          <Chip icon={UNION_ARRANGEMENTS[row.arrangement].icon}>
+            {UNION_ARRANGEMENTS[row.arrangement].label}
+          </Chip>
+          <Chip icon={UNION_DISSOLUTIONS[row.dissolution].icon}>
+            Ended {UNION_DISSOLUTIONS[row.dissolution].label.toLowerCase()}
+          </Chip>
+          <Chip icon={PARTNER_SCOPES[row.endogamy].icon}>
+            {row.endogamy === 'none'
+              ? 'Partners need share nothing'
+              : `Partners share their ${PARTNER_SCOPES[row.endogamy].label.toLowerCase()}`}
+          </Chip>
+          <Chip icon={PARTNER_SCOPES[row.exogamy].icon}>
+            {row.exogamy === 'none'
+              ? 'Partners may come from anywhere'
+              : `Partners come from another ${PARTNER_SCOPES[row.exogamy].label.toLowerCase()}`}
+          </Chip>
+          <Chip icon={UNION_FORMS.contract.icon}>
+            A term union lasts {plural(row.term_epochs, 'epoch', 'epochs')}
+          </Chip>
+        </>
+      }
+    />
+  )
+}
+
+function UnionForge({
+  peopleId,
+  isPeople,
+  blocked,
+}: {
+  peopleId: number
+  isPeople: boolean
+  blocked: string | null
+}) {
+  const [form, setForm] = useState<Union['form']>('pair')
+  const [purpose, setPurpose] = useState<Union['purpose']>('kinship')
+  const [residence, setResidence] =
+    useState<Union['residence']>('new_household')
+  const [descent, setDescent] = useState<Union['descent']>('through_both')
+  const [exchange, setExchange] = useState<Union['exchange']>('none')
+  const [arrangement, setArrangement] =
+    useState<Union['arrangement']>('both_consent')
+  const [dissolution, setDissolution] =
+    useState<Union['dissolution']>('by_custom')
+  const [endogamy, setEndogamy] = useState<Union['endogamy']>('none')
+  const [exogamy, setExogamy] = useState<Union['exogamy']>('none')
+  const [term, setTerm] = useState('4')
+  const setting = useCycleAction(
+    'union:set',
+    (_: void) => ({
+      people_id: peopleId,
+      form,
+      purpose,
+      residence,
+      descent,
+      exchange,
+      arrangement,
+      dissolution,
+      endogamy,
+      exogamy,
+      term_epochs: clamp(term, 100, 1),
+    }),
+    'Their customs of union are set'
+  )
+  const busy = why(isPeople ? blocked : NOT_PEOPLE, setting.isPending)
+  return (
+    <ForgeCard
+      icon={HeartHandshake}
+      tone='success'
+      title='Set their customs of union'
+      note='Shape what a union is among this people, from its form and purpose to how it ends; nothing here assumes who the partners are.'
+      columns={4}
+      action={
+        <Button
+          size='sm'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => setting.mutate()}
+        >
+          <HeartHandshake />
+          Set their customs of union
+        </Button>
+      }
+    >
+      <MindPicker
+        label='Form'
+        value={form}
+        table={table(UNION_FORMS)}
+        blocked={busy}
+        onPick={(value) => setForm(value as Union['form'])}
+      />
+      <MindPicker
+        label='Purpose'
+        value={purpose}
+        table={table(UNION_PURPOSES)}
+        blocked={busy}
+        onPick={(value) => setPurpose(value as Union['purpose'])}
+      />
+      <MindPicker
+        label='Residence'
+        value={residence}
+        table={table(UNION_RESIDENCES)}
+        blocked={busy}
+        onPick={(value) => setResidence(value as Union['residence'])}
+      />
+      <MindPicker
+        label='Lines run'
+        value={descent}
+        table={table(UNION_DESCENTS)}
+        blocked={busy}
+        onPick={(value) => setDescent(value as Union['descent'])}
+      />
+      <MindPicker
+        label='Exchange'
+        value={exchange}
+        table={table(UNION_EXCHANGES)}
+        blocked={busy}
+        onPick={(value) => setExchange(value as Union['exchange'])}
+      />
+      <MindPicker
+        label='Arranged by'
+        value={arrangement}
+        table={table(UNION_ARRANGEMENTS)}
+        blocked={busy}
+        onPick={(value) => setArrangement(value as Union['arrangement'])}
+      />
+      <MindPicker
+        label='Ended'
+        value={dissolution}
+        table={table(UNION_DISSOLUTIONS)}
+        blocked={busy}
+        onPick={(value) => setDissolution(value as Union['dissolution'])}
+      />
+      <MindPicker
+        label='Partners share'
+        value={endogamy}
+        table={table(PARTNER_SCOPES)}
+        blocked={busy}
+        onPick={(value) => setEndogamy(value as Union['endogamy'])}
+      />
+      <MindPicker
+        label='Partners from another'
+        value={exogamy}
+        table={table(PARTNER_SCOPES)}
+        blocked={busy}
+        onPick={(value) => setExogamy(value as Union['exogamy'])}
+      />
+      <NumberField
+        label='Term in epochs'
+        value={term}
+        min={1}
+        max={100}
+        blocked={busy}
+        onChange={setTerm}
       />
     </ForgeCard>
   )
@@ -717,6 +990,16 @@ export function KinshipPanel({
         </Muted>
       )}
       <KinshipForge peopleId={nodeId} isPeople={isPeople} blocked={blocked} />
+      {data.union ? (
+        <UnionCard peopleId={nodeId} row={data.union} blocked={blocked} />
+      ) : (
+        <Muted variant='caption'>
+          {isPeople
+            ? 'Their customs of union are read at the next epoch.'
+            : NOT_PEOPLE}
+        </Muted>
+      )}
+      <UnionForge peopleId={nodeId} isPeople={isPeople} blocked={blocked} />
       {data.reproduction ? (
         <ReproductionCard
           peopleId={nodeId}

@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { ConfirmDialog } from '@/components/domain'
+import { ConfirmDialog, Picture } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import {
   type ImageRecord,
@@ -139,9 +139,10 @@ export function Lightbox({
         {current && (
           <div className='flex min-w-0 flex-col gap-4'>
             <div className='relative flex min-w-0 items-center justify-center overflow-hidden rounded-md bg-muted'>
-              <img
+              <Picture
                 src={mediaUrl(current.file_name)}
                 alt={current.caption ?? title}
+                missingClassName='aspect-video w-full max-h-lightbox'
                 className={cn(
                   'max-h-lightbox w-auto max-w-full object-contain',
                   veiled && 'blur-xl'

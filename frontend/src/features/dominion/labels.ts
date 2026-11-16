@@ -1,4 +1,5 @@
 import {
+  Waves,
   Activity,
   Ban,
   BookOpen,
@@ -113,6 +114,8 @@ export const SITE_KINDS: Record<Schema['MagicSiteKind'], Named> = {
   school_seat: { label: 'School seat', icon: BookOpen, tone: 'info' },
   ward: { label: 'Ward', icon: Shield, tone: 'gold' },
   gateway: { label: 'Gateway', icon: DoorOpen, tone: 'warning' },
+  tide_point: { label: 'Tide point', icon: Waves, tone: 'verdigris' },
+  depletion_scar: { label: 'Depletion scar', icon: Flame, tone: 'verdigris' },
 }
 
 export const DEEDS: Record<Schema['CreatureDeed'], Named> = {

@@ -104,7 +104,7 @@ function ImpositionRow({
   const axis = named(VALUE_ICONS, row.axis)
   const busy = blocked ?? (edit.isPending || cancel.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-2.5 rounded-lg border bg-card p-2.5'>
+    <div className='flex min-w-0 flex-wrap items-center gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <Medallion icon={cause.icon} tone={cause.tone} size='sm' />
       <div className='flex min-w-0 flex-1 basis-40 flex-col'>
         <Text as='span' weight='medium' truncate>

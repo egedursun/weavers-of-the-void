@@ -115,6 +115,11 @@ NEEDS: tuple[Need, ...] = (
     ),
     (K.LIBRARY, lambda rules, f: f.shares.get(SocialClass.SCRIBE, 0) >= rules.deep_life.library_min_scribe_pct or f.knows(B.WRITING)),
     (K.SCHOOL, lambda rules, f: f.knows(B.WRITING) and f.literacy < rules.construction.need_literacy),
+    (
+        K.PRINTING_HOUSE,
+        lambda rules, f: f.knows(B.WRITING) and f.reaches(K.PRINTING_HOUSE) and f.at_least(SizeTier.TOWN) and f.literacy >= rules.construction.press_literacy,
+    ),
+    (K.QUARANTINE_HOUSE, lambda rules, f: f.outbreak and f.knows(B.MEDICINE) and f.reaches(K.QUARANTINE_HOUSE) and f.at_least(SizeTier.TOWN)),
     (K.ROAD, lambda rules, f: f.at_least(SizeTier.VILLAGE) and f.knows(B.ARCHITECTURE)),
     (K.COURT, lambda rules, f: f.civic("crime") >= rules.construction.need_crime),
     (K.PRISON, lambda rules, f: f.civic("crime") >= rules.construction.need_prison_crime),

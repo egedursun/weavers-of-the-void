@@ -41,7 +41,7 @@ export function TypographySpecimens() {
           {FAMILIES.map((family) => (
             <div
               key={family.name}
-              className='flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-4'
+              className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-4'
             >
               <PageTitle className={family.className} truncate>
                 {'Aa \u011e\u011f \u015e\u015f'}

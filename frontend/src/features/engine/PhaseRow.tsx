@@ -29,8 +29,8 @@ export function PhaseRow({
     <li
       data-phase={phase.name}
       className={cn(
-        'flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border p-2.5',
-        phase.enabled ? 'bg-background' : 'bg-muted/40'
+        'flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-md border surface-sheen border-gild/60 bg-card p-2.5',
+        phase.enabled ? 'bg-card' : 'bg-muted/40'
       )}
     >
       <Badge

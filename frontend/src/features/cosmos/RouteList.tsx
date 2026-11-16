@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { EntityLink } from '@/components/domain'
+import { EntityLink, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import {
   RouteFlowEditor,
@@ -43,18 +43,20 @@ export function RouteList({
   if (routes.length === 0) return <Muted>No known route to this world.</Muted>
   return (
     <ul className='flex min-w-0 flex-col gap-3'>
-      {routes.map((route) => (
-        <RouteRow
-          key={route.id}
-          route={route}
-          worldId={worldId}
-          index={index}
-          rules={rules}
-          sonName={sonName}
-          highlighted={route.id === highlightedRouteId}
-          onSelectWorld={onSelectWorld}
-        />
-      ))}
+      <Paged items={routes} as='li'>
+        {(route) => (
+          <RouteRow
+            key={route.id}
+            route={route}
+            worldId={worldId}
+            index={index}
+            rules={rules}
+            sonName={sonName}
+            highlighted={route.id === highlightedRouteId}
+            onSelectWorld={onSelectWorld}
+          />
+        )}
+      </Paged>
     </ul>
   )
 }
@@ -90,7 +92,7 @@ function RouteRow({
       ref={ref}
       data-route-id={route.id}
       className={cn(
-        'flex min-w-0 flex-col gap-2 rounded-lg border p-3 transition-colors',
+        'flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3 transition-colors',
         !state.open && 'border-dashed',
         !route.known && 'opacity-80',
         highlighted && 'border-primary bg-accent'

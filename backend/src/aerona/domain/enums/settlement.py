@@ -7,9 +7,11 @@ class SizeTier(StrEnum):
     TOWN = "town"
     CITY = "city"
     METROPOLIS = "metropolis"
+    MEGALOPOLIS = "megalopolis"
+    WORLD_CITY = "world_city"
 
 
-TIER_ORDER = (SizeTier.HAMLET, SizeTier.VILLAGE, SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS)
+TIER_ORDER = (SizeTier.HAMLET, SizeTier.VILLAGE, SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY)
 
 
 class DistrictKind(StrEnum):

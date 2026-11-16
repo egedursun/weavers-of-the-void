@@ -10,7 +10,7 @@ class HistorianViewOutput(OutputModel):
     people_id: int
     historian: str = Field(description="The historian's name and title, in the people's language")
     text: str = Field(
-        description="1 to 2 paragraphs; through this people's own eyes and interests: partial where its pride, grief or fear is at stake, silent on what it would rather forget"
+        description="1 to 2 paragraphs; from this people's own side and interests: partial where its standing is at stake, silent on what it would rather forget"
     )
 
 

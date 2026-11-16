@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.agrarian import CommonsRow, GameReserveRow, PreparednessRow, ReconstructionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
@@ -105,7 +106,7 @@ async def enclose_commons(call: MortalCall, args: EncloseCommonsInput) -> str:
 async def rule_commons(call: MortalCall, args: RuleCommonsInput) -> str:
     row = await common_here(call, args.commons_id, MortalResult.COUNCIL_REFUSED)
     if row.rule in (CommonsRule.ENCLOSED, CommonsRule.COUNCIL):
-        fail(MortalResult.COUNCIL_REFUSED, why=f"it is already {row.rule.value}")
+        fail(MortalResult.COUNCIL_REFUSED, why=f"it is already {spoken(row.rule)}")
     await control.edit_record(call.tick, "commons", row.id, {"rule": CommonsRule.COUNCIL.value}, [])
     call.target(row.region_entity_id)
     await call.chronicle(ChronicleKind.WORLD, lines.RULE_COMMONS, entity_ids=[call.me.id, row.region_entity_id], me=call.me.name, kind=row.kind.value)

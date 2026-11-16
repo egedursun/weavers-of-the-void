@@ -15,9 +15,9 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import HorizonStatus, TravelMethod
-from aerona.domain.enums.world import HorrorEventKind
 from aerona.domain.models.entity_stats import CultStats, LanguageStats, MortalStats, OuterBeingStats, PeopleStats, PlaceStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.horror_model import HORROR_PRESETS
 from aerona.engine.cosmos.leak import apply_leak, leak_cap
 from aerona.engine.phases.exploration import (
     LandSearch,
@@ -47,7 +47,7 @@ from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make
 
 
 def test_exploration_sentence_never_shows_measures() -> None:
-    text = exploration_sentence([Reason.NARROW, Reason.HUNGER, Reason.EXPLORER, Reason.KNOWLEDGE], 0, "Iska")
+    text = exploration_sentence([Reason.NARROW, Reason.HUNGER, Reason.EXPLORER, Reason.KNOWLEDGE], "Iska")
     assert text == "when their homeland grew too small and when their food ran short led by Iska trusting what they knew of travel"
 
 
@@ -150,21 +150,23 @@ async def test_son_sanity_erodes_and_bands(ctx: TickContext, cosmos: Cosmos) -> 
 
 async def test_horror_events(ctx: TickContext, cosmos: Cosmos) -> None:
     people = await make_entity(ctx.session, "Tarn", EntityType.PEOPLE, PeopleStats(population=5000), world_id=cosmos.home.id)
-    eye = await horror_event(ctx, HorrorEventKind.EYE_IN_THE_SKY, cosmos.home)
-    assert eye is not None and people.sanity == ctx.rules.cosmic_horror.default_sanity - ctx.rules.cosmic_horror.sky_eye_sanity_loss
+    horror = ctx.rules.cosmic_horror
+    eye = await horror_event(ctx, HORROR_PRESETS["minds_marked"], cosmos.home)
+    assert eye and people.sanity == horror.default_sanity - horror.mind_mark_sanity_loss - horror.horror_sanity_cost
     language = await make_entity(ctx.session, "Tarnic", EntityType.LANGUAGE, LanguageStats(), world_id=cosmos.home.id)
     for index in range(10):
         ctx.session.add(LexemeRow(language_entity_id=language.id, word=f"word{index}", meaning="thing", added_by_kind=ActorKind.ENGINE, epoch=1))
     await ctx.session.flush()
-    await horror_event(ctx, HorrorEventKind.WAVE_OF_SILENCE, cosmos.home)
+    await horror_event(ctx, HORROR_PRESETS["language_taken"], cosmos.home)
     remaining = await ctx.session.scalar(select(func.count()).select_from(LexemeRow))
-    assert remaining == 10 - 10 * ctx.rules.cosmic_horror.silence_word_loss_pct // 100
+    assert remaining == 10 - 10 * ctx.rules.cosmic_horror.language_loss_pct // 100
     region = await make_region(ctx.session, "Barrens", cosmos.home.id)
     place = await make_entity(ctx.session, "Empty Hollow", EntityType.PLACE, PlaceStats(), world_id=cosmos.home.id, location_id=region.id)
-    text = await horror_event(ctx, HorrorEventKind.VISIT_OF_THE_VOID, cosmos.home)
-    assert text is not None and place.status is EntityStatus.DESTROYED
-    await horror_event(ctx, HorrorEventKind.STARS_ALIGN, cosmos.home)
-    assert cosmos.home.leakage == ctx.rules.cosmic_horror.alignment_leak
+    text = await horror_event(ctx, HORROR_PRESETS["place_taken"], cosmos.home)
+    assert text and place.status is EntityStatus.DESTROYED
+    before = cosmos.home.leakage
+    await horror_event(ctx, HORROR_PRESETS["time_multiplied"], cosmos.home)
+    assert cosmos.home.leakage == before + horror.alignment_leak + horror.horror_leak
 
 
 async def test_routes_reopen_and_reseal(ctx: TickContext, cosmos: Cosmos) -> None:

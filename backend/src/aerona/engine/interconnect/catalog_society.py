@@ -46,7 +46,7 @@ SOCIETY_MECHANICS = (
         tables=(CohortRow.__tablename__,),
         targets=(*COMMUNITIES, "mortal"),
         couplings=(
-            Coupling(Subsystem.WAR, "battles and levies take young men first", EdgeKind.FLOW),
+            Coupling(Subsystem.WAR, "battles and levies take the young first", EdgeKind.FLOW),
             Coupling(Subsystem.BODY, "mass maimings and the first sick raise named mortals", EdgeKind.TRIGGER, "cohorts.promotion_chance"),
             Coupling(Subsystem.MIND, "dormant mortals skip careers and needs", EdgeKind.MODIFIER, "cohorts.dormant_after_epochs"),
             Coupling(Subsystem.BODY, "maimed survivors fill the maimed cohort and are not levied", EdgeKind.FLOW, "maimed.labour_loss_pct"),

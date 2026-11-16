@@ -327,7 +327,7 @@ export function AnatomyFigure({
   })
   if (!drawing.data) return null
   return (
-    <div className='dark flex min-w-0 flex-col items-center gap-3 rounded-lg border bg-background p-3 text-foreground'>
+    <div className='dark flex min-w-0 flex-col items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3 text-foreground'>
       <Figure
         drawing={drawing.data}
         parts={parts}

@@ -251,7 +251,10 @@ describe('city', () => {
         screen.getByText('Residential · 1 district · 2 hexes · 0 buildings')
       )
       .toBeVisible()
-    await screen.getByRole('button', { name: 'Rule it' }).first().click()
+    await screen
+      .getByRole('button', { name: 'Rule the district' })
+      .first()
+      .click()
     await screen.getByRole('button', { name: 'Raise a level' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/district:edit'))
@@ -292,7 +295,10 @@ describe('city', () => {
       }
     )
     await screen.getByRole('tab', { name: /Buildings/ }).click()
-    await screen.getByRole('button', { name: 'Rule it' }).first().click()
+    await screen
+      .getByRole('button', { name: 'Rule the building' })
+      .first()
+      .click()
     await screen.getByRole('button', { name: 'Finish now' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/structure:finish'))
@@ -354,7 +360,10 @@ describe('city', () => {
     await expect
       .element(screen.getByText('Forest · 1 of 3 tiles'))
       .toBeVisible()
-    await screen.getByRole('button', { name: 'Rule it' }).first().click()
+    await screen
+      .getByRole('button', { name: 'Rule the resource' })
+      .first()
+      .click()
     await screen.getByRole('button', { name: 'Set', exact: true }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/resource:set'))

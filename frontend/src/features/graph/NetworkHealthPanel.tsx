@@ -13,7 +13,12 @@ import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ConfirmDialog, EntityLink, JobProgress } from '@/components/domain'
+import {
+  ConfirmDialog,
+  EntityLink,
+  JobProgress,
+  Paged,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { ruleValue, useRules } from '@/features/map/api'
 import {
@@ -137,34 +142,43 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
             )}
           </div>
           {health.data.weakest.length > 0 && (
-            <div className='flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1'>
-              <Label>Weakest</Label>
-              {health.data.weakest.map((node) => (
-                <span
-                  key={node.id}
-                  className='inline-flex min-w-0 items-baseline gap-1'
+            <div className='flex min-w-0 flex-col gap-2'>
+              <Label>Weakest records</Label>
+              <ul className='flex min-w-0 flex-col gap-1.5'>
+                <Paged
+                  items={health.data.weakest}
+                  as='li'
+                  noun={['record', 'records']}
                 >
-                  {node.kind === 'creator' ? (
-                    <EntityLink kind='creator'>{node.name}</EntityLink>
-                  ) : node.kind === 'son' ? (
-                    <EntityLink kind='son' id={String(node.id)}>
-                      {node.name}
-                    </EntityLink>
-                  ) : node.kind === 'foreign_god' ? (
-                    <EntityLink kind='foreign-god' id={String(node.id)}>
-                      {node.name}
-                    </EntityLink>
-                  ) : (
-                    <EntityLink kind='entity' id={String(node.id)}>
-                      {node.name}
-                    </EntityLink>
+                  {(node) => (
+                    <li
+                      key={node.id}
+                      className='flex min-w-0 items-center justify-between gap-3 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-1.5'
+                    >
+                      <span className='min-w-0 flex-1 truncate'>
+                        {node.kind === 'creator' ? (
+                          <EntityLink kind='creator'>{node.name}</EntityLink>
+                        ) : node.kind === 'son' ? (
+                          <EntityLink kind='son' id={String(node.id)}>
+                            {node.name}
+                          </EntityLink>
+                        ) : node.kind === 'foreign_god' ? (
+                          <EntityLink kind='foreign-god' id={String(node.id)}>
+                            {node.name}
+                          </EntityLink>
+                        ) : (
+                          <EntityLink kind='entity' id={String(node.id)}>
+                            {node.name}
+                          </EntityLink>
+                        )}
+                      </span>
+                      <Badge size='sm' variant='outline'>
+                        {plural(node.degree, 'link', 'links')}
+                      </Badge>
+                    </li>
                   )}
-                  <Muted
-                    as='span'
-                    variant='caption'
-                  >{`(${node.degree})`}</Muted>
-                </span>
-              ))}
+                </Paged>
+              </ul>
             </div>
           )}
           {health.data.priority > 0 && (
@@ -254,23 +268,25 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
           </Muted>
         )}
         <ul className='flex min-w-0 flex-col gap-1'>
-          {health.data?.log.slice(0, RECENT_LIMIT).map((entry, index) => (
-            <li
-              key={`${entry.at}-${index}`}
-              className='flex min-w-0 items-baseline gap-2'
-            >
-              <Muted
-                as='span'
-                variant='caption'
-                className='shrink-0 tabular-nums'
+          <Paged items={health.data?.log.slice(0, RECENT_LIMIT) ?? []} as='li'>
+            {(entry, index) => (
+              <li
+                key={`${entry.at}-${index}`}
+                className='flex min-w-0 items-baseline gap-2'
               >
-                {format(new Date(entry.at), 'HH:mm')}
-              </Muted>
-              <Text as='span' variant='caption' truncate={2}>
-                {entry.text}
-              </Text>
-            </li>
-          ))}
+                <Muted
+                  as='span'
+                  variant='caption'
+                  className='shrink-0 tabular-nums'
+                >
+                  {format(new Date(entry.at), 'HH:mm')}
+                </Muted>
+                <Text as='span' variant='caption' truncate={2}>
+                  {entry.text}
+                </Text>
+              </li>
+            )}
+          </Paged>
         </ul>
       </div>
       <ConfirmDialog

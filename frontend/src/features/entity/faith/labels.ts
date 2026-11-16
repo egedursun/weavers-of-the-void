@@ -1,4 +1,8 @@
 import {
+  Coins,
+  Atom,
+  GitBranch,
+  Network,
   Angry,
   Ban,
   Bird,
@@ -178,25 +182,38 @@ export const HOLDINGS: Record<string, Named> = {
   relic: { label: 'Relics', icon: Gem, tone: 'verdigris' },
   holy_place: { label: 'Holy places', icon: Sparkles, tone: 'gold' },
   monastery: { label: 'Monasteries', icon: BookOpen, tone: 'info' },
+  network: { label: 'Networks', icon: Network, tone: 'info' },
+  shares: { label: 'Shares in companies', icon: Coins, tone: 'gold' },
+  lines: { label: 'Holy lines', icon: GitBranch, tone: 'verdigris' },
 }
 
 export const STRATA: Record<string, Named & { depth: number }> = {
-  paradise: { label: 'Paradise', icon: Sun, tone: 'gold', depth: 0 },
-  warrior_hall: {
-    label: 'Hall of warriors',
+  reward: { label: 'Realm of reward', icon: Sun, tone: 'gold', depth: 0 },
+  by_manner_of_death: {
+    label: 'Realm of those who die in battle',
     icon: Swords,
     tone: 'warning',
     depth: 1,
   },
-  ancestor_hall: {
-    label: 'Hall of ancestors',
+  by_line: {
+    label: 'Realm of the line',
     icon: Users,
     tone: 'verdigris',
     depth: 2,
   },
-  plain: { label: 'Grey plain', icon: Cloud, tone: 'muted', depth: 3 },
-  torment: { label: 'Torment', icon: Flame, tone: 'danger', depth: 4 },
-  oblivion: { label: 'Oblivion', icon: EyeOff, tone: 'muted', depth: 5 },
+  common: { label: 'Common realm', icon: Cloud, tone: 'muted', depth: 3 },
+  punishment: {
+    label: 'Realm of punishment',
+    icon: Flame,
+    tone: 'danger',
+    depth: 4,
+  },
+  dissolution: {
+    label: 'Realm where souls dissolve',
+    icon: EyeOff,
+    tone: 'muted',
+    depth: 5,
+  },
 }
 
 export const SOUL_STATES: Record<string, Named> = {
@@ -268,6 +285,11 @@ export const BINDINGS: Record<string, Named> = {
   structure: { label: 'A building', icon: Castle, tone: 'gold' },
   beast: { label: 'A beast', icon: PawPrint, tone: 'warning' },
   person: { label: 'A person', icon: User, tone: 'info' },
+  realm: { label: 'A realm', icon: Crown, tone: 'gold' },
+  network: { label: 'A network', icon: Network, tone: 'info' },
+  line: { label: 'A line of descent', icon: GitBranch, tone: 'verdigris' },
+  tenet: { label: 'A tenet', icon: ScrollText, tone: 'gold' },
+  natural_law: { label: 'A law of nature', icon: Atom, tone: 'verdigris' },
 }
 
 export const DEEDS: Record<string, Named> = {

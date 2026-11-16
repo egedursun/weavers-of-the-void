@@ -176,7 +176,7 @@ async def arena(ctx: TickContext, item: Working, host: EntityRow, tally: Tally) 
     await apply_hits(ctx, loser, Harm(table.arena_duel_hp, HarmCause.DUEL, f"fell in the arena of {item.structure.name}"))
     await note(
         ctx,
-        f"In {item.structure.name}, {victor.name} bested {loser.name} before the roaring crowd.",
+        f"In {item.structure.name}, {victor.name} bested {loser.name} before the crowd.",
         key="structures.duel",
         ids=[item.structure.id, victor.id, loser.id],
         kind=ChronicleKind.WORLD,

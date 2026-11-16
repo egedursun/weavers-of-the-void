@@ -40,7 +40,7 @@ async def seek_sanctuary(call: MortalCall, args: SeekSanctuaryInput) -> str:
         fail(MortalResult.SANCTUARY_DENIED, why="no one hunts you")
     found = await host_for(call.tick, hunted)
     if found is None:
-        fail(MortalResult.SANCTUARY_DENIED, why="no temple or welcoming hearth in your town will take you in")
+        fail(MortalResult.SANCTUARY_DENIED, why="no temple or welcoming host in your town will take you in")
     host, kind = found
     await control.set_record(
         call.tick,

@@ -4,7 +4,7 @@ import { formatInteger } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { EmptyState, EntityLink, Section } from '@/components/domain'
+import { EmptyState, EntityLink, Paged, Section } from '@/components/domain'
 import { Label, Text } from '@/components/typography'
 import { fixedCost } from '@/features/entity/actions/gate'
 import { ActionButton } from '@/features/pantheon/ActionButton'
@@ -61,7 +61,7 @@ function ViewRow({
   return (
     <li
       data-historian-view={view.id}
-      className='flex min-w-0 flex-col gap-2 rounded-xl border bg-background p-3'
+      className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2'>
         <div className='flex min-w-0 flex-1 basis-60 flex-col gap-0.5'>
@@ -164,17 +164,19 @@ export function HistorianViewsPanel({
         />
       ) : (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {views.map((view) => (
-            <ViewRow
-              key={view.id}
-              view={view}
-              cost={cost}
-              people={
-                people.get(view.people_entity_id) ??
-                `People ${view.people_entity_id}`
-              }
-            />
-          ))}
+          <Paged items={views} as='li'>
+            {(view) => (
+              <ViewRow
+                key={view.id}
+                view={view}
+                cost={cost}
+                people={
+                  people.get(view.people_entity_id) ??
+                  `People ${view.people_entity_id}`
+                }
+              />
+            )}
+          </Paged>
         </ul>
       )}
     </Section>

@@ -1,10 +1,12 @@
+from aerona.catalog.quests import LEGACY_LEGENDARY
 from aerona.constants.schema import FACT_OBJECT_MAX_LENGTH, FACT_PREDICATE_MAX_LENGTH, LEXEME_TEXT_MAX_LENGTH, LEXEME_WORD_MAX_LENGTH, NAME_MAX_LENGTH
 from aerona.db.tables.entities import NetworkReviewRow
 from aerona.db.tables.lore import CanonFactRow, CouncilRow, FolkBeliefRow, LegendaryQuestRow, LexemeRow, MessageRow, ThreadLinkRow, ThreadRow, lexeme_key
 from aerona.domain.enums.agent import MessageIntent, PrayerRequest
-from aerona.domain.enums.chronicle import LegendaryQuestKind, PartOfSpeech, ThreadLinkRole, ThreadStatus
+from aerona.domain.enums.chronicle import PartOfSpeech, ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.quests import QuestTargetKind
 from aerona.engine.primitives.canon_facts import Predicate
 from aerona.migration.legacy import blobs
 from aerona.migration.legacy.context import MigrationContext
@@ -100,18 +102,20 @@ def _quest(context: MigrationContext, thread_id: int, epoch: int, payload: objec
         return
     vocabulary = context.vocabulary
     raw_kind = vocabulary.field("quest", data, "kind")
-    kind = vocabulary.decode_as("legendary_quest_kind", raw_kind, LegendaryQuestKind)
-    if kind is None:
+    legacy = vocabulary.decode("legendary_quest_kind", raw_kind)
+    pair = LEGACY_LEGENDARY.get(legacy) if legacy is not None else None
+    if pair is None:
         context.report.place_failed("legendary quest", f"thread:{thread_id}", f"unknown quest kind {raw_kind!r}")
         return
     target = as_int(vocabulary.field("quest", data, "target"))
     opener = vocabulary.decode_as("quest_opener", vocabulary.field("quest", data, "opened_by"), ActorKind) or ActorKind.FATE
     opened = as_int(vocabulary.field("quest", data, "opened")) or epoch
     deadline = as_int(vocabulary.field("quest", data, "deadline")) or opened
-    quest = LegendaryQuestRow(thread_id=thread_id, kind=kind, opened_by=opener, opened_epoch=opened, deadline_epoch=deadline)
-    if kind is LegendaryQuestKind.DEAD_STAR:
+    aim, target_kind = pair
+    quest = LegendaryQuestRow(thread_id=thread_id, aim=aim, target_kind=target_kind, opened_by=opener, opened_epoch=opened, deadline_epoch=deadline, locked=[])
+    if target_kind is QuestTargetKind.STAR:
         quest.target_star_id = context.ids.get(LegacyKind.STAR, target)
-    elif kind is LegendaryQuestKind.SEALED_GATE:
+    elif target_kind is QuestTargetKind.ROUTE:
         quest.target_route_id = context.ids.get(LegacyKind.ROUTE, target)
     else:
         quest.target_entity_id = context.entity(target)

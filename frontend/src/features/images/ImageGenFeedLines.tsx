@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
-import { EntityLink } from '@/components/domain'
+import { EntityLink, Paged, Picture } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
@@ -88,64 +88,72 @@ export function ImageGenFeedLines({ log = [], limit }: ImageGenFeedLinesProps) {
     <div data-domain='image-feed' className='flex min-w-0 flex-col gap-3'>
       {shown.length > 0 && (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {shown.map((line) => {
-            const Icon = TONE_ICON[line.tone]
-            return (
-              <li key={line.key} className='flex min-w-0 items-center gap-2'>
-                <Icon
-                  aria-hidden='true'
-                  className={cn('size-icon-sm shrink-0', TONE_CLASS[line.tone])}
-                />
-                {line.file && (
-                  <img
-                    src={mediaUrl(line.file, 64)}
-                    alt=''
-                    className='size-portrait-sm shrink-0 rounded-sm object-cover'
+          <Paged items={shown} as='li'>
+            {(line) => {
+              const Icon = TONE_ICON[line.tone]
+              return (
+                <li key={line.key} className='flex min-w-0 items-center gap-2'>
+                  <Icon
+                    aria-hidden='true'
+                    className={cn(
+                      'size-icon-sm shrink-0',
+                      TONE_CLASS[line.tone]
+                    )}
                   />
-                )}
-                <div className='flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2'>
-                  {target(line.nodeId)}
-                  <Muted as='span' variant='caption' truncate>
-                    {line.text}
-                  </Muted>
-                </div>
-                {line.percent !== undefined && line.tone === 'progress' && (
-                  <Progress
-                    size='sm'
-                    value={Math.min(line.percent, PERCENT)}
-                    aria-label='Image progress'
-                    className='w-16 shrink-0'
-                  />
-                )}
-                <Label>{timeOf(line.at)}</Label>
-              </li>
-            )
-          })}
+                  {line.file && (
+                    <Picture
+                      compact
+                      src={mediaUrl(line.file, 64)}
+                      alt=''
+                      className='size-portrait-sm shrink-0 rounded-sm object-cover'
+                    />
+                  )}
+                  <div className='flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2'>
+                    {target(line.nodeId)}
+                    <Muted as='span' variant='caption' truncate>
+                      {line.text}
+                    </Muted>
+                  </div>
+                  {line.percent !== undefined && line.tone === 'progress' && (
+                    <Progress
+                      size='sm'
+                      value={Math.min(line.percent, PERCENT)}
+                      aria-label='Image progress'
+                      className='w-16 shrink-0'
+                    />
+                  )}
+                  <Label>{timeOf(line.at)}</Label>
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       )}
       {log.length > 0 && (
         <div className='flex min-w-0 flex-col gap-1'>
           <Label variant='overline'>Worker log</Label>
           <ul className='flex min-w-0 flex-col gap-1'>
-            {log.slice(-LOG_SHOWN).map((entry, index) => (
-              <li key={`${entry.at}-${index}`} className='flex min-w-0 gap-2'>
-                <Label>{timeOf(entry.at)}</Label>
-                <Text
-                  as='span'
-                  variant='caption'
-                  tone={
-                    entry.level === 'error'
-                      ? 'destructive'
-                      : entry.level === 'warning'
-                        ? 'warning'
-                        : 'muted'
-                  }
-                  className='min-w-0'
-                >
-                  {entry.text}
-                </Text>
-              </li>
-            ))}
+            <Paged items={log.slice(-LOG_SHOWN)} as='li'>
+              {(entry, index) => (
+                <li key={`${entry.at}-${index}`} className='flex min-w-0 gap-2'>
+                  <Label>{timeOf(entry.at)}</Label>
+                  <Text
+                    as='span'
+                    variant='caption'
+                    tone={
+                      entry.level === 'error'
+                        ? 'destructive'
+                        : entry.level === 'warning'
+                          ? 'warning'
+                          : 'muted'
+                    }
+                    className='min-w-0'
+                  >
+                    {entry.text}
+                  </Text>
+                </li>
+              )}
+            </Paged>
           </ul>
         </div>
       )}

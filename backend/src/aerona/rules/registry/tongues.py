@@ -9,6 +9,7 @@ L = RuleGroup.LANGUAGE_AND_NAMES
 @dataclass(frozen=True)
 class SoundChangeRules:
     base_pct: int = rule(6, 0, 100, L, "Chance a living language takes a new sound change each epoch when it stands alone (%)")
+    texture_epochs: int = rule(2, 0, 100, L, "Epochs after the making of the world in which a first language takes the way of speaking its world was made with")
     contact_pct: int = rule(4, 0, 100, L, "Extra chance for each other tongue its speakers also speak (%)")
     migration_pct: int = rule(8, 0, 100, L, "Extra chance when its speakers moved to a new land this epoch (%)")
     prestige_gap: int = rule(25, 0, 100, L, "Prestige by which a neighbouring tongue must outrank it before its sounds are copied")

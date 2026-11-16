@@ -19,7 +19,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, JobProgress } from '@/components/domain'
+import { EmptyState, JobProgress, Paged } from '@/components/domain'
 import { Logo } from '@/components/layout/Logo'
 import { Label, Muted, PageTitle, Text } from '@/components/typography'
 import { BackupsPanel } from '@/features/backups/BackupsPanel'
@@ -45,7 +45,7 @@ function GenesisProgress() {
     <section
       aria-label='Genesis in progress'
       data-onboarding='progress'
-      className='flex w-full max-w-2xl min-w-0 flex-col items-center gap-6 self-center rounded-xl border bg-card p-6 text-center shadow-sm'
+      className='flex w-full max-w-2xl min-w-0 flex-col items-center gap-6 self-center rounded-md border surface-framed border-gild/70 bg-card p-6 text-center'
     >
       <div className='relative flex h-40 w-40 items-center justify-center'>
         <span
@@ -76,32 +76,34 @@ function GenesisProgress() {
         )}
       </div>
       {notes.length > 0 && (
-        <ol className='flex max-h-80 w-full min-w-0 flex-col gap-1.5 overflow-y-auto rounded-lg border bg-muted/30 p-3 text-start'>
-          {notes.map((line, index) => {
-            const latest = index === notes.length - 1
-            return (
-              <li key={line.id} className='flex min-w-0 items-start gap-2'>
-                {latest ? (
-                  <LoaderCircle
-                    aria-hidden='true'
-                    className='size-icon-sm shrink-0 animate-spin text-primary motion-reduce:animate-none'
-                  />
-                ) : (
-                  <CircleCheck
-                    aria-hidden='true'
-                    className='size-icon-sm shrink-0 text-success'
-                  />
-                )}
-                <Text
-                  as='span'
-                  variant='caption'
-                  tone={latest ? 'default' : 'muted'}
-                >
-                  {line.title}
-                </Text>
-              </li>
-            )
-          })}
+        <ol className='flex max-h-80 w-full min-w-0 flex-col gap-1.5 overflow-y-auto rounded-md border surface-well border-gild/20 bg-muted/60 p-3 text-start'>
+          <Paged items={notes} as='li'>
+            {(line, index) => {
+              const latest = index === notes.length - 1
+              return (
+                <li key={line.id} className='flex min-w-0 items-start gap-2'>
+                  {latest ? (
+                    <LoaderCircle
+                      aria-hidden='true'
+                      className='size-icon-sm shrink-0 animate-spin text-primary motion-reduce:animate-none'
+                    />
+                  ) : (
+                    <CircleCheck
+                      aria-hidden='true'
+                      className='size-icon-sm shrink-0 text-success'
+                    />
+                  )}
+                  <Text
+                    as='span'
+                    variant='caption'
+                    tone={latest ? 'default' : 'muted'}
+                  >
+                    {line.title}
+                  </Text>
+                </li>
+              )
+            }}
+          </Paged>
         </ol>
       )}
     </section>
@@ -195,7 +197,7 @@ export function GenesisScreen() {
           <WorldBorn state={state.data} />
         )}
         {state.data && !running && world && !witnessed && (
-          <div className='flex w-full max-w-2xl min-w-0 flex-col self-center rounded-xl border bg-card p-6 shadow-sm'>
+          <div className='flex w-full max-w-2xl min-w-0 flex-col self-center rounded-md border surface-framed border-gild/70 bg-card p-6'>
             <EmptyState
               icon={Globe}
               title={`${world.name} already exists`}

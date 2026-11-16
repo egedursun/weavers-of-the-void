@@ -18,12 +18,21 @@ class EchelonOrder(StrEnum):
 
 
 class CarrierKind(StrEnum):
-    WAGONS = "wagons"
-    PACK_ANIMALS = "pack_animals"
     PORTERS = "porters"
-    BARGES = "barges"
-    SHIPS = "ships"
-    SKY_BARGES = "sky_barges"
+    PACK_ANIMALS = "pack_animals"
+    ANIMAL_CARTS = "animal_carts"
+    RAIL = "rail"
+    ROAD_MOTOR = "road_motor"
+    RIVER_AND_CANAL = "river_and_canal"
+    SEA = "sea"
+    AIR = "air"
+    PIPELINE = "pipeline"
+    ORBITAL_LIFT = "orbital_lift"
+    SPACE = "space"
+    TELEPORT = "teleport"
+    LIVING = "living"
+    RITE = "rite"
+    NETWORK = "network"
 
 
 class ShotKind(StrEnum):
@@ -31,6 +40,13 @@ class ShotKind(StrEnum):
     CHAIN = "chain"
     GRAPE = "grape"
     FIRE = "fire"
+    SOLID = "solid"
+    SPREAD = "spread"
+    INCENDIARY = "incendiary"
+    EXPLOSIVE = "explosive"
+    PIERCING = "piercing"
+    GUIDED = "guided"
+    ENERGY = "energy"
 
 
 class PointOfSail(StrEnum):

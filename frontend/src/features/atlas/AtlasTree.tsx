@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { GenerateImageMini } from '@/features/images/GenerateImageMini'
 import { Highlight } from './Highlight'
@@ -103,80 +104,82 @@ export function AtlasTree({
       className='flex min-w-0 flex-col'
       onKeyDown={onKeyDown}
     >
-      {rows.map(({ node, depth }) => {
-        const Icon = nodeIcon(node)
-        const expandable = node.children.length > 0
-        const isOpen = open.has(node.key)
-        const isSelected = selected === node.key
-        return (
-          <li
-            key={node.key}
-            id={`atlas-row-${node.key}`}
-            role='treeitem'
-            aria-level={depth + 1}
-            aria-expanded={expandable ? isOpen : undefined}
-            aria-selected={isSelected}
-            tabIndex={node.key === active ? 0 : -1}
-            onFocus={() => setFocused(node.key)}
-            onClick={() => onSelect(node)}
-            onDoubleClick={() =>
-              expandable ? onToggle(node.key, !isOpen) : onActivate(node)
-            }
-            className={cn(
-              'group flex min-w-0 cursor-pointer items-center gap-1 rounded-md pe-1 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring',
-              INDENT[Math.min(depth, INDENT.length - 1)],
-              isSelected && 'bg-accent text-accent-foreground'
-            )}
-          >
-            {expandable ? (
-              <Button
-                variant='ghost'
-                size='icon-sm'
-                tabIndex={-1}
-                aria-label={
-                  isOpen ? `Close ${node.label}` : `Open ${node.label}`
-                }
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onToggle(node.key, !isOpen)
-                }}
-              >
-                {isOpen ? <ChevronDown /> : <ChevronRight />}
-              </Button>
-            ) : (
-              <span aria-hidden='true' className='size-control-sm shrink-0' />
-            )}
-            <Icon
-              aria-hidden='true'
-              className={cn('size-icon-sm shrink-0', KIND_TONE[node.kind])}
-            />
-            <Text as='span' truncate className='min-w-0 flex-1'>
-              <Highlight text={node.label} query={query} />
-            </Text>
-            {node.kind === 'group' ? (
-              <Muted as='span' variant='caption'>
-                {formatInteger(counts.get(node.key) ?? 0)}
-              </Muted>
-            ) : node.hint ? (
-              <Muted
-                as='span'
-                variant='caption'
-                truncate
-                className='hidden max-w-1/3 sm:block'
-              >
-                {node.hint}
-              </Muted>
-            ) : null}
-            {node.kind === 'entity' &&
-              node.id !== undefined &&
-              imageWorkerOn && (
-                <span className='flex opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100'>
-                  <GenerateImageMini nodeId={node.id} name={node.label} />
-                </span>
+      <Paged items={rows} as='li'>
+        {({ node, depth }) => {
+          const Icon = nodeIcon(node)
+          const expandable = node.children.length > 0
+          const isOpen = open.has(node.key)
+          const isSelected = selected === node.key
+          return (
+            <li
+              key={node.key}
+              id={`atlas-row-${node.key}`}
+              role='treeitem'
+              aria-level={depth + 1}
+              aria-expanded={expandable ? isOpen : undefined}
+              aria-selected={isSelected}
+              tabIndex={node.key === active ? 0 : -1}
+              onFocus={() => setFocused(node.key)}
+              onClick={() => onSelect(node)}
+              onDoubleClick={() =>
+                expandable ? onToggle(node.key, !isOpen) : onActivate(node)
+              }
+              className={cn(
+                'group flex min-w-0 cursor-pointer items-center gap-1 rounded-md pe-1 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring',
+                INDENT[Math.min(depth, INDENT.length - 1)],
+                isSelected && 'bg-accent text-accent-foreground'
               )}
-          </li>
-        )
-      })}
+            >
+              {expandable ? (
+                <Button
+                  variant='ghost'
+                  size='icon-sm'
+                  tabIndex={-1}
+                  aria-label={
+                    isOpen ? `Close ${node.label}` : `Open ${node.label}`
+                  }
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onToggle(node.key, !isOpen)
+                  }}
+                >
+                  {isOpen ? <ChevronDown /> : <ChevronRight />}
+                </Button>
+              ) : (
+                <span aria-hidden='true' className='size-control-sm shrink-0' />
+              )}
+              <Icon
+                aria-hidden='true'
+                className={cn('size-icon-sm shrink-0', KIND_TONE[node.kind])}
+              />
+              <Text as='span' truncate className='min-w-0 flex-1'>
+                <Highlight text={node.label} query={query} />
+              </Text>
+              {node.kind === 'group' ? (
+                <Muted as='span' variant='caption'>
+                  {formatInteger(counts.get(node.key) ?? 0)}
+                </Muted>
+              ) : node.hint ? (
+                <Muted
+                  as='span'
+                  variant='caption'
+                  truncate
+                  className='hidden max-w-1/3 sm:block'
+                >
+                  {node.hint}
+                </Muted>
+              ) : null}
+              {node.kind === 'entity' &&
+                node.id !== undefined &&
+                imageWorkerOn && (
+                  <span className='flex opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100'>
+                    <GenerateImageMini nodeId={node.id} name={node.label} />
+                  </span>
+                )}
+            </li>
+          )
+        }}
+      </Paged>
     </ul>
   )
 }

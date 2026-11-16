@@ -22,7 +22,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
-import { MiniStat, Section } from '@/components/domain'
+import { MiniStat, Paged, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useHealth } from '@/features/images/api'
 import { useHealthReport } from './api'
@@ -182,15 +182,17 @@ export function HealthPanel() {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <ul className='flex min-w-0 flex-col gap-1.5 pt-2'>
-                  {errors.slice(-RECENT_ERRORS).map((entry, index) => (
-                    <li
-                      key={`${entry.at}-${index}`}
-                      className='flex min-w-0 flex-col gap-0.5 rounded-lg border border-destructive/30 bg-destructive/5 p-2'
-                    >
-                      <Muted variant='caption'>{`${entry.at} · ${entry.level}`}</Muted>
-                      <Text variant='caption'>{entry.text}</Text>
-                    </li>
-                  ))}
+                  <Paged items={errors.slice(-RECENT_ERRORS)} as='li'>
+                    {(entry, index) => (
+                      <li
+                        key={`${entry.at}-${index}`}
+                        className='flex min-w-0 flex-col gap-0.5 rounded-md border surface-sheen border-destructive/30 bg-destructive/5 p-2'
+                      >
+                        <Muted variant='caption'>{`${entry.at} · ${entry.level}`}</Muted>
+                        <Text variant='caption'>{entry.text}</Text>
+                      </li>
+                    )}
+                  </Paged>
                 </ul>
               </CollapsibleContent>
             </Collapsible>

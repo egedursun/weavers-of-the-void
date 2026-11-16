@@ -133,7 +133,7 @@ async def log_setups(ctx: TickContext, tally: DramaTally) -> None:
         subject = await ctx.session.scalar(
             select(ThreadLinkRow.entity_id).where(ThreadLinkRow.thread_id == thread.id).order_by(ThreadLinkRow.entity_id).limit(1)
         )
-        await log_setup(ctx, SetupKind.THREAD, thread.id, subject, tally)
+        await log_setup(ctx, SetupKind.INCIDENT_ARC, thread.id, subject, tally)
     await ctx.session.flush()
 
 
@@ -209,7 +209,7 @@ async def portent_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
 PAYERS = {
     SetupKind.FORESIGHT: foresight_paid,
     SetupKind.PROPHECY: prophecy_paid,
-    SetupKind.THREAD: thread_paid,
+    SetupKind.INCIDENT_ARC: thread_paid,
     SetupKind.DREAM: dream_paid,
     SetupKind.OMEN: omen_paid,
     SetupKind.PORTENT: portent_paid,

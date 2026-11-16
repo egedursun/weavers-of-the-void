@@ -32,6 +32,14 @@ class TrialKind(StrEnum):
     JURY = "jury"
     COMBAT = "combat"
     ORDEAL = "ordeal"
+    COUNCIL = "council"
+    ARBITRATION = "arbitration"
+    ORACLE = "oracle"
+    DIVINE_JUDGEMENT = "divine_judgement"
+    ASSEMBLY = "assembly"
+    INQUISITION = "inquisition"
+    MEDIATION = "mediation"
+    MADE_JUDGE = "made_judge"
 
 
 class Verdict(StrEnum):

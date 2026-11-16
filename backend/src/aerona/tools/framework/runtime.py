@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.tool_inputs import ERROR_EXCERPT
 from aerona.core.errors import AeronaError
+from aerona.core.grammar import spoken
 from aerona.db.ledger_capture import RowChange
 from aerona.db.session import Database
 from aerona.db.tables.lore import ChronicleRow
@@ -201,7 +202,7 @@ class ToolRuntime[CallT: ToolCall]:
             publish=settings.publish,
             stats=TickStats(),
         )
-        return TickContext(environment, session, f"tool.{self.agent.value}.{settings.actor_node_id}.{self._calls}.{spec.name}")
+        return TickContext(environment, session, f"tool.{spoken(self.agent)}.{settings.actor_node_id}.{self._calls}.{spec.name}")
 
     async def _environment(self, session: AsyncSession, spec: ToolSpec[CallT, Any], writable: bool) -> CallEnvironment:
         loader = load_turn if writable else peek_turn

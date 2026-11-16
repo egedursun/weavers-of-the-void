@@ -20257,14 +20257,14 @@
  },
  {
   "namespace": "FOREIGN_GODS",
-  "key": "power_sharp_tongue",
+  "key": "power_persuasion",
   "old_namespace": "YABANCI",
   "old_key": "guc_soz",
   "default": 15,
   "min": 0,
   "max": 500,
   "group": "Foreign gods",
-  "label": "Sharp-tongued power: subtracted from the die of a son talking with it",
+  "label": "Persuasive power: subtracted from the die of a son talking with it",
   "module": "src/yabanci.js"
  },
  {
@@ -33061,14 +33061,14 @@
  },
  {
   "namespace": "SON_TOOLS",
-  "key": "dream_whisper_bonus_pct",
+  "key": "dream_sending_bonus_pct",
   "old_namespace": "OGUL_ARAC",
   "old_key": "ruya_fisilti",
   "default": 25,
   "min": 0,
   "max": 100,
   "group": "Son tools",
-  "label": "Bonus of the Whisper power to dream chance (%)",
+  "label": "Bonus of the Dream sending power to dream chance (%)",
   "module": "src/tools.js"
  },
  {
@@ -39661,7 +39661,7 @@
  },
  {
   "namespace": "WORLD_WAR_STRENGTH",
-  "key": "war_father_mult",
+  "key": "war_leader_mult",
   "old_namespace": "DUNYA_SAVAS_GUCU",
   "old_key": "savas_babasi_carpan",
   "default": 2,

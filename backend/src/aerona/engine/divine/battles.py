@@ -11,7 +11,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, alive, god_of
 from aerona.engine.divine.politics import god_grudge
 from aerona.engine.divine.standing import standing_row
-from aerona.engine.divine.wounds import name_exposure
+from aerona.engine.divine.wounds import bound_factor, name_exposure
 from aerona.engine.faith.book import patron_node
 from aerona.engine.military.battle import Side
 from aerona.engine.mythic.offices import conquer_offices
@@ -36,7 +36,8 @@ def style_of(god: God) -> bool:
 async def might_of(ctx: TickContext, god: God) -> float:
     table = ctx.rules.divine_wounds
     base = (god.strength + god.will) / 2 + god.level if isinstance(god, SonRow) else float(god.power)
-    return (base + await host_of(ctx.session, ctx.rules, god.id)) * await name_exposure(ctx.session, god.id, table.name_exposure_pct)
+    exposed = await name_exposure(ctx.session, god.id, table.name_exposure_pct)
+    return (base + await host_of(ctx.session, ctx.rules, god.id)) * exposed * await bound_factor(ctx.session, god.id)
 
 
 async def pay(ctx: TickContext, god: God) -> bool:
@@ -55,8 +56,8 @@ async def pay(ctx: TickContext, god: God) -> bool:
 async def willing(ctx: TickContext, god: God, stream: str) -> bool:
     table = ctx.rules.domains
     chance = table.battle_intervene_chance
-    if isinstance(god, SonRow) and await has_power(ctx.session, god.id, PowerEffect.WAR_FATHER):
-        chance = min(PERCENT, chance * table.battle_war_father_mult)
+    if isinstance(god, SonRow) and await has_power(ctx.session, god.id, PowerEffect.WAR_LEADER):
+        chance = min(PERCENT, chance * table.battle_war_leader_mult)
     return ctx.rng(stream).chance(chance)
 
 

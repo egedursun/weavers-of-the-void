@@ -46,7 +46,7 @@ function Summary({
         to='/cities'
         search={{ view: 'city', town: scene.town.id }}
         aria-label={`Walk the city of ${scene.town.name}`}
-        className='group relative block min-w-0 overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary'
+        className='group relative block min-w-0 overflow-hidden rounded-md border surface-sheen border-gild/60 bg-card transition-colors hover:border-primary'
       >
         {empty ? (
           <div className='p-4'>
@@ -66,7 +66,7 @@ function Summary({
             />
           </div>
         )}
-        <div className='pointer-events-none absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full border bg-popover/90 px-3 py-1 text-popover-foreground shadow-sm backdrop-blur-sm'>
+        <div className='pointer-events-none absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full border surface-sheen border-gild/60 bg-card px-3 py-1 text-popover-foreground backdrop-blur-sm'>
           <Maximize2 className='size-icon-xs' />
           <Text as='span' variant='caption' tone='inherit'>
             Walk the city

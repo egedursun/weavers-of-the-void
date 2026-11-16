@@ -73,10 +73,10 @@ function AchievementTile({
       data-achievement={item.key}
       data-tier={item.tier}
       className={cn(
-        'flex min-w-0 flex-col gap-2.5 rounded-xl border p-3 transition-colors',
+        'flex min-w-0 flex-col gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3 transition-colors',
         complete && 'border-primary/50 bg-primary/10',
         begun && !complete && 'border-primary/30 bg-primary/5',
-        !begun && 'border-dashed bg-background'
+        !begun && 'border-dashed bg-card'
       )}
     >
       <div className='flex min-w-0 items-start gap-3'>
@@ -166,7 +166,7 @@ export function AchievementsGrid({
   return (
     <Collapsible
       defaultOpen={defaultOpen}
-      className='flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4'
+      className='flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-3'>
         <Medallion icon={Trophy} />

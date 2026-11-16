@@ -181,7 +181,7 @@ function PagedList<T>({
           {(item) => (
             <li
               key={keyOf(item)}
-              className='flex min-w-0 items-start gap-3 rounded-lg border bg-background p-3'
+              className='flex min-w-0 items-start gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
             >
               {row(item)}
             </li>

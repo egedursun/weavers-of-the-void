@@ -8,14 +8,14 @@ const toggleVariants = cva(
   [
     'inline-flex max-w-full shrink-0 items-center justify-center gap-2 rounded-md border font-medium whitespace-nowrap text-control text-muted-foreground transition-[color,background-color,box-shadow] outline-none',
     'hover:bg-field-hover hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50',
-    'data-[state=on]:bg-accent data-[state=on]:text-accent-foreground',
+    'data-[state=on]:plate-active',
     '[&_svg]:pointer-events-none [&_svg]:shrink-0',
   ],
   {
     variants: {
       variant: {
         default: 'border-transparent bg-transparent',
-        outline: 'border-input bg-field shadow-xs',
+        outline: 'plate-track',
       },
       size: {
         sm: [controlHeight.sm, controlIcon.sm, 'min-w-control-sm gap-1.5 px-2'],

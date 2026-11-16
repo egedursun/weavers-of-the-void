@@ -18,6 +18,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.aspects import keep_aspects
 from aerona.engine.cosmos.beings import create_being, ruler_gains
 from aerona.engine.cosmos.kinds import DIMENSION_KIND_MECHANICS
 from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension
@@ -282,8 +283,8 @@ async def dimension_cults(ctx: TickContext, cosmography: Cosmography) -> int:
     return risen
 
 
-@reads("table.bonds", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.rifts")
-@writes("table.bonds", "table.dimensions")
+@reads("table.bonds", "table.cosmos", "table.dimension_aspects", "table.dimensional_events", "table.galactic_structures", "table.rifts")
+@writes("table.bonds", "table.dimension_aspects", "table.dimensions")
 async def dimension_cycles(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
     rifts: Counter[int] = Counter(await ctx.session.scalars(select(RiftRow.dimension_id).where(RiftRow.state.in_(list(OPEN_RIFT_STATES)))))
@@ -304,6 +305,7 @@ async def dimension_cycles(ctx: TickContext) -> None:
         if held(dimension.id):
             continue
         await tend_veil(ctx, cosmography, dimension, rifts, worship)
+        ctx.count("aspects", await keep_aspects(ctx, dimension))
         ctx.count("ruler_gains", await ruler_gains(ctx, dimension))
         if ctx.rng(f"thinning.{dimension.id}").chance(table.thinning_chance) and "veil" not in dimension.locked:
             dimension.veil = clamp_percent(dimension.veil - table.thinning_loss)

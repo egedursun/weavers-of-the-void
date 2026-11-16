@@ -69,6 +69,6 @@ async def star_god_died(ctx: TickContext, god: ForeignGodRow) -> StarModifierRow
     )
     if region is not None:
         await form_phenomenon(ctx, PhenomenonKind.GOD_CORPSE_AURA, region, PhenomenonCause.GOD_DEATH, cause_node_id=god.id)
-    await note(ctx, f"{god.name} died, and {star.name} burns dimmer for it.", key="transform.star_god_death", world_id=god.world_id)
+    await note(ctx, f"{god.name} died, and {star.name} dims for it.", key="transform.star_god_death", world_id=god.world_id)
     await ctx.session.flush()
     return row

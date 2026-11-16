@@ -123,7 +123,7 @@ export function ActionCard({ spec, item, ctx, data }: ActionCardProps) {
       open={open}
       onOpenChange={setOpen}
       data-action-id={item.id}
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <CollapsibleTrigger asChild>
         <Button

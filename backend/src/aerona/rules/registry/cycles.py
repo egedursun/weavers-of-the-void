@@ -75,6 +75,9 @@ class AsabiyyaRules:
 @dataclass(frozen=True)
 class ChallengeResponseRules:
     severity_scale: int = rule(300, 0, 2000, P, "How much a loss against carrying capacity counts as a challenge (%)")
+    collapse_below: int = rule(30, 0, 100, P, "Stability below which a realm meets the trial of collapse")
+    depleted_below: int = rule(25, 0, 100, P, "Stability of a source of power below which a realm meets the trial of its depletion")
+    signal_step: int = rule(15, 0, 100, P, "Severity each arrival, loosed line or new technique adds to its trial")
     notice_at: int = rule(3, 0, 100, P, "Severity from which a loss is recorded as a challenge")
     fade_pct: int = rule(25, 0, 100, P, "Share of the challenge index that fades each epoch (%)")
     band_low: int = rule(15, 0, 100, P, "Challenge index from which a realm answers with innovation instead of stagnation")
@@ -102,6 +105,10 @@ class LongPlanRules:
     eco_fertility: int = rule(20, -100, 100, P, "Soil fertility a fulfilled ecological transformation gives each land it remakes")
     bloodline_gift_pct: int = rule(20, 0, 100, P, "How far a fulfilled bloodline plan aimed at a people moves its pool toward the gifted allele (%)")
     wonder_funds_pct: int = rule(50, 0, 100, P, "Share of a wonder plan's savings that fund the wonder it raises (%)")
+    programme_head_start: int = rule(30, 0, 100, P, "Progress a long plan gives the programme it opens")
+    realm_gain: int = rule(10, 0, 100, P, "Administration and legitimacy a long plan to bind a realm gives")
+    reform_cut: int = rule(15, 0, 100, P, "Corruption a long plan of reform takes away")
+    routes_found: int = rule(2, 0, 50, P, "Hidden ways a long plan of exploration charts")
 
 
 @dataclass(frozen=True)

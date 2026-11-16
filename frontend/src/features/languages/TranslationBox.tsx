@@ -8,7 +8,7 @@ import { type components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { KeyValueList, Section } from '@/components/domain'
+import { KeyValueList, Paged, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { NO_LLM_REASON, READ_ONLY_REASON } from '@/features/entity/actions/gate'
 import { humanize } from '@/features/entity/actions/schema'
@@ -117,7 +117,7 @@ export function TranslationBox({
         <Textarea
           aria-label={`Text to translate into ${languageName}`}
           maxLength={TEXT_MAX}
-          placeholder='The river remembers every king.'
+          placeholder='A sentence to translate'
           value={text}
           onChange={(event) => {
             drafts.set(languageId, event.target.value)
@@ -143,7 +143,7 @@ export function TranslationBox({
         </div>
       </form>
       {result && (
-        <div className='flex min-w-0 flex-col gap-3 rounded-lg border p-3'>
+        <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <Text variant='prose' weight='semibold'>
             {result.translation}
           </Text>
@@ -161,14 +161,16 @@ export function TranslationBox({
             <div className='flex min-w-0 flex-col gap-1'>
               <Label variant='overline'>New words</Label>
               <ul className='flex min-w-0 flex-col gap-1'>
-                {result.new_words.map((word, index) => (
-                  <Text as='li' key={`${word.word}-${index}`}>
-                    <Text as='strong' weight='semibold'>
-                      {word.word}
+                <Paged items={result.new_words} as='li'>
+                  {(word, index) => (
+                    <Text as='li' key={`${word.word}-${index}`}>
+                      <Text as='strong' weight='semibold'>
+                        {word.word}
+                      </Text>
+                      {` · ${word.meaning} · ${humanize(word.kind)} · ${word.origin}`}
                     </Text>
-                    {` · ${word.meaning} · ${humanize(word.kind)} · ${word.origin}`}
-                  </Text>
-                ))}
+                  )}
+                </Paged>
               </ul>
             </div>
           )}

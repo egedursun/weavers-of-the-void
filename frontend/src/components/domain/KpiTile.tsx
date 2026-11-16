@@ -7,32 +7,11 @@ import {
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { GEM_CLASS, type GemTone, OrnateFrame } from '@/components/ui/ornate'
 import { Progress } from '@/components/ui/progress'
 import { Label, Muted, Stat } from '@/components/typography'
 
-export type KpiTone =
-  'gold' | 'verdigris' | 'info' | 'success' | 'warning' | 'danger' | 'muted'
-
-const MEDALLION: Record<KpiTone, string> = {
-  gold: 'border-primary/30 bg-primary/12 text-primary',
-  verdigris:
-    'border-brand-verdigris/30 bg-brand-verdigris/12 text-brand-verdigris',
-  info: 'border-info/30 bg-info/12 text-info',
-  success: 'border-success/30 bg-success/12 text-success',
-  warning: 'border-warning/30 bg-warning/12 text-warning',
-  danger: 'border-destructive/30 bg-destructive/12 text-destructive',
-  muted: 'border-border bg-muted text-muted-foreground',
-}
-
-const ACCENT: Record<KpiTone, string> = {
-  gold: 'before:bg-primary',
-  verdigris: 'before:bg-brand-verdigris',
-  info: 'before:bg-info',
-  success: 'before:bg-success',
-  warning: 'before:bg-warning',
-  danger: 'before:bg-destructive',
-  muted: 'before:bg-border',
-}
+export type KpiTone = GemTone
 
 const METER_TONE = {
   gold: 'default',
@@ -61,9 +40,9 @@ export function Medallion({
     <span
       data-domain='medallion'
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-full border',
+        'medallion',
         size === 'md' ? 'size-control-lg' : 'size-control-sm',
-        MEDALLION[tone]
+        GEM_CLASS[tone]
       )}
     >
       <Icon
@@ -134,19 +113,29 @@ export function KpiTile({
   valueTone = 'default',
 }: KpiTileProps) {
   return (
-    <div
+    <OrnateFrame
       data-domain='kpi-tile'
-      className={cn(
-        '@container/kpi relative flex min-w-0 flex-col gap-3 overflow-hidden rounded-xl border bg-background p-4 before:absolute before:inset-x-0 before:top-0 before:h-0.5',
-        ACCENT[tone]
-      )}
+      frame='tile'
+      crest
+      tone={tone}
+      className='@container/kpi flex min-w-0 flex-col gap-3 p-4'
     >
       <div className='flex min-w-0 flex-col items-start gap-2 @tile/kpi:flex-row @tile/kpi:items-center @tile/kpi:gap-3'>
         <Medallion icon={icon} tone={tone} />
-        <Label className='min-w-0 flex-1 break-normal'>{label}</Label>
+        <Label variant='gilded' className='min-w-0 flex-1 break-normal'>
+          {label}
+        </Label>
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Stat value={value} size='kpi' tone={valueTone} />
+        <Stat
+          value={value}
+          size='kpi'
+          tone={valueTone}
+          className={cn(
+            'font-display',
+            valueTone === 'default' && 'text-gilded'
+          )}
+        />
         {change !== undefined && (
           <ChangeChip value={change} harmful={harmful} />
         )}
@@ -167,6 +156,6 @@ export function KpiTile({
           {hint}
         </Muted>
       )}
-    </div>
+    </OrnateFrame>
   )
 }

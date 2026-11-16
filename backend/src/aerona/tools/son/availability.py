@@ -88,7 +88,7 @@ AGE_LIMITS: dict[SonToolId, tuple[TurnCounter, Callable[[Rules], int]]] = {
     SonToolId.REORDER_SEASONS: (C.SEASON_ORDER, lambda rules: rules.son_tools.reorder_seasons_per_epoch),
     SonToolId.SHAPE_WEATHER: (C.WEATHER_SHAPING, lambda rules: rules.son_tools.shape_weather_per_epoch),
     SonToolId.DECLARE_HOLY_WORLD: (C.HOLY_WORLD, lambda rules: rules.son_tools.holy_world_per_epoch),
-    SonToolId.SEAL_LEAK: (C.LEAK_STITCHED, lambda rules: rules.son_tools.seal_per_epoch),
+    SonToolId.SEAL_LEAK: (C.LEAK_CLOSED, lambda rules: rules.son_tools.seal_per_epoch),
     SonToolId.BARGAIN_WITH_OUTSIDER: (C.OUTER_BARGAIN, lambda rules: rules.son_tools.outer_bargain_per_epoch),
     SonToolId.MAKE_BOND: (C.NARRATIVE_BONDS, lambda rules: rules.son_tools.link_per_epoch),
     SonToolId.TAKE_LIFE: (C.TAKE_LIFE, lambda rules: rules.death.take_life_per_epoch),

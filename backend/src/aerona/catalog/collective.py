@@ -80,6 +80,15 @@ FORMATIVE_SHIFTS = total(
         F.FAMINE: ((V.WEALTH, 1), (V.KINSHIP, 1)),
         F.GOLDEN_AGE: ((V.LEISURE, 1), (V.XENOPHILIA, 1)),
         F.CONQUEST: ((V.HIERARCHY, -1), (V.LOYALTY, 1)),
+        F.REVOLUTION: ((V.HIERARCHY, -1), (V.TRADITION, -1)),
+        F.MIGRATION: ((V.XENOPHILIA, 1), (V.KINSHIP, 1)),
+        F.FOUNDING: ((V.TRADITION, 1), (V.LOYALTY, 1)),
+        F.REVELATION: ((V.TRUTH, 1), (V.PIETY, 1)),
+        F.COLLAPSE: ((V.PERSEVERANCE, 1), (V.HIERARCHY, -1)),
+        F.CONTACT: ((V.XENOPHILIA, 1), (V.KNOWLEDGE, 1)),
+        F.DISASTER: ((V.PERSEVERANCE, 1), (V.NATURE, 1)),
+        F.LIBERATION: ((V.LAW, 1), (V.HIERARCHY, -1)),
+        F.SCHISM: ((V.PIETY, 1), (V.LOYALTY, -1)),
     },
 )
 COLLECTION_FORMATIVE = MappingProxyType(
@@ -89,6 +98,16 @@ COLLECTION_FORMATIVE = MappingProxyType(
         CollectionKind.PLAGUE: F.PLAGUE,
         CollectionKind.FAMINE: F.FAMINE,
         CollectionKind.OCCUPATION: F.CONQUEST,
+        CollectionKind.INSURRECTION: F.REVOLUTION,
+        CollectionKind.COUP: F.REVOLUTION,
+        CollectionKind.MIGRATION: F.MIGRATION,
+        CollectionKind.FOUNDING: F.FOUNDING,
+        CollectionKind.EXCAVATION: F.REVELATION,
+        CollectionKind.SUCCESSION_CRISIS: F.COLLAPSE,
+        CollectionKind.JOURNEY: F.CONTACT,
+        CollectionKind.BEAST_ATTACK: F.DISASTER,
+        CollectionKind.SCHISM: F.SCHISM,
+        CollectionKind.MOVEMENT: F.LIBERATION,
     }
 )
 LEGACY_TINCTURES = MappingProxyType(

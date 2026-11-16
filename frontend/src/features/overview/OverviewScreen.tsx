@@ -3,7 +3,7 @@ import { navItem } from '@/config/navigation'
 import { Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, PageHeader, Section } from '@/components/domain'
+import { EmptyState, PageHeader, PanelGrid, Section } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { CompleteEpochButton } from '@/features/epoch/CompleteEpochButton'
 import { EpochProgress } from '@/features/epoch/EpochProgress'
@@ -66,10 +66,10 @@ export function OverviewScreen() {
           <EpochProgress framed />
         </>
       )}
-      <div className='grid min-w-0 grid-cols-1 items-stretch gap-6 xl:grid-cols-2'>
+      <PanelGrid>
         <LiveFeedPanel showHeader />
         {state.data && world && <ChangeDigestPanel />}
-      </div>
+      </PanelGrid>
       {state.data && world && <EpochBreakdownPanel state={state.data} />}
       <StatsCharts hasWorld={Boolean(world)} />
     </>

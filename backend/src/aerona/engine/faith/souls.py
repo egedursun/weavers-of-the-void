@@ -25,7 +25,7 @@ from aerona.domain.enums.faith import (
     RebirthPath,
     ReincarnationGate,
     SpiritAlignment,
-    StratumKind,
+    StratumValence,
     TenetKind,
 )
 from aerona.domain.enums.mind import TraitKind, TraitSource, ValueAxis, ValueHolder
@@ -37,7 +37,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of as creature_traits
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.faith.book import Church, faith_tenets
-from aerona.engine.faith.judgement import leave_realm, ledger_score, seal, unseal
+from aerona.engine.faith.judgement import leave_realm, ledger_score, reaches_living, seal, unseal
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.mind.book import add_trait, stored_values, values_for, write_values
 from aerona.engine.mind.memories import remember
@@ -76,7 +76,7 @@ async def venerates(ctx: TickContext, community: EntityRow) -> bool:
 
 
 async def house_luck(ctx: TickContext, profile: SpiritProfileRow) -> int:
-    if profile.alignment is not SpiritAlignment.GUARDIAN or profile.origin_mortal_id is None:
+    if profile.alignment is not SpiritAlignment.GUARDIAN or profile.origin_mortal_id is None or not await reaches_living(ctx.session, profile):
         return 0
     houses = await ctx.session.scalars(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == profile.origin_mortal_id))
     lucky = 0
@@ -476,7 +476,7 @@ async def tormented(ctx: TickContext, church: Church) -> int:
             SpiritProfileRow.patron_son_id == church.god.id,
             SpiritProfileRow.state == AfterlifeState.IN_REALM,
             SpiritProfileRow.origin_mortal_id.in_(origins),
-            AfterlifeStratumRow.kind == StratumKind.TORMENT,
+            AfterlifeStratumRow.valence == StratumValence.PUNISHMENT,
         )
     )
     return int(found or 0)

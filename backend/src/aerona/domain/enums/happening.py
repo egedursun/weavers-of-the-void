@@ -5,6 +5,7 @@ class EventPhase(StrEnum):
     ONSET = "onset"
     PEAK = "peak"
     AFTERMATH = "aftermath"
+    MEMORY = "memory"
 
 
 class LandAct(StrEnum):

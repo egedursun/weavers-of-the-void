@@ -80,7 +80,7 @@ export function SceneLabels({ labels }: { labels: SceneLabel[] }) {
           >
             <div
               className={cn(
-                'pointer-events-none flex items-center gap-1.5 rounded-full border bg-popover/90 px-2 py-0.5 whitespace-nowrap text-popover-foreground shadow-sm backdrop-blur-sm',
+                'pointer-events-none flex items-center gap-1.5 rounded-full border surface-sheen border-gild/60 bg-card px-2 py-0.5 whitespace-nowrap text-popover-foreground backdrop-blur-sm',
                 label.chosen && 'border-primary'
               )}
             >

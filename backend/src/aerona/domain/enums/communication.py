@@ -10,6 +10,8 @@ class Medium(StrEnum):
     BIRD = "bird"
     MAGIC_SENDING = "magic_sending"
     NETWORK = "network"
+    MIND_LINK = "mind_link"
+    BROADCAST = "broadcast"
 
 
 class DispatchContent(StrEnum):
@@ -47,10 +49,14 @@ class OpinionSubject(StrEnum):
 
 
 class SignalKind(StrEnum):
-    FIRE_BEACON = "fire_beacon"
-    MIRROR_TOWER = "mirror_tower"
-    POST_STATION = "post_station"
-    SENDING_STONE = "sending_stone"
+    BEACON_CHAIN = "beacon_chain"
+    OPTICAL_RELAY = "optical_relay"
+    COURIER_POST = "courier_post"
+    BOUND_PAIR = "bound_pair"
+    WIRE_STATION = "wire_station"
+    RADIO_STATION = "radio_station"
+    MIND_LINK_STATION = "mind_link_station"
+    GROWN_NODE = "grown_node"
 
 
 class SignalState(StrEnum):

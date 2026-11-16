@@ -1,11 +1,14 @@
+from collections import Counter
 from collections.abc import Sequence
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
 from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
+from aerona.cartography.biomes import Biome
 from aerona.catalog.cosmography import CLUSTER_KINDS, DIMENSION_KINDS, GALAXY_TYPES, KindSpec
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
@@ -18,6 +21,7 @@ from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalaxyRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.sons import SonRow
@@ -32,11 +36,15 @@ from aerona.prompts.schemas.narrative import CosmosImagePromptsOutput, EntityIma
 PROMPTABLE_STATUSES = (EntityStatus.CANON, EntityStatus.DEAD, EntityStatus.FULFILLED)
 
 
-def ambience(world: WorldRow | None) -> WorldAmbience | None:
+async def ambience(session: AsyncSession, world: WorldRow | None) -> WorldAmbience | None:
     if world is None or world.world_type is WorldType.ORDINARY:
         return None
-    spec = WORLD_TYPES[world.world_type]
-    return WorldAmbience(type_label=spec.label, biomes=list(spec.biomes))
+    totals: Counter[int] = Counter()
+    for mix in await session.scalars(select(RegionEnvironmentRow.biome_mix).where(RegionEnvironmentRow.world_id == world.id)):
+        for index, share in enumerate(mix or []):
+            totals[index] += share
+    biomes = [Biome(index).name.lower().replace("_", " ") for index, share in totals.most_common() if share > 0 and index in Biome._value2member_map_]
+    return WorldAmbience(type_label=WORLD_TYPES[world.world_type].label, biomes=biomes)
 
 
 async def entity_subjects(scope: Scope, limit: int, ids: Sequence[int] | None) -> list[tuple[EntityRow, ImageSubject]]:
@@ -63,7 +71,7 @@ async def entity_subjects(scope: Scope, limit: int, ids: Sequence[int] | None) -
                 description=row.description[: content.image_prompt_description_chars],
                 megafauna=await repository.has_flag(row.id, EntityFlag.MEGAFAUNA),
                 vehicle=vehicles.get(row.id),
-                ambience=ambience(scope.worlds.get(row.world_id)),
+                ambience=await ambience(scope.session, scope.worlds.get(row.world_id)),
                 appearance=looks.get(row.id),
             ),
         )
@@ -170,7 +178,7 @@ async def cosmos_subjects(scope: Scope, ids: Sequence[int] | None = None) -> lis
                 type_label=WORLD_TYPES[world.world_type].label,
                 name=world.name,
                 description=(world.description or world.cosmology or "")[: content.cosmic_prompt_world_chars],
-                ambience=ambience(world),
+                ambience=await ambience(scope.session, world),
             )
             found.append((CosmosSubjectKind.WORLD, world.id, subject))
     for star in await scope.session.scalars(select(StarRow).where(StarRow.image_prompt.is_(None)).order_by(StarRow.id)):

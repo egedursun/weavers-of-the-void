@@ -138,7 +138,7 @@ export function CosmosGalaxyPanel({
       open={open}
       onOpenChange={setOpen}
       id='section-cosmos-galaxy'
-      className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-3'>
         {galaxy ? (

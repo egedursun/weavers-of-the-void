@@ -72,11 +72,20 @@ def levers() -> set[str]:
 
 
 def screens() -> set[str]:
-    return {f"{path.relative_to(FRONTEND).parent}/{name}" for path in sources(FRONTEND, ".tsx") if ".test." not in path.name for name in SCREEN.findall(path.read_text(encoding="utf-8"))}
+    return {
+        f"{path.relative_to(FRONTEND).parent}/{name}"
+        for path in sources(FRONTEND, ".tsx")
+        if ".test." not in path.name
+        for name in SCREEN.findall(path.read_text(encoding="utf-8"))
+    }
 
 
 def model_texts() -> set[str]:
-    return {str(path.relative_to(PACKAGE)) for path in sorted((PACKAGE / "prompts").rglob("*")) if path.is_file() and path.suffix in PROMPT_SUFFIXES and not SKIPPED & set(path.parts)}
+    return {
+        str(path.relative_to(PACKAGE))
+        for path in sorted((PACKAGE / "prompts").rglob("*"))
+        if path.is_file() and path.suffix in PROMPT_SUFFIXES and not SKIPPED & set(path.parts)
+    }
 
 
 AXES = (
@@ -86,7 +95,12 @@ AXES = (
         ("integrity of every value: 47.13", "history, changes, moments and terms: F58.5", "F58.6", "F58.7"),
         tables,
     ),
-    Axis("enum", ("check_wiring.py", "check_label_maps.py", "check_raw_enums.mjs"), ("every value read: 47.7", "two layers for content concepts: W48"), enum_types),
+    Axis(
+        "enum",
+        ("check_wiring.py", "check_label_maps.py", "check_raw_enums.mjs"),
+        ("every value read: 47.7", "two layers for content concepts: W48"),
+        enum_types,
+    ),
     Axis("step", ("test_god_control.py", "test_eager_epochs.py"), ("each write recorded with its happening: F58.5",), steps),
     Axis("incident", ("check_canned_lines.py",), ("roles, facts, steps, template, place and clock: F58.1",), incident_kinds),
     Axis("tool", ("test_every_tool.py", "test_catalogue.py", "test_tool_enum_lists.py"), (), tools),
@@ -135,7 +149,11 @@ def render(found: list[tuple[str, str, str, str]]) -> str:
 def problems(found: list[tuple[str, str, str, str]]) -> list[str]:
     issues: list[str] = []
     written = INVENTORY.read_text(encoding="utf-8") if INVENTORY.exists() else ""
-    kept = {tuple(cell.strip() for cell in line.strip().strip("|").split("|")) for line in written.splitlines() if line.startswith("| ") and line.count("|") == len(COLUMNS) + 1}
+    kept = {
+        tuple(cell.strip() for cell in line.strip().strip("|").split("|"))
+        for line in written.splitlines()
+        if line.startswith("| ") and line.count("|") == len(COLUMNS) + 1
+    }
     issues += [f"{axis} {item} has no row in {INVENTORY.relative_to(ROOT)}" for axis, item, *_ in found if not any(row[:2] == (axis, item) for row in kept)]
     present = {(axis, item) for axis, item, *_ in found}
     issues += [f"row {row[0]} {row[1]} names nothing the code holds" for row in kept if row[0] in {axis.name for axis in AXES} and row[:2] not in present]

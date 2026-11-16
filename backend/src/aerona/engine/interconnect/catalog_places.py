@@ -19,6 +19,9 @@ SECRET_CARRIERS: dict[SecretKind, tuple[Subsystem, str]] = {
     SecretKind.LOST_KNOWLEDGE: (S.KNOWLEDGE, "found lore is taught to the finder's people"),
     SecretKind.LOST_RITE: (S.MAGIC, "a found rite is devised or learned by the finder"),
     SecretKind.UNDERWORLD_ENTRANCE: (S.COSMOS, "a way down links the place to the underworld; opened, it haunts and deepens the place"),
+    SecretKind.HIDDEN_PEOPLE: (S.SOCIAL, "a found people comes into the knowledge of the finder"),
+    SecretKind.DORMANT_MIND: (S.MIND, "a found mind wakes steadier"),
+    SecretKind.SEALED_REALM: (S.COSMOS, "a found realm is unsealed"),
 }
 
 PLACE_MECHANICS = (

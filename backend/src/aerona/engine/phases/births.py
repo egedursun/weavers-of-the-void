@@ -681,7 +681,7 @@ async def uplift(ctx: TickContext, atlas: RegionAtlas, species: EntityRow) -> En
         RecordSpec(
             entity_type=EntityType.PEOPLE,
             name=f"Lineage of {species.name}",
-            body=f"Among the {species.name} a branch arose that learned to speak, to make tools and to bury its dead; it is now a people.",
+            body=f"Among the {species.name} a branch arose that learned to think and speak; it is now a people.",
             stats=PeopleStats(
                 population=life.sapient_population_base + rng.die(life.sapient_population_die),
                 martiality=clamp_int((strength if strength is not None else life.sapient_default_strength) + rng.die(life.sapient_martiality_die), 0, PERCENT),

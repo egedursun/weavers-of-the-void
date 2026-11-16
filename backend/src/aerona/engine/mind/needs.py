@@ -25,12 +25,15 @@ from aerona.engine.context import TickContext
 from aerona.engine.customs.relief import beggars, poverty_relief
 from aerona.engine.demography.basket import effect_shortfalls, fed_index, poverty_of
 from aerona.engine.gods.queries import community_of
+from aerona.engine.households.forms import home_comfort
 from aerona.engine.households.homes import home_of
 from aerona.engine.industry.quality import at_least
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import Values, best_skill, is_locked, mind_of, needs_of, pressures_of, write_needs, write_pressures
 from aerona.engine.mind.memories import strength_of
+from aerona.engine.mind.new_pressures import wider_pressures
 from aerona.engine.mind.preferences import market_fit, nature_bonus
+from aerona.engine.mind.wider_needs import by_activity_and_make, wider_needs
 from aerona.engine.mortal.kin import close_kin_of, partners_of
 from aerona.engine.museums.reading import gardens_kept
 from aerona.engine.notes import note
@@ -158,6 +161,7 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
         PressureKind.IMPIETY: pct(impiety),
         PressureKind.HUMILIATION: pct(humiliation),
         PressureKind.STAGNATION: pct(stagnation),
+        **await wider_pressures(ctx, community, prosperity=round(prosperity), impiety=pct(impiety)),
     }
 
 
@@ -251,6 +255,8 @@ async def mortal_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, *
     if community is not None and await fine_cloth(session, rules, community.id):
         needs[NeedKind.COMFORT] = pct(needs.get(NeedKind.COMFORT, 0) + rules.quality.fine_cloth_comfort)
     await home_needs(session, rules, mortal, needs)
+    needs.update(await wider_needs(session, rules, mortal, values=values, pressures=pressures, epoch=epoch))
+    await by_activity_and_make(session, rules, mortal, needs)
     return needs
 
 
@@ -268,7 +274,11 @@ async def home_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, nee
     needs[NeedKind.STATUS] = blended(needs.get(NeedKind.STATUS, 0), quality, table.status_home_pct)
     spare = dwelling.rooms - members
     rest = spare * table.rest_rooms if spare >= 0 else spare * table.crowding_rest
-    needs[NeedKind.REST] = pct(needs.get(NeedKind.REST, 0) + rest)
+    if dwelling.crowding > table.crowded_at:
+        rest -= table.crowding_rest
+    heated, lit = home_comfort(table.heated_comfort, table.lit_rest, dwelling)
+    needs[NeedKind.REST] = pct(needs.get(NeedKind.REST, 0) + rest + lit)
+    needs[NeedKind.COMFORT] = pct(needs.get(NeedKind.COMFORT, 0) + heated)
 
 
 async def deeper_needs(
@@ -352,6 +362,7 @@ async def deeper_needs(
             FULL
             - pressures.get(PressureKind.INSECURITY, 0) * table.order_insecurity_pct / PERCENT
             - pressures.get(PressureKind.HUMILIATION, 0) * table.order_humiliation_pct / PERCENT
+            - pressures.get(PressureKind.OPPRESSION, 0) * table.order_humiliation_pct / PERCENT
         ),
     }
 

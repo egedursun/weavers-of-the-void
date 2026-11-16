@@ -452,7 +452,8 @@ function SupplyForge({
   const [field, setField] = useState<'true' | 'false'>('false')
   const [capacity, setCapacity] = useState('600')
   const [supplies, setSupplies] = useState('200')
-  const [carrier, setCarrier] = useState<keyof typeof TRANSPORTS>('wagons')
+  const [carrier, setCarrier] =
+    useState<keyof typeof TRANSPORTS>('animal_carts')
   const [count, setCount] = useState('10')
   const [base, setBase] = useState('')
   const founding = useOperationsAction(
@@ -641,7 +642,7 @@ function FlowChart({ flows }: { flows: Flow[] }) {
   )
   const width = (value: number) => (value * SPAN) / widest
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Label variant='overline'>Supply season by season</Label>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <Badge size='sm' variant='success'>

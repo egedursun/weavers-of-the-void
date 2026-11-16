@@ -8,7 +8,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow, LegendaryQuestRow, ThreadRow
-from aerona.engine.cosmos.quests import QUEST_NAMES
+from aerona.engine.cosmos.quests import legendary_name
 
 router = APIRouter(tags=["cosmos"])
 
@@ -52,8 +52,13 @@ async def list_expeditions(services: ServicesDep, open_only: bool = False) -> li
         return [
             GreatExpedition(
                 thread_id=quest.thread_id,
-                kind=quest.kind,
-                name=QUEST_NAMES[quest.kind],
+                aim=quest.aim,
+                target_kind=quest.target_kind,
+                obstacle=quest.obstacle,
+                reward=quest.reward,
+                scale=quest.scale,
+                locked=list(quest.locked),
+                name=legendary_name(quest),
                 text=thread.text,
                 declared_by=quest.opened_by,
                 opened_epoch=quest.opened_epoch,

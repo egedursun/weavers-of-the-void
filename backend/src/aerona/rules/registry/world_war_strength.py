@@ -7,7 +7,7 @@ from aerona.rules.model import rule
 @dataclass(frozen=True)
 class WorldWarStrengthRules:
     patron_strength_divisor: int = rule(8, 1, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Patron god's war contribution: god's strength / this number")
-    war_father_mult: int = rule(2, 1, 20, RuleGroup.WAR_AND_DIPLOMACY, "The Warbringer power multiplies the patron contribution (times)")
+    war_leader_mult: int = rule(2, 1, 20, RuleGroup.WAR_AND_DIPLOMACY, "The War leader power multiplies the patron contribution (times)")
     weapon_damage_divisor: int = rule(8, 1, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Weapon's war contribution: damage / this number")
     armor_protection_divisor: int = rule(10, 1, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Armor's war contribution: protection / this number")
     item_might_divisor: int = rule(20, 1, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Item might's war contribution: might / this number")

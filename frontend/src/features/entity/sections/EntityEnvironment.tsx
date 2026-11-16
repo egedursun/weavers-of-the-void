@@ -43,6 +43,7 @@ import {
   EntityLink,
   KpiTile,
   Medallion,
+  Paged,
   Section,
   StatBar,
 } from '@/components/domain'
@@ -156,7 +157,7 @@ function Card({
   children: ReactNode
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={icon} size='sm' />
         <Label variant='overline'>{title}</Label>
@@ -170,7 +171,7 @@ function LandHero({ ground }: { ground: RegionEnvironment }) {
   const terrain = named(TERRAIN, ground.dominant_terrain)
   const band = named(BAND, ground.temperature_band)
   return (
-    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={terrain.icon} tone={terrain.tone ?? 'gold'} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <Text weight='semibold'>{terrain.label}</Text>
@@ -291,7 +292,7 @@ function WeatherTile({ item }: { item: Forecast }) {
         <div
           tabIndex={0}
           aria-label={`${season}: ${weather.label}`}
-          className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+          className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
         >
           <Medallion
             icon={weather.icon}
@@ -348,54 +349,56 @@ function LeyLines({
     return <Muted>No ley line runs through this land.</Muted>
   return (
     <ul className='flex min-w-0 flex-col gap-2'>
-      {ground.ley_lines.map((line) => (
-        <li
-          key={line.id}
-          className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-2'
-        >
-          <Medallion
-            icon={Waypoints}
-            tone={line.severed ? 'muted' : 'verdigris'}
-            size='sm'
-          />
-          <div className='flex min-w-0 flex-1 flex-col gap-1'>
-            <div className='flex min-w-0 flex-wrap items-center gap-2'>
-              <EntityLink
-                kind='entity'
-                id={String(line.other_region_id)}
-                showIcon
-              >
-                {line.other_region_name}
-              </EntityLink>
-              {line.severed && (
-                <Badge size='sm' variant='warning'>
-                  {line.severed_until_epoch !== null
-                    ? `Cut until epoch ${line.severed_until_epoch}`
-                    : 'Cut by scarred land'}
-                </Badge>
-              )}
-            </div>
-            <StatBar
-              label='Strength'
-              value={line.strength}
-              max={PERCENT}
-              tone='verdigris'
-            />
-          </div>
-          <Button
-            size='sm'
-            variant='outline'
-            disabled={reason !== null}
-            disabledReason={reason ?? undefined}
-            onClick={() =>
-              line.severed ? restore.mutate(line.id) : sever.mutate(line.id)
-            }
+      <Paged items={ground.ley_lines} as='li'>
+        {(line) => (
+          <li
+            key={line.id}
+            className='flex min-w-0 flex-wrap items-center gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
           >
-            {line.severed ? <Link2 /> : <Scissors />}
-            {line.severed ? 'Let it flow' : 'Cut it'}
-          </Button>
-        </li>
-      ))}
+            <Medallion
+              icon={Waypoints}
+              tone={line.severed ? 'muted' : 'verdigris'}
+              size='sm'
+            />
+            <div className='flex min-w-0 flex-1 flex-col gap-1'>
+              <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                <EntityLink
+                  kind='entity'
+                  id={String(line.other_region_id)}
+                  showIcon
+                >
+                  {line.other_region_name}
+                </EntityLink>
+                {line.severed && (
+                  <Badge size='sm' variant='warning'>
+                    {line.severed_until_epoch !== null
+                      ? `Cut until epoch ${line.severed_until_epoch}`
+                      : 'Cut by scarred land'}
+                  </Badge>
+                )}
+              </div>
+              <StatBar
+                label='Strength'
+                value={line.strength}
+                max={PERCENT}
+                tone='verdigris'
+              />
+            </div>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={reason !== null}
+              disabledReason={reason ?? undefined}
+              onClick={() =>
+                line.severed ? restore.mutate(line.id) : sever.mutate(line.id)
+              }
+            >
+              {line.severed ? <Link2 /> : <Scissors />}
+              {line.severed ? 'Let it flow' : 'Cut it'}
+            </Button>
+          </li>
+        )}
+      </Paged>
     </ul>
   )
 }
@@ -567,7 +570,7 @@ function RegionControls({
   const busy =
     reason() ?? (choose.isPending || release.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
+    <div className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
         <div className='flex min-w-0 flex-col gap-0.5'>
           <Text weight='semibold'>Shape this land</Text>
@@ -894,7 +897,7 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
               hint='Where ley lines meet; works here gain power fastest'
             />
           </div>
-          <div className='flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
+          <div className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
             <div className='flex min-w-0 flex-col gap-0.5'>
               <Text weight='semibold'>Shape this place</Text>
               <Muted variant='caption'>

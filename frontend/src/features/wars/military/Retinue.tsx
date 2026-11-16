@@ -86,7 +86,7 @@ function ContractCard({
   const army = row.refs.army_entity_id
   const loyalty = Number(row.values.loyalty ?? 0)
   return (
-    <li className='@container/mil flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'>
+    <li className='@container/mil flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion icon={Sword} tone={status.tone} />
         <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
@@ -331,7 +331,7 @@ function PrisonerCard({
   const married = row.refs.married_entity_id
   const loyalty = Number(row.values.loyalty ?? 0)
   return (
-    <li className='@container/mil flex min-w-0 flex-col gap-2.5 rounded-xl border bg-background p-3'>
+    <li className='@container/mil flex min-w-0 flex-col gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion icon={status.icon} tone={status.tone} />
         <div className='flex min-w-0 flex-1 flex-col gap-0.5'>

@@ -28,7 +28,7 @@ REVIVAL_FIELDS = ("aim", "stage", "goal", "strength", "prophet_node_id", "ended_
 INTOXICANT_FIELDS = ("use", "acceptance")
 MARK_CUSTOM_FIELDS = ("meaning",)
 MARK_FIELDS = ("kind", "meaning", "placed_epoch")
-TIME_FIELDS = ("work", "rest", "worship", "leisure", "travel", "service")
+TIME_FIELDS = ("work", "rest", "worship", "leisure", "travel", "service", "learning", "care", "art")
 NAMING_FIELDS = ("pattern", "secret_names", "taboo_epochs", "rename_on_initiation", "rename_on_marriage", "rename_on_vow")
 NAME_FORM_FIELDS = ("name", "given_epoch")
 AGE_SET_FIELDS = ("name", "initiated_from", "initiated_to", "grade", "promoted_epoch")
@@ -106,6 +106,9 @@ class TimeBudgetRow(Base):
     leisure: Mapped[int] = mapped_column(default=10)
     travel: Mapped[int] = mapped_column(default=3)
     service: Mapped[int] = mapped_column(default=2)
+    learning: Mapped[int] = mapped_column(default=0, server_default="0")
+    care: Mapped[int] = mapped_column(default=0, server_default="0")
+    art: Mapped[int] = mapped_column(default=0, server_default="0")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

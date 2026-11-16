@@ -52,7 +52,9 @@ def losses(files: dict[Path, str]) -> list[Loss]:
 def main() -> int:
     found = losses({path: path.read_text(encoding="utf-8") for path in sorted(SOURCE.rglob("*.py"))})
     for item in found:
-        print(f"{item.path.relative_to(ROOT)}:{item.line}: {item.text} lowers morale without the fear of the body; scale it by fear_of from engine/body/variants.py")
+        print(
+            f"{item.path.relative_to(ROOT)}:{item.line}: {item.text} lowers morale without the fear of the body; scale it by fear_of from engine/body/variants.py"
+        )
     print(f"morale losses: {len(found)}")
     return 1 if found else 0
 

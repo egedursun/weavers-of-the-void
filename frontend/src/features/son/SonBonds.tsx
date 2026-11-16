@@ -135,7 +135,7 @@ export function BondList({
               renderBond={(bond) => (
                 <li
                   key={bond.id}
-                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border bg-card px-2.5 py-1.5'
+                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-1.5'
                 >
                   <Label>{bond.outgoing ? '→' : '←'}</Label>
                   {bond.other ? (

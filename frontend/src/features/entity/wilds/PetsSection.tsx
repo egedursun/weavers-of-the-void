@@ -122,7 +122,7 @@ export function PetsSection({
                 {(row) => (
                   <li
                     key={row.pet?.id}
-                    className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
+                    className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'
                   >
                     <div className='flex min-w-0 items-center gap-2'>
                       <Medallion icon={PawPrint} tone='success' size='sm' />

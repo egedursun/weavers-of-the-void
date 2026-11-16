@@ -306,7 +306,7 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
     harm = await armed(ctx, harm)
     hardiness = lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.TOUGHNESS), ctx.rules.mind_split.toughness_pct)
     creature = await ctx.session.get(CreatureAnatomyRow, bearer.id)
-    harm = replace(harm, damage=harm.damage * max(0.0, 1 - hardiness) * skin_kept(ctx.rules, creature))
+    harm = replace(harm, damage=harm.damage * max(0.0, 1 - hardiness) * skin_kept(ctx.rules, creature, harm.damage_type))
     hits = hits_for(
         ctx.rules,
         anatomy,

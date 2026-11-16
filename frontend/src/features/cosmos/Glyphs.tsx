@@ -1,5 +1,6 @@
-import { useId } from 'react'
+import { type ReactNode, useId } from 'react'
 import { cn } from '@/lib/utils'
+import { Picture } from '@/components/domain'
 import { mediaUrl } from '@/features/images/media'
 import { type StarType, type TravelMethod } from './api'
 import {
@@ -93,20 +94,23 @@ function CoverDisc({
   cover,
   size,
   muted = false,
+  fallback,
 }: {
   cover: string
   size: 'sm' | 'md'
   muted?: boolean
+  fallback: ReactNode
 }) {
   return (
-    <img
-      src={mediaUrl(cover, COVER_WIDTH) ?? undefined}
+    <Picture
+      src={mediaUrl(cover, COVER_WIDTH)}
+      fallback={fallback}
       alt=''
       aria-hidden='true'
       loading='lazy'
       decoding='async'
       className={cn(
-        'shrink-0 rounded-full border object-cover',
+        'shrink-0 rounded-full border border-gild/60 object-cover',
         size === 'sm' ? 'size-portrait-sm' : 'size-control-lg',
         muted && 'opacity-45'
       )}
@@ -126,11 +130,10 @@ export function WorldDisc({
   cover?: string | null
 }) {
   const id = svgId(useId())
-  if (cover) return <CoverDisc cover={cover} size={size} muted={muted} />
   const stops = [palette[4], palette[3], palette[1]].map(
     (color) => color ?? cssVar('--cosmos-fog')
   )
-  return (
+  const disc = (
     <svg
       aria-hidden='true'
       viewBox={`0 0 ${DISC_VIEW} ${DISC_VIEW}`}
@@ -154,6 +157,9 @@ export function WorldDisc({
       />
     </svg>
   )
+  if (cover)
+    return <CoverDisc cover={cover} size={size} muted={muted} fallback={disc} />
+  return disc
 }
 
 export function StarDisc({
@@ -164,9 +170,8 @@ export function StarDisc({
   cover?: string | null
 }) {
   const id = svgId(useId())
-  if (cover) return <CoverDisc cover={cover} size='md' />
   const look = STAR_LOOK[type]
-  return (
+  const disc = (
     <svg
       aria-hidden='true'
       viewBox={`0 0 ${DISC_VIEW} ${DISC_VIEW}`}
@@ -187,6 +192,8 @@ export function StarDisc({
       />
     </svg>
   )
+  if (cover) return <CoverDisc cover={cover} size='md' fallback={disc} />
+  return disc
 }
 
 export function PaletteStrip({

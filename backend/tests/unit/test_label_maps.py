@@ -119,3 +119,28 @@ def test_no_frontend_label_map_leaves_out_a_value_of_its_enum() -> None:
     enums = module.enum_values(module.SCHEMA.read_text(encoding="utf-8"))
     paths = [path for path in sorted(module.FRONTEND.rglob("*.ts*")) if "generated" not in path.parts and ".test." not in path.name]
     assert [gap for path in paths for gap in module.gaps_in(path, enums)] == []
+
+
+SIGN_PICKER = """
+type SignKind = components['schemas']['CreatorSignKind']
+
+const SIGNS: {
+  key: SignKind
+  label: string
+}[] = [
+  { key: 'wrath', label: 'Wrath' },
+  { key: 'grace', label: 'Grace' },
+]
+"""
+
+
+def test_an_option_list_typed_over_an_enum_must_offer_every_value(tmp_path: Path) -> None:
+    module = checker()
+    enums = {"CreatorSignKind": frozenset({"wrath", "grace", "omen", "warning"})}
+    picker = tmp_path / "GodPanel.tsx"
+    picker.write_text(SIGN_PICKER, encoding="utf-8")
+    gaps = module.option_gaps_in(picker, enums)
+    assert [(gap.name, gap.missing) for gap in gaps] == [("SIGNS", ("omen", "warning"))]
+    full = tmp_path / "Full.tsx"
+    full.write_text(SIGN_PICKER.replace("]\n", "  { key: 'omen', label: 'Omen' },\n  { key: 'warning', label: 'Warning' },\n]\n"), encoding="utf-8")
+    assert module.option_gaps_in(full, enums) == []

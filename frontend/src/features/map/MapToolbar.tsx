@@ -252,7 +252,10 @@ export function MapToolbar(props: MapToolbarProps) {
     mobile,
   } = props
   return (
-    <div data-map-toolbar className='flex min-w-0 flex-col gap-2'>
+    <div
+      data-map-toolbar
+      className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-4'
+    >
       {!mobile && <LayerControls {...props} />}
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         {worlds.length > 1 && (

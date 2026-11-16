@@ -1,8 +1,9 @@
+from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.mind import CONDITION_TRAITS, DIVINE_TRAITS, TRAITS
+from aerona.catalog.mind import CONDITION_TRAITS, DIVINE_TRAITS, FAMILY_LIMIT, TRAIT_FAMILY, TRAITS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.domain.enums.body import ConditionKind
@@ -23,7 +24,8 @@ def affinity(trait: TraitKind, values: Mapping[ValueAxis, int], scale_pct: int) 
 
 def open_choices(choices: Iterable[TraitKind], held: set[TraitKind]) -> list[TraitKind]:
     blocked = held | {TRAITS[trait].opposite for trait in held if TRAITS[trait].opposite is not None}
-    return [trait for trait in choices if trait not in blocked]
+    filled = Counter(TRAIT_FAMILY[trait] for trait in held)
+    return [trait for trait in choices if trait not in blocked and filled[TRAIT_FAMILY[trait]] < FAMILY_LIMIT[TRAIT_FAMILY[trait]]]
 
 
 def pick_traits(rng: SeededRandom, choices: Sequence[TraitKind], values: Mapping[ValueAxis, int], count: int, scale_pct: int) -> list[TraitKind]:
@@ -91,7 +93,7 @@ async def gain_trait(
     rng = ctx.rng(f"{stream}.{node_id}")
     if not rng.chance(chance_pct):
         return None
-    pool = [trait for trait in choices if trait not in held]
+    pool = open_choices(choices, held)
     if not pool:
         return None
     picked = rng.weighted(pool, [affinity(trait, values or {}, table.value_affinity_pct) for trait in pool])

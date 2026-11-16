@@ -44,7 +44,7 @@ function NodeName({
 function ItemRow({ item }: { item: JobItem }) {
   const Icon = ACTION_ICON[item.action] ?? FALLBACK_ACTION_ICON
   return (
-    <li className='flex min-w-0 items-center gap-2 rounded-md border bg-card px-2 py-1.5'>
+    <li className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1.5'>
       <NodeAvatar id={item.node_id} name={item.name} />
       <span className='flex min-w-0 flex-1 flex-col'>
         <span className='flex min-w-0 items-center gap-1.5'>

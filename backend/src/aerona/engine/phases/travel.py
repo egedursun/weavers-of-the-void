@@ -39,6 +39,7 @@ from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.discovery import mark_world_discovered
+from aerona.engine.cosmos.encounters import draw, meet, seed_encounters
 from aerona.engine.cosmos.fauna import stowaway
 from aerona.engine.cosmos.features import slingshot
 from aerona.engine.cosmos.lifeforms import habitability
@@ -53,9 +54,9 @@ from aerona.engine.cosmos.routes import (
     connect_world,
     method_label,
     other_end,
+    repair_route,
     sever_route,
     start_journey,
-    stitch_route,
     touches,
     world_name,
 )
@@ -102,7 +103,7 @@ REVEAL_BRANCH: dict[TravelMethod, KnowledgeBranch] = {
     M.ROCKETRY: KnowledgeBranch.SKY_NAVIGATION,
 }
 ROAD_EVENT_TEXT: dict[JourneyEventKind, str] = {
-    JourneyEventKind.PIRATES: "void pirates attacked",
+    JourneyEventKind.PIRATES: "route raiders attacked",
     JourneyEventKind.VOID_STORM: "they were caught in a void storm",
     JourneyEventKind.CREATURE: "they met a cosmic creature",
     JourneyEventKind.LOST_WAY: "they lost their way and turned back",
@@ -116,8 +117,8 @@ SWALLOWED_TEXT: dict[JourneyEventKind, str] = {
     JourneyEventKind.LOST_WAY: "they lost their bearings in the void",
     JourneyEventKind.SWALLOWED: "the creature carrying them never let them go",
     JourneyEventKind.DREAM_NOT_RETURNED: "no one woke from the dream",
-    JourneyEventKind.MEMORY_LOSS: "the river took every memory; forgetting who they were, they melted into its water",
-    JourneyEventKind.PIRATES: "void pirates left no one alive",
+    JourneyEventKind.MEMORY_LOSS: "the river took every memory; forgetting who they were, they were lost in its water",
+    JourneyEventKind.PIRATES: "route raiders left no one alive",
     JourneyEventKind.VOID_STORM: "a void storm swallowed them",
     JourneyEventKind.CREATURE: "a cosmic creature swallowed the travellers",
 }
@@ -472,7 +473,7 @@ async def _ghost_ship(ctx: TickContext, journey: JourneyRow, traveller: EntityRo
         RecordSpec(
             name=f"{vehicle.name} Ghost",
             entity_type=EntityType.LEGEND,
-            body=f"{vehicle.name} vanished in the void with {traveller.name}'s travellers; on some nights its lights are still seen.",
+            body=f"{vehicle.name} vanished in the void with {traveller.name}'s travellers.",
             stats=LegendStats(spread=travel.ghost_ship_legend_spread),
             power=travel.ghost_ship_legend_power,
             world_id=journey.origin_world_id,
@@ -528,7 +529,13 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     risk = road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, rig=rig, region_danger=home)
     if not scene.rng.probability(risk * await ctx.hook_easing(traveller.id, DomainHook.ROAD_SAFETY)):
         return True
-    kind = METHOD_EVENTS.get(route.method) or (JourneyEventKind.PIRATES if scene.rng.chance(route.piracy) else scene.rng.pick(COMMON_EVENTS))
+    kind = METHOD_EVENTS.get(route.method) or (JourneyEventKind.PIRATES if scene.rng.chance(route.piracy) else None)
+    if kind is None:
+        met = await draw(ctx, route, journey.destination_world_id, scene.rng)
+        if met is not None:
+            await meet(ctx, journey, met)
+            return True
+        kind = scene.rng.pick(COMMON_EVENTS)
     target = await world_name(ctx.session, journey.destination_world_id)
     if scene.rng.chance(swallow_chance(ctx.rules, kind, vehicle, rig)):
         how = SWALLOWED_TEXT[kind]
@@ -573,6 +580,9 @@ LOST_REASONS: dict[RouteState, str] = {
     RouteState.COLLAPSED: "the divine bridge collapsed",
     RouteState.SEALED: "the route was sealed",
     RouteState.SNAPPED: "the light sail snapped",
+    RouteState.SEVERED: "the route was severed for good",
+    RouteState.WORN: "the route wore away",
+    RouteState.SCORCHED: "a flare scorched the route shut for good",
 }
 
 
@@ -990,6 +1000,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.holder_levels",
     "table.incident_participants",
     "table.item_profiles",
+    "table.journey_encounters",
     "table.journeys",
     "table.language_grammar",
     "table.language_intelligibility",
@@ -1054,6 +1065,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.journey_encounters",
     "table.journeys",
     "table.language_intelligibility",
     "table.lexemes",
@@ -1069,6 +1081,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.treaty_profiles",
 )
 async def travel_phase(ctx: TickContext) -> None:
+    ctx.count("encounters_seeded", await seed_encounters(ctx))
     await hidden_routes(ctx)
     await route_knowledge(ctx)
     await spontaneous_expeditions(ctx)
@@ -1122,7 +1135,7 @@ async def sever_by_hand(session: AsyncSession, rules: Rules, route_id: int, by: 
 
 
 async def stitch_by_hand(session: AsyncSession, rules: Rules, route_id: int, by: str) -> str:
-    return await stitch_route(await manual_context(session, "stitch", rules, key=str(route_id)), route_id, by)
+    return await repair_route(await manual_context(session, "stitch", rules, key=str(route_id)), route_id, by)
 
 
 async def run_travel_phase(session: AsyncSession, rules: Rules) -> None:

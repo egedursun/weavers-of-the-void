@@ -18,7 +18,7 @@ from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
-from aerona.domain.enums.powers import BloodlineRule, GiftedAttitude, GiftedStance, PowerDeviceEffect, PowerOrigin, PowerState, PowerVisibility, RestrictionKind
+from aerona.domain.enums.powers import BloodlineRule, GiftedAttitude, PowerDeviceEffect, PowerOrigin, PowerState, PowerVisibility, RestrictionKind
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -30,6 +30,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.laws import enact, law_param
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.powers.devices import devices_of
+from aerona.engine.powers.kinds import STANCE_ATTITUDE, teachable
 from aerona.engine.powers.war import field_gifted
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.queries import connect
@@ -40,12 +41,6 @@ CASTE_STANDING = {GiftedAttitude.HONOURED: 85, GiftedAttitude.PERSECUTED: 10}
 BORN_ORIGINS = frozenset({PowerOrigin.BORN, PowerOrigin.BLOODLINE})
 GIFTED_LAWS = frozenset({"registered", "licensed", "conscripted"})
 HUNTING_LAWS = frozenset({"hunted", "banned"})
-STANCE_ATTITUDE = {
-    GiftedStance.SACRED: GiftedAttitude.HONOURED,
-    GiftedStance.FORBIDDEN: GiftedAttitude.PERSECUTED,
-    GiftedStance.SUSPECT: GiftedAttitude.FEARED,
-    GiftedStance.TOOL: GiftedAttitude.REGULATED,
-}
 LEAN = 25
 BAND_POWER = 4
 
@@ -79,11 +74,14 @@ async def harmed_by_gifted(ctx: TickContext, people_id: int, holders: set[int]) 
 
 async def attitude_for(ctx: TickContext, people: EntityRow, holders: set[int]) -> GiftedAttitude:
     doctrine = await doctrine_here(ctx.session, people)
-    if doctrine is not None and doctrine.power_stance in STANCE_ATTITUDE:
-        return STANCE_ATTITUDE[doctrine.power_stance]
+    stance = STANCE_ATTITUDE[doctrine.power_stance] if doctrine is not None else None
+    if stance is not None:
+        return stance
     values = dict(await values_for(ctx.session, people.id))
     memory = await harmed_by_gifted(ctx, people.id, holders) * ctx.rules.powered_society.attitude_shift
-    lean = values.get(ValueAxis.TRADITION, 0) + values.get(ValueAxis.PURITY, 0) + memory
+    hiding = select(func.count()).select_from(IdentityRow).where(IdentityRow.mortal_node_id.in_(holders), IdentityRow.reason == IdentityReason.HIDDEN_POWER)
+    fear = int(await ctx.session.scalar(hiding) or 0) * ctx.rules.powered_society.hidden_fear
+    lean = values.get(ValueAxis.TRADITION, 0) + values.get(ValueAxis.PURITY, 0) + memory + fear
     if lean >= LEAN * 3:
         return GiftedAttitude.PERSECUTED
     if lean >= LEAN * 2:
@@ -222,9 +220,26 @@ async def form_bands(ctx: TickContext) -> int:
     return formed
 
 
-async def move_laws(ctx: TickContext) -> int:
+async def registry_pull(ctx: TickContext) -> int:
     table = ctx.rules.powered_society
     moved = 0
+    full = select(GiftedAttitudeRow).where(GiftedAttitudeRow.registered_share >= table.registry_pull).order_by(GiftedAttitudeRow.people_entity_id)
+    for row in list(await ctx.session.scalars(full)):
+        homes = await towns_of_people(ctx.session, row.people_entity_id)
+        polity_id = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id.in_(homes)).limit(1))
+        polity = await ctx.session.get(EntityRow, polity_id) if polity_id is not None else None
+        if polity is None or held(polity.id) or not ctx.rng(f"power.registry.{polity.id}.{ctx.epoch}").chance(table.law_adopt_chance):
+            continue
+        if str(await law_param(ctx.session, polity.id, LawKind.POWER_LAW, "level") or "free") != "registered":
+            continue
+        await enact(ctx, polity, LawKind.POWER_LAW, {"level": "conscripted", "mind_powers": "licensed"})
+        moved += 1
+    return moved
+
+
+async def move_laws(ctx: TickContext) -> int:
+    table = ctx.rules.powered_society
+    moved = await registry_pull(ctx)
     for row in list(
         await ctx.session.scalars(select(GiftedAttitudeRow).where(GiftedAttitudeRow.attitude.in_([GiftedAttitude.FEARED, GiftedAttitude.PERSECUTED])))
     ):
@@ -326,6 +341,12 @@ async def at_death(ctx: TickContext) -> int:
     return ended
 
 
+async def go_quiet(ctx: TickContext, holder_id: int) -> None:
+    for power in list(await ctx.session.scalars(select(PowerRow).where(PowerRow.holder_node_id == holder_id, PowerRow.visibility == PowerVisibility.OVERT))):
+        if "visibility" not in power.locked:
+            power.visibility = PowerVisibility.SUBTLE
+
+
 async def keep_apart(ctx: TickContext) -> int:
     hidden = 0
     overt = select(PowerRow.holder_node_id).where(PowerRow.state == PowerState.ACTIVE, PowerRow.visibility == PowerVisibility.OVERT)
@@ -345,6 +366,8 @@ async def keep_apart(ctx: TickContext) -> int:
         if level not in HUNTING_LAWS and not feared:
             continue
         found = await assume(ctx, holder, IdentityReason.HIDDEN_POWER, f"{holder.name.split()[0]} of no note", community_id=holder.location_id)
+        if found is not None:
+            await go_quiet(ctx, holder.id)
         hidden += int(found is not None)
     return hidden
 
@@ -357,7 +380,8 @@ async def train_in_bands(ctx: TickContext) -> int:
     for power in list(
         await ctx.session.scalars(select(PowerRow).where(PowerRow.holder_node_id.in_(banded), PowerRow.state != PowerState.LOST).order_by(PowerRow.id))
     ):
-        if held(power.holder_node_id) or "control" in power.locked:
+        holder = await ctx.session.get(EntityRow, power.holder_node_id)
+        if held(power.holder_node_id) or "control" in power.locked or holder is None or not await teachable(ctx, power.system_id, holder):
             continue
         power.control = min(PERCENT, power.control + ctx.rules.powers.control_gain)
         if power.state is PowerState.LATENT and "state" not in power.locked:
@@ -429,6 +453,7 @@ async def broken_vows(ctx: TickContext) -> int:
     "table.gifted_attitudes",
     "table.house_members",
     "table.house_profiles",
+    "table.identities",
     "table.law_profiles",
     "table.memories",
     "table.personality_values",

@@ -3,7 +3,8 @@ from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.war import HeroQuestKind, HeroQuestStatus
+from aerona.domain.enums.quests import QuestAim
+from aerona.domain.enums.war import HeroQuestStatus
 from aerona.domain.models.entity_stats import ItemStats, StructureStats
 from aerona.engine.phases.heroes import resolve_quest, send_on_quest
 from aerona.engine.phases.wonders import wonders
@@ -28,14 +29,14 @@ async def test_thread_quest_is_offered_for_an_open_story_and_reveals_the_truth(r
     )
     await realm.session.flush()
     ctx = context(realm.session, epoch=3)
-    quest = await send_on_quest(ctx, hero.id, kind=HeroQuestKind.THREAD)
-    assert quest.kind is HeroQuestKind.THREAD and quest.thread_id == thread.id
+    quest = await send_on_quest(ctx, hero.id, aim=QuestAim.RESOLVE)
+    assert quest.aim is QuestAim.RESOLVE and quest.thread_id == thread.id
     assert await bonded(realm.session, hero.id, quest.target_node_id or 0, BondKind.PURSUES)
     status = await resolve_quest(context(realm.session, epoch=4), hero.id, succeed=True)
     assert status is HeroQuestStatus.SUCCEEDED
     assert not await bonded(realm.session, hero.id, quest.target_node_id or 0, BondKind.PURSUES)
     keys = await chronicle_keys(realm.session)
-    assert "heroes.quest_start" in keys and "heroes.quest_thread" in keys
+    assert "heroes.quest_start" in keys and "heroes.quest_resolve" in keys
     assert stat(hero, "charisma") == 50 + ctx.rules.heroes.quest_charisma_gain
 
 
@@ -43,12 +44,12 @@ async def test_no_thread_quest_exists_without_an_open_thread(realm: Realm) -> No
     home = await settlement(realm, "Keep")
     hero = await mortal(realm, "Seeker", location_id=home.id, role=MortalRole.HERO)
     await link(realm.session, hero.id, home.id, BondKind.PROTECTS)
-    assert await _offered(realm, hero.id, HeroQuestKind.THREAD) is False
+    assert await _offered(realm, hero.id, QuestAim.RESOLVE) is False
 
 
-async def _offered(realm: Realm, hero_id: int, kind: HeroQuestKind) -> bool:
+async def _offered(realm: Realm, hero_id: int, aim: QuestAim) -> bool:
     try:
-        await send_on_quest(context(realm.session, epoch=3), hero_id, kind=kind)
+        await send_on_quest(context(realm.session, epoch=3), hero_id, aim=aim)
     except ValidationFailedError:
         return False
     return True
@@ -57,13 +58,13 @@ async def _offered(realm: Realm, hero_id: int, kind: HeroQuestKind) -> bool:
 async def test_relic_quest_targets_an_ownerless_item_and_the_hero_takes_it_up(realm: Realm) -> None:
     hero = await mortal(realm, "Finder", role=MortalRole.HERO)
     relic = await make(realm.session, "Lost Crown", EntityType.ITEM, ItemStats(damage=10, might=20), world_id=realm.world.id, location_id=realm.region.id)
-    quest = await send_on_quest(context(realm.session, epoch=3), hero.id, kind=HeroQuestKind.RELIC)
+    quest = await send_on_quest(context(realm.session, epoch=3), hero.id, aim=QuestAim.FIND)
     assert quest.target_node_id == relic.id
     status = await resolve_quest(context(realm.session, epoch=4), hero.id, succeed=True)
     assert status is HeroQuestStatus.SUCCEEDED
     assert await bonded(realm.session, hero.id, relic.id, BondKind.OWNS)
     assert not await bonded(realm.session, hero.id, relic.id, BondKind.PURSUES)
-    assert "heroes.quest_relic" in await chronicle_keys(realm.session)
+    assert "heroes.quest_find" in await chronicle_keys(realm.session)
 
 
 async def test_owned_item_is_not_a_relic_quest_target(realm: Realm) -> None:
@@ -71,7 +72,7 @@ async def test_owned_item_is_not_a_relic_quest_target(realm: Realm) -> None:
     holder = await mortal(realm, "Holder")
     relic = await make(realm.session, "Held Crown", EntityType.ITEM, ItemStats(damage=10), world_id=realm.world.id, location_id=realm.region.id)
     await link(realm.session, holder.id, relic.id, BondKind.OWNS)
-    assert await _offered(realm, hero.id, HeroQuestKind.RELIC) is False
+    assert await _offered(realm, hero.id, QuestAim.FIND) is False
 
 
 async def envy_scene(realm: Realm) -> tuple[int, int]:

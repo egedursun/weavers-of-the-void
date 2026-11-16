@@ -40,6 +40,7 @@ from aerona.core.grammar import an
 from aerona.core.random import SeededRandom
 from aerona.db.tables.collective import ARMS_FIELDS, ArmsRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.mortal import MarriageRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, PolityProfileRow
@@ -57,7 +58,7 @@ from aerona.domain.enums.collective import (
     SupporterPose,
     Tincture,
 )
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.engine.body.customs import people_of
@@ -67,6 +68,7 @@ from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 
 H = HeraldryHolderKind
+ORDERS = frozenset({FactionKind.WARRIOR_ORDER, FactionKind.HOLY_ORDER, FactionKind.MAGE_ORDER})
 GUILDS = frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD, FactionKind.THIEVES_GUILD, FactionKind.WARRIOR_ORDER, FactionKind.HOLY_ORDER})
 DESIGN_FIELDS = tuple(name for name in ARMS_FIELDS if name != "motto")
 STRONGEST = 3
@@ -351,6 +353,16 @@ async def holders(ctx: TickContext) -> list[tuple[EntityRow, HeraldryHolderKind,
         select(FactionProfileRow).where(FactionProfileRow.kind.in_(sorted(GUILDS))).order_by(FactionProfileRow.faction_entity_id)
     ):
         found.append((guild.faction_entity_id, H.GUILD, {}))
+    for company in await ctx.session.scalars(select(CompanyProfileRow.faction_entity_id).order_by(CompanyProfileRow.faction_entity_id)):
+        found.append((company, H.COMPANY, {}))
+    for order in await ctx.session.scalars(
+        select(FactionProfileRow.faction_entity_id).where(FactionProfileRow.kind.in_(sorted(ORDERS))).order_by(FactionProfileRow.faction_entity_id)
+    ):
+        found.append((order, H.ORDER, {}))
+    for people in await ctx.session.scalars(
+        select(EntityRow.id).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    ):
+        found.append((people, H.PEOPLE, {}))
     rows: list[tuple[EntityRow, HeraldryHolderKind, dict[str, str]]] = []
     for holder_id, kind, legacy in found:
         entity = await ctx.session.get(EntityRow, holder_id)

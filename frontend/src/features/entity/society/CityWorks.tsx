@@ -65,7 +65,7 @@ function Breakdown({
   rows: { icon: LucideIcon; label: string; value: string; hint?: string }[]
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={icon} tone={tone} size='sm' />
         <Text as='span' weight='medium' truncate className='flex-1'>
@@ -228,7 +228,7 @@ export function CityWorkings({ plan }: { plan: Plan }) {
             },
           ]}
         />
-        <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
           <div className='flex min-w-0 items-center gap-2.5'>
             <Medallion icon={Compass} tone='verdigris' size='sm' />
             <Text as='span' weight='medium' truncate>
@@ -501,7 +501,7 @@ function DesignCard({
   })
   const busy = blocked ?? (remove.isPending ? WORKING : null)
   return (
-    <li className='flex min-w-0 flex-col gap-3 rounded-lg border bg-muted/30 p-3'>
+    <li className='flex min-w-0 flex-col gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>

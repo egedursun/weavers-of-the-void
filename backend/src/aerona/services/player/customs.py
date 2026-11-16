@@ -104,6 +104,9 @@ class TimeBudgetDraft(Command):
     leisure: int = 10
     travel: int = 3
     service: int = 2
+    learning: int = 0
+    care: int = 0
+    art: int = 0
 
 
 class TimeBudgetTarget(Command):
@@ -413,6 +416,9 @@ async def time_budget_set(scope: PlayerScope, command: TimeBudgetDraft) -> Effec
             "leisure": command.leisure,
             "travel": command.travel,
             "service": command.service,
+            "learning": command.learning,
+            "care": command.care,
+            "art": command.art,
         },
     )
     return Effect("The year of the class is set.", values={"record_id": getattr(row, "id", 0)})

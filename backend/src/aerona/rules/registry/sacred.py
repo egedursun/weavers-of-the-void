@@ -184,6 +184,7 @@ class PrescienceRules:
     foresights_per_epoch: int = rule(20, 0, 10000, R, "Foresights that may be made across the cosmos in one epoch")
     horizon_years: int = rule(10, 1, 1000, R, "Years ahead a seer looks")
     god_sight: int = rule(25, 0, 100, D, "Certainty a god with the seer's power adds to what it foresees")
+    divination_skill: int = rule(40, 0, 100, D, "Skill in reading the sky a priest needs to foretell by divination")
     rival_cloud: int = rule(15, 0, 100, R, "Certainty lost for every rival seer in the same world")
     cloud_floor: int = rule(20, 0, 100, R, "Certainty below which a foresight is clouded")
     likely_at: int = rule(45, 0, 100, R, "Chance from which the forecast counts a future as likely")

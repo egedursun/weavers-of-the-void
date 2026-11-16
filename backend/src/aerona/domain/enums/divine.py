@@ -102,6 +102,11 @@ class DivineWoundKind(StrEnum):
     SHATTERED_MANIFESTATION = "shattered_manifestation"
     STOLEN_NAME = "stolen_name"
     VOID_WOUND = "void_wound"
+    DRAINED_ESSENCE = "drained_essence"
+    LOST_WORSHIPPERS = "lost_worshippers"
+    BOUND = "bound"
+    SPLIT_ASPECT = "split_aspect"
+    FORGOTTEN_NAME = "forgotten_name"
 
 
 class WoundCause(StrEnum):
@@ -127,6 +132,39 @@ class CouncilMotion(StrEnum):
     COSMIC_TRUCE = "cosmic_truce"
     PETITION_CREATOR = "petition_creator"
     APPOINT_OFFICE = "appoint_office"
+    REASSIGN_WORLD = "reassign_world"
+    OUTLAW_POWER = "outlaw_power"
+    OUTLAW_SOURCE = "outlaw_source"
+    ADMIT_MEMBER = "admit_member"
+    EXPEL_MEMBER = "expel_member"
+    RECOGNISE_GOD = "recognise_god"
+    ESSENCE_TITHE = "essence_tithe"
+    SET_COUNCIL_RULES = "set_council_rules"
+    REGULATE_MADE_MINDS = "regulate_made_minds"
+    REGULATE_POWERS = "regulate_powers"
+    REGULATE_LIVING_CRAFT = "regulate_living_craft"
+
+
+class VotingRule(StrEnum):
+    UNANIMITY = "unanimity"
+    MAJORITY = "majority"
+    WEIGHTED_BY_STANDING = "weighted_by_standing"
+    WEIGHTED_BY_RANK = "weighted_by_rank"
+
+
+class CouncilSeat(StrEnum):
+    BY_RIGHT = "by_right"
+    INVITED = "invited"
+    BY_PACT = "by_pact"
+    RECOGNISED = "recognised"
+
+
+class EscalationStep(StrEnum):
+    CENSURE = "censure"
+    SANCTION = "sanction"
+    EXCLUSION = "exclusion"
+    DUEL = "duel"
+    DIVINE_WAR = "divine_war"
 
 
 class SonPunishment(StrEnum):
@@ -169,3 +207,77 @@ class BargainPrice(StrEnum):
     WORLD_SANITY = "world_sanity"
     DOMAIN = "domain"
     TRUE_NAME = "true_name"
+
+
+class DivineVerb(StrEnum):
+    GRANT = "grant"
+    BLESS = "bless"
+    CURSE = "curse"
+    CREATE = "create"
+    DESTROY = "destroy"
+    SHAPE = "shape"
+    REVEAL = "reveal"
+    CONCEAL = "conceal"
+    SUMMON = "summon"
+    BIND = "bind"
+    FREE = "free"
+    HEAL = "heal"
+    HARM = "harm"
+    RAISE = "raise"
+    INSPIRE = "inspire"
+    TERRIFY = "terrify"
+    PROTECT = "protect"
+    GUIDE = "guide"
+    JUDGE = "judge"
+    TRANSFORM = "transform"
+    FORESEE = "foresee"
+    HASTEN = "hasten"
+    SLOW = "slow"
+    MULTIPLY = "multiply"
+    STILL = "still"
+    WAKE = "wake"
+    REMEMBER = "remember"
+    ERASE = "erase"
+
+
+class DivineObject(StrEnum):
+    STAT = "stat"
+    NEED = "need"
+    SKILL = "skill"
+    VALUE = "value"
+    TRAIT = "trait"
+    COMMODITY = "commodity"
+    SPECIES = "species"
+    LINE = "line"
+    STRUCTURE = "structure"
+    WEATHER = "weather"
+    SOURCE = "source"
+    POWER = "power"
+    MIND = "mind"
+    TRUTH = "truth"
+    LAW = "law"
+    MEMORY = "memory"
+    INCIDENT = "incident"
+
+
+class DivineScope(StrEnum):
+    PERSON = "person"
+    COMMUNITY = "community"
+    REGION = "region"
+    WORLD = "world"
+    SYSTEM = "system"
+    DIMENSION = "dimension"
+
+
+class DivineMode(StrEnum):
+    PASSIVE = "passive"
+    TRIGGERED = "triggered"
+    ACTIVE = "active"
+
+
+class DivineCost(StrEnum):
+    ESSENCE = "essence"
+    ATTENTION = "attention"
+    STANDING = "standing"
+    DOMAIN = "domain"
+    SACRIFICE = "sacrifice"

@@ -166,7 +166,7 @@ async def _dangers(session: AsyncSession, rules: Rules, world: WorldRow, complet
         dangers.append(Danger(entity.id, entity.name, f"predator (danger {stat(entity, 'danger')}){suffix}"))
     dangers += [Danger(entity.id, entity.name, OUTER_BEING) for entity in await _canon(session, world.id, [EntityType.OUTER_BEING])]
     if world.leakage >= guide.leak_threshold:
-        dangers.append(Danger(None, LEAK, f"cosmic leak {world.leakage}/100: minds cloud, species warp"))
+        dangers.append(Danger(None, LEAK, f"cosmic leak {world.leakage}/100: sanity falls and living kinds change"))
     return dangers
 
 

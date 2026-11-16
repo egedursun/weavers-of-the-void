@@ -32,7 +32,9 @@ LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED})
 FIGHTING_ROLES = frozenset({*HERO_ROLES, MortalRole.CAPTAIN, MortalRole.BANDIT, MortalRole.OFFICER, MortalRole.PILOT})
 BATTLE_TRAITS = (TraitKind.BRAVE, TraitKind.CRAVEN)
 MAIMED_TRAITS = (TraitKind.MELANCHOLIC, TraitKind.IRON_WILLED)
-CAPTIVITY_TRAITS = (TraitKind.PARANOID,)
+CAPTIVITY_TRAITS = (TraitKind.PARANOID, TraitKind.DEFIANT, TraitKind.OBEDIENT)
+DEFEAT_TRAITS = (TraitKind.CAUTIOUS, TraitKind.RECKLESS)
+PRACTICE_TRAITS = (TraitKind.DILIGENT, TraitKind.SLOTHFUL)
 ACT_MEMORIES: dict[ActKind, MemoryKind] = {}
 for _kind, _spec in MEMORIES.items():
     if _spec.act is not None:
@@ -85,6 +87,16 @@ async def fought(ctx: TickContext, fighter: EntityRow, *, commander: bool = Fals
     await practise_any(ctx.session, ctx.rules, fighter.id, (*MELEE_SKILLS, *MISSILE_SKILLS), skills.battle_xp, epoch=ctx.epoch)
     if commander:
         await practise_any(ctx.session, ctx.rules, fighter.id, COMMAND_SKILLS, skills.command_xp, epoch=ctx.epoch)
+    if survived and won is False:
+        await gain_trait(
+            ctx,
+            fighter.id,
+            DEFEAT_TRAITS,
+            ctx.rules.traits.defeat_chance,
+            TraitSource.EXPERIENCE,
+            values=await values_for(ctx.session, fighter.id),
+            stream="defeat_trait",
+        )
     if survived:
         await gain_trait(
             ctx,
@@ -174,6 +186,10 @@ async def failed_to_heal(ctx: TickContext, healer_id: int, patient: EntityRow) -
 
 async def practised(ctx: TickContext, node_id: int, skill: SkillKind, xp_rule: int) -> None:
     await practise(ctx.session, ctx.rules, node_id, skill, xp_rule, epoch=ctx.epoch)
+    if not ctx.rng(f"practice_trait.{node_id}.{skill.value}.{ctx.epoch}").chance(ctx.rules.traits.practice_chance):
+        return
+    values = await values_for(ctx.session, node_id)
+    await gain_trait(ctx, node_id, PRACTICE_TRAITS, PERCENT, TraitSource.EXPERIENCE, values=values, stream="practice_trait")
 
 
 async def witnessed(

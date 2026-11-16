@@ -20,6 +20,8 @@ CARRIERS = {
     TechnologyEra.ELECTRICAL: NetworkCarrier.WIRED,
     TechnologyEra.INFORMATION: NetworkCarrier.MESH,
     TechnologyEra.ADVANCED: NetworkCarrier.BROADCAST,
+    TechnologyEra.INTERSTELLAR: NetworkCarrier.BROADCAST,
+    TechnologyEra.BEYOND: NetworkCarrier.MIND_LINK,
 }
 
 

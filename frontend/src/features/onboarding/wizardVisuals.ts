@@ -1,4 +1,8 @@
 import {
+  Hand,
+  Pointer,
+  AudioWaveform,
+  Sparkles,
   Pickaxe,
   BrainCircuit,
   Anchor,
@@ -55,6 +59,7 @@ import {
   TrendingUp,
   Users,
   Zap,
+  Clapperboard,
 } from 'lucide-react'
 import {
   type ClimateEra,
@@ -109,6 +114,9 @@ export const TEMPLATE_ICON: Record<WizardTemplate['key'], LucideIcon> = {
   advanced_age: Atom,
   made_minds: BrainCircuit,
   after_abundance: Pickaxe,
+  gunpowder_age: Flame,
+  interstellar_age: Rocket,
+  beyond_age: Orbit,
 }
 
 export const SHAPE_ICON: Record<CosmosShape, LucideIcon> = {
@@ -123,6 +131,10 @@ export const CLIMATE_ICON: Record<ClimateEra, LucideIcon> = {
   rain: Droplets,
   ice_age: Snowflake,
   scorching: Flame,
+  hothouse: Leaf,
+  snowball: Leaf,
+  variable: Leaf,
+  wet_cold: Leaf,
 }
 
 export const AGE_ICON: Record<WorldAge, LucideIcon> = {
@@ -137,11 +149,14 @@ export const TECHNOLOGY_ICON: Record<TechnologyEra, LucideIcon> = {
   bronze: Shell,
   iron: Hammer,
   medieval: Castle,
+  gunpowder: Flame,
   renaissance: Palette,
   steam: Cog,
   electrical: Zap,
   information: Cpu,
   advanced: Rocket,
+  interstellar: Orbit,
+  beyond: Sparkles,
 }
 
 export const TECHNOLOGY_HINT: Record<TechnologyEra, string> = {
@@ -149,11 +164,14 @@ export const TECHNOLOGY_HINT: Record<TechnologyEra, string> = {
   bronze: 'Bronze is worked',
   iron: 'Iron is worked',
   medieval: 'Steel and written law',
+  gunpowder: 'Powder, guns and star-shaped forts',
   renaissance: 'Printing and natural philosophy',
-  steam: 'Steam power and gunpowder',
+  steam: 'Steam power and machines',
   electrical: 'Electricity and messages by wire',
   information: 'Computation and mass media',
   advanced: 'Split matter, rockets and machines that think',
+  interstellar: 'Travel between the stars',
+  beyond: 'Matter shaped at will and works the size of stars',
 }
 
 export const LANGUAGE_ICON: Record<LanguageTexture, LucideIcon> = {
@@ -163,15 +181,23 @@ export const LANGUAGE_ICON: Record<LanguageTexture, LucideIcon> = {
   sibilant: Wind,
   long: ScrollText,
   free: Sparkle,
+  tonal: AudioWaveform,
+  clicking: Pointer,
+  whistled: Wind,
+  non_vocal: Hand,
 }
 
 export const LANGUAGE_HINT: Record<LanguageTexture, string> = {
   flowing: 'Soft vowels, liquid sounds',
-  hard: 'Sharp stops and stone edges',
+  hard: 'Hard consonants, short syllables',
   guttural: 'Deep throat sounds',
-  sibilant: 'Whispers and hisses',
+  sibilant: 'Hissing, fricative sounds',
   long: 'Long, many-syllabled names',
   free: 'Let the seed decide',
+  tonal: 'Meaning carried by pitch',
+  clicking: 'Clicks among its consonants',
+  whistled: 'Whistled speech',
+  non_vocal: 'Not spoken aloud',
 }
 
 export const COSMOS_ICON: Record<CosmosSize, LucideIcon> = {
@@ -185,6 +211,8 @@ export const STORYTELLER_ICON: Record<StorytellerProfile, LucideIcon> = {
   rising: TrendingUp,
   cyclic: Repeat,
   chaotic: Shuffle,
+  slow_burn: Flame,
+  episodic: Clapperboard,
 }
 
 export const STORYTELLER_HINT: Record<StorytellerProfile, string> = {
@@ -192,6 +220,8 @@ export const STORYTELLER_HINT: Record<StorytellerProfile, string> = {
   rising: 'Tension grows with the ages',
   cyclic: 'Hard years and quiet years in turn',
   chaotic: 'Tension rises and falls without warning',
+  slow_burn: 'Tension starts low and climbs a little every epoch',
+  episodic: 'Quiet stretches broken by a sharp peak at the end of each episode',
 }
 
 export const AGE_CYCLE_ICON: Record<AgeCycle, LucideIcon> = {

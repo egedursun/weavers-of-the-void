@@ -17,9 +17,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  AsideLayout,
   EmptyState,
   EntityLink,
+  HeroFrame,
   MiniStat,
+  Paged,
   PagedList,
   Section,
 } from '@/components/domain'
@@ -147,7 +150,7 @@ function LanguageRail({
   return (
     <nav
       aria-label='Languages'
-      className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <Input
         type='search'
@@ -197,7 +200,7 @@ function LanguageHero({
 }) {
   const { parent, daughters } = relativesOf(nodes, current.language.id)
   return (
-    <div className='flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4'>
+    <HeroFrame>
       <div className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'>
         <LanguageSeal
           name={current.language.name}
@@ -306,7 +309,7 @@ function LanguageHero({
           </PagedList>
         </div>
       )}
-    </div>
+    </HeroFrame>
   )
 }
 
@@ -334,7 +337,7 @@ function WordCard({ word, query }: { word: Lexeme; query: string }) {
   const Part = word.part_of_speech ? PART_ICON[word.part_of_speech] : null
   const register = REGISTERS[word.word_register]
   return (
-    <li className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background p-3'>
+    <li className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-start gap-2'>
         <Text
           as='span'
@@ -519,7 +522,7 @@ function EveryTongueSearch({
         onChange={(event) => onQuery(event.target.value)}
       />
       {needle && (
-        <div className='flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-3'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <Label variant='overline'>
             {`${plural(matches.length, 'word', 'words')} found`}
           </Label>
@@ -527,28 +530,34 @@ function EveryTongueSearch({
             <Muted variant='caption'>No language has such a word yet.</Muted>
           ) : (
             <ul className='grid min-w-0 grid-cols-1 gap-1.5 md:grid-cols-2'>
-              {matches.slice(0, MATCH_LIMIT).map(({ language, word }) => (
-                <li
-                  key={`${language.language.id}-${word.id}`}
-                  className='min-w-0'
-                >
-                  <Button
-                    variant='ghost'
-                    size='tile'
-                    onClick={() => onSelect(language.language.id)}
+              <Paged items={matches.slice(0, MATCH_LIMIT)} as='li'>
+                {({ language, word }) => (
+                  <li
+                    key={`${language.language.id}-${word.id}`}
+                    className='min-w-0'
                   >
-                    <Text as='span' weight='semibold' className='font-display'>
-                      <Highlight text={word.word} query={query} />
-                    </Text>
-                    <Text as='span' truncate className='min-w-0 flex-1'>
-                      <Highlight text={word.meaning} query={query} />
-                    </Text>
-                    <Badge size='sm' variant='outline'>
-                      {language.language.name}
-                    </Badge>
-                  </Button>
-                </li>
-              ))}
+                    <Button
+                      variant='ghost'
+                      size='tile'
+                      onClick={() => onSelect(language.language.id)}
+                    >
+                      <Text
+                        as='span'
+                        weight='semibold'
+                        className='font-display'
+                      >
+                        <Highlight text={word.word} query={query} />
+                      </Text>
+                      <Text as='span' truncate className='min-w-0 flex-1'>
+                        <Highlight text={word.meaning} query={query} />
+                      </Text>
+                      <Badge size='sm' variant='outline'>
+                        {language.language.name}
+                      </Badge>
+                    </Button>
+                  </li>
+                )}
+              </Paged>
             </ul>
           )}
           {matches.length > MATCH_LIMIT && (
@@ -582,37 +591,38 @@ export function Dictionary({
       />
     )
   return (
-    <div className='grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-4'>
-      <div className='min-w-0 lg:sticky lg:top-topbar lg:self-start'>
+    <AsideLayout
+      side='start'
+      ratio='quarter'
+      aside={
         <LanguageRail
           languages={languages}
           nodes={nodes}
           current={current.language.id}
           onSelect={onSelect}
         />
-      </div>
-      <div className='flex min-w-0 flex-col gap-6 lg:col-span-3'>
-        <EveryTongueSearch
-          languages={languages}
-          query={query}
-          onQuery={onQuery}
-          onSelect={onSelect}
+      }
+    >
+      <EveryTongueSearch
+        languages={languages}
+        query={query}
+        onQuery={onQuery}
+        onSelect={onSelect}
+      />
+      <LanguageHero current={current} node={node} nodes={nodes} />
+      <Lexicon key={current.language.id} current={current} />
+      <div className='grid min-w-0 grid-cols-1 gap-6 2xl:grid-cols-2'>
+        <TranslationBox
+          key={`translate-${current.language.id}`}
+          languageId={current.language.id}
+          languageName={current.language.name}
         />
-        <LanguageHero current={current} node={node} nodes={nodes} />
-        <Lexicon key={current.language.id} current={current} />
-        <div className='grid min-w-0 grid-cols-1 gap-6 2xl:grid-cols-2'>
-          <TranslationBox
-            key={`translate-${current.language.id}`}
-            languageId={current.language.id}
-            languageName={current.language.name}
-          />
-          <AddWordsForm
-            key={`words-${current.language.id}`}
-            languageId={current.language.id}
-            languageName={current.language.name}
-          />
-        </div>
+        <AddWordsForm
+          key={`words-${current.language.id}`}
+          languageId={current.language.id}
+          languageName={current.language.name}
+        />
       </div>
-    </div>
+    </AsideLayout>
   )
 }

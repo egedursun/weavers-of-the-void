@@ -14,6 +14,7 @@ class EventsRules:
     severity_neutral: int = rule(50, 1, 100, G, "Event severity at which per-phase harm is applied as written")
     peak_max_epochs: int = rule(3, 1, 50, G, "Most epochs a famine, plague or siege can stay at its height before it turns")
     aftermath_epochs: int = rule(1, 0, 20, G, "Epochs an event spends in its aftermath before it is over")
+    memory_pct: int = rule(50, 0, 100, G, "Share of an event's severity that each community it struck keeps as a memory of it once it passes into memory (%)")
     famine_peak_below_harvest: int = rule(70, 0, 200, G, "A famine deepens to its height while the land's harvest stays below this (% of normal)")
     famine_recover_harvest: int = rule(90, 0, 200, G, "A famine passes its height once the harvest is back to this (% of normal)")
     famine_onset_prosperity: int = rule(5, 0, 100, G, "Prosperity lost by the hungry communities when a famine begins")

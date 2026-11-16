@@ -25,7 +25,7 @@ export function MapStatusLine(props: MapStatusLineProps) {
   return (
     <div
       data-map-status
-      className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2'
+      className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'
     >
       {props.multiWorld && (
         <Badge

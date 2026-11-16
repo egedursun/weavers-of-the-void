@@ -92,47 +92,49 @@ export function ParticipantsEditor({
         <Muted variant='caption'>Nobody named yet.</Muted>
       ) : (
         <ul className='flex min-w-0 flex-col gap-1.5'>
-          {participants.map((item, index) => {
-            const spec = named(INCIDENT_ROLE, item.role)
-            return (
-              <li
-                key={`${item.node_id}-${item.role}`}
-                className='flex min-w-0 items-center gap-2'
-              >
-                <Medallion
-                  icon={spec.icon}
-                  tone={spec.tone ?? 'gold'}
-                  size='sm'
-                />
-                <Text as='span' className='min-w-0 flex-1' truncate>
-                  {item.name ?? `Record #${item.node_id}`}
-                </Text>
-                <RolePicker
-                  label='Role'
-                  value={item.role}
-                  onChange={(next) =>
-                    onChange(
-                      participants.map((other, at) =>
-                        at === index ? { ...other, role: next } : other
-                      )
-                    )
-                  }
-                />
-                <Button
-                  size='sm'
-                  variant='ghost'
-                  aria-label='Remove participant'
-                  disabled={blocked !== null}
-                  disabledReason={blocked ?? undefined}
-                  onClick={() =>
-                    onChange(participants.filter((_, at) => at !== index))
-                  }
+          <Paged items={participants} as='li'>
+            {(item, index) => {
+              const spec = named(INCIDENT_ROLE, item.role)
+              return (
+                <li
+                  key={`${item.node_id}-${item.role}`}
+                  className='flex min-w-0 items-center gap-2'
                 >
-                  <X />
-                </Button>
-              </li>
-            )
-          })}
+                  <Medallion
+                    icon={spec.icon}
+                    tone={spec.tone ?? 'gold'}
+                    size='sm'
+                  />
+                  <Text as='span' className='min-w-0 flex-1' truncate>
+                    {item.name ?? `Record #${item.node_id}`}
+                  </Text>
+                  <RolePicker
+                    label='Role'
+                    value={item.role}
+                    onChange={(next) =>
+                      onChange(
+                        participants.map((other, at) =>
+                          at === index ? { ...other, role: next } : other
+                        )
+                      )
+                    }
+                  />
+                  <Button
+                    size='sm'
+                    variant='ghost'
+                    aria-label='Remove participant'
+                    disabled={blocked !== null}
+                    disabledReason={blocked ?? undefined}
+                    onClick={() =>
+                      onChange(participants.filter((_, at) => at !== index))
+                    }
+                  >
+                    <X />
+                  </Button>
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       )}
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
@@ -249,7 +251,7 @@ export function IncidentForge({
   return (
     <div
       data-surface='IncidentForge'
-      className='@container/inc flex min-w-0 flex-col gap-3 rounded-lg border border-dashed bg-muted/20 p-3'
+      className='@container/inc flex min-w-0 flex-col gap-3 rounded-md p-3 sealed-well'
     >
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={Feather} tone='gold' size='sm' />
@@ -458,7 +460,7 @@ export function IncidentControls({
         </Button>
       </div>
       {mode === 'cause' && (
-        <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed bg-muted/20 p-2'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
           <CausePicker
             incidents={incidents}
             value={incident.cause_incident_id}
@@ -474,7 +476,7 @@ export function IncidentControls({
         </div>
       )}
       {mode === 'edit' && (
-        <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed bg-muted/20 p-2'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
           <Label as='label' htmlFor={`incident-edit-${incident.id}`}>
             What happened
           </Label>
@@ -503,7 +505,7 @@ export function IncidentControls({
         </div>
       )}
       {mode === 'roles' && (
-        <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed bg-muted/20 p-2'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
           <ParticipantsEditor
             participants={participants}
             onChange={setParticipants}

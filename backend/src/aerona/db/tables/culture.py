@@ -307,6 +307,9 @@ class ProphecyConditionRow(Base):
     pressure: Mapped[int] = mapped_column(default=20)
     state: Mapped[ProphecyState] = mapped_column(enum_type(ProphecyState, "state"), default=ProphecyState.PENDING)
     resolved_epoch: Mapped[int | None]
+    retold: Mapped[int] = mapped_column(default=0, server_default="0")
+    forged: Mapped[bool] = mapped_column(default=False, server_default="0")
+    rival_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

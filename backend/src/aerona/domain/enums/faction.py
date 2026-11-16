@@ -17,7 +17,7 @@ class FactionKind(StrEnum):
     MERCENARY_COMPANY = "mercenary_company"
     INTERWORLD_FEDERATION = "interworld_federation"
     WANDERING_MARKET = "wandering_market"
-    VOID_PIRATES = "void_pirates"
+    ROUTE_RAIDERS = "route_raiders"
     SOCIAL_CIRCLE = "social_circle"
     MAGE_ORDER = "mage_order"
     ESTATE = "estate"
@@ -54,7 +54,7 @@ class FoundableFaction(StrEnum):
     MERCENARY_COMPANY = "mercenary_company"
     INTERWORLD_FEDERATION = "interworld_federation"
     WANDERING_MARKET = "wandering_market"
-    VOID_PIRATES = "void_pirates"
+    ROUTE_RAIDERS = "route_raiders"
     SOCIAL_CIRCLE = "social_circle"
     CRIME_FAMILY = "crime_family"
     THIEVES_GUILD = "thieves_guild"
@@ -113,8 +113,8 @@ class FactionRank(StrEnum):
 
 
 CRIME_KINDS = frozenset({FactionKind.CRIME_FAMILY, FactionKind.THIEVES_GUILD, FactionKind.SMUGGLING_RING, FactionKind.PIRATE_CONFEDERACY})
-OUTLAW_KINDS = frozenset({FactionKind.REBELS, FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, FactionKind.ASSASSINS, *CRIME_KINDS})
-ROBBER_KINDS = frozenset({FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, FactionKind.REBELS, FactionKind.PIRATE_CONFEDERACY})
+OUTLAW_KINDS = frozenset({FactionKind.REBELS, FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, FactionKind.ASSASSINS, *CRIME_KINDS})
+ROBBER_KINDS = frozenset({FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, FactionKind.REBELS, FactionKind.PIRATE_CONFEDERACY})
 GUILD_KINDS = frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD, FactionKind.WANDERING_MARKET})
 ARMED_KINDS = frozenset(
     {
@@ -122,7 +122,7 @@ ARMED_KINDS = frozenset(
         FactionKind.REBELS,
         FactionKind.BANDITS,
         FactionKind.PIRATES,
-        FactionKind.VOID_PIRATES,
+        FactionKind.ROUTE_RAIDERS,
         FactionKind.MERCENARY_COMPANY,
         FactionKind.CRIME_FAMILY,
         FactionKind.PIRATE_CONFEDERACY,

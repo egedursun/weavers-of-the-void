@@ -122,7 +122,7 @@ async def test_an_enemy_takes_a_signal_link(realm: Realm) -> None:
     enemy = await settlement(realm, "Lorn")
     link = SignalLinkRow(
         owner_node_id=owner.id,
-        kind=SignalKind.FIRE_BEACON,
+        kind=SignalKind.BEACON_CHAIN,
         from_region_id=realm.region.id,
         to_region_id=realm.far_region.id,
         state=SignalState.ACTIVE,

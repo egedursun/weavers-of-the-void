@@ -8,11 +8,11 @@ from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import DefenderAction, OutcomeClass, SackChoice, SiegeAction, StarvationStage, Tactic
+from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestScale, QuestTargetKind
 from aerona.domain.enums.war import (
     BattleOutcome,
     CaptiveStatus,
     CasusBelliKind,
-    HeroQuestKind,
     HeroQuestStatus,
     SiegeStatus,
     TributeStatus,
@@ -225,7 +225,12 @@ class HeroQuestRow(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     hero_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
-    kind: Mapped[HeroQuestKind] = mapped_column(enum_type(HeroQuestKind, "kind"))
+    aim: Mapped[QuestAim] = mapped_column("kind", enum_type(QuestAim, "kind"))
+    target_kind: Mapped[QuestTargetKind] = mapped_column(enum_type(QuestTargetKind, "target_kind"), default=QuestTargetKind.PERSON, server_default="person")
+    obstacle: Mapped[QuestObstacle] = mapped_column(enum_type(QuestObstacle, "obstacle"), default=QuestObstacle.DISTANCE, server_default="distance")
+    reward: Mapped[QuestReward] = mapped_column(enum_type(QuestReward, "reward"), default=QuestReward.RENOWN, server_default="renown")
+    scale: Mapped[QuestScale] = mapped_column(enum_type(QuestScale, "scale"), default=QuestScale.PERSONAL, server_default="personal")
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     thread_id: Mapped[int | None] = mapped_column(ForeignKey("threads.id", ondelete="SET NULL"))
     bond_id: Mapped[int | None] = mapped_column(ForeignKey("bonds.id", ondelete="SET NULL"))

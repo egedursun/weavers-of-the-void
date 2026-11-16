@@ -18,10 +18,11 @@ from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import LegendaryQuestKind, LegendaryQuestOutcome
+from aerona.domain.enums.chronicle import LegendaryQuestOutcome
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.meta import ACHIEVEMENT_TIERS, AchievementKey, GoalMetric, ScenarioKey, ScenarioStatus, ScoreComponent
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.travel import HorizonStatus, JourneyIntent, JourneyStatus, TravelMethod
 from aerona.domain.enums.world import StarType
 from aerona.domain.models.entity_stats import StructureStats
@@ -165,7 +166,9 @@ async def test_saga_completed_needs_a_completed_legendary_quest(session: AsyncSe
     thread = ThreadRow(epoch=1, text="The long road")
     session.add(thread)
     await session.flush()
-    quest = LegendaryQuestRow(thread_id=thread.id, kind=LegendaryQuestKind.ARCHIVE, opened_by=ActorKind.SON, opened_epoch=1, deadline_epoch=9)
+    quest = LegendaryQuestRow(
+        thread_id=thread.id, aim=QuestAim.FIND, target_kind=QuestTargetKind.KNOWLEDGE, locked=[], opened_by=ActorKind.SON, opened_epoch=1, deadline_epoch=9
+    )
     session.add(quest)
     await session.flush()
     assert not await _reached(session, rules, AchievementKey.SAGA_COMPLETED)

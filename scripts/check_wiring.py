@@ -35,6 +35,8 @@ UNION_MEMBER = re.compile(r"(?m)^\s*\|\s*'[^']+'\s*$")
 
 def calling_text(frontend: str) -> str:
     return UNION_MEMBER.sub("", frontend)
+
+
 WORD_HOMES: dict[str, frozenset[Path]] = {}
 
 

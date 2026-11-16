@@ -36,7 +36,7 @@ from aerona.domain.models.entity_stats import EntityStats, PlaceStats, RegionSta
 from aerona.engine.body.book import factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import hidden_sky
-from aerona.engine.cosmos.routes import RouteSpec, has_tamed_mount, open_route
+from aerona.engine.cosmos.routes import RouteSpec, can_reach, has_tamed_mount, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -76,21 +76,20 @@ class Reason(StrEnum):
     SPIRIT = "spirit"
 
 
-PHRASES: dict[Reason, tuple[str, ...]] = {
-    Reason.NARROW: ("when their homeland grew too small", "when their lands grew crowded", "when they no longer fit their lands"),
-    Reason.HUNGER: ("when their food ran short", "when hunger came", "when famine struck"),
-    Reason.POVERTY: ("when poverty pressed", "when they grew poor", "when poverty spread through the homeland"),
-    Reason.EXPLORER: ("led by {name}", "following {name}", "when {name} went ahead of them"),
-    Reason.KNOWLEDGE: ("trusting what they knew of travel", "with old knowledge of the way", "guided by their learning"),
-    Reason.SPIRIT: ("unable to stay still", "giving in to curiosity", "with the curiosity within"),
+PHRASES: dict[Reason, str] = {
+    Reason.NARROW: "when their homeland grew too small",
+    Reason.HUNGER: "when their food ran short",
+    Reason.POVERTY: "when poverty pressed",
+    Reason.EXPLORER: "led by {name}",
+    Reason.KNOWLEDGE: "trusting what they knew of travel",
+    Reason.SPIRIT: "out of curiosity",
 }
 NEED_REASONS = (Reason.NARROW, Reason.HUNGER, Reason.POVERTY)
 
 
-def exploration_sentence(reasons: list[Reason], variant: int, explorer_name: str | None = None) -> str:
+def exploration_sentence(reasons: list[Reason], explorer_name: str | None = None) -> str:
     def phrase(reason: Reason) -> str:
-        options = PHRASES[reason]
-        return options[variant % len(options)].format(name=explorer_name or "an explorer")
+        return PHRASES[reason].format(name=explorer_name or "an explorer")
 
     needs = " and ".join(phrase(reason) for reason in NEED_REASONS if reason in reasons)
     parts = [needs] if needs else []
@@ -462,7 +461,7 @@ async def _gate_vehicle(ctx: TickContext, me: EntityRow, target: WorldRow, how: 
         RecordSpec(
             name=f"{me.name} Gate",
             entity_type=EntityType.VESSEL,
-            body=f"An ancient stone ring found by {me.name}, opening onto the world {target.name}. {how}",
+            body=f"An ancient gate found by {me.name}, opening onto the world {target.name}. {how}",
             stats=VesselStats(
                 speed=tools.gate_speed,
                 range=tools.gate_range,
@@ -489,7 +488,7 @@ async def search_route(ctx: TickContext, me: EntityRow, how: str, *, certain: bo
         return RouteSearch(SearchStatus.NONE, method)
     tools = ctx.rules.mortal_tools
     rng = ctx.rng(seed_of("route_search", me.id))
-    unconnected = await _unconnected(ctx, home)
+    unconnected = [world for world in await _unconnected(ctx, home) if await can_reach(ctx.session, home, world, method)]
     roll = (
         float("inf")
         if certain
@@ -627,7 +626,7 @@ async def _explore_world(ctx: TickContext, scene: ExplorationScene, world: World
         pressure = await exploration_pressure(ctx, scene, entity, communities) if stale else measured
         if not rng.chance(pressure.pct):
             continue
-        reason = exploration_sentence(pressure.reasons, rng.below(len(PHRASES[Reason.NARROW])), pressure.explorer.name if pressure.explorer else None)
+        reason = exploration_sentence(pressure.reasons, pressure.explorer.name if pressure.explorer else None)
         result = await find_land(
             ctx,
             LandSearch(

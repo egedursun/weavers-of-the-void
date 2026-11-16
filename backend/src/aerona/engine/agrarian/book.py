@@ -32,15 +32,16 @@ from aerona.rules.registry import Rules
 P = PreparednessKind
 BODY = (NutrientKind.FIXED, NutrientKind.MINERAL, NutrientKind.ORGANIC)
 SHIELDS: dict[Disaster, frozenset[PreparednessKind]] = {
-    Disaster.FLOOD: frozenset({P.LEVEE, P.SEAWALL}),
-    Disaster.STORM: frozenset({P.SEAWALL}),
-    Disaster.EARTHQUAKE: frozenset({P.DRILL}),
-    Disaster.VOLCANIC_QUAKE: frozenset({P.DRILL}),
-    Disaster.ERUPTION: frozenset({P.DRILL}),
-    Disaster.DROUGHT: frozenset({P.STOCKPILE}),
-    Disaster.PLAGUE: frozenset(),
+    Disaster.FLOOD: frozenset({P.LEVEE, P.SEAWALL, P.EVACUATION_ROUTES, P.WARNING_NETWORK}),
+    Disaster.STORM: frozenset({P.SEAWALL, P.SHELTERS, P.WARNING_NETWORK}),
+    Disaster.EARTHQUAKE: frozenset({P.DRILL, P.SHELTERS, P.EVACUATION_ROUTES}),
+    Disaster.VOLCANIC_QUAKE: frozenset({P.DRILL, P.SHELTERS, P.EVACUATION_ROUTES}),
+    Disaster.ERUPTION: frozenset({P.DRILL, P.EVACUATION_ROUTES, P.WARNING_NETWORK}),
+    Disaster.DROUGHT: frozenset({P.STOCKPILE, P.RESERVES_OF_ENERGY}),
+    Disaster.PLAGUE: frozenset({P.QUARANTINE_PLAN}),
 }
-FIRE_SHIELDS = frozenset({P.FIREBREAK})
+FIRE_SHIELDS = frozenset({P.FIREBREAK, P.EVACUATION_ROUTES, P.WARD})
+SHIELDS = {disaster: kinds | {P.WARD} for disaster, kinds in SHIELDS.items()}
 
 
 def ring_shares(rules: Rules, ring: LandUseRing) -> tuple[int, int]:

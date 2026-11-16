@@ -21,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   EntityLink,
   Medallion,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -193,47 +194,49 @@ function Checklist({ missing }: { missing: MissingContent }) {
         />
       </div>
       <ul className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4'>
-        {checks.map((check) => (
-          <li
-            key={check.key}
-            className={cn(
-              'flex min-w-0 items-start gap-3 rounded-xl border p-3',
-              check.missing ? 'border-warning/40 bg-warning/5' : 'bg-background'
-            )}
-          >
-            <Medallion
-              icon={check.icon}
-              tone={check.missing ? 'warning' : 'success'}
-              size='sm'
-            />
-            <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
-              <div className='flex min-w-0 items-center gap-1.5'>
-                <Text
-                  as='span'
-                  weight='semibold'
-                  truncate
-                  className='min-w-0 flex-1'
-                >
-                  {check.label}
-                </Text>
-                {check.missing ? (
-                  <CircleAlert
-                    aria-label='Missing'
-                    className='size-icon-sm shrink-0 text-warning'
-                  />
-                ) : (
-                  <CircleCheck
-                    aria-label='In place'
-                    className='size-icon-sm shrink-0 text-success'
-                  />
-                )}
+        <Paged items={checks} as='li'>
+          {(check) => (
+            <li
+              key={check.key}
+              className={cn(
+                'flex min-w-0 items-start gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
+                check.missing ? 'border-warning/40 bg-warning/5' : 'bg-card'
+              )}
+            >
+              <Medallion
+                icon={check.icon}
+                tone={check.missing ? 'warning' : 'success'}
+                size='sm'
+              />
+              <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+                <div className='flex min-w-0 items-center gap-1.5'>
+                  <Text
+                    as='span'
+                    weight='semibold'
+                    truncate
+                    className='min-w-0 flex-1'
+                  >
+                    {check.label}
+                  </Text>
+                  {check.missing ? (
+                    <CircleAlert
+                      aria-label='Missing'
+                      className='size-icon-sm shrink-0 text-warning'
+                    />
+                  ) : (
+                    <CircleCheck
+                      aria-label='In place'
+                      className='size-icon-sm shrink-0 text-success'
+                    />
+                  )}
+                </div>
+                <Muted as='span' variant='caption'>
+                  {check.detail}
+                </Muted>
               </div>
-              <Muted as='span' variant='caption'>
-                {check.detail}
-              </Muted>
-            </div>
-          </li>
-        ))}
+            </li>
+          )}
+        </Paged>
       </ul>
     </div>
   )

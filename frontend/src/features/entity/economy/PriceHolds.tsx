@@ -65,7 +65,7 @@ function PremiumRow({
   return (
     <li
       data-commodity={row.commodity}
-      className='flex min-w-0 flex-wrap items-center gap-2.5 rounded-lg border bg-background p-2.5'
+      className='flex min-w-0 flex-wrap items-center gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-2.5'
     >
       <Medallion icon={spec.icon} tone={tone} size='sm' />
       <div className='flex min-w-0 flex-1 basis-40 flex-col'>

@@ -10,6 +10,7 @@ from aerona.engine.polity.governance import agenda, collect, conquest_conflict, 
 from aerona.engine.polity.houses import HouseBook, arrange_marriages, conquest_claims, dynasty_backfill, fabricate_claims, gather_kin, seed_houses, tend
 from aerona.engine.polity.law_effects import realm_coinage
 from aerona.engine.polity.laws import LawBook, backfill_kinds, ensure_profile
+from aerona.engine.polity.oath_terms import releases
 from aerona.engine.polity.oaths import lapse, pledges, vows
 from aerona.engine.polity.offices import coups, name_heir, office_effects, press_claims, purge, regency, staff, succession_line
 from aerona.engine.polity.pacts import outer_pacts
@@ -68,12 +69,14 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.currencies",
     "table.data_stores",
     "table.designated_heirs",
+    "table.dimensional_events",
     "table.districts",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.exam_sittings",
     "table.fabrication",
     "table.feuds",
+    "table.galactic_structures",
     "table.genomes",
     "table.goods",
     "table.held_identities",
@@ -103,6 +106,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.minds",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.natural_law_profiles",
     "table.network_nodes",
     "table.network_profiles",
     "table.nodes",
@@ -121,6 +125,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.public_opinion",
     "table.regimes",
     "table.region_pollution",
+    "table.relation_components",
     "table.relationships",
     "table.reputations",
     "table.routes",
@@ -320,6 +325,7 @@ async def polity_cycles(ctx: TickContext) -> None:
     "table.sons",
     "table.speaker_cohorts",
     "table.traits",
+    "table.union_customs",
     "table.vassalages",
     "table.wars",
     "table.world_maps",
@@ -406,6 +412,7 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.deed_claims",
     "table.deeds",
     "table.entity_flags",
+    "table.faction_memberships",
     "table.foreign_gods",
     "table.geasa",
     "table.goods_flows",
@@ -422,13 +429,16 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.minds",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.natural_law_profiles",
     "table.nodes",
     "table.oaths",
     "table.offices",
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
+    "table.polity_regard",
     "table.polity_territories",
+    "table.relation_components",
     "table.relationships",
     "table.reputations",
     "table.ruler_currencies",
@@ -463,6 +473,7 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.deeds",
     "table.entities",
     "table.entity_flags",
+    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
@@ -471,8 +482,11 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.name_registry",
     "table.oaths",
     "table.polity_profiles",
+    "table.polity_regard",
     "table.reputations",
     "table.sons",
+    "table.thoughts",
+    "table.traits",
     "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_parties",
@@ -503,6 +517,7 @@ async def treaty_cycles(ctx: TickContext) -> None:
     kept, broken = await lapse(ctx)
     ctx.count("oaths_kept", kept)
     ctx.count("oaths_broken", broken)
+    ctx.count("oaths_released", await releases(ctx))
     await ctx.session.flush()
 
 

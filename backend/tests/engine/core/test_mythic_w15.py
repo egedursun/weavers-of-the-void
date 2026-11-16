@@ -23,7 +23,7 @@ from aerona.domain.enums.culture import LegendArchetype, MagicSchool, RiteEffect
 from aerona.domain.enums.divine import GodGoalKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.faith import StratumKind
+from aerona.domain.enums.faith import StratumKind, StratumValence
 from aerona.domain.enums.mind import ActKind, SkillKind
 from aerona.domain.enums.mythic import (
     CosmicOffice,
@@ -36,7 +36,6 @@ from aerona.domain.enums.mythic import (
     MythicRealm,
     OfficeChoice,
     QuestTrial,
-    ServitorRank,
     ServitorRole,
 )
 from aerona.domain.enums.renown import ReputationAxis
@@ -246,8 +245,8 @@ async def test_a_strong_god_cannot_be_replaced(ctx: TickContext, session: AsyncS
 async def test_a_guarding_servitor_turns_back_a_desecrator_and_a_host_adds_to_its_god(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await tuned(session, servitors={"guard_pct": 100})
     shrine = await settlement(session, "Calder", world, world.regions[0])
-    await make_servitor(ctx, world.son.id, name="Warden", rank=ServitorRank.ANGEL, role=ServitorRole.GUARD, post_id=shrine.id, world_id=world.world.id)
-    await make_servitor(ctx, world.son.id, name="Spear", rank=ServitorRank.ANGEL, role=ServitorRole.HOST, post_id=None, world_id=world.world.id)
+    await make_servitor(ctx, world.son.id, name="Warden", role=ServitorRole.GUARD, post_id=shrine.id, world_id=world.world.id)
+    await make_servitor(ctx, world.son.id, name="Spear", role=ServitorRole.HOST, post_id=None, world_id=world.world.id)
     assert await turned_back(ctx, [shrine.id], "test.guard")
     assert not await turned_back(ctx, [world.regions[1].id], "test.guard")
     assert await host_of(session, ctx.rules, world.son.id) == ctx.rules.servitors.host_strength
@@ -256,7 +255,7 @@ async def test_a_guarding_servitor_turns_back_a_desecrator_and_a_host_adds_to_it
 async def test_a_disloyal_servitor_falls_to_another_master(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await tuned(session, servitors={"fall_pct": 100})
     outer = await entity(session, "The Outside", EntityType.OUTER_BEING, OuterBeingStats(), world_id=world.world.id)
-    row = await make_servitor(ctx, world.son.id, name="Herald", rank=ServitorRank.HERALD, role=ServitorRole.MESSENGER, post_id=None, world_id=world.world.id)
+    row = await make_servitor(ctx, world.son.id, name="Herald", role=ServitorRole.MESSENGER, post_id=None, world_id=world.world.id)
     row.loyalty = 0
     tally = ServitorTally()
     await fall(ctx, row, tally)
@@ -411,7 +410,7 @@ async def test_a_binding_rite_cast_on_a_mortal_lays_a_geas_witnessed_by_the_cast
 
 async def test_a_servitors_loyalty_follows_how_its_god_treats_it(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await tuned(session, servitors={})
-    row = await make_servitor(ctx, world.son.id, name="Spear", rank=ServitorRank.ANGEL, role=ServitorRole.HOST, post_id=None, world_id=world.world.id)
+    row = await make_servitor(ctx, world.son.id, name="Spear", role=ServitorRole.HOST, post_id=None, world_id=world.world.id)
     start = row.loyalty
     assert await shake_host(ctx, world.son.id) == 1
     assert row.loyalty == start - ctx.rules.servitors.defeat_loyalty
@@ -424,14 +423,16 @@ async def test_only_a_saint_in_a_rewarding_stratum_rises_to_serve_the_stratums_g
     saint = await mortal(session, "Wil", world, world.regions[0].id)
     saint.mortal_role = MortalRole.SAINT
     shade = await entity(session, "Wil's shade", EntityType.SPIRIT, SpiritStats(), world_id=world.world.id)
-    stratum = AfterlifeStratumRow(realm_entity_id=world.regions[0].id, kind=StratumKind.TORMENT, name="Below", son_id=world.son.id)
+    stratum = AfterlifeStratumRow(
+        realm_entity_id=world.regions[0].id, kind=StratumKind.PUNISHMENT, valence=StratumValence.PUNISHMENT, name="Below", son_id=world.son.id
+    )
     session.add(stratum)
     await session.flush()
     session.add(SpiritProfileRow(spirit_entity_id=shade.id, origin_mortal_id=saint.id, stratum_id=stratum.id, locked=[]))
     await session.flush()
     await raise_saints(ctx, ServitorTally())
     assert await session.get(ServitorRow, shade.id) is None
-    stratum.kind = StratumKind.PARADISE
+    stratum.kind, stratum.valence = StratumKind.REWARD, StratumValence.REWARD
     await raise_saints(ctx, ServitorTally())
     risen = await session.get(ServitorRow, shade.id)
     assert risen is not None
@@ -455,7 +456,7 @@ async def test_the_god_chooses_a_quests_party_and_a_companion_sent_home_from_a_t
 
 
 async def test_mythic_links_to_fallen_gods_and_vanished_mortals_are_mended(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
-    servitor = await make_servitor(ctx, world.son.id, name="Warden", rank=ServitorRank.ANGEL, role=ServitorRole.GUARD, post_id=None, world_id=world.world.id)
+    servitor = await make_servitor(ctx, world.son.id, name="Warden", role=ServitorRole.GUARD, post_id=None, world_id=world.world.id)
     await appoint(ctx, CosmicOffice.DEAD, world.son.id, OfficeChoice.CREATOR)
     quester, legend, _ = await quest(ctx, session, world)
     row = await begin_quest(ctx, quester, legend, [])

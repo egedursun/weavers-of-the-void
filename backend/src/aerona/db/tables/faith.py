@@ -17,7 +17,12 @@ from aerona.domain.enums.faith import (
     RebirthPath,
     ReincarnationGate,
     SpiritAlignment,
+    StratumActivity,
+    StratumAdmission,
+    StratumContact,
     StratumKind,
+    StratumPermanence,
+    StratumValence,
     TenetKind,
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -165,6 +170,14 @@ class AfterlifeStratumRow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     realm_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     kind: Mapped[StratumKind] = mapped_column(enum_type(StratumKind, "kind"))
+    valence: Mapped[StratumValence] = mapped_column(enum_type(StratumValence, "valence"), default=StratumValence.NEUTRAL, server_default="neutral")
+    permanence: Mapped[StratumPermanence] = mapped_column(
+        enum_type(StratumPermanence, "permanence"), default=StratumPermanence.ETERNAL, server_default="eternal"
+    )
+    admission: Mapped[StratumAdmission] = mapped_column(enum_type(StratumAdmission, "admission"), default=StratumAdmission.ALL, server_default="all")
+    activity: Mapped[StratumActivity] = mapped_column(enum_type(StratumActivity, "activity"), default=StratumActivity.REST, server_default="rest")
+    contact: Mapped[StratumContact] = mapped_column(enum_type(StratumContact, "contact"), default=StratumContact.BY_RITE, server_default="by_rite")
+    ruler_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
     criteria: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     population: Mapped[int] = mapped_column(default=0)

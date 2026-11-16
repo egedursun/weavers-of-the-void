@@ -248,7 +248,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
           type='search'
           leadingIcon={Search}
           aria-label='Search rules'
-          placeholder='Search rules, for example doom, war or plague'
+          placeholder='Search rules by name or group'
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           className='flex-1 basis-64'
@@ -318,7 +318,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
       <div className='grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-4'>
         <nav
           aria-label='Rule groups'
-          className='hidden h-160 min-w-0 flex-col gap-0.5 overflow-y-auto rounded-lg border bg-background p-1.5 lg:flex'
+          className='hidden h-160 min-w-0 flex-col gap-0.5 overflow-y-auto rounded-md border surface-framed border-gild/70 bg-card p-1.5 lg:flex'
         >
           <Button
             variant={group === ALL_GROUPS ? 'secondary' : 'ghost'}

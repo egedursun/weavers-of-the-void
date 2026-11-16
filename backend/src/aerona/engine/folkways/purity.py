@@ -1,10 +1,11 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.constructs import ConstructRow
@@ -12,6 +13,8 @@ from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.divine import CreatorTabooRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import ImpuritySourceRow, PurificationRow, PurityRankRow, PurityRow
+from aerona.db.tables.living import LivingProfileRow
+from aerona.db.tables.made import AugmentRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import SentenceRow
 from aerona.db.tables.settlement import DistrictRow
@@ -199,21 +202,50 @@ async def by_taboo(touch: Touch) -> bool:
     return await touch.ctx.session.scalar(query.limit(1)) is not None
 
 
-TOUCHES: dict[ImpuritySource, Callable[[Touch], Awaitable[bool]]] = {
-    ImpuritySource.THE_DEAD: by_the_dead,
-    ImpuritySource.BIRTH: by_birth,
-    ImpuritySource.BODILY_FLUIDS: by_fluids,
-    ImpuritySource.FOOD: by_food,
-    ImpuritySource.SPECIES: by_species,
-    ImpuritySource.PROFESSION: by_profession,
-    ImpuritySource.OUTSIDERS: by_outsiders,
-    ImpuritySource.PLACE: by_place,
-    ImpuritySource.OBJECT: by_object,
-    ImpuritySource.ACT: by_act,
-    ImpuritySource.MADE_THING: by_made_thing,
-    ImpuritySource.TABOO: by_taboo,
-    ImpuritySource.WOUND: by_wound,
-}
+async def by_augment(touch: Touch) -> bool:
+    return await touch.ctx.session.scalar(select(AugmentRow.id).where(AugmentRow.bearer_node_id == touch.mortal.id).limit(1)) is not None
+
+
+async def by_designed_body(touch: Touch) -> bool:
+    profile = await touch.ctx.session.get(LivingProfileRow, touch.mortal.id)
+    return profile is not None and profile.designed_by_node_id is not None
+
+
+TOUCHES: Mapping[ImpuritySource, Callable[[Touch], Awaitable[bool]]] = total(
+    ImpuritySource,
+    {
+        ImpuritySource.THE_DEAD: by_the_dead,
+        ImpuritySource.BIRTH: by_birth,
+        ImpuritySource.BODILY_FLUIDS: by_fluids,
+        ImpuritySource.FOOD: by_food,
+        ImpuritySource.SPECIES: by_species,
+        ImpuritySource.PROFESSION: by_profession,
+        ImpuritySource.OUTSIDERS: by_outsiders,
+        ImpuritySource.PLACE: by_place,
+        ImpuritySource.OBJECT: by_object,
+        ImpuritySource.ACT: by_act,
+        ImpuritySource.MADE_THING: by_made_thing,
+        ImpuritySource.TABOO: by_taboo,
+        ImpuritySource.WOUND: by_wound,
+        ImpuritySource.AUGMENT: by_augment,
+        ImpuritySource.DESIGNED_BODY: by_designed_body,
+    },
+)
+
+
+async def spread_by_contact(ctx: TickContext, people_id: int, sources: dict[ImpuritySource, ImpuritySourceRow], tally: PurityTally) -> None:
+    fresh = select(PurityRow).where(PurityRow.state != PurityState.PURE, PurityRow.since_epoch == ctx.epoch, PurityRow.source.is_not(None))
+    methods = await methods_of(ctx, people_id)
+    for row in list(await ctx.session.scalars(fresh.order_by(PurityRow.holder_node_id))):
+        source = sources.get(row.source) if row.source is not None else None
+        if source is None:
+            continue
+        for kin in await close_kin_of(ctx.session, row.holder_node_id):
+            other = await ctx.session.get(PurityRow, kin)
+            if other is None or other.state is not PurityState.PURE or held(kin):
+                continue
+            if ctx.rng(seed_of("purity.contact", row.holder_node_id, kin, ctx.epoch)).chance(ctx.rules.purity.contact_pct):
+                await defile(ctx, other, source, methods, tally)
 
 
 async def purity_of(ctx: TickContext, mortal_id: int) -> PurityRow:
@@ -330,6 +362,7 @@ async def keep_purity(ctx: TickContext, tally: PurityTally) -> None:
                 if await TOUCHES[source.source](touch) and rng.chance(source.weight):
                     await defile(ctx, row, source, methods, tally)
                     break
+        await spread_by_contact(ctx, people.id, sources, tally)
     await ctx.session.flush()
 
 

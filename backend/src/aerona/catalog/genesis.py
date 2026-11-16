@@ -14,11 +14,14 @@ TECHNOLOGY_LABELS: MappingProxyType[TechnologyEra, str] = MappingProxyType(
         TechnologyEra.BRONZE: "Bronze age",
         TechnologyEra.IRON: "Iron age",
         TechnologyEra.MEDIEVAL: "Medieval",
+        TechnologyEra.GUNPOWDER: "Gunpowder age",
         TechnologyEra.RENAISSANCE: "Renaissance",
-        TechnologyEra.STEAM: "Steam and gunpowder",
+        TechnologyEra.STEAM: "Steam age",
         TechnologyEra.ELECTRICAL: "Electric age",
         TechnologyEra.INFORMATION: "Information age",
         TechnologyEra.ADVANCED: "Advanced age",
+        TechnologyEra.INTERSTELLAR: "Interstellar age",
+        TechnologyEra.BEYOND: "Beyond",
     }
 )
 TEXTURE_LABELS: MappingProxyType[LanguageTexture, str] = MappingProxyType(
@@ -29,6 +32,10 @@ TEXTURE_LABELS: MappingProxyType[LanguageTexture, str] = MappingProxyType(
         LanguageTexture.SIBILANT: "Sibilant, fricative (s, sh, z, ch)",
         LanguageTexture.LONG: "Long, agglutinative, polysyllabic",
         LanguageTexture.FREE: "Free",
+        LanguageTexture.TONAL: "Tonal, meaning carried by pitch",
+        LanguageTexture.CLICKING: "With clicks among its consonants",
+        LanguageTexture.WHISTLED: "Whistled",
+        LanguageTexture.NON_VOCAL: "Not spoken aloud",
     }
 )
 COSMOS_LABELS: MappingProxyType[CosmosSize, str] = MappingProxyType(
@@ -57,6 +64,8 @@ STORYTELLER_LABELS: MappingProxyType[StorytellerProfile, str] = MappingProxyType
         StorytellerProfile.RISING: "Rising",
         StorytellerProfile.CYCLIC: "Cyclic",
         StorytellerProfile.CHAOTIC: "Chaotic",
+        StorytellerProfile.SLOW_BURN: "Slow burn",
+        StorytellerProfile.EPISODIC: "Episodic",
     }
 )
 AGE_CYCLE_LABELS: MappingProxyType[AgeCycle, str] = MappingProxyType(
@@ -158,7 +167,7 @@ TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
             ),
             WizardTemplate(
                 T.SAND_AND_ASH,
-                "Sand and ash",
+                "Desert world",
                 "harsh, arid, proud",
                 35,
                 60,
@@ -376,6 +385,42 @@ TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
                 4,
                 CosmosSize.SMALL,
                 "A world whose peoples have split matter, built minds that think and begun to leave their world for others.",
+            ),
+            WizardTemplate(
+                T.GUNPOWDER_AGE,
+                "Gunpowder age",
+                "contested, changing, armed",
+                40,
+                55,
+                TechnologyEra.GUNPOWDER,
+                LanguageTexture.FREE,
+                4,
+                CosmosSize.SINGLE,
+                "A world whose peoples have learned to make powder and fire it, and whose old orders change because of it.",
+            ),
+            WizardTemplate(
+                T.INTERSTELLAR_AGE,
+                "Interstellar age",
+                "far-flung, connected, unequal",
+                20,
+                50,
+                TechnologyEra.INTERSTELLAR,
+                LanguageTexture.FREE,
+                5,
+                CosmosSize.LARGE,
+                "A world whose peoples cross between the stars and settle worlds beyond their own.",
+            ),
+            WizardTemplate(
+                T.BEYOND_AGE,
+                "Beyond age",
+                "vast, uncertain, self-made",
+                30,
+                45,
+                TechnologyEra.BEYOND,
+                LanguageTexture.FREE,
+                4,
+                CosmosSize.LARGE,
+                "A world whose peoples' craft has gone past every earlier age and reaches into how the world itself works.",
             ),
             WizardTemplate(
                 T.MADE_MINDS,

@@ -612,7 +612,9 @@ describe('command forms', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Remove Marsh Folk' }))
       .toBeVisible()
-    await screen.getByPlaceholder('Northern Federation').fill('Salt League')
+    await screen
+      .getByPlaceholder('The name of the federation')
+      .fill('Salt League')
     await found.click()
     await expect.poll(() => calls('POST', '/api/federations').length).toBe(1)
     expect(calls('POST', '/api/federations')[0].body).toEqual({
@@ -630,7 +632,7 @@ describe('command forms', () => {
         ) as HTMLElement
       )
       .toHaveAttribute('data-state', 'open')
-    await screen.getByPlaceholder('Hour sand').fill('Hour sand')
+    await screen.getByPlaceholder('The name of the resource').fill('Hour sand')
     await screen
       .getByPlaceholder('Only gathered in one season')
       .fill('Gathered at dusk')

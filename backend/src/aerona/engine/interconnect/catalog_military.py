@@ -67,7 +67,7 @@ MILITARY_MECHANICS = (
         targets=(A, W, *COMMUNITIES),
         couplings=(
             Coupling(Subsystem.CULTURE, "a people fights in its own way of war", EdgeKind.MODIFIER, "military_units.style_share_pct"),
-            Coupling(Subsystem.SOCIAL, "nobles ride as heavy horse", EdgeKind.MODIFIER, "military_units.noble_share_pct"),
+            Coupling(Subsystem.SOCIAL, "nobles fight as heavy mounted troops", EdgeKind.MODIFIER, "military_units.noble_share_pct"),
             Coupling(
                 Subsystem.KNOWLEDGE, "metallurgy and building unlock armour, engines and ships", EdgeKind.MODIFIER, "military_units.equipment_quality_pct"
             ),
@@ -327,12 +327,12 @@ RAW: tuple[Raw, ...] = (
     (
         "noble_horse",
         "S5.1",
-        "Nobles ride as heavy cavalry",
+        "Nobles fight as heavy mounted troops",
         CAMPAIGN,
         STACKS,
         (A, W, "settlement"),
         ("unit_heavy_cavalry",),
-        (S.SOCIAL, "military_units.noble_share_pct", "heavy horse"),
+        (S.SOCIAL, "military_units.noble_share_pct", "heavy mounted troops"),
     ),
     (
         "coastal_fleets",
@@ -607,7 +607,7 @@ RAW: tuple[Raw, ...] = (
     (
         "charges",
         "S5.3",
-        "Horse and beasts charge, braced spears meet them",
+        "Mounted troops and beasts charge, braced spears meet them",
         CAMPAIGN,
         BATTLE_REPORT,
         AW,
@@ -637,7 +637,7 @@ RAW: tuple[Raw, ...] = (
         ("unit_war_mages",),
         (S.FAITH, "morale.priests_gain", "rites"),
     ),
-    ("pursuit", "S5.3", "Light horse ride down the routed", CAMPAIGN, BATTLE_REPORT, AW, ("loser_losses",), (S.WAR, "tactics.pursuit_pct", "pursuit")),
+    ("pursuit", "S5.3", "Light mounted troops ride down the routed", CAMPAIGN, BATTLE_REPORT, AW, ("loser_losses",), (S.WAR, "tactics.pursuit_pct", "pursuit")),
     (
         "battle_captives",
         "S5.7",
@@ -723,7 +723,7 @@ RAW: tuple[Raw, ...] = (
     (
         "weather_units",
         "S5.2",
-        "Rain wets bowstrings, snow slows the horse",
+        "Rain wets bowstrings, snow slows mounted troops",
         CAMPAIGN,
         BATTLE_REPORT,
         (W, A, "region"),

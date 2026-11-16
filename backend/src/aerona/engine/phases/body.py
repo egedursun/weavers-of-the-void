@@ -212,6 +212,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "mortal.wisdom",
     "settlement.population",
     "table.assistive_aids",
+    "table.augments",
     "table.avatars",
     "table.bodies",
     "table.body_customs",
@@ -291,6 +292,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.griefs",
     "table.incident_participants",
     "table.incidents",
+    "table.incorporeal_rights",
     "table.injuries",
     "table.item_history",
     "table.marriages",
@@ -441,11 +443,11 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     if not candidates:
         return None
     reader = max(candidates, key=lambda mortal: (stat(mortal, "intellect") or 0, -mortal.id))
-    await connect(ctx.session, reader.id, scholar.id, BondKind.APPRENTICE_OF, ctx.epoch, description="reads aloud to the blind master")
+    await connect(ctx.session, reader.id, scholar.id, BondKind.APPRENTICE_OF, ctx.epoch, description="reads for the blind master")
     await refresh(ctx.session, ctx.rules, scholar, ctx.epoch)
     await ctx.chronicle(
         ChronicleKind.LINEAGE,
-        f"Blinded, {scholar.name} took {reader.name} as a reader; the young voice now carries the old books.",
+        f"Blinded, {scholar.name} took {reader.name} as a reader; the young reader now carries the old learning.",
         template_key="body.reader_taken",
         entity_ids=[scholar.id, reader.id],
         world_id=scholar.world_id,
@@ -470,6 +472,7 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.addictions",
     "table.afflictions",
     "table.assistive_aids",
+    "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -645,6 +648,7 @@ async def body_society(ctx: TickContext) -> None:
     "table.nodes",
     "table.personality_values",
     "table.prostheses",
+    "table.symbionts",
     "table.tradition_profiles",
     "table.traits",
     "table.worlds",

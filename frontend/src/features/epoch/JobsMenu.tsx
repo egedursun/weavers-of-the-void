@@ -116,7 +116,7 @@ function JobCard({ job, now }: { job: Job; now: number }) {
     <div
       data-job-card={status}
       className={cn(
-        'flex min-w-0 items-start gap-3 rounded-lg border p-3',
+        'flex min-w-0 items-start gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         active ? 'border-primary/30 bg-primary/5' : 'bg-card'
       )}
     >

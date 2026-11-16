@@ -81,6 +81,8 @@ class NutrientRules:
 @dataclass(frozen=True)
 class PerennialRules:
     orchard_epochs: int = rule(2, 1, 100, E, "Epochs an orchard takes to bear fully")
+    plantation_epochs: int = rule(3, 1, 100, E, "Epochs a plantation takes to bear")
+    forest_garden_epochs: int = rule(5, 1, 100, E, "Epochs a forest garden takes to bear")
     vineyard_epochs: int = rule(2, 1, 100, E, "Epochs a vineyard takes to bear fully")
     grove_epochs: int = rule(5, 1, 100, E, "Epochs a grove takes to bear fully")
     timber_epochs: int = rule(6, 1, 100, E, "Epochs a timber plantation takes to be felled")
@@ -99,6 +101,9 @@ class PerennialRules:
 class CommonsRules:
     pasture_grazed: int = rule(15, 0, 100, E, "Grazed share at which a land's pasture is held in common")
     woods_forest: int = rule(25, 0, 100, E, "Forest cover at which a land's woods are held in common")
+    water_rain: int = rule(60, 0, 100, E, "Rainfall at which a land's waters are held in common")
+    wild_built: int = rule(20, 0, 100, E, "Built share below which wooded land is a common hunting ground")
+    source_density: int = rule(50, 0, 100, E, "Magic density at which a land's source ground is held in common")
     sustainable: int = rule(60, 0, 200, E, "Use of a common it bears without wearing down")
     degrade_pct: int = rule(20, 0, 100, E, "Condition lost each epoch for each point of use over what a common bears (%)")
     council_pct: int = rule(20, 0, 100, E, "Share of the wear a council that rules a common still lets happen (%)")
@@ -176,6 +181,8 @@ class ReliefRules:
     prosperity_cap: int = rule(8, 0, 100, P, "Most prosperity aid restores to a town in an epoch")
     healer_disease: int = rule(10, 0, 100, P, "Sickness healers sent as aid take from a stricken land")
     labour_progress: int = rule(15, 0, 100, P, "Progress labour sent as aid adds to a town's rebuilding")
+    shelter_relief: int = rule(10, 0, 100, P, "Unrest shelter sent as aid takes from a stricken town")
+    soldiers_sent: int = rule(50, 0, 100000, P, "Militia soldiers sent as aid add to a threatened town")
     favour: int = rule(20, 0, 100, P, "Size of the favour a town's ruler owes for aid")
     love: int = rule(8, 0, 100, P, "Love a town gains for the god of those who sent it aid")
     refuse_below: int = rule(-30, -100, 100, P, "Regard under which a stricken realm refuses the aid of a rival")

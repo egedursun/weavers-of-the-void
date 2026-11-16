@@ -119,7 +119,7 @@ async def test_feuds_are_typed_rows_that_open_and_close(session: AsyncSession, w
     second = await make(session, "Reed Folk", EntityType.PEOPLE, world_id, population=6000)
     await start_blood_feud(ctx, first.id, second.id, "a killing")
     feud = await feud_between(session, first.id, second.id)
-    assert feud is not None and feud.party is FeudParty.COMMUNITY and feud.status is FeudStatus.ACTIVE
+    assert feud is not None and feud.party is FeudParty.PEOPLE and feud.status is FeudStatus.ACTIVE
     again = await open_feud(session, ctx.rules, first.id, second.id, epoch=ctx.epoch, cause="again", party=FeudParty.COMMUNITY)
     assert again.id == feud.id and again.grievance > ctx.rules.vendetta.grievance
     assert await close_feud(session, first.id, second.id, epoch=ctx.epoch, status=FeudStatus.MEDIATED)

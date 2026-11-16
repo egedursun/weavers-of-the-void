@@ -35,14 +35,20 @@ def shares_for(values: dict[ValueAxis, int]) -> dict[str, int]:
     leisure = clamp_int(10 + values.get(ValueAxis.LEISURE, 0) // 10, 0, 40)
     worship = clamp_int(10 + values.get(ValueAxis.PIETY, 0) // 10, 0, 40)
     service = clamp_int(2 + values.get(ValueAxis.MARTIAL, 0) // 20, 0, 20)
+    learning = clamp_int(2 + values.get(ValueAxis.KNOWLEDGE, 0) // 20, 0, 15)
+    care = clamp_int(3 + values.get(ValueAxis.FAMILY, 0) // 20, 0, 15)
+    art = clamp_int(1 + values.get(ValueAxis.ARTWORK, 0) // 20, 0, 15)
     rest, travel = 20, 3
     return {
-        "work": max(0, PERCENT - leisure - worship - service - rest - travel),
+        "work": max(0, PERCENT - leisure - worship - service - rest - travel - learning - care - art),
         "rest": rest,
         "worship": worship,
         "leisure": leisure,
         "travel": travel,
         "service": service,
+        "learning": learning,
+        "care": care,
+        "art": art,
     }
 
 

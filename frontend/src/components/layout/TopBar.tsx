@@ -39,7 +39,7 @@ export function TopBar({ context, actions }: TopBarProps) {
         {context}
         <div
           data-layout='top-bar-cluster'
-          className='flex items-center gap-0.5 rounded-lg border bg-card/70 p-0.5 shadow-xs'
+          className='flex items-center gap-0.5 rounded-md border surface-framed border-gild/70 bg-card p-0.5'
         >
           <RealtimeIndicator />
           <Separator
@@ -56,14 +56,6 @@ export function TopBar({ context, actions }: TopBarProps) {
           </span>
         </div>
       </div>
-      <span
-        aria-hidden='true'
-        className='pointer-events-none absolute inset-x-0 bottom-0 h-px bg-border/70'
-      />
-      <span
-        aria-hidden='true'
-        className='pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-primary/40 to-transparent'
-      />
     </header>
   )
 }

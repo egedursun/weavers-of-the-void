@@ -15,6 +15,7 @@ from aerona.domain.enums.body import MADNESS_CONDITIONS, HarmCause
 from aerona.domain.enums.mind import DreamState, LifeGoal, MemoryKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.domain.enums.relations import PassionKind, PassionSource, RelationType
+from aerona.engine.body.bands import banded
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
 from aerona.engine.military.feuds import house_of
@@ -25,6 +26,7 @@ from aerona.engine.mortal.life import adult
 from aerona.engine.mortal.standing import add_stress
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.relations.feelings import from_feelings
 
 PASSIONS_KEY = "passions"
 LOYAL_OATHS = frozenset({OathKind.FEALTY, OathKind.PROTECTION, OathKind.SWORN_KINSHIP})
@@ -118,6 +120,7 @@ async def tend_passions(ctx: TickContext, mortal: EntityRow, tally: PassionTally
     await from_oaths(ctx, mortal.id, found)
     await from_memories(ctx, mortal.id, found)
     await from_upbringing(ctx, mortal, found)
+    await from_feelings(ctx, mortal, found)
     for (kind, target), (strength, source) in sorted(found.items(), key=lambda item: (item[0][0].value, item[0][1])):
         row = await kindle(ctx.session, mortal.id, kind, target, strength=strength, source=source, epoch=ctx.epoch)
         tally.kindled += row is not None and row.since_epoch == ctx.epoch
@@ -151,7 +154,14 @@ async def invoke(ctx: TickContext, holder: EntityRow, objects: Iterable[int] | N
         return 1 + table.bonus_pct / PERCENT
     await add_stress(ctx.session, holder.id, table.break_stress, ctx.epoch)
     if rng.chance(table.break_madness_pct):
-        await gain_condition(ctx, holder, rng.pick(list(MADNESS_CONDITIONS)), HarmCause.ACCIDENT, severity=2, source_node_id=row.object_node_id)
+        await gain_condition(
+            ctx,
+            holder,
+            rng.pick(list(MADNESS_CONDITIONS)),
+            HarmCause.ACCIDENT,
+            severity=banded(ctx, ctx.rules.harm_bands.passion_madness, holder.id),
+            source_node_id=row.object_node_id,
+        )
     else:
         await think(ctx.session, ctx.rules, holder.id, ThoughtKind.PASSION_BROKE, ctx.epoch, subject_id=row.object_node_id)
     return 1.0

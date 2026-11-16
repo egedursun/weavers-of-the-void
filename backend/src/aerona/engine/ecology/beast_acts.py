@@ -1,7 +1,10 @@
+from collections.abc import Mapping
+
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.anatomy import CreatureAnatomyRow
+from aerona.core.total import total
+from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -10,7 +13,7 @@ from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, DamageType, HarmCause
-from aerona.domain.enums.ecology import AwakeningTrigger, BreathKind, GazeKind, Habitat, Temperament
+from aerona.domain.enums.ecology import AttackDelivery, AttackEffect, AttackRange, AwakeningTrigger, Habitat, Temperament
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -27,7 +30,7 @@ from aerona.engine.mortal.standing import add_stress
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.services.war import held_captive, release_captive, take_captive
 
 
@@ -89,23 +92,91 @@ async def seize(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town: 
     return None
 
 
-BREATH_HARM: dict[BreathKind, DamageType] = {BreathKind.FIRE: DamageType.FIRE, BreathKind.STEAM: DamageType.FIRE, BreathKind.FROST: DamageType.COLD}
+WOUNDS: Mapping[AttackEffect, DamageType | None] = total(
+    AttackEffect,
+    {
+        AttackEffect.HEAT: DamageType.FIRE,
+        AttackEffect.COLD: DamageType.COLD,
+        AttackEffect.CORROSION: DamageType.CHEMICAL,
+        AttackEffect.SHOCK: DamageType.ELECTRIC,
+        AttackEffect.VENOM: None,
+        AttackEffect.FORCE: DamageType.BLUNT,
+        AttackEffect.ENTANGLE: None,
+        AttackEffect.FEAR: None,
+        AttackEffect.STILLNESS: None,
+        AttackEffect.SLEEP: None,
+        AttackEffect.CONFUSION: None,
+        AttackEffect.CHARM: None,
+        AttackEffect.DRAIN: DamageType.VOID,
+    },
+)
+CARRIED_BY: Mapping[AttackDelivery, Transmission] = total(
+    AttackDelivery,
+    {
+        AttackDelivery.BREATH: Transmission.INHALATION,
+        AttackDelivery.SPIT: Transmission.CONTACT,
+        AttackDelivery.SPRAY: Transmission.CONTACT,
+        AttackDelivery.EMANATION: Transmission.INHALATION,
+        AttackDelivery.GAZE: Transmission.GAZE,
+        AttackDelivery.VOICE: Transmission.EXPERIENCE,
+        AttackDelivery.TOUCH: Transmission.CONTACT,
+        AttackDelivery.SPORES: Transmission.INHALATION,
+        AttackDelivery.BITE: Transmission.BITE,
+        AttackDelivery.STING: Transmission.BLOOD,
+    },
+)
+WHOLE_TOWN = frozenset({AttackRange.FAR, AttackRange.SIGHT})
 
 
-async def breathe(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town: EntityRow, breath: BreathKind) -> EntityRow | None:
-    if breath is BreathKind.WEB:
-        return await seize(ctx, beast, row, town, "caught in its web")
-    living = [mortal for mortal in await townsfolk(ctx, town) if not held(mortal.id)]
+def ready(attack: CreatureAttackRow, epoch: int) -> bool:
+    return attack.last_used_epoch is None or epoch - attack.last_used_epoch >= attack.recharge
+
+
+async def wound(ctx: TickContext, beast: EntityRow, victim: EntityRow, attack: CreatureAttackRow, damage_type: DamageType) -> None:
+    told = f"struck by the {attack.delivery.value} of {beast.name}"
+    harm = Harm(ctx.rules.creature_anatomy.attack_damage, HarmCause.MONSTER, told, damage_type=damage_type, source_node_id=beast.id, killer_id=beast.id)
+    await apply_hits(ctx, victim, harm)
+    if attack.effect is AttackEffect.DRAIN and not held(beast.id):
+        shift_stat(beast, "hp", ctx.rules.creature_anatomy.drain_heal, 0)
+
+
+async def bind_mind(ctx: TickContext, beast: EntityRow, victims: list[EntityRow], attack: CreatureAttackRow) -> None:
+    table = ctx.rules.creature_anatomy
+    rng = ctx.rng(f"attack.mind.{beast.id}.{attack.id}.{ctx.epoch}")
+    if attack.effect is AttackEffect.FEAR:
+        for mortal in victims:
+            await add_stress(ctx.session, mortal.id, table.fear_stress, ctx.epoch)
+    elif attack.effect is AttackEffect.STILLNESS:
+        severity = 5 if attack.permanent else table.stillness_severity
+        await gain_condition(ctx, rng.pick(victims), ConditionKind.WITHERED_LIMB, HarmCause.MONSTER, severity=severity, source_node_id=beast.id)
+    elif attack.effect is AttackEffect.CONFUSION:
+        await gain_condition(ctx, rng.pick(victims), rng.pick(list(MADNESS_CONDITIONS)), HarmCause.MONSTER, source_node_id=beast.id)
+
+
+async def strike(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town: EntityRow, attack: CreatureAttackRow) -> EntityRow | None:
+    if not ready(attack, ctx.epoch) or attack.effect is AttackEffect.SLEEP:
+        return None
+    if "last_used_epoch" not in attack.locked:
+        attack.last_used_epoch = ctx.epoch
+    if attack.effect in (AttackEffect.ENTANGLE, AttackEffect.CHARM):
+        return await seize(ctx, beast, row, town, f"taken by the {attack.delivery.value} of {beast.name}")
+    living = await townsfolk(ctx, town)
     if not living:
         return None
-    victim = ctx.rng(f"breath.{beast.id}.{town.id}.{ctx.epoch}").pick(living)
-    if breath is BreathKind.VENOM_GAS:
-        await afflict(ctx, victim, PackageKind.SNAKE_VENOM, Transmission.INHALATION, source_node_id=beast.id)
-        return victim
-    damage = ctx.rules.creature_anatomy.breath_damage
-    harm = Harm(damage, HarmCause.MONSTER, f"breathed upon by {beast.name}", damage_type=BREATH_HARM[breath], source_node_id=beast.id, killer_id=beast.id)
-    await apply_hits(ctx, victim, harm)
+    victim = ctx.rng(f"attack.{beast.id}.{attack.id}.{town.id}.{ctx.epoch}").pick(living)
+    victims = living if attack.range in WHOLE_TOWN else [victim]
+    damage_type = WOUNDS[attack.effect]
+    if attack.effect is AttackEffect.VENOM:
+        await afflict(ctx, victim, PackageKind.SNAKE_VENOM, CARRIED_BY[attack.delivery], source_node_id=beast.id)
+    elif damage_type is not None:
+        await wound(ctx, beast, victim, attack, damage_type)
+    else:
+        await bind_mind(ctx, beast, victims, attack)
     return victim
+
+
+async def attacks_of(ctx: TickContext, node_id: int) -> list[CreatureAttackRow]:
+    return list(await ctx.session.scalars(select(CreatureAttackRow).where(CreatureAttackRow.node_id == node_id).order_by(CreatureAttackRow.id)))
 
 
 async def free_captives(ctx: TickContext, beast: EntityRow) -> int:
@@ -146,26 +217,13 @@ async def townsfolk(ctx: TickContext, town: EntityRow) -> list[EntityRow]:
     return [mortal for mortal in found if not held(mortal.id)]
 
 
-async def gaze_strike(ctx: TickContext, beast: EntityRow, town: EntityRow, anatomy: CreatureAnatomyRow | None) -> float:
-    if anatomy is None or anatomy.gaze is None:
+async def sight_scale(ctx: TickContext, beast: EntityRow, town: EntityRow, attacks: list[CreatureAttackRow]) -> float:
+    seen = [attack for attack in attacks if attack.range is AttackRange.SIGHT and ready(attack, ctx.epoch)]
+    if not seen:
         return 1.0
     table = ctx.rules.creature_anatomy
-    set_stats(beast, terror=clamp_int((stat(beast, "terror") or 0) + table.gaze_terror, 0, PERCENT))
-    if anatomy.gaze is GazeKind.SLEEP:
-        return 1 + table.sleep_raid_pct / PERCENT
-    people = await townsfolk(ctx, town)
-    if not people:
-        return 1.0
-    rng = ctx.rng(f"gaze.{beast.id}.{town.id}.{ctx.epoch}")
-    if anatomy.gaze is GazeKind.TERROR:
-        for mortal in people:
-            await add_stress(ctx.session, mortal.id, table.terror_stress, ctx.epoch)
-    elif anatomy.gaze is GazeKind.PETRIFY:
-        victim = rng.pick(people)
-        await gain_condition(ctx, victim, ConditionKind.WITHERED_LIMB, HarmCause.MONSTER, severity=table.petrify_severity, source_node_id=beast.id)
-    elif anatomy.gaze is GazeKind.MADNESS:
-        await gain_condition(ctx, rng.pick(people), rng.pick(list(MADNESS_CONDITIONS)), HarmCause.MONSTER, source_node_id=beast.id)
-    return 1.0
+    set_stats(beast, terror=clamp_int((stat(beast, "terror") or 0) + table.sight_terror, 0, PERCENT))
+    return 1 + table.sleep_raid_pct / PERCENT if any(attack.effect is AttackEffect.SLEEP for attack in seen) else 1.0
 
 
 async def bite_someone(ctx: TickContext, beast: EntityRow, town: EntityRow, package: PackageKind) -> bool:

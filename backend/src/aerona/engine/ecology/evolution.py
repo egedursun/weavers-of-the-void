@@ -24,6 +24,7 @@ from aerona.rules.registry import Rules
 E = EvolvedTrait
 Evolved = dict[EvolvedTrait, int]
 PREY_TRAITS = (E.SPEED, E.CAMOUFLAGE)
+WARMER = -1
 MAX_VARIANCE = 50
 BASE_VARIANCE = 10
 
@@ -58,6 +59,18 @@ def cold_reach(rules: Rules, evolved: Evolved) -> float:
     return max(0.0, lean(evolved.get(E.COLD_TOLERANCE))) * rules.trait_evolution.cold_reach
 
 
+def heat_reach(rules: Rules, evolved: Evolved) -> float:
+    return max(0.0, lean(evolved.get(E.HEAT_TOLERANCE))) * rules.trait_evolution.heat_reach
+
+
+def drought_reach(rules: Rules, evolved: Evolved) -> float:
+    return max(0.0, lean(evolved.get(E.DROUGHT_TOLERANCE))) * rules.trait_evolution.drought_reach
+
+
+def alert(rules: Rules, evolved: Evolved) -> float:
+    return 1 - max(0.0, lean(evolved.get(E.KEEN_SENSES))) * rules.trait_evolution.senses_pct / PERCENT
+
+
 async def seed_traits(session: AsyncSession, species: EntityRow, profile: SpeciesProfileRow, region_id: int, epoch: int) -> list[SpeciesTraitRow]:
     marks = await traits_of(session, species.id)
     rows = [
@@ -73,6 +86,8 @@ async def seed_traits(session: AsyncSession, species: EntityRow, profile: Specie
                 intelligence=stat_or(species, "intelligence", NEUTRAL),
                 litter=profile.litter_size,
                 fear=profile.fear_of_people,
+                heat_ceiling=profile.temperature_max,
+                water_need=profile.water_need,
             ),
             variance=BASE_VARIANCE,
             updated_epoch=epoch,
@@ -128,6 +143,7 @@ def pressures(
     if any((hunter, region) in selection.present for hunter in selection.hunted_by.get(row.species_entity_id, set())):
         for trait in PREY_TRAITS:
             steps[trait] += table.predator_pressure
+        steps[E.KEEN_SENSES] += table.predator_pressure
     prey_speeds = [
         selection.stored[(prey, region)][E.SPEED].mean
         for prey, hunters in selection.hunted_by.items()
@@ -136,7 +152,11 @@ def pressures(
     own = selection.stored[(row.species_entity_id, region)].get(E.SPEED)
     if prey_speeds and own is not None:
         steps[E.SPEED] += table.arms_race if sum(prey_speeds) / len(prey_speeds) > own.mean else -table.arms_race
-    steps[E.COLD_TOLERANCE] += climate_push(profile, land) * table.climate_pressure
+    push = climate_push(profile, land)
+    steps[E.COLD_TOLERANCE] += push * table.climate_pressure
+    steps[E.HEAT_TOLERANCE] += table.climate_pressure if push == WARMER else 0
+    if land is not None and land.moisture < profile.water_need:
+        steps[E.DROUGHT_TOLERANCE] += table.drought_pressure
     if row.hunted > 0:
         steps[E.WARINESS] += table.hunting_pressure
         steps[E.SIZE] -= table.hunting_pressure

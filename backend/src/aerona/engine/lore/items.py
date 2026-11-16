@@ -98,9 +98,21 @@ async def owner_of(ctx: TickContext, item_id: int) -> int | None:
 
 CURSES = (
     (WEAPONS, CurseKind.BLOODTHIRST),
-    (frozenset({C.CROWN, C.SCEPTRE, C.SEAL, C.RING, C.STANDARD, C.KEY}), CurseKind.BETRAYAL),
-    (frozenset({C.MIRROR, C.JEWEL, C.IDOL, C.INSTRUMENT, C.ASTROLABE, C.BOOK, C.SCROLL, C.PRAYER_BOOK}), CurseKind.MADNESS),
-    (frozenset({C.ARMOUR, C.SHIELD, C.HELMET, C.PROSTHESIS, C.HOLY_RELIC}), CurseKind.WASTING),
+    (frozenset({C.CROWN, C.SCEPTRE, C.SEAL, C.STANDARD, C.KEY}), CurseKind.BETRAYAL),
+    (frozenset({C.JEWEL}), CurseKind.MADNESS),
+    (frozenset({C.ARMOUR, C.SHIELD, C.HELMET, C.PROSTHESIS}), CurseKind.WASTING),
+    (frozenset({C.RING}), CurseKind.COMPULSION),
+    (frozenset({C.MIRROR}), CurseKind.AGING),
+    (frozenset({C.IDOL, C.HOLY_RELIC}), CurseKind.LINE_CURSE),
+    (frozenset({C.INSTRUMENT}), CurseKind.SILENCE),
+    (frozenset({C.BOOK, C.SCROLL, C.PRAYER_BOOK}), CurseKind.FORGETTING),
+    (frozenset({C.ASTROLABE, C.MAP}), CurseKind.RESTLESSNESS),
+    (frozenset({C.CLOAK, C.PADDING}), CurseKind.SLEEP),
+    (frozenset({C.VESSEL_OBJECT}), CurseKind.HUNGER),
+    (frozenset({C.IMPLANT, C.DRUG}), CurseKind.TRANSFORMATION),
+    (frozenset({C.COMMUNICATOR, C.COMPUTER, C.DEVICE}), CurseKind.EXPOSURE),
+    (frozenset({C.TOOL}), CurseKind.BARRENNESS),
+    (frozenset({C.CURRENCY}), CurseKind.PLACE_CURSE),
 )
 
 
@@ -587,10 +599,8 @@ async def broke(ctx: TickContext, item: EntityRow, owner: int | None) -> None:
     record(ctx, item.id, ItemDeed.BROKEN, owner, "broken in use")
     legendary = item.id in await flags_by_entity(ctx.session, EntityFlag.LEGENDARY)
     if legendary:
-        await open_story(
-            ctx.session, f"{item.name} lies broken; a hero must find the means to make it whole.", [item.id, *([owner] if owner else [])], ctx.epoch
-        )
-        await note(ctx, f"{item.name} broke, and the world waits for one who can reforge it.", key="item.reforge_quest", ids=[item.id])
+        await open_story(ctx.session, f"{item.name} lies broken and waits to be made whole.", [item.id, *([owner] if owner else [])], ctx.epoch)
+        await note(ctx, f"{item.name} broke; it waits to be made whole.", key="item.reforge_quest", ids=[item.id])
     else:
         await note(ctx, f"{item.name} broke and is of no use until mended.", key="item.broken", ids=[item.id])
 

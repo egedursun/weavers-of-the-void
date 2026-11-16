@@ -13,8 +13,10 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalacticStructureRow, GalaxyRow
 from aerona.db.tables.cosmos import AppliedFixupRow, CosmosRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.cosmography import ClusterKind, DimensionElement, DimensionKind, GalacticNucleus, GalacticStructureKind, GalacticZone, GalaxyType
 from aerona.domain.enums.world import Discovery
+from aerona.engine.cosmos.aspects import first_aspects
 from aerona.engine.cosmos.cluster_shape import slot, spread
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography, zone_at
@@ -51,6 +53,7 @@ class DimensionDraft:
     parent_dimension_id: int | None = None
     element: DimensionElement | None = None
     description: str | None = None
+    form: SpellForm | None = None
 
 
 @dataclass(frozen=True)
@@ -86,7 +89,6 @@ async def create_dimension(session: AsyncSession, rules: Rules, draft: Dimension
     row = DimensionRow(
         name=name,
         dimension_kind=draft.kind,
-        element=draft.element if draft.kind is DimensionKind.ELEMENTAL else None,
         parent_dimension_id=draft.parent_dimension_id,
         veil=nature.veil(rules),
         stability=nature.stability(rules),
@@ -102,6 +104,8 @@ async def create_dimension(session: AsyncSession, rules: Rules, draft: Dimension
     )
     await Repository(session).insert(row)
     row.name = await names.claim(row.id, name)
+    for aspect in first_aspects(rules, row.id, draft.kind, draft.element, draft.form):
+        session.add(aspect)
     await host_strata(session)
     return row
 

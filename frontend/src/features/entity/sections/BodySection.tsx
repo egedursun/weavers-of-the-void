@@ -160,8 +160,8 @@ function Card({
     <div
       className={
         wide
-          ? 'flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3 @xl/body:col-span-2'
-          : 'flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'
+          ? 'flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3 @xl/body:col-span-2'
+          : 'flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
       }
     >
       <div className='flex min-w-0 items-center gap-2'>
@@ -216,7 +216,7 @@ function BodyHero({ body }: { body: Body }) {
       LIFE_STATES.has(row.state)
   )
   return (
-    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={plan.icon} tone={plan.tone ?? 'gold'} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <Text weight='semibold'>{`${plan.label} body`}</Text>
@@ -472,7 +472,7 @@ function Digits({ body, blocked }: { body: Body; blocked: string | null }) {
           return (
             <div
               key={`${limb.part}-${limb.side}`}
-              className='flex min-w-0 flex-col gap-2 rounded-md border bg-muted/30 p-2'
+              className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
             >
               <div className='flex min-w-0 items-center gap-2'>
                 <Label variant='overline'>{limb.label}</Label>
@@ -581,7 +581,7 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
             return (
               <li
                 key={row.id}
-                className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-2'
+                className='flex min-w-0 flex-wrap items-center gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
               >
                 <Medallion
                   icon={spec.icon}
@@ -731,7 +731,7 @@ function ProsthesisRework({
   })
   const reason = blocked ?? (rework.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-md border p-2'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <Label variant='overline'>Rework the prosthesis</Label>
       <div className='grid min-w-0 grid-cols-1 gap-2 @md/body:grid-cols-3'>
         <Picker
@@ -1254,7 +1254,7 @@ function StrikeForm({ body, blocked }: { body: Body; blocked: string | null }) {
   })
   const reason = blocked ?? (strike.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Text weight='semibold'>Wound a part</Text>
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/body:grid-cols-2 @3xl/body:grid-cols-5'>
         <Picker
@@ -1344,7 +1344,7 @@ function ConditionForm({
   })
   const reason = blocked ?? (give.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Text weight='semibold'>Give a lasting condition</Text>
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/body:grid-cols-2'>
         <Picker
@@ -1426,7 +1426,7 @@ function ProsthesisForm({
   const reason = blocked ?? (fit.isPending ? WORKING : null)
   if (lost.length === 0 || body.bearer_kind !== 'mortal') return null
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Text weight='semibold'>Fit a prosthesis</Text>
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/body:grid-cols-3'>
         <Picker
@@ -1582,7 +1582,7 @@ function BodyControls({ body }: { body: Body }) {
     (row) => row.function_loss > 0 && row.state !== 'lethal'
   )
   return (
-    <div className='flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
+    <div className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
         <div className='flex min-w-0 flex-col gap-0.5'>
           <Text weight='semibold'>Shape this body</Text>

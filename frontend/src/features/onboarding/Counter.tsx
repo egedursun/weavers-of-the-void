@@ -25,7 +25,7 @@ export function Counter({
   return (
     <div
       data-onboarding='counter'
-      className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-card p-3'
+      className='flex min-w-0 flex-wrap items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 flex-1 flex-col'>
         <Text as='span' weight='semibold'>

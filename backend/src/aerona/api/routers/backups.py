@@ -7,6 +7,8 @@ from aerona.api.schemas.common import ApiModel, RequestModel
 from aerona.constants.api import PACKAGE_MEDIA_TYPE, SQLITE_MEDIA_TYPE
 from aerona.constants.maintenance import BACKUP_SUFFIX, SAFE_FILE_NAME_PATTERN
 from aerona.core.errors import NotFoundError
+from aerona.domain.enums.job import JobKind, JobStatus
+from aerona.jobs.context import JOB_LABEL_KEY
 from aerona.services.backups import BackupInfo, is_safe_file_name
 from aerona.services.container import Services
 from aerona.services.exchange import stream_and_delete
@@ -57,7 +59,14 @@ async def list_backups(services: ServicesDep) -> list[BackupInfo]:
 
 @router.post("/backups", response_model=BackupInfo)
 async def take_backup(services: ServicesDep) -> BackupInfo:
-    return await services.application.backups.take()
+    context, log = await services.jobs.begin_external(JobKind.BACKUP, {JOB_LABEL_KEY: "taking a backup"})
+    try:
+        info = await services.application.backups.take()
+    except Exception as error:
+        await services.jobs.end_external(context, log, JobStatus.FAILED, error=str(error))
+        raise
+    await services.jobs.end_external(context, log, JobStatus.SUCCEEDED, {"file": info.file})
+    return info
 
 
 @router.get("/backups/secondary", response_model=SecondaryTarget)

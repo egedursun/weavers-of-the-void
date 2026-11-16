@@ -100,7 +100,7 @@ async def parley(ctx: TickContext, war: WarRow, sides: tuple[EntityRow, EntityRo
         term=ctx.epoch + table.truce_epochs if averted else ctx.epoch,
         honour=margin,
     )
-    text = f"{first.name} and {second.name} parleyed before battle" + (" and agreed a truce." if averted else "; words gave way to steel.")
+    text = f"{first.name} and {second.name} parleyed before battle" + (" and agreed a truce." if averted else "; the parley failed and they fought.")
     await note(ctx, text, key="parley.held", ids=[first.id, second.id, sides[0].id, sides[1].id])
     return averted
 

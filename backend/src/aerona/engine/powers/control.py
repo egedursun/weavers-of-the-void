@@ -379,6 +379,17 @@ async def reveal(ctx: TickContext, truth_id: int, population_id: int) -> PublicK
     row = await knowledge(ctx, truth.id, population_id)
     row.know_pct = row.believe_pct = PERCENT
     row.revealed_epoch = ctx.epoch
+    ctx.session.add(
+        BreachRow(
+            truth_id=truth.id,
+            epoch=ctx.epoch,
+            cause=BreachCause.REVELATION_BY_GOD,
+            witnesses=0,
+            witness_node_ids=[],
+            place_node_id=population_id,
+            spread=PERCENT,
+        )
+    )
     await note(ctx, f"What was hidden was made known: {truth.title}.", key="truth.revealed_by_hand", ids=[truth.subject_node_id, population_id])
     await ctx.session.flush()
     return row

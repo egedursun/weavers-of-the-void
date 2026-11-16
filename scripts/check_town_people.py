@@ -74,7 +74,9 @@ def raw_links(files: dict[Path, str]) -> list[Raw]:
 
 
 def main() -> int:
-    found = raw_links({path: path.read_text(encoding="utf-8") for root in (SOURCE, TESTS) for path in sorted(root.rglob("*.py")) if path.name != "test_town_people.py"})
+    found = raw_links(
+        {path: path.read_text(encoding="utf-8") for root in (SOURCE, TESTS) for path in sorted(root.rglob("*.py")) if path.name != "test_town_people.py"}
+    )
     for item in found:
         print(
             f"{item.path.relative_to(ROOT)}:{item.line}: {item.text} {item.reason}; a settlement holds its people by a homeland bond, "

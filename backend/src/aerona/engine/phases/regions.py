@@ -124,6 +124,7 @@ async def danger_harm(ctx: TickContext) -> None:
 @reads(
     "army.morale",
     "army.size",
+    "cult.zeal",
     "item.protection",
     "mortal.age",
     "mortal.agility",
@@ -142,6 +143,7 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.army_profiles",
     "table.army_units",
     "table.assistive_aids",
+    "table.augments",
     "table.avatars",
     "table.bodies",
     "table.body_customs",
@@ -150,6 +152,8 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.conditions",
     "table.cosmos",
     "table.creature_anatomy",
+    "table.crime_cases",
+    "table.cult_offices",
     "table.cult_tenets",
     "table.culture_values",
     "table.designated_heirs",
@@ -175,6 +179,7 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.mortal_profiles",
     "table.name_registry",
     "table.nodes",
+    "table.outbreaks",
     "table.passions",
     "table.people_culture",
     "table.place_environment",
@@ -183,6 +188,7 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.region_environment",
     "table.region_winds",
     "table.routes",
+    "table.sacraments",
     "table.sky_events",
     "table.spirit_profiles",
     "table.tradition_profiles",
@@ -215,8 +221,10 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.name_registry",
     "table.region_environment",
     "table.region_hazards",
+    "table.sacraments",
     "table.sons",
     "table.spirit_profiles",
+    "table.transformations",
 )
 async def terrain_hazards(ctx: TickContext) -> None:
     tally = await hazards.roll_hazards(ctx)

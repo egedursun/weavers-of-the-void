@@ -19,8 +19,9 @@ import { Button } from '@/components/ui/button'
 import {
   AttributeTile,
   EmptyState,
-  Medallion,
   LoadingBlock,
+  Medallion,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import {
@@ -192,7 +193,7 @@ function DesignCard({ design }: { design: Design }) {
   return (
     <li
       data-design={design.id}
-      className='@container/design flex h-full min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'
+      className='@container/design flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={spec.icon} tone={spec.tone} />
@@ -405,12 +406,14 @@ export function WorkshopDesigns({ worldId }: { worldId: number }) {
         />
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-3 @3xl/eco:grid-cols-2'>
-          {view.data.map((design) => (
-            <DesignCard
-              key={`${design.id}-${design.held}-${design.name}-${design.output_pct}-${design.capacity_pct}-${design.store_pct}-${design.quality_bonus}`}
-              design={design}
-            />
-          ))}
+          <Paged items={view.data} as='li'>
+            {(design) => (
+              <DesignCard
+                key={`${design.id}-${design.held}-${design.name}-${design.output_pct}-${design.capacity_pct}-${design.store_pct}-${design.quality_bonus}`}
+                design={design}
+              />
+            )}
+          </Paged>
         </ul>
       )}
     </div>

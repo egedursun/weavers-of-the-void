@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
-from aerona.catalog.operations import RAKED_SECTIONS, SHOT_TARGETS, STATION_SHARES
+from aerona.catalog.operations import RAKED_SECTIONS, SHOT_TARGETS, SHOT_WEIGHT, STATION_SHARES
 from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -11,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.operations import ShipCrewRow, ShipStateRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import MaterialFamily
+from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.military import VesselArmament
 from aerona.domain.enums.operations import CrewStation, PointOfSail, ShotKind
 from aerona.domain.enums.vehicles import VehicleFrame, VehicleSection
@@ -20,10 +21,15 @@ from aerona.engine.military.battle import stack_material
 from aerona.engine.operations.fields import keep
 from aerona.engine.operations.limits import tonnage_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.technology.profiles import family_level
 from aerona.engine.vehicles.sections import design_sections, strike_vessel
 
 OCTANTS = 8
 HALF_TURN = 4
+SOLID_LEVEL = 4
+SHELL_LEVEL = 6
+GUIDED_LEVEL = 7
+ENERGY_LEVEL = 9
 RAKING_GAP = 30
 TINY = 1e-9
 GRAPE_CREW_PCT = 130
@@ -161,6 +167,20 @@ def rate_of_fire(ctx: TickContext, row: VesselProfileRow, crews: dict[CrewStatio
     return clamp_int(gunners.skill * served // PERCENT + command, 0, PERCENT)
 
 
+def modern_shot(shooter: Broadside, target: Broadside, level: int, sections: list[VehicleSection]) -> ShotKind | None:
+    if level >= ENERGY_LEVEL:
+        return ShotKind.ENERGY
+    if level >= GUIDED_LEVEL and VesselArmament.MISSILES.value in shooter.row.armament:
+        return ShotKind.GUIDED
+    if level >= SHELL_LEVEL:
+        if VehicleSection.ARMOUR_PLATING in sections:
+            return ShotKind.PIERCING
+        if target.row.crew * PERCENT > shooter.row.crew * GRAPE_CREW_PCT:
+            return ShotKind.SPREAD
+        return ShotKind.INCENDIARY if stack_material(target.row.hull_material).family is MaterialFamily.ORGANIC else ShotKind.EXPLOSIVE
+    return ShotKind.SOLID if level >= SOLID_LEVEL else None
+
+
 def shot_for(shooter: Broadside, target: Broadside, shooter_speed: int, target_speed: int) -> ShotKind:
     if shooter.row.frame is VehicleFrame.FIRE_SHIP or VesselArmament.RITES.value in shooter.row.armament:
         return ShotKind.FIRE
@@ -182,14 +202,15 @@ async def fire_broadside(ctx: TickContext, shooter: Broadside, target: Broadside
     crews = await crews_of(ctx, shooter.vessel.id, shooter.row)
     keep(shooter.state, "rate_of_fire", rate_of_fire(ctx, shooter.row, crews))
     mine, theirs = speed_of(ctx, shooter.state), speed_of(ctx, target.state)
-    keep(shooter.state, "shot", shot_for(shooter, target, mine, theirs))
+    sections = sorted(await design_sections(ctx.session, target.row.design_id), key=lambda item: item.value) if target.row.design_id is not None else []
+    level = await family_level(ctx.session, shooter.vessel.affiliated_entity_id, TechFamily.WARFARE)
+    keep(shooter.state, "shot", modern_shot(shooter, target, level, sections) or shot_for(shooter, target, mine, theirs))
     raking = target.state.point_of_sail is P.IN_IRONS or mine - theirs >= RAKING_GAP
-    hits = max(1, round((table.base_hits + shooter.state.rate_of_fire // table.rate_hits_per) * weight))
+    hits = max(1, round((table.base_hits + shooter.state.rate_of_fire // table.rate_hits_per) * weight * SHOT_WEIGHT[shooter.state.shot] / PERCENT))
     if raking:
         hits = hits * table.raking_pct // PERCENT
         keep(target.state, "raked", target.state.raked + 1)
         tally.raked += 1
-    sections = sorted(await design_sections(ctx.session, target.row.design_id), key=lambda item: item.value) if target.row.design_id is not None else []
     rng = ctx.rng(f"broadside.{shooter.vessel.id}.{target.vessel.id}.{ctx.epoch}.{index}")
     flammable = stack_material(target.row.hull_material).family is MaterialFamily.ORGANIC
     for _ in range(hits):

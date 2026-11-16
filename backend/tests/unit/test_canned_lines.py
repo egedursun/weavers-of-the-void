@@ -32,3 +32,29 @@ def test_a_pool_of_canned_sentences_is_caught() -> None:
 def test_no_source_keeps_a_pool_of_canned_sentences() -> None:
     module = checker()
     assert module.pools(module.sources()) == []
+
+
+def test_a_pool_of_sentence_variants_in_pairs_is_caught_and_a_keyed_table_is_not() -> None:
+    source = (
+        "REWARDS = (\n"
+        '    ("Fate gave the god fame: {reason}", "Fate gave the god its fame."),\n'
+        '    ("In the mouths of mortals the god grew: {reason}", "In the mouths of mortals the god grew."),\n'
+        ")\n"
+        'TABLE = (("warning_1", "Leakage crossed its first threshold in {world}.", "horror.first"),\n'
+        '    ("warning_2", "Leakage crossed its second threshold in {world}.", "horror.second"))\n'
+    )
+    assert [(item.line, item.name) for item in checker().pools({Path("lines.py"): source})] == [(1, "REWARDS")]
+
+
+def test_a_table_of_phrase_variants_is_caught_and_a_pair_of_labels_is_not() -> None:
+    source = (
+        "PHRASES = {\n"
+        '    "narrow": ("when their homeland grew too small", "when their lands grew crowded", "when they no longer fit"),\n'
+        '    "hunger": ("when their food ran short", "when hunger came to them", "when famine struck them"),\n'
+        "}\n"
+        "LABELS = {\n"
+        '    "custom": ("the weight of custom", "custom forsaken by all"),\n'
+        '    "law": ("the rule of law", "laws that bind no one"),\n'
+        "}\n"
+    )
+    assert [(item.line, item.name) for item in checker().pools({Path("lines.py"): source})] == [(1, "PHRASES")]

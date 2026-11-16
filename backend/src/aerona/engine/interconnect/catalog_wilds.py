@@ -1,6 +1,6 @@
 from aerona.catalog.creatures import CREATURE_TRAITS
 from aerona.core.grammar import an
-from aerona.db.tables.anatomy import CreatureAnatomyRow
+from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
 from aerona.domain.enums.body import BodyPlan
@@ -95,30 +95,38 @@ WILDS_MECHANICS = (
         couplings=(
             Coupling(S.MIND, "a pet's death is mourned", EdgeKind.TRIGGER, "husbandry.pet_grief_strength"),
             Coupling(S.SOCIAL, "a hunting pet sharpens its owner's hunting", EdgeKind.FLOW, "husbandry.pet_hunt_xp"),
-            Coupling(S.WAR, "a hound or falcon stands beside its owner against a beast", EdgeKind.MODIFIER, "husbandry.pet_hero_bonus"),
+            Coupling(S.WAR, "a companion beast stands beside its owner against a beast", EdgeKind.MODIFIER, "husbandry.pet_hero_bonus"),
             Coupling(S.ECOLOGY, "people with small tame herds take pets", EdgeKind.TRIGGER, "husbandry.pet_chance"),
         ),
     ),
     Mechanic(
         key="creature_anatomy",
         spec_item="S3.3a/RP2",
-        title="Every kind and beast gets a generated body: limbs, heads, wings, skin and bone, a breath, bite or gaze, a temperament, a hoard and a dislike",
+        title=(
+            "Every kind and beast gets a generated body: limbs, heads, wings, skin and bone of typed tissue, "
+            "typed attacks, a temperament, a hoard and a dislike"
+        ),
         subsystem=S.ECOLOGY,
         phases=("beast_cycles",),
         surface=Surface(drawer=BEAST),
         backfill="beast_cycles: every kind and beast is given a body from its plan, traits and chemistry",
-        fields=("limbs", "heads", "wings", "skin", "breath", "bite", "gaze", "temperament", "hoards", "hates", "habitat"),
-        tables=(CreatureAnatomyRow.__tablename__,),
+        fields=("limbs", "heads", "wings", "skin", "bite", "temperament", "hoards", "hates", "habitat", "delivery", "effect", "range", "recharge"),
+        tables=(CreatureAnatomyRow.__tablename__, CreatureAttackRow.__tablename__),
         tools=("raise_beast",),
         targets=(SP, "beast"),
         couplings=(
-            Coupling(S.WAR, "breath, heads and stuff add to a creature's raids", EdgeKind.MODIFIER, "creature_anatomy.breath_harm_pct"),
+            Coupling(S.WAR, "attacks, heads and tissue add to a creature's raids", EdgeKind.MODIFIER, "creature_anatomy.attack_harm_pct"),
             Coupling(S.BODY, "a bite passes on an affliction", EdgeKind.TRIGGER, "creature_anatomy.monster_bite_pct"),
-            Coupling(S.SOCIAL, "a gaze makes a creature more dreaded", EdgeKind.FLOW, "creature_anatomy.gaze_terror"),
-            Coupling(S.MIND, "a terrifying gaze stresses a town and a maddening one drives a mortal mad", EdgeKind.FLOW, "creature_anatomy.terror_stress"),
-            Coupling(S.BODY, "a petrifying gaze turns a limb to stone", EdgeKind.TRIGGER, "creature_anatomy.petrify_severity"),
-            Coupling(S.WAR, "a sleeping gaze lulls the watch and the raid cuts deeper", EdgeKind.MODIFIER, "creature_anatomy.sleep_raid_pct"),
-            Coupling(S.BODY, "skin and bone of stone, crystal or metal turn blades as tissue layers", EdgeKind.MODIFIER, "creature_anatomy.skin_damage_pct"),
+            Coupling(S.SOCIAL, "an attack that works by sight makes a creature more dreaded", EdgeKind.FLOW, "creature_anatomy.sight_terror"),
+            Coupling(S.MIND, "an attack of fear stresses a town and one of confusion unsettles a mortal", EdgeKind.FLOW, "creature_anatomy.fear_stress"),
+            Coupling(S.BODY, "an attack of stillness leaves a limb unable to move", EdgeKind.TRIGGER, "creature_anatomy.stillness_severity"),
+            Coupling(S.WAR, "an attack of sleep lulls the watch and the raid cuts deeper", EdgeKind.MODIFIER, "creature_anatomy.sleep_raid_pct"),
+            Coupling(
+                S.BODY,
+                "hard, flexible, heat-resistant or conducting tissue changes the harm of each kind of hit",
+                EdgeKind.MODIFIER,
+                "creature_anatomy.skin_damage_pct",
+            ),
             Coupling(S.WAR, "a creature's armour stands against heroes", EdgeKind.MODIFIER, "creature_anatomy.armour_power_pct"),
             Coupling(S.ECONOMY, "a hoarder carries off its favoured goods", EdgeKind.FLOW, "creature_anatomy.hoard_take"),
         ),
@@ -858,7 +866,7 @@ EXTRA: tuple[Raw, ...] = (
     (
         "breath",
         "S3.2",
-        "Fire- and frost-breathers burn what they raid",
+        "Creatures whose traits give them heat or cold attacks burn what they raid",
         ("monster_raids",),
         WEB,
         (SP, "settlement"),
@@ -1287,7 +1295,7 @@ TYPED: tuple[Raw, ...] = (
     (
         "animal_gods",
         "S3.2",
-        "A son of the Hunt wears the head of their worshippers' totem, and the kind is holy where they are prayed to",
+        "A son of the Hunt takes the form of its worshippers' totem, and the kind is holy where they are prayed to",
         ("husbandry", "ecology"),
         ECOLOGY,
         (SP, "son", "people"),

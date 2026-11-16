@@ -226,7 +226,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
         </div>
       </OrderBlock>
       <OrderBlock
-        title='Wandering markets and void pirates'
+        title='Wandering markets and route raiders'
         description='Raise a market that drifts between worlds, or loose pirates on the routes from a region.'
       >
         <OrderFields>
@@ -259,7 +259,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
           />
           <CosmicActionButton
             actionId='pirates:spawn'
-            label='Loose void pirates'
+            label='Loose route raiders'
             icon={Anchor}
             variant='destructive'
             pending={order.isPending}

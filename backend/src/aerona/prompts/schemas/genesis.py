@@ -88,7 +88,7 @@ class SonRelationOutput(OutputModel):
 class GenesisOutput(OutputModel):
     world_name: str
     cosmology: str = Field(
-        description="4 to 6 sentences: the shape of the universe, what it rests on, what lies above, below or beyond it, the flow of time, what death is"
+        description="4 to 6 sentences: the shape of the universe as the seed gives it, how time passes in it, and what death is if it knows death"
     )
     naming: NamingRuleOutput = Field(description="The world's naming language as structured sound rules")
     tone: str = Field(description="The tone of the narrative, 2 sentences")
@@ -113,7 +113,7 @@ class SonPowersOutput(OutputModel):
     powers: list[PowerOutput] = Field(min_length=POWERS_PER_SON, max_length=POWERS_PER_SON)
     existence: ExistenceOutput
     image_prompt: str = Field(
-        description="English, detailed full-length portrait prompt: body, face, material, clothing, lighting, background, composition. {{ image_prompt_rules }}"
+        description="English, detailed full-length portrait prompt: form, material, surface, marks, lighting, background, composition. {{ image_prompt_rules }}"
     )
 
 

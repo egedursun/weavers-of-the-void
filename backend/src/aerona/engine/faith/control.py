@@ -1,4 +1,5 @@
 from collections.abc import Awaitable, Callable, Mapping, Sequence
+from dataclasses import dataclass
 
 from pydantic import ValidationError
 from sqlalchemy import delete, select
@@ -20,6 +21,7 @@ from aerona.db.tables.faith import (
     SoulJudgementRow,
     SpiritProfileRow,
 )
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
@@ -34,7 +36,12 @@ from aerona.domain.enums.faith import (
     RebirthPath,
     ReincarnationGate,
     SpiritAlignment,
+    StratumActivity,
+    StratumAdmission,
+    StratumContact,
     StratumKind,
+    StratumPermanence,
+    StratumValence,
     TenetKind,
 )
 from aerona.domain.enums.mind import TraitKind, ValueAxis
@@ -43,7 +50,7 @@ from aerona.domain.models.faith import StratumCriteria
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import Church, FaithBook
 from aerona.engine.faith.doctrine import found_doctrine
-from aerona.engine.faith.judgement import ledger, new_stratum, place, profile_for, recount, seal, unseal
+from aerona.engine.faith.judgement import axes_criteria, axes_of, ledger, new_stratum, place, profile_for, recount, seal, unseal
 from aerona.engine.faith.souls import home_of, rebirth, release_host, take_host
 from aerona.engine.faith.works import canonise
 from aerona.engine.faith.zealotry import record_heresy
@@ -634,6 +641,30 @@ def criteria_of(raw: Mapping[str, object] | StratumCriteria | None) -> StratumCr
         raise ValidationFailedError(f"The entry rule is not valid: {error.errors()[0]['msg']}.") from error
 
 
+@dataclass(frozen=True)
+class AxesChange:
+    valence: StratumValence | None = None
+    permanence: StratumPermanence | None = None
+    admission: StratumAdmission | None = None
+    activity: StratumActivity | None = None
+    contact: StratumContact | None = None
+    ruler_id: int | None = None
+
+
+async def reshape_stratum(ctx: TickContext, row: AfterlifeStratumRow, axes: AxesChange) -> bool:
+    changed = False
+    for key in ("valence", "permanence", "admission", "activity", "contact"):
+        value = getattr(axes, key)
+        if value is not None:
+            setattr(row, key, value)
+            changed = True
+    if axes.ruler_id is not None:
+        if await ctx.session.get(NodeRow, axes.ruler_id) is None:
+            raise ValidationFailedError("No such ruler for the stratum.")
+        row.ruler_node_id = axes.ruler_id
+    return changed
+
+
 async def set_stratum(
     ctx: TickContext,
     realm_id: int,
@@ -649,6 +680,7 @@ async def set_stratum(
     clear_links: bool = False,
     dimension_id: int | None = None,
     clear_dimension: bool = False,
+    axes: AxesChange | None = None,
 ) -> AfterlifeStratumRow | None:
     realm = await living_entity(ctx.session, realm_id)
     if realm is None:
@@ -671,6 +703,8 @@ async def set_stratum(
         row.criteria = parsed.stored()
     if closed is not None:
         row.closed = closed
+    if axes is not None and await reshape_stratum(ctx, row, axes) and parsed is None:
+        row.criteria = axes_criteria(ctx.rules.afterlife, axes_of(row)).stored()
     await link_stratum(ctx, row, son_id=son_id, cult_id=cult_id, clear=clear_links)
     if clear_dimension:
         row.dimension_id = None

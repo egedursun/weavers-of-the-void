@@ -857,7 +857,7 @@ function ConvoyCard({
     >
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Chip icon={Truck}>{`${row.capacity} capacity`}</Chip>
-        <Chip>{`${plural(row.animals, 'animal', 'animals')}, ${plural(row.vehicles, 'wagon', 'wagons')} or boats, ${plural(row.guards, 'guard', 'guards')}`}</Chip>
+        <Chip>{`${plural(row.animals, 'animal', 'animals')}, ${plural(row.vehicles, 'vehicle', 'vehicles')}, ${plural(row.guards, 'guard', 'guards')}`}</Chip>
         <Chip icon={PRESERVATION[row.preservation].icon}>
           {PRESERVATION[row.preservation].label}
         </Chip>
@@ -1285,7 +1285,7 @@ function TradeForge({
   )
   const [good, setGood] = useState('grain')
   const [play, setPlay] = useState('corner')
-  const [kind, setKind] = useState('wagons')
+  const [kind, setKind] = useState('animal_carts')
   const post = useUrbanAction(
     'trading_post:open',
     (_: void) => ({ owner_id: house ?? 0, host_id: place ?? 0 }),
@@ -1332,7 +1332,7 @@ function TradeForge({
       icon={Store}
       tone='gold'
       title='Trade, convoys and markets'
-      note='Open a trading post, send a convoy, give an owner wagons, boats or animals, or corner or flood a market.'
+      note='Open a trading post, send a convoy, give an owner carriers of any kind, or corner or flood a market.'
       columns={4}
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
@@ -1585,7 +1585,7 @@ function UrbanBody({
       <Listed
         title='Fleets'
         items={data.fleets}
-        empty='It owns no wagons, boats or animals.'
+        empty='It owns no carriers.'
         noun={['fleet', 'fleets']}
         itemKey={(row) => row.kind}
       >

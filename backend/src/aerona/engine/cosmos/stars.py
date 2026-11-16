@@ -299,9 +299,9 @@ async def hang_star(
         ctx.epoch,
         StarSpec(name, star_type, pantheon.star_brightness_base, pantheon.star_brightness_die, description, galaxy_id=galaxy_id, position=position),
     )
-    text = f"{by} hung a new star in the sky: {star.name} ({star_label(star_type)})."
+    text = f"{by} set a new star in the sky: {star.name} ({star_label(star_type)})."
     if world is not None and root is not None:
-        text = f"{by} hung a new star in the sky of {world.name}: {star.name} ({star_label(star_type)})."
+        text = f"{by} set a new star in the sky of {world.name}: {star.name} ({star_label(star_type)})."
         if root.star_id is None and not held(root.id):
             root.star_id = star.id
             root.orbit = ORBIT_PLANET_BASE

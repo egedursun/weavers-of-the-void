@@ -66,6 +66,7 @@ from aerona.engine.phases import (
     faith,
     finance,
     folkways,
+    fortune,
     fossils,
     gatherings,
     genetics,
@@ -290,6 +291,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + rumours.PHASES
     + powers.PHASES
     + living.PHASES
+    + fortune.PHASES
     + resources.PHASES
     + ruins.PHASES
     + settlements.PHASES
@@ -551,6 +553,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "company_power",
     "replicators",
     "living",
+    "fortune",
     "society_economy",
     "putting_out",
     "refining",

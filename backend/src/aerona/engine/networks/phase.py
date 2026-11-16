@@ -10,20 +10,23 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import SiegeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.networks import NetworkRole, OutageCause
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.minds.values import best_level, liberty_of
+from aerona.engine.minds.values import liberty_of
 from aerona.engine.networks.backfill import keep_relays, relay_backfill
 from aerona.engine.networks.book import carrier_days, running, shake_ledger
 from aerona.engine.networks.energy import CARRIER_ENERGY, starved
+from aerona.engine.networks.kinds import ACCESS_REACH, CARRIER_FAILURE, CAUSE_EPOCHS, ROLE_SHOCK
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.stats import set_stats, shift_stat
 from aerona.engine.services.community_relations import change_relation
+from aerona.engine.technology.profiles import family_level
 
 
 async def members(ctx: TickContext, network_id: int) -> list[NetworkNodeRow]:
@@ -43,15 +46,16 @@ async def besieged(ctx: TickContext, rows: list[NetworkNodeRow]) -> bool:
 async def repairable(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> bool:
     if profile.tech_level <= 1:
         return True
-    best = max([await best_level(ctx.session, row.member_node_id) for row in rows] or [0])
+    best = max([await family_level(ctx.session, row.member_node_id, TechFamily.COMMUNICATION) for row in rows] or [0])
     return best >= profile.tech_level
 
 
 async def cut(ctx: TickContext, network: EntityRow, profile: NetworkProfileRow, cause: OutageCause, severity: int) -> None:
     table = ctx.rules.networks
+    epochs = max(1, table.outage_epochs * CAUSE_EPOCHS[cause] // PERCENT)
     if "down_until_epoch" not in profile.locked:
-        profile.down_until_epoch = ctx.epoch + table.outage_epochs
-    ctx.session.add(NetworkOutageRow(network_entity_id=network.id, cause=cause, epoch=ctx.epoch, epochs=table.outage_epochs, severity=severity))
+        profile.down_until_epoch = ctx.epoch + epochs
+    ctx.session.add(NetworkOutageRow(network_entity_id=network.id, cause=cause, epoch=ctx.epoch, epochs=epochs, severity=severity))
     await shake_ledger(ctx.session, ctx.rules, network.id)
     await note(ctx, f"{network.name} went down: {cause.value.replace('_', ' ')}.", key="network.outage", ids=[network.id])
 
@@ -67,7 +71,7 @@ async def outage_cause(ctx: TickContext, profile: NetworkProfileRow, rows: list[
         if await starved(ctx.session, row.member_node_id, CARRIER_ENERGY[profile.carrier], table.shortage_pct):
             return OutageCause.SHORTAGE
     if rng.chance(table.outage_base * (PERCENT - profile.reliability) / PERCENT):
-        return OutageCause.STORM
+        return CARRIER_FAILURE[profile.carrier]
     return None
 
 
@@ -76,7 +80,7 @@ async def shock(ctx: TickContext, row: NetworkNodeRow) -> None:
     town = await ctx.session.get(EntityRow, row.member_node_id)
     if town is None or town.status is not EntityStatus.CANON or held(town.id):
         return
-    share = row.dependency_pct / PERCENT
+    share = row.dependency_pct / PERCENT * ROLE_SHOCK[row.role] / PERCENT
     settled = await ctx.session.get(SettlementProfileRow, town.id)
     if settled is not None and "public_order" not in settled.locked:
         settled.public_order = clamp_percent(settled.public_order - round_half_up(table.shock_order * share))
@@ -89,7 +93,9 @@ async def depend(ctx: TickContext, profile: NetworkProfileRow, rows: list[Networ
         if held(row.member_node_id) or "dependency_pct" in row.locked:
             continue
         if live:
-            row.dependency_pct = clamp_percent(row.dependency_pct + table.dependency_gain * profile.capacity // PERCENT)
+            row.dependency_pct = clamp_percent(
+                row.dependency_pct + table.dependency_gain * profile.capacity // PERCENT * ACCESS_REACH[profile.access] // PERCENT
+            )
         else:
             await shock(ctx, row)
             row.dependency_pct = clamp_percent(row.dependency_pct - table.dependency_loss)
@@ -193,6 +199,7 @@ async def converge(ctx: TickContext, profile: NetworkProfileRow, rows: list[Netw
     "table.community_societies",
     "table.entities",
     "table.holder_levels",
+    "table.holder_techniques",
     "table.network_nodes",
     "table.network_profiles",
     "table.polity_members",

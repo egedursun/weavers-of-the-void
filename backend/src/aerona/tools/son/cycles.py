@@ -24,6 +24,7 @@ from aerona.domain.enums.cycles import (
     ResidenceRule,
 )
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.unions import PartnerScope, UnionArrangement, UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionPurpose, UnionResidence
 from aerona.engine.cycles import control
 from aerona.engine.cycles.gifts import weigh_debt
 from aerona.engine.primitives.queries import living_entity
@@ -68,6 +69,20 @@ class ShapeKinshipInput(ToolInput):
     residence: ResidenceRule
     preference: MarriagePreference
     payment: MarriagePayment
+    reason: Reason
+
+
+class ShapeUnionsInput(ToolInput):
+    people_id: int
+    form: UnionForm
+    purpose: UnionPurpose
+    residence: UnionResidence
+    descent: UnionDescent
+    exchange: UnionExchange
+    arrangement: UnionArrangement
+    dissolution: UnionDissolution
+    endogamy: PartnerScope
+    exogamy: PartnerScope
     reason: Reason
 
 
@@ -153,6 +168,15 @@ async def further_plan(call: SonCall, args: FurtherPlanInput) -> str:
     return result(SonResult.PLAN_FURTHERED, name=plan.name, progress=plan.progress, steps=plan.steps)
 
 
+async def shape_unions(call: SonCall, args: ShapeUnionsInput) -> str:
+    people = await reached(call, args.people_id, frozenset({EntityType.PEOPLE}), SonResult.UNIONS_REFUSED, "there is no such people")
+    values = args.model_dump(exclude={"people_id", "reason"}, mode="json")
+    row = await control.set_union(call.tick, people.id, values)
+    call.target(people.id)
+    await call.chronicle(ChronicleKind.WORLD, lines.SHAPE_UNIONS, entity_ids=[people.id], son=call.son.name, people=people.name, reason=args.reason)
+    return result(SonResult.UNIONS_SHAPED, name=people.name, form=row.form.value, purpose=row.purpose.value, residence=row.residence.value)
+
+
 async def shape_kinship(call: SonCall, args: ShapeKinshipInput) -> str:
     people = await reached(call, args.people_id, frozenset({EntityType.PEOPLE}), SonResult.KINSHIP_REFUSED, "there is no such people")
     values = {"descent": args.descent.value, "residence": args.residence.value, "preference": args.preference.value, "payment": args.payment.value}
@@ -207,6 +231,7 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
         ToolSpec(SonToolId.BEGIN_LONG_PLAN, son, BeginPlanInput, meta, begin_long_plan),
         ToolSpec(SonToolId.FURTHER_PLAN, son, FurtherPlanInput, meta, further_plan),
         ToolSpec(SonToolId.SHAPE_KINSHIP, son, ShapeKinshipInput, meta, shape_kinship),
+        ToolSpec(SonToolId.SHAPE_UNIONS, son, ShapeUnionsInput, meta, shape_unions),
         ToolSpec(SonToolId.SHAPE_REPRODUCTION, son, ShapeReproductionInput, meta, shape_reproduction),
         ToolSpec(SonToolId.TRY_REALM, son, TryRealmInput, meta, try_realm),
         ToolSpec(SonToolId.SET_CIRCUIT, son, SetCircuitInput, meta, set_circuit),

@@ -7,7 +7,7 @@ Write one prompt for each entity below; follow each entity's GUIDE exactly (an O
 {% for subject in subjects %}
 #{{ subject.id }} [{{ subject.type_label }}{% if subject.subtype %} / {{ subject.subtype }}{% endif %}] {{ subject.name }}: {{ subject.description[:rules.content.image_prompt_description_chars] }}
 GUIDE: {{ subject.direction }}.{{ ambience_line(subject.ambience) }}
-{% if subject.appearance %}LOOKS (keep the same face in every portrait): {{ subject.appearance }}
+{% if subject.appearance %}LOOKS (keep the same look in every portrait): {{ subject.appearance }}
 {% endif %}{% if not loop.last %}
 
 {% endif %}

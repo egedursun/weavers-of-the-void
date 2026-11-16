@@ -32,8 +32,8 @@ export function MindCard({
     <div
       className={
         wide
-          ? '@container/mind flex min-w-0 flex-col gap-4 rounded-lg border bg-background p-4 @xl/mind:col-span-2'
-          : '@container/mind flex min-w-0 flex-col gap-4 rounded-lg border bg-background p-4'
+          ? '@container/mind flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4 @xl/mind:col-span-2'
+          : '@container/mind flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4'
       }
     >
       <div className='flex min-w-0 items-center gap-2'>
@@ -96,7 +96,7 @@ export function ControlPanel({
   children: ReactNode
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
+    <div className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
         <div className='flex min-w-0 flex-col gap-0.5'>
           <Text weight='semibold'>{title}</Text>
@@ -241,7 +241,7 @@ export function ItemRow({
 }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-muted/10 p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 flex-wrap items-start gap-3'>
         <Medallion icon={icon} tone={tone} size='sm' />
         <div className='flex min-w-0 flex-1 basis-36 flex-col gap-1'>
@@ -274,7 +274,7 @@ export function ItemRow({
       </div>
       {children}
       {editor && open && (
-        <div className='flex min-w-0 flex-col gap-4 rounded-md border border-dashed bg-muted/20 p-3'>
+        <div className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
           {editor}
         </div>
       )}

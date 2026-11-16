@@ -501,7 +501,11 @@ def lane_for(
         + table.transport_cost_pct_per_hop * route.profile.length / PERCENT * carriage_factor(ctx.rules, left.commodity, route.profile.mode)
         + table.danger_cost_pct * danger / PERCENT / PERCENT
     )
-    landed = cheap.price * carriage * (1 + toll_total(route) / PERCENT) * (1 + terms.tariff_pct / PERCENT) * (1 - terms.subsidy_pct / PERCENT)
+    landed = (
+        cheap.price * carriage * (1 + toll_total(route) / PERCENT) * (1 + (terms.tariff_pct + terms.licence_pct) / PERCENT) * (1 - terms.subsidy_pct / PERCENT)
+    )
+    if terms.price_cap_pct:
+        landed = min(landed, cheap.price * (PERCENT + terms.price_cap_pct) / PERCENT)
     if dear.price * PERCENT < landed * flow.flow_price_gap_pct * (gaps or {}).get(seller_id, 1.0):
         return None
     surplus = max(0, cheap.supply - max(cheap.demand, flow.flow_reserve))
@@ -509,6 +513,8 @@ def lane_for(
     trusted = 1.0 if trust is None else (ctx.rules.money.trust_trade_pct + (PERCENT - ctx.rules.money.trust_trade_pct) * trust / PERCENT) / PERCENT
     reach = terms.access * terms.informed
     volume = round_half_up(min(room, flow.flow_cap, round_half_up(surplus * flow.flow_share_pct / PERCENT * reach), shortfall) * season * trusted)
+    if terms.quota_pct:
+        volume = round_half_up(volume * terms.quota_pct / PERCENT)
     famine = dear.price * PERCENT >= cheap.price * flow.famine_gap_pct
     return Lane(left.commodity, seller_id, buyer_id, landed, volume, famine, terms) if volume > 0 else None
 
@@ -611,6 +617,9 @@ async def levy_terms(ctx: TickContext, lane: Lane, value: int, tally: RouteTally
     if terms.tariff_pct and terms.buyer_realm is not None:
         duty = round_half_up(value * terms.tariff_pct / PERCENT)
         tally.policy.tariffs += await fund_polity(ctx, terms.buyer_realm, duty, "tariff")
+    if terms.licence_pct and terms.buyer_realm is not None:
+        fee = round_half_up(value * terms.licence_pct / PERCENT)
+        tally.policy.tariffs += await fund_polity(ctx, terms.buyer_realm, fee, "trade licence")
     if terms.subsidy_pct and terms.seller_realm is not None:
         profile = await ctx.session.get(PolityProfileRow, terms.seller_realm)
         grant = min(round_half_up(value * terms.subsidy_pct / PERCENT), profile.treasury if profile is not None else 0)

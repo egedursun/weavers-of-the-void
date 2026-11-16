@@ -9,6 +9,8 @@ from aerona.db.tables.cycles import PolityStressRow
 from aerona.db.tables.dominion import MiracleRecordRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.sacred import DivinationRow, DivinationSystemRow, ForecastModelRow, ForesightRow
@@ -21,7 +23,8 @@ from aerona.domain.enums.cycles import LongPlanKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind
-from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.mind import SkillKind, ValueAxis, ValueHolder
+from aerona.domain.enums.minds import MindPurpose
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.sacred import DivinationKind, DivinationQuestion, DivinationValidity, ForesightSource, ForesightStatus, OmenVerdict
 from aerona.domain.enums.society import Commodity
@@ -418,6 +421,26 @@ async def seers(ctx: TickContext) -> list[tuple[int, ForesightSource, int | None
         .order_by(EntityRow.id)
     )
     found.extend((mortal.id, ForesightSource.POWER, mortal.world_id, stat_or(mortal, "wisdom", MIDDLE)) for mortal in mortals)
+    diviners = await ctx.session.execute(
+        select(EntityRow, SkillRow.level)
+        .join(SkillRow, SkillRow.holder_node_id == EntityRow.id)
+        .where(
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.mortal_role == MortalRole.PRIEST,
+            SkillRow.skill == SkillKind.ASTRONOMY,
+            SkillRow.level >= ctx.rules.prescience.divination_skill,
+        )
+        .order_by(EntityRow.id)
+    )
+    found.extend((mortal.id, ForesightSource.DIVINATION, mortal.world_id, level) for mortal, level in diviners.all())
+    oracles = await ctx.session.execute(
+        select(MindProfileRow.node_id, EntityRow.world_id, MindProfileRow.capacity)
+        .join(EntityRow, EntityRow.id == MindProfileRow.node_id)
+        .where(MindProfileRow.purpose == MindPurpose.ORACLE, MindProfileRow.dormant.is_(False), EntityRow.status == EntityStatus.CANON)
+        .order_by(MindProfileRow.node_id)
+    )
+    found.extend((node, ForesightSource.MADE_ORACLE, world, capacity) for node, world, capacity in oracles.all())
     for son in await ctx.session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE).order_by(SonRow.id)):
         if son.current_world_id is not None and await seer_power(ctx, son):
             found.append((son.id, ForesightSource.GOD, son.current_world_id, MIDDLE + ctx.rules.prescience.god_sight))

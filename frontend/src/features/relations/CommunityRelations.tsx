@@ -20,6 +20,7 @@ import { humanize } from '@/features/entity/actions/schema'
 import { usePickerData } from '@/features/entity/actions/usePickerData'
 import { MEMORY_ICONS, named } from '@/features/entity/mind/labels'
 import { OpinionBreakdown } from '@/features/entity/sections/MemoriesSection'
+import { RelationParts } from './RelationParts'
 import {
   type RelationEntry,
   useEndFeud,
@@ -83,16 +84,24 @@ function RelationRow({ entry, selfId, readOnlyReason }: RowProps) {
       </div>
       {entry.history.some((event) => event.holder_id === selfId) && (
         <ul className='flex min-w-0 flex-col gap-0.5'>
-          {entry.history
-            .filter((event) => event.holder_id === selfId)
-            .map((event, index) => (
+          <Paged
+            items={entry.history.filter((event) => event.holder_id === selfId)}
+            as='li'
+          >
+            {(event, index) => (
               <li key={`${event.epoch}-${index}`}>
                 <Muted variant='caption'>{`Epoch ${event.epoch}: ${named(MEMORY_ICONS, event.kind).label.toLowerCase()} · ${event.event} (${signed(event.delta)})`}</Muted>
               </li>
-            ))}
+            )}
+          </Paged>
         </ul>
       )}
       <WhyToggle entityId={selfId} otherId={entry.other.id} />
+      <RelationParts
+        firstId={selfId}
+        secondId={entry.other.id}
+        blocked={readOnlyReason}
+      />
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Input
           type='number'
@@ -165,7 +174,7 @@ function PairStanding({
   if (pair.isError) return <Text tone='destructive'>{pair.error.message}</Text>
   const data = pair.data
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Label>Now</Label>
         <Badge

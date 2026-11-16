@@ -24,6 +24,7 @@ from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.renown.book import acclaim
+from aerona.engine.renown.lore_kinds import WIDER_LORE
 
 Item = tuple[LoreKind, str, int | None]
 SEEKERS = frozenset({EntityType.FACTION, EntityType.CULT, EntityType.BEAST, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.POLITY})
@@ -45,6 +46,8 @@ async def wants_of(session: AsyncSession, seeker: EntityRow) -> frozenset[LoreKi
 
 
 async def holdings(session: AsyncSession, holder_id: int, kind: LoreKind) -> set[tuple[str, int | None]]:
+    if kind in WIDER_LORE:
+        return await WIDER_LORE[kind].holdings(session, holder_id)
     if kind is LoreKind.TECHNIQUE:
         return {
             (row.value, None) for row in await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == holder_id))
@@ -64,6 +67,8 @@ async def holdings(session: AsyncSession, holder_id: int, kind: LoreKind) -> set
 
 async def holders(session: AsyncSession, item: Item) -> int:
     kind, key, subject = item
+    if kind in WIDER_LORE:
+        return await WIDER_LORE[kind].holders(session, subject)
     if kind is LoreKind.TECHNIQUE:
         return int(await session.scalar(select(func.count()).select_from(HolderTechniqueRow).where(HolderTechniqueRow.technique == Technique(key))) or 0)
     if kind is LoreKind.SITE:
@@ -90,6 +95,10 @@ async def grant(ctx: TickContext, holder: EntityRow, item: Item) -> bool:
     kind, key, subject = item
     if held(holder.id):
         return False
+    if kind in WIDER_LORE:
+        granted = await WIDER_LORE[kind].grant(ctx, holder, subject)
+        await ctx.session.flush()
+        return granted
     if kind is LoreKind.TECHNIQUE:
         if await ctx.session.get(HolderTechniqueRow, (holder.id, Technique(key))) is not None:
             return False

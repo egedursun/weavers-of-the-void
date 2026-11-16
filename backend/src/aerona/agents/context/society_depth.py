@@ -69,7 +69,7 @@ async def labour_lines(session: AsyncSession, home: EntityRow) -> list[str]:
     ]
     corvee = await session.get(CorveeRow, home.id)
     if corvee is not None:
-        lines.append(f"a corvee takes {corvee.share_pct}% of the farmhands for great works")
+        lines.append(f"a corvee takes {corvee.share_pct}% of the workers for great works")
     return lines
 
 

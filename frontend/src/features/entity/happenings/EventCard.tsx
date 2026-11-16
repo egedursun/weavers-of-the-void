@@ -97,7 +97,7 @@ function PhaseTrack({ view }: { view: EventView }) {
             <li
               key={step.phase}
               className={cn(
-                'flex min-w-0 items-center gap-2 rounded-lg border p-2',
+                'flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2',
                 step.current && 'border-primary bg-primary/5',
                 !step.reached && 'opacity-50'
               )}
@@ -245,7 +245,7 @@ function FootprintPanel({
           {(item) => (
             <li
               key={item.region_id}
-              className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+              className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'
             >
               <MapPin
                 aria-hidden='true'
@@ -460,7 +460,7 @@ function RecordControls({
         return (
           <div
             key={key}
-            className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-3'
+            className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'
           >
             <IconPicker
               label={fieldLabel(key)}
@@ -657,7 +657,7 @@ export function EventSection({
           data-surface='EventCard'
           className='@container/event flex min-w-0 flex-col gap-4'
         >
-          <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+          <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <Medallion icon={spec.icon} tone={spec.tone} />
             <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
               <Text weight='semibold' className='first-letter:uppercase'>
@@ -742,7 +742,7 @@ export function EventSection({
           </div>
           <PhaseTrack view={data} />
           {data.incident_text && (
-            <div className='flex min-w-0 items-start gap-2 rounded-lg border bg-muted/30 p-3'>
+            <div className='flex min-w-0 items-start gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
               <Quote
                 aria-hidden='true'
                 className='size-icon-sm shrink-0 text-primary'

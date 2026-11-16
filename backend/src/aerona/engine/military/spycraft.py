@@ -1,11 +1,14 @@
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow, WarAimRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.polity import ClaimRow, HouseMemberRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.warfare import WarSideRow
@@ -16,6 +19,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import AgentStatus, SpyCover, SpyOwnerKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -32,22 +36,36 @@ from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import held_captive, take_captive
 
 OWNER_KINDS = {EntityType.POLITY: SpyOwnerKind.POLITY, EntityType.FACTION: SpyOwnerKind.FACTION, EntityType.CULT: SpyOwnerKind.CULT}
-OWNER_COVERS = {SpyOwnerKind.POLITY: SpyCover.ENVOY, SpyOwnerKind.FACTION: SpyCover.MERCHANT, SpyOwnerKind.CULT: SpyCover.PRIEST}
+OWNER_COVERS = {
+    SpyOwnerKind.POLITY: SpyCover.ENVOY,
+    SpyOwnerKind.FACTION: SpyCover.MERCHANT,
+    SpyOwnerKind.CULT: SpyCover.PRIEST,
+    SpyOwnerKind.COMPANY: SpyCover.MERCHANT,
+    SpyOwnerKind.MADE_MIND: SpyCover.ENVOY,
+}
+MADE_ORIGINS = frozenset({MindOrigin.MADE, MindOrigin.GROWN, MindOrigin.TRAINED, MindOrigin.COPIED})
 COVER_EXPOSURE = {SpyCover.MERCHANT: 100, SpyCover.PRIEST: 80, SpyCover.ENVOY: 60, SpyCover.BEGGAR: 90}
 COVER_ACCESS = {SpyCover.MERCHANT: 100, SpyCover.PRIEST: 110, SpyCover.ENVOY: 130, SpyCover.BEGGAR: 70}
 BOND_FIXUP = "military.spy_networks_typed"
 
 
-def owner_kind(owner: EntityRow) -> SpyOwnerKind:
+async def owner_kind(session: AsyncSession, owner: EntityRow) -> SpyOwnerKind:
+    if await session.get(CompanyProfileRow, owner.id) is not None:
+        return SpyOwnerKind.COMPANY
+    mind = await session.get(MindProfileRow, owner.id)
+    if mind is not None and mind.origin in MADE_ORIGINS:
+        return SpyOwnerKind.MADE_MIND
     return OWNER_KINDS.get(owner.entity_type, SpyOwnerKind.COMMUNITY)
 
 
-def cover_for(owner: EntityRow) -> SpyCover:
-    return OWNER_COVERS.get(owner_kind(owner), SpyCover.BEGGAR)
+async def cover_for(session: AsyncSession, owner: EntityRow) -> SpyCover:
+    return OWNER_COVERS.get(await owner_kind(session, owner), SpyCover.BEGGAR)
 
 
 async def side_for(ctx: TickContext, owner: EntityRow) -> int | None:
-    kind = owner_kind(owner)
+    kind = await owner_kind(ctx.session, owner)
+    if kind is SpyOwnerKind.COMPANY:
+        return owner.affiliated_entity_id or owner.location_id
     if kind is SpyOwnerKind.POLITY:
         profile = await ctx.session.get(PolityProfileRow, owner.id)
         return profile.core_entity_id if profile is not None else None
@@ -74,9 +92,12 @@ async def agents_of(ctx: TickContext, network: SpyNetworkRow, *, active: bool = 
 async def retire_agents(ctx: TickContext, network: SpyNetworkRow) -> int:
     retired = 0
     for agent in await agents_of(ctx, network):
-        if "status" in agent.locked or held(agent.mortal_entity_id) or ctx.epoch - agent.since_epoch < ctx.rules.espionage.agent_service_epochs:
+        if "status" in agent.locked or held(agent.mortal_entity_id):
             continue
-        agent.status, agent.ended_epoch = AgentStatus.RETIRED, ctx.epoch
+        fallen = agent.mortal_entity_id is not None and await living_entity(ctx.session, agent.mortal_entity_id) is None
+        if not fallen and ctx.epoch - agent.since_epoch < ctx.rules.espionage.agent_service_epochs:
+            continue
+        agent.status, agent.ended_epoch = (AgentStatus.DEAD if fallen else AgentStatus.RETIRED), ctx.epoch
         retired += 1
         if "agents" not in network.locked:
             network.agents = max(0, network.agents - 1)
@@ -263,11 +284,11 @@ async def migrate_bonds(ctx: TickContext) -> int:
                 agent_ids=[],
                 depth=10,
                 exposure=0,
-                cover=cover_for(owner),
+                cover=await cover_for(ctx.session, owner),
                 since_epoch=bond.epoch,
             )
             ctx.session.add(row)
-        row.owner_kind = owner_kind(owner)
+        row.owner_kind = await owner_kind(ctx.session, owner)
         row.side_entity_id = await side_for(ctx, owner)
         row.bond_id = None
         await BondRepository(ctx.session).deactivate(bond, ctx.epoch, "kept as a typed spy network")
@@ -275,7 +296,7 @@ async def migrate_bonds(ctx: TickContext) -> int:
     for row in list(await ctx.session.scalars(select(SpyNetworkRow))):
         owner = await living_entity(ctx.session, row.owner_entity_id)
         if owner is not None:
-            row.owner_kind = owner_kind(owner)
+            row.owner_kind = await owner_kind(ctx.session, owner)
             row.side_entity_id = row.side_entity_id or await side_for(ctx, owner)
         for mortal_id in row.agent_ids:
             ctx.session.add(

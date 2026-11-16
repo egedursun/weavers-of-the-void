@@ -509,7 +509,7 @@ async def delete_true_name(scope: PlayerScope, command: TrueNameTarget) -> Effec
     row = await found_row(scope, TrueNameRow, command.bearer_id, "true name")
     await scope.session.delete(row)
     await scope.session.flush()
-    return Effect("The true name was struck; the bearer goes nameless in the deep tongue.", target_node_id=command.bearer_id)
+    return Effect("The true name was struck; the bearer goes without a true name.", target_node_id=command.bearer_id)
 
 
 @player_action("belief:set", ActionKind.EDIT_RECORD)

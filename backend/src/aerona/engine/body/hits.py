@@ -163,9 +163,13 @@ def region_weights(rules: Rules, anatomy: Anatomy, style: StrikeStyle) -> dict[B
         StrikeStyle.TRAMPLE: {BodyRegion.LEGS: table.trample_legs_pct, BodyRegion.TORSO: table.trample_torso_pct},
         StrikeStyle.AERIAL: {BodyRegion.HEAD: table.aerial_head_pct, BodyRegion.WINGS: table.aerial_wings_pct},
         StrikeStyle.LOW: {BodyRegion.LEGS: table.low_legs_pct},
+        StrikeStyle.RANGED: {BodyRegion.TORSO: table.ranged_torso_pct, BodyRegion.HEAD: table.ranged_head_pct},
+        StrikeStyle.BURROWING: {BodyRegion.LEGS: table.burrow_legs_pct, BodyRegion.TAIL: table.burrow_legs_pct},
+        StrikeStyle.ENGULFING: {},
+        StrikeStyle.FROM_HIDING: {BodyRegion.HEAD: table.hidden_head_pct, BodyRegion.TORSO: table.hidden_torso_pct},
     }[style]
     present = {part.region for part in anatomy.parts}
-    if style is StrikeStyle.WHOLE:
+    if style in {StrikeStyle.WHOLE, StrikeStyle.ENGULFING}:
         return {region: 1.0 for region in base if region in present}
     return {region: weight * lean.get(region, PERCENT) / PERCENT for region, weight in base.items() if region in present}
 

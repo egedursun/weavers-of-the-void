@@ -87,7 +87,7 @@ export function LetterTiles({
         <li
           key={`${letter}-${index}`}
           className={cn(
-            'flex size-control-sm items-center justify-center rounded-md border font-display',
+            'flex size-control-sm items-center justify-center rounded-md border surface-sheen border-gild/60 bg-card font-display',
             strong.has(letter)
               ? 'border-primary/40 bg-primary/12 text-primary'
               : 'bg-muted text-foreground'

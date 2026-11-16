@@ -231,6 +231,43 @@ describe('cycles, gifts, kin and bound labour', () => {
     })
   })
 
+  it('shows a people’s customs of union and reads them anew', async () => {
+    serveBase()
+    onApi('GET', '/api/cycles/of/60', {
+      ...EMPTY,
+      node: KIN,
+      union: {
+        form: 'pair',
+        purpose: 'alliance',
+        residence: 'new_household',
+        descent: 'through_first',
+        exchange: 'mutual',
+        arrangement: 'both_consent',
+        dissolution: 'by_court',
+        endogamy: 'none',
+        exogamy: 'house',
+        term_epochs: 0,
+        locked: [],
+      },
+    })
+    onApi('POST', '/api/actions/union:delete', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/union:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CyclesSection nodeId={60} />)
+    await expect.element(screen.getByText('Unions: two partners')).toBeVisible()
+    await screen
+      .getByRole('button', { name: 'Read anew from their ways' })
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/union:delete'))
+      .toHaveLength(1)
+    await screen
+      .getByRole('button', { name: 'Set their customs of union' })
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/union:set'))
+      .toHaveLength(1)
+  })
+
   it('shows the bonds of newcomers and the standing of the freed', async () => {
     serveBase()
     onApi('GET', '/api/cycles/of/20', {

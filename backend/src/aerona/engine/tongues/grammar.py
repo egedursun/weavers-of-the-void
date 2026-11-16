@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.tongues import COMPOUNDING, LOAN_RULES, NUMBER_COUNTS, ORDERS
+from aerona.catalog.tongues import COMPOUNDING, HEAD_FIRST, LOAN_RULES, NUMBER_COUNTS, ORDERS
 from aerona.constants.units import PERCENT
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.db.tables.culture import LanguageStandingRow
@@ -102,6 +102,11 @@ async def loan_factor(session: AsyncSession, rules: Rules, language_id: int) -> 
     row = await grammar_of(session, language_id)
     key = LOAN_RULES[row.morphology] if row is not None else None
     return int(getattr(rules.grammar, key)) / PERCENT if key is not None else 1.0
+
+
+async def head_first(session: AsyncSession, language_id: int | None) -> bool:
+    row = await grammar_of(session, language_id) if language_id is not None else None
+    return row is not None and HEAD_FIRST[row.word_order]
 
 
 async def compounds(session: AsyncSession, language_id: int | None) -> bool:

@@ -101,14 +101,14 @@ async def test_military_strength_counts_weapons_knowledge_and_allies(world: Core
     assert share == await military_strength(session, rules, friend) * rules.world_war_strength.ally_share_pct / 100
 
 
-async def test_tamed_beasts_and_war_father(world: CoreWorld, session: AsyncSession, rules: Rules) -> None:
+async def test_tamed_beasts_and_war_leader(world: CoreWorld, session: AsyncSession, rules: Rules) -> None:
     await bond(session, world.people.id, world.species.id, BondKind.TAMED)
     creatures = rules.creatures
     assert await tamed_power(session, rules, world.people.id) == creatures.tamed_war_base + round_half_up(40 / creatures.tamed_strength_divisor)
     plain = await patron_bonus(session, rules, world.people)
-    await SonRepository(session).set_powers(world.son.id, [PowerDraft("War Father", "Leads armies.", PowerEffect.WAR_FATHER)])
+    await SonRepository(session).set_powers(world.son.id, [PowerDraft("War Leader", "Leads armies.", PowerEffect.WAR_LEADER)])
     fathered = await patron_bonus(session, rules, world.people)
-    assert fathered.bonus == round_half_up(world.son.strength / rules.world_war_strength.patron_strength_divisor * rules.world_war_strength.war_father_mult)
+    assert fathered.bonus == round_half_up(world.son.strength / rules.world_war_strength.patron_strength_divisor * rules.world_war_strength.war_leader_mult)
     assert plain.bonus == round_half_up(world.son.strength / rules.world_war_strength.patron_strength_divisor)
 
 

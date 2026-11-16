@@ -111,7 +111,7 @@ async def forget_knowledge(ctx: TickContext, community: EntityRow, knowledge: En
     holdings.forget(community.id, knowledge.id)
     await note(
         ctx,
-        f"After the devastation {community.name} forgot the {knowledge.name} knowledge; the masters died, the records burned.",
+        f"After the devastation {community.name} forgot the {knowledge.name} knowledge; the masters died and the records were lost.",
         key="dark_ages.forgotten",
         ids=[community.id, knowledge.id],
         kind=ChronicleKind.KNOWLEDGE,

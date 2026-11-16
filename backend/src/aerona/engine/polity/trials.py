@@ -1,10 +1,14 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.crimes import CRIMES
+from aerona.catalog.crimes import TRIALS as TRIAL_SPECS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an
+from aerona.core.total import total
+from aerona.db.tables.customs import EvidenceRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import IdentityRow, SecretRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow
@@ -20,19 +24,22 @@ from aerona.domain.enums.intrigue import HookDemand, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Deposition, TrialKind, Verdict
 from aerona.domain.enums.mind import ActKind, HonourModel, MemoryKind, SkillKind, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
-from aerona.domain.enums.polity import LawKind, OfficeKind
+from aerona.domain.enums.polity import LawArea, LawKind, OfficeKind
 from aerona.domain.enums.settlement import TreasuryEntry
+from aerona.engine.body.bands import banded
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.customs.rights import has_right
+from aerona.engine.faith.book import patron_node
 from aerona.engine.intrigue.favours import hook_on, use_hook
 from aerona.engine.intrigue.identities import EXPOSURE
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.law.appeals import file_appeal
 from aerona.engine.law.jurisdictions import claimed_court
 from aerona.engine.law.outlawry import declare_outlaw, is_outlaw
-from aerona.engine.law.systems import by_system, plead
+from aerona.engine.law.sentences import weigh_trial
+from aerona.engine.law.systems import by_oracle, by_system, plead
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.mind.book import skill_level, traits_of, values_for
@@ -41,21 +48,36 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.justice import CRIME_TEXT, MUTILATIONS, code_punishment, community_ruler, cruelty_of, sentence
 from aerona.engine.mortal.kin import close_kin_of
-from aerona.engine.mortal.standing import add_renown
+from aerona.engine.mortal.standing import add_renown, add_stress
 from aerona.engine.notes import note
 from aerona.engine.polity.justice import offenders
 from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.polity.repute import shift_infamy
+from aerona.engine.powers.sources import polity_of
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.relations.book import relation
 from aerona.engine.relations.persuasion import office_holder
 from aerona.engine.settlement.book import Town, credit
 
 CRUEL = 60
-CRIME_SECRETS: dict[CrimeKind, frozenset[IntrigueSecret]] = {
+AREA_SECRETS: Mapping[LawArea, frozenset[IntrigueSecret]] = total(
+    LawArea,
+    {
+        LawArea.SUCCESSION: frozenset({IntrigueSecret.TRUE_PARENTAGE, IntrigueSecret.CRIME}),
+        LawArea.PROPERTY: frozenset({IntrigueSecret.CRIME, IntrigueSecret.DEBT}),
+        LawArea.FISCAL: frozenset({IntrigueSecret.CRIME, IntrigueSecret.DEBT}),
+        LawArea.PENAL: frozenset({IntrigueSecret.CRIME}),
+        LawArea.MILITARY: frozenset({IntrigueSecret.COWARDICE_IN_BATTLE, IntrigueSecret.BROKEN_OATH}),
+        LawArea.SOCIAL: frozenset({IntrigueSecret.CRIME, IntrigueSecret.AFFAIR}),
+        LawArea.PUBLIC_HEALTH: frozenset({IntrigueSecret.HIDDEN_CONDITION, IntrigueSecret.CRIME}),
+        LawArea.MAGIC: frozenset({IntrigueSecret.DEAL_WITH_OUTER_BEING, IntrigueSecret.SECRET_CULT_MEMBERSHIP}),
+        LawArea.CONSTITUTIONAL: frozenset({IntrigueSecret.CRIME, IntrigueSecret.BROKEN_OATH}),
+    },
+)
+NAMED_CRIME_SECRETS: dict[CrimeKind, frozenset[IntrigueSecret]] = {
     CrimeKind.THEFT: frozenset({IntrigueSecret.CRIME}),
     CrimeKind.MURDER: frozenset({IntrigueSecret.MURDER, IntrigueSecret.CRIME}),
     CrimeKind.BLASPHEMY: frozenset({IntrigueSecret.HERESY, IntrigueSecret.SECRET_CULT_MEMBERSHIP}),
@@ -70,13 +92,12 @@ CRIME_SECRETS: dict[CrimeKind, frozenset[IntrigueSecret]] = {
     CrimeKind.IMPERSONATION: frozenset({IntrigueSecret.CRIME}),
     CrimeKind.MIND_COMPULSION: frozenset({IntrigueSecret.CRIME}),
 }
+CRIME_SECRETS: Mapping[CrimeKind, frozenset[IntrigueSecret]] = total(
+    CrimeKind, {crime: NAMED_CRIME_SECRETS.get(crime, AREA_SECRETS[CRIMES[crime].area]) for crime in CrimeKind}
+)
 TRIAL_KINDS = {kind.value: kind for kind in TrialKind}
-TRIAL_TEXT: dict[TrialKind, str] = {
-    TrialKind.JUDGE: "before a judge",
-    TrialKind.JURY: "before a jury",
-    TrialKind.COMBAT: "by combat",
-    TrialKind.ORDEAL: "by ordeal",
-}
+SEEN_TRIALS = frozenset({TrialKind.ORDEAL, TrialKind.ORACLE})
+TRIAL_TEXT = {kind: spec.text for kind, spec in TRIAL_SPECS.items()}
 VERDICT = "verdict"
 
 
@@ -167,6 +188,8 @@ async def weigh(ctx: TickContext, case: CrimeCaseRow, culprit_id: int, investiga
     courts = [court for court in (case.settlement_entity_id, case.polity_entity_id) if court is not None]
     if await holders_know(ctx.session, courts, Technique.ORAL_LAW):
         found += ctx.rules.technique_effects.oral_law_evidence
+    kinds = list(await ctx.session.scalars(select(EvidenceRow.kind).where(EvidenceRow.case_id == case.id)))
+    found += sum(table.fitting_evidence for kind in kinds if kind in CRIMES[case.crime].evidence)
     return clamp_int(found, 0, PERCENT)
 
 
@@ -248,15 +271,24 @@ async def trial_for(ctx: TickContext, town_id: int | None) -> TrialKind:
     if town_id is None:
         return TrialKind.JUDGE
     chosen = TRIAL_KINDS.get(str(await law_param(ctx.session, town_id, LawKind.PENAL_CODE, "trial")), TrialKind.JUDGE)
+    return chosen if await trial_open(ctx, town_id, chosen) else TrialKind.JUDGE
+
+
+async def trial_open(ctx: TickContext, town_id: int, chosen: TrialKind) -> bool:
     town = await ctx.session.get(EntityRow, town_id)
     folk = await people_of(ctx.session, town) if town is not None else None
     if chosen is TrialKind.COMBAT:
         culture = await culture_of(ctx.session, folk.id if folk is not None else town_id)
-        if await honour_of(ctx.session, culture.id if culture is not None else None) is not HonourModel.HONOUR:
-            return TrialKind.JUDGE
-    if chosen is TrialKind.ORDEAL and (await values_for(ctx.session, folk.id if folk is not None else town_id)).get(ValueAxis.SUPERSTITION, 0) < 0:
-        return TrialKind.JUDGE
-    return chosen
+        return await honour_of(ctx.session, culture.id if culture is not None else None) is HonourModel.HONOUR
+    if chosen in SEEN_TRIALS:
+        return (await values_for(ctx.session, folk.id if folk is not None else town_id)).get(ValueAxis.SUPERSTITION, 0) >= 0
+    if chosen is TrialKind.DIVINE_JUDGEMENT:
+        return await patron_node(ctx.session, town_id) is not None
+    if chosen is TrialKind.MADE_JUDGE:
+        realm = await polity_of(ctx.session, town_id)
+        courts = [town_id, *([realm] if realm is not None else [])]
+        return await holders_know(ctx.session, courts, Technique.ARTIFICIAL_MINDS)
+    return True
 
 
 async def open_case(ctx: TickContext, town: Town, laws: LawBook, *, judge: EntityRow | None) -> CrimeCaseRow | None:
@@ -390,17 +422,80 @@ async def by_ordeal(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) ->
     survived = ctx.rng(f"trials.ordeal.{case.id}").chance(table.ordeal_pct if innocent else PERCENT - table.ordeal_pct)
     if not held(accused.id):
         await apply_hits(
-            ctx, accused, Harm(table.combat_hp // 2, HarmCause.PUNISHMENT, "bore the ordeal", damage_type=DamageType.FIRE, severity=1), lethal=False
+            ctx,
+            accused,
+            Harm(
+                table.combat_hp // 2,
+                HarmCause.PUNISHMENT,
+                "bore the ordeal",
+                damage_type=DamageType.FIRE,
+                severity=banded(ctx, ctx.rules.harm_bands.ordeal, accused.id),
+            ),
+            lethal=False,
         )
     return not survived
 
 
-TRIALS: dict[TrialKind, Callable[[TickContext, CrimeCaseRow, EntityRow], Awaitable[bool]]] = {
-    TrialKind.JUDGE: by_judge,
-    TrialKind.JURY: by_jury,
-    TrialKind.COMBAT: by_combat,
-    TrialKind.ORDEAL: by_ordeal,
-}
+async def by_council(ctx: TickContext, case: CrimeCaseRow, _accused: EntityRow) -> bool:
+    return case.evidence + testimony_weight(ctx, await witnesses_of(ctx, case.id)) // 3 >= ctx.rules.trials.standard
+
+
+async def by_arbitration(ctx: TickContext, case: CrimeCaseRow, _accused: EntityRow) -> bool:
+    return case.evidence + ctx.rules.trials.arbitration_ease >= ctx.rules.trials.standard
+
+
+async def by_seer(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> bool:
+    return by_oracle(ctx, case, accused)
+
+
+async def by_god(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> bool:
+    god = await patron_node(ctx.session, case.settlement_entity_id) if case.settlement_entity_id is not None else None
+    if god is None:
+        return await by_judge(ctx, case, accused)
+    return case.culprit_entity_id == accused.id
+
+
+async def by_assembly(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> bool:
+    sway = round_half_up(stat_or(accused, "renown", 0) * ctx.rules.trials.renown_sway_pct / PERCENT)
+    return case.evidence + testimony_weight(ctx, await witnesses_of(ctx, case.id)) // 2 - sway >= ctx.rules.trials.standard
+
+
+async def by_inquisition(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> bool:
+    if not held(accused.id):
+        await add_stress(ctx.session, accused.id, ctx.rules.trials.inquisition_stress, ctx.epoch)
+    return case.evidence + ctx.rules.trials.inquisition_bias >= ctx.rules.trials.standard
+
+
+async def by_mediation(ctx: TickContext, case: CrimeCaseRow, _accused: EntityRow) -> bool:
+    return case.evidence >= ctx.rules.trials.standard
+
+
+async def by_made_judge(ctx: TickContext, case: CrimeCaseRow, _accused: EntityRow) -> bool:
+    return case.evidence + ctx.rules.trials.made_judge_precision >= ctx.rules.trials.standard
+
+
+TRIALS: Mapping[TrialKind, Callable[[TickContext, CrimeCaseRow, EntityRow], Awaitable[bool]]] = total(
+    TrialKind,
+    {
+        TrialKind.JUDGE: by_judge,
+        TrialKind.JURY: by_jury,
+        TrialKind.COMBAT: by_combat,
+        TrialKind.ORDEAL: by_ordeal,
+        TrialKind.COUNCIL: by_council,
+        TrialKind.ARBITRATION: by_arbitration,
+        TrialKind.ORACLE: by_seer,
+        TrialKind.DIVINE_JUDGEMENT: by_god,
+        TrialKind.ASSEMBLY: by_assembly,
+        TrialKind.INQUISITION: by_inquisition,
+        TrialKind.MEDIATION: by_mediation,
+        TrialKind.MADE_JUDGE: by_made_judge,
+    },
+)
+
+
+def erred(ctx: TickContext, case: CrimeCaseRow, trial: TrialKind, guilty: bool) -> bool:
+    chance = TRIAL_SPECS[trial].error * (PERCENT - case.evidence) // PERCENT
+    return not guilty if ctx.rng(f"trials.error.{case.id}").chance(chance) else guilty
 
 
 async def grieve(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, punishment: PunishmentKind) -> None:
@@ -427,7 +522,7 @@ async def grieve(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, punis
 
 async def convict(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, laws: LawBook, tally: TrialTally) -> None:
     judge = await living_entity(ctx.session, case.judge_entity_id) if case.judge_entity_id is not None else None
-    punishment = await code_punishment(ctx, case.settlement_entity_id, case.crime)
+    punishment = TRIAL_SPECS[case.trial or TrialKind.JUDGE].sentence or await code_punishment(ctx, case.settlement_entity_id, case.crime)
     close(ctx, case, Verdict.GUILTY)
     case.wrongful = case.culprit_entity_id != accused.id
     code = laws.in_force(case.settlement_entity_id, LawKind.PENAL_CODE) if case.settlement_entity_id is not None else None
@@ -479,11 +574,13 @@ async def try_case(ctx: TickContext, case: CrimeCaseRow, laws: LawBook, tally: T
     await claimed_court(ctx, case, accused)
     await plead(ctx, case, accused)
     trial = case.trial or TrialKind.JUDGE
-    guilty = await by_system(ctx, case, accused, await TRIALS[trial](ctx, case, accused))
+    guilty = erred(ctx, case, trial, await by_system(ctx, case, accused, await TRIALS[trial](ctx, case, accused)))
     tally.tried += 1
+    await weigh_trial(ctx, trial, case.settlement_entity_id, case.polity_entity_id)
     if guilty:
         await convict(ctx, case, accused, laws, tally)
-        await file_appeal(ctx, case, accused)
+        if ctx.rng(f"trials.appeal.{case.id}").chance(TRIAL_SPECS[trial].appeal):
+            await file_appeal(ctx, case, accused)
     else:
         close(ctx, case, Verdict.ACQUITTED)
         tally.acquitted += 1
@@ -507,7 +604,7 @@ async def tend_cases(ctx: TickContext, tally: TrialTally) -> None:
     )
     laws = await LawBook.load(ctx.session)
     for case in list(rows):
-        if VERDICT in (case.locked or []) or case_held(case):
+        if VERDICT in (case.locked or []) or case_held(case) or case.opened_epoch + TRIAL_SPECS[case.trial or TrialKind.JUDGE].delay >= ctx.epoch:
             continue
         await try_case(ctx, case, laws, tally)
 

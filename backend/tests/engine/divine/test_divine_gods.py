@@ -20,7 +20,7 @@ from aerona.engine.divine.avatars import avatar_cycles, manifest
 from aerona.engine.divine.goals import pursue_goals
 from aerona.engine.divine.lineage import inherited_domains, inherited_stats
 from aerona.engine.divine.standing import mean_neglect, tend_standing
-from aerona.engine.divine.wounds import avatar_slain, heal_wounds, inflict, name_exposure, sanity_ceiling, strike
+from aerona.engine.divine.wounds import avatar_slain, heal_wounds, inflict, name_exposure, sanity_ceiling, strike, worst
 from aerona.engine.primitives.faith import has_unlocked_power
 from aerona.rules.registry import Rules
 from tests.engine.divine.pantheon import god, worship
@@ -97,7 +97,9 @@ async def test_a_beaten_god_may_be_wounded_and_its_wounds_bite(realm: Realm) -> 
     name = await inflict(ctx, sea, DivineWoundKind.STOLEN_NAME, WoundCause.CREATOR, severity=50)
     void = await inflict(ctx, sea, DivineWoundKind.VOID_WOUND, WoundCause.CREATOR, severity=50)
     assert name is not None and void is not None
-    assert await name_exposure(realm.session, sea.id, 40) == 0.8
+    deepest = await worst(realm.session, sea.id, DivineWoundKind.STOLEN_NAME)
+    assert deepest >= name.severity == 50
+    assert await name_exposure(realm.session, sea.id, 40) == 1 - deepest * 40 / 100 / 100
     assert await sanity_ceiling(realm.session, sea.id, 60) == 70
     before = name.healed
     await heal_wounds(context(realm.session))

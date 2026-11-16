@@ -6,6 +6,7 @@ from sqlalchemy.orm import ORMExecuteState, Session
 
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import register_index, touched_rows
+from aerona.db.tables.belief_depth import SourceTrustRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import BeliefRow
@@ -23,6 +24,7 @@ PRICE = "price."
 DEFENCE = "defense"
 DARING_MIN = 0.5
 DARING_MAX = 1.5
+TRUST_BASE = 60
 
 
 BELIEF_INDEX = "aerona.belief_index"
@@ -107,6 +109,11 @@ async def believe(
 ) -> BeliefRow | None:
     if held(holder_id):
         return None
+    trusted = await ctx.session.get(SourceTrustRow, (holder_id, source))
+    if trusted is not None:
+        if trusted.trust < ctx.rules.belief_depth.trust_floor and not false:
+            return None
+        confidence = clamp_int(confidence * (PERCENT + trusted.trust - TRUST_BASE) // PERCENT, 0, PERCENT)
     table = ctx.rules.belief_state
     spread = round_half_up(table.error_pct * (PERCENT - confidence) / PERCENT)
     value = (

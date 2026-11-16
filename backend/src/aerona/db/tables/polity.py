@@ -16,6 +16,7 @@ from aerona.domain.enums.polity import (
     LawKind,
     LegitimacyBasis,
     OathKind,
+    OathPenalty,
     OathStatus,
     OfficeKind,
     PartyRole,
@@ -263,6 +264,8 @@ class OathRow(Base):
     recipient_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     kind: Mapped[OathKind] = mapped_column(enum_type(OathKind, "kind"))
     witness_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    witness_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    penalty: Mapped[OathPenalty | None] = mapped_column(enum_type(OathPenalty, "penalty"))
     status: Mapped[OathStatus] = mapped_column(enum_type(OathStatus, "status"), default=OathStatus.SWORN)
     sworn_epoch: Mapped[int]
     deadline_epoch: Mapped[int | None]

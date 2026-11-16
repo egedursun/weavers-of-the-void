@@ -188,6 +188,7 @@ class SonToolId(StrEnum):
     BEGIN_LONG_PLAN = "begin_long_plan"
     FURTHER_PLAN = "further_plan"
     SHAPE_KINSHIP = "shape_kinship"
+    SHAPE_UNIONS = "shape_unions"
     SHAPE_REPRODUCTION = "shape_reproduction"
     TRY_REALM = "try_realm"
     SET_CIRCUIT = "set_circuit"
@@ -276,6 +277,10 @@ class SonToolId(StrEnum):
     HIDE_TRUTH = "hide_truth"
     BLESS_LINE = "bless_line"
     CURSE_LINE = "curse_line"
+    BLESS_FORTUNE = "bless_fortune"
+    WIELD_POWER = "wield_power"
+    CURSE_FORTUNE = "curse_fortune"
+    SET_NATURAL_LAW = "set_natural_law"
 
 
 class MortalToolId(StrEnum):
@@ -513,6 +518,8 @@ class MortalToolId(StrEnum):
     RAISE_SAPIENCE = "raise_sapience"
     LICENSE_LINE = "license_line"
     SET_CLONE_LAW = "set_clone_law"
+    TAKE_CARE = "take_care"
+    FOUND_FACTION = "found_faction"
 
 
 ToolId = SonToolId | MortalToolId

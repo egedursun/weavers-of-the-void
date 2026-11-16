@@ -340,7 +340,7 @@ async def commons_edit(scope: PlayerScope, command: CommonsEdit) -> Effect:
 @player_action("commons:enclose", ActionKind.EDIT_RECORD)
 async def commons_enclose(scope: PlayerScope, command: EnclosureDraft) -> Effect:
     row = await control.enclose_common(await scope.context("commons_enclose"), command.commons_id, command.encloser_id)
-    return Effect("The common is enclosed and its cottagers driven off.", row.region_entity_id)
+    return Effect("The common is enclosed and those who used it are driven off.", row.region_entity_id)
 
 
 @player_action("commons:delete", ActionKind.EDIT_RECORD)
@@ -474,7 +474,7 @@ async def keystone_edit(scope: PlayerScope, command: KeystoneEdit) -> Effect:
 @player_action("keystone:delete", ActionKind.EDIT_RECORD)
 async def keystone_delete(scope: PlayerScope, command: KeystoneTarget) -> Effect:
     await control.delete_record(await scope.context("keystone_delete"), "keystone", command.keystone_id)
-    return Effect("The world no longer hangs on one resource.")
+    return Effect("The world no longer depends on one resource.")
 
 
 @player_action("brand:found", ActionKind.EDIT_RECORD)

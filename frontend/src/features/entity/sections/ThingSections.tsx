@@ -1,19 +1,24 @@
-import { Muted } from '@/components/typography'
+import { IntroNote } from '@/components/domain'
 import { AgrarianSection } from '@/features/agrarian/AgrarianSection'
 import { ArcanaSection } from '@/features/arcana/ArcanaSection'
 import { MythicSection } from '@/features/arcana/MythicSection'
+import { SourceTrustSection } from '@/features/beliefTrust/SourceTrustSection'
 import { BelongingSection } from '@/features/belonging/BelongingSection'
 import { BiologySection } from '@/features/biology/BiologySection'
 import { ClimesSection } from '@/features/climes/ClimesSection'
 import { CollectiveSection } from '@/features/collective/CollectiveSection'
 import { CouplingsSection } from '@/features/couplings/CouplingsSection'
 import { CraftsSection } from '@/features/crafts/CraftsSection'
+import { CreatorBondsSection } from '@/features/creatorBonds/CreatorBondsSection'
 import { CustomsSection } from '@/features/customs/CustomsSection'
 import { CyclesSection } from '@/features/cycles/CyclesSection'
+import { GodCouncilSection } from '@/features/divine/CouncilOrderPanel'
+import { DivinePowersSection } from '@/features/divinePowers/DivinePowersSection'
 import { DominionSection } from '@/features/dominion/DominionSection'
 import { TechErasSection } from '@/features/eras/TechErasSection'
 import { EvolutionSection } from '@/features/evolution/EvolutionSection'
 import { FolkwaysSection } from '@/features/folkways/FolkwaysSection'
+import { FortuneSection } from '@/features/fortune/FortuneSection'
 import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
 import { HonoursSection } from '@/features/honours/HonoursSection'
@@ -32,6 +37,7 @@ import { NetworkSection } from '@/features/minds/NetworkSection'
 import { NatureSection } from '@/features/nature/NatureSection'
 import { OperationsSection } from '@/features/operations/OperationsSection'
 import { OrdersSection } from '@/features/orders/OrdersSection'
+import { PantheonSection } from '@/features/pantheonLife/PantheonSection'
 import { HiddenTruthsSection } from '@/features/powers/HiddenTruthsSection'
 import { MagicSystemsSection } from '@/features/powers/MagicSystemsSection'
 import { PowersSection } from '@/features/powers/PowersSection'
@@ -41,8 +47,10 @@ import { PursuitsSection } from '@/features/pursuits/PursuitsSection'
 import { RegimeSection } from '@/features/regime/RegimeSection'
 import { SacredSection } from '@/features/sacred/SacredSection'
 import { TalesSection } from '@/features/tales/TalesSection'
+import { TechnologySection } from '@/features/technology/TechnologySection'
 import { TonguesSection } from '@/features/tongues/TonguesSection'
 import { TransformSection } from '@/features/transform/TransformSection'
+import { TypedModelsSection } from '@/features/typedModels/TypedModelsSection'
 import { UrbanSection } from '@/features/urban/UrbanSection'
 import { WorldViewSection } from '@/features/worldview/WorldViewSection'
 import { AffairsSection } from './AffairsSection'
@@ -82,13 +90,13 @@ export function ThingSections({
   if (scope === 'made')
     return (
       <>
-        <Muted variant='caption'>
+        <IntroNote>
           A made type is a design its makers draw, cook, forge, field or build.
           It has no mind, augments, networks, household, purse, lands, offices,
           rule, magic or tongue of its own, so those sections stay with the
           beings and things who make and use it. Every record tied to it is
           still listed and editable under Every record.
-        </Muted>
+        </IntroNote>
         <EntityMechanics
           nodeId={nodeId}
           statKeys={statKeys}
@@ -121,6 +129,14 @@ export function ThingSections({
       <MagicSystemsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <HiddenTruthsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <LivingSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <FortuneSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <TechnologySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <DivinePowersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <CreatorBondsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <PantheonSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <TypedModelsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <SourceTrustSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <GodCouncilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <FeelingsSection nodeId={nodeId} />
       <TastesSection nodeId={nodeId} />
       <EthicsSection nodeId={nodeId} />

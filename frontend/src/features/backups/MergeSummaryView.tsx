@@ -1,4 +1,4 @@
-import { type KeyValueItem, KeyValueList } from '@/components/domain'
+import { type KeyValueItem, KeyValueList, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { type MergeSummary } from './api'
 
@@ -88,22 +88,30 @@ export function MergeSummaryView({ summary }: { summary: MergeSummary }) {
       {summary.renamed.length > 0 && (
         <Group title='Renamed to avoid clashes'>
           <ul className='flex min-w-0 flex-col gap-1'>
-            {summary.renamed.map((node) => (
-              <Text as='li' key={`${node.old_name}-${node.new_name}`} truncate>
-                {`${node.old_name} became ${node.new_name}`}
-              </Text>
-            ))}
+            <Paged items={summary.renamed} as='li'>
+              {(node) => (
+                <Text
+                  as='li'
+                  key={`${node.old_name}-${node.new_name}`}
+                  truncate
+                >
+                  {`${node.old_name} became ${node.new_name}`}
+                </Text>
+              )}
+            </Paged>
           </ul>
         </Group>
       )}
       {images.length > 0 && (
         <Group title='Images renamed'>
           <ul className='flex min-w-0 flex-col gap-1'>
-            {images.map(([from, to]) => (
-              <Text as='li' key={from} variant='caption' truncate>
-                {`${from} became ${to}`}
-              </Text>
-            ))}
+            <Paged items={images} as='li'>
+              {([from, to]) => (
+                <Text as='li' key={from} variant='caption' truncate>
+                  {`${from} became ${to}`}
+                </Text>
+              )}
+            </Paged>
           </ul>
         </Group>
       )}

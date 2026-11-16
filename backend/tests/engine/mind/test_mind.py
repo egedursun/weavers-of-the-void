@@ -24,8 +24,8 @@ from aerona.domain.enums.mind import (
     ValueAxis,
     ValueHolder,
 )
+from aerona.domain.enums.quests import QuestAim
 from aerona.domain.enums.society import Commodity
-from aerona.domain.enums.war import HeroQuestKind
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.body.book import effective
 from aerona.engine.body.healing import heal_wounds
@@ -196,7 +196,7 @@ async def test_strong_grief_sets_a_mortal_on_vengeance(realm: Realm) -> None:
     await remember(realm.session, RULES, holder_id=avenger.id, subject_id=killer.id, kind=MemoryKind.KILLED_KIN, magnitude=-90, epoch=3, decay_pct=0)
     await mind_memories(context(realm.session, tuned(memory={"vengeance_chance": 100})))
     quest = await realm.session.scalar(select(HeroQuestRow).where(HeroQuestRow.hero_entity_id == avenger.id))
-    assert quest is not None and quest.kind is HeroQuestKind.VENGEANCE and quest.target_node_id == killer.id
+    assert quest is not None and quest.aim is QuestAim.AVENGE and quest.target_node_id == killer.id
 
 
 async def test_pressures_come_from_the_state_of_a_community(realm: Realm) -> None:

@@ -35,7 +35,7 @@ function PartChip({ part }: { part: Part }) {
         <div
           tabIndex={0}
           aria-label={describe(part)}
-          className='flex min-w-0 items-center gap-2 rounded-md border bg-background px-2 py-1'
+          className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1'
         >
           <svg
             viewBox='0 0 10 10'

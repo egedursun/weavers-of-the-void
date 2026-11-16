@@ -44,6 +44,9 @@ const SHARES = [
   'leisure',
   'travel',
   'service',
+  'learning',
+  'care',
+  'art',
 ] as const
 
 function RevivalCard({
@@ -218,7 +221,7 @@ function BudgetCard({
       caption={SHARES.map((key) => `${key} ${row[key]}`).join(' · ')}
       removeLabel='Strike the budget'
       editTitle='Set the budget'
-      note="A class's year: work sets a town's output, leisure its satisfaction, worship its piety, rest eases unrest, travel brings trade and service guards the walls."
+      note="A class's year: work sets a town's output, leisure its satisfaction, worship its piety, rest eases unrest, travel brings trade, service guards the walls, and learning, care and art feed the needs they serve."
       fields={SHARES.map((key) => ({
         key,
         label: key[0].toUpperCase() + key.slice(1),
@@ -411,6 +414,9 @@ export function FolkPanel({
       leisure: 10,
       travel: 3,
       service: 2,
+      learning: 0,
+      care: 0,
+      art: 0,
     }),
     'The year is set'
   )

@@ -12,6 +12,7 @@ from aerona.domain.enums.structure import (
     ConstructionState,
     ConstructionStatus,
     StaffScale,
+    StructureEffect,
     StructureGroup,
     StructureKind,
 )
@@ -76,6 +77,7 @@ class StructureView(ApiModel):
     dedicated_son_name: str | None
     aesthetic: Aesthetic | None
     on_ley_line: bool
+    own_effects: list[StructureEffect]
     attuned: bool
     anchor: bool
     splendor: int

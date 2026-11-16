@@ -123,7 +123,7 @@ function DepthEditForm({
   const field = (key: keyof DepthDraft) => (value: string) =>
     setDraft({ ...draft, [key]: value })
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'>
       <FormRow label='History'>
         {(fieldId) => (
           <Textarea
@@ -283,7 +283,7 @@ export function CelestialDepthSection({
                   itemKey={(_, index) => index}
                 >
                   {(rumour) => (
-                    <li className='flex min-w-0 items-start gap-3 rounded-lg border bg-background p-3'>
+                    <li className='flex min-w-0 items-start gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
                       <Medallion icon={MessageCircle} tone='info' size='sm' />
                       <Text variant='caption'>{rumour}</Text>
                     </li>
@@ -302,7 +302,7 @@ export function CelestialDepthSection({
                   itemKey={(_, index) => index}
                 >
                   {(saying) => (
-                    <li className='flex min-w-0 items-start gap-3 rounded-xl rounded-tl-sm border border-primary/30 bg-primary/5 p-3'>
+                    <li className='flex min-w-0 items-start gap-3 rounded-md rounded-tl-sm border surface-framed border-primary/30 bg-primary/5 p-3'>
                       <Quote
                         aria-hidden='true'
                         className='size-icon-sm shrink-0 text-primary'
@@ -334,7 +334,7 @@ export function CelestialDepthSection({
                   itemKey={(_, index) => index}
                 >
                   {(detail) => (
-                    <li className='flex min-w-0 items-start gap-2 rounded-lg border bg-muted/30 p-2.5'>
+                    <li className='flex min-w-0 items-start gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2.5'>
                       <Sparkle
                         aria-hidden='true'
                         className='size-icon-sm shrink-0 text-brand-verdigris'
@@ -354,7 +354,7 @@ export function CelestialDepthSection({
               />
             )}
             {depth.hidden_truth && (
-              <div className='flex min-w-0 flex-col gap-2 rounded-xl border border-dashed border-warning/50 p-3'>
+              <div className='flex min-w-0 flex-col gap-2 rounded-md border-warning/50 p-3 sealed-well'>
                 <div className='flex min-w-0 items-center gap-3'>
                   <Medallion
                     icon={truthShown ? Eye : EyeOff}

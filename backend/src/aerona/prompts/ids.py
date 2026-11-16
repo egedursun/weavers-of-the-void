@@ -19,7 +19,6 @@ class PromptArea(StrEnum):
     MORTAL = "mortal"
     OPPORTUNITIES = "opportunities"
     AGENT = "agent"
-    CHRONICLE = "chronicle"
     LOCALISATION = "localisation"
 
 
@@ -155,9 +154,6 @@ class PromptId(StrEnum):
     ENTITY_STATE_REASON = "entity_state_reason"
     FIELD_ERROR = "field_error"
     PER_EPOCH_LIMIT = "per_epoch_limit"
-
-    CREATOR_SIGN = "creator_sign"
-    SENTIENT_DEMAND = "sentient_demand"
 
     LOCALISE_SYSTEM = "localise_system"
     LOCALISE_USER = "localise_user"

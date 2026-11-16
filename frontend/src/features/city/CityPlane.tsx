@@ -13,6 +13,7 @@ import {
 import { postAction } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
+import { OrnateFrame } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Toggle } from '@/components/ui/toggle'
@@ -56,7 +57,7 @@ function ZoneFilter({
 }) {
   const counts = new Map(scene.zones.map((row) => [row.zone, row]))
   return (
-    <div className='pointer-events-auto flex max-w-xs min-w-0 flex-col gap-2 rounded-xl border bg-popover/90 p-3 shadow-lg backdrop-blur-sm'>
+    <div className='pointer-events-auto flex max-w-xs min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3 shadow-lg backdrop-blur-sm'>
       <Text variant='caption' tone='muted'>
         Zones
       </Text>
@@ -176,9 +177,9 @@ function CityBody({
       <section
         ref={stage}
         aria-label={`City of ${scene.town.name}`}
-        className='relative flex min-w-0 scroll-mt-16 flex-col border-b'
+        className='relative flex min-w-0 scroll-mt-16 flex-col'
       >
-        <div className='relative h-scene min-w-0 overflow-hidden bg-card lg:h-scene-lg'>
+        <div className='scene-frame relative h-scene min-w-0 overflow-hidden bg-card lg:h-scene-lg'>
           {empty ? (
             <div className='flex h-full items-center justify-center p-6'>
               <EmptyState
@@ -206,7 +207,7 @@ function CityBody({
           )}
           <div className='pointer-events-none absolute top-3 bottom-3 left-3 flex w-full max-w-md min-w-0 flex-col gap-2 overflow-y-auto'>
             {moving !== null && (
-              <div className='pointer-events-auto flex items-center gap-2 rounded-xl border border-primary bg-popover/95 p-3 shadow-lg'>
+              <div className='pointer-events-auto flex items-center gap-2 rounded-md border surface-framed border-primary bg-card p-3 shadow-lg'>
                 <Text variant='caption'>
                   Pick the hex the district moves to.
                 </Text>
@@ -284,132 +285,137 @@ function CityBody({
           <CityLegend scene={scene} />
         </div>
       </section>
-      <div className='flex min-w-0 flex-col gap-4 p-4 md:p-6'>
-        <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6'>
-          <KpiTile
-            label='People'
-            value={scene.population}
-            icon={Users}
-            tone='info'
-          />
-          <KpiTile label='Homes' value={homes} icon={Home} tone='success' />
-          <KpiTile
-            label='Homeless'
-            value={scene.homeless}
-            icon={Tent}
-            tone='danger'
-            harmful
-          />
-          <KpiTile
-            label='Districts'
-            value={scene.districts.length}
-            icon={Layers}
-            tone='verdigris'
-          />
-          <KpiTile
-            label='Buildings standing'
-            value={standing}
-            icon={Building2}
-            tone='gold'
-          />
-          <KpiTile
-            label='Walls'
-            value={scene.walls_level}
-            icon={Castle}
-            tone='warning'
-          />
-        </div>
-        <Text variant='caption' tone='muted'>
-          {`A ${scene.tier.replaceAll('_', ' ')}, ${MORPHOLOGIES[scene.morphology].label.toLowerCase()}; walls of level ${scene.walls_level}${scene.walls_radius ? ` ${plural(scene.walls_radius, 'hex', 'hexes')} out` : ''}; roads of level ${scene.roads}; water from ${scene.water.replaceAll('_', ' ')}. Each house drawn stands for ${plural(scene.scale, 'home', 'homes')}, each tent for ${scene.scale} homeless households.`}
-        </Text>
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList aria-label='City panel' className='w-full'>
-            <TabsTrigger value='districts'>{`Districts · ${scene.districts.length}`}</TabsTrigger>
-            <TabsTrigger value='buildings'>{`Buildings · ${scene.buildings.length}`}</TabsTrigger>
-            <TabsTrigger value='build'>Build</TabsTrigger>
-          </TabsList>
-          <TabsContent
-            value='districts'
-            className='flex min-w-0 flex-col gap-2'
-          >
-            {scene.districts.length === 0 && (
-              <Text variant='caption' tone='muted'>
-                No district stands yet; raise one from the Build tab.
-              </Text>
-            )}
-            <PagedList
-              items={scene.districts}
-              initial={8}
-              noun={['district', 'districts']}
-              className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
-              itemKey={(row) => row.id}
+      <div className='p-4 md:p-6'>
+        <OrnateFrame
+          footCrest
+          className='flex min-w-0 flex-col gap-4 px-6 py-8'
+        >
+          <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6'>
+            <KpiTile
+              label='People'
+              value={scene.population}
+              icon={Users}
+              tone='info'
+            />
+            <KpiTile label='Homes' value={homes} icon={Home} tone='success' />
+            <KpiTile
+              label='Homeless'
+              value={scene.homeless}
+              icon={Tent}
+              tone='danger'
+              harmful
+            />
+            <KpiTile
+              label='Districts'
+              value={scene.districts.length}
+              icon={Layers}
+              tone='verdigris'
+            />
+            <KpiTile
+              label='Buildings standing'
+              value={standing}
+              icon={Building2}
+              tone='gold'
+            />
+            <KpiTile
+              label='Walls'
+              value={scene.walls_level}
+              icon={Castle}
+              tone='warning'
+            />
+          </div>
+          <Text variant='caption' tone='muted'>
+            {`A ${scene.tier.replaceAll('_', ' ')}, ${MORPHOLOGIES[scene.morphology].label.toLowerCase()}; walls of level ${scene.walls_level}${scene.walls_radius ? ` ${plural(scene.walls_radius, 'hex', 'hexes')} out` : ''}; roads of level ${scene.roads}; water from ${scene.water.replaceAll('_', ' ')}. Each house drawn stands for ${plural(scene.scale, 'home', 'homes')}, each tent for ${scene.scale} homeless households.`}
+          </Text>
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList aria-label='City panel' className='w-full'>
+              <TabsTrigger value='districts'>{`Districts · ${scene.districts.length}`}</TabsTrigger>
+              <TabsTrigger value='buildings'>{`Buildings · ${scene.buildings.length}`}</TabsTrigger>
+              <TabsTrigger value='build'>Build</TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value='districts'
+              className='flex min-w-0 flex-col gap-2'
             >
-              {(row) => {
-                const spec = DISTRICT_SPEC[row.kind]
-                return (
-                  <RecordRow
-                    icon={spec.icon}
-                    tone={spec.tone ?? 'muted'}
-                    title={`${spec.label} · level ${row.level}`}
-                    caption={`${ZONES[row.zone].label} · ${plural(row.cells.length, 'hex', 'hexes')} · ${plural(row.dwellings, 'home', 'homes')} · desirability ${row.desirability}`}
-                    aside={
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        onClick={() => show({ kind: 'district', id: row.id })}
-                      >
-                        Rule it
-                      </Button>
-                    }
-                  />
-                )
-              }}
-            </PagedList>
-          </TabsContent>
-          <TabsContent
-            value='buildings'
-            className='flex min-w-0 flex-col gap-2'
-          >
-            {scene.buildings.length === 0 && (
-              <Text variant='caption' tone='muted'>
-                No building stands yet; begin one from the Build tab.
-              </Text>
-            )}
-            <PagedList
-              items={scene.buildings}
-              initial={8}
-              noun={['building', 'buildings']}
-              className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
-              itemKey={(row) => row.node.id}
+              {scene.districts.length === 0 && (
+                <Text variant='caption' tone='muted'>
+                  No district stands yet; raise one from the Build tab.
+                </Text>
+              )}
+              <PagedList
+                items={scene.districts}
+                initial={8}
+                noun={['district', 'districts']}
+                className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
+                itemKey={(row) => row.id}
+              >
+                {(row) => {
+                  const spec = DISTRICT_SPEC[row.kind]
+                  return (
+                    <RecordRow
+                      icon={spec.icon}
+                      tone={spec.tone ?? 'muted'}
+                      title={`${spec.label} · level ${row.level}`}
+                      caption={`${ZONES[row.zone].label} · ${plural(row.cells.length, 'hex', 'hexes')} · ${plural(row.dwellings, 'home', 'homes')} · desirability ${row.desirability}`}
+                      aside={
+                        <Button
+                          size='sm'
+                          variant='outline'
+                          onClick={() => show({ kind: 'district', id: row.id })}
+                        >
+                          Rule the district
+                        </Button>
+                      }
+                    />
+                  )
+                }}
+              </PagedList>
+            </TabsContent>
+            <TabsContent
+              value='buildings'
+              className='flex min-w-0 flex-col gap-2'
             >
-              {(row) => {
-                const spec = KIND_SPEC[row.kind]
-                return (
-                  <RecordRow
-                    icon={spec.icon}
-                    tone={spec.tone ?? 'muted'}
-                    title={<Ref node={row.node} />}
-                    caption={`${spec.label} · ${ZONES[row.zone].label} · ${STATES[row.state]}`}
-                    aside={
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        onClick={() =>
-                          show({ kind: 'building', id: row.node.id })
-                        }
-                      >
-                        Rule it
-                      </Button>
-                    }
-                  />
-                )
-              }}
-            </PagedList>
-          </TabsContent>
-          <TabsContent value='build' className='flex min-w-0 flex-col gap-2'>
-            <BuildForge scene={scene} blocked={blocked} />
-          </TabsContent>
-        </Tabs>
+              {scene.buildings.length === 0 && (
+                <Text variant='caption' tone='muted'>
+                  No building stands yet; begin one from the Build tab.
+                </Text>
+              )}
+              <PagedList
+                items={scene.buildings}
+                initial={8}
+                noun={['building', 'buildings']}
+                className='grid min-w-0 grid-cols-1 gap-2 lg:grid-cols-2'
+                itemKey={(row) => row.node.id}
+              >
+                {(row) => {
+                  const spec = KIND_SPEC[row.kind]
+                  return (
+                    <RecordRow
+                      icon={spec.icon}
+                      tone={spec.tone ?? 'muted'}
+                      title={<Ref node={row.node} />}
+                      caption={`${spec.label} · ${ZONES[row.zone].label} · ${STATES[row.state]}`}
+                      aside={
+                        <Button
+                          size='sm'
+                          variant='outline'
+                          onClick={() =>
+                            show({ kind: 'building', id: row.node.id })
+                          }
+                        >
+                          Rule the building
+                        </Button>
+                      }
+                    />
+                  )
+                }}
+              </PagedList>
+            </TabsContent>
+            <TabsContent value='build' className='flex min-w-0 flex-col gap-2'>
+              <BuildForge scene={scene} blocked={blocked} />
+            </TabsContent>
+          </Tabs>
+        </OrnateFrame>
       </div>
     </>
   )

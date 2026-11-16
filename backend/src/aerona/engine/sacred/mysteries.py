@@ -113,7 +113,7 @@ async def become_mystic(ctx: TickContext, mortal: EntityRow, sender: int | None,
     await ctx.session.flush()
     tally.mystics += 1
     await see_vision(ctx, row, mortal, sender, tally)
-    await note(ctx, f"{mortal.name} was seized by a vision.", key="sacred.mystic", ids=[mortal.id])
+    await note(ctx, f"{mortal.name} had a vision.", key="sacred.mystic", ids=[mortal.id])
     return row
 
 

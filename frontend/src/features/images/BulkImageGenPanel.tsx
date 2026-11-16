@@ -206,7 +206,7 @@ export function BulkImageGenPanel() {
                     {(item, index) => (
                       <li
                         key={`${item.node_id}-${item.queued_at}`}
-                        className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border bg-muted/20 px-2 py-1'
+                        className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 px-2 py-1'
                       >
                         <Badge size='sm' variant='outline'>
                           {formatInteger(index + 1)}

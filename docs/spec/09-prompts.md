@@ -2434,7 +2434,7 @@ Schema description string (in deepening schema `gucler`): `"The god's powers; ea
 | bereketli | Bountiful | When friendly, prosperity added to worshippers ×{bounty/100}. | YABANCI.guc_bereket |
 | dirilen | Returning | When defeated, wake time drops to {return}%. | YABANCI.guc_dirilis |
 | olumsuz | Deathless | Even in a crushing defeat it does not die; it is only laid low. | — |
-| sozu_keskin | Sharp-tongued | The roll of a son who talks with it −{sharp}. | YABANCI.guc_soz |
+| sozu_keskin | Persuasive | The roll of a son who talks with it −{sharp}. | YABANCI.guc_soz |
 
 ### `fragment.foreign_god.personality` (YT_KISILIK) — schema property descriptions are `"{label}; 1–2 sentences, concrete"`
 | key | label (TR) | English label |
@@ -2493,7 +2493,7 @@ Schema description string (in deepening schema `gucler`): `"The god's powers; ea
 | destroyer | guc_yikici | 15 | 0 | 100 | Foreign gods | Destroyer power: added hostile-act chance (%) |
 | bounty | guc_bereket | 200 | 100 | 10000 | Foreign gods | Bountiful power: friendly prosperity multiplier (%) |
 | return | guc_dirilis | 50 | 1 | 100 | Foreign gods | Returning power: % of wake time after defeat |
-| sharp | guc_soz | 15 | 0 | 500 | Foreign gods | Sharp-tongued power: subtracted from talking son's roll |
+| sharp | guc_soz | 15 | 0 | 500 | Foreign gods | Persuasive power: subtracted from talking son's roll |
 | deepen_chronicle | derin_kronik | 40 | 0 | 10000 | Foreign gods | Chronicle lines mentioning its name given to the model when deepening |
 
 ---

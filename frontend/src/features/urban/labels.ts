@@ -1,4 +1,26 @@
 import {
+  Wine,
+  Swords,
+  FileWarning,
+  Database,
+  Backpack,
+  Footprints,
+  Car,
+  Plane,
+  Cable,
+  ArrowUpFromLine,
+  PawPrint,
+  Network,
+  Zap,
+  HandHeart,
+  TreePine,
+  Library,
+  Landmark,
+  Warehouse,
+  Drama,
+  Droplets,
+  TrainFront,
+  RadioTower,
   Bath,
   BookOpen,
   Building,
@@ -70,6 +92,23 @@ export const SERVICES: Record<Schema['UrbanService'], Named> = {
   school: { label: 'School', icon: BookOpen, tone: 'verdigris' },
   bath: { label: 'Baths', icon: Bath, tone: 'info' },
   fire: { label: 'Fire brigade', icon: Flame, tone: 'danger' },
+  sanitation: { label: 'Sewers and waste', icon: Droplets, tone: 'info' },
+  transport: { label: 'Transport', icon: TrainFront, tone: 'muted' },
+  communication: {
+    label: 'Communication',
+    icon: RadioTower,
+    tone: 'verdigris',
+  },
+  power: { label: 'Power', icon: Zap, tone: 'warning' },
+  courts: { label: 'Courts', icon: Scale, tone: 'info' },
+  welfare: { label: 'Welfare', icon: HandHeart, tone: 'verdigris' },
+  granary: { label: 'Granaries', icon: Wheat, tone: 'success' },
+  parks: { label: 'Parks', icon: TreePine, tone: 'success' },
+  library: { label: 'Libraries', icon: Library, tone: 'info' },
+  burial: { label: 'Burial', icon: Landmark, tone: 'muted' },
+  depot: { label: 'Depots', icon: Warehouse, tone: 'muted' },
+  administration: { label: 'Administration', icon: Building2, tone: 'info' },
+  entertainment: { label: 'Entertainment', icon: Drama, tone: 'gold' },
 }
 
 export const MORPHOLOGIES: Record<Schema['Morphology'], Named> = {
@@ -88,6 +127,13 @@ export const RACKETS: Record<Schema['RacketKind'], Named> = {
   fencing: { label: 'Fencing', icon: Coins, tone: 'muted' },
   kidnapping: { label: 'Kidnapping', icon: UserX, tone: 'danger' },
   counterfeiting: { label: 'Counterfeiting', icon: Repeat, tone: 'warning' },
+  fraud: { label: 'Fraud', icon: FileWarning, tone: 'danger' },
+  extortion: { label: 'Extortion', icon: HandCoins, tone: 'danger' },
+  trafficking: { label: 'Trafficking', icon: Truck, tone: 'danger' },
+  intoxicants: { label: 'Intoxicants', icon: Wine, tone: 'danger' },
+  data_theft: { label: 'Data theft', icon: Database, tone: 'danger' },
+  loan_sharking: { label: 'Loan sharking', icon: Coins, tone: 'danger' },
+  arms: { label: 'Arms', icon: Swords, tone: 'danger' },
 }
 
 export const STANCES: Record<Schema['CrimeStance'], Named> = {
@@ -142,10 +188,25 @@ export const PRESERVATION: Record<Schema['Preservation'], Named> = {
 }
 
 export const TRANSPORT: Record<Schema['TransportKind'], Named> = {
-  pack_animals: { label: 'Pack animals', icon: Truck, tone: 'muted' },
-  wagons: { label: 'Wagons', icon: Truck, tone: 'info' },
-  river_boats: { label: 'River boats', icon: Sailboat, tone: 'info' },
-  ships: { label: 'Ships', icon: Ship, tone: 'gold' },
+  porters: { label: 'Porters', icon: Backpack, tone: 'muted' },
+  pack_animals: { label: 'Pack animals', icon: Footprints, tone: 'success' },
+  animal_carts: { label: 'Animal carts', icon: Truck, tone: 'gold' },
+  rail: { label: 'Rail', icon: TrainFront, tone: 'info' },
+  road_motor: { label: 'Motor transport', icon: Car, tone: 'info' },
+  river_and_canal: {
+    label: 'River and canal boats',
+    icon: Sailboat,
+    tone: 'info',
+  },
+  sea: { label: 'Sea ships', icon: Ship, tone: 'verdigris' },
+  air: { label: 'Aircraft', icon: Plane, tone: 'warning' },
+  pipeline: { label: 'Pipelines', icon: Cable, tone: 'muted' },
+  orbital_lift: { label: 'Orbital lifts', icon: ArrowUpFromLine, tone: 'gold' },
+  space: { label: 'Space freighters', icon: Rocket, tone: 'gold' },
+  teleport: { label: 'Teleport', icon: Zap, tone: 'verdigris' },
+  living: { label: 'Living carriers', icon: PawPrint, tone: 'success' },
+  rite: { label: 'Bound conveyance', icon: Sparkles, tone: 'verdigris' },
+  network: { label: 'Networks', icon: Network, tone: 'info' },
 }
 
 export const PLAYS: Record<Schema['MarketPlay'], Named> = {

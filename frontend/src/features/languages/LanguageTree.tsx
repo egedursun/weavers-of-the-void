@@ -14,10 +14,12 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
+  AsideLayout,
   EmptyState,
   EntityLink,
   Medallion,
   MiniStat,
+  Paged,
   PagedList,
   Section,
 } from '@/components/domain'
@@ -120,7 +122,7 @@ function CognateRow({
   cognate: LanguageNode['cognates'][number]
 }) {
   return (
-    <li className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'>
+    <li className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
       <span className='flex min-w-0 flex-1 flex-col'>
         <Text as='span' weight='semibold' className='font-display' truncate>
           {cognate.first_word}
@@ -161,7 +163,7 @@ function LanguageDetail({
   const { parent, daughters } = relativesOf(nodes, self.language.id)
   const chain = useMemo(() => chainOf(nodes, self), [nodes, self])
   return (
-    <div className='flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4'>
+    <div className='flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4'>
       <div className='flex min-w-0 items-start gap-3'>
         <LanguageSeal
           name={self.language.name}
@@ -260,9 +262,9 @@ function LanguageDetail({
               : 'Shared roots'}
           </Label>
           <ul className='flex min-w-0 flex-col gap-1.5'>
-            {self.cognates.map((cognate, index) => (
-              <CognateRow key={index} cognate={cognate} />
-            ))}
+            <Paged items={self.cognates} as='li'>
+              {(cognate, index) => <CognateRow key={index} cognate={cognate} />}
+            </Paged>
           </ul>
         </div>
       )}
@@ -313,20 +315,32 @@ export function LanguageTree({
   const self = nodes.find((node) => node.language.id === chosen)
   return (
     <div className='flex min-w-0 flex-col gap-6'>
-      <div className='grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-3'>
-        <div className='flex min-w-0 flex-col gap-6 xl:col-span-2'>
-          {ordered.length > 0 && (
-            <Section
-              id='languages-families'
-              title='Families'
-              description='Each tongue gave birth to the ones on its right. The lit line is the lineage of the chosen language.'
-              level={3}
-            >
-              <ul className='flex min-w-0 flex-col gap-4'>
-                {ordered.map((family) => (
+      <AsideLayout
+        aside={
+          self && (
+            <LanguageDetail
+              nodes={nodes}
+              covers={covers}
+              self={self}
+              onSelect={onSelect}
+              onOpenDictionary={onOpenDictionary}
+            />
+          )
+        }
+      >
+        {ordered.length > 0 && (
+          <Section
+            id='languages-families'
+            title='Families'
+            description='Each tongue gave birth to the ones on its right. The lit line is the lineage of the chosen language.'
+            level={3}
+          >
+            <ul className='flex min-w-0 flex-col gap-4'>
+              <Paged items={ordered} as='li'>
+                {(family) => (
                   <li
                     key={family.node.language.id}
-                    className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'
+                    className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
                   >
                     <div className='flex min-w-0 flex-wrap items-center gap-3'>
                       <Medallion icon={GitBranch} tone='verdigris' size='sm' />
@@ -353,19 +367,21 @@ export function LanguageTree({
                       onSelect={onSelect}
                     />
                   </li>
-                ))}
-              </ul>
-            </Section>
-          )}
-          {loners.length > 0 && (
-            <Section
-              id='languages-loners'
-              title='Isolates'
-              description='Tongues with no known mother and no daughters yet.'
-              level={3}
-            >
-              <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3'>
-                {loners.map((node) => (
+                )}
+              </Paged>
+            </ul>
+          </Section>
+        )}
+        {loners.length > 0 && (
+          <Section
+            id='languages-loners'
+            title='Isolates'
+            description='Tongues with no known mother and no daughters yet.'
+            level={3}
+          >
+            <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3'>
+              <Paged items={loners} as='li'>
+                {(node) => (
                   <li key={node.language.id} className='min-w-0'>
                     <IsolateCard
                       node={node}
@@ -374,23 +390,12 @@ export function LanguageTree({
                       onSelect={() => onSelect(node.language.id)}
                     />
                   </li>
-                ))}
-              </ul>
-            </Section>
-          )}
-        </div>
-        {self && (
-          <div className='min-w-0 xl:sticky xl:top-topbar xl:self-start'>
-            <LanguageDetail
-              nodes={nodes}
-              covers={covers}
-              self={self}
-              onSelect={onSelect}
-              onOpenDictionary={onOpenDictionary}
-            />
-          </div>
+                )}
+              </Paged>
+            </ul>
+          </Section>
         )}
-      </div>
+      </AsideLayout>
       {self && (
         <LanguageShaper
           key={self.language.id}

@@ -121,7 +121,7 @@ export function CouncilBlock({ showAll = false }: { showAll?: boolean }) {
         </div>
       )}
       <form
-        className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-4'
+        className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
         onSubmit={(event) => {
           event.preventDefault()
           if (!blocked) convene.mutate()

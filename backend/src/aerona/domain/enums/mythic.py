@@ -42,15 +42,6 @@ class MantlingState(StrEnum):
     FAILED = "failed"
 
 
-class ServitorRank(StrEnum):
-    HERALD = "herald"
-    GUARDIAN = "guardian"
-    ANGEL = "angel"
-    FURY = "fury"
-    PSYCHOPOMP = "psychopomp"
-    CHOIR = "choir"
-
-
 class ServitorOrigin(StrEnum):
     MADE = "made"
     RAISED = "raised"
@@ -63,6 +54,12 @@ class ServitorRole(StrEnum):
     JUDGE = "judge"
     HOST = "host"
     SPY = "spy"
+    AGENT = "agent"
+    AVENGER = "avenger"
+    GUIDE_OF_SOULS = "guide_of_souls"
+    WORSHIPPER = "worshipper"
+    WARDEN = "warden"
+    SCRIBE = "scribe"
 
 
 class GeasMode(StrEnum):

@@ -1,7 +1,9 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
+from aerona.core.total import total
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.genetics import GIFT_LOCI, DwellingKind, GiftStance, HouseholdDecision, HouseholdRole, Locus, LocusGroup
+from aerona.domain.enums.genetics import DwellingKind, GiftStance, HouseholdDecision, HouseholdRole, Locus, LocusGroup
 from aerona.domain.enums.society import SocialClass
 
 
@@ -38,6 +40,28 @@ def looks(locus: Locus, label: str, noun: str, alleles: tuple[Allele, ...], *, g
 
 def leaning(locus: Locus, label: str, alleles: tuple[Allele, ...], *, visible: bool = False) -> LocusSpec:
     return LocusSpec(locus, label, LocusGroup.PREDISPOSITION, alleles, visible=visible)
+
+
+GIFT_LOCI: Mapping[MagicSchool, Locus] = total(
+    MagicSchool,
+    {
+        MagicSchool.ELEMENTAL_FIRE: Locus.GIFT_ELEMENTAL_FIRE,
+        MagicSchool.ELEMENTAL_WATER: Locus.GIFT_ELEMENTAL_WATER,
+        MagicSchool.EARTH: Locus.GIFT_EARTH,
+        MagicSchool.STORM: Locus.GIFT_STORM,
+        MagicSchool.LIFE: Locus.GIFT_LIFE,
+        MagicSchool.DEATH: Locus.GIFT_DEATH,
+        MagicSchool.MIND: Locus.GIFT_MIND,
+        MagicSchool.ILLUSION: Locus.GIFT_ILLUSION,
+        MagicSchool.DIVINATION: Locus.GIFT_DIVINATION,
+        MagicSchool.WARDING: Locus.GIFT_WARDING,
+        MagicSchool.BINDING: Locus.GIFT_BINDING,
+        MagicSchool.SUMMONING: Locus.GIFT_SUMMONING,
+        MagicSchool.BLOOD: Locus.GIFT_BLOOD,
+        MagicSchool.VOID: Locus.GIFT_VOID,
+    },
+)
+SCHOOL_OF_LOCUS: Mapping[Locus, MagicSchool] = {locus: school for school, locus in GIFT_LOCI.items()}
 
 
 def gift(school: MagicSchool) -> LocusSpec:

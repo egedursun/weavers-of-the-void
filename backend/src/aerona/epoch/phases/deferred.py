@@ -33,7 +33,7 @@ async def deferred_worlds(ec: EpochContext) -> None:
         return
     async with ec.database.read() as session:
         status = await step_status(session, ec.epoch, EpochStepKind.WORLD_BIRTH)
-    if status is not None and status is not EpochStepStatus.RUNNING:
+    if status not in {None, EpochStepStatus.RUNNING, EpochStepStatus.PENDING}:
         await name_pending(ec)
         return
     await ec.mark(EpochStepKind.WORLD_BIRTH, EpochStepStatus.RUNNING)

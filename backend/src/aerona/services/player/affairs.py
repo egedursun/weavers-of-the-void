@@ -511,7 +511,7 @@ async def edit_court(scope: PlayerScope, command: EditCourt) -> Effect:
         raise ValidationFailedError("Set a grandeur or a count of courtiers.")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"The court of {found.name} shines at grandeur {row.grandeur}.", target_node_id=found.id)
+    return Effect(f"The court of {found.name} now stands at grandeur {row.grandeur}.", target_node_id=found.id)
 
 
 @player_action("position:set", ActionKind.EDIT_RECORD)

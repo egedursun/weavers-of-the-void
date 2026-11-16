@@ -122,7 +122,9 @@ def python_violations(path: Path, text: str) -> list[Violation]:
             found.append(Violation(relative, token.start[0], "fixed article before a placeholder; use an(), {name:an} or | an"))
     for number, raw in enumerate(text.splitlines(), start=1):
         if NAIVE_SINGULAR.search(raw):
-            found.append(Violation(relative, number, "rstrip('s') strips every trailing s and leaves 'entrie' for 'entries'; use singular() from aerona.core.grammar"))
+            found.append(
+                Violation(relative, number, "rstrip('s') strips every trailing s and leaves 'entrie' for 'entries'; use singular() from aerona.core.grammar")
+            )
     tree = ast.parse(text)
     for line, name in shadowed_guards(tree, guard_imports(tree)):
         found.append(Violation(relative, line, f"{name} is bound here and hides the hold guard of the same name; give it a name of its own"))

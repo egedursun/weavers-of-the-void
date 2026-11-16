@@ -25,6 +25,13 @@ class VehicleKind(StrEnum):
     SHIP = "ship"
     MOUNT = "mount"
     BRIDGE = "bridge"
+    RAIL = "rail"
+    ROAD_VEHICLE = "road_vehicle"
+    AIRCRAFT = "aircraft"
+    TELEPORT = "teleport"
+    LIVING = "living"
+    RIFT = "rift"
+    ON_FOOT = "on_foot"
 
 
 class JourneyIntent(StrEnum):
@@ -63,6 +70,9 @@ class JourneyEventKind(StrEnum):
     CROSSING = "crossing"
     PROVISIONS = "provisions"
     OTHER = "other"
+    ENCOUNTER = "encounter"
+    BIRTH = "birth"
+    DEATH = "death"
 
 
 class HorizonStatus(StrEnum):
@@ -94,3 +104,29 @@ class RouteState(StrEnum):
     UNSTABLE = "unstable"
     FORGOTTEN = "forgotten"
     WORN = "worn"
+
+
+class RouteEnvironment(StrEnum):
+    SEA = "sea"
+    LAND = "land"
+    AIR = "air"
+    SPACE = "space"
+    RIFT = "rift"
+    NETWORK = "network"
+
+
+class EncounterEffect(StrEnum):
+    ATTACK = "attack"
+    HAZARD = "hazard"
+    DELAY = "delay"
+    STRAYING = "straying"
+    FIND = "find"
+    TOLL = "toll"
+    SICKNESS = "sickness"
+    DESERTION = "desertion"
+
+
+class ArrivalOutcome(StrEnum):
+    SETTLERS = "settlers"
+    REFUGEES = "refugees"
+    INVADERS = "invaders"

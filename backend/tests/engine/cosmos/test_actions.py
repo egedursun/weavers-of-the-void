@@ -7,13 +7,15 @@ from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.foreign_gods import OuterBargainRow
 from aerona.db.tables.routes import JourneyRow
 from aerona.domain.enums.entity import CivilizationTier, EntityStatus, EntityType
+from aerona.domain.enums.horror import HorrorTarget
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import JourneyIntent, RouteClosure, TravelMethod
-from aerona.domain.enums.world import HorrorEventKind, SkyEventKind
+from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import OuterBeingStats, PeopleStats, SpeciesStats
 from aerona.domain.models.profiles import TravelResource
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.actions import bargain_with_outer, cleanse_leak, seal_gate
+from aerona.engine.cosmos.horror_model import HORROR_PRESETS
 from aerona.engine.cosmos.resources import define_cosmic_resource
 from aerona.engine.phases.civilization import set_tier
 from aerona.engine.phases.creatures import cross_species, force_mutation
@@ -70,8 +72,8 @@ async def test_manual_services(session: AsyncSession, cosmos: Cosmos, rules: Rul
     assert mutant.id != chimera.id
     eclipse = await order_sky_event(session, rules, SkyEventKind.ECLIPSE, SkyOrder(world_id=other.id, by="Aeron"))
     assert eclipse.world_id == other.id
-    eye = await order_horror_event(session, rules, other.id, HorrorEventKind.EYE_IN_THE_SKY)
-    assert "eye" in eye
+    row, eye = await order_horror_event(session, rules, other.id, HORROR_PRESETS["minds_marked"])
+    assert row.target is HorrorTarget.MINDS and other.name in eye
     son = await make_son(session, "Velan", cosmos.home.id)
     assert (await set_son_sanity(session, son.id, 150)).sanity == 100
     resource = await define_cosmic_resource(session, TravelResource(name="Starglass", rule="Melt to fold."))

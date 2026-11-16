@@ -41,7 +41,7 @@ export function ErrorScreen({
           {APP_NAME}
         </Text>
       </div>
-      <section className='relative flex w-full max-w-lg min-w-0 flex-col items-center gap-4 rounded-xl border bg-card p-8 shadow-lg'>
+      <section className='relative flex w-full max-w-lg min-w-0 flex-col items-center gap-4 rounded-md border surface-framed border-gild/70 bg-card p-8 shadow-lg'>
         <Medallion icon={icon} tone='warning' />
         <Label variant='overline'>{`Error ${code}`}</Label>
         <PageTitle>{title}</PageTitle>

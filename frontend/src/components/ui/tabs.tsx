@@ -34,7 +34,7 @@ function TabsList({
         data-slot='tabs-list'
         data-control-size={size}
         className={cn(
-          'no-scrollbar inline-flex w-fit max-w-full items-center justify-start gap-0.5 overflow-x-auto rounded-lg bg-muted p-0.5 text-muted-foreground',
+          'no-scrollbar inline-flex w-fit max-w-full items-center justify-start gap-0.5 overflow-x-auto rounded-md plate-track p-0.5 text-muted-foreground',
           controlHeight[size],
           controlText,
           className
@@ -70,10 +70,10 @@ function TabsTrigger({
       }}
       data-slot='tabs-trigger'
       className={cn(
-        'inline-flex h-full flex-1 shrink-0 basis-auto items-center justify-center gap-1.5 rounded-md border border-transparent px-3 font-medium whitespace-nowrap text-muted-foreground transition-[color,background-color,box-shadow] outline-none',
+        'inline-flex h-full flex-1 shrink-0 basis-auto items-center justify-center gap-1.5 rounded-md border border-transparent px-3 font-medium whitespace-nowrap text-foreground/80 transition-[color,background-color,box-shadow] outline-none',
         'hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50',
-        'data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs',
-        '[&_svg]:pointer-events-none [&_svg]:shrink-0',
+        'data-[state=active]:plate-active',
+        '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:text-gild/85',
         controlIcon[size],
         className
       )}

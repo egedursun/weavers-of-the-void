@@ -4,11 +4,11 @@ import { cn } from '@/lib/utils'
 import { Label, Text } from '@/components/typography'
 
 const TONE_CLASS = {
-  default: 'border-border bg-muted text-muted-foreground',
-  primary: 'border-primary/30 bg-primary/12 text-primary',
-  success: 'border-success/30 bg-success/12 text-success',
-  warning: 'border-warning/30 bg-warning/12 text-warning',
-  destructive: 'border-destructive/30 bg-destructive/12 text-destructive',
+  default: 'gem-muted',
+  primary: 'gem-gold',
+  success: 'gem-success',
+  warning: 'gem-warning',
+  destructive: 'gem-danger',
 } as const
 
 export type TimelineTone = keyof typeof TONE_CLASS
@@ -55,22 +55,19 @@ export function TimelineItem({
       className='grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-3'
     >
       <div className='flex flex-col items-center'>
-        <span
-          className={cn(
-            'flex size-control-sm shrink-0 items-center justify-center rounded-full border',
-            TONE_CLASS[tone]
-          )}
-        >
+        <span className={cn('medallion size-control-sm', TONE_CLASS[tone])}>
           <Icon aria-hidden='true' className='size-icon-sm' />
         </span>
-        {!last && <span aria-hidden='true' className='w-px flex-1 bg-border' />}
+        {!last && (
+          <span aria-hidden='true' className='w-px flex-1 bg-gild/30' />
+        )}
       </div>
       <div className={cn('flex min-w-0 flex-col', !last && 'pb-4')}>
         <div
           className={cn(
             'flex min-w-0 flex-col gap-1',
             framed &&
-              'rounded-lg border bg-background/60 px-3 py-2 transition-colors hover:bg-accent/40'
+              'rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2 transition-colors hover:bg-accent/40'
           )}
         >
           <div className='flex min-h-control-sm min-w-0 items-center gap-2'>

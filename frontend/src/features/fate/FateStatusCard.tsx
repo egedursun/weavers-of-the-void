@@ -4,7 +4,7 @@ import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Section } from '@/components/domain'
+import { Paged, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { FateJobRow } from './FateJobRow'
 import { type FateControls, useFateControls } from './api'
@@ -80,9 +80,11 @@ export function FateStatusCard() {
       {controls.data && !calm && <Summary controls={controls.data} />}
       {controls.data && jobs.length > 0 && (
         <ul className='flex min-w-0 flex-col'>
-          {jobs.map((job) => (
-            <FateJobRow key={job.action} job={job} controls={controls.data} />
-          ))}
+          <Paged items={jobs} as='li'>
+            {(job) => (
+              <FateJobRow key={job.action} job={job} controls={controls.data} />
+            )}
+          </Paged>
         </ul>
       )}
     </Section>

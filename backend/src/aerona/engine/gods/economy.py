@@ -609,12 +609,12 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     economy = ctx.rules.economy
     travel = ctx.rules.travel
     rng = ctx.rng("pirates")
-    pirates = await faction_kind(ctx.session, EngineKind.VOID_PIRATES)
+    pirates = await faction_kind(ctx.session, EngineKind.ROUTE_RAIDERS)
     if len(pirates) < economy.pirate_max and traffic >= economy.pirate_min_traffic and rng.chance(economy.pirate_chance):
         regions = await open_regions(ctx.session)
         if regions:
             region = max(regions, key=lambda entity: (trait_or(entity, Trait.DANGER, 0), -entity.id))
-            pirates.append(await found_faction(ctx, EngineKind.VOID_PIRATES, region))
+            pirates.append(await found_faction(ctx, EngineKind.ROUTE_RAIDERS, region))
     routes = [route for route in await passable_routes(ctx.session) if route.method in PIRATE_METHODS]
     for route in routes:
         if pirates:

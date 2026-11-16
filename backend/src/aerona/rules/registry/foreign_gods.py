@@ -53,7 +53,7 @@ class ForeignGodsRules:
     power_destroyer: int = rule(15, 0, 100, RuleGroup.FOREIGN_GODS, "Destroyer power: added to the chance of a hostile action (%)")
     power_bountiful: int = rule(200, 100, 10000, RuleGroup.FOREIGN_GODS, "Bountiful power: multiplier of the friendly prosperity contribution (%)")
     power_reviving: int = rule(50, 1, 100, RuleGroup.FOREIGN_GODS, "Reviving power: percentage of the wake-up time after defeat")
-    power_sharp_tongue: int = rule(15, 0, 500, RuleGroup.FOREIGN_GODS, "Sharp-tongued power: subtracted from the die of a son talking with it")
+    power_persuasion: int = rule(15, 0, 500, RuleGroup.FOREIGN_GODS, "Persuasive power: subtracted from the die of a son talking with it")
     action_full_faith: int = rule(
         10,
         1,

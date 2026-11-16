@@ -266,24 +266,26 @@ export function PowerBalance({
           </svg>
         )}
         <ul className='flex min-w-0 flex-1 flex-col gap-1.5'>
-          {slices.map((slice, index) => (
-            <li key={slice.id} className='flex min-w-0 items-center gap-2'>
-              <Medallion icon={PieChart} tone={toneAt(index)} size='sm' />
-              <EntityLink kind='entity' id={String(slice.id)}>
-                {slice.name}
-              </EntityLink>
-              {slice.kind && (
-                <Badge size='sm' variant='secondary'>
-                  {plain({}, slice.kind)}
-                </Badge>
-              )}
-              <Badge
-                size='sm'
-                variant='outline'
-                className='ml-auto'
-              >{`${slice.share}%`}</Badge>
-            </li>
-          ))}
+          <Paged items={slices} as='li'>
+            {(slice, index) => (
+              <li key={slice.id} className='flex min-w-0 items-center gap-2'>
+                <Medallion icon={PieChart} tone={toneAt(index)} size='sm' />
+                <EntityLink kind='entity' id={String(slice.id)}>
+                  {slice.name}
+                </EntityLink>
+                {slice.kind && (
+                  <Badge size='sm' variant='secondary'>
+                    {plain({}, slice.kind)}
+                  </Badge>
+                )}
+                <Badge
+                  size='sm'
+                  variant='outline'
+                  className='ml-auto'
+                >{`${slice.share}%`}</Badge>
+              </li>
+            )}
+          </Paged>
         </ul>
       </div>
     </Panel>
@@ -320,7 +322,7 @@ export function LawProtection({
         return (
           <label
             key={key}
-            className='flex min-w-0 items-center gap-2 rounded-md border p-2'
+            className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
           >
             <Medallion
               icon={held ? spec.icon : LockOpen}
@@ -390,7 +392,7 @@ function OfficeEditor({
     (save.isPending || abolish.isPending || release.isPending ? WORKING : null)
   const spec = named(OFFICES, office.kind)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -553,7 +555,7 @@ function CreateOffice({
         <Label>Title</Label>
         <Input
           value={title}
-          placeholder='Lord of the Granaries'
+          placeholder='The title of the office'
           disabled={busy !== null}
           onChange={(event) => setTitle(event.target.value)}
         />
@@ -621,7 +623,7 @@ function Purse({ realm, blocked }: { realm: Realm; blocked: string | null }) {
           {(loan) => (
             <li
               key={loan.id}
-              className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border p-2'
+              className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
             >
               <Medallion
                 icon={Coins}
@@ -863,92 +865,96 @@ function Vassals({ realm, blocked }: { realm: Realm; blocked: string | null }) {
     >
       {terms.length === 0 && <Muted>No realm owes or is owed fealty.</Muted>}
       <ul className='flex min-w-0 flex-col gap-3'>
-        {terms.map((term) => (
-          <li
-            key={term.id}
-            className='flex min-w-0 flex-col gap-2 rounded-md border p-2'
-          >
-            <Fact
-              icon={GitFork}
-              label={term.id === realm.id ? 'Our overlord' : 'Vassal'}
+        <Paged items={terms} as='li'>
+          {(term) => (
+            <li
+              key={term.id}
+              className='flex min-w-0 flex-col gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'
             >
-              <EntityLink
-                kind='entity'
-                id={String(term.id === realm.id ? term.overlord_id : term.id)}
+              <Fact
+                icon={GitFork}
+                label={term.id === realm.id ? 'Our overlord' : 'Vassal'}
               >
-                {term.id === realm.id
-                  ? (realm.overlord?.name ?? '')
-                  : term.name}
-              </EntityLink>
-            </Fact>
-            <div className='grid min-w-0 grid-cols-1 gap-2 @md/realm:grid-cols-3'>
-              <StatBar
-                label='Tribute %'
-                value={term.tribute_pct}
-                max={PERCENT}
-                icon={Coins}
-                tone='default'
-              />
-              <StatBar
-                label='Levy %'
-                value={term.levy_pct}
-                max={PERCENT}
-                icon={Shield}
-                tone='warning'
-              />
-              <StatBar
-                label='Loyalty'
-                value={term.loyalty}
-                max={PERCENT}
-                icon={Crown}
-                tone={term.loyalty < 30 ? 'destructive' : 'success'}
-              />
-            </div>
-            <AdjustPanel
-              trigger='Set terms'
-              title='Set the terms of fealty'
-              note='Each value you set is held until released.'
-            >
-              {(['tribute_pct', 'levy_pct', 'loyalty'] as const).map((key) => (
-                <div key={key} className='flex min-w-0 items-end gap-2'>
-                  <RangeField
-                    label={plain({}, key.replace('_pct', ''))}
-                    icon={
-                      key === 'loyalty'
-                        ? Crown
-                        : key === 'levy_pct'
-                          ? Shield
-                          : Coins
-                    }
-                    value={term[key]}
-                    min={0}
-                    max={PERCENT}
-                    level={`${term[key]}%`}
-                    lowLabel='None'
-                    highLabel='All'
-                    onChange={(value) =>
-                      edit.mutate({ id: term.id, key, value })
-                    }
-                  />
-                  {term.locked.includes(key) && (
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      disabled={busy !== null}
-                      disabledReason={busy ?? 'Choose every field first'}
-                      onClick={() =>
-                        edit.mutate({ id: term.id, key, value: null })
-                      }
-                    >
-                      <LockOpen />
-                      Release
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </AdjustPanel>
-          </li>
-        ))}
+                <EntityLink
+                  kind='entity'
+                  id={String(term.id === realm.id ? term.overlord_id : term.id)}
+                >
+                  {term.id === realm.id
+                    ? (realm.overlord?.name ?? '')
+                    : term.name}
+                </EntityLink>
+              </Fact>
+              <div className='grid min-w-0 grid-cols-1 gap-2 @md/realm:grid-cols-3'>
+                <StatBar
+                  label='Tribute %'
+                  value={term.tribute_pct}
+                  max={PERCENT}
+                  icon={Coins}
+                  tone='default'
+                />
+                <StatBar
+                  label='Levy %'
+                  value={term.levy_pct}
+                  max={PERCENT}
+                  icon={Shield}
+                  tone='warning'
+                />
+                <StatBar
+                  label='Loyalty'
+                  value={term.loyalty}
+                  max={PERCENT}
+                  icon={Crown}
+                  tone={term.loyalty < 30 ? 'destructive' : 'success'}
+                />
+              </div>
+              <AdjustPanel
+                trigger='Set terms'
+                title='Set the terms of fealty'
+                note='Each value you set is held until released.'
+              >
+                {(['tribute_pct', 'levy_pct', 'loyalty'] as const).map(
+                  (key) => (
+                    <div key={key} className='flex min-w-0 items-end gap-2'>
+                      <RangeField
+                        label={plain({}, key.replace('_pct', ''))}
+                        icon={
+                          key === 'loyalty'
+                            ? Crown
+                            : key === 'levy_pct'
+                              ? Shield
+                              : Coins
+                        }
+                        value={term[key]}
+                        min={0}
+                        max={PERCENT}
+                        level={`${term[key]}%`}
+                        lowLabel='None'
+                        highLabel='All'
+                        onChange={(value) =>
+                          edit.mutate({ id: term.id, key, value })
+                        }
+                      />
+                      {term.locked.includes(key) && (
+                        <Button
+                          size='sm'
+                          variant='outline'
+                          disabled={busy !== null}
+                          disabledReason={busy ?? 'Choose every field first'}
+                          onClick={() =>
+                            edit.mutate({ id: term.id, key, value: null })
+                          }
+                        >
+                          <LockOpen />
+                          Release
+                        </Button>
+                      )}
+                    </div>
+                  )
+                )}
+              </AdjustPanel>
+            </li>
+          )}
+        </Paged>
       </ul>
       <AdjustPanel
         trigger='Take a vassal'
@@ -1065,7 +1071,7 @@ export function FoundRealm({ blocked }: { blocked: string | null }) {
         <Label>Name</Label>
         <Input
           value={name}
-          placeholder='The Kingdom of the Salt Coast'
+          placeholder='The name of the realm'
           disabled={busy !== null}
           onChange={(event) => setName(event.target.value)}
         />

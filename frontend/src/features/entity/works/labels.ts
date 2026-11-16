@@ -1,4 +1,14 @@
 import {
+  Fuel,
+  Zap,
+  BatteryCharging,
+  SunMedium,
+  Atom,
+  Orbit,
+  Star,
+  Sprout,
+  Church,
+  CircleDashed,
   Anvil,
   Beef,
   BicepsFlexed,
@@ -31,6 +41,7 @@ import {
   Wind,
   Wine,
 } from 'lucide-react'
+import type { components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
 
 export const WORKS_ICON = Factory
@@ -38,13 +49,30 @@ export const POWER_ICON = BicepsFlexed
 export const STORES_ICON = Snowflake
 export const LAND_ICON = Leaf
 
-export const ENERGY: Record<string, Named> = {
+export const ENERGY: Record<components['schemas']['EnergyKind'], Named> = {
   muscle: { label: 'Muscle', icon: BicepsFlexed, tone: 'gold' },
   water: { label: 'Water', icon: Waves, tone: 'info' },
   wind: { label: 'Wind', icon: Wind, tone: 'verdigris' },
   heat: { label: 'Heat', icon: Flame, tone: 'warning' },
   magic: { label: 'Magic', icon: Sparkles, tone: 'info' },
   divine: { label: 'Divine', icon: Sun, tone: 'gold' },
+  fuel: { label: 'Fuel', icon: Fuel, tone: 'warning' },
+  electric: { label: 'Electric', icon: Zap, tone: 'info' },
+  stored: { label: 'Stored', icon: BatteryCharging, tone: 'info' },
+  solar: { label: 'Solar', icon: SunMedium, tone: 'gold' },
+  geothermal: { label: 'Geothermal', icon: Mountain, tone: 'warning' },
+  tidal: { label: 'Tidal', icon: Waves, tone: 'info' },
+  fission: { label: 'Fission', icon: Atom, tone: 'danger' },
+  fusion: { label: 'Fusion', icon: Orbit, tone: 'gold' },
+  stellar: { label: 'Stellar', icon: Star, tone: 'gold' },
+  source: {
+    label: 'From a source of power',
+    icon: Sparkles,
+    tone: 'verdigris',
+  },
+  feed: { label: 'Living feed', icon: Sprout, tone: 'success' },
+  belief: { label: 'Belief', icon: Church, tone: 'gold' },
+  void: { label: 'Drawn from the leak', icon: CircleDashed, tone: 'muted' },
 }
 
 export const PROCESSES: Record<string, Named> = {

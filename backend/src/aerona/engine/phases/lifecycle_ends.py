@@ -37,7 +37,7 @@ async def lifecycle_ends(ctx: TickContext) -> None:
     count(ctx, "lifecycle_ends", tally)
 
 
-@reads("table.sky_events", "table.stars", "table.world_ends", "table.world_type_profiles", "table.worlds")
+@reads("table.rifts", "table.sky_events", "table.stars", "table.world_ends", "table.world_type_profiles", "table.worlds")
 @writes("table.chronicle", "table.entities", "table.world_ends")
 async def world_ends(ctx: TickContext) -> None:
     tally = EndingTally()

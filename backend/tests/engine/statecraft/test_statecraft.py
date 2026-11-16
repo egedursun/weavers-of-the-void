@@ -3,11 +3,11 @@ from sqlalchemy import select
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import FavourRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow, VassalageRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow, VassalageRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.polity import DecisionRule, GovernmentKind, RegionalStanding, TreatyKind
+from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind, RegionalStanding, TreatyKind
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState, SubjectKind
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import PolityStats
@@ -21,7 +21,7 @@ from aerona.engine.polity.spheres import SphereTally, tend_spheres
 from aerona.engine.polity.subjects import SubjectTally, forbidden_war, kind_for, pays_tribute, sends_levies, tend_subjects
 from aerona.engine.polity.wars import comrades
 from aerona.engine.primitives.distance import RegionAtlas
-from tests.engine.society.factories import Realm, context, make, people, tuned
+from tests.engine.society.factories import Realm, context, make, mortal, people, settlement, tuned
 
 
 async def polity(realm: Realm, name: str, *, treasury: int = 100, standing: RegionalStanding = RegionalStanding.MINOR_POWER) -> tuple[EntityRow, EntityRow]:
@@ -141,6 +141,9 @@ async def test_subjects_become_tributaries_clients_or_protectorates_and_are_defe
     ctx = context(realm.session, tuned(statecraft={"protectorate_tiers": 2}))
     overlord, overlord_core = await polity(realm, "Great Crown")
     vassal, vassal_core = await polity(realm, "Small Crown")
+    lord = await mortal(realm, "Lord of the Small Crown")
+    realm.session.add(OfficeRow(polity_entity_id=vassal.id, kind=OfficeKind.RULER, holder_entity_id=lord.id, locked=[]))
+    await realm.session.flush()
     book = await RealmBook.load(realm.session)
     high, low = book.realms[overlord.id], book.realms[vassal.id]
     assert await kind_for(ctx, book, low, high) is SubjectKind.TRIBUTARY
@@ -150,6 +153,8 @@ async def test_subjects_become_tributaries_clients_or_protectorates_and_are_defe
     await realm.session.delete(await realm.session.get(SphereRow, (overlord.id, vassal.id)))
     for found in (overlord, vassal):
         realm.session.add(PolityTerritoryRow(polity_entity_id=found.id, region_entity_id=realm.region.id, control=80, locked=[]))
+    second_town = await settlement(realm, "Small Crown Market")
+    realm.session.add(PolityMemberRow(polity_entity_id=vassal.id, member_entity_id=second_town.id))
     high.profile.tier, low.profile.tier = 3, 0
     await realm.session.flush()
     book = await RealmBook.load(realm.session)

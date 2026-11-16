@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy import select
 
 from aerona.catalog.bonds import BOND_KINDS
+from aerona.catalog.creature_anatomy import AttackSpec
 from aerona.catalog.domains import match_domain
 from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
 from aerona.catalog.gates import CREATION_GATE_RULES
@@ -24,6 +25,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadStatus
+from aerona.domain.enums.ecology import AttackRange
 from aerona.domain.enums.entity import AGENT_TYPES, LIVING_CREATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitKind, TraitSource
 from aerona.domain.enums.mortal import MortalSex
@@ -32,7 +34,7 @@ from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.body.book import ensure_species_body
-from aerona.engine.ecology.anatomy import beast_anatomy
+from aerona.engine.ecology.anatomy import beast_anatomy, give_attacks
 from aerona.engine.ecology.beasts import profile_beast
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.gods.progress import power_ceiling
@@ -260,7 +262,7 @@ def _traits(call: SonCall, args: CreationInput) -> list[CreatureTrait]:
 
 
 BEAST_ABILITIES = ("endurance", "perception", "willpower", "intelligence")
-BEAST_BODY = ("breath", "gaze", "temperament", "habitat", "awakening", "skin")
+BEAST_BODY = ("temperament", "habitat", "awakening", "skin")
 
 
 async def shape_beast(call: SonCall, args: CreationInput, created: EntityRow) -> None:
@@ -277,10 +279,13 @@ async def shape_beast(call: SonCall, args: CreationInput, created: EntityRow) ->
     if species is not None:
         await BondRepository(call.session).connect(BondDraft(created.id, species.id, BondKind.DESCENDS_FROM, call.epoch, "the greatest of its kind"))
     shaped = {key: args.option(key) for key in BEAST_BODY if args.option(key) is not None}
-    if shaped:
+    delivery, effect = args.option("attack_delivery"), args.option("attack_effect")
+    if shaped or (delivery is not None and effect is not None):
         anatomy = await beast_anatomy(call.tick, created, row)
         for key, value in shaped.items():
             setattr(anatomy, key, value)
+        if delivery is not None and effect is not None:
+            await give_attacks(call.tick, created.id, [AttackSpec(delivery, effect, args.option("attack_range") or AttackRange.NEAR)])
 
 
 def species_spec(args: CreationInput) -> SpeciesSpec:
@@ -596,5 +601,5 @@ def creation_specs() -> list[ToolSpec[SonCall, Any]]:
             flexible_actions=True,
         )
         specs.append(ToolSpec(SonToolId(tool), AgentKind.SON, model, meta, _handler(entity_type)))
-    bond_meta = ToolMeta(ActionKind.WEAVE_BOND, no_cost, essence_cost=lambda rules: rules.son_tools.link_cost)
+    bond_meta = ToolMeta(ActionKind.MAKE_BOND, no_cost, essence_cost=lambda rules: rules.son_tools.link_cost)
     return [ToolSpec(SonToolId.MAKE_BOND, AgentKind.SON, MakeBondInput, bond_meta, make_bond), *specs]

@@ -49,7 +49,7 @@ function TechniqueTile({
       data-surface='EraTechnique'
       data-state={row.held ? 'known' : missing.length ? 'locked' : 'open'}
       className={cn(
-        'flex h-full min-w-0 flex-col gap-2 rounded-lg border p-3',
+        'flex h-full min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3',
         row.held && 'border-primary/50 bg-primary/8 ring-1 ring-primary/20',
         !row.held && missing.length > 0 && 'border-dashed bg-muted/20'
       )}
@@ -158,14 +158,16 @@ export function LadderPanel({
               </Badge>
             </div>
             <ul className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-              {rows.map((row) => (
-                <TechniqueTile
-                  key={row.technique}
-                  row={row}
-                  data={data}
-                  blocked={blocked}
-                />
-              ))}
+              <Paged items={rows} as='li'>
+                {(row) => (
+                  <TechniqueTile
+                    key={row.technique}
+                    row={row}
+                    data={data}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
             </ul>
           </section>
         )

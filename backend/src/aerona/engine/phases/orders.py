@@ -33,6 +33,7 @@ async def saving(ctx: TickContext) -> None:
     "table.exchange_rates",
     "table.goods_flows",
     "table.loans",
+    "table.polity_members",
     "table.trade_route_profiles",
 )
 @writes("table.bills_of_exchange", "table.exchange_rates", "table.loans")

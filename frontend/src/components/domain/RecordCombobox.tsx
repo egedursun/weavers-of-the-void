@@ -83,7 +83,7 @@ export function RecordCombobox({
         <Button
           id={id}
           type='button'
-          variant='outline'
+          variant='field'
           size={size}
           role='combobox'
           aria-expanded={open}

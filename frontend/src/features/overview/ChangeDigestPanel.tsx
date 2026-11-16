@@ -20,6 +20,7 @@ import {
   EmptyState,
   type KpiTone,
   Medallion,
+  Paged,
   Section,
 } from '@/components/domain'
 import { Label, Stat, Text } from '@/components/typography'
@@ -91,7 +92,7 @@ function rowsOf(tally: ChangeTally): DigestRow[] {
 
 function DigestTile({ row }: { row: DigestRow }) {
   return (
-    <li className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <li className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={row.icon} tone={row.tone} size='sm' />
       <Label truncate title={row.label} className='flex-1'>
         {row.label}
@@ -151,9 +152,9 @@ export function ChangeDigestPanel() {
       {rows.length > 0 && (
         <div className='@container/digest min-w-0'>
           <ul className='grid min-w-0 grid-cols-1 gap-2 @md/digest:grid-cols-2'>
-            {rows.map((row) => (
-              <DigestTile key={row.label} row={row} />
-            ))}
+            <Paged items={rows} as='li'>
+              {(row) => <DigestTile key={row.label} row={row} />}
+            </Paged>
           </ul>
         </div>
       )}

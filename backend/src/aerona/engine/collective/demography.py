@@ -32,7 +32,18 @@ from aerona.engine.primitives.transfers import move_amount
 from aerona.rules.registry import Rules
 
 THIRD = PERCENT // 3
-URBAN_OF = total(SizeTier, {SizeTier.HAMLET: 5, SizeTier.VILLAGE: 15, SizeTier.TOWN: 50, SizeTier.CITY: 80, SizeTier.METROPOLIS: 95})
+URBAN_OF = total(
+    SizeTier,
+    {
+        SizeTier.HAMLET: 5,
+        SizeTier.VILLAGE: 15,
+        SizeTier.TOWN: 50,
+        SizeTier.CITY: 80,
+        SizeTier.METROPOLIS: 95,
+        SizeTier.MEGALOPOLIS: 98,
+        SizeTier.WORLD_CITY: 99,
+    },
+)
 FERTILITY_SPAN = 200
 WEALTH_PER_HEAD = 100
 

@@ -1,6 +1,7 @@
 from aerona.core.errors import ValidationFailedError
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.world import HorrorEventKind
+from aerona.domain.enums.horror import HorrorEffect, HorrorScope, HorrorSense, HorrorSource, HorrorTarget
+from aerona.engine.cosmos.horror_model import HorrorSpec
 from aerona.engine.phases.afterlife import (
     abandon_legendary_quest,
     force_soul_descent,
@@ -50,7 +51,11 @@ class Immortality(Command):
 
 class HorrorEvent(Command):
     world_id: int
-    kind: HorrorEventKind
+    target: HorrorTarget = HorrorTarget.MINDS
+    effect: HorrorEffect = HorrorEffect.MARK
+    scope: HorrorScope = HorrorScope.WORLD
+    sense: HorrorSense = HorrorSense.SEEN
+    source: HorrorSource = HorrorSource.UNKNOWN
 
 
 class EntityTarget(Command):
@@ -149,7 +154,9 @@ async def time_echo(scope: PlayerScope, command: ThreadTarget) -> Effect:
 
 @player_action("horror:event", ActionKind.HORROR_EVENT)
 async def horror_event(scope: PlayerScope, command: HorrorEvent) -> Effect:
-    return Effect(await order_horror_event(scope.session, scope.rules, command.world_id, command.kind))
+    spec = HorrorSpec(command.target, command.effect, command.scope, command.sense, command.source)
+    row, text = await order_horror_event(scope.session, scope.rules, command.world_id, spec)
+    return Effect(text, command.world_id, values={"horror_id": row.id})
 
 
 @player_action("horror:outer_being", ActionKind.SUMMON_OUTER_BEING)

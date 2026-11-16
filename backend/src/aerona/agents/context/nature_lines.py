@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.nature import SpeciesRelationRow
@@ -57,5 +57,5 @@ async def son_nature_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(SpeciesRelationRow.strength.desc(), SpeciesRelationRow.id)
         .limit(LIST_LINES)
     ):
-        found.append(f"{await named(scope, row.first_species_id)} and {await named(scope, row.second_species_id)} are bound by {row.kind.value}")
+        found.append(f"{await named(scope, row.first_species_id)} and {await named(scope, row.second_species_id)} are bound by {spoken(row.kind)}")
     return found

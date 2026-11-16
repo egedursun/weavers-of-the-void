@@ -101,7 +101,7 @@ POWER_MECHANICS: tuple[Mechanic, ...] = (
         phases=("powers",),
         surface=Surface(drawer=POWERS),
         backfill="powers.legacy_backfill: mortals of high gift carry a latent power of their gift",
-        templates=("power.emerged", "power.wild", "power.used", "power.burned_out", "power.gestalt", "power.granted", "power.revoked", "power.breach"),
+        templates=("power.emerged", "power.wild", "power.used", "power.exhausted", "power.gestalt", "power.granted", "power.revoked", "power.breach"),
         tables=(PowerRow.__tablename__, PowerRestrictionRow.__tablename__, PowerTriggerRow.__tablename__, PowerSpanRow.__tablename__),
         exposure=Exposure.TOOL,
         tools=("use_power", "train_power", "link_minds", "foresee", "grant_power", "revoke_power"),

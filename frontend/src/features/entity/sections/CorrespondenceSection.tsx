@@ -803,7 +803,7 @@ function SignalRow({ row, ctx }: { row: Signal; ctx: Ctx }) {
       ),
   })
   const busy = why(ctx.blocked, edit.isPending, strike.isPending)
-  const look = SIGNAL_ICONS[row.kind] ?? SIGNAL_ICONS.fire_beacon
+  const look = SIGNAL_ICONS[row.kind]
   return (
     <ItemRow
       icon={look.icon}
@@ -848,7 +848,7 @@ function SignalRow({ row, ctx }: { row: Signal; ctx: Ctx }) {
 
 function SignalsCard({ ctx }: { ctx: Ctx }) {
   const view = ctx.view
-  const [kind, setKind] = useState('fire_beacon')
+  const [kind, setKind] = useState('beacon_chain')
   const [start, setStart] = useState<number | null>(null)
   const [end, setEnd] = useState<number | null>(null)
   const build = useGodAction({

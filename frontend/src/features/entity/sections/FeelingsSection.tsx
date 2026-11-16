@@ -126,7 +126,7 @@ function ThoughtRow({
 }) {
   const spec = named(EMOTION_ICONS, item.emotion)
   return (
-    <div className='flex min-w-0 flex-col gap-1.5 rounded-md border bg-muted/20 p-2'>
+    <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion
           icon={spec.icon}
@@ -276,7 +276,7 @@ function Formative({ view }: { view: Feelings }) {
         {(item) => (
           <div
             key={item.id}
-            className='flex min-w-0 flex-col gap-0.5 rounded-md border p-2'
+            className='flex min-w-0 flex-col gap-0.5 rounded-md border surface-sheen border-gild/60 bg-card p-2'
           >
             <Text weight='semibold' truncate>
               {item.label}
@@ -305,7 +305,7 @@ function GriefCard({
 }) {
   const stage = named(GRIEF_STAGES, item.stage)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-md border bg-muted/20 p-2'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={stage.icon} size='sm' tone={stage.tone} />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -415,7 +415,7 @@ function DreamCard({
 }) {
   const kind = named(DREAM_KINDS, item.kind)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-md border bg-muted/20 p-2'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={kind.icon} size='sm' tone={kind.tone} />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -654,7 +654,7 @@ function FeelingControls({ view }: { view: Feelings }) {
         }
       </PagedList>
       <div className='grid min-w-0 grid-cols-1 gap-3 @xl/feel:grid-cols-3'>
-        <div className='flex min-w-0 flex-col gap-2 rounded-md border border-dashed p-2'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
           <MindPicker
             label='Send a thought'
             value={kind}
@@ -680,7 +680,7 @@ function FeelingControls({ view }: { view: Feelings }) {
             Send
           </Button>
         </div>
-        <div className='flex min-w-0 flex-col gap-2 rounded-md border border-dashed p-2'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
           <MindPicker
             label='Send a dream'
             value={dreamKind}
@@ -698,7 +698,7 @@ function FeelingControls({ view }: { view: Feelings }) {
             Send the dream
           </Button>
         </div>
-        <div className='flex min-w-0 flex-col gap-2 rounded-md border border-dashed p-2'>
+        <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
           <Label>Make them mourn</Label>
           <RecordCombobox
             options={people}

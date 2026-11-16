@@ -166,7 +166,7 @@ export function EraSection({
                 {(deed) => (
                   <li
                     key={deed.id}
-                    className='flex min-w-0 items-center gap-2 rounded-md border bg-muted/20 px-2.5 py-1.5'
+                    className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 px-2.5 py-1.5'
                   >
                     <Badge
                       size='sm'
@@ -200,7 +200,7 @@ export function EraSection({
                   {(item) => (
                     <li
                       key={item.work.id}
-                      className='flex min-w-0 items-center gap-2 rounded-md border px-2.5 py-1.5'
+                      className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-1.5'
                     >
                       <Medallion icon={Ban} tone='warning' size='sm' />
                       <Who item={item.work} />
@@ -341,7 +341,7 @@ export function WorldEraSection({
       )}
       {view.data && (
         <div data-surface='WorldEra' className='flex min-w-0 flex-col gap-3'>
-          <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-muted/30 p-3'>
+          <div className='flex min-w-0 items-center gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
             <Medallion icon={Telescope} tone='gold' />
             <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
               <div className='flex min-w-0 flex-wrap items-center gap-2'>

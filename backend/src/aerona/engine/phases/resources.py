@@ -4,7 +4,7 @@ from aerona.domain.enums.economy import ExtractionKind
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.catch import regrowth_scale
 from aerona.engine.economy.book import EconomyBook
-from aerona.engine.economy.extraction import ExtractionTally, extract, extraction_kind, reconcile, regrow
+from aerona.engine.economy.extraction import ExtractionTally, extract, extraction_kind, keep_methods, reconcile, regrow
 from aerona.engine.economy.stocks import sync_aggregates
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
@@ -66,6 +66,7 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.region_pollution",
     "table.resource_profiles",
     "table.resource_workers",
+    "table.salvage_sites",
     "table.skills",
     "table.sky_events",
     "table.species_profiles",
@@ -106,6 +107,8 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
 async def resource_economy(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     tally = ExtractionTally()
+    pairs = [(resource, book.profiles[resource.id]) for resource in book.resources() if resource.id in book.profiles]
+    ctx.count("extraction_methods_moved", await keep_methods(ctx, pairs))
     for resource in book.resources():
         profile = book.profiles.get(resource.id)
         if profile is None:

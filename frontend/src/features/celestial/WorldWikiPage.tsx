@@ -32,11 +32,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   EmptyState,
   EntityLink,
+  HeroFrame,
   MiniStat,
+  Paged,
   PagedList,
   Portrait,
   Section,
-  Paged,
 } from '@/components/domain'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
@@ -46,6 +47,7 @@ import { ChronicleEntry } from '@/features/chronicle/ChronicleEntry'
 import { useChronicleKindLabels } from '@/features/chronicle/api'
 import { WorldPlacementSection } from '@/features/cosmography/HeavenlyLife'
 import { RiftsForWorld } from '@/features/cosmography/RiftsPanel'
+import { EncountersSection } from '@/features/cosmos/EncountersSection'
 import { PaletteStrip, WorldDisc } from '@/features/cosmos/Glyphs'
 import { useCosmos } from '@/features/cosmos/api'
 import {
@@ -88,70 +90,72 @@ function WorldHero({ wiki }: { wiki: WorldWiki }) {
       (item) => item.world_type === world.world_type
     )?.palette.biome_colours ?? []
   return (
-    <header className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'>
-      <PortraitGenerateOverlay
-        nodeId={world.id}
-        name={world.name}
-        cover={wiki.cover ?? null}
-        placeholder={
-          <div className='flex size-portrait-xl shrink-0 items-center justify-center rounded-xl border bg-card'>
-            <WorldDisc palette={palette} />
+    <HeroFrame>
+      <header className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'>
+        <PortraitGenerateOverlay
+          nodeId={world.id}
+          name={world.name}
+          cover={wiki.cover ?? null}
+          placeholder={
+            <div className='flex size-portrait-xl shrink-0 items-center justify-center rounded-md border surface-sheen border-gild/60 bg-card'>
+              <WorldDisc palette={palette} />
+            </div>
+          }
+        />
+        <div className='flex min-w-0 flex-1 flex-col gap-2'>
+          <Label variant='overline'>{`World · ${wiki.type_label}`}</Label>
+          <PageTitle truncate={2}>{world.name}</PageTitle>
+          {world.description && <Muted>{world.description}</Muted>}
+          <div className='flex min-w-0 flex-wrap gap-1.5'>
+            <Badge size='sm' variant='info'>
+              <Globe2 />
+              {DISCOVERY_LABEL[world.discovery]}
+            </Badge>
+            {world.climate_era && (
+              <Badge size='sm' variant='warning'>
+                <Thermometer />
+                {CLIMATE_LABEL[world.climate_era]}
+              </Badge>
+            )}
+            {wiki.star && (
+              <Badge size='sm' variant='outline'>
+                <Star />
+                <EntityLink kind='star' id={String(wiki.star.id)}>
+                  {wiki.star.name}
+                </EntityLink>
+              </Badge>
+            )}
+            {wiki.patron && (
+              <Badge size='sm' variant='default'>
+                <ShieldCheck />
+                <EntityLink kind='son' id={String(wiki.patron.id)}>
+                  {wiki.patron.name}
+                </EntityLink>
+              </Badge>
+            )}
           </div>
-        }
-      />
-      <div className='flex min-w-0 flex-1 flex-col gap-2'>
-        <Label variant='overline'>{`World · ${wiki.type_label}`}</Label>
-        <PageTitle truncate={2}>{world.name}</PageTitle>
-        {world.description && <Muted>{world.description}</Muted>}
-        <div className='flex min-w-0 flex-wrap gap-1.5'>
-          <Badge size='sm' variant='info'>
-            <Globe2 />
-            {DISCOVERY_LABEL[world.discovery]}
-          </Badge>
-          {world.climate_era && (
-            <Badge size='sm' variant='warning'>
-              <Thermometer />
-              {CLIMATE_LABEL[world.climate_era]}
-            </Badge>
+          {palette.length > 0 && (
+            <PaletteStrip
+              palette={palette}
+              label={`${wiki.type_label} palette`}
+            />
           )}
-          {wiki.star && (
-            <Badge size='sm' variant='outline'>
-              <Star />
-              <EntityLink kind='star' id={String(wiki.star.id)}>
-                {wiki.star.name}
-              </EntityLink>
-            </Badge>
-          )}
-          {wiki.patron && (
-            <Badge size='sm' variant='default'>
-              <ShieldCheck />
-              <EntityLink kind='son' id={String(wiki.patron.id)}>
-                {wiki.patron.name}
-              </EntityLink>
-            </Badge>
-          )}
+          <div className='flex min-w-0 flex-wrap gap-2'>
+            <RecordNavLink to={{ view: 'world-map', world: world.id }} />
+            <RecordNavLink to={{ view: 'chronicle', world: world.id }} />
+            <Button variant='outline' size='sm' asChild>
+              <a href='#section-seasons'>
+                <CloudSun />
+                Climate and seasons
+              </a>
+            </Button>
+            <EntityLink kind='world-guide' id={String(world.id)}>
+              Traveller's guide
+            </EntityLink>
+          </div>
         </div>
-        {palette.length > 0 && (
-          <PaletteStrip
-            palette={palette}
-            label={`${wiki.type_label} palette`}
-          />
-        )}
-        <div className='flex min-w-0 flex-wrap gap-2'>
-          <RecordNavLink to={{ view: 'world-map', world: world.id }} />
-          <RecordNavLink to={{ view: 'chronicle', world: world.id }} />
-          <Button variant='outline' size='sm' asChild>
-            <a href='#section-seasons'>
-              <CloudSun />
-              Climate and seasons
-            </a>
-          </Button>
-          <EntityLink kind='world-guide' id={String(world.id)}>
-            Traveller's guide
-          </EntityLink>
-        </div>
-      </div>
-    </header>
+      </header>
+    </HeroFrame>
   )
 }
 
@@ -253,7 +257,7 @@ function WorldPeoples({ wiki }: { wiki: WorldWiki }) {
             itemKey={(item) => item.entity.id}
           >
             {(item) => (
-              <li className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2'>
+              <li className='flex min-w-0 items-center gap-3 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
                 <Portrait
                   name={item.entity.name}
                   src={mediaUrl(item.cover)}
@@ -320,7 +324,7 @@ function WorldSky({ wiki }: { wiki: WorldWiki }) {
                 ? route.world_b_id
                 : route.world_a_id
             return (
-              <li className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'>
+              <li className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
                 <Route
                   aria-hidden='true'
                   className='size-icon-sm shrink-0 text-info'
@@ -347,7 +351,7 @@ function WorldSky({ wiki }: { wiki: WorldWiki }) {
           itemKey={(event) => event.id}
         >
           {(event) => (
-            <li className='flex min-w-0 items-start gap-2 rounded-lg border bg-muted/30 p-2'>
+            <li className='flex min-w-0 items-start gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
               <Sparkles
                 aria-hidden='true'
                 className='size-icon-sm shrink-0 text-primary'
@@ -447,6 +451,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       <GoldenAgeSection worldId={data.world.id} />
       <WorldEraSection worldId={data.world.id} />
       <WorldLifeSection worldId={data.world.id} />
+      <EncountersSection worldId={data.world.id} />
       <WorldPlacementSection world={data.world} />
       <WorldPhysicsSection worldId={data.world.id} />
       <LifeClassSection worldId={data.world.id} />

@@ -305,6 +305,7 @@ REALM_MECHANICS = (
             "loyalty",
         ),
         tables=(FactionProfileRow.__tablename__, FactionGoalRow.__tablename__, FactionMembershipRow.__tablename__, FactionActionRow.__tablename__),
+        tools=("found_faction",),
         targets=("faction", "polity", "mortal", *COMMUNITIES, "treaty"),
         couplings=(
             Coupling(Subsystem.POLITY, "the factions' power balance steers the realm's will", EdgeKind.MODIFIER, "factions.balance_pct"),

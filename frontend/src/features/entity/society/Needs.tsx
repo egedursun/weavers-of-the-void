@@ -128,7 +128,7 @@ function ClassBasket({
       (need.effect !== 'hunger' || staples.includes(need.commodity))
   )
   return (
-    <div className='flex h-full min-w-0 flex-col gap-2.5 rounded-lg border bg-muted/30 p-2.5'>
+    <div className='flex h-full min-w-0 flex-col gap-2.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-2.5'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>

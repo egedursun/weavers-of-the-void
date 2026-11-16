@@ -239,19 +239,19 @@ FUNERAL_NAMES: dict[FuneralCustom, str] = {
     FuneralCustom.ANCESTOR_SHRINE: "The Ancestor Shrines of {people}",
     FuneralCustom.ENDOCANNIBALISM: "The Last Feast of {people}",
     FuneralCustom.REANIMATION: "The Raising of the Dead of {people}",
-    FuneralCustom.SOUL_BINDING: "The Soul Stones of {people}",
+    FuneralCustom.SOUL_BINDING: "The Soul Binding of {people}",
 }
 
 FUNERAL_DEEDS: dict[FuneralCustom, str] = {
     FuneralCustom.BURIAL: "lay their dead in the earth",
     FuneralCustom.CREMATION: "burn their dead on pyres",
-    FuneralCustom.SKY_BURIAL: "give their dead to the sky and the birds",
+    FuneralCustom.SKY_BURIAL: "lay their dead open to the sky",
     FuneralCustom.SEA_BURIAL: "give their dead to the waters",
     FuneralCustom.ENTOMBMENT: "seal their dead in tombs",
     FuneralCustom.ANCESTOR_SHRINE: "keep the bones of their dead at home shrines",
     FuneralCustom.ENDOCANNIBALISM: "eat of their dead to keep them close",
     FuneralCustom.REANIMATION: "raise their dead to serve again",
-    FuneralCustom.SOUL_BINDING: "bind the souls of their dead into stones",
+    FuneralCustom.SOUL_BINDING: "bind the souls of their dead into vessels",
 }
 
 AESTHETIC_MEDIA: dict[Aesthetic, frozenset[ArtMedium]] = {

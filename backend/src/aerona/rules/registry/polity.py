@@ -135,6 +135,13 @@ class RevoltsRules:
     secession_autonomy: int = rule(60, 0, 100, P, "Autonomy above which a revolt is a war of secession")
     rebel_share_pct: int = rule(8, 0, 100, P, "Share of the people who take up arms in a revolt (%)")
     slave_share_pct: int = rule(25, 0, 100, P, "Share of the bound at which a revolt is a slave revolt (%)")
+    minority_loyalty: int = rule(40, 0, 100, P, "Loyalty below which a town of a people not the realm's core rises as a minority")
+    class_bitter: int = rule(25, 0, 100, P, "Satisfaction below which workers, soldiers or the learned lead a revolt")
+    class_share_pct: int = rule(20, 0, 100, P, "Share of workers at which their grievance leads a revolt (%)")
+    tax_heavy: int = rule(40, 0, 500, P, "Sum of a realm's tax rates at which a revolt is a tax revolt")
+    made_minds_at: int = rule(3, 1, 1000, P, "Made minds in a town at which a revolt is theirs")
+    gifted_at: int = rule(3, 1, 1000, P, "Gifted held unlicensed or conscripted by a realm at which a revolt is theirs")
+    urban_population: int = rule(20000, 0, 10000000, P, "Population at which a revolt in a city is an urban revolt")
 
 
 @dataclass(frozen=True)
@@ -150,6 +157,7 @@ class LegislationRules:
     rigidity_resist_pct: int = rule(60, 0, 100, P, "How strongly a customary law's rigidity resists repeal (%)")
     conquest_conflict: int = rule(60, 0, 100, P, "Conflict between conqueror and local law at the conquest")
     conflict_decay: int = rule(15, 0, 100, P, "Conflict that fades per epoch as the laws settle")
+    lobby_conflict_pct: int = rule(10, 0, 100, P, "Share of the sway of the factions that press on a law's area it adds to that law's conflict each epoch (%)")
     conflict_unrest_pct: int = rule(20, 0, 100, P, "Unrest from legal conflict (%)")
     levy_share_pct: int = rule(100, 0, 500, P, "Weight of the levy law's share in raising an army (%)")
     pension_outcast_pct: int = rule(50, 0, 100, P, "Share of the maimed a veteran pension keeps out of the outcasts (%)")
@@ -228,6 +236,8 @@ class OathsRules:
     fealty_on_office: int = rule(1, 0, 1, H, "Office holders swear fealty to the ruler (1 yes)")
     vengeance_chance: int = rule(30, 0, 100, H, "A mortal whose kin was slain swears vengeance (%)")
     protection_chance: int = rule(20, 0, 100, H, "A knight swears to protect their lord (%)")
+    vow_chance: int = rule(15, 0, 100, H, "A mortal whose life calls for a vow of service, poverty, peace, fidelity or secrecy swears it in an epoch (%)")
+    poverty_wealth: int = rule(30, 0, 100, H, "Wealth above which a vow of poverty is broken")
     kinship_chance: int = rule(10, 0, 100, H, "Companions in arms swear sworn kinship (%)")
     deadline_epochs: int = rule(3, 1, 100, H, "Epochs a vengeance or pilgrimage oath gives the swearer")
     witness_chance: int = rule(40, 0, 100, H, "A god of oaths witnesses a sworn oath (%)")
@@ -240,6 +250,12 @@ class OathsRules:
     celibacy_chance: int = rule(30, 0, 100, H, "A priest of a celibate faith swears celibacy in an epoch (%)")
     pilgrimage_chance: int = rule(10, 0, 100, H, "A devout mortal of a pilgrim faith swears a pilgrimage in an epoch (%)")
     silence_on_office: int = rule(1, 0, 1, H, "A spymaster swears silence on taking office (1 yes)")
+    fine: int = rule(10, 0, 10000, H, "Coin an oathbreaker pays when the oath's penalty is a fine")
+    shame: int = rule(15, 0, 100, H, "Honour an oathbreaker loses on top of the rest when the oath's penalty is shame")
+    curse_fortune: int = rule(15, 0, 100, H, "Fortune an oathbreaker loses when the oath's penalty is a curse")
+    witness_relation: int = rule(15, 0, 100, H, "Relation a person or body that witnessed an oath gains when it is kept or loses when it is broken")
+    release_friendship: int = rule(60, 0, 100, H, "Friendship toward the swearer at which the one an oath was sworn to may release it")
+    release_chance: int = rule(10, 0, 100, H, "A recipient that close releases the oath in an epoch (%)")
 
 
 @dataclass(frozen=True)

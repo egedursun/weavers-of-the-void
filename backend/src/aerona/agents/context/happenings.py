@@ -4,11 +4,15 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.grammar import several
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow
 from aerona.domain.enums.happening import EventPhase
 
-PHASE_WORDS = {EventPhase.ONSET: "beginning", EventPhase.PEAK: "at its height", EventPhase.AFTERMATH: "in its aftermath"}
+PHASE_WORDS = total(
+    EventPhase,
+    {EventPhase.ONSET: "beginning", EventPhase.PEAK: "at its height", EventPhase.AFTERMATH: "in its aftermath", EventPhase.MEMORY: "kept in memory"},
+)
 
 
 async def event_phase_lines(session: AsyncSession, epoch: int) -> list[str]:

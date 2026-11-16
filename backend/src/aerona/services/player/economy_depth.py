@@ -6,7 +6,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.economy import CommodityKind, LoanStatus, MaterialFamily, MaterialSlot, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, ExtractionKind, LoanStatus, MaterialFamily, MaterialSlot, WorkshopKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
@@ -125,6 +125,7 @@ class EditResourceDepth(Command):
     byproduct_material: MaterialKind | None = None
     clear_byproduct: bool = False
     world_material_id: int | None = Field(default=None, ge=0)
+    extraction: ExtractionKind | None = None
     hold: bool | None = None
 
 
@@ -371,6 +372,8 @@ async def edit_resource(scope: PlayerScope, command: EditResourceDepth) -> Effec
         world_material_id=command.world_material_id,
         hold=command.hold,
     )
+    if command.extraction is not None:
+        profile.extraction = command.extraction
     held = " and held" if profile.held else ""
     return Effect(f"The resource is set{held}.", command.resource_id)
 

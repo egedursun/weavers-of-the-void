@@ -38,7 +38,9 @@ from aerona.engine.lore import (
 )
 from aerona.engine.lore.backfill import backfill_typed_kinds
 from aerona.engine.lore.calendar_rites import RiteCalendar, found_sleep_customs
+from aerona.engine.lore.creed_change import keep_constitutions, schisms, syntheses
 from aerona.engine.lore.language import SACRED_STAT, derive_registers, learn_second, prestige_parts, remeasure, speakers, standing_of, tongues_of
+from aerona.engine.lore.prophecy_tales import keep_prophecy_tales
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.made_things import artwork_cycles, item_cycles
@@ -536,6 +538,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.art_form_profiles",
     "table.artwork_profiles",
     "table.assistive_aids",
+    "table.augments",
     "table.banned_works",
     "table.blueprints",
     "table.bodies",
@@ -678,9 +681,11 @@ async def research_cycles(ctx: TickContext) -> None:
     "ideology.adherents",
     "ideology.appeal",
     "mortal.intellect",
+    "table.banned_works",
     "table.bonds",
     "table.community_societies",
     "table.community_society",
+    "table.constitutions",
     "table.cult_tenets",
     "table.culture_values",
     "table.epoch_year_cursors",
@@ -692,12 +697,14 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.minds",
     "table.name_registry",
     "table.personality_values",
+    "table.polity_members",
     "table.polity_profiles",
 )
 @writes(
     "ideology.adherents",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.constitutions",
     "table.culture_values",
     "table.entities",
     "table.epoch_year_cursors",
@@ -725,6 +732,7 @@ async def ideology_cycles(ctx: TickContext) -> None:
         ctx.count("creed_spread", await ideology.spread(ctx, creed, profile))
         ctx.count("creed_pressed", await ideology.press(ctx, creed, profile))
         ctx.count("creed_adopted", await ideology.adopt(ctx, creed))
+        ctx.count("creed_splits", await schisms(ctx, creed))
         if events >= table.cap:
             continue
         persecuted = await ideology.clash_with_faith(ctx, creed)
@@ -737,6 +745,8 @@ async def ideology_cycles(ctx: TickContext) -> None:
             events += 1
             ctx.count("revolutions")
             await note(ctx, f"In the name of {creed.name}, {outcome}.", key="lore.revolution", ids=[creed.id])
+    ctx.count("creed_merges", await syntheses(ctx, [creed for creed, _ in await ideology.living_creeds(ctx)]))
+    ctx.count("constitutions", await keep_constitutions(ctx))
 
 
 @reads(
@@ -812,6 +822,7 @@ async def rite_cycles(ctx: TickContext) -> None:
     "table.house_members",
     "table.legend_profiles",
     "table.offices",
+    "table.polity_profiles",
     "table.prophecy_conditions",
     "table.sky_events",
     "table.wars",
@@ -839,6 +850,7 @@ async def prophecy_cycles(ctx: TickContext) -> None:
         elif pressed:
             ctx.count("prophecies_pressing")
             await note(ctx, f"Under the weight of {seen.name}, {pressed}.", key="lore.prophecy_pressure", ids=[seen.id])
+    await keep_prophecy_tales(ctx)
 
 
 LANGUAGE_PHASES = (Phase("language_cycles", language_cycles),)

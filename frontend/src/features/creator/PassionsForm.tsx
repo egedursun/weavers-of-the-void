@@ -17,7 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { PagedList } from '@/components/domain'
+import { Paged, PagedList } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
@@ -86,32 +86,34 @@ export function PassionsForm({
         </CollapsibleTrigger>
         <CollapsibleContent className='flex min-w-0 flex-col gap-3'>
           <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
-            {reputation.all_passions.map((info) => {
-              const id = `passion-${info.passion}`
-              const checked = chosen.includes(info.passion)
-              return (
-                <li
-                  key={info.passion}
-                  className='flex min-w-0 items-start gap-2'
-                >
-                  <Checkbox
-                    id={id}
-                    checked={checked}
-                    onCheckedChange={(value) =>
-                      setChosen(
-                        value === true
-                          ? [...chosen, info.passion]
-                          : chosen.filter((item) => item !== info.passion)
-                      )
-                    }
-                  />
-                  <div className='flex min-w-0 flex-col gap-0.5'>
-                    <FieldLabel htmlFor={id}>{info.name}</FieldLabel>
-                    <Muted variant='caption'>{info.hint}</Muted>
-                  </div>
-                </li>
-              )
-            })}
+            <Paged items={reputation.all_passions} as='li'>
+              {(info) => {
+                const id = `passion-${info.passion}`
+                const checked = chosen.includes(info.passion)
+                return (
+                  <li
+                    key={info.passion}
+                    className='flex min-w-0 items-start gap-2'
+                  >
+                    <Checkbox
+                      id={id}
+                      checked={checked}
+                      onCheckedChange={(value) =>
+                        setChosen(
+                          value === true
+                            ? [...chosen, info.passion]
+                            : chosen.filter((item) => item !== info.passion)
+                        )
+                      }
+                    />
+                    <div className='flex min-w-0 flex-col gap-0.5'>
+                      <FieldLabel htmlFor={id}>{info.name}</FieldLabel>
+                      <Muted variant='caption'>{info.hint}</Muted>
+                    </div>
+                  </li>
+                )
+              }}
+            </Paged>
           </ul>
           {limit !== undefined && (
             <Muted variant='caption'>{`Pick up to ${limit}.`}</Muted>

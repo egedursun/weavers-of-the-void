@@ -8,12 +8,15 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import ChallengeKind, ChallengeResponse
+from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.asabiyya import asabiyya_row
 from aerona.engine.cycles.book import polities, put, realm_towns
+from aerona.engine.cycles.challenge_signals import signalled
 from aerona.engine.cycles.stress import realm_capacity, stress_row
+from aerona.engine.folkways.biases import lean_community
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.interconnect.guards import HEADCOUNT_KEY
 from aerona.engine.lore.research_depth import add_progress, research_choices
@@ -72,7 +75,8 @@ async def civic_leap(ctx: TickContext, holder_id: int, index: int) -> bool:
     choices = await research_choices(ctx.session, holder_id)
     if not choices:
         return False
-    await add_progress(ctx, holder_id, choices[0], round_half_up(table.research_progress * index / PERCENT))
+    leaning = await lean_community(ctx, holder_id, BiasedDecision.RESEARCH)
+    await add_progress(ctx, holder_id, choices[0], round_half_up(table.research_progress * index * leaning / PERCENT))
     civic = [technique for technique in choices if TECHNIQUES[technique].branch is KnowledgeBranch.CIVICS]
     if civic and ctx.rng(f"challenge.civic.{holder_id}.{ctx.epoch}").chance(table.civic_pct):
         await add_progress(ctx, holder_id, civic[0], table.civic_progress)
@@ -116,8 +120,10 @@ async def meet_challenges(ctx: TickContext, tally: ChallengeTally) -> None:
                     sources[kind] = town.id
         row = await stress_row(ctx, polity.id)
         struck = 0
-        for kind in sorted(kinds, key=lambda item: item.value):
-            severity = clamp_int(kinds[kind] * PERCENT / capacity * table.severity_scale, 0, PERCENT)
+        severities = {kind: clamp_int(kinds[kind] * PERCENT / capacity * table.severity_scale, 0, PERCENT) for kind in kinds}
+        severities.update(await signalled(ctx, profile, towns))
+        for kind in sorted(severities, key=lambda item: item.value):
+            severity = severities[kind]
             if severity < table.notice_at:
                 continue
             struck += severity

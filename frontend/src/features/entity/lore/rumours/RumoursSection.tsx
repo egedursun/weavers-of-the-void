@@ -125,7 +125,7 @@ function RumourCard({
   const channel = CHANNELS[rumour.channel]
   const held = rumour.locked.includes('fidelity')
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <NamedChip spec={channel} />
         {rumour.atrocity && (

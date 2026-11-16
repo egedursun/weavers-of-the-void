@@ -3,7 +3,7 @@ from sqlalchemy import func, select
 from aerona.agents.context.scope import Scope
 from aerona.catalog.collective import ACT_TEXT
 from aerona.catalog.storylets import STORYLETS
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.collective import (
     AccountRow,
     ArmsRow,
@@ -53,7 +53,7 @@ async def town_lines(scope: Scope, me: EntityRow) -> list[str]:
     if mood is not None and max(mood.anger, mood.anxiety, mood.fervour) >= MOOD_AT:
         found.append(f"your town's mood: anger {mood.anger}, fear {mood.anxiety}, fervour {mood.fervour}, held back by the watch at {mood.deterrence}")
     for mob in await session.scalars(select(MobRow).where(MobRow.settlement_entity_id == me.location_id, MobRow.status != MobStatus.DISPERSED)):
-        found.append(f"a crowd of {mob.size} has {ACT_TEXT[mob.act]} and goes for the {mob.target.value}, anger {mob.anger}")
+        found.append(f"a crowd of {mob.size} has {ACT_TEXT[mob.act]} and goes for the {spoken(mob.target)}, anger {mob.anger}")
     for movement in await session.scalars(select(MovementRow).where(MovementRow.settlement_entity_id == me.location_id, MovementRow.ended_epoch.is_(None))):
         found.append(f"a movement of {movement.members} that {ACT_TEXT[movement.act]} stands at strength {movement.strength}")
     return found
@@ -74,7 +74,7 @@ async def custom_lines(scope: Scope, me: EntityRow) -> list[str]:
     for row in await session.scalars(select(RoleNormRow).where(RoleNormRow.holder_entity_id == people.id).order_by(RoleNormRow.role)):
         if row.eligibility is not RoleEligibility.ANY or row.classes:
             classes = f", only for {', '.join(row.classes)}" if row.classes else ""
-            found.append(f"the {row.role.value} role is {row.eligibility.value.replace('_', ' ')} from age {row.min_age}{classes}")
+            found.append(f"the {spoken(row.role)} role is {row.eligibility.value.replace('_', ' ')} from age {row.min_age}{classes}")
     return found
 
 

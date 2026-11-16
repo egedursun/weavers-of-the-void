@@ -209,14 +209,14 @@ async def feed_soils(ctx: TickContext, atlas: RegionAtlas, tally: SoilTally) -> 
                 tally.salted += 1
                 await note(
                     ctx,
-                    f"Salt has risen in the watered fields of {await region_name(ctx, land.entity_id)}; each harvest there is thinner than the last.",
+                    f"The watered fields have turned saline in {await region_name(ctx, land.entity_id)}; each harvest there is thinner than the last.",
                     key="nutrients.salted",
                     ids=[land.entity_id],
                 )
             elif nutrient is N.SALINITY and row.stock < ctx.rules.nutrients.noted_salinity // 2 <= before:
                 await note(
                     ctx,
-                    f"The rains have washed the salt from the fields of {await region_name(ctx, land.entity_id)}.",
+                    f"The rains have cleared the saline fields of {await region_name(ctx, land.entity_id)}.",
                     key="nutrients.recovered",
                     ids=[land.entity_id],
                 )

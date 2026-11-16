@@ -152,8 +152,138 @@ const noRawColor = {
   },
 }
 
+const SURFACE_FILL = /^bg-(background|card|popover|secondary|accent|muted)(\/\d+)?$/
+const SURFACE_CLASSES = new Set([
+  'surface-framed',
+  'surface-sheen',
+  'surface-well',
+  'sealed-well',
+  'plate-chip',
+  'plate-track',
+  'well',
+])
+
+function rawSurface(text) {
+  const tokens = text.split(/\s+/)
+  if (tokens.includes('surface-brackets')) return true
+  if (!tokens.includes('border')) return false
+  if (tokens.some((token) => SURFACE_CLASSES.has(token))) return false
+  const boxed =
+    tokens.some((token) => /^rounded(-(sm|md|lg|xl|2xl|3xl))?$/.test(token)) &&
+    tokens.some((token) => /^(p|px|py)-\d/.test(token))
+  return boxed || tokens.some((token) => SURFACE_FILL.test(token)) || tokens.includes('border-dashed')
+}
+
+const noRawSurface = {
+  meta: {
+    type: 'problem',
+    messages: {
+      rawSurface:
+        'A bordered box needs a shared surface: surface-framed for a card, surface-sheen for a row, surface-well for a well or sealed-well for an empty or dashed box.',
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      JSXAttribute(node) {
+        if (node.name.name !== 'className' || !node.value) return
+        const parts = []
+        const visit = (child) => {
+          if (!child || typeof child !== 'object') return
+          if (child.type === 'Literal' && typeof child.value === 'string') parts.push(child.value)
+          if (child.type === 'TemplateElement') parts.push(child.value.cooked ?? '')
+          for (const key of Object.keys(child)) {
+            if (key === 'parent') continue
+            const value = child[key]
+            if (Array.isArray(value)) value.forEach(visit)
+            else if (value && typeof value.type === 'string') visit(value)
+          }
+        }
+        visit(node.value)
+        if (parts.length > 1 && rawSurface(parts.join(' ')) && !parts.some(rawSurface))
+          context.report({ node, messageId: 'rawSurface' })
+      },
+      Literal(node) {
+        if (typeof node.value === 'string' && rawSurface(node.value))
+          context.report({ node, messageId: 'rawSurface' })
+      },
+      TemplateElement(node) {
+        if (rawSurface(node.value.cooked ?? ''))
+          context.report({ node, messageId: 'rawSurface' })
+      },
+    }
+  },
+}
+
+function returnsListItem(node) {
+  let found = false
+  const visit = (child) => {
+    if (found || !child || typeof child !== 'object') return
+    if (child.type === 'JSXOpeningElement' && child.name.type === 'JSXIdentifier' && child.name.name === 'li') {
+      found = true
+      return
+    }
+    for (const key of Object.keys(child)) {
+      if (key === 'parent') continue
+      const value = child[key]
+      if (Array.isArray(value)) value.forEach(visit)
+      else if (value && typeof value.type === 'string') visit(value)
+    }
+  }
+  visit(node)
+  return found
+}
+
+function insideList(node) {
+  let current = node.parent
+  while (current && current.type !== 'JSXElement') {
+    if (current.type === 'ArrowFunctionExpression' || current.type === 'FunctionExpression') return false
+    current = current.parent
+  }
+  if (!current) return false
+  const name = current.openingElement.name
+  return name.type === 'JSXIdentifier' && (name.name === 'ul' || name.name === 'ol')
+}
+
+function fixedList(source) {
+  return (
+    /^\(?\s*\[/.test(source) ||
+    /^[A-Z][A-Z0-9_]*(\.|$)/.test(source) ||
+    /^Object\.(keys|entries|values)\([A-Z][A-Z0-9_]*\)$/.test(source) ||
+    /^[a-z][A-Za-z]*Values$/.test(source) ||
+    /(^|\.)(page|shown|visible)$/.test(source) ||
+    /\.slice\([^)]*\)$/.test(source)
+  )
+}
+
+const pagedLists = {
+  meta: {
+    type: 'problem',
+    messages: {
+      unpaged:
+        'A list of records grows with the world: render it through Paged (or useShowMore) so it shows a few and offers show more.',
+    },
+    schema: [],
+  },
+  create(context) {
+    const source = context.sourceCode ?? context.getSourceCode()
+    return {
+      CallExpression(node) {
+        const callee = node.callee
+        if (callee.type !== 'MemberExpression' || callee.property.type !== 'Identifier' || callee.property.name !== 'map') return
+        const fn = node.arguments[0]
+        if (!fn || (fn.type !== 'ArrowFunctionExpression' && fn.type !== 'FunctionExpression')) return
+        if (!returnsListItem(fn.body) && !insideList(node)) return
+        if (fixedList(source.getText(callee.object))) return
+        context.report({ node, messageId: 'unpaged' })
+      },
+    }
+  },
+}
+
 const RAW_ELEMENTS = {
   button: 'Button',
+  img: 'Picture',
   input: 'Input',
   select: 'Select',
   textarea: 'Textarea',
@@ -350,6 +480,8 @@ export const aeronaPlugin = {
     'no-inline-style': noInlineStyle,
     'no-raw-color': noRawColor,
     'no-raw-elements': noRawElements,
+    'no-raw-surface': noRawSurface,
+    'paged-lists': pagedLists,
     'disabled-needs-reason': disabledNeedsReason,
     'typed-request-body': typedRequestBody,
     'scene-tap': sceneTap,
@@ -362,6 +494,8 @@ export const FEATURE_RULES = {
   'aerona/no-inline-style': 'error',
   'aerona/no-raw-color': 'error',
   'aerona/no-raw-elements': 'error',
+  'aerona/no-raw-surface': 'error',
+  'aerona/paged-lists': 'error',
   'aerona/disabled-needs-reason': 'error',
   'aerona/typed-request-body': 'error',
   'aerona/scene-tap': 'error',

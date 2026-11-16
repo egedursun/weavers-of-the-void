@@ -54,21 +54,28 @@ async def legislature(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.intellect",
     "table.bonds",
     "table.case_witnesses",
     "table.crime_cases",
+    "table.jurisdictions",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.polity_members",
     "table.relationships",
+    "table.skills",
     "table.traits",
 )
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
     "table.crime_cases",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
     "table.memories",
     "table.mortal_profiles",
+    "table.polity_profiles",
     "table.sentences",
     "table.settlement_profiles",
     "table.settlement_treasury",

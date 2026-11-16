@@ -142,7 +142,7 @@ async def end_debt(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor:
     if rng.chance(round(table.debt_war_chance * weight)) and await declare_war(ctx, creditor.id, debtor.id, f"the unpaid debt of {owed}", cause=WarCause.DEBT):
         await close_debt(ctx, bond, "turned to war")
         await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, MemoryKind.FOUGHT_US, note="debt war")
-        text = f"The unpaid debt of {owed} turned to war: {creditor.name} declared {debtor.name} its enemy to take it by the sword."
+        text = f"The unpaid debt of {owed} turned to war: {creditor.name} declared {debtor.name} its enemy to take it by force."
         await _debt_chronicle(ctx, text, "debt_war", [debtor.id, creditor.id])
         return "war"
     return None
@@ -203,7 +203,7 @@ async def exhaust(ctx: TickContext, resource: EntityRow) -> None:
             if stat(owner, key) is not None:
                 set_stats(owner, **{key: clamp_int(stat_or(owner, key, 0) - table.depletion_loss, 0, PERCENT)})
     lost = f"; {', '.join(owner.name for owner in owners)} lost what it gave" if owners else ""
-    text = f"{resource.name} was exhausted: its last vein was scraped away{lost}."
+    text = f"{resource.name} was exhausted: nothing is left to take{lost}."
     await ctx.chronicle(ChronicleKind.RESOURCE, text, template_key="market.exhausted", entity_ids=[resource.id, *(owner.id for owner in owners)])
     await note(ctx, text, key="market.exhausted_note", ids=[resource.id], kind=ChronicleKind.RESOURCE)
 
@@ -217,7 +217,7 @@ async def _refill(ctx: TickContext, resource: EntityRow) -> bool:
         return False
     await remove_flag(ctx.session, resource.id, EntityFlag.DEPLETED)
     await remove_flag(ctx.session, resource.id, EntityFlag.DEPLETING)
-    await note(ctx, f"{resource.name} filled again after long ages; the veins that once ran dry give once more.", key="market.refilled", ids=[resource.id])
+    await note(ctx, f"{resource.name} filled again after long ages; it yields once more.", key="market.refilled", ids=[resource.id])
     return True
 
 
@@ -248,7 +248,7 @@ async def resource_market(ctx: TickContext) -> None:
         if abundance <= table.depletion_abundance and load >= table.depletion_demand:
             if resource.id not in depleting:
                 await add_flag(ctx.session, resource.id, EntityFlag.DEPLETING, ctx.epoch)
-                await note(ctx, f"{resource.name} hit bottom; its owners scrape at it until it is gone.", key="market.depleting", ids=[resource.id])
+                await note(ctx, f"{resource.name} hit bottom; its owners take what little is left.", key="market.depleting", ids=[resource.id])
             elif exhausted < table.depletion_cap and ctx.rng(f"exhaust.{resource.id}").chance(table.depletion_chance):
                 await exhaust(ctx, resource)
                 exhausted += 1

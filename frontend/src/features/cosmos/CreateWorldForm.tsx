@@ -113,7 +113,7 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
               key={type}
               htmlFor={id}
               className={cn(
-                'flex min-w-0 cursor-pointer flex-col gap-2 rounded-lg border p-3 transition-colors hover:bg-accent',
+                'flex min-w-0 cursor-pointer flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3 transition-colors hover:bg-accent',
                 type === worldType && 'border-primary bg-accent'
               )}
             >

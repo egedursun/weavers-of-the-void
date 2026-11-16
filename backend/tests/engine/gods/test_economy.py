@@ -93,7 +93,7 @@ async def test_cosmic_economy_deposits_monopoly_markets(session: AsyncSession, w
     assert len(owners) == 1
     assert await EntityRepository(session).has_flag(owners[0].id, EntityFlag.COSMIC_MONOPOLY)
     markets = list(await session.scalars(select(EntityRow).where(EntityRow.engine_kind == EngineKind.WANDERING_MARKET)))
-    pirates = list(await session.scalars(select(EntityRow).where(EntityRow.engine_kind == EngineKind.VOID_PIRATES)))
+    pirates = list(await session.scalars(select(EntityRow).where(EntityRow.engine_kind == EngineKind.ROUTE_RAIDERS)))
     assert len(markets) == 1 and len(pirates) == 1
     route = await session.scalar(select(RouteRow))
     assert route is not None and route.danger > 30

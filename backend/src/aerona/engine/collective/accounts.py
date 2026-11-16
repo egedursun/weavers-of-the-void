@@ -1,13 +1,17 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.total import total
 from aerona.db.tables.collective import AccountRow, AccountStanceRow, CommemorationRow, FoundingMythRow, LostLandRow, MemoryStrikeRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow
+from aerona.db.tables.made import DataStoreRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import HouseMemberRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
 from aerona.db.tables.renown import DeedClaimRow, DeedRow
@@ -18,7 +22,9 @@ from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountSt
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.intrigue import IntrigueSecret
+from aerona.domain.enums.made import Authenticity
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus
 from aerona.domain.enums.war import CasusBelliKind
@@ -66,10 +72,12 @@ RECORDED = frozenset(
 )
 FAITH_KINDS = frozenset({C.CONVERSION_WAVE, C.SCHISM, C.PERSECUTION, C.PILGRIMAGE, C.HEROQUEST, C.MOVEMENT})
 EPIC_KINDS = frozenset({C.BATTLE, C.SIEGE, C.HEROQUEST, C.DUEL})
+STAGED_KINDS = frozenset({C.PERFORMANCE, C.FEAST, C.CEREMONY, C.TOURNAMENT, C.CORONATION})
+SWORN_KINDS = frozenset({C.TRIAL, C.INVESTIGATION})
 PRIDE_KINDS = frozenset({C.FOUNDING, C.CORONATION})
 GRIEF_KINDS = frozenset({C.PERSECUTION, C.PURGE, C.PLAGUE, C.FAMINE, C.OCCUPATION, C.RIOT})
 GREAT_KINDS = frozenset({C.WAR, C.SIEGE, C.FOUNDING, C.PERSECUTION, C.PURGE, C.CORONATION, C.INSURRECTION})
-TRIUMPH = frozenset({R.WINNER, R.FOUNDER, R.LEADER, R.HOST})
+TRIUMPH = frozenset({R.WINNER, R.FOUNDER, R.LEADER, R.HOST, R.FINDER})
 DEFEAT = frozenset({R.LOSER, R.VICTIM, R.ACCUSED})
 SLANT = {AccountStance.GLORIFY: 8, AccountStance.VILIFY: 8, AccountStance.OMIT: 15, AccountStance.NEUTRAL: 0}
 REVISION_LOSS = 20
@@ -148,6 +156,7 @@ async def record(
         credence=clamp_int(credence, 0, PERCENT),
         revised_from_id=revised_from,
         defaced=False,
+        authenticity=Authenticity.UNKNOWN if medium is AccountMedium.ORAL else Authenticity.GENUINE,
         epoch=ctx.epoch,
         locked=[],
     )
@@ -219,14 +228,15 @@ async def realm_accounts(ctx: TickContext, collection: CollectionRow, members: M
         monument = await monument_of(ctx, profile) if boasts else None
         artwork = await artwork_of(ctx, realm_id, [node for node, _ in members]) if boasts and monument is None else None
         slanted = sum(1 for stance in stances.values() if stance is not AccountStance.NEUTRAL)
+        kept = await keeps_records(ctx, realm_id)
         written = await record(
             ctx,
             realm,
-            AccountKind.OFFICIAL_CHRONICLE if own else AccountKind.FOREIGN_ACCOUNT,
+            official_kind(own, monument, kept),
             fidelity=(table.official_fidelity if own else table.foreign_fidelity) - slanted * 3,
             stances=stances,
             collection_id=collection.id,
-            medium=AccountMedium.INSCRIPTION if monument is not None else AccountMedium.ARTWORK if artwork is not None else AccountMedium.BOOK,
+            medium=await official_medium(ctx, realm_id, monument, artwork, kept),
             author_id=await ruler_id(ctx, realm_id),
             structure_id=monument,
             artwork_id=artwork,
@@ -241,8 +251,10 @@ async def folk_accounts(ctx: TickContext, collection: CollectionRow, members: Me
     if people is None:
         return
     folk = {node: AccountStance.GLORIFY if role in DEFEAT else AccountStance.NEUTRAL for node, role in members}
-    kind = AccountKind.EPIC if collection.kind in EPIC_KINDS else AccountKind.FOLK_MEMORY
-    written = await record(ctx, people, kind, fidelity=table.folk_fidelity + await truthful(ctx, people) // 5, stances=folk, collection_id=collection.id)
+    kind = AccountKind.EPIC if collection.kind in EPIC_KINDS else AccountKind.TESTIMONY if collection.kind in SWORN_KINDS else AccountKind.FOLK_MEMORY
+    medium = AccountMedium.PERFORMANCE if collection.kind in STAGED_KINDS else AccountMedium.ORAL
+    fidelity = table.folk_fidelity + await truthful(ctx, people) // 5
+    written = await record(ctx, people, kind, fidelity=fidelity, stances=folk, collection_id=collection.id, medium=medium)
     tally.accounts += written is not None
 
 
@@ -317,14 +329,68 @@ async def write_accounts(ctx: TickContext, tally: HistoryTally) -> None:
             await chronicle_collection(ctx, collection, tally)
 
 
+KIND_DECAY: Mapping[AccountKind, int] = total(
+    AccountKind,
+    {
+        AccountKind.OFFICIAL_CHRONICLE: 100,
+        AccountKind.FOLK_MEMORY: 120,
+        AccountKind.FOREIGN_ACCOUNT: 100,
+        AccountKind.GOSPEL: 60,
+        AccountKind.EPIC: 80,
+        AccountKind.INSCRIPTION: 30,
+        AccountKind.FOUNDING_MYTH: 50,
+        AccountKind.ELDER_MEMORY: 140,
+        AccountKind.RECORD: 20,
+        AccountKind.TESTIMONY: 110,
+    },
+)
+
+
+MEDIUM_FADE: Mapping[AccountMedium, int] = total(
+    AccountMedium,
+    {
+        AccountMedium.ORAL: 100,
+        AccountMedium.BOOK: 0,
+        AccountMedium.INSCRIPTION: 0,
+        AccountMedium.ARTWORK: 0,
+        AccountMedium.RECORD: 0,
+        AccountMedium.PERFORMANCE: 50,
+        AccountMedium.MIND_STATE: 10,
+    },
+)
+
+
+async def keeps_records(ctx: TickContext, realm_id: int) -> bool:
+    return await ctx.session.scalar(select(DataStoreRow.id).where(DataStoreRow.holder_node_id == realm_id).limit(1)) is not None
+
+
+def official_kind(own: bool, monument: int | None, kept: bool) -> AccountKind:
+    if not own:
+        return AccountKind.FOREIGN_ACCOUNT
+    if monument is not None:
+        return AccountKind.INSCRIPTION
+    return AccountKind.RECORD if kept else AccountKind.OFFICIAL_CHRONICLE
+
+
+async def official_medium(ctx: TickContext, realm_id: int, monument: int | None, artwork: int | None, kept: bool) -> AccountMedium:
+    if monument is not None:
+        return AccountMedium.INSCRIPTION
+    if artwork is not None:
+        return AccountMedium.ARTWORK
+    ruler = await ruler_id(ctx, realm_id)
+    mind = await ctx.session.get(MindProfileRow, ruler) if ruler is not None else None
+    if mind is not None and mind.seat is not MindSeat.BODY:
+        return AccountMedium.MIND_STATE
+    return AccountMedium.RECORD if kept else AccountMedium.BOOK
+
+
 async def age_accounts(ctx: TickContext, tally: HistoryTally) -> None:
     table = ctx.rules.historiography
     for account in list(await ctx.session.scalars(select(AccountRow).where(AccountRow.credence > 0).order_by(AccountRow.id))):
         if held(account.holder_entity_id):
             continue
-        if account.medium is AccountMedium.ORAL:
-            shift(account, "fidelity", -table.fidelity_decay)
-        shift(account, "credence", -table.credence_decay)
+        shift(account, "fidelity", -table.fidelity_decay * MEDIUM_FADE[account.medium] // PERCENT)
+        shift(account, "credence", -table.credence_decay * KIND_DECAY[account.kind] // PERCENT)
         tally.faded += 1
 
 

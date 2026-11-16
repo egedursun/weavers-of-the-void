@@ -50,6 +50,7 @@ class ConstructionRules:
     need_terraform_harvest: int = rule(60, 0, 200, G, "Harvest of its land below which a settlement that can terraform wants a terraformer (%)")
     need_prosperity_wonder: int = rule(80, 0, 100, G, "Prosperity at which a great city begins a wonder")
     need_literacy: int = rule(40, 0, 100, G, "Literacy below which a town wants a school")
+    press_literacy: int = rule(25, 0, 100, G, "Literacy at which a town that writes wants a printing house")
     need_wealth_bank: int = rule(60, 0, 100, G, "Wealth at which a town opens a bank")
     need_class_pct: int = rule(8, 0, 100, G, "Share of a class that calls for the works it staffs (%)")
     need_sanitation: int = rule(35, 0, 100, G, "Sanitation below which a town digs aqueducts and sewers")
@@ -167,3 +168,12 @@ class StructureFunctionsRules:
     museum_prestige: int = rule(5, 0, 100, G, "Prestige a working museum adds")
     guildhall_investment: int = rule(10, 0, 100000, G, "Investment a working guildhall adds per level each epoch")
     mint_investment: int = rule(15, 0, 100000, G, "Investment a working mint adds per level each epoch")
+
+
+@dataclass(frozen=True)
+class StructureEffectRules:
+    step_pct: int = rule(100, 0, 1000, G, "How strongly each level of a building moves what its own effects touch each epoch (%)")
+    cap: int = rule(10, 0, 100, G, "Most a town's buildings together move any one thing they touch in an epoch")
+    boom_pct: int = rule(55, 0, 100, G, "Chance an epoch of speculation in a town's exchanges and banks ends in gain rather than loss (%)")
+    quarantine_memory: int = rule(8, 1, 200, G, "Epochs a land remembers its last epidemic and keeps its quarantine houses tended")
+    quarantine_decay: int = rule(10, 0, 100, G, "Condition a quarantine house loses each epoch once its land has forgotten epidemics")

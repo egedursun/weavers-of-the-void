@@ -222,15 +222,15 @@ async def press(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: Cam
             continue
         guard = profile.militia + 1
         if might >= guard * table.tribute_ratio and await active_tribute(ctx.session, other.id, town.id) is None:
-            await impose_tribute(ctx, other, town, None, "tribute to the riders of the pastures")
+            await impose_tribute(ctx, other, town, None, "tribute to the herders of the pastures")
             tally.tributes += 1
-            await note(ctx, f"{other.name} bowed to the riders of {town.name} and paid them tribute.", key="nomads.tribute", ids=[other.id, town.id])
+            await note(ctx, f"{other.name} bowed to the herders of {town.name} and paid them tribute.", key="nomads.tribute", ids=[other.id, town.id])
             continue
         if might >= guard and ctx.rng(f"nomads.raid.{town.id}.{other.id}.{ctx.epoch}").chance(table.raid_pct):
             taken = min(await coin_of(ctx.session, ctx.rules, other), round_half_up(might * table.raid_take / PERCENT))
             if taken > 0 and await take_coin(ctx.session, ctx.rules, other, taken):
                 await receive_coin(ctx.session, ctx.rules, town, taken)
-            await change_relation(ctx, other.id, town.id, -table.raid_relation, MemoryKind.HARMED_ME, note="raided by riders")
+            await change_relation(ctx, other.id, town.id, -table.raid_relation, MemoryKind.HARMED_ME, note="raided by herders")
             tally.raids += 1
             await note(ctx, f"Riders of {town.name} raided {other.name} and rode off with {taken} in plunder.", key="nomads.raid", ids=[town.id, other.id])
             continue
@@ -244,7 +244,7 @@ async def trade(ctx: TickContext, town: EntityRow, camp: CampRow, other: EntityR
     if worth <= 0 or not await take_coin(ctx.session, ctx.rules, other, worth):
         return
     await receive_coin(ctx.session, ctx.rules, town, worth)
-    await change_relation(ctx, other.id, town.id, table.trade_regard, MemoryKind.TRADED_WITH, note="trade with the riders")
+    await change_relation(ctx, other.id, town.id, table.trade_regard, MemoryKind.TRADED_WITH, note="trade with the herders")
     tally.trades += 1
     await note(ctx, f"The camp of {town.name} traded the yield of its herds with {other.name} for {worth}.", key="nomads.trade", ids=[town.id, other.id])
 
@@ -282,7 +282,7 @@ async def confederate(
         tally.confederations += 1
         await note(
             ctx,
-            f"{leader.name} gathered {several(len(joined), 'wandering camp', 'wandering camps')} under one banner.",
+            f"{leader.name} gathered {several(len(joined), 'wandering camp', 'wandering camps')} under one rule.",
             key="nomads.confederation",
             ids=[leader.id, *joined],
         )

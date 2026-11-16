@@ -80,7 +80,12 @@ async def unrest(session: AsyncSession, rules: Rules, community_id: int) -> int:
         + pressures.get(PressureKind.HUMILIATION, 0)
         + pressures.get(PressureKind.INSECURITY, 0)
         + pressures.get(PressureKind.HUNGER, 0)
-    ) / 5
+        + pressures.get(PressureKind.UNEMPLOYMENT, 0)
+        + pressures.get(PressureKind.OPPRESSION, 0)
+        + pressures.get(PressureKind.POLLUTION, 0) // 2
+        + pressures.get(PressureKind.DISEASE_BURDEN, 0) // 2
+        + pressures.get(PressureKind.PURPOSELESSNESS, 0) // 2
+    ) / 9
     justice = await ruler_effect(session, rules, community_id, TraitEffect.JUSTICE)
     return round(weighted / justice) if justice else round(weighted)
 

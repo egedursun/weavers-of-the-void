@@ -1031,7 +1031,7 @@ Components of war strength (askeriGuc, hamiBonus, silahGucu, muttefikGucu).
 | key | original key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
 | patron_power_divisor | hami_guc_bolen | 8 | 1 | 1000 | War and diplomacy | Patron god's war contribution: god's power / this number |
-| war_father_multiplier | savas_babasi_carpan | 2 | 1 | 20 | War and diplomacy | The war-father power multiplies the patron contribution (×) |
+| war_leader_multiplier | savas_babasi_carpan | 2 | 1 | 20 | War and diplomacy | The war-father power multiplies the patron contribution (×) |
 | weapon_damage_divisor | silah_hasar_bolen | 8 | 1 | 1000 | War and diplomacy | A weapon's war contribution: damage / this number |
 | armor_protection_divisor | silah_koruma_bolen | 10 | 1 | 1000 | War and diplomacy | Armour's war contribution: protection / this number |
 | item_might_divisor | silah_kudret_bolen | 20 | 1 | 1000 | War and diplomacy | An item's might as war contribution: might / this number |

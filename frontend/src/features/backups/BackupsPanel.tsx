@@ -13,7 +13,13 @@ import { toast } from 'sonner'
 import { formatBytes } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, Medallion, MiniStat, Section } from '@/components/domain'
+import {
+  EmptyState,
+  Medallion,
+  MiniStat,
+  Paged,
+  Section,
+} from '@/components/domain'
 import { Label, Text } from '@/components/typography'
 import { VerifyBackupButton } from '@/features/maintenance/VerifyBackupButton'
 import { useRuleValue } from '@/features/world-rules/api'
@@ -61,7 +67,7 @@ function BackupRow({
   onRestore: (backup: BackupInfo) => void
 }) {
   return (
-    <li className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-background p-3'>
+    <li className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion
         icon={backupLook(backup).icon}
         tone={backupLook(backup).tone}
@@ -182,14 +188,16 @@ export function BackupsPanel({ readOnly }: BackupsPanelProps) {
       )}
       {backups.data && backups.data.length > 0 && (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {backups.data.map((backup) => (
-            <BackupRow
-              key={backup.file}
-              backup={backup}
-              readOnly={readOnly}
-              onRestore={setTarget}
-            />
-          ))}
+          <Paged items={backups.data} as='li'>
+            {(backup) => (
+              <BackupRow
+                key={backup.file}
+                backup={backup}
+                readOnly={readOnly}
+                onRestore={setTarget}
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <SecondaryTargetForm readOnly={readOnly} />

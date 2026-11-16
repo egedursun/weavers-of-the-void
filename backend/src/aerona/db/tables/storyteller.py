@@ -27,6 +27,8 @@ class StorytellerRow(Base):
     cycle_offset: Mapped[int] = mapped_column(default=0)
     spotlight_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     recent_kinds: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
+    palette: Mapped[dict[str, int]] = mapped_column(JSON, default=dict, server_default="{}")
+    target_points: Mapped[list[list[int]]] = mapped_column(JSON, default=list, server_default="[]")
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

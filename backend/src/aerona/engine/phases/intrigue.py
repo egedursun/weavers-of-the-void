@@ -3,8 +3,10 @@ from sqlalchemy import select
 from aerona.db.tables.intrigue import IdentityRow, SchemeRow
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.intrigue.belief_depth import keep_belief_depth
 from aerona.engine.intrigue.beliefs import fade_beliefs
 from aerona.engine.intrigue.decay import DecayTally, keep_decays
+from aerona.engine.intrigue.far_sources import far_sources
 from aerona.engine.intrigue.identities import tend_identity
 from aerona.engine.intrigue.names import confide_names, renew_names, research_names, seed_true_names
 from aerona.engine.intrigue.schemes import OPEN, SchemeTally, plotters, tend_scheme
@@ -63,16 +65,22 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.army_units",
     "table.beliefs",
     "table.bias_weights",
+    "table.community_relations",
     "table.favours",
     "table.forced_weather",
+    "table.foresights",
     "table.hooks",
     "table.identities",
+    "table.intrusions",
+    "table.mind_profiles",
     "table.mortal_profiles",
+    "table.network_nodes",
     "table.offices",
     "table.outbreaks",
     "table.people_culture",
     "table.personality_values",
     "table.polity_members",
+    "table.powers",
     "table.region_environment",
     "table.relationships",
     "table.schemes",
@@ -81,7 +89,9 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.sieges",
     "table.skills",
     "table.sky_events",
+    "table.source_trust",
     "table.spy_networks",
+    "table.surveillance_profiles",
     "table.traits",
     "table.true_names",
     "table.world_maps",
@@ -93,12 +103,14 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.bonds",
     "table.chronicle",
     "table.claims",
+    "table.community_relations",
     "table.favours",
     "table.hooks",
     "table.identities",
     "table.messages",
     "table.schemes",
     "table.secrets",
+    "table.source_trust",
     "table.true_names",
 )
 async def intrigue(ctx: TickContext) -> None:
@@ -108,6 +120,8 @@ async def intrigue(ctx: TickContext) -> None:
     await neighbours_seen(ctx, atlas, sources)
     await spy_reports(ctx, sources)
     await scout_reports(ctx, sources)
+    await far_sources(ctx, sources)
+    await keep_belief_depth(ctx, sources)
     await likeness_noticed(ctx, sources)
     ctx.count("true_names_learned", await research_names(ctx))
     ctx.count("true_names_confided", await confide_names(ctx))

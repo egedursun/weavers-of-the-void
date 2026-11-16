@@ -73,7 +73,7 @@ function EventRow({ item }: { item: Summary }) {
   const spec = kindSpec(item.kind)
   const phase = PHASE_SPEC[item.phase]
   return (
-    <li className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 items-center gap-2.5 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
       <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
         <EntityLink kind='entity' id={String(item.entity_id)}>
@@ -278,7 +278,7 @@ function CreateEvent({
           blocked={busy}
           onPick={(value) => setPhase(value as EventPhase)}
         />
-        <div className='flex min-w-0 items-center gap-2 rounded-lg border bg-card p-2'>
+        <div className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
           <Lock aria-hidden='true' className='size-icon-xs text-primary' />
           <Text as='span' className='flex-1'>
             Hold it in this phase

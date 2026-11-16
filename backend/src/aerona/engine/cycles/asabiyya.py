@@ -107,7 +107,7 @@ async def tend(
     if frontier:
         tally.frontiers += 1
     if before < table.surge_at <= row.value:
-        await note(ctx, f"The frontier forged {holder.name} into one: its people stand together as never before.", key="asabiyya.surge", ids=[holder.id])
+        await note(ctx, f"The frontier bound {holder.name} into one: its people stand together as never before.", key="asabiyya.surge", ids=[holder.id])
     if before >= table.soft_at > row.value:
         await note(
             ctx, f"Generations of ease have softened {holder.name}; its people no longer hold together as they did.", key="asabiyya.softened", ids=[holder.id]

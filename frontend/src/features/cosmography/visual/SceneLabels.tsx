@@ -128,7 +128,7 @@ export function LabelLayer({
             'absolute top-0 left-0 flex flex-col items-center rounded-md px-1.5 py-0.5 text-center whitespace-nowrap opacity-0 shadow-sm',
             label.quiet
               ? 'text-cosmos-label-muted'
-              : 'bg-cosmos-void/80 text-cosmos-label'
+              : 'plate-chip border border-gild/50 text-plate-ink'
           )}
         >
           <Text

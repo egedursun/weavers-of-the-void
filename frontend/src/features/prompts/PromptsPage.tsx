@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Blocks, BookText, Crown, Repeat } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Muted } from '@/components/typography'
+import { IntroNote } from '@/components/domain'
 import { ContextBlocksView } from './ContextBlocksView'
 import { PromptCatalogueView } from './PromptCatalogueView'
 import { SonPromptView } from './SonPromptView'
@@ -16,11 +16,11 @@ export function PromptsPage({ search = {} }: PromptsPageProps) {
   const [view, setView] = useState<PromptView>(search.view ?? 'son')
   return (
     <div className='flex min-w-0 flex-col gap-6'>
-      <Muted>
+      <IntroNote>
         Look at exactly what the agents read: a son’s whole turn prompt, every
         context block, the prompt catalogue with its templates, and the motifs
         Fate holds back.
-      </Muted>
+      </IntroNote>
       <Tabs
         value={view}
         onValueChange={(value) => setView(value as PromptView)}

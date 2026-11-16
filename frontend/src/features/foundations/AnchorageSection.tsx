@@ -101,7 +101,7 @@ function AnchorControls({
             disabled={busy !== null}
           />
         </div>
-        <label className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2.5'>
+        <label className='flex min-w-0 items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
           <Switch
             checked={hold}
             onCheckedChange={setHold}
@@ -249,7 +249,7 @@ export function AnchorageSection({
                   {(war) => (
                     <li
                       key={war.war_id}
-                      className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2.5'
+                      className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-2.5'
                     >
                       <Medallion
                         icon={war.ending ? Swords : Flame}

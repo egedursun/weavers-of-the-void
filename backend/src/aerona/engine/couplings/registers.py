@@ -44,7 +44,7 @@ FACTION_SPEECH = MappingProxyType(
         F.ASSASSINS: SociolectKind.CANT,
         F.CRIME_FAMILY: SociolectKind.CANT,
         F.THIEVES_GUILD: SociolectKind.CANT,
-        F.VOID_PIRATES: SociolectKind.CANT,
+        F.ROUTE_RAIDERS: SociolectKind.CANT,
     }
 )
 SPEECH_LAYERS = MappingProxyType(
@@ -115,7 +115,7 @@ async def make_sign_language(ctx: TickContext, community: EntityRow, cause: Sign
         RecordSpec(
             entity_type=EntityType.LANGUAGE,
             name=await NameRepository(ctx.session).unique_name(f"{community.name} Signing"),
-            body=f"The signed language of {community.name}, made with hands and faces instead of voices.",
+            body=f"The signed language of {community.name}, made by signs instead of voices.",
             stats=LanguageStats(spread=0, complexity=PERCENT // 2, sacredness=PERCENT // 2 if cause is SignCause.SILENCE_VOW else 0),
             power=max(1, community.power_level // 2),
             world_id=community.world_id,

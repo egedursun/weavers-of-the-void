@@ -1,5 +1,6 @@
 import { Flag, Medal, Trophy } from 'lucide-react'
 import { plural } from '@/lib/units'
+import { OrnateFrame } from '@/components/ui/ornate'
 import { KpiTile, MiniStat } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { ScoreSparkline } from './ScoreSparkline'
@@ -64,8 +65,14 @@ export function ScorePanel({ data }: { data: GoalsOverview }) {
           value={completed}
           hint={plural(data.running.length, 'goal running', 'goals running')}
         />
-        <div className='flex min-w-0 flex-col gap-2 rounded-xl border bg-background p-4 sm:col-span-3 xl:col-span-1'>
-          <Label variant='overline'>Score over the epochs</Label>
+        <OrnateFrame
+          frame='tile'
+          crest
+          tone='gold'
+          bayClassName='sm:col-span-3 xl:col-span-1'
+          className='flex min-w-0 flex-col gap-2 p-4'
+        >
+          <Label variant='gilded'>Score over the epochs</Label>
           {data.score_history.length < 2 ? (
             <Muted variant='caption'>
               The score is measured at the end of each epoch.
@@ -73,7 +80,7 @@ export function ScorePanel({ data }: { data: GoalsOverview }) {
           ) : (
             <ScoreSparkline history={data.score_history} />
           )}
-        </div>
+        </OrnateFrame>
       </div>
       {parts.length > 0 && (
         <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5'>

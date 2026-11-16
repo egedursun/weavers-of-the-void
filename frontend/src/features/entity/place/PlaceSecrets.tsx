@@ -58,7 +58,7 @@ function SecretTile({
   const extra = detail(secret)
   return (
     <div
-      className='@container/secret flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
+      className='@container/secret flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'
       data-secret={secret.id}
     >
       <div className='flex min-w-0 items-center gap-2'>

@@ -4,7 +4,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
-from aerona.domain.enums.genetics import DwellingKind, HouseholdDecision, HouseholdRole
+from aerona.domain.enums.genetics import DwellingKind, DwellingTenure, HouseholdDecision, HouseholdForm, HouseholdRole
+from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.society import SocialClass
 
@@ -39,6 +40,7 @@ class HouseholdRow(Base):
     debts: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     last_decision: Mapped[HouseholdDecision | None] = mapped_column(enum_type(HouseholdDecision, "last_decision"))
     decided_epoch: Mapped[int | None]
+    form: Mapped[HouseholdForm] = mapped_column(enum_type(HouseholdForm, "form"), default=HouseholdForm.NUCLEAR, server_default=HouseholdForm.NUCLEAR.value)
     formed_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -72,6 +74,10 @@ class DwellingRow(Base):
     rooms: Mapped[int] = mapped_column(default=1)
     settlement_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     district_id: Mapped[int | None] = mapped_column(ForeignKey("districts.id", ondelete="SET NULL"))
+    tenure: Mapped[DwellingTenure] = mapped_column(enum_type(DwellingTenure, "tenure"), default=DwellingTenure.OWNED, server_default=DwellingTenure.OWNED.value)
+    heating: Mapped[EnergyKind | None] = mapped_column(enum_type(EnergyKind, "heating"))
+    light: Mapped[EnergyKind | None] = mapped_column(enum_type(EnergyKind, "light"))
+    crowding: Mapped[int] = mapped_column(default=0, server_default="0")
     built_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

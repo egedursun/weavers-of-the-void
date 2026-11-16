@@ -20,6 +20,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   EmptyState,
   Medallion,
+  Paged,
   PagedList,
   Section,
   StatBar,
@@ -143,31 +144,33 @@ function MotifList({
     )
   return (
     <ul className='flex min-w-0 flex-col'>
-      {report.motifs.map((motif) => (
-        <li
-          key={motif.key}
-          data-motif={motif.key}
-          className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 border-b py-3 last:border-b-0'
-        >
-          <div className='flex min-w-0 flex-1 basis-60 flex-col gap-1'>
-            <StatBar
-              label={motif.key}
-              value={motif.percent / PERCENT_MAX}
-              max={1}
-              format='percent'
-              showMax={false}
-              tone={motif.pinned ? 'warning' : 'default'}
+      <Paged items={report.motifs} as='li'>
+        {(motif) => (
+          <li
+            key={motif.key}
+            data-motif={motif.key}
+            className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 border-b py-3 last:border-b-0'
+          >
+            <div className='flex min-w-0 flex-1 basis-60 flex-col gap-1'>
+              <StatBar
+                label={motif.key}
+                value={motif.percent / PERCENT_MAX}
+                max={1}
+                format='percent'
+                showMax={false}
+                tone={motif.pinned ? 'warning' : 'default'}
+              />
+            </div>
+            <MotifActions
+              motif={motif.key}
+              mode={modes.get(motif.key) ?? null}
+              blocked={blocked}
+              pending={pending}
+              onChange={onChange}
             />
-          </div>
-          <MotifActions
-            motif={motif.key}
-            mode={modes.get(motif.key) ?? null}
-            blocked={blocked}
-            pending={pending}
-            onChange={onChange}
-          />
-        </li>
-      ))}
+          </li>
+        )}
+      </Paged>
     </ul>
   )
 }
@@ -188,7 +191,7 @@ function AddOverride({
   const reason =
     blocked ?? (pending ? 'Saving.' : key === '' ? 'Type a motif key.' : null)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-xl border border-dashed bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md p-3 sealed-well'>
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={Plus} tone='gold' size='sm' />
         <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
@@ -203,7 +206,7 @@ function AddOverride({
         id={inputId}
         value={motif}
         maxLength={MOTIF_KEY_MAX}
-        placeholder='A motif, for example weeping moon'
+        placeholder='A motif key'
         onChange={(event) => setMotif(event.target.value)}
       />
       <ChoiceTiles
@@ -301,40 +304,44 @@ export function TiredMotifsView() {
               <Muted variant='caption'>No override yet.</Muted>
             ) : (
               <ul className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2'>
-                {report.data.overrides.map((item) => (
-                  <li
-                    key={item.id}
-                    className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-background p-3'
-                  >
-                    <Medallion
-                      icon={item.mode === 'pinned' ? Pin : Ban}
-                      tone={item.mode === 'pinned' ? 'warning' : 'success'}
-                      size='sm'
-                    />
-                    <div className='flex min-w-0 flex-1 basis-60 items-center gap-2'>
-                      <Text as='span' weight='medium' truncate>
-                        {item.motif}
-                      </Text>
-                      <Badge
-                        size='sm'
-                        variant={item.mode === 'pinned' ? 'warning' : 'success'}
-                      >
-                        {item.mode === 'pinned' ? <Pin /> : <Ban />}
-                        {MODE_LABEL[item.mode]}
-                      </Badge>
-                    </div>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      disabled={blocked !== null || save.isPending}
-                      disabledReason={blocked ?? 'Saving.'}
-                      onClick={() => change(item.motif, null)}
+                <Paged items={report.data.overrides} as='li'>
+                  {(item) => (
+                    <li
+                      key={item.id}
+                      className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
                     >
-                      <Eraser />
-                      Clear
-                    </Button>
-                  </li>
-                ))}
+                      <Medallion
+                        icon={item.mode === 'pinned' ? Pin : Ban}
+                        tone={item.mode === 'pinned' ? 'warning' : 'success'}
+                        size='sm'
+                      />
+                      <div className='flex min-w-0 flex-1 basis-60 items-center gap-2'>
+                        <Text as='span' weight='medium' truncate>
+                          {item.motif}
+                        </Text>
+                        <Badge
+                          size='sm'
+                          variant={
+                            item.mode === 'pinned' ? 'warning' : 'success'
+                          }
+                        >
+                          {item.mode === 'pinned' ? <Pin /> : <Ban />}
+                          {MODE_LABEL[item.mode]}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        disabled={blocked !== null || save.isPending}
+                        disabledReason={blocked ?? 'Saving.'}
+                        onClick={() => change(item.motif, null)}
+                      >
+                        <Eraser />
+                        Clear
+                      </Button>
+                    </li>
+                  )}
+                </Paged>
               </ul>
             )}
             <AddOverride

@@ -12,7 +12,7 @@ import {
 import { plural } from '@/lib/units'
 import { Input } from '@/components/ui/input'
 import { Kbd } from '@/components/ui/kbd'
-import { EmptyState, PageHeader, Section } from '@/components/domain'
+import { EmptyState, Paged, PageHeader, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { GLOSSARY } from './glossary'
 
@@ -38,7 +38,7 @@ const FIXED_SHORTCUTS: Shortcut[] = [
 function ShortcutTile({ shortcut }: { shortcut: Shortcut }) {
   const Icon = shortcut.icon
   return (
-    <li className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-card p-2.5'>
+    <li className='flex min-w-0 items-center gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <span className='flex size-control-sm shrink-0 items-center justify-center rounded-md border border-primary/25 bg-primary/10 text-primary'>
         <Icon aria-hidden='true' className='size-icon-sm' />
       </span>
@@ -77,9 +77,11 @@ export function HelpDrawer() {
       />
       <Section title='Keyboard shortcuts' level={3} icon={Keyboard}>
         <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
-          {shortcuts.map((shortcut) => (
-            <ShortcutTile key={shortcut.key} shortcut={shortcut} />
-          ))}
+          <Paged items={shortcuts} as='li'>
+            {(shortcut) => (
+              <ShortcutTile key={shortcut.key} shortcut={shortcut} />
+            )}
+          </Paged>
         </ul>
         <Muted variant='caption'>
           While you type in a text box, digits and ? are not shortcuts.
@@ -111,7 +113,7 @@ export function HelpDrawer() {
             {terms.map((term) => (
               <div
                 key={term.term}
-                className='flex min-w-0 flex-col gap-1 rounded-lg border bg-card p-3'
+                className='flex min-w-0 flex-col gap-1 rounded-md border surface-framed border-gild/70 bg-card p-3'
               >
                 <Text as='dt' weight='semibold' className='font-display'>
                   {term.term}

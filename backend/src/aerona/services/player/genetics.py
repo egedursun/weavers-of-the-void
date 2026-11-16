@@ -131,7 +131,7 @@ async def pool(scope: PlayerScope, node_id: int) -> AllelePoolRow:
 async def found(scope: PlayerScope, command: GenomeTarget) -> Effect:
     holder = await mortal(scope, command.mortal_id)
     row = await genome(scope, holder.id)
-    return Effect(f"The blood of {holder.name} is written down, locus by locus.", target_node_id=holder.id, values={"loci": len(row.genes)})
+    return Effect(f"The genome of {holder.name} is written down, locus by locus.", target_node_id=holder.id, values={"loci": len(row.genes)})
 
 
 @player_action("genome:gene", ActionKind.EDIT_RECORD)
@@ -144,7 +144,7 @@ async def set_gene(scope: PlayerScope, command: SetGene) -> Effect:
     await scope.session.flush()
     spec = LOCI[command.locus]
     return Effect(
-        f"{spec.label}: {spec.allele(command.first).label} and {spec.allele(command.second).label} now run in this blood.", target_node_id=command.mortal_id
+        f"{spec.label}: {spec.allele(command.first).label} and {spec.allele(command.second).label} now run in this genome.", target_node_id=command.mortal_id
     )
 
 
@@ -182,7 +182,7 @@ async def redraw(scope: PlayerScope, command: GenomeTarget) -> Effect:
     row.genes = drawn_genes(context.rng(f"genome.redraw.{holder.id}.{await scope.epoch()}"), source.frequencies if source is not None else None)
     row.locked = held(row.locked, [GENES], True)
     await scope.session.flush()
-    return Effect(f"The blood of {holder.name} was drawn anew from the pool of its people.", target_node_id=holder.id)
+    return Effect(f"The genome of {holder.name} was drawn anew from the pool of its people.", target_node_id=holder.id)
 
 
 @player_action("genome:remove", ActionKind.EDIT_RECORD)
@@ -215,7 +215,7 @@ async def set_frequency(scope: PlayerScope, command: SetFrequency) -> Effect:
     row.frequencies = frequencies
     row.locked = held(row.locked, [FREQUENCIES], command.hold)
     await scope.session.flush()
-    return Effect(f"{LOCI[command.locus].allele(key).label} now runs in {command.frequency}% of the people's blood.", target_node_id=command.people_id)
+    return Effect(f"{LOCI[command.locus].allele(key).label} now runs in {command.frequency}% of the people's pool.", target_node_id=command.people_id)
 
 
 @player_action("allele_pool:stance", ActionKind.EDIT_RECORD)

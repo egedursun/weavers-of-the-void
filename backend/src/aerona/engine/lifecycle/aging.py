@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.medicine import MEDICINE, tier_of
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
@@ -12,8 +13,9 @@ from aerona.domain.enums.cosmography import PhenomenonKind
 from aerona.domain.enums.entity import EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.cosmos.placement import world_pull
+from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.knowledge import known_branches
+from aerona.engine.primitives.knowledge import known_branches, known_levels
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import set_stats, stat
@@ -77,6 +79,10 @@ async def effective_lifespan(
     base = recorded if recorded else rules.world_effects.default_lifespan
     region = region_atlas.top_region(entity.id)
     medicine_bonus = rules.world_engine.medicine_lifespan_bonus if region is not None and region in healed else 0
+    home = await community_of(session, entity) if entity.entity_type is EntityType.MORTAL else None
+    if home is not None:
+        level = (await known_levels(session, [home.id])).get(home.id, {}).get(KnowledgeBranch.MEDICINE, 0)
+        medicine_bonus += round(base * MEDICINE[tier_of(rules.healing, level, 0, False)].lifespan_pct / PERCENT)
     flags = await EntityRepository(session).flags(entity.id)
     notable_bonus = rules.world_engine.notable_lifespan_bonus if is_notable(rules, entity, flags) else 0
     return LifespanInfo(base=base, medicine=medicine_bonus, notable=notable_bonus)

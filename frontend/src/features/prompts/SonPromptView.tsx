@@ -168,24 +168,26 @@ export function SonPromptView({ initialSon }: SonPromptViewProps) {
   const preview = useSonPrompt(sonId)
   return (
     <div className='flex min-w-0 flex-col gap-6'>
-      <FormRow
-        label='Son'
-        description='The exact prompt this son would receive if their turn began now.'
-      >
-        {(id) => (
-          <div className='min-w-0 flex-1 basis-60'>
-            <NamePicker
-              id={id}
-              value={sonId === null ? null : String(sonId)}
-              kinds={['son']}
-              placeholder='Pick a son'
-              onChange={(value) =>
-                setSonId(value === null ? null : Number(value))
-              }
-            />
-          </div>
-        )}
-      </FormRow>
+      <div className='rounded-md border surface-sheen border-gild/60 bg-card p-4'>
+        <FormRow
+          label='Son'
+          description='The exact prompt this son would receive if their turn began now.'
+        >
+          {(id) => (
+            <div className='min-w-0 flex-1 basis-60'>
+              <NamePicker
+                id={id}
+                value={sonId === null ? null : String(sonId)}
+                kinds={['son']}
+                placeholder='Pick a son'
+                onChange={(value) =>
+                  setSonId(value === null ? null : Number(value))
+                }
+              />
+            </div>
+          )}
+        </FormRow>
+      </div>
       {sonId === null && (
         <EmptyState
           icon={Crown}

@@ -25,7 +25,7 @@ export function ArmyWorks({ army }: { army: ArmyCard }) {
   return (
     <div
       data-surface='ArmyWorks'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-muted/20 p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Label variant='overline'>Land and works</Label>
@@ -109,7 +109,7 @@ export function CommanderAreas({ army }: { army: ArmyCard }) {
   return (
     <div
       data-surface='CommanderAreas'
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/20 p-3'
+      className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Label variant='overline'>Leads best at</Label>

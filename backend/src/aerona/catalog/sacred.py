@@ -145,12 +145,12 @@ SACRAMENT_GUARDS = total(
 STRATUM_MODELS = total(
     StratumKind,
     {
-        StratumKind.PARADISE: M.JUDGED_REALMS,
-        StratumKind.TORMENT: M.JUDGED_REALMS,
-        StratumKind.PLAIN: M.COMMON_REALM,
-        StratumKind.OBLIVION: M.OBLIVION,
-        StratumKind.WARRIOR_HALL: M.WARRIOR_HALL,
-        StratumKind.ANCESTOR_HALL: M.ANCESTOR_HALL,
+        StratumKind.REWARD: M.JUDGED_REALMS,
+        StratumKind.PUNISHMENT: M.JUDGED_REALMS,
+        StratumKind.COMMON: M.COMMON_REALM,
+        StratumKind.DISSOLUTION: M.OBLIVION,
+        StratumKind.BY_MANNER_OF_DEATH: M.REALM_BY_DEATH,
+        StratumKind.BY_LINE: M.REALM_OF_LINE,
     },
 )
 
@@ -168,11 +168,11 @@ STATE_MODELS = partial(
 MODEL_STRATA = partial(
     AfterlifeModel,
     {
-        M.JUDGED_REALMS: StratumKind.PARADISE,
-        M.COMMON_REALM: StratumKind.PLAIN,
-        M.WARRIOR_HALL: StratumKind.WARRIOR_HALL,
-        M.ANCESTOR_HALL: StratumKind.ANCESTOR_HALL,
-        M.OBLIVION: StratumKind.OBLIVION,
+        M.JUDGED_REALMS: StratumKind.REWARD,
+        M.COMMON_REALM: StratumKind.COMMON,
+        M.REALM_BY_DEATH: StratumKind.BY_MANNER_OF_DEATH,
+        M.REALM_OF_LINE: StratumKind.BY_LINE,
+        M.OBLIVION: StratumKind.DISSOLUTION,
     },
     without=(M.REBIRTH, M.WANDERING, M.UNION),
 )

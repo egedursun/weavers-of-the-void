@@ -216,7 +216,7 @@ export function IdeologyPanel({
                 return (
                   <li
                     key={item}
-                    className='flex items-center gap-1 rounded-md border bg-muted/30 py-0.5 pr-0.5 pl-2'
+                    className='flex items-center gap-1 rounded-md border surface-well border-gild/20 bg-muted/60 py-0.5 pr-0.5 pl-2'
                   >
                     <Icon
                       aria-hidden='true'

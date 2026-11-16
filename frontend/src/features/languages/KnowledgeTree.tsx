@@ -20,6 +20,7 @@ import {
   EmptyState,
   EntityLink,
   Medallion,
+  Paged,
   PagedList,
   Section,
 } from '@/components/domain'
@@ -127,7 +128,7 @@ function BranchTile({
 function LockedTile({ branch }: { branch: KnowledgeBranch }) {
   const Icon = BRANCH_ICON[branch]
   return (
-    <div className='flex min-w-0 items-center gap-2.5 rounded-xl border border-dashed bg-muted/40 p-3'>
+    <div className='flex min-w-0 items-center gap-2.5 rounded-md p-3 sealed-well'>
       <Medallion icon={Icon} tone='muted' size='sm' />
       <span className='flex min-w-0 flex-1 flex-col'>
         <Text as='span' weight='medium' tone='muted' truncate>
@@ -159,7 +160,7 @@ function TechDetail({
   const spread = Math.max(0, Math.min(PERCENT, item.spread ?? 0))
   const lost = item.knowers.length === 0
   return (
-    <div className='flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4'>
+    <div className='flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4'>
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={Icon} tone={lost ? 'muted' : 'gold'} />
         <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
@@ -409,24 +410,28 @@ export function KnowledgeTree({ knowledge }: { knowledge: KnowledgeView[] }) {
           </PagedList>
         )}
         <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'>
-          {branches.map((summary) => (
-            <li key={summary.key} className='min-w-0'>
-              <BranchTile
-                summary={summary}
-                peak={peak}
-                active={summary.key === current.key}
-                onSelect={() => {
-                  setBranch(summary.key)
-                  setSelected(null)
-                }}
-              />
-            </li>
-          ))}
-          {locked.map((key) => (
-            <li key={key} className='min-w-0'>
-              <LockedTile branch={key} />
-            </li>
-          ))}
+          <Paged items={branches} as='li'>
+            {(summary) => (
+              <li key={summary.key} className='min-w-0'>
+                <BranchTile
+                  summary={summary}
+                  peak={peak}
+                  active={summary.key === current.key}
+                  onSelect={() => {
+                    setBranch(summary.key)
+                    setSelected(null)
+                  }}
+                />
+              </li>
+            )}
+          </Paged>
+          <Paged items={locked} as='li'>
+            {(key) => (
+              <li key={key} className='min-w-0'>
+                <LockedTile branch={key} />
+              </li>
+            )}
+          </Paged>
         </ul>
       </Section>
       <div className='grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-3'>

@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
@@ -6,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -345,14 +347,18 @@ async def holdings_in(ctx: TickContext, towns: list[int]) -> list[tuple[BondRow,
     return found
 
 
+COMPENSATED: Mapping[Compensation, int] = total(Compensation, {Compensation.NONE: 0, Compensation.PARTIAL: 50, Compensation.FULL: 100})
+
+
 async def compensate(ctx: TickContext, row: OrderTransitionRow, realm: EntityRow, loser: EntityRow) -> int:
     table = ctx.rules.economic_orders
-    if row.compensation is Compensation.NONE:
+    share = COMPENSATED[row.compensation]
+    if share == 0:
         return table.uncompensated_grievance
-    price = table.holding_price if row.compensation is Compensation.FULL else table.holding_price // 2
+    price = table.holding_price * share // PERCENT
     if await take_coin(ctx.session, ctx.rules, realm, price):
         await give_coin(ctx.session, ctx.rules, loser, price)
-        return 0 if row.compensation is Compensation.FULL else table.uncompensated_grievance // 2
+        return table.uncompensated_grievance * (PERCENT - share) // PERCENT
     return table.uncompensated_grievance
 
 

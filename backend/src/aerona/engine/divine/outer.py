@@ -18,6 +18,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import AfterlifeState, TenetKind
 from aerona.domain.enums.limits import POWER_SLOTS
+from aerona.domain.enums.outer import OuterFate
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import PowerEffect
 from aerona.domain.enums.world import DARK_STAR_TYPES
@@ -153,12 +154,16 @@ async def outer_feeding(ctx: TickContext) -> int:
         if held(being.id) or being.id in gone:
             continue
         row = await outer_profile(ctx, being)
+        if row.fate is not OuterFate.ACTIVE:
+            continue
         if "reach" not in row.locked:
             row.reach = reach_of(table.size_per_region, being)
         bite = max(1, round(stat_or(being, "interest", 0) * table.bite_per_interest / PERCENT))
         eaten = await EATERS[row.hunger](ctx, being, bite)
         if "fed" not in row.locked:
             row.fed += eaten
+        if "unfed_epochs" not in row.locked:
+            row.unfed_epochs = 0 if eaten else row.unfed_epochs + 1
         if eaten:
             influence = clamp_percent(stat_or(being, "influence", 0) + table.influence_per_meal)
             being.stats = being.stats.model_copy(update={"influence": influence})

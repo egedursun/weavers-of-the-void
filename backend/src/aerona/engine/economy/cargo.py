@@ -1,7 +1,7 @@
-from aerona.catalog.urban import cargo_class
+from aerona.catalog.urban import CARGO, cargo_class
 from aerona.constants.units import PERCENT
 from aerona.domain.enums.economy import CommodityKind, TradeMode
-from aerona.domain.enums.urban import CargoClass, Preservation
+from aerona.domain.enums.urban import Preservation
 from aerona.rules.registry import Rules
 
 WATER_MODES = frozenset({TradeMode.RIVER, TradeMode.SEA})
@@ -10,7 +10,7 @@ KEEPING = {Preservation.SALTED: "salted_pct", Preservation.ICED: "iced_pct", Pre
 
 
 def carriage_factor(rules: Rules, commodity: CommodityKind, mode: TradeMode) -> float:
-    if cargo_class(commodity) is not CargoClass.BULK:
+    if not CARGO[cargo_class(commodity)].heavy:
         return 1.0
     if mode in WATER_MODES:
         return rules.cargo.water_bulk_pct / PERCENT
@@ -20,10 +20,12 @@ def carriage_factor(rules: Rules, commodity: CommodityKind, mode: TradeMode) -> 
 
 
 def spoilage(rules: Rules, commodity: CommodityKind, mode: TradeMode, preservation: Preservation) -> float:
-    kind = cargo_class(commodity)
-    if kind is CargoClass.LIVESTOCK:
-        return rules.cargo.livestock_loss / PERCENT
-    if kind is not CargoClass.PERISHABLE or mode not in LAND_MODES:
+    spec = CARGO[cargo_class(commodity)]
+    if spec.loss_key is None:
+        return 0.0
+    if not spec.perishes:
+        return int(getattr(rules.cargo, spec.loss_key)) / PERCENT
+    if mode not in LAND_MODES:
         return 0.0
     key = KEEPING.get(preservation)
     spared = int(getattr(rules.cargo, key)) / PERCENT if key is not None else 0.0

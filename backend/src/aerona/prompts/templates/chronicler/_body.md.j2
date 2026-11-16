@@ -12,7 +12,7 @@ TASK: {{ task }}
 {% include "shared/lore_language.md.j2" %} {% include "shared/_harm_narration.md.j2" %}
 
 {% if multi_world %}
-WORLDS: {% for world in worlds %}world#{{ world.id }} {{ world.name }}{% if not loop.last %}, {% endif %}{% endfor %}. In the "worlds" field write a separate section for EVERY world (skip none). Each world's section tells ONLY the events under that world's heading; do not carry another world's people, city or person into that world. For a world with few events, tell of its silence, its waiting, its everyday life; do not add invented great events.
+WORLDS: {% for world in worlds %}world#{{ world.id }} {{ world.name }}{% if not loop.last %}, {% endif %}{% endfor %}. In the "worlds" field write a separate section for EVERY world (skip none). Each world's section tells ONLY the events under that world's heading; do not carry another world's people, city or person into that world. For a world with few events, tell plainly what is recorded of it; do not add invented great events.
 {% endif %}
 {% if previous_names %}
 NAMES OF PREVIOUS AGES (this age takes a name of its own): {{ previous_names[-f.previous_epoch_names_shown:] | join("; ") }}

@@ -8,6 +8,7 @@ import {
   EpochSlider,
   LoadingBlock,
   MiniStat,
+  Paged,
   PagedList,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
@@ -149,7 +150,7 @@ function MapKey({ sides }: { sides: { id: number; name: string }[] }) {
   return (
     <div
       data-surface='WarMapKey'
-      className='pointer-events-none absolute inset-x-2 bottom-2 flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background/85 px-3 py-2 shadow-sm backdrop-blur-sm'
+      className='pointer-events-none absolute inset-x-2 bottom-2 flex min-w-0 flex-col gap-1.5 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2 backdrop-blur-sm'
     >
       <PagedList
         items={sides}
@@ -297,30 +298,32 @@ function Legend({
         )}
       </PagedList>
       <ul className='flex min-w-0 flex-col gap-1.5'>
-        {room.armies.map((army, index) => {
-          const place = placeOf(army, epoch)
-          return (
-            <li
-              key={army.army?.id ?? index}
-              className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-lg border bg-background px-2.5 py-1.5'
-            >
-              <Text
-                as='span'
-                weight='medium'
-                truncate
-                className='min-w-0 flex-1'
+        <Paged items={room.armies} as='li'>
+          {(army, index) => {
+            const place = placeOf(army, epoch)
+            return (
+              <li
+                key={army.army?.id ?? index}
+                className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-1.5'
               >
-                {army.army?.name ?? 'An army'}
-              </Text>
-              <Tag item={nameOf(STANCE, place.stance)} />
-              <Muted as='span' variant='caption'>
-                {place.region !== null
-                  ? (where.get(place.region) ?? 'beyond the known map')
-                  : 'off the map'}
-              </Muted>
-            </li>
-          )
-        })}
+                <Text
+                  as='span'
+                  weight='medium'
+                  truncate
+                  className='min-w-0 flex-1'
+                >
+                  {army.army?.name ?? 'An army'}
+                </Text>
+                <Tag item={nameOf(STANCE, place.stance)} />
+                <Muted as='span' variant='caption'>
+                  {place.region !== null
+                    ? (where.get(place.region) ?? 'beyond the known map')
+                    : 'off the map'}
+                </Muted>
+              </li>
+            )
+          }}
+        </Paged>
       </ul>
     </div>
   )
@@ -460,7 +463,7 @@ export function WarMap({ room }: { room: WarRoom }) {
         data-surface='WarMap'
         className='grid min-w-0 grid-cols-1 gap-3 @3xl/mil:grid-cols-5'
       >
-        <div className='relative min-w-0 self-start overflow-hidden rounded-lg border bg-background @3xl/mil:col-span-3'>
+        <div className='relative min-w-0 self-start overflow-hidden rounded-md border surface-sheen border-gild/60 bg-card @3xl/mil:col-span-3'>
           <Terrain view={view} box={box} />
           <svg
             viewBox={`${box.x} ${box.y} ${box.width} ${box.height}`}

@@ -307,7 +307,7 @@ async def test_resolve(ctx: TickContext, party: Party, tally: ExpeditionTally) -
     table = ctx.rules.expeditions
     for member in party.alive:
         if member.stress >= table.breaking_stress:
-            await harm(ctx, party, member, table.breaking_hp, cause=HarmCause.EXPOSURE, reason="whose heart gave out on an expedition", tally=tally)
+            await harm(ctx, party, member, table.breaking_hp, cause=HarmCause.EXPOSURE, reason="who gave out from exhaustion on an expedition", tally=tally)
             keep(member, "stress", table.resolve_at)
             continue
         if member.stress < table.resolve_at or member.resolve is not ResolveKind.STEADY or "resolve" in member.locked:

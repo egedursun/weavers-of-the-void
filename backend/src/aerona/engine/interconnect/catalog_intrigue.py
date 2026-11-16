@@ -53,7 +53,7 @@ INTRIGUE_MECHANICS: tuple[Mechanic, ...] = (
     Mechanic(
         key="false_identities",
         spec_item="F20",
-        title="Spies, the blood-cursed, exiles and impostors live under false names that wear thin with carelessness and a memorable face",
+        title="Spies, the blood-cursed, exiles and impostors live under false names that wear thin with carelessness and memorable looks",
         subsystem=S.INTRIGUE,
         phases=("intrigue_survey", "intrigue"),
         surface=Surface(drawer=INTRIGUE),

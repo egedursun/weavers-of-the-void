@@ -174,7 +174,7 @@ function AfflictionCard({
       ? Math.max(0, row.next_stage_epoch - epoch)
       : null
   return (
-    <li className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <li className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion
           icon={look.icon}
@@ -347,7 +347,7 @@ function AfflictionCard({
 function PackagePreview({ spec }: { spec: Package }) {
   const look = named(PACKAGE_LOOKS, spec.kind)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-md border bg-muted/30 p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={look.icon} tone={look.tone ?? 'gold'} size='sm' />
         <div className='flex min-w-0 flex-col gap-0.5'>
@@ -356,14 +356,16 @@ function PackagePreview({ spec }: { spec: Package }) {
         </div>
       </div>
       <ol className='flex min-w-0 flex-col gap-2'>
-        {spec.stages.map((stage) => (
-          <li key={stage.number} className='flex min-w-0 flex-col gap-1'>
-            <Label variant='overline'>
-              {`${stage.number}. ${stage.label}${stage.epochs !== null ? ` · ${stage.epochs} epoch${stage.epochs === 1 ? '' : 's'}` : ''}`}
-            </Label>
-            <StageEffects spec={spec} stage={stage.number} />
-          </li>
-        ))}
+        <Paged items={spec.stages} as='li'>
+          {(stage) => (
+            <li key={stage.number} className='flex min-w-0 flex-col gap-1'>
+              <Label variant='overline'>
+                {`${stage.number}. ${stage.label}${stage.epochs !== null ? ` · ${stage.epochs} epoch${stage.epochs === 1 ? '' : 's'}` : ''}`}
+              </Label>
+              <StageEffects spec={spec} stage={stage.number} />
+            </li>
+          )}
+        </Paged>
       </ol>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         {spec.onset > 0 && (
@@ -422,7 +424,7 @@ function GiveForm({
     (give.isPending ? WORKING : null) ??
     (chosen ? null : 'They already bear every affliction there is.')
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border border-dashed bg-muted/20 p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md p-3 sealed-well'>
       <div className='flex min-w-0 flex-col gap-0.5'>
         <Text weight='semibold'>Lay an affliction or a blessing</Text>
         <Muted variant='caption'>

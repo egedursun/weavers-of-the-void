@@ -38,6 +38,12 @@ OWNER_LABELS: MappingProxyType[OwnerClass, str] = MappingProxyType(
         OC.REALM: "The realm",
         OC.HOUSE: "A landed house",
         OC.COMMUNITY: "The community itself",
+        OC.COMPANY: "A company",
+        OC.INDIVIDUAL: "One owner",
+        OC.COOPERATIVE: "Its own workers",
+        OC.MADE_MIND: "A made mind",
+        OC.FOREIGN_POWER: "A foreign power",
+        OC.GOD: "A god",
     }
 )
 GUILD_KINDS: MappingProxyType[OwnerClass, tuple[FactionKind, ...]] = MappingProxyType(

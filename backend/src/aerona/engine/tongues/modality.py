@@ -2,8 +2,9 @@ from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import ANATOMIES
-from aerona.catalog.tongues import MODALITY_NEEDS, MODALITY_ORDER, WRITABLE
+from aerona.catalog.tongues import MODALITY_NEEDS, MODALITY_ORDER, TEXTURE_MODALITY, WRITABLE
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
@@ -66,6 +67,12 @@ async def made_people(session: AsyncSession, people: EntityRow) -> bool:
     return bool(shares) and all(row.seat is not MindSeat.BODY for row in shares if row.share_pct > 0)
 
 
+async def texture_modality(session: AsyncSession) -> LanguageModality | None:
+    cosmos = await CosmosRepository(session).get()
+    settings = cosmos.genesis_settings if cosmos is not None else None
+    return TEXTURE_MODALITY.get(settings.language_texture) if settings is not None else None
+
+
 async def settle_modalities(ctx: TickContext) -> int:
     settled = 0
     for language in await canon(ctx.session, [EntityType.LANGUAGE]):
@@ -76,8 +83,12 @@ async def settle_modalities(ctx: TickContext) -> int:
         bodies = [await body_functions(ctx.session, row.id) for row in peoples if row.entity_type is EntityType.PEOPLE]
         known = [body for body in bodies if body is not None]
         made = [await made_people(ctx.session, row) for row in peoples]
+        textured = await texture_modality(ctx.session) if language.birth_epoch <= ctx.rules.sound_changes.texture_epochs else None
         if made and all(made):
             profile.modality = LanguageModality.DATA
+            settled += 1
+        elif textured is not None:
+            profile.modality = textured
             settled += 1
         elif known and all(BodyFunction.SPEECH not in body for body in known):
             profile.modality = suited(known[0])

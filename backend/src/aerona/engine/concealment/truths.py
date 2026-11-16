@@ -17,6 +17,7 @@ from aerona.domain.enums.polity import TreatyStatus
 from aerona.domain.enums.powers import GiftedAttitude
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.crowds import begin_movement
+from aerona.engine.concealment.kinds import after_seeking, answer_weight, by_accident, denied, keepers_by_role, leaked, spread_of, strain_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
@@ -65,7 +66,8 @@ async def trust_in(ctx: TickContext, population_id: int) -> int:
 
 async def answer(ctx: TickContext, truth: HiddenTruthRow, row: PublicKnowledgeRow) -> KeeperResponse:
     table = ctx.rules.concealment
-    keepers = list(await ctx.session.scalars(select(TruthKeeperRow).where(TruthKeeperRow.truth_id == truth.id)))
+    keepers = await keepers_by_role(ctx, truth.id)
+    weight = await answer_weight(ctx, truth.id)
     payer = None
     for keeper in keepers:
         found = await ctx.session.get(EntityRow, keeper.keeper_node_id)
@@ -76,10 +78,10 @@ async def answer(ctx: TickContext, truth: HiddenTruthRow, row: PublicKnowledgeRo
         return KeeperResponse.NONE
     await shift_points(ctx.session, payer, -table.keeper_cost)
     if truth.by_memory_removal:
-        row.know_pct = clamp_percent(row.know_pct - row.know_pct * table.memory_cut_pct // PERCENT)
+        row.know_pct = clamp_percent(row.know_pct - row.know_pct * table.memory_cut_pct * weight // PERCENT // PERCENT)
         return KeeperResponse.MEMORY_REMOVAL
     if truth.by_cover_story:
-        row.believe_pct = clamp_percent(row.believe_pct - row.believe_pct * table.cover_cut_pct // PERCENT)
+        row.believe_pct = clamp_percent(row.believe_pct - row.believe_pct * table.cover_cut_pct * weight // PERCENT // PERCENT)
         return KeeperResponse.COVER_STORY
     if truth.by_discrediting:
         row.believe_pct = clamp_percent(row.believe_pct - row.believe_pct * table.discredit_cut_pct // PERCENT)
@@ -98,7 +100,7 @@ async def breach(
     table = ctx.rules.concealment
     population = await population_for(ctx, truth, place_id)
     seen = witnesses or []
-    spread = clamp_percent(table.spread_pct * (PERCENT - truth.strength // 2) // PERCENT + len(seen))
+    spread = clamp_percent(spread_of(truth, table.spread_pct * (PERCENT - truth.strength // 2) // PERCENT) + len(seen))
     response = KeeperResponse.NONE
     if population is not None and not held(population):
         row = await knowledge(ctx, truth.id, population)
@@ -144,7 +146,7 @@ async def harm_knowers(ctx: TickContext, truth: HiddenTruthRow, knowers: list[in
     for knower in knowers:
         profile = await ctx.session.get(MortalProfileRow, knower)
         if profile is not None and not held(knower) and "stress" not in (profile.locked or []):
-            profile.stress = clamp_percent(profile.stress + ctx.rules.concealment.sanity_harm * truth.sanity_cost // PERCENT)
+            profile.stress = clamp_percent(profile.stress + ctx.rules.concealment.sanity_harm * strain_of(truth) // PERCENT)
 
 
 async def truths_about(ctx: TickContext, subject_id: int) -> list[HiddenTruthRow]:
@@ -169,6 +171,7 @@ async def seek(ctx: TickContext, seeker: TruthSeekerRow, truth: HiddenTruthRow) 
     if ctx.rng(f"truth.seek.{seeker.id}.{ctx.epoch}").chance(chance):
         found = await ctx.session.get(EntityRow, seeker.seeker_node_id)
         await breach(ctx, truth, BreachCause.INVESTIGATOR, place_id=found.location_id if found is not None else None, witnesses=[seeker.seeker_node_id])
+        await after_seeking(ctx, seeker, truth)
         if seeker.aim is SeekerAim.JOIN_THE_HIDDEN:
             exists = await ctx.session.scalar(
                 select(TruthKeeperRow.id).where(TruthKeeperRow.truth_id == truth.id, TruthKeeperRow.keeper_node_id == seeker.seeker_node_id)
@@ -195,16 +198,20 @@ async def attitude_on_reveal(ctx: TickContext, population_id: int) -> TruthAttit
     folk = await people_of(ctx.session, place) if place is not None else None
     values = dict(await values_for(ctx.session, folk.id if folk is not None else population_id))
     fear = values.get(ValueAxis.TRADITION, 0) + values.get(ValueAxis.PURITY, 0) >= LEAN
+    trust = await trust_in(ctx, population_id)
     if values.get(ValueAxis.PIETY, 0) >= LEAN * 2:
-        return TruthAttitude.REVERED
+        return denied(trust, TruthAttitude.REVERED)
     if values.get(ValueAxis.WEALTH, 0) >= LEAN * 2:
-        return TruthAttitude.EXPLOITED
-    return ATTITUDE_BY_FEAR[fear]
+        return denied(trust, TruthAttitude.EXPLOITED)
+    return denied(trust, ATTITUDE_BY_FEAR[fear])
 
 
 async def react(ctx: TickContext, truth: HiddenTruthRow, row: PublicKnowledgeRow) -> None:
     place = await ctx.session.get(EntityRow, row.population_node_id)
     if place is None or held(place.id):
+        return
+    if row.attitude is TruthAttitude.DENIED and "believe_pct" not in row.locked:
+        row.believe_pct //= 2
         return
     if row.attitude is TruthAttitude.FEARED and place.entity_type is EntityType.SETTLEMENT:
         await begin_movement(ctx, place, CollectiveActKind.PANIC, CollectiveTrigger.RUMOUR, members=0, share=row.believe_pct)
@@ -323,6 +330,9 @@ async def keep_concealment(ctx: TickContext) -> None:
             continue
         await tend(ctx, truth)
         await presence_breaches(ctx, truth)
+        cause = await leaked(ctx, truth) or (BreachCause.ACCIDENT if by_accident(ctx, truth) else None)
+        if cause is not None:
+            await breach(ctx, truth, cause, place_id=None)
         for seeker in list(await ctx.session.scalars(select(TruthSeekerRow).where(TruthSeekerRow.truth_id == truth.id).order_by(TruthSeekerRow.id))):
             if not held(seeker.seeker_node_id):
                 await seek(ctx, seeker, truth)

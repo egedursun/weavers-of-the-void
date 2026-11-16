@@ -11,6 +11,8 @@ K = RuleGroup.FATE_AND_CHRONICLE
 @dataclass(frozen=True)
 class PowerSourceRules:
     density_floor: int = rule(15, 0, 100, P, "Density below which a land is overdrawn and suffers the source's depletion")
+    locus_pct: int = rule(30, 0, 200, P, "Most a source drawn from feeling, dreams, story, bonds or made things moves a draw by its user's state (%)")
+    sky_days: int = rule(28, 1, 1000, P, "Days of the sky cycle a tide of the sky follows")
     draw_per_strength: int = rule(3, 0, 100, P, "Density a draw takes from its land for each point of strength")
     rest_renewal: int = rule(10, 0, 100, P, "Density a source renewed by rest or time regains each epoch")
     season_renewal: int = rule(15, 0, 100, P, "Density a source renewed by the seasons or the sky regains each epoch at the height of its tide")
@@ -24,12 +26,19 @@ class PowerSourceRules:
     knowledge_loss: int = rule(2, 0, 100, P, "Knowledge of a source a people loses each epoch it has no living user of it")
     hazard_scale_pct: int = rule(100, 0, 400, P, "Share of a hazard's weight rolled as its chance on each draw (%)")
     start_density: int = rule(50, 0, 100, P, "Density a land starts with for a source that reaches it")
+    contention_draw: int = rule(2, 0, 50, P, "Density each further user strips from an overdrawn land as they race to draw before the others")
+    contention_rivals: int = rule(6, 0, 100, P, "Most pairs of users of one overdrawn land who come to resent each other in an epoch")
 
 
 @dataclass(frozen=True)
 class MagicSystemRules:
     spread_pct: int = rule(50, 0, 100, P, "Spread of outcomes in a system of no predictability (%)")
     oppose_pct: int = rule(20, 0, 100, P, "Strength a power loses in a contest against a user of an opposing system (%)")
+    complement_pct: int = rule(15, 0, 100, P, "Strength a power gains against a user of a complementing system (%)")
+    unheld_structure_pct: int = rule(
+        50, 0, 100, P, "Strength a power keeps when what its system rests on is missing: its made thing, its giver or its bond (%)"
+    )
+    innate_bonus_pct: int = rule(10, 0, 100, P, "Strength a born power gains in a system of innate powers (%)")
     shared_discovery_pct: int = rule(50, 0, 100, P, "Share of a discovery in one system passed to a system of the same root (%)")
     drift: int = rule(2, 0, 100, P, "Largest change in a system's prevalence or predictability each epoch from its sources' density")
     theory_gain: int = rule(2, 0, 100, P, "Predictability a system gains each epoch from the theories of its users")
@@ -43,6 +52,7 @@ class PowerRules:
     harm_at_pct: int = rule(100, 1, 400, H, "Strain at which a use harms its user, as a share of the cap (%)")
     burnout_at_pct: int = rule(200, 1, 1000, H, "Strain at which a power burns out, as a share of the cap (%)")
     scar_hp: int = rule(6, 0, 100, H, "Harm a power pushed past its cap does to its user")
+    hazard_stress: int = rule(15, 0, 100, H, "Stress a madness or dependency a source carries lays on its user")
     burnout_recovery_chance: int = rule(10, 0, 100, H, "Chance each epoch a burned-out power comes back")
     growth_chance: int = rule(10, 0, 100, H, "Chance a use past the cap that succeeds raises strength")
     control_gain: int = rule(2, 0, 100, H, "Control a power gains each epoch it is used or trained")
@@ -86,6 +96,8 @@ class PoweredSocietyRules:
     band_members: int = rule(3, 2, 100, H, "Users of powers in one realm at which they may form a band")
     band_chance: int = rule(10, 0, 100, H, "Chance each epoch such users form a band")
     law_adopt_chance: int = rule(10, 0, 100, H, "Chance each epoch a realm moved by a wild manifestation or fear changes its law of powers")
+    hidden_fear: int = rule(5, 0, 100, H, "Weight each gifted one living under a false name adds to a people's fear of the gifted")
+    registry_pull: int = rule(60, 0, 100, H, "Share of a realm's gifted on its registry at which a registering realm moves to conscript them")
 
 
 @dataclass(frozen=True)
@@ -93,6 +105,9 @@ class ConcealmentRules:
     overt_breach: int = rule(30, 0, 100, K, "Chance an overt use of power before witnesses breaches a truth about it")
     subtle_breach: int = rule(8, 0, 100, K, "Chance a subtle use breaches a truth about it")
     witness_breach: int = rule(5, 0, 100, K, "Chance each epoch a truth of presence is breached by its people living among others")
+    accident_breach: int = rule(2, 0, 100, K, "Chance each epoch any kept truth slips out by accident, against its strength")
+    hunt_harm: int = rule(10, 0, 100, K, "Harm a seeker who means to destroy the hidden does to them when it finds them")
+    hush_money: int = rule(20, 0, 10000, K, "Coin a seeker who means to exploit a hidden truth wrings from its subject")
     seeker_breach_pct: int = rule(50, 0, 100, K, "Share of a seeker's progress added to the chance of a breach (%)")
     seeker_gain: int = rule(10, 0, 100, K, "Progress a seeker makes each epoch")
     spread_pct: int = rule(20, 0, 100, K, "Knowledge a breach adds to its population, before the keepers answer (%)")

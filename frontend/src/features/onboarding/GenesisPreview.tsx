@@ -122,7 +122,7 @@ export function GenesisPreview({
     <aside
       aria-label='Your world so far'
       data-onboarding='preview'
-      className='flex min-w-0 flex-col gap-4 overflow-hidden rounded-xl border bg-card shadow-sm'
+      className='flex min-w-0 flex-col gap-4 overflow-hidden rounded-md border surface-sheen border-gild/60 bg-card'
     >
       <div className='flex min-w-0 flex-col gap-1 border-b bg-linear-to-br from-primary/15 via-brand-violet/10 to-transparent p-4'>
         <Label variant='overline'>Your world so far</Label>
@@ -231,6 +231,12 @@ export function GenesisPreview({
             <TechIcon />
             {options.technology[draft.technology] ?? draft.technology}
           </Badge>
+          {Object.keys(draft.technologyLevels).length > 0 && (
+            <Badge variant='outline'>
+              <TechIcon />
+              {`${plural(Object.keys(draft.technologyLevels).length, 'family', 'families')} set by hand`}
+            </Badge>
+          )}
           <Badge variant='outline' title={languageLabel}>
             <LanguageIcon />
             {languageLabel.split(',')[0]}
@@ -282,7 +288,7 @@ export function GenesisPreview({
               <li
                 key={index}
                 title={RARITY_LABEL[rarity]}
-                className='flex size-control-md items-center justify-center rounded-full border bg-background'
+                className='flex size-control-md items-center justify-center rounded-full border surface-sheen border-gild/60 bg-card'
               >
                 <RarityIcon
                   rarity={rarity}

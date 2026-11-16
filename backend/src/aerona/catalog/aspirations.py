@@ -122,7 +122,7 @@ FEARS: MappingProxyType[FearKind, FearSpec] = MappingProxyType(
     {
         F.DEATH: FearSpec("Death", fac(anxiety=40, vulnerability=30)),
         F.WAR: FearSpec("War", fac(anxiety=30, caution=30, assertiveness=-20)),
-        F.PLAGUE: FearSpec("Plague", fac(anxiety=40, tolerance_of_strangeness=-20)),
+        F.PLAGUE: FearSpec("Plague", fac(anxiety=40, tolerance_of_difference=-20)),
         F.BEASTS: FearSpec("Beasts", fac(anxiety=30, caution=30)),
         F.LOSING_A_CHILD: FearSpec("Losing a child", fac(anxiety=30, friendliness=20)),
         F.POVERTY: FearSpec("Poverty", fac(anxiety=20, greed=30)),
@@ -154,7 +154,7 @@ FOCUSES: MappingProxyType[FocusKind, FocusSpec] = MappingProxyType(
         K.DIPLOMACY: FocusSpec("Diplomacy", (SF.SOCIAL,), (P.SILVER_TONGUE, P.PEACEMAKER, P.WELL_CONNECTED, P.ENVOYS_PATIENCE, P.BELOVED)),
         K.MARTIAL: FocusSpec("Martial", (SF.COMBAT, SF.COMMAND), (P.HARDENED, P.SWIFT_BLADE, P.IRON_NERVE, P.BATTLE_EYE, P.WARLORD)),
         K.STEWARDSHIP: FocusSpec("Stewardship", (SF.SURVIVAL,), (P.LEDGER_MIND, P.STEADY_HAND, P.PRUDENT, P.BUILDER, P.GRANARY_KEEPER)),
-        K.INTRIGUE: FocusSpec("Intrigue", (SF.SOCIAL,), (P.SHADOW_STEP, P.KEEN_EAR, P.MASK, P.WEB_SPINNER, P.COLD_EYE)),
+        K.INTRIGUE: FocusSpec("Intrigue", (SF.SOCIAL,), (P.SHADOW_STEP, P.KEEN_EAR, P.MASK, P.NETWORK_BUILDER, P.COLD_EYE)),
         K.LEARNING: FocusSpec("Learning", (SF.KNOWLEDGE,), (P.QUICK_STUDY, P.DEEP_MEMORY, P.LUCID, P.SAGES_INSIGHT, P.POLYMATH)),
         K.PIETY: FocusSpec("Piety", (SF.FAITH,), (P.DEVOUT, P.SERENE, P.FAITHFUL_VOICE, P.VISIONARY, P.HALLOWED)),
         K.CRAFT: FocusSpec("Craft", (SF.CRAFT,), (P.SURE_HANDS, P.INVENTIVE, P.TIRELESS, P.EYE_FOR_BEAUTY, P.MASTERS_TOUCH)),
@@ -183,7 +183,7 @@ PERK_STATS: MappingProxyType[PerkKind, tuple[str, str, int]] = MappingProxyType(
         P.SHADOW_STEP: ("Shadow step", "agility", 3),
         P.KEEN_EAR: ("Keen ear", "perception", 4),
         P.MASK: ("Mask", "charisma", 3),
-        P.WEB_SPINNER: ("Web spinner", "intellect", 4),
+        P.NETWORK_BUILDER: ("Network builder", "intellect", 4),
         P.COLD_EYE: ("Cold eye", "willpower", 5),
         P.QUICK_STUDY: ("Quick study", "intellect", 3),
         P.DEEP_MEMORY: ("Deep memory", "intellect", 3),
@@ -221,6 +221,9 @@ INSPIRATION_LABELS: MappingProxyType[InspirationKind, str] = MappingProxyType(
         InspirationKind.MASTERWORK_FEVER: "A fever to make a masterwork",
         InspirationKind.RESEARCH_INSIGHT: "A flash of insight",
         InspirationKind.HEROIC_RESOLVE: "A heroic resolve",
+        InspirationKind.ARTISTIC_VISION: "A vision of a work to make",
+        InspirationKind.TECHNICAL_BREAKTHROUGH: "A way through a hard problem",
+        InspirationKind.SPIRITUAL_INSIGHT: "An insight of the spirit",
     }
 )
 

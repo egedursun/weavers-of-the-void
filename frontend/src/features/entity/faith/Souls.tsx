@@ -79,7 +79,7 @@ export function SoulSeal({
   return (
     <div
       data-surface='SoulSeal'
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
+      className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion

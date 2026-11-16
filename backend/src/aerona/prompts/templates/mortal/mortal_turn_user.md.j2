@@ -1,14 +1,14 @@
 Age {{ age }}. It is your turn.
 
 {% if manifestations %}
-THE CREATOR APPEARED TO YOU ({{ creator_name }} appeared before your eyes while you were awake and spoke with you; this is not a dream, it is a plain command and a sign; you must act accordingly):
+THE CREATOR APPEARED TO YOU ({{ creator_name }} appeared to you while you were awake and spoke with you; this is not a dream, it is a plain command and a sign; you must act accordingly):
 {% for text in manifestations %}
 "{{ text }}"
 {% endfor %}
 
 {% endif %}
 {% if dreams %}
-A DREAM FROM YOUR GOD (the creator god {{ creator_name }} appeared to you in a dream; how you interpret it and whether you obey it is up to you, but it cannot leave you unmoved):
+A DREAM FROM YOUR GOD (the creator god {{ creator_name }} appeared to you in a dream; how you interpret it and whether you obey it is up to you):
 {% for text in dreams %}
 "{{ text }}"
 {% endfor %}

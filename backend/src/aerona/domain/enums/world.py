@@ -104,6 +104,10 @@ class ClimateEra(StrEnum):
     RAIN = "rain"
     ICE_AGE = "ice_age"
     SCORCHING = "scorching"
+    HOTHOUSE = "hothouse"
+    SNOWBALL = "snowball"
+    VARIABLE = "variable"
+    WET_COLD = "wet_cold"
 
 
 class SkyEventKind(StrEnum):
@@ -116,16 +120,6 @@ class SkyEventKind(StrEnum):
     FLARE = "flare"
     AURORA = "aurora"
     TRANSIT = "transit"
-
-
-class HorrorEventKind(StrEnum):
-    STARS_ALIGN = "stars_align"
-    EYE_IN_THE_SKY = "eye_in_the_sky"
-    WAVE_OF_SILENCE = "wave_of_silence"
-    REVERSE_RAIN = "reverse_rain"
-    VISIT_OF_THE_VOID = "visit_of_the_void"
-    THE_DIMMING = "the_dimming"
-    WHISPERS_FROM_BEYOND = "whispers_from_beyond"
 
 
 class LoreLanguage(StrEnum):
@@ -160,11 +154,14 @@ class TechnologyEra(StrEnum):
     BRONZE = "bronze"
     IRON = "iron"
     MEDIEVAL = "medieval"
+    GUNPOWDER = "gunpowder"
     RENAISSANCE = "renaissance"
     STEAM = "steam"
     ELECTRICAL = "electrical"
     INFORMATION = "information"
     ADVANCED = "advanced"
+    INTERSTELLAR = "interstellar"
+    BEYOND = "beyond"
 
 
 class LanguageTexture(StrEnum):
@@ -174,6 +171,10 @@ class LanguageTexture(StrEnum):
     SIBILANT = "sibilant"
     LONG = "long"
     FREE = "free"
+    TONAL = "tonal"
+    CLICKING = "clicking"
+    WHISTLED = "whistled"
+    NON_VOCAL = "non_vocal"
 
 
 class GenesisTemplate(StrEnum):
@@ -201,6 +202,9 @@ class GenesisTemplate(StrEnum):
     ADVANCED_AGE = "advanced_age"
     MADE_MINDS = "made_minds"
     AFTER_ABUNDANCE = "after_abundance"
+    GUNPOWDER_AGE = "gunpowder_age"
+    INTERSTELLAR_AGE = "interstellar_age"
+    BEYOND_AGE = "beyond_age"
 
 
 class ImageStyle(StrEnum):

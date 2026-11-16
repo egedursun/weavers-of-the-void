@@ -4,7 +4,7 @@ import { STREAM_COLLAPSE_CHARS } from '@/constants/ui'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { TimelineItem } from '@/components/domain'
+import { Paged, TimelineItem } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { FEED_SYMBOL_ICON } from './feedLabels'
 import { type FeedLine } from './feedModel'
@@ -179,13 +179,15 @@ export function ReadingGroupView({
       <div className='flex min-w-0 flex-col items-start gap-1'>
         {open ? (
           <ul className='flex min-w-0 flex-col gap-1'>
-            {lines.map((line) => (
-              <li key={line.id}>
-                <Text as='span' variant='caption' tone='muted'>
-                  {toolLabel(line.stream?.tool ?? null)}
-                </Text>
-              </li>
-            ))}
+            <Paged items={lines} as='li'>
+              {(line) => (
+                <li key={line.id}>
+                  <Text as='span' variant='caption' tone='muted'>
+                    {toolLabel(line.stream?.tool ?? null)}
+                  </Text>
+                </li>
+              )}
+            </Paged>
           </ul>
         ) : (
           <Muted truncate>

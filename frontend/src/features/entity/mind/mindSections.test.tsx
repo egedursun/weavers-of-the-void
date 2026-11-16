@@ -54,6 +54,7 @@ const MIND = {
     {
       trait: 'brave',
       label: 'Brave',
+      family: 'virtue',
       source: 'experience',
       epoch: 4,
       source_node: null,

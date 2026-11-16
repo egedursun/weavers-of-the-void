@@ -4,6 +4,7 @@ from pydantic import Field
 from sqlalchemy import select
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.customs import RevivalRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -74,7 +75,7 @@ async def proclaim_right(call: SonCall, args: ProclaimRightInput) -> str:
         fail(SonResult.RIGHT_REFUSED, why="a stronger hand holds it")
     await control.grant_right(call.tick, realm.id, args.category, args.right, granted=args.granted)
     call.target(realm.id)
-    told = f"{args.right.value} for {args.category.value.replace('_', ' ')}s"
+    told = f"{spoken(args.right)} for {args.category.value.replace('_', ' ')}s"
     await call.chronicle(
         ChronicleKind.CIVILIZATION, lines.PROCLAIM_RIGHT, entity_ids=[realm.id], son=call.son.name, realm=realm.name, right=told, reason=args.reason
     )

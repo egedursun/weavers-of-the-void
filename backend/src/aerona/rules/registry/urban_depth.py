@@ -46,6 +46,23 @@ class CoverageRules:
     disease: int = rule(8, 0, 100, S, "Sanitation a town loses with no healing or bath coverage")
     prices: int = rule(5, 0, 100, S, "Prosperity a town loses each epoch with no market coverage")
     illiteracy: int = rule(5, 0, 100, S, "Literacy a town loses with no school coverage")
+    sewerage: int = rule(8, 0, 100, S, "Sanitation a town gains at full sanitation coverage")
+    transport_trade: int = rule(3, 0, 100, S, "Prosperity a town gains each epoch at full transport coverage")
+    news_calm: int = rule(2, 0, 100, S, "Unrest a town loses each epoch at full communication coverage")
+    power_yield: int = rule(3, 0, 100, S, "Prosperity a town gains each epoch at full power coverage")
+    courts_order: int = rule(4, 0, 100, S, "Public order a town gains and crime it loses each epoch at full court coverage")
+    welfare_calm: int = rule(3, 0, 100, S, "Unrest and crime a town loses each epoch at full welfare coverage")
+    granary_store: int = rule(5, 0, 100, S, "Siege stores a town lays by each epoch at full granary coverage")
+    parks_health: int = rule(2, 0, 100, S, "Sanitation and prestige a town gains each epoch at full park coverage")
+    library_literacy: int = rule(3, 0, 100, S, "Literacy loss a town is spared at full library coverage")
+    library_prestige: int = rule(2, 0, 100, S, "Prestige a town gains each epoch at full library coverage")
+    burial_health: int = rule(3, 0, 100, S, "Sanitation a town gains each epoch at full burial coverage")
+    depot_hauling: int = rule(5, 0, 100, S, "Hauling capacity a town gains each epoch at full depot coverage")
+    admin_order: int = rule(3, 0, 100, S, "Public order a town gains each epoch at full administration coverage")
+    entertainment_calm: int = rule(3, 0, 100, S, "Unrest a town loses each epoch at full entertainment coverage")
+    warded_order: int = rule(
+        2, 0, 100, S, "Public order each guardian spirit bound to a building of a town gives it each epoch, or unrest each vengeful one adds"
+    )
 
 
 @dataclass(frozen=True)
@@ -156,6 +173,8 @@ class MagicalOrderRules:
     defiance_at: int = rule(20, 0, 100, S, "Reputation below which an order under a ban on magic is outlawed by its realm")
     feud_pct: int = rule(10, 0, 100, S, "Chance each epoch two orders of one town turn on each other (%)")
     feud_loss: int = rule(10, 0, 100, S, "Reputation and regard a feud between orders, or an order's defiance, costs")
+    share_step: int = rule(2, 0, 50, S, "Craft each member of an order that shares its discoveries gains toward its best, at full strength of the law")
+    secrecy_step: int = rule(5, 0, 100, S, "Secrecy an order that keeps its secrets gains each epoch, up to the strength of the law")
 
 
 @dataclass(frozen=True)
@@ -190,6 +209,8 @@ class CargoRules:
     land_bulk_pct: int = rule(150, 0, 400, M, "Cost of carrying bulk goods over land (%)")
     perishable_loss: int = rule(20, 0, 100, M, "Share of perishable goods spoiled on a slow land route (%)")
     livestock_loss: int = rule(5, 0, 100, M, "Share of livestock lost walking a route (%)")
+    spill_loss: int = rule(3, 0, 100, M, "Share of liquids and gases lost to leaks on a route (%)")
+    hazard_loss: int = rule(4, 0, 100, M, "Share of dangerous goods lost to accidents on a route (%)")
     salted_pct: int = rule(60, 0, 100, M, "Spoilage salting spares (%)")
     iced_pct: int = rule(80, 0, 100, M, "Spoilage ice spares (%)")
     magic_pct: int = rule(100, 0, 100, M, "Spoilage magical keeping spares (%)")

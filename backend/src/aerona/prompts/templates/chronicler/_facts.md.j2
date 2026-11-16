@@ -18,7 +18,7 @@ FACT SHEET (definite outcomes; the narrative may not contradict them: do not sho
 MANDATORY COVERAGE (each is told at least once, in the main narrative or in its own world's section, by name, with its doer and its outcome; do not list them, bind the events together):
 Sons:
 {% for son in facts.sons %}
-- {{ son.name }} (id {{ son.id }}, ref {{ son.ref }}{% if son.world %}, {{ son.world }}{% endif %}): {% if son.deeds %}{{ son.deeds | join("; ") }}{% if son.deed_count > son.deeds | length %} ({{ son.deed_count }} deeds in all){% endif %}{% else %}did no great deed this age (tell of their waiting in one sentence){% endif %}{% if son.records %}; made or blessed: {% for record in son.records %}{{ record.name }} (id {{ record.id }}){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+- {{ son.name }} (id {{ son.id }}, ref {{ son.ref }}{% if son.world %}, {{ son.world }}{% endif %}): {% if son.deeds %}{{ son.deeds | join("; ") }}{% if son.deed_count > son.deeds | length %} ({{ son.deed_count }} deeds in all){% endif %}{% else %}did no great deed this age (say so in one sentence){% endif %}{% if son.records %}; made or blessed: {% for record in son.records %}{{ record.name }} (id {{ record.id }}){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
 
 {% endfor %}
 {% if facts.histories %}

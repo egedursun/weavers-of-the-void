@@ -63,11 +63,52 @@ tester.run('no-raw-color', rules['no-raw-color'], {
 })
 
 tester.run('no-raw-elements', rules['no-raw-elements'], {
-  valid: ['<Button>Go</Button>', '<main />', '<section />'],
+  valid: ['<Button>Go</Button>', '<main />', '<section />', "<Picture src='a.webp' />"],
   invalid: [
     { code: '<button>Go</button>', errors: [{ messageId: 'rawElement' }] },
     { code: '<input />', errors: [{ messageId: 'rawElement' }] },
     { code: '<h2>Title</h2>', errors: [{ messageId: 'rawElement' }] },
+    { code: "<img src='a.webp' alt='' />", errors: [{ messageId: 'rawElement' }] },
+  ],
+})
+
+tester.run('no-raw-surface', rules['no-raw-surface'], {
+  valid: [
+    "<div className='rounded-md border border-gild/70 bg-card surface-framed p-4' />",
+    "<div className='rounded-md p-3 sealed-well' />",
+    "<div className='border-t pt-2' />",
+    "<span className='rounded-full border px-2 py-0.5' />",
+  ],
+  invalid: [
+    { code: "<div className='rounded-xl border bg-card p-4' />", errors: [{ messageId: 'rawSurface' }] },
+    { code: "<div className='rounded-lg border bg-muted/30 p-3' />", errors: [{ messageId: 'rawSurface' }] },
+    { code: "<div className='rounded-lg border border-dashed p-3' />", errors: [{ messageId: 'rawSurface' }] },
+    {
+      code: "<li className={cn('rounded-xl border p-4', idle && 'bg-background')} />",
+      errors: [{ messageId: 'rawSurface' }],
+    },
+    { code: "<div className='rounded-md border surface-brackets p-4' />", errors: [{ messageId: 'rawSurface' }] },
+    { code: "<div className='rounded-lg border p-3' />", errors: [{ messageId: 'rawSurface' }] },
+    { code: "<div className='rounded-xl border border-primary/30 bg-primary/5 p-3' />", errors: [{ messageId: 'rawSurface' }] },
+  ],
+})
+
+tester.run('paged-lists', rules['paged-lists'], {
+  valid: [
+    '<Paged items={laws}>{(law) => <li key={law.id}>{law.name}</li>}</Paged>',
+    '<ul>{page.visible.map((law) => <li key={law.id}>{law.name}</li>)}</ul>',
+    '<ul>{STAGES.map((stage) => <li key={stage}>{stage}</li>)}</ul>',
+    "<ul>{['a', 'b'].map((key) => <li key={key}>{key}</li>)}</ul>",
+    '<div>{laws.map((law) => <span key={law.id}>{law.name}</span>)}</div>',
+    '<ul>{words.slice(0, shown).map((word) => <li key={word}>{word}</li>)}</ul>',
+    '<ul>{greatFieldValues.map((key) => <li key={key}>{key}</li>)}</ul>',
+    '<ul>{Object.keys(SCALES).map((key) => <li key={key}>{key}</li>)}</ul>',
+    '<ul>{page.map((item) => <Tile key={item.id} item={item} />)}</ul>',
+  ],
+  invalid: [
+    { code: '<ul>{laws.map((law) => <li key={law.id}>{law.name}</li>)}</ul>', errors: [{ messageId: 'unpaged' }] },
+    { code: '<ul>{query.data?.rows.map((row) => <li key={row.id}>{row.name}</li>)}</ul>', errors: [{ messageId: 'unpaged' }] },
+    { code: '<ul>{steps.map((step) => <StepRow key={step.id} step={step} />)}</ul>', errors: [{ messageId: 'unpaged' }] },
   ],
 })
 

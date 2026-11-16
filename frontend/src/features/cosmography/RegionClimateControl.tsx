@@ -51,7 +51,7 @@ export function RegionClimateControl({
     <div
       id='section-region-climate'
       data-surface='RegionClimateControl'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-muted/20 p-3'
+      className='flex min-w-0 flex-col gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'
     >
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
         <div className='flex min-w-0 flex-col gap-0.5'>

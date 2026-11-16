@@ -1,6 +1,4 @@
-import math
-
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
@@ -22,7 +20,8 @@ from aerona.db.tables.powers import (
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.dominion import DivineScale
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.powers import (
     PowerCost,
@@ -36,11 +35,15 @@ from aerona.domain.enums.powers import (
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.economy.purse import points_of, shift_points
+from aerona.engine.fortune.profiles import shift_fortune
+from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
+from aerona.engine.powers.kinds import locus_factor, tide_wave
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import shift_stat
 
 LAND_LOCI = frozenset({SourceLocus.PLACE, SourceLocus.SKY, SourceLocus.SURROUNDINGS, SourceLocus.LIFE, SourceLocus.DEATH})
@@ -80,7 +83,7 @@ async def density_row(ctx: TickContext, source: PowerSourceRow, region_id: int) 
 async def tide_factor(ctx: TickContext, source_id: int) -> float:
     factor = 1.0
     for tide in await ctx.session.scalars(select(SourceTideRow).where(SourceTideRow.source_id == source_id)):
-        wave = math.sin(2 * math.pi * ((ctx.epoch + tide.phase) % tide.period) / tide.period)
+        wave = tide_wave(ctx.epoch, tide, ctx.rules.power_sources.sky_days)
         factor *= 1 + wave * tide.amplitude / PERCENT * ctx.rules.power_sources.tide_pct / PERCENT
     return max(0.0, factor)
 
@@ -99,9 +102,21 @@ async def interaction_factor(ctx: TickContext, source_id: int, region_id: int | 
         share = row.strength / PERCENT * ctx.rules.power_sources.interaction_pct / PERCENT
         if row.relation is SourceRelation.AMPLIFIES:
             factor *= 1 + share
+        elif row.relation is SourceRelation.CONVERTS_INTO:
+            await convert(ctx, row.first_source_id, source_id, region_id, row.strength)
         elif row.relation in {SourceRelation.SUPPRESSES, SourceRelation.CONFLICTS}:
             factor *= max(0.0, 1 - share)
     return factor
+
+
+async def convert(ctx: TickContext, first_id: int, second_id: int, region_id: int, strength: int) -> None:
+    taken = await ctx.session.scalar(select(SourceDensityRow).where(SourceDensityRow.source_id == first_id, SourceDensityRow.region_entity_id == region_id))
+    given = await ctx.session.scalar(select(SourceDensityRow).where(SourceDensityRow.source_id == second_id, SourceDensityRow.region_entity_id == region_id))
+    if taken is None or given is None or held(region_id) or "density" in taken.locked or "density" in given.locked:
+        return
+    moved = min(taken.density, strength * ctx.rules.power_sources.interaction_pct // PERCENT // 4 + 1)
+    taken.density -= moved
+    given.density = clamp_int(given.density + moved, 0, max(given.base_density, given.density + moved))
 
 
 async def source_level(session: AsyncSession, holder_id: int, community_id: int | None, polity_id: int | None, source_id: int) -> SourceLawLevel:
@@ -135,6 +150,12 @@ async def pay_costs(ctx: TickContext, user: EntityRow, source_id: int, strength:
                 await shift_points(ctx.session, user, -amount)
         elif cost.cost in {PowerCost.RENOWN, PowerCost.OATH_STANDING, PowerCost.BELIEF} and user.entity_type is EntityType.MORTAL:
             await add_renown(ctx.session, user.id, -amount, ctx.epoch, rules=ctx.rules)
+        elif cost.cost is PowerCost.WARPING and not held(user.id):
+            await add_flag(ctx.session, user.id, EntityFlag.MUTATED, ctx.epoch)
+        elif cost.cost is PowerCost.LUCK and not held(user.id):
+            await shift_fortune(ctx, user.id, -amount)
+        elif cost.cost is PowerCost.NONE:
+            continue
         elif cost.cost is PowerCost.SURROUNDINGS and user.location_id is not None:
             town = await ctx.session.get(EntityRow, user.location_id)
             if town is not None and town.entity_type is EntityType.SETTLEMENT and not held(town.id):
@@ -144,7 +165,7 @@ async def pay_costs(ctx: TickContext, user: EntityRow, source_id: int, strength:
 async def drawn_from_land(ctx: TickContext, user: EntityRow, source: PowerSourceRow, strength: int) -> float:
     atlas = await RegionAtlas.load(ctx.session)
     region = atlas.top_region(user.id)
-    factor = await tide_factor(ctx, source.id) * await interaction_factor(ctx, source.id, region)
+    factor = await tide_factor(ctx, source.id) * await interaction_factor(ctx, source.id, region) * await locus_factor(ctx, user, source.drawn_from)
     if region is None or source.drawn_from not in LAND_LOCI:
         return factor
     row = await density_row(ctx, source, region)
@@ -217,6 +238,38 @@ async def deplete(ctx: TickContext, row: SourceDensityRow, source: PowerSourceRo
             shift_stat(town, "prosperity", -table.depletion_prosperity, 0)
 
 
+async def drawers_in(ctx: TickContext, source_id: int, region_id: int) -> list[int]:
+    here = select(EntityRow.id).where(
+        or_(EntityRow.location_id == region_id, EntityRow.location_id.in_(select(EntityRow.id).where(EntityRow.location_id == region_id)))
+    )
+    users = select(PowerRow.holder_node_id).where(PowerRow.source_id == source_id, PowerRow.last_used_epoch >= ctx.epoch - 1, PowerRow.holder_node_id.in_(here))
+    return sorted(set(await ctx.session.scalars(users)))
+
+
+async def contend(ctx: TickContext, row: SourceDensityRow, source: PowerSourceRow) -> int:
+    table = ctx.rules.power_sources
+    if not row.depleted or "density" in row.locked:
+        return 0
+    drawers = [holder for holder in await drawers_in(ctx, source.id, row.region_entity_id) if not held(holder)]
+    if len(drawers) < 2:
+        return 0
+    row.density = clamp_int(row.density - table.contention_draw * (len(drawers) - 1), 0, row.base_density)
+    pairs = [(first, second) for index, first in enumerate(drawers) for second in drawers[index + 1 :]][: table.contention_rivals]
+    for first, second in pairs:
+        for holder, other in ((first, second), (second, first)):
+            await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=holder,
+                subject_id=other,
+                kind=MemoryKind.ENVIED,
+                magnitude=-table.contention_draw,
+                epoch=ctx.epoch,
+                note=f"drew on {source.name} where it ran thin",
+            )
+    return len(pairs)
+
+
 async def surroundings_cost(ctx: TickContext, source_id: int) -> bool:
     found = await ctx.session.scalar(
         select(PowerSourceCostRow.id).where(PowerSourceCostRow.source_id == source_id, PowerSourceCostRow.cost == PowerCost.SURROUNDINGS)
@@ -233,6 +286,7 @@ async def keep_density(ctx: TickContext) -> int:
             continue
         await renew(ctx, row, source)
         await deplete(ctx, row, source)
+        ctx.count("source_rivalries", await contend(ctx, row, source))
         kept += 1
     return kept
 

@@ -9,6 +9,7 @@ import {
   DomainIcon,
   EmptyState,
   ExpandableText,
+  Paged,
   PageHeader,
   Section,
 } from '@/components/domain'
@@ -93,9 +94,13 @@ function InTheWorld({ state }: { state: WorldState }) {
     >
       {counts.length > 0 && (
         <ul className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6'>
-          {[...counts]
-            .sort((left, right) => right[1] - left[1])
-            .map(([type, value]) => (
+          <Paged
+            items={[...counts].sort((left, right) => right[1] - left[1])}
+            initial={12}
+            as='li'
+            noun={['kind', 'kinds']}
+          >
+            {([type, value]) => (
               <li key={type} className='min-w-0'>
                 <Button variant='outline' size='tile' asChild>
                   <Link to='/atlas' search={{ type }}>
@@ -111,11 +116,12 @@ function InTheWorld({ state }: { state: WorldState }) {
                   </Link>
                 </Button>
               </li>
-            ))}
+            )}
+          </Paged>
         </ul>
       )}
       {state.world?.cosmology && (
-        <div className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-4'>
+        <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-4'>
           <Label variant='overline'>Cosmology</Label>
           <ExpandableText variant='prose' lines={6}>
             {state.world.cosmology}

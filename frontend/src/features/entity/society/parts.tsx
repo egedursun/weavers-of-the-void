@@ -50,7 +50,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        'flex h-full min-w-0 flex-col gap-3 rounded-lg border bg-background p-3',
+        'flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         wide && 'col-span-full'
       )}
     >
@@ -89,7 +89,7 @@ export function AdjustPanel({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className='flex min-w-0 flex-col rounded-lg border border-dashed bg-muted/20'
+      className='flex min-w-0 flex-col rounded-md sealed-well'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-3 p-3'>
         <Medallion icon={SlidersHorizontal} tone='muted' size='sm' />
@@ -163,7 +163,7 @@ export function EditorTile({
   children?: ReactNode
 }) {
   return (
-    <div className='flex h-full min-w-0 flex-col justify-between gap-2.5 rounded-lg border bg-card p-3'>
+    <div className='flex h-full min-w-0 flex-col justify-between gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={icon} tone={tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -417,7 +417,7 @@ export function HeldStrip({
       </div>
     )
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3'>
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-primary/30 bg-primary/5 p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Lock aria-hidden='true' className='size-icon-xs text-primary' />
         <Text as='span' weight='medium'>

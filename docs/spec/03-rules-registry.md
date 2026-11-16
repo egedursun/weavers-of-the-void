@@ -220,8 +220,8 @@ hasPower(son, effect, param=null) = openPowers(son).some(p => p.effect == effect
 | inanc_carpani | Worshipped (Tapınılan) | — | "Faith ×1.5." | world.js faith: `FAITH.multiplier_power_pct` (150) |
 | ek_eylem | Tireless (Yorulmaz) | — | "+1 action point every epoch." | rules.js eylemHakki: `CORE_RULES.tireless_extra_action` |
 | dokunulmaz | Untouchable (Dokunulmaz) | — | "Duels and curses against him −15." | `SON_TOOLS.challenge_untouchable` (15), `SON_TOOLS.curse_untouchable_resist` (15), mortal defy: `MORTAL_TOOLS.defy_god_untouchable` |
-| fisilti | Dream Whisper (Rüya fısıltısı) | — | "+25 success when sending dreams." | `SON_TOOLS.dream_whisper_bonus_pct` (25) |
-| savas_babasi | War Father (Savaş babası) | — | "Contribution to the war strength of armies that worship him ×2." | sim.js: `WORLD_WAR_STRENGTH.war_father_mult` (2) |
+| fisilti | Dream Whisper (Rüya fısıltısı) | — | "+25 success when sending dreams." | `SON_TOOLS.dream_sending_bonus_pct` (25) |
+| savas_babasi | War Father (Savaş babası) | — | "Contribution to the war strength of armies that worship him ×2." | sim.js: `WORLD_WAR_STRENGTH.war_leader_mult` (2) |
 | hasat | Harvester (Hasatçı) | — | "Double essence when harvesting resources." | `SON_TOOLS.harvest_power_mult` (2) |
 | kahin | Seer (Kâhin) | — | "Prophecies half price; fulfilled-prophecy reward ×2." | tools.js treats it as `ucuz` for type `kehanet` → cost × 60% (**not** half; text is stale); reward × `FATE.seer_power_mult` (2) |
 | dirilis | Reviving (Dirilen) | — | "If his HP runs out he sleeps only one epoch." | `SON_TOOLS.reviving_sleep_epochs` (1); panteon.js foreign war hardcodes `1` |
@@ -2855,7 +2855,7 @@ Old namespace `YABANCI` · 21 rows · defined in `src/yabanci.js` · also read b
 | power_destroyer | guc_yikici | 15 | 0 | 100 | Foreign gods | Destroyer power: added to the chance of a hostile action (%) |
 | power_bountiful | guc_bereket | 200 | 100 | 10,000 | Foreign gods | Bountiful power: multiplier of the friendly prosperity contribution (%) |
 | power_reviving | guc_dirilis | 50 | 1 | 100 | Foreign gods | Reviving power: percentage of the wake-up time after defeat |
-| power_sharp_tongue | guc_soz | 15 | 0 | 500 | Foreign gods | Sharp-tongued power: subtracted from the die of a son talking with it |
+| power_persuasion | guc_soz | 15 | 0 | 500 | Foreign gods | Persuasive power: subtracted from the die of a son talking with it |
 | deepen_chronicle_lines | derin_kronik | 40 | 0 | 10,000 | Foreign gods | Chronicle lines mentioning its name given to the model when a foreign god is deepened |
 
 ### GENESIS
@@ -4146,7 +4146,7 @@ Old namespace `OGUL_ARAC` · 192 rows · defined in `src/tools.js` · also read 
 | miracle_renown | mucize_un | 2 | 0 | 100 | Son tools | Renown of a miracle |
 | dream_base_pct | ruya_taban | 45 | 0 | 100 | Son tools | Dream success chance: base (%) |
 | dream_default_rival_charisma | ruya_karizma_varsayilan | 30 | 0 | 100 | Son tools | Dream: rival charisma assumed if the target has no god |
-| dream_whisper_bonus_pct | ruya_fisilti | 25 | 0 | 100 | Son tools | Bonus of the Whisper power to dream chance (%) |
+| dream_sending_bonus_pct | ruya_fisilti | 25 | 0 | 100 | Son tools | Bonus of the Dream sending power to dream chance (%) |
 | dream_zealotry_divisor | ruya_bagnaz_bolen | 4 | 1 | 1000 | Son tools | Dream chance: − target's zealotry / this number |
 | dream_min_pct | ruya_sans_min | 5 | 0 | 100 | Son tools | Lowest dream success chance (%) |
 | dream_max_pct | ruya_sans_max | 95 | 0 | 100 | Son tools | Highest dream success chance (%) |
@@ -4780,7 +4780,7 @@ Old namespace `DUNYA_SAVAS_GUCU` · 19 rows · defined in `src/sim.js`. War-stre
 | key | old key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
 | patron_strength_divisor | hami_guc_bolen | 8 | 1 | 1000 | War and diplomacy | Patron god's war contribution: god's strength / this number |
-| war_father_mult | savas_babasi_carpan | 2 | 1 | 20 | War and diplomacy | The War Father power multiplies the patron contribution (times) |
+| war_leader_mult | savas_babasi_carpan | 2 | 1 | 20 | War and diplomacy | The War Father power multiplies the patron contribution (times) |
 | weapon_damage_divisor | silah_hasar_bolen | 8 | 1 | 1000 | War and diplomacy | Weapon's war contribution: damage / this number |
 | armor_protection_divisor | silah_koruma_bolen | 10 | 1 | 1000 | War and diplomacy | Armor's war contribution: protection / this number |
 | item_might_divisor | silah_kudret_bolen | 20 | 1 | 1000 | War and diplomacy | Item might's war contribution: might / this number |

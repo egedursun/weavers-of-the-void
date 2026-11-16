@@ -1,10 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.crimes import CRIMES, PENALTY_WORDS, PUNISHMENTS
 from aerona.catalog.ethics import CRIME_ACTS, HONOUR_MODELS
 from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.catalog.thoughts import THOUGHTS
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.customs import BodyMarkRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import BodyPart, DamageType, HarmCause, InjuryKind
@@ -15,12 +15,14 @@ from aerona.domain.enums.mind import ActKind, ThoughtKind
 from aerona.domain.enums.mortal import CrimeKind, DeathCause, PunishmentKind
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.belonging.refuge import sheltered
+from aerona.engine.body.bands import banded
 from aerona.engine.body.hits import Harm
 from aerona.engine.constructs.remaking import may_remake, remake
 from aerona.engine.context import TickContext
 from aerona.engine.customs.marks import read_mark
 from aerona.engine.factions.estates import immune
 from aerona.engine.law.prisons import imprison
+from aerona.engine.law.sentences import SENTENCES, weigh
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.ethics import culture_of, honour_of
@@ -29,28 +31,11 @@ from aerona.engine.mind.thoughts import think
 from aerona.engine.minds.sentences import MIND_PUNISHMENTS, suffer_in_mind
 from aerona.engine.mortal.standing import add_infamy, add_wealth
 from aerona.engine.notes import note
-from aerona.engine.polity.laws import law_param
+from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.primitives.queries import active_bonds, add_flag, living_entity
 
 JUDGED_CRIMES = frozenset({CrimeKind.THEFT, CrimeKind.BLASPHEMY, CrimeKind.TREASON})
-CODE_PUNISHMENTS: dict[str, PunishmentKind] = {
-    "fine": PunishmentKind.FINE,
-    "pillory": PunishmentKind.PUBLIC_SHAMING,
-    "wergild": PunishmentKind.FINE,
-    "flogging": PunishmentKind.FLOGGING,
-    "prison": PunishmentKind.IMPRISONMENT,
-    "hand": PunishmentKind.HAND,
-    "blinding": PunishmentKind.EYES,
-    "tongue": PunishmentKind.TONGUE,
-    "exile": PunishmentKind.EXILE,
-    "death": PunishmentKind.DEATH,
-    "remaking": PunishmentKind.REMAKING,
-    "dormancy": PunishmentKind.FORCED_DORMANCY,
-    "edit": PunishmentKind.FORCED_EDIT,
-    "confinement": PunishmentKind.SEAT_CONFINEMENT,
-    "seizure": PunishmentKind.STATE_SEIZURE,
-    "erasure": PunishmentKind.ERASURE,
-}
+CODE_PUNISHMENTS = PENALTY_WORDS
 MUTILATIONS: dict[PunishmentKind, tuple[BodyPart, ...]] = {
     PunishmentKind.HAND: (BodyPart.RIGHT_HAND,),
     PunishmentKind.TONGUE: (BodyPart.TONGUE,),
@@ -61,45 +46,8 @@ MUTILATION_KINDS: dict[PunishmentKind, InjuryKind] = {
     PunishmentKind.TONGUE: InjuryKind.SEVERED,
     PunishmentKind.EYES: InjuryKind.GOUGED,
 }
-SENTENCE_TEXT = total(
-    PunishmentKind,
-    {
-        PunishmentKind.FINE: "was fined",
-        PunishmentKind.PUBLIC_SHAMING: "was shamed in public",
-        PunishmentKind.FLOGGING: "was flogged",
-        PunishmentKind.EXILE: "was sent into exile",
-        PunishmentKind.BRANDING: "was branded",
-        PunishmentKind.HAND: "lost a hand to the law",
-        PunishmentKind.TONGUE: "had their tongue cut out by the law",
-        PunishmentKind.EYES: "was blinded by the law",
-        PunishmentKind.DEATH: "was put to death",
-        PunishmentKind.IMPRISONMENT: "was sent to prison",
-        PunishmentKind.REMAKING: "was remade in body by the law",
-        PunishmentKind.FORCED_DORMANCY: "was put to sleep by the law",
-        PunishmentKind.FORCED_EDIT: "had their mind edited by the law",
-        PunishmentKind.SEAT_CONFINEMENT: "was confined to their seat by the law",
-        PunishmentKind.STATE_SEIZURE: "lost the minds they kept saved to the law",
-        PunishmentKind.ERASURE: "was erased by the law",
-    },
-)
-CRIME_TEXT = total(
-    CrimeKind,
-    {
-        CrimeKind.THEFT: "theft",
-        CrimeKind.BLASPHEMY: "blasphemy",
-        CrimeKind.TREASON: "treason",
-        CrimeKind.MURDER: "murder",
-        CrimeKind.DESERTION: "desertion",
-        CrimeKind.WITCHCRAFT: "witchcraft",
-        CrimeKind.MIND_THEFT: "theft of a mind",
-        CrimeKind.UNLICENSED_COPYING: "copying a mind without leave",
-        CrimeKind.FORCED_EDIT: "editing a mind by force",
-        CrimeKind.ERASURE: "ending a mind",
-        CrimeKind.MACHINE_SEIZURE: "seizing a made thing",
-        CrimeKind.IMPERSONATION: "passing as another by a copy",
-        CrimeKind.MIND_COMPULSION: "bending a mind by a power",
-    },
-)
+SENTENCE_TEXT = {kind: spec.text for kind, spec in PUNISHMENTS.items()}
+CRIME_TEXT = {kind: spec.text for kind, spec in CRIMES.items()}
 
 
 def cruelty_of(punishment: PunishmentKind) -> int:
@@ -119,7 +67,7 @@ async def community_ruler(session: AsyncSession, community_id: int | None) -> En
 
 async def code_punishment(ctx: TickContext, community_id: int | None, crime: CrimeKind) -> PunishmentKind:
     value = await law_param(ctx.session, community_id, LawKind.PENAL_CODE, crime.value) if community_id is not None else None
-    chosen = CODE_PUNISHMENTS.get(str(value), PunishmentKind.FINE) if value is not None else PunishmentKind.FINE
+    chosen = CODE_PUNISHMENTS.get(str(value), CRIMES[crime].punishment) if value is not None else CRIMES[crime].punishment
     table = ctx.rules.punishment
     if chosen in MUTILATIONS and community_id is not None and ctx.rng(f"mercy.{community_id}.{crime.value}").chance(table.exile_chance):
         return PunishmentKind.EXILE
@@ -148,6 +96,8 @@ async def jailed_or_fined(ctx: TickContext, culprit: EntityRow, punishment: Puni
         return PunishmentKind.FINE
     if punishment is PunishmentKind.REMAKING:
         await remake(ctx, culprit, case_id)
+    if punishment in SENTENCES:
+        await SENTENCES[punishment](ctx, culprit, case_id)
     return punishment
 
 
@@ -159,6 +109,7 @@ async def sentence(
     if await immune(ctx, culprit) or await sheltered(ctx.session, culprit.id):
         return False
     await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_PUNISHED, ctx.epoch, subject_id=judge.id if judge is not None else None)
+    await add_infamy(ctx.session, culprit.id, CRIMES[crime].severity * ctx.rules.sentences.severity_infamy_pct / PERCENT, ctx.epoch, rules=ctx.rules)
     if crime in JUDGED_CRIMES:
         await judged(ctx, culprit.id, culprit.id, CRIME_ACTS[crime])
     if punishment is PunishmentKind.PUBLIC_SHAMING:
@@ -168,7 +119,16 @@ async def sentence(
         await add_wealth(ctx.session, culprit.id, -table.fine_wealth, ctx.epoch)
     elif punishment is PunishmentKind.FLOGGING:
         await apply_hits(
-            ctx, culprit, Harm(ctx.rules.crime.punishment_hp, HarmCause.PUNISHMENT, reason, damage_type=DamageType.BLUNT, severity=2), lethal=False
+            ctx,
+            culprit,
+            Harm(
+                ctx.rules.crime.punishment_hp,
+                HarmCause.PUNISHMENT,
+                reason,
+                damage_type=DamageType.BLUNT,
+                severity=banded(ctx, ctx.rules.harm_bands.flogging, culprit.id),
+            ),
+            lethal=False,
         )
     elif punishment is PunishmentKind.EXILE:
         culprit.location_id = None
@@ -177,7 +137,14 @@ async def sentence(
         await apply_hits(
             ctx,
             culprit,
-            Harm(ctx.rules.crime.punishment_hp, HarmCause.PUNISHMENT, reason, damage_type=DamageType.FIRE, part=BodyPart.FACE, severity=1),
+            Harm(
+                ctx.rules.crime.punishment_hp,
+                HarmCause.PUNISHMENT,
+                reason,
+                damage_type=DamageType.FIRE,
+                part=BodyPart.FACE,
+                severity=banded(ctx, ctx.rules.harm_bands.branding, culprit.id),
+            ),
             lethal=False,
         )
         await add_infamy(ctx.session, culprit.id, table.branding_infamy, ctx.epoch, rules=ctx.rules)
@@ -205,6 +172,8 @@ async def sentence(
         await die(
             ctx, culprit, cause=f"executed for {CRIME_TEXT[crime]}", manner=DeathCause.EXECUTION, killer_id=judge.id if judge is not None else None, forced=True
         )
+    town = culprit.location_id
+    await weigh(ctx, punishment, town, (await LawBook.load(ctx.session)).member_of.get(town) if town is not None else None)
     text = f"{culprit.name} {SENTENCE_TEXT[punishment]} for {CRIME_TEXT[crime]}."
     await note(ctx, text, key=f"justice.{punishment.value}", ids=[culprit.id, *([judge.id] if judge is not None else [])])
     return True

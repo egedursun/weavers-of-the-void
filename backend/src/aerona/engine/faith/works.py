@@ -6,8 +6,10 @@ from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow, RelicRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
+from aerona.db.tables.networks import NetworkProfileRow
+from aerona.db.tables.polity import HouseMemberRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
@@ -154,7 +156,33 @@ async def survey_holdings(ctx: TickContext, church: Church) -> int:
     target = church.tenets.get(TenetKind.PILGRIMAGE_DUTY)
     if target is not None and target.target is not None and target.target.isdigit():
         added += await hold(ctx, church, int(target.target), HoldingKind.HOLY_PLACE)
+    return added + await wider_holdings(ctx, church, homes)
+
+
+async def wider_holdings(ctx: TickContext, church: Church, homes: list[int]) -> int:
+    added = 0
+    for network in await ctx.session.scalars(select(NetworkProfileRow.network_entity_id).where(NetworkProfileRow.owner_node_id == church.cult.id)):
+        added += await hold(ctx, church, network, HoldingKind.NETWORK)
+    if homes and church.doctrine is not None and church.doctrine.treasury >= ctx.rules.tithes.shares_at:
+        for company in await ctx.session.scalars(select(CompanyProfileRow.faction_entity_id).where(CompanyProfileRow.headquarters_entity_id.in_(homes))):
+            added += await hold(ctx, church, company, HoldingKind.SHARES)
+    for saint in await saints(ctx, church):
+        house = await ctx.session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == saint.id).limit(1))
+        if house is not None:
+            added += await hold(ctx, church, house, HoldingKind.LINES)
     return added
+
+
+async def holding_income(ctx: TickContext, church: Church) -> int:
+    yields = {
+        HoldingKind.NETWORK: ctx.rules.tithes.network_income,
+        HoldingKind.SHARES: ctx.rules.tithes.share_income,
+        HoldingKind.LINES: ctx.rules.tithes.line_income,
+    }
+    income = 0
+    for kind, amount in yields.items():
+        income += amount * len(await holdings_of(ctx, church, kind))
+    return credit(church.doctrine, income) if income and church.doctrine is not None else 0
 
 
 async def build(ctx: TickContext, church: Church, kind: HoldingKind, knowledge: KnowledgeMap) -> EntityRow | None:

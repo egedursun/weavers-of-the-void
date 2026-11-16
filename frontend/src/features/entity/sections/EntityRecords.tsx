@@ -153,7 +153,7 @@ export function EntityRecords({ ctx }: { ctx: EntityContext }) {
   return (
     <>
       {languages.length > 0 && (
-        <div className='flex min-w-0 flex-wrap items-center gap-2'>
+        <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'>
           <Label>Speaks</Label>
           <RefList refs={languages.map((bond) => bond.other as NodeRef)} />
         </div>
@@ -229,7 +229,7 @@ export function EntityRecords({ ctx }: { ctx: EntityContext }) {
             itemKey={(item) => item.id}
           >
             {(item) => (
-              <li className='flex min-w-0 items-center gap-2 rounded-md border bg-card px-2.5 py-1.5'>
+              <li className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2.5 py-1.5'>
                 <Badge size='sm' variant='outline'>
                   {humanize(item.entity_type)}
                 </Badge>

@@ -108,6 +108,17 @@ class ExtractionKind(StrEnum):
     HERDING = "herding"
     FARMING = "farming"
     GATHERING = "gathering"
+    DRILLING = "drilling"
+    PUMPING = "pumping"
+    DREDGING = "dredging"
+    DEEP_SEA = "deep_sea"
+    ATMOSPHERIC = "atmospheric"
+    ASTEROID = "asteroid"
+    STELLAR = "stellar"
+    SOURCE_HARVEST = "source_harvest"
+    SALVAGE = "salvage"
+    LIVING_HARVEST = "living_harvest"
+    DISTILLATION = "distillation"
 
 
 class HazardKind(StrEnum):
@@ -116,6 +127,15 @@ class HazardKind(StrEnum):
     FELLING_ACCIDENT = "felling_accident"
     DROWNING = "drowning"
     GORING = "goring"
+    BLOWOUT = "blowout"
+    EXPLOSION = "explosion"
+    TOXIC_RELEASE = "toxic_release"
+    DECOMPRESSION = "decompression"
+    RADIATION_EXPOSURE = "radiation_exposure"
+    SUBSIDENCE = "subsidence"
+    BEAST_ATTACK = "beast_attack"
+    SOURCE_BACKLASH = "source_backlash"
+    MACHINE_ACCIDENT = "machine_accident"
 
 
 class TradeMode(StrEnum):

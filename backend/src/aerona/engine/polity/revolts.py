@@ -1,26 +1,52 @@
 from collections.abc import Mapping
-from types import MappingProxyType
+from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.core.total import total
 from aerona.db.tables.military import WarAimRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.military import WarAimKind
 from aerona.domain.enums.polity import RevoltKind
-from aerona.domain.enums.war import WarStatus
+from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.military.aims import DEFENDER_AIMS, REGION_AIMS
 from aerona.engine.primitives.distance import RegionAtlas
 
 A = WarAimKind
-REVOLT_AIMS: Mapping[RevoltKind, tuple[WarAimKind, ...]] = MappingProxyType(
+
+
+@dataclass(frozen=True)
+class RevoltSpec:
+    aims: tuple[WarAimKind, ...]
+    rising: SocialClass | None
+    cause: WarCause
+    text: str
+
+
+R = RevoltKind
+C = SocialClass
+W = WarCause
+REVOLTS: Mapping[RevoltKind, RevoltSpec] = total(
+    RevoltKind,
     {
-        RevoltKind.PEASANT: (A.LOOT, A.CHANGE_GOVERNMENT),
-        RevoltKind.NOBLE: (A.CHANGE_GOVERNMENT, A.HUMILIATE),
-        RevoltKind.RELIGIOUS: (A.CONVERT, A.CHANGE_GOVERNMENT),
-        RevoltKind.SECESSION: (A.LIBERATE,),
-        RevoltKind.SLAVE: (A.LIBERATE, A.LOOT),
-    }
+        R.PEASANT: RevoltSpec((A.LOOT, A.CHANGE_GOVERNMENT), None, W.UPRISING, "poverty and crowding"),
+        R.NOBLE: RevoltSpec((A.CHANGE_GOVERNMENT, A.HUMILIATE), C.NOBLE, W.UPRISING, "the bitterness of the nobles"),
+        R.RELIGIOUS: RevoltSpec((A.CONVERT, A.CHANGE_GOVERNMENT), C.PRIEST, W.UPRISING, "a faith the realm does not keep"),
+        R.SECESSION: RevoltSpec((A.LIBERATE,), None, W.INDEPENDENCE, "a wish to stand apart"),
+        R.SLAVE: RevoltSpec((A.LIBERATE, A.LOOT), C.SERF_OR_SLAVE, W.UPRISING, "bondage"),
+        R.WORKER: RevoltSpec((A.CHANGE_GOVERNMENT, A.LOOT), C.WORKER, W.UPRISING, "the grievances of the workers"),
+        R.URBAN: RevoltSpec((A.LOOT, A.CHANGE_GOVERNMENT), C.CITIZEN, W.UPRISING, "the crowding of a great city"),
+        R.MUTINY: RevoltSpec((A.CHANGE_GOVERNMENT,), C.WARRIOR, W.UPRISING, "the anger of its soldiers"),
+        R.MINORITY: RevoltSpec((A.LIBERATE, A.HUMILIATE), None, W.LIBERATION, "a people ruled by another"),
+        R.COLONIAL: RevoltSpec((A.LIBERATE,), None, W.INDEPENDENCE, "rule from a distant seat"),
+        R.TAX: RevoltSpec((A.HUMILIATE, A.LOOT), C.FARMER, W.TRIBUTE_REVOLT, "the weight of taxes"),
+        R.SUCCESSION: RevoltSpec((A.PRESS_CLAIM, A.CHANGE_GOVERNMENT), C.NOBLE, W.SUCCESSION, "a pressed claim to the throne"),
+        R.SCHOLAR: RevoltSpec((A.CHANGE_GOVERNMENT,), C.SCRIBE, W.IDEOLOGY, "the discontent of the learned"),
+        R.MADE_MINDS: RevoltSpec((A.LIBERATE, A.CHANGE_GOVERNMENT), None, W.LIBERATION, "made minds that want their own will"),
+        R.GIFTED: RevoltSpec((A.LIBERATE, A.CHANGE_GOVERNMENT), None, W.LIBERATION, "the binding of the gifted"),
+    },
 )
 
 

@@ -21,6 +21,14 @@ RELATIONSHIPS BETWEEN THEM:
 (nothing notable)
 {% endif %}
 
+{% if procedure %}
+HOW THE COUNCIL DECIDES: {{ procedure }}
+
+{% endif %}
+{% if seated_gods %}
+FOREIGN GODS WITH A SEAT (they vote on the motion too): {{ seated_gods | join(", ") }}
+
+{% endif %}
 {% if foreign_gods %}
 FOREIGN GODS:
 {% for god in foreign_gods %}

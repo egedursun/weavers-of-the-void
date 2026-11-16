@@ -35,6 +35,10 @@ run deprecated_apis "$PYTHON" scripts/check_deprecated_apis.py
 run transfers "$PYTHON" scripts/check_transfers.py
 run import_cycles "$PYTHON" scripts/check_import_cycles.py
 run hidden_controls "$PYTHON" scripts/check_hidden_controls.py
+run duplicate_buttons "$PYTHON" scripts/check_duplicate_buttons.py
+run lever_costs "$PYTHON" scripts/check_lever_costs.py
+run model_enum_text "$PYTHON" scripts/check_model_enum_text.py
+run stat_keys "$PYTHON" scripts/check_stat_keys.py
 run label_maps "$PYTHON" scripts/check_label_maps.py
 run unpaged_lists "$PYTHON" scripts/check_unpaged_lists.py
 run raw_ids "$PYTHON" scripts/check_raw_ids.py
@@ -53,10 +57,14 @@ run theme_tokens "$PYTHON" scripts/check_theme_tokens.py
 run zero_ids "$PYTHON" scripts/check_zero_ids.py
 run record_cuts "$PYTHON" scripts/check_record_cuts.py
 run canned_lines "$PYTHON" scripts/check_canned_lines.py
+run text_ledger "$PYTHON" scripts/check_text_ledger.py
 run moon_orbits "$PYTHON" scripts/check_moon_orbits.py
 run goods_ledger "$PYTHON" scripts/check_goods_ledger.py
 run town_people "$PYTHON" scripts/check_town_people.py
 run backfills "$PYTHON" scripts/check_backfills.py
+run enum_values_read "$PYTHON" scripts/check_enum_values_read.py
+run fixed_harm "$PYTHON" scripts/check_fixed_harm.py
+run acts_as "$PYTHON" scripts/check_acts_as.py
 run war_foes "$PYTHON" scripts/check_war_foes.py
 run point_shares "$PYTHON" scripts/check_point_shares.py
 run held_ids "$PYTHON" scripts/check_held_ids.py
@@ -64,9 +72,16 @@ run ended_war_sides "$PYTHON" scripts/check_ended_war_sides.py
 run purse_welfare "$PYTHON" scripts/check_purse_welfare.py
 run method_orphans "$PYTHON" scripts/check_method_orphans.py
 run food_energy "$PYTHON" scripts/check_food_energy.py
+run spec_depth "$PYTHON" scripts/check_spec_depth.py
+run integrity_coverage "$PYTHON" scripts/check_integrity_coverage.py
 run raw_enums sh -c 'cd frontend && node scripts/check_raw_enums.mjs'
+run panel_stacks sh -c 'cd frontend && node scripts/check_panel_stacks.mjs'
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check
 run inventory "$PYTHON" scripts/check_inventory.py check
+
+if echo "$STAGED" | grep -qE '^backend/src/aerona/(db/tables|db/alembic|domain/enums)/.*\.py$|^scripts/check_enum_constraints\.py$'; then
+  run enum_constraints "$PYTHON" scripts/check_enum_constraints.py
+fi
 
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then
   run static sh -c 'cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports'
@@ -74,7 +89,7 @@ fi
 
 PROVING=""
 if echo "$STAGED" | grep -qE '^backend/src/aerona/(engine|db)/.*\.py$|^backend/tests/engine/core/(test_god_control|test_eager_epochs|stirring)\.py$'; then
-  PROVING="tests/engine/core/test_god_control.py tests/engine/core/test_eager_epochs.py"
+  PROVING="tests/engine/core/test_god_control.py tests/engine/core/test_eager_epochs.py tests/engine/core/test_parallel_engine.py::test_a_tick_of_the_reference_world_stays_within_its_statement_budget"
 fi
 if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^backend/pyproject\.toml$'; then
   PROVING="$PROVING tests/tools/test_every_tool.py tests/tools/test_catalogue.py tests/services/player/test_every_lever.py tests/services/player/test_every_job.py tests/api/test_every_endpoint.py"

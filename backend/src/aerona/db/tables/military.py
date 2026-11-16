@@ -16,6 +16,7 @@ from aerona.domain.enums.military import (
     CasualtyFate,
     CommanderTrait,
     ContractStatus,
+    FeudLevel,
     FeudParty,
     FeudStatus,
     Formation,
@@ -312,6 +313,8 @@ class FeudRow(Base):
     intensity: Mapped[int] = mapped_column(default=40)
     grievance: Mapped[int] = mapped_column(default=40)
     generations: Mapped[int] = mapped_column(default=0)
+    level: Mapped[FeudLevel] = mapped_column(enum_type(FeudLevel, "level"), default=FeudLevel.BLOOD, server_default=FeudLevel.BLOOD.value)
+    mediator_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     status: Mapped[FeudStatus] = mapped_column(enum_type(FeudStatus, "status"), default=FeudStatus.ACTIVE)
     cause: Mapped[str | None] = mapped_column(Text)
     since_epoch: Mapped[int] = mapped_column(default=0)

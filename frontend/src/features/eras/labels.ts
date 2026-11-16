@@ -46,11 +46,14 @@ const ERA_NAMES: Record<Schema['TechnologyEra'], [string, Named['tone']]> = {
   bronze: ['Bronze', 'warning'],
   iron: ['Iron', 'muted'],
   medieval: ['Medieval', 'verdigris'],
+  gunpowder: ['Gunpowder', 'danger'],
   renaissance: ['Renaissance', 'gold'],
   steam: ['Steam', 'warning'],
   electrical: ['Electrical', 'info'],
   information: ['Information', 'info'],
   advanced: ['Advanced', 'danger'],
+  interstellar: ['Interstellar', 'gold'],
+  beyond: ['Beyond', 'verdigris'],
 }
 
 export const ERAS = Object.fromEntries(

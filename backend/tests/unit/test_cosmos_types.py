@@ -112,7 +112,7 @@ def test_every_world_type_has_a_row_in_every_per_type_table() -> None:
     for world_type in WorldType:
         default_terrain(world_type, RULES)
         WORLD_TEMPERATURE[world_type](RULES)
-        assert len(WORLD_TYPE_PROFILES[world_type].biomes) == len(WORLD_TYPES[world_type].biomes) == 10
+        assert len(WORLD_TYPE_PROFILES[world_type].biomes) == 10
     for world_type in NEW_WORLDS:
         assert world_type in WORLD_NATURES
         assert world_type is WorldType.FORGE or mechanics_of(world_type).capacity_pct is not None

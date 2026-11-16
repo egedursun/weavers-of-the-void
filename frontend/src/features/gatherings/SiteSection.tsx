@@ -411,7 +411,7 @@ function HolderRow({
   )
   const busy = why(blocked, remove.isPending)
   return (
-    <div className='flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg border bg-background p-2.5'>
+    <div className='flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <span className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <Flag
           aria-hidden='true'

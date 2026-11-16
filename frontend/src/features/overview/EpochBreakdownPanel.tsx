@@ -24,6 +24,7 @@ import {
   EntityLink,
   type KpiTone,
   Medallion,
+  Paged,
   Portrait,
   Section,
 } from '@/components/domain'
@@ -67,7 +68,7 @@ function Measure({ field, after, before, delta }: MeasureProps) {
   return (
     <div
       data-measure={field}
-      className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'
+      className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
     >
       <Medallion icon={STAT_ICON[field]} tone={STAT_TONE[field]} size='sm' />
       <div className='flex min-w-0 flex-1 flex-col'>
@@ -109,7 +110,7 @@ function ItemList({ title, icon, tone, items, harmful }: ItemListProps) {
   const net = items.reduce((sum, item) => sum + item.delta, 0)
   const largest = Math.max(...top.map((item) => Math.abs(item.delta)), 1)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='flex min-w-0 items-center gap-2'>
         <Medallion icon={icon} tone={tone} size='sm' />
         <Label variant='overline' truncate className='flex-1'>
@@ -118,30 +119,32 @@ function ItemList({ title, icon, tone, items, harmful }: ItemListProps) {
         <ChangeChip value={net} harmful={harmful} />
       </div>
       <ul className='flex min-w-0 flex-col gap-2'>
-        {top.map((item) => (
-          <li key={item.item} className='flex min-w-0 flex-col gap-1'>
-            <div className='flex min-w-0 items-baseline justify-between gap-3'>
-              <Text as='span' truncate className='min-w-0 flex-1'>
-                {humanize(item.item)}
-              </Text>
-              <Stat
-                value={signed(item.delta)}
-                tone={toneOf(item.delta, harmful)}
-                className='shrink-0'
+        <Paged items={top} as='li'>
+          {(item) => (
+            <li key={item.item} className='flex min-w-0 flex-col gap-1'>
+              <div className='flex min-w-0 items-baseline justify-between gap-3'>
+                <Text as='span' truncate className='min-w-0 flex-1'>
+                  {humanize(item.item)}
+                </Text>
+                <Stat
+                  value={signed(item.delta)}
+                  tone={toneOf(item.delta, harmful)}
+                  className='shrink-0'
+                />
+              </div>
+              <Progress
+                size='sm'
+                tone={
+                  toneOf(item.delta, harmful) === 'destructive'
+                    ? 'destructive'
+                    : 'success'
+                }
+                value={(Math.abs(item.delta) / largest) * PERCENT}
+                aria-label={`${humanize(item.item)} ${signed(item.delta)}`}
               />
-            </div>
-            <Progress
-              size='sm'
-              tone={
-                toneOf(item.delta, harmful) === 'destructive'
-                  ? 'destructive'
-                  : 'success'
-              }
-              value={(Math.abs(item.delta) / largest) * PERCENT}
-              aria-label={`${humanize(item.item)} ${signed(item.delta)}`}
-            />
-          </li>
-        ))}
+            </li>
+          )}
+        </Paged>
       </ul>
     </div>
   )
@@ -157,7 +160,7 @@ type SonCardProps = {
 
 function SonCard({ name, rarity, cover, sonId, changes }: SonCardProps) {
   return (
-    <li className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <li className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Portrait
         name={name}
         src={mediaUrl(cover)}
@@ -285,19 +288,21 @@ export function EpochBreakdownPanel({ state }: EpochBreakdownPanelProps) {
             <div className='flex min-w-0 flex-col gap-3'>
               <SectionTitle level={4}>Sons</SectionTitle>
               <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3'>
-                {(breakdown.data?.sons ?? []).map((item) => {
-                  const view = views.get(item.son_id)
-                  return (
-                    <SonCard
-                      key={item.son_id}
-                      sonId={item.son_id}
-                      name={view?.son.name ?? `Son #${item.son_id}`}
-                      rarity={view?.son.rarity ?? null}
-                      cover={view?.cover ?? null}
-                      changes={item.changes}
-                    />
-                  )
-                })}
+                <Paged items={breakdown.data?.sons ?? []} as='li'>
+                  {(item) => {
+                    const view = views.get(item.son_id)
+                    return (
+                      <SonCard
+                        key={item.son_id}
+                        sonId={item.son_id}
+                        name={view?.son.name ?? `Son #${item.son_id}`}
+                        rarity={view?.son.rarity ?? null}
+                        cover={view?.cover ?? null}
+                        changes={item.changes}
+                      />
+                    )
+                  }}
+                </Paged>
               </ul>
             </div>
           )}

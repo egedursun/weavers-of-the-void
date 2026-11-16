@@ -21,15 +21,11 @@ from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.storyteller.palette import BY_KEY, keep_palette, weight_of
+from aerona.engine.storyteller.regions import deeper_aim, measure_parts
 from aerona.rules.registry import Rules
 
-STRUCK_KEYS: dict[SpontaneousKind, tuple[str, ...]] = {
-    SpontaneousKind.BEAST_AWAKENING: ("monsters.emerged", "monsters.void_roamed", "pantheon.sleeper_woke"),
-    SpontaneousKind.RAID: ("vendetta.raid", "faction.raid", "monsters.raid"),
-    SpontaneousKind.COMET: ("sky.", "feature.comet_returned"),
-    SpontaneousKind.PLAGUE: ("disasters.plague", "disasters.city_plague", "disasters.plague_spread"),
-    SpontaneousKind.CLAIMANT: ("polity.usurper_accepted", "titles.usurped", "polity.coup"),
-}
+STRUCK_KEYS: dict[SpontaneousKind, tuple[str, ...]] = {kind: BY_KEY[kind.value].struck for kind in SpontaneousKind}
 
 
 @dataclass
@@ -54,6 +50,9 @@ async def storyteller_of(ctx: TickContext, world_id: int) -> StorytellerRow:
 
 def aim(rules: Rules, row: StorytellerRow, epoch: int, chaos: int) -> int:
     table = rules.storyteller
+    deeper = deeper_aim(rules, row, epoch)
+    if deeper is not None:
+        return deeper
     if row.profile is StorytellerProfile.STEADY:
         return table.steady_target
     if row.profile is StorytellerProfile.RISING:
@@ -160,9 +159,11 @@ async def measure(ctx: TickContext, world: WorldRow, tally: StorytellerTally) ->
     row.target = aim(ctx.rules, row, ctx.epoch, chaos)
     felt = await lagged(ctx, BalanceLoop.STORYTELLER_PACING, world.id, row.tension)
     row.band = band_of(ctx.rules, felt, row.target)
+    crises = await measure_parts(ctx, world.id)
     if "boost_pct" not in row.locked:
-        row.boost_pct = boost_of(ctx.rules, felt, row.target, row.band)
+        row.boost_pct = 0 if crises and row.band is TensionBand.QUIET else boost_of(ctx.rules, felt, row.target, row.band)
     row.recent_kinds = remember_kinds(ctx.rules, row, await struck_counts(ctx, world.id))
+    await keep_palette(ctx, row)
     if "spotlight_entity_id" not in row.locked:
         row.spotlight_entity_id = await spotlight_for(ctx, world.id)
         tally.spotlights += row.spotlight_entity_id is not None
@@ -190,8 +191,15 @@ async def paced(ctx: TickContext, world_id: int | None, kind: SpontaneousKind, p
     for row in rows:
         recent = (row.recent_kinds or {}).get(kind.value, 0)
         variety = table.variety_pct * min(1.0, recent / table.variety_window) / PERCENT
-        factor += (1 + row.boost_pct / PERCENT) * (1 - variety)
+        factor += (1 + row.boost_pct / PERCENT) * (1 - variety) * weight_of(row, kind.value)
     return pct * factor / len(rows)
+
+
+async def paced_key(ctx: TickContext, world_id: int | None, key: str, pct: float) -> float:
+    rows = await boosts(ctx, world_id)
+    if not rows:
+        return pct
+    return pct * sum((1 + row.boost_pct / PERCENT) * weight_of(row, key) for row in rows) / len(rows)
 
 
 async def recovered(ctx: TickContext, world_id: int | None, kind: RecoveryKind, value: float) -> float:
@@ -199,7 +207,7 @@ async def recovered(ctx: TickContext, world_id: int | None, kind: RecoveryKind, 
     if not rows:
         return value
     lift = sum(max(0, -row.boost_pct) for row in rows) / len(rows)
-    return value * (1 + lift / PERCENT)
+    return value * (1 + lift / PERCENT) * sum(weight_of(row, kind.value) for row in rows) / len(rows)
 
 
 async def quiet_world(ctx: TickContext, world_id: int) -> bool:

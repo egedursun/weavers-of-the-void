@@ -23,6 +23,14 @@ class RegistryKind(StrEnum):
     SALE = "sale"
     DOWRY = "dowry"
     INDENTURE = "indenture"
+    PATENT = "patent"
+    PATTERN = "pattern"
+    MIND_STATE = "mind_state"
+    LINE = "line"
+    COMPANY = "company"
+    BIRTH = "birth"
+    DEATH = "death"
+    CITIZENSHIP = "citizenship"
 
 
 class JurisdictionClaim(StrEnum):

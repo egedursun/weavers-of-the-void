@@ -1,9 +1,12 @@
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from aerona.catalog.crimes import CRIME_PENALTY_DEFAULTS, CRIMES, PENALTY_WORDS, PUNISHMENTS
 from aerona.core.grammar import fill
 from aerona.core.total import total
 from aerona.domain.enums.demography import MarriageCustom
+from aerona.domain.enums.justice import TrialKind
+from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import DebtRemedy, DecisionRule, GenderRule, GovernmentKind, LawKind, SuccessionRule
 
 
@@ -27,26 +30,9 @@ def pick(*values: str, default: str | None = None) -> Param:
 
 
 FRANCHISES = ("nobles", "landholders", "citizens", "free", "all")
-CRIME_TERMS = ("theft", "murder", "treason", "blasphemy", "desertion", "witchcraft")
+CRIME_TERMS = tuple(crime.value for crime in CrimeKind)
 TORTURE_CRUELTY = 15
-PENALTIES = (
-    "fine",
-    "pillory",
-    "flogging",
-    "prison",
-    "hand",
-    "blinding",
-    "tongue",
-    "exile",
-    "wergild",
-    "death",
-    "remaking",
-    "dormancy",
-    "edit",
-    "confinement",
-    "seizure",
-    "erasure",
-)
+PENALTIES = tuple(PENALTY_WORDS)
 LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
     LawKind,
     {
@@ -65,20 +51,8 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
         LawKind.TOLLS: {"rate": Param(5)},
         LawKind.DEBT_LAW: {"remedy": pick(*(item.value for item in DebtRemedy), default=DebtRemedy.PRISON.value), "jubilee_epochs": Param(2, 1, 20)},
         LawKind.PENAL_CODE: {
-            "theft": pick(*PENALTIES, default="fine"),
-            "murder": pick(*PENALTIES, default="wergild"),
-            "treason": pick(*PENALTIES, default="death"),
-            "blasphemy": pick(*PENALTIES, default="fine"),
-            "desertion": pick(*PENALTIES, default="flogging"),
-            "witchcraft": pick(*PENALTIES, default="fine"),
-            "mind_theft": pick(*PENALTIES, default="prison"),
-            "unlicensed_copying": pick(*PENALTIES, default="fine"),
-            "forced_edit": pick(*PENALTIES, default="prison"),
-            "erasure": pick(*PENALTIES, default="prison"),
-            "machine_seizure": pick(*PENALTIES, default="prison"),
-            "impersonation": pick(*PENALTIES, default="fine"),
-            "mind_compulsion": pick(*PENALTIES, default="prison"),
-            "trial": pick("judge", "jury", "combat", "ordeal"),
+            **{crime.value: pick(*PENALTIES, default=CRIME_PENALTY_DEFAULTS[crime]) for crime in CrimeKind},
+            "trial": pick(*(kind.value for kind in TrialKind)),
             "torture": pick("allowed", "forbidden", default="forbidden"),
         },
         LawKind.LEVY_LAW: {"share": Param(10, 0, 50), "duration": Param(1, 1, 10)},
@@ -97,7 +71,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
         LawKind.RELIGIOUS_TOLERANCE: {"level": pick("persecution", "tolerated", "free", default="tolerated")},
         LawKind.WORSHIP_BAN: {"son_id": Param(0, 0, 10**9)},
         LawKind.CENSORSHIP: {"strictness": Param(50)},
-        LawKind.BLOOD_FEUD: {"wergild_allowed": Param(True)},
+        LawKind.BLOOD_FEUD: {"wergild_allowed": Param(True), "banned": Param(False)},
         LawKind.QUARANTINE: {"automatic": Param(True), "epochs": Param(2, 1, 20)},
         LawKind.BURIAL_LAW: {"rite": pick("burial", "burning", "exposure")},
         LawKind.SANITATION: {"works": Param(10)},
@@ -173,26 +147,7 @@ def law_terms_guide() -> str:
     return "; ".join(f"{kind.value}: {law_terms(kind)}" for kind in LAW_PARAMS)
 
 
-PENALTY_CRUELTY = MappingProxyType(
-    {
-        "fine": 0,
-        "wergild": 5,
-        "pillory": 15,
-        "exile": 25,
-        "prison": 30,
-        "flogging": 35,
-        "hand": 60,
-        "tongue": 65,
-        "blinding": 80,
-        "remaking": 90,
-        "death": 100,
-        "dormancy": 30,
-        "edit": 70,
-        "confinement": 20,
-        "seizure": 25,
-        "erasure": 100,
-    }
-)
+PENALTY_CRUELTY = MappingProxyType({spec.word: spec.harm for spec in PUNISHMENTS.values()})
 LAW_TITLES = MappingProxyType(
     {
         LawKind.SUCCESSION_RULE: "the Law of the Throne",
@@ -261,13 +216,8 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.TITHE: "{rate}% goes to the state temples.",
         LawKind.TOLLS: "Roads through the realm charge {rate}%.",
         LawKind.DEBT_LAW: "Defaulters face {remedy}.",
-        LawKind.PENAL_CODE: (
-            "Theft: {theft}; murder: {murder}; treason: {treason}; blasphemy: {blasphemy}; desertion: {desertion}; witchcraft: {witchcraft}; "
-            "theft of a mind: {mind_theft}; copying without leave: {unlicensed_copying}; forced edit of a mind: {forced_edit}; "
-            "ending a mind: {erasure}; seizing a made thing: {machine_seizure}; passing as another by copy: {impersonation}; "
-            "bending a mind by a power: {mind_compulsion}; "
-            "trial by {trial}; questioning under torture {torture}."
-        ),
+        LawKind.PENAL_CODE: "; ".join(f"{spec.text}: {{{crime.value}}}" for crime, spec in CRIMES.items())
+        + "; trial by {trial}; questioning under torture {torture}.",
         LawKind.LEVY_LAW: "{share}% of the able are levied for {duration} seasons; armies grow.",
         LawKind.CONSCRIPTION: "Everyone from age {min_age} may be drafted; {share}% more soldiers.",
         LawKind.STANDING_ARMY: "{share}% of the people serve in a standing army.",
@@ -279,7 +229,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.FOREIGNER_RIGHTS: "Foreigners have {level}; citizenship pulls migrants.",
         LawKind.RELIGIOUS_TOLERANCE: "Foreign faiths are under {level}; conversions follow.",
         LawKind.WORSHIP_BAN: "The worship of a god is banned.",
-        LawKind.BLOOD_FEUD: "Blood feuds may end in wergild: {wergild_allowed}.",
+        LawKind.BLOOD_FEUD: "Blood feuds may end in wergild: {wergild_allowed}. Blood feuds are banned: {banned}.",
         LawKind.CENSORSHIP: "Contrary rumours, broadsheets and satire are suppressed with strictness {strictness}.",
         LawKind.QUARANTINE: "Sick lands are sealed for {epochs} epochs.",
         LawKind.BURIAL_LAW: "The dead are given to {rite}; burning slows plague.",

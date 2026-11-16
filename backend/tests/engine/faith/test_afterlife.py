@@ -65,8 +65,8 @@ async def test_routing_follows_priority_closure_and_ownership(session: AsyncSess
     strata = [new_stratum(rules, world.region, kind) for kind in StratumKind]
     for index, row in enumerate(strata):
         row.id = index + 1
-    paradise = next(row for row in strata if row.kind is StratumKind.PARADISE)
-    plain = next(row for row in strata if row.kind is StratumKind.PLAIN)
+    paradise = next(row for row in strata if row.kind is StratumKind.REWARD)
+    plain = next(row for row in strata if row.kind is StratumKind.COMMON)
     common = {"deeds": {"violence": 0}, "rite": FuneralRite.BURIAL, "tenets": set[TenetKind]()}
     assert route(strata, score=90, god=god, **common) is paradise
     assert route(strata, score=50, god=god, **common) is plain
@@ -75,8 +75,8 @@ async def test_routing_follows_priority_closure_and_ownership(session: AsyncSess
     paradise.closed, paradise.son_id = False, rival.id
     assert route(strata, score=90, god=god, **common) is plain
     assert route(strata, score=90, god=rival, **common) is paradise
-    assert route(strata, score=90, god=None, **common).kind is StratumKind.OBLIVION
-    assert default_criteria(rules.afterlife, StratumKind.TORMENT).score_below == rules.afterlife.torment_score
+    assert route(strata, score=90, god=None, **common).kind is StratumKind.DISSOLUTION
+    assert default_criteria(rules.afterlife, StratumKind.PUNISHMENT).score_below == rules.afterlife.torment_score
 
 
 def test_judgement_scores_come_from_rules(rules: Rules) -> None:
@@ -207,7 +207,7 @@ async def test_death_gods_draw_on_their_realm(session: AsyncSession, world: Gods
     ctx = tick(session, rules)
     death = await make_son(session, "Grave", world.world.id)
     death.domain_primary = Domain.DEATH
-    stratum = new_stratum(rules, world.region, StratumKind.PLAIN)
+    stratum = new_stratum(rules, world.region, StratumKind.COMMON)
     session.add(stratum)
     await session.flush()
     soul = await spirit(session, world, world.region, "Resting")
@@ -225,7 +225,7 @@ async def test_death_gods_draw_on_their_realm(session: AsyncSession, world: Gods
 async def test_fear_of_torment_settles_at_its_target(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
     ctx = tick(session, rules)
     faith = await faithful(session, world)
-    torment = new_stratum(rules, world.region, StratumKind.TORMENT)
+    torment = new_stratum(rules, world.region, StratumKind.PUNISHMENT)
     session.add(torment)
     await session.flush()
     dead = await mortal(session, world, faith.town, "Sinner", dead=True)
@@ -289,7 +289,7 @@ async def test_backfill_gives_old_spirits_profiles_and_typed_strata(session: Asy
     old = await spirit(session, world, world.region, "Old Spirit", unrest=5)
     await bond(session, old.id, dead.id, BondKind.DESCENDS_FROM)
     orphan = await spirit(session, world, world.region, "Nameless Wisp", unrest=95)
-    legacy = AfterlifeStratumRow(realm_entity_id=world.region.id, kind=StratumKind.PLAIN, name="Grey", criteria={"score_between": "25-60"}, population=7)
+    legacy = AfterlifeStratumRow(realm_entity_id=world.region.id, kind=StratumKind.COMMON, name="Grey", criteria={"score_between": "25-60"}, population=7)
     session.add(legacy)
     await session.flush()
     await backfill_faith(ctx, await FaithBook.load(session))
@@ -297,7 +297,7 @@ async def test_backfill_gives_old_spirits_profiles_and_typed_strata(session: Asy
     orphan_profile = await session.get(SpiritProfileRow, orphan.id)
     assert old_profile is not None and old_profile.origin_mortal_id == dead.id and old_profile.alignment is SpiritAlignment.GUARDIAN
     assert orphan_profile is not None and orphan_profile.alignment is SpiritAlignment.VENGEFUL
-    assert legacy.criteria == default_criteria(rules.afterlife, StratumKind.PLAIN).stored()
+    assert legacy.criteria == default_criteria(rules.afterlife, StratumKind.COMMON).stored()
     assert legacy.population == 0
     assert await session.get(AppliedFixupRow, PROFILES_FIXUP) is not None
     assert await session.get(AppliedFixupRow, CRITERIA_FIXUP) is not None

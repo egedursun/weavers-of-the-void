@@ -822,8 +822,8 @@
       "inanc_carpani": "worshipped",
       "ek_eylem": "tireless",
       "dokunulmaz": "untouchable",
-      "fisilti": "dream_whisper",
-      "savas_babasi": "war_father",
+      "fisilti": "dream_sending",
+      "savas_babasi": "war_leader",
       "hasat": "harvester",
       "kahin": "seer",
       "dirilis": "reviving",
@@ -838,7 +838,7 @@
       "bereketli": "fertile",
       "dirilen": "reviving",
       "olumsuz": "deathless",
-      "sozu_keskin": "sharp_tongued"
+      "sozu_keskin": "persuasion"
     },
     "foreign_god_status": {
       "uyanik": "awake",
@@ -1413,7 +1413,7 @@
       "savaşçı birliği": "warrior_band",
       "dünyalar arası federasyon": "interworld_federation",
       "gezgin pazar": "wandering_market",
-      "boşluk korsanları": "void_pirates"
+      "boşluk korsanları": "route_raiders"
     },
     "army": {
       "halk ordusu": "peoples_army",
@@ -1467,7 +1467,7 @@
   "engine_kind_tags": {
     "gezgin pazar": "wandering_market",
     "kozmik arşiv": "cosmic_archive",
-    "boşluk korsanı": "void_pirates",
+    "boşluk korsanı": "route_raiders",
     "harika": "wonder",
     "golem": "golem",
     "tanrı cesedi": "god_corpse"
@@ -3587,7 +3587,7 @@
     "DUNYA_SAVAS_GUCU.hizip_nufuz": "world_war_strength.faction_sway_coeff_pct",
     "DUNYA_SAVAS_GUCU.muttefik_pay": "world_war_strength.ally_share_pct",
     "DUNYA_SAVAS_GUCU.olumlu_ceviklik_bolen": "world_war_strength.mortal_agility_divisor",
-    "DUNYA_SAVAS_GUCU.savas_babasi_carpan": "world_war_strength.war_father_mult",
+    "DUNYA_SAVAS_GUCU.savas_babasi_carpan": "world_war_strength.war_leader_mult",
     "DUNYA_SAVAS_GUCU.savas_bilgisi": "world_war_strength.warcraft_bonus",
     "DUNYA_SAVAS_GUCU.savasci_esik": "world_war_strength.warrior_threshold_pct",
     "DUNYA_SAVAS_GUCU.savasci_katsayi": "world_war_strength.warrior_coeff_pct",
@@ -4106,7 +4106,7 @@
     "KORKU.genc_carpan": "cosmic_horror.young_growth_pct",
     "KORKU.genc_tavan": "cosmic_horror.young_cap",
     "KORKU.genc_tavan_artis": "cosmic_horror.young_cap_growth",
-    "KORKU.goz_sagduyu": "cosmic_horror.sky_eye_sanity_loss",
+    "KORKU.goz_sagduyu": "cosmic_horror.mind_mark_sanity_loss",
     "KORKU.ilgi_dusus": "cosmic_horror.interest_decay",
     "KORKU.ilgi_varsayilan": "cosmic_horror.default_interest",
     "KORKU.ilgi_zar": "cosmic_horror.interest_die",
@@ -4123,7 +4123,7 @@
     "KORKU.rahip_tavan": "cosmic_horror.priest_cap",
     "KORKU.sagduyu_onarim": "cosmic_horror.sanity_self_repair",
     "KORKU.sagduyu_varsayilan": "cosmic_horror.default_sanity",
-    "KORKU.sessizlik_pay": "cosmic_horror.silence_word_loss_pct",
+    "KORKU.sessizlik_pay": "cosmic_horror.language_loss_pct",
     "KORKU.sizinti_asinma_bolen": "cosmic_horror.leak_erosion_divisor",
     "KORKU.tanrisiz_sizinti": "cosmic_horror.godless_leak",
     "KORKU.tapar_onarim": "cosmic_horror.worship_repair",
@@ -4131,7 +4131,7 @@
     "KORKU.tapinan_onarim": "cosmic_horror.worshipper_repair",
     "KORKU.tapinan_oran_onarim": "cosmic_horror.worshipper_ratio_repair",
     "KORKU.tapinan_tavan": "cosmic_horror.worshipper_cap",
-    "KORKU.ters_yagmur_ruh": "cosmic_horror.reverse_rain_souls",
+    "KORKU.ters_yagmur_ruh": "cosmic_horror.dead_taken",
     "KORKU.tip_onarim": "cosmic_horror.medicine_repair",
     "KORKU.uyari1": "cosmic_horror.warning_1",
     "KORKU.uyari2": "cosmic_horror.warning_2",
@@ -4462,7 +4462,7 @@
     "OGUL_ARAC.ortak_xp_guc": "son_tools.co_creator_xp_per_power",
     "OGUL_ARAC.ozellik_adet": "son_tools.creature_max_traits",
     "OGUL_ARAC.ruya_bagnaz_bolen": "son_tools.dream_zealotry_divisor",
-    "OGUL_ARAC.ruya_fisilti": "son_tools.dream_whisper_bonus_pct",
+    "OGUL_ARAC.ruya_fisilti": "son_tools.dream_sending_bonus_pct",
     "OGUL_ARAC.ruya_iliski": "son_tools.dream_steal_relation",
     "OGUL_ARAC.ruya_karizma_bolen": "son_tools.dream_charisma_divisor",
     "OGUL_ARAC.ruya_karizma_varsayilan": "son_tools.dream_default_rival_charisma",
@@ -5356,7 +5356,7 @@
     "YABANCI.guc_inanc_kudret": "foreign_gods.growth_faith_might",
     "YABANCI.guc_kalkan": "foreign_gods.power_shield",
     "YABANCI.guc_sayi": "foreign_gods.powers_count",
-    "YABANCI.guc_soz": "foreign_gods.power_sharp_tongue",
+    "YABANCI.guc_soz": "foreign_gods.power_persuasion",
     "YABANCI.guc_yikici": "foreign_gods.power_destroyer",
     "YABANCI.konusma_irade": "foreign_gods.talk_will",
     "YABANCI.refah_yaraticilik": "foreign_gods.prosperity_creativity",

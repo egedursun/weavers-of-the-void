@@ -62,7 +62,7 @@ export function CosmicResourceForm({
             id={id}
             value={name}
             maxLength={NAME_MAX}
-            placeholder='Hour sand'
+            placeholder='The name of the resource'
             onChange={(event) => setName(event.target.value)}
           />
         )}
@@ -91,7 +91,7 @@ export function CosmicResourceForm({
           <Input
             id={id}
             value={sideEffect}
-            placeholder="Gnaws its users' sanity"
+            placeholder='What long use does, if anything'
             onChange={(event) => setSideEffect(event.target.value)}
           />
         )}

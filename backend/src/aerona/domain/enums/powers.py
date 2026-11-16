@@ -151,7 +151,7 @@ class PowerState(StrEnum):
     EMERGING = "emerging"
     ACTIVE = "active"
     STRAINED = "strained"
-    BURNED_OUT = "burned_out"
+    EXHAUSTED = "exhausted"
     SUPPRESSED = "suppressed"
     LOST = "lost"
 

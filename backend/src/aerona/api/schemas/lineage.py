@@ -3,7 +3,8 @@ from aerona.api.schemas.mind import LabelView
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.genetics import DwellingKind, GiftStance, HouseholdDecision, HouseholdRole, Locus, LocusGroup
+from aerona.domain.enums.genetics import DwellingKind, DwellingTenure, GiftStance, HouseholdDecision, HouseholdForm, HouseholdRole, Locus, LocusGroup
+from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
@@ -118,6 +119,10 @@ class DwellingView(ApiModel):
     district_kind: DistrictKind | None
     settlement: NodeRef | None
     furnishings: list[FurnishingView]
+    tenure: DwellingTenure
+    heating: EnergyKind | None
+    light: EnergyKind | None
+    crowding: int
     built_epoch: int
     held: list[str]
 
@@ -145,6 +150,7 @@ class HouseholdView(ApiModel):
     last_decision_label: str | None
     decided_epoch: int | None
     formed_epoch: int
+    form: HouseholdForm
     members: list[HouseholdMemberView]
     dwelling: DwellingView | None
     held: list[str]

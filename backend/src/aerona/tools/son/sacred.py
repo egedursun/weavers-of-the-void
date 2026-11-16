@@ -5,6 +5,7 @@ from pydantic import Field
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sacred import DoctrineAfterlifeRow, PetitionRow, SpiritOfficeRow, TheodicyCrisisRow
 from aerona.db.write_guard import held
@@ -148,7 +149,7 @@ async def appoint_spirit(call: SonCall, args: AppointSpiritInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.SPIRIT_APPOINT_REFUSED, why=reason_of(error))
     call.target(spirit.id)
-    standing = "dismissed" if row.dismissed else f"made a spirit of {row.rank.value} rank"
+    standing = "dismissed" if row.dismissed else f"made a spirit of {spoken(row.rank)} rank"
     await call.chronicle(
         ChronicleKind.WORSHIP, lines.APPOINT_SPIRIT, entity_ids=[spirit.id], son=call.son.name, spirit=spirit.name, standing=standing, reason=args.reason
     )

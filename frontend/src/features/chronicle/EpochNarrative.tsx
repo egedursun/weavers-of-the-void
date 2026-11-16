@@ -97,7 +97,7 @@ export function EpochNarrative({ epoch, perspectives }: EpochNarrativeProps) {
             {worlds.map((world) => (
               <div
                 key={world.world_id}
-                className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background p-3'
+                className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'
               >
                 <div className='flex min-w-0 items-center gap-2'>
                   <Globe2

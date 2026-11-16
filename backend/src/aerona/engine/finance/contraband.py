@@ -25,7 +25,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 
-OUTLAWS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, *sorted(CRIME_KINDS))
+OUTLAWS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, *sorted(CRIME_KINDS))
 BOOKS = (ItemClass.BOOK, ItemClass.SCROLL, ItemClass.PRAYER_BOOK)
 FORBIDDEN_LORE = (KnowledgeBranch.FORBIDDEN, KnowledgeBranch.MAGIC)
 VOID_KINDS = frozenset({MaterialKind.VOID_GLASS})

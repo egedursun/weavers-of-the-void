@@ -138,7 +138,7 @@ function SlotCard({
   return (
     <li
       data-slot={slot.slot}
-      className='@container/slot flex h-full min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'
+      className='@container/slot flex h-full min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={spec.icon} tone={family.tone} />
@@ -164,7 +164,7 @@ function SlotCard({
                 <li
                   key={key}
                   data-effect={key}
-                  className='flex min-w-0 items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5'
+                  className='flex min-w-0 items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 px-2 py-1.5'
                 >
                   <effect.icon
                     aria-hidden='true'
@@ -244,7 +244,7 @@ function OpenSlot({
   return (
     <li
       data-slot={slot}
-      className='flex h-full min-w-0 flex-col gap-3 rounded-xl border border-dashed bg-muted/20 p-4'
+      className='flex h-full min-w-0 flex-col gap-3 rounded-md p-4 sealed-well'
     >
       <div className='flex min-w-0 items-start gap-3'>
         <Medallion icon={spec.icon} tone='muted' />

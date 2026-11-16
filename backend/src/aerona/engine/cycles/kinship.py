@@ -21,6 +21,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.unions.customs import sides, union_of
 
 
 @dataclass
@@ -61,6 +62,16 @@ async def reside(ctx: TickContext, marriage: MarriageRow, tally: KinshipTally) -
     first = await living_entity(ctx.session, marriage.first_id)
     second = await living_entity(ctx.session, marriage.second_id)
     if first is None or second is None or held(first.id, second.id):
+        return
+    custom = await union_of(ctx.session, first)
+    if custom is not None:
+        chosen = sides(custom, first, second)
+        if chosen is None:
+            return
+        leaving, staying = chosen
+        if staying.location_id is not None and leaving.location_id != staying.location_id:
+            leaving.location_id = staying.location_id
+            tally.moved += 1
         return
     system = await kinship_of(ctx.session, first)
     if system is None or system.residence is ResidenceRule.NEOLOCAL:

@@ -304,6 +304,9 @@ class ProphecyCard(ApiModel):
     locked: list[str]
     consequence_kind: ProphecyConsequence | None = None
     consequence: NodeRef | None = None
+    retold: int = 0
+    forged: bool = False
+    rival: NodeRef | None = None
 
 
 class BookPage(ApiModel):

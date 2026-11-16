@@ -24,7 +24,7 @@ from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import add_stock
-from aerona.engine.cosmos.routes import RouteSpec, open_route
+from aerona.engine.cosmos.routes import RouteSpec, open_route, reaching
 from aerona.engine.cosmos.world_types import hidden_route_method
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.dominion.book import DominionBook
@@ -171,7 +171,9 @@ async def open_gateway(ctx: TickContext, site: MagicSiteRow, place: EntityRow) -
     )
     if linked is not None:
         return
-    method = hidden_route_method(first.world_type, second.world_type)
+    method = await reaching(ctx.session, first, second, hidden_route_method(first.world_type, second.world_type))
+    if method is None:
+        return
     await open_route(ctx.session, ctx.rules, ctx.rng(f"gateway.{site.id}"), ctx.epoch, RouteSpec(first.id, second.id, method, known=True))
 
 

@@ -22,6 +22,6 @@ FOREIGN_GOD_POWERS: dict[ForeignGodPowerEffect, ForeignGodPowerSpec] = {
         ForeignGodPowerSpec(F.FERTILE, "Bountiful", "Its friends prosper more."),
         ForeignGodPowerSpec(F.REVIVING, "Reviving", "Wakes sooner after a defeat."),
         ForeignGodPowerSpec(F.DEATHLESS, "Deathless", "Never dies even in a crushing defeat; it is only defeated."),
-        ForeignGodPowerSpec(F.SHARP_TONGUED, "Sharp-tongued", "Sons who parley with it are at a disadvantage."),
+        ForeignGodPowerSpec(F.PERSUASION, "Persuasive", "Sons who parley with it are at a disadvantage."),
     )
 }

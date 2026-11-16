@@ -4,6 +4,7 @@ from aerona.catalog.mind import LEARNED_SKILLS
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.catalog.theories import DISCIPLINES, DOMAINS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.culture import ResearchFocusRow
 from aerona.db.tables.entities import EntityRow
@@ -183,7 +184,7 @@ async def choose_research(call: MortalCall, args: ChooseResearchInput) -> str:
         fail(
             MortalResult.RESEARCH_NOT_OFFERED,
             technique=TECHNIQUES[args.technique].label,
-            options=", ".join(f"{item.value} ({TECHNIQUES[item].label})" for item in choices),
+            options=", ".join(f"{spoken(item)} ({TECHNIQUES[item].label})" for item in choices),
         )
     if row is None:
         row = ResearchFocusRow(holder_entity_id=holder.id, technique=args.technique, chooser=ResearchChooser.AGENT, options=[], epoch=call.epoch, locked=[])

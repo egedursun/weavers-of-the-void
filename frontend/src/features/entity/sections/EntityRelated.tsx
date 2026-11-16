@@ -21,7 +21,7 @@ export function EntityRelated({ similar }: { similar: SimilarRecord[] }) {
         itemKey={(item) => item.entity.id}
       >
         {(item) => (
-          <li className='flex min-w-0 flex-col gap-1 rounded-md border bg-card px-3 py-2'>
+          <li className='flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'>
             <div className='flex min-w-0 items-center gap-2'>
               <EntityLink kind='entity' id={String(item.entity.id)}>
                 {item.entity.name}

@@ -181,6 +181,12 @@ async def _reward_death_domains(ctx: TickContext) -> None:
         son.existence = min(PERCENT, son.existence + round(effects.death_domain_existence * toll))
 
 
+def left_behind(mortal: EntityRow) -> tuple[ItemDeed, int, str]:
+    if mortal.location_id is not None:
+        return ItemDeed.BURIAL, mortal.id, f"laid in the grave of {mortal.name}"
+    return ItemDeed.LOST, mortal.id, f"lost with {mortal.name}, who died far from any grave"
+
+
 async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
     session = ctx.session
     items = await active_bonds(session, [BondKind.OWNS], sources=[mortal.id])
@@ -208,7 +214,7 @@ async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
     if receiver is None:
         for item_id in item_ids:
             if await session.get(ItemProfileRow, item_id) is not None:
-                record(ctx, item_id, ItemDeed.BURIAL, mortal.id, f"laid in the grave of {mortal.name}")
+                record(ctx, item_id, *left_behind(mortal))
     if receiver is not None:
         text = f"{several(len(items), 'item', 'items')} of {mortal.name} passed to {', '.join(heir.name for heir in heirs)}."
         ids = [mortal.id, *item_ids, *(heir.id for heir in heirs)]

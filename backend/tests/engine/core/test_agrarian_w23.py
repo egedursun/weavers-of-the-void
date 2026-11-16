@@ -370,7 +370,7 @@ async def test_aid_earns_a_favour_and_a_gift_owed_and_a_rival_turns_it_away(sess
     tally = ResilienceTally()
     await relieve(ctx, await RegionAtlas.load(session), tally)
     aid = await session.scalar(select(ReliefAidRow).where(ReliefAidRow.giver_node_id == giver.id))
-    assert aid is not None and not aid.refused and aid.kind is AidKind.GOODS and tally.aid == 1
+    assert aid is not None and not aid.refused and aid.kind is AidKind.SHELTER and tally.aid == 1
     assert await session.scalar(select(FavourRow).where(FavourRow.owed_to_node_id == giver.id, FavourRow.origin == FavourOrigin.RELIEF)) is not None
     assert await session.scalar(select(GiftRow).where(GiftRow.giver_node_id == giver.id, GiftRow.occasion == GiftOccasion.RELIEF)) is not None
     await change_relation(ctx, own.id, giver.id, -90, MemoryKind.HARMED_ME, note="an old war")

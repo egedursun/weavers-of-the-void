@@ -54,7 +54,7 @@ export function FilePicker({
         if (!blocked) take(event.dataTransfer.files[0])
       }}
       className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-lg border border-dashed px-4 py-4',
+        'flex min-w-0 flex-col gap-3 rounded-md px-4 py-4 sealed-well',
         over && 'border-primary bg-primary/5'
       )}
     >

@@ -15,6 +15,7 @@ from aerona.domain.enums.divine import (
     LawScope,
     OuterHunger,
     SonPunishment,
+    VotingRule,
     WoundCause,
 )
 from aerona.domain.enums.domain import Domain
@@ -173,6 +174,7 @@ class CouncilRulingView(ApiModel):
     world: NodeRef | None = None
     school: MagicSchool | None = None
     punishment: SonPunishment | None = None
+    voting_rule: VotingRule | None = None
     epoch: int
     until_epoch: int | None = None
     active: bool

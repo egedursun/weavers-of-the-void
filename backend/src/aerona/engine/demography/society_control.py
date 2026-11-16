@@ -98,7 +98,7 @@ async def set_corvee(ctx: TickContext, community_id: int, share_pct: int, polity
         if row is not None:
             await ctx.session.delete(row)
             await ctx.session.flush()
-            await note(ctx, f"The corvee on {entity.name} was lifted; the farmhands went home.", key="labour.corvee_lifted", ids=[entity.id])
+            await note(ctx, f"The corvee on {entity.name} was lifted; the workers went home.", key="labour.corvee_lifted", ids=[entity.id])
         return None
     if row is None:
         row = CorveeRow(community_entity_id=entity.id, since_epoch=ctx.epoch, by_hand=True)
@@ -112,7 +112,7 @@ async def set_corvee(ctx: TickContext, community_id: int, share_pct: int, polity
     row.work_entity_id = work_id
     await ctx.session.flush()
     await note(
-        ctx, f"A corvee was laid on {entity.name}: {row.share_pct}% of its farmhands must labour on the great works.", key="labour.corvee", ids=[entity.id]
+        ctx, f"A corvee was laid on {entity.name}: {row.share_pct}% of its workers must labour on the great works.", key="labour.corvee", ids=[entity.id]
     )
     return row
 

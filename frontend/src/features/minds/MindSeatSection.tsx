@@ -18,6 +18,7 @@ import {
   EmptyState,
   KpiTile,
   LoadingBlock,
+  Paged,
   Section,
   ShowMore,
   useShowMore,
@@ -670,9 +671,11 @@ function Lists({
       <div className='flex min-w-0 flex-col gap-2'>
         {view.seats.length ? (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {view.seats.map((part) => (
-              <SeatPart key={part.id} part={part} blocked={blocked} />
-            ))}
+            <Paged items={view.seats} as='li'>
+              {(part) => (
+                <SeatPart key={part.id} part={part} blocked={blocked} />
+              )}
+            </Paged>
           </ul>
         ) : (
           <EmptyState

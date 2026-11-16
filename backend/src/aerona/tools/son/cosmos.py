@@ -385,7 +385,7 @@ async def talk_to_foreign_god(call: SonCall, args: TalkInput) -> str:
         (me.strength - god.power) / tools.foreign_threat_strength_divisor if args.intent is TalkIntent.THREAT else god.stance / tools.foreign_attitude_divisor
     )
     resist = stat_effect(call.rules, god, Stat.WILL, call.rules.foreign_gods.talk_will)
-    sharp = call.rules.foreign_gods.power_sharp_tongue if ForeignGodPowerEffect.SHARP_TONGUED in powers else 0
+    sharp = call.rules.foreign_gods.power_persuasion if ForeignGodPowerEffect.PERSUASION in powers else 0
     roll = call.die(PERCENT, "talk") + me.charisma / tools.foreign_talk_charisma_divisor + leaning - resist - sharp
     gained = 0
     if args.intent is TalkIntent.ALLIANCE:
@@ -418,7 +418,7 @@ async def talk_to_foreign_god(call: SonCall, args: TalkInput) -> str:
 
 async def seal_leak(call: SonCall, args: LeakSealInput) -> str:
     tools = call.rules.son_tools
-    await call.within_limit(TurnCounter.LEAK_STITCHED, tools.seal_per_epoch, "son_tools.seal_per_epoch", SonResult.STITCH_LIMIT)
+    await call.within_limit(TurnCounter.LEAK_CLOSED, tools.seal_per_epoch, "son_tools.seal_per_epoch", SonResult.STITCH_LIMIT)
     world = await call.session.get(WorldRow, call.world_id) if call.world_id is not None else None
     if world is None:
         fail(SonResult.WORLD_UNREGISTERED)
@@ -429,7 +429,7 @@ async def seal_leak(call: SonCall, args: LeakSealInput) -> str:
     world.leakage = max(0, old - tools.seal_leak_reduction)
     call.spend_essence(tools.seal_cost)
     call.target(world.id)
-    await call.bump(TurnCounter.LEAK_STITCHED)
+    await call.bump(TurnCounter.LEAK_CLOSED)
     await call.chronicle(ChronicleKind.COSMIC, lines.STITCH, world_id=world.id, son=call.son.name, world=world.name, how=args.how, old=old, new=world.leakage)
     return result(SonResult.STITCHED, old=old, new=world.leakage)
 
@@ -590,7 +590,7 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             son,
             LeakSealInput,
             ToolMeta(
-                ActionKind.STITCH_LEAK,
+                ActionKind.CLOSE_LEAK,
                 lambda rules: rules.son_tools.seal_ap,
                 essence_cost=lambda rules: rules.son_tools.seal_cost,
                 rarity_gate=gate(Gate.SEAL_LEAK),

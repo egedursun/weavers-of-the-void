@@ -77,6 +77,9 @@ class ClusterRules:
 
 @dataclass(frozen=True)
 class DimensionRules:
+    aspect_step: int = rule(2, 0, 50, D, "How far a full-strength aspect pulls its dimension's matching value each epoch")
+    aspect_time_pct: int = rule(2, 0, 50, D, "Share a full-strength aspect of time or cold moves its dimension's time factor each epoch (%)")
+    aspect_strength: int = rule(50, 0, 100, D, "Strength a dimension's first aspects are given")
     veil_heal: int = rule(1, 0, 50, D, "Veil a dimension regains each epoch")
     veil_rift_loss: int = rule(2, 0, 50, D, "Veil a dimension loses each epoch for each open rift into it")
     veil_leak_per: int = rule(20, 1, 100, D, "Leak of its worlds that costs a dimension one point of veil each epoch")
@@ -324,6 +327,11 @@ class CelestialBodyRules:
     return_doom: int = rule(1, 0, 50, S, "Doom a return read as evil by most peoples adds")
     superstition_evil: int = rule(30, -100, 100, S, "Superstition at or above which a people reads a dim return as evil")
     superstition_good: int = rule(-30, -100, 100, S, "Superstition at or below which a people reads a bright return as good")
+    seen_at: int = rule(30, 0, 100, S, "Visibility a body must keep, after clouds and the height of the sky, for a people to see it and read it")
+    cloud_pct: int = rule(40, 0, 100, S, "Visibility rain and cloud in a people's home take from a body, against its rainfall (%)")
+    latitude_pct: int = rule(50, 0, 100, S, "Visibility each degree of latitude beyond the middle bands takes from a body (%)")
+    middle_band: int = rule(45, 0, 90, S, "Latitude within which bodies stand high enough in the sky to be seen in full")
+    return_source: int = rule(5, 0, 100, S, "Stability each source of power drawn from the sky gains when a body returns over its world")
 
 
 @dataclass(frozen=True)
@@ -339,3 +347,11 @@ class JourneyRules:
     derelict_goods: int = rule(40, 0, 100000, T, "Goods a derelict yields")
     provision_per_100: int = rule(2, 0, 100, T, "Food a journey takes for each hundred travellers for each epoch on the way, against its reach")
     short_condition: int = rule(20, 0, 100, T, "Condition travellers lose when they set out short of food")
+    supply_use: int = rule(20, 0, 100, T, "Supplies a journey uses up each epoch on the way")
+    starve_pct: int = rule(10, 0, 100, T, "Share of the travellers who die each epoch a journey goes on with no supplies left (%)")
+    birth_after: int = rule(2, 1, 100, T, "Epochs on the way after which children are born to a journey's travellers")
+    birth_pct: int = rule(3, 0, 100, T, "Share of the travellers born on the way each epoch of a long journey (%)")
+    find_supplies: int = rule(20, 0, 100, T, "Supplies a journey gains from a find on the way")
+    toll_supplies: int = rule(10, 0, 100, T, "Supplies a journey gives up to a toll on the way")
+    refugee_share: int = rule(50, 0, 100, T, "Share of a journey's travellers lost on the way above which those who arrive come as refugees (%)")
+    refugee_unrest: int = rule(5, 0, 100, T, "Unrest a town gains when refugees arrive")

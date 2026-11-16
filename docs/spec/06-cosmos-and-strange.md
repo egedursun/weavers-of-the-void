@@ -1576,7 +1576,7 @@ below hurt. Stat effect texts (display, generated from live rules):
 | fertile (`bereketli`) | Bountiful | power_bounty | Friendly prosperity contribution × N/100. |
 | reviving (`dirilen`) | Reviving | power_revive | Wake time after defeat becomes N%. |
 | deathless (`olumsuz`) | Deathless | — | Never dies even in a crushing defeat; only defeated. |
-| sharp_tongued (`sozu_keskin`) | Sharp-tongued | power_word | A son talking to it gets −N on the roll. |
+| sharp_tongued (`sozu_keskin`) | Persuasive | power_word | A son talking to it gets −N on the roll. |
 
 Personality fields (`YT_KISILIK`): appearance, temperament, obsession, fear, speech style, secret. Existence fields
 (`YT_VAROLUS`): nature, state (∈ `VAROLUS_HALLERI` = concrete, semi-concrete, conceptual, reflection, scattered),
@@ -1613,7 +1613,7 @@ embedded-JSON depth texts; a depth with empty history is reset to null (so it ge
 | guc_yikici | power_destroy_pct | 15 | 0 | 100 | Destroyer: hostile action chance (%) |
 | guc_bereket | power_bounty_pct | 200 | 100 | 10000 | Bountiful: friendly prosperity multiplier (%) |
 | guc_dirilis | power_revive_pct | 50 | 1 | 100 | Reviving: wake time percentage |
-| guc_soz | power_word | 15 | 0 | 500 | Sharp-tongued: subtracted from the talking son's roll |
+| guc_soz | power_word | 15 | 0 | 500 | Persuasive: subtracted from the talking son's roll |
 | derin_kronik | deepen_chronicle_lines | 40 | 0 | 10000 | Chronicle lines naming the god given to the model when deepening |
 
 Cross refs: used by `panteon` (all mechanics), `tools` (son talk tools use `talk_will`, `power_word`, war power),

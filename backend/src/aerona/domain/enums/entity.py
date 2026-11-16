@@ -90,7 +90,7 @@ class EngineKind(StrEnum):
     WARRIOR_BAND = "warrior_band"
     INTERWORLD_FEDERATION = "interworld_federation"
     WANDERING_MARKET = "wandering_market"
-    VOID_PIRATES = "void_pirates"
+    ROUTE_RAIDERS = "route_raiders"
     PEOPLES_ARMY = "peoples_army"
     HOLY_GUARD = "holy_guard"
     MERCENARY_ARMY = "mercenary_army"

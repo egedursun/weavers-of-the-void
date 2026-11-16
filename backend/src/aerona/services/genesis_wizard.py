@@ -23,6 +23,7 @@ from aerona.catalog.genesis import (
 )
 from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH
 from aerona.catalog.rarities import DEFAULT_FIRST_SONS
+from aerona.catalog.technology import ERA_LEVEL
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.core.grammar import ordinal_word, several
@@ -34,6 +35,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.cosmography import DimensionKind, RiftCause, WorldAge
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
 from aerona.domain.enums.storyteller import StorytellerProfile
 from aerona.domain.enums.world import (
@@ -47,7 +49,7 @@ from aerona.domain.enums.world import (
     TechnologyEra,
     WorldType,
 )
-from aerona.domain.models.genesis import MOISTURE_FLOOR, PREHISTORY_CEILING, GenesisOutcome, GenesisSettings
+from aerona.domain.models.genesis import MOISTURE_FLOOR, PREHISTORY_CEILING, TECH_LEVEL_CEILING, GenesisOutcome, GenesisSettings
 from aerona.engine.cosmos.control import tear_rift
 from aerona.engine.made.genesis import seed_made_world
 from aerona.engine.prehistory.control import configure
@@ -84,6 +86,7 @@ class WizardInput(BaseModel):
     magic: Any = None
     danger: Any = None
     technology: str | None = None
+    technology_levels: Any = None
     language: str | None = None
     peoples: Any = None
     cosmos: str | None = None
@@ -156,6 +159,8 @@ class FirstSonsOptions:
 @dataclass(frozen=True)
 class WizardOptions:
     technology: dict[TechnologyEra, str]
+    technology_levels: dict[TechnologyEra, int]
+    technology_level_max: int
     language: dict[LanguageTexture, str]
     cosmos: list[CosmosOption]
     shapes: list[ShapeOption]
@@ -190,6 +195,8 @@ def extra_worlds(rules: Rules, size: CosmosSize) -> int:
 def options(rules: Rules) -> WizardOptions:
     return WizardOptions(
         technology=dict(TECHNOLOGY_LABELS),
+        technology_levels=dict(ERA_LEVEL),
+        technology_level_max=TECH_LEVEL_CEILING,
         language=dict(TEXTURE_LABELS),
         cosmos=[CosmosOption(size, COSMOS_LABELS[size], 1 + extra_worlds(rules, size)) for size in CosmosSize],
         shapes=[ShapeOption(shape, SHAPE_LABELS[shape], SHAPE_HINTS[shape]) for shape in CosmosShape],
@@ -237,6 +244,14 @@ def _bounded(value: Any, fallback: int | None, low: int, high: int) -> int | Non
         return fallback
 
 
+def _levels(value: Any) -> dict[TechFamily, int]:
+    if not isinstance(value, dict):
+        return {}
+    known = {family.value: family for family in TechFamily}
+    levels = {known[key]: _bounded(level, None, 0, TECH_LEVEL_CEILING) for key, level in value.items() if key in known}
+    return {family: level for family, level in levels.items() if level is not None}
+
+
 def _percent(value: Any, fallback: int) -> int:
     bounded = _bounded(value, fallback, 0, PERCENT)
     return fallback if bounded is None else bounded
@@ -280,6 +295,7 @@ def sanitize(rules: Rules, raw: WizardInput) -> GenesisSettings:
         magic=_percent(magic, wizard.magic),
         danger=_percent(danger, wizard.danger),
         technology=_choice(TechnologyEra, raw.technology or (template.technology.value if template else None), TechnologyEra.IRON),
+        technology_levels=_levels(raw.technology_levels),
         language_texture=_choice(LanguageTexture, raw.language or (template.language.value if template else None), LanguageTexture.FREE),
         peoples=peoples,
         cosmos_size=size,

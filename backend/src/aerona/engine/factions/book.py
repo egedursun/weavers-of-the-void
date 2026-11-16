@@ -27,7 +27,7 @@ KIND_OF_ENGINE = MappingProxyType(
         EngineKind.PRIESTS_COUNCIL: FactionKind.PRIESTHOOD,
         EngineKind.WARRIOR_BAND: FactionKind.WARRIOR_ORDER,
         EngineKind.REBELS: FactionKind.REBELS,
-        EngineKind.VOID_PIRATES: FactionKind.VOID_PIRATES,
+        EngineKind.ROUTE_RAIDERS: FactionKind.ROUTE_RAIDERS,
         EngineKind.INTERWORLD_FEDERATION: FactionKind.INTERWORLD_FEDERATION,
         EngineKind.WANDERING_MARKET: FactionKind.WANDERING_MARKET,
         EngineKind.MERCENARY_ARMY: FactionKind.MERCENARY_COMPANY,
@@ -41,7 +41,7 @@ ENGINE_OF_KIND = MappingProxyType(
         FactionKind.PRIESTHOOD: EngineKind.PRIESTS_COUNCIL,
         FactionKind.WARRIOR_ORDER: EngineKind.WARRIOR_BAND,
         FactionKind.REBELS: EngineKind.REBELS,
-        FactionKind.VOID_PIRATES: EngineKind.VOID_PIRATES,
+        FactionKind.ROUTE_RAIDERS: EngineKind.ROUTE_RAIDERS,
         FactionKind.INTERWORLD_FEDERATION: EngineKind.INTERWORLD_FEDERATION,
         FactionKind.WANDERING_MARKET: EngineKind.WANDERING_MARKET,
     }

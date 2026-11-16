@@ -452,7 +452,7 @@ export function LandShapeSection({
           data-surface='LandShapeSection'
           className='@container/land flex min-w-0 flex-col gap-4'
         >
-          <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+          <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <Medallion
               icon={
                 data.desertified

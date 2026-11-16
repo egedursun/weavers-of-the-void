@@ -4,13 +4,16 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.concealment import HiddenTruthRow
 from aerona.db.tables.culture import CastingRow, ItemEnchantmentRow, ItemProfileRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow
 from aerona.db.tables.folkways import CharmRow, LuckBeliefRow, MishapRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
@@ -18,13 +21,17 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.enums.folkways import CharmPower, LuckReach, LuckSign, MishapAttribution, MishapKind, MishapResponse, PurityState
+from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.mortal import DeathCause, LifeStage
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.folkways.fed import charm_powers, real_charm
 from aerona.engine.folkways.purity import purity_of, sources_of
+from aerona.engine.fortune.everyday import everyday
+from aerona.engine.fortune.profiles import shift_fortune
 from aerona.engine.lore.rumours import enemies_of
 from aerona.engine.mind.book import values_for
 from aerona.engine.mortal.profile import is_held
@@ -35,25 +42,85 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.services.community_relations import change_relation
 
+WITNESSES = 3
 YOUNG = frozenset({LifeStage.INFANT, LifeStage.CHILD, LifeStage.YOUTH})
 VIOLENT = frozenset({DeathCause.BATTLE, DeathCause.DUEL, DeathCause.EXECUTION, DeathCause.MURDER, DeathCause.SACRIFICE, DeathCause.OLD_AGE})
 WARDS = frozenset({CharmPower.PROTECTION, CharmPower.LUCK})
-REACHES: Mapping[MishapKind, frozenset[LuckReach]] = {
-    MishapKind.ILLNESS: frozenset({LuckReach.HEALTH}),
-    MishapKind.CROP_FAILURE: frozenset({LuckReach.HARVEST}),
-    MishapKind.CHILD_DEATH: frozenset({LuckReach.BIRTH}),
-    MishapKind.LIVESTOCK_DEATH: frozenset({LuckReach.HARVEST}),
-    MishapKind.ACCIDENT: frozenset({LuckReach.JOURNEY}),
-    MishapKind.BAD_LUCK: frozenset(LuckReach),
-}
-EXPLAINERS: Mapping[MishapKind, KnowledgeBranch | None] = {
-    MishapKind.ILLNESS: KnowledgeBranch.MEDICINE,
-    MishapKind.CROP_FAILURE: KnowledgeBranch.AGRICULTURE,
-    MishapKind.CHILD_DEATH: KnowledgeBranch.MEDICINE,
-    MishapKind.LIVESTOCK_DEATH: KnowledgeBranch.AGRICULTURE,
-    MishapKind.ACCIDENT: None,
-    MishapKind.BAD_LUCK: None,
-}
+HEALTH = frozenset({LuckReach.HEALTH})
+HARVEST = frozenset({LuckReach.HARVEST})
+JOURNEY = frozenset({LuckReach.JOURNEY})
+REACHES: Mapping[MishapKind, frozenset[LuckReach]] = total(
+    MishapKind,
+    {
+        MishapKind.ILLNESS: HEALTH,
+        MishapKind.CROP_FAILURE: HARVEST,
+        MishapKind.CHILD_DEATH: frozenset({LuckReach.BIRTH}),
+        MishapKind.LIVESTOCK_DEATH: HARVEST,
+        MishapKind.ACCIDENT: JOURNEY,
+        MishapKind.BAD_LUCK: frozenset(LuckReach),
+        MishapKind.FALL: HEALTH,
+        MishapKind.CRUSH: HEALTH,
+        MishapKind.CUT: HEALTH,
+        MishapKind.BURN: HEALTH,
+        MishapKind.SCALD: HEALTH,
+        MishapKind.DROWNING: JOURNEY,
+        MishapKind.BEAST: HARVEST,
+        MishapKind.TOOL: HEALTH,
+        MishapKind.MACHINE: HEALTH,
+        MishapKind.VEHICLE: JOURNEY,
+        MishapKind.COLLAPSE: HEALTH,
+        MishapKind.HOUSE_FIRE: HEALTH,
+        MishapKind.POISONING: HEALTH,
+        MishapKind.CHOKING: HEALTH,
+        MishapKind.EXPOSURE: JOURNEY,
+        MishapKind.LIGHTNING: JOURNEY,
+        MishapKind.SPORT: frozenset({LuckReach.BATTLE}),
+        MishapKind.BRAWL: frozenset({LuckReach.BATTLE}),
+        MishapKind.LOST_WAY: JOURNEY,
+        MishapKind.STORES_SPOILED: HARVEST,
+        MishapKind.GOODS_LOST: JOURNEY,
+        MishapKind.PURSE_LOST: JOURNEY,
+        MishapKind.THEFT_SUFFERED: JOURNEY,
+        MishapKind.TOOL_BROKEN: HARVEST,
+        MishapKind.NEAR_MISS: frozenset(LuckReach),
+    },
+)
+EXPLAINERS: Mapping[MishapKind, KnowledgeBranch | None] = total(
+    MishapKind,
+    {
+        MishapKind.ILLNESS: KnowledgeBranch.MEDICINE,
+        MishapKind.CROP_FAILURE: KnowledgeBranch.AGRICULTURE,
+        MishapKind.CHILD_DEATH: KnowledgeBranch.MEDICINE,
+        MishapKind.LIVESTOCK_DEATH: KnowledgeBranch.AGRICULTURE,
+        MishapKind.ACCIDENT: None,
+        MishapKind.BAD_LUCK: None,
+        MishapKind.FALL: None,
+        MishapKind.CRUSH: None,
+        MishapKind.CUT: None,
+        MishapKind.BURN: None,
+        MishapKind.SCALD: None,
+        MishapKind.DROWNING: None,
+        MishapKind.BEAST: None,
+        MishapKind.TOOL: None,
+        MishapKind.MACHINE: None,
+        MishapKind.VEHICLE: None,
+        MishapKind.COLLAPSE: None,
+        MishapKind.HOUSE_FIRE: None,
+        MishapKind.POISONING: KnowledgeBranch.MEDICINE,
+        MishapKind.CHOKING: None,
+        MishapKind.EXPOSURE: None,
+        MishapKind.LIGHTNING: KnowledgeBranch.ASTRONOMY,
+        MishapKind.SPORT: None,
+        MishapKind.BRAWL: None,
+        MishapKind.LOST_WAY: None,
+        MishapKind.STORES_SPOILED: KnowledgeBranch.AGRICULTURE,
+        MishapKind.GOODS_LOST: None,
+        MishapKind.PURSE_LOST: None,
+        MishapKind.THEFT_SUFFERED: None,
+        MishapKind.TOOL_BROKEN: None,
+        MishapKind.NEAR_MISS: None,
+    },
+)
 LEANINGS: Mapping[MishapAttribution, tuple[ValueAxis, ...]] = {
     MishapAttribution.CHANCE: (ValueAxis.KNOWLEDGE, ValueAxis.TRUTH),
     MishapAttribution.KNOWN_CAUSE: (ValueAxis.KNOWLEDGE,),
@@ -67,6 +134,8 @@ LEANINGS: Mapping[MishapAttribution, tuple[ValueAxis, ...]] = {
     MishapAttribution.ENEMY_SCHEME: (ValueAxis.LOYALTY,),
     MishapAttribution.IMPURITY: (ValueAxis.PURITY,),
     MishapAttribution.BROKEN_OATH: (ValueAxis.HONOUR, ValueAxis.LAW),
+    MishapAttribution.MADE_MIND: (ValueAxis.TRADITION, ValueAxis.PURITY),
+    MishapAttribution.HIDDEN_PEOPLE: (ValueAxis.SUPERSTITION, ValueAxis.NATURE),
 }
 RESPONSES: Mapping[MishapAttribution, MishapResponse] = {
     MishapAttribution.CHANCE: MishapResponse.NOTHING,
@@ -81,6 +150,8 @@ RESPONSES: Mapping[MishapAttribution, MishapResponse] = {
     MishapAttribution.ENEMY_SCHEME: MishapResponse.NOTHING,
     MishapAttribution.IMPURITY: MishapResponse.PURIFICATION,
     MishapAttribution.BROKEN_OATH: MishapResponse.NOTHING,
+    MishapAttribution.MADE_MIND: MishapResponse.ACCUSATION,
+    MishapAttribution.HIDDEN_PEOPLE: MishapResponse.OFFERING,
 }
 SIGN_WORDS: Mapping[LuckSign, str] = {
     LuckSign.DAY: "day",
@@ -109,6 +180,8 @@ class Befell:
     cause: str
     victim: int | None = None
     cause_node: int | None = None
+    severity: int = 0
+    died: bool = False
 
 
 async def deaths_in(ctx: TickContext, town: EntityRow) -> list[Befell]:
@@ -195,7 +268,7 @@ async def explained(ctx: TickContext, town: EntityRow, befell: Befell) -> bool:
         return False
     branch = EXPLAINERS[befell.kind]
     if branch is None:
-        return befell.kind is MishapKind.ACCIDENT
+        return befell.kind is not MishapKind.BAD_LUCK
     need = ctx.rules.mishaps.explained_medicine if branch is KnowledgeBranch.MEDICINE else ctx.rules.mishaps.explained_farming
     return await branch_level(ctx.session, town.id, branch) >= need
 
@@ -220,10 +293,27 @@ async def weights_for(ctx: TickContext, town: EntityRow, row: MishapRow, people:
         weights[MishapAttribution.IMPURITY] = 0
     if not await enemies_of(ctx, town.id):
         weights[MishapAttribution.ENEMY_SCHEME] = 0
+    if not await made_minds_near(ctx, town.id):
+        weights[MishapAttribution.MADE_MIND] = 0
+    if not await hidden_near(ctx, town.id):
+        weights[MishapAttribution.HIDDEN_PEOPLE] = 0
     reaching = sum(1 for belief in await beliefs_of(ctx, people.id if people is not None else None) if belief.reach in REACHES[row.kind])
     for attribution in (MishapAttribution.OMEN, MishapAttribution.FATE):
         weights[attribution] += reaching * table.luck_weight
     return weights
+
+
+async def made_minds_near(ctx: TickContext, town_id: int) -> bool:
+    here = select(EntityRow.id).where(EntityRow.location_id == town_id)
+    return (
+        await ctx.session.scalar(select(MindProfileRow.node_id).where(MindProfileRow.node_id.in_(here), MindProfileRow.origin != MindOrigin.BORN).limit(1))
+        is not None
+    )
+
+
+async def hidden_near(ctx: TickContext, town_id: int) -> bool:
+    here = select(EntityRow.id).where(EntityRow.location_id == town_id)
+    return await ctx.session.scalar(select(HiddenTruthRow.id).where(HiddenTruthRow.subject_node_id.in_(here)).limit(1)) is not None
 
 
 async def attribute(ctx: TickContext, town: EntityRow, row: MishapRow, people: EntityRow | None) -> None:
@@ -300,7 +390,10 @@ async def keep_charms(ctx: TickContext) -> None:
             continue
         if "real" not in row.locked:
             row.real = await is_real(ctx, row.item_entity_id)
-    for bearer in sorted(await charm_powers(ctx.session)):
+    for bearer, powers in sorted((await charm_powers(ctx.session)).items()):
+        real, strength = powers.get(CharmPower.LUCK, (False, 0))
+        if real and strength:
+            await shift_fortune(ctx, bearer, strength * ctx.rules.fortune.charm_pct // PERCENT, FortuneSourceKind.CHARM, epochs=0)
         profile = await ctx.session.get(MortalProfileRow, bearer)
         if profile is not None and not held(bearer) and not is_held(profile, "stress"):
             profile.stress = clamp_int(profile.stress - table.charm_calm, 0, PERCENT)
@@ -346,6 +439,7 @@ async def keep_mishaps(ctx: TickContext, tally: MishapTally) -> None:
             *await land_losses(ctx, town, atlas.top_region(town.id)),
             *await castings_on(ctx, folk),
             *await bad_luck(ctx, town, folk, tally),
+            *[Befell(found.kind, found.cause, found.victim, severity=found.severity, died=found.died) for found in await everyday(ctx, folk)],
         ]
         folk_people = await people_of(ctx.session, town)
         for befell in befallen:
@@ -356,6 +450,9 @@ async def keep_mishaps(ctx: TickContext, tally: MishapTally) -> None:
                 kind=befell.kind,
                 true_cause=befell.cause,
                 explained=await explained(ctx, town, befell),
+                severity=befell.severity,
+                died=befell.died,
+                witnesses=[node for node in folk[:WITNESSES] if node != befell.victim],
                 epoch=ctx.epoch,
                 locked=[],
             )

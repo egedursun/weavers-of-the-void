@@ -113,6 +113,7 @@ export const RIFT_CAUSES: Record<Schema['RiftCause'], string> = {
   being: 'A cosmic being',
   phenomenon: 'A phenomenon',
   creator: 'The Creator',
+  made_realm_gate: 'The gate of a made realm',
 }
 
 export const SCOPES: Record<Schema['RouteScope'], Named> = {

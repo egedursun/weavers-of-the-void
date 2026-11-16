@@ -2,10 +2,10 @@ from collections import Counter
 
 from sqlalchemy import select
 
-from aerona.agents.context.dominion_lines import god_called, place_name, spoken
+from aerona.agents.context.dominion_lines import god_called, place_name
 from aerona.agents.context.scope import Scope
 from aerona.catalog.mythic import REALM_PHRASES, trial_at
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.db.tables.arcana import LawUpkeepRow, LongevityRow, VisStockRow, WarpingRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -43,7 +43,8 @@ async def kept_lines(scope: Scope, son: SonRow) -> list[str]:
         law = await session.get(EntityRow, row.law_entity_id)
         if law is not None and law.status is EntityStatus.CANON:
             found.append(
-                f"You keep {law.name} ({row.source.value}): {row.essence_upkeep} essence each epoch, unpaid for {several(row.unpaid_epochs, 'epoch', 'epochs')}"
+                f"You keep {law.name} ({spoken(row.source)}): {row.essence_upkeep} essence each epoch, "
+                f"unpaid for {several(row.unpaid_epochs, 'epoch', 'epochs')}"
             )
     geasa = list(await session.scalars(select(GeasRow).where(GeasRow.layer_node_id == son.id)))
     if geasa:
@@ -73,7 +74,7 @@ async def vis_line(scope: Scope, holder_id: int, whose: str) -> list[str]:
     rows = [
         row for row in await scope.session.scalars(select(VisStockRow).where(VisStockRow.holder_node_id == holder_id).order_by(VisStockRow.form)) if row.amount
     ]
-    return [f"{whose} vis: {', '.join(f'{row.form.value} {row.amount}' for row in rows)}"] if rows else []
+    return [f"{whose} vis: {', '.join(f'{spoken(row.form)} {row.amount}' for row in rows)}"] if rows else []
 
 
 async def mortal_magic_lines(scope: Scope, me: EntityRow) -> list[str]:
@@ -84,19 +85,19 @@ async def mortal_magic_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.extend(await vis_line(scope, community.id, f"{community.name}'s"))
     warp = await session.get(WarpingRow, me.id)
     if warp is not None and warp.value:
-        found.append(f"long exposure to magic has warped you ({warp.value}, stage {warp.stage})")
+        found.append(f"long exposure to magic has warped you ({spoken(warp)}, stage {warp.stage})")
     long_life = await session.get(LongevityRow, me.id)
     if long_life is not None:
-        dose = f"{long_life.dose} {long_life.form.value} vis each epoch"
+        dose = f"{long_life.dose} {spoken(long_life.form)} vis each epoch"
         found.append(f"longevity magic keeps you: {dose}, dependence {long_life.dependence}, {long_life.years_gained} borrowed years")
     for geas in await session.scalars(select(GeasRow).where(GeasRow.bearer_entity_id == me.id).order_by(GeasRow.id)):
         layer = await god_called(scope, geas.layer_node_id) if geas.layer_node_id is not None else "a seer"
-        found.append(f"a geas of {layer}: {geas.mode.value} {spoken(geas.act.value)} ({geas.state.value})")
+        found.append(f"a geas of {layer}: {spoken(geas.mode)} {spoken(geas.act.value)} ({spoken(geas.state)})")
     quest = await session.scalar(select(HeroquestRow).where(HeroquestRow.quester_entity_id == me.id, HeroquestRow.state == HeroquestState.QUESTING).limit(1))
     if quest is not None:
         legend = await session.get(LegendProfileRow, quest.legend_entity_id) if quest.legend_entity_id is not None else None
         trial = trial_at(legend.archetype if legend is not None else None, quest.step)
-        found.append(f"your heroquest into {REALM_PHRASES[quest.realm]} stands at step {quest.step} of {quest.steps}; next comes a trial of {trial.value}")
+        found.append(f"your heroquest into {REALM_PHRASES[quest.realm]} stands at step {quest.step} of {quest.steps}; next comes a trial of {spoken(trial)}")
     path = await session.get(MantlingRow, me.id)
     if path is not None and path.state is MantlingState.WALKING and path.god_node_id is not None:
         found.append(f"you walk the path of {await god_called(scope, path.god_node_id)} toward godhood ({path.progress}%)")

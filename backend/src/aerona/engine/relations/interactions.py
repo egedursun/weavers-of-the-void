@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import or_, select
 
+from aerona.catalog.ethics import STANCE_READINGS
 from aerona.catalog.norms import GATHERING_SITUATIONS, INTERACTION_BEHAVIOUR
 from aerona.catalog.relations import INTERACTIONS
 from aerona.constants.units import PERCENT
@@ -19,18 +20,32 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.collective import NormSituation
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.mind import ActKind, EthicalStance, Facet, GriefStage, MemoryKind, NeedKind, SkillKind, ThoughtKind, ValueAxis, ValueHolder, WantKind
+from aerona.domain.enums.mind import (
+    ActKind,
+    EthicalStance,
+    Facet,
+    GriefStage,
+    MemoryKind,
+    NeedKind,
+    SkillKind,
+    ThoughtKind,
+    TraitEffect,
+    ValueAxis,
+    ValueHolder,
+    WantKind,
+)
 from aerona.domain.enums.relations import AppealKind, InteractionKind, PersuasionAim, RelationType
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.engine.body.decline import too_forgetful
 from aerona.engine.body.hits import Harm
 from aerona.engine.collective.book import shift as shift_field
+from aerona.engine.collective.norm_situations import deeper_behaviour, encounters, networks_of, place_situation
 from aerona.engine.collective.norms import Norms, breach, norms_of, stance_in, volition
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.talk import affair_secret, ask_back, confide_own, gift_earns, gossip_secret
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.aspirations import open_wants
-from aerona.engine.mind.book import Values, needs_of, stored_values
+from aerona.engine.mind.book import Values, effect_of, needs_of, stored_values
 from aerona.engine.mind.ethics import at_war, conscience, culture_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.skills import practise
@@ -85,6 +100,9 @@ class Scene:
     norms: dict[int, Norms] = field(default_factory=dict)
     gathering: NormSituation | None = None
     forgetful: set[int] = field(default_factory=set)
+    encounters: dict[int, NormSituation] = field(default_factory=dict)
+    networks: dict[int, set[int]] = field(default_factory=dict)
+    setting: NormSituation | None = None
 
 
 @dataclass
@@ -146,6 +164,9 @@ async def load_scene(ctx: TickContext, place_id: int, mortals: list[EntityRow]) 
         .order_by(CollectionRow.start_epoch.desc(), CollectionRow.id.desc())
     )
     scene.gathering = next((GATHERING_SITUATIONS[kind] for kind in kinds if kind in GATHERING_SITUATIONS), None)
+    scene.encounters = await encounters(ctx.session, ids)
+    scene.networks = await networks_of(ctx.session, ids)
+    scene.setting = await place_situation(ctx.session, place_id)
     return scene
 
 
@@ -262,10 +283,18 @@ def situation_of(scene: Scene, actor: int, target: int) -> NormSituation:
     mine, theirs = scene.profiles.get(actor), scene.profiles.get(target)
     if mine is not None and theirs is not None and theirs.renown - mine.renown >= SUPERIOR_GAP:
         return NormSituation.SUPERIOR
-    if scene.gathering is not None:
-        return scene.gathering
+    if target in scene.encounters:
+        return scene.encounters[target]
+    return scene.gathering or setting_of(scene, actor, target)
+
+
+def setting_of(scene: Scene, actor: int, target: int) -> NormSituation:
+    if scene.networks.get(actor, set()) & scene.networks.get(target, set()):
+        return NormSituation.NETWORK_SPACE
+    if scene.setting is not None:
+        return scene.setting
     if scene.tongues.get(actor) != scene.tongues.get(target):
-        return NormSituation.STRANGER
+        return NormSituation.OUTSIDER
     return NormSituation.MARKET
 
 
@@ -279,7 +308,7 @@ def rebellion(scene: Scene, mortal_id: int) -> float:
 
 
 def norm_for(scene: Scene, actor: int, target: int, kind: InteractionKind) -> EthicalStance:
-    behaviour = INTERACTION_BEHAVIOUR.get(kind)
+    behaviour = deeper_behaviour(scene.encounters.get(actor), bool(scene.networks.get(actor)), kind) or INTERACTION_BEHAVIOUR.get(kind)
     if behaviour is None:
         return EthicalStance.ACCEPTABLE
     return stance_in(scene.norms.get(actor, {}), situation_of(scene, actor, target), behaviour)
@@ -306,11 +335,14 @@ async def choose(scene: Scene, actor: int, target: int, rng: SeededRandom) -> In
 
 
 async def shamed(scene: Scene, actor: int, target: int, kind: InteractionKind, tally: SocialTally) -> None:
-    if not breach(norm_for(scene, actor, target, kind)) or len(scene.mortals) < 3 or write_blocked(actor, RELATIONS_KEY):
+    stance = norm_for(scene, actor, target, kind)
+    if not breach(stance) or len(scene.mortals) < 3 or write_blocked(actor, RELATIONS_KEY):
         return
     profile = scene.profiles.get(actor)
     if profile is not None:
         shift_field(profile, "honour", -scene.ctx.rules.volition.breach_shame)
+        if STANCE_READINGS[stance] <= scene.ctx.rules.norm_depth.breach_stance:
+            shift_field(profile, "renown", -scene.ctx.rules.norm_depth.breach_renown)
     tally.breaches += 1
     await think(scene.ctx.session, scene.ctx.rules, actor, ThoughtKind.WAS_SHAMED, scene.ctx.epoch, subject_id=target)
 
@@ -405,7 +437,7 @@ async def brawl(scene: Scene, actor: int, target: int) -> None:
     for side in (first, second):
         await acclaim_deed(ctx, side.id, ReputationAxis.TROUBLEMAKER, ctx.rules.local_renown.brawl_magnitude, place_id=scene.place_id)
     if not write_blocked(loser.id, RELATIONS_KEY):
-        await apply_hits(ctx, loser, Harm(ctx.rules.social.brawl_hp, HarmCause.ACCIDENT, "hurt in a brawl", severity=1), lethal=False)
+        await apply_hits(ctx, loser, Harm(ctx.rules.social.brawl_hp, HarmCause.ACCIDENT, "hurt in a brawl"), lethal=False)
         await remember(ctx.session, ctx.rules, holder_id=loser.id, subject_id=winner.id, kind=MemoryKind.HARMED_ME, magnitude=-8, epoch=ctx.epoch)
 
 
@@ -448,6 +480,7 @@ async def lands(scene: Scene, actor: int, target: int, kind: InteractionKind, rn
         return True
     table = scene.ctx.rules.social
     chance = table.success_base + (skill_of(scene, actor, spec.skill.value if spec.skill else None) - PERCENT // 2) * table.skill_success_pct / PERCENT
+    chance += await effect_of(scene.ctx.session, actor, TraitEffect.SOCIABILITY, scene.ctx.rules.traits.effect_scale_pct) * table.sociable_pct / PERCENT
     if spec.romantic:
         back = await relation(scene.ctx.session, target, actor)
         chance += (back.romance if back is not None else 0) / 2 - PERCENT // 4

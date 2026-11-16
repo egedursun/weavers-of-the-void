@@ -175,9 +175,33 @@ class MedicineTier(StrEnum):
     SURGERY = "surgery"
     PROSTHETICS = "prosthetics"
     REATTACHMENT = "reattachment"
+    ANTISEPSIS = "antisepsis"
+    ANAESTHESIA = "anaesthesia"
+    IMMUNISATION = "immunisation"
+    ANTIMICROBIALS = "antimicrobials"
+    TRANSPLANTATION = "transplantation"
+    REGENERATION = "regeneration"
+    GENOME_REPAIR = "genome_repair"
+    CELLULAR_MACHINES = "cellular_machines"
+    MIND_MEDICINE = "mind_medicine"
 
 
-MEDICINE_ORDER = (MedicineTier.NONE, MedicineTier.HERBS, MedicineTier.SURGERY, MedicineTier.PROSTHETICS, MedicineTier.REATTACHMENT)
+MEDICINE_ORDER = (
+    MedicineTier.NONE,
+    MedicineTier.HERBS,
+    MedicineTier.SURGERY,
+    MedicineTier.ANTISEPSIS,
+    MedicineTier.ANAESTHESIA,
+    MedicineTier.PROSTHETICS,
+    MedicineTier.IMMUNISATION,
+    MedicineTier.ANTIMICROBIALS,
+    MedicineTier.REATTACHMENT,
+    MedicineTier.TRANSPLANTATION,
+    MedicineTier.MIND_MEDICINE,
+    MedicineTier.REGENERATION,
+    MedicineTier.GENOME_REPAIR,
+    MedicineTier.CELLULAR_MACHINES,
+)
 
 
 class Capacity(StrEnum):
@@ -216,6 +240,10 @@ class StrikeStyle(StrEnum):
     AERIAL = "aerial"
     LOW = "low"
     WHOLE = "whole"
+    RANGED = "ranged"
+    BURROWING = "burrowing"
+    ENGULFING = "engulfing"
+    FROM_HIDING = "from_hiding"
 
 
 class BodyPart(StrEnum):

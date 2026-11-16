@@ -56,12 +56,12 @@ BOOKKEEPING_KINDS = frozenset(
 )
 LAND_ORIGINS = frozenset({EntityOrigin.SON, EntityOrigin.MORTAL, EntityOrigin.CREATOR})
 WAKE_PHRASES = {
-    "son": "the footsteps of gods",
-    "expedition": "foreign sails and opened roads",
-    "event": "the noise of war and disaster",
+    "son": "the deeds of gods",
+    "expedition": "travellers and opened roads",
+    "event": "war and disaster",
     "land": "the reshaping of its land",
-    "ruin": "old ruins rising from beneath the earth",
-    "death": "the laments of the dead",
+    "ruin": "old ruins found again",
+    "death": "the dead",
 }
 PROSPERITY_KEY = "prosperity"
 INFLUENCE_KEY = "influence"
@@ -505,7 +505,7 @@ async def outer_gnaw(ctx: TickContext) -> int:
     if creator is None or gnaw <= 0:
         return 0
     creator.essence = max(0, creator.essence - gnaw)
-    await note(ctx, f"The things outside gnawed {gnaw} from {creator.name}'s essence.", key="pantheon.outer_gnaw")
+    await note(ctx, f"What is outside the cosmos drained {gnaw} from {creator.name}'s essence.", key="pantheon.outer_gnaw")
     return gnaw
 
 

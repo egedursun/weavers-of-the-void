@@ -29,7 +29,7 @@ from aerona.engine.body.variants import ORDINARY, BiologyView, biology_views
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import bearable, tolerated
-from aerona.engine.ecology.evolution import cold_reach, escape, evolved_traits, fecund, wary
+from aerona.engine.ecology.evolution import alert, cold_reach, drought_reach, escape, evolved_traits, fecund, heat_reach, wary
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.faith.book import FaithBook
@@ -191,6 +191,8 @@ def fit_of(
     allowed: tuple[Biochemistry, ...] | None = None,
     *,
     cold: float = 0.0,
+    heat: float = 0.0,
+    dry: float = 0.0,
 ) -> float:
     if land is None:
         return rules.habitat.terrain_default / PERCENT
@@ -199,13 +201,15 @@ def fit_of(
     table = rules.habitat
     fit = terrain_fit(rules, profile, land, traits)
     beyond = max(
-        0, profile.temperature_min - table.temperature_slack - cold - land.temperature, land.temperature - profile.temperature_max - table.temperature_slack
+        0,
+        profile.temperature_min - table.temperature_slack - cold - land.temperature,
+        land.temperature - profile.temperature_max - table.temperature_slack - heat,
     )
     fit *= max(0.0, 1 - beyond * table.cold_penalty_pct / PERCENT)
     if not profile.altitude_min <= land.elevation_mean <= profile.altitude_max:
         fit *= 1 - table.altitude_penalty_pct / PERCENT
-    if land.moisture < profile.water_need:
-        fit *= max(0.0, 1 - (profile.water_need - land.moisture) / PERCENT * table.water_pct / PERCENT)
+    if land.moisture + dry < profile.water_need:
+        fit *= max(0.0, 1 - (profile.water_need - land.moisture - dry) / PERCENT * table.water_pct / PERCENT)
     return max(0.0, min(1.5, fit))
 
 
@@ -351,7 +355,9 @@ def plan(
     traits = wilds.traits.get(species.id, set())
     land = wilds.lands.get(region)
     evolved = wilds.evolved.get((species.id, region), {})
-    fit = fit_of(rules, profile, land, traits, wilds.allowed(land), cold=cold_reach(rules, evolved))
+    fit = fit_of(
+        rules, profile, land, traits, wilds.allowed(land), cold=cold_reach(rules, evolved), heat=heat_reach(rules, evolved), dry=drought_reach(rules, evolved)
+    )
     if "fit" not in row.locked:
         row.fit = clamp_int(round_half_up(fit * PERCENT), 0, PERCENT * 2)
     felt = marks.prey_seen.get((species.id, region), 1.0)
@@ -376,7 +382,7 @@ def plan(
         * nature.factor("fertility_pct")
     )
     delta -= wilds.symbiosis.drain(rules, species.id, present)
-    delta -= predation(rules, wilds, species.id, region, hunters_of) * escape(rules, evolved)
+    delta -= predation(rules, wilds, species.id, region, hunters_of) * escape(rules, evolved) * alert(rules, evolved)
     if profile.diet in HUNTERS and prey and sum(prey) / len(prey) < rules.ecology.hunger_threshold:
         delta -= rules.ecology.hunger * profile.metabolism / rules.habitat.metabolism_mean * nature.factor("food_need_pct") * nature.factor("death_pct")
     hunted = (

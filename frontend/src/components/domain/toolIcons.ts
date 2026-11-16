@@ -407,6 +407,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   begin_long_plan: Route,
   further_plan: ChevronsRight,
   shape_kinship: GitBranch,
+  shape_unions: HeartHandshake,
   shape_reproduction: Recycle,
   try_realm: Swords,
   set_circuit: Repeat,
@@ -699,6 +700,11 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   set_clone_law: Gavel,
   bless_line: Sparkles,
   curse_line: Skull,
+  take_care: ShieldCheck,
+  bless_fortune: Clover,
+  wield_power: Wand2,
+  curse_fortune: CloudRain,
+  set_natural_law: Gavel,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

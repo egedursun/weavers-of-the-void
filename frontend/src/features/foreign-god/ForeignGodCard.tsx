@@ -61,6 +61,7 @@ export function ForeignGodCard({
   const StatusIcon = FOREIGN_STATUS_ICON[god.status]
   return (
     <Card
+      frame='panel'
       data-foreign-god={god.id}
       data-status={god.status}
       className={cn('h-full', STATUS_BORDER[god.status])}

@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.catalog.mind import CAREER_SKILLS
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -17,11 +18,14 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import MemoryKind, OpinionComponent, SkillKind, SkillSource, ValueHolder, WantKind
 from aerona.domain.enums.mortal import Ability, DeathCause, LifeStage, MarriageEnd, MarriageKind
-from aerona.domain.enums.polity import LawKind, OathKind
+from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.society import SocialClass
+from aerona.engine.body.bands import banded
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.law.prisons import realm_of_town
+from aerona.engine.military.terms import war_between
 from aerona.engine.mind.aspirations import open_wants
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mind.memories import strength_of
@@ -36,13 +40,13 @@ from aerona.engine.mortal.life import ability, adult, assign_sex, refresh_life, 
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
-from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.unions.customs import divorce_rule
 
 ROLE_CLASSES: dict[MortalRole, SocialClass] = {
     MortalRole.RULER: SocialClass.NOBLE,
@@ -87,6 +91,14 @@ FULL = PERCENT
 
 def class_for(mortal: EntityRow) -> SocialClass:
     return ROLE_CLASSES.get(mortal.mortal_role or MortalRole.COMMONER, SocialClass.FARMER)
+
+
+async def parted_by_war(ctx: TickContext, mortal: EntityRow, spouse_id: int) -> bool:
+    spouse = await ctx.session.get(EntityRow, spouse_id)
+    if spouse is None:
+        return False
+    mine, theirs = await realm_of_town(ctx, mortal.location_id), await realm_of_town(ctx, spouse.location_id)
+    return mine is not None and theirs is not None and mine != theirs and await war_between(ctx, mine, theirs) is not None
 
 
 async def heritage_class(ctx: TickContext, mortal: EntityRow) -> SocialClass:
@@ -177,7 +189,7 @@ async def live_one_epoch(ctx: TickContext, mortal: EntityRow) -> LifeStage:
         rng = ctx.rng(seed_of("age_condition", mortal.id, ctx.epoch))
         if rng.chance(table.age_condition_chance):
             kind = rng.pick((ConditionKind.AGE_BLINDNESS, ConditionKind.AGE_DEAFNESS, ConditionKind.CHRONIC_ILLNESS))
-            await gain_condition(ctx, mortal, kind, HarmCause.AGE, severity=1)
+            await gain_condition(ctx, mortal, kind, HarmCause.AGE, severity=banded(ctx, ctx.rules.harm_bands.old_age, mortal.id))
     await update_health(ctx, mortal, profile, stage)
     if stage is not before and stage_rank(stage) > stage_rank(before) and stage in (LifeStage.ADULT, LifeStage.ELDER):
         await note(ctx, f"{mortal.name} came into {'adulthood' if stage is LifeStage.ADULT else 'old age'}.", key=f"life.{stage.value}", ids=[mortal.id])
@@ -308,6 +320,37 @@ async def marriage_wish(ctx: TickContext, mortal: EntityRow) -> float:
     return 1 + ctx.rules.aspirations.want_match_pct / PERCENT if WantKind.MARRY in await open_wants(ctx.session, mortal.id) else 1.0
 
 
+async def end_marriages(ctx: TickContext, mortal: EntityRow, rng: SeededRandom) -> str | None:
+    table = ctx.rules.kinship
+    custom = await divorce_custom(ctx, mortal)
+    for row in await marriages_of(ctx.session, mortal.id, ended=False):
+        spouse_id = row.second_id if row.first_id == mortal.id else row.first_id
+        view = await opinion(ctx.session, ctx.rules, ctx.epoch, mortal.id, spouse_id)
+        if custom != "forbidden" and view.value < table.divorce_opinion_below and rng.chance(table.divorce_chance * (2 if custom == "free" else 1)):
+            await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.DIVORCE)
+            spouse = await ctx.session.get(EntityRow, spouse_id)
+            await note(ctx, f"{mortal.name} and {spouse.name if spouse else 'their spouse'} parted.", key="kin.divorce", ids=[mortal.id, spouse_id])
+            return "divorced"
+        if await parted_by_war(ctx, mortal, spouse_id) and rng.chance(table.war_parting_chance):
+            await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.WAR)
+            spouse = await ctx.session.get(EntityRow, spouse_id)
+            await note(
+                ctx,
+                f"War between their realms parted {mortal.name} and {spouse.name if spouse else 'their spouse'}.",
+                key="kin.war_parted",
+                ids=[mortal.id, spouse_id],
+            )
+            return "parted by war"
+        cold = custom == "forbidden" and view.value < table.divorce_opinion_below
+        if cold and await childless(ctx, mortal.id, spouse_id) and rng.chance(table.annulment_chance):
+            await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.ANNULMENT)
+            spouse = await ctx.session.get(EntityRow, spouse_id)
+            text = f"The marriage of {mortal.name} and {spouse.name if spouse else 'their spouse'} was declared void, as if it had never been."
+            await note(ctx, text, key="kin.annulment", ids=[mortal.id, spouse_id])
+            return "annulled"
+    return None
+
+
 async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> str | None:
     table = ctx.rules.kinship
     if not adult(profile.life_stage) or is_held(profile, "kin"):
@@ -339,23 +382,7 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
         await marry(ctx.session, mortal, lover, ctx.epoch, kind=MarriageKind.PLURAL if married else MarriageKind.MONOGAMOUS, description="for love")
         await note(ctx, f"{mortal.name} and {lover.name} were wed.", key="kin.marriage", ids=[mortal.id, lover.id])
         return "married"
-    custom = await divorce_custom(ctx, mortal)
-    for row in await marriages_of(ctx.session, mortal.id, ended=False):
-        spouse_id = row.second_id if row.first_id == mortal.id else row.first_id
-        view = await opinion(ctx.session, ctx.rules, ctx.epoch, mortal.id, spouse_id)
-        if custom != "forbidden" and view.value < table.divorce_opinion_below and rng.chance(table.divorce_chance * (2 if custom == "free" else 1)):
-            await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.DIVORCE)
-            spouse = await ctx.session.get(EntityRow, spouse_id)
-            await note(ctx, f"{mortal.name} and {spouse.name if spouse else 'their spouse'} parted.", key="kin.divorce", ids=[mortal.id, spouse_id])
-            return "divorced"
-        cold = custom == "forbidden" and view.value < table.divorce_opinion_below
-        if cold and await childless(ctx, mortal.id, spouse_id) and rng.chance(table.annulment_chance):
-            await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.ANNULMENT)
-            spouse = await ctx.session.get(EntityRow, spouse_id)
-            text = f"The marriage of {mortal.name} and {spouse.name if spouse else 'their spouse'} was declared void, as if it had never been."
-            await note(ctx, text, key="kin.annulment", ids=[mortal.id, spouse_id])
-            return "annulled"
-    return None
+    return await end_marriages(ctx, mortal, rng)
 
 
 async def childless(ctx: TickContext, first: int, second: int) -> bool:
@@ -363,8 +390,7 @@ async def childless(ctx: TickContext, first: int, second: int) -> bool:
 
 
 async def divorce_custom(ctx: TickContext, mortal: EntityRow) -> str:
-    found = await law_param(ctx.session, mortal.location_id, LawKind.MARRIAGE_LAW, "divorce") if mortal.location_id is not None else None
-    return str(found) if found is not None else "for_cause"
+    return await divorce_rule(ctx.session, mortal)
 
 
 async def plural_custom(ctx: TickContext, mortal: EntityRow) -> bool:

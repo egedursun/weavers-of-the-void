@@ -1,3 +1,4 @@
+from collections import Counter
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -65,6 +66,12 @@ async def tribe_for(ctx: TickContext, house: HouseProfileRow) -> int | None:
     return people.id if people is not None else None
 
 
+def segment_level(ctx: TickContext, branches: int, *, founding: bool) -> SegmentLevel:
+    if not founding or branches == 0:
+        return SegmentLevel.LINEAGE
+    return SegmentLevel.TRIBE if branches >= ctx.rules.segmentary_lineages.tribe_houses else SegmentLevel.CLAN
+
+
 async def seed_segments(ctx: TickContext, tally: LineageTally) -> list[LineageSegmentRow]:
     houses = await ctx.session.execute(
         select(HouseProfileRow, EntityRow)
@@ -72,7 +79,7 @@ async def seed_segments(ctx: TickContext, tally: LineageTally) -> list[LineageSe
         .where(EntityRow.status == EntityStatus.CANON, HouseProfileRow.extinct_epoch.is_(None))
         .order_by(HouseProfileRow.house_entity_id)
     )
-    parents = set(await ctx.session.scalars(select(HouseProfileRow.parent_house_id).where(HouseProfileRow.parent_house_id.is_not(None))))
+    parents = Counter(await ctx.session.scalars(select(HouseProfileRow.parent_house_id).where(HouseProfileRow.parent_house_id.is_not(None))))
     rows: list[LineageSegmentRow] = []
     for house, _ in houses.all():
         if held(house.house_entity_id) or not await stateless(ctx, house):
@@ -83,7 +90,7 @@ async def seed_segments(ctx: TickContext, tally: LineageTally) -> list[LineageSe
             ctx.session.add(row)
             tally.segments += 1
         if "level" not in row.locked:
-            row.level = SegmentLevel.CLAN if house.house_entity_id in parents and house.parent_house_id is None else SegmentLevel.LINEAGE
+            row.level = segment_level(ctx, parents[house.house_entity_id], founding=house.parent_house_id is None)
         if "tribe_entity_id" not in row.locked:
             row.tribe_entity_id = await tribe_for(ctx, house)
         rows.append(row)

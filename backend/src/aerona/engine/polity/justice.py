@@ -19,6 +19,7 @@ from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.customs.relief import relieved_theft
 from aerona.engine.faith.book import patron_node
+from aerona.engine.law.offences import wide_offences
 from aerona.engine.mind.book import values_for
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.folk import present_among
@@ -124,4 +125,5 @@ async def offenders(ctx: TickContext, town_id: int, laws: LawBook) -> dict[Crime
             relief * PERCENT
         ):
             found[CrimeKind.THEFT].append(mortal)
+    await wide_offences(ctx, town_id, laws, mortals, found)
     return found

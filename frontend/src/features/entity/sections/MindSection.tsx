@@ -50,6 +50,7 @@ import {
   PRESSURE_ICONS,
   ROLE_ICONS,
   TRAIT_EFFECTS,
+  TRAIT_FAMILIES,
   TRAIT_ICONS,
   TRAIT_SOURCES,
   VALUE_ICONS,
@@ -121,7 +122,7 @@ function TraitChip({
       <TooltipTrigger asChild>
         <div
           tabIndex={0}
-          className='flex min-w-0 items-center gap-2 rounded-md border bg-background px-2 py-1'
+          className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen border-gild/60 bg-card px-2 py-1'
         >
           <spec.icon
             aria-hidden='true'
@@ -131,7 +132,7 @@ function TraitChip({
             {trait.label}
           </Text>
           <Muted as='span' variant='caption'>
-            {`${plain(TRAIT_SOURCES, trait.source)}${trait.heritable ? ' · passes to children' : ''}`}
+            {`${named(TRAIT_FAMILIES, trait.family).label} · ${plain(TRAIT_SOURCES, trait.source)}${trait.heritable ? ' · passes to children' : ''}`}
           </Muted>
           <Button
             size='icon-sm'
@@ -158,7 +159,7 @@ function MindHero({ mind }: { mind: Mind }) {
   const holder = named(HOLDERS, mind.holder)
   const role = mind.career?.role ? named(ROLE_ICONS, mind.career.role) : null
   return (
-    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+    <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <Medallion icon={holder.icon} tone={holder.tone ?? 'gold'} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <Text weight='semibold'>{holder.label}</Text>

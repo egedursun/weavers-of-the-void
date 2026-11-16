@@ -37,7 +37,7 @@ from aerona.api.views.common import node_refs
 from aerona.catalog.flora import BIOCHEMISTRY_LABELS, plant_product_of
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
-from aerona.db.tables.anatomy import CreatureAnatomyRow
+from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -591,6 +591,7 @@ async def creature_anatomy(node_id: Id, services: ServicesDep) -> AnatomyView | 
             return None
         rules = await world_rules(services, session)
         limbs = await plan_limbs(session, node_id)
+        attacks = list(await session.scalars(select(CreatureAttackRow.id).where(CreatureAttackRow.node_id == node_id)))
         return AnatomyView(
             node_id=node_id,
             limbs=row.limbs,
@@ -599,16 +600,14 @@ async def creature_anatomy(node_id: Id, services: ServicesDep) -> AnatomyView | 
             tails=row.tails,
             skin=row.skin,
             bone=row.bone,
-            breath=row.breath,
             bite=row.bite,
-            gaze=row.gaze,
             temperament=row.temperament,
             hoards=row.hoards,
             hates=row.hates,
             awakening=row.awakening,
             habitat=row.habitat,
             armour_pct=armour_of(row),
-            harm_pct=round((harm_factor(rules, row, limbs) - 1) * PERCENT),
+            harm_pct=round((harm_factor(rules, row, limbs, len(attacks)) - 1) * PERCENT),
             generated_epoch=row.generated_epoch,
             locked=row.locked,
         )

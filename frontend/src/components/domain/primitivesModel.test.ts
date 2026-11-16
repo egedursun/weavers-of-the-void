@@ -3,6 +3,7 @@ import { acceptsFile } from './fileAccept'
 import {
   chartFrame,
   directLabelOffsets,
+  gridFractions,
   nearestIndex,
   niceCeiling,
   shortLabel,
@@ -178,5 +179,14 @@ describe('file accept rules', () => {
     expect(acceptsFile(image, '.aerona,application/gzip')).toBe(false)
     expect(acceptsFile(image, 'image/*')).toBe(true)
     expect(acceptsFile(image, undefined)).toBe(true)
+  })
+})
+
+describe('gridFractions', () => {
+  it('keeps axis labels apart on a short chart', () => {
+    expect(gridFractions(200)).toEqual([0, 0.25, 0.5, 0.75, 1])
+    expect(gridFractions(40)).toEqual([0, 0.5, 1])
+    expect(gridFractions(20)).toEqual([0, 1])
+    expect(gridFractions(10)).toEqual([1])
   })
 })

@@ -110,7 +110,7 @@ function ChainLink({ step, members }: { step: Step; members: Member[] }) {
       data-step={step.key}
       data-state={state}
       className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3',
+        'flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3',
         look.border
       )}
     >
@@ -184,7 +184,7 @@ function ChainLink({ step, members }: { step: Step; members: Member[] }) {
 
 function MemberRow({ member }: { member: Member }) {
   return (
-    <li className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-background p-2.5'>
+    <li className='flex min-w-0 items-center gap-2.5 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
       <Medallion
         icon={member.bottlenecks > 0 ? TriangleAlert : Store}
         tone={member.bottlenecks > 0 ? 'warning' : 'gold'}

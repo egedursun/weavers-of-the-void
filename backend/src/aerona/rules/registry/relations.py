@@ -21,6 +21,7 @@ class SocialRules:
     foreign_tongue_pct: int = rule(50, 0, 100, G, "Weight of talk between mortals without a shared language (%)")
     success_base: int = rule(60, 0, 100, G, "Base chance an interaction lands as meant (%)")
     skill_success_pct: int = rule(40, 0, 200, G, "How much the actor's skill moves the chance an interaction lands (%)")
+    sociable_pct: int = rule(30, 0, 200, G, "How much a sociable or withdrawn nature moves the chance an interaction lands (%)")
     delta_pct: int = rule(100, 0, 400, G, "Scale of every friendship, romance, familiarity and rivalry change (%)")
     familiarity_fade: int = rule(2, 0, 20, G, "Familiarity lost each epoch by pairs who did not meet")
     friendship_fade: int = rule(1, 0, 20, G, "Friendship and hostility that fade toward zero each epoch for pairs who did not meet")
@@ -67,6 +68,9 @@ class CircleRules:
 @dataclass(frozen=True)
 class PassionRules:
     relation_at: int = rule(70, 0, 100, G, "Romance, friendship or hostility at which a bond becomes a passion")
+    obsession_at: int = rule(90, 0, 100, G, "Romance at which love turns to obsession")
+    admired_renown: int = rule(40, 0, 100, G, "Renown a close friend needs to be admired")
+    temper_strength: int = rule(40, 0, 100, G, "Strength of an ambition, pride or curiosity a mortal's nature kindles")
     oath_strength: int = rule(70, 0, 100, G, "Strength of the loyalty an oath of fealty or protection kindles")
     memory_at: int = rule(60, 0, 100, G, "Strength of a formative memory of killed kin that kindles hatred")
     upbringing_at: int = rule(50, 0, 100, G, "Belief at which an adult takes up a loyalty or devotion from their upbringing")

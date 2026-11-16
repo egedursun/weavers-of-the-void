@@ -143,13 +143,13 @@ export function SonCard({
     DOMAIN_GLYPH[son.domain_secondary] ?? DOMAIN_GLYPH_FALLBACK
   return (
     <Card
+      frame='panel'
       data-son-card={son.id}
       data-rarity={son.rarity}
       aria-busy={acting || undefined}
       className={cn(
-        'relative h-full overflow-hidden',
+        'relative h-full',
         RARITY_FRAME_CLASS[son.rarity],
-        FOILED.has(son.rarity) && !dead && 'card-foil',
         interactive &&
           'cursor-pointer transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-xl',
         dead && 'opacity-70 grayscale-50',
@@ -162,10 +162,16 @@ export function SonCard({
         open({ kind: 'son', id: String(son.id) })
       }}
     >
+      {FOILED.has(son.rarity) && !dead && (
+        <span
+          aria-hidden='true'
+          className='card-foil pointer-events-none absolute inset-0'
+        />
+      )}
       <span
         aria-hidden='true'
         className={cn(
-          'pointer-events-none absolute inset-x-0 top-0 h-1',
+          'pointer-events-none absolute inset-x-6 top-2 h-1 rounded-full',
           RARITY_BAR_CLASS[son.rarity]
         )}
       />

@@ -9,6 +9,9 @@ SCHEMA = FRONTEND / "api" / "generated" / "schema.ts"
 ENUM_LIST = re.compile(r"export const (\w+)Values: ReadonlyArray<[^>]*>[^=]*= \[([^\]]*)\]")
 MAP_START = re.compile(r"(?:export )?const (\w+)(?::\s*(Record<[^=]+>))?\s*=\s*\{\n")
 MAP_KEY = re.compile(r"\s*([a-z_][a-z0-9_-]*|'[^']+'|\"[^\"]+\")\s*(?::|,\s*$)")
+OPTION_LIST = re.compile(r"const (\w+): \{\n\s*key: (\w+)\n[^=]*\}\[\] = \[", re.DOTALL)
+ALIAS = re.compile(r"type (\w+) = components\['schemas'\]\['(\w+)'\]")
+OPTION_KEY = re.compile(r"key: '([^']+)'")
 NEARLY_ALL = 0.65
 SMALLEST = 3
 
@@ -22,7 +25,9 @@ class Gap:
 
 
 def enum_values(schema: str) -> dict[str, frozenset[str]]:
-    return {match.group(1): frozenset(value.strip().strip("'\"") for value in match.group(2).split(",") if value.strip()) for match in ENUM_LIST.finditer(schema)}
+    return {
+        match.group(1): frozenset(value.strip().strip("'\"") for value in match.group(2).split(",") if value.strip()) for match in ENUM_LIST.finditer(schema)
+    }
 
 
 def top_keys(body: str) -> set[str]:
@@ -62,9 +67,29 @@ def gaps_in(path: Path, enums: dict[str, frozenset[str]]) -> list[Gap]:
     return gaps
 
 
+def option_gaps_in(path: Path, enums: dict[str, frozenset[str]]) -> list[Gap]:
+    text = path.read_text(encoding="utf-8")
+    aliases = dict(ALIAS.findall(text))
+    gaps: list[Gap] = []
+    for match in OPTION_LIST.finditer(text):
+        name, alias = match.groups()
+        enum = aliases.get(alias, alias)
+        if enum not in enums:
+            continue
+        depth, index = 1, match.end()
+        while index < len(text) and depth:
+            depth += {"[": 1, "]": -1}.get(text[index], 0)
+            index += 1
+        missing = enums[enum] - set(OPTION_KEY.findall(text[match.end() : index]))
+        if missing:
+            gaps.append(Gap(path, name, enum, tuple(sorted(missing))))
+    return gaps
+
+
 def main() -> int:
     enums = enum_values(SCHEMA.read_text(encoding="utf-8"))
-    gaps = [gap for path in sorted(FRONTEND.rglob("*.ts*")) if "generated" not in path.parts and ".test." not in path.name for gap in gaps_in(path, enums)]
+    paths = [path for path in sorted(FRONTEND.rglob("*.ts*")) if "generated" not in path.parts and ".test." not in path.name]
+    gaps = [gap for path in paths for gap in [*gaps_in(path, enums), *option_gaps_in(path, enums)]]
     for gap in gaps:
         print(f"{gap.path.relative_to(ROOT)}: {gap.name} labels nearly every {gap.enum} but not {', '.join(gap.missing)}")
     print(f"label maps: {len(gaps)} gap(s)")

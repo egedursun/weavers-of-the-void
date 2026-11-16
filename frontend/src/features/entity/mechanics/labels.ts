@@ -47,6 +47,11 @@ export const MODIFIER_SOURCE: Record<string, Named> = {
   weather: { label: 'Weather', icon: CloudSun, tone: 'info' },
   season: { label: 'Season', icon: Snowflake, tone: 'info' },
   natural_law: { label: 'Natural law', icon: Orbit, tone: 'verdigris' },
+  law_grammar: {
+    label: 'Working of a natural law',
+    icon: Orbit,
+    tone: 'verdigris',
+  },
   god_power: { label: 'God power', icon: Zap, tone: 'gold' },
   blessing: { label: 'Blessing', icon: Sun, tone: 'success' },
   curse: { label: 'Curse', icon: Skull, tone: 'danger' },

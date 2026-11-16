@@ -46,7 +46,7 @@ export function SelfNoteForm() {
               id={id}
               required
               maxLength={TITLE_MAX}
-              placeholder='Reminder: reconcile the two eldest sons'
+              placeholder='A note to yourself'
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />

@@ -24,6 +24,7 @@ from aerona.domain.enums.belonging import IdentityLayer
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKind, DesignKind, StoryletId
 from aerona.domain.enums.constructs import OrderKind
+from aerona.domain.enums.cosmography import DimensionElement
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.cycles import (
@@ -39,12 +40,13 @@ from aerona.domain.enums.cycles import (
 from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
 from aerona.domain.enums.ecology import (
+    AttackDelivery,
+    AttackEffect,
+    AttackRange,
     AwakeningTrigger,
     BeastTemper,
     Biochemistry,
-    BreathKind,
     Diet,
-    GazeKind,
     GrowthCycle,
     Habitat,
     PlantYield,
@@ -58,12 +60,13 @@ from aerona.domain.enums.ecology import (
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.evolution import PlagueResponse
+from aerona.domain.enums.faction import FactionKind, FoundableFaction
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmourType, Formation, ShieldType
 from aerona.domain.enums.mind import Emotion
-from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, ServitorRole
+from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRole
 from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
 from aerona.domain.enums.operations import EchelonOrder, QuirkKind
 from aerona.domain.enums.place import PlaceKind, SecretKind
@@ -73,6 +76,7 @@ from aerona.domain.enums.sacred import BureauRank, DivinationQuestion, OmenVerdi
 from aerona.domain.enums.structure import BuildingForm
 from aerona.domain.enums.tongues import LanguagePolicy, SoundChangeKind, SoundEnvironment
 from aerona.domain.enums.travel import VehicleKind
+from aerona.domain.enums.unions import PartnerScope, UnionArrangement, UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionPurpose, UnionResidence
 from aerona.domain.enums.vehicles import MountKind
 from aerona.prompts.contexts.blocks import SummarySection
 from aerona.prompts.environment import normalize, string_template
@@ -153,11 +157,13 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "rite_effects": ", ".join(effect.value for effect in RiteEffectKind),
         "spell_techniques": ", ".join(item.value for item in SpellTechnique),
         "spell_forms": ", ".join(item.value for item in SpellForm),
+        "dimension_elements": ", ".join(item.value for item in DimensionElement),
         "closure_kinds": ", ".join(item.value for item in sorted(CLOSURES)),
         "spell_ranges": ", ".join(item.value for item in SpellRange),
         "spell_durations": ", ".join(item.value for item in SpellDuration),
         "spell_targets": ", ".join(item.value for item in SpellTarget),
-        "servitor_ranks": ", ".join(item.value for item in ServitorRank),
+        "foundable_factions": ", ".join(item.value for item in FoundableFaction),
+        "faction_kinds": ", ".join(item.value for item in FactionKind),
         "servitor_roles": ", ".join(item.value for item in ServitorRole),
         "geas_modes": ", ".join(item.value for item in GeasMode),
         "geas_acts": "; ".join(f"{mode.value}: {', '.join(act.value for act in acts)}" for mode, acts in GEAS_ACTS.items()),
@@ -170,6 +176,14 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "storylet_ids": ", ".join(item.value for item in StoryletId),
         "long_plan_kinds": ", ".join(item.value for item in LongPlanKind),
         "kinship_descents": ", ".join(item.value for item in KinshipDescent),
+        "union_forms": ", ".join(item.value for item in UnionForm),
+        "union_purposes": ", ".join(item.value for item in UnionPurpose),
+        "union_residences": ", ".join(item.value for item in UnionResidence),
+        "union_descents": ", ".join(item.value for item in UnionDescent),
+        "union_exchanges": ", ".join(item.value for item in UnionExchange),
+        "union_arrangements": ", ".join(item.value for item in UnionArrangement),
+        "union_dissolutions": ", ".join(item.value for item in UnionDissolution),
+        "partner_scopes": ", ".join(item.value for item in PartnerScope),
         "residence_rules": ", ".join(item.value for item in ResidenceRule),
         "marriage_preferences": ", ".join(item.value for item in MarriagePreference),
         "marriage_payments": ", ".join(item.value for item in MarriagePayment),
@@ -224,8 +238,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "dormancies": [kind.value for kind in Dormancy],
         "thermoregulations": [kind.value for kind in Thermoregulation],
         "plant_defences": [kind.value for kind in PlantDefence],
-        "breath_kinds": [kind.value for kind in BreathKind],
-        "gaze_kinds": [kind.value for kind in GazeKind],
+        "attack_deliveries": [kind.value for kind in AttackDelivery],
+        "attack_effects": [kind.value for kind in AttackEffect],
+        "attack_ranges": [kind.value for kind in AttackRange],
         "temperaments": [kind.value for kind in Temperament],
         "habitats": [kind.value for kind in Habitat],
         "awakening_triggers": [kind.value for kind in AwakeningTrigger],

@@ -94,7 +94,7 @@ function LoadoutRow({
     numberProblem(count, 1, PIECES_MAX) ?? settled(count, row.count)
   const slot = SLOT[row.slot]
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'>
+    <li className='flex min-w-0 flex-col gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Chip icon={slot.icon}>{slot.label}</Chip>
         <Muted

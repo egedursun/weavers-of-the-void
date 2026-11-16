@@ -18,9 +18,9 @@ from aerona.engine.polity.regard import borders, core_values, value_distance
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.strength import MilitaryStrength
 
-TRIBUTE_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.TRIBUTARY, SubjectKind.COLONY})
-LEVY_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.MARCH, SubjectKind.COLONY})
-PROTECTED_KINDS = frozenset({SubjectKind.CLIENT, SubjectKind.PROTECTORATE})
+TRIBUTE_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.TRIBUTARY, SubjectKind.COLONY, SubjectKind.ENCLAVE, SubjectKind.MANDATE})
+LEVY_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.MARCH, SubjectKind.COLONY, SubjectKind.MANDATE})
+PROTECTED_KINDS = frozenset({SubjectKind.CLIENT, SubjectKind.PROTECTORATE, SubjectKind.ASSOCIATED_STATE, SubjectKind.ENCLAVE})
 LIBERTY = "liberty"
 LOYALTY = "loyalty"
 TRIBUTE = "tribute_pct"
@@ -48,6 +48,22 @@ async def kind_for(ctx: TickContext, book: RealmBook, vassal: Realm, overlord: R
         return SubjectKind.COLONY
     if await ctx.session.get(SphereRow, (overlord.entity.id, vassal.entity.id)) is not None:
         return SubjectKind.CLIENT
+    return await bound_kind(ctx, book, vassal, overlord)
+
+
+async def bound_kind(ctx: TickContext, book: RealmBook, vassal: Realm, overlord: Realm) -> SubjectKind:
+    others = [realm for realm in book.realms.values() if realm.entity.id not in (vassal.entity.id, overlord.entity.id)]
+    if len(vassal.members) == 1 and borders(book, vassal, overlord) and not any(borders(book, vassal, realm) for realm in others):
+        return SubjectKind.ENCLAVE
+    mine, theirs = await core_values(ctx, vassal), await core_values(ctx, overlord)
+    if mine and theirs and value_distance(mine, theirs) <= ctx.rules.statecraft.associated_distance:
+        return SubjectKind.ASSOCIATED_STATE
+    if vassal.ruler_id is None:
+        return SubjectKind.MANDATE
+    return await held_kind(ctx, book, vassal, overlord)
+
+
+async def held_kind(ctx: TickContext, book: RealmBook, vassal: Realm, overlord: Realm) -> SubjectKind:
     if not borders(book, vassal, overlord):
         return SubjectKind.TRIBUTARY
     others = [realm for realm in book.realms.values() if realm.entity.id not in (vassal.entity.id, overlord.entity.id)]

@@ -244,7 +244,7 @@ export function ScenePointer({
       <div
         ref={tip}
         role='tooltip'
-        className='pointer-events-none absolute top-0 left-0 flex max-w-xs flex-col gap-0.5 rounded-md border bg-popover p-2 text-popover-foreground shadow-md'
+        className='pointer-events-none absolute top-0 left-0 flex max-w-xs flex-col gap-0.5 rounded-md border surface-sheen border-gild/60 bg-card p-2 text-popover-foreground'
         style={{ visibility: hover ? 'visible' : 'hidden' }}
       >
         <TipBody hover={hover} index={index} foreignGodOf={foreignGodOf} />

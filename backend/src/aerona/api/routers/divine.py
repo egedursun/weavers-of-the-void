@@ -313,6 +313,7 @@ async def council_rulings(services: ServicesDep) -> CouncilRulings:
                     world=ref(refs, row.world_id),
                     school=row.school,
                     punishment=row.punishment,
+                    voting_rule=row.voting_rule,
                     epoch=row.epoch,
                     until_epoch=row.until_epoch,
                     active=row.active,

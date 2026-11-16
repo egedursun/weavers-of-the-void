@@ -32,6 +32,9 @@ class RoomContentKind(StrEnum):
     SPIRIT = "spirit"
     BEAST = "beast"
     TRAP = "trap"
+    MIND = "mind"
+    RELIC = "relic"
+    REALM_GATE = "realm_gate"
 
 
 class ExcavationStage(StrEnum):

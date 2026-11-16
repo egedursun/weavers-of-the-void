@@ -3,6 +3,7 @@ from contextvars import ContextVar
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.medicine import MEDICINE, tier_of
 from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
@@ -135,6 +136,8 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
             factor *= table.virgin_soil_pct / PERCENT
         if book.cured(disease_id, community.id) or knowledge.level(community.id, KnowledgeBranch.MEDICINE) >= profile.cure_level:
             factor *= resisted(book.rules, profile, table.cure_lethality_pct / PERCENT)
+        tier = tier_of(book.rules.healing, knowledge.level(community.id, KnowledgeBranch.MEDICINE), 0, False)
+        factor *= (PERCENT - MEDICINE[tier].epidemic_cut) / PERCENT
         ward = book.hospital_strength.get(book.atlas.top_region(community.id) or -1, 0.0)
         factor *= resisted(book.rules, profile, 1 - ward * (1 - table.hospital_lethality_pct / PERCENT))
         if community.id in book.medicine:

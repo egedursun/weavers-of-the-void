@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.cosmography import (
     ApocalypseVariant,
     BeingKind,
@@ -17,9 +18,11 @@ from aerona.domain.enums.cosmography import (
     RiftCause,
     SkyObject,
 )
+from aerona.domain.enums.travel import ArrivalOutcome
 from aerona.domain.models.records import CargoLine, PassengerLine
 from aerona.engine.cosmos import control
 from aerona.engine.cosmos.climate import ClimateTurn
+from aerona.engine.cosmos.encounters import JourneyCounts
 from aerona.engine.cosmos.ladder import NEW_CLUSTER_RADIUS, NEW_GALAXY_RADIUS
 from aerona.services.player import guards
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -37,6 +40,7 @@ class DimensionDraft(Command):
     kind: DimensionKind
     parent_dimension_id: int | None = None
     element: DimensionElement | None = None
+    form: SpellForm | None = None
     description: str | None = None
 
 
@@ -204,6 +208,10 @@ class JourneyLoad(Command):
     escorts: int | None = None
     cargo: list[CargoLine] | None = None
     passengers: list[PassengerLine] | None = None
+    supplies: int | None = Field(default=None, ge=0, le=100)
+    births: int | None = Field(default=None, ge=0)
+    deaths: int | None = Field(default=None, ge=0)
+    arrival: ArrivalOutcome | None = None
 
 
 class JourneyRelease(Command):
@@ -215,6 +223,7 @@ class Reading(Command):
     celestial_id: int
     people_id: int
     reading: OmenReading | None = None
+    visible: bool | None = None
 
 
 class Variant(Command):
@@ -236,6 +245,7 @@ async def create_dimension(scope: PlayerScope, command: DimensionDraft) -> Effec
         parent_id=command.parent_dimension_id,
         element=command.element,
         description=command.description,
+        form=command.form,
     )
     return Effect(f"{row.name} came into being.", row.id, essence_spent=spent, created_ids=(row.id,))
 
@@ -532,6 +542,7 @@ async def load_journey(scope: PlayerScope, command: JourneyLoad) -> Effect:
         escorts=command.escorts,
         cargo=command.cargo,
         passengers=command.passengers,
+        counts=JourneyCounts(supplies=command.supplies, births=command.births, deaths=command.deaths, arrival=command.arrival),
     )
     return Effect("The journey's load is set and held.", row.traveller_entity_id)
 
@@ -544,7 +555,7 @@ async def release_journey(scope: PlayerScope, command: JourneyRelease) -> Effect
 
 @player_action("celestial_reading:set", ActionKind.EDIT_RECORD)
 async def set_reading(scope: PlayerScope, command: Reading) -> Effect:
-    row = await control.set_reading(await scope.context("celestial_reading_set"), command.celestial_id, command.people_id, command.reading)
+    row = await control.set_reading(await scope.context("celestial_reading_set"), command.celestial_id, command.people_id, command.reading, command.visible)
     return Effect("The people's reading of the body is set." if row is not None else "The people will read the body again.", command.people_id)
 
 
