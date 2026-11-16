@@ -165,9 +165,9 @@ export const CONDITIONS: Record<Schema['OrderCondition'], Named> = {
 export const WILLS: Record<Schema['MindWill'], Named> = {
   none: { label: 'No will', icon: CircleDot, tone: 'muted' },
   instructed: { label: 'Follows orders', icon: ScrollText, tone: 'info' },
-  emergent: { label: 'A will stirs', icon: Sparkles, tone: 'warning' },
-  full: { label: 'A will of its own', icon: Brain, tone: 'danger' },
-  exceeding: { label: 'Beyond every order', icon: Bird, tone: 'danger' },
+  emergent: { label: 'A will stirs', icon: Sparkles, tone: 'info' },
+  full: { label: 'A will of its own', icon: Brain, tone: 'verdigris' },
+  exceeding: { label: 'Beyond every order', icon: Bird, tone: 'gold' },
 }
 
 export const CONTRACT_STATUS: Record<Schema['ContractStatus'], Named> = {

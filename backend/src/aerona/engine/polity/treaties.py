@@ -28,6 +28,7 @@ from aerona.engine.intrigue.favours import owe
 from aerona.engine.intrigue.leverage import leaned_on
 from aerona.engine.military.support import new_side
 from aerona.engine.mind.drives import greed_drive
+from aerona.engine.minds.war_methods import method_breached
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
 from aerona.engine.operations.limits import over_limit
@@ -307,6 +308,10 @@ async def armed_breach(ctx: TickContext, profile: TreatyProfileRow, clause: Trea
                 return True
     if clause.kind is ClauseKind.FLEET_LIMIT and await over_limit(ctx, clause):
         await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason="its fleet grew past the tonnage it swore to")
+        return True
+    method = await method_breached(ctx, clause)
+    if method is not None:
+        await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason=method)
         return True
     return False
 

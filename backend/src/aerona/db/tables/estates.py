@@ -7,6 +7,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.faction import EstatePrivilege, MovementCause
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.made import CompanyCharter
 from aerona.domain.enums.society import SocialClass
 
 
@@ -72,6 +73,8 @@ class CompanyProfileRow(Base):
     dividend_pct: Mapped[int] = mapped_column(default=30)
     value: Mapped[int] = mapped_column(default=0)
     chartered_epoch: Mapped[int] = mapped_column(default=0)
+    charter: Mapped[CompanyCharter] = mapped_column(enum_type(CompanyCharter, "charter"), default=CompanyCharter.CHARTERED)
+    headquarters_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

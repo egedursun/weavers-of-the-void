@@ -9,6 +9,7 @@ class Medium(StrEnum):
     DREAM = "dream"
     BIRD = "bird"
     MAGIC_SENDING = "magic_sending"
+    NETWORK = "network"
 
 
 class DispatchContent(StrEnum):

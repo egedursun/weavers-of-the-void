@@ -160,6 +160,14 @@ class LawKind(StrEnum):
     PROTECTED_WATERS = "protected_waters"
     CATCH_QUOTA = "catch_quota"
     GEAR_BAN = "gear_ban"
+    MIND_STATUS = "mind_status"
+    COPY_LAW = "copy_law"
+    COPY_SUCCESSION = "copy_succession"
+    ERASURE_LAW = "erasure_law"
+    AUGMENT_LAW = "augment_law"
+    NETWORK_LAW = "network_law"
+    SURVEILLANCE_LAW = "surveillance_law"
+    PROVISION_LAW = "provision_law"
 
 
 class DebtRemedy(StrEnum):
@@ -261,6 +269,12 @@ class ClauseKind(StrEnum):
     RESOURCE_DEMAND = "resource_demand"
     RESEARCH_AGREEMENT = "research_agreement"
     FLEET_LIMIT = "fleet_limit"
+    AUTONOMOUS_WEAPONS_BAN = "autonomous_weapons_ban"
+    MIND_SEIZURE_BAN = "mind_seizure_ban"
+    SOLDIER_COPY_BAN = "soldier_copy_ban"
+    REPLICATOR_WEAPON_BAN = "replicator_weapon_ban"
+    CIVIL_NETWORK_SHIELD = "civil_network_shield"
+    CIVIL_HOST_SHIELD = "civil_host_shield"
 
 
 class PartyRole(StrEnum):
@@ -317,4 +331,12 @@ LAW_AREAS: dict[LawKind, LawArea] = {
     LawKind.INTELLECTUAL_PROPERTY: LawArea.PROPERTY,
     LawKind.MACHINE_LAW: LawArea.SOCIAL,
     LawKind.SPACE_LAW: LawArea.PROPERTY,
+    LawKind.MIND_STATUS: LawArea.SOCIAL,
+    LawKind.COPY_LAW: LawArea.SOCIAL,
+    LawKind.COPY_SUCCESSION: LawArea.PROPERTY,
+    LawKind.ERASURE_LAW: LawArea.PENAL,
+    LawKind.AUGMENT_LAW: LawArea.PUBLIC_HEALTH,
+    LawKind.NETWORK_LAW: LawArea.PROPERTY,
+    LawKind.SURVEILLANCE_LAW: LawArea.SOCIAL,
+    LawKind.PROVISION_LAW: LawArea.FISCAL,
 }

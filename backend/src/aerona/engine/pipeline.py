@@ -101,6 +101,7 @@ from aerona.engine.phases import (
     mechanics_assignment,
     migration,
     mind,
+    minds,
     monsters,
     mortal_life,
     mortals,
@@ -243,6 +244,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + prehistory.PHASES
     + transformations.PHASES
     + couplings.PHASES
+    + minds.PHASES
     + museums.PHASES
     + ages.PHASES
     + folkways.PHASES
@@ -535,11 +537,18 @@ SOCIETY_ENGINE_STAGE = stage(
     "collections",
     "gardens",
     "world_views",
+    "networks",
+    "intrusions",
+    "surveillance",
+    "information_trust",
+    "company_power",
+    "replicators",
     "society_economy",
     "putting_out",
     "refining",
     "market_manipulation",
     "markets",
+    "abundance",
     "trade_policy",
     "convoys",
     "transport_fleets",
@@ -681,6 +690,12 @@ MIND_STAGE = stage(
     "mind_ideas",
     "mind_memories",
     "mind_needs",
+    "minds",
+    "made_realms",
+    "augments",
+    "mind_law",
+    "made_peoples",
+    "made_relics",
     "mind_thoughts",
     "mind_grief",
     "mind_dreams",

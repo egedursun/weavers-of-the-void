@@ -72,6 +72,7 @@ from tests.tools.every_setup_crafts import material_resource
 from tests.tools.every_setup_eras import realm_programme
 from tests.tools.every_setup_folkways import owned_item
 from tests.tools.every_setup_lifecycle import forgotten_theory, hidden_fossils, son_made_world, worshipped_star
+from tests.tools.every_setup_minds import made_mind, made_realm, network, replicator, sealed_realm
 from tests.tools.every_setup_nature import first_kind, second_kind, two_kinds
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
@@ -454,4 +455,15 @@ SON_CASES: dict[str, Case] = {
     "sharpen_sense": Case(plain(holder_id=people, sense="smell", reason=REASON)),
     "sabotage_programme": Case(plain(programme_id=lambda _realm, ids: ids["programme"], reason=REASON), realm_programme),
     "stir_identity": Case(plain(community_id=people, layer="faith", reason=REASON)),
+    "awaken_mind": Case(plain(node_id=created("mind"), will="full", reason=REASON), made_mind),
+    "still_mind": Case(plain(node_id=created("mind"), reason=REASON), made_mind),
+    "grant_mind": Case(plain(node_id=created("construct"), origin="granted", reason=REASON), built_construct),
+    "grant_soul": Case(plain(mind_id=created("mind"), reason=REASON), made_mind),
+    "withhold_soul": Case(plain(mind_id=created("mind"), reason=REASON), made_mind),
+    "set_mind_law": Case(plain(world_id=lambda realm, _ids: realm.cosmos.world_id, made_mind_souls="emergent", reason=REASON)),
+    "bless_network": Case(plain(network_id=created("network"), reason=REASON), network),
+    "sever_network": Case(plain(network_id=created("network"), reason=REASON), network),
+    "halt_replicator": Case(plain(line_id=created("line"), reason=REASON), replicator),
+    "seal_realm": Case(plain(realm_id=created("realm"), reason=REASON), made_realm),
+    "open_realm": Case(plain(realm_id=created("realm"), reason=REASON), sealed_realm),
 }

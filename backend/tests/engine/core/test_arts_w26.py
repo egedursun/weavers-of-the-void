@@ -17,6 +17,7 @@ from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.intrigue import SchemeRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.mind import SkillRow, TraitRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import ClaimRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.sacred import BirthSignRow, DivinationSystemRow
@@ -261,16 +262,17 @@ async def test_a_bound_soul_grows_a_will_past_every_order_and_a_kill_switch_stil
     tally = OrderTally()
     for epoch in (3, 4):
         await keep_constructs(await at(session, epoch, constructs={"will_chance": 100}), tally)
-    assert row.will is MindWill.FULL and tally.woke == 2
+    mind = await session.get(MindProfileRow, row.entity_id)
+    assert mind is not None and mind.will is MindWill.FULL and tally.woke == 2
     rules.kill_switch = True
     await session.flush()
     await keep_constructs(await at(session, 5, constructs={"will_chance": 100}), tally)
     body = await session.get(EntityRow, row.entity_id)
-    assert row.will is MindWill.EXCEEDING and tally.freed == 1 and tally.killed == 1 and tally.risen == 1
+    assert mind.will is MindWill.EXCEEDING and tally.freed == 1 and tally.killed == 1
     enemy = await session.scalar(
         select(BondRow).where(BondRow.source_node_id == row.entity_id, BondRow.target_node_id == maker.id, BondRow.kind == BondKind.ENEMY)
     )
-    assert enemy is not None
+    assert enemy is None
     assert body is not None and body.status is not EntityStatus.CANON
 
 

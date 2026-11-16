@@ -132,6 +132,9 @@ class RarityGatesRules:
     create_building_type: int = rule(
         0, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can draw a Building type (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
+    create_network: int = rule(
+        1, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can found a Network (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
     create_natural_law: int = rule(
         4, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can create a Natural Law (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )

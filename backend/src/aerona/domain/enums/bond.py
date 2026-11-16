@@ -62,6 +62,14 @@ class BondKind(StrEnum):
     FIXED_IN = "fixed_in"
     ADHERENT_OF = "adherent_of"
     PRACTISES = "practises"
+    COPY_OF = "copy_of"
+    MERGED_INTO = "merged_into"
+    DIVIDED_FROM = "divided_from"
+    TRANSFERRED_FROM = "transferred_from"
+    RESTORED_FROM = "restored_from"
+    MADE_MIND_OF = "made_mind_of"
+    HOSTED_BY = "hosted_by"
+    LINKED_WITH = "linked_with"
 
 
 class BondCategory(StrEnum):

@@ -32,7 +32,9 @@ from aerona.db.tables.arts import ArtMovementRow, ArtPriceRow, ArtSaleRow, BetRo
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow, RemadeRow
 from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.tables.culture import ArtworkProfileRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.sacred import BirthSignRow
+from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.node import NodeKind
 
 router = APIRouter(tags=["pursuits"])
@@ -51,7 +53,7 @@ async def refs_of(session: AsyncSession, ids: Iterable[int | None]) -> dict[int,
     return await node_refs(session, sorted({value for value in ids if value is not None}))
 
 
-def construct_view(row: ConstructRow, refs: dict[int, NodeRef]) -> ConstructView:
+def construct_view(row: ConstructRow, refs: dict[int, NodeRef], wills: dict[int, MindWill]) -> ConstructView:
     return ConstructView(
         body=ref(refs, row.entity_id),
         material=row.material,
@@ -60,7 +62,7 @@ def construct_view(row: ConstructRow, refs: dict[int, NodeRef]) -> ConstructView
         upkeep=row.upkeep,
         maker=at(refs, row.maker_entity_id),
         decay=row.decay,
-        will=row.will,
+        will=wills.get(row.entity_id, MindWill.INSTRUCTED),
         soul=at(refs, row.soul_entity_id),
         made_epoch=row.made_epoch,
         locked=row.locked,
@@ -222,6 +224,8 @@ async def node_pursuits(services: ServicesDep, node_id: NodeId) -> PursuitsNodeV
         clubs, league, matches, bets = await sport_rows(session, node_id)
         construct = await session.get(ConstructRow, node_id)
         made = list(await session.scalars(select(ConstructRow).where(ConstructRow.maker_entity_id == node_id).order_by(ConstructRow.entity_id)))
+        bodies_ids = [row.entity_id for row in [*([construct] if construct is not None else []), *made]]
+        wills = {row.node_id: row.will for row in await session.scalars(select(MindProfileRow).where(MindProfileRow.node_id.in_(bodies_ids)))}
         instructions = list(
             await session.scalars(
                 select(InstructionSetRow)
@@ -384,8 +388,8 @@ async def node_pursuits(services: ServicesDep, node_id: NodeId) -> PursuitsNodeV
                 )
                 for row in bets
             ],
-            as_construct=construct_view(construct, refs) if construct is not None else None,
-            made=[construct_view(row, refs) for row in made],
+            as_construct=construct_view(construct, refs, wills) if construct is not None else None,
+            made=[construct_view(row, refs, wills) for row in made],
             instructions=[set_view(row, orders, refs) for row in instructions],
             remade=RemadeView(
                 mortal=ref(refs, remade.mortal_entity_id),

@@ -25,7 +25,7 @@ class SetDream(MortalTarget):
     target_id: int | None = None
     progress: int = Field(default=0, ge=0, le=PERCENT)
     state: DreamState = DreamState.PURSUING
-    hold: bool = False
+    hold: bool = True
 
 
 class AddWant(MortalTarget):

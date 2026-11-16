@@ -72,6 +72,15 @@ export const DIMENSION_LOOK: Record<DimensionKind, DimensionLook> = {
     sparkle: 0.6,
     halo: 0.35,
   },
+  made: {
+    core: '--structure-reflection',
+    body: '--dimension-mirror',
+    edge: '--dimension-prime',
+    pattern: 'lattice',
+    turbulence: 0.1,
+    sparkle: 0.2,
+    halo: 0.6,
+  },
   bubble_universe: {
     core: '--galaxy-core',
     body: '--structure-bubble',

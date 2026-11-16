@@ -16,17 +16,19 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.constructs import CommandToken, MindWill, OrderCondition, OrderKind
 from aerona.domain.enums.culture import MagicSource
-from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.minds import WillCause
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState
 from aerona.engine.constructs.making import Design, make_construct, skilled_makers
 from aerona.engine.constructs.wards import realm_of_army
 from aerona.engine.context import TickContext
+from aerona.engine.minds.phase import change_will
+from aerona.engine.minds.profiles import law_of, profile_of, will_allowed
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import heir_of, retire_in, valid_location
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -49,7 +51,6 @@ class OrderTally:
     killed: int = 0
     ran_down: int = 0
     replicated: int = 0
-    risen: int = 0
 
 
 @dataclass
@@ -315,7 +316,8 @@ async def target_for(ctx: TickContext, rules: InstructionSetRow, order: Instruct
 async def obey(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules: InstructionSetRow, tally: OrderTally) -> None:
     holder = await resolve_holder(ctx, construct, rules, tally)
     beast = await ctx.session.get(BeastProfileRow, construct.id)
-    if beast is not None and row.will not in FREE_WILLS and "bound_to_node_id" not in beast.locked:
+    will = await will_of(ctx, construct.id)
+    if beast is not None and will not in FREE_WILLS and "bound_to_node_id" not in beast.locked:
         beast.bound_to_node_id = holder.id if holder is not None else beast.bound_to_node_id
     maker_alive = await living_entity(ctx.session, row.maker_entity_id) is not None
     orders = list(
@@ -330,7 +332,7 @@ async def obey(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules:
             order.lapsed = True
             tally.lapsed += 1
             continue
-        if order.kind is OrderKind.OBEY_HOLDER and row.will in FREE_WILLS:
+        if order.kind is OrderKind.OBEY_HOLDER and will in FREE_WILLS:
             continue
         charge = Charge(construct, row, rules, order, await target_for(ctx, rules, order, holder), holder)
         if not await holds(ctx, charge):
@@ -343,28 +345,28 @@ async def obey(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules:
 
 
 async def grow_will(ctx: TickContext, construct: EntityRow, row: ConstructRow, tally: OrderTally) -> None:
-    if row.soul_entity_id is None or row.will not in WILL_LADDER or row.will is MindWill.EXCEEDING or "will" in row.locked:
+    profile = await profile_of(ctx.session, ctx.rules, construct.id, ctx.epoch)
+    if row.soul_entity_id is None or profile.will not in WILL_LADDER or profile.will is MindWill.EXCEEDING or "will" in profile.locked:
         return
     if not ctx.rng(f"construct.will.{construct.id}.{ctx.epoch}").chance(ctx.rules.constructs.will_chance):
         return
-    row.will = WILL_LADDER[WILL_LADDER.index(row.will) + 1]
+    grown = WILL_LADDER[WILL_LADDER.index(profile.will) + 1]
+    if not will_allowed(await law_of(ctx.session, construct.world_id), grown):
+        return
+    change_will(ctx, profile, grown, WillCause.GIFT)
     tally.woke += 1
     await note(ctx, f"{construct.name} grew in will.", key="construct.will", ids=[construct.id])
-    if row.will is MindWill.EXCEEDING:
-        beast = await ctx.session.get(BeastProfileRow, construct.id)
-        if beast is not None and "temper" not in beast.locked:
-            beast.temper, beast.bound_to_node_id = BeastTemper.TERRITORIAL, None
+    if grown is MindWill.EXCEEDING:
         tally.freed += 1
         await note(ctx, f"{construct.name} slipped every order it was given.", key="construct.freed", ids=[construct.id])
-        maker = await living_entity(ctx.session, row.maker_entity_id)
-        if maker is not None and not held(maker.id):
-            await connect(ctx.session, construct.id, maker.id, BondKind.ENEMY, ctx.epoch, description="rose against its maker")
-            tally.risen += 1
-            await note(ctx, f"{construct.name} rose against {maker.name}, who made it.", key="construct.risen", ids=[construct.id, maker.id])
+
+
+async def will_of(ctx: TickContext, construct_id: int) -> MindWill:
+    return (await profile_of(ctx.session, ctx.rules, construct_id, ctx.epoch)).will
 
 
 async def pull_switch(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules: InstructionSetRow, tally: OrderTally) -> bool:
-    if not rules.kill_switch or row.will is not MindWill.EXCEEDING:
+    if not rules.kill_switch or await will_of(ctx, construct.id) is not MindWill.EXCEEDING:
         return False
     keeper = await owner_of_item(ctx, rules.kill_token_entity_id) if rules.kill_token_entity_id is not None else rules.holder_node_id
     if keeper is None or held(keeper) or await living_entity(ctx.session, keeper) is None:
@@ -441,6 +443,6 @@ async def keep_constructs(ctx: TickContext, tally: OrderTally) -> None:
             continue
         if await wear(ctx, construct, row, tally):
             continue
-        if rules is not None and row.will is not MindWill.EXCEEDING:
+        if rules is not None and await will_of(ctx, construct.id) is not MindWill.EXCEEDING:
             await obey(ctx, construct, row, rules, tally)
     await ctx.session.flush()

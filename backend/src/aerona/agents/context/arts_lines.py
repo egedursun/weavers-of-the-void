@@ -9,6 +9,7 @@ from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.sacred import BirthSignRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.arts import ForgeryStatus
@@ -62,7 +63,9 @@ async def body_lines(scope: Scope, me: EntityRow) -> list[str]:
         .limit(LIST_LINES)
     ):
         construct = await session.get(ConstructRow, body.id)
-        state = f": power {construct.power}, decay {construct.decay}, will {words(construct.will.value)}" if construct is not None else ""
+        mind = await session.get(MindProfileRow, body.id)
+        will = words(mind.will.value) if mind is not None else "unknown"
+        state = f": power {construct.power}, decay {construct.decay}, will {will}" if construct is not None else ""
         found.append(f"{body.name} (construct {body.id}) answers you through its {words(rules.command_token.value)}{state}")
     return found
 
@@ -124,7 +127,9 @@ async def son_arts_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(ConstructRow.power.desc())
         .limit(LIST_LINES)
     ):
-        found.append(f"{body.name} (construct {body.id}): power {construct.power}, decay {construct.decay}, will {words(construct.will.value)}")
+        mind = await session.get(MindProfileRow, body.id)
+        will = words(mind.will.value) if mind is not None else "unknown"
+        found.append(f"{body.name} (construct {body.id}): power {construct.power}, decay {construct.decay}, will {will}")
     for row, beast in await session.execute(
         select(MonsterContractRow, EntityRow)
         .join(EntityRow, EntityRow.id == MonsterContractRow.beast_entity_id)

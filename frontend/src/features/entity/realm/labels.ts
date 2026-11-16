@@ -1,4 +1,8 @@
 import {
+  Server,
+  Boxes,
+  Copy,
+  Bot,
   Anchor,
   Baby,
   BadgeCheck,
@@ -227,6 +231,14 @@ export const LAW_KINDS: Record<string, string> = {
   protected_waters: 'Protected waters',
   catch_quota: 'Catch quota',
   gear_ban: 'Gear ban',
+  mind_status: 'Standing of made minds',
+  copy_law: 'Copying of minds',
+  copy_succession: 'Succession among copies',
+  erasure_law: 'Ending a made mind',
+  augment_law: 'Augmentation',
+  network_law: 'Networks',
+  surveillance_law: 'Surveillance',
+  provision_law: 'Provision of goods',
 }
 
 export const LAW_PARAMS: Record<string, string> = {
@@ -255,6 +267,7 @@ export const LAW_PARAMS: Record<string, string> = {
   guild_id: 'Guild',
   monopoly: 'Monopoly',
   level: 'Level',
+  banned_method: 'Banned method',
   son_id: 'Banned god',
   wergild_allowed: 'Wergild allowed',
   automatic: 'Automatic',
@@ -433,6 +446,36 @@ export const CLAUSES: Record<string, Named> = {
   fleet_limit: {
     label: 'Fleet limit',
     icon: Ship,
+    tone: 'info',
+  },
+  autonomous_weapons_ban: {
+    label: 'No instructed weapons',
+    icon: Bot,
+    tone: 'warning',
+  },
+  mind_seizure_ban: {
+    label: 'No seizing of minds or machines',
+    icon: Cpu,
+    tone: 'warning',
+  },
+  soldier_copy_ban: {
+    label: 'No copied soldiers',
+    icon: Copy,
+    tone: 'warning',
+  },
+  replicator_weapon_ban: {
+    label: 'No self-making weapons',
+    icon: Boxes,
+    tone: 'danger',
+  },
+  civil_network_shield: {
+    label: 'Civil networks spared',
+    icon: Network,
+    tone: 'info',
+  },
+  civil_host_shield: {
+    label: 'Hosts of realms spared',
+    icon: Server,
     tone: 'info',
   },
 }

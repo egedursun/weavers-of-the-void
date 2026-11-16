@@ -1,5 +1,7 @@
 import { type ReactNode, useId } from 'react'
 import {
+  Network,
+  BrainCircuit,
   Cloudy,
   Droplets,
   Globe,
@@ -368,6 +370,95 @@ export function FirstWorldFields({ draft, update, options }: StepProps) {
             onChange={(prehistoryEpochs) => update({ prehistoryEpochs })}
           />
         </Part>
+      </div>
+    </SettingGroup>
+  )
+}
+
+function MindPart({
+  icon,
+  title,
+  hint,
+  value,
+  fallback,
+  lowLabel,
+  highLabel,
+  onChange,
+}: {
+  icon: LucideIcon
+  title: string
+  hint: string
+  value: number | null
+  fallback: number
+  lowLabel: string
+  highLabel: string
+  onChange: (value: number | null) => void
+}) {
+  const set = value !== null
+  return (
+    <Part
+      icon={icon}
+      title={title}
+      hint={set ? hint : `${SEED_LABEL}.`}
+      action={
+        <label className='flex items-center gap-2'>
+          <Text as='span' variant='caption' tone='muted'>
+            Set it yourself
+          </Text>
+          <Switch
+            aria-label={`Set ${title.toLowerCase()} yourself`}
+            checked={set}
+            onCheckedChange={(on) => onChange(on ? fallback : null)}
+          />
+        </label>
+      }
+    >
+      {set && (
+        <RangeField
+          label={title}
+          icon={icon}
+          hint={hint}
+          value={value}
+          min={0}
+          max={PERCENT_MAX}
+          level={`${value} of 100`}
+          lowLabel={lowLabel}
+          highLabel={highLabel}
+          onChange={onChange}
+        />
+      )}
+    </Part>
+  )
+}
+
+export function MindsFields({ draft, update }: StepProps) {
+  return (
+    <SettingGroup
+      label='Minds'
+      description='Two choices: how common made minds are, with the law of whether they may have a will, and how far networks reach at the start.'
+    >
+      <div className='flex min-w-0 flex-col gap-5 rounded-xl border bg-muted/20 p-4'>
+        <MindPart
+          icon={BrainCircuit}
+          title='Made minds'
+          hint='How many works hold a made mind at the start; none means no made mind may have a will.'
+          value={draft.madeMinds}
+          fallback={50}
+          lowLabel='No will in made minds'
+          highLabel='Made minds everywhere'
+          onChange={(madeMinds) => update({ madeMinds })}
+        />
+        <Separator />
+        <MindPart
+          icon={Network}
+          title='Reach of networks'
+          hint='How far networks reach between the towns of each realm at the start, carried as its technology allows.'
+          value={draft.informationReach}
+          fallback={30}
+          lowLabel='No networks'
+          highLabel='Every town joined'
+          onChange={(informationReach) => update({ informationReach })}
+        />
       </div>
     </SettingGroup>
   )

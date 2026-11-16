@@ -49,3 +49,4 @@ class CreationBaseCostRules:
     equipment_model: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of forging an equipment model")
     dish: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of giving a dish")
     building_type: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of drawing a building type")
+    network: int = rule(20, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of founding a network")

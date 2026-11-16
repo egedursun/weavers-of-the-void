@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react'
 import {
+  Wifi,
   Scroll,
   Biohazard,
   BookOpen,
@@ -110,6 +111,7 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   rings: Wheat,
   centrality: Store,
   nutrients: Sprout,
+  networks: Wifi,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {

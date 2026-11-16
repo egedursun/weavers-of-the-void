@@ -101,6 +101,14 @@ BOND_KINDS: dict[BondKind, BondKindSpec] = {
         BondKindSpec(BondKind.FIXED_IN, "is fixed in", MECHANICAL),
         BondKindSpec(BondKind.ADHERENT_OF, "adheres to", MECHANICAL),
         BondKindSpec(BondKind.PRACTISES, "practises", MECHANICAL),
+        BondKindSpec(BondKind.COPY_OF, "copy of", MECHANICAL),
+        BondKindSpec(BondKind.MERGED_INTO, "merged into", MECHANICAL),
+        BondKindSpec(BondKind.DIVIDED_FROM, "divided from", MECHANICAL),
+        BondKindSpec(BondKind.TRANSFERRED_FROM, "moved from the seat of", MECHANICAL),
+        BondKindSpec(BondKind.RESTORED_FROM, "restored from", MECHANICAL),
+        BondKindSpec(BondKind.MADE_MIND_OF, "made the mind of", MECHANICAL),
+        BondKindSpec(BondKind.HOSTED_BY, "hosted by", MECHANICAL),
+        BondKindSpec(BondKind.LINKED_WITH, "linked with", MECHANICAL),
     )
 }
 

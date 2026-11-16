@@ -122,6 +122,7 @@ DIMENSION_KINDS: MappingProxyType[DimensionKind, KindSpec] = MappingProxyType(
         DimensionKind.UNDERWORLD: KindSpec("Underworld", "A realm of the dead."),
         DimensionKind.DIVINE_DOMAIN: KindSpec("Divine domain", "A plane that belongs to one god."),
         DimensionKind.VOID_BETWEEN: KindSpec("Void between", "The empty dark between the dimensions."),
+        DimensionKind.MADE: KindSpec("Made realm", "A realm made by someone and kept running by what hosts it."),
     }
 )
 

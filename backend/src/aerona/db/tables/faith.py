@@ -21,6 +21,7 @@ from aerona.domain.enums.faith import (
     TenetKind,
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.made import MadeMindStance, RelicStance
 
 
 class CultDoctrineRow(Base):
@@ -49,6 +50,11 @@ class CultDoctrineRow(Base):
     excommunicated: Mapped[list[int]] = mapped_column(JSON, default=list)
     rebirth_path: Mapped[RebirthPath] = mapped_column(enum_type(RebirthPath, "rebirth_path"), default=RebirthPath.PEOPLE)
     updated_epoch: Mapped[int] = mapped_column(default=0)
+    made_mind_stance: Mapped[MadeMindStance] = mapped_column(enum_type(MadeMindStance, "made_mind_stance"), default=MadeMindStance.SILENT)
+    copy_stance: Mapped[MadeMindStance] = mapped_column(enum_type(MadeMindStance, "copy_stance"), default=MadeMindStance.SILENT)
+    augment_stance: Mapped[MadeMindStance] = mapped_column(enum_type(MadeMindStance, "augment_stance"), default=MadeMindStance.SILENT)
+    made_afterlife_stance: Mapped[MadeMindStance] = mapped_column(enum_type(MadeMindStance, "made_afterlife_stance"), default=MadeMindStance.SILENT)
+    relic_stance: Mapped[RelicStance] = mapped_column(enum_type(RelicStance, "relic_stance"), default=RelicStance.HERITAGE)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

@@ -37,7 +37,7 @@ import { Label, Muted, Text } from '@/components/typography'
 import { ImageStylePicker } from '@/features/images/ImageStylePicker'
 import { romanNumeral } from '@/features/pantheon/labels'
 import { Counter } from './Counter'
-import { CosmosFields, FirstWorldFields } from './WorldShapeFields'
+import { CosmosFields, FirstWorldFields, MindsFields } from './WorldShapeFields'
 import {
   type LanguageTexture,
   type LoreLanguage,
@@ -429,6 +429,12 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           onChange={(value) => update({ technology: value })}
         />
       </SettingGroup>
+      <MindsFields
+        draft={draft}
+        update={update}
+        options={options}
+        peoplesMax={peoplesMax}
+      />
       <SettingGroup
         label='Texture of the language'
         description='How the names and words of the world sound.'

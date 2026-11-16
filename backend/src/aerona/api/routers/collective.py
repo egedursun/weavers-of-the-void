@@ -251,6 +251,7 @@ async def account_views(session: AsyncSession, node_id: int, clock: Clock) -> li
                 distance=distance_from_truth(row, [stance.stance for stance in own]),
                 revised_from_id=row.revised_from_id,
                 defaced=row.defaced,
+                authenticity=row.authenticity,
                 epoch=row.epoch,
                 dated=await render_date(session, row.holder_entity_id, clock.year_of(row.epoch)),
                 stances=[AccountStanceView(node=refs[stance.node_id], stance=stance.stance) for stance in own if stance.node_id in refs],

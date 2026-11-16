@@ -572,6 +572,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.network_nodes",
     "table.novelty_stocks",
     "table.occupations",
     "table.offices",

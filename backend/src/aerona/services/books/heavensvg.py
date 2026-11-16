@@ -153,6 +153,7 @@ DIMENSION_INK: dict[DimensionKind, str] = {
     DimensionKind.CLOCKWORK: "#d8b060",
     DimensionKind.CHAOS: "#ff6ad0",
     DimensionKind.UNDERWORLD: "#7a6aa0",
+    DimensionKind.MADE: "#8fd8ff",
     DimensionKind.DIVINE_DOMAIN: "#ffd870",
     DimensionKind.VOID_BETWEEN: "#4a4068",
 }

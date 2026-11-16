@@ -199,6 +199,8 @@ class GenesisTemplate(StrEnum):
     ELECTRIC_AGE = "electric_age"
     INFORMATION_AGE = "information_age"
     ADVANCED_AGE = "advanced_age"
+    MADE_MINDS = "made_minds"
+    AFTER_ABUNDANCE = "after_abundance"
 
 
 class ImageStyle(StrEnum):

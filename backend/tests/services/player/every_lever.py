@@ -32,6 +32,7 @@ from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import CurrencyRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import DeferredStepRow, EpochRow
+from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.gatherings import CollectionRow
@@ -3474,8 +3475,8 @@ ARTS_EDITS: Mapping[str, Mapping[str, Any]] = {
         "upkeep": 4,
         "maker_entity_id": Pick(MORTAL),
         "decay": 20,
-        "will": "emergent",
         "soul_entity_id": None,
+        "will": "emergent",
     },
     "instruction_set:edit": {
         "binding": "oath",
@@ -4446,5 +4447,48 @@ LEVERS.update(
         "deep_seal:delete": after(SEALED, seal_id=Newest("deep_seals")),
         "novelty:set": after(FORM, holder_id=Newest(EntityType.ART_FORM), values=FASHION, release=[]),
         "novelty:delete": after(FORM, FASHIONED, holder_id=Newest(EntityType.ART_FORM)),
+    }
+)
+
+
+async def chartered_company(session: AsyncSession) -> None:
+    faction = await session.scalar(
+        select(EntityRow.id).where(EntityRow.entity_type == EntityType.FACTION, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1)
+    )
+    assert faction is not None
+    if await session.get(CompanyProfileRow, faction) is None:
+        session.add(CompanyProfileRow(faction_entity_id=faction, locked=[]))
+    await session.flush()
+
+
+NETWORK = Newest(EntityType.NETWORK)
+NETWORK_UP = ("network:found", {"name": "The Coast Relay", "carrier": "relay", "owner_id": Pick(MORTAL), "place_id": Pick(TOWN)})
+NETWORK_TOO = ("network:found", {"name": "The Hill Relay", "carrier": "wired", "owner_id": Pick(MORTAL, 1), "place_id": Pick(TOWN, 1)})
+AUGMENT_UP = ("augment:install", {"bearer_id": Pick(MORTAL), "slot": "whole_body", "kind": "enhancement", "make": "made", "quality": 50})
+EFFECT_UP = ("augment:effect", {"augment_id": Newest("augments"), "target": "skill", "key": "engineering", "amount": 10})
+STORE_UP = ("data_store:open", {"holder_id": Pick(MORTAL), "owner_id": Pick(MORTAL), "security": 30})
+CONTENT_UP = ("data_store:put", {"store_id": Newest("data_stores"), "content": "secret", "subject_id": Pick(MORTAL, 1)})
+LINE_UP = ("replicator:found", {"name": "The Grey Line", "place_id": Pick(EntityType.REGION), "owner_id": Pick(MORTAL)})
+SAVED_UP = ("mind:save", {"mind_id": Pick(MORTAL), "holder_id": Pick(MORTAL, 1), "owner_id": Pick(MORTAL, 1), "medium": "record"})
+MINDS_EDITS: Mapping[str, Mapping[str, Any]] = {"augment:edit_effect": {"target": "capacity", "target_key": "grasp", "amount": 15}}
+EDITS = {**EDITS, **MINDS_EDITS}
+LEVERS.update(
+    {
+        "augment:install": given(bearer_id=Pick(MORTAL), slot="whole_body", kind="enhancement", make="made", quality=50),
+        "augment:remove": after(AUGMENT_UP, augment_id=Newest("augments")),
+        "augment:effect": after(AUGMENT_UP, augment_id=Newest("augments"), target="skill", key="engineering", amount=10),
+        "augment:edit_effect": after(AUGMENT_UP, EFFECT_UP, effect_id=Newest("augment_effects"), values=MINDS_EDITS["augment:edit_effect"], release=[]),
+        "augment:drop_effect": after(AUGMENT_UP, EFFECT_UP, effect_id=Newest("augment_effects")),
+        "network:join": after(NETWORK_UP, network_id=NETWORK, member_id=Pick(TOWN, 2), role="end"),
+        "network:link": after(NETWORK_UP, NETWORK_TOO, first_id=Newest(EntityType.NETWORK), second_id=Pick(EntityType.NETWORK)),
+        "network:cut": after(NETWORK_UP, network_id=NETWORK, cause="storm", epochs=1, severity=40),
+        "data_store:put": after(STORE_UP, store_id=Newest("data_stores"), content="secret", subject_id=Pick(MORTAL, 1)),
+        "data_store:take": after(STORE_UP, CONTENT_UP, content_id=Newest("data_store_contents")),
+        "company:hold": setup_then(chartered_company, company_id=Pick(EntityType.FACTION), holding_id=Pick(TOWN), kind="structure"),
+        "replicator:stop": after(LINE_UP, line_id=Newest("replicator_lines")),
+        "replicator:seed": after(LINE_UP, line_id=Newest("replicator_lines"), place_id=Pick(EntityType.REGION, 1), mass=5),
+        "replicator:lift": after(LINE_UP, presence_id=Newest("replicator_presence")),
+        "mind:restore": after(SAVED_UP, state_id=Newest("mind_states")),
+        "salvage:open": given(site_id=Pick(TOWN), holder_id=Pick(MORTAL), yield_left=40),
     }
 )

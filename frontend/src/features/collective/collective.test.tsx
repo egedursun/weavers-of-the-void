@@ -205,6 +205,7 @@ describe('crowds, memory, customs and craft', () => {
           distance: 68,
           revised_from_id: 9,
           defaced: false,
+          authenticity: 'genuine',
           epoch: 6,
           dated: 'the 2nd year of the reign of Brannoc',
           stances: [{ node: KING, stance: 'vilify' }],

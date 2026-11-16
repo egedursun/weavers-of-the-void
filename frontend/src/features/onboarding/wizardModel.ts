@@ -59,6 +59,8 @@ export type WizardDraft = {
   climateEra: ClimateEra | null
   worldAge: WorldAge | null
   prehistoryEpochs: number | null
+  madeMinds: number | null
+  informationReach: number | null
   peoples: number
   firstSons: Rarity[] | null
   imageStyle: ImageStyle
@@ -94,6 +96,8 @@ export function initialDraft(defaults: WizardDefaults): WizardDraft {
     climateEra: null,
     worldAge: null,
     prehistoryEpochs: null,
+    madeMinds: null,
+    informationReach: null,
     peoples: defaults.peoples,
     firstSons: null,
     imageStyle: DEFAULT_IMAGE_STYLE,
@@ -136,6 +140,8 @@ export function applyTemplate(
     moisturePct: null,
     climateEra: template.climate_era ?? null,
     worldAge: template.world_age ?? null,
+    madeMinds: template.made_minds ?? null,
+    informationReach: template.information_reach ?? null,
     peoples: template.peoples,
   }
 }
@@ -253,6 +259,8 @@ export function toRequest(
       climate_era: draft.climateEra,
       world_age: draft.worldAge,
       prehistory_epochs: draft.prehistoryEpochs,
+      made_minds: draft.madeMinds,
+      information_reach: draft.informationReach,
       peoples: draft.peoples,
       tone: draft.tone.trim() || null,
       seed: draft.seed.trim(),

@@ -16,11 +16,12 @@ from aerona.db.tables.contracts import CONTRACT_FIELDS, MonsterContractRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.sacred import SIGN_FIELDS, BirthSignRow
-from aerona.domain.enums.constructs import CommandToken, ContractStatus, OrderCondition, OrderKind
+from aerona.domain.enums.constructs import CommandToken, ContractStatus, MindWill, OrderCondition, OrderKind
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faith import BindingKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.minds import WillCause
 from aerona.engine.collective.control import of_type, saved
 from aerona.engine.constructs.making import Design, make_construct
 from aerona.engine.constructs.orders import holder_of, unmake
@@ -30,6 +31,8 @@ from aerona.engine.cycles.control import node_exists
 from aerona.engine.divine.control import apply
 from aerona.engine.ecology.contracts import open_contract
 from aerona.engine.gatherings.control import Values, allowed, found
+from aerona.engine.minds.phase import change_will
+from aerona.engine.minds.profiles import profile_of
 from aerona.engine.sacred.astrology import SignTally, sign_birth
 
 MORTALS = frozenset({EntityType.MORTAL})
@@ -151,8 +154,21 @@ EDITABLE: dict[str, tuple[type[Base], tuple[str, ...], str]] = {
 }
 
 
+async def set_construct_will(ctx: TickContext, construct_id: int, values: Values, release: list[str]) -> None:
+    profile = await profile_of(ctx.session, ctx.rules, construct_id, ctx.epoch)
+    if "will" in values:
+        change_will(ctx, profile, MindWill(values["will"]), WillCause.GIFT)
+        profile.locked = sorted({*profile.locked, "will"})
+    if "will" in release:
+        profile.locked = [item for item in profile.locked if item != "will"]
+
+
 async def edit_record(ctx: TickContext, kind: str, key: object, values: Values, release: list[str]) -> Base:
     table, fields, label = EDITABLE[kind]
+    if kind == "construct" and ("will" in values or "will" in release):
+        await set_construct_will(ctx, int(str(key)), values, release)
+        values = {name: value for name, value in values.items() if name != "will"}
+        release = [name for name in release if name != "will"]
     row = apply(await found(ctx, table, key, label), allowed(values, fields, label), release)
     await ctx.session.flush()
     return row

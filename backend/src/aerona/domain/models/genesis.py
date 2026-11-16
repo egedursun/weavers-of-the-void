@@ -36,6 +36,8 @@ class GenesisSettings(ValueObject):
     climate_era: ClimateEra | None = None
     world_age: WorldAge | None = None
     prehistory_epochs: int = Field(default=0, ge=0, le=PREHISTORY_CEILING)
+    made_minds: int | None = Field(default=None, ge=0, le=PERCENT_CEILING)
+    information_reach: int | None = Field(default=None, ge=0, le=PERCENT_CEILING)
     tone: str | None = None
     seed_idea: str | None = None
 

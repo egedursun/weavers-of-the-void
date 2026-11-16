@@ -671,6 +671,17 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             (),
         ),
         EntityTypeSpec(
+            EntityType.NETWORK,
+            "Network",
+            "Networks",
+            "network",
+            None,
+            frozenset({EntityType.REGION, EntityType.SETTLEMENT, EntityType.STRUCTURE}),
+            False,
+            (StatField("reach", "Members reached", lambda rules: 0, lambda rules: 100000),),
+            (),
+        ),
+        EntityTypeSpec(
             EntityType.NATURAL_LAW,
             "Natural law",
             "Natural laws",
@@ -728,6 +739,7 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.EQUIPMENT_MODEL: lambda rules: rules.creation_base_cost.equipment_model,
     EntityType.DISH: lambda rules: rules.creation_base_cost.dish,
     EntityType.BUILDING_TYPE: lambda rules: rules.creation_base_cost.building_type,
+    EntityType.NETWORK: lambda rules: rules.creation_base_cost.network,
 }
 
 

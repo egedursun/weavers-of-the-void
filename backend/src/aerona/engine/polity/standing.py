@@ -1,4 +1,5 @@
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
@@ -13,6 +14,7 @@ from aerona.db.tables.faith import CultDoctrineRow, CultTenetRow
 from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.networks import NetworkNodeRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -334,8 +336,15 @@ async def administration(ctx: TickContext, book: RealmBook, realm: Realm, knowle
         + knowledge.level(core_id, KnowledgeBranch.WRITING) * table.per_writing_level
         + roads * table.per_road
     )
-    need = len(realm.territory) * table.land_weight + len(members) * table.member_weight
+    discount = ctx.rules.networks.admin_discount_pct
+    shares = [PERCENT - discount * await network_dependence(ctx.session, member.id) // PERCENT for member in members]
+    need = len(realm.territory) * table.land_weight + round_half_up(sum(shares) * table.member_weight / PERCENT)
     return capacity, need
+
+
+async def network_dependence(session: AsyncSession, member_id: int) -> int:
+    found = await session.scalar(select(func.max(NetworkNodeRow.dependency_pct)).where(NetworkNodeRow.member_node_id == member_id))
+    return int(found or 0)
 
 
 async def overreach(ctx: TickContext, book: RealmBook, realm: Realm, capacity: int, need: int) -> list[EntityRow]:

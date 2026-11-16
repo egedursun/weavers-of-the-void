@@ -1,4 +1,5 @@
 import {
+  Network,
   Bird,
   Flame,
   KeySquare,
@@ -28,6 +29,7 @@ export const MEDIUMS: Record<string, Named> = {
   dream: { label: 'Dream', icon: Moon, tone: 'verdigris' },
   bird: { label: 'Messenger bird', icon: Bird, tone: 'info' },
   magic_sending: { label: 'Magic sending', icon: Sparkles, tone: 'verdigris' },
+  network: { label: 'By network', icon: Network, tone: 'info' },
 }
 
 export const STATE_TONE: Record<string, Named['tone']> = {

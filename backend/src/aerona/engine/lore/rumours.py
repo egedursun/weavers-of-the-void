@@ -37,6 +37,7 @@ from aerona.engine.folkways.biases import lean_community
 from aerona.engine.lore.language import barrier
 from aerona.engine.lore.printing import printed
 from aerona.engine.mind.memories import remember
+from aerona.engine.networks.book import reach_pct
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
@@ -285,7 +286,9 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
             if target not in taverns:
                 taverns[target] = await tavern_of(ctx.session, target)
             tavern = taverns[target]
-            boost = ctx.rules.taverns.rumour_pct if tavern is not None else 0
+            boost = (ctx.rules.taverns.rumour_pct if tavern is not None else 0) + await reach_pct(
+                ctx.session, ctx.rules, target, ctx.epoch, kind="carries_opinion"
+            )
             if not ctx.rng(f"rumour.{rumour.incident_id}.{carrier.id}.{target}.{ctx.epoch}").chance(int(getattr(table, CHANCES[channel])) + boost):
                 continue
             if tavern is not None and "rumours" not in tavern.locked:

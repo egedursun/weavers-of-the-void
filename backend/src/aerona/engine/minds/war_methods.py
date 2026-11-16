@@ -1,0 +1,107 @@
+from sqlalchemy import select
+
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.constructs import InstructionOrderRow, InstructionSetRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.made import IntrusionRow, MadeRealmRow, ReplicatorLineRow, ReplicatorPresenceRow
+from aerona.db.tables.networks import NetworkProfileRow
+from aerona.db.tables.polity import PolityMemberRow, TreatyClauseRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.constructs import OrderKind
+from aerona.domain.enums.entity import MortalRole
+from aerona.domain.enums.made import IntrusionAim, ReplicatorOutput, ReplicatorStage
+from aerona.domain.enums.polity import ClauseKind
+from aerona.engine.context import TickContext
+
+WEAPON_ORDERS = frozenset({OrderKind.DESTROY, OrderKind.GUARD})
+METHOD_CLAUSES = frozenset(
+    {
+        ClauseKind.AUTONOMOUS_WEAPONS_BAN,
+        ClauseKind.MIND_SEIZURE_BAN,
+        ClauseKind.SOLDIER_COPY_BAN,
+        ClauseKind.REPLICATOR_WEAPON_BAN,
+        ClauseKind.CIVIL_NETWORK_SHIELD,
+        ClauseKind.CIVIL_HOST_SHIELD,
+    }
+)
+
+
+async def side_of(ctx: TickContext, party_id: int) -> set[int]:
+    members = set(await ctx.session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == party_id)))
+    return {party_id, *members}
+
+
+async def intruded(ctx: TickContext, actors: set[int], victims: set[int], aims: set[IntrusionAim], hosts: set[int] | None = None) -> bool:
+    statement = select(IntrusionRow).where(IntrusionRow.epoch == ctx.epoch, IntrusionRow.actor_node_id.in_(actors), IntrusionRow.aim.in_(aims))
+    for row in await ctx.session.scalars(statement):
+        target = row.target_node_id
+        if target is None:
+            continue
+        if hosts is not None:
+            if target in hosts:
+                return True
+            continue
+        owner = await ctx.session.get(NetworkProfileRow, target)
+        holder = owner.owner_node_id if owner is not None else None
+        entity = await ctx.session.get(EntityRow, target)
+        if target in victims or holder in victims or (entity is not None and entity.location_id in victims):
+            return True
+    return False
+
+
+async def copied_soldiers(ctx: TickContext, actors: set[int]) -> bool:
+    soldiers = select(EntityRow.id).where(
+        EntityRow.mortal_role.in_([MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.OFFICER]), EntityRow.affiliated_entity_id.in_(actors)
+    )
+    found = await ctx.session.scalar(
+        select(BondRow.id).where(BondRow.kind == BondKind.COPY_OF, BondRow.epoch == ctx.epoch, BondRow.target_node_id.in_(soldiers)).limit(1)
+    )
+    return found is not None
+
+
+async def armed_with_orders(ctx: TickContext, actors: set[int], victims: set[int]) -> bool:
+    sets = select(InstructionSetRow.id).where(InstructionSetRow.holder_node_id.in_(actors))
+    statement = select(InstructionOrderRow).where(
+        InstructionOrderRow.set_id.in_(sets), InstructionOrderRow.kind.in_(list(WEAPON_ORDERS)), InstructionOrderRow.lapsed.is_(False)
+    )
+    return any(order.target_node_id in victims for order in await ctx.session.scalars(statement))
+
+
+async def replicator_weapons(ctx: TickContext, actors: set[int], victims: set[int]) -> bool:
+    lines = select(ReplicatorLineRow.id).where(
+        ReplicatorLineRow.owner_node_id.in_(actors),
+        ReplicatorLineRow.output == ReplicatorOutput.DISASSEMBLY,
+        ReplicatorLineRow.stage.not_in([ReplicatorStage.STOPPED, ReplicatorStage.EXTINCT]),
+    )
+    regions = {town.location_id for town in await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_(victims))) if town.location_id is not None}
+    present = await ctx.session.scalar(
+        select(ReplicatorPresenceRow.id).where(ReplicatorPresenceRow.line_id.in_(lines), ReplicatorPresenceRow.place_node_id.in_(regions)).limit(1)
+    )
+    return present is not None
+
+
+async def civil_hosts(ctx: TickContext, victims: set[int]) -> set[int]:
+    return {
+        row.host_node_id
+        for row in await ctx.session.scalars(select(MadeRealmRow).where(MadeRealmRow.keeper_node_id.in_(victims)))
+        if row.host_node_id is not None
+    }
+
+
+async def method_breached(ctx: TickContext, clause: TreatyClauseRow) -> str | None:
+    if clause.kind not in METHOD_CLAUSES or clause.obligor_node_id is None or clause.beneficiary_node_id is None:
+        return None
+    actors, victims = await side_of(ctx, clause.obligor_node_id), await side_of(ctx, clause.beneficiary_node_id)
+    checks = {
+        ClauseKind.MIND_SEIZURE_BAN: (intruded(ctx, actors, victims, {IntrusionAim.SEIZE}), "it seized what the other side's minds and machines obeyed"),
+        ClauseKind.CIVIL_NETWORK_SHIELD: (intruded(ctx, actors, victims, {IntrusionAim.DENY}), "it cut a network the other side's people lived by"),
+        ClauseKind.CIVIL_HOST_SHIELD: (
+            intruded(ctx, actors, victims, {IntrusionAim.DENY, IntrusionAim.SEIZE, IntrusionAim.ALTER}, await civil_hosts(ctx, victims)),
+            "it struck what holds the other side's realm",
+        ),
+        ClauseKind.SOLDIER_COPY_BAN: (copied_soldiers(ctx, actors), "it copied its soldiers"),
+        ClauseKind.AUTONOMOUS_WEAPONS_BAN: (armed_with_orders(ctx, actors, victims), "it set instructed weapons on the other side"),
+        ClauseKind.REPLICATOR_WEAPON_BAN: (replicator_weapons(ctx, actors, victims), "it loosed self-making machines on the other side's lands"),
+    }
+    test, reason = checks[ClauseKind(clause.kind)]
+    return reason if await test else None

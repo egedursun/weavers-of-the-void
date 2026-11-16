@@ -226,6 +226,7 @@ class HomeLine(ContextItem):
     world_nature: list[str] = Field(default_factory=list)
     biology: list[str] = Field(default_factory=list)
     grounds: list[str] = Field(default_factory=list)
+    made_world: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

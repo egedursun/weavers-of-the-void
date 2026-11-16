@@ -22,8 +22,9 @@ class RowTarget(Command):
 
 
 class EditRow(RowTarget):
-    values: dict[str, JsonValue]
+    values: dict[str, JsonValue] = Field(default_factory=dict)
     hold: bool = False
+    release: list[str] = Field(default_factory=list)
 
 
 class CreateRow(Command):
@@ -100,6 +101,8 @@ async def edit_row(scope: PlayerScope, command: EditRow) -> Effect:
     for column, value in command.values.items():
         setattr(row, column, value_for(mapper, column, value))
     owner = owner_of(mapper, row)
+    if command.release and LOCK_COLUMN in mapper.columns:
+        setattr(row, LOCK_COLUMN, sorted(held_columns(row) - set(command.release)))
     if command.hold:
         if LOCK_COLUMN in mapper.columns:
             setattr(row, LOCK_COLUMN, sorted(held_columns(row) | set(command.values)))
@@ -108,7 +111,8 @@ async def edit_row(scope: PlayerScope, command: EditRow) -> Effect:
                 await pin_profile(scope, owner, profile_key(str(mapper.class_.__tablename__), column))
     await flushed(scope, label(mapper))
     held = " and held" if command.hold else ""
-    return Effect(f"A row of {label(mapper)} was reshaped{held}.", target_node_id=owner)
+    freed = ", and let follow the world again" if command.release else ""
+    return Effect(f"A row of {label(mapper)} was reshaped{held}{freed}.", target_node_id=owner)
 
 
 @player_action("record_row:delete", ActionKind.EDIT_RECORD)

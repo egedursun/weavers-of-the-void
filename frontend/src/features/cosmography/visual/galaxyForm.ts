@@ -305,6 +305,7 @@ export const DIMENSION_TOKEN: Record<DimensionKind, string> = {
   parallel: '--dimension-material',
   mirror: '--dimension-mirror',
   pocket: '--dimension-material',
+  made: '--dimension-material',
   bubble_universe: '--dimension-material',
   brane: '--dimension-material',
   higher_dimensional: '--dimension-astral',

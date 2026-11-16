@@ -36,6 +36,7 @@ from aerona.domain.enums.body import (
 )
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
@@ -46,6 +47,7 @@ from aerona.engine.body.hits import Armour
 from aerona.engine.lore.arms import guard_of, held_profiles
 from aerona.engine.mortal.equipment import worn_coverage
 from aerona.engine.mortal.variants import strength, variants_by_id
+from aerona.engine.primitives.augment_bonus import bonus
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.queries import active_bonds, living_entity
@@ -428,9 +430,10 @@ async def function_level(session: AsyncSession, rules: Rules, node_id: int | Non
 
 
 async def function_unhindered(session: AsyncSession, rules: Rules, node_id: int, function: BodyFunction) -> int:
+    lift = await bonus(session, node_id, EffectTarget.CAPACITY, function.value)
     if await session.get(BodyRow, node_id) is None:
-        return PERCENT
-    return await function_level(session, rules, node_id, function)
+        return PERCENT + max(0, lift)
+    return max(0, await function_level(session, rules, node_id, function) + lift)
 
 
 async def perception_of(session: AsyncSession, rules: Rules, mortal: EntityRow) -> float:

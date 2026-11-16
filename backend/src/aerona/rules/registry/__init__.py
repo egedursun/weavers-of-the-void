@@ -47,6 +47,7 @@ from aerona.rules.registry.arts import (
     SportRules,
 )
 from aerona.rules.registry.ascension import AscensionRules
+from aerona.rules.registry.augments import AugmentRules
 from aerona.rules.registry.awakening import AwakeningRules
 from aerona.rules.registry.backup import BackupRules
 from aerona.rules.registry.balance import BalanceRules
@@ -376,6 +377,18 @@ from aerona.rules.registry.made_kinds import (
     UnitTypeRules,
     VehicleRules,
 )
+from aerona.rules.registry.made_world import (
+    AbundanceRules,
+    CompanyPowerRules,
+    InformationRules,
+    IntrusionRules,
+    MadePeopleRules,
+    MadeRealmRules,
+    MadeRelicRules,
+    MindLawRules,
+    ReplicatorRules,
+    SurveillanceRules,
+)
 from aerona.rules.registry.market import MarketRules
 from aerona.rules.registry.markets import BankingRules, MarketsRules, MoneyRules, TollsRules, TradeRoutesRules
 from aerona.rules.registry.materials import MaterialsRules
@@ -425,6 +438,7 @@ from aerona.rules.registry.mind import (
     ThoughtsRules,
     TraitsRules,
 )
+from aerona.rules.registry.minds import ContinuityRules, InterfaceRules, MindAwakeningRules, MindMakingRules, MindRules, MindWillRules
 from aerona.rules.registry.model import ModelRules
 from aerona.rules.registry.modifiers import IncidentRules, ModifiersRules
 from aerona.rules.registry.monsters import CreatureAnatomyRules, MonstersRules
@@ -454,6 +468,7 @@ from aerona.rules.registry.nature import (
     SymbiosisRules,
     ThermoregulationRules,
 )
+from aerona.rules.registry.networks import NetworkRules
 from aerona.rules.registry.notifications import NotificationsRules
 from aerona.rules.registry.operations import (
     AdmiraltyRules,
@@ -1024,6 +1039,24 @@ class Rules:
     closures: ClosureRules = field(default_factory=ClosureRules)
     fashion: FashionRules = field(default_factory=FashionRules)
     loops: LoopRules = field(default_factory=LoopRules)
+    minds: MindRules = field(default_factory=MindRules)
+    mind_making: MindMakingRules = field(default_factory=MindMakingRules)
+    mind_awakening: MindAwakeningRules = field(default_factory=MindAwakeningRules)
+    mind_will: MindWillRules = field(default_factory=MindWillRules)
+    continuity: ContinuityRules = field(default_factory=ContinuityRules)
+    interfaces: InterfaceRules = field(default_factory=InterfaceRules)
+    networks: NetworkRules = field(default_factory=NetworkRules)
+    augments: AugmentRules = field(default_factory=AugmentRules)
+    made_realms: MadeRealmRules = field(default_factory=MadeRealmRules)
+    intrusion: IntrusionRules = field(default_factory=IntrusionRules)
+    surveillance: SurveillanceRules = field(default_factory=SurveillanceRules)
+    information: InformationRules = field(default_factory=InformationRules)
+    company_power: CompanyPowerRules = field(default_factory=CompanyPowerRules)
+    replicators: ReplicatorRules = field(default_factory=ReplicatorRules)
+    abundance: AbundanceRules = field(default_factory=AbundanceRules)
+    made_relics: MadeRelicRules = field(default_factory=MadeRelicRules)
+    made_peoples: MadePeopleRules = field(default_factory=MadePeopleRules)
+    mind_law: MindLawRules = field(default_factory=MindLawRules)
     fossils: FossilRules = field(default_factory=FossilRules)
     museums: MuseumRules = field(default_factory=MuseumRules)
     gardens: GardenRules = field(default_factory=GardenRules)

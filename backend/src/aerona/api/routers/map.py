@@ -55,6 +55,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import SpeciesTraitRow
 from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
+from aerona.db.tables.networks import NetworkNodeRow, NetworkProfileRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import PolityTerritoryRow
 from aerona.db.tables.settlement import DistrictRow
@@ -589,7 +590,28 @@ async def region_stocks(session: AsyncSession, world_id: int) -> dict[int, Regio
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0}).update(values)
     for region, values in (await agrarian_by_region(session, world_id, atlas)).items():
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0}).update(values)
+    for region, count in (await networks_by_region(session, world_id, atlas)).items():
+        totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["networks"] = count
     return {region: RegionStocks(**values) for region, values in totals.items()}
+
+
+async def networks_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, int]:
+    reached: dict[int, set[int]] = {}
+    members = (
+        select(NetworkNodeRow.network_entity_id, EntityRow.id)
+        .join(EntityRow, EntityRow.id == NetworkNodeRow.member_node_id)
+        .where(EntityRow.world_id == world_id)
+    )
+    anchors = (
+        select(NetworkProfileRow.network_entity_id, EntityRow.id)
+        .join(EntityRow, EntityRow.id == NetworkProfileRow.network_entity_id)
+        .where(EntityRow.world_id == world_id)
+    )
+    for network, place in [*(await session.execute(members)).all(), *(await session.execute(anchors)).all()]:
+        region = atlas.top_region(place)
+        if region is not None:
+            reached.setdefault(region, set()).add(network)
+    return {region: len(networks) for region, networks in reached.items()}
 
 
 async def urban_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, dict[str, int]]:

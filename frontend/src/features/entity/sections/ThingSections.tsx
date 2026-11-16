@@ -24,6 +24,10 @@ import { LifecycleSection } from '@/features/lifecycle/LifecycleSection'
 import { WorldEndSection } from '@/features/lifecycle/WorldEndSection'
 import { MadeKindsSection } from '@/features/madeKinds/MadeKindsSection'
 import { MeansSection } from '@/features/means/MeansSection'
+import { AugmentsSection } from '@/features/minds/AugmentsSection'
+import { MadeWorldSection } from '@/features/minds/MadeWorldSection'
+import { MindSeatSection } from '@/features/minds/MindSeatSection'
+import { NetworkSection } from '@/features/minds/NetworkSection'
 import { NatureSection } from '@/features/nature/NatureSection'
 import { OperationsSection } from '@/features/operations/OperationsSection'
 import { OrdersSection } from '@/features/orders/OrdersSection'
@@ -75,10 +79,10 @@ export function ThingSections({
       <>
         <Muted variant='caption'>
           A made type is a design its makers draw, cook, forge, field or build.
-          It has no mind, household, purse, lands, offices, rule, magic or
-          tongue of its own, so those sections stay with the beings who make and
-          use it. Every record tied to it is still listed and editable under
-          Every record.
+          It has no mind, augments, networks, household, purse, lands, offices,
+          rule, magic or tongue of its own, so those sections stay with the
+          beings and things who make and use it. Every record tied to it is
+          still listed and editable under Every record.
         </Muted>
         <EntityMechanics
           nodeId={nodeId}
@@ -103,6 +107,10 @@ export function ThingSections({
       />
       <NameSection nodeId={nodeId} />
       <MindSplitSection nodeId={nodeId} />
+      <MindSeatSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <AugmentsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <NetworkSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <MadeWorldSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <FeelingsSection nodeId={nodeId} />
       <TastesSection nodeId={nodeId} />
       <EthicsSection nodeId={nodeId} />

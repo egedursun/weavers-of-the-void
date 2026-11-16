@@ -42,6 +42,7 @@ export const LAYER_MODES = [
   'rings',
   'centrality',
   'nutrients',
+  'networks',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -76,6 +77,7 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   rings: 'Rings of land use',
   centrality: 'Central places',
   nutrients: 'Soil nutrients',
+  networks: 'Networks',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -103,6 +105,7 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   rings: 'map-layer-rings',
   centrality: 'map-layer-centrality',
   nutrients: 'map-layer-nutrients',
+  networks: 'map-layer-networks',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {

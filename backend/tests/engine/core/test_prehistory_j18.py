@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.session import Database
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, LanguageProfileRow
@@ -8,13 +9,16 @@ from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.titles import TitleProfileRow
-from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.titles import TitleRank
+from aerona.domain.models.entity_stats import PolityStats, TitleStats
 from aerona.engine.prehistory.control import configure
 from aerona.engine.prehistory.run import run_prehistory
 from aerona.engine.primitives.manual import manual_context
 from aerona.rules.registry import Rules
 from tests.conftest import OpenDatabase
+from tests.engine.core.factories import entity
 from tests.engine.integration.factories import seed_rich_cosmos
 
 EPOCHS = 40
@@ -46,10 +50,21 @@ async def counted(database: Database) -> dict[str, object]:
         }
 
 
+async def fallen_kingdom(session: AsyncSession, world_id: int, ruler_id: int) -> None:
+    realm = await entity(session, "The Elder Crown", EntityType.POLITY, PolityStats(), world_id=world_id)
+    realm.status, realm.end_epoch = EntityStatus.DESTROYED, realm.birth_epoch
+    title = await entity(session, "Throne of the Elder Crown", EntityType.TITLE, TitleStats(), world_id=world_id)
+    session.add(
+        TitleProfileRow(title_entity_id=title.id, rank=TitleRank.EMPIRE, holder_node_id=ruler_id, polity_entity_id=realm.id, regalia=[], drift={}, locked=[])
+    )
+    await session.flush()
+
+
 async def lived(database: Database) -> tuple[dict[str, object], dict[str, object], int]:
     async with database.write() as session:
         cosmos = await seed_rich_cosmos(session)
         target = cosmos.home.world.id
+        await fallen_kingdom(session, target, cosmos.home.people.id)
         ctx = await manual_context(session, "prehistory_j18", Rules())
         birth = ctx.epoch
         await configure(ctx, target, EPOCHS, RESOLUTION)

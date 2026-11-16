@@ -1,4 +1,6 @@
 import {
+  Network,
+  BrainCircuit,
   Activity,
   AudioLines,
   Cloudy,
@@ -160,6 +162,28 @@ function GenesisBody({
                 settings.prehistory_epochs
                   ? plural(settings.prehistory_epochs, 'epoch')
                   : 'None'
+              }
+              tone='info'
+            />
+            <MiniStat
+              icon={BrainCircuit}
+              label='Made minds'
+              value={
+                settings.made_minds === null ||
+                settings.made_minds === undefined
+                  ? 'The seed decides'
+                  : `${settings.made_minds} of 100`
+              }
+              tone='info'
+            />
+            <MiniStat
+              icon={Network}
+              label='Reach of networks'
+              value={
+                settings.information_reach === null ||
+                settings.information_reach === undefined
+                  ? 'The seed decides'
+                  : `${settings.information_reach} of 100`
               }
               tone='info'
             />

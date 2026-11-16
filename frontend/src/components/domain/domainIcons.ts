@@ -1,4 +1,5 @@
 import {
+  Network,
   Activity,
   Atom,
   Biohazard,
@@ -103,6 +104,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   rite: Wand2,
   theory: Atom,
   art_form: Music,
+  network: Network,
 }
 
 export const STAT_ICON: Record<Schemas['Stat'], LucideIcon> = {

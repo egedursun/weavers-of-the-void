@@ -26,10 +26,12 @@ from aerona.db.tables.mind import (
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.mind import NeedKind, PressureKind, SkillKind, SkillSource, TraitEffect, TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
 from aerona.engine.mortal.variants import strength, variants_by_id
+from aerona.engine.primitives.augment_bonus import bonus
 from aerona.engine.primitives.numbers import clamp_int
 
 Holder = EntityRow | SonRow | ForeignGodRow
@@ -247,8 +249,8 @@ async def best_skill(session: AsyncSession, node_id: int, skills: Iterable[Skill
 
 
 async def effective_skill(session: AsyncSession, node_id: int, skill: SkillKind) -> int:
-    level = await skill_level(session, node_id, skill)
-    return round(level * await factor(session, node_id, SKILLS[skill].capacity))
+    level = await skill_level(session, node_id, skill) + await bonus(session, node_id, EffectTarget.SKILL, skill.value)
+    return round(max(0, level) * await factor(session, node_id, SKILLS[skill].capacity))
 
 
 async def best_effective(session: AsyncSession, node_id: int, skills: Iterable[SkillKind]) -> int:

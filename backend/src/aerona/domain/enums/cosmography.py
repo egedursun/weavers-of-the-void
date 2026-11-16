@@ -134,6 +134,7 @@ class DimensionKind(StrEnum):
     ASTRAL = "astral"
     ETHEREAL = "ethereal"
     DREAM = "dream"
+    MADE = "made"
     SHADOW = "shadow"
     SPIRIT = "spirit"
     FEY = "fey"

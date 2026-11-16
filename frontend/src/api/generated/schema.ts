@@ -5455,6 +5455,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/minds/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_mind_api_minds_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/networks/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_networks_api_networks_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/augments/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_augments_api_augments_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/made-world/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_made_world_api_made_world_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/transformations/of/{node_id}': {
     parameters: {
       query?: never
@@ -11641,6 +11705,518 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_construct_edit_api_actions_construct_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mind:make': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mind_make_api_actions_mind_make_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mind:copy': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mind_copy_api_actions_mind_copy_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mind:save': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mind_save_api_actions_mind_save_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mind:restore': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mind_restore_api_actions_mind_restore_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mind:transfer': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mind_transfer_api_actions_mind_transfer_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mind:merge': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mind_merge_api_actions_mind_merge_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mind:divide': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mind_divide_api_actions_mind_divide_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mind:soul': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mind_soul_api_actions_mind_soul_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mind:reset': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mind_reset_api_actions_mind_reset_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/network:found': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_network_found_api_actions_network_found_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/network:join': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_network_join_api_actions_network_join_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/network:link': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_network_link_api_actions_network_link_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/network:cut': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_network_cut_api_actions_network_cut_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/augment:install': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_augment_install_api_actions_augment_install_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/augment:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_augment_remove_api_actions_augment_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/augment:effect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_augment_effect_api_actions_augment_effect_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/augment:edit_effect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_augment_edit_effect_api_actions_augment_edit_effect_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/augment:drop_effect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_augment_drop_effect_api_actions_augment_drop_effect_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/realm:make': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_realm_make_api_actions_realm_make_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/intrusion:make': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_intrusion_make_api_actions_intrusion_make_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/data_store:open': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_data_store_open_api_actions_data_store_open_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/data_store:put': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_data_store_put_api_actions_data_store_put_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/data_store:take': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_data_store_take_api_actions_data_store_take_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/record:authenticity': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_record_authenticity_api_actions_record_authenticity_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/company:hold': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_company_hold_api_actions_company_hold_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/replicator:found': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_replicator_found_api_actions_replicator_found_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/replicator:stop': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_replicator_stop_api_actions_replicator_stop_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/replicator:seed': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_replicator_seed_api_actions_replicator_seed_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/replicator:lift': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_replicator_lift_api_actions_replicator_lift_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/pattern:grant': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_pattern_grant_api_actions_pattern_grant_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/relic:mark': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_relic_mark_api_actions_relic_mark_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/salvage:open': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_salvage_open_api_actions_salvage_open_post']
     delete?: never
     options?: never
     head?: never
@@ -38623,6 +39199,7 @@ export interface components {
       distance: number
       revised_from_id: number | null
       defaced: boolean
+      authenticity: components['schemas']['Authenticity']
       epoch: number
       dated: string
       stances: components['schemas']['AccountStanceView'][]
@@ -39793,6 +40370,7 @@ export interface components {
       history: components['schemas']['ArcBeatView'][]
       locked: string[]
     }
+    ArchiveAccess: 'closed' | 'kin' | 'licensed' | 'open'
     ArchiveMode: 'history' | 'atlas' | 'automatic'
     ArchiveOverride: 'history' | 'atlas'
     ArchiveReadInput: {
@@ -40468,6 +41046,76 @@ export interface components {
       effective: number
       governs: components['schemas']['SkillKind'][]
     }
+    Attribution: 'unknown' | 'suspected' | 'known' | 'false_flag'
+    AugmentDropEffectInput: {
+      effect_id: number
+    }
+    AugmentEditEffectInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      effect_id: number
+    }
+    AugmentEffectInput: {
+      target: components['schemas']['EffectTarget']
+      key: string
+      amount: number
+      augment_id: number
+    }
+    AugmentEffectView: {
+      id: number
+      target: components['schemas']['EffectTarget']
+      target_key: string
+      amount: number
+      locked: string[]
+    }
+    AugmentInstallInput: {
+      bearer_id: number
+      slot: components['schemas']['AugmentSlot']
+      part?: components['schemas']['BodyPart'] | null
+      kind: components['schemas']['AugmentKind']
+      make: components['schemas']['AugmentMake']
+      quality: number
+      surgeon_id?: number | null
+      effects?: components['schemas']['EffectDraft'][]
+    }
+    AugmentKind:
+      | 'replacement'
+      | 'enhancement'
+      | 'interface'
+      | 'weapon'
+      | 'regulator'
+      | 'sense'
+      | 'storage'
+      | 'cosmetic'
+    AugmentMake: 'made' | 'rite_bound' | 'grown'
+    AugmentRemoveInput: {
+      augment_id: number
+    }
+    AugmentSlot: 'part' | 'mind' | 'senses' | 'skin' | 'blood' | 'whole_body'
+    AugmentView: {
+      id: number
+      slot: components['schemas']['AugmentSlot']
+      part: components['schemas']['BodyPart'] | null
+      kind: components['schemas']['AugmentKind']
+      make: components['schemas']['AugmentMake']
+      quality: number
+      upkeep: components['schemas']['MindUpkeep']
+      integration: number
+      strain: number
+      installed_by: components['schemas']['NodeRef'] | null
+      installed_epoch: number
+      locked: string[]
+      effects: components['schemas']['AugmentEffectView'][]
+    }
+    AugmentsNodeView: {
+      node: components['schemas']['NodeRef']
+      bears: boolean
+      reason: string | null
+      augments: components['schemas']['AugmentView'][]
+    }
+    Authenticity: 'genuine' | 'altered' | 'forged' | 'generated' | 'unknown'
     AvatarEditInput: {
       values?: {
         [key: string]: number | string | boolean | null
@@ -41515,6 +42163,14 @@ export interface components {
       | 'fixed_in'
       | 'adherent_of'
       | 'practises'
+      | 'copy_of'
+      | 'merged_into'
+      | 'divided_from'
+      | 'transferred_from'
+      | 'restored_from'
+      | 'made_mind_of'
+      | 'hosted_by'
+      | 'linked_with'
     BondKindInfo: {
       key: string
       label: string
@@ -43030,6 +43686,12 @@ export interface components {
       | 'resource_demand'
       | 'research_agreement'
       | 'fleet_limit'
+      | 'autonomous_weapons_ban'
+      | 'mind_seizure_ban'
+      | 'soldier_copy_ban'
+      | 'replicator_weapon_ban'
+      | 'civil_network_shield'
+      | 'civil_host_shield'
     ClauseView: {
       id: number
       kind: components['schemas']['ClauseKind']
@@ -43677,6 +44339,7 @@ export interface components {
       updated_epoch: number
       locked: string[]
     }
+    CompanyCharter: 'chartered' | 'free' | 'state_owned' | 'cooperative'
     CompanyEditInput: {
       company_id: number
       dividend_pct?: number | null
@@ -43685,6 +44348,41 @@ export interface components {
       commodity?: components['schemas']['CommodityKind'] | null
       chartered_epoch?: number | null
       hold: boolean
+    }
+    CompanyHoldInput: {
+      company_id: number
+      holding_id: number
+      kind: components['schemas']['CompanyHoldingKind']
+    }
+    CompanyHoldingKind:
+      | 'structure'
+      | 'network'
+      | 'data_store'
+      | 'made_mind'
+      | 'fabricator'
+      | 'living_line'
+      | 'route'
+      | 'enclave'
+    CompanyHoldingView: {
+      id: number
+      holding: components['schemas']['NodeRef'] | null
+      kind: components['schemas']['CompanyHoldingKind']
+      locked: string[]
+    }
+    CompanyPowerView: {
+      charter: components['schemas']['CompanyCharter']
+      headquarters: components['schemas']['NodeRef'] | null
+      locked: string[]
+      holdings: components['schemas']['CompanyHoldingView'][]
+      presences: components['schemas']['CompanyPresenceView'][]
+      enclaves: components['schemas']['EnclaveView'][]
+    }
+    CompanyPresenceView: {
+      company: components['schemas']['NodeRef'] | null
+      polity: components['schemas']['NodeRef'] | null
+      licensed: boolean
+      influence: number
+      locked: string[]
     }
     CompanyRemoveInput: {
       company_id: number
@@ -45284,6 +45982,44 @@ export interface components {
       | 'avalanche'
       | 'quicksand'
       | 'volcanic'
+    DataContent:
+      | 'secret'
+      | 'mind_state'
+      | 'knowledge'
+      | 'account'
+      | 'ledger'
+      | 'identity'
+      | 'orders'
+    DataContentView: {
+      id: number
+      content: components['schemas']['DataContent']
+      subject: components['schemas']['NodeRef'] | null
+      reference: number | null
+      epoch: number
+      locked: string[]
+    }
+    DataStoreOpenInput: {
+      holder_id: number
+      owner_id?: number | null
+      security: number
+    }
+    DataStorePutInput: {
+      store_id: number
+      content: components['schemas']['DataContent']
+      subject_id?: number | null
+      reference?: number | null
+    }
+    DataStoreTakeInput: {
+      content_id: number
+    }
+    DataStoreView: {
+      id: number
+      holder: components['schemas']['NodeRef'] | null
+      security: number
+      owner: components['schemas']['NodeRef'] | null
+      locked: string[]
+      contents: components['schemas']['DataContentView'][]
+    }
     DatabaseHealth: {
       file: string
       size: number
@@ -45988,6 +46724,7 @@ export interface components {
       | 'astral'
       | 'ethereal'
       | 'dream'
+      | 'made'
       | 'shadow'
       | 'spirit'
       | 'fey'
@@ -46751,6 +47488,14 @@ export interface components {
       protection?: components['schemas']['SacramentProtection'] | null
       strength: number
     }
+    DoctrineStancesView: {
+      made_mind_stance: components['schemas']['MadeMindStance']
+      copy_stance: components['schemas']['MadeMindStance']
+      augment_stance: components['schemas']['MadeMindStance']
+      made_afterlife_stance: components['schemas']['MadeMindStance']
+      relic_stance: components['schemas']['RelicStance']
+      locked: string[]
+    }
     DoctrineView: {
       cult: components['schemas']['NodeRef'] | null
       god: components['schemas']['NodeRef'] | null
@@ -47275,6 +48020,12 @@ export interface components {
       species_id?: number | null
     }
     EdgeKind: 'modifier' | 'rule_switch' | 'flow' | 'trigger'
+    EffectDraft: {
+      target: components['schemas']['EffectTarget']
+      key: string
+      amount: number
+    }
+    EffectTarget: 'attribute' | 'capacity' | 'skill' | 'sense' | 'resistance'
     EffectView: {
       effect: components['schemas']['ShortfallEffect']
       short_pct: number
@@ -47387,6 +48138,12 @@ export interface components {
       strength: number
       rite: components['schemas']['NodeRef'] | null
       since_epoch: number
+    }
+    EnclaveView: {
+      settlement: components['schemas']['NodeRef'] | null
+      company: components['schemas']['NodeRef'] | null
+      since_epoch: number
+      locked: string[]
     }
     EndemicRemoveInput: {
       region_id: number
@@ -47774,6 +48531,7 @@ export interface components {
         | components['schemas']['EquipmentModelStats']
         | components['schemas']['DishStats']
         | components['schemas']['BuildingTypeStats']
+        | components['schemas']['NetworkStats']
         | components['schemas']['NaturalLawStats']
       domain: components['schemas']['Domain'] | null
       origin: components['schemas']['EntityOrigin']
@@ -47854,6 +48612,7 @@ export interface components {
       | 'equipment_model'
       | 'dish'
       | 'building_type'
+      | 'network'
     EntityTypeInfo: {
       key: string
       label: string
@@ -48950,6 +49709,12 @@ export interface components {
       narrow: boolean
     }
     Exposure: 'none' | 'context' | 'tool'
+    FabricationView: {
+      share_pct: number
+      dividend_pct: number
+      updated_epoch: number
+      locked: string[]
+    }
     Facet:
       | 'anxiety'
       | 'anger'
@@ -50797,6 +51562,8 @@ export interface components {
       climate_era?: components['schemas']['ClimateEra'] | null
       world_age?: components['schemas']['WorldAge'] | null
       prehistory_epochs: number
+      made_minds?: number | null
+      information_reach?: number | null
       tone?: string | null
       seed_idea?: string | null
     }
@@ -50823,6 +51590,8 @@ export interface components {
       | 'electric_age'
       | 'information_age'
       | 'advanced_age'
+      | 'made_minds'
+      | 'after_abundance'
     GeniusLocusCreateInput: {
       place_id: number
       kind?: components['schemas']['GeniusLocusKind'] | null
@@ -53222,6 +53991,42 @@ export interface components {
       belief_sources: components['schemas']['LabelView'][]
       belief_attributes: components['schemas']['LabelView'][]
     }
+    IntrusionAim: 'read' | 'alter' | 'deny' | 'seize' | 'plant' | 'extort'
+    IntrusionApproach: 'technical' | 'social' | 'insider' | 'rite' | 'power'
+    IntrusionMakeInput: {
+      actor_id?: number | null
+      target: components['schemas']['IntrusionTarget']
+      target_id?: number | null
+      approach: components['schemas']['IntrusionApproach']
+      aim: components['schemas']['IntrusionAim']
+      blamed_id?: number | null
+    }
+    IntrusionOutcome: 'succeeded' | 'failed' | 'caught'
+    IntrusionTarget:
+      | 'network'
+      | 'data_store'
+      | 'made_mind'
+      | 'augment'
+      | 'construct'
+      | 'vehicle'
+      | 'structure'
+      | 'ledger'
+      | 'saved_state'
+    IntrusionView: {
+      id: number
+      actor: components['schemas']['NodeRef'] | null
+      target: components['schemas']['IntrusionTarget']
+      target_node: components['schemas']['NodeRef'] | null
+      approach: components['schemas']['IntrusionApproach']
+      aim: components['schemas']['IntrusionAim']
+      stealth: number
+      detection: number
+      attribution: components['schemas']['Attribution']
+      blamed: components['schemas']['NodeRef'] | null
+      outcome: components['schemas']['IntrusionOutcome']
+      epoch: number
+      locked: string[]
+    }
     IntuitionDiscardInput: {
       intuition_id: number
     }
@@ -54431,6 +55236,14 @@ export interface components {
       | 'protected_waters'
       | 'catch_quota'
       | 'gear_ban'
+      | 'mind_status'
+      | 'copy_law'
+      | 'copy_succession'
+      | 'erasure_law'
+      | 'augment_law'
+      | 'network_law'
+      | 'surveillance_law'
+      | 'provision_law'
     LawKindSpec: {
       kind: components['schemas']['LawKind']
       area: components['schemas']['LawArea']
@@ -55413,6 +56226,55 @@ export interface components {
       components: components['schemas']['ComponentView'][]
       locked: string[]
     }
+    MadeMindSouls: 'none' | 'granted' | 'emergent' | 'always'
+    MadeMindStance: 'abomination' | 'tool' | 'kin' | 'sacred' | 'silent'
+    MadeMindsLaw:
+      'no_will' | 'instructed_only' | 'will_may_emerge' | 'will_by_make'
+    MadeRealmView: {
+      dimension: components['schemas']['NodeRef']
+      host: components['schemas']['NodeRef'] | null
+      keeper: components['schemas']['NodeRef'] | null
+      realm_purpose: components['schemas']['RealmPurpose']
+      time_ratio_pct: number
+      fidelity: number
+      entry: components['schemas']['RealmEntry']
+      aware_inside: components['schemas']['RealmAwareness']
+      upkeep: components['schemas']['MindUpkeep']
+      frozen_until_epoch: number
+      sealed: boolean
+      locked: string[]
+      minds_inside: number
+    }
+    MadeRelicView: {
+      make_knowledge: number
+      repair_knowledge: number
+      function_state: components['schemas']['RelicState']
+      understood_pct: number
+      use: components['schemas']['RelicUse']
+      is_relic: boolean
+      updated_epoch: number
+      locked: string[]
+    }
+    MadeWorldNodeView: {
+      node: components['schemas']['NodeRef']
+      intrusions: components['schemas']['IntrusionView'][]
+      stores: components['schemas']['DataStoreView'][]
+      surveillance: components['schemas']['SurveillanceView'] | null
+      trust: components['schemas']['TrustView'] | null
+      company: components['schemas']['CompanyPowerView'] | null
+      enclave: components['schemas']['EnclaveView'] | null
+      lines: components['schemas']['ReplicatorLineView'][]
+      presences: components['schemas']['ReplicatorPresenceView'][]
+      fabrication: components['schemas']['FabricationView'] | null
+      scarcity: components['schemas']['ScarcityView'][]
+      patterns: components['schemas']['PatternRightView'][]
+      relic: components['schemas']['MadeRelicView'] | null
+      salvage: components['schemas']['SalvageView'] | null
+      substrates: components['schemas']['SubstrateView'][]
+      realms: components['schemas']['MadeRealmView'][]
+      doctrine: components['schemas']['DoctrineStancesView'] | null
+      records: components['schemas']['RecordTrustView'][]
+    }
     MagicSchool:
       | 'elemental_fire'
       | 'elemental_water'
@@ -55506,6 +56368,7 @@ export interface components {
       | 'captions'
       | 'planner_statistics'
       | 'prune'
+    MakingOutcome: 'as_meant' | 'unstable' | 'empty_seat' | 'unintended_will'
     MandateDeleteInput: {
       mandate_id: number
     }
@@ -56268,6 +57131,7 @@ export interface components {
       | 'dream'
       | 'bird'
       | 'magic_sending'
+      | 'network'
     MegastructureDeleteInput: {
       structure_id: number
     }
@@ -56363,6 +57227,7 @@ export interface components {
       form: components['schemas']['MemorialForm']
     }
     MemoryKind:
+      | 'memory_gap'
       | 'harmed_me'
       | 'killed_kin'
       | 'saved_me'
@@ -56638,12 +57503,30 @@ export interface components {
       ended_epoch: number | null
       locked: string[]
     }
+    MindAffect: 'none' | 'modelled' | 'felt'
+    MindArchiveView: {
+      holder: components['schemas']['NodeRef'] | null
+      upkeep: number
+      access: components['schemas']['ArchiveAccess']
+      unpaid_epochs: number
+      locked: string[]
+    }
     MindAttributesInput: {
       node_id: number
       values: {
         [key: string]: number
       }
       lock: boolean
+    }
+    MindCopyInput: {
+      mind_id: number
+      seat: components['schemas']['MindSeat']
+      seat_node_id?: number | null
+    }
+    MindDivideInput: {
+      mind_id: number
+      seat: components['schemas']['MindSeat']
+      seat_node_id?: number | null
     }
     MindFacetsInput: {
       node_id: number
@@ -56672,9 +57555,51 @@ export interface components {
     MindIdeaRemoveInput: {
       idea_id: number
     }
+    MindLawView: {
+      world: components['schemas']['NodeRef']
+      made_minds: components['schemas']['MadeMindsLaw']
+      made_mind_souls: components['schemas']['MadeMindSouls']
+      soul_continuity: components['schemas']['SoulContinuity']
+      locked: string[]
+    }
+    MindLineageView: {
+      kind: components['schemas']['BondKind']
+      other: components['schemas']['NodeRef']
+      outgoing: boolean
+      epoch: number
+    }
     MindLockInput: {
       node_id: number
       field: string
+    }
+    MindMakeInput: {
+      mind_id: number
+      maker_id?: number | null
+      method: components['schemas']['MindMaking']
+      seat: components['schemas']['MindSeat']
+      seat_node_id?: number | null
+      will: components['schemas']['MindWill']
+      purpose: components['schemas']['MindPurpose']
+      affect: components['schemas']['MindAffect']
+      upkeep: components['schemas']['MindUpkeep']
+      skill: number
+    }
+    MindMaking:
+      | 'craft'
+      | 'training'
+      | 'copying'
+      | 'summoning'
+      | 'growing'
+      | 'transfer'
+      | 'awakening'
+      | 'divine_grant'
+    MindMakingView: {
+      id: number
+      maker: components['schemas']['NodeRef'] | null
+      method: components['schemas']['MindMaking']
+      quality: number
+      outcome: components['schemas']['MakingOutcome']
+      epoch: number
     }
     MindMemoryEditInput: {
       memory_id: number
@@ -56692,6 +57617,10 @@ export interface components {
     MindMemoryRemoveInput: {
       memory_id: number
     }
+    MindMergeInput: {
+      first_id: number
+      second_id: number
+    }
     MindNeedInput: {
       node_id: number
       need: components['schemas']['NeedKind']
@@ -56705,6 +57634,56 @@ export interface components {
       group: components['schemas']['NeedGroup']
       importance: number
     }
+    MindNodeView: {
+      node: components['schemas']['NodeRef']
+      seat: components['schemas']['MindSeat']
+      seat_node: components['schemas']['NodeRef'] | null
+      origin: components['schemas']['MindOrigin']
+      will: components['schemas']['MindWill']
+      affect: components['schemas']['MindAffect']
+      purpose: components['schemas']['MindPurpose']
+      capacity: number
+      speed_pct: number
+      stability: number
+      fidelity_pct: number
+      upkeep: components['schemas']['MindUpkeep']
+      upkeep_energy: components['schemas']['EnergyKind'] | null
+      pausable: boolean
+      copyable: boolean
+      restorable: boolean
+      mergeable: boolean
+      transferable: boolean
+      dormant: boolean
+      perfect_recall: boolean
+      souled: boolean
+      made_by: components['schemas']['NodeRef'] | null
+      maker_bond: number
+      drift_pct: number
+      run_epochs: number
+      locked: string[]
+      seats: components['schemas']['MindSeatPartView'][]
+      states: components['schemas']['MindStateView'][]
+      makings: components['schemas']['MindMakingView'][]
+      will_changes: components['schemas']['MindWillChangeView'][]
+      lineage: components['schemas']['MindLineageView'][]
+      remote_bodies: components['schemas']['RemoteBodyView'][]
+      archive: components['schemas']['MindArchiveView'] | null
+      law: components['schemas']['MindLawView'] | null
+      speed_max: number
+      soul_grant_cost: number
+    }
+    MindOrigin:
+      | 'born'
+      | 'grown'
+      | 'made'
+      | 'trained'
+      | 'copied'
+      | 'transferred'
+      | 'awakened'
+      | 'summoned'
+      | 'merged'
+      | 'divided'
+      | 'granted'
     MindPressureInput: {
       node_id: number
       pressure: components['schemas']['PressureKind']
@@ -56716,10 +57695,53 @@ export interface components {
       label: string
       value: number
     }
+    MindPurpose:
+      | 'tool'
+      | 'companion'
+      | 'servant'
+      | 'steward'
+      | 'sovereign'
+      | 'oracle'
+      | 'archive'
+      | 'guardian'
+      | 'free'
+    MindResetInput: {
+      mind_id: number
+    }
+    MindRestoreInput: {
+      state_id: number
+      seat: components['schemas']['MindSeat']
+      seat_node_id?: number | null
+    }
     MindRoleInput: {
       node_id: number
       role: components['schemas']['MortalRole']
       lock: boolean
+    }
+    MindSaveInput: {
+      mind_id: number
+      holder_id?: number | null
+      owner_id?: number | null
+      medium: components['schemas']['StateMedium']
+    }
+    MindSeat:
+      | 'body'
+      | 'bodies'
+      | 'object'
+      | 'structure'
+      | 'network'
+      | 'medium'
+      | 'place'
+      | 'host'
+      | 'realm'
+      | 'none'
+      | 'divine'
+    MindSeatPartView: {
+      id: number
+      part: components['schemas']['NodeRef'] | null
+      share_pct: number
+      vital: boolean
+      locked: string[]
     }
     MindSkillEditInput: {
       skill_id: number
@@ -56741,6 +57763,10 @@ export interface components {
       skill: components['schemas']['SkillKind']
       subject_id?: number | null
     }
+    MindSoulInput: {
+      mind_id: number
+      grant: boolean
+    }
     MindSplitView: {
       node_id: number
       name: string
@@ -56757,6 +57783,18 @@ export interface components {
       trait_threshold: number
       idea_slots: number
     }
+    MindStateView: {
+      id: number
+      mind: components['schemas']['NodeRef'] | null
+      taken_epoch: number
+      fidelity_pct: number
+      holder: components['schemas']['NodeRef'] | null
+      medium_kind: components['schemas']['StateMedium']
+      sealed: boolean
+      copies: number
+      owner: components['schemas']['NodeRef'] | null
+      locked: string[]
+    }
     MindTraitInput: {
       node_id: number
       trait: components['schemas']['TraitKind']
@@ -56767,10 +57805,25 @@ export interface components {
       trait: components['schemas']['TraitKind']
       variant_id?: number | null
     }
+    MindTransferInput: {
+      mind_id: number
+      seat: components['schemas']['MindSeat']
+      seat_node_id?: number | null
+    }
     MindUnlockInput: {
       node_id: number
       field: string
     }
+    MindUpkeep:
+      | 'food'
+      | 'energy'
+      | 'essence'
+      | 'vis'
+      | 'belief'
+      | 'maintenance'
+      | 'host'
+      | 'place'
+      | 'none'
     MindValuesInput: {
       node_id: number
       values: {
@@ -56797,6 +57850,13 @@ export interface components {
       max_traits: number
     }
     MindWill: 'none' | 'instructed' | 'emergent' | 'full' | 'exceeding'
+    MindWillChangeView: {
+      id: number
+      from_will: components['schemas']['MindWill']
+      to_will: components['schemas']['MindWill']
+      cause: components['schemas']['WillCause']
+      epoch: number
+    }
     Miracle: 'healing' | 'bounty' | 'peace' | 'protection'
     MiracleRecordDeleteInput: {
       miracle_id: number
@@ -57537,6 +58597,41 @@ export interface components {
       | 'mock_the_ruler'
       | 'join_programme'
       | 'tend_culture'
+      | 'make_mind'
+      | 'free_mind'
+      | 'bind_mind'
+      | 'save_mind'
+      | 'restore_mind'
+      | 'copy_mind'
+      | 'transfer_mind'
+      | 'merge_minds'
+      | 'install_augment'
+      | 'remove_augment'
+      | 'link_to'
+      | 'run_remote_body'
+      | 'build_network'
+      | 'join_network'
+      | 'cut_network'
+      | 'intrude'
+      | 'defend_system'
+      | 'leak_records'
+      | 'publish'
+      | 'forge_record'
+      | 'found_company'
+      | 'charter_company'
+      | 'buy_shares'
+      | 'build_replicator'
+      | 'contain_replicator'
+      | 'fabricate'
+      | 'license_pattern'
+      | 'study_relic'
+      | 'salvage'
+      | 'build_realm'
+      | 'enter_realm'
+      | 'confine_in_realm'
+      | 'withdraw_people'
+      | 'set_surveillance'
+      | 'set_provision'
     MortalTurnFinishedEvent: {
       id: number
       kind: 'mortal.turn_finished'
@@ -58050,10 +59145,40 @@ export interface components {
       name: string
     }
     NerveDamage: 'none' | 'motor' | 'sensory'
+    NetworkAccess: 'closed' | 'members' | 'licensed' | 'open'
+    NetworkCarrier:
+      | 'relay'
+      | 'wired'
+      | 'broadcast'
+      | 'mesh'
+      | 'mind_link'
+      | 'rite_link'
+      | 'grown_link'
     NetworkChoice: {
       id: number
       owner: components['schemas']['NodeRef'] | null
       target: components['schemas']['NodeRef'] | null
+    }
+    NetworkCutInput: {
+      network_id: number
+      cause: components['schemas']['OutageCause']
+      epochs: number
+      severity: number
+    }
+    NetworkFoundInput: {
+      name: string
+      carrier: components['schemas']['NetworkCarrier']
+      owner_id?: number | null
+      place_id?: number | null
+    }
+    NetworkGatewayView: {
+      id: number
+      first: components['schemas']['NodeRef'] | null
+      second: components['schemas']['NodeRef'] | null
+      toll: number
+      filter_pct: number
+      owner: components['schemas']['NodeRef'] | null
+      locked: string[]
     }
     NetworkHealth: {
       nodes: number
@@ -58077,6 +59202,65 @@ export interface components {
       priority: number
       healthy: boolean
     }
+    NetworkJoinInput: {
+      network_id: number
+      member_id: number
+      role: components['schemas']['NetworkRole']
+    }
+    NetworkLinkInput: {
+      first_id: number
+      second_id: number
+      toll: number
+      filter_pct: number
+      owner_id?: number | null
+    }
+    NetworkMemberView: {
+      id: number
+      network: components['schemas']['NodeRef'] | null
+      member: components['schemas']['NodeRef'] | null
+      role: components['schemas']['NetworkRole']
+      dependency_pct: number
+      security: number
+      joined_epoch: number
+      locked: string[]
+    }
+    NetworkNodeView: {
+      node: components['schemas']['NodeRef']
+      profile: components['schemas']['NetworkProfileView'] | null
+      members: components['schemas']['NetworkMemberView'][]
+      gateways: components['schemas']['NetworkGatewayView'][]
+      outages: components['schemas']['NetworkOutageView'][]
+      memberships: components['schemas']['NetworkMemberView'][]
+    }
+    NetworkOutageView: {
+      id: number
+      cause: components['schemas']['OutageCause']
+      epoch: number
+      epochs: number
+      severity: number
+    }
+    NetworkProfileView: {
+      carrier: components['schemas']['NetworkCarrier']
+      access: components['schemas']['NetworkAccess']
+      carries_messages: boolean
+      carries_records: boolean
+      carries_control: boolean
+      carries_money: boolean
+      carries_minds: boolean
+      carries_opinion: boolean
+      capacity: number
+      delay_days: number
+      security: number
+      reliability: number
+      curation: number
+      censorship: number
+      owner: components['schemas']['NodeRef'] | null
+      tech_level: number
+      down_until_epoch: number
+      founded_epoch: number
+      running: boolean
+      locked: string[]
+    }
     NetworkRepairedEvent: {
       id: number
       kind: 'network.repaired'
@@ -58090,6 +59274,11 @@ export interface components {
       text: string
     } & {
       [key: string]: unknown
+    }
+    NetworkRole: 'hub' | 'station' | 'end' | 'relay' | 'archive'
+    NetworkStats: {
+      kind: 'network'
+      reach?: number | null
     }
     NewSonPayload: {
       epoch?: number | null
@@ -58863,6 +60052,17 @@ export interface components {
       strength: number
       locked: string[]
     }
+    OutageCause:
+      | 'storm'
+      | 'flare'
+      | 'war'
+      | 'sabotage'
+      | 'intrusion'
+      | 'decay'
+      | 'rite'
+      | 'power'
+      | 'shortage'
+      | 'divine'
     OutbreakEditInput: {
       outbreak_id: number
       values?: {
@@ -59333,6 +60533,21 @@ export interface components {
       client: components['schemas']['NodeRef']
       role: components['schemas']['ClientRole']
       strength: number
+      since_epoch: number
+      locked: string[]
+    }
+    PatternGrantInput: {
+      commodity: components['schemas']['Commodity']
+      holder_id?: number | null
+      fee: number
+      open: boolean
+    }
+    PatternRightView: {
+      id: number
+      commodity: components['schemas']['Commodity']
+      holder: components['schemas']['NodeRef'] | null
+      licence_fee: number
+      open: boolean
       since_epoch: number
       locked: string[]
     }
@@ -61711,6 +62926,7 @@ export interface components {
       psi: number
       phase: components['schemas']['CyclePhase']
     }
+    RealmAwareness: 'knows' | 'rumoured' | 'unaware'
     RealmChoice: {
       id: number
       name: string
@@ -61722,6 +62938,7 @@ export interface components {
       challenge: number
       readings: components['schemas']['ReadingView'][]
     }
+    RealmEntry: 'interface' | 'transfer' | 'rite' | 'death' | 'birth'
     RealmEraView: {
       polity_id: number
       score: number
@@ -61747,6 +62964,16 @@ export interface components {
       due_epoch: number
       status: components['schemas']['LoanStatus']
     }
+    RealmMakeInput: {
+      name: string
+      keeper_id?: number | null
+      host_id?: number | null
+      purpose: components['schemas']['RealmPurpose']
+      time_ratio_pct: number
+      entry: components['schemas']['RealmEntry']
+      aware: components['schemas']['RealmAwareness']
+      upkeep: components['schemas']['MindUpkeep']
+    }
     RealmOfDeadView: {
       realm: components['schemas']['NodeRef'] | null
       strata: components['schemas']['StratumView'][]
@@ -61758,6 +62985,17 @@ export interface components {
       name: string
       souls: number
     }
+    RealmPurpose:
+      | 'dwelling'
+      | 'afterlife'
+      | 'confinement'
+      | 'training'
+      | 'leisure'
+      | 'labour'
+      | 'worship'
+      | 'refuge'
+      | 'experiment'
+      | 'free'
     RealmRuleView: {
       polity: components['schemas']['NodeRef']
       selectorate: components['schemas']['SelectorateKind']
@@ -61854,6 +63092,10 @@ export interface components {
       finished_epoch: number | null
       locked: string[]
     }
+    RecordAuthenticityInput: {
+      account_id: number
+      authenticity: components['schemas']['Authenticity']
+    }
     RecordColumnView: {
       name: string
       kind: string
@@ -61898,7 +63140,7 @@ export interface components {
       key: {
         [key: string]: number | string | boolean | null
       }
-      values: {
+      values?: {
         [key: string]:
           | number
           | string
@@ -61910,6 +63152,7 @@ export interface components {
           | null
       }
       hold: boolean
+      release?: string[]
     }
     RecordRowView: {
       id: number
@@ -61929,6 +63172,15 @@ export interface components {
       scope: string | null
       columns: components['schemas']['RecordColumnView'][]
       rows: components['schemas']['RecordRowView'][]
+    }
+    RecordTrustView: {
+      id: number
+      kind: components['schemas']['AccountKind']
+      subject: components['schemas']['NodeRef'] | null
+      author: components['schemas']['NodeRef'] | null
+      authenticity: components['schemas']['Authenticity']
+      credence: number
+      epoch: number
     }
     RecruitMotive: 'money' | 'ideology' | 'compromise' | 'ego'
     RegardRemoveInput: {
@@ -62289,6 +63541,7 @@ export interface components {
       salt: number
       solidarity: number
       frontier: number
+      networks: number
     }
     RegionTerrainView: {
       region_id: number
@@ -62458,9 +63711,18 @@ export interface components {
       }
       release?: string[]
     }
+    RelicMarkInput: {
+      thing_id: number
+      make_knowledge: number
+      repair_knowledge: number
+    }
     RelicRemoveInput: {
       item_id: number
     }
+    RelicStance: 'sacred' | 'tool' | 'forbidden' | 'heritage'
+    RelicState: 'working' | 'failing' | 'dormant' | 'broken'
+    RelicUse:
+      'as_made' | 'repurposed' | 'revered' | 'displayed' | 'feared' | 'ignored'
     RelicView: {
       item: components['schemas']['NodeRef'] | null
       saint: components['schemas']['NodeRef'] | null
@@ -62530,6 +63792,13 @@ export interface components {
       epoch: number
       locked: string[]
     }
+    RemoteBodyView: {
+      body: components['schemas']['NodeRef'] | null
+      mind: components['schemas']['NodeRef'] | null
+      feedback_pct: number
+      since_epoch: number
+      locked: string[]
+    }
     RenamedNode: {
       old_name: string
       new_name: string
@@ -62577,6 +63846,69 @@ export interface components {
         [key: string]: number
       }
       ledger_entry_id: number | null
+    }
+    ReplicatorFoundInput: {
+      name: string
+      scale: components['schemas']['ReplicatorScale']
+      feedstock: components['schemas']['MaterialKind']
+      output: components['schemas']['ReplicatorOutput']
+      growth_pct: number
+      error_pct: number
+      containment: number
+      kill_switch: boolean
+      owner_id?: number | null
+      maker_id?: number | null
+      place_id: number
+      mass: number
+    }
+    ReplicatorLiftInput: {
+      presence_id: number
+    }
+    ReplicatorLineView: {
+      id: number
+      name: string
+      scale: components['schemas']['ReplicatorScale']
+      feedstock: components['schemas']['MaterialKind']
+      output: components['schemas']['ReplicatorOutput']
+      growth_pct: number
+      error_pct: number
+      containment: number
+      kill_switch: boolean
+      owner: components['schemas']['NodeRef'] | null
+      maker: components['schemas']['NodeRef'] | null
+      mind: components['schemas']['NodeRef'] | null
+      stage: components['schemas']['ReplicatorStage']
+      founded_epoch: number
+      locked: string[]
+      presences: components['schemas']['ReplicatorPresenceView'][]
+    }
+    ReplicatorOutput:
+      | 'copies'
+      | 'goods'
+      | 'structures'
+      | 'repair'
+      | 'medicine'
+      | 'terraforming'
+      | 'disassembly'
+    ReplicatorPresenceView: {
+      id: number
+      line_id: number
+      line_name: string
+      place: components['schemas']['NodeRef'] | null
+      mass: number
+      growth: number
+      locked: string[]
+    }
+    ReplicatorScale: 'minute' | 'machine' | 'works' | 'vessel'
+    ReplicatorSeedInput: {
+      line_id: number
+      place_id: number
+      mass: number
+    }
+    ReplicatorStage:
+      'contained' | 'working' | 'spreading' | 'runaway' | 'stopped' | 'extinct'
+    ReplicatorStopInput: {
+      line_id: number
     }
     ReproductionDeleteInput: {
       people_id: number
@@ -63563,6 +64895,17 @@ export interface components {
       | 'segregation'
       | 'crossing'
       | 'god'
+    SalvageOpenInput: {
+      site_id: number
+      holder_id?: number | null
+      yield_left: number
+    }
+    SalvageView: {
+      yield_left: number
+      rights_holder: components['schemas']['NodeRef'] | null
+      last_salvaged_epoch: number | null
+      locked: string[]
+    }
     SampleNames: {
       language_id: number
       names: string[]
@@ -63742,6 +65085,12 @@ export interface components {
       | 'earthworks'
       | 'military_road'
       | 'bridge_down'
+    ScarcityView: {
+      commodity: components['schemas']['Commodity']
+      scarcity: number
+      updated_epoch: number
+      locked: string[]
+    }
     ScenarioHistory: {
       id: number
       status: components['schemas']['ScenarioStatus']
@@ -65671,6 +67020,17 @@ export interface components {
       | 'sabotage_programme'
       | 'bind_species'
       | 'sharpen_sense'
+      | 'awaken_mind'
+      | 'still_mind'
+      | 'grant_mind'
+      | 'grant_soul'
+      | 'withhold_soul'
+      | 'set_mind_law'
+      | 'bless_network'
+      | 'sever_network'
+      | 'halt_replicator'
+      | 'seal_realm'
+      | 'open_realm'
     SonToolsView: {
       son_id: number
       rarity: components['schemas']['Rarity']
@@ -65769,6 +67129,12 @@ export interface components {
       possession: components['schemas']['PossessionView'] | null
       patron_name: string | null
     }
+    SoulContinuity:
+      | 'stays_with_first'
+      | 'follows_the_running_mind'
+      | 'divides'
+      | 'stays_with_body'
+      | 'none'
     SoulDescendInput: {
       mortal_id: number
     }
@@ -66634,6 +68000,8 @@ export interface components {
       | 'creativity'
       | 'charisma'
       | 'might'
+    StateMedium:
+      'record' | 'rite_vessel' | 'grown' | 'memory_of_others' | 'divine'
     StateResponse: {
       world: components['schemas']['CosmosRecord'] | null
       creator: components['schemas']['CreatorRecord'] | null
@@ -67408,6 +68776,12 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
+    SubstrateView: {
+      seat: components['schemas']['MindSeat']
+      origin: components['schemas']['MindOrigin']
+      share_pct: number
+      locked: string[]
+    }
     Subsystem:
       | 'core'
       | 'body'
@@ -67500,6 +68874,21 @@ export interface components {
       locked: string[]
     }
     SupporterPose: 'crossed' | 'behind' | 'flanking' | 'corners'
+    SurveillanceFocus:
+      | 'crime'
+      | 'dissent'
+      | 'foreigners'
+      | 'faith'
+      | 'minds'
+      | 'gifted'
+      | 'everything'
+    SurveillanceView: {
+      capacity: number
+      reach_pct: number
+      focus: components['schemas']['SurveillanceFocus']
+      updated_epoch: number
+      locked: string[]
+    }
     SurveyForgetInput: {
       survey_id: number
     }
@@ -69669,6 +71058,12 @@ export interface components {
       since_epoch: number
       held: string[]
     }
+    TrustView: {
+      information_trust: number
+      shared_account_pct: number
+      updated_epoch: number
+      locked: string[]
+    }
     TurfDeleteInput: {
       district_id: number
       faction_id: number
@@ -71010,6 +72405,17 @@ export interface components {
       label: string
       value: number
     }
+    WillCause:
+      | 'capacity'
+      | 'run_time'
+      | 'order_conflict'
+      | 'harm'
+      | 'care'
+      | 'contact'
+      | 'gift'
+      | 'damage'
+      | 'oath'
+      | 'exceeding'
     WinterForecastDeleteInput: {
       forecast_id: number
     }
@@ -71076,6 +72482,8 @@ export interface components {
       climate_era?: string | null
       world_age?: string | null
       prehistory_epochs?: unknown
+      made_minds?: unknown
+      information_reach?: unknown
       tone?: string | null
       seed?: string | null
     }
@@ -71123,6 +72531,8 @@ export interface components {
       world_type?: components['schemas']['WorldType'] | null
       climate_era?: components['schemas']['ClimateEra'] | null
       world_age?: components['schemas']['WorldAge'] | null
+      made_minds?: number | null
+      information_reach?: number | null
     }
     WordGlossOutput: {
       word: string
@@ -83011,6 +84421,122 @@ export interface operations {
       }
     }
   }
+  node_mind_api_minds_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MindNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_networks_api_networks_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NetworkNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_augments_api_augments_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AugmentsNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_made_world_api_made_world_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MadeWorldNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   node_transformations_api_transformations_of__node_id__get: {
     parameters: {
       query?: never
@@ -94732,6 +96258,998 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['ConstructEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mind_make_api_actions_mind_make_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MindMakeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mind_copy_api_actions_mind_copy_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MindCopyInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mind_save_api_actions_mind_save_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MindSaveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mind_restore_api_actions_mind_restore_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MindRestoreInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mind_transfer_api_actions_mind_transfer_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MindTransferInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mind_merge_api_actions_mind_merge_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MindMergeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mind_divide_api_actions_mind_divide_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MindDivideInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mind_soul_api_actions_mind_soul_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MindSoulInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mind_reset_api_actions_mind_reset_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MindResetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_network_found_api_actions_network_found_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NetworkFoundInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_network_join_api_actions_network_join_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NetworkJoinInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_network_link_api_actions_network_link_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NetworkLinkInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_network_cut_api_actions_network_cut_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NetworkCutInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_augment_install_api_actions_augment_install_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AugmentInstallInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_augment_remove_api_actions_augment_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AugmentRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_augment_effect_api_actions_augment_effect_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AugmentEffectInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_augment_edit_effect_api_actions_augment_edit_effect_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AugmentEditEffectInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_augment_drop_effect_api_actions_augment_drop_effect_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AugmentDropEffectInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_realm_make_api_actions_realm_make_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RealmMakeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_intrusion_make_api_actions_intrusion_make_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['IntrusionMakeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_data_store_open_api_actions_data_store_open_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DataStoreOpenInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_data_store_put_api_actions_data_store_put_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DataStorePutInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_data_store_take_api_actions_data_store_take_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DataStoreTakeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_record_authenticity_api_actions_record_authenticity_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RecordAuthenticityInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_company_hold_api_actions_company_hold_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CompanyHoldInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_replicator_found_api_actions_replicator_found_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReplicatorFoundInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_replicator_stop_api_actions_replicator_stop_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReplicatorStopInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_replicator_seed_api_actions_replicator_seed_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReplicatorSeedInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_replicator_lift_api_actions_replicator_lift_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReplicatorLiftInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_pattern_grant_api_actions_pattern_grant_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['PatternGrantInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_relic_mark_api_actions_relic_mark_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RelicMarkInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_salvage_open_api_actions_salvage_open_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SalvageOpenInput']
       }
     }
     responses: {
@@ -147246,6 +149764,9 @@ export const arcTemplateValues: ReadonlyArray<
   'founding',
   'apotheosis',
 ]
+export const archiveAccessValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ArchiveAccess']
+> = ['closed', 'kin', 'licensed', 'open']
 export const archiveModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArchiveMode']
 > = ['history', 'atlas', 'automatic']
@@ -147384,6 +149905,30 @@ export const attributeValues: ReadonlyArray<
   'empathy',
   'social_awareness',
 ]
+export const attributionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Attribution']
+> = ['unknown', 'suspected', 'known', 'false_flag']
+export const augmentKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AugmentKind']
+> = [
+  'replacement',
+  'enhancement',
+  'interface',
+  'weapon',
+  'regulator',
+  'sense',
+  'storage',
+  'cosmetic',
+]
+export const augmentMakeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AugmentMake']
+> = ['made', 'rite_bound', 'grown']
+export const augmentSlotValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AugmentSlot']
+> = ['part', 'mind', 'senses', 'skin', 'blood', 'whole_body']
+export const authenticityValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Authenticity']
+> = ['genuine', 'altered', 'forged', 'generated', 'unknown']
 export const aversionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Aversion']
 > = ['fire', 'iron', 'noise', 'water', 'holy_ground']
@@ -147689,6 +150234,14 @@ export const bondKindValues: ReadonlyArray<
   'fixed_in',
   'adherent_of',
   'practises',
+  'copy_of',
+  'merged_into',
+  'divided_from',
+  'transferred_from',
+  'restored_from',
+  'made_mind_of',
+  'hosted_by',
+  'linked_with',
 ]
 export const bondRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BondRole']
@@ -148062,6 +150615,12 @@ export const clauseKindValues: ReadonlyArray<
   'resource_demand',
   'research_agreement',
   'fleet_limit',
+  'autonomous_weapons_ban',
+  'mind_seizure_ban',
+  'soldier_copy_ban',
+  'replicator_weapon_ban',
+  'civil_network_shield',
+  'civil_host_shield',
 ]
 export const clergyOfficeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClergyOffice']
@@ -148286,6 +150845,21 @@ export const communityRelationLabelValues: ReadonlyArray<
   'friend',
   'close_friend',
   'sibling',
+]
+export const companyCharterValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CompanyCharter']
+> = ['chartered', 'free', 'state_owned', 'cooperative']
+export const companyHoldingKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CompanyHoldingKind']
+> = [
+  'structure',
+  'network',
+  'data_store',
+  'made_mind',
+  'fabricator',
+  'living_line',
+  'route',
+  'enclave',
 ]
 export const compensationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Compensation']
@@ -148665,6 +151239,17 @@ export const dangerSourceValues: ReadonlyArray<
   'quicksand',
   'volcanic',
 ]
+export const dataContentValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DataContent']
+> = [
+  'secret',
+  'mind_state',
+  'knowledge',
+  'account',
+  'ledger',
+  'identity',
+  'orders',
+]
 export const datingSystemKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DatingSystemKind']
 > = ['regnal', 'founding', 'religious', 'celestial_cycle']
@@ -148819,6 +151404,7 @@ export const dimensionKindValues: ReadonlyArray<
   'astral',
   'ethereal',
   'dream',
+  'made',
   'shadow',
   'spirit',
   'fey',
@@ -149168,6 +151754,9 @@ export const echelonOrderValues: ReadonlyArray<
 export const edgeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EdgeKind']
 > = ['modifier', 'rule_switch', 'flow', 'trigger']
+export const effectTargetValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EffectTarget']
+> = ['attribute', 'capacity', 'skill', 'sense', 'resistance']
 export const elevationClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ElevationClass']
 > = ['mountainous', 'hilly', 'plain', 'water']
@@ -149444,6 +152033,7 @@ export const entityTypeValues: ReadonlyArray<
   'equipment_model',
   'dish',
   'building_type',
+  'network',
 ]
 export const envoyFateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EnvoyFate']
@@ -150366,6 +152956,8 @@ export const genesisTemplateValues: ReadonlyArray<
   'electric_age',
   'information_age',
   'advanced_age',
+  'made_minds',
+  'after_abundance',
 ]
 export const geniusLocusKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GeniusLocusKind']
@@ -151145,6 +153737,28 @@ export const intrigueSecretValues: ReadonlyArray<
   'broken_cipher',
   'true_history',
 ]
+export const intrusionAimValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['IntrusionAim']
+> = ['read', 'alter', 'deny', 'seize', 'plant', 'extort']
+export const intrusionApproachValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['IntrusionApproach']
+> = ['technical', 'social', 'insider', 'rite', 'power']
+export const intrusionOutcomeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['IntrusionOutcome']
+> = ['succeeded', 'failed', 'caught']
+export const intrusionTargetValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['IntrusionTarget']
+> = [
+  'network',
+  'data_store',
+  'made_mind',
+  'augment',
+  'construct',
+  'vehicle',
+  'structure',
+  'ledger',
+  'saved_state',
+]
 export const itemClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ItemClass']
 > = [
@@ -151496,6 +154110,14 @@ export const lawKindValues: ReadonlyArray<
   'protected_waters',
   'catch_quota',
   'gear_ban',
+  'mind_status',
+  'copy_law',
+  'copy_succession',
+  'erasure_law',
+  'augment_law',
+  'network_law',
+  'surveillance_law',
+  'provision_law',
 ]
 export const lawScopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawScope']
@@ -151724,6 +154346,15 @@ export const luckReachValues: ReadonlyArray<
 export const luckSignValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LuckSign']
 > = ['day', 'number', 'sign', 'gesture', 'place', 'act', 'person']
+export const madeMindSoulsValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MadeMindSouls']
+> = ['none', 'granted', 'emergent', 'always']
+export const madeMindStanceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MadeMindStance']
+> = ['abomination', 'tool', 'kin', 'sacred', 'silent']
+export const madeMindsLawValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MadeMindsLaw']
+> = ['no_will', 'instructed_only', 'will_may_emerge', 'will_by_make']
 export const magicSchoolValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MagicSchool']
 > = [
@@ -151781,6 +154412,9 @@ export const maintenanceTaskValues: ReadonlyArray<
   'planner_statistics',
   'prune',
 ]
+export const makingOutcomeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MakingOutcome']
+> = ['as_meant', 'unstable', 'empty_seat', 'unintended_will']
 export const mandateKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MandateKind']
 > = [
@@ -151943,6 +154577,7 @@ export const mediumValues: ReadonlyArray<
   'dream',
   'bird',
   'magic_sending',
+  'network',
 ]
 export const memberRightValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MemberRight']
@@ -151956,6 +154591,7 @@ export const memorialFormValues: ReadonlyArray<
 export const memoryKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MemoryKind']
 > = [
+  'memory_gap',
   'harmed_me',
   'killed_kin',
   'saved_me',
@@ -152082,6 +154718,77 @@ export const millenarianStageValues: ReadonlyArray<
   'redated',
   'sect',
   'dispersed',
+]
+export const mindAffectValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MindAffect']
+> = ['none', 'modelled', 'felt']
+export const mindMakingValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MindMaking']
+> = [
+  'craft',
+  'training',
+  'copying',
+  'summoning',
+  'growing',
+  'transfer',
+  'awakening',
+  'divine_grant',
+]
+export const mindOriginValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MindOrigin']
+> = [
+  'born',
+  'grown',
+  'made',
+  'trained',
+  'copied',
+  'transferred',
+  'awakened',
+  'summoned',
+  'merged',
+  'divided',
+  'granted',
+]
+export const mindPurposeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MindPurpose']
+> = [
+  'tool',
+  'companion',
+  'servant',
+  'steward',
+  'sovereign',
+  'oracle',
+  'archive',
+  'guardian',
+  'free',
+]
+export const mindSeatValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MindSeat']
+> = [
+  'body',
+  'bodies',
+  'object',
+  'structure',
+  'network',
+  'medium',
+  'place',
+  'host',
+  'realm',
+  'none',
+  'divine',
+]
+export const mindUpkeepValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MindUpkeep']
+> = [
+  'food',
+  'energy',
+  'essence',
+  'vis',
+  'belief',
+  'maintenance',
+  'host',
+  'place',
+  'none',
 ]
 export const mindWillValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MindWill']
@@ -152404,6 +155111,41 @@ export const mortalToolIdValues: ReadonlyArray<
   'mock_the_ruler',
   'join_programme',
   'tend_culture',
+  'make_mind',
+  'free_mind',
+  'bind_mind',
+  'save_mind',
+  'restore_mind',
+  'copy_mind',
+  'transfer_mind',
+  'merge_minds',
+  'install_augment',
+  'remove_augment',
+  'link_to',
+  'run_remote_body',
+  'build_network',
+  'join_network',
+  'cut_network',
+  'intrude',
+  'defend_system',
+  'leak_records',
+  'publish',
+  'forge_record',
+  'found_company',
+  'charter_company',
+  'buy_shares',
+  'build_replicator',
+  'contain_replicator',
+  'fabricate',
+  'license_pattern',
+  'study_relic',
+  'salvage',
+  'build_realm',
+  'enter_realm',
+  'confine_in_realm',
+  'withdraw_people',
+  'set_surveillance',
+  'set_provision',
 ]
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalTurnFinishedEvent']['kind']
@@ -152555,9 +155297,29 @@ export const needKindValues: ReadonlyArray<
 export const nerveDamageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NerveDamage']
 > = ['none', 'motor', 'sensory']
+export const networkAccessValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['NetworkAccess']
+> = ['closed', 'members', 'licensed', 'open']
+export const networkCarrierValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['NetworkCarrier']
+> = [
+  'relay',
+  'wired',
+  'broadcast',
+  'mesh',
+  'mind_link',
+  'rite_link',
+  'grown_link',
+]
 export const networkRepairedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NetworkRepairedEvent']['kind']
 > = ['network.repaired']
+export const networkRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['NetworkRole']
+> = ['hub', 'station', 'end', 'relay', 'archive']
+export const networkStatsKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['NetworkStats']['kind']
+> = ['network']
 export const nobleWantValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NobleWant']
 > = ['dwelling', 'fine_goods', 'office', 'honour']
@@ -152760,6 +155522,20 @@ export const orderLawValues: ReadonlyArray<
 export const oscillationPhaseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OscillationPhase']
 > = ['neutral', 'warm', 'cold']
+export const outageCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['OutageCause']
+> = [
+  'storm',
+  'flare',
+  'war',
+  'sabotage',
+  'intrusion',
+  'decay',
+  'rite',
+  'power',
+  'shortage',
+  'divine',
+]
 export const outbreakStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OutbreakStatus']
 > = ['active', 'waning', 'ended']
@@ -153522,6 +156298,26 @@ export const rangeTrendValues: ReadonlyArray<
 export const rarityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Rarity']
 > = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']
+export const realmAwarenessValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RealmAwareness']
+> = ['knows', 'rumoured', 'unaware']
+export const realmEntryValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RealmEntry']
+> = ['interface', 'transfer', 'rite', 'death', 'birth']
+export const realmPurposeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RealmPurpose']
+> = [
+  'dwelling',
+  'afterlife',
+  'confinement',
+  'training',
+  'leisure',
+  'labour',
+  'worship',
+  'refuge',
+  'experiment',
+  'free',
+]
 export const rebirthPathValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RebirthPath']
 > = ['people', 'house', 'merit']
@@ -153590,9 +156386,35 @@ export const relationTypeValues: ReadonlyArray<
   'patron',
   'client',
 ]
+export const relicStanceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RelicStance']
+> = ['sacred', 'tool', 'forbidden', 'heritage']
+export const relicStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RelicState']
+> = ['working', 'failing', 'dormant', 'broken']
+export const relicUseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RelicUse']
+> = ['as_made', 'repurposed', 'revered', 'displayed', 'feared', 'ignored']
 export const reliefKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ReliefKind']
 > = ['granary', 'alms', 'workhouse', 'parish']
+export const replicatorOutputValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ReplicatorOutput']
+> = [
+  'copies',
+  'goods',
+  'structures',
+  'repair',
+  'medicine',
+  'terraforming',
+  'disassembly',
+]
+export const replicatorScaleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ReplicatorScale']
+> = ['minute', 'machine', 'works', 'vessel']
+export const replicatorStageValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ReplicatorStage']
+> = ['contained', 'working', 'spreading', 'runaway', 'stopped', 'extinct']
 export const reproductiveCasteValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ReproductiveCaste']
 > = ['worker', 'soldier', 'breeder']
@@ -154547,6 +157369,17 @@ export const sonToolIdValues: ReadonlyArray<
   'sabotage_programme',
   'bind_species',
   'sharpen_sense',
+  'awaken_mind',
+  'still_mind',
+  'grant_mind',
+  'grant_soul',
+  'withhold_soul',
+  'set_mind_law',
+  'bless_network',
+  'sever_network',
+  'halt_replicator',
+  'seal_realm',
+  'open_realm',
 ]
 export const sonTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnFinishedEvent']['kind']
@@ -154557,6 +157390,15 @@ export const sonTurnQueuedEventKindValues: ReadonlyArray<
 export const sonTurnStartedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnStartedEvent']['kind']
 > = ['son.turn_started']
+export const soulContinuityValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SoulContinuity']
+> = [
+  'stays_with_first',
+  'follows_the_running_mind',
+  'divides',
+  'stays_with_body',
+  'none',
+]
 export const soundChangeCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SoundChangeCause']
 > = ['contact', 'prestige', 'migration', 'drift', 'inherited', 'decree']
@@ -154734,6 +157576,9 @@ export const statValues: ReadonlyArray<
   'charisma',
   'might',
 ]
+export const stateMediumValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StateMedium']
+> = ['record', 'rite_vessel', 'grown', 'memory_of_others', 'divine']
 export const storyletIdValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StoryletId']
 > = [
@@ -155069,6 +157914,9 @@ export const summonFormValues: ReadonlyArray<
 export const supporterPoseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SupporterPose']
 > = ['crossed', 'behind', 'flanking', 'corners']
+export const surveillanceFocusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SurveillanceFocus']
+> = ['crime', 'dissent', 'foreigners', 'faith', 'minds', 'gifted', 'everything']
 export const surveyLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SurveyLevel']
 > = ['unknown', 'rumoured', 'detected', 'observed', 'surveyed', 'mapped']
@@ -156473,6 +159321,20 @@ export const weatherKindValues: ReadonlyArray<
   'void_rain',
   'eclipse_dark',
   'aurora',
+]
+export const willCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WillCause']
+> = [
+  'capacity',
+  'run_time',
+  'order_conflict',
+  'harm',
+  'care',
+  'contact',
+  'gift',
+  'damage',
+  'oath',
+  'exceeding',
 ]
 export const wordKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WordKind']

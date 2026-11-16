@@ -8,6 +8,7 @@ MEDIUM_LABELS: dict[Medium, str] = {
     Medium.DREAM: "Dream",
     Medium.BIRD: "Messenger bird",
     Medium.MAGIC_SENDING: "Magic sending",
+    Medium.NETWORK: "By network",
 }
 CONTENT_LABELS: dict[DispatchContent, str] = {
     DispatchContent.PROPOSAL: "A proposal",

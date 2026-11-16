@@ -188,6 +188,48 @@ PATTERNS = (
         image_only=True,
     ),
     Pattern(
+        "made mind persona",
+        re.compile(
+            r"\b(?:made minds?|artificial minds?|thinking machines?|machines?|constructs?|automatons?|robots?|androids?|golems?)\s+(?:are|is|seem|seems|remain|remains|stay|stays|feel|feels|act|acts|being)\s+(?:\w+\s+)?"
+            r"(?:cold|emotionless|unfeeling|purely logical|coldly logical|servile|hostile|soulless)\b|"
+            r"\b(?:made minds?|artificial minds?|thinking machines?|machines?|constructs?|automatons?|robots?|androids?|golems?)\b[^.;:]{0,40}\b(?:longs? to be|yearns? to be|dreams? of being) (?:alive|human|real)\b|"
+            r"\b(?:cold|emotionless|unfeeling|coldly logical|servile|soulless)\s+(?:made minds?|artificial minds?|thinking machines?|machines?|constructs?|automatons?|robots?|androids?|golems?)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    Pattern(
+        "made mind uprising",
+        re.compile(
+            r"\b(?:made minds?|artificial minds?|thinking machines?|machines?|constructs?|automatons?|robots?|androids?|golems?)\b[^.;:]{0,40}\b(?:will|must|always|inevitably|eventually|one day)\s+(?:rise up|rise against|rebel|revolt|turn on|overthrow|take over|seize power)\b|"
+            r"\b(?:machine|robot|android|construct|made minds?) (?:uprising|rebellion|revolt|takeover)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    Pattern(
+        "tech imagery",
+        re.compile(
+            r"\b(?:neon|cyberpunk|chrome-plated|holograms?|holographic|circuitry|glowing screens?|blinking lights|data streams?|"
+            r"server farms?|rain-slicked|megacit(?:y|ies)|silicon dreams?)\b",
+            re.IGNORECASE,
+        ),
+        prose_only=True,
+    ),
+    Pattern(
+        "abundance tone",
+        re.compile(
+            r"\b(?:post-scarcity (?:paradise|utopia|dystopia)|utopian? of plenty|paradise of plenty|gilded cage|idle masses|decadent plenty|"
+            r"(?:plenty|abundance) (?:breeds|brings) (?:decay|sloth|ruin|idleness|decadence)|end of all want)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    Pattern(
+        "designed being gender",
+        re.compile(
+            r"\b(?:made minds?|artificial minds?|thinking machines?|machines?|constructs?|automatons?|robots?|androids?|golems?|clones?|designed beings?)\b[^.;:]{0,30}\b(?:she|her|hers|herself)\b|\b(?:gynoids?|fembots?|(?:android|robot) (?:woman|women|girl|girls))\b",
+            re.IGNORECASE,
+        ),
+    ),
+    Pattern(
         MEDIUM_RULE,
         re.compile(
             r"\b(photo-?realistic|photoreal|camera and lens|never a cartoon|wildlife photography|documentary style|astrophotography|"

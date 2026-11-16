@@ -91,6 +91,7 @@ const ALPHA: Record<LayerMode, number> = {
   rings: 0.45,
   centrality: 0.45,
   nutrients: 0.45,
+  networks: 0.45,
 }
 
 export const STOCK_BANDS = [
@@ -115,6 +116,9 @@ const BAND_LABEL: Record<string, string> = {
   soft: 'Gone soft',
   steady: 'Holding together',
   forged: 'Forged as one',
+  net_one: 'Reached by one network',
+  net_few: 'Reached by a few networks',
+  net_many: 'Reached by many networks',
   frontier_soft: 'A frontier gone soft',
   frontier_steady: 'A frontier holding together',
   frontier_forged: 'A frontier forged as one',
@@ -194,6 +198,17 @@ export const NICHE_BANDS = [
   { key: 'many_ways', below: 6 },
   { key: 'crowded_ways', below: Number.POSITIVE_INFINITY },
 ] as const
+
+export const NETWORK_BANDS = [
+  { key: 'net_one', below: 2 },
+  { key: 'net_few', below: 4 },
+  { key: 'net_many', below: Number.POSITIVE_INFINITY },
+] as const
+
+export function networkBand(value: number): string | null {
+  if (value <= 0) return null
+  return NETWORK_BANDS.find((band) => value < band.below)?.key ?? null
+}
 
 export function nicheBand(value: number): string | null {
   if (value <= 0) return null
@@ -360,6 +375,11 @@ function regionKey(
       const band = stocks ? shareBand(stocks[mode] ?? 0) : null
       return band ? { key: `${mode}:${band}`, alpha } : null
     }
+    case 'networks': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks ? networkBand(stocks.networks ?? 0) : null
+      return band ? { key: `networks:${band}`, alpha } : null
+    }
     case 'niches': {
       const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
       const band = stocks ? nicheBand(stocks.niches ?? 0) : null
@@ -453,6 +473,7 @@ function labelFor(
     kind === 'desirability' ||
     kind === 'coverage' ||
     kind === 'niches' ||
+    kind === 'networks' ||
     kind === 'solidarity' ||
     kind === 'rings' ||
     kind === 'centrality' ||

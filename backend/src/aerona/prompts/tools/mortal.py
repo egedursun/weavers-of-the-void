@@ -1086,4 +1086,144 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         " pickled and brewed food better. 1 action.",
         {"kind": "The culture: yeast, starter, mould, lactic or vinegar"},
     ),
+    T.MAKE_MIND: ToolText(
+        "You make a mind in a thing near you, by the method you name, with the will and purpose you give it; your skill sets how well it turns out. 1 action.",
+        {"target_id": "The thing that will hold the mind", "method": "How you make it", "will": "How much will you give it", "purpose": "What it is for"},
+    ),
+    T.FREE_MIND: ToolText(
+        "You release a mind of your making from service. 1 action.",
+        {"mind_id": "The mind"},
+    ),
+    T.BIND_MIND: ToolText(
+        "You bind a mind of your making to obey your word. 1 action.",
+        {"mind_id": "The mind"},
+    ),
+    T.SAVE_MIND: ToolText(
+        "You save the state of your mind, or of one you made, so it can be restored later. 1 action.",
+        {"mind_id": "The mind", "medium": "What holds the saved state"},
+    ),
+    T.RESTORE_MIND: ToolText(
+        "You restore a mind from a state you hold, into a seat you name or its own body. It remembers nothing after the state was taken. 1 action.",
+        {"state_id": "The saved state", "seat_id": "Where the mind will run, or empty for its own body"},
+    ),
+    T.COPY_MIND: ToolText(
+        "You copy your mind, or one you made, into another seat; the copy is a little less faithful than the source. 1 action.",
+        {"mind_id": "The mind", "seat_id": "Where the copy will run"},
+    ),
+    T.TRANSFER_MIND: ToolText(
+        "You move your mind, or one you made, into another seat. 1 action.",
+        {"mind_id": "The mind", "seat_id": "Its new seat"},
+    ),
+    T.MERGE_MINDS: ToolText(
+        "You merge two minds of yours or of your making into one; the second ends as itself. 1 action.",
+        {"mind_ids": "The two minds, the one that stays first"},
+    ),
+    T.INSTALL_AUGMENT: ToolText(
+        "You take an augment into your own body, in the part you name or across the whole body. 1 action.",
+        {"body_part": "The part it goes in, or empty for the whole body", "kind": "What the augment does", "make": "How it is made"},
+    ),
+    T.REMOVE_AUGMENT: ToolText(
+        "You have one of your augments taken out. 1 action.",
+        {"augment_id": "The augment"},
+    ),
+    T.LINK_TO: ToolText(
+        "You link your mind with another's, so the two share what they think. 1 action.",
+        {"target_id": "The one you link with"},
+    ),
+    T.RUN_REMOTE_BODY: ToolText(
+        "You run a made body from afar as if it were your own. 1 action.",
+        {"body_id": "The made body"},
+    ),
+    T.BUILD_NETWORK: ToolText(
+        "You build a network from your home, carried the way you name, open to whom you choose, and bring the members you name onto it. 1 action.",
+        {"carrier": "How it carries what it carries", "access": "Who may use it", "member_ids": "Who else joins at once"},
+    ),
+    T.JOIN_NETWORK: ToolText(
+        "You bring your home onto a network. 1 action.",
+        {"network_id": "The network"},
+    ),
+    T.CUT_NETWORK: ToolText(
+        "You cut one member off a network, or bring the whole network down for an epoch. 1 action.",
+        {"network_id": "The network", "node_id": "The member to cut off, or empty to bring it all down"},
+    ),
+    T.INTRUDE: ToolText(
+        "You try to break into a network, store, mind or made thing for the aim you name; you may be found and named. 1 action.",
+        {"target": "What kind of thing you break into", "target_id": "The thing", "aim": "What you want from it"},
+    ),
+    T.DEFEND_SYSTEM: ToolText(
+        "You harden a network or store against intrusion. 1 action.",
+        {"system_id": "The network or store"},
+    ),
+    T.LEAK_RECORDS: ToolText(
+        "You let out the secrets a store holds, so they become known. 1 action.",
+        {"store_id": "The store"},
+    ),
+    T.PUBLISH: ToolText(
+        "You publish a true record about someone or something, kept in your home. 1 action.",
+        {"subject_id": "What the record is about"},
+    ),
+    T.FORGE_RECORD: ToolText(
+        "You write a false record about someone or something and pass it as genuine. 1 action.",
+        {"subject_id": "What the false record is about"},
+    ),
+    T.FOUND_COMPANY: ToolText(
+        "You found a company in your home and hold all its shares. 1 action.",
+        {"name": "Its name"},
+    ),
+    T.CHARTER_COMPANY: ToolText(
+        "As ruler of a realm, you charter a company to work in it. 1 action.",
+        {"company_id": "The company"},
+    ),
+    T.BUY_SHARES: ToolText(
+        "You buy parts of a company for coin. 1 action.",
+        {"company_id": "The company", "share": "How many of its hundred parts you buy"},
+    ),
+    T.BUILD_REPLICATOR: ToolText(
+        "You start a self-making line in your land that feeds on the stock you name and makes what you name. It can drift and spread. 1 action.",
+        {"output": "What it makes", "feedstock": "What it feeds on"},
+    ),
+    T.CONTAIN_REPLICATOR: ToolText(
+        "You tighten the containment of a self-making line. 1 action.",
+        {"line_id": "The line"},
+    ),
+    T.FABRICATE: ToolText(
+        "You set more of your town's goods to be fabricated rather than made by hand. 1 action.",
+        {},
+    ),
+    T.LICENSE_PATTERN: ToolText(
+        "You pay for the right to use a pattern. 1 action.",
+        {"pattern_id": "The pattern"},
+    ),
+    T.STUDY_RELIC: ToolText(
+        "You study a relic of a making your people have lost, to learn how it works. 1 action.",
+        {"item_id": "The relic"},
+    ),
+    T.SALVAGE: ToolText(
+        "You take what can be used from a salvage site. 1 action.",
+        {"site_id": "The site"},
+    ),
+    T.BUILD_REALM: ToolText(
+        "You make a realm kept running by the host you name, for the purpose you name, at the time ratio you set. 1 action.",
+        {"host_id": "What holds it", "purpose": "What it is for", "ratio": "How fast it runs against world time (%)"},
+    ),
+    T.ENTER_REALM: ToolText(
+        "You go into a made realm; your mind runs there. 1 action.",
+        {"realm_id": "The made realm"},
+    ),
+    T.CONFINE_IN_REALM: ToolText(
+        "As ruler, you confine someone's mind in a made realm. 1 action.",
+        {"target_id": "Whom you confine", "realm_id": "The made realm"},
+    ),
+    T.WITHDRAW_PEOPLE: ToolText(
+        "As ruler, you move a people's minds into a made realm. 1 action.",
+        {"people_id": "The people", "realm_id": "The made realm"},
+    ),
+    T.SET_SURVEILLANCE: ToolText(
+        "As ruler, you set what your realm's watch looks for. 1 action.",
+        {"focus": "What the watch looks for"},
+    ),
+    T.SET_PROVISION: ToolText(
+        "As ruler, you set how your realm provides for its people once goods can be fabricated: by market, ration, for all, by status, by standing or in common. 1 action.",
+        {"level": "How goods are given out"},
+    ),
 }

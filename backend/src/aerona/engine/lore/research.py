@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import combinations
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +14,7 @@ from aerona.db.tables.culture import BookContentRow, HolderLevelRow, HolderTechn
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.networks import NetworkNodeRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import WarSideRow
 from aerona.db.write_guard import held
@@ -34,6 +36,7 @@ from aerona.engine.lore.printing import banned_for, read_in_secret
 from aerona.engine.lore.truth import branch_factor
 from aerona.engine.means.media import legible
 from aerona.engine.museums.reading import collection_factor
+from aerona.engine.networks.book import reach_pct
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import raw_level
@@ -259,6 +262,19 @@ async def forget(ctx: TickContext, holder_id: int, knowledge_id: int) -> None:
         await repository.deactivate(bond, ctx.epoch, "the last masters died")
 
 
+async def network_pairs(ctx: TickContext) -> list[tuple[int, int]]:
+    members: dict[int, list[int]] = {}
+    for network_id, member in await ctx.session.execute(select(NetworkNodeRow.network_entity_id, NetworkNodeRow.member_node_id).order_by(NetworkNodeRow.id)):
+        members.setdefault(network_id, []).append(member)
+    pairs: list[tuple[int, int]] = []
+    for network_id, joined in members.items():
+        for first, second in combinations(joined, 2):
+            reach = await reach_pct(ctx.session, ctx.rules, first, ctx.epoch, kind="carries_records")
+            if reach and ctx.rng(f"diffusion.network.{network_id}.{first}.{second}.{ctx.epoch}").chance(reach):
+                pairs.append((first, second))
+    return pairs
+
+
 async def diffuse_techniques(ctx: TickContext) -> int:
     moved = 0
     levels = await holder_levels(ctx.session)
@@ -267,7 +283,8 @@ async def diffuse_techniques(ctx: TickContext) -> int:
             BondRow.kind.in_([BondKind.TRADES_WITH, BondKind.ALLY, BondKind.RULES]), BondRow.state == BondState.ACTIVE
         )
     )
-    for first, second in links.all():
+    pairs = [*links.all(), *await network_pairs(ctx)]
+    for first, second in pairs:
         for giver, taker in ((first, second), (second, first)):
             if held(taker):
                 continue

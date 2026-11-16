@@ -1,4 +1,6 @@
 import {
+  Pickaxe,
+  BrainCircuit,
   Anchor,
   Atom,
   MoveRight,
@@ -105,6 +107,8 @@ export const TEMPLATE_ICON: Record<WizardTemplate['key'], LucideIcon> = {
   electric_age: Zap,
   information_age: Cpu,
   advanced_age: Atom,
+  made_minds: BrainCircuit,
+  after_abundance: Pickaxe,
 }
 
 export const SHAPE_ICON: Record<CosmosShape, LucideIcon> = {

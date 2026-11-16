@@ -47,6 +47,14 @@ KIND_VALUES: Mapping[LawKind, Mapping[ValueAxis, int]] = {
     LawKind.INTELLECTUAL_PROPERTY: {ValueAxis.WEALTH: 1, ValueAxis.KNOWLEDGE: -1},
     LawKind.MACHINE_LAW: {ValueAxis.TRADITION: 1, ValueAxis.KNOWLEDGE: -1},
     LawKind.SPACE_LAW: {ValueAxis.XENOPHILIA: 1},
+    LawKind.MIND_STATUS: {ValueAxis.MERCY: 1, ValueAxis.TRADITION: -1},
+    LawKind.COPY_LAW: {ValueAxis.TRADITION: 1, ValueAxis.FAMILY: 1},
+    LawKind.COPY_SUCCESSION: {ValueAxis.LAW: 1},
+    LawKind.ERASURE_LAW: {ValueAxis.MERCY: 1},
+    LawKind.AUGMENT_LAW: {ValueAxis.TRADITION: 1, ValueAxis.PURITY: 1},
+    LawKind.NETWORK_LAW: {ValueAxis.HIERARCHY: 1},
+    LawKind.SURVEILLANCE_LAW: {ValueAxis.LAW: 1, ValueAxis.HIERARCHY: 1},
+    LawKind.PROVISION_LAW: {ValueAxis.MERCY: 1, ValueAxis.WEALTH: -1},
 }
 
 

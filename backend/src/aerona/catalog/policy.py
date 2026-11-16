@@ -117,6 +117,14 @@ LAW_POLICY: MappingProxyType[LawKind, Callable[[Terms], Shift]] = MappingProxyTy
         LawKind.INTELLECTUAL_PROPERTY: fixed({C.PROFESSIONAL: 4, C.MERCHANT: 3, C.ARTISAN: -2}),
         LawKind.MACHINE_LAW: machines,
         LawKind.SPACE_LAW: fixed({C.MERCHANT: 2, C.PROFESSIONAL: 2}),
+        LawKind.MIND_STATUS: fixed({C.PROFESSIONAL: 1, C.WORKER: -1}),
+        LawKind.COPY_LAW: fixed({C.NOBLE: 2, C.PROFESSIONAL: 1}),
+        LawKind.COPY_SUCCESSION: fixed({C.NOBLE: 2}),
+        LawKind.ERASURE_LAW: fixed({C.PROFESSIONAL: 1}),
+        LawKind.AUGMENT_LAW: fixed({C.PROFESSIONAL: 2, C.WORKER: 1}),
+        LawKind.NETWORK_LAW: fixed({C.MERCHANT: 2, C.OFFICIAL: 2}),
+        LawKind.SURVEILLANCE_LAW: fixed({C.OFFICIAL: 3, C.CITIZEN: -3}),
+        LawKind.PROVISION_LAW: fixed({C.WORKER: 4, C.UNEMPLOYED: 6, C.MERCHANT: -3}),
     }
 )
 MANDATE_POLICY: MappingProxyType[MandateKind, Shift] = MappingProxyType(

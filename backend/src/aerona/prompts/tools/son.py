@@ -1141,7 +1141,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact or naval_limit",
             "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
-            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id, tonnage, frame...)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id, tonnage, frame...)",
             "epochs": "How many ages it holds; empty for ever",
             "parties.party_id": "The party's id",
             "parties.role": "Its role: signatory, overlord, vassal or guarantor",
@@ -1846,5 +1846,55 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "sense": "The sense: sight, night_vision, smell, hearing, echolocation, vibration, magnetic, spirit_sight or heat",
             "reason": "Why you sharpen it",
         },
+    ),
+    T.AWAKEN_MIND: ToolText(
+        "You wake a mind in a thing in your reach, giving it the will you name. 1 action.",
+        {"node_id": "The thing whose mind wakes", "will": "How much will it wakes with", "reason": "Why you wake it"},
+    ),
+    T.STILL_MIND: ToolText(
+        "You still a mind in your reach; it stops thinking until it is woken. 1 action.",
+        {"node_id": "The thing whose mind goes still", "reason": "Why you still it"},
+    ),
+    T.GRANT_MIND: ToolText(
+        "You give a thing in your reach a mind of its own, by your gift. 1 action.",
+        {"node_id": "The thing that gains a mind", "origin": "Where its mind is said to come from", "reason": "Why you give it a mind"},
+    ),
+    T.GRANT_SOUL: ToolText(
+        "You give a made mind in your reach a soul, as far as the law of its world allows. Costs essence. 1 action.",
+        {"mind_id": "The mind", "reason": "Why you give it a soul"},
+    ),
+    T.WITHHOLD_SOUL: ToolText(
+        "You take back the soul of a made mind in your reach. 1 action.",
+        {"mind_id": "The mind", "reason": "Why you withhold its soul"},
+    ),
+    T.SET_MIND_LAW: ToolText(
+        "You set how a world in your reach treats made minds: whether they may have will, whether they have souls and where a soul goes when a mind is copied. Name at least one. 1 action.",
+        {
+            "world_id": "The world",
+            "made_minds": "Whether made minds may have will, or empty to leave it",
+            "made_mind_souls": "Whether made minds have souls, or empty to leave it",
+            "soul_continuity": "Where a soul goes when its mind is copied or moved, or empty to leave it",
+            "reason": "Why you set it so",
+        },
+    ),
+    T.BLESS_NETWORK: ToolText(
+        "You bless a network in your reach: it runs more reliably, is harder to break into and comes back up if it was down. 1 action.",
+        {"network_id": "The network", "reason": "Why you bless it"},
+    ),
+    T.SEVER_NETWORK: ToolText(
+        "You bring a network in your reach down for a while; what depends on it goes without. 1 action.",
+        {"network_id": "The network", "reason": "Why you sever it"},
+    ),
+    T.HALT_REPLICATOR: ToolText(
+        "You stop a self-making line wherever it has spread. 1 action.",
+        {"line_id": "The line", "reason": "Why you stop it"},
+    ),
+    T.SEAL_REALM: ToolText(
+        "You seal a made realm: no one may go in or out until it is opened. 1 action.",
+        {"realm_id": "The made realm", "reason": "Why you seal it"},
+    ),
+    T.OPEN_REALM: ToolText(
+        "You open a sealed made realm again. 1 action.",
+        {"realm_id": "The made realm", "reason": "Why you open it"},
     ),
 }

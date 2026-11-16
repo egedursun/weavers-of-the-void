@@ -65,6 +65,7 @@ run method_orphans "$PYTHON" scripts/check_method_orphans.py
 run food_energy "$PYTHON" scripts/check_food_energy.py
 run raw_enums sh -c 'cd frontend && node scripts/check_raw_enums.mjs'
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check
+run inventory "$PYTHON" scripts/check_inventory.py check
 
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then
   run static sh -c 'cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports'

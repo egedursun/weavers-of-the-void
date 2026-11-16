@@ -20,6 +20,7 @@ import { NodePicker } from '@/features/dominion/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { Ref } from '@/features/gatherings/parts'
+import { AUTHENTICITIES } from '@/features/minds/labels'
 import {
   type AccountView,
   type CollectiveView,
@@ -171,7 +172,7 @@ function AccountCard({
           ? `${kind.label}: ${row.collection_name}`
           : kind.label
       }
-      caption={`Kept by ${row.holder.name} · ${row.dated} (epoch ${row.epoch})`}
+      caption={`Kept by ${row.holder.name} · ${row.dated} (epoch ${row.epoch}) · ${AUTHENTICITIES[row.authenticity].label}`}
       removeLabel='Lose this account'
       editTitle='Set the account'
       note='Fidelity is how true it stays to what happened; credence is how far it is believed. Its distance from the truth adds every praise, blame and omission.'
@@ -198,6 +199,12 @@ function AccountCard({
         },
         { key: 'medium', label: 'Kept as', kind: 'pick', table: table(MEDIA) },
         { key: 'defaced', label: 'Defaced', kind: 'pick', table: YES_NO },
+        {
+          key: 'authenticity',
+          label: 'How genuine it is',
+          kind: 'pick',
+          table: table(AUTHENTICITIES),
+        },
         {
           key: 'author_node_id',
           label: 'Written by',

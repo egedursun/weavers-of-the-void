@@ -49,6 +49,7 @@ from aerona.domain.enums.world import (
 )
 from aerona.domain.models.genesis import MOISTURE_FLOOR, PREHISTORY_CEILING, GenesisOutcome, GenesisSettings
 from aerona.engine.cosmos.control import tear_rift
+from aerona.engine.made.genesis import seed_made_world
 from aerona.engine.prehistory.control import configure
 from aerona.engine.prehistory.run import run_prehistory
 from aerona.engine.primitives.manual import manual_context
@@ -97,6 +98,8 @@ class WizardInput(BaseModel):
     climate_era: str | None = None
     world_age: str | None = None
     prehistory_epochs: Any = None
+    made_minds: Any = None
+    information_reach: Any = None
     tone: str | None = None
     seed: str | None = None
 
@@ -291,6 +294,8 @@ def sanitize(rules: Rules, raw: WizardInput) -> GenesisSettings:
         climate_era=_optional(ClimateEra, raw.climate_era, template.climate_era if template else None),
         world_age=_optional(WorldAge, raw.world_age, template.world_age if template else None),
         prehistory_epochs=_bounded(raw.prehistory_epochs, rules.prehistory.epochs, 0, PREHISTORY_CEILING) or 0,
+        made_minds=_bounded(raw.made_minds, template.made_minds if template else None, 0, PERCENT),
+        information_reach=_bounded(raw.information_reach, template.information_reach if template else None, 0, PERCENT),
         tone=tone,
         seed_idea=seed,
     )
@@ -414,6 +419,8 @@ class GenesisWizard:
                 worlds.append(await self._ports.worlds.create(extra_world_order(settings, seed, number, sun=sun, layer=layer)))
         if layer is not None and first_world is not None:
             await self._join_layer(first_world, layer[0], worlds[0] if worlds else None)
+        if settings is not None and first_world is not None and (settings.made_minds is not None or settings.information_reach):
+            await self._made_world([first_world, *worlds], settings)
         if settings is not None and settings.prehistory_epochs and first_world is not None:
             self._report(context, 0.9, STAGE_PREHISTORY)
             await self._prehistory(first_world, settings.prehistory_epochs)
@@ -442,6 +449,11 @@ class GenesisWizard:
                 by_node_id=creator.id if creator is not None else None,
                 cause=RiftCause.CREATOR,
             )
+
+    async def _made_world(self, world_ids: list[int], settings: GenesisSettings) -> None:
+        async with self._database.write() as session:
+            ctx = await manual_context(session, "genesis_made_world", self._rules)
+            await seed_made_world(ctx, world_ids, prevalence=settings.made_minds, reach=settings.information_reach, technology=settings.technology)
 
     async def _prehistory(self, world_id: int, epochs: int) -> None:
         async with self._database.write() as session:

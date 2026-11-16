@@ -316,6 +316,11 @@ class BuildingTypeStats(ValueObject):
     renown: Percent | None = None
 
 
+class NetworkStats(ValueObject):
+    kind: Literal["network"] = "network"
+    reach: Count | None = None
+
+
 EntityStats = Annotated[
     RegionStats
     | PlaceStats
@@ -359,6 +364,7 @@ EntityStats = Annotated[
     | EquipmentModelStats
     | DishStats
     | BuildingTypeStats
+    | NetworkStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

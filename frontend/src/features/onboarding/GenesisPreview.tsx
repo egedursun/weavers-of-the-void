@@ -1,5 +1,7 @@
 import { type ReactNode } from 'react'
 import {
+  Network,
+  BrainCircuit,
   Hourglass,
   CircleAlert,
   CircleCheck,
@@ -197,6 +199,20 @@ export function GenesisPreview({
             <Badge variant='outline'>
               <Hourglass />
               {`${plural(draft.prehistoryEpochs, 'epoch')} of prehistory`}
+            </Badge>
+          )}
+          {draft.madeMinds !== null && (
+            <Badge variant='outline'>
+              <BrainCircuit />
+              {draft.madeMinds === 0
+                ? 'No made mind has a will'
+                : `Made minds ${draft.madeMinds} of 100`}
+            </Badge>
+          )}
+          {draft.informationReach !== null && draft.informationReach > 0 && (
+            <Badge variant='outline'>
+              <Network />
+              {`Networks reach ${draft.informationReach} of 100`}
             </Badge>
           )}
           {age && AgeIcon && (

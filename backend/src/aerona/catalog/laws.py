@@ -98,8 +98,19 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
         LawKind.GEAR_BAN: {},
         LawKind.WEAPONS_LAW: {"level": pick("open", "licensed", "banned", default="licensed")},
         LawKind.INTELLECTUAL_PROPERTY: {"term": Param(20, 1, 100)},
-        LawKind.MACHINE_LAW: {"level": pick("free", "licensed", "banned", default="licensed")},
+        LawKind.MACHINE_LAW: {
+            "level": pick("free", "licensed", "banned", default="licensed"),
+            "banned_method": pick("none", "craft", "training", "copying", "summoning", "growing", "transfer", "awakening", "divine_grant", default="none"),
+        },
         LawKind.SPACE_LAW: {"claims": pick("open", "national", "shared", default="shared")},
+        LawKind.MIND_STATUS: {"status": pick("property", "ward", "servant", "citizen", "sovereign", default="property")},
+        LawKind.COPY_LAW: {"level": pick("banned", "licensed", "free", default="licensed")},
+        LawKind.COPY_SUCCESSION: {"rule": pick("first_only", "all_equal", "by_fidelity", "by_court", "none", default="first_only")},
+        LawKind.ERASURE_LAW: {"level": pick("permitted", "regulated", "destruction", "killing", default="regulated")},
+        LawKind.AUGMENT_LAW: {"level": pick("banned", "licensed", "free", default="licensed")},
+        LawKind.NETWORK_LAW: {"level": pick("state_owned", "licensed", "open", default="licensed")},
+        LawKind.SURVEILLANCE_LAW: {"level": pick("forbidden", "warranted", "broad", "total", default="warranted")},
+        LawKind.PROVISION_LAW: {"level": pick("market", "ration", "universal", "by_status", "by_reputation", "communal", default="market")},
     },
 )
 
@@ -152,6 +163,14 @@ LAW_TITLES = MappingProxyType(
         LawKind.INTELLECTUAL_PROPERTY: "the Patent Law",
         LawKind.MACHINE_LAW: "the Machine Law",
         LawKind.SPACE_LAW: "the Space Law",
+        LawKind.MIND_STATUS: "the Law of Made Minds",
+        LawKind.COPY_LAW: "the Copy Law",
+        LawKind.COPY_SUCCESSION: "the Law of Copies and Heirs",
+        LawKind.ERASURE_LAW: "the Erasure Law",
+        LawKind.AUGMENT_LAW: "the Augment Law",
+        LawKind.NETWORK_LAW: "the Network Law",
+        LawKind.SURVEILLANCE_LAW: "the Watch Law",
+        LawKind.PROVISION_LAW: "the Provision Law",
     }
 )
 
@@ -213,8 +232,16 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.GEAR_BAN: "The gear that takes the young is forbidden.",
         LawKind.WEAPONS_LAW: "Weapons are {level}; where banned, crime falls.",
         LawKind.INTELLECTUAL_PROPERTY: "Inventions are protected for {term} epochs; techniques spread more slowly.",
-        LawKind.MACHINE_LAW: "Thinking machines are {level}; banned, they may never rule.",
+        LawKind.MACHINE_LAW: "Making minds is {level}; forbidden way of making: {banned_method}; banned, made minds may never rule.",
         LawKind.SPACE_LAW: "Claims beyond the world are {claims}; shared claims keep space routes safer.",
+        LawKind.MIND_STATUS: "Made minds stand in the law as {status}.",
+        LawKind.COPY_LAW: "Copying a mind is {level}.",
+        LawKind.COPY_SUCCESSION: "When copies of a mind exist, what it held passes by the rule {rule}.",
+        LawKind.ERASURE_LAW: "Ending a made mind is {level}.",
+        LawKind.AUGMENT_LAW: "Augmenting a body is {level}.",
+        LawKind.NETWORK_LAW: "Networks are {level}.",
+        LawKind.SURVEILLANCE_LAW: "Watching the people is {level}.",
+        LawKind.PROVISION_LAW: "What is made without hands is given out by {level}.",
     }
 )
 

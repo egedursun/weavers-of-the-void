@@ -710,7 +710,8 @@
       "asker_tipi": "unit_type",
       "techizat_modeli": "equipment_model",
       "yemek": "dish",
-      "bina_tipi": "building_type"
+      "bina_tipi": "building_type",
+      "ag": "network"
     },
     "entity_status": {
       "kanon": "canon",
@@ -942,7 +943,15 @@
       "esi": "spouse_of",
       "kan_kardesi": "sworn_kin",
       "rivayet_eder": "tells",
-      "evcil_hayvani": "pet_of"
+      "evcil_hayvani": "pet_of",
+      "kopyasi": "copy_of",
+      "birlesti": "merged_into",
+      "bolundu": "divided_from",
+      "tasindi": "transferred_from",
+      "geri_yuklendi": "restored_from",
+      "yapay_zihni": "made_mind_of",
+      "barindirilir": "hosted_by",
+      "baglantili": "linked_with"
     },
     "dropped_bond_kind": {
       "bilirdi": "knew",
@@ -2191,6 +2200,9 @@
     },
     "building_type": {
       "un": "renown"
+    },
+    "network": {
+      "erisim": "reach"
     }
   },
   "entity_extra_stats": {

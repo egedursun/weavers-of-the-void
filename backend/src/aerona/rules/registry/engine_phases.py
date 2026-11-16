@@ -616,6 +616,39 @@ class EnginePhasesRules:
     )
     closures: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: grounds worked in common near collapse are closed by custom")
     novelty: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: art forms and dishes go in and out of fashion as they spread and grow rare")
+    networks: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: networks grow, go down and carry their members' dependence")
+    intrusions: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: foes break into each other's networks and stores, and some are found")
+    surveillance: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: realms watch their towns as far as their networks, stores, spies and laws allow"
+    )
+    information_trust: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: how far a people trusts its records rises and falls with censorship and found forgeries"
+    )
+    company_power: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: companies gain influence where they hold things, take enclaves and may capture or leave realms"
+    )
+    replicators: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: self-making lines grow on their feedstock, drift, spread and yield or consume"
+    )
+    abundance: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fabrication lowers scarcity and prices, moves workers and pays dividends")
+    made_realms: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: made realms run at their own time, stand still when their host goes down and yield to their keepers",
+    )
+    augments: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: augments integrate or strain their bearers, cost upkeep and may be rejected")
+    mind_law: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: world and realm law and doctrine give made minds souls, standing and movements"
+    )
+    made_peoples: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: made minds of one maker become a people of their own")
+    made_relics: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: what its keepers can no longer make becomes a relic, wears, is studied and salvaged"
+    )
+    minds: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: minds in made seats are kept or go still, drift, grow or lose their will, wake and leave"
+    )
     transformations: int = rule(
         1,
         0,

@@ -33,6 +33,7 @@ from aerona.domain.enums.collective import (
     SupporterPose,
     Tincture,
 )
+from aerona.domain.enums.made import Authenticity
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.vehicles import VehicleFrame
@@ -115,6 +116,7 @@ class AccountView(ApiModel):
     distance: int
     revised_from_id: int | None
     defaced: bool
+    authenticity: Authenticity
     epoch: int
     dated: str
     stances: list[AccountStanceView]

@@ -45,6 +45,7 @@ class EntityType(StrEnum):
     EQUIPMENT_MODEL = "equipment_model"
     DISH = "dish"
     BUILDING_TYPE = "building_type"
+    NETWORK = "network"
 
 
 class EntityStatus(StrEnum):

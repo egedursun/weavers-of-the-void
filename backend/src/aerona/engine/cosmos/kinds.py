@@ -674,6 +674,17 @@ DIMENSION_KIND_MECHANICS: MappingProxyType[DimensionKind, DimensionKindMechanics
             leak=lambda rules: rules.dimension_kinds.pocket_leak,
             capacity=lambda rules: rules.dimension_kinds.pocket_capacity,
         ),
+        DimensionKind.MADE: DimensionKindMechanics(
+            DimensionKind.MADE,
+            veil=lambda rules: rules.dimension_kinds.made_veil,
+            stability=lambda rules: rules.dimension_kinds.made_stability,
+            time=lambda rules: rules.dimension_kinds.made_time,
+            magic=lambda rules: rules.dimension_kinds.made_magic,
+            hostility=lambda rules: rules.dimension_kinds.made_hostility,
+            sanity=lambda rules: rules.dimension_kinds.made_sanity,
+            leak=lambda rules: rules.dimension_kinds.made_leak,
+            capacity=lambda rules: rules.dimension_kinds.made_capacity,
+        ),
         DimensionKind.BUBBLE_UNIVERSE: DimensionKindMechanics(
             DimensionKind.BUBBLE_UNIVERSE,
             veil=lambda rules: rules.dimension_kinds.bubble_universe_veil,

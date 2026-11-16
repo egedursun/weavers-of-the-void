@@ -68,6 +68,7 @@ from aerona.engine.interconnect.catalog_means import BIOLOGY_MECHANICS, HONOURS_
 from aerona.engine.interconnect.catalog_military import BEHAVIOURS as MILITARY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_military import MILITARY_MECHANICS
 from aerona.engine.interconnect.catalog_military_depth import MILITARY_DEPTH_MECHANICS
+from aerona.engine.interconnect.catalog_minds import MINDS_MECHANICS
 from aerona.engine.interconnect.catalog_mortal import BEHAVIOURS as MORTAL_BEHAVIOURS
 from aerona.engine.interconnect.catalog_mortal import MORTAL_MECHANICS
 from aerona.engine.interconnect.catalog_nature import NATURE_MECHANICS
@@ -1029,6 +1030,7 @@ BUILT_IN = (
     *OPERATIONS_MECHANICS,
     *SACRED_MECHANICS,
     *ARTS_MECHANICS,
+    *MINDS_MECHANICS,
     *AGES_MECHANICS,
     *FOLKWAYS_MECHANICS,
     *CRAFTS_MECHANICS,

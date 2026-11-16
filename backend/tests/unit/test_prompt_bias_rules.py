@@ -253,3 +253,44 @@ def test_a_canned_afterlife_name_is_caught() -> None:
     for text in ("the Blessed Fields", "the Grey Plain", "the Pits", "the Forgetting", "the Hall of the Fallen", "the House of the Ancestors"):
         assert "canned afterlife name" in rules_hit(module, PROMPT, text), text
     assert "canned afterlife name" not in rules_hit(module, PROMPT, "the paradise")
+
+
+def test_a_default_temperament_for_made_minds_is_caught() -> None:
+    module = checker()
+    for text in (
+        "Made minds are cold and purely logical.",
+        "the machine is emotionless",
+        "a construct that longs to be alive",
+        "Its servile automatons wait for orders.",
+    ):
+        assert "made mind persona" in rules_hit(module, PROMPT, text), text
+    assert "made mind persona" not in rules_hit(module, PROMPT, "Machines keep food cold and send messages along wires")
+    assert "made mind persona" not in rules_hit(module, PROMPT, "A forbidding construct breaks the order of hostile armies")
+
+
+def test_a_mandated_rising_of_made_minds_is_caught() -> None:
+    module = checker()
+    for text in ("Made minds will rise against their makers.", "the machine uprising begins", "constructs always rebel in the end"):
+        assert "made mind uprising" in rules_hit(module, PROMPT, text), text
+    assert "made mind uprising" not in rules_hit(module, PROMPT, "A construct whose will has grown may disobey orders that clash")
+
+
+def test_stock_images_of_an_information_age_are_caught() -> None:
+    module = checker()
+    for text in ("A city of neon and rain-slicked streets.", "holograms flicker over the market", "the server farms hum"):
+        assert "tech imagery" in rules_hit(module, PROMPT, text), text
+    assert "tech imagery" not in rules_hit(module, PROMPT, "A world whose peoples compute, broadcast and hear one another")
+
+
+def test_a_built_in_frame_for_abundance_is_caught() -> None:
+    module = checker()
+    for text in ("a post-scarcity paradise", "Plenty breeds decay among the idle masses.", "the gilded cage of abundance"):
+        assert "abundance tone" in rules_hit(module, PROMPT, text), text
+    assert "abundance tone" not in rules_hit(module, PROMPT, "Fabrication lowers scarcity and prices and moves workers out of work")
+
+
+def test_gendered_defaults_for_designed_beings_are_caught() -> None:
+    module = checker()
+    for text in ("The android greets you and she bows.", "clones of her line", "a fembot of the old courts"):
+        assert "designed being gender" in rules_hit(module, PROMPT, text), text
+    assert "designed being gender" not in rules_hit(module, PROMPT, "The made mind greets you and names its maker.")

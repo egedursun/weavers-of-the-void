@@ -553,6 +553,7 @@ def _memory(
 
 MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = MappingProxyType(
     {
+        M.MEMORY_GAP: _memory({OC.TRUST: 100}, 10, {}, "A gap in memory", inherited=False),
         M.HARMED_ME: _memory({OC.GRIEVANCE: 60, OC.TRUST: 25, OC.FEAR: 15}, 12, {V.HONOUR: 20, V.MERCY: 15}, "Harmed us", A.RAIDING),
         M.KILLED_KIN: _memory({OC.GRIEVANCE: 75, OC.TRUST: 15, OC.FEAR: 10}, 2, {V.KINSHIP: 40, V.HONOUR: 25}, "Killed our kin", A.EXECUTION),
         M.SAVED_ME: _memory({OC.AFFECTION: 45, OC.TRUST: 35, OC.RESPECT: 20}, 6, {V.MERCY: 20, V.KINSHIP: 15}, "Saved us"),

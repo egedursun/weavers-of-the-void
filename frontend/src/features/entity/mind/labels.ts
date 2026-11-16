@@ -1,4 +1,5 @@
 import {
+  CircleDashed,
   Bed,
   Droplets,
   HeartPulse,
@@ -300,6 +301,7 @@ export const SKILL_SOURCES: Record<string, string> = {
 
 export const MEMORY_ICONS: Record<components['schemas']['MemoryKind'], Named> =
   {
+    memory_gap: { label: 'A gap in memory', icon: CircleDashed, tone: 'muted' },
     harmed_me: { label: 'Harmed us', icon: Swords, tone: 'danger' },
     killed_kin: { label: 'Killed our kin', icon: Skull, tone: 'danger' },
     saved_me: { label: 'Saved us', icon: HandHeart, tone: 'success' },

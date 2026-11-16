@@ -18,12 +18,15 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import AfterlifeState, BindingKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.minds import MindAffect, MindMaking, MindPurpose, MindSeat, MindUpkeep
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import BeastStats, ItemStats
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import profile_of
+from aerona.engine.mind.book import skill_level
+from aerona.engine.minds.making import Making, make_mind
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -173,13 +176,24 @@ async def make_construct(ctx: TickContext, maker: EntityRow, design: Design) -> 
         power=SOURCE_POWER[source],
         upkeep=ctx.rules.constructs.upkeep * (2 if source is MagicSource.VOID else 1),
         maker_entity_id=maker.id,
-        will=MindWill.INSTRUCTED,
         soul_entity_id=None,
         made_epoch=ctx.epoch,
         locked=[],
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    method = MindMaking.SUMMONING if source is MagicSource.SOUL else MindMaking.CRAFT
+    making = Making(
+        method,
+        MindSeat.BODY,
+        body.id,
+        MindWill.INSTRUCTED,
+        MindPurpose.SERVANT,
+        MindAffect.NONE,
+        MindUpkeep.MAINTENANCE,
+        skill=await skill_level(ctx.session, maker.id, SkillKind.SPELLCRAFT),
+    )
+    await make_mind(ctx, body.id, maker.id, making)
     await record_transformation(ctx, TransformKind.CONSTRUCT, None, body.id)
     if source is MagicSource.SOUL:
         await bind_soul(ctx, row, body, maker)

@@ -102,6 +102,7 @@ CREATION_GATE_RULES: dict[EntityType, Callable[[Rules], int]] = {
     EntityType.EQUIPMENT_MODEL: lambda rules: rules.rarity_gates.create_equipment_model,
     EntityType.DISH: lambda rules: rules.rarity_gates.create_dish,
     EntityType.BUILDING_TYPE: lambda rules: rules.rarity_gates.create_building_type,
+    EntityType.NETWORK: lambda rules: rules.rarity_gates.create_network,
 }
 
 

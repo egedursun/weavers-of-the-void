@@ -8,6 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = ROOT / "docs" / "spec" / "13-depth-expansion.md"
 MATRIX = ROOT / "docs" / "spec" / "13-coverage.md"
+MINDS_SPEC = ROOT / "docs" / "spec" / "16-minds-powers-living-craft.md"
+MINDS_MATRIX = ROOT / "docs" / "spec" / "16-coverage.md"
 
 COLUMNS = ("ID", "Kind", "Title", "Spec", "Module", "Trigger", "Lever", "UI", "LLM", "Templates", "Backfill", "Test", "Status")
 WORK_COLUMNS = ("Module", "Trigger", "Lever", "UI", "LLM", "Templates", "Backfill", "Test")
@@ -31,6 +33,10 @@ WAVE_ROW = re.compile(r"^\| (W\d+\+?)(?: \(extended\))? \| ([^|]+) \|")
 GROUND_RULE_ROW = re.compile(r"^\| (G\d+) \| ([^|]+) \|")
 DECISION_ROW = re.compile(r"^\| (K\.\d+) \| ([^|]+) \|")
 STORY_ITEM = re.compile(r"^(\d+)\. \*\*([^*]+)\*\*")
+NAMED_STORY = re.compile(r"^(AS\d+) (.+)$")
+STORY_BLOCK = re.compile(r"^\*\*Acceptance stories\*\*")
+COUPLING_ROW = re.compile(r"^\| (C\d+) \| ([^|]+) \| ([^|]+) \|")
+LANE_HEADING = re.compile(r"^\*\*(R\d+) ([^*]+)\*\*$")
 STORY_HEADING = re.compile(r"acceptance stories|stories", re.IGNORECASE)
 TYPE_SECTIONS = {"title": "S4.11", "art_form": "S7.5", "art form": "S7.5", "theory": "S8.4b", "8.4b": "S8.4b"}
 SUMMARY_HEADING = re.compile(r"totals|convergence|count", re.IGNORECASE)
@@ -84,7 +90,7 @@ def reference_keys(text: str) -> tuple[str, ...]:
 
 
 class SpecParser:
-    def __init__(self) -> None:
+    def __init__(self, *, extended: bool = False) -> None:
         self.items: dict[str, Item] = {}
         self.owner: str | None = None
         self.audit: str | None = None
@@ -101,8 +107,10 @@ class SpecParser:
             (GROUND_RULE_ROW, self.simple("ground-rule", "Part 0")),
             (DECISION_ROW, self.simple("decision", "Part K")),
             (WAVE_ROW, self.wave),
+            *(((STORY_BLOCK, self.story_block), (LANE_HEADING, self.lane)) if extended else ()),
             (STORY_ITEM, self.story),
             (OCM_ROW, self.ocm_gap),
+            *(((COUPLING_ROW, self.coupling),) if extended else ()),
             (NUMBERED_ROW, self.numbered_gap),
         )
 
@@ -165,8 +173,27 @@ class SpecParser:
             self.add(Item(match.group(1), "wave", clean(match.group(2))[:TITLE_LIMIT], "Part J"))
 
     def story(self, match: re.Match[str], _: str) -> None:
-        if self.stories:
+        if not self.stories:
+            return
+        named = NAMED_STORY.match(clean(match.group(2)))
+        if named:
+            self.add(Item(named.group(1), "story", clean(named.group(2)).rstrip("."), f"§{self.owner[1:] if self.owner else 'Part I'}"))
+        else:
             self.add(Item(f"AS{match.group(1)}", "story", clean(match.group(2)), "Part I"))
+
+    def story_block(self, _match: re.Match[str], _: str) -> None:
+        self.stories = True
+
+    def lane(self, match: re.Match[str], _: str) -> None:
+        self.add(Item(match.group(1), "reference-lane", clean(match.group(2)), f"§{self.owner[1:] if self.owner else 'Part 2'}"))
+
+    def coupling(self, match: re.Match[str], line: str) -> None:
+        if self.audit:
+            self.numbered_gap(match, line)
+            return
+        if match.group(2).strip() in {"From", "Id"}:
+            return
+        self.add(Item(match.group(1), "coupling", f"{clean(match.group(2))} → {clean(match.group(3))}", f"§{self.owner[1:] if self.owner else 'Part I'}"))
 
     def ocm_gap(self, match: re.Match[str], line: str) -> None:
         if not self.audit:
@@ -189,8 +216,8 @@ def cells_of(line: str) -> list[str]:
     return [cell.strip() for cell in line.strip().strip("|").split("|")]
 
 
-def parse_spec(text: str) -> list[Item]:
-    return SpecParser().parse(text)
+def parse_spec(text: str, *, extended: bool = False) -> list[Item]:
+    return SpecParser(extended=extended).parse(text)
 
 
 def parse_matrix(text: str) -> dict[str, Row]:
@@ -205,11 +232,32 @@ def parse_matrix(text: str) -> dict[str, Row]:
     return rows
 
 
-def render(items: list[Item], existing: dict[str, Row]) -> str:
+@dataclass(frozen=True)
+class Matrix:
+    spec: Path
+    matrix: Path
+    title: str
+    source: str
+    extended: bool = False
+
+
+MATRICES = (
+    Matrix(SPEC, MATRIX, "Depth expansion coverage matrix", "`docs/spec/13-depth-expansion.md` (spec J.19)"),
+    Matrix(
+        MINDS_SPEC,
+        MINDS_MATRIX,
+        "Minds, powers and living craft coverage matrix",
+        "`docs/spec/16-minds-powers-living-craft.md` (spec 5.10)",
+        extended=True,
+    ),
+)
+
+
+def render(items: list[Item], existing: dict[str, Row], matrix: Matrix = MATRICES[0]) -> str:
     lines = [
-        "# Depth expansion coverage matrix",
+        f"# {matrix.title}",
         "",
-        "Traceability matrix for `docs/spec/13-depth-expansion.md` (spec J.19). Generated and checked by `scripts/spec_coverage.py`.",
+        f"Traceability matrix for {matrix.source}. Generated and checked by `scripts/spec_coverage.py`.",
         "Every numbered item of the spec has one row.",
         "A row is `done` only when every work column is filled (or `n/a` where it does not apply) and its test passes.",
         "`deferred-approved` requires the user's explicit approval and a reason in the Test column.",
@@ -255,6 +303,20 @@ def reference_problems(key: str, row: Row, front: set[str]) -> list[str]:
     return problems
 
 
+def status_problems(key: str, row: Row) -> list[str]:
+    problems: list[str] = []
+    status = row.get("Status")
+    if status not in STATUSES:
+        problems.append(f"row {key} has an unknown status '{status}'")
+    if status == "deferred-approved" and row.get("Test") in EMPTY:
+        problems.append(f"row {key} is deferred without a recorded approval and reason")
+    if status == "done" and row.get("Kind") != "gap":
+        empty = [column for column in WORK_COLUMNS if row.get(column) in EMPTY]
+        if empty:
+            problems.append(f"row {key} is done but has empty columns: {', '.join(empty)}")
+    return problems
+
+
 def check(items: list[Item], rows: dict[str, Row]) -> list[str]:
     problems: list[str] = []
     keys = {item.key for item in items}
@@ -265,15 +327,7 @@ def check(items: list[Item], rows: dict[str, Row]) -> list[str]:
         if key not in keys:
             problems.append(f"row {key} has no item in the spec")
     for key, row in rows.items():
-        status = row.get("Status")
-        if status not in STATUSES:
-            problems.append(f"row {key} has an unknown status '{status}'")
-        if status == "deferred-approved" and row.get("Test") in EMPTY:
-            problems.append(f"row {key} is deferred without a recorded approval and reason")
-        if status == "done" and row.get("Kind") != "gap":
-            empty = [column for column in WORK_COLUMNS if row.get(column) in EMPTY]
-            if empty:
-                problems.append(f"row {key} is done but has empty columns: {', '.join(empty)}")
+        problems += status_problems(key, row)
     front = front_tests()
     for key, row in rows.items():
         if row.get("Status") == "done":
@@ -296,24 +350,29 @@ def summary(rows: dict[str, Row]) -> str:
     return ", ".join(f"{status}: {count}" for status, count in sorted(counts.items()))
 
 
+def run(mode: str, matrix: Matrix) -> int:
+    items = parse_spec(matrix.spec.read_text(encoding="utf-8"), extended=matrix.extended)
+    existing = parse_matrix(matrix.matrix.read_text(encoding="utf-8")) if matrix.matrix.exists() else {}
+    name = matrix.matrix.relative_to(ROOT)
+    if mode == "write":
+        matrix.matrix.write_text(render(items, existing, matrix), encoding="utf-8")
+        print(f"{len(items)} items written to {name}")
+        return 0
+    if mode == "summary":
+        print(f"{name}: {len(existing)} rows. {summary(existing)}")
+        return 0
+    problems = check(items, existing)
+    for problem in problems:
+        print(f"{name}: {problem}")
+    print(f"{name}: {len(items)} items, {len(problems)} problem(s). {summary(existing)}")
+    return 1 if problems else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", choices=("write", "check", "summary"))
     mode = parser.parse_args().mode
-    items = parse_spec(SPEC.read_text(encoding="utf-8"))
-    existing = parse_matrix(MATRIX.read_text(encoding="utf-8")) if MATRIX.exists() else {}
-    if mode == "write":
-        MATRIX.write_text(render(items, existing), encoding="utf-8")
-        print(f"{len(items)} items written to {MATRIX.relative_to(ROOT)}")
-        return 0
-    if mode == "summary":
-        print(f"{len(existing)} rows. {summary(existing)}")
-        return 0
-    problems = check(items, existing)
-    for problem in problems:
-        print(problem)
-    print(f"{len(items)} items, {len(problems)} problem(s). {summary(existing)}")
-    return 1 if problems else 0
+    return max(run(mode, matrix) for matrix in MATRICES)
 
 
 if __name__ == "__main__":

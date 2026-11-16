@@ -35,6 +35,7 @@ from aerona.domain.enums.collective import (
 )
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.made import Authenticity
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
 from aerona.domain.enums.vehicles import FireControl, Propulsion, VehicleDomain, VehicleFamily, VehicleFrame, VehicleSize
 
@@ -42,7 +43,7 @@ KEY_LENGTH = 80
 MOOD_FIELDS = ("anger", "anxiety", "fervour", "deterrence", "agitation", "last_trigger")
 MOB_FIELDS = ("act", "size", "anger", "damage", "target", "target_entity_id", "leader_entity_id", "status")
 MOVEMENT_FIELDS = ("act", "trigger", "members", "strength", "leader_entity_id", "cult_entity_id", "faction_entity_id", "ended_epoch")
-ACCOUNT_FIELDS = ("kind", "fidelity", "credence", "defaced", "medium", "author_node_id", "subject_node_id")
+ACCOUNT_FIELDS = ("kind", "fidelity", "credence", "defaced", "medium", "author_node_id", "subject_node_id", "authenticity")
 STRIKE_FIELDS = ("active",)
 MYTH_FIELDS = ("credence", "account_id")
 COMMEMORATION_FIELDS = ("strength", "pride")
@@ -231,6 +232,7 @@ class AccountRow(Base):
     revised_from_id: Mapped[int | None] = mapped_column(ForeignKey("accounts.id", ondelete="SET NULL"))
     defaced: Mapped[bool] = mapped_column(default=False)
     epoch: Mapped[int] = mapped_column(default=0)
+    authenticity: Mapped[Authenticity] = mapped_column(enum_type(Authenticity, "authenticity"), default=Authenticity.GENUINE)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

@@ -83,6 +83,8 @@ class WizardTemplate:
     world_type: WorldType | None = None
     climate_era: ClimateEra | None = None
     world_age: WorldAge | None = None
+    made_minds: int | None = None
+    information_reach: int | None = None
 
 
 TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
@@ -374,6 +376,31 @@ TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
                 4,
                 CosmosSize.SMALL,
                 "A world whose peoples have split matter, built minds that think and begun to leave their world for others.",
+            ),
+            WizardTemplate(
+                T.MADE_MINDS,
+                "Made minds",
+                "made and born alike",
+                50,
+                50,
+                TechnologyEra.IRON,
+                LanguageTexture.FREE,
+                4,
+                CosmosSize.SINGLE,
+                "A world where minds are made as well as born.",
+                made_minds=70,
+            ),
+            WizardTemplate(
+                T.AFTER_ABUNDANCE,
+                "After abundance",
+                "relearning what was once easy",
+                50,
+                50,
+                TechnologyEra.IRON,
+                LanguageTexture.FREE,
+                4,
+                CosmosSize.SINGLE,
+                "A world that once made everything it needed and has lost the means.",
             ),
         )
     }

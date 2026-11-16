@@ -16,6 +16,7 @@ from aerona.domain.enums.eras import EraChannel
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.lore.civics import holders_know
+from aerona.engine.networks.book import message_epochs
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import spoken_language
 
@@ -72,6 +73,11 @@ async def posted(ctx: TickContext, owner_id: int) -> bool:
 async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_id: int, *, medium: Medium, owner_id: int) -> int:
     if medium in INSTANT:
         return 0
+    if medium is Medium.NETWORK:
+        linked = await message_epochs(ctx.session, ctx.rules, owner_id, recipient_id, ctx.epoch)
+        if linked is not None:
+            return linked
+        medium = Medium.LETTER
     table = ctx.rules.communication
     origin = await ctx.session.get(EntityRow, origin_id)
     target = await ctx.session.get(EntityRow, recipient_id)

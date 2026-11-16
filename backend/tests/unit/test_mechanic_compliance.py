@@ -15,13 +15,14 @@ from aerona.prompts.tools.ids import MortalToolId, SonToolId
 from aerona.services.player.catalog import ACTIONS_BY_ID
 
 ROOT = Path(__file__).resolve().parents[3]
-MATRIX = ROOT / "docs" / "spec" / "13-coverage.md"
+MATRICES = (ROOT / "docs" / "spec" / "13-coverage.md", ROOT / "docs" / "spec" / "16-coverage.md")
 FRONTEND = ROOT / "frontend" / "src"
 GENERIC_LEVERS = ("lever:pin", "lever:unpin", "lever:suppress", "lever:unsuppress", "lever:run", "modifier:add", "modifier:remove")
 
 
 def matrix_ids() -> set[str]:
-    return {line.split("|")[1].strip() for line in MATRIX.read_text(encoding="utf-8").splitlines() if line.startswith("| ") and not line.startswith("| ID ")}
+    lines = [line for matrix in MATRICES for line in matrix.read_text(encoding="utf-8").splitlines()]
+    return {line.split("|")[1].strip() for line in lines if line.startswith("| ") and not line.startswith("| ID ")}
 
 
 def frontend_source() -> str:
