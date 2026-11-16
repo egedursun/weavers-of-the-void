@@ -20,8 +20,9 @@ from aerona.db.tables.minds import MindProfileRow, MindStateRow, RemoteBodyRow
 from aerona.db.tables.networks import NetworkGatewayRow, NetworkNodeRow, NetworkProfileRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.made import AugmentSlot
-from aerona.domain.enums.minds import MindSeat
+from aerona.domain.enums.minds import MindOrigin, MindSeat
 from aerona.engine.primitives.numbers import apportion
 
 TIME_RATIO_MIN = 1
@@ -78,6 +79,23 @@ async def cap_copies(session: AsyncSession) -> int:
     return mended
 
 
+async def drop_empty_profiles(session: AsyncSession) -> int:
+    empty = select(MindProfileRow).where(
+        MindProfileRow.seat == MindSeat.NONE,
+        MindProfileRow.will == MindWill.NONE,
+        MindProfileRow.origin == MindOrigin.BORN,
+        MindProfileRow.made_by_node_id.is_(None),
+        MindProfileRow.dormant.is_(False),
+    )
+    dropped = 0
+    for row in list(await session.scalars(empty)):
+        if row.locked:
+            continue
+        await session.delete(row)
+        dropped += 1
+    return dropped
+
+
 async def mend_minds_links(session: AsyncSession) -> int:
     nodes = select(NodeRow.id)
     networks = select(NetworkProfileRow.network_entity_id)
@@ -113,4 +131,5 @@ async def mend_minds_links(session: AsyncSession) -> int:
         + await balance_substrates(session)
         + await trim_shares(session)
         + await cap_copies(session)
+        + await drop_empty_profiles(session)
     )

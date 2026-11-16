@@ -415,6 +415,7 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.law_profiles",
     "table.marriages",
     "table.memories",
+    "table.mind_profiles",
     "table.minds",
     "table.mortal_profiles",
     "table.name_registry",

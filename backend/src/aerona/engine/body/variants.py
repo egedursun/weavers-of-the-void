@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, fields, replace
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import Anatomy
@@ -20,6 +20,8 @@ from aerona.db.tables.biology import BIOLOGY_FLAGS, BIOLOGY_SHARE_MAX, BIOLOGY_S
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.military import ArmyUnitRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.biology import BiologyVariant
@@ -27,6 +29,8 @@ from aerona.domain.enums.ecology import TissueMaterial
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.folkways import DecisionBias
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.military import UnitKind
+from aerona.domain.enums.minds import MindAffect, MindOrigin
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -34,6 +38,9 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 BIOLOGY_TABLES = frozenset({BiologyRow.__tablename__})
 HOLDER_TYPES = frozenset({EntityType.PEOPLE, EntityType.SPECIES})
 MIDDLE = 50
+
+FEARLESS_UNITS = frozenset({UnitKind.CONSTRUCTS})
+FEELING_ORIGINS = frozenset({MindOrigin.BORN, MindOrigin.GRANTED, MindOrigin.AWAKENED})
 
 
 @dataclass(frozen=True)
@@ -166,8 +173,23 @@ def tissue_of(view: BiologyView) -> TissueMaterial | None:
     return next((BIOLOGY_VARIANTS[variant].tissue for variant in view.variants if BIOLOGY_VARIANTS[variant].tissue is not None), None)
 
 
+async def fearless_share(session: AsyncSession, entity: EntityRow) -> float:
+    mind = await session.get(MindProfileRow, entity.id)
+    if mind is not None and mind.affect is MindAffect.NONE and mind.origin not in FEELING_ORIGINS:
+        return 1.0
+    if entity.entity_type is not EntityType.ARMY:
+        return 0.0
+    rows = (
+        await session.execute(select(ArmyUnitRow.kind, func.sum(ArmyUnitRow.count)).where(ArmyUnitRow.army_entity_id == entity.id).group_by(ArmyUnitRow.kind))
+    ).all()
+    total = sum(int(count or 0) for _, count in rows)
+    unfeeling = sum(int(count or 0) for kind, count in rows if kind in FEARLESS_UNITS)
+    return unfeeling / total if total else 0.0
+
+
 async def fear_of(session: AsyncSession, entity: EntityRow | None) -> float:
-    return (await folk_biology(session, entity)).factor("morale_loss_pct")
+    fear = (await folk_biology(session, entity)).factor("morale_loss_pct")
+    return fear * (1 - await fearless_share(session, entity)) if entity is not None else fear
 
 
 async def fear_of_id(session: AsyncSession, entity_id: int | None) -> float:

@@ -9,7 +9,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | 762 |
 | enum | 1075 |
 | step | 437 |
-| incident | 954 |
+| incident | 961 |
 | tool | 471 |
 | lever | 2081 |
 | screen | 1243 |
@@ -2829,6 +2829,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | incident | mind.disputed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.divided | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.dormant | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| incident | mind.ended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.exceeding | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.facet_trait | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.famine_aid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
@@ -2838,6 +2839,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | incident | mind.plot_uncovered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.restored | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.saved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| incident | mind.seat_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.soul_withheld | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.souled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | mind.transferred | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
@@ -2883,6 +2885,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | incident | network.cut | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | network.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | network.grew | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| incident | network.ledger | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | network.outage | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | nomads.camp | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | nomads.confederation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
@@ -2964,6 +2967,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | incident | prison.escaped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | prison.released | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | putting_out.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| incident | realm.ended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | realm.entered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | realm.escape | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | realm.frozen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
@@ -2997,10 +3001,13 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | incident | remembrance.plague_estranged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | remembrance.plague_turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | remembrance.war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| incident | replicator.drifted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | replicator.extinct | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | replicator.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | replicator.spread | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | replicator.stopped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| incident | replicator.voyage | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| incident | replicator.woke | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | reproduction.budded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | reproduction.changed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | research.boosted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |

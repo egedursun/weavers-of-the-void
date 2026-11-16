@@ -100,6 +100,7 @@ from tests.tools.every_setup_minds import (
     replicator,
     salvage_site,
     saved_state,
+    skilled_maker,
     store,
     two_made_minds,
 )
@@ -329,7 +330,7 @@ MORTAL_CASES: dict[str, Case] = {
     "tend_culture": named(plain(kind="yeast"), town_dweller),
     "join_programme": named(plain(programme_id=lambda _realm, ids: ids["programme"]), skilled_for_programme),
     "mock_the_ruler": named(plain(), mocked_court),
-    "make_mind": named(plain(target_id=created("construct"), method="craft", will="instructed", purpose="servant"), built_construct),
+    "make_mind": named(plain(target_id=created("construct"), method="craft", will="instructed", purpose="servant"), skilled_maker),
     "free_mind": named(plain(mind_id=created("mind")), made_mind),
     "bind_mind": named(plain(mind_id=created("mind")), made_mind),
     "save_mind": named(plain(mind_id=created("mind"), medium="record"), made_mind),

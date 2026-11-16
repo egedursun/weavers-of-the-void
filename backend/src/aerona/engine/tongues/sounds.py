@@ -21,6 +21,7 @@ from aerona.domain.enums.tongues import SoundChangeCause, SoundChangeKind, Sound
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import speakers, tongues_of
+from aerona.engine.networks.book import networked_with
 from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import canon, has_flag
@@ -138,7 +139,8 @@ async def prestigious(ctx: TickContext, language: EntityRow, contacts: set[int])
 
 async def contacts_of(ctx: TickContext, language_id: int) -> set[int]:
     found: set[int] = set()
-    for community in await speakers(ctx.session, language_id):
+    communities = set(await speakers(ctx.session, language_id))
+    for community in sorted(communities | await networked_with(ctx.session, communities)):
         found |= await tongues_of(ctx.session, community)
     found.discard(language_id)
     return found

@@ -209,7 +209,7 @@ async def debase(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, *, 
 async def tend_currencies(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     table = ctx.rules.money
     for currency in (await currencies(ctx)).values():
-        if currency.held:
+        if currency.held or currency.metal is None:
             continue
         issuer = book.entities.get(currency.issuer_entity_id)
         if issuer is None:

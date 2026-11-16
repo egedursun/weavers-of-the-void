@@ -9,6 +9,7 @@ from aerona.db.key_index import index_spec, keyed_rows
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.write_guard import held, write_blocked
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
@@ -36,6 +37,9 @@ def strength_of(row: MemoryRow, epoch: int) -> float:
 
 
 async def default_decay(session: AsyncSession, rules: Rules, holder_id: int, kind: MemoryKind) -> int:
+    seated = await session.get(MindProfileRow, holder_id)
+    if seated is not None and seated.perfect_recall:
+        return 0
     base = MEMORIES[kind].decay_pct * rules.memory.decay_scale_pct / PERCENT
     return clamp_int(base * scaled_by(await effect_of(session, holder_id, TraitEffect.MEMORY_DECAY, rules.traits.effect_scale_pct)), 0, PERCENT)
 

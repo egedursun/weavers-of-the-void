@@ -36,6 +36,7 @@ class MindMakingRules:
     unintended_weight: int = rule(20, 0, 100, M, "Weight of a failed making leaving a will the maker did not mean")
     programme_capacity: int = rule(80, 0, 100, M, "Capacity above which making a mind is a programme of a whole realm")
     value_noise: int = rule(15, 0, 100, M, "Noise on the values a made mind takes from its makers")
+    skill_floor: int = rule(30, 0, 100, M, "Skill a maker needs in a craft its method of making calls for")
 
 
 @dataclass(frozen=True)

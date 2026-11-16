@@ -10,6 +10,7 @@ import {
   CircuitBoard,
   Coins,
   Compass,
+  Copy,
   Cpu,
   Crown,
   Eye,
@@ -262,6 +263,28 @@ export const CRIMES: Record<string, Named> = {
   murder: { label: 'Murder', icon: Skull, tone: 'danger' },
   desertion: { label: 'Desertion', icon: Wind, tone: 'warning' },
   witchcraft: { label: 'Witchcraft', icon: Ghost, tone: 'danger' },
+  mind_theft: { label: 'Theft of a mind', icon: Brain, tone: 'danger' },
+  unlicensed_copying: {
+    label: 'Copying a mind without leave',
+    icon: Copy,
+    tone: 'warning',
+  },
+  forced_edit: {
+    label: 'Editing a mind by force',
+    icon: Wrench,
+    tone: 'danger',
+  },
+  erasure: { label: 'Ending a mind', icon: Skull, tone: 'danger' },
+  machine_seizure: {
+    label: 'Seizing a made thing',
+    icon: Cpu,
+    tone: 'warning',
+  },
+  impersonation: {
+    label: 'Passing as another by a copy',
+    icon: Users,
+    tone: 'warning',
+  },
 }
 
 export const PUNISHMENTS: Record<
@@ -279,6 +302,23 @@ export const PUNISHMENTS: Record<
   public_shaming: { label: 'Public shaming', icon: Users, tone: 'warning' },
   imprisonment: { label: 'Prison', icon: Lock, tone: 'warning' },
   remaking: { label: 'Remade in body', icon: Shapes, tone: 'danger' },
+  forced_dormancy: {
+    label: 'A sentence slept',
+    icon: Hourglass,
+    tone: 'warning',
+  },
+  forced_edit: { label: 'Mind edited by force', icon: Wrench, tone: 'danger' },
+  seat_confinement: {
+    label: 'Confined to its seat',
+    icon: Lock,
+    tone: 'warning',
+  },
+  state_seizure: {
+    label: 'Saved minds seized',
+    icon: Briefcase,
+    tone: 'warning',
+  },
+  erasure: { label: 'Erased', icon: Skull, tone: 'danger' },
 }
 
 export const STANDING_FIELDS: Record<

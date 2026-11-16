@@ -167,6 +167,7 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.item_profiles",
     "table.memories",
     "table.mind_attributes",
+    "table.mind_profiles",
     "table.minds",
     "table.mortal_equipment",
     "table.mortal_profiles",

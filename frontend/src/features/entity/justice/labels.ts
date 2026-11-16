@@ -1,5 +1,9 @@
 import {
   Ban,
+  Brain,
+  Copy,
+  Cpu,
+  Wrench,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -100,6 +104,28 @@ export const CRIMES: Record<string, Named> = {
   blasphemy: { label: 'Blasphemy', icon: Flame, tone: 'warning' },
   desertion: { label: 'Desertion', icon: Wind, tone: 'warning' },
   witchcraft: { label: 'Witchcraft', icon: Ghost, tone: 'danger' },
+  mind_theft: { label: 'Theft of a mind', icon: Brain, tone: 'danger' },
+  unlicensed_copying: {
+    label: 'Copying a mind without leave',
+    icon: Copy,
+    tone: 'warning',
+  },
+  forced_edit: {
+    label: 'Editing a mind by force',
+    icon: Wrench,
+    tone: 'danger',
+  },
+  erasure: { label: 'Ending a mind', icon: Skull, tone: 'danger' },
+  machine_seizure: {
+    label: 'Seizing a made thing',
+    icon: Cpu,
+    tone: 'warning',
+  },
+  impersonation: {
+    label: 'Passing as another by a copy',
+    icon: Users,
+    tone: 'warning',
+  },
 }
 
 export function labelTable(

@@ -12,6 +12,7 @@ from aerona.db.tables.made import (
     ReplicatorPresenceRow,
     SalvageSiteRow,
 )
+from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.minds import MindProfileRow, MindStateRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkProfileRow
 from aerona.domain.enums.constructs import MindWill
@@ -33,6 +34,7 @@ from aerona.domain.enums.made import (
     ReplicatorStage,
 )
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.minds import MindOrigin, MindPurpose, MindSeat, MindUpkeep, StateMedium
 from aerona.domain.enums.networks import NetworkCarrier, NetworkRole
 from aerona.domain.enums.society import Commodity
@@ -238,3 +240,21 @@ async def pattern(session: AsyncSession, realm: Realm) -> Ids:
     session.add(row)
     await session.flush()
     return {"pattern": row.id}
+
+
+async def skilled_maker(session: AsyncSession, realm: Realm) -> Ids:
+    found = await built_construct(session, realm)
+    session.add(
+        SkillRow(
+            holder_node_id=realm.mortal_id,
+            skill=SkillKind.ENGINEERING,
+            subject_node_id=None,
+            level=60,
+            peak=60,
+            xp=0,
+            last_used_epoch=EPOCH,
+            source=SkillSource.PRACTICE,
+        )
+    )
+    await session.flush()
+    return found

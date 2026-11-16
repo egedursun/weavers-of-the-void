@@ -7,10 +7,12 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
+from aerona.db.tables.made import PeopleSubstrateRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyFunction
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.tongues import LanguageModality
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -57,6 +59,13 @@ async def body_functions(session: AsyncSession, people_id: int) -> frozenset[Bod
     return frozenset(function for part in ANATOMIES[biology.body_plan].parts for function in part.functions)
 
 
+async def made_people(session: AsyncSession, people: EntityRow) -> bool:
+    if people.entity_type is not EntityType.PEOPLE:
+        return False
+    shares = list(await session.scalars(select(PeopleSubstrateRow).where(PeopleSubstrateRow.people_entity_id == people.id)))
+    return bool(shares) and all(row.seat is not MindSeat.BODY for row in shares if row.share_pct > 0)
+
+
 async def settle_modalities(ctx: TickContext) -> int:
     settled = 0
     for language in await canon(ctx.session, [EntityType.LANGUAGE]):
@@ -66,7 +75,11 @@ async def settle_modalities(ctx: TickContext) -> int:
         peoples = list(await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_(speaking(language.id)))))
         bodies = [await body_functions(ctx.session, row.id) for row in peoples if row.entity_type is EntityType.PEOPLE]
         known = [body for body in bodies if body is not None]
-        if known and all(BodyFunction.SPEECH not in body for body in known):
+        made = [await made_people(ctx.session, row) for row in peoples]
+        if made and all(made):
+            profile.modality = LanguageModality.DATA
+            settled += 1
+        elif known and all(BodyFunction.SPEECH not in body for body in known):
             profile.modality = suited(known[0])
             settled += 1
     return settled

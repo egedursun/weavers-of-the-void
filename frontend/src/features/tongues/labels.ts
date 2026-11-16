@@ -1,4 +1,5 @@
 import {
+  Binary,
   ArrowRightLeft,
   Asterisk,
   BookA,
@@ -143,6 +144,7 @@ export const MODALITIES: Record<Schema['LanguageModality'], Named> = {
   scent: { label: 'Scent', icon: Wind, tone: 'warning' },
   colour: { label: 'Colour pattern', icon: Palette, tone: 'gold' },
   telepathic: { label: 'Thought', icon: Brain, tone: 'gold' },
+  data: { label: 'Data', icon: Binary, tone: 'info' },
 }
 
 export const STAGES: Record<Schema['LanguageStage'], Named> = {

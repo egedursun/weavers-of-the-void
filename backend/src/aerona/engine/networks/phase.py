@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkOutageRow, NetworkProfileRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
@@ -17,7 +18,8 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.values import best_level, liberty_of
 from aerona.engine.networks.backfill import relay_backfill
-from aerona.engine.networks.book import carrier_days, running
+from aerona.engine.networks.book import carrier_days, running, shake_ledger
+from aerona.engine.networks.energy import CARRIER_ENERGY, starved
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.stats import set_stats, shift_stat
@@ -50,6 +52,7 @@ async def cut(ctx: TickContext, network: EntityRow, profile: NetworkProfileRow, 
     if "down_until_epoch" not in profile.locked:
         profile.down_until_epoch = ctx.epoch + table.outage_epochs
     ctx.session.add(NetworkOutageRow(network_entity_id=network.id, cause=cause, epoch=ctx.epoch, epochs=table.outage_epochs, severity=severity))
+    await shake_ledger(ctx.session, ctx.rules, network.id)
     await note(ctx, f"{network.name} went down: {cause.value.replace('_', ' ')}.", key="network.outage", ids=[network.id])
 
 
@@ -60,6 +63,9 @@ async def outage_cause(ctx: TickContext, profile: NetworkProfileRow, rows: list[
         return OutageCause.WAR
     if not await repairable(ctx, profile, rows) and rng.chance(table.decay_outage):
         return OutageCause.DECAY
+    for row in rows:
+        if await starved(ctx.session, row.member_node_id, CARRIER_ENERGY[profile.carrier], table.shortage_pct):
+            return OutageCause.SHORTAGE
     if rng.chance(table.outage_base * (PERCENT - profile.reliability) / PERCENT):
         return OutageCause.STORM
     return None
@@ -137,6 +143,35 @@ async def censor(ctx: TickContext, profile: NetworkProfileRow, rows: list[Networ
                 await change_relation(ctx, town.id, profile.owner_node_id, -loss, MemoryKind.ILL_WILL)
 
 
+async def keep_ledger(ctx: TickContext, network: EntityRow, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> None:
+    if not profile.carries_money or len(rows) < 2 or held(network.id):
+        return
+    issued = select(CurrencyRow).where(CurrencyRow.issuer_entity_id == network.id, CurrencyRow.metal.is_(None))
+    ledger = await ctx.session.scalar(issued.limit(1))
+    trust = (profile.security + profile.reliability) // 2
+    if ledger is None:
+        ledger = CurrencyRow(
+            issuer_entity_id=network.id,
+            item_entity_id=None,
+            name=f"the ledger of {network.name}",
+            metal=None,
+            purity=PERCENT,
+            supply=0,
+            trust=trust,
+            minted_epoch=ctx.epoch,
+            held=False,
+        )
+        ctx.session.add(ledger)
+        await ctx.session.flush()
+        await note(ctx, f"{network.name} began to carry a money of its own.", key="network.ledger", ids=[network.id])
+    elif not ledger.held:
+        ledger.trust = clamp_percent(ledger.trust + (trust - ledger.trust) * ctx.rules.money.trust_drift_pct / PERCENT)
+    for row in rows:
+        society = await ctx.session.get(CommunitySocietyRow, row.member_node_id)
+        if society is not None and society.currency_id is None and not held(row.member_node_id):
+            society.currency_id = ledger.id
+
+
 async def converge(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> None:
     if not profile.carries_money or len(rows) < 2:
         return
@@ -194,6 +229,7 @@ async def networks(ctx: TickContext) -> None:
         if live:
             await grow(ctx, network, profile, rows)
             await converge(ctx, profile, rows)
+            await keep_ledger(ctx, network, profile, rows)
         await censor(ctx, profile, rows)
         set_stats(network, reach=len(rows))
         ctx.count("networks_kept")

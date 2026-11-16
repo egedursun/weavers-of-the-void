@@ -26,6 +26,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.ethics import culture_of, honour_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.thoughts import think
+from aerona.engine.minds.sentences import MIND_PUNISHMENTS, suffer_in_mind
 from aerona.engine.mortal.standing import add_infamy, add_wealth
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
@@ -44,6 +45,11 @@ CODE_PUNISHMENTS: dict[str, PunishmentKind] = {
     "exile": PunishmentKind.EXILE,
     "death": PunishmentKind.DEATH,
     "remaking": PunishmentKind.REMAKING,
+    "dormancy": PunishmentKind.FORCED_DORMANCY,
+    "edit": PunishmentKind.FORCED_EDIT,
+    "confinement": PunishmentKind.SEAT_CONFINEMENT,
+    "seizure": PunishmentKind.STATE_SEIZURE,
+    "erasure": PunishmentKind.ERASURE,
 }
 MUTILATIONS: dict[PunishmentKind, tuple[BodyPart, ...]] = {
     PunishmentKind.HAND: (BodyPart.RIGHT_HAND,),
@@ -69,6 +75,11 @@ SENTENCE_TEXT = total(
         PunishmentKind.DEATH: "was put to death",
         PunishmentKind.IMPRISONMENT: "was sent to prison",
         PunishmentKind.REMAKING: "was remade in body by the law",
+        PunishmentKind.FORCED_DORMANCY: "was put to sleep by the law",
+        PunishmentKind.FORCED_EDIT: "had their mind edited by the law",
+        PunishmentKind.SEAT_CONFINEMENT: "was confined to their seat by the law",
+        PunishmentKind.STATE_SEIZURE: "lost the minds they kept saved to the law",
+        PunishmentKind.ERASURE: "was erased by the law",
     },
 )
 CRIME_TEXT = total(
@@ -80,6 +91,12 @@ CRIME_TEXT = total(
         CrimeKind.MURDER: "murder",
         CrimeKind.DESERTION: "desertion",
         CrimeKind.WITCHCRAFT: "witchcraft",
+        CrimeKind.MIND_THEFT: "theft of a mind",
+        CrimeKind.UNLICENSED_COPYING: "copying a mind without leave",
+        CrimeKind.FORCED_EDIT: "editing a mind by force",
+        CrimeKind.ERASURE: "ending a mind",
+        CrimeKind.MACHINE_SEIZURE: "seizing a made thing",
+        CrimeKind.IMPERSONATION: "passing as another by a copy",
     },
 )
 
@@ -123,7 +140,9 @@ async def shame_publicly(ctx: TickContext, culprit: EntityRow, judge: EntityRow 
     await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_SHAMED, ctx.epoch, subject_id=judge.id if judge is not None else None, intensity=size)
 
 
-async def jailed_or_fined(ctx: TickContext, culprit: EntityRow, punishment: PunishmentKind, case_id: int | None) -> PunishmentKind:
+async def jailed_or_fined(ctx: TickContext, culprit: EntityRow, punishment: PunishmentKind, case_id: int | None, judge_id: int | None) -> PunishmentKind:
+    if punishment in MIND_PUNISHMENTS:
+        punishment = await suffer_in_mind(ctx, culprit, punishment, judge_id)
     if punishment is PunishmentKind.IMPRISONMENT and await imprison(ctx, culprit, case_id=case_id) is None:
         return PunishmentKind.FINE
     if punishment is PunishmentKind.REMAKING:
@@ -143,7 +162,7 @@ async def sentence(
         await judged(ctx, culprit.id, culprit.id, CRIME_ACTS[crime])
     if punishment is PunishmentKind.PUBLIC_SHAMING:
         await shame_publicly(ctx, culprit, judge)
-    punishment = await jailed_or_fined(ctx, culprit, punishment, case_id)
+    punishment = await jailed_or_fined(ctx, culprit, punishment, case_id, judge.id if judge is not None else None)
     if punishment is PunishmentKind.FINE:
         await add_wealth(ctx.session, culprit.id, -table.fine_wealth, ctx.epoch)
     elif punishment is PunishmentKind.FLOGGING:

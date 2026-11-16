@@ -299,7 +299,7 @@ class CurrencyView(ApiModel):
     issuer_id: int
     issuer_name: str
     item_id: int | None
-    metal: MaterialKind
+    metal: MaterialKind | None
     purity: int
     trust: int
     supply: int

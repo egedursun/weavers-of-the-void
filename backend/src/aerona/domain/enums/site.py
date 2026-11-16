@@ -64,6 +64,7 @@ class ExcavationFind(StrEnum):
     TECHNIQUE = "technique"
     REGALIA = "regalia"
     ROUTE_MAP = "route_map"
+    WAKING = "waking"
 
 
 class BattlefieldFeature(StrEnum):

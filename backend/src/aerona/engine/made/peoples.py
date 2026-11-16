@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -8,7 +8,7 @@ from aerona.db.tables.made import PeopleSubstrateRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.minds import MindOrigin, MindSeat
 from aerona.domain.models.entity_stats import PeopleStats
 from aerona.engine.context import TickContext
@@ -17,6 +17,7 @@ from aerona.engine.minds.profiles import is_made
 from aerona.engine.notes import note
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.stats import set_stats
 
 PEOPLE_POWER = 10
 
@@ -46,6 +47,27 @@ async def form(ctx: TickContext, maker: EntityRow, rows: list[MindProfileRow]) -
     return people
 
 
+async def grow(ctx: TickContext, rows: list[MindProfileRow], joined: set[int]) -> int:
+    member = next(row.node_id for row in rows if row.node_id in joined)
+    people_id = await ctx.session.scalar(
+        select(BondRow.target_node_id)
+        .where(BondRow.kind == BondKind.MEMBER_OF, BondRow.source_node_id == member, BondRow.target_node_id.in_(select(PeopleSubstrateRow.people_entity_id)))
+        .limit(1)
+    )
+    people = await ctx.session.get(EntityRow, people_id) if people_id is not None else None
+    if people is None or held(people.id):
+        return 0
+    for row in rows:
+        if row.node_id not in joined:
+            await connect(ctx.session, row.node_id, people.id, BondKind.MEMBER_OF, ctx.epoch, description="made into this people")
+    living = select(EntityRow.id).where(EntityRow.status == EntityStatus.CANON)
+    count = await ctx.session.scalar(
+        select(func.count()).where(BondRow.kind == BondKind.MEMBER_OF, BondRow.target_node_id == people.id, BondRow.source_node_id.in_(living))
+    )
+    set_stats(people, population=int(count or 0))
+    return int(count or 0)
+
+
 @reads("table.bonds", "table.entities", "table.mind_profiles", "table.people_substrates")
 @writes("table.bonds", "table.entities", "table.people_substrates")
 async def form_made_peoples(ctx: TickContext) -> None:
@@ -56,6 +78,8 @@ async def form_made_peoples(ctx: TickContext) -> None:
     members = select(BondRow.source_node_id).where(BondRow.kind == BondKind.MEMBER_OF, BondRow.target_node_id.in_(select(PeopleSubstrateRow.people_entity_id)))
     joined = set(await ctx.session.scalars(members))
     have = {maker for maker, rows in lines.items() if any(row.node_id in joined for row in rows)}
+    for maker_id in sorted(have):
+        ctx.count("made_people_members", await grow(ctx, lines[maker_id], joined))
     for maker_id, rows in sorted(lines.items()):
         if maker_id in have or len(rows) < ctx.rules.made_peoples.formation_minds or held(maker_id):
             continue

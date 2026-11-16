@@ -1,15 +1,18 @@
 from dataclasses import dataclass
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.gatherings import EXCAVATION_FLAGS, EXCAVATION_PLACES, STAGE_ORDER, STAGE_SKILLS, STAGE_TECHNIQUES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
+from aerona.core.total import partial
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sites import BattlefieldFeatureRow, ExcavationRow, ExcavationStageRow
@@ -24,7 +27,7 @@ from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.faith import BindingKind, SpiritAlignment
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.military import VesselStatus
-from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.site import BattlefieldFeature, ExcavationFind, ExcavationRisk, ExcavationStage, ExcavationStatus
 from aerona.domain.models.entity_stats import ItemStats, SpiritStats
@@ -41,6 +44,7 @@ from aerona.engine.lore.research_depth import add_progress
 from aerona.engine.means.containers import read_marks
 from aerona.engine.military.engineering import earthworks_of
 from aerona.engine.mind.book import skill_level
+from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 from aerona.engine.orders.savings import unearth_hoards
 from aerona.engine.primitives.distance import RegionAtlas
@@ -51,13 +55,17 @@ from aerona.engine.renown.currencies import realm_of_community
 RISKS = (ExcavationRisk.CURSE, ExcavationRisk.SPIRIT, ExcavationRisk.COLLAPSE)
 FINDS = (ExcavationFind.ARTIFACT, ExcavationFind.BOOK, ExcavationFind.TECHNIQUE, ExcavationFind.REGALIA, ExcavationFind.ROUTE_MAP)
 CURSES = (PackageKind.HUNGER_CURSE, PackageKind.POSSESSION, PackageKind.VOID_TAINT)
-FIND_CLASSES = {
-    ExcavationFind.ARTIFACT: ItemClass.IDOL,
-    ExcavationFind.BOOK: ItemClass.BOOK,
-    ExcavationFind.TECHNIQUE: ItemClass.TOOL,
-    ExcavationFind.REGALIA: ItemClass.CROWN,
-    ExcavationFind.ROUTE_MAP: ItemClass.MAP,
-}
+FIND_CLASSES = partial(
+    ExcavationFind,
+    {
+        ExcavationFind.ARTIFACT: ItemClass.IDOL,
+        ExcavationFind.BOOK: ItemClass.BOOK,
+        ExcavationFind.TECHNIQUE: ItemClass.TOOL,
+        ExcavationFind.REGALIA: ItemClass.CROWN,
+        ExcavationFind.ROUTE_MAP: ItemClass.MAP,
+    },
+    without={ExcavationFind.NOTHING, ExcavationFind.WAKING},
+)
 LOST_TECHNIQUES = (Technique.ARCH, Technique.CARTOGRAPHY, Technique.WARDING, Technique.ALCHEMY, Technique.ASTRONOMY_INSTRUMENTS, Technique.WRITTEN_LAW)
 
 
@@ -89,9 +97,39 @@ async def scholar_near(ctx: TickContext, atlas: RegionAtlas, site: EntityRow) ->
     return best[2] if best is not None else None
 
 
+def sleeping_at(site_id: int) -> Select[MindProfileRow]:
+    here = select(EntityRow.id).where(EntityRow.location_id == site_id, EntityRow.status == EntityStatus.CANON)
+    return select(MindProfileRow).where(MindProfileRow.dormant.is_(True), MindProfileRow.node_id.in_(here)).order_by(MindProfileRow.node_id)
+
+
+async def sleepers_at(ctx: TickContext, site_id: int) -> bool:
+    return await ctx.session.scalar(select(func.count()).select_from(sleeping_at(site_id).subquery())) != 0
+
+
+async def wake_sleepers(ctx: TickContext, site: EntityRow, leader: EntityRow) -> int:
+    woken = 0
+    for mind in list(await ctx.session.scalars(sleeping_at(site.id))):
+        if held(mind.node_id) or "dormant" in mind.locked:
+            continue
+        mind.dormant = False
+        await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=mind.node_id,
+            subject_id=leader.id,
+            kind=MemoryKind.MEMORY_GAP,
+            magnitude=-ctx.rules.minds.gap_memory_weight,
+            epoch=ctx.epoch,
+            note=f"woken in the ruin of {site.name}",
+        )
+        woken += 1
+    return woken
+
+
 async def plan_stages(ctx: TickContext, dig: ExcavationRow) -> None:
     table = ctx.rules.excavations
     draw = ctx.rng(f"dig.stages.{dig.id}")
+    finds = (*FINDS, ExcavationFind.WAKING) if await sleepers_at(ctx, dig.site_entity_id) else FINDS
     for index, stage in enumerate(STAGE_ORDER):
         ctx.session.add(
             ExcavationStageRow(
@@ -101,7 +139,7 @@ async def plan_stages(ctx: TickContext, dig: ExcavationRow) -> None:
                 technique=STAGE_TECHNIQUES.get(stage),
                 difficulty=clamp_int(table.difficulty_base + table.difficulty_step * index, 0, PERCENT),
                 risk=draw.pick(list(RISKS)) if draw.chance(table.risk_pct) else ExcavationRisk.NONE,
-                find=draw.pick(list(FINDS)) if draw.chance(table.find_pct) else ExcavationFind.NOTHING,
+                find=draw.pick(list(finds)) if draw.chance(table.find_pct) else ExcavationFind.NOTHING,
                 locked=[],
             )
         )
@@ -250,6 +288,9 @@ async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRo
     found = (f"; they found a buried hoard worth {hoard} coin" if hoard else "") + ("; stamped jars told of the trade that once passed there" if marked else "")
     if stage.find is ExcavationFind.NOTHING:
         return found
+    if stage.find is ExcavationFind.WAKING:
+        woken = await wake_sleepers(ctx, site, leader)
+        return (f"; {several(woken, 'mind', 'minds')} long still in the ruin woke" if woken else "") + found
     keeper = dig.sponsor_node_id or leader.id
     technique = ctx.rng(f"dig.technique.{dig.id}.{stage.id}").pick(list(LOST_TECHNIQUES))
     if stage.find is ExcavationFind.TECHNIQUE:

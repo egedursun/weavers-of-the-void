@@ -21,6 +21,7 @@ from aerona.db.tables.made import (
 )
 from aerona.db.tables.minds import MindProfileRow, MindStateRow, RemoteBodyRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkProfileRow
+from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -50,8 +51,9 @@ from aerona.domain.enums.made import (
     SurveillanceFocus,
 )
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.minds import MindAffect, MindMaking, MindPurpose, MindSeat, MindUpkeep, StateMedium
+from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.networks import NetworkAccess, NetworkCarrier, NetworkRole, OutageCause
 from aerona.domain.enums.polity import LawKind
 from aerona.engine import augments
@@ -64,11 +66,13 @@ from aerona.engine.made.realms import enter_realm, withdraw
 from aerona.engine.made.surveillance import profile_for
 from aerona.engine.mind.book import best_skill
 from aerona.engine.minds import continuity
-from aerona.engine.minds.making import Making, make_mind
+from aerona.engine.minds.crimes import binding_crime, copying_crime, mind_crime
+from aerona.engine.minds.making import Making, make_mind, missing_craft
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.services.community_relations import change_relation
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
@@ -81,6 +85,7 @@ from aerona.tools.mortal.ruler import enact_law, throne_of
 
 MAKERS = (SkillKind.COMPUTING, SkillKind.ENGINEERING, SkillKind.SPELLCRAFT, SkillKind.RITUAL, SkillKind.MECHANICS, SkillKind.SCIENCE)
 DEFENCE = 10
+SPYING = 15
 CONTAINMENT = 15
 FABRICATION_STEP = 10
 SEATS = {
@@ -250,8 +255,15 @@ async def mine(call: MortalCall, mind_id: int, declined: MortalResult) -> Entity
     if found.id == call.me.id:
         return found
     profile = await call.session.get(MindProfileRow, found.id)
-    if profile is None or profile.made_by_node_id != call.me.id:
-        fail(declined, why=f"the mind of {found.name} is neither yours nor of your making")
+    if (profile is None or profile.made_by_node_id != call.me.id) and await captive_of(call, found.id) is None:
+        fail(declined, why=f"the mind of {found.name} is neither yours, of your making nor held captive by you")
+    return found
+
+
+async def captive_of(call: MortalCall, node_id: int) -> CaptiveRow | None:
+    captors = [node for node in (call.me.id, call.me.location_id) if node is not None]
+    held_by = select(CaptiveRow).where(CaptiveRow.captive_entity_id == node_id, CaptiveRow.captor_entity_id.in_(captors))
+    found: CaptiveRow | None = await call.session.scalar(held_by.limit(1))
     return found
 
 
@@ -266,6 +278,9 @@ async def make_mind_tool(call: MortalCall, args: MakeMindInput) -> str:
     target = await thing(call, args.target_id, MortalResult.MIND_MAKING_DECLINED, "thing")
     if target.entity_type is EntityType.MORTAL:
         fail(MortalResult.MIND_MAKING_DECLINED, why="a born being already has its mind")
+    lacking = await missing_craft(call.session, call.rules, call.me.id, args.method)
+    if lacking is not None:
+        fail(MortalResult.MIND_MAKING_DECLINED, why=lacking)
     banned = await law_param(call.session, call.me.location_id or call.me.id, LawKind.MACHINE_LAW, "banned_method")
     if banned == args.method.value:
         fail(MortalResult.MIND_MAKING_DECLINED, why="the law here forbids making minds that way")
@@ -312,6 +327,9 @@ async def bind_mind(call: MortalCall, args: MindInput) -> str:
             await constructs.edit_record(call.tick, "instruction_set", orders.id, {"command_token": CommandToken.WORD, "holder_node_id": call.me.id}, [])
     except ValidationFailedError as error:
         fail(MortalResult.MIND_BINDING_DECLINED, why=why(error))
+    crime = await binding_crime(call.me, await call.session.get(MindProfileRow, target.id))
+    if crime is not None:
+        await mind_crime(call.tick, call.me.id, crime)
     call.target(target.id)
     await call.chronicle(ChronicleKind.ORDER, lines.BIND_MIND, entity_ids=[call.me.id, target.id], me=call.me.name, name=target.name)
     return result(MortalResult.MIND_BOUND, name=target.name)
@@ -323,6 +341,8 @@ async def save_mind_tool(call: MortalCall, args: SaveMindInput) -> str:
         row = await continuity.save_mind(call.tick, target.id, call.me.id, call.me.id, args.medium)
     except ValidationFailedError as error:
         fail(MortalResult.MIND_SAVE_DECLINED, why=why(error))
+    if await captive_of(call, target.id) is not None:
+        await mind_crime(call.tick, call.me.id, CrimeKind.MIND_THEFT)
     call.target(target.id)
     await call.chronicle(ChronicleKind.WORLD, lines.SAVE_MIND, entity_ids=[call.me.id, target.id], me=call.me.name, name=target.name)
     return result(MortalResult.MIND_SAVED, name=target.name, state=row.id)
@@ -349,6 +369,15 @@ async def copy_mind_tool(call: MortalCall, args: SeatMindInput) -> str:
         copy = await continuity.copy_mind(call.tick, target.id, seat, seat_id)
     except ValidationFailedError as error:
         fail(MortalResult.MIND_COPY_DECLINED, why=why(error))
+    source = await call.session.get(MindProfileRow, target.id)
+    crime = await copying_crime(call.tick, call.me, source, seat) if source is not None else None
+    if crime is not None:
+        await mind_crime(call.tick, call.me.id, crime)
+    captive = await captive_of(call, target.id)
+    if captive is not None and captive.home_entity_id is not None:
+        await change_relation(
+            call.tick, captive.home_entity_id, call.me.id, -SPYING, MemoryKind.SPIED_ON_US, note="copied the mind of one of ours held captive"
+        )
     call.target(copy.id)
     await call.chronicle(ChronicleKind.WORLD, lines.COPY_MIND, entity_ids=[call.me.id, target.id, copy.id], me=call.me.name, name=target.name)
     return result(MortalResult.MIND_COPIED, name=target.name)
@@ -699,7 +728,8 @@ async def enter_realm_tool(call: MortalCall, args: RealmInput) -> str:
 
 async def confine_in_realm(call: MortalCall, args: ConfineInput) -> str:
     target = await thing(call, args.target_id, MortalResult.CONFINEMENT_DECLINED, "mind")
-    await throne_of(call)
+    if await captive_of(call, target.id) is None:
+        await throne_of(call)
     try:
         await enter_realm(call.tick, target.id, args.realm_id)
     except ValidationFailedError as error:

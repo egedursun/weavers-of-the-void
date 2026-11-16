@@ -2,19 +2,21 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.db.tables.cosmography import DimensionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import MadeRealmRow
 from aerona.db.tables.minds import SPEED_MAX, MindProfileRow
 from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import ENDED_STATUSES, EntityStatus, EntityType
 from aerona.domain.enums.made import RealmPurpose
 from aerona.domain.enums.minds import MindSeat, MindUpkeep
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.profiles import profile_of
+from aerona.engine.minds.seat_loss import lose_seat
 from aerona.engine.networks.book import running
 from aerona.engine.notes import note
 from aerona.engine.primitives.folk import folk_among
@@ -32,6 +34,24 @@ async def host_down(ctx: TickContext, realm: MadeRealmRow) -> bool:
         return not running(network, ctx.epoch)
     host = await ctx.session.get(EntityRow, realm.host_node_id)
     return host is not None and host.status is not EntityStatus.CANON
+
+
+async def host_ended(ctx: TickContext, realm: MadeRealmRow) -> bool:
+    if realm.host_node_id is None or realm.sealed or await ctx.session.get(NetworkProfileRow, realm.host_node_id) is not None:
+        return False
+    host = await ctx.session.get(EntityRow, realm.host_node_id)
+    return host is None or host.status in ENDED_STATUSES
+
+
+async def end_realm(ctx: TickContext, realm: MadeRealmRow) -> None:
+    for mind in await minds_inside(ctx, realm):
+        if not held(mind.node_id) and "seat" not in mind.locked:
+            await lose_seat(ctx, mind)
+    dimension = await ctx.session.get(DimensionRow, realm.dimension_id)
+    if dimension is not None:
+        dimension.stability = 0
+    realm.sealed = True
+    await note(ctx, "A made realm ended with what held it.", key="realm.ended", ids=[realm.dimension_id])
 
 
 async def minds_inside(ctx: TickContext, realm: MadeRealmRow) -> list[MindProfileRow]:
@@ -92,6 +112,9 @@ async def escapes(ctx: TickContext, realm: MadeRealmRow, minds: list[MindProfile
 async def keep_realm(ctx: TickContext, realm: MadeRealmRow) -> None:
     table = ctx.rules.made_realms
     keeper = await ctx.session.get(EntityRow, realm.keeper_node_id) if realm.keeper_node_id is not None else None
+    if await host_ended(ctx, realm):
+        await end_realm(ctx, realm)
+        return
     if await host_down(ctx, realm) and "frozen_until_epoch" not in realm.locked:
         if realm.frozen_until_epoch <= ctx.epoch:
             await note(ctx, "A made realm stood still when what held it went down.", key="realm.frozen", ids=[realm.dimension_id])

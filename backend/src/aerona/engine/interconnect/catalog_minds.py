@@ -124,6 +124,11 @@ MINDS_MECHANICS: tuple[Mechanic, ...] = (
             Coupling(S.COMMUNICATION, "dispatches by network arrive in the network's delay", E.MODIFIER, "networks.relay_days"),
             Coupling(S.ECONOMY, "towns that depend on a network lose prosperity when it goes down", E.FLOW, "networks.shock_prosperity"),
             Coupling(S.POLITY, "a censored network lowers the trust of its members", E.MODIFIER, "information.censorship_loss"),
+            Coupling(S.WAR, "an army whose control network runs fights better coordinated, and confused while it is down", E.MODIFIER, "networks.command_pct"),
+            Coupling(S.ECONOMY, "a network draws energy from its member towns and goes down when they run short", E.TRIGGER, "networks.shortage_pct"),
+            Coupling(S.ECONOMY, "a money network carries a ledger whose trust falls each time it goes down", E.FLOW, "networks.ledger_shock"),
+            Coupling(S.LANGUAGE, "towns that share a network bring their tongues into contact", E.MODIFIER, "networks.diffusion_pct"),
+            Coupling(S.LAW, "copying, editing, seizing or ending a mind is a crime the courts hear", E.TRIGGER, "mind_law.edit_drift"),
         ),
     ),
     Mechanic(

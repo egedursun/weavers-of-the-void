@@ -79,6 +79,7 @@ class LanguageModality(StrEnum):
     SCENT = "scent"
     COLOUR = "colour"
     TELEPATHIC = "telepathic"
+    DATA = "data"
 
 
 class LanguageStage(StrEnum):

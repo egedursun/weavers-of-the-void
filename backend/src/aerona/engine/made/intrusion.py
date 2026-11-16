@@ -21,6 +21,7 @@ from aerona.engine.economy.routes import enemies_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import best_skill
 from aerona.engine.minds.values import best_level
+from aerona.engine.networks.book import shake_ledger
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.services.community_relations import change_relation
@@ -81,6 +82,7 @@ async def deny(ctx: TickContext, network_id: int) -> None:
     ctx.session.add(
         NetworkOutageRow(network_entity_id=network_id, cause=OutageCause.INTRUSION, epoch=ctx.epoch, epochs=1, severity=ctx.rules.intrusion.outage_severity)
     )
+    await shake_ledger(ctx.session, ctx.rules, network_id)
 
 
 async def seize(ctx: TickContext, attempt: Attempt) -> None:

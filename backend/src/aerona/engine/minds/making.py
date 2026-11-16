@@ -1,21 +1,25 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import PersonalityValueRow
 from aerona.db.tables.minds import MindMakingRow, MindProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.minds import MakingOutcome, MindAffect, MindMaking, MindOrigin, MindPurpose, MindSeat, MindUpkeep, WillCause
 from aerona.engine.context import TickContext
-from aerona.engine.mind.book import clamp_value, values_for
+from aerona.engine.mind.book import best_skill, clamp_value, values_for
 from aerona.engine.minds.phase import change_will
 from aerona.engine.minds.profiles import WILL_ORDER, profile_of, will_rank
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.queries import connect
+from aerona.rules.registry import Rules
 
 ORIGINS = {
     MindMaking.CRAFT: MindOrigin.MADE,
@@ -87,6 +91,29 @@ def apply_outcome(ctx: TickContext, row: MindProfileRow, outcome: MakingOutcome,
     elif outcome is MakingOutcome.UNINTENDED_WILL:
         shift = 1 if ctx.rng(f"mind.unintended.{row.node_id}.{ctx.epoch}").chance(PERCENT // 2) else -1
         change_will(ctx, row, WILL_ORDER[max(0, min(len(WILL_ORDER) - 2, will_rank(meant) + shift))], WillCause.DAMAGE)
+
+
+MAKING_SKILLS = partial(
+    MindMaking,
+    {
+        MindMaking.CRAFT: (SkillKind.ENGINEERING, SkillKind.MECHANICS, SkillKind.SPELLCRAFT, SkillKind.COMPUTING, SkillKind.SMITHING),
+        MindMaking.TRAINING: (SkillKind.COMPUTING, SkillKind.TEACHING, SkillKind.SPELLCRAFT),
+        MindMaking.COPYING: (SkillKind.COMPUTING, SkillKind.SPELLCRAFT, SkillKind.RITUAL),
+        MindMaking.SUMMONING: (SkillKind.SPELLCRAFT, SkillKind.SPIRIT_SPEAKING, SkillKind.RITUAL),
+        MindMaking.GROWING: (SkillKind.MEDICINE, SkillKind.SURGERY, SkillKind.SCIENCE),
+        MindMaking.TRANSFER: (SkillKind.COMPUTING, SkillKind.SPELLCRAFT, SkillKind.RITUAL),
+        MindMaking.AWAKENING: (SkillKind.SPELLCRAFT, SkillKind.RITUAL, SkillKind.COMPUTING),
+    },
+    without={MindMaking.DIVINE_GRANT},
+)
+
+
+async def missing_craft(session: AsyncSession, rules: Rules, maker_id: int, method: MindMaking) -> str | None:
+    if method not in MAKING_SKILLS:
+        return "only a god can grant a mind"
+    if await best_skill(session, maker_id, MAKING_SKILLS[method]) < rules.mind_making.skill_floor:
+        return "the maker lacks the craft this way of making calls for"
+    return None
 
 
 async def make_mind(ctx: TickContext, node_id: int, maker_id: int | None, making: Making) -> MindProfileRow:

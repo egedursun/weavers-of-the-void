@@ -642,6 +642,7 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "table.language_registers",
     "table.lexemes",
     "table.memories",
+    "table.mind_profiles",
     "table.minds",
     "table.name_registry",
     "table.node_materials",

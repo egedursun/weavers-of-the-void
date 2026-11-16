@@ -13,7 +13,7 @@ from aerona.engine.tongues.scripts import ScriptTally, evolve_scripts
 from aerona.engine.tongues.sounds import SoundTally, shift_sounds
 
 
-@reads("table.bonds", "table.entity_flags", "table.language_profiles", "table.language_standing", "table.lexemes", "table.sound_changes")
+@reads("table.bonds", "table.entity_flags", "table.language_profiles", "table.language_standing", "table.lexemes", "table.network_nodes", "table.sound_changes")
 @writes("table.sound_changes")
 async def sound_changes(ctx: TickContext) -> None:
     tally = SoundTally()
@@ -21,7 +21,16 @@ async def sound_changes(ctx: TickContext) -> None:
     count(ctx, "sound", tally)
 
 
-@reads("language.complexity", "table.bonds", "table.language_grammar", "table.language_profiles", "table.people_biology", "table.speaker_cohorts")
+@reads(
+    "language.complexity",
+    "table.bonds",
+    "table.language_grammar",
+    "table.language_profiles",
+    "table.network_nodes",
+    "table.people_biology",
+    "table.people_substrates",
+    "table.speaker_cohorts",
+)
 @writes("table.language_grammar")
 async def grammar(ctx: TickContext) -> None:
     tally = GrammarTally()

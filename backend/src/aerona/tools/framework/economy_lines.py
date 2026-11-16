@@ -51,6 +51,8 @@ from aerona.rules.registry import Rules
 
 UNTOLLED = "untolled."
 
+LEDGER = "no metal, a ledger kept on a network"
+
 
 def words(value: str) -> str:
     return value.replace("_", " ")
@@ -123,7 +125,7 @@ async def currency_line(session: AsyncSession, community_id: int, names: Names) 
     return CurrencyLine(
         id=currency.id,
         name=currency.name,
-        metal=words(currency.metal.value),
+        metal=words(currency.metal.value) if currency.metal is not None else LEDGER,
         purity=currency.purity,
         trust=currency.trust,
         supply=currency.supply,

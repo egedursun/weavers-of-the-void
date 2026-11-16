@@ -72,6 +72,10 @@ class ReplicatorRules:
     runaway_harm: int = rule(3, 0, 100, E, "Prosperity a runaway line consumes from each town of its land each epoch")
     repair_yield: int = rule(2, 0, 100, E, "Prosperity a repair line restores to each town of its land each epoch")
     goods_yield: int = rule(2, 0, 100, E, "Goods a goods line yields each epoch per unit of mass at full growth")
+    drift_line_chance: int = rule(20, 0, 100, E, "Chance a copy error founds a drifted line of its own in one of the lands")
+    vessel_reach_chance: int = rule(25, 0, 100, E, "Chance a loose line of vessel scale seeds a land on another world instead of a neighbouring one")
+    wake_mass: int = rule(2000, 1, 1000000, E, "Mass across its lands at which a self-making line may wake as a mind of many bodies")
+    wake_chance: int = rule(10, 0, 100, E, "Chance each epoch such a line wakes where the world's law lets made minds grow a will")
 
 
 @dataclass(frozen=True)
@@ -104,3 +108,5 @@ class MindLawRules:
     movement_gap: int = rule(2, 1, 4, P, "Steps of status below what a people's mercy calls for at which made minds form a movement")
     movement_chance: int = rule(10, 0, 100, P, "Chance each epoch such a movement forms")
     bond_by_status: int = rule(2, 0, 100, P, "Maker bond made minds gain each epoch for each step of status above property")
+    edit_drift: int = rule(20, 0, 100, P, "Drift of values a mind carries after the law edits it by force")
+    edit_stability: int = rule(25, 0, 100, P, "Stability a mind loses when the law edits it by force")

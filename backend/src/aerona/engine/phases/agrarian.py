@@ -194,6 +194,7 @@ async def resilience(ctx: TickContext) -> None:
     "table.held_identities",
     "table.keystone_resources",
     "table.memories",
+    "table.mind_profiles",
     "table.minds",
     "table.nodes",
     "table.offices",

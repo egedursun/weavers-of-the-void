@@ -7,7 +7,7 @@ import {
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MaterialForge } from './MaterialsTab'
-import { DebtLaws, LoanCard, LoanForge } from './MoneyTab'
+import { CurrencyCards, DebtLaws, LoanCard, LoanForge } from './MoneyTab'
 import { WorkshopDesigns } from './WorkshopDesigns'
 
 vi.mock('@/api/client', async () => {
@@ -287,5 +287,29 @@ describe('economy forms', () => {
       },
       description: null,
     })
+  })
+  it('shows a network ledger as money with no metal', async () => {
+    serve()
+    onApi('GET', '/api/currencies', [
+      {
+        id: 9,
+        name: 'the ledger of Coast Relay',
+        issuer_id: 46,
+        issuer_name: 'Coast Relay',
+        item_id: null,
+        metal: null,
+        purity: 100,
+        trust: 55,
+        supply: 0,
+        minted_epoch: 12,
+        debased_epoch: null,
+        users: [32],
+        held: false,
+      },
+    ])
+    const { screen } = await renderApp(<CurrencyCards worldId={WORLD} />)
+    await expect
+      .element(screen.getByText(/a ledger with no metal, since epoch 12/))
+      .toBeVisible()
   })
 })

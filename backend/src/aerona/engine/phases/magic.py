@@ -142,6 +142,7 @@ async def enemy_in_reach(ctx: TickContext, mortal: EntityRow, row: RiteProfileRo
     "table.law_profiles",
     "table.ley_lines",
     "table.mind_attributes",
+    "table.mind_profiles",
     "table.minds",
     "table.mortal_equipment",
     "table.mortal_profiles",

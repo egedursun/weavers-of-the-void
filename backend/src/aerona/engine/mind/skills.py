@@ -11,6 +11,7 @@ from aerona.db.tables.body import BodyCustomRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import SKILL_MAX, SkillRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
@@ -97,6 +98,9 @@ async def practise(
         rate *= colour_factor(rules, await session.get(GenomeRow, node_id), skill)
         rate *= await focus_rate(session, rules, node_id, skill)
     rate *= learning(await variants_by_id(session, [row.variant_id]), row.variant_id)
+    seated = await session.get(MindProfileRow, node_id)
+    if seated is not None:
+        rate *= seated.speed_pct / PERCENT
     schooled = await session.get(MortalProfileRow, node_id)
     if schooled is not None:
         rate *= 1 + schooled.education / PERCENT * rules.education.education_skill_pct / PERCENT

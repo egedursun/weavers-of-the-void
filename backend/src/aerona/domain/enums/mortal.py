@@ -96,6 +96,12 @@ class CrimeKind(StrEnum):
     MURDER = "murder"
     DESERTION = "desertion"
     WITCHCRAFT = "witchcraft"
+    MIND_THEFT = "mind_theft"
+    UNLICENSED_COPYING = "unlicensed_copying"
+    FORCED_EDIT = "forced_edit"
+    ERASURE = "erasure"
+    MACHINE_SEIZURE = "machine_seizure"
+    IMPERSONATION = "impersonation"
 
 
 class PunishmentKind(StrEnum):
@@ -110,6 +116,11 @@ class PunishmentKind(StrEnum):
     PUBLIC_SHAMING = "public_shaming"
     IMPRISONMENT = "imprisonment"
     REMAKING = "remaking"
+    FORCED_DORMANCY = "forced_dormancy"
+    FORCED_EDIT = "forced_edit"
+    SEAT_CONFINEMENT = "seat_confinement"
+    STATE_SEIZURE = "state_seizure"
+    ERASURE = "erasure"
 
 
 class EquipmentSlot(StrEnum):

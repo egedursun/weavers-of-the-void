@@ -1,4 +1,5 @@
 import {
+  Sunrise,
   Activity,
   Ban,
   Baby,
@@ -327,6 +328,7 @@ export const DIG_FINDS: Record<Schema['ExcavationFind'], Named> = {
   technique: { label: 'Lost technique', icon: ScrollText, tone: 'info' },
   regalia: { label: 'Regalia', icon: Crown, tone: 'gold' },
   route_map: { label: 'Map of a route', icon: Map, tone: 'success' },
+  waking: { label: 'Sleepers woken', icon: Sunrise, tone: 'info' },
 }
 
 export const BATTLEFIELD_FEATURES: Record<Schema['BattlefieldFeature'], Named> =

@@ -18,12 +18,16 @@ from aerona.domain.enums.constructs import CommandToken, MindWill, OrderConditio
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.minds import WillCause
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState
 from aerona.engine.constructs.making import Design, make_construct, skilled_makers
 from aerona.engine.constructs.wards import realm_of_army
 from aerona.engine.context import TickContext
+from aerona.engine.economy.routes import enemies_of
+from aerona.engine.mind.hooks import judged
+from aerona.engine.minds.crimes import erasure_crime, mind_crime
 from aerona.engine.minds.phase import change_will
 from aerona.engine.minds.profiles import law_of, profile_of, will_allowed
 from aerona.engine.notes import note
@@ -205,9 +209,16 @@ async def do_destroy(ctx: TickContext, charge: Charge) -> bool:
     if foe.entity_type is EntityType.SETTLEMENT:
         people = stat_or(foe, "population", 0)
         set_stats(foe, population=max(0, people - round_half_up(people * table.destroy_per_mille / PER_MILLE)))
+        if charge.holder is not None:
+            foes = await enemies_of(ctx)
+            act = ActKind.KILLING_IN_WAR if (charge.holder.id, foe.id) in foes or (charge.holder.id, foe.location_id) in foes else ActKind.KILLING_OUTSIDER
+            await judged(ctx, charge.holder.id, foe.id, act, note="slain by an instructed weapon")
         return True
     if stat_or(foe, "defense", -1) >= 0:
         set_stats(foe, defense=clamp_int(stat_or(foe, "defense", 0) - table.destroy_harm, 0, PERCENT))
+        crime = await erasure_crime(ctx, charge.holder, foe.id) if charge.holder is not None and stat_or(foe, "defense", 0) <= 0 else None
+        if crime is not None and charge.holder is not None:
+            await mind_crime(ctx, charge.holder.id, crime)
         return True
     return False
 

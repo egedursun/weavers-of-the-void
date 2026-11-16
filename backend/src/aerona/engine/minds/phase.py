@@ -19,7 +19,9 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.continuity import keep_disputes
 from aerona.engine.minds.instructions import conflict_of
 from aerona.engine.minds.profiles import WILL_ORDER, is_made, law_lets_will_grow, law_of, seed_missing, will_allowed, will_rank, world_of
+from aerona.engine.minds.seat_loss import lose_seat, name_of, seat_lost
 from aerona.engine.networks.book import members_of
+from aerona.engine.networks.energy import starved
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import close
@@ -30,11 +32,6 @@ CARES = frozenset({MemoryKind.SAVED_ME, MemoryKind.GIFTED_ME, MemoryKind.TAUGHT_
 SELF_KEPT = frozenset({MindUpkeep.NONE, MindUpkeep.FOOD, MindUpkeep.PLACE, MindUpkeep.BELIEF, MindUpkeep.HOST})
 
 
-async def name_of(ctx: TickContext, node_id: int) -> str:
-    entity = await ctx.session.get(EntityRow, node_id)
-    return entity.name if entity is not None else "a mind"
-
-
 async def kept(ctx: TickContext, row: MindProfileRow) -> bool:
     if row.upkeep in SELF_KEPT:
         return True
@@ -42,6 +39,9 @@ async def kept(ctx: TickContext, row: MindProfileRow) -> bool:
     if seat is None or seat.status is not EntityStatus.CANON:
         return False
     town = await ctx.session.get(EntityRow, seat.location_id) if seat.location_id is not None else None
+    upkeep_energy = row.upkeep_energy if row.upkeep is MindUpkeep.ENERGY else None
+    if upkeep_energy is not None and await starved(ctx.session, seat.location_id, upkeep_energy, ctx.rules.networks.shortage_pct):
+        return False
     maker = await ctx.session.get(EntityRow, row.made_by_node_id) if row.made_by_node_id is not None else None
     if maker is not None and maker.status is EntityStatus.CANON:
         return True
@@ -57,6 +57,9 @@ def change_will(ctx: TickContext, row: MindProfileRow, will: MindWill, cause: Wi
 
 async def tend_seat(ctx: TickContext, row: MindProfileRow) -> None:
     table, will = ctx.rules.minds, ctx.rules.mind_will
+    if "seat" not in row.locked and await seat_lost(ctx, row):
+        await lose_seat(ctx, row)
+        return
     if await kept(ctx, row):
         if "stability" not in row.locked:
             row.stability = clamp_percent(row.stability + table.kept_stability_gain)

@@ -62,6 +62,12 @@ CRIME_SECRETS: dict[CrimeKind, frozenset[IntrigueSecret]] = {
     CrimeKind.TREASON: frozenset({IntrigueSecret.CRIME, IntrigueSecret.BROKEN_OATH}),
     CrimeKind.DESERTION: frozenset({IntrigueSecret.COWARDICE_IN_BATTLE}),
     CrimeKind.WITCHCRAFT: frozenset({IntrigueSecret.DEAL_WITH_OUTER_BEING, IntrigueSecret.SECRET_CULT_MEMBERSHIP}),
+    CrimeKind.MIND_THEFT: frozenset({IntrigueSecret.CRIME}),
+    CrimeKind.UNLICENSED_COPYING: frozenset({IntrigueSecret.CRIME}),
+    CrimeKind.FORCED_EDIT: frozenset({IntrigueSecret.CRIME}),
+    CrimeKind.ERASURE: frozenset({IntrigueSecret.MURDER, IntrigueSecret.CRIME}),
+    CrimeKind.MACHINE_SEIZURE: frozenset({IntrigueSecret.CRIME}),
+    CrimeKind.IMPERSONATION: frozenset({IntrigueSecret.CRIME}),
 }
 TRIAL_KINDS = {kind.value: kind for kind in TrialKind}
 TRIAL_TEXT: dict[TrialKind, str] = {

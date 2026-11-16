@@ -131,7 +131,7 @@ function CurrencyCard({
   worldId: number | null
 }) {
   const [name, setName] = useState(currency.name)
-  const [metal, setMetal] = useState<string>(currency.metal)
+  const [metal, setMetal] = useState<string>(currency.metal ?? '')
   const [purity, setPurity] = useState(String(currency.purity))
   const [trust, setTrust] = useState(String(currency.trust))
   const [supply, setSupply] = useState(String(currency.supply))
@@ -145,7 +145,7 @@ function CurrencyCard({
           body: {
             currency_id: currency.id,
             name: name.trim() || null,
-            metal: metal as MaterialKind,
+            metal: metal ? (metal as MaterialKind) : null,
             purity: whole(purity, PERCENT),
             trust: whole(trust, PERCENT),
             supply: whole(supply),
@@ -198,11 +198,13 @@ function CurrencyCard({
             {currency.name}
           </Text>
           <Muted variant='caption'>
-            {'Struck by '}
+            {currency.metal === null ? 'Kept on a network by ' : 'Struck by '}
             <EntityLink kind='entity' id={String(currency.issuer_id)}>
               {currency.issuer_name}
             </EntityLink>
-            {` in ${metalWord(currency.metal)}, epoch ${currency.minted_epoch}`}
+            {currency.metal === null
+              ? `, a ledger with no metal, since epoch ${currency.minted_epoch}`
+              : ` in ${metalWord(currency.metal)}, epoch ${currency.minted_epoch}`}
           </Muted>
         </div>
         <div className='flex shrink-0 flex-wrap justify-end gap-1.5'>

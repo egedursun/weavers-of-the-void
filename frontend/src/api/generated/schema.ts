@@ -45552,7 +45552,18 @@ export interface components {
       witnesses: components['schemas']['WitnessView'][]
     }
     CrimeKind:
-      'theft' | 'blasphemy' | 'treason' | 'murder' | 'desertion' | 'witchcraft'
+      | 'theft'
+      | 'blasphemy'
+      | 'treason'
+      | 'murder'
+      | 'desertion'
+      | 'witchcraft'
+      | 'mind_theft'
+      | 'unlicensed_copying'
+      | 'forced_edit'
+      | 'erasure'
+      | 'machine_seizure'
+      | 'impersonation'
     CrimeStance: 'suppress' | 'co_opt'
     CrimeStanceDeleteInput: {
       polity_id: number
@@ -45845,7 +45856,7 @@ export interface components {
       issuer_id: number
       issuer_name: string
       item_id: number | null
-      metal: components['schemas']['MaterialKind']
+      metal: components['schemas']['MaterialKind'] | null
       purity: number
       trust: number
       supply: number
@@ -49539,7 +49550,13 @@ export interface components {
       dig_id: number
     }
     ExcavationFind:
-      'nothing' | 'artifact' | 'book' | 'technique' | 'regalia' | 'route_map'
+      | 'nothing'
+      | 'artifact'
+      | 'book'
+      | 'technique'
+      | 'regalia'
+      | 'route_map'
+      | 'waking'
     ExcavationRisk: 'none' | 'curse' | 'spirit' | 'collapse'
     ExcavationStage:
       'survey' | 'clearing' | 'digging' | 'deep_layers' | 'inner_sanctum'
@@ -55041,7 +55058,8 @@ export interface components {
       second_id: number
       value: number
     }
-    LanguageModality: 'vocal' | 'sign' | 'scent' | 'colour' | 'telepathic'
+    LanguageModality:
+      'vocal' | 'sign' | 'scent' | 'colour' | 'telepathic' | 'data'
     LanguageNode: {
       language: components['schemas']['EntitySummary']
       writing_system: components['schemas']['WritingSystem'] | null
@@ -57227,7 +57245,6 @@ export interface components {
       form: components['schemas']['MemorialForm']
     }
     MemoryKind:
-      | 'memory_gap'
       | 'harmed_me'
       | 'killed_kin'
       | 'saved_me'
@@ -57263,6 +57280,7 @@ export interface components {
       | 'formative'
       | 'stole_faithful'
       | 'aided_chosen'
+      | 'memory_gap'
     MemoryOrigin: 'derived' | 'player'
     MemoryStrikeDeleteInput: {
       by_id: number
@@ -62541,6 +62559,11 @@ export interface components {
       | 'public_shaming'
       | 'imprisonment'
       | 'remaking'
+      | 'forced_dormancy'
+      | 'forced_edit'
+      | 'seat_confinement'
+      | 'state_seizure'
+      | 'erasure'
     Purification:
       | 'time'
       | 'washing'
@@ -151156,7 +151179,20 @@ export const crewStationValues: ReadonlyArray<
 > = ['gunners', 'riggers', 'marines', 'officers', 'rowers']
 export const crimeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrimeKind']
-> = ['theft', 'blasphemy', 'treason', 'murder', 'desertion', 'witchcraft']
+> = [
+  'theft',
+  'blasphemy',
+  'treason',
+  'murder',
+  'desertion',
+  'witchcraft',
+  'mind_theft',
+  'unlicensed_copying',
+  'forced_edit',
+  'erasure',
+  'machine_seizure',
+  'impersonation',
+]
 export const crimeStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrimeStance']
 > = ['suppress', 'co_opt']
@@ -152359,7 +152395,15 @@ export const evolvedTraitValues: ReadonlyArray<
 ]
 export const excavationFindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ExcavationFind']
-> = ['nothing', 'artifact', 'book', 'technique', 'regalia', 'route_map']
+> = [
+  'nothing',
+  'artifact',
+  'book',
+  'technique',
+  'regalia',
+  'route_map',
+  'waking',
+]
 export const excavationRiskValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ExcavationRisk']
 > = ['none', 'curse', 'spirit', 'collapse']
@@ -154028,7 +154072,7 @@ export const landUseRingValues: ReadonlyArray<
 > = ['gardens', 'forestry', 'grain', 'ranching', 'wilds']
 export const languageModalityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageModality']
-> = ['vocal', 'sign', 'scent', 'colour', 'telepathic']
+> = ['vocal', 'sign', 'scent', 'colour', 'telepathic', 'data']
 export const languagePolicyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguagePolicy']
 > = ['official', 'liturgical', 'suppressed', 'revival']
@@ -154591,7 +154635,6 @@ export const memorialFormValues: ReadonlyArray<
 export const memoryKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MemoryKind']
 > = [
-  'memory_gap',
   'harmed_me',
   'killed_kin',
   'saved_me',
@@ -154627,6 +154670,7 @@ export const memoryKindValues: ReadonlyArray<
   'formative',
   'stole_faithful',
   'aided_chosen',
+  'memory_gap',
 ]
 export const memoryOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MemoryOrigin']
@@ -156236,6 +156280,11 @@ export const punishmentKindValues: ReadonlyArray<
   'public_shaming',
   'imprisonment',
   'remaking',
+  'forced_dormancy',
+  'forced_edit',
+  'seat_confinement',
+  'state_seizure',
+  'erasure',
 ]
 export const purificationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Purification']

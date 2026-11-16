@@ -8,6 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import OPEN_INJURY_STATES, HarmCause, InjuryState
 from aerona.domain.enums.divine import DomainHook
@@ -108,6 +109,9 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     if await binds(ctx, NaturalLaw.IMMORTALITY, mortal) or immortal(await mortal_flags(ctx.session, mortal)) or await ageless(ctx.session, mortal.id):
         return
     if not (await folk_biology(ctx.session, mortal)).ages:
+        return
+    seated = await ctx.session.get(MindProfileRow, mortal.id)
+    if seated is not None and seated.dormant:
         return
     rng = ctx.rng(seed_of("aging", mortal.id))
     first = mortal.birth_epoch == ctx.epoch

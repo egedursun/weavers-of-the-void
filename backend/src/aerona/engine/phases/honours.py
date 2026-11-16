@@ -17,6 +17,7 @@ from aerona.engine.phases.dominion import count
     "table.geasa",
     "table.held_identities",
     "table.incident_participants",
+    "table.mind_profiles",
     "table.minds",
     "table.nodes",
     "table.offices",

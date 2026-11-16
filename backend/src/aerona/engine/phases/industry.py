@@ -11,6 +11,7 @@ from aerona.engine.industry.owners import ProfitTally, magic_banned, tend_profit
 from aerona.engine.industry.pollution import PollutionTally, tend_pollution
 from aerona.engine.industry.stores import StoreTally, burn_fuel, kindle, noble_taste, pour_drink, preserve, spoil, wear_tools
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.networks.energy import draw_networks
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 
@@ -99,6 +100,7 @@ async def industry_methods(ctx: TickContext) -> None:
         row = await gauge(ctx, book, community, leys)
         await choose_methods(ctx, book, community, tally, banned=community.id in banned)
         await kindle(ctx, book, community, row)
+    ctx.count("network_energy_drawn", await draw_networks(ctx, book))
     await ctx.session.flush()
     ctx.count("methods_chosen", tally.chosen)
     ctx.count("methods_changed", tally.changed)

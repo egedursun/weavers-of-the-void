@@ -11,19 +11,23 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.made import ReplicatorOutput, ReplicatorStage
+from aerona.domain.enums.made import ReplicatorOutput, ReplicatorScale, ReplicatorStage
+from aerona.domain.enums.minds import MindAffect, MindOrigin, MindSeat
+from aerona.domain.models.entity_stats import PhenomenonStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.minds.profiles import profile_of
+from aerona.engine.minds.profiles import law_lets_will_grow, law_of, profile_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
+from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.structures.construction import material_commodity
 
 DONE = frozenset({ReplicatorStage.STOPPED, ReplicatorStage.EXTINCT})
 LOOSE = frozenset({ReplicatorStage.SPREADING, ReplicatorStage.RUNAWAY})
+SWARM_POWER = 4
 OUTPUT_GOODS = {ReplicatorOutput.GOODS: CommodityKind.TOOLS, ReplicatorOutput.MEDICINE: CommodityKind.MEDICINE}
 
 
@@ -78,8 +82,30 @@ async def yield_to(ctx: TickContext, line: ReplicatorLineRow, presence: Replicat
             shift_stat(town, "prosperity", table.repair_yield // 2, 0, high=PERCENT)
 
 
-async def spread(ctx: TickContext, atlas: RegionAtlas, line: ReplicatorLineRow, presence: ReplicatorPresenceRow, here: set[int]) -> int:
+async def far_land(ctx: TickContext, line: ReplicatorLineRow, presence: ReplicatorPresenceRow, towns: dict[int, list[EntityRow]], here: set[int]) -> int | None:
+    if line.scale is not ReplicatorScale.VESSEL or not ctx.rng(f"replicator.voyage.{line.id}.{ctx.epoch}").chance(ctx.rules.replicators.vessel_reach_chance):
+        return None
+    home = await ctx.session.get(EntityRow, presence.place_node_id)
+    for region in sorted(towns):
+        place = await ctx.session.get(EntityRow, region)
+        if region not in here and not held(region) and place is not None and home is not None and place.world_id != home.world_id:
+            return region
+    return None
+
+
+async def spread(
+    ctx: TickContext, atlas: RegionAtlas, line: ReplicatorLineRow, presence: ReplicatorPresenceRow, *, here: set[int], towns: dict[int, list[EntityRow]]
+) -> int:
     seeded = 0
+    far = await far_land(ctx, line, presence, towns, here)
+    if far is not None:
+        ctx.session.add(ReplicatorPresenceRow(line_id=line.id, place_node_id=far, mass=presence.mass // 4, growth=presence.growth, locked=[]))
+        here.add(far)
+        presence.mass -= presence.mass // 4
+        if "owner_node_id" not in line.locked:
+            line.owner_node_id = None
+        await note(ctx, f"{line.name} crossed to another world and slipped its makers' hands.", key="replicator.voyage", ids=[far])
+        return 1
     for region in atlas.neighbours(presence.place_node_id):
         if region in here or held(region):
             continue
@@ -103,6 +129,70 @@ async def stop_runaway(ctx: TickContext, line: ReplicatorLineRow) -> bool:
     return True
 
 
+async def drift_line(ctx: TickContext, line: ReplicatorLineRow, presences: list[ReplicatorPresenceRow]) -> ReplicatorLineRow | None:
+    table = ctx.rules.replicators
+    rng = ctx.rng(f"replicator.drift.{line.id}.{ctx.epoch}")
+    movable = [row for row in presences if "line_id" not in row.locked and not held(row.place_node_id)]
+    if len(movable) < 2 or not rng.chance(line.error_pct) or not rng.chance(table.drift_line_chance):
+        return None
+    child = ReplicatorLineRow(
+        name=f"{line.name}, drifted",
+        scale=line.scale,
+        feedstock=line.feedstock,
+        output=rng.pick(list(ReplicatorOutput)),
+        growth_pct=line.growth_pct,
+        error_pct=line.error_pct,
+        set_id=line.set_id,
+        containment=clamp_percent(line.containment - table.drift_containment),
+        kill_switch=line.kill_switch and rng.chance(PERCENT // 2),
+        owner_node_id=line.owner_node_id,
+        maker_node_id=line.maker_node_id,
+        mind_node_id=None,
+        stage=ReplicatorStage.WORKING if line.stage is ReplicatorStage.CONTAINED else line.stage,
+        drifted_from_id=line.id,
+        founded_epoch=ctx.epoch,
+        locked=[],
+    )
+    ctx.session.add(child)
+    await ctx.session.flush()
+    movable[-1].line_id = child.id
+    await note(ctx, f"A copy error in {line.name} began a line of its own.", key="replicator.drifted", ids=[movable[-1].place_node_id])
+    return child
+
+
+async def wake_swarm(ctx: TickContext, line: ReplicatorLineRow, presences: list[ReplicatorPresenceRow]) -> EntityRow | None:
+    table = ctx.rules.replicators
+    if line.mind_node_id is not None or "mind_node_id" in line.locked or not presences or sum(row.mass for row in presences) < table.wake_mass:
+        return None
+    land = await ctx.session.get(EntityRow, presences[0].place_node_id)
+    if land is None or not law_lets_will_grow(await law_of(ctx.session, land.world_id)):
+        return None
+    rng = ctx.rng(f"replicator.wake.{line.id}.{ctx.epoch}")
+    if not rng.chance(table.wake_chance):
+        return None
+    swarm = await create_record(
+        ctx,
+        RecordSpec(
+            entity_type=EntityType.PHENOMENON,
+            name=f"the mind of {line.name}",
+            body=f"{line.name} woke as one mind across its many bodies.",
+            stats=PhenomenonStats(),
+            power=SWARM_POWER,
+            location_id=land.id,
+            world_id=land.world_id,
+        ),
+    )
+    mind = await profile_of(ctx.session, ctx.rules, swarm.id, ctx.epoch)
+    mind.seat, mind.seat_node_id, mind.origin, mind.will = MindSeat.BODIES, swarm.id, MindOrigin.AWAKENED, MindWill.EMERGENT
+    mind.affect, mind.capacity = (
+        rng.pick(list(MindAffect)),
+        clamp_percent(sum(row.mass for row in presences) // table.wake_mass * ctx.rules.minds.baseline_capacity),
+    )
+    line.mind_node_id = swarm.id
+    await note(ctx, f"{line.name} woke as one mind across its many bodies.", key="replicator.woke", ids=[swarm.id])
+    return swarm
+
+
 async def run_line(ctx: TickContext, atlas: RegionAtlas, towns: dict[int, list[EntityRow]], line: ReplicatorLineRow) -> None:
     table = ctx.rules.replicators
     if ctx.rng(f"replicator.error.{line.id}.{ctx.epoch}").chance(line.error_pct) and "containment" not in line.locked:
@@ -124,14 +214,16 @@ async def run_line(ctx: TickContext, atlas: RegionAtlas, towns: dict[int, list[E
         presence.mass = max(0, presence.mass + (eaten // max(1, table.feedstock_per_mass)) - (0 if eaten else max(1, presence.mass // 20)))
         await yield_to(ctx, line, presence, local)
         if line.stage in LOOSE and presence.mass >= table.spread_mass:
-            await spread(ctx, atlas, line, presence, here)
+            await spread(ctx, atlas, line, presence, here=here, towns=towns)
+    await drift_line(ctx, line, presences)
+    await wake_swarm(ctx, line, presences)
     if presences and all(row.mass <= 0 for row in presences) and "stage" not in line.locked:
         line.stage = ReplicatorStage.EXTINCT
         await note(ctx, f"{line.name} died out.", key="replicator.extinct", ids=[])
 
 
 @reads("table.community_stocks", "table.entities", "table.mind_profiles", "table.replicator_lines", "table.replicator_presences")
-@writes("table.community_stocks", "table.entities", "table.replicator_lines", "table.replicator_presences", "table.settlement_profiles")
+@writes("table.community_stocks", "table.entities", "table.mind_profiles", "table.replicator_lines", "table.replicator_presences", "table.settlement_profiles")
 async def run_replicators(ctx: TickContext) -> None:
     lines = list(await ctx.session.scalars(select(ReplicatorLineRow).where(ReplicatorLineRow.stage.not_in(list(DONE))).order_by(ReplicatorLineRow.id)))
     if not lines:

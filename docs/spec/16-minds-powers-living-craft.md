@@ -948,6 +948,30 @@ The concepts of these works and genres were checked against the sections above. 
 
 **Rule namespaces.** `minds`, `mind_making`, `awakening`, `minds.will`, `continuity`, `mind_law`, `augments`, `interfaces`, `networks`, `intrusion`, `surveillance`, `information`, `companies`, `replicators`, `abundance`, `relics`, `collapse`, `made_peoples`, `instructions`.
 
+
+**Cross-cutting layers (6.6) for W44.**
+
+| Layer | What W44 gives it |
+|---|---|
+| Record of what happened | incident keys for making, waking, will changes, copies, saves, restores, merges, seat loss, ends with a seat, network outages and ledgers, intrusions, realm freezes and ends, line drift, voyages and swarms waking, made peoples formed |
+| What changed | will changes kept in `mind_will_changes`; makings in `mind_makings`; outages in `network_outages`; intrusions append-only |
+| When | every history row carries its epoch; saved states carry `taken_epoch`, restores leave a memory gap naming the span |
+| Where | seats name the node that holds a mind; realms name their host; presences name the land of a line; ledgers name their network |
+| Why | crimes name the act and the law that made it one; outages name their cause, a shortage included; seat loss names the lost seat |
+| Who knows | intrusions carry attribution; copies of captives are remembered by the captive's home; mind crimes go to the courts with witnesses |
+| How it is told | lines told from typed fields, counted through `several()` |
+| What it was | will history, saved states and the lineage bonds `copy_of`, `restored_from`, `hosted_by`, `merged_into` and `divided_from` |
+| What is kept | append-only histories; ended realms stay as sealed records; nothing is folded |
+| Names | swarm minds, drifted lines, network ledgers and made peoples are named from their sources |
+| Look | the `made` dimension look is a pattern at render time; no medium is fixed |
+| Model-facing wording | every W44 tool text, result and context line read in full against rule 2 |
+| Control | every W44 table has god levers or the generic record levers; a construct's will edit goes to its mind profile |
+| Reach | Mind, Augments, Network and Made world sections sit in `ThingSections` for every kind of node |
+| Books | W44 records render through `services/books/typed.py` and the Records of the Cosmos appendix |
+| Search | W44 records are found by their typed fields through the record index |
+| Integrity and legacy | `services/integrity/minds_links.py` (seats, states, gateways, shares, substrates, copies, empty profiles); fixups `made.legacy_backfill` and `networks.relay_backfill`; migrations for the new enum values |
+| Speed | profiles are seeded only for things with a mind, so the tick no longer carries a row per settlement, place and item |
+
 ---
 
 ## Part 3. W45 — Innate powers, power sources and concealment

@@ -32,3 +32,8 @@ class NetworkRules:
     price_pull_pct: int = rule(30, 0, 100, C, "Share of the gap between member markets closed each epoch at full capacity (%)")
     admin_discount_pct: int = rule(30, 0, 100, C, "Share of a dependent member's cost of governance its realm saves at full dependency (%)")
     diffusion_pct: int = rule(40, 0, 400, C, "Added spread of techniques between members of a network carrying records, at full capacity (%)")
+    energy_draw: int = rule(10, 0, 100, C, "Energy a member town gives a running network at full capacity each epoch")
+    ledger_shock: int = rule(10, 0, 100, C, "Trust the money a network carries loses each time the network goes down")
+    shortage_pct: int = rule(50, 0, 100, C, "Share of a member town's energy left unmet at which a network or a mind it keeps goes short (%)")
+    command_pct: int = rule(10, 0, 100, C, "Coordination a running network that carries control gives an army in battle (%)")
+    confusion_pct: int = rule(15, 0, 100, C, "Coordination an army loses in battle while every network that carries its control is down (%)")

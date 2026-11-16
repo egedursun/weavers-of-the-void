@@ -363,7 +363,7 @@ class CurrencyRow(Base):
     issuer_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), index=True)
     item_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
-    metal: Mapped[MaterialKind] = mapped_column(enum_type(MaterialKind, "metal"))
+    metal: Mapped[MaterialKind | None] = mapped_column(enum_type(MaterialKind, "metal"))
     purity: Mapped[int]
     supply: Mapped[int]
     trust: Mapped[int]

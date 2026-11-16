@@ -46,7 +46,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, found
-from aerona.engine.networks.book import carrier_days
+from aerona.engine.networks.book import carrier_days, shake_ledger
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -120,6 +120,7 @@ async def cut_network(ctx: TickContext, network_id: int, cause: OutageCause, epo
     network.down_until_epoch = max(network.down_until_epoch, ctx.epoch + max(1, epochs))
     row = NetworkOutageRow(network_entity_id=network_id, cause=cause, epoch=ctx.epoch, epochs=max(1, epochs), severity=clamp_percent(severity))
     ctx.session.add(row)
+    await shake_ledger(ctx.session, ctx.rules, network_id)
     await ctx.session.flush()
     await note(ctx, "A network went down.", key="network.cut", ids=[network_id])
     return row

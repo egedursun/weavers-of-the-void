@@ -38,7 +38,7 @@ SCRIPT_SIGNS = total(
     },
 )
 
-WRITABLE = total(LanguageModality, {M.VOCAL: True, M.SIGN: True, M.SCENT: False, M.COLOUR: True, M.TELEPATHIC: False})
+WRITABLE = total(LanguageModality, {M.VOCAL: True, M.SIGN: True, M.SCENT: False, M.COLOUR: True, M.TELEPATHIC: False, M.DATA: True})
 
 MODALITY_NEEDS = total(
     LanguageModality,
@@ -48,6 +48,7 @@ MODALITY_NEEDS = total(
         M.COLOUR: frozenset({BodyFunction.SIGHT, BodyFunction.PRESENCE}),
         M.SCENT: frozenset({BodyFunction.PRESENCE}),
         M.TELEPATHIC: frozenset({BodyFunction.COGNITION}),
+        M.DATA: frozenset({BodyFunction.COGNITION}),
     },
 )
 
