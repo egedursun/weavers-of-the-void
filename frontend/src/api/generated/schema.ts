@@ -53808,7 +53808,8 @@ export interface components {
       | 'generation'
       | 'polity'
       | 'circle'
-    IdentityReason: 'spy' | 'blood_curse' | 'exile' | 'impostor'
+    IdentityReason:
+      'spy' | 'blood_curse' | 'exile' | 'impostor' | 'hidden_power'
     IdentityUnmaskInput: {
       mortal_id: number
     }
@@ -62634,6 +62635,7 @@ export interface components {
         [key: string]: number | string | boolean | null
       }
       hold: boolean
+      release?: string[]
     }
     PowerRegistryView: {
       id: number
@@ -68302,6 +68304,7 @@ export interface components {
         [key: string]: number | string | boolean | null
       }
       hold: boolean
+      release?: string[]
     }
     SourceRelation: 'suppresses' | 'amplifies' | 'converts_into' | 'conflicts'
     SourceRenewal:
@@ -70107,6 +70110,7 @@ export interface components {
         [key: string]: number | string | boolean | null
       }
       hold: boolean
+      release?: string[]
     }
     SystemRelation: 'opposes' | 'complements' | 'same_root' | 'unaware'
     SystemRestrictionView: {
@@ -155868,7 +155872,7 @@ export const identityLayerValues: ReadonlyArray<
 ]
 export const identityReasonValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdentityReason']
-> = ['spy', 'blood_curse', 'exile', 'impostor']
+> = ['spy', 'blood_curse', 'exile', 'impostor', 'hidden_power']
 export const ideologyStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdeologyStats']['kind']
 > = ['ideology']

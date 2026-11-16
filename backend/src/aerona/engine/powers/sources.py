@@ -20,6 +20,7 @@ from aerona.db.tables.powers import (
     SourceTideRow,
 )
 from aerona.db.write_guard import held
+from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import LawKind
@@ -42,6 +43,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import shift_stat
 
+LAND_LOCI = frozenset({SourceLocus.PLACE, SourceLocus.SKY, SourceLocus.SURROUNDINGS, SourceLocus.LIFE, SourceLocus.DEATH})
 RENEWAL_KINDS = {
     SourceRenewal.REST: "rest",
     SourceRenewal.TIME: "rest",
@@ -139,16 +141,27 @@ async def pay_costs(ctx: TickContext, user: EntityRow, source_id: int, strength:
                 shift_stat(town, "prosperity", -amount, 0)
 
 
-async def draw(ctx: TickContext, user: EntityRow, source: PowerSourceRow, strength: int) -> float:
+async def drawn_from_land(ctx: TickContext, user: EntityRow, source: PowerSourceRow, strength: int) -> float:
     atlas = await RegionAtlas.load(ctx.session)
     region = atlas.top_region(user.id)
     factor = await tide_factor(ctx, source.id) * await interaction_factor(ctx, source.id, region)
-    if region is not None and source.drawn_from in {SourceLocus.PLACE, SourceLocus.SKY, SourceLocus.SURROUNDINGS, SourceLocus.LIFE, SourceLocus.DEATH}:
-        row = await density_row(ctx, source, region)
-        factor *= row.density / max(1, row.base_density) if row.base_density else 0.0
-        if not held(region) and "density" not in row.locked:
-            row.density = clamp_percent(row.density - strength * ctx.rules.power_sources.draw_per_strength)
-            row.last_drawn_epoch = ctx.epoch
+    if region is None or source.drawn_from not in LAND_LOCI:
+        return factor
+    row = await density_row(ctx, source, region)
+    factor *= row.density / max(1, row.base_density) if row.base_density else 0.0
+    if not held(region) and "density" not in row.locked:
+        row.density = clamp_percent(row.density - strength * ctx.rules.power_sources.draw_per_strength)
+        row.last_drawn_epoch = ctx.epoch
+    return factor
+
+
+async def rite_draw(ctx: TickContext, caster: EntityRow, source: MagicSource, power: int) -> float:
+    row = await ctx.session.scalar(select(PowerSourceRow).where(PowerSourceRow.built_in == source).limit(1))
+    return await drawn_from_land(ctx, caster, row, power) if row is not None else 1.0
+
+
+async def draw(ctx: TickContext, user: EntityRow, source: PowerSourceRow, strength: int) -> float:
+    factor = await drawn_from_land(ctx, user, source, strength)
     await pay_costs(ctx, user, source.id, strength)
     return factor
 

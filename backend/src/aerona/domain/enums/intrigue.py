@@ -56,6 +56,7 @@ class IdentityReason(StrEnum):
     BLOOD_CURSE = "blood_curse"
     EXILE = "exile"
     IMPOSTOR = "impostor"
+    HIDDEN_POWER = "hidden_power"
 
 
 class PlotKind(StrEnum):

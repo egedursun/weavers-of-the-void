@@ -109,3 +109,4 @@ class ConcealmentRules:
     strength_decay: int = rule(1, 0, 100, K, "Strength a truth loses each epoch its keepers do not tend it")
     tend_gain: int = rule(2, 0, 100, K, "Strength a truth gains each epoch its keepers tend it")
     hide_chance: int = rule(10, 0, 100, K, "Chance each epoch a persecuted gifted folk hides itself as a hidden truth")
+    black_market_gain: int = rule(2, 0, 100, K, "Black market each town where hidden folk pass among the rest gains each epoch")

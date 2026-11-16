@@ -44,3 +44,14 @@ def test_a_town_read_as_holding_its_people_by_affiliation_is_flagged() -> None:
 def test_the_backend_finds_a_town_s_people_only_through_its_homeland() -> None:
     module = checker()
     assert module.raw_links({path: path.read_text(encoding="utf-8") for path in sorted(module.SOURCE.rglob("*.py"))}) == []
+
+
+GUARDED = """
+async def folk_of(place):
+    return place.affiliated_entity_id if place.entity_type is EntityType.SETTLEMENT else place.id
+"""
+
+
+def test_a_settlement_s_people_read_from_its_affiliation_under_a_kind_check_is_flagged() -> None:
+    found = checker().raw_links({Path("module.py"): GUARDED})
+    assert [item.reason for item in found] == ["reads a settlement's people from its affiliation"]

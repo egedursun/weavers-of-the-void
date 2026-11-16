@@ -858,7 +858,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
     <MindCard
       title='False identity'
       icon={IDENTITY_ICON}
-      hint='Spies, the blood-cursed, exiles and impostors live under false names. Carelessness and a face others remember wear the mask thin; at full exposure it falls.'
+      hint='Spies, the blood-cursed, exiles, impostors and those who keep their powers apart from their names live under false names. Carelessness and a face others remember wear the mask thin; at full exposure it falls.'
     >
       {identity ? (
         <>

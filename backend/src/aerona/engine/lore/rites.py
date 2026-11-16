@@ -118,6 +118,7 @@ from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import law_param
 from aerona.engine.powers import effects as power_effects
+from aerona.engine.powers.sources import rite_draw
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
@@ -1112,7 +1113,7 @@ async def cast(
     strength *= await name_power(ctx, caster.id, target) * (await component_bar(ctx, caster, rite.id)).factor
     strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
     strength *= await magic_factor(ctx, caster) * await tech_relief(ctx.session, ctx.rules, caster.id, EraChannel.RITES)
-    strength *= await site_factor(ctx, caster, row)
+    strength *= await site_factor(ctx, caster, row) * await rite_draw(ctx, caster, row.source, row.power)
     strength *= await divine_power(ctx, patron, caster.id, ctx.rules.dominion.rite_power_pct)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
     understood = await theory_factor(ctx.session, ctx.rules, caster.location_id or caster.id, TheoryDomain.MAGIC)
@@ -1235,7 +1236,8 @@ async def enchant(ctx: TickContext, caster: EntityRow, rite: EntityRow, row: Rit
             item_entity_id=owned.id, effect=effect.effect, strength=0, rite_entity_id=rite.id, since_epoch=ctx.epoch, charges=capacity, capacity=capacity
         )
         ctx.session.add(found)
-    found.strength = clamp_int(found.strength + effect.magnitude * row.power, 0, PERCENT)
+    drawn = await rite_draw(ctx, caster, row.source, row.power)
+    found.strength = clamp_int(found.strength + round_half_up(effect.magnitude * row.power * drawn), 0, PERCENT)
     set_stats(owned, might=clamp_int((stat(owned, "might") or 0) + effect.magnitude, 0, PERCENT))
     return found
 

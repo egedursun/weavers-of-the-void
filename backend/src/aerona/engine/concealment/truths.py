@@ -3,22 +3,38 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.concealment import BreachRow, HiddenTruthRow, PublicKnowledgeRow, TruthKeeperRow, TruthSeekerRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.tables.made import InformationTrustRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import TreatyProfileRow
 from aerona.db.tables.powers import GiftedAttitudeRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger
 from aerona.domain.enums.concealment import BreachCause, ConcealScope, HiddenTruthKind, KeeperResponse, KeeperRole, SeekerAim, TruthAttitude
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.polity import TreatyStatus
 from aerona.domain.enums.powers import GiftedAttitude
+from aerona.engine.body.customs import people_of
+from aerona.engine.collective.crowds import begin_movement
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import values_for
 from aerona.engine.notes import note
+from aerona.engine.polity.treaties import breach as treaty_breach
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 
 LEAN = 25
+ACCORD_BREAKING = frozenset({BreachCause.OVERT_USE, BreachCause.WAR, BreachCause.DEFECTOR})
+GIFTED_TRUTHS = frozenset({HiddenTruthKind.PRESENCE, HiddenTruthKind.POWER, HiddenTruthKind.NATURE})
+REVEALED_ATTITUDES = {
+    TruthAttitude.FEARED: GiftedAttitude.FEARED,
+    TruthAttitude.REVERED: GiftedAttitude.HONOURED,
+    TruthAttitude.ACCEPTED: GiftedAttitude.ORDINARY,
+    TruthAttitude.EXPLOITED: GiftedAttitude.REGULATED,
+}
 ATTITUDE_BY_FEAR = {True: TruthAttitude.FEARED, False: TruthAttitude.ACCEPTED}
 
 
@@ -109,7 +125,17 @@ async def breach(
     ctx.session.add(record)
     await ctx.session.flush()
     await note(ctx, f"Something hidden showed itself: {truth.title}.", key="truth.breached", ids=[truth.subject_node_id, *seen])
+    await break_accord(ctx, truth, cause)
     return record
+
+
+async def break_accord(ctx: TickContext, truth: HiddenTruthRow, cause: BreachCause) -> None:
+    if truth.accord_entity_id is None or cause not in ACCORD_BREAKING:
+        return
+    accord = await ctx.session.get(TreatyProfileRow, truth.accord_entity_id)
+    if accord is None or accord.status is not TreatyStatus.IN_FORCE or held(accord.treaty_entity_id):
+        return
+    await treaty_breach(ctx, accord, truth.subject_node_id, clause=None, reason="what was kept hidden was shown")
 
 
 async def harm_knowers(ctx: TickContext, truth: HiddenTruthRow, knowers: list[int]) -> None:
@@ -165,13 +191,30 @@ async def tend(ctx: TickContext, truth: HiddenTruthRow) -> None:
 
 
 async def attitude_on_reveal(ctx: TickContext, population_id: int) -> TruthAttitude:
-    values = dict(await values_for(ctx.session, population_id))
+    place = await ctx.session.get(EntityRow, population_id)
+    folk = await people_of(ctx.session, place) if place is not None else None
+    values = dict(await values_for(ctx.session, folk.id if folk is not None else population_id))
     fear = values.get(ValueAxis.TRADITION, 0) + values.get(ValueAxis.PURITY, 0) >= LEAN
     if values.get(ValueAxis.PIETY, 0) >= LEAN * 2:
         return TruthAttitude.REVERED
     if values.get(ValueAxis.WEALTH, 0) >= LEAN * 2:
         return TruthAttitude.EXPLOITED
     return ATTITUDE_BY_FEAR[fear]
+
+
+async def react(ctx: TickContext, truth: HiddenTruthRow, row: PublicKnowledgeRow) -> None:
+    place = await ctx.session.get(EntityRow, row.population_node_id)
+    if place is None or held(place.id):
+        return
+    if row.attitude is TruthAttitude.FEARED and place.entity_type is EntityType.SETTLEMENT:
+        await begin_movement(ctx, place, CollectiveActKind.PANIC, CollectiveTrigger.RUMOUR, members=0, share=row.believe_pct)
+    if truth.kind not in GIFTED_TRUTHS:
+        return
+    folk = await people_of(ctx.session, place)
+    attitude = await ctx.session.get(GiftedAttitudeRow, folk.id) if folk is not None else None
+    settled = REVEALED_ATTITUDES.get(row.attitude)
+    if attitude is not None and settled is not None and "attitude" not in attitude.locked:
+        attitude.attitude = settled
 
 
 async def reveal_or_fade(ctx: TickContext, truth: HiddenTruthRow, row: PublicKnowledgeRow) -> None:
@@ -181,6 +224,7 @@ async def reveal_or_fade(ctx: TickContext, truth: HiddenTruthRow, row: PublicKno
         if "attitude" not in row.locked:
             row.attitude = await attitude_on_reveal(ctx, row.population_node_id)
         await note(ctx, f"What was hidden became known: {truth.title}.", key="truth.revealed", ids=[truth.subject_node_id, row.population_node_id])
+        await react(ctx, truth, row)
         if truth.hidden_from is not ConcealScope.EVERYONE and "revealed" not in truth.locked:
             truth.revealed = True
         return
@@ -194,9 +238,25 @@ async def reveal_or_fade(ctx: TickContext, truth: HiddenTruthRow, row: PublicKno
     row.updated_epoch = ctx.epoch
 
 
+async def passing_trade(ctx: TickContext, truth: HiddenTruthRow) -> int:
+    subject = await ctx.session.get(EntityRow, truth.subject_node_id)
+    if subject is None:
+        return 0
+    towns = await towns_of_people(ctx.session, subject.id) if subject.entity_type is EntityType.PEOPLE else [subject.location_id] if subject.location_id else []
+    traded = 0
+    for town in towns:
+        row = await ctx.session.get(CommunityIndustryRow, town)
+        if row is None or held(town) or "black_market" in row.locked:
+            continue
+        row.black_market = clamp_percent(row.black_market + ctx.rules.concealment.black_market_gain)
+        traded += 1
+    return traded
+
+
 async def presence_breaches(ctx: TickContext, truth: HiddenTruthRow) -> None:
     if truth.kind is not HiddenTruthKind.PRESENCE or not truth.by_passing:
         return
+    ctx.count("hidden_folk_trading_towns", await passing_trade(ctx, truth))
     if ctx.rng(f"truth.presence.{truth.id}.{ctx.epoch}").chance(ctx.rules.concealment.witness_breach * (PERCENT - truth.strength) // PERCENT):
         subject = await ctx.session.get(EntityRow, truth.subject_node_id)
         await breach(ctx, truth, BreachCause.WITNESS, place_id=subject.location_id if subject is not None else None)
@@ -236,6 +296,7 @@ async def keep_hidden_folk(ctx: TickContext, attitudes: dict[int, GiftedAttitude
 
 @reads(
     "table.breaches",
+    "table.community_industry",
     "table.entities",
     "table.gifted_attitudes",
     "table.hidden_truths",
@@ -247,7 +308,14 @@ async def keep_hidden_folk(ctx: TickContext, attitudes: dict[int, GiftedAttitude
     "table.truth_seekers",
 )
 @writes(
-    "table.breaches", "table.entities", "table.hidden_truths", "table.mortal_profiles", "table.public_knowledge", "table.truth_keepers", "table.truth_seekers"
+    "table.breaches",
+    "table.community_industry",
+    "table.entities",
+    "table.hidden_truths",
+    "table.mortal_profiles",
+    "table.public_knowledge",
+    "table.truth_keepers",
+    "table.truth_seekers",
 )
 async def keep_concealment(ctx: TickContext) -> None:
     for truth in list(await ctx.session.scalars(select(HiddenTruthRow).order_by(HiddenTruthRow.id))):

@@ -30,6 +30,28 @@ def town_affiliations(tree: ast.AST) -> Iterator[ast.Attribute]:
             yield node
 
 
+def settlement_named(test: ast.AST) -> set[str]:
+    found: set[str] = set()
+    for node in ast.walk(test):
+        if isinstance(node, ast.Compare) and SETTLEMENT_MARK in ast.unparse(node):
+            for inner in ast.walk(node.left):
+                if isinstance(inner, ast.Attribute) and inner.attr == "entity_type" and isinstance(inner.value, ast.Name):
+                    found.add(inner.value.id)
+    return found
+
+
+def guarded_affiliations(tree: ast.AST) -> Iterator[ast.Attribute]:
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.IfExp | ast.If):
+            continue
+        names = settlement_named(node.test)
+        branch = node.body if isinstance(node.body, list) else [node.body]
+        for part in branch:
+            for inner in ast.walk(part):
+                if affiliation(inner) and isinstance(inner, ast.Attribute) and isinstance(inner.value, ast.Name) and inner.value.id in names:
+                    yield inner
+
+
 def settlement_queries(tree: ast.AST) -> Iterator[ast.AST]:
     for node in ast.walk(tree):
         if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "where"):
@@ -47,6 +69,7 @@ def raw_links(files: dict[Path, str]) -> list[Raw]:
         tree = ast.parse(text)
         found |= {Raw(path, node.lineno, ast.unparse(node), "reads a town's people from its affiliation") for node in town_affiliations(tree)}
         found |= {Raw(path, node.lineno, ast.unparse(node), "finds the towns of a people by affiliation") for node in settlement_queries(tree)}
+        found |= {Raw(path, node.lineno, ast.unparse(node), "reads a settlement's people from its affiliation") for node in guarded_affiliations(tree)}
     return sorted(found, key=lambda item: (str(item.path), item.line))
 
 

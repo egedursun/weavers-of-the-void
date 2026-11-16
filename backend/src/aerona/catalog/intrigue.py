@@ -113,6 +113,7 @@ IDENTITY_LABELS: dict[IdentityReason, str] = {
     IdentityReason.BLOOD_CURSE: "A blood-cursed one's mask",
     IdentityReason.EXILE: "An exile's new name",
     IdentityReason.IMPOSTOR: "An impostor's guise",
+    IdentityReason.HIDDEN_POWER: "A name kept apart from one's powers",
 }
 
 BELIEF_ATTRIBUTES: tuple[str, ...] = ("wealth", "defense", "population", "prosperity")

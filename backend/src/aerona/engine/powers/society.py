@@ -5,22 +5,25 @@ from sqlalchemy import func, select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.intrigue import SecretRow
+from aerona.db.tables.folkways import PurityRankRow, PurityRow
+from aerona.db.tables.intrigue import IdentityRow, SecretRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, PolityMemberRow
 from aerona.db.tables.powers import GiftedAttitudeRow, PowerRegistryRow, PowerRestrictionRow, PowerRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.intrigue import IntrigueSecret
+from aerona.domain.enums.intrigue import IdentityReason, IntrigueSecret
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
-from aerona.domain.enums.powers import BloodlineRule, GiftedAttitude, GiftedStance, PowerDeviceEffect, PowerOrigin, PowerState, RestrictionKind
+from aerona.domain.enums.powers import BloodlineRule, GiftedAttitude, GiftedStance, PowerDeviceEffect, PowerOrigin, PowerState, PowerVisibility, RestrictionKind
 from aerona.domain.models.entity_stats import FactionStats
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.intrigue.identities import assume
 from aerona.engine.made.doctrine import doctrine_here
 from aerona.engine.mind.book import values_for
 from aerona.engine.notes import note
@@ -32,6 +35,9 @@ from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 
+CASTE_NAME = "those born with powers"
+CASTE_STANDING = {GiftedAttitude.HONOURED: 85, GiftedAttitude.PERSECUTED: 10}
+BORN_ORIGINS = frozenset({PowerOrigin.BORN, PowerOrigin.BLOODLINE})
 GIFTED_LAWS = frozenset({"registered", "licensed", "conscripted"})
 HUNTING_LAWS = frozenset({"hunted", "banned"})
 STANCE_ATTITUDE = {
@@ -320,6 +326,77 @@ async def at_death(ctx: TickContext) -> int:
     return ended
 
 
+async def keep_apart(ctx: TickContext) -> int:
+    hidden = 0
+    overt = select(PowerRow.holder_node_id).where(PowerRow.state == PowerState.ACTIVE, PowerRow.visibility == PowerVisibility.OVERT)
+    holders = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.id.in_(overt), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    for holder in list(holders):
+        if held(holder.id) or holder.location_id is None or await ctx.session.get(IdentityRow, holder.id) is not None:
+            continue
+        level = str(await law_param(ctx.session, holder.location_id, LawKind.POWER_LAW, "level") or "free")
+        town = await ctx.session.get(EntityRow, holder.location_id)
+        folk = await people_of(ctx.session, town) if town is not None else None
+        home = await ctx.session.get(GiftedAttitudeRow, folk.id) if folk is not None else None
+        feared = home is not None and home.attitude in {GiftedAttitude.FEARED, GiftedAttitude.PERSECUTED}
+        if level not in HUNTING_LAWS and not feared:
+            continue
+        found = await assume(ctx, holder, IdentityReason.HIDDEN_POWER, f"{holder.name.split()[0]} of no note", community_id=holder.location_id)
+        hidden += int(found is not None)
+    return hidden
+
+
+async def train_in_bands(ctx: TickContext) -> int:
+    trained = 0
+    banded = select(BondRow.source_node_id).where(
+        BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE, BondRow.description == "one of the band"
+    )
+    for power in list(
+        await ctx.session.scalars(select(PowerRow).where(PowerRow.holder_node_id.in_(banded), PowerRow.state != PowerState.LOST).order_by(PowerRow.id))
+    ):
+        if held(power.holder_node_id) or "control" in power.locked:
+            continue
+        power.control = min(PERCENT, power.control + ctx.rules.powers.control_gain)
+        if power.state is PowerState.LATENT and "state" not in power.locked:
+            power.state = PowerState.EMERGING
+        trained += 1
+    return trained
+
+
+async def power_castes(ctx: TickContext) -> int:
+    placed = 0
+    for row in list(
+        await ctx.session.scalars(
+            select(GiftedAttitudeRow).where(GiftedAttitudeRow.attitude.in_(list(CASTE_STANDING))).order_by(GiftedAttitudeRow.people_entity_id)
+        )
+    ):
+        if held(row.people_entity_id):
+            continue
+        towns = await towns_of(ctx, row.people_entity_id)
+        born = [power for power in await powered_in(ctx, towns) if power.origin in BORN_ORIGINS]
+        if not born:
+            continue
+        rank = await ctx.session.scalar(select(PurityRankRow).where(PurityRankRow.people_entity_id == row.people_entity_id, PurityRankRow.name == CASTE_NAME))
+        if rank is None:
+            rank = PurityRankRow(people_entity_id=row.people_entity_id, name=CASTE_NAME, standing=CASTE_STANDING[row.attitude], professions=[], locked=[])
+            ctx.session.add(rank)
+            await ctx.session.flush()
+        elif "standing" not in rank.locked:
+            rank.standing = CASTE_STANDING[row.attitude]
+        for power in born:
+            purity = await ctx.session.get(PurityRow, power.holder_node_id)
+            if purity is None:
+                purity = PurityRow(holder_node_id=power.holder_node_id, locked=[])
+                ctx.session.add(purity)
+            if "rank_id" not in purity.locked and purity.rank_id != rank.id:
+                purity.rank_id = rank.id
+                placed += 1
+    return placed
+
+
 async def broken_vows(ctx: TickContext) -> int:
     broken = 0
     vows = await ctx.session.execute(
@@ -366,10 +443,14 @@ async def broken_vows(ctx: TickContext) -> int:
     "table.crime_cases",
     "table.entities",
     "table.gifted_attitudes",
+    "table.identities",
     "table.law_profiles",
     "table.power_registry",
     "table.power_restrictions",
     "table.powers",
+    "table.purity",
+    "table.purity_ranks",
+    "table.secrets",
 )
 async def keep_powered_society(ctx: TickContext) -> None:
     ctx.count("gifted_attitudes_kept", await keep_attitudes(ctx))
@@ -379,4 +460,7 @@ async def keep_powered_society(ctx: TickContext) -> None:
     ctx.count("bloodline_powers", await heirs(ctx))
     ctx.count("powers_ended_at_death", await at_death(ctx))
     ctx.count("vows_broken", await broken_vows(ctx))
+    ctx.count("gifted_keeping_apart", await keep_apart(ctx))
+    ctx.count("gifted_trained_in_bands", await train_in_bands(ctx))
+    ctx.count("gifted_placed_in_castes", await power_castes(ctx))
     await ctx.session.flush()
