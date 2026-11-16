@@ -720,6 +720,7 @@ MIND_STAGE = stage(
     "battlefields",
     "event_collections",
     "challenge_response",
+    "carrion",
     "storyteller",
     "storylets",
     "incident_threads",
@@ -731,7 +732,6 @@ TICK_ORDER: tuple[Phase, ...] = (
 
 PRE_TRANSITION_ORDER = stage("local_gods")
 GROWTH_STAGE = stage(
-    "carrion",
     "law_fertility",
     "population_baseline",
     "climate_transition",

@@ -1,17 +1,14 @@
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, replace
-from typing import Any
 
-from sqlalchemy import Table, UniqueConstraint, delete, event, or_, select
+from sqlalchemy import delete, event, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from aerona.catalog.prehistory import COARSE_PHASES, PREHISTORY_GROWTH, PREHISTORY_PHASES, SIMULATED_KINDS
 from aerona.core.errors import AeronaError, NotFoundError
 from aerona.core.random import SeededRandom
-from aerona.db.base import Base
-from aerona.db.profile_guard import NODE_TABLES
 from aerona.db.session import Database, Steps
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -24,6 +21,7 @@ from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import TICK_ORDER, TRANSITION_ORDER, EnginePhaseError, current_environment
 from aerona.engine.prehistory import digest
+from aerona.engine.prehistory.rewind import Touched, epoch_points, follow_touched, mapped, rewind
 from aerona.engine.primitives.manual import silent
 from aerona.engine.stats import TickStats
 from aerona.rules.registry import Rules
@@ -68,30 +66,6 @@ def follow_inside(world_id: int, inside: set[int]) -> Callable[..., None]:
     return follow
 
 
-def keyed_by_epoch(table: Table) -> list[str]:
-    keys = [list(table.primary_key.columns)]
-    keys += [list(constraint.columns) for constraint in table.constraints if isinstance(constraint, UniqueConstraint)]
-    keys += [list(index.columns) for index in table.indexes if index.unique]
-    return [column.name for columns in keys for column in columns if "epoch" in column.name and len(columns) > 1]
-
-
-def node_columns(table: Table) -> list[str]:
-    return [column.name for column in table.columns if any(foreign.column.table.name in NODE_TABLES for foreign in column.foreign_keys)]
-
-
-def epoch_points() -> list[tuple[Table, str, list[str]]]:
-    found: list[tuple[Table, str, list[str]]] = []
-    for table in Base.metadata.sorted_tables:
-        epochs, nodes = keyed_by_epoch(table), node_columns(table)
-        if epochs and nodes:
-            found.append((table, epochs[0], nodes))
-    return found
-
-
-def mapped(table: Table) -> type[Any] | Table:
-    return next((mapper.class_ for mapper in Base.registry.mappers if mapper.local_table is table), table)
-
-
 async def clear_points(session: AsyncSession, epoch: int, inside: set[int]) -> int:
     cleared = 0
     own = sorted(inside)
@@ -121,8 +95,8 @@ async def run_round(steps: Steps, plan: Plan, number: int, environments: Environ
     world_id, kind, resolution = plan
     tick, growth = environments
     seed = round_seed(tick.world_seed, world_id, number)
-    await run_steps(steps, replace(tick, world_seed=seed, stats=TickStats()), round_phases(number, resolution), inside)
-    await run_steps(steps, replace(growth, world_seed=seed, stats=TickStats()), growth_phases(kind), inside)
+    await run_steps(steps, replace(tick, epoch=tick.epoch + number, world_seed=seed, stats=TickStats()), round_phases(number, resolution), inside)
+    await run_steps(steps, replace(growth, epoch=growth.epoch + number, world_seed=seed, stats=TickStats()), growth_phases(kind), inside)
 
 
 async def next_round(steps: Steps, world_id: int, tick: TickEnvironment) -> tuple[int, int, Plan] | bool:
@@ -155,13 +129,18 @@ async def simulate_rounds(database: Database, world_id: int, rules: Rules | None
         async with steps.step() as session:
             inside = await own_nodes(session, world_id)
         follow = follow_inside(world_id, inside)
+        touched: Touched = {}
+        record = follow_touched(touched)
         event.listen(steps.session.sync_session, "after_flush", follow)
+        event.listen(steps.session.sync_session, "after_flush", record)
+        last: int | None = None
         try:
             while True:
                 found = await next_round(steps, world_id, tick)
                 if isinstance(found, bool):
                     return found
                 since, number, plan = found
+                last = tick.epoch + number
                 started = time.perf_counter()
                 if number:
                     async with steps.step() as session:
@@ -171,6 +150,10 @@ async def simulate_rounds(database: Database, world_id: int, rules: Rules | None
                 summary.rounds += 1
         finally:
             event.remove(steps.session.sync_session, "after_flush", follow)
+            event.remove(steps.session.sync_session, "after_flush", record)
+            if last is not None:
+                async with steps.step() as session:
+                    await rewind(session, tick.epoch, last, inside, touched)
 
 
 async def prepare(database: Database, world_id: int, rules: Rules | None, publish: Publisher, summary: PrehistorySummary) -> int | None:

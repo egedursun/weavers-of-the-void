@@ -132,7 +132,24 @@ async def owned_rites(ctx: TickContext, entity_id: int) -> list[int]:
 
 @reads("table.bonds", "table.captive_restraints", "table.captives", "table.rite_components", "table.rite_profiles")
 @writes("table.captive_restraints", "table.rite_components")
+async def seed_components(ctx: TickContext) -> int:
+    parted = select(RiteComponentRow.rite_entity_id)
+    seeded = 0
+    for profile in await ctx.session.scalars(
+        select(RiteProfileRow).where(RiteProfileRow.rite_entity_id.not_in(parted)).order_by(RiteProfileRow.rite_entity_id)
+    ):
+        if held(profile.rite_entity_id):
+            continue
+        for component in SCHOOL_COMPONENTS[profile.school]:
+            ctx.session.add(RiteComponentRow(rite_entity_id=profile.rite_entity_id, component=component))
+        seeded += 1
+    await ctx.session.flush()
+    return seeded
+
+
+@reads("table.rite_profiles")
 async def restrain_casters(ctx: TickContext) -> None:
+    ctx.count("rite_parts_drawn", await seed_components(ctx))
     for captive, entity in await casters_held(ctx):
         if held(entity.id, captive.captor_entity_id):
             continue

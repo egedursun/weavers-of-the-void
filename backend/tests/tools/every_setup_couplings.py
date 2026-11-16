@@ -18,7 +18,8 @@ TREASURY = 500
 
 async def teaching_spirit(session: AsyncSession, realm: Realm) -> Ids:
     found = await spirit(session, realm)
-    elder = await make_entity(session, "Old Teacher", EntityType.MORTAL, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id, stats=MortalStats())
+    land = realm.cosmos.region_id
+    elder = await make_entity(session, "Old Teacher", EntityType.MORTAL, world_id=realm.cosmos.world_id, location_id=land, stats=MortalStats())
     elder.status = EntityStatus.DEAD
     elder.end_epoch = 1
     rite = await make_entity(session, "Call of the Wisp", EntityType.RITE, world_id=realm.cosmos.world_id, stats=RiteStats())

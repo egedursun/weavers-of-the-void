@@ -125,8 +125,31 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
             set_stats(town, prosperity=clamp_percent(stat_or(town, "prosperity", 0) - ctx.rules.carrion.burial_cost))
 
 
-@reads("table.carrion_pulses", "table.region_environment", "table.species_profiles", "table.species_ranges", "table.worlds")
-@writes("table.carrion_pulses", "table.entities", "table.region_environment", "table.species_ranges")
+@reads(
+    "settlement.prosperity",
+    "table.bonds",
+    "table.carrion_pulses",
+    "table.name_registry",
+    "table.nodes",
+    "table.region_environment",
+    "table.species_profiles",
+    "table.species_ranges",
+    "table.worlds",
+)
+@writes(
+    "settlement.prosperity",
+    "table.bonds",
+    "table.carrion_pulses",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+    "table.region_environment",
+    "table.species_ranges",
+)
 async def carrion(ctx: TickContext) -> None:
     table = ctx.rules.carrion
     rows = {row.region_entity_id: row for row in await ctx.session.scalars(select(CarrionPulseRow))}
