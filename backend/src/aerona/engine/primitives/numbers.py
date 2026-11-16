@@ -1,5 +1,5 @@
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 from aerona.constants.engine import (
     FNV_OFFSET,
@@ -82,3 +82,16 @@ def stable_roll(key: int | str, salt: str) -> float:
         value ^= ord(character)
         value = (value * FNV_PRIME) & U32_MASK
     return value / U32_SPAN
+
+
+def apportion[Key](amount: int, weights: Mapping[Key, float]) -> dict[Key, int]:
+    positive = [(key, float(weight)) for key, weight in weights.items() if weight > 0]
+    mass = sum(weight for _, weight in positive)
+    if amount <= 0 or mass <= 0:
+        return {}
+    quotas = [(key, amount * weight / mass) for key, weight in positive]
+    found = {key: int(quota) for key, quota in quotas}
+    left = amount - sum(found.values())
+    for key, _ in sorted(quotas, key=lambda item: item[1] - int(item[1]), reverse=True)[:left]:
+        found[key] += 1
+    return found

@@ -179,6 +179,23 @@ describe('genesis record', () => {
   })
 })
 
+describe('a world with no genesis settings', () => {
+  it('says the settings were not kept and still shows the seed', async () => {
+    const { screen } = await renderScreen(<GenesisRecord />, {
+      'GET /api/genesis/settings': {
+        lore_language: 'english',
+        seed_idea: 'An imported seed',
+        tone: 'quiet',
+        settings: null,
+      },
+    })
+    await expect.element(screen.getByText('An imported seed')).toBeVisible()
+    await expect
+      .element(screen.getByText('No genesis settings were kept'))
+      .toBeVisible()
+  })
+})
+
 describe('teaching a language new words', () => {
   it('keeps only rows with a word and a meaning', () => {
     expect(

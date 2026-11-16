@@ -26,7 +26,7 @@ from aerona.engine.demography.cohorts import CohortKey, cohorts_of, place, pyram
 from aerona.engine.environment.seasons import DRY, WET
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import apportion, clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.records import RecordSpec, create_record
 
@@ -145,15 +145,8 @@ def cohort_split(rows: Mapping[CohortKey, CohortRow], category: FlowCategory, am
 def even_split(amount: int, ages: Mapping[AgeBand, float], kinds: Mapping[Sex, float]) -> dict[CohortKey, int]:
     shares = {(age, sex, FALLBACK_CLASS, CohortCondition.NONE): age_share * sex_share for age, age_share in ages.items() for sex, sex_share in kinds.items()}
     total = sum(shares.values()) or 1.0
-    split: dict[CohortKey, int] = {}
-    left = amount
     ordered = sorted(shares.items(), key=lambda item: (-item[1], item[0][0].value, item[0][1].value))
-    for index, (key, share) in enumerate(ordered):
-        part = left if index == len(ordered) - 1 else min(left, round(amount * share / total))
-        if part > 0:
-            split[key] = part
-            left -= part
-    return split
+    return {key: part for key, part in apportion(amount, {key: share / total for key, share in ordered}).items() if part > 0}
 
 
 async def record_casualties(ctx: TickContext, event_id: int, community: EntityRow, dead: int, *, category: FlowCategory, phase: EventPhase) -> int:

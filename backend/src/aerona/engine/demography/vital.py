@@ -10,7 +10,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, age_cohorts, row_for, seed, total
 from aerona.engine.environment.years import world_years
 from aerona.engine.primitives.harshness import harshness
-from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.numbers import apportion, round_half_up
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.services.war import ongoing_wars
 from aerona.rules.registry import Rules
@@ -69,11 +69,10 @@ def one_year(rules: Rules, rows: dict[CohortKey, CohortRow], biology: PeopleBiol
 
 def take(rows: dict[CohortKey, CohortRow], band: AgeBand, amount: int) -> int:
     keys = sorted((key for key in rows if key[0] is band and rows[key].count > 0), key=lambda key: (-rows[key].count, tuple(part.value for part in key)))
-    mass = sum(rows[key].count for key in keys)
+    parts = apportion(amount, {key: float(rows[key].count) for key in keys})
     done = 0
-    for index, key in enumerate(keys):
-        share = amount - done if index == len(keys) - 1 else round_half_up(amount * rows[key].count / max(1, mass))
-        taken = max(0, min(rows[key].count, share))
+    for key in keys:
+        taken = max(0, min(rows[key].count, parts.get(key, 0)))
         rows[key].count -= taken
         done += taken
     return done
@@ -90,9 +89,9 @@ async def give_births(ctx: TickContext, community: EntityRow, rows: dict[CohortK
         (sex, social_class, max(0.0, share) / weight * (female if sex is Sex.FEMALE else 1 - female)) for sex in Sex for social_class, share in shares.items()
     ]
     slots = [slot for slot in slots if slot[2] > 0]
-    for index, (sex, social_class, part) in enumerate(slots):
-        count = births - placed if index == len(slots) - 1 else round_half_up(births * part)
-        count = max(0, min(count, births - placed))
+    counts = apportion(births, {(sex, social_class): part for sex, social_class, part in slots})
+    for sex, social_class, _part in slots:
+        count = max(0, min(counts.get((sex, social_class), 0), births - placed))
         row_for(ctx.session, rows, community.id, (A.CHILD, sex, social_class, CohortCondition.NONE), ctx.epoch).count += count
         placed += count
     return placed

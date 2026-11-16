@@ -13,7 +13,7 @@ from aerona.engine.interconnect.guards import blocked
 from aerona.engine.notes import note
 from aerona.engine.phases.remembrance import MemorialForm, memorial
 from aerona.engine.primitives.knowledge import known_levels
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import apportion, clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.rules.registry import Rules
@@ -69,9 +69,8 @@ async def return_maimed(ctx: TickContext, community: EntityRow, lost: int) -> in
         return 0
     placed = 0
     ordered = sorted(weights.items(), key=lambda item: -item[1])
-    for index, (kind, weight) in enumerate(ordered):
-        share = maimed - placed if index == len(ordered) - 1 else round_half_up(maimed * weight / total)
-        share = max(0, min(share, maimed - placed))
+    for kind, part in apportion(maimed, dict(ordered)).items():
+        share = max(0, min(part, maimed - placed))
         if share <= 0:
             continue
         row = await cohort(ctx, community.id, kind)

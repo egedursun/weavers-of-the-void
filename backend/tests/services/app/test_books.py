@@ -160,6 +160,18 @@ async def test_book_and_codex_tell_how_the_world_was_made(session: AsyncSession,
     assert "| High ground | Chosen by the seed |" in codex
 
 
+async def test_a_world_made_before_its_genesis_settings_were_kept_says_so_in_the_book_and_the_codex(
+    session: AsyncSession, rules: Rules, world: Cosmos
+) -> None:
+    world.cosmos.genesis_settings = None
+    await session.flush()
+    page = await book_page(session, rules)
+    codex = await codex_markdown(session, rules, CodexLinks())
+    for text in ("How the world was made", "Not kept: this world was made before they were recorded"):
+        assert text in page.html, text
+        assert text in codex, text
+
+
 async def test_book_is_never_truncated(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
     other = await make_world(session, "Dusk")
     tight = replace(rules, server=replace(rules.server, cosmic_chronicle_default=1), guide=replace(rules.guide, people_list=0, danger_list=0))

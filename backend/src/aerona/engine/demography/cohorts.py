@@ -15,7 +15,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.interconnect.guards import AFTER_PHASE
-from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.numbers import apportion, round_half_up
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
 from aerona.engine.primitives.transfers import move_amount
@@ -118,8 +118,9 @@ def place(rows: dict[CohortKey, CohortRow], weights: Mapping[CohortKey, float], 
         return 0
     done = 0
     ordered = sorted(scored.items(), key=lambda item: (-item[1], tuple(part.value for part in item[0])))
-    for index, (key, score) in enumerate(ordered):
-        part = amount - done if index == len(ordered) - 1 else round_half_up(amount * score / mass)
+    parts = apportion(amount, dict(ordered))
+    for key, _score in ordered:
+        part = parts.get(key, 0)
         if add:
             rows[key].count += max(0, part)
             done += max(0, part)
@@ -223,7 +224,6 @@ def age_cohorts(session: AsyncSession, community: EntityRow, rows: dict[CohortKe
 
 async def rebalance_classes(session: AsyncSession, rules: Rules, community: EntityRow, rows: dict[CohortKey, CohortRow], epoch: int) -> None:
     shares = await class_shares(session, rules, community.id)
-    weight = sum(max(0.0, value) for value in shares.values()) or 1.0
     for band in AgeBand:
         for sex in Sex:
             free = [key for key in rows if key[0] is band and key[1] is sex and key[3] is CohortCondition.NONE and key[2] is not SocialClass.SERF_OR_SLAVE]
@@ -233,10 +233,10 @@ async def rebalance_classes(session: AsyncSession, rules: Rules, community: Enti
             for key in free:
                 rows[key].count = 0
             classes = [social_class for social_class in shares if social_class is not SocialClass.SERF_OR_SLAVE]
-            free_weight = sum(max(0.0, shares[social_class]) for social_class in classes) or weight
+            weights = {social_class: max(0.0, shares[social_class]) for social_class in classes}
+            parts = apportion(people, weights if sum(weights.values()) > 0 else dict.fromkeys(classes, 1.0))
             placed = 0
-            for index, social_class in enumerate(classes):
-                part = people - placed if index == len(classes) - 1 else round_half_up(people * max(0.0, shares[social_class]) / free_weight)
-                part = max(0, min(part, people - placed))
+            for social_class in classes:
+                part = max(0, min(parts.get(social_class, 0), people - placed))
                 row_for(session, rows, community.id, (band, sex, social_class, CohortCondition.NONE), epoch).count += part
                 placed += part

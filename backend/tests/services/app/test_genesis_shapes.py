@@ -14,12 +14,12 @@ from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.cosmography import DimensionKind, GalaxyType, RiftCause
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.travel import TravelMethod
-from aerona.domain.enums.world import CosmosShape, CosmosSize, StarType, WorldType
+from aerona.domain.enums.world import CosmosShape, CosmosSize, LoreLanguage, StarType, WorldType
 from aerona.domain.models.entity_stats import RegionStats
-from aerona.domain.models.genesis import GenesisOutcome
+from aerona.domain.models.genesis import GenesisOutcome, GenesisSettings
 from aerona.engine.cosmos.ladder import DimensionDraft, GalaxyDraft, create_dimension, create_galaxy, ensure_ladder
 from aerona.rules.registry import Rules
-from aerona.services.genesis_wizard import GenesisCommand, GenesisWizard, WizardInput, sanitize
+from aerona.services.genesis_wizard import GenesisCommand, GenesisWizard, WizardInput, pull_regions, sanitize
 from aerona.services.lore_ports import GenesisRequest, LorePorts
 from aerona.services.player.ports import WorldCreationRequest
 from tests.conftest import OpenDatabase
@@ -144,3 +144,23 @@ async def test_the_first_world_danger_follows_its_pulled_regions(database: Datab
         cosmos = await session.get(CosmosRow, 1)
         world = await session.get(WorldRow, cosmos.primary_world_id if cosmos is not None else 0)
     assert world is not None and world.danger == 50
+
+
+async def test_regions_are_pulled_once_toward_the_chosen_magic_and_danger_and_the_world_takes_their_mean(database: Database) -> None:
+    rules = Rules()
+    pull = rules.setup_wizard.setting_pull_pct
+    async with database.write() as session:
+        repository = CosmosRepository(session)
+        cosmos = await repository.create(
+            CosmosDraft(name="Pull", rng_seed=1, lore_language=LoreLanguage.ENGLISH, seed_idea=SEED, cosmology="", tone="", rules=rules)
+        )
+        world = await make_world(session, "First")
+        cosmos.primary_world_id = world.id
+        low = await make_entity(session, "Low", EntityType.REGION, world_id=world.id, stats=RegionStats(magic=0, danger=0))
+        high = await make_entity(session, "High", EntityType.REGION, world_id=world.id, stats=RegionStats(magic=100, danger=100))
+        await session.flush()
+        assert await pull_regions(session, rules, GenesisSettings(magic=100, danger=0, peoples=2)) == 2
+        expected_low = round(100 * pull / 100)
+        assert low.stats.model_dump()["magic"] == expected_low and low.stats.model_dump()["danger"] == 0
+        assert high.stats.model_dump()["magic"] == 100 and high.stats.model_dump()["danger"] == round(100 * (100 - pull) / 100)
+        assert world.danger == round((0 + round(100 * (100 - pull) / 100)) / 2)

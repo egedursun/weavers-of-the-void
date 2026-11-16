@@ -100,6 +100,14 @@ function GenesisBody({
         <Quoted label='Seed idea' text={saved.seed_idea ?? null} />
         <Quoted label='Tone' text={saved.tone ?? null} />
       </div>
+      {settings ? null : (
+        <EmptyState
+          icon={LayoutTemplate}
+          size='inline'
+          title='No genesis settings were kept'
+          description='This world was made before its genesis settings were recorded, so only its seed, tone and lore language are known.'
+        />
+      )}
       <div className='grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4'>
         <MiniStat
           icon={Languages}

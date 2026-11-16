@@ -1073,7 +1073,7 @@ def settings_facts(settings: GenesisSettings) -> list[Labelled]:
 
 def creation_facts(cosmos: CosmosRow) -> list[Labelled]:
     settings = cosmos.genesis_settings
-    return settings_facts(settings) if settings is not None else []
+    return settings_facts(settings) if settings is not None else [Labelled("Genesis settings", "Not kept: this world was made before they were recorded")]
 
 
 async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:

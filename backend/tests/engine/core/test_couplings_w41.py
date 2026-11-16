@@ -52,7 +52,9 @@ from aerona.engine.couplings.novelty import novelty
 from aerona.engine.couplings.offices import found_sinecure, office_count
 from aerona.engine.couplings.rite_body import component_bar
 from aerona.engine.couplings.teachers import lesson
+from aerona.engine.demography.cohorts import rebalance_classes, seed
 from aerona.engine.gods.queries import worshippers_of
+from aerona.engine.phases.society_economy import save_society, society_of
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import set_stats
@@ -368,3 +370,20 @@ async def test_story_29_a_fallen_god_who_dies_mortal_leaves_a_cult_that_turns_to
         row = await force(ctx, TransformKind.SECULARISATION, cult.id)
         became = await session.get_one(EntityRow, row.result_node_id)
         assert became.entity_type is EntityType.IDEOLOGY
+
+
+async def test_rebalancing_classes_never_puts_people_in_a_class_with_no_share(database: Database) -> None:
+    async with database.write() as session:
+        cosmos = await seed_rich_cosmos(session)
+        folk = cosmos.home.people
+        society = await save_society(session, folk.id, await society_of(session, Rules(), folk.id))
+        for social_class in SocialClass:
+            setattr(society, f"share_{social_class.value}", 0.0)
+        society.share_farmer, society.share_artisan, society.share_priest = 61.3, 25.4, 13.3
+        await session.flush()
+        rows = await seed(session, Rules(), folk, 1)
+        assert rows
+        rows[next(iter(rows))].count += 7
+        await rebalance_classes(session, Rules(), folk, rows, 1)
+        idle = sum(row.count for key, row in rows.items() if key[2] in {SocialClass.UNEMPLOYED, SocialClass.MONASTIC, SocialClass.WORKER})
+        assert idle == 0 and sum(row.count for row in rows.values()) > 0

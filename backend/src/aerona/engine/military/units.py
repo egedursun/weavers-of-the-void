@@ -36,7 +36,7 @@ from aerona.engine.lore.research import techniques_of
 from aerona.engine.military.templates import blend, realm_template, weights_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import apportion, clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_base_stats, set_stats, stat, stat_or
 from aerona.engine.regime.book import morale_factor
 from aerona.engine.vehicles.fleet import outfit_army
@@ -411,9 +411,10 @@ def take(rows: Sequence[ArmyUnitRow], losses: int) -> int:
     if total <= 0 or losses <= 0:
         return 0
     done = 0
-    for index, row in enumerate(sorted(alive, key=lambda item: (-item.count, item.id))):
-        part = losses - done if index == len(alive) - 1 else round_half_up(losses * row.count / total)
-        part = max(0, min(row.count, part))
+    ordered = sorted(alive, key=lambda item: (-item.count, item.id))
+    parts = apportion(losses, {index: float(row.count) for index, row in enumerate(ordered)})
+    for index, row in enumerate(ordered):
+        part = max(0, min(row.count, parts.get(index, 0)))
         row.count -= part
         done += part
     return done
