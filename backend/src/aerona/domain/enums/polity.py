@@ -50,6 +50,7 @@ class OfficeKind(StrEnum):
     SPEAKER = "speaker"
     CHIEF_SCIENTIST = "chief_scientist"
     JESTER = "jester"
+    WARDEN = "warden"
 
 
 class OfficePower(StrEnum):
@@ -155,6 +156,10 @@ class LawKind(StrEnum):
     INTELLECTUAL_PROPERTY = "intellectual_property"
     MACHINE_LAW = "machine_law"
     SPACE_LAW = "space_law"
+    CLOSED_SEASON = "closed_season"
+    PROTECTED_WATERS = "protected_waters"
+    CATCH_QUOTA = "catch_quota"
+    GEAR_BAN = "gear_ban"
 
 
 class DebtRemedy(StrEnum):
@@ -265,6 +270,8 @@ class PartyRole(StrEnum):
     GUARANTOR = "guarantor"
 
 
+CLOSURES = frozenset({LawKind.CLOSED_SEASON, LawKind.PROTECTED_WATERS, LawKind.CATCH_QUOTA, LawKind.GEAR_BAN})
+
 LAW_AREAS: dict[LawKind, LawArea] = {
     LawKind.SUCCESSION_RULE: LawArea.SUCCESSION,
     LawKind.INHERITANCE_SPLIT: LawArea.PROPERTY,
@@ -302,6 +309,10 @@ LAW_AREAS: dict[LawKind, LawArea] = {
     LawKind.LABOUR_LAW: LawArea.SOCIAL,
     LawKind.ENVIRONMENT_LAW: LawArea.PUBLIC_HEALTH,
     LawKind.DATA_PRIVACY: LawArea.SOCIAL,
+    LawKind.CLOSED_SEASON: LawArea.PROPERTY,
+    LawKind.PROTECTED_WATERS: LawArea.PROPERTY,
+    LawKind.CATCH_QUOTA: LawArea.PROPERTY,
+    LawKind.GEAR_BAN: LawArea.PROPERTY,
     LawKind.WEAPONS_LAW: LawArea.PENAL,
     LawKind.INTELLECTUAL_PROPERTY: LawArea.PROPERTY,
     LawKind.MACHINE_LAW: LawArea.SOCIAL,

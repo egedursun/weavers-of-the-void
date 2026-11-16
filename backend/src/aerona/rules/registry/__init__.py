@@ -130,6 +130,16 @@ from aerona.rules.registry.cosmography_kinds import (
 )
 from aerona.rules.registry.costs import CostsRules
 from aerona.rules.registry.council import CouncilRules
+from aerona.rules.registry.couplings import (
+    CarrionRules,
+    ClosureRules,
+    CouplingRules,
+    DeepSealRules,
+    FashionRules,
+    FieldDiplomacyRules,
+    OfficeMakingRules,
+    TeachingRules,
+)
 from aerona.rules.registry.crafts import (
     AffinityRules,
     AidRules,
@@ -331,6 +341,7 @@ from aerona.rules.registry.life_cycles import LifeCyclesRules
 from aerona.rules.registry.lifecycle_ends import LifecycleEndRules
 from aerona.rules.registry.limits import LimitsRules
 from aerona.rules.registry.link_graph import LinkGraphRules
+from aerona.rules.registry.loops import LoopRules
 from aerona.rules.registry.lore import (
     ArtRules,
     BacklashRules,
@@ -1004,6 +1015,15 @@ class Rules:
     world_ends: WorldEndRules = field(default_factory=WorldEndRules)
     prehistory: PrehistoryRules = field(default_factory=PrehistoryRules)
     transform: TransformRules = field(default_factory=TransformRules)
+    couplings: CouplingRules = field(default_factory=CouplingRules)
+    carrion: CarrionRules = field(default_factory=CarrionRules)
+    teachings: TeachingRules = field(default_factory=TeachingRules)
+    offices_made: OfficeMakingRules = field(default_factory=OfficeMakingRules)
+    field_diplomacy: FieldDiplomacyRules = field(default_factory=FieldDiplomacyRules)
+    deep_seals: DeepSealRules = field(default_factory=DeepSealRules)
+    closures: ClosureRules = field(default_factory=ClosureRules)
+    fashion: FashionRules = field(default_factory=FashionRules)
+    loops: LoopRules = field(default_factory=LoopRules)
     fossils: FossilRules = field(default_factory=FossilRules)
     museums: MuseumRules = field(default_factory=MuseumRules)
     gardens: GardenRules = field(default_factory=GardenRules)

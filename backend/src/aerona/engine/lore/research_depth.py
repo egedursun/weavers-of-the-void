@@ -17,7 +17,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.military import CaptiveCohortRow, OccupationRow
 from aerona.db.tables.mind import CultureValueRow, SkillRow
-from aerona.db.tables.polity import OfficeRow, PolityProfileRow, TreatyClauseRow, TreatyProfileRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, TreatyClauseRow, TreatyProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import SiegeRow, WarSideRow
 from aerona.db.write_guard import held
@@ -29,6 +29,7 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import TerrainKind
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.polity import ClauseKind, OfficeKind, TreatyKind, TreatyStatus
 from aerona.domain.enums.renown import Currency
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -42,6 +43,7 @@ from aerona.engine.economy.stocks import holding
 from aerona.engine.eras.progress import powder_barred, researchable
 from aerona.engine.faith.book import patron_node
 from aerona.engine.gods.queries import community_of
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.learning import court_scholar, realm_of
 from aerona.engine.lore.research import gate_open, has_technique, holder_levels, need_for, techniques_of
 from aerona.engine.notes import note
@@ -260,6 +262,13 @@ async def open_techniques(session: AsyncSession, holder_id: int, levels: dict[Kn
     return found
 
 
+async def courier_need(ctx: TickContext, holder_id: int) -> float:
+    realm = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == holder_id).limit(1))
+    profile = await ctx.session.get(PolityProfileRow, realm if realm is not None else holder_id)
+    weariness = profile.war_weariness if profile is not None else 0
+    return await lagged(ctx, BalanceLoop.COURIER_NETWORKS, holder_id, weariness) / PERCENT
+
+
 async def draw_options(ctx: TickContext, holder_id: int, levels: dict[KnowledgeBranch, int]) -> list[Technique]:
     table = ctx.rules.research_depth
     pool = await open_techniques(ctx.session, holder_id, levels)
@@ -267,6 +276,8 @@ async def draw_options(ctx: TickContext, holder_id: int, levels: dict[KnowledgeB
     weights: dict[Technique, int] = {}
     for technique in pool:
         need = await need_for(ctx.session, holder_id, TECHNIQUES[technique].branch)
+        if technique is Technique.POSTAL_SERVICE:
+            need += await courier_need(ctx, holder_id)
         weights[technique] = 1 + round(need * table.need_weight) + (table.boost_weight if technique in boosted else 0)
     rng = ctx.rng(f"research.options.{holder_id}.{ctx.epoch}")
     chosen: list[Technique] = []

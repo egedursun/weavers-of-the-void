@@ -142,10 +142,17 @@ CHANGES OF KIND UNDER WAY AROUND YOU: {% for line in changes %}{{ line }}{% if n
 
 {% endif %}
 {% endset %}
+{% set registers_text %}
+{% if registers %}
+
+YOUR WAYS OF SPEAKING AND REMEMBERING: {% for line in registers %}{{ line }}{% if not loop.last %}; {% endif %}{% endfor %}
+
+{% endif %}
+{% endset %}
 {% set floor = c.section_min_chars %}
 {% set hint = "look with look_at_world, search_entities and inspect_entity" %}
 {% set parts = [(header, header | length, hint)] %}
-{% for text in [you_text, character_text, god_text, language_text, land_text, "\n" ~ near_text, events_text, rumours_text, knowledge_text, owned_text, mentions_text, languages_text, worlds_text, expeditions_text, changes_text] %}
+{% for text in [you_text, character_text, god_text, language_text, land_text, "\n" ~ near_text, events_text, rumours_text, knowledge_text, owned_text, mentions_text, languages_text, worlds_text, expeditions_text, changes_text, registers_text] %}
 {% set _ = parts.append((text.rstrip() if text.strip() else "", floor, hint)) %}
 {% endfor %}
 {{ sectioned(parts, c.mortal_context_chars * (c.read_tool_multiplier if full else 1), trim) }}

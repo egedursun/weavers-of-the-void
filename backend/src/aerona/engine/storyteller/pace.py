@@ -15,9 +15,11 @@ from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.storyteller import RecoveryKind, SpontaneousKind, StorytellerProfile, TensionBand
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
+from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
@@ -156,9 +158,10 @@ async def measure(ctx: TickContext, world: WorldRow, tally: StorytellerTally) ->
         row.tension = clamp_int(row.tension * table.tension_carry_pct / PERCENT + fresh, 0, PERCENT)
     chaos = ctx.rng(f"storyteller.chaos.{world.id}.{ctx.epoch}").die(PERCENT)
     row.target = aim(ctx.rules, row, ctx.epoch, chaos)
-    row.band = band_of(ctx.rules, row.tension, row.target)
+    felt = await lagged(ctx, BalanceLoop.STORYTELLER_PACING, world.id, row.tension)
+    row.band = band_of(ctx.rules, felt, row.target)
     if "boost_pct" not in row.locked:
-        row.boost_pct = boost_of(ctx.rules, row.tension, row.target, row.band)
+        row.boost_pct = boost_of(ctx.rules, felt, row.target, row.band)
     row.recent_kinds = remember_kinds(ctx.rules, row, await struck_counts(ctx, world.id))
     if "spotlight_entity_id" not in row.locked:
         row.spotlight_entity_id = await spotlight_for(ctx, world.id)

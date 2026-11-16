@@ -30,6 +30,7 @@ from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
 from aerona.domain.enums.evolution import KeystoneRole
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.nature import PlantDefence
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
@@ -89,6 +90,7 @@ from aerona.engine.environment.works import backfill_typed_works, works_by_regio
 from aerona.engine.environment.years import SampledYear, world_years
 from aerona.engine.industry.pollution import disease_extra, fertility_factor
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.calendar_rites import backfill_holy_days, hallow_holy_days
 from aerona.engine.means.water import irrigation_lift
 from aerona.engine.nature.cover import cover_of, poisoned_forage, smothered
@@ -644,6 +646,11 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     return {region_id: round_half_up(weighted[region_id] / totals[region_id]) for region_id in totals if totals[region_id]}
 
 
+async def worked_soil(ctx: TickContext, env: RegionEnvironmentRow, swing: int, shift: int) -> int:
+    recover_soil(ctx.rules, env, swing + await lagged(ctx, BalanceLoop.SALINISATION, env.entity_id, shift))
+    return await lagged(ctx, BalanceLoop.SOIL_EXHAUSTION, env.entity_id, env.soil_fertility)
+
+
 @reads(
     "people.population",
     "place.fertility",
@@ -727,13 +734,11 @@ async def environment_derive(ctx: TickContext) -> None:
         current = base_stat(region, "fertility")
         if "soil_fertility" not in env.locked:
             env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
-        recover_soil(rules, env, soil_swing(rules, cycles.get(env.world_id)) + nutrient_shift(rules, stocks.get(env.entity_id), env.soil_base))
+        soil = await worked_soil(ctx, env, soil_swing(rules, cycles.get(env.world_id)), nutrient_shift(rules, stocks.get(env.entity_id), env.soil_base))
         if current is not None or not region.is_water:
             set_base_stats(
                 region,
-                fertility=fertility_from(
-                    env.soil_fertility, factor_of(rules, env, context.works, context.sea) * fertility_factor(rules, fouled.get(region.id))
-                ),
+                fertility=fertility_from(soil, factor_of(rules, env, context.works, context.sea) * fertility_factor(rules, fouled.get(region.id))),
             )
             env.derived_fertility = base_stat(region, "fertility")
             derived += 1

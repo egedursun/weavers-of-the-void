@@ -5,10 +5,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.loops.delay import lagged
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -68,6 +70,7 @@ async def envy(ctx: TickContext, work: EntityRow, owner: EntityRow, neighbours: 
         if current >= settings.envy_threshold:
             continue
         current = await change_relation(ctx, neighbour.id, owner.id, -settings.envy_relation_loss, MemoryKind.ENVIED)
+        current = await lagged(ctx, BalanceLoop.WONDER_ENVY, neighbour.id, current, subject=owner.id)
         if current > -settings.war_relation or not rng.chance(settings.envy_war_chance):
             continue
         if await declare_war(ctx, neighbour.id, owner.id, f"for {work.name}", cause=WarCause.ENVY):

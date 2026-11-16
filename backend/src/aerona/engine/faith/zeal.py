@@ -15,12 +15,14 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind, TraitKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import Church, FaithBook
 from aerona.engine.faith.doctrine import clergy_of, liturgy_reach
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.memories import remember
@@ -201,6 +203,7 @@ async def zeal_parts(ctx: TickContext, church: Church, book: FaithBook, *, laws:
         parts["doom omens"] = omens * table.doom_omen
     if church.members and not church.holds(TenetKind.ASCETICISM):
         wealth = sum(stat(member, "prosperity") or 0 for member in church.members) / len(church.members)
+        wealth = await lagged(ctx, BalanceLoop.COMFORT_ZEAL, church.cult.id, wealth)
         comfort = round_half_up(wealth * table.prosperity_pct / PERCENT / TENTH * HALF)
         if comfort:
             parts["comfort"] = -comfort

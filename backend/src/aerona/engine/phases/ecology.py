@@ -20,7 +20,20 @@ from aerona.engine.ecology.extinction import cascade
 from aerona.engine.ecology.foodweb import appetites
 from aerona.engine.ecology.hosts import acquire_immunity
 from aerona.engine.ecology.pests import plague_of_pests
-from aerona.engine.ecology.ranges import RangeMarks, Wilds, harvest_hunt, load_wilds, migrate, overall, plan, seed, settle, size_weights, spread
+from aerona.engine.ecology.ranges import (
+    RangeMarks,
+    Wilds,
+    harvest_hunt,
+    load_wilds,
+    migrate,
+    overall,
+    plan,
+    seed,
+    seen_by_hunters,
+    settle,
+    size_weights,
+    spread,
+)
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -162,7 +175,8 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     web = await food_web(ctx, species)
     prey_of = {key: [item.id for item in rows] for key, rows in web.prey_of.items()}
     hunters_of = {key: [item.id for item in rows] for key, rows in web.hunters_of.items()}
-    range_marks = RangeMarks(marks.megafauna, marks.protected, marks.invasive, await trap_factors(ctx.session, ctx.rules))
+    prey_seen, people_seen = await seen_by_hunters(ctx, wilds, species, prey_of)
+    range_marks = RangeMarks(marks.megafauna, marks.protected, marks.invasive, await trap_factors(ctx.session, ctx.rules), prey_seen, people_seen)
     planned = [
         (row, plan(ctx, wilds, item, row, hunters_of=hunters_of, prey_of=prey_of, marks=range_marks))
         for item in species

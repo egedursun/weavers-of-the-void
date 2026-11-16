@@ -26,6 +26,7 @@ from aerona.domain.enums.demography import Job
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.gathering import CollectionKind
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind, OathKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -34,6 +35,7 @@ from aerona.engine.body.customs import customs_of, maimed_for_rule, presence_pct
 from aerona.engine.body.decline import decline_severity, failing_part
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.items import regalia_holder
 from aerona.engine.lore.legends import foretold_return
 from aerona.engine.mind.book import values_for
@@ -341,7 +343,8 @@ async def overreach(ctx: TickContext, book: RealmBook, realm: Realm, capacity: i
     profile = realm.profile
     profile.administration = capacity
     profile.overextension = clamp_int(need * PERCENT / max(1, capacity), 0, PERCENT * 10)
-    over = profile.overextension > PERCENT
+    strain = await lagged(ctx, BalanceLoop.OVEREXTENSION, realm.entity.id, profile.overextension)
+    over = strain > PERCENT
     capital_region = book.atlas.top_region(profile.capital_entity_id or -1)
     breaking: list[EntityRow] = []
     for member_id, row in realm.members.items():
@@ -352,7 +355,7 @@ async def overreach(ctx: TickContext, book: RealmBook, realm: Realm, capacity: i
         hops = book.atlas.region_hops(capital_region, region) if capital_region is not None and region is not None else None
         distance = 1 + (hops or 0)
         if over:
-            row.autonomy = clamp_int(row.autonomy + table.autonomy_gain * distance * (profile.overextension - PERCENT) / PERCENT, 0, PERCENT)
+            row.autonomy = clamp_int(row.autonomy + table.autonomy_gain * distance * (strain - PERCENT) / PERCENT, 0, PERCENT)
         else:
             row.autonomy = clamp_int(row.autonomy - table.autonomy_decay, 0, PERCENT)
         member = book.entities.get(member_id)

@@ -76,6 +76,7 @@ from aerona.engine.interconnect.catalog_peoples import PEOPLE_MECHANICS
 from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_MECHANICS
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
 from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
+from aerona.engine.interconnect.catalog_reference8 import REFERENCE8_MECHANICS
 from aerona.engine.interconnect.catalog_regime import REGIME_MECHANICS
 from aerona.engine.interconnect.catalog_region import REGION_MECHANICS
 from aerona.engine.interconnect.catalog_research import RESEARCH_MECHANICS
@@ -1041,6 +1042,7 @@ BUILT_IN = (
     *WORLD_VIEW_MECHANICS,
     *BIOLOGY_MECHANICS,
     *LIFECYCLE_MECHANICS,
+    *REFERENCE8_MECHANICS,
     *CUSTOMS_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,

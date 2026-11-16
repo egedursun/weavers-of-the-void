@@ -9,6 +9,7 @@ import {
   Castle,
   Church,
   Coins,
+  Compass,
   Crown,
   Drama,
   Eye,
@@ -25,7 +26,9 @@ import {
   Handshake,
   Heart,
   HeartCrack,
+  HeartPulse,
   Home,
+  Hourglass,
   KeyRound,
   Landmark,
   type LucideIcon,
@@ -34,6 +37,7 @@ import {
   Moon,
   Mountain,
   PartyPopper,
+  Rocket,
   Scale,
   ScrollText,
   Shield,
@@ -48,6 +52,7 @@ import {
   Swords,
   Tent,
   Trophy,
+  Truck,
   User,
   UserMinus,
   Users,
@@ -55,11 +60,7 @@ import {
   Wheat,
   Wind,
   Wrench,
-  Truck,
-  Rocket,
-  Compass,
   Zap,
-  HeartPulse,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -137,6 +138,11 @@ export const ACCOUNT_KINDS: Record<Schema['AccountKind'], Named> = {
   epic: { label: 'Epic', icon: Trophy, tone: 'gold' },
   inscription: { label: 'Inscription', icon: Mountain, tone: 'muted' },
   founding_myth: { label: 'Founding myth', icon: Star, tone: 'gold' },
+  elder_memory: {
+    label: 'Memory of an elder beast',
+    icon: Hourglass,
+    tone: 'verdigris',
+  },
 }
 
 export const STANCES: Record<Schema['AccountStance'], Named> = {

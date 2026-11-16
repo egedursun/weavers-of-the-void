@@ -14,10 +14,12 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import CyclePhase
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import polities, put, realm_towns
+from aerona.engine.loops.delay import lagged
 from aerona.engine.notes import note
 from aerona.engine.primitives.capacity import CapacityModel
 from aerona.engine.primitives.folk import present_among
@@ -116,7 +118,7 @@ async def read_realm(ctx: TickContext, model: CapacityModel, polity: EntityRow, 
             + share(society, SocialClass.SCRIBE) * table.scribe_elite_pct / PERCENT
         )
     aspirants += await graduates(ctx.session, ctx.rules, polity.id, ctx.epoch)
-    misery = misery_total / lower_people if lower_people else 0.0
+    misery = await lagged(ctx, BalanceLoop.MALTHUSIAN, polity.id, misery_total / lower_people if lower_people else 0.0)
     youth = await youth_share(ctx, [town.id for town in towns])
     youth_factor = 1 + (youth - table.youth_norm_pct) * table.youth_weight / PERCENT / PERCENT
     urban_factor = 1 + max(0.0, urban * PERCENT / max(1, population) - table.urban_norm_pct) * table.urban_weight / PERCENT / PERCENT

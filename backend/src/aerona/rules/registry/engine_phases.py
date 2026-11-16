@@ -588,6 +588,34 @@ class EnginePhasesRules:
     dreamt_pasts: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: dream worlds dream their past again from the dreams of those who reach them"
     )
+    restrain_casters: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: captors hold captive casters so that their rites cannot be worked")
+    sign_languages: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: communities of the deaf, the mute, the silent and the hunting come to share signed languages"
+    )
+    sociolects: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: classes, guilds, courts, crews and cants speak in their own ways, which fade when their groups do",
+    )
+    carrion: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: mass deaths feed scavengers, vermin and the restless dead until the dead are cleared"
+    )
+    teachings: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: spirits and lore-keeping beasts teach the living, and beasts keep the memory of their age"
+    )
+    office_creation: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: realms make offices for their rising elites and abolish them when the treasury runs short"
+    )
+    field_diplomacy: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: commanders parley, agree truces, exchange captives and fraternise in the field"
+    )
+    deep_seals: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: seals over the deep wear down, are tested by what lies below and are dug through by miners"
+    )
+    closures: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: grounds worked in common near collapse are closed by custom")
+    novelty: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: art forms and dishes go in and out of fashion as they spread and grow rare")
     transformations: int = rule(
         1,
         0,

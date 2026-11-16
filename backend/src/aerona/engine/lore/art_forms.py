@@ -22,6 +22,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ArtFormStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.couplings.novelty import novelty_of
 from aerona.engine.lore.language import barrier
 from aerona.engine.lore.learning import realm_of
 from aerona.engine.lore.printing import banned_for
@@ -201,6 +202,7 @@ async def spread(ctx: TickContext) -> int:
                 continue
             chance = table.spread_pct * (1 + (await fit_of(ctx.session, partner) - 1) * table.value_fit_pct / PERCENT)
             chance *= 1 + table.notation_pct / PERCENT * profile.notation
+            chance *= await novelty_of(ctx.session, profile.art_form_entity_id) / PERCENT
             if not ctx.rng(f"art_form.spread.{profile.art_form_entity_id}.{partner}.{ctx.epoch}").chance(chance):
                 continue
             mastery = row.mastery // 2
@@ -275,7 +277,7 @@ async def tend_forms(ctx: TickContext) -> dict[str, int]:
         if "notation" not in profile.locked and not profile.notation and await written_down(ctx.session, holders):
             profile.notation = True
         if "prestige" not in profile.locked:
-            aim = min(PERCENT, practitioners * PERCENT // 10)
+            aim = min(PERCENT, practitioners * PERCENT // 10) * await novelty_of(ctx.session, form.id) // PERCENT
             step = table.prestige_drift if aim > profile.prestige else -table.prestige_drift if aim < profile.prestige else 0
             profile.prestige = clamp_int(profile.prestige + step, 0, PERCENT)
         if practitioners:

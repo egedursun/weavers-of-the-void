@@ -25,6 +25,7 @@ from aerona.db.tables.collective import LearningEventRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
+from aerona.db.tables.couplings import SociolectRow
 from aerona.db.tables.culture import ArtworkProfileRow, BookContentRow
 from aerona.db.tables.cycles import ManumissionRow
 from aerona.db.tables.ecology import SpeciesRangeRow
@@ -4382,5 +4383,68 @@ LEVERS.update(
             DIMMED, modifier_id=Newest("star_modifiers"), values={"luminosity_pct": -10, "age_epochs": 3, "decay": 1, "source": "divine_act"}, release=[]
         ),
         "star_modifier:delete": after(DIMMED, modifier_id=Newest("star_modifiers")),
+    }
+)
+
+
+async def oldest_sociolect(session: AsyncSession) -> int | None:
+    return await session.scalar(select(SociolectRow.id).order_by(SociolectRow.id).limit(1))
+
+
+FOLK = EntityType.PEOPLE
+TALKERS = ("sociolect:create", {"holder_id": Pick(FOLK), "kind": "guild"})
+COURTLY = ("sociolect:create", {"holder_id": Pick(FOLK), "kind": "court"})
+SIGNERS = ("sign_language:create", {"community_id": Pick(FOLK), "cause": "deafness"})
+UNBURIED = ("carrion:keep", {"region_id": Pick(EntityType.REGION), "kept": True})
+HAPPENING = ("collection:create", {"kind": "war", "members": [{"node_id": Pick(REALM)}]})
+REMEMBERED = ("beast_lore:grant", {"beast_id": Newest(EntityType.BEAST), "collection_id": Newest("incident_collection")})
+TAUGHT = ("teaching:grant", {"teacher_id": Newest(EntityType.BEAST), "learner_id": Pick(FOLK), "kind": "account"})
+TRUCE = ("field_agreement:force", {"kind": "truce", "place_id": Pick(TOWN)})
+SEALED = ("deep_seal:seal", {"place_id": Pick(TOWN)})
+FORM = ("lore:create", {"entity_type": "art_form", "name": "Reed Song", "world_id": Pick("world"), "values": {"discipline": "music"}})
+FASHION = {"novelty": 40, "adoption": 30, "revivals": 1}
+FASHIONED = ("novelty:set", {"holder_id": Newest(EntityType.ART_FORM), "values": FASHION, "release": []})
+COUPLING_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "sociolect:edit": {"kind": "court", "prestige": 20, "secret": True, "salience": 50, "faded_epoch": 3},
+    "sign_origin:edit": {"cause": "silence_vow"},
+    "carrion:edit": {"carrion": 40, "scavenged": 10, "preserved": True, "rest": "frozen", "kept": False},
+    "teaching:edit": {"kind": "account", "fidelity": 50, "state": "sold", "price": 5},
+    "field_agreement:edit": {"kind": "truce", "state": "ended", "term_epoch": 9, "honour": 10},
+    "deep_seal:edit": {"kind": "rite", "strength": 60, "decay": 2},
+    "novelty:set": FASHION,
+}
+EDITS = {**EDITS, **COUPLING_EDITS}
+LEVERS.update(
+    {
+        "rite_component:set": after(RITE, rite_id=Newest(EntityType.RITE), component="sung", present=True),
+        "restraint:set": after(
+            ("captive:take", {"captor_id": Pick(TOWN), "mortal_id": Pick(MORTAL, 1)}), captive_id=Newest("captives"), restraint="gag", present=True
+        ),
+        "sociolect:create": given(holder_id=Pick(FOLK), kind="guild"),
+        "sociolect:merge": after(TALKERS, COURTLY, kept_id=Computed(oldest_sociolect), merged_id=Newest("sociolects")),
+        "sociolect:edit": after(TALKERS, sociolect_id=Newest("sociolects"), values=COUPLING_EDITS["sociolect:edit"], release=[]),
+        "sociolect:delete": after(TALKERS, sociolect_id=Newest("sociolects")),
+        "sign_language:create": given(community_id=Pick(FOLK), cause="deafness"),
+        "sign_origin:edit": after(SIGNERS, language_id=Newest(EntityType.LANGUAGE), values=COUPLING_EDITS["sign_origin:edit"], release=[]),
+        "sign_origin:delete": after(SIGNERS, language_id=Newest(EntityType.LANGUAGE)),
+        "carrion:keep": given(region_id=Pick(EntityType.REGION), kept=True),
+        "carrion:clear": after(UNBURIED, region_id=Pick(EntityType.REGION)),
+        "carrion:edit": after(UNBURIED, region_id=Pick(EntityType.REGION), values=COUPLING_EDITS["carrion:edit"], release=[]),
+        "beast_lore:grant": after(BEAST, HAPPENING, beast_id=Newest(EntityType.BEAST), collection_id=Newest("incident_collection")),
+        "beast_lore:reveal": after(BEAST, HAPPENING, REMEMBERED, beast_id=Newest(EntityType.BEAST), learner_id=Pick(FOLK)),
+        "teaching:grant": after(BEAST, HAPPENING, REMEMBERED, teacher_id=Newest(EntityType.BEAST), learner_id=Pick(FOLK), kind="account"),
+        "teaching:block": after(BEAST, teacher_id=Newest(EntityType.BEAST), learner_id=Pick(FOLK)),
+        "teaching:edit": after(BEAST, HAPPENING, REMEMBERED, TAUGHT, teaching_id=Newest("teachings"), values=COUPLING_EDITS["teaching:edit"], release=[]),
+        "teaching:delete": after(BEAST, HAPPENING, REMEMBERED, TAUGHT, teaching_id=Newest("teachings")),
+        "field_agreement:force": given(kind="truce", place_id=Pick(TOWN)),
+        "field_agreement:void": after(TRUCE, agreement_id=Newest("field_agreements")),
+        "field_agreement:edit": after(TRUCE, agreement_id=Newest("field_agreements"), values=COUPLING_EDITS["field_agreement:edit"], release=[]),
+        "field_agreement:delete": after(TRUCE, agreement_id=Newest("field_agreements")),
+        "deep_seal:seal": given(place_id=Pick(TOWN), kind="divine", strength=80),
+        "deep_seal:unseal": after(SEALED, seal_id=Newest("deep_seals")),
+        "deep_seal:edit": after(SEALED, seal_id=Newest("deep_seals"), values=COUPLING_EDITS["deep_seal:edit"], release=[]),
+        "deep_seal:delete": after(SEALED, seal_id=Newest("deep_seals")),
+        "novelty:set": after(FORM, holder_id=Newest(EntityType.ART_FORM), values=FASHION, release=[]),
+        "novelty:delete": after(FORM, FASHIONED, holder_id=Newest(EntityType.ART_FORM)),
     }
 )

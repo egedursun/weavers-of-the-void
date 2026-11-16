@@ -9,6 +9,7 @@ from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.couplings import FieldAgreementState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import SoilKind
@@ -20,6 +21,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.body.cohorts import return_maimed
 from aerona.engine.context import TickContext
+from aerona.engine.couplings.field import break_terms, under_terms
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -227,6 +229,12 @@ async def sack_choice(ctx: TickContext, siege: SiegeRow, victor: EntityRow, comm
         choice = SackChoice.MERCY
     else:
         choice = SackChoice.SACK
+    terms = await under_terms(ctx, siege.war_id, siege.besieged_entity_id)
+    if terms is not None and terms.state is FieldAgreementState.KEPT and choice is not SackChoice.MERCY:
+        if CommanderTrait.BRUTAL in traits:
+            await break_terms(ctx, terms, commander_id or victor.id)
+        else:
+            choice = SackChoice.MERCY
     siege.choice = choice
     return choice
 

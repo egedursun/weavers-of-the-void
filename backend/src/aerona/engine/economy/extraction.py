@@ -26,6 +26,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.cosmos.world_views import WorldView, light_pct, view_of
+from aerona.engine.couplings.deep import active_seal, seal_after_breach
 from aerona.engine.crafts.catch import catch_factor
 from aerona.engine.crafts.linking import affinity_value
 from aerona.engine.crafts.timekeeping import clock_output
@@ -336,8 +337,9 @@ async def strike_hazard(
     cavern: EntityRow | None = None
     if hazard is HazardKind.CAVE_IN and not profile.held:
         profile.sealed_until_epoch = ctx.epoch + table.seal_epochs
-        if ctx.rng(f"cavern.roll.{resource.id}").chance(table.cavern_chance):
+        if await active_seal(ctx.session, resource.id) is None and ctx.rng(f"cavern.roll.{resource.id}").chance(table.cavern_chance):
             cavern = await _open_cavern(ctx, resource)
+            await seal_after_breach(ctx, resource, community)
     woodcutters_counted = several(killed, "woodcutter", "woodcutters")
     words = {
         HazardKind.CAVE_IN: f"The galleries of {resource.name} caved in on the miners of {community.name}: {killed} died and "

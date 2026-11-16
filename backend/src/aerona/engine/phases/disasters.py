@@ -32,6 +32,7 @@ from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.integrity import HarmForce
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.settlement import DistrictHarm
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
@@ -60,6 +61,7 @@ from aerona.engine.households.homes import sickness_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
+from aerona.engine.loops.delay import lagged
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.climate import plague_pct
@@ -179,7 +181,7 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
     }
     medicine = (
         knowledge.ratio(ctx.rules, mortal.id, KnowledgeBranch.MEDICINE, effects.medicine_plague_severity)
-        * await sickness_factor(ctx.session, ctx.rules, mortal.id)
+        * await lagged(ctx, BalanceLoop.SQUALOR_DISEASE, mortal.id, await sickness_factor(ctx.session, ctx.rules, mortal.id))
         if disaster is Disaster.PLAGUE
         else 1.0
     )

@@ -82,6 +82,7 @@ from tests.tools.every_setup_ages import remade_land, sky_scholar, slain_kin
 from tests.tools.every_setup_arts import art_work, built_construct, posted_contract, sold_work
 from tests.tools.every_setup_belonging import hunted_by_a_temple, mocked_court
 from tests.tools.every_setup_climes import road_culture
+from tests.tools.every_setup_couplings import armies_face, rich_realm, town_besieged
 from tests.tools.every_setup_crafts import people_home, town_insurer
 from tests.tools.every_setup_customs import long_foreigner, town_pool
 from tests.tools.every_setup_eras import skilled_for_programme
@@ -215,6 +216,10 @@ MORTAL_CASES: dict[str, Case] = {
     "dig_site": named(plain(site_id=created("site")), dig_ready),
     "search_magic_sites": named(plain(), hidden_magic),
     "undertake_heroquest": named(plain(), quester),
+    "parley": named(plain(foe_id=created("foe")), armies_face),
+    "offer_terms": named(plain(town_id=created("town")), town_besieged),
+    "declare_closure": named(plain(kind="closed_season"), ruled_realm),
+    "create_office": named(plain(kind="warden"), rich_realm),
     "seek_true_name": named(plain(keeper_id=created("keeper")), name_keeper),
     "take_longevity": named(plain(form="body"), mortal_vis),
     "found_enchantment": named(plain(name="The Long Calm", effect="bounty", form="body", strength=30), mortal_vis),

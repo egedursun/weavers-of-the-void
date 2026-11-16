@@ -33,6 +33,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, Tra
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.eras import EraChannel
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.settlement import TreasuryEntry
@@ -61,6 +62,7 @@ from aerona.engine.eras.effects import channel_value, tech_relief
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, Terms, smuggle
 from aerona.engine.folkways.shunning import outsider_barrier
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.research_depth import capable_among
 from aerona.engine.lore.truth import theory_factor
 from aerona.engine.means.containers import packed_capacity
@@ -908,7 +910,7 @@ async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: di
     ):
         tally.chokepoints += 1
     if (
-        toll_total(route) >= ctx.rules.tolls.divert_total_pct
+        await lagged(ctx, BalanceLoop.TOLL_DIVERSION, route.entity.id, toll_total(route)) >= ctx.rules.tolls.divert_total_pct
         and not route_locked(route, "path")
         and not await divert(ctx, book, route, works)
         and profile.chokepoint

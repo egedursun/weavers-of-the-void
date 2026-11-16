@@ -34,6 +34,7 @@ class ExchangeRules:
 
 @dataclass(frozen=True)
 class EconomicOrderRules:
+    redistribution_upkeep: int = rule(2, 0, 1000, E, "Treasury the clerks and stores of a redistributing centre cost each epoch for every town it serves")
     redistribution_storage_loss_pct: int = rule(10, 0, 100, E, "Share of the goods sent to a centre that its storage loses before they are given out (%)")
     command_efficiency_floor: int = rule(30, 0, 100, E, "Output a commanded economy keeps at no planning capacity (%)")
     planning_per_official: int = rule(2, 0, 20, E, "Planning capacity each official of a realm adds")

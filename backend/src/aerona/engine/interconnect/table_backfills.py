@@ -9,6 +9,15 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("dreamt_pasts", "prehistory_events"): (
         "dreamt_pasts: dream worlds dream their past again from the next epoch; worlds with written lore take a past backfilled from it at the next start"
     ),
+    ("rite_bodies", "rite_components"): "none: each rite takes the parts its school asks for when it is next cast or held",
+    ("rite_bodies", "captive_restraints"): "none: captors hold captive casters from the next epoch",
+    ("registers", "sociolects"): "none: ways of speaking arise from the next epoch",
+    ("registers", "sign_origins"): "none: signed languages arise from the next epoch",
+    ("carrion", "carrion_pulses"): "none: carrion is left by the next mass death",
+    ("teachings", "teachings"): "none: spirits and beasts teach from the next epoch",
+    ("field_diplomacy", "field_agreements"): "none: commanders come to terms from the next battle",
+    ("deep_seals", "deep_seals"): "none: seals are set at the next breach",
+    ("novelty", "novelty_stocks"): "computed: every art form and dish takes its novelty at the next epoch",
     ("transformations", "transformations"): (
         "transformations: past deifications, uplifts, god corpses, risen spirits, manifestations and raised beasts are entered at the next start"
     ),

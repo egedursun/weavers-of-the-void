@@ -273,7 +273,6 @@ async def test_citizenship_decides_rights_and_borders_and_measures_shape_trade(s
     stranger = await mortal(session, "Tov", world, town.id)
     realm = await realm_of(session, world, "Lawmere Realm", town.id)
     abroad = await realm_of(session, world, "Far Realm", other.id)
-    await bond(session, ruler.id, realm.id, BondKind.RULES)
     session.add(OfficeRow(polity_entity_id=realm.id, kind=OfficeKind.RULER, holder_entity_id=ruler.id))
     session.add_all([profile(ruler.id, polity_id=realm.id), profile(stranger.id, polity_id=realm.id)])
     stranger.affiliated_entity_id = None

@@ -25,6 +25,7 @@ from aerona.domain.enums.collective import RoleKind
 from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intrigue import FavourOrigin
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
 from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, OfficePower, SuccessionRule, TreatyStatus
 from aerona.domain.enums.settlement import TIER_ORDER
@@ -39,6 +40,7 @@ from aerona.engine.customs.rights import has_right
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.civics import realm_allows, realm_reaches
 from aerona.engine.military.causes import press_claim_war
 from aerona.engine.military.support import new_side
@@ -86,6 +88,7 @@ OFFICE_SKILLS = partial(
         OfficeKind.SPEAKER: ((S.ORATORY, S.LAW, S.NEGOTIATION), "charisma"),
         OfficeKind.CHIEF_SCIENTIST: ((S.SCIENCE, S.COMPUTING, S.ENGINEERING), "intellect"),
         OfficeKind.JESTER: ((S.ORATORY, S.DECEPTION, S.ETIQUETTE), "charisma"),
+        OfficeKind.WARDEN: ((S.HUNTING, S.TRACKING, S.LAW), "wisdom"),
     },
     without={OfficeKind.HEIR_DESIGNATE, OfficeKind.RULER},
 )
@@ -130,6 +133,7 @@ DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
         OfficeKind.SPEAKER: (W.PROCLAIM,),
         OfficeKind.CHIEF_SCIENTIST: (W.RESEARCH,),
         OfficeKind.JESTER: (W.JEST,),
+        OfficeKind.WARDEN: (W.JUDGE,),
     }
 )
 POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
@@ -511,9 +515,9 @@ async def regency(ctx: TickContext, realm: Realm, occupied: set[int]) -> str | N
     if regent is None or fresh:
         return "appointed" if fresh else None
     ambitious = TraitKind.AMBITIOUS in await traits_of(ctx.session, regent.id)
-    if ambitious and ctx.rng(f"usurp.{realm.entity.id}.{ctx.epoch}").chance(
-        await paced(ctx, realm.entity.world_id, SpontaneousKind.CLAIMANT, ctx.rules.succession.usurp_chance)
-    ):
+    ambition = await paced(ctx, realm.entity.world_id, SpontaneousKind.CLAIMANT, ctx.rules.succession.usurp_chance) if ambitious else 0.0
+    ambition = await lagged(ctx, BalanceLoop.REGENCY, realm.entity.id, ambition, subject=regent.id)
+    if ambition and ctx.rng(f"usurp.{realm.entity.id}.{ctx.epoch}").chance(ambition):
         await usurp(ctx, realm, regent, ruler)
         return "usurped"
     return None

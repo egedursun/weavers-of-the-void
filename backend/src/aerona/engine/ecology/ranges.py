@@ -22,6 +22,7 @@ from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.agrarian.book import reserve_factor, reserve_marks
 from aerona.engine.body.variants import ORDINARY, BiologyView, biology_views
@@ -32,6 +33,7 @@ from aerona.engine.ecology.evolution import cold_reach, escape, evolved_traits, 
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.faith.book import FaithBook
+from aerona.engine.loops.delay import delay_of, lagged
 from aerona.engine.museums.reading import refuges
 from aerona.engine.nature.islands import spared_kinds
 from aerona.engine.nature.seasons import activity, asleep, chilled, season_bands
@@ -288,13 +290,13 @@ def predation(rules: Rules, wilds: Wilds, prey_id: int, region: int, hunters_of:
     return loss * shield(rules, wilds.traits.get(prey_id, set())) * numbers_kept(rules, wilds.profiles.get(prey_id))
 
 
-def human_hunting(rules: Rules, wilds: Wilds, species: EntityRow, region: int, *, protected: bool, megafauna: bool) -> float:
+def human_hunting(rules: Rules, wilds: Wilds, species: EntityRow, region: int, *, protected: bool, megafauna: bool, people: int) -> float:
     ecology = rules.ecology
     traits = wilds.traits.get(species.id, set())
     spared = protected or (species.id, region) in wilds.spared or region in wilds.sacred.get(species.id, set())
     if spared or megafauna or traits & UNHUNTED or (stat(species, "danger") or 0) >= ecology.hunting_danger:
         return 0.0
-    pressure: float = min(ecology.hunting_cap, wilds.population[region] // max(1, ecology.hunting_population)) * wilds.tracking.get(region, 1.0)
+    pressure: float = min(ecology.hunting_cap, people // max(1, ecology.hunting_population)) * wilds.tracking.get(region, 1.0)
     pressure *= reserve_factor(rules, wilds.reserves, species.id, region)
     if T.REGENERATING in traits:
         pressure *= 1 - rules.habitat.regeneration_pct / PERCENT
@@ -312,6 +314,25 @@ class RangeMarks:
     protected: set[int]
     invasive: set[int]
     traps: Mapping[tuple[int, int], float] = field(default_factory=dict)
+    prey_seen: Mapping[tuple[int, int], float] = field(default_factory=dict)
+    people_seen: Mapping[int, int] = field(default_factory=dict)
+
+
+async def seen_by_hunters(
+    ctx: TickContext, wilds: Wilds, species: list[EntityRow], prey_of: dict[int, list[int]]
+) -> tuple[dict[tuple[int, int], float], dict[int, int]]:
+    prey_seen: dict[tuple[int, int], float] = {}
+    people_seen: dict[int, int] = {}
+    if delay_of(ctx, BalanceLoop.PREDATOR_PREY) > 0:
+        for item in species:
+            for region in wilds.ranges[item.id]:
+                now = sum(wilds.ranges[prey][region].abundance for prey in prey_of.get(item.id, []) if region in wilds.ranges.get(prey, {}))
+                if now:
+                    prey_seen[(item.id, region)] = await lagged(ctx, BalanceLoop.PREDATOR_PREY, region, float(now), subject=item.id) / now
+    if delay_of(ctx, BalanceLoop.KEYSTONE_HUNTING) > 0:
+        for region in sorted({region for item in species for region in wilds.ranges[item.id]}):
+            people_seen[region] = await lagged(ctx, BalanceLoop.KEYSTONE_HUNTING, region, wilds.population[region])
+    return prey_seen, people_seen
 
 
 def plan(
@@ -333,7 +354,8 @@ def plan(
     fit = fit_of(rules, profile, land, traits, wilds.allowed(land), cold=cold_reach(rules, evolved))
     if "fit" not in row.locked:
         row.fit = clamp_int(round_half_up(fit * PERCENT), 0, PERCENT * 2)
-    prey = [wilds.ranges[item][region].abundance for item in prey_of.get(species.id, []) if region in wilds.ranges.get(item, {})]
+    felt = marks.prey_seen.get((species.id, region), 1.0)
+    prey = [round_half_up(wilds.ranges[item][region].abundance * felt) for item in prey_of.get(species.id, []) if region in wilds.ranges.get(item, {})]
     megafauna = species.id in marks.megafauna
     capacity = (
         capacity_of(rules, land, wilds.regions.get(region), megafauna, wildness(land, T.BURROWING in traits, rules)) * fit * food_of(rules, profile, land, prey)
@@ -358,7 +380,15 @@ def plan(
     if profile.diet in HUNTERS and prey and sum(prey) / len(prey) < rules.ecology.hunger_threshold:
         delta -= rules.ecology.hunger * profile.metabolism / rules.habitat.metabolism_mean * nature.factor("food_need_pct") * nature.factor("death_pct")
     hunted = (
-        human_hunting(rules, wilds, species, region, protected=species.id in marks.protected, megafauna=megafauna)
+        human_hunting(
+            rules,
+            wilds,
+            species,
+            region,
+            protected=species.id in marks.protected,
+            megafauna=megafauna,
+            people=marks.people_seen.get(region, wilds.population[region]),
+        )
         * wary(rules, evolved)
         * marks.traps.get((species.id, region), 1.0)
         * wilds.symbiosis.shield(rules, species.id, present)

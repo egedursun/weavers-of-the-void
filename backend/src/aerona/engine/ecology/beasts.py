@@ -28,6 +28,7 @@ from aerona.engine.arcana.vis import harvest_vis
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
+from aerona.engine.couplings.beast_memory import memory_dies
 from aerona.engine.ecology.anatomy import anatomy_of, harm_factor, plan_limbs, repelled
 from aerona.engine.ecology.beast_acts import bite_someone, breathe, carry_off, free_captives, gaze_strike, is_abductor, triggered, void_trophy
 from aerona.engine.ecology.foodweb import raid_herds
@@ -585,6 +586,7 @@ async def fall(ctx: TickContext, beast: EntityRow, row: BeastProfileRow) -> str:
     row.locked = []
     slayer = await slayer_of(ctx, beast.id)
     await colossal_remains(ctx, beast, row)
+    await memory_dies(ctx, beast)
     for profile, _ in await tribute_clauses(ctx, beast.id):
         await end_treaty(ctx, profile, TreatyStatus.FULFILLED, f"{beast.name} is dead")
     ctx.count("captives_rescued", await free_captives(ctx, beast))

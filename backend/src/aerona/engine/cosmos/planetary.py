@@ -14,9 +14,11 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.cycles import carbon_flux, cycles_by_world
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.loops.delay import lagged
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.primitives.distance import RegionAtlas
@@ -37,11 +39,10 @@ def sea_level_of(rules: Rules, physics: WorldPhysicsRow) -> int:
     return round_half_up(physics.hydrosphere - physics.cryosphere * rules.planetary_climate.sea_per_ice_pct / PERCENT)
 
 
-def move_ice(rules: Rules, physics: WorldPhysicsRow) -> int:
+def move_ice(rules: Rules, physics: WorldPhysicsRow, target: int) -> int:
     if "cryosphere" in physics.locked:
         return 0
     table = rules.planetary_climate
-    target = ice_target(rules, physics)
     step = max(-table.ice_step, min(table.ice_step, target - physics.cryosphere))
     if not step:
         return 0
@@ -132,7 +133,7 @@ async def planetary_climate(ctx: TickContext, worlds: dict[int, WorldRow], physi
             continue
         land = grounds.get(world_id, [])
         cleared = sum(ground.cleared for ground in land) / len(land) if land else 0.0
-        changed += abs(move_ice(ctx.rules, row))
+        changed += abs(move_ice(ctx.rules, row, await lagged(ctx, BalanceLoop.GLACIAL_THAW, row.world_id, ice_target(ctx.rules, row))))
         changed += abs(move_carbon(ctx, row, cleared, cycles.get(world_id)))
         changed += await move_coasts(ctx, world, row, land, atlas)
     return changed

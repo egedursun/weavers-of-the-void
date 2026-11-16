@@ -260,3 +260,4 @@ class MortalContextContext(RulesContext):
     routes: list[RouteLine] = Field(default_factory=list)
     expeditions: list[ExpeditionLine] = Field(default_factory=list)
     changes: list[str] = Field(default_factory=list)
+    registers: list[str] = Field(default_factory=list)

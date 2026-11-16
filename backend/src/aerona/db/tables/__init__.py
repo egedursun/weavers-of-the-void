@@ -126,6 +126,17 @@ from aerona.db.tables.cosmography import (
     RiftRow,
 )
 from aerona.db.tables.cosmos import AppliedFixupRow, CosmosRow, CreatorMoodInputRow, CreatorRow
+from aerona.db.tables.couplings import (
+    CaptiveRestraintRow,
+    CarrionPulseRow,
+    DeepSealRow,
+    FieldAgreementRow,
+    NoveltyStockRow,
+    RiteComponentRow,
+    SignOriginRow,
+    SociolectRow,
+    TeachingRow,
+)
 from aerona.db.tables.crafts import (
     AssistiveAidRow,
     CatchGroundRow,
@@ -401,6 +412,7 @@ from aerona.db.tables.law_depth import (
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.lifecycle_ends import LifecycleStateRow
+from aerona.db.tables.loops import LoopSignalRow
 from aerona.db.tables.lore import (
     CanonFactRow,
     ChronicleEntityRow,
@@ -682,8 +694,10 @@ __all__ = [
     "CanonFactRow",
     "CanonWorkRow",
     "CaptiveCohortRow",
+    "CaptiveRestraintRow",
     "CaptiveRow",
     "CarrierRow",
+    "CarrionPulseRow",
     "CascadeRow",
     "CaseWitnessRow",
     "CastingRow",
@@ -775,6 +789,7 @@ __all__ = [
     "DecipherWorkRow",
     "DeedClaimRow",
     "DeedRow",
+    "DeepSealRow",
     "DeepTimeEventRow",
     "DeepTimeRunRow",
     "DefectionRow",
@@ -865,6 +880,7 @@ __all__ = [
     "FavourRow",
     "FermentCultureRow",
     "FeudRow",
+    "FieldAgreementRow",
     "FleetRow",
     "FolkBeliefRow",
     "ForecastModelRow",
@@ -983,6 +999,7 @@ __all__ = [
     "LoanRow",
     "LongPlanRow",
     "LongevityRow",
+    "LoopSignalRow",
     "LoreTradeRow",
     "LostLandRow",
     "LuckBeliefRow",
@@ -1046,6 +1063,7 @@ __all__ = [
     "NormChangeRow",
     "NotableYearRow",
     "NotificationRow",
+    "NoveltyStockRow",
     "NumberSystemRow",
     "NutrientNeedRow",
     "NutritionScoreRow",
@@ -1144,6 +1162,7 @@ __all__ = [
     "ReverenceRow",
     "RevivalRow",
     "RiftRow",
+    "RiteComponentRow",
     "RiteEffectRow",
     "RiteGrammarRow",
     "RiteProfileRow",
@@ -1178,6 +1197,7 @@ __all__ = [
     "ShipCrewRow",
     "ShipStateRow",
     "SiegeRow",
+    "SignOriginRow",
     "SignalLinkRow",
     "SiteHolderRow",
     "SiteProfitRow",
@@ -1187,6 +1207,7 @@ __all__ = [
     "SlaveMarketRow",
     "SocialCircleRow",
     "SocialNormRow",
+    "SociolectRow",
     "SoilMicrobiotaRow",
     "SoilNutrientRow",
     "SonPowerRow",
@@ -1229,6 +1250,7 @@ __all__ = [
     "SympatheticLinkRow",
     "TavernRow",
     "TaxPolicyRow",
+    "TeachingRow",
     "TechProgrammeRow",
     "TensionRecordRow",
     "TerraformingRow",

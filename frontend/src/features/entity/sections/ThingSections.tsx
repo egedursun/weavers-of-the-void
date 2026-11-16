@@ -6,6 +6,7 @@ import { BelongingSection } from '@/features/belonging/BelongingSection'
 import { BiologySection } from '@/features/biology/BiologySection'
 import { ClimesSection } from '@/features/climes/ClimesSection'
 import { CollectiveSection } from '@/features/collective/CollectiveSection'
+import { CouplingsSection } from '@/features/couplings/CouplingsSection'
 import { CraftsSection } from '@/features/crafts/CraftsSection'
 import { CustomsSection } from '@/features/customs/CustomsSection'
 import { CyclesSection } from '@/features/cycles/CyclesSection'
@@ -89,6 +90,7 @@ export function ThingSections({
         <RenownSection nodeId={nodeId} />
         <HistoriesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
         <MythicSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+        <CouplingsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
         <RecordRowsSection nodeId={nodeId} />
       </>
     )
@@ -151,6 +153,7 @@ export function ThingSections({
       <WorldEndSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <PrehistorySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <TransformSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <CouplingsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <FossilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <GroundsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeKindsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />

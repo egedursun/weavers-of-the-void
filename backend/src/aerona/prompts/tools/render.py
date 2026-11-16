@@ -67,7 +67,7 @@ from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, Ser
 from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
 from aerona.domain.enums.operations import EchelonOrder, QuirkKind
 from aerona.domain.enums.place import PlaceKind, SecretKind
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.polity import CLOSURES, LawKind
 from aerona.domain.enums.regime import SelectorateKind
 from aerona.domain.enums.sacred import BureauRank, DivinationQuestion, OmenVerdict, PetitionKind, SacramentKind, SacramentProtection
 from aerona.domain.enums.structure import BuildingForm
@@ -153,6 +153,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "rite_effects": ", ".join(effect.value for effect in RiteEffectKind),
         "spell_techniques": ", ".join(item.value for item in SpellTechnique),
         "spell_forms": ", ".join(item.value for item in SpellForm),
+        "closure_kinds": ", ".join(item.value for item in sorted(CLOSURES)),
         "spell_ranges": ", ".join(item.value for item in SpellRange),
         "spell_durations": ", ".join(item.value for item in SpellDuration),
         "spell_targets": ", ".join(item.value for item in SpellTarget),

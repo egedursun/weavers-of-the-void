@@ -23,6 +23,7 @@ from aerona.engine.mythic.heroquests import renown_of
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import living_sons, top_region
 from aerona.engine.primitives.records import RecordSpec
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.transform.bodies import fallen_in, living_body
 from aerona.engine.transform.ledger import Ledger
 from aerona.engine.transform.moves import bind, end, make
@@ -83,6 +84,18 @@ async def fall_check(ctx: TickContext, son_id: int) -> str | None:
     return None
 
 
+async def recognise(ctx: TickContext, ledger: Ledger, son: SonRow, body_id: int) -> int:
+    remnant = 0
+    for worshipper in await worshippers_of(ctx.session, son.id):
+        if held(worshipper.id) or worshipper.id == body_id:
+            continue
+        chance = stat_or(worshipper, "piety", ctx.rules.society.default_stat) * ctx.rules.transform.remnant_pct / PERCENT
+        if ctx.rng(f"fall.remnant.{son.id}.{worshipper.id}").chance(chance):
+            await bind(ctx, ledger, (worshipper.id, body_id, BondKind.WORSHIPS), f"knows its fallen god {son.name} in the mortal it became")
+            remnant += 1
+    return remnant
+
+
 async def cast_down(ctx: TickContext, son_id: int, ledger: Ledger) -> int:
     son = await ctx.session.get_one(SonRow, son_id)
     body = await living_body(ctx.session, son)
@@ -106,6 +119,7 @@ async def cast_down(ctx: TickContext, son_id: int, ledger: Ledger) -> int:
         ctx.session.add(name)
         await ctx.session.flush()
         ledger.added(name)
+    await recognise(ctx, ledger, son, body.id)
     ledger.set(son, "status", SonStatus.FALLEN)
     ledger.set(son, "essence", 0)
     ledger.set(son, "fading_epochs", 0)

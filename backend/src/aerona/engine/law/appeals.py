@@ -10,9 +10,11 @@ from aerona.db.tables.law_depth import AppealRow, PrecedentRow, PrisonerRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.justice import Verdict
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of, take_coin
 from aerona.engine.law.systems import advocacy, court_above, courts_of
+from aerona.engine.loops.delay import lagged
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -64,6 +66,7 @@ async def hear_appeal(ctx: TickContext, row: AppealRow, tally: AppealTally) -> N
     if case is None:
         return
     chance = upheld_chance(ctx, case, await advocacy(ctx.session, case.advocate_entity_id, ctx.rules.appeals.advocate_pct))
+    chance = await lagged(ctx, BalanceLoop.PRECEDENT_DRIFT, case.polity_entity_id or case.settlement_entity_id, chance)
     upheld = row.reversed if REVERSED in row.locked else ctx.rng(f"law.appeal.{row.case_id}").chance(chance)
     row.decided_epoch, row.reversed = ctx.epoch, upheld
     if "court" not in case.locked:

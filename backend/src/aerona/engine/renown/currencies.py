@@ -14,10 +14,12 @@ from aerona.db.tables.renown import RulerCurrencyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.faction import OUTLAW_KINDS, FactionKind
 from aerona.domain.enums.justice import Verdict
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.renown import Currency, ReputationAxis
 from aerona.engine.context import TickContext
+from aerona.engine.loops.delay import lagged
 from aerona.engine.museums.reading import grandeur
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -183,7 +185,8 @@ async def restraint(ctx: TickContext, polity_id: int | None) -> tuple[float, flo
         return 0.0, 1.0
     table = ctx.rules.currencies
     suppress = 1 - table.dread_suppress_pct / PERCENT * row.dread / PERCENT
-    press = 1 + table.tyranny_pressure_pct / PERCENT * row.tyranny / PERCENT
+    tyranny = await lagged(ctx, BalanceLoop.TYRANNY_CONCESSIONS, polity_id, row.tyranny)
+    press = 1 + table.tyranny_pressure_pct / PERCENT * tyranny / PERCENT
     return max(0.0, suppress), press
 
 

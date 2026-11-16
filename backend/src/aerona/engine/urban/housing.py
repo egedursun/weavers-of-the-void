@@ -11,11 +11,13 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.urban import DistrictServiceRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.domain.enums.urban import HousingLevel
 from aerona.engine.context import TickContext
+from aerona.engine.loops.delay import lagged
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -130,7 +132,7 @@ async def house_town(ctx: TickContext, settlement: EntityRow, knowledge: Knowled
     people = people_of_districts(ctx.rules, population, town.districts)
     almshouses = await almshouse_levels(ctx, settlement.id)
     sheltered = almshouses * ctx.rules.city_plan.almshouse_shelter
-    unhoused = max(0, population - housing_of(ctx.rules, town)) + priced_out(ctx, town, people)
+    unhoused = max(0, population - housing_of(ctx.rules, town)) + await lagged(ctx, BalanceLoop.GENTRIFICATION, town.entity.id, priced_out(ctx, town, people))
     homeless = max(0, unhoused - sheltered)
     tally.sheltered += min(sheltered, unhoused)
     profile = town.profile

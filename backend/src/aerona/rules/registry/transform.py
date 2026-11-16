@@ -11,6 +11,7 @@ class TransformRules:
     warn_epochs: int = rule(1, 0, 10, T, "Epochs between the warning to the player and a fall or a corruption, while the player can still block it")
     decay: int = rule(5, 0, 100, T, "Progress a transformation loses in an epoch when its conditions no longer hold")
     fall_epochs: int = rule(3, 1, 50, T, "Epochs a son fading while anchored in a mortal body takes to fall into that body instead of dying")
+    remnant_pct: int = rule(40, 0, 100, T, "Share of a worshipper's piety that is its chance to recognise its fallen god in the mortal body")
     fallen_drift_pct: int = rule(10, 0, 100, T, "Share of the gap to its renown and remnant worship a fallen son's existence closes each epoch")
     fallen_attribute_bonus: int = rule(20, 0, 100, T, "Points above a mortal's usual attributes the body of a fallen son keeps from its godhood")
     restoration_existence: int = rule(40, 1, 100, T, "Existence a fallen son must climb back to before it regains godhood")

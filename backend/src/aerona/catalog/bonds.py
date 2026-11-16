@@ -137,6 +137,12 @@ def endpoints_valid(kind: BondKind, subject_type: EntityType, object_type: Entit
     return subject_ok and object_ok
 
 
+def bond_fits(kind: BondKind, subject_type: EntityType, object_type: EntityType) -> bool:
+    if should_swap(kind, subject_type, object_type):
+        subject_type, object_type = object_type, subject_type
+    return endpoints_valid(kind, subject_type, object_type)
+
+
 def should_swap(kind: BondKind, subject_type: EntityType, object_type: EntityType) -> bool:
     rule = DIRECTION_RULES.get(kind)
     if rule is None:

@@ -103,6 +103,22 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "companion_ids": "Mortals where you are who walk beside you (ids), if any",
         },
     ),
+    T.PARLEY: ToolText(
+        "As a commander you parley with the commander of an enemy army in your land before battle; it may end in a truce. 1 action.",
+        {"foe_id": "The enemy army you parley with (an id)"},
+    ),
+    T.OFFER_TERMS: ToolText(
+        "As a commander besieging a town you offer it terms: it may surrender with its honour, and you are bound not to sack it. 1 action.",
+        {"town_id": "The besieged town (an id)"},
+    ),
+    T.DECLARE_CLOSURE: ToolText(
+        "As a ruler you close the waters and hunting grounds of your realm to let their stock return. 1 action.",
+        {"kind": "The closure you declare: {{ closure_kinds }}"},
+    ),
+    T.CREATE_OFFICE: ToolText(
+        "As a ruler you make a new office in your realm, paid from its treasury, to hold those who want a place. 1 action.",
+        {"kind": "The kind of office", "title": "Its title, if it has one of its own"},
+    ),
     T.SEEK_TRUE_NAME: ToolText(
         "You seek a true name, your own if you have lost it or another's, from someone in your land who keeps it: a beast or a mortal who "
         "knows it. Learning a name gives you power over its bearer. 1 action.",

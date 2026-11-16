@@ -34,6 +34,7 @@ from aerona.services.player import (
     cosmic,
     cosmic_orders,
     cosmography,
+    couplings,
     crafts,
     creation,
     creator,
@@ -5175,6 +5176,110 @@ WORLD_END_ACTIONS = (
     ),
 )
 
+COUPLING_ACTIONS = (
+    _sync(
+        Meta("rite_component:set", "Ask or stop asking a rite for a part of the body", G.SOCIETY),
+        couplings.rite_component_set,
+        couplings.ComponentChoice,
+        free,
+        ("S8.6/RP8",),
+    ),
+    _sync(
+        Meta("restraint:set", "Gag, bind or blindfold a captive, or loose them", G.SOCIETY),
+        couplings.restraint_set,
+        couplings.RestraintChoice,
+        free,
+        ("S8.6/RP8",),
+    ),
+    _sync(
+        Meta("sociolect:create", "Give a group its own way of speaking", G.SOCIETY), couplings.sociolect_create, couplings.SociolectDraft, free, ("S8.1/RP8",)
+    ),
+    _sync(
+        Meta("sociolect:merge", "Merge two ways of speaking one language", G.SOCIETY), couplings.sociolect_merge, couplings.SociolectMerge, free, ("S8.1/RP8",)
+    ),
+    _sync(
+        Meta("sign_language:create", "Give a community a signed language", G.SOCIETY), couplings.sign_language_create, couplings.SignDraft, free, ("S8.1/RP8",)
+    ),
+    _sync(
+        Meta("carrion:keep", "Leave the dead of a region where they lie, or let them be buried", G.SOCIETY),
+        couplings.carrion_keep,
+        couplings.CarrionKeep,
+        free,
+        ("S3.2/RP8",),
+    ),
+    _sync(Meta("carrion:clear", "Clear away the dead of a region", G.SOCIETY), couplings.carrion_clear, couplings.CarrionTarget, free, ("S3.2/RP8",)),
+    _sync(
+        Meta("teaching:grant", "Have a spirit or a beast teach the living", G.SOCIETY), couplings.teaching_grant, couplings.TeachingDraft, free, ("S3.3/RP8",)
+    ),
+    _sync(
+        Meta("teaching:block", "Forbid a spirit or a beast to teach someone", G.SOCIETY), couplings.teaching_block, couplings.TeachingBlock, free, ("S3.3/RP8",)
+    ),
+    _sync(Meta("beast_lore:grant", "Give a beast the memory of a happening", G.SOCIETY), couplings.beast_lore_grant, couplings.LoreGrant, free, ("S3.3a/RP8",)),
+    _sync(Meta("beast_lore:reveal", "Have a beast tell what it remembers", G.SOCIETY), couplings.beast_lore_reveal, couplings.LoreReveal, free, ("S3.3a/RP8",)),
+    _sync(
+        Meta("field_agreement:force", "Force commanders to a parley or terms in the field", G.SOCIETY),
+        couplings.field_agreement_force,
+        couplings.AgreementDraft,
+        free,
+        ("S5.8/RP8",),
+    ),
+    _sync(
+        Meta("field_agreement:void", "Void an agreement made in the field", G.SOCIETY),
+        couplings.field_agreement_void,
+        couplings.FieldAgreementTarget,
+        free,
+        ("S5.8/RP8",),
+    ),
+    _sync(Meta("deep_seal:seal", "Seal the deep beneath a place", G.SOCIETY), couplings.deep_seal_seal, couplings.SealDraft, free, ("S6.1/RP8",)),
+    _sync(Meta("deep_seal:unseal", "Break a seal over the deep", G.SOCIETY), couplings.deep_seal_unseal, couplings.DeepSealTarget, free, ("S6.1/RP8",)),
+    _sync(Meta("novelty:set", "Set how new or worn a form is", G.SOCIETY), couplings.novelty_set, couplings.NoveltyDraft, free, ("S7.5/RP8",)),
+    _sync(Meta("novelty:delete", "Forget the fashion of a form", G.SOCIETY), couplings.novelty_delete, couplings.NoveltyTarget, free, ("S7.5/RP8",)),
+    _sync(Meta("sociolect:edit", "Set the record of a way of speaking", G.SOCIETY), couplings.sociolect_edit, couplings.SociolectEdit, free, ("S8.1/RP8",)),
+    _sync(
+        Meta("sociolect:delete", "Strike out the record of a way of speaking", G.SOCIETY),
+        couplings.sociolect_delete,
+        couplings.SociolectTarget,
+        free,
+        ("S8.1/RP8",),
+    ),
+    _sync(
+        Meta("sign_origin:edit", "Set the record of a signed language", G.SOCIETY), couplings.sign_origin_edit, couplings.SignOriginEdit, free, ("S8.1/RP8",)
+    ),
+    _sync(
+        Meta("sign_origin:delete", "Strike out the record of a signed language", G.SOCIETY),
+        couplings.sign_origin_delete,
+        couplings.SignOriginTarget,
+        free,
+        ("S8.1/RP8",),
+    ),
+    _sync(Meta("carrion:edit", "Set the record of a carrion of a region", G.SOCIETY), couplings.carrion_edit, couplings.CarrionEdit, free, ("S3.2/RP8",)),
+    _sync(Meta("teaching:edit", "Set the record of a teaching", G.SOCIETY), couplings.teaching_edit, couplings.TeachingEdit, free, ("S3.3/RP8",)),
+    _sync(Meta("teaching:delete", "Strike out the record of a teaching", G.SOCIETY), couplings.teaching_delete, couplings.TeachingTarget, free, ("S3.3/RP8",)),
+    _sync(
+        Meta("field_agreement:edit", "Set the record of a field agreement", G.SOCIETY),
+        couplings.field_agreement_edit,
+        couplings.FieldAgreementEdit,
+        free,
+        ("S5.8/RP8",),
+    ),
+    _sync(
+        Meta("field_agreement:delete", "Strike out the record of a field agreement", G.SOCIETY),
+        couplings.field_agreement_delete,
+        couplings.FieldAgreementTarget,
+        free,
+        ("S5.8/RP8",),
+    ),
+    _sync(Meta("deep_seal:edit", "Set the record of a seal over the deep", G.SOCIETY), couplings.deep_seal_edit, couplings.DeepSealEdit, free, ("S6.1/RP8",)),
+    _sync(
+        Meta("deep_seal:delete", "Strike out the record of a seal over the deep", G.SOCIETY),
+        couplings.deep_seal_delete,
+        couplings.DeepSealTarget,
+        free,
+        ("S6.1/RP8",),
+    ),
+)
+
+
 TRANSFORM_ACTIONS = (
     _sync(
         Meta("transform:force", "Force a thing to become another kind of thing", G.COSMOS), transform.transform_force, transform.TransformTarget, free, ("F49",)
@@ -5340,6 +5445,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *WORLD_END_ACTIONS,
     *PREHISTORY_ACTIONS,
     *TRANSFORM_ACTIONS,
+    *COUPLING_ACTIONS,
     *FOSSIL_ACTIONS,
     *MUSEUM_ACTIONS,
     *ERAS_ACTIONS,

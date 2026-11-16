@@ -65,6 +65,7 @@ class AccountKind(StrEnum):
     EPIC = "epic"
     INSCRIPTION = "inscription"
     FOUNDING_MYTH = "founding_myth"
+    ELDER_MEMORY = "elder_memory"
 
 
 class AccountStance(StrEnum):

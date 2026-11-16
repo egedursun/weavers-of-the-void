@@ -20,6 +20,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.embodied import embody
 from aerona.engine.context import TickContext
+from aerona.engine.couplings.novelty import novelty_of
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.nature.microbes import culture_lift
 from aerona.engine.notes import note
@@ -234,7 +235,8 @@ async def savour(ctx: TickContext, town: EntityRow, dish: DishRow) -> None:
     if profile is not None and dish.course in {D.STAPLE, D.SIDE, D.DRINK, D.FESTIVE} and "unrest" not in profile.locked:
         profile.unrest = clamp_int(profile.unrest - lift, 0, PERCENT)
     if profile is not None and dish.course in {D.DELICACY, D.FESTIVE} and "prestige" not in profile.locked:
-        profile.prestige = clamp_int(profile.prestige + round_half_up(dish.prestige * table.prestige_pct / PERCENT), 0, PERCENT)
+        fresh = await novelty_of(ctx.session, dish.entity_id) / PERCENT
+        profile.prestige = clamp_int(profile.prestige + round_half_up(dish.prestige * fresh * table.prestige_pct / PERCENT), 0, PERCENT)
     if dish.course is D.RITE and stat(town, "piety") is not None:
         shift_stat(town, "piety", round_half_up(dish.delight * table.rite_pct / PERCENT))
     if dish.course in {D.STAPLE, D.REMEDY} and stat(town, "prosperity") is not None:

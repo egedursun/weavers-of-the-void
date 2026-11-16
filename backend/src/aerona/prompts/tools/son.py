@@ -1703,6 +1703,19 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "you name while every other world is held, and its happenings become the world's past. 1 action.",
         {"world_id": "The world you made that gets a past", "epochs": "How many epochs of past it lives", "reason": "Why you give it a past"},
     ),
+    T.SEND_TEACHER: ToolText(
+        "You send a spirit or a beast in your reach to teach a community what it knows that they lack; what a spirit teaches carries its own errors. 1 action.",
+        {
+            "teacher_id": "The spirit or beast that teaches (an id)",
+            "learner_id": "The community it teaches (an id)",
+            "kind": "What it teaches",
+            "reason": "Why you send it",
+        },
+    ),
+    T.SEAL_BREACH: ToolText(
+        "You seal the deep beneath a place in your reach, so that nothing comes up from it and no one digs into it until the seal wears away or is broken. 1 action.",
+        {"place_id": "The place whose deep you seal (an id)", "reason": "Why you seal it"},
+    ),
     T.PRESS_TRANSFORMATION: ToolText(
         "You press a thing in your reach toward becoming another kind of thing, a change whose conditions it already meets in part. "
         "Its progress toward the change grows; the Creator may have blocked it. 1 action.",

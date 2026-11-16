@@ -111,6 +111,7 @@ class OfficeRow(Base):
     task: Mapped[CouncilTask | None] = mapped_column(enum_type(CouncilTask, "task"))
     task_target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     diligence: Mapped[int] = mapped_column(default=50, server_default="50")
+    sinecure: Mapped[bool] = mapped_column(default=False, server_default="0")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

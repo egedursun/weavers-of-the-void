@@ -7,6 +7,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import MovementMode
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import Commodity
@@ -20,6 +21,7 @@ from aerona.engine.disease.load import endemic_repel
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.legends import haunted_regions
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import closeness, hunger
@@ -229,6 +231,7 @@ async def famine_migration(ctx: TickContext) -> None:
         if community.status is not EntityStatus.CANON or population <= effects.famine_migration_min_population or held(community.id):
             continue
         level = await hunger(ctx.session, community.id) if await pressures_of(ctx.session, community.id) else None
+        level = await lagged(ctx, BalanceLoop.MONSOON_MIGRATION, community.id, level) if level is not None else None
         starving = level >= rules.needs.migration_hunger if level is not None else await is_hungry(ctx, community)
         weight = level / rules.needs.migration_hunger if level is not None and rules.needs.migration_hunger else 1
         if not starving or not rng.chance(rules.world_engine.famine_migration_chance * weight):

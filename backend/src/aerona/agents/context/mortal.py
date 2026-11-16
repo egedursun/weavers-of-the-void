@@ -7,6 +7,7 @@ from aerona.agents.context.belonging_lines import mortal_belonging_lines
 from aerona.agents.context.biology_lines import mortal_biology_lines
 from aerona.agents.context.climes_lines import mortal_climes_lines
 from aerona.agents.context.collective_lines import mortal_collective_lines
+from aerona.agents.context.coupling_lines import register_lines
 from aerona.agents.context.crafts_lines import mortal_crafts_lines
 from aerona.agents.context.customs_lines import mortal_customs_lines
 from aerona.agents.context.cycle_lines import mortal_cycle_lines
@@ -250,6 +251,7 @@ async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> Mor
         rules=scope.rules,
         full=full,
         changes=changes,
+        registers=await register_lines(scope.session, me),
         world_header=await world_header(scope, me.world_id, short=True),
         world_line=await world_line(scope, me.world_id),
         self_detail=await entity_detail(scope, me, private=True),

@@ -22,6 +22,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.mythic import HeroquestBoon, HeroquestState, MythicRealm, QuestTrial
 from aerona.domain.models.entity_stats import ItemStats
@@ -34,6 +35,7 @@ from aerona.engine.faith.book import patron_node
 from aerona.engine.gods.queries import community_of
 from aerona.engine.history.collections import open_collection
 from aerona.engine.lifecycle.wounds import apply_hits, slay
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.names import entitle
 from aerona.engine.mind.book import skill_level
 from aerona.engine.notes import note
@@ -242,8 +244,9 @@ async def rewrite(ctx: TickContext, row: HeroquestRow) -> None:
     legend = await ctx.session.get(LegendProfileRow, row.legend_entity_id) if row.legend_entity_id is not None else None
     if legend is None or held(legend.legend_entity_id):
         return
-    if row.deviated and "distortion" not in legend.locked:
-        legend.distortion = clamp_int(legend.distortion + ctx.rules.heroquests.rewrite_distortion, 0, PERCENT)
+    shift = await lagged(ctx, BalanceLoop.HEROQUEST_SCHISM, legend.legend_entity_id, ctx.rules.heroquests.rewrite_distortion if row.deviated else 0)
+    if shift and "distortion" not in legend.locked:
+        legend.distortion = clamp_int(legend.distortion + shift, 0, PERCENT)
     legend.updated_epoch = ctx.epoch
 
 

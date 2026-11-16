@@ -16,6 +16,7 @@ from aerona.db.session import Database
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES
@@ -69,7 +70,7 @@ async def measure(database: Database, epochs: int, start_doom: int, start_commun
     }
 
 
-async def run(epochs: int) -> dict[str, float]:
+async def run(epochs: int, overrides: dict[str, float] | None = None) -> dict[str, float]:
     with tempfile.TemporaryDirectory() as folder:
         url = f"sqlite+aiosqlite:///{folder}/balance.db"
         database = Database(url)
@@ -79,6 +80,9 @@ async def run(epochs: int) -> dict[str, float]:
             await asyncio.to_thread(command.stamp, build_config(url), "head")
             async with database.write() as session:
                 await seed_rich_cosmos(session)
+                for name, value in sorted((overrides or {}).items()):
+                    namespace, key = name.split(".", 1)
+                    session.add(RuleOverrideRow(namespace=namespace, key=key, value=value))
                 cosmos = await session.get(CosmosRow, 1)
                 start_doom = cosmos.doom_clock if cosmos is not None else 0
                 start_communities = int(

@@ -24,6 +24,7 @@ from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.body.hits import Harm
 from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
+from aerona.engine.couplings.field import offer_terms
 from aerona.engine.economy.equipment import siege_engines
 from aerona.engine.economy.purse import receive_coin, riches_of
 from aerona.engine.environment.book import region_environment, scar_region
@@ -285,6 +286,8 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
         return found
     found.betrayed = await hunger_betrayal(ctx, siege, besieged)
     found.surrendered = found.betrayed or await surrenders(ctx, siege, action)
+    if found.surrendered:
+        await offer_terms(ctx, siege)
     found.assault = not found.surrendered and action is SiegeAction.ASSAULT
     return found
 

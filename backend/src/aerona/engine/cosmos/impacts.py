@@ -17,6 +17,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.environment import NotableYearKind, ScarKind, WeatherKind
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.physics import CosmicFeatureKind, ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind
@@ -30,6 +31,7 @@ from aerona.engine.economy.deposits import Deposit, open_deposit
 from aerona.engine.environment.places import write_kind
 from aerona.engine.environment.years import world_years
 from aerona.engine.industry.stores import perishables
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.research import has_technique
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
@@ -49,7 +51,7 @@ PENDING = ImpactOutcome.PENDING
 async def foreseers(ctx: TickContext, world_id: int) -> list[EntityRow]:
     found: list[EntityRow] = []
     for community in sorted(await canon(ctx.session, COMMUNITY_TYPES, world_id), key=lambda row: row.id):
-        level = await branch_level(ctx.session, community.id, KnowledgeBranch.ASTRONOMY)
+        level = await lagged(ctx, BalanceLoop.IMPACT_PREPARATION, community.id, await branch_level(ctx.session, community.id, KnowledgeBranch.ASTRONOMY))
         if level >= ctx.rules.impacts.predict_level or await has_technique(ctx.session, community.id, Technique.ECLIPSE_PREDICTION):
             found.append(community)
     return found

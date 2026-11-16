@@ -13,6 +13,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import DebtRemedy
@@ -23,6 +24,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.credit import interest_for, on_default, refuses
+from aerona.engine.loops.delay import lagged
 from aerona.engine.notes import note
 from aerona.engine.polity.law_effects import may_coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -213,7 +215,8 @@ async def tend_currencies(ctx: TickContext, book: EconomyBook, tally: MoneyTally
         if issuer is None:
             currency.trust = clamp_int(currency.trust - table.debase_trust_loss, 0, PERCENT)
             continue
-        currency.trust = clamp_int(currency.trust + (currency.purity - currency.trust) * table.trust_drift_pct / PERCENT, 0, PERCENT)
+        purity = await lagged(ctx, BalanceLoop.DEBASEMENT, issuer.id, currency.purity, subject=currency.id)
+        currency.trust = clamp_int(currency.trust + (purity - currency.trust) * table.trust_drift_pct / PERCENT, 0, PERCENT)
         at_war = await _at_war(ctx, issuer.id)
         tempted = at_war and riches(issuer) < table.debase_wealth_below and ctx.rng(f"debase.{currency.id}.{ctx.epoch}").chance(table.debase_chance)
         if tempted and await debase(ctx, book, currency):

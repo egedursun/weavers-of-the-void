@@ -32,6 +32,7 @@ from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import EnergyKind, MethodKind, ProcessKind
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.agrarian.book import method_lift
@@ -41,6 +42,7 @@ from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.industry.energy import available
 from aerona.engine.industry.quality import premium
 from aerona.engine.intrigue.beliefs import BeliefView, price_key
+from aerona.engine.loops.delay import lagged
 from aerona.engine.mind.book import values_for
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -300,7 +302,7 @@ async def adopt(ctx: TickContext, book: EconomyBook, community: EntityRow, spec:
     if gain > 0:
         row.displaced = displace(ctx, book, community, spec.process, gain)
         tally.displaced += row.displaced
-        if row.displaced > 0:
+        if await lagged(ctx, BalanceLoop.MILL_RIOTS, community.id, row.displaced, subject=list(ProcessKind).index(spec.process)) > 0:
             tally.resisted += await resist(ctx, community, spec.process)
     await note(
         ctx,

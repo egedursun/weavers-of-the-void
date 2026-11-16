@@ -8,10 +8,12 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.warfare import CasusBelliRow, WarRow, WarSideRow
 from aerona.domain.enums.communication import OpinionSubject
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import DecisionRule, OfficeKind
 from aerona.domain.enums.war import WarSide
 from aerona.engine.context import TickContext
+from aerona.engine.loops.delay import lagged
 from aerona.engine.mind.book import values_for
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat
@@ -97,7 +99,8 @@ async def rally_support(ctx: TickContext, war: WarRow, side: WarSideRow, *, dead
 
 async def peace_pressure(ctx: TickContext, side: WarSideRow) -> int:
     table = ctx.rules.war_conduct
-    gap = max(0, table.support_neutral - side.support)
+    support = await lagged(ctx, BalanceLoop.WAR_WEARINESS, side.entity_id, side.support)
+    gap = max(0, table.support_neutral - support)
     pressure = gap * table.support_peace_pct / PERCENT
     realm = await realm_of(ctx, side.entity_id)
     profile = await ctx.session.get(PolityProfileRow, realm) if realm is not None else None

@@ -5,6 +5,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import CatchGroundRow
 from aerona.domain.enums.crafts import CatchGround, Gear
 from aerona.engine.climes.shifts import upwelling
+from aerona.engine.couplings.closures import closure_factor
 from aerona.rules.registry import Rules
 
 LAND_GROUNDS = frozenset({CatchGround.TRAPPING, CatchGround.FOWLING})
@@ -31,7 +32,9 @@ def worked(rules: Rules, row: CatchGroundRow) -> float:
 
 async def catch_factor(session: AsyncSession, rules: Rules, source_id: int) -> float:
     rows = list(await session.scalars(select(CatchGroundRow).where(CatchGroundRow.source_entity_id == source_id)))
-    return worked(rules, rows[0]) * await upwelling(session, rules, rows[0].region_entity_id) if rows else 1.0
+    if not rows:
+        return 1.0
+    return worked(rules, rows[0]) * await upwelling(session, rules, rows[0].region_entity_id) * await closure_factor(session, rules, rows[0])
 
 
 async def regrowth_scale(session: AsyncSession, rules: Rules, source_id: int) -> float:

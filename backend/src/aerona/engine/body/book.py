@@ -427,6 +427,12 @@ async def function_level(session: AsyncSession, rules: Rules, node_id: int | Non
     return function_percents(rules, state)[function] if function in FUNCTION_LEVELS else PERCENT
 
 
+async def function_unhindered(session: AsyncSession, rules: Rules, node_id: int, function: BodyFunction) -> int:
+    if await session.get(BodyRow, node_id) is None:
+        return PERCENT
+    return await function_level(session, rules, node_id, function)
+
+
 async def perception_of(session: AsyncSession, rules: Rules, mortal: EntityRow) -> float:
     base = stat_or(mortal, "perception", DEFAULT_STAT)
     body = await session.get(BodyRow, mortal.id)

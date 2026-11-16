@@ -1,6 +1,6 @@
 import {
-  Ban,
   Baby,
+  Ban,
   BookOpen,
   Castle,
   Church,
@@ -11,8 +11,8 @@ import {
   Flame,
   Gamepad2,
   Gavel,
-  Handshake,
   Hammer,
+  Handshake,
   Heart,
   HeartCrack,
   Home,

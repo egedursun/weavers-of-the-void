@@ -6,12 +6,14 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.bonds import endpoints_valid
 from aerona.catalog.entity_types import can_contain
 from aerona.catalog.transform_lines import LINES
 from aerona.catalog.transformations import ENGINE_KINDS, TRANSFORMS, WARNED_KINDS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.session import Database
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import PhenomenonProfileRow
 from aerona.db.tables.culture import IdeologyProfileRow
@@ -260,7 +262,19 @@ async def test_every_watched_transformation_can_be_forced_recorded_and_undone(da
         cosmos = await seed_rich_cosmos(session)
         ctx = await manual_context(session, "test_transform", Rules())
         subject = await BUILDERS[kind](ctx, cosmos)
+        witness = cosmos.frontiers[0].settlements[0]
+        before = await session.get(EntityRow, subject)
+        if before is not None:
+            await connect(session, witness.id, subject, BondKind.RELATED, ctx.epoch, description="an old tie")
         row = await force(ctx, kind, subject)
+        after = await session.get(EntityRow, row.result_node_id)
+        if before is not None and after is not None and after.id != subject and endpoints_valid(BondKind.RELATED, witness.entity_type, after.entity_type):
+            assert (
+                await session.scalar(
+                    select(BondRow.id).where(BondRow.source_node_id == witness.id, BondRow.target_node_id == after.id, BondRow.kind == BondKind.RELATED)
+                )
+                is not None
+            )
         assert row.kind is kind and row.state is TransformState.DONE and row.epoch == ctx.epoch
         assert row.result_node_id is not None and await session.get(NodeRow, row.result_node_id) is not None
         assert row.trigger is KINDS[kind].forced_trigger and row.undo

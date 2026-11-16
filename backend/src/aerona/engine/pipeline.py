@@ -38,6 +38,7 @@ from aerona.engine.phases import (
     cosmic_economy,
     cosmography,
     cosmos_upkeep,
+    couplings,
     crafts,
     creator_mood,
     creatures,
@@ -241,6 +242,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + fossils.PHASES
     + prehistory.PHASES
     + transformations.PHASES
+    + couplings.PHASES
     + museums.PHASES
     + ages.PHASES
     + folkways.PHASES
@@ -363,7 +365,9 @@ SUB_ENGINE_STAGE = stage(
     "campaigns",
     "vendetta_cycles",
     "prisoners",
+    "restrain_casters",
     "war_casualties",
+    "field_diplomacy",
     "veterans",
     "crossings",
     "travel",
@@ -450,6 +454,8 @@ ECONOMY_STAGE = stage(
     "cursed_items",
     "magic_storms",
     "resource_regeneration",
+    "deep_seals",
+    "closures",
 )
 SOCIETY_STAGE = stage(
     "schisms",
@@ -494,6 +500,10 @@ SOCIETY_STAGE = stage(
     "intrigue",
     "dialect_divergence",
     "language_death",
+    "sign_languages",
+    "sociolects",
+    "teachings",
+    "office_creation",
     "language_contact",
     "language_cycles",
     "divine_tongues",
@@ -521,6 +531,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "fossils",
     "dreamt_pasts",
     "transformations",
+    "novelty",
     "collections",
     "gardens",
     "world_views",
@@ -720,6 +731,7 @@ TICK_ORDER: tuple[Phase, ...] = (
 
 PRE_TRANSITION_ORDER = stage("local_gods")
 GROWTH_STAGE = stage(
+    "carrion",
     "law_fertility",
     "population_baseline",
     "climate_transition",

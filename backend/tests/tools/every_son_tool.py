@@ -67,6 +67,7 @@ from tests.tools.every_setup import (
 )
 from tests.tools.every_setup_ages import long_winter, open_tale, turning_cosmos
 from tests.tools.every_setup_arts import art_work, built_construct, forged_work, two_clubs, wild_beast
+from tests.tools.every_setup_couplings import teaching_spirit
 from tests.tools.every_setup_crafts import material_resource
 from tests.tools.every_setup_eras import realm_programme
 from tests.tools.every_setup_folkways import owned_item
@@ -425,6 +426,8 @@ SON_CASES: dict[str, Case] = {
     "shape_biology": Case(plain(holder_id=people, variant="aerial", gain=True, reason=REASON)),
     "wake_lore": Case(plain(lore_id=created("theory"), reason=REASON), forgotten_theory),
     "plan_prehistory": Case(plain(world_id=created("world"), epochs=3, reason=REASON), son_made_world),
+    "send_teacher": Case(plain(teacher_id=created("spirit"), learner_id=settlement, kind="rite", reason=REASON), teaching_spirit),
+    "seal_breach": Case(plain(place_id=settlement, reason=REASON)),
     "press_transformation": Case(plain(kind="star_god", subject_id=created("star"), reason=REASON), worshipped_star),
     "lay_bare_fossils": Case(plain(region_id=created("region"), reason=REASON), hidden_fossils),
     "found_museum": Case(plain(town_id=settlement, reason=REASON)),

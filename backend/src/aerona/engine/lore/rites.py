@@ -78,6 +78,7 @@ from aerona.engine.cosmos.omens import celestial_rite_pct
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.rifts import seal_near, tear_toward
 from aerona.engine.cosmos.sanity import shift_sanity
+from aerona.engine.couplings.rite_body import component_bar
 from aerona.engine.crafts.haunting import bind_spirit
 from aerona.engine.crafts.linking import affinity_boost, link_boost, link_strength
 from aerona.engine.divine.decrees import outlawed_schools
@@ -467,7 +468,8 @@ async def unmet(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> str
         (mortal and await unclean(ctx.session, caster.id), "the caster is unclean in the eyes of their people"),
         (await state_of(ctx.session, row.rite_entity_id) is LifecycleState.LOST, "no one living knows that rite and no text of it survives"),
     )
-    return next((reason for failed, reason in checks if failed), None)
+    reason = next((reason for failed, reason in checks if failed), None)
+    return reason if reason is not None else (await component_bar(ctx, caster, row.rite_entity_id)).reason
 
 
 async def dominion_price(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> float:
@@ -1079,7 +1081,7 @@ async def cast(
     strength *= await drawn_power(ctx, atlas, caster, target, row=row, genome=genome)
     strength *= shaping.strength * await office_power(ctx, patron, shaping.grammar.form)
     strength *= await rite_factor(ctx.session, ctx.rules.divine_tongues.rite_pct, caster.id, patron)
-    strength *= await name_power(ctx, caster.id, target)
+    strength *= await name_power(ctx, caster.id, target) * (await component_bar(ctx, caster, rite.id)).factor
     strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
     strength *= await magic_factor(ctx, caster) * await tech_relief(ctx.session, ctx.rules, caster.id, EraChannel.RITES)
     strength *= await site_factor(ctx, caster, row)

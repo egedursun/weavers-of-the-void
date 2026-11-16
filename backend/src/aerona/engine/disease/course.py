@@ -12,6 +12,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import DiseaseVector, OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.enums.war import SiegeStatus
 from aerona.domain.models.entity_stats import TraditionStats
@@ -21,6 +22,7 @@ from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.emergence import WET, new_strain, plain
 from aerona.engine.disease.origin import caused_by_origin, mark_strain_origin, origin_line
 from aerona.engine.disease.outbreaks import QUARANTINE_LOCK, STATUS_LOCK, lethality_factor, spread_factor, tally
+from aerona.engine.loops.delay import lagged
 from aerona.engine.military.units import resize
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
@@ -78,6 +80,7 @@ async def finish(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow) -> 
     reached = min(1.0, outbreak.infected / max(1, people))
     for community in communities:
         rows = book.immunity.setdefault((community.id, outbreak.disease_entity_id), {})
+        survived = await lagged(ctx, BalanceLoop.ENDEMIC_IMMUNITY, community.id, reached, subject=outbreak.disease_entity_id)
         for band in AgeBand:
             row = rows.get(band)
             if row is None:
@@ -88,7 +91,7 @@ async def finish(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow) -> 
                 rows[band] = row
             if row.locked:
                 continue
-            row.immune_pct = clamp_int(max(row.immune_pct, reached * table.survivor_immunity_pct), 0, PERCENT)
+            row.immune_pct = clamp_int(max(row.immune_pct, survived * table.survivor_immunity_pct), 0, PERCENT)
             row.since_epoch = ctx.epoch
     ground = await ctx.session.get(RegionEnvironmentRow, outbreak.region_entity_id)
     fitting = ground is not None and (ground.wetland >= WET or ground.disease_load >= ENDEMIC_LOAD)

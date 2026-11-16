@@ -20,6 +20,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.sacred import MillenarianStage, MysticState, TheodicyCause, TheodicyResolution, VisionKind
 from aerona.domain.enums.society import Commodity
@@ -30,6 +31,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import psi_of
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.faith.zealotry import record_heresy
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.thoughts import think
@@ -474,6 +476,7 @@ async def test_doctrines(ctx: TickContext, tally: MysteryTally) -> None:
         if held(town.id):
             continue
         suffering, cause = await suffering_of(ctx, town, signs)
+        suffering = await lagged(ctx, BalanceLoop.THEODICY, town.id, suffering)
         if cause is None or suffering < table.suffering_at:
             continue
         cult = await church_of(ctx.session, town)

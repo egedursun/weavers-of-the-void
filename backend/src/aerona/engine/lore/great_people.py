@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,11 +20,14 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.discovery import GreatField
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.mind import SkillSource
+from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.mind import MemoryKind, SkillSource
 from aerona.domain.enums.structure import ConstructionState
+from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
+from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.learning import realm_of
 from aerona.engine.lore.research import holder_levels
 from aerona.engine.lore.research_depth import open_techniques
@@ -38,6 +41,8 @@ from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.services.community_relations import change_relation
+from aerona.engine.services.war import declare_war
 from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
 
@@ -305,5 +310,36 @@ async def pending_deeds(ctx: TickContext) -> int:
     return done
 
 
+async def great_envy(ctx: TickContext) -> int:
+    table = ctx.rules.discovery
+    held_by = Counter(
+        row.holder_entity_id
+        for row, status in await ctx.session.execute(
+            select(GreatPersonRow, EntityRow.status)
+            .join(EntityRow, EntityRow.id == GreatPersonRow.mortal_entity_id)
+            .where(GreatPersonRow.holder_entity_id.is_not(None))
+        )
+        if status is EntityStatus.CANON
+    )
+    atlas = await RegionAtlas.load(ctx.session)
+    found = await communities(ctx.session)
+    wars = 0
+    for holder_id, count in sorted(held_by.items()):
+        owner = next((item for item in found if item.id == holder_id), None)
+        if owner is None or holder_id is None or held(holder_id) or await lagged(ctx, BalanceLoop.GREAT_PERSON_ENVY, holder_id, count) < table.envied_great:
+            continue
+        for other in [item for item in found if item.id != holder_id and atlas.adjacent(item.id, holder_id) and not held(item.id)]:
+            regard = await change_relation(ctx, other.id, holder_id, -table.great_envy_loss, MemoryKind.ENVIED)
+            if regard > -ctx.rules.wonders.war_relation or not ctx.rng(f"great.envy.{other.id}.{holder_id}.{ctx.epoch}").chance(table.great_envy_war_chance):
+                continue
+            wars += int(await declare_war(ctx, other.id, holder_id, f"to break the hold of {owner.name} on its great people", cause=WarCause.ENVY))
+    return wars
+
+
 async def great_people(ctx: TickContext) -> dict[str, int]:
-    return {"great_points": await gather_points(ctx), "great_people": await promote_great(ctx), "great_deeds": await pending_deeds(ctx)}
+    return {
+        "great_points": await gather_points(ctx),
+        "great_people": await promote_great(ctx),
+        "great_deeds": await pending_deeds(ctx),
+        "great_envy_wars": await great_envy(ctx),
+    }

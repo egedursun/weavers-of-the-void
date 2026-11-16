@@ -18,6 +18,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.orders import (
     AllocationMode,
     Compensation,
@@ -32,6 +33,7 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
+from aerona.engine.loops.delay import lagged
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.knowledge import branch_level
@@ -246,6 +248,17 @@ async def give_out(ctx: TickContext, centre: int, towns: list[int], amount: int)
     return given
 
 
+async def afford_centre(ctx: TickContext, realm: PolityProfileRow, towns: int) -> bool:
+    cost = await lagged(ctx, BalanceLoop.REDISTRIBUTION_COLLAPSE, realm.polity_entity_id, towns * ctx.rules.economic_orders.redistribution_upkeep)
+    if "treasury" in realm.locked:
+        return True
+    if realm.treasury < cost:
+        realm.treasury = 0
+        return cost <= 0
+    realm.treasury -= cost
+    return True
+
+
 async def run_flows(ctx: TickContext, order: EconomicOrderRow, realm: PolityProfileRow, towns: list[int], tally: OrderTally) -> None:
     table = ctx.rules.economic_orders
     entity = await ctx.session.get(EntityRow, order.polity_entity_id)
@@ -256,6 +269,9 @@ async def run_flows(ctx: TickContext, order: EconomicOrderRow, realm: PolityProf
         await collapse(ctx, entity, towns, tally)
         return
     if order.allocation is A.REDISTRIBUTION and centre is not None:
+        if not await afford_centre(ctx, realm, len(towns)):
+            await collapse(ctx, entity, towns, tally)
+            return
         gathered = await gather(ctx, centre, towns, table.redistribution_share, loss=table.redistribution_storage_loss_pct)
         tally.redistributed += await give_out(ctx, centre, towns, gathered)
     elif order.allocation is A.OBLIGATION and centre is not None:

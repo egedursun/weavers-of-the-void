@@ -46,6 +46,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import WorldView, world_views
+from aerona.engine.couplings.field import parley
 from aerona.engine.demography.biology import acclimatised, profiles_of
 from aerona.engine.economy.equipment import march_burden, siege_engines, suffer_heat
 from aerona.engine.economy.loot import loot_temples
@@ -1174,12 +1175,20 @@ async def hail_victor(ctx: TickContext, winner: EntityRow, commander_id: int | N
 
 
 async def fight_battle(
-    ctx: TickContext, theatre: Theatre, item: OngoingWar, armies: dict[int, tuple[EntityRow, ArmyRow]], ground: BattleGround | None = None
+    ctx: TickContext,
+    theatre: Theatre,
+    item: OngoingWar,
+    armies: dict[int, tuple[EntityRow, ArmyRow]],
+    ground: BattleGround | None = None,
+    *,
+    forced: bool = False,
 ) -> BattleReport | None:
     campaigns = ctx.rules.campaigns
     war = item.war
     attacker, defender = await living_entity(ctx.session, item.attacker_id), await living_entity(ctx.session, item.defender_id)
     if attacker is None or defender is None:
+        return None
+    if not forced and await parley(ctx, war, (attacker, defender), (armies[attacker.id][0].id, armies[defender.id][0].id)):
         return None
     ground = ground or BattleGround()
     besieged = _besieged(ctx.rules, defender)
@@ -1914,7 +1923,7 @@ async def force_battle(ctx: TickContext, war_id: int, region_id: int | None = No
         raise ValidationFailedError("A battle can only be fought in a known region.")
     slot = f"forced.{item.war.id}.{item.war.battles}"
     ground = theatre.battleground(ctx, item.war, defender, slot=slot, season_index=item.war.battles, year=None, region_id=region_id)
-    report = await fight_battle(ctx, theatre, item, await _armies(ctx, theatre, item.war, attacker, defender), ground)
+    report = await fight_battle(ctx, theatre, item, await _armies(ctx, theatre, item.war, attacker, defender), ground, forced=True)
     if report is None:
         raise ConflictError("The battle could not be fought.")
     return report

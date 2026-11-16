@@ -16,6 +16,7 @@ from aerona.engine.transform.cosmos import spread_star_light
 from aerona.engine.transform.gods import tend_fallen
 from aerona.engine.transform.kinds import KINDS
 from aerona.engine.transform.ledger import Ledger
+from aerona.engine.transform.moves import carry_bonds
 from aerona.engine.transform.record import record_transformation
 
 WARNINGS = {
@@ -62,6 +63,7 @@ async def warn(ctx: TickContext, row: TransformProspectRow) -> None:
 async def perform(ctx: TickContext, kind: TransformKind, subject_id: int, trigger: TransformTrigger) -> TransformationRow:
     ledger = Ledger()
     result = await KINDS[kind].perform(ctx, subject_id, ledger)
+    ctx.count("bonds_carried", await carry_bonds(ctx, ledger, subject_id, result))
     row = await record_transformation(ctx, kind, subject_id, result, trigger=trigger, ledger=ledger)
     prospect = await prospect_of(ctx, kind, subject_id)
     if prospect is not None:

@@ -35,3 +35,15 @@ def test_a_rite_is_held_by_owning_it_since_knowing_reaches_only_knowledge_and_pl
 def test_the_guard_finds_a_rite_taught_as_knowledge() -> None:
     old = "async def recover_rite(ctx, finder, known):\n    await connect(ctx.session, finder.id, known[0].id, BondKind.KNOWS, ctx.epoch)\n"
     assert misplaced(old) == [2]
+
+
+def test_a_bond_is_checked_after_its_direction_is_settled() -> None:
+    allowed = {SOURCE / "catalog" / "bonds.py", SOURCE / "db" / "repositories" / "bonds.py"}
+    bare = [
+        f"{path.relative_to(SOURCE)}:{number}"
+        for path in sorted(SOURCE.rglob("*.py"))
+        if path not in allowed
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1)
+        if "endpoints_valid(" in line and "companion_endpoints_valid" not in line
+    ]
+    assert bare == [], "check a bond with bond_fits, which turns it the way the store turns it before reading its ends"
