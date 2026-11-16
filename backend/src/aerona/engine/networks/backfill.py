@@ -63,7 +63,11 @@ async def signal_relays(ctx: TickContext) -> int:
     made = 0
     for owner_id, regions in sorted(chains.items()):
         owner = await ctx.session.get(EntityRow, owner_id)
-        if owner is not None and await relay(ctx, owner, regions, f"the signal chain of {owner.name}"):
+        if (
+            owner is not None
+            and not await founded(ctx, owner.id, f"the signal chain of {owner.name}")
+            and await relay(ctx, owner, regions, f"the signal chain of {owner.name}")
+        ):
             made += 1
     return made
 
@@ -72,9 +76,24 @@ async def post_relays(ctx: TickContext) -> int:
     made = 0
     for polity, _ in await polities(ctx.session):
         towns = [town.id for town in await realm_towns(ctx.session, polity.id)]
-        if len(towns) > 1 and await holders_know(ctx.session, [polity.id, *towns], Technique.POSTAL_SERVICE):
+        known = await holders_know(ctx.session, [polity.id, *towns], Technique.POSTAL_SERVICE)
+        if len(towns) > 1 and known and not await founded(ctx, polity.id, f"the post of {polity.name}"):
             made += int(await relay(ctx, polity, towns, f"the post of {polity.name}"))
     return made
+
+
+async def founded(ctx: TickContext, owner_id: int, name: str) -> bool:
+    found = await ctx.session.scalar(
+        select(NetworkProfileRow.network_entity_id)
+        .join(EntityRow, EntityRow.id == NetworkProfileRow.network_entity_id)
+        .where(NetworkProfileRow.owner_node_id == owner_id, EntityRow.name == name)
+        .limit(1)
+    )
+    return found is not None
+
+
+async def keep_relays(ctx: TickContext) -> int:
+    return await signal_relays(ctx) + await post_relays(ctx)
 
 
 async def relay_backfill(ctx: TickContext) -> int:

@@ -10,7 +10,7 @@ from aerona.domain.enums.made import RelicStance, RelicState, RelicUse
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.made.backfill import legacy_backfill
+from aerona.engine.made.backfill import keep_made_kinds, legacy_backfill
 from aerona.engine.made.doctrine import doctrine_here
 from aerona.engine.minds.values import best_level
 from aerona.engine.notes import note
@@ -110,6 +110,7 @@ async def salvage(ctx: TickContext) -> int:
 
 
 @reads(
+    "table.augments",
     "table.cult_doctrines",
     "table.culture_values",
     "table.entities",
@@ -119,6 +120,7 @@ async def salvage(ctx: TickContext) -> int:
     "table.people_substrates",
     "table.place_profiles",
     "table.prostheses",
+    "table.replicator_lines",
     "table.salvage_sites",
 )
 @writes(
@@ -133,6 +135,7 @@ async def salvage(ctx: TickContext) -> int:
 )
 async def keep_relics(ctx: TickContext) -> None:
     ctx.count("made_world_backfilled", await legacy_backfill(ctx))
+    ctx.count("made_kinds_kept", await keep_made_kinds(ctx))
     ctx.count("relics_marked", await mark_collapse(ctx))
     for relic in list(await ctx.session.scalars(select(MadeRelicRow).order_by(MadeRelicRow.thing_node_id))):
         thing = await ctx.session.get(EntityRow, relic.thing_node_id)

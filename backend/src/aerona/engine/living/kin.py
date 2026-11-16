@@ -112,7 +112,17 @@ async def remove_symbiont(ctx: TickContext, row: SymbiontRow) -> None:
     host = await ctx.session.get(EntityRow, row.host_node_id)
     if host is not None and not held(host.id):
         shift_stat(host, "hp", -ctx.rules.symbionts.removal_harm * DEPTH[row.placement], 0)
+        await lose_partner(ctx, host)
     await ctx.session.delete(row)
+
+
+async def lose_partner(ctx: TickContext, host: EntityRow) -> None:
+    if host.entity_type is not EntityType.PEOPLE or held(host.id):
+        return
+    loss = ctx.rules.symbionts.partner_loss
+    shift_stat(host, "prosperity", -loss, 0)
+    shift_stat(host, "craft", -loss, 0)
+    await note(ctx, f"{host.name} lost the partner that lived with them.", key="living.partner_lost", ids=[host.id])
 
 
 async def generation_of(ctx: TickContext, source_id: int) -> int:

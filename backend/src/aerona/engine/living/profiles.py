@@ -160,6 +160,7 @@ async def live(ctx: TickContext, row: LivingProfileRow, thing: EntityRow) -> Non
     if "growth_stage" not in row.locked:
         row.growth_stage = stage_for(ctx, row)
     await breed(ctx, row)
+    await turn_away(ctx, row, thing)
     if row.growth_stage is GrowthStage.DEAD:
         await end(ctx, row, thing)
 
@@ -175,6 +176,14 @@ async def keep_profiles(ctx: TickContext) -> int:
         await live(ctx, row, thing)
         kept += 1
     return kept
+
+
+async def turn_away(ctx: TickContext, row: LivingProfileRow, thing: EntityRow) -> None:
+    if row.bonded_to_node_id is None or "bonded_to_node_id" in row.locked or not refuses(ctx, row):
+        return
+    handler = await ctx.session.get(EntityRow, row.bonded_to_node_id)
+    row.bonded_to_node_id = None
+    await note(ctx, f"{thing.name} turned from {handler.name if handler else 'its handler'} and answers to no one now.", key="living.turned", ids=[thing.id])
 
 
 def refuses(ctx: TickContext, row: LivingProfileRow | None) -> bool:

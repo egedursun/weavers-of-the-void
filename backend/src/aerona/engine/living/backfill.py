@@ -97,7 +97,7 @@ async def banks(ctx: TickContext) -> int:
     return made
 
 
-async def bred_lines(ctx: TickContext) -> int:
+async def bred_species_lines(ctx: TickContext) -> int:
     made = 0
     lined = set(await ctx.session.scalars(select(LivingLineRow.species_entity_id).where(LivingLineRow.species_entity_id.is_not(None))))
     bred = select(SpeciesProfileRow.species_entity_id).where(SpeciesProfileRow.stage.in_(list(BRED))).order_by(SpeciesProfileRow.species_entity_id)
@@ -117,10 +117,21 @@ async def bred_lines(ctx: TickContext) -> int:
             )
         )
         made += 1
+    return made
+
+
+async def bred_lines(ctx: TickContext) -> int:
+    made = await bred_species_lines(ctx)
+    housed = set(
+        await ctx.session.scalars(
+            select(LivingLineRow.owner_node_id).where(LivingLineRow.method == CultivationMethod.SELECTIVE_BREEDING, LivingLineRow.species_entity_id.is_(None))
+        )
+    )
     for plan in list(await ctx.session.scalars(select(BreedingPlanRow).order_by(BreedingPlanRow.plan_id))):
         house = await ctx.session.get(EntityRow, plan.house_entity_id)
-        if house is None or held(house.id):
+        if house is None or held(house.id) or house.id in housed:
             continue
+        housed.add(house.id)
         ctx.session.add(
             LivingLineRow(
                 name=f"the line {house.name} seeks by marriage",
@@ -150,6 +161,10 @@ async def vat_food(ctx: TickContext) -> int:
         )
         made += 1
     return made
+
+
+async def keep_kinds_alive(ctx: TickContext) -> int:
+    return await bioships(ctx) + await grown_works(ctx) + await banks(ctx) + await bred_lines(ctx) + await vat_food(ctx) + await doctrine_stances(ctx)
 
 
 async def legacy_backfill(ctx: TickContext) -> int:

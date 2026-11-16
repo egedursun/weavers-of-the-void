@@ -23,7 +23,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.profiles import profile_of
 from aerona.engine.notes import note
-from aerona.engine.powers.backfill import legacy_backfill
+from aerona.engine.powers.backfill import keep_power_kinds, legacy_backfill
 from aerona.engine.powers.devices import devices_of
 from aerona.engine.powers.sources import keep_density, keep_knowledge
 from aerona.engine.powers.use import use
@@ -272,6 +272,7 @@ async def train(ctx: TickContext, power: PowerRow) -> None:
     "table.entity_traits",
     "table.equipment_models",
     "table.equipment_stores",
+    "table.hidden_truths",
     "table.ley_lines",
     "table.magic_system_links",
     "table.magic_systems",
@@ -311,6 +312,7 @@ async def train(ctx: TickContext, power: PowerRow) -> None:
 )
 async def keep_powers(ctx: TickContext) -> None:
     ctx.count("powers_backfilled", await legacy_backfill(ctx))
+    ctx.count("power_kinds_kept", await keep_power_kinds(ctx))
     ctx.count("source_lands_kept", await keep_density(ctx))
     ctx.count("source_knowledge_changed", await keep_knowledge(ctx))
     ctx.count("power_spans_ended", await end_spans(ctx))

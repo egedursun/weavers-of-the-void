@@ -43,7 +43,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.genetics.genome import aptitudes
 from aerona.engine.industry.energy import leys_by_region
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.primitives.once import once
 
+BURIED_TITLE = "what truly happened"
 LEGACY_FIXUP = "powers.legacy_backfill"
 LEY_STEP = 15
 SEEKER_ROLES = frozenset({MortalRole.JOURNALIST, MortalRole.SAGE, MortalRole.SPY})
@@ -158,6 +160,7 @@ async def built_in_source(session: AsyncSession, source: MagicSource) -> PowerSo
     return row
 
 
+@once
 async def sources(ctx: TickContext) -> int:
     made = 0
     for source in MagicSource:
@@ -169,8 +172,9 @@ async def sources(ctx: TickContext) -> int:
 async def ley_density(ctx: TickContext) -> int:
     ley = await built_in_source(ctx.session, MagicSource.LEY)
     made = 0
+    dense = set(await ctx.session.scalars(select(SourceDensityRow.region_entity_id).where(SourceDensityRow.source_id == ley.id)))
     for region, lines in sorted((await leys_by_region(ctx)).items()):
-        if held(region):
+        if held(region) or region in dense:
             continue
         base = clamp_percent(ctx.rules.power_sources.start_density // 2 + lines * LEY_STEP)
         ctx.session.add(SourceDensityRow(region_entity_id=region, source_id=ley.id, density=base, base_density=base, renewal_pct=10, depleted=False, locked=[]))
@@ -257,12 +261,14 @@ async def gifted(ctx: TickContext) -> int:
 
 async def buried_histories(ctx: TickContext) -> int:
     made = 0
+    kept = set(await ctx.session.scalars(select(HiddenTruthRow.subject_node_id).where(HiddenTruthRow.title == BURIED_TITLE)))
     for secret in list(await ctx.session.scalars(select(SecretRow).where(SecretRow.kind == IntrigueSecret.TRUE_HISTORY).order_by(SecretRow.id))):
         subject = secret.about_node_id or secret.holder_node_id
-        if held(subject):
+        if held(subject) or subject in kept:
             continue
+        kept.add(subject)
         truth = HiddenTruthRow(
-            title="what truly happened",
+            title=BURIED_TITLE,
             description="",
             subject_node_id=subject,
             kind=HiddenTruthKind.EVENT,
@@ -282,6 +288,10 @@ async def buried_histories(ctx: TickContext) -> int:
                 ctx.session.add(TruthSeekerRow(truth_id=truth.id, seeker_node_id=knower, aim=SeekerAim.EXPOSE, progress=0, began_epoch=ctx.epoch, locked=[]))
         made += 1
     return made
+
+
+async def keep_power_kinds(ctx: TickContext) -> int:
+    return await ley_density(ctx) + await systems(ctx) + await gifted(ctx) + await buried_histories(ctx)
 
 
 async def legacy_backfill(ctx: TickContext) -> int:

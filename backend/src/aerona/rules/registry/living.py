@@ -32,6 +32,7 @@ class LivingRules:
     gift_at: int = rule(40, 0, 100, C, "Strength of a designed gift at which things of a line are born with a power")
     escape_spread_pct: int = rule(100, 0, 1000, C, "Extra chance of escape a flying or swimming line has (%)")
     unfed_army_harm: int = rule(10, 0, 100, C, "Condition a living army loses each epoch it goes unfed")
+    link_heal: int = rule(1, 0, 20, C, "Epochs a cut in a grown link heals by each epoch")
 
 
 @dataclass(frozen=True)
@@ -70,6 +71,7 @@ class SymbiontRules:
     control_pull: int = rule(10, 0, 100, C, "Opinion a controlling symbiont moves its host each epoch toward its own kind")
     spread_chance: int = rule(5, 0, 100, C, "Chance each epoch a parasite spreads to another in its host's town")
     removal_harm: int = rule(10, 0, 100, C, "Harm removing a symbiont does to its host by placement")
+    partner_loss: int = rule(10, 0, 100, C, "Prosperity and craft a people bonded to a symbiont line loses when the partnership ends")
 
 
 @dataclass(frozen=True)
@@ -86,6 +88,8 @@ class LivingProductionRules:
     yield_pct: int = rule(100, 0, 1000, C, "Share of a designed yield trait that adds to what living works and orchards give (%)")
     works_feed: int = rule(1, 0, 100, C, "Feed a living works eats each season")
     sick_works_pct: int = rule(50, 0, 100, C, "Health below which living works give less")
+    seed_due: int = rule(2, 0, 100, C, "Coin a grower pays the owner of a sterile or maker-bound line for each planting each epoch")
+    seed_regard: int = rule(2, 0, 100, C, "Regard a grower comes to owe the owner of the line it depends on each epoch")
 
 
 @dataclass(frozen=True)

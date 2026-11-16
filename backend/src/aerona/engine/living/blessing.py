@@ -7,6 +7,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.living import Fertility
 from aerona.engine.context import TickContext
+from aerona.engine.living.kin import lose_partner
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
@@ -53,6 +54,9 @@ async def curse_line(ctx: TickContext, line: LivingLineRow, god_id: int) -> Livi
             continue
         symbiont.strength = clamp_percent(symbiont.strength - table.blight_harm)
         if symbiont.strength <= 0:
+            host = await ctx.session.get(EntityRow, symbiont.host_node_id)
+            if host is not None:
+                await lose_partner(ctx, host)
             await ctx.session.delete(symbiont)
     if line.species_entity_id is not None:
         await connect(ctx.session, god_id, line.species_entity_id, BondKind.CURSED, ctx.epoch, description=f"cursed the line {line.name}")

@@ -17,7 +17,7 @@ from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.values import best_level, liberty_of
-from aerona.engine.networks.backfill import relay_backfill
+from aerona.engine.networks.backfill import keep_relays, relay_backfill
 from aerona.engine.networks.book import carrier_days, running, shake_ledger
 from aerona.engine.networks.energy import CARRIER_ENERGY, starved
 from aerona.engine.notes import note
@@ -213,6 +213,7 @@ async def converge(ctx: TickContext, profile: NetworkProfileRow, rows: list[Netw
 )
 async def networks(ctx: TickContext) -> None:
     ctx.count("relay_networks_founded", await relay_backfill(ctx))
+    ctx.count("relay_networks_kept", await keep_relays(ctx))
     for profile in list(await ctx.session.scalars(select(NetworkProfileRow).order_by(NetworkProfileRow.network_entity_id))):
         network = await ctx.session.get(EntityRow, profile.network_entity_id)
         if network is None or network.status is not EntityStatus.CANON or held(network.id):

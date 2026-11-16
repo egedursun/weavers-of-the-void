@@ -8,14 +8,19 @@ from aerona.db.tables.agrarian import PerennialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.tables.living import LivingLineRow, LivingProfileRow
+from aerona.db.tables.networks import NetworkOutageRow, NetworkProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.industry import MethodKind, ProcessKind
-from aerona.domain.enums.living import LineTrait
+from aerona.domain.enums.living import Fertility, LineTrait
+from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.networks import NetworkCarrier
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.living.traits import eased, traits_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.services.community_relations import change_relation
 
 LIVING_METHODS = frozenset({MethodKind.CULTURED_CROPS, MethodKind.GROWN_TIMBER, MethodKind.SPUN_FIBRE, MethodKind.VAT_CULTURE, MethodKind.BIOREACTOR})
 
@@ -87,3 +92,31 @@ async def blight_monocultures(ctx: TickContext) -> int:
         )
         struck += 1
     return struck
+
+
+async def seed_dues(ctx: TickContext) -> int:
+    table = ctx.rules.living_production
+    paid = 0
+    bound = select(LivingLineRow.id).where(LivingLineRow.fertility.in_([Fertility.STERILE, Fertility.NEEDS_MAKER]), LivingLineRow.owner_node_id.is_not(None))
+    for row in list(await ctx.session.scalars(select(PerennialRow).where(PerennialRow.line_id.in_(bound)).order_by(PerennialRow.id))):
+        line = await ctx.session.get(LivingLineRow, row.line_id)
+        grower = await ctx.session.get(EntityRow, row.owner_node_id) if row.owner_node_id is not None else None
+        owner = await ctx.session.get(EntityRow, line.owner_node_id) if line is not None and line.owner_node_id is not None else None
+        if grower is None or owner is None or grower.id == owner.id or held(grower.id) or held(owner.id):
+            continue
+        if await take_coin(ctx.session, ctx.rules, grower, table.seed_due):
+            await give_coin(ctx.session, ctx.rules, owner, table.seed_due)
+            await change_relation(ctx, grower.id, owner.id, table.seed_regard, MemoryKind.GOODWILL, note="depends on its line")
+            paid += 1
+    return paid
+
+
+async def heal_living_links(ctx: TickContext) -> int:
+    grown = select(NetworkProfileRow.network_entity_id).where(NetworkProfileRow.carrier == NetworkCarrier.GROWN_LINK)
+    healed = 0
+    for outage in list(await ctx.session.scalars(select(NetworkOutageRow).where(NetworkOutageRow.network_entity_id.in_(grown), NetworkOutageRow.epochs > 1))):
+        if held(outage.network_entity_id):
+            continue
+        outage.epochs = max(1, outage.epochs - ctx.rules.living.link_heal)
+        healed += 1
+    return healed

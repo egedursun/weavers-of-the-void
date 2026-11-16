@@ -22,6 +22,7 @@ from aerona.engine.demography.wealth import gini, stock_value, wealth_targets
 from aerona.engine.economy.household import Meal, Wear, diet_demand
 from aerona.engine.economy.stocks import epoch_need, holdings, nourishment_need
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.once import once
 from aerona.engine.primitives.stats import headcount
 
 SOCIETY_DEPTH_FIXUP = "society.depth_backfill"
@@ -36,6 +37,7 @@ def backfill_meal(population: int, wanted: Mapping[CommodityKind, int], held: Ma
     return Meal(pct, eaten, {kind: wanted[kind] - eaten[kind] for kind in wanted if wanted[kind] > eaten[kind]}, dict(wanted))
 
 
+@once
 async def backfill_community(ctx: TickContext, community: EntityRow, society: CommunitySocietyRow) -> bool:
     if await ctx.session.scalar(select(ClassStandingRow.social_class).where(ClassStandingRow.community_entity_id == community.id).limit(1)) is not None:
         return False
@@ -59,6 +61,7 @@ async def backfill_community(ctx: TickContext, community: EntityRow, society: Co
     return True
 
 
+@once
 async def backfill_events(ctx: TickContext) -> int:
     made = 0
     for incident in await ctx.session.scalars(select(IncidentRow).where(IncidentRow.kind.in_(list(EVENT_KEYS))).order_by(IncidentRow.id)):

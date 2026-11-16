@@ -9,7 +9,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | 795 |
 | enum | 1112 |
 | step | 442 |
-| incident | 1004 |
+| incident | 1006 |
 | tool | 507 |
 | lever | 2132 |
 | screen | 1248 |
@@ -2849,6 +2849,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | incident | living.line_made | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living.mutated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living.organ_grown | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| incident | living.partner_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living.profile_made | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living.refused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living.released | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
@@ -2857,6 +2858,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | incident | living.sapience | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living.sapience_shaped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living.spread | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
+| incident | living.turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living.works_lapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living_stats.mocked | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | living_stats.mystery_knowledge | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |

@@ -9,6 +9,7 @@ from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.body import BodyPart
 from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import (
@@ -30,6 +31,7 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import values_for
 from aerona.engine.minds.profiles import profile_of
+from aerona.engine.primitives.once import once
 
 LEGACY_FIXUP = "made.legacy_backfill"
 FULL = 100
@@ -42,9 +44,12 @@ RUINS = (PlaceKind.WRECK_SITE, PlaceKind.MEGASTRUCTURE_RUIN)
 
 async def prostheses(ctx: TickContext) -> int:
     made = 0
+    made_parts = select(AugmentRow.bearer_node_id, AugmentRow.part, AugmentRow.installed_epoch).where(AugmentRow.make == AugmentMake.MADE)
+    fitted: set[tuple[int, BodyPart | None, int]] = {(bearer, part, epoch) for bearer, part, epoch in (await ctx.session.execute(made_parts)).all()}
     for row in list(await ctx.session.scalars(select(ProsthesisRow).order_by(ProsthesisRow.id))):
-        if held(row.bearer_node_id):
+        if held(row.bearer_node_id) or (row.bearer_node_id, row.part, row.epoch) in fitted:
             continue
+        fitted.add((row.bearer_node_id, row.part, row.epoch))
         augment = AugmentRow(
             bearer_node_id=row.bearer_node_id,
             slot=AugmentSlot.PART,
@@ -83,9 +88,10 @@ async def region_of(ctx: TickContext, thing: EntityRow) -> int | None:
 
 async def terraformers(ctx: TickContext) -> int:
     made = 0
+    named = set(await ctx.session.scalars(select(ReplicatorLineRow.name).where(ReplicatorLineRow.output == ReplicatorOutput.TERRAFORMING)))
     for works in await structures_of(ctx, StructureKind.TERRAFORMER):
         region = await region_of(ctx, works)
-        if region is None or held(works.id):
+        if region is None or held(works.id) or f"the terraforming of {works.name}" in named:
             continue
         line = ReplicatorLineRow(
             name=f"the terraforming of {works.name}",
@@ -195,6 +201,7 @@ async def doctrines(ctx: TickContext) -> int:
     return set_from
 
 
+@once
 async def substrates(ctx: TickContext) -> int:
     made = 0
     peoples = select(EntityRow.id).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
@@ -205,6 +212,10 @@ async def substrates(ctx: TickContext) -> int:
         ctx.session.add(PeopleSubstrateRow(people_entity_id=people, seat=MindSeat.BODY, origin=MindOrigin.BORN, share_pct=FULL, locked=[]))
         made += 1
     return made
+
+
+async def keep_made_kinds(ctx: TickContext) -> int:
+    return await prostheses(ctx) + await terraformers(ctx) + await farms(ctx) + await ruins(ctx) + await cores(ctx) + await doctrines(ctx)
 
 
 async def legacy_backfill(ctx: TickContext) -> int:
