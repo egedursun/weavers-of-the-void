@@ -81,6 +81,7 @@ class PlantingDraft(Command):
     species_id: int | None = None
     owner_id: int | None = None
     area: int = Field(default=5, ge=1, le=SPAN)
+    line_id: int | None = None
 
 
 class PlantingTarget(Command):
@@ -295,7 +296,13 @@ async def intensification_delete(scope: PlayerScope, command: RegionTarget) -> E
 @player_action("perennial:plant", ActionKind.EDIT_RECORD)
 async def perennial_plant(scope: PlayerScope, command: PlantingDraft) -> Effect:
     row = await control.plant(
-        await scope.context("perennial_plant"), command.region_id, command.kind, species_id=command.species_id, owner_id=command.owner_id, area=command.area
+        await scope.context("perennial_plant"),
+        command.region_id,
+        command.kind,
+        species_id=command.species_id,
+        owner_id=command.owner_id,
+        area=command.area,
+        line_id=command.line_id,
     )
     return Effect("A long-lived planting is set in the ground.", command.region_id, values={"perennial_id": row.id})
 

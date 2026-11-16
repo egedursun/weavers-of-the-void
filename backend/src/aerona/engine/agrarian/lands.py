@@ -21,6 +21,7 @@ from aerona.domain.enums.ecology import SOWN, GrowthCycle
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
+from aerona.domain.enums.living import LineTrait
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
@@ -33,6 +34,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.standing import regard
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.living.traits import eased, traits_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
@@ -168,7 +170,8 @@ async def grow(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
         if row.condition > 0:
             shift(row, "maturity", PERCENT / max(1, row.mature_epochs))
         old = row.maturity >= PERCENT and ctx.epoch - row.planted_epoch > row.mature_epochs * (PERCENT + table.life_pct) / PERCENT
-        shift(row, "condition", -table.ageing if old else table.recover)
+        traits = await traits_of(ctx.session, row.line_id)
+        shift(row, "condition", -eased(table.ageing, traits.get(LineTrait.HARDINESS, 0)) if old else table.recover)
         if old and row.condition <= 0:
             await replant(ctx, row)
             continue
@@ -178,7 +181,8 @@ async def grow(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
         tally.bearing += 1
         owner = await ctx.session.get(EntityRow, row.owner_node_id) if row.owner_node_id is not None else None
         if owner is not None and not held(owner.id):
-            await give_coin(ctx.session, ctx.rules, owner, round_half_up(row.area * table.coin_per_area * row.condition / PERCENT))
+            bred = PERCENT + traits.get(LineTrait.YIELD, 0) * ctx.rules.living_production.yield_pct // PERCENT
+            await give_coin(ctx.session, ctx.rules, owner, round_half_up(row.area * table.coin_per_area * row.condition / PERCENT * max(0, bred) / PERCENT))
     for region_id, count in sorted(bearing.items()):
         for town in lands.towns.get(region_id, []):
             if not held(town.id):

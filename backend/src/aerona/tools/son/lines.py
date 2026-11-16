@@ -284,3 +284,5 @@ GRANT_POWER = Line("tools.son.grant_power", "{son} gave {name} a power: {reason}
 REVOKE_POWER = Line("tools.son.revoke_power", "{son} took back a power it had given: {reason}")
 UNVEIL_TRUTH = Line("tools.son.unveil_truth", "{son} made a hidden truth known to {name}: {reason}")
 HIDE_TRUTH = Line("tools.son.hide_truth", "{son} hid a truth about {name}: {reason}")
+BLESS_LINE = Line("tools.son.bless_line", "{son} blessed the line {name}: {reason}")
+CURSE_LINE = Line("tools.son.curse_line", "{son} cursed the line {name}: {reason}")

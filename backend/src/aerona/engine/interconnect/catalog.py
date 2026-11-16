@@ -60,6 +60,7 @@ from aerona.engine.interconnect.catalog_justice import JUSTICE_MECHANICS
 from aerona.engine.interconnect.catalog_law_depth import LAW_MECHANICS
 from aerona.engine.interconnect.catalog_lifecycle import LIFECYCLE_MECHANICS
 from aerona.engine.interconnect.catalog_lineage import LINEAGE_MECHANICS
+from aerona.engine.interconnect.catalog_living import LIVING_MECHANICS
 from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
 from aerona.engine.interconnect.catalog_made import BEHAVIOURS as MADE_BEHAVIOURS
@@ -1033,6 +1034,7 @@ BUILT_IN = (
     *ARTS_MECHANICS,
     *MINDS_MECHANICS,
     *POWER_MECHANICS,
+    *LIVING_MECHANICS,
     *AGES_MECHANICS,
     *FOLKWAYS_MECHANICS,
     *CRAFTS_MECHANICS,

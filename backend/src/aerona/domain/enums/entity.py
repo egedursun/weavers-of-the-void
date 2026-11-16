@@ -199,6 +199,7 @@ class EntityFlag(StrEnum):
     NAME_FROM_LANGUAGE = "name_from_language"
     FIXED_NAME = "fixed_name"
     SPECIES_BECAME_PEOPLE = "species_became_people"
+    DESIGNED_PEOPLE = "designed_people"
     ORIGINAL_RESOURCE = "original_resource"
     COSMIC_MONOPOLY = "cosmic_monopoly"
     OUTER_CULT = "outer_cult"

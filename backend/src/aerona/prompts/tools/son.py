@@ -1141,7 +1141,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact or naval_limit",
             "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
-            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield, no_mind_compulsion, no_plague_powers), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id, tonnage, frame...)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield, no_mind_compulsion, no_plague_powers, no_designed_disease), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id, tonnage, frame...)",
             "epochs": "How many ages it holds; empty for ever",
             "parties.party_id": "The party's id",
             "parties.role": "Its role: signatory, overlord, vassal or guarantor",
@@ -1948,5 +1948,13 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "hidden_from": "From whom: everyone, a_people, a_polity, the_uninitiated, a_world or the_cosmos",
             "reason": "Why you hide it",
         },
+    ),
+    T.BLESS_LINE: ToolText(
+        "You bless a living line in your world: it steadies and its living things thrive. 1 action.",
+        {"line_id": "The line", "reason": "Why"},
+    ),
+    T.CURSE_LINE: ToolText(
+        "You curse a living line in your world: it unsteadies and its living things, plantings and symbionts sicken. 1 action.",
+        {"line_id": "The line", "reason": "Why"},
     ),
 }

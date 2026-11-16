@@ -57,6 +57,11 @@ KIND_VALUES: Mapping[LawKind, Mapping[ValueAxis, int]] = {
     LawKind.PROVISION_LAW: {ValueAxis.MERCY: 1, ValueAxis.WEALTH: -1},
     LawKind.POWER_LAW: {ValueAxis.LAW: 1, ValueAxis.HIERARCHY: 1},
     LawKind.SOURCE_LAW: {ValueAxis.TRADITION: 1, ValueAxis.PIETY: 1},
+    LawKind.LIVING_CRAFT_LAW: {ValueAxis.PURITY: 1, ValueAxis.TRADITION: 1},
+    LawKind.CLONE_LAW: {ValueAxis.TRADITION: 1, ValueAxis.FAMILY: 1},
+    LawKind.CLONE_STATUS: {ValueAxis.MERCY: 1, ValueAxis.TRADITION: -1},
+    LawKind.GERMLINE_LAW: {ValueAxis.PURITY: 1, ValueAxis.FAMILY: 1},
+    LawKind.DESIGNED_STATUS: {ValueAxis.MERCY: 1, ValueAxis.HIERARCHY: -1},
 }
 
 

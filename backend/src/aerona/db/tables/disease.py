@@ -28,6 +28,8 @@ class DiseaseProfileRow(Base):
     lethality: Mapped[int]
     chronic_rate: Mapped[int]
     incubation: Mapped[int]
+    designed_line_id: Mapped[int | None] = mapped_column(ForeignKey("living_lines.id", ondelete="SET NULL"))
+    target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     target_functions: Mapped[list[str]] = mapped_column(JSON, default=list)
     climate_affinity: Mapped[ClimateAffinity] = mapped_column(enum_type(ClimateAffinity, "climate_affinity"))
     host_species_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

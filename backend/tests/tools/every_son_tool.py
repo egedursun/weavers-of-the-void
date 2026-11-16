@@ -72,6 +72,7 @@ from tests.tools.every_setup_crafts import material_resource
 from tests.tools.every_setup_eras import realm_programme
 from tests.tools.every_setup_folkways import owned_item
 from tests.tools.every_setup_lifecycle import forgotten_theory, hidden_fossils, son_made_world, worshipped_star
+from tests.tools.every_setup_living import son_line
 from tests.tools.every_setup_minds import made_mind, made_realm, network, replicator, sealed_realm
 from tests.tools.every_setup_nature import first_kind, second_kind, two_kinds
 from tests.tools.every_setup_powers import kept_truth, son_granted
@@ -473,4 +474,6 @@ SON_CASES: dict[str, Case] = {
     "revoke_power": Case(plain(power_id=created("power"), reason=REASON), son_granted),
     "unveil_truth": Case(plain(truth_id=created("truth"), population_id=people, reason=REASON), kept_truth),
     "hide_truth": Case(plain(title="those who walk unseen", subject_id=people, kind="presence", reason=REASON)),
+    "bless_line": Case(plain(line_id=created("line"), reason=REASON), son_line),
+    "curse_line": Case(plain(line_id=created("line"), reason=REASON), son_line),
 }

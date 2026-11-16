@@ -661,6 +661,9 @@ class EnginePhasesRules:
         "Run the engine step: peoples judge the gifted, realms register or hunt them, bands form and lines pass their powers on",
     )
     concealment: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: hidden truths are kept, sought, breached, revealed or forgotten")
+    living: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: living things eat, grow, heal, age, breed and die; lines drift and escape; symbionts act"
+    )
     transformations: int = rule(
         1,
         0,

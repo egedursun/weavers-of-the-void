@@ -1265,4 +1265,142 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "mind_powers": "Powers over minds are: allowed, licensed or banned",
         },
     ),
+    T.BREED_LINE: ToolText(
+        "You breed a kind of life over generations toward traits you choose, making a living line of your own. 1 action.",
+        {
+            "species_id": "The kind of life you breed from",
+            "name": "Name of the line",
+            "traits": "Traits you aim for, each with a strength from -100 to 100",
+            "traits.trait": "The trait: yield, hardiness, climate_tolerance, disease_resistance, strength, speed, size, regeneration, lifespan, docility, potency, fibre, venom, flight, aquatic, void_hardy, gift, nervous_system or sapience",
+            "traits.strength": "How strongly, from -100 to 100",
+        },
+    ),
+    T.DESIGN_LINE: ToolText(
+        "You make a living line by a way of living craft from organisms you can reach. Each trait you add makes the line less stable. 1 action.",
+        {
+            "name": "Name of the line",
+            "method": "How: selective_breeding, cultivation, shaping, engineering, synthesis, binding, cloning, chimera or induction",
+            "source_ids": "The organisms it is made from",
+            "traits": "Traits you aim for, each with a strength from -100 to 100",
+            "traits.trait": "The trait: yield, hardiness, climate_tolerance, disease_resistance, strength, speed, size, regeneration, lifespan, docility, potency, fibre, venom, flight, aquatic, void_hardy, gift, nervous_system or sapience",
+            "traits.strength": "How strongly, from -100 to 100",
+            "fertility": "How it breeds: sterile, breeds_true, breeds_wild or needs_maker",
+        },
+    ),
+    T.BANK_SAMPLE: ToolText(
+        "You put a sample of a living thing into a bank of life you can reach, so its traits are kept. 1 action.",
+        {
+            "bank_id": "The work that keeps the bank",
+            "organism_id": "The living thing you sample",
+        },
+    ),
+    T.PLANT_LINE: ToolText(
+        "You plant a line you hold in your land as a long-lived planting. 1 action.",
+        {
+            "line_id": "The line",
+        },
+    ),
+    T.RAISE_LINE: ToolText(
+        "You raise a line again from a sample kept in a bank you hold. 1 action.",
+        {
+            "sample_id": "The sample",
+        },
+    ),
+    T.GROW_STRUCTURE: ToolText(
+        "You grow a living work in your town; it grows from a seed and cannot work at full until grown. 1 action.",
+        {
+            "name": "Name of the work",
+            "line_id": "A line of yours it is grown from, or empty",
+        },
+    ),
+    T.GROW_VESSEL: ToolText(
+        "You grow a living vessel that eats, heals, ages and bonds with you. 1 action.",
+        {
+            "name": "Name of the vessel",
+            "line_id": "A line of yours it is grown from, or empty",
+        },
+    ),
+    T.GROW_GEAR: ToolText(
+        "You grow a living thing to be worn or wielded; it feeds on its bearer and bonds with them. 1 action.",
+        {
+            "name": "Name of the gear",
+            "line_id": "A line of yours it is grown from, or empty",
+        },
+    ),
+    T.GROW_ORGAN: ToolText(
+        "You grow a part for a body, yours or another's here. 1 action.",
+        {
+            "slot": "Where it goes: part, mind, senses, skin, blood or whole_body",
+            "kind": "What it does: replacement, enhancement, interface, weapon, regulator, sense, storage or cosmetic",
+            "bearer_id": "Whose body, or empty for your own",
+        },
+    ),
+    T.CLONE: ToolText(
+        "You grow a clone of a body here, yours or another's: a new person with its own mind and history. 1 action.",
+        {
+            "source_id": "Whose body is copied",
+        },
+    ),
+    T.HOST_SYMBIONT: ToolText(
+        "You take something of a line you hold to live within you. 1 action.",
+        {
+            "line_id": "The line",
+            "placement": "Where it lives: skin, blood, organ, nerve or mind",
+            "relation": "How it lives with you: mutual, commensal, parasitic or controlling",
+        },
+    ),
+    T.REMOVE_SYMBIONT: ToolText(
+        "You have something that lives within you taken out; removal harms by where it lived. 1 action.",
+        {
+            "symbiont_id": "What lives within you",
+        },
+    ),
+    T.DESIGN_DISEASE: ToolText(
+        "You make a disease by design, aimed at whom you name or at no one; it may get loose among its makers. 1 action.",
+        {
+            "name": "Name of the disease",
+            "target_id": "Whom it is made to strike, or empty",
+            "lethality": "How deadly, from 1 to 100",
+            "virulence": "How readily it spreads, from 1 to 100",
+        },
+    ),
+    T.DESIGN_CURE: ToolText(
+        "You culture a cure for a disease from a potent line you hold, for your town. 1 action.",
+        {
+            "disease_id": "The disease",
+            "line_id": "The line",
+        },
+    ),
+    T.FOUND_LIVING_WORKS: ToolText(
+        "You found living works in your town that make goods by living things. 1 action.",
+        {
+            "method": "How: cultured_crops, grown_timber, spun_fibre, vat_culture or bioreactor",
+            "name": "Name of the works",
+        },
+    ),
+    T.RELEASE_LINE: ToolText(
+        "You let a line you hold loose into the wild, where it lives as a kind of its own. 1 action.",
+        {
+            "line_id": "The line",
+        },
+    ),
+    T.RAISE_SAPIENCE: ToolText(
+        "You shape a line with a designed nervous system toward thought; strong enough, its kind rises as a people. 1 action.",
+        {
+            "line_id": "The line",
+        },
+    ),
+    T.LICENSE_LINE: ToolText(
+        "You pay the owner of a line for a licence to grow it. 1 action.",
+        {
+            "line_id": "The line",
+            "fee": "What you pay",
+        },
+    ),
+    T.SET_CLONE_LAW: ToolText(
+        "As ruler, you set whether clones may be made in your realm. 1 action.",
+        {
+            "level": "Making clones is: banned, licensed or free",
+        },
+    ),
 }

@@ -951,7 +951,8 @@
       "geri_yuklendi": "restored_from",
       "yapay_zihni": "made_mind_of",
       "barindirilir": "hosted_by",
-      "baglantili": "linked_with"
+      "baglantili": "linked_with",
+      "klonu": "clone_of"
     },
     "dropped_bond_kind": {
       "bilirdi": "knew",

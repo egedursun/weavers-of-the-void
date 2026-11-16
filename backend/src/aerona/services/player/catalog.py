@@ -89,6 +89,7 @@ from aerona.services.player import (
     levers,
     life_cycles,
     lifecycle_ends,
+    living,
     living_stats,
     lore,
     made_kinds,
@@ -5538,7 +5539,36 @@ POWER_ACTIONS = (
     _sync(Meta("breach:trigger", "Make a hidden truth show itself", G.FATE), powers.breach_trigger, powers.BreachTrigger, free, ("S45.16",)),
 )
 
+LIVING_ACTIONS = (
+    _sync(Meta("living:create", "Bring a thing to life", G.CREATURES), living.life_give, living.LifeGive, free, ("F54.1",)),
+    _sync(Meta("living:edit", "Set the values of a living thing", G.CREATURES), living.life_edit, living.LifeEdit, free, ("F54.1",)),
+    _sync(Meta("living:delete", "Stop a thing being a living thing", G.CREATURES), living.life_delete, living.LifeTarget, free, ("F54.1",)),
+    _sync(Meta("living:end", "End the life of a living thing", G.CREATURES), living.life_end, living.LifeTarget, free, ("F54.3",)),
+    _sync(Meta("line:create", "Make a living line", G.CREATURES), living.line_create, living.LineCreate, free, ("S46.2",)),
+    _sync(Meta("line:edit", "Set the values of a living line", G.CREATURES), living.line_edit, living.LineEdit, free, ("F54.2",)),
+    _sync(Meta("line:delete", "Unmake a living line", G.CREATURES), living.line_delete, living.LineTarget, free, ("F54.2",)),
+    _sync(Meta("line:escape", "Let a living line loose into the wild", G.CREATURES), living.line_release, living.LineTarget, free, ("S46.16",)),
+    _sync(Meta("line:contain", "Hunt down an escaped line and hold it in", G.CREATURES), living.line_contain, living.LineTarget, free, ("S46.16",)),
+    _sync(
+        Meta("line_part:create", "Give a living line a trait or a source organism", G.CREATURES), living.line_part_create, powers.PartCreate, free, ("S46.3",)
+    ),
+    _sync(Meta("line_part:edit", "Set a trait or source of a living line", G.CREATURES), living.line_part_edit, powers.PartEdit, free, ("S46.3",)),
+    _sync(Meta("line_part:delete", "Take a trait or source from a living line", G.CREATURES), living.line_part_delete, powers.PartTarget, free, ("S46.3",)),
+    _sync(Meta("bank:create", "Keep a bank of life in a work", G.CREATURES), living.bank_create, living.BankCreate, free, ("S46.3",)),
+    _sync(Meta("bank:edit", "Set the values of a bank of life", G.CREATURES), living.bank_edit, living.BankEdit, free, ("S46.3",)),
+    _sync(Meta("bank:delete", "Close a bank of life", G.CREATURES), living.bank_delete, living.BankTarget, free, ("S46.3",)),
+    _sync(Meta("sample:create", "Put a sample into a bank of life", G.CREATURES), living.bank_part_create, powers.PartCreate, free, ("S46.3",)),
+    _sync(Meta("sample:edit", "Set a sample kept in a bank of life", G.CREATURES), living.bank_part_edit, powers.PartEdit, free, ("S46.3",)),
+    _sync(Meta("sample:delete", "Take a sample from a bank of life", G.CREATURES), living.bank_part_delete, powers.PartTarget, free, ("S46.3",)),
+    _sync(Meta("sample:raise", "Raise a line again from a kept sample", G.CREATURES), living.sample_raise, living.SampleRaise, free, ("S46.3",)),
+    _sync(Meta("clone:create", "Grow a clone of a being", G.CREATURES), living.life_clone, living.CloneCommand, free, ("S46.9",)),
+    _sync(Meta("symbiont:host", "Set something to live within a host", G.CREATURES), living.symbiont_create, living.SymbiontCreate, free, ("S46.10",)),
+    _sync(Meta("symbiont:edit", "Set the values of what lives within a host", G.CREATURES), living.symbiont_edit, living.SymbiontEdit, free, ("S46.10",)),
+    _sync(Meta("symbiont:remove", "Take out what lives within a host", G.CREATURES), living.symbiont_delete, living.SymbiontTarget, free, ("S46.10",)),
+)
+
 ACTIONS: tuple[ActionSpec, ...] = (
+    *LIVING_ACTIONS,
     *POWER_ACTIONS,
     *CYCLE_ACTIONS,
     *REGIME_ACTIONS,

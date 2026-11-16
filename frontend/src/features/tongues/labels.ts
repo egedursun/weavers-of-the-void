@@ -1,4 +1,5 @@
 import {
+  FlaskConical,
   Binary,
   ArrowRightLeft,
   Asterisk,
@@ -145,6 +146,11 @@ export const MODALITIES: Record<Schema['LanguageModality'], Named> = {
   colour: { label: 'Colour pattern', icon: Palette, tone: 'gold' },
   telepathic: { label: 'Thought', icon: Brain, tone: 'gold' },
   data: { label: 'Data', icon: Binary, tone: 'info' },
+  chemical: {
+    label: 'Chemical signals',
+    icon: FlaskConical,
+    tone: 'verdigris',
+  },
 }
 
 export const STAGES: Record<Schema['LanguageStage'], Named> = {

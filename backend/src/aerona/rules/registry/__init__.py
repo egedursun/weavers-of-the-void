@@ -342,6 +342,15 @@ from aerona.rules.registry.life_cycles import LifeCyclesRules
 from aerona.rules.registry.lifecycle_ends import LifecycleEndRules
 from aerona.rules.registry.limits import LimitsRules
 from aerona.rules.registry.link_graph import LinkGraphRules
+from aerona.rules.registry.living import (
+    CloneRules,
+    DesignedDiseaseRules,
+    GenomeDesignRules,
+    LivingMethodRules,
+    LivingProductionRules,
+    LivingRules,
+    SymbiontRules,
+)
 from aerona.rules.registry.loops import LoopRules
 from aerona.rules.registry.lore import (
     ArtRules,
@@ -1063,6 +1072,13 @@ class Rules:
     powers: PowerRules = field(default_factory=PowerRules)
     powered_society: PoweredSocietyRules = field(default_factory=PoweredSocietyRules)
     concealment: ConcealmentRules = field(default_factory=ConcealmentRules)
+    living: LivingRules = field(default_factory=LivingRules)
+    living_methods: LivingMethodRules = field(default_factory=LivingMethodRules)
+    genome_design: GenomeDesignRules = field(default_factory=GenomeDesignRules)
+    symbionts: SymbiontRules = field(default_factory=SymbiontRules)
+    clones: CloneRules = field(default_factory=CloneRules)
+    designed_disease: DesignedDiseaseRules = field(default_factory=DesignedDiseaseRules)
+    living_production: LivingProductionRules = field(default_factory=LivingProductionRules)
     fossils: FossilRules = field(default_factory=FossilRules)
     museums: MuseumRules = field(default_factory=MuseumRules)
     gardens: GardenRules = field(default_factory=GardenRules)

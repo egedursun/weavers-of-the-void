@@ -103,6 +103,11 @@ class MethodKind(StrEnum):
     IRON_SHEARS = "iron_shears"
     GATHERED_EGGS = "gathered_eggs"
     KEPT_FLOCKS = "kept_flocks"
+    CULTURED_CROPS = "cultured_crops"
+    GROWN_TIMBER = "grown_timber"
+    SPUN_FIBRE = "spun_fibre"
+    VAT_CULTURE = "vat_culture"
+    BIOREACTOR = "bioreactor"
 
 
 class OwnerClass(StrEnum):

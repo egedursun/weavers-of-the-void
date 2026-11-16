@@ -170,6 +170,11 @@ class LawKind(StrEnum):
     PROVISION_LAW = "provision_law"
     POWER_LAW = "power_law"
     SOURCE_LAW = "source_law"
+    LIVING_CRAFT_LAW = "living_craft_law"
+    CLONE_LAW = "clone_law"
+    CLONE_STATUS = "clone_status"
+    GERMLINE_LAW = "germline_law"
+    DESIGNED_STATUS = "designed_status"
 
 
 class DebtRemedy(StrEnum):
@@ -279,6 +284,7 @@ class ClauseKind(StrEnum):
     CIVIL_HOST_SHIELD = "civil_host_shield"
     NO_MIND_COMPULSION = "no_mind_compulsion"
     NO_PLAGUE_POWERS = "no_plague_powers"
+    NO_DESIGNED_DISEASE = "no_designed_disease"
 
 
 class PartyRole(StrEnum):
@@ -345,4 +351,9 @@ LAW_AREAS: dict[LawKind, LawArea] = {
     LawKind.PROVISION_LAW: LawArea.FISCAL,
     LawKind.POWER_LAW: LawArea.SOCIAL,
     LawKind.SOURCE_LAW: LawArea.SOCIAL,
+    LawKind.LIVING_CRAFT_LAW: LawArea.PUBLIC_HEALTH,
+    LawKind.CLONE_LAW: LawArea.SOCIAL,
+    LawKind.CLONE_STATUS: LawArea.SOCIAL,
+    LawKind.GERMLINE_LAW: LawArea.PUBLIC_HEALTH,
+    LawKind.DESIGNED_STATUS: LawArea.SOCIAL,
 }

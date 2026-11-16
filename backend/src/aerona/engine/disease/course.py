@@ -19,6 +19,7 @@ from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import kin_lethality
 from aerona.engine.disease.book import DiseaseBook
+from aerona.engine.disease.designed import designed_aim
 from aerona.engine.disease.emergence import WET, new_strain, plain
 from aerona.engine.disease.origin import caused_by_origin, mark_strain_origin, origin_line
 from aerona.engine.disease.outbreaks import QUARANTINE_LOCK, STATUS_LOCK, lethality_factor, spread_factor, tally
@@ -59,6 +60,7 @@ async def linger(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow, kno
     for community in communities:
         rate = fraction(effects.plague_population_loss) * scale * lethality_factor(book, disease.id, [community], knowledge)
         rate *= await kin_lethality(ctx.session, ctx.rules, community, disease.id)
+        rate *= await designed_aim(ctx.session, ctx.rules, community, disease.id)
         before = stat(community, "population") or 0
         floor, _ = headcount_bounds(ctx.rules, community)
         after = max(floor, round_half_up(before * (1 - min(1.0, rate))))

@@ -21,6 +21,7 @@ from aerona.domain.enums.faith import (
     TenetKind,
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.living import LivingCraftStance
 from aerona.domain.enums.made import MadeMindStance, RelicStance
 from aerona.domain.enums.powers import GiftedStance
 
@@ -57,6 +58,15 @@ class CultDoctrineRow(Base):
     made_afterlife_stance: Mapped[MadeMindStance] = mapped_column(enum_type(MadeMindStance, "made_afterlife_stance"), default=MadeMindStance.SILENT)
     relic_stance: Mapped[RelicStance] = mapped_column(enum_type(RelicStance, "relic_stance"), default=RelicStance.HERITAGE)
     power_stance: Mapped[GiftedStance] = mapped_column(enum_type(GiftedStance, "power_stance"), default=GiftedStance.SILENT, server_default="silent")
+    living_craft_stance: Mapped[LivingCraftStance] = mapped_column(
+        enum_type(LivingCraftStance, "living_craft_stance"), default=LivingCraftStance.SILENT, server_default="silent"
+    )
+    germline_stance: Mapped[LivingCraftStance] = mapped_column(
+        enum_type(LivingCraftStance, "germline_stance"), default=LivingCraftStance.SILENT, server_default="silent"
+    )
+    clone_stance: Mapped[LivingCraftStance] = mapped_column(
+        enum_type(LivingCraftStance, "clone_stance"), default=LivingCraftStance.SILENT, server_default="silent"
+    )
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

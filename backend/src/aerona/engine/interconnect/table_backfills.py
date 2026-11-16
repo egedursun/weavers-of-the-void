@@ -251,6 +251,13 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("concealment", "truth_seekers"): "powers.legacy_backfill: journalists, sages and spies who knew a buried history seek its truth",
     ("concealment", "public_knowledge"): "none: populations come to know hidden truths from the next epoch",
     ("concealment", "breaches"): "none: breaches are recorded from the next epoch",
+    ("living", "living_profiles"): "living.legacy_backfill: every bioship and every grown work gains a living profile on the first epoch",
+    ("living_lines", "living_lines"): "living.legacy_backfill: every bred species and every breeding plan becomes a line of selective breeding",
+    ("living_lines", "living_line_sources"): "none: lines take source organisms when they are made",
+    ("living_lines", "living_line_traits"): "none: lines carry the traits they are made with or gain by mutation",
+    ("living_lines", "gene_banks"): "living.legacy_backfill: every cloning facility keeps a bank of life",
+    ("living_lines", "gene_bank_samples"): "none: banks are filled from the next epoch",
+    ("symbionts", "symbionts"): "none: symbionts come by craft from the next epoch",
 }
 
 

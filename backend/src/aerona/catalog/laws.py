@@ -140,6 +140,18 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
             "mind_powers": pick("allowed", "licensed", "banned", default="licensed"),
         },
         LawKind.SOURCE_LAW: {"level": pick("free", "licensed", "banned", default="free")},
+        LawKind.LIVING_CRAFT_LAW: {
+            "level": pick("free", "licensed", "banned", default="licensed"),
+            "engineering": pick("free", "licensed", "banned", default="licensed"),
+            "synthesis": pick("free", "licensed", "banned", default="licensed"),
+            "cloning": pick("free", "licensed", "banned", default="licensed"),
+            "chimera": pick("free", "licensed", "banned", default="licensed"),
+            "shaping": pick("free", "licensed", "banned", default="free"),
+        },
+        LawKind.CLONE_LAW: {"level": pick("banned", "licensed", "free", default="licensed")},
+        LawKind.CLONE_STATUS: {"status": pick("property", "ward", "servant", "citizen", "sovereign", default="citizen")},
+        LawKind.GERMLINE_LAW: {"level": pick("banned", "licensed", "free", default="licensed")},
+        LawKind.DESIGNED_STATUS: {"status": pick("property", "ward", "servant", "citizen", "sovereign", default="citizen")},
     },
 )
 
@@ -219,6 +231,11 @@ LAW_TITLES = MappingProxyType(
         LawKind.PROVISION_LAW: "the Provision Law",
         LawKind.POWER_LAW: "the Law of Powers",
         LawKind.SOURCE_LAW: "the Law of Sources",
+        LawKind.LIVING_CRAFT_LAW: "the Law of Living Craft",
+        LawKind.CLONE_LAW: "the Clone Law",
+        LawKind.CLONE_STATUS: "the Standing of Clones",
+        LawKind.GERMLINE_LAW: "the Law of the Line",
+        LawKind.DESIGNED_STATUS: "the Standing of Designed Peoples",
     }
 )
 
@@ -295,6 +312,13 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.PROVISION_LAW: "What is made without hands is given out by {level}.",
         LawKind.POWER_LAW: "Those with powers are {level}; powers over minds are {mind_powers}.",
         LawKind.SOURCE_LAW: "Drawing on a source of power is {level} unless a source is named otherwise.",
+        LawKind.LIVING_CRAFT_LAW: (
+            "Living craft is {level}; engineering {engineering}, synthesis {synthesis}, cloning {cloning}, chimeras {chimera}, shaping {shaping}."
+        ),
+        LawKind.CLONE_LAW: "Making clones is {level}.",
+        LawKind.CLONE_STATUS: "Clones stand as {status}.",
+        LawKind.GERMLINE_LAW: "Changing what passes to descendants is {level}.",
+        LawKind.DESIGNED_STATUS: "Designed peoples stand as {status}.",
     }
 )
 

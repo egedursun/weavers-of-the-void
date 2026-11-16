@@ -458,6 +458,11 @@ export const STATUS_SPEC: Record<OutbreakStatus, Spec> = {
 export const CURE_SPEC: Record<CureSource, Spec> = {
   knowledge: { label: 'Learned by healers', icon: BookOpen, tone: 'success' },
   granted: { label: 'Granted by a god', icon: Sparkles, tone: 'gold' },
+  cultured: {
+    label: 'Cultured from a living line',
+    icon: Sprout,
+    tone: 'verdigris',
+  },
 }
 
 export const FIELD_LABEL: Record<string, string> = {

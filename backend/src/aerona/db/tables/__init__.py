@@ -419,6 +419,15 @@ from aerona.db.tables.law_depth import (
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.lifecycle_ends import LifecycleStateRow
+from aerona.db.tables.living import (
+    GeneBankRow,
+    GeneBankSampleRow,
+    LivingLineRow,
+    LivingLineSourceRow,
+    LivingLineTraitRow,
+    LivingProfileRow,
+    SymbiontRow,
+)
 from aerona.db.tables.loops import LoopSignalRow
 from aerona.db.tables.lore import (
     CanonFactRow,
@@ -977,6 +986,8 @@ __all__ = [
     "GatheringGuestRow",
     "GatheringRow",
     "GeasRow",
+    "GeneBankRow",
+    "GeneBankSampleRow",
     "GenerationRow",
     "GeniusLocusRow",
     "GenomeRow",
@@ -1076,6 +1087,10 @@ __all__ = [
     "LifecycleStateRow",
     "LineageMarkRow",
     "LineageSegmentRow",
+    "LivingLineRow",
+    "LivingLineSourceRow",
+    "LivingLineTraitRow",
+    "LivingProfileRow",
     "LoanRow",
     "LongPlanRow",
     "LongevityRow",
@@ -1368,6 +1383,7 @@ __all__ = [
     "StructureStaffRow",
     "SupplyFlowRow",
     "SurveillanceProfileRow",
+    "SymbiontRow",
     "SympatheticLinkRow",
     "SystemRestrictionRow",
     "TavernRow",

@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.errors import ValidationFailedError
+from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.agrarian import (
     AID_FIELDS,
@@ -34,6 +34,7 @@ from aerona.db.tables.agrarian import (
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.living import LivingLineRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.agrarian import (
     AidKind,
@@ -101,18 +102,23 @@ async def set_intensity(ctx: TickContext, region_id: int, values: Values) -> Int
     return await put_values(ctx, row, values, INTENSITY_FIELDS, "farming intensity")
 
 
-async def plant(ctx: TickContext, region_id: int, kind: PerennialKind, *, species_id: int | None, owner_id: int | None, area: int) -> PerennialRow:
+async def plant(
+    ctx: TickContext, region_id: int, kind: PerennialKind, *, species_id: int | None, owner_id: int | None, area: int, line_id: int | None = None
+) -> PerennialRow:
     region = await of_type(ctx, region_id, REGIONS, "a land")
     if species_id is not None:
         await of_type(ctx, species_id, SPECIES, "a species")
     if owner_id is not None:
         await node_exists(ctx, owner_id, "owner")
+    if line_id is not None and await ctx.session.get(LivingLineRow, line_id) is None:
+        raise NotFoundError("No such living line.")
     row = await saved(
         ctx,
         PerennialRow(
             region_entity_id=region_id,
             kind=kind,
             species_entity_id=species_id,
+            line_id=line_id,
             owner_node_id=owner_id,
             area=area,
             mature_epochs=mature_epochs(ctx, kind),

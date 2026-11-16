@@ -88,6 +88,7 @@ from tests.tools.every_setup_customs import long_foreigner, town_pool
 from tests.tools.every_setup_eras import skilled_for_programme
 from tests.tools.every_setup_folkways import impure_mortal, neighbour, owned_item
 from tests.tools.every_setup_lifecycle import name_keeper
+from tests.tools.every_setup_living import bank_held, bred_line, breeder, hosted, line_of_another, sickness_and_line
 from tests.tools.every_setup_means import money_changer
 from tests.tools.every_setup_minds import (
     borne_augment,
@@ -375,4 +376,23 @@ MORTAL_CASES: dict[str, Case] = {
     "investigate": named(plain(truth_id=created("truth"), aim="expose"), heard_truth),
     "cover_up": named(plain(truth_id=created("truth")), kept_truth),
     "set_power_law": named(plain(level="registered", mind_powers="licensed"), ruled_realm),
+    "breed_line": named(plain(species_id=species, name="the long-legged line", traits=[{"trait": "speed", "strength": 20}]), breeder),
+    "design_line": named(plain(name="the bright moss", method="engineering", source_ids=[], traits=[{"trait": "yield", "strength": 20}]), breeder),
+    "bank_sample": named(plain(bank_id=created("bank"), organism_id=species), bank_held),
+    "plant_line": named(plain(line_id=created("line")), bred_line),
+    "raise_line": named(plain(sample_id=created("sample")), bank_held),
+    "grow_structure": named(plain(name="the living hall")),
+    "grow_vessel": named(plain(name="the grown hull")),
+    "grow_gear": named(plain(name="the living mail")),
+    "grow_organ": named(plain(slot="part", kind="replacement")),
+    "clone": named(plain(source_id=mortal)),
+    "host_symbiont": named(plain(line_id=created("line"), placement="blood", relation="mutual"), bred_line),
+    "remove_symbiont": named(plain(symbiont_id=created("symbiont")), hosted),
+    "design_disease": named(plain(name="the grey cough", lethality=20, virulence=30), breeder),
+    "design_cure": named(plain(disease_id=created("disease"), line_id=created("line")), sickness_and_line),
+    "found_living_works": named(plain(method="vat_culture", name="the vats")),
+    "release_line": named(plain(line_id=created("line")), bred_line),
+    "raise_sapience": named(plain(line_id=created("line")), bred_line),
+    "license_line": named(plain(line_id=created("line"), fee=0), line_of_another),
+    "set_clone_law": named(plain(level="licensed"), ruled_realm),
 }

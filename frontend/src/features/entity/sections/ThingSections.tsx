@@ -22,6 +22,7 @@ import { FossilSection } from '@/features/lifecycle/FossilSection'
 import { GroundsSection } from '@/features/lifecycle/GroundsSection'
 import { LifecycleSection } from '@/features/lifecycle/LifecycleSection'
 import { WorldEndSection } from '@/features/lifecycle/WorldEndSection'
+import { LivingSection } from '@/features/living/LivingSection'
 import { MadeKindsSection } from '@/features/madeKinds/MadeKindsSection'
 import { MeansSection } from '@/features/means/MeansSection'
 import { AugmentsSection } from '@/features/minds/AugmentsSection'
@@ -119,6 +120,7 @@ export function ThingSections({
       <SourcesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MagicSystemsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <HiddenTruthsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <LivingSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <FeelingsSection nodeId={nodeId} />
       <TastesSection nodeId={nodeId} />
       <EthicsSection nodeId={nodeId} />

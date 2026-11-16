@@ -49,6 +49,7 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.enactment import propose
 from aerona.engine.polity.law_effects import jubilee, levy_terms, standing_soldiers, tenure_and_serfdom
 from aerona.engine.polity.laws import LawBook, discord, enact, repeal, settle_justice, validate
+from aerona.engine.polity.living_laws import living_world_laws
 from aerona.engine.polity.made_laws import made_world_laws
 from aerona.engine.polity.offices import best_skill, powers_of
 from aerona.engine.polity.standing import war_record
@@ -244,6 +245,7 @@ async def wanted_laws(
         wants.append((LawKind.SUMPTUARY, {}))
     wants.extend(law for law in await modern_laws(ctx, realm, values) if laws.in_force(polity.id, law[0]) is None)
     wants.extend(law for law in await made_world_laws(ctx, realm, values) if laws.in_force(polity.id, law[0]) is None)
+    wants.extend(law for law in await living_world_laws(ctx, realm, values) if laws.in_force(polity.id, law[0]) is None)
     return wants
 
 

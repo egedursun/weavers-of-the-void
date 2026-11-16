@@ -274,6 +274,8 @@ class SonToolId(StrEnum):
     REVOKE_POWER = "revoke_power"
     UNVEIL_TRUTH = "unveil_truth"
     HIDE_TRUTH = "hide_truth"
+    BLESS_LINE = "bless_line"
+    CURSE_LINE = "curse_line"
 
 
 class MortalToolId(StrEnum):
@@ -492,6 +494,25 @@ class MortalToolId(StrEnum):
     INVESTIGATE = "investigate"
     COVER_UP = "cover_up"
     SET_POWER_LAW = "set_power_law"
+    BREED_LINE = "breed_line"
+    DESIGN_LINE = "design_line"
+    BANK_SAMPLE = "bank_sample"
+    PLANT_LINE = "plant_line"
+    RAISE_LINE = "raise_line"
+    GROW_STRUCTURE = "grow_structure"
+    GROW_VESSEL = "grow_vessel"
+    GROW_GEAR = "grow_gear"
+    GROW_ORGAN = "grow_organ"
+    CLONE = "clone"
+    HOST_SYMBIONT = "host_symbiont"
+    REMOVE_SYMBIONT = "remove_symbiont"
+    DESIGN_DISEASE = "design_disease"
+    DESIGN_CURE = "design_cure"
+    FOUND_LIVING_WORKS = "found_living_works"
+    RELEASE_LINE = "release_line"
+    RAISE_SAPIENCE = "raise_sapience"
+    LICENSE_LINE = "license_line"
+    SET_CLONE_LAW = "set_clone_law"
 
 
 ToolId = SonToolId | MortalToolId

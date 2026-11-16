@@ -92,6 +92,7 @@ from aerona.engine.phases import (
     life_cycles,
     life_seed,
     lifecycle_ends,
+    living,
     living_stats,
     lore,
     made_kinds,
@@ -288,6 +289,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + reputation.PHASES
     + rumours.PHASES
     + powers.PHASES
+    + living.PHASES
     + resources.PHASES
     + ruins.PHASES
     + settlements.PHASES
@@ -548,6 +550,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "information_trust",
     "company_power",
     "replicators",
+    "living",
     "society_economy",
     "putting_out",
     "refining",

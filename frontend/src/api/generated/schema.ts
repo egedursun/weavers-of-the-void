@@ -5583,6 +5583,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/living/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_living_api_living_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/transformations/of/{node_id}': {
     parameters: {
       query?: never
@@ -7337,6 +7353,374 @@ export interface paths {
     get: operations['list_actions_api_actions_get']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/living:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_living_create_api_actions_living_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/living:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_living_edit_api_actions_living_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/living:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_living_delete_api_actions_living_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/living:end': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_living_end_api_actions_living_end_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/line:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_line_create_api_actions_line_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/line:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_line_edit_api_actions_line_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/line:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_line_delete_api_actions_line_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/line:escape': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_line_escape_api_actions_line_escape_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/line:contain': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_line_contain_api_actions_line_contain_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/line_part:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_line_part_create_api_actions_line_part_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/line_part:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_line_part_edit_api_actions_line_part_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/line_part:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_line_part_delete_api_actions_line_part_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/bank:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_bank_create_api_actions_bank_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/bank:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_bank_edit_api_actions_bank_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/bank:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_bank_delete_api_actions_bank_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sample:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sample_create_api_actions_sample_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sample:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sample_edit_api_actions_sample_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sample:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sample_delete_api_actions_sample_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sample:raise': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sample_raise_api_actions_sample_raise_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/clone:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_clone_create_api_actions_clone_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/symbiont:host': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_symbiont_host_api_actions_symbiont_host_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/symbiont:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_symbiont_edit_api_actions_symbiont_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/symbiont:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_symbiont_remove_api_actions_symbiont_remove_post']
     delete?: never
     options?: never
     head?: never
@@ -41692,6 +42076,28 @@ export interface components {
       kind: string
       share: number
     }
+    BankCreateInput: {
+      structure_id: number
+      holder_id?: number | null
+    }
+    BankDeleteInput: {
+      structure_id: number
+    }
+    BankEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      structure_id: number
+      hold: boolean
+    }
+    BankSampleView: {
+      id: number
+      organism: components['schemas']['NodeRef']
+      quality: number
+      taken_epoch: number
+      locked: string[]
+    }
     BannedWorkView: {
       work: components['schemas']['NodeRef']
       since_epoch: number
@@ -42684,6 +43090,7 @@ export interface components {
       | 'made_mind_of'
       | 'hosted_by'
       | 'linked_with'
+      | 'clone_of'
     BondKindInfo: {
       key: string
       label: string
@@ -44222,6 +44629,7 @@ export interface components {
       | 'civil_host_shield'
       | 'no_mind_compulsion'
       | 'no_plague_powers'
+      | 'no_designed_disease'
     ClauseView: {
       id: number
       kind: components['schemas']['ClauseKind']
@@ -44304,6 +44712,10 @@ export interface components {
       precision: number
       built_epoch: number
       locked: string[]
+    }
+    CloneCreateInput: {
+      source_id: number
+      maker_id?: number | null
     }
     ClubCreateInput: {
       town_id: number
@@ -46288,6 +46700,16 @@ export interface components {
       heresy_id: number
     }
     Cultivation: 'wild' | 'gathered' | 'cultivated' | 'cultivar'
+    CultivationMethod:
+      | 'selective_breeding'
+      | 'cultivation'
+      | 'shaping'
+      | 'engineering'
+      | 'synthesis'
+      | 'binding'
+      | 'cloning'
+      | 'chimera'
+      | 'induction'
     CultureMindView: {
       node_id: number
       name: string
@@ -46351,7 +46773,7 @@ export interface components {
       cured_epoch: number | null
       locked: string[]
     }
-    CureSource: 'knowledge' | 'granted'
+    CureSource: 'knowledge' | 'granted' | 'cultured'
     CureView: {
       community_id: number
       community: string
@@ -48942,6 +49364,7 @@ export interface components {
       | 'name_from_language'
       | 'fixed_name'
       | 'species_became_people'
+      | 'designed_people'
       | 'original_resource'
       | 'cosmic_monopoly'
       | 'outer_cult'
@@ -50862,6 +51285,7 @@ export interface components {
       locked: string[]
     }
     FermentKind: 'yeast' | 'starter' | 'mould' | 'lactic' | 'vinegar'
+    Fertility: 'sterile' | 'breeds_true' | 'breeds_wild' | 'needs_maker'
     FeudParty: 'house' | 'community'
     FeudStatus: 'active' | 'mediated' | 'faded' | 'ended'
     FeudView: {
@@ -52044,6 +52468,14 @@ export interface components {
       broken_epoch: number | null
       locked: string[]
     }
+    GeneBankView: {
+      structure: components['schemas']['NodeRef']
+      holder: components['schemas']['NodeRef'] | null
+      upkeep: number
+      unpaid_epochs: number
+      locked: string[]
+      samples: components['schemas']['BankSampleView'][]
+    }
     GeneView: {
       locus: components['schemas']['Locus']
       label: string
@@ -52778,6 +53210,7 @@ export interface components {
       locked: string[]
     }
     GrowthCycle: 'annual' | 'perennial' | 'tree'
+    GrowthStage: 'seed' | 'young' | 'grown' | 'prime' | 'old' | 'dying' | 'dead'
     GuardRecord: {
       id: number
       key: string
@@ -53524,6 +53957,8 @@ export interface components {
     HorrorSuppressCultInput: {
       cult_id: number
     }
+    HostPlacement: 'skin' | 'blood' | 'organ' | 'nerve' | 'mind'
+    HostRelation: 'mutual' | 'commensal' | 'parasitic' | 'controlling'
     HostedStratumRecord: {
       id: number
       name: string
@@ -55660,7 +56095,7 @@ export interface components {
       value: number
     }
     LanguageModality:
-      'vocal' | 'sign' | 'scent' | 'colour' | 'telepathic' | 'data'
+      'vocal' | 'sign' | 'scent' | 'colour' | 'telepathic' | 'data' | 'chemical'
     LanguageNode: {
       language: components['schemas']['EntitySummary']
       writing_system: components['schemas']['WritingSystem'] | null
@@ -55865,6 +56300,11 @@ export interface components {
       | 'provision_law'
       | 'power_law'
       | 'source_law'
+      | 'living_craft_law'
+      | 'clone_law'
+      | 'clone_status'
+      | 'germline_law'
+      | 'designed_status'
     LawKindSpec: {
       kind: components['schemas']['LawKind']
       area: components['schemas']['LawArea']
@@ -56402,6 +56842,95 @@ export interface components {
       born_epoch: number
       rationale: string | null
     }
+    LineChoice: {
+      id: number
+      name: string
+    }
+    LineContainInput: {
+      line_id: number
+    }
+    LineCreateInput: {
+      name: string
+      method: components['schemas']['CultivationMethod']
+      maker_id: number
+      owner_id?: number | null
+      source_ids?: number[]
+      traits?: components['schemas']['TraitPick'][]
+      fertility: components['schemas']['Fertility']
+    }
+    LineDeleteInput: {
+      line_id: number
+    }
+    LineEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      line_id: number
+      hold: boolean
+    }
+    LineEscapeInput: {
+      line_id: number
+    }
+    LineOutcome:
+      | 'as_meant'
+      | 'unstable'
+      | 'sterile'
+      | 'side_effects'
+      | 'non_viable'
+      | 'escaped'
+    LinePartCreateInput: {
+      owner_id: number
+      part: string
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+    }
+    LinePartDeleteInput: {
+      part_id: number
+      part: string
+    }
+    LinePartEditInput: {
+      part_id: number
+      part: string
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      hold: boolean
+      release?: string[]
+    }
+    LineSourceView: {
+      id: number
+      organism: components['schemas']['NodeRef']
+      locked: string[]
+    }
+    LineTrait:
+      | 'yield'
+      | 'hardiness'
+      | 'climate_tolerance'
+      | 'disease_resistance'
+      | 'strength'
+      | 'speed'
+      | 'size'
+      | 'regeneration'
+      | 'lifespan'
+      | 'docility'
+      | 'potency'
+      | 'fibre'
+      | 'venom'
+      | 'flight'
+      | 'aquatic'
+      | 'void_hardy'
+      | 'gift'
+      | 'nervous_system'
+      | 'sapience'
+    LineTraitView: {
+      id: number
+      trait: components['schemas']['LineTrait']
+      strength: number
+      side_effect: boolean
+      locked: string[]
+    }
     LineageDeleteInput: {
       species_id: number
       package: components['schemas']['PackageKind']
@@ -56475,6 +57004,89 @@ export interface components {
     LinkedRecord: {
       id: number
       name: string
+    }
+    LivingCraftStance: 'abomination' | 'permitted' | 'sacred_duty' | 'silent'
+    LivingCreateInput: {
+      thing_id: number
+      line_id?: number | null
+      metabolism: components['schemas']['Metabolism']
+      lifespan: number
+      bonded_to?: number | null
+    }
+    LivingDeleteInput: {
+      thing_id: number
+    }
+    LivingEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      thing_id: number
+      hold: boolean
+    }
+    LivingEndInput: {
+      thing_id: number
+    }
+    LivingLineView: {
+      id: number
+      name: string
+      method: components['schemas']['CultivationMethod']
+      outcome: components['schemas']['LineOutcome']
+      stability: number
+      generation: number
+      drift_pct: number
+      fertility: components['schemas']['Fertility']
+      metabolism: components['schemas']['Metabolism']
+      owner: components['schemas']['NodeRef'] | null
+      maker: components['schemas']['NodeRef'] | null
+      species: components['schemas']['NodeRef'] | null
+      drifted_from_id: number | null
+      drifted_from_name: string | null
+      licensed: boolean
+      escaped: boolean
+      founded_epoch: number
+      living_count: number
+      locked: string[]
+      traits: components['schemas']['LineTraitView'][]
+      sources: components['schemas']['LineSourceView'][]
+    }
+    LivingNodeView: {
+      node: components['schemas']['NodeRef']
+      alive_reason: string | null
+      clone_reason: string | null
+      profile: components['schemas']['LivingProfileView'] | null
+      lines: components['schemas']['LivingLineView'][]
+      symbionts: components['schemas']['SymbiontView'][]
+      banks: components['schemas']['GeneBankView'][]
+      clone_of: components['schemas']['NodeRef'][]
+      clones: components['schemas']['NodeRef'][]
+      stances: components['schemas']['LivingStancesView'] | null
+      every_line: components['schemas']['LineChoice'][]
+    }
+    LivingProfileView: {
+      line_id: number | null
+      line_name: string | null
+      metabolism: components['schemas']['Metabolism']
+      feed_commodity: components['schemas']['CommodityKind'] | null
+      feed_per_season: number
+      growth_stage: components['schemas']['GrowthStage']
+      size_pct: number
+      regeneration: number
+      health: number
+      temperament: components['schemas']['Temperament'] | null
+      bonded_to: components['schemas']['NodeRef'] | null
+      bond: number
+      fertility: components['schemas']['Fertility']
+      lifespan_years: number
+      age_seasons: number
+      designed_by: components['schemas']['NodeRef'] | null
+      planted_epoch: number
+      locked: string[]
+    }
+    LivingStancesView: {
+      living_craft_stance: components['schemas']['LivingCraftStance']
+      germline_stance: components['schemas']['LivingCraftStance']
+      clone_stance: components['schemas']['LivingCraftStance']
     }
     LlmCall: {
       id: number
@@ -58012,6 +58624,14 @@ export interface components {
       tone: components['schemas']['PrayerTone'] | null
       answered: boolean
     }
+    Metabolism:
+      | 'feeding'
+      | 'light'
+      | 'chemical'
+      | 'host'
+      | 'source'
+      | 'partner'
+      | 'dormant'
     MethodKind:
       | 'hand_sickle'
       | 'ox_plough'
@@ -58066,6 +58686,11 @@ export interface components {
       | 'iron_shears'
       | 'gathered_eggs'
       | 'kept_flocks'
+      | 'cultured_crops'
+      | 'grown_timber'
+      | 'spun_fibre'
+      | 'vat_culture'
+      | 'bioreactor'
     MethodRemoveInput: {
       community_id: number
       process: components['schemas']['ProcessKind']
@@ -59309,6 +59934,25 @@ export interface components {
       | 'investigate'
       | 'cover_up'
       | 'set_power_law'
+      | 'breed_line'
+      | 'design_line'
+      | 'bank_sample'
+      | 'plant_line'
+      | 'raise_line'
+      | 'grow_structure'
+      | 'grow_vessel'
+      | 'grow_gear'
+      | 'grow_organ'
+      | 'clone'
+      | 'host_symbiont'
+      | 'remove_symbiont'
+      | 'design_disease'
+      | 'design_cure'
+      | 'found_living_works'
+      | 'release_line'
+      | 'raise_sapience'
+      | 'license_line'
+      | 'set_clone_law'
     MortalTurnFinishedEvent: {
       id: number
       kind: 'mortal.turn_finished'
@@ -61412,6 +62056,7 @@ export interface components {
       species_id?: number | null
       owner_id?: number | null
       area: number
+      line_id?: number | null
     }
     PerennialView: {
       id: number
@@ -65869,6 +66514,26 @@ export interface components {
       last_salvaged_epoch: number | null
       locked: string[]
     }
+    SampleCreateInput: {
+      owner_id: number
+      part: string
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+    }
+    SampleDeleteInput: {
+      part_id: number
+      part: string
+    }
+    SampleEditInput: {
+      part_id: number
+      part: string
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      hold: boolean
+      release?: string[]
+    }
     SampleNames: {
       language_id: number
       names: string[]
@@ -65876,6 +66541,10 @@ export interface components {
     SampleNamesRequest: {
       count: number
       salt: string
+    }
+    SampleRaiseInput: {
+      sample_id: number
+      maker_id: number
     }
     SanctuaryCreateInput: {
       fugitive_entity_id: number
@@ -68014,6 +68683,8 @@ export interface components {
       | 'revoke_power'
       | 'unveil_truth'
       | 'hide_truth'
+      | 'bless_line'
+      | 'curse_line'
     SonToolsView: {
       son_id: number
       rarity: components['schemas']['Rarity']
@@ -70042,6 +70713,36 @@ export interface components {
       world_id: number
       level: components['schemas']['SurveyLevel']
     }
+    SymbiontEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      symbiont_id: number
+      hold: boolean
+    }
+    SymbiontHostInput: {
+      host_id: number
+      line_id?: number | null
+      placement: components['schemas']['HostPlacement']
+      relation: components['schemas']['HostRelation']
+      strength: number
+    }
+    SymbiontRemoveInput: {
+      symbiont_id: number
+    }
+    SymbiontView: {
+      id: number
+      host: components['schemas']['NodeRef']
+      line_id: number | null
+      line_name: string | null
+      mind: components['schemas']['NodeRef'] | null
+      placement: components['schemas']['HostPlacement']
+      relation: components['schemas']['HostRelation']
+      strength: number
+      since_epoch: number
+      locked: string[]
+    }
     SymbiosisKind: 'mutualism' | 'commensalism' | 'parasitism' | 'mimicry'
     SympatheticLinkCreateInput: {
       holder_node_id: number
@@ -71667,6 +72368,10 @@ export interface components {
       | 'impressionable'
       | 'cunning_tactician'
       | 'reckless'
+    TraitPick: {
+      trait: components['schemas']['LineTrait']
+      strength: number
+    }
     TraitPointView: {
       trait: string
       epoch: number
@@ -85898,6 +86603,35 @@ export interface operations {
       }
     }
   }
+  node_living_api_living_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LivingNodeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   node_transformations_api_transformations_of__node_id__get: {
     parameters: {
       query?: never
@@ -89041,6 +89775,719 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionCatalogueItem'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_living_create_api_actions_living_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LivingCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_living_edit_api_actions_living_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LivingEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_living_delete_api_actions_living_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LivingDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_living_end_api_actions_living_end_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LivingEndInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_line_create_api_actions_line_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LineCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_line_edit_api_actions_line_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LineEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_line_delete_api_actions_line_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LineDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_line_escape_api_actions_line_escape_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LineEscapeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_line_contain_api_actions_line_contain_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LineContainInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_line_part_create_api_actions_line_part_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LinePartCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_line_part_edit_api_actions_line_part_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LinePartEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_line_part_delete_api_actions_line_part_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LinePartDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_bank_create_api_actions_bank_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BankCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_bank_edit_api_actions_bank_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BankEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_bank_delete_api_actions_bank_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BankDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sample_create_api_actions_sample_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SampleCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sample_edit_api_actions_sample_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SampleEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sample_delete_api_actions_sample_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SampleDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sample_raise_api_actions_sample_raise_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SampleRaiseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_clone_create_api_actions_clone_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CloneCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_symbiont_host_api_actions_symbiont_host_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SymbiontHostInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_symbiont_edit_api_actions_symbiont_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SymbiontEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_symbiont_remove_api_actions_symbiont_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SymbiontRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
         }
       }
       default: {
@@ -152474,6 +153921,7 @@ export const bondKindValues: ReadonlyArray<
   'made_mind_of',
   'hosted_by',
   'linked_with',
+  'clone_of',
 ]
 export const bondRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BondRole']
@@ -152868,6 +154316,7 @@ export const clauseKindValues: ReadonlyArray<
   'civil_host_shield',
   'no_mind_compulsion',
   'no_plague_powers',
+  'no_designed_disease',
 ]
 export const clergyOfficeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClergyOffice']
@@ -153449,12 +154898,25 @@ export const cultStatsKindValues: ReadonlyArray<
 export const cultivationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Cultivation']
 > = ['wild', 'gathered', 'cultivated', 'cultivar']
+export const cultivationMethodValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CultivationMethod']
+> = [
+  'selective_breeding',
+  'cultivation',
+  'shaping',
+  'engineering',
+  'synthesis',
+  'binding',
+  'cloning',
+  'chimera',
+  'induction',
+]
 export const cureKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CureKind']
 > = ['rite', 'technique', 'medicine', 'time', 'quest']
 export const cureSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CureSource']
-> = ['knowledge', 'granted']
+> = ['knowledge', 'granted', 'cultured']
 export const curseKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CurseKind']
 > = ['none', 'bloodthirst', 'misfortune', 'wasting', 'madness', 'betrayal']
@@ -154181,6 +155643,7 @@ export const entityFlagValues: ReadonlyArray<
   'name_from_language',
   'fixed_name',
   'species_became_people',
+  'designed_people',
   'original_resource',
   'cosmic_monopoly',
   'outer_cult',
@@ -154864,6 +156327,9 @@ export const feedCategoryValues: ReadonlyArray<
 export const fermentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FermentKind']
 > = ['yeast', 'starter', 'mould', 'lactic', 'vinegar']
+export const fertilityValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Fertility']
+> = ['sterile', 'breeds_true', 'breeds_wild', 'needs_maker']
 export const feudPartyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FeudParty']
 > = ['house', 'community']
@@ -155463,6 +156929,9 @@ export const groupKindValues: ReadonlyArray<
 export const growthCycleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GrowthCycle']
 > = ['annual', 'perennial', 'tree']
+export const growthStageValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GrowthStage']
+> = ['seed', 'young', 'grown', 'prime', 'old', 'dying', 'dead']
 export const guestRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GuestRole']
 > = [
@@ -155785,6 +157254,12 @@ export const horrorEventKindValues: ReadonlyArray<
   'the_dimming',
   'whispers_from_beyond',
 ]
+export const hostPlacementValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['HostPlacement']
+> = ['skin', 'blood', 'organ', 'nerve', 'mind']
+export const hostRelationValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['HostRelation']
+> = ['mutual', 'commensal', 'parasitic', 'controlling']
 export const houseStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HouseStats']['kind']
 > = ['house']
@@ -156341,7 +157816,7 @@ export const landUseRingValues: ReadonlyArray<
 > = ['gardens', 'forestry', 'grain', 'ranching', 'wilds']
 export const languageModalityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageModality']
-> = ['vocal', 'sign', 'scent', 'colour', 'telepathic', 'data']
+> = ['vocal', 'sign', 'scent', 'colour', 'telepathic', 'data', 'chemical']
 export const languagePolicyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguagePolicy']
 > = ['official', 'liturgical', 'suppressed', 'revival']
@@ -156433,6 +157908,11 @@ export const lawKindValues: ReadonlyArray<
   'provision_law',
   'power_law',
   'source_law',
+  'living_craft_law',
+  'clone_law',
+  'clone_status',
+  'germline_law',
+  'designed_status',
 ]
 export const lawScopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawScope']
@@ -156555,6 +158035,32 @@ export const lifecycleStateValues: ReadonlyArray<
   'banished',
   'destroyed',
 ]
+export const lineOutcomeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LineOutcome']
+> = ['as_meant', 'unstable', 'sterile', 'side_effects', 'non_viable', 'escaped']
+export const lineTraitValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LineTrait']
+> = [
+  'yield',
+  'hardiness',
+  'climate_tolerance',
+  'disease_resistance',
+  'strength',
+  'speed',
+  'size',
+  'regeneration',
+  'lifespan',
+  'docility',
+  'potency',
+  'fibre',
+  'venom',
+  'flight',
+  'aquatic',
+  'void_hardy',
+  'gift',
+  'nervous_system',
+  'sapience',
+]
 export const linkGroupValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LinkGroup']
 > = [
@@ -156569,6 +158075,9 @@ export const linkGroupValues: ReadonlyArray<
 export const linkTokenValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LinkToken']
 > = ['hair', 'blood', 'name', 'portrait', 'fragment']
+export const livingCraftStanceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LivingCraftStance']
+> = ['abomination', 'permitted', 'sacred_duty', 'silent']
 export const llmCallKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LlmCallKind']
 > = ['agent', 'structured']
@@ -156967,6 +158476,9 @@ export const messageIntentValues: ReadonlyArray<
   'command',
   'dispatch',
 ]
+export const metabolismValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Metabolism']
+> = ['feeding', 'light', 'chemical', 'host', 'source', 'partner', 'dormant']
 export const methodKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MethodKind']
 > = [
@@ -157023,6 +158535,11 @@ export const methodKindValues: ReadonlyArray<
   'iron_shears',
   'gathered_eggs',
   'kept_flocks',
+  'cultured_crops',
+  'grown_timber',
+  'spun_fibre',
+  'vat_culture',
+  'bioreactor',
 ]
 export const milestoneValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Milestone']
@@ -157474,6 +158991,25 @@ export const mortalToolIdValues: ReadonlyArray<
   'investigate',
   'cover_up',
   'set_power_law',
+  'breed_line',
+  'design_line',
+  'bank_sample',
+  'plant_line',
+  'raise_line',
+  'grow_structure',
+  'grow_vessel',
+  'grow_gear',
+  'grow_organ',
+  'clone',
+  'host_symbiont',
+  'remove_symbiont',
+  'design_disease',
+  'design_cure',
+  'found_living_works',
+  'release_line',
+  'raise_sapience',
+  'license_line',
+  'set_clone_law',
 ]
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalTurnFinishedEvent']['kind']
@@ -159855,6 +161391,8 @@ export const sonToolIdValues: ReadonlyArray<
   'revoke_power',
   'unveil_truth',
   'hide_truth',
+  'bless_line',
+  'curse_line',
 ]
 export const sonTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnFinishedEvent']['kind']

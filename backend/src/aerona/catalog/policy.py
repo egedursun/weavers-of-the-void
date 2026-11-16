@@ -127,6 +127,11 @@ LAW_POLICY: MappingProxyType[LawKind, Callable[[Terms], Shift]] = MappingProxyTy
         LawKind.PROVISION_LAW: fixed({C.WORKER: 4, C.UNEMPLOYED: 6, C.MERCHANT: -3}),
         LawKind.POWER_LAW: fixed({C.OFFICIAL: 2, C.WARRIOR: 1}),
         LawKind.SOURCE_LAW: fixed({C.PRIEST: 2, C.SCRIBE: 1}),
+        LawKind.LIVING_CRAFT_LAW: fixed({C.FARMER: 2, C.PROFESSIONAL: 1}),
+        LawKind.CLONE_LAW: fixed({C.PROFESSIONAL: 2, C.NOBLE: 1}),
+        LawKind.CLONE_STATUS: fixed({C.WORKER: 1, C.PROFESSIONAL: -1}),
+        LawKind.GERMLINE_LAW: fixed({C.NOBLE: 2, C.PRIEST: 1}),
+        LawKind.DESIGNED_STATUS: fixed({C.OFFICIAL: 1, C.CITIZEN: 1}),
     }
 )
 MANDATE_POLICY: MappingProxyType[MandateKind, Shift] = MappingProxyType(

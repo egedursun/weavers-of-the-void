@@ -8,6 +8,8 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.living import LivingLineRow
+from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import ClimateAffinity, CureSource, DiseaseTarget, DiseaseVector, OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
@@ -33,7 +35,7 @@ PROFILE_NUMBERS = {
     "resistance": (0, PERCENT),
 }
 PROFILE_CHOICES = {"vector": DiseaseVector, "climate_affinity": ClimateAffinity}
-PROFILE_LINKS = ("host_species_id", "origin_incident_id", "origin_region_id")
+PROFILE_LINKS = ("host_species_id", "origin_incident_id", "origin_region_id", "designed_line_id", "target_node_id")
 TARGETS_KEY = "target_functions"
 PROFILE_FIELDS = (*PROFILE_NUMBERS, *PROFILE_CHOICES, TARGETS_KEY, *PROFILE_LINKS)
 OUTBREAK_NUMBERS = {"severity": (0, PERCENT), "infected": (0, 10**9), "dead": (0, 10**9)}
@@ -83,6 +85,14 @@ async def link(ctx: TickContext, key: str, value: ProfileValue) -> int | None:
     if key == "origin_incident_id":
         if await ctx.session.get(IncidentRow, value) is None:
             raise NotFoundError("No such incident.")
+        return value
+    if key == "designed_line_id":
+        if await ctx.session.get(LivingLineRow, value) is None:
+            raise NotFoundError("No such living line.")
+        return value
+    if key == "target_node_id":
+        if await ctx.session.get(NodeRow, value) is None:
+            raise NotFoundError("No such thing to aim at.")
         return value
     kind = EntityType.SPECIES if key == "host_species_id" else EntityType.REGION
     await living(ctx, value, frozenset({kind}), "species" if kind is EntityType.SPECIES else "land")

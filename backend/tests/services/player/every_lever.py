@@ -4544,3 +4544,45 @@ LEVERS.update(
         "breach:trigger": after(TRUTH_UP, truth_id=Newest("hidden_truths"), cause="witness", place_id=Pick(TOWN)),
     }
 )
+LINE_UP = ("line:create", {"name": "The Long-Legged Line", "method": "selective_breeding", "maker_id": Pick(MORTAL), "source_ids": [Pick(EntityType.SPECIES)]})
+LIFE_UP = ("living:create", {"thing_id": Pick(STRUCTURE), "metabolism": "light", "lifespan": 60})
+TRAIT_UP = ("line_part:create", {"owner_id": Newest("living_lines"), "part": "trait", "values": {"trait": "speed", "strength": 30}})
+BANK_UP = ("bank:create", {"structure_id": Pick(STRUCTURE), "holder_id": Pick(MORTAL)})
+SAMPLE_UP = ("sample:create", {"owner_id": Pick(STRUCTURE), "part": "sample", "values": {"organism_node_id": Pick(EntityType.SPECIES), "quality": 70}})
+HOST_UP = ("symbiont:host", {"host_id": Pick(MORTAL), "placement": "blood", "relation": "mutual"})
+LIVING_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "living:edit": {"health": 70, "growth_stage": "grown", "bond": 60, "metabolism": "feeding", "feed_commodity": "fodder"},
+    "line:edit": {"stability": 55, "fertility": "breeds_wild", "licensed": True},
+    "line_part:edit": {"strength": 45},
+    "bank:edit": {"upkeep": 3, "unpaid_epochs": 1},
+    "sample:edit": {"quality": 90},
+    "symbiont:edit": {"strength": 50, "relation": "parasitic"},
+}
+EDITS = {**EDITS, **LIVING_EDITS}
+LEVERS.update(
+    {
+        "living:create": given(thing_id=Pick(STRUCTURE), metabolism="light", lifespan=60),
+        "living:edit": after(LIFE_UP, thing_id=Pick(STRUCTURE), values=LIVING_EDITS["living:edit"], release=[]),
+        "living:delete": after(LIFE_UP, thing_id=Pick(STRUCTURE)),
+        "living:end": after(LIFE_UP, thing_id=Pick(STRUCTURE)),
+        "line:create": given(name="The Long-Legged Line", method="selective_breeding", maker_id=Pick(MORTAL), source_ids=[Pick(EntityType.SPECIES)]),
+        "line:edit": after(LINE_UP, line_id=Newest("living_lines"), values=LIVING_EDITS["line:edit"], release=[]),
+        "line:delete": after(LINE_UP, line_id=Newest("living_lines")),
+        "line:escape": after(LINE_UP, line_id=Newest("living_lines")),
+        "line:contain": after(LINE_UP, ("line:escape", {"line_id": Newest("living_lines")}), line_id=Newest("living_lines")),
+        "line_part:create": after(LINE_UP, owner_id=Newest("living_lines"), part="trait", values={"trait": "yield", "strength": 25}),
+        "line_part:edit": after(LINE_UP, TRAIT_UP, part_id=Newest("living_line_traits"), part="trait", values=LIVING_EDITS["line_part:edit"]),
+        "line_part:delete": after(LINE_UP, TRAIT_UP, part_id=Newest("living_line_traits"), part="trait"),
+        "bank:create": given(structure_id=Pick(STRUCTURE), holder_id=Pick(MORTAL)),
+        "bank:edit": after(BANK_UP, structure_id=Pick(STRUCTURE), values=LIVING_EDITS["bank:edit"], release=[]),
+        "bank:delete": after(BANK_UP, structure_id=Pick(STRUCTURE)),
+        "sample:create": after(BANK_UP, owner_id=Pick(STRUCTURE), part="sample", values={"organism_node_id": Pick(EntityType.SPECIES), "quality": 70}),
+        "sample:edit": after(BANK_UP, SAMPLE_UP, part_id=Newest("gene_bank_samples"), part="sample", values=LIVING_EDITS["sample:edit"]),
+        "sample:delete": after(BANK_UP, SAMPLE_UP, part_id=Newest("gene_bank_samples"), part="sample"),
+        "sample:raise": after(BANK_UP, SAMPLE_UP, sample_id=Newest("gene_bank_samples"), maker_id=Pick(MORTAL)),
+        "clone:create": given(source_id=Pick(MORTAL), maker_id=Pick(MORTAL)),
+        "symbiont:host": given(host_id=Pick(MORTAL), placement="blood", relation="mutual"),
+        "symbiont:edit": after(HOST_UP, symbiont_id=Newest("symbionts"), values=LIVING_EDITS["symbiont:edit"], release=[]),
+        "symbiont:remove": after(HOST_UP, symbiont_id=Newest("symbionts")),
+    }
+)

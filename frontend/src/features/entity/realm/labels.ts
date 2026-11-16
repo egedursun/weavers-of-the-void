@@ -243,9 +243,19 @@ export const LAW_KINDS: Record<string, string> = {
   provision_law: 'Provision of goods',
   power_law: 'Powers',
   source_law: 'Sources of power',
+  living_craft_law: 'Living craft',
+  clone_law: 'Making clones',
+  clone_status: 'Standing of clones',
+  germline_law: 'Changing what passes to descendants',
+  designed_status: 'Standing of designed peoples',
 }
 
 export const LAW_PARAMS: Record<string, string> = {
+  engineering: 'Engineering of life',
+  synthesis: 'Synthesis of life',
+  cloning: 'Cloning',
+  chimera: 'Chimeras',
+  shaping: 'Shaping of bodies',
   rule: 'Rule',
   gender: 'Gender',
   wholeness_required: 'Must be whole of body',
@@ -497,6 +507,11 @@ export const CLAUSES: Record<string, Named> = {
   },
   no_plague_powers: {
     label: 'No powers of plague',
+    icon: Biohazard,
+    tone: 'info',
+  },
+  no_designed_disease: {
+    label: 'No diseases made by design',
     icon: Biohazard,
     tone: 'info',
   },

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import UniqueConstraint, func, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -71,7 +71,7 @@ TRUTH_METHODS = (
     "by_neglect",
     "by_nature",
 )
-OWNER_KEYS = {"source_id", "system_id", "power_id", "first_source_id", "first_system_id"}
+OWNER_KEYS = {"source_id", "system_id", "power_id", "first_source_id", "first_system_id", "line_id", "bank_entity_id"}
 
 
 @dataclass(frozen=True)
@@ -186,10 +186,24 @@ async def add_part(ctx: TickContext, parts: dict[str, type[Base]], kind: str, ow
     unknown = sorted(set(values) - columns)
     if unknown:
         raise ValidationFailedError(f"{an(kind, capital=True)} has no {', '.join(unknown)}.")
-    row = table(**{owner_key: owner_id, **values, "locked": []})
+    fields = {owner_key: owner_id, **values}
+    await refuse_duplicate(ctx, table, kind, fields)
+    row = table(**fields, locked=[])
     ctx.session.add(row)
     await ctx.session.flush()
     return row
+
+
+async def refuse_duplicate(ctx: TickContext, table: type[Base], kind: str, fields: dict[str, Any]) -> None:
+    for constraint in table.metadata.tables[str(table.__tablename__)].constraints:
+        if not isinstance(constraint, UniqueConstraint):
+            continue
+        keys = [column.key for column in constraint.columns]
+        if not all(key in fields for key in keys):
+            continue
+        found = await ctx.session.scalar(select(func.count()).select_from(table).where(*(getattr(table, key) == fields[key] for key in keys)))
+        if found:
+            raise ValidationFailedError(f"It already has that {kind}.")
 
 
 async def edit_part(ctx: TickContext, parts: dict[str, type[Base]], kind: str, part_id: int, values: dict[str, Any], *, hold: bool, release: list[str]) -> Base:

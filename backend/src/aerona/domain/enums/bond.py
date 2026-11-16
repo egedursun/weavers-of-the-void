@@ -70,6 +70,7 @@ class BondKind(StrEnum):
     MADE_MIND_OF = "made_mind_of"
     HOSTED_BY = "hosted_by"
     LINKED_WITH = "linked_with"
+    CLONE_OF = "clone_of"
 
 
 class BondCategory(StrEnum):

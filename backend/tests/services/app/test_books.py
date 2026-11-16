@@ -160,9 +160,7 @@ async def test_book_and_codex_tell_how_the_world_was_made(session: AsyncSession,
     assert "| High ground | Chosen by the seed |" in codex
 
 
-async def test_a_world_made_before_its_genesis_settings_were_kept_says_so_in_the_book_and_the_codex(
-    session: AsyncSession, rules: Rules, world: Cosmos
-) -> None:
+async def test_a_world_made_before_its_genesis_settings_were_kept_says_so_in_the_book_and_the_codex(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
     world.cosmos.genesis_settings = None
     await session.flush()
     page = await book_page(session, rules)

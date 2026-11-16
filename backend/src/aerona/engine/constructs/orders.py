@@ -10,6 +10,7 @@ from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, Instr
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SchemeRow
+from aerona.db.tables.living import LivingProfileRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
@@ -26,6 +27,7 @@ from aerona.engine.constructs.making import Design, make_construct, skilled_make
 from aerona.engine.constructs.wards import realm_of_army
 from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import enemies_of
+from aerona.engine.living.profiles import refuses
 from aerona.engine.mind.hooks import judged
 from aerona.engine.minds.crimes import erasure_crime, mind_crime
 from aerona.engine.minds.phase import change_will
@@ -325,6 +327,9 @@ async def target_for(ctx: TickContext, rules: InstructionSetRow, order: Instruct
 
 
 async def obey(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules: InstructionSetRow, tally: OrderTally) -> None:
+    if refuses(ctx, await ctx.session.get(LivingProfileRow, construct.id)):
+        await note(ctx, f"{construct.name} would not obey a handler it no longer trusts.", key="living.refused", ids=[construct.id])
+        return
     holder = await resolve_holder(ctx, construct, rules, tally)
     beast = await ctx.session.get(BeastProfileRow, construct.id)
     will = await will_of(ctx, construct.id)

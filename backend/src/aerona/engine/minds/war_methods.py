@@ -1,15 +1,23 @@
-from sqlalchemy import select
+from collections.abc import Awaitable, Callable
+
+from sqlalchemy import Select, or_, select
 
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.constructs import InstructionOrderRow, InstructionSetRow
+from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.living import LivingLineRow
 from aerona.db.tables.made import IntrusionRow, MadeRealmRow, ReplicatorLineRow, ReplicatorPresenceRow
+from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.tables.polity import PolityMemberRow, TreatyClauseRow
+from aerona.db.tables.powers import PowerRow
+from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.entity import MortalRole
 from aerona.domain.enums.made import IntrusionAim, ReplicatorOutput, ReplicatorStage
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind
 from aerona.engine.context import TickContext
 
@@ -22,8 +30,13 @@ METHOD_CLAUSES = frozenset(
         ClauseKind.REPLICATOR_WEAPON_BAN,
         ClauseKind.CIVIL_NETWORK_SHIELD,
         ClauseKind.CIVIL_HOST_SHIELD,
+        ClauseKind.NO_MIND_COMPULSION,
+        ClauseKind.NO_PLAGUE_POWERS,
+        ClauseKind.NO_DESIGNED_DISEASE,
     }
 )
+SEIZED = "it seized what the other side's minds and machines obeyed"
+HARMING = frozenset({SpellTechnique.DESTROY, SpellTechnique.DRAIN})
 
 
 async def side_of(ctx: TickContext, party_id: int) -> set[int]:
@@ -88,20 +101,67 @@ async def civil_hosts(ctx: TickContext, victims: set[int]) -> set[int]:
     }
 
 
+def folk_of(sides: set[int]) -> Select[int]:
+    return select(EntityRow.id).where(or_(EntityRow.id.in_(sides), EntityRow.location_id.in_(sides)))
+
+
+async def compelled(ctx: TickContext, actors: set[int], victims: set[int]) -> bool:
+    found = await ctx.session.scalar(
+        select(MemoryRow.id)
+        .where(
+            MemoryRow.kind == MemoryKind.COMPELLED_ME,
+            MemoryRow.epoch == ctx.epoch,
+            MemoryRow.holder_node_id.in_(folk_of(victims)),
+            MemoryRow.subject_node_id.in_(folk_of(actors)),
+        )
+        .limit(1)
+    )
+    return found is not None
+
+
+async def plague_powers(ctx: TickContext, actors: set[int]) -> bool:
+    found = await ctx.session.scalar(
+        select(PowerRow.id)
+        .where(
+            PowerRow.holder_node_id.in_(folk_of(actors)),
+            PowerRow.form == SpellForm.BODY,
+            PowerRow.technique.in_(list(HARMING)),
+            PowerRow.last_used_epoch == ctx.epoch,
+        )
+        .limit(1)
+    )
+    return found is not None
+
+
+async def designed_against(ctx: TickContext, actors: set[int], victims: set[int]) -> bool:
+    lines = select(LivingLineRow.id).where(LivingLineRow.maker_node_id.in_(folk_of(actors)))
+    found = await ctx.session.scalar(
+        select(DiseaseProfileRow.disease_entity_id)
+        .where(DiseaseProfileRow.designed_line_id.in_(lines), DiseaseProfileRow.target_node_id.in_(folk_of(victims)))
+        .limit(1)
+    )
+    return found is not None
+
+
 async def method_breached(ctx: TickContext, clause: TreatyClauseRow) -> str | None:
     if clause.kind not in METHOD_CLAUSES or clause.obligor_node_id is None or clause.beneficiary_node_id is None:
         return None
     actors, victims = await side_of(ctx, clause.obligor_node_id), await side_of(ctx, clause.beneficiary_node_id)
-    checks = {
-        ClauseKind.MIND_SEIZURE_BAN: (intruded(ctx, actors, victims, {IntrusionAim.SEIZE}), "it seized what the other side's minds and machines obeyed"),
-        ClauseKind.CIVIL_NETWORK_SHIELD: (intruded(ctx, actors, victims, {IntrusionAim.DENY}), "it cut a network the other side's people lived by"),
-        ClauseKind.CIVIL_HOST_SHIELD: (
-            intruded(ctx, actors, victims, {IntrusionAim.DENY, IntrusionAim.SEIZE, IntrusionAim.ALTER}, await civil_hosts(ctx, victims)),
-            "it struck what holds the other side's realm",
-        ),
-        ClauseKind.SOLDIER_COPY_BAN: (copied_soldiers(ctx, actors), "it copied its soldiers"),
-        ClauseKind.AUTONOMOUS_WEAPONS_BAN: (armed_with_orders(ctx, actors, victims), "it set instructed weapons on the other side"),
-        ClauseKind.REPLICATOR_WEAPON_BAN: (replicator_weapons(ctx, actors, victims), "it loosed self-making machines on the other side's lands"),
+    kind = ClauseKind(clause.kind)
+    checks: dict[ClauseKind, tuple[Callable[[], Awaitable[bool]], str]] = {
+        ClauseKind.MIND_SEIZURE_BAN: (lambda: intruded(ctx, actors, victims, {IntrusionAim.SEIZE}), SEIZED),
+        ClauseKind.CIVIL_NETWORK_SHIELD: (lambda: intruded(ctx, actors, victims, {IntrusionAim.DENY}), "it cut a network the other side's people lived by"),
+        ClauseKind.CIVIL_HOST_SHIELD: (lambda: shielded_hosts(ctx, actors, victims), "it struck what holds the other side's realm"),
+        ClauseKind.SOLDIER_COPY_BAN: (lambda: copied_soldiers(ctx, actors), "it copied its soldiers"),
+        ClauseKind.AUTONOMOUS_WEAPONS_BAN: (lambda: armed_with_orders(ctx, actors, victims), "it set instructed weapons on the other side"),
+        ClauseKind.REPLICATOR_WEAPON_BAN: (lambda: replicator_weapons(ctx, actors, victims), "it loosed self-making machines on the other side's lands"),
+        ClauseKind.NO_MIND_COMPULSION: (lambda: compelled(ctx, actors, victims), "it bent the minds of the other side's people by a power"),
+        ClauseKind.NO_PLAGUE_POWERS: (lambda: plague_powers(ctx, actors), "it used powers that harm the body"),
+        ClauseKind.NO_DESIGNED_DISEASE: (lambda: designed_against(ctx, actors, victims), "it made a disease aimed at the other side"),
     }
-    test, reason = checks[ClauseKind(clause.kind)]
-    return reason if await test else None
+    test, reason = checks[kind]
+    return reason if await test() else None
+
+
+async def shielded_hosts(ctx: TickContext, actors: set[int], victims: set[int]) -> bool:
+    return await intruded(ctx, actors, victims, {IntrusionAim.DENY, IntrusionAim.SEIZE, IntrusionAim.ALTER}, await civil_hosts(ctx, victims))

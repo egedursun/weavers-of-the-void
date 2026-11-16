@@ -46,3 +46,4 @@ class SpreadPath(StrEnum):
 class CureSource(StrEnum):
     KNOWLEDGE = "knowledge"
     GRANTED = "granted"
+    CULTURED = "cultured"
