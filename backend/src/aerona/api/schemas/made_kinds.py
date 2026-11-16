@@ -11,6 +11,7 @@ from aerona.domain.enums.integrity import Criticality, SectionHazard, SectionSta
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmourType, Formation, ShieldType, UnitFamily, UnitKind
 from aerona.domain.enums.mortal import MortalSex
+from aerona.domain.enums.powers import PowerDeviceEffect
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import BuildingForm, BuildScale, SectionRole, StaffScale, StructureKind, StructureSection
@@ -169,6 +170,7 @@ class EquipmentModelView(ApiModel):
     quality: int
     technique: Technique | None
     tech_level: int
+    power_effect: PowerDeviceEffect | None
     damage: int
     piercing: int
     reach: int

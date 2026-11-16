@@ -10,6 +10,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.powers import PowerDeviceEffect
 
 MODEL_FIELDS = (
     "name",
@@ -23,6 +24,7 @@ MODEL_FIELDS = (
     "quality",
     "technique",
     "tech_level",
+    "power_effect",
     "damage",
     "piercing",
     "reach",
@@ -90,6 +92,7 @@ class EquipmentModelRow(Base):
     parent_model_id: Mapped[int | None] = mapped_column(ForeignKey("equipment_models.id", ondelete="SET NULL"))
     created_epoch: Mapped[int] = mapped_column(default=0)
     retired: Mapped[bool] = mapped_column(default=False)
+    power_effect: Mapped[PowerDeviceEffect | None] = mapped_column(enum_type(PowerDeviceEffect, "power_effect"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

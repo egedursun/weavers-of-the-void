@@ -400,6 +400,9 @@ ROLE_ARMS: MappingProxyType[UnitKind, MappingProxyType[ArmamentSlot, tuple[Equip
         U.BATTLE_CASTERS: arms(hand=(E.STAFF, E.DAGGER), missile=(E.FOCUS,), armour=WARD_GUARD, shield=(), helmet=()),
         U.SUPPORT_CASTERS: arms(hand=(E.STAFF,), missile=(E.FOCUS,), armour=WARD_GUARD, shield=(), helmet=()),
         U.SUMMONERS: arms(hand=(E.STAFF, E.DAGGER), missile=(E.FOCUS,), armour=WARD_GUARD, shield=(), helmet=()),
+        U.GIFTED: arms(hand=(E.STAFF, E.DAGGER), missile=(E.FOCUS,), armour=WARD_GUARD, shield=(), helmet=()),
+        U.DAMPENERS: arms(hand=(E.DAGGER,), missile=(E.FOCUS,), armour=WARD_GUARD, shield=(), helmet=()),
+        U.DETECTORS: arms(hand=(E.DAGGER,), missile=(E.FOCUS,), shield=(), helmet=()),
         U.MECHANISED_INFANTRY: arms(hand=(E.BLADE, E.DAGGER), missile=RIFLES, armour=VEST_GUARD, shield=(), helmet=MEDIUM_HELMS, sensor=SIGHTS, support=AIDS),
         U.SPECIAL_FORCES: arms(
             hand=(E.BLADE, E.DAGGER),

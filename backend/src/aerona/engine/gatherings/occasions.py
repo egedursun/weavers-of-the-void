@@ -10,7 +10,7 @@ from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.place import PlaceProfileRow
-from aerona.db.tables.polity import OfficeRow, PolityProfileRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -21,11 +21,12 @@ from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole, Milestone
 from aerona.domain.enums.mortal import LifeStage, PunishmentKind
-from aerona.domain.enums.polity import DecisionRule, OfficeKind
+from aerona.domain.enums.polity import DecisionRule, LawKind, OfficeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import STANDING_STATES, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.mortal.kin import children_of, close_kin_of, parents_of, spouses_of
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.stats import stat_or
@@ -34,6 +35,8 @@ from aerona.engine.renown.currencies import ruler_of_realm
 G = GatheringKind
 MARTIAL_ROLES = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.HUNTER, MortalRole.OFFICER})
 PERFORMER_ROLES = frozenset({MortalRole.ARTISAN, MortalRole.SCRIBE, MortalRole.PRIEST, MortalRole.JOURNALIST})
+
+TESTING_LAWS = frozenset({"registered", "licensed", "conscripted"})
 
 
 @dataclass(frozen=True)
@@ -154,6 +157,16 @@ async def festivals(ctx: TickContext) -> list[Occasion]:
         community = await living(ctx, community_id)
         if community is not None and chance(ctx, f"festival.{tradition_id}.{community_id}", ctx.rules.gatherings.festival_pct):
             found.append(Occasion(G.FESTIVAL, community.id, community.world_id, community.id, tradition_id=tradition_id))
+    return found
+
+
+async def testings(ctx: TickContext) -> list[Occasion]:
+    found: list[Occasion] = []
+    for polity in list(await ctx.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.POLITY, EntityRow.status == EntityStatus.CANON))):
+        level = str(await law_param(ctx.session, polity.id, LawKind.POWER_LAW, "level") or "free")
+        town = await ctx.session.scalar(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == polity.id).limit(1))
+        if level in TESTING_LAWS and town is not None and chance(ctx, f"testing.{polity.id}", ctx.rules.powered_society.testing_finds):
+            found.append(Occasion(G.TESTING, town, polity.world_id, town))
     return found
 
 
@@ -374,6 +387,7 @@ async def occasions(ctx: TickContext, atlas: RegionAtlas) -> list[Occasion]:
         *await structured(ctx, StructureKind.OFFICE_TOWER, G.CONVENTION, table.convention_pct),
         *await structured(ctx, StructureKind.SPACEPORT, G.LAUNCH, table.launch_pct),
         *await structured(ctx, StructureKind.BROADCAST_TOWER, G.BROADCAST, table.broadcast_pct),
+        *await testings(ctx),
     ]
     kept: list[Occasion] = []
     per_world: dict[int | None, int] = {}

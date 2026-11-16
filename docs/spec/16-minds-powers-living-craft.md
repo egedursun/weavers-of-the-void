@@ -1289,6 +1289,30 @@ The behaviours of F53 in engine detail. A world has hidden truths only when the 
 
 **Rule namespaces.** `power_sources`, `magic_systems`, `powers`, `powered_society`, `concealment`.
 
+
+**Cross-cutting layers (6.6) for W45.**
+
+| Layer | What W45 gives it |
+|---|---|
+| Record of what happened | incident keys for sources made and run thin, systems shaped, powers stirring, breaking loose, used, giving out, granted and taken back, gestalts and hive minds, bands, broken vows, breaches, revelations and folk going into hiding |
+| What changed | breaches are append-only; spans keep the value an effect replaced and restore it when they end |
+| When | powers carry the epochs they were gained and last used; spans name the epoch they end; breaches their epoch; knowledge the epoch it was weighed and revealed |
+| Where | densities belong to lands, sources to their scope, breaches to their place, knowledge to its population |
+| Why | a refused use names the law, the restriction or the unknown source; a breach names its cause and the keepers' answer |
+| Who knows | knowledge and belief per population, breaches name their witnesses, keepers and seekers are rows, a mortal sees only the truths it keeps, seeks or has heard |
+| How it is told | lines told from typed fields; the stock image of a power burning out was rewritten plainly |
+| What it was | breaches and foresights keep their history; a revealed truth fades back into hiding by neglect |
+| What is kept | nothing folded; ended spans are deleted only once their value is restored |
+| Names | sources, systems and bands are named by the god or from their founder |
+| Look | no medium fixed; device effects, sources and truths are typed |
+| Model-facing wording | every W45 tool text, result and context line read in full against rule 2 |
+| Control | dedicated levers for sources, systems, powers, their parts and truths; record levers for densities, knowledge, laws, stances, registries, spans, keepers, seekers and knowledge; profile levers for attitudes and lines |
+| Reach | Powers, Sources of power, Systems of power and Hidden truths sit in `ThingSections` for every kind of node; the atlas shows hidden places |
+| Books | W45 records render through `services/books/typed.py`; breach witnesses render as names |
+| Search | W45 records are found by their typed fields through the record index |
+| Integrity and legacy | `powers.legacy_backfill`; migration `eb2a138f5f58` retypes every column whose enum gained values |
+| Speed | densities exist only where a source is drawn; devices and resistances read per use |
+
 ---
 
 ## Part 4. W46 — Living craft

@@ -42,7 +42,7 @@ from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
-from aerona.engine.sacred.places import church_of, plagued_regions, realm_of_town, region_of, town_of
+from aerona.engine.sacred.places import church_of, patron_of, plagued_regions, realm_of_town, region_of, town_of
 from aerona.engine.sacred.signs import defeated_realms, miracles_by_region, omen_worlds, struck_regions
 
 MIDDLING = 50
@@ -73,12 +73,6 @@ class MysteryTally:
     doctrines: int = 0
     conversions: int = 0
     drifts: int = 0
-
-
-async def patron_of(ctx: TickContext, entity_id: int) -> int | None:
-    book = await ctx.divine()
-    gods, _ = await book.faithful_of(ctx.session, entity_id)
-    return min(gods) if gods else None
 
 
 async def see_vision(ctx: TickContext, row: MysticRow, mortal: EntityRow, sender: int | None, tally: MysteryTally) -> VisionRow:

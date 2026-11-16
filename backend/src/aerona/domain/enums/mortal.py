@@ -102,6 +102,7 @@ class CrimeKind(StrEnum):
     ERASURE = "erasure"
     MACHINE_SEIZURE = "machine_seizure"
     IMPERSONATION = "impersonation"
+    MIND_COMPULSION = "mind_compulsion"
 
 
 class PunishmentKind(StrEnum):

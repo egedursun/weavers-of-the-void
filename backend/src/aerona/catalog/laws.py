@@ -77,6 +77,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
             "erasure": pick(*PENALTIES, default="prison"),
             "machine_seizure": pick(*PENALTIES, default="prison"),
             "impersonation": pick(*PENALTIES, default="fine"),
+            "mind_compulsion": pick(*PENALTIES, default="prison"),
             "trial": pick("judge", "jury", "combat", "ordeal"),
             "torture": pick("allowed", "forbidden", default="forbidden"),
         },
@@ -134,6 +135,11 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
         LawKind.NETWORK_LAW: {"level": pick("state_owned", "licensed", "open", default="licensed")},
         LawKind.SURVEILLANCE_LAW: {"level": pick("forbidden", "warranted", "broad", "total", default="warranted")},
         LawKind.PROVISION_LAW: {"level": pick("market", "ration", "universal", "by_status", "by_reputation", "communal", default="market")},
+        LawKind.POWER_LAW: {
+            "level": pick("free", "registered", "licensed", "conscripted", "hunted", "banned", default="free"),
+            "mind_powers": pick("allowed", "licensed", "banned", default="licensed"),
+        },
+        LawKind.SOURCE_LAW: {"level": pick("free", "licensed", "banned", default="free")},
     },
 )
 
@@ -211,6 +217,8 @@ LAW_TITLES = MappingProxyType(
         LawKind.NETWORK_LAW: "the Network Law",
         LawKind.SURVEILLANCE_LAW: "the Watch Law",
         LawKind.PROVISION_LAW: "the Provision Law",
+        LawKind.POWER_LAW: "the Law of Powers",
+        LawKind.SOURCE_LAW: "the Law of Sources",
     }
 )
 
@@ -240,6 +248,7 @@ LAW_EFFECTS = MappingProxyType(
             "Theft: {theft}; murder: {murder}; treason: {treason}; blasphemy: {blasphemy}; desertion: {desertion}; witchcraft: {witchcraft}; "
             "theft of a mind: {mind_theft}; copying without leave: {unlicensed_copying}; forced edit of a mind: {forced_edit}; "
             "ending a mind: {erasure}; seizing a made thing: {machine_seizure}; passing as another by copy: {impersonation}; "
+            "bending a mind by a power: {mind_compulsion}; "
             "trial by {trial}; questioning under torture {torture}."
         ),
         LawKind.LEVY_LAW: "{share}% of the able are levied for {duration} seasons; armies grow.",
@@ -284,6 +293,8 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.NETWORK_LAW: "Networks are {level}.",
         LawKind.SURVEILLANCE_LAW: "Watching the people is {level}.",
         LawKind.PROVISION_LAW: "What is made without hands is given out by {level}.",
+        LawKind.POWER_LAW: "Those with powers are {level}; powers over minds are {mind_powers}.",
+        LawKind.SOURCE_LAW: "Drawing on a source of power is {level} unless a source is named otherwise.",
     }
 )
 

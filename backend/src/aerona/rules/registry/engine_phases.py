@@ -649,6 +649,18 @@ class EnginePhasesRules:
     minds: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: minds in made seats are kept or go still, drift, grow or lose their will, wake and leave"
     )
+    magic_systems: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: systems of power drift with their sources and share what one root learns")
+    powers: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: sources renew or run thin, powers wake, strain, burn out, are used and spread by exposure"
+    )
+    powered_society: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: peoples judge the gifted, realms register or hunt them, bands form and lines pass their powers on",
+    )
+    concealment: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: hidden truths are kept, sought, breached, revealed or forgotten")
     transformations: int = rule(
         1,
         0,

@@ -97,6 +97,7 @@ CRIME_TEXT = total(
         CrimeKind.ERASURE: "ending a mind",
         CrimeKind.MACHINE_SEIZURE: "seizing a made thing",
         CrimeKind.IMPERSONATION: "passing as another by a copy",
+        CrimeKind.MIND_COMPULSION: "bending a mind by a power",
     },
 )
 

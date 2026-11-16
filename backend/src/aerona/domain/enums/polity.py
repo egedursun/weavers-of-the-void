@@ -168,6 +168,8 @@ class LawKind(StrEnum):
     NETWORK_LAW = "network_law"
     SURVEILLANCE_LAW = "surveillance_law"
     PROVISION_LAW = "provision_law"
+    POWER_LAW = "power_law"
+    SOURCE_LAW = "source_law"
 
 
 class DebtRemedy(StrEnum):
@@ -275,6 +277,8 @@ class ClauseKind(StrEnum):
     REPLICATOR_WEAPON_BAN = "replicator_weapon_ban"
     CIVIL_NETWORK_SHIELD = "civil_network_shield"
     CIVIL_HOST_SHIELD = "civil_host_shield"
+    NO_MIND_COMPULSION = "no_mind_compulsion"
+    NO_PLAGUE_POWERS = "no_plague_powers"
 
 
 class PartyRole(StrEnum):
@@ -339,4 +343,6 @@ LAW_AREAS: dict[LawKind, LawArea] = {
     LawKind.NETWORK_LAW: LawArea.PROPERTY,
     LawKind.SURVEILLANCE_LAW: LawArea.SOCIAL,
     LawKind.PROVISION_LAW: LawArea.FISCAL,
+    LawKind.POWER_LAW: LawArea.SOCIAL,
+    LawKind.SOURCE_LAW: LawArea.SOCIAL,
 }

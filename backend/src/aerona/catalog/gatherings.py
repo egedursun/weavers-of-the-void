@@ -43,6 +43,7 @@ GATHERING_COLLECTIONS = total(
         G.LAUNCH: C.CEREMONY,
         G.RALLY: C.PROCESSION,
         G.STRIKE: C.COUNCIL,
+        G.TESTING: C.COMPETITION,
     },
 )
 
@@ -73,6 +74,7 @@ GATHERING_THOUGHTS = total(
         G.ELECTION: ThoughtKind.RESPECTED,
         G.LAUNCH: ThoughtKind.FELT_PURPOSE,
         G.RALLY: ThoughtKind.BELONGED,
+        G.TESTING: ThoughtKind.FELT_PURPOSE,
         G.STRIKE: ThoughtKind.RESPECTED,
     },
 )

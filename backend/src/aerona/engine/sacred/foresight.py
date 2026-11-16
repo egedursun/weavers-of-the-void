@@ -44,8 +44,7 @@ from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.renown.currencies import members_of, ruler_of_realm
 from aerona.engine.sacred.astrology import real_sky
-from aerona.engine.sacred.mysteries import patron_of
-from aerona.engine.sacred.places import realm_of_town, region_of
+from aerona.engine.sacred.places import patron_of, realm_of_town, region_of
 from aerona.engine.services.war import ongoing_wars
 
 MIDDLE = 50

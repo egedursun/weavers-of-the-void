@@ -298,6 +298,7 @@ async def equipment_models(session: AsyncSession, models: list[EquipmentModelRow
             quality=row.quality,
             technique=row.technique,
             tech_level=row.tech_level,
+            power_effect=row.power_effect,
             damage=row.damage,
             piercing=row.piercing,
             reach=row.reach,

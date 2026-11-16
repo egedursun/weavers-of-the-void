@@ -26,8 +26,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, has_flag, living_entity, remove_flag
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.sacred.guards import perform
-from aerona.engine.sacred.mysteries import patron_of
-from aerona.engine.sacred.places import church_of, plagued_regions, realm_of_town, region_of, town_of
+from aerona.engine.sacred.places import church_of, patron_of, plagued_regions, realm_of_town, region_of, town_of
 from aerona.engine.sacred.signs import dominion_over, miracles_by_region, struck_regions
 from aerona.engine.services.war import ongoing_wars
 

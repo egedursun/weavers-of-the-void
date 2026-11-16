@@ -125,6 +125,8 @@ LAW_POLICY: MappingProxyType[LawKind, Callable[[Terms], Shift]] = MappingProxyTy
         LawKind.NETWORK_LAW: fixed({C.MERCHANT: 2, C.OFFICIAL: 2}),
         LawKind.SURVEILLANCE_LAW: fixed({C.OFFICIAL: 3, C.CITIZEN: -3}),
         LawKind.PROVISION_LAW: fixed({C.WORKER: 4, C.UNEMPLOYED: 6, C.MERCHANT: -3}),
+        LawKind.POWER_LAW: fixed({C.OFFICIAL: 2, C.WARRIOR: 1}),
+        LawKind.SOURCE_LAW: fixed({C.PRIEST: 2, C.SCRIBE: 1}),
     }
 )
 MANDATE_POLICY: MappingProxyType[MandateKind, Shift] = MappingProxyType(

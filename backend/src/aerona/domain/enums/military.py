@@ -64,6 +64,9 @@ class UnitKind(StrEnum):
     POWERED_TROOPERS = "powered_troopers"
     DROP_TROOPS = "drop_troops"
     PILOTS = "pilots"
+    GIFTED = "gifted"
+    DAMPENERS = "dampeners"
+    DETECTORS = "detectors"
 
 
 class ArmourType(StrEnum):

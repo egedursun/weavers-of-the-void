@@ -45,6 +45,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.agrarian import CentralPlaceRow, LandRingRow, SoilNutrientRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
+from aerona.db.tables.concealment import HiddenTruthRow
 from aerona.db.tables.culture import ArtworkProfileRow, CastingRow, HolderLevelRow, IdeologyAdherentRow, LanguageStandingRow, LegendProfileRow
 from aerona.db.tables.cycles import AsabiyyaRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
@@ -592,7 +593,23 @@ async def region_stocks(session: AsyncSession, world_id: int) -> dict[int, Regio
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0}).update(values)
     for region, count in (await networks_by_region(session, world_id, atlas)).items():
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["networks"] = count
+    for region, count in (await hidden_by_region(session, world_id, atlas)).items():
+        totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["hidden"] = count
     return {region: RegionStocks(**values) for region, values in totals.items()}
+
+
+async def hidden_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, int]:
+    found: dict[int, int] = {}
+    subjects = (
+        select(HiddenTruthRow.subject_node_id)
+        .join(EntityRow, EntityRow.id == HiddenTruthRow.subject_node_id)
+        .where(EntityRow.world_id == world_id, HiddenTruthRow.revealed.is_(False))
+    )
+    for subject in await session.scalars(subjects):
+        region = atlas.top_region(subject)
+        if region is not None:
+            found[region] = found.get(region, 0) + 1
+    return found
 
 
 async def networks_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, int]:

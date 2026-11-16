@@ -142,6 +142,7 @@ class HarmCause(StrEnum):
     RADIATION = "radiation"
     DECOMPRESSION = "decompression"
     EXPERIMENT = "experiment"
+    POWER = "power"
 
 
 class ConditionKind(StrEnum):

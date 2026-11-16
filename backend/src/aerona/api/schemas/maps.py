@@ -98,6 +98,7 @@ class RegionStocks(ApiModel):
     solidarity: int = 0
     frontier: int = 0
     networks: int = 0
+    hidden: int = 0
 
 
 class MapConvoy(ApiModel):

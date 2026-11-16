@@ -4492,3 +4492,55 @@ LEVERS.update(
         "salvage:open": given(site_id=Pick(TOWN), holder_id=Pick(MORTAL), yield_left=40),
     }
 )
+
+
+SOURCE_UP = ("source:create", {"name": "The Deep Well", "scope_id": Pick(EntityType.REGION), "locus": "place"})
+SYSTEM_UP = ("magic_system:create", {"name": "The Old Way", "scope_id": Pick("world"), "structure": "innate"})
+POWER_UP = ("power:create", {"holder_id": Pick(MORTAL), "technique": "perceive", "form": "mind", "strength": 4})
+GRANTED_UP = ("power:grant", {"holder_id": Pick(MORTAL), "god_id": Pick("son"), "technique": "control", "form": "fate", "strength": 2})
+TRUTH_UP = ("truth:create", {"title": "those who walk unseen", "subject_id": Pick(MORTAL), "kind": "presence", "methods": ["by_oath"]})
+COST_UP = ("source_part:create", {"owner_id": Newest("power_sources"), "part": "cost", "values": {"cost": "hp", "weight": 40}})
+GRAMMAR_UP = ("system_part:create", {"owner_id": Newest("magic_systems"), "part": "grammar", "values": {"technique": "ward", "form": "mind"}})
+LIMIT_UP = ("power_part:create", {"owner_id": Newest("powers"), "part": "restriction", "values": {"kind": "spoken_vow", "strength_gain_pct": 20}})
+POWER_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "source:edit": {"stability": 70, "renewal": "season", "visibility": "overt"},
+    "source_part:edit": {"weight": 30},
+    "magic_system:edit": {"predictability": 70, "structure": "mixed", "learnability": "gifted_only"},
+    "system_part:edit": {"technique": "perceive", "form": "time"},
+    "power:edit": {"strength": 5, "control": 60, "state": "strained"},
+    "power_part:edit": {"strength_gain_pct": 35, "detail": "only before witnesses"},
+    "truth:edit": {"strength": 70, "by_cover_story": True, "sanity_cost": 10},
+}
+EDITS = {**EDITS, **POWER_EDITS}
+LEVERS.update(
+    {
+        "source:create": given(name="The Deep Well", scope_id=Pick(EntityType.REGION), locus="place"),
+        "source:edit": after(SOURCE_UP, source_id=Newest("power_sources"), values=POWER_EDITS["source:edit"], release=[]),
+        "source:delete": after(SOURCE_UP, source_id=Newest("power_sources")),
+        "source_part:create": after(SOURCE_UP, owner_id=Newest("power_sources"), part="cost", values={"cost": "hp", "weight": 40}),
+        "source_part:edit": after(SOURCE_UP, COST_UP, part_id=Newest("power_source_costs"), part="cost", values=POWER_EDITS["source_part:edit"]),
+        "source_part:delete": after(SOURCE_UP, COST_UP, part_id=Newest("power_source_costs"), part="cost"),
+        "magic_system:create": given(name="The Old Way", scope_id=Pick("world"), structure="innate"),
+        "magic_system:edit": after(SYSTEM_UP, system_id=Newest("magic_systems"), values=POWER_EDITS["magic_system:edit"], release=[]),
+        "magic_system:delete": after(SYSTEM_UP, system_id=Newest("magic_systems")),
+        "system_part:create": after(SYSTEM_UP, owner_id=Newest("magic_systems"), part="grammar", values={"technique": "ward", "form": "mind"}),
+        "system_part:edit": after(SYSTEM_UP, GRAMMAR_UP, part_id=Newest("magic_system_grammar"), part="grammar", values=POWER_EDITS["system_part:edit"]),
+        "system_part:delete": after(SYSTEM_UP, GRAMMAR_UP, part_id=Newest("magic_system_grammar"), part="grammar"),
+        "power:create": given(holder_id=Pick(MORTAL), technique="perceive", form="mind", strength=4),
+        "power:edit": after(POWER_UP, power_id=Newest("powers"), values=POWER_EDITS["power:edit"], release=[]),
+        "power:delete": after(POWER_UP, power_id=Newest("powers")),
+        "power:awaken": after(POWER_UP, power_id=Newest("powers")),
+        "power:suppress": after(POWER_UP, power_id=Newest("powers")),
+        "power:grant": given(holder_id=Pick(MORTAL), god_id=Pick("son"), technique="control", form="fate", strength=2),
+        "power:revoke": after(GRANTED_UP, power_id=Newest("powers"), god_id=Pick("son")),
+        "power_part:create": after(POWER_UP, owner_id=Newest("powers"), part="trigger", values={"trigger": "danger"}),
+        "power_part:edit": after(POWER_UP, LIMIT_UP, part_id=Newest("power_restrictions"), part="restriction", values=POWER_EDITS["power_part:edit"]),
+        "power_part:delete": after(POWER_UP, LIMIT_UP, part_id=Newest("power_restrictions"), part="restriction"),
+        "truth:create": given(title="those who walk unseen", subject_id=Pick(MORTAL), kind="presence", methods=["by_oath"]),
+        "truth:edit": after(TRUTH_UP, truth_id=Newest("hidden_truths"), values=POWER_EDITS["truth:edit"], release=[]),
+        "truth:delete": after(TRUTH_UP, truth_id=Newest("hidden_truths")),
+        "truth:reveal": after(TRUTH_UP, truth_id=Newest("hidden_truths"), population_id=Pick(TOWN)),
+        "truth:hide": after(TRUTH_UP, truth_id=Newest("hidden_truths")),
+        "breach:trigger": after(TRUTH_UP, truth_id=Newest("hidden_truths"), cause="witness", place_id=Pick(TOWN)),
+    }
+)

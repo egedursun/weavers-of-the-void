@@ -285,6 +285,7 @@ export const CAUSES: Record<components['schemas']['HarmCause'], string> = {
   radiation: 'Radiation',
   decompression: 'Decompression',
   experiment: 'An experiment',
+  power: 'A power',
 }
 
 export const CONDITIONS: Record<string, Named> = {

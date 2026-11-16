@@ -1,4 +1,5 @@
 import {
+  ScanSearch,
   Sunrise,
   Activity,
   Ban,
@@ -102,6 +103,7 @@ export const GATHERING_KINDS: Record<Schema['GatheringKind'], Named> = {
   convention: { label: 'Convention', icon: Briefcase, tone: 'verdigris' },
   launch: { label: 'Launch', icon: Rocket, tone: 'gold' },
   broadcast: { label: 'Broadcast', icon: RadioTower, tone: 'info' },
+  testing: { label: 'Testing for gifts', icon: ScanSearch, tone: 'verdigris' },
 }
 
 export const GATHERING_STATUSES: Record<Schema['GatheringStatus'], Named> = {

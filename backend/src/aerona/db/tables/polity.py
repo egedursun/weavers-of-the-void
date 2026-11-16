@@ -23,6 +23,7 @@ from aerona.domain.enums.polity import (
     TreatyKind,
     TreatyStatus,
 )
+from aerona.domain.enums.powers import BloodlineRule
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.statecraft import CouncilTask, SubjectKind
 
@@ -208,6 +209,7 @@ class HouseProfileRow(Base):
     seats: Mapped[list[int]] = mapped_column(JSON, default=list)
     founded_epoch: Mapped[int] = mapped_column(default=0)
     extinct_epoch: Mapped[int | None]
+    bloodline_rule: Mapped[BloodlineRule] = mapped_column(enum_type(BloodlineRule, "bloodline_rule"), default=BloodlineRule.NONE, server_default="none")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

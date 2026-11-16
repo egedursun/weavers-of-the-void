@@ -509,6 +509,7 @@ from aerona.rules.registry.polity import (
     TreatiesRules,
 )
 from aerona.rules.registry.power_unlock_levels import PowerUnlockLevelsRules
+from aerona.rules.registry.powers import ConcealmentRules, MagicSystemRules, PoweredSocietyRules, PowerRules, PowerSourceRules
 from aerona.rules.registry.prehistory import PrehistoryRules
 from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules, RefiningRules
 from aerona.rules.registry.rarities import RaritiesRules
@@ -1057,6 +1058,11 @@ class Rules:
     made_relics: MadeRelicRules = field(default_factory=MadeRelicRules)
     made_peoples: MadePeopleRules = field(default_factory=MadePeopleRules)
     mind_law: MindLawRules = field(default_factory=MindLawRules)
+    power_sources: PowerSourceRules = field(default_factory=PowerSourceRules)
+    magic_systems: MagicSystemRules = field(default_factory=MagicSystemRules)
+    powers: PowerRules = field(default_factory=PowerRules)
+    powered_society: PoweredSocietyRules = field(default_factory=PoweredSocietyRules)
+    concealment: ConcealmentRules = field(default_factory=ConcealmentRules)
     fossils: FossilRules = field(default_factory=FossilRules)
     museums: MuseumRules = field(default_factory=MuseumRules)
     gardens: GardenRules = field(default_factory=GardenRules)

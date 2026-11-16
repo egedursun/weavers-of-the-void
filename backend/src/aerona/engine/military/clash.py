@@ -66,6 +66,7 @@ from aerona.engine.nature.senses import AMBUSH, NIGHT, sense_score
 from aerona.engine.networks.book import command_factor
 from aerona.engine.operations.command import command_edge
 from aerona.engine.polity.book import RealmBook
+from aerona.engine.powers.war import foe_armies, power_edge
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
@@ -267,6 +268,8 @@ async def side_of(
     medicine += await surgeon_skill(ctx, [item.id for item, _ in armies]) * table.battle_magic.surgeon_pct // PERCENT
     biology, culture = await profiles_of(ctx.session, community)
     ordered = await command_edge(ctx, army.id) * (1 + await battle_omen(ctx, community)) * await command_factor(ctx.session, ctx.rules, community.id, ctx.epoch)
+    foes = await foe_armies(ctx.session, row.war_id, community.id)
+    ordered *= await power_edge(ctx.session, ctx.rules, community.id, [item.id for item, _ in armies], foes)
     kin = battle_edge(ctx.rules, biology, culture, terrain=ground.terrain, weather=ground.weather, night=ground.night, river=ground.river, defending=defending)
     kin *= await cold_war(ctx, community, army.location_id)
     if ground.night:

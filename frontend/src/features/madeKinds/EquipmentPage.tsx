@@ -2,12 +2,14 @@ import { Crosshair, Gem, Package, Shield, Sword, Swords } from 'lucide-react'
 import { damageTypeValues, techniqueValues } from '@/api/generated/schema'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
+import { table } from '@/features/arcana/labels'
 import { Held } from '@/features/collective/parts'
 import { Chip, Facts } from '@/features/cosmography/parts'
 import { SPAN } from '@/features/cycles/model'
 import { useWorldMaterials } from '@/features/entity/economy/api'
 import { COMMODITY, MATERIAL_LABEL } from '@/features/entity/economy/labels'
 import { Ref } from '@/features/gatherings/parts'
+import { DEVICE_EFFECTS } from '@/features/powers/labels'
 import { type EquipmentModel } from './api'
 import {
   EQUIPMENT_FAMILIES,
@@ -139,7 +141,7 @@ export function EquipmentPage({
           ['Weight and cost', `${row.weight} · ${row.cost}`],
           [
             'Knowledge it needs',
-            `level ${row.tech_level}${row.technique ? `, ${sectionLabel(row.technique).toLowerCase()}` : ''}`,
+            `level ${row.tech_level}${row.technique ? `, ${sectionLabel(row.technique).toLowerCase()}` : ''}${row.power_effect ? `, ${DEVICE_EFFECTS[row.power_effect].label.toLowerCase()}` : ''}`,
           ],
           ['Made by', <Ref key='origin' node={row.origin} empty='no maker' />],
           [
@@ -217,6 +219,12 @@ export function EquipmentPage({
               kind: 'number',
               min: 0,
               max: LEVEL_MAX,
+            },
+            {
+              key: 'power_effect',
+              label: 'What it does to powers',
+              kind: 'pick',
+              table: table(DEVICE_EFFECTS),
             },
             {
               key: 'damage',

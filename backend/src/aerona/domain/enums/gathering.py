@@ -27,6 +27,7 @@ class GatheringKind(StrEnum):
     CONVENTION = "convention"
     LAUNCH = "launch"
     BROADCAST = "broadcast"
+    TESTING = "testing"
 
 
 class GatheringStatus(StrEnum):

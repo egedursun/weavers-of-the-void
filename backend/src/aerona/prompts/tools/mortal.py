@@ -1226,4 +1226,43 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "As ruler, you set how your realm provides for its people once goods can be fabricated: by market, ration, for all, by status, by standing or in common. 1 action.",
         {"level": "How goods are given out"},
     ),
+    T.USE_POWER: ToolText(
+        "You use a power you hold, on someone or on yourself. Each use strains you; past your limit it harms you. 1 action.",
+        {"power_id": "The power", "target_id": "Whom or what you use it on, or empty for yourself"},
+    ),
+    T.TRAIN_POWER: ToolText(
+        "You train a power you hold to master it better. 1 action.",
+        {"power_id": "The power"},
+    ),
+    T.TEST_FOR_GIFTS: ToolText(
+        "As ruler, you have the people of your town tested for hidden gifts. 1 action.",
+        {},
+    ),
+    T.LINK_MINDS: ToolText(
+        "You link your power with another who holds one; linked, you are stronger together and share the strain. 1 action.",
+        {"partner_id": "Whom you link with"},
+    ),
+    T.FORESEE: ToolText(
+        "You use a power over time to see what may come. 1 action.",
+        {"power_id": "The power"},
+    ),
+    T.KEEP_SECRET_OF: ToolText(
+        "You take up the keeping of a hidden truth you know of. 1 action.",
+        {"truth_id": "The hidden truth"},
+    ),
+    T.INVESTIGATE: ToolText(
+        "You look into a hidden truth you have heard of, for an aim of your own. 1 action.",
+        {"truth_id": "The hidden truth", "aim": "What you want: expose, exploit, destroy_the_hidden, join_the_hidden or understand"},
+    ),
+    T.COVER_UP: ToolText(
+        "As a keeper, you cover up a hidden truth in your town so fewer believe what they heard. 1 action.",
+        {"truth_id": "The hidden truth"},
+    ),
+    T.SET_POWER_LAW: ToolText(
+        "As ruler, you set how your realm treats those with powers and powers over minds. 1 action.",
+        {
+            "level": "Those with powers are: free, registered, licensed, conscripted, hunted or banned",
+            "mind_powers": "Powers over minds are: allowed, licensed or banned",
+        },
+    ),
 }

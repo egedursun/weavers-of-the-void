@@ -122,6 +122,7 @@ def cause_mix(rules: InjuryRules, cause: HarmCause) -> dict[DamageType, int]:
         HarmCause.CRASH: {DamageType.BLUNT: rules.crash_blunt, DamageType.CUT: rules.crash_cut, DamageType.FIRE: rules.crash_fire},
         HarmCause.RADIATION: {DamageType.RADIATION: rules.radiation_radiation},
         HarmCause.DECOMPRESSION: {DamageType.COLD: rules.decompression_cold, DamageType.BLUNT: rules.decompression_blunt},
+        HarmCause.POWER: {DamageType.PSYCHIC: rules.power_psychic, DamageType.BLUNT: rules.power_blunt},
         HarmCause.EXPERIMENT: {
             DamageType.CHEMICAL: rules.experiment_chemical,
             DamageType.RADIATION: rules.experiment_radiation,

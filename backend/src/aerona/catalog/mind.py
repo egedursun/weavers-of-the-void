@@ -551,9 +551,11 @@ def _memory(
     return MemorySpec(MappingProxyType(components), decay_pct, MappingProxyType(cares), label, act, inherited)
 
 
-MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = MappingProxyType(
+MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = total(
+    MemoryKind,
     {
         M.MEMORY_GAP: _memory({OC.TRUST: 100}, 10, {}, "A gap in memory", inherited=False),
+        M.COMPELLED_ME: _memory({OC.GRIEVANCE: 50, OC.TRUST: 30, OC.FEAR: 20}, 8, {V.HONOUR: 25, V.LAW: 10}, "Bent our minds"),
         M.HARMED_ME: _memory({OC.GRIEVANCE: 60, OC.TRUST: 25, OC.FEAR: 15}, 12, {V.HONOUR: 20, V.MERCY: 15}, "Harmed us", A.RAIDING),
         M.KILLED_KIN: _memory({OC.GRIEVANCE: 75, OC.TRUST: 15, OC.FEAR: 10}, 2, {V.KINSHIP: 40, V.HONOUR: 25}, "Killed our kin", A.EXECUTION),
         M.SAVED_ME: _memory({OC.AFFECTION: 45, OC.TRUST: 35, OC.RESPECT: 20}, 6, {V.MERCY: 20, V.KINSHIP: 15}, "Saved us"),
@@ -595,7 +597,7 @@ MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = MappingProxyType(
         M.ILL_WILL: _memory({OC.GRIEVANCE: 50, OC.TRUST: 35, OC.FEAR: 15}, 12, {V.XENOPHILIA: -15, V.HONOUR: 10}, "Showed us ill will"),
         M.STOLE_FAITHFUL: _memory({OC.GRIEVANCE: 60, OC.TRUST: 40}, 8, {V.LOYALTY: 15, V.COMPETITION: 15}, "Took our faithful"),
         M.AIDED_CHOSEN: _memory({OC.AFFECTION: 50, OC.TRUST: 50}, 10, {V.FRIENDSHIP: 15, V.LOYALTY: 10}, "Aided our chosen"),
-    }
+    },
 )
 
 ACT_READINGS: MappingProxyType[ActKind, MappingProxyType[ValueAxis, int]] = MappingProxyType(

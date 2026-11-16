@@ -114,6 +114,7 @@ from aerona.engine.phases import (
     pantheon,
     places,
     population,
+    powers,
     prehistory,
     prisoners,
     production,
@@ -286,6 +287,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + religion_spread.PHASES
     + reputation.PHASES
     + rumours.PHASES
+    + powers.PHASES
     + resources.PHASES
     + ruins.PHASES
     + settlements.PHASES
@@ -491,6 +493,9 @@ SOCIETY_STAGE = stage(
     "currency",
     "wizards",
     "rite_cycles",
+    "magic_systems",
+    "powers",
+    "powered_society",
     "creature_rebellion",
     "godlessness",
     "speciation",
@@ -666,6 +671,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "item_cycles",
     "artwork_cycles",
     "rumour_cycles",
+    "concealment",
     "ages",
     "arcs",
 )

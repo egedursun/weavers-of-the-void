@@ -1141,7 +1141,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact or naval_limit",
             "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
-            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id, tonnage, frame...)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield, no_mind_compulsion, no_plague_powers), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id, tonnage, frame...)",
             "epochs": "How many ages it holds; empty for ever",
             "parties.party_id": "The party's id",
             "parties.role": "Its role: signatory, overlord, vassal or guarantor",
@@ -1896,5 +1896,57 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.OPEN_REALM: ToolText(
         "You open a sealed made realm again. 1 action.",
         {"realm_id": "The made realm", "reason": "Why you open it"},
+    ),
+    T.SHAPE_SOURCE: ToolText(
+        "You bring forth a source of power in a place in your reach: what it is drawn from, how it renews, who may draw on it and how plainly its use is seen. 1 action.",
+        {
+            "name": "Its name",
+            "place_id": "The place where it can be drawn on",
+            "locus": "What it is drawn from: self, others, place, sky, surroundings, made_things, patron, bond, story, void, substance, life, death, dream or emotion",
+            "renewal": "How it renews: rest, time, season, sky_cycle, worship, feeding, taking, vows_kept, return_to_place or none",
+            "access": "Who may draw on it: anyone, gifted, trained, granted, bloodline, bonded or made",
+            "visibility": "How plainly its use is seen: overt, subtle or hidden",
+            "reason": "Why you bring it forth",
+        },
+    ),
+    T.SHAPE_MAGIC: ToolText(
+        "You shape a system of power for your world: how it works, how predictable and how common it is, and who can learn it. 1 action.",
+        {
+            "name": "Its name",
+            "world_id": "Your world",
+            "structure": "How it works: rite, innate, granted, bonded, crafted or mixed",
+            "predictability": "How far its outcomes follow known rules (0 to 100)",
+            "prevalence": "How common it is (0 to 100)",
+            "learnability": "Who can learn it: anyone, gifted_only, granted_only or cannot_be_taught",
+            "reason": "Why you shape it",
+        },
+    ),
+    T.GRANT_POWER: ToolText(
+        "You give a being in your reach a power of your own giving, at a cost in essence. 1 action.",
+        {
+            "holder_id": "Who receives it",
+            "technique": "What it does: create, perceive, transform, destroy, control, bind, summon, ward, drain or mimic",
+            "form": "What it works on: fire, water, air, earth, plant, animal, body, mind, image, spirit, time, void, death, light, space, force, sound, emotion, fate, machine or information",
+            "strength": "Its strength (1 to 10)",
+            "reason": "Why you give it",
+        },
+    ),
+    T.REVOKE_POWER: ToolText(
+        "You take back a power you gave. 1 action.",
+        {"power_id": "The power", "reason": "Why you take it back"},
+    ),
+    T.UNVEIL_TRUTH: ToolText(
+        "You make a hidden truth known to a people, a realm or a town in your reach. 1 action.",
+        {"truth_id": "The hidden truth", "population_id": "Who comes to know it", "reason": "Why you make it known"},
+    ),
+    T.HIDE_TRUTH: ToolText(
+        "You hide a truth about something in your reach from those you name; only some can perceive it. 1 action.",
+        {
+            "title": "What the truth is",
+            "subject_id": "What it is about",
+            "kind": "What kind of truth: existence, nature, presence, power, event, origin, awakening, programme or cosmic",
+            "hidden_from": "From whom: everyone, a_people, a_polity, the_uninitiated, a_world or the_cosmos",
+            "reason": "Why you hide it",
+        },
     ),
 }

@@ -1,4 +1,5 @@
 import {
+  Dumbbell,
   WifiOff,
   Wifi,
   Unplug,
@@ -622,6 +623,12 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   halt_replicator: OctagonX,
   seal_realm: Lock,
   open_realm: LockOpen,
+  shape_source: Waves,
+  shape_magic: Sparkles,
+  grant_power: Gift,
+  revoke_power: Undo2,
+  unveil_truth: Eye,
+  hide_truth: EyeOff,
   make_mind: Cpu,
   free_mind: Unlock,
   bind_mind: Link,
@@ -657,6 +664,15 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   withdraw_people: Users,
   set_surveillance: Eye,
   set_provision: HandCoins,
+  use_power: Zap,
+  train_power: Dumbbell,
+  test_for_gifts: ScanSearch,
+  link_minds: Link2,
+  foresee: Telescope,
+  keep_secret_of: Lock,
+  investigate: Search,
+  cover_up: EyeOff,
+  set_power_law: Gavel,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

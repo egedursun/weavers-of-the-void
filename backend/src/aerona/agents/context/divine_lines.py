@@ -20,6 +20,7 @@ from aerona.agents.context.minds_lines import son_minds_lines
 from aerona.agents.context.mythic_lines import mythic_lines
 from aerona.agents.context.nature_lines import son_nature_lines
 from aerona.agents.context.operations_lines import son_operations_lines
+from aerona.agents.context.powers_lines import son_power_lines
 from aerona.agents.context.regime_lines import son_regime_lines
 from aerona.agents.context.sacred_lines import son_sacred_lines
 from aerona.agents.context.scope import Scope
@@ -109,6 +110,7 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     lines.extend(await son_sacred_lines(scope, son))
     lines.extend(await son_arts_lines(scope, son))
     lines.extend(await son_minds_lines(scope, son))
+    lines.extend(await son_power_lines(scope, son))
     lines.extend(await son_ages_lines(scope, son))
     lines.extend(await son_folkways_lines(scope, son))
     lines.extend(await son_customs_lines(scope, son))

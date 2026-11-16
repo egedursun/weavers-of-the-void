@@ -1,4 +1,5 @@
 import {
+  Cpu,
   Ban,
   BookOpen,
   Building2,
@@ -233,6 +234,7 @@ export const SOURCES: Record<Schema['ForesightSource'], Named> = {
   power: { label: 'A seer’s gift', icon: Eye, tone: 'verdigris' },
   divination: { label: 'A reading of omens', icon: Orbit, tone: 'info' },
   god: { label: 'A god’s showing', icon: Sun, tone: 'gold' },
+  made_oracle: { label: 'A made oracle', icon: Cpu, tone: 'info' },
 }
 
 export const FORESIGHT_STATUS: Record<Schema['ForesightStatus'], Named> = {

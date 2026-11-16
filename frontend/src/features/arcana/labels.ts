@@ -1,4 +1,10 @@
 import {
+  Copy,
+  Move,
+  AudioLines,
+  Dices,
+  Cog,
+  Database,
   Anchor,
   Ban,
   BookOpen,
@@ -71,6 +77,8 @@ export const TECHNIQUES: Record<Schema['SpellTechnique'], Named> = {
   bind: { label: 'Bind', icon: Link, tone: 'warning' },
   summon: { label: 'Summon', icon: Ghost, tone: 'verdigris' },
   ward: { label: 'Ward', icon: Shield, tone: 'gold' },
+  drain: { label: 'Drain', icon: Droplets, tone: 'danger' },
+  mimic: { label: 'Mimic', icon: Copy, tone: 'verdigris' },
 }
 
 export const FORMS: Record<Schema['SpellForm'], Named> = {
@@ -88,6 +96,13 @@ export const FORMS: Record<Schema['SpellForm'], Named> = {
   void: { label: 'Void', icon: CircleDashed, tone: 'muted' },
   death: { label: 'Death', icon: Skull, tone: 'danger' },
   light: { label: 'Light', icon: Sun, tone: 'gold' },
+  space: { label: 'Space', icon: Move, tone: 'info' },
+  force: { label: 'Force', icon: Wind, tone: 'warning' },
+  sound: { label: 'Sound', icon: AudioLines, tone: 'info' },
+  emotion: { label: 'Emotion', icon: Heart, tone: 'warning' },
+  fate: { label: 'Fate', icon: Dices, tone: 'gold' },
+  machine: { label: 'Machine', icon: Cog, tone: 'muted' },
+  information: { label: 'Information', icon: Database, tone: 'info' },
 }
 
 export const RANGES: Record<Schema['SpellRange'], Named> = {

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.gatherings import CONTEST_KINDS, GATHERING_COLLECTIONS, GATHERING_THOUGHTS, GUEST_ROLES, HONOURED_ROLES, HOSTED_FEASTS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, several
 from aerona.core.random import SeededRandom
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -52,6 +52,7 @@ from aerona.engine.mortal.life import adult
 from aerona.engine.mortal.standing import add_honour, add_infamy, add_renown, add_stress, add_wealth
 from aerona.engine.notes import note
 from aerona.engine.polity.treaties import sign_derived
+from aerona.engine.powers.society import test_people
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import folk_among, present_among
 from aerona.engine.primitives.numbers import clamp_int
@@ -527,6 +528,11 @@ async def broadcast(ctx: TickContext, holding: Holding) -> str:
     return ""
 
 
+async def testing(ctx: TickContext, holding: Holding) -> str:
+    found = await test_people(ctx, holding.row.host_node_id)
+    return f"; {several(found, 'gift', 'gifts')} found among the tested" if found else ""
+
+
 async def nothing(ctx: TickContext, holding: Holding) -> str:
     return ""
 
@@ -550,6 +556,7 @@ OUTCOMES: dict[GatheringKind, Callable[[TickContext, Holding], Awaitable[str]]] 
     G.CONVENTION: convention,
     G.LAUNCH: launch,
     G.BROADCAST: broadcast,
+    G.TESTING: testing,
 }
 
 

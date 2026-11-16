@@ -105,6 +105,7 @@ from tests.tools.every_setup_minds import (
     two_made_minds,
 )
 from tests.tools.every_setup_nature import town_dweller
+from tests.tools.every_setup_powers import heard_truth, kept_truth, linked_pair, powered, seer, tested_realm
 from tests.tools.every_son_tool import faction, knowledge, language, mortal, people, plain, region, resource, route, settlement, species
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
@@ -365,4 +366,13 @@ MORTAL_CASES: dict[str, Case] = {
     "withdraw_people": named(plain(people_id=people, realm_id=created("realm")), combined(ruled_realm, made_realm)),
     "set_surveillance": named(plain(focus="crime"), ruled_realm),
     "set_provision": named(plain(level="universal"), ruled_realm),
+    "use_power": named(plain(power_id=created("power")), powered),
+    "train_power": named(plain(power_id=created("power")), powered),
+    "test_for_gifts": named(plain(), tested_realm),
+    "link_minds": named(plain(partner_id=created("partner")), linked_pair),
+    "foresee": named(plain(power_id=created("power")), seer),
+    "keep_secret_of": named(plain(truth_id=created("truth")), heard_truth),
+    "investigate": named(plain(truth_id=created("truth"), aim="expose"), heard_truth),
+    "cover_up": named(plain(truth_id=created("truth")), kept_truth),
+    "set_power_law": named(plain(level="registered", mind_powers="licensed"), ruled_realm),
 }

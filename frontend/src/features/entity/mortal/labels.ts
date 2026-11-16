@@ -285,6 +285,11 @@ export const CRIMES: Record<string, Named> = {
     icon: Users,
     tone: 'warning',
   },
+  mind_compulsion: {
+    label: 'Bending a mind by a power',
+    icon: Brain,
+    tone: 'danger',
+  },
 }
 
 export const PUNISHMENTS: Record<

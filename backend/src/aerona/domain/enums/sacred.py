@@ -151,6 +151,7 @@ class ForesightSource(StrEnum):
     POWER = "power"
     DIVINATION = "divination"
     GOD = "god"
+    MADE_ORACLE = "made_oracle"
 
 
 class ForesightStatus(StrEnum):

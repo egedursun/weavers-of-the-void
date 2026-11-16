@@ -43,6 +43,7 @@ export const LAYER_MODES = [
   'centrality',
   'nutrients',
   'networks',
+  'hidden',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -78,6 +79,7 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   centrality: 'Central places',
   nutrients: 'Soil nutrients',
   networks: 'Networks',
+  hidden: 'Hidden places',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -106,6 +108,7 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   centrality: 'map-layer-centrality',
   nutrients: 'map-layer-nutrients',
   networks: 'map-layer-networks',
+  hidden: 'map-layer-hidden',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {

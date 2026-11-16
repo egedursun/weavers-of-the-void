@@ -1,4 +1,5 @@
 import {
+  ShieldOff,
   Anvil,
   ArrowRightLeft,
   Ban,
@@ -283,6 +284,9 @@ export const UNIT_ICON: Record<Schemas['UnitKind'], LucideIcon> = {
   powered_troopers: BicepsFlexed,
   drop_troops: PlaneTakeoff,
   pilots: Plane,
+  gifted: Sparkles,
+  dampeners: ShieldOff,
+  detectors: Radar,
 }
 
 const UNIT_ICONS: Readonly<Record<string, LucideIcon | undefined>> = UNIT_ICON

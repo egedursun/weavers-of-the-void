@@ -10,6 +10,7 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import WarStatus
+from aerona.engine.context import TickContext
 from aerona.engine.primitives.stats import stat_or
 
 LIVE_OUTBREAKS = (OutbreakStatus.ACTIVE, OutbreakStatus.WANING)
@@ -107,3 +108,9 @@ async def realm_ruled_by(session: AsyncSession, mortal_id: int) -> int | None:
         select(OfficeRow.polity_entity_id).where(OfficeRow.holder_entity_id == mortal_id, OfficeRow.kind == OfficeKind.RULER).order_by(OfficeRow.id).limit(1)
     )
     return int(found) if found is not None else None
+
+
+async def patron_of(ctx: TickContext, entity_id: int) -> int | None:
+    book = await ctx.divine()
+    gods, _ = await book.faithful_of(ctx.session, entity_id)
+    return min(gods) if gods else None

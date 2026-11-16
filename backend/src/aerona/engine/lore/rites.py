@@ -117,6 +117,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import law_param
+from aerona.engine.powers import effects as power_effects
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
@@ -858,6 +859,10 @@ async def do_longevity(ctx: TickContext, work: Working) -> str | None:
     return f"slowed the ageing of {target.name}" if row is not None else None
 
 
+async def by_power(ctx: TickContext, work: Working) -> str | None:
+    return await power_effects.apply(ctx, work.effect.effect, power_effects.Act(work.caster, work.target, work.magnitude))
+
+
 EFFECTS: dict[RiteEffectKind, Callable[[TickContext, Working], Awaitable[str | None]]] = {
     E.DAMAGE: do_damage,
     E.HEAL: do_heal,
@@ -876,6 +881,29 @@ EFFECTS: dict[RiteEffectKind, Callable[[TickContext, Working], Awaitable[str | N
     E.EXORCISE: do_exorcise,
     E.DISPEL: do_dispel,
     E.LONGEVITY: do_longevity,
+    E.MOVE_TARGET: by_power,
+    E.MOVE_SELF: by_power,
+    E.PUSH: by_power,
+    E.SHAPE_MATTER: by_power,
+    E.READ_RECORD: by_power,
+    E.SEIZE_MACHINE: by_power,
+    E.ALTER_RECORD: by_power,
+    E.SENSE_EMOTION: by_power,
+    E.SWAY_EMOTION: by_power,
+    E.TURN_FORTUNE: by_power,
+    E.DRAIN_LIFE: by_power,
+    E.DRAIN_POWER: by_power,
+    E.COPY_POWER: by_power,
+    E.PROJECT_SELF: by_power,
+    E.POSSESS: by_power,
+    E.CHANGE_FORM: by_power,
+    E.CONCEAL: by_power,
+    E.NULLIFY: by_power,
+    E.HASTEN: by_power,
+    E.SLOW: by_power,
+    E.AGE: by_power,
+    E.RENEW: by_power,
+    E.FORESEE: by_power,
 }
 
 

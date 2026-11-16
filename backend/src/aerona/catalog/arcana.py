@@ -30,7 +30,9 @@ SCHOOL_GRAMMAR = total(
     },
 )
 
-TECHNIQUE_COST = total(SpellTechnique, {T.CREATE: 3, T.PERCEIVE: 1, T.TRANSFORM: 3, T.DESTROY: 2, T.CONTROL: 3, T.BIND: 4, T.SUMMON: 4, T.WARD: 2})
+TECHNIQUE_COST = total(
+    SpellTechnique, {T.CREATE: 3, T.PERCEIVE: 1, T.TRANSFORM: 3, T.DESTROY: 2, T.CONTROL: 3, T.BIND: 4, T.SUMMON: 4, T.WARD: 2, T.DRAIN: 3, T.MIMIC: 4}
+)
 
 FORM_COST = total(
     SpellForm,
@@ -49,6 +51,13 @@ FORM_COST = total(
         F.VOID: 5,
         F.DEATH: 4,
         F.LIGHT: 2,
+        F.SPACE: 4,
+        F.FORCE: 2,
+        F.SOUND: 1,
+        F.EMOTION: 3,
+        F.FATE: 5,
+        F.MACHINE: 3,
+        F.INFORMATION: 3,
     },
 )
 

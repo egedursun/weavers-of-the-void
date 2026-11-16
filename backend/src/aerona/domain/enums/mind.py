@@ -313,6 +313,7 @@ class MemoryKind(StrEnum):
     STOLE_FAITHFUL = "stole_faithful"
     AIDED_CHOSEN = "aided_chosen"
     MEMORY_GAP = "memory_gap"
+    COMPELLED_ME = "compelled_me"
 
 
 class OpinionComponent(StrEnum):

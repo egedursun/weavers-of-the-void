@@ -60,6 +60,7 @@ from aerona.engine.military.siege_depth import (
 )
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.museums.hoards import loot
+from aerona.engine.powers.war import breach_by_power
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -214,6 +215,7 @@ async def batter(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastruct
             walls.walls_condition = clamp_int(walls.walls_condition - round_half_up(table.bombard_breach * gates), 0, PERCENT)
     if walls.walls_condition < table.breach_condition and "breaches" not in siege.locked:
         siege.breaches = max(siege.breaches, 1)
+    await breach_by_power(ctx, siege)
 
 
 def mend(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None) -> None:

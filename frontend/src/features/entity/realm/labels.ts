@@ -1,4 +1,6 @@
 import {
+  Brain,
+  Biohazard,
   Server,
   Boxes,
   Copy,
@@ -239,6 +241,8 @@ export const LAW_KINDS: Record<string, string> = {
   network_law: 'Networks',
   surveillance_law: 'Surveillance',
   provision_law: 'Provision of goods',
+  power_law: 'Powers',
+  source_law: 'Sources of power',
 }
 
 export const LAW_PARAMS: Record<string, string> = {
@@ -267,6 +271,7 @@ export const LAW_PARAMS: Record<string, string> = {
   guild_id: 'Guild',
   monopoly: 'Monopoly',
   level: 'Level',
+  mind_powers: 'Powers over minds',
   banned_method: 'Banned method',
   son_id: 'Banned god',
   wergild_allowed: 'Wergild allowed',
@@ -290,6 +295,7 @@ export const LAW_PARAMS: Record<string, string> = {
   erasure: 'Ending a mind',
   machine_seizure: 'Seizing a made thing',
   impersonation: 'Passing as another by a copy',
+  mind_compulsion: 'Bending a mind by a power',
   strictness: 'Strictness',
   strength: 'Strength',
   voters: 'Who votes',
@@ -482,6 +488,16 @@ export const CLAUSES: Record<string, Named> = {
   civil_host_shield: {
     label: 'Hosts of realms spared',
     icon: Server,
+    tone: 'info',
+  },
+  no_mind_compulsion: {
+    label: 'No bending of minds by powers',
+    icon: Brain,
+    tone: 'info',
+  },
+  no_plague_powers: {
+    label: 'No powers of plague',
+    icon: Biohazard,
     tone: 'info',
   },
 }

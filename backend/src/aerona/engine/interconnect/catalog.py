@@ -75,6 +75,7 @@ from aerona.engine.interconnect.catalog_nature import NATURE_MECHANICS
 from aerona.engine.interconnect.catalog_operations import OPERATIONS_MECHANICS
 from aerona.engine.interconnect.catalog_peoples import PEOPLE_MECHANICS
 from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_MECHANICS
+from aerona.engine.interconnect.catalog_powers import POWER_MECHANICS
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
 from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
 from aerona.engine.interconnect.catalog_reference8 import REFERENCE8_MECHANICS
@@ -1031,6 +1032,7 @@ BUILT_IN = (
     *SACRED_MECHANICS,
     *ARTS_MECHANICS,
     *MINDS_MECHANICS,
+    *POWER_MECHANICS,
     *AGES_MECHANICS,
     *FOLKWAYS_MECHANICS,
     *CRAFTS_MECHANICS,

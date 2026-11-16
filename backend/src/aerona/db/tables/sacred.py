@@ -393,6 +393,8 @@ class ForesightRow(Base):
     divination_id: Mapped[int | None] = mapped_column(ForeignKey("divinations.id", ondelete="SET NULL"))
     status: Mapped[ForesightStatus] = mapped_column(enum_type(ForesightStatus, "status"), default=ForesightStatus.PENDING)
     checked_epoch: Mapped[int | None]
+    power_id: Mapped[int | None] = mapped_column(ForeignKey("powers.id", ondelete="SET NULL"))
+    strain_cost: Mapped[int] = mapped_column(default=0, server_default="0")
     made_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

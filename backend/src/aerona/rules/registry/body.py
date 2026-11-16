@@ -113,6 +113,8 @@ class InjuryRules:
     experiment_radiation: int = rule(25, 0, 100, G, "Experiments gone wrong: share of radiation sickness")
     experiment_electric: int = rule(20, 0, 100, G, "Experiments gone wrong: share of electrical burns")
     experiment_psychic: int = rule(20, 0, 100, G, "Experiments gone wrong: share of harm to the mind")
+    power_psychic: int = rule(50, 0, 100, G, "Powers: share of harm to the mind")
+    power_blunt: int = rule(50, 0, 100, G, "Powers: share of harm as blows")
     torture_cut: int = rule(35, 0, 100, G, "Torture: share of cuts")
     torture_blunt: int = rule(35, 0, 100, G, "Torture: share of breaking")
     torture_fire: int = rule(30, 0, 100, G, "Torture: share of burns")

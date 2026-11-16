@@ -31,6 +31,7 @@ from aerona.agents.context.minds_lines import mortal_minds_lines
 from aerona.agents.context.mythic_lines import mortal_magic_lines
 from aerona.agents.context.nature_lines import mortal_nature_lines
 from aerona.agents.context.operations_lines import mortal_operations_lines
+from aerona.agents.context.powers_lines import mortal_power_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
 from aerona.agents.context.regime_lines import mortal_regime_lines
 from aerona.agents.context.research import research_for
@@ -232,6 +233,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "biology": await mortal_biology_lines(scope, me),
             "grounds": await mortal_grounds_lines(scope, me),
             "made_world": await mortal_minds_lines(scope, me),
+            "powers": await mortal_power_lines(scope, me),
         }
     )
 

@@ -65,6 +65,7 @@ NODE_SUFFIXES = ("_entity_id", "_node_id")
 INDEXED_LISTS: dict[str, list[str]] = {"biome_mix": [biome.name.lower().replace("_", " ") for biome in Biome]}
 ID_LISTS = frozenset(
     {
+        "witness_node_ids",
         "excommunicated",
         "prior_journey_ids",
         "migration_path",

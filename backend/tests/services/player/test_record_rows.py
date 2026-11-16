@@ -47,4 +47,3 @@ async def test_a_held_row_value_can_be_let_go_again(scope: PlayerScope, session:
     assert row.integration == 70 and "integration" in row.locked
     await record_rows.edit_row(scope, record_rows.EditRow(table="augments", key={"id": row.id}, release=["integration"]))
     assert row.integration == 70 and "integration" not in row.locked
-

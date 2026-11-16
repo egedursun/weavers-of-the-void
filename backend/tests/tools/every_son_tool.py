@@ -74,6 +74,7 @@ from tests.tools.every_setup_folkways import owned_item
 from tests.tools.every_setup_lifecycle import forgotten_theory, hidden_fossils, son_made_world, worshipped_star
 from tests.tools.every_setup_minds import made_mind, made_realm, network, replicator, sealed_realm
 from tests.tools.every_setup_nature import first_kind, second_kind, two_kinds
+from tests.tools.every_setup_powers import kept_truth, son_granted
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
 
@@ -466,4 +467,10 @@ SON_CASES: dict[str, Case] = {
     "halt_replicator": Case(plain(line_id=created("line"), reason=REASON), replicator),
     "seal_realm": Case(plain(realm_id=created("realm"), reason=REASON), made_realm),
     "open_realm": Case(plain(realm_id=created("realm"), reason=REASON), sealed_realm),
+    "shape_source": Case(plain(name="The Deep Well", place_id=region, locus="place", reason=REASON)),
+    "shape_magic": Case(plain(name="The Old Way", world_id=world, structure="innate", reason=REASON)),
+    "grant_power": Case(plain(holder_id=mortal, technique="control", form="fate", strength=2, reason=REASON)),
+    "revoke_power": Case(plain(power_id=created("power"), reason=REASON), son_granted),
+    "unveil_truth": Case(plain(truth_id=created("truth"), population_id=people, reason=REASON), kept_truth),
+    "hide_truth": Case(plain(title="those who walk unseen", subject_id=people, kind="presence", reason=REASON)),
 }

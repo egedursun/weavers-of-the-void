@@ -268,6 +268,12 @@ class SonToolId(StrEnum):
     HALT_REPLICATOR = "halt_replicator"
     SEAL_REALM = "seal_realm"
     OPEN_REALM = "open_realm"
+    SHAPE_SOURCE = "shape_source"
+    SHAPE_MAGIC = "shape_magic"
+    GRANT_POWER = "grant_power"
+    REVOKE_POWER = "revoke_power"
+    UNVEIL_TRUTH = "unveil_truth"
+    HIDE_TRUTH = "hide_truth"
 
 
 class MortalToolId(StrEnum):
@@ -477,6 +483,15 @@ class MortalToolId(StrEnum):
     WITHDRAW_PEOPLE = "withdraw_people"
     SET_SURVEILLANCE = "set_surveillance"
     SET_PROVISION = "set_provision"
+    USE_POWER = "use_power"
+    TRAIN_POWER = "train_power"
+    TEST_FOR_GIFTS = "test_for_gifts"
+    LINK_MINDS = "link_minds"
+    FORESEE = "foresee"
+    KEEP_SECRET_OF = "keep_secret_of"
+    INVESTIGATE = "investigate"
+    COVER_UP = "cover_up"
+    SET_POWER_LAW = "set_power_law"
 
 
 ToolId = SonToolId | MortalToolId

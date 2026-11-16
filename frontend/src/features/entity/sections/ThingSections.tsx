@@ -31,6 +31,10 @@ import { NetworkSection } from '@/features/minds/NetworkSection'
 import { NatureSection } from '@/features/nature/NatureSection'
 import { OperationsSection } from '@/features/operations/OperationsSection'
 import { OrdersSection } from '@/features/orders/OrdersSection'
+import { HiddenTruthsSection } from '@/features/powers/HiddenTruthsSection'
+import { MagicSystemsSection } from '@/features/powers/MagicSystemsSection'
+import { PowersSection } from '@/features/powers/PowersSection'
+import { SourcesSection } from '@/features/powers/SourcesSection'
 import { PrehistorySection } from '@/features/prehistory/PrehistorySection'
 import { PursuitsSection } from '@/features/pursuits/PursuitsSection'
 import { RegimeSection } from '@/features/regime/RegimeSection'
@@ -111,6 +115,10 @@ export function ThingSections({
       <AugmentsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <NetworkSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MadeWorldSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <PowersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <SourcesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <MagicSystemsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <HiddenTruthsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <FeelingsSection nodeId={nodeId} />
       <TastesSection nodeId={nodeId} />
       <EthicsSection nodeId={nodeId} />

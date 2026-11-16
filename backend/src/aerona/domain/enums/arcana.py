@@ -10,6 +10,8 @@ class SpellTechnique(StrEnum):
     BIND = "bind"
     SUMMON = "summon"
     WARD = "ward"
+    DRAIN = "drain"
+    MIMIC = "mimic"
 
 
 class SpellForm(StrEnum):
@@ -27,6 +29,13 @@ class SpellForm(StrEnum):
     VOID = "void"
     DEATH = "death"
     LIGHT = "light"
+    SPACE = "space"
+    FORCE = "force"
+    SOUND = "sound"
+    EMOTION = "emotion"
+    FATE = "fate"
+    MACHINE = "machine"
+    INFORMATION = "information"
 
 
 class SpellRange(StrEnum):
