@@ -195,3 +195,39 @@ async def test_every_concept_can_be_made_from_a_name_and_a_category_alone(sessio
     for spec in CONCEPTS.values():
         made = await make_kind(ctx, spec, {"name": f"Plain {spec.label}", "category": spec.category(next(iter(spec.category_labels)))})
         assert made.id is not None
+
+
+async def test_a_dear_good_yields_one_substitute_that_other_holders_take_up(session: AsyncSession, cosmos: Cosmos) -> None:
+    home = await town(session, cosmos)
+    other = await town(session, cosmos, "Vessa Ford")
+    good = await held_good(session, cosmos, home, CommodityKind.GRAIN, base_value=100, prestige=40)
+    session.add(held(KindConcept.GOOD, good.id, other.id, KindStance.USES, 80))
+    await session.flush()
+    for market in (home, other):
+        await price(session, market, CommodityKind.GRAIN, 300)
+        await price(session, market, CommodityKind.TUBERS, 70)
+    rules = quiet(Rules(), substitution_pct=100)
+    await derive_kinds(tick(session, rules))
+    await derive_kinds(tick(session, rules))
+    goods = list(await session.scalars(select(GoodKindRow).where(GoodKindRow.derived_from_id == good.id)))
+    assert len(goods) == 1
+    holders = {row.holder_node_id for row in await session.scalars(select(KindHoldingRow).where(KindHoldingRow.kind_id == goods[0].id))}
+    assert holders == {home.id, other.id}
+
+
+async def test_two_kinds_fuse_once_for_a_holder_however_long_they_stay_strong(session: AsyncSession, cosmos: Cosmos) -> None:
+    home = await town(session, cosmos)
+    other = await make_entity(session, "Vessa", EntityType.PEOPLE, PeopleStats(population=4000), world_id=cosmos.home.id)
+    first = await held_good(session, cosmos, home, CommodityKind.GRAIN, prestige=20)
+    second = GoodKindRow(
+        name="Red Millet", category=GoodCategory.GRAIN, world_id=cosmos.home.id, origin_node_id=other.id, prestige=60, created_epoch=0, locked=[]
+    )
+    session.add(second)
+    await session.flush()
+    session.add(held(KindConcept.GOOD, second.id, home.id, KindStance.USES, 60))
+    await session.flush()
+    rules = quiet(Rules(), fusion_pct=100)
+    for _ in range(3):
+        await derive_kinds(tick(session, rules))
+    fused = list(await session.scalars(select(GoodKindRow).where(GoodKindRow.derived_from_id.in_([first.id, second.id]))))
+    assert len(fused) == 1

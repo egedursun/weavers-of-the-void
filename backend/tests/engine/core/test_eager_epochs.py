@@ -1,6 +1,8 @@
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.kind_concepts.registry import CONCEPTS
+from aerona.db.kind_concepts.spec import ConceptSpec
 from aerona.db.session import Database
 from aerona.db.tables.creator_bonds import CovenantRow, CreatorChosenRow
 from aerona.db.tables.divine_powers import DivinePowerRow
@@ -16,6 +18,17 @@ LIVED_DIVINE = (DivinePowerRow, PantheonStructureRow, PantheonTieRow, Syncretism
 LIVED_STEPS = ("ways_of_life", "foodways", "crafts_of_life", "traits_and_works", "culture_kinds", "society_kinds")
 
 
+async def twin_derivatives(session: AsyncSession, spec: ConceptSpec) -> bool:
+    query = (
+        select(KindHoldingRow.holder_node_id, spec.table.derived_from_id)
+        .join(spec.table, spec.table.id == KindHoldingRow.kind_id)
+        .where(KindHoldingRow.concept == spec.concept, spec.table.derived_from_id.is_not(None))
+        .group_by(KindHoldingRow.holder_node_id, spec.table.derived_from_id)
+        .having(func.count() > 1)
+    )
+    return await session.scalar(select(func.count()).select_from(query.subquery())) != 0
+
+
 async def test_a_stirred_cosmos_lives_five_epochs_with_every_chance_certain(database: Database) -> None:
     async with database.write() as session:
         await stir(session, await seed_rich_cosmos(session))
@@ -27,7 +40,9 @@ async def test_a_stirred_cosmos_lives_five_epochs_with_every_chance_certain(data
         empty = [table.__tablename__ for table in LIVED_DIVINE if not await session.scalar(select(func.count()).select_from(table))]
         unmade = [spec.table.__tablename__ for spec in CONCEPTS.values() if not await session.scalar(select(func.count()).select_from(spec.table))]
         holdings_after = await session.scalar(select(func.count()).select_from(KindHoldingRow))
+        twins = [spec.table.__tablename__ for spec in CONCEPTS.values() if await twin_derivatives(session, spec)]
     work = {step: sum(value for run in runs for key, value in run.tick.stats.counters.items() if key.startswith(f"{step}.")) for step in LIVED_STEPS}
     idle = [step for step, done in work.items() if done <= 0]
     grown = (holdings_after or 0) > (holdings_before or 0)
-    assert {"empty": empty, "unmade": unmade, "idle": idle, "holdings grew": grown} == {"empty": [], "unmade": [], "idle": [], "holdings grew": True}
+    found = {"empty": empty, "unmade": unmade, "idle": idle, "holdings grew": grown, "twin derivatives": twins}
+    assert found == {"empty": [], "unmade": [], "idle": [], "holdings grew": True, "twin derivatives": []}

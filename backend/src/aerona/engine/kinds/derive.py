@@ -30,6 +30,9 @@ Tied = Callable[[TickContext, KindRow], Awaitable[set[CommodityKind]]]
 Swap = Callable[[TickContext, KindRow, KindRow, CommodityKind, CommodityKind], Awaitable[None]]
 
 
+LINEAGE_DEPTH = 12
+
+
 @dataclass
 class DeriveTally:
     substituted: int = 0
@@ -112,6 +115,67 @@ async def derived(ctx: TickContext, spec: ConceptSpec, source: KindRow, holder_i
     return row
 
 
+async def derivatives(ctx: TickContext, spec: ConceptSpec, source: KindRow) -> list[KindRow]:
+    query = select(spec.table).where(spec.table.derived_from_id == source.id, spec.table.retired.is_(False)).order_by(spec.table.id)
+    return [row for row in await ctx.session.scalars(query) if row.world_id == source.world_id]
+
+
+async def holds_any(ctx: TickContext, concept: KindConcept, holder_id: int, kinds: list[KindRow]) -> bool:
+    if not kinds:
+        return False
+    query = select(KindHoldingRow.id).where(
+        KindHoldingRow.concept == concept, KindHoldingRow.holder_node_id == holder_id, KindHoldingRow.kind_id.in_([row.id for row in kinds])
+    )
+    return await ctx.session.scalar(query.limit(1)) is not None
+
+
+async def lineage(ctx: TickContext, spec: ConceptSpec, kind: KindRow) -> list[KindRow]:
+    found = [kind]
+    while found[-1].derived_from_id is not None and len(found) < LINEAGE_DEPTH:
+        parent = await ctx.session.get(spec.table, found[-1].derived_from_id)
+        if parent is None or parent in found:
+            break
+        found.append(parent)
+    return found
+
+
+async def already_joined(ctx: TickContext, spec: ConceptSpec, holder_id: int, first: KindRow, second: KindRow) -> bool:
+    first_line, second_line = await lineage(ctx, spec, first), await lineage(ctx, spec, second)
+    if {row.id for row in first_line} & {row.id for row in second_line}:
+        return True
+    offspring = [child for row in (*first_line, *second_line) for child in await derivatives(ctx, spec, row)]
+    return await holds_any(ctx, spec.concept, holder_id, offspring)
+
+
+async def adopted(ctx: TickContext, concept: KindConcept, holder_id: int, kind: KindRow) -> None:
+    ctx.session.add(
+        KindHoldingRow(
+            concept=concept,
+            kind_id=kind.id,
+            holder_node_id=holder_id,
+            stance=KindStance.USES,
+            strength=ctx.rules.kinds.adoption_strength,
+            spread=KindSpread.CONTACT,
+            since_epoch=ctx.epoch,
+            locked=[],
+        )
+    )
+    await ctx.session.flush()
+
+
+async def replacement(ctx: TickContext, spec: ConceptSpec, kind: KindRow, holding: KindHoldingRow, tally: DeriveTally) -> KindRow | None:
+    known = await derivatives(ctx, spec, kind)
+    if await holds_any(ctx, holding.concept, holding.holder_node_id, known):
+        return None
+    if not known:
+        return await derived(ctx, spec, kind, holding.holder_node_id, "kind.substitute.name")
+    await adopted(ctx, holding.concept, holding.holder_node_id, known[0])
+    if "strength" not in holding.locked:
+        holding.strength = clamp_int(holding.strength - ctx.rules.kinds.substitution_fade, 0, PERCENT)
+    tally.substituted += 1
+    return None
+
+
 def lowered(row: KindRow, column: str, pct: int) -> None:
     value = getattr(row, column, None)
     if isinstance(value, int) and column not in row.locked:
@@ -138,7 +202,7 @@ async def substitute(ctx: TickContext, holding: KindHoldingRow, tally: DeriveTal
     plenty = plentiful(prices, scarce)
     if plenty is None or not ctx.rng(seed_of("kind.substitute", holding.id, ctx.epoch)).chance(table.substitution_pct):
         return
-    row = await derived(ctx, spec, kind, holding.holder_node_id, "kind.substitute.name")
+    row = await replacement(ctx, spec, kind, holding, tally)
     if row is None:
         return
     await swap(ctx, kind, row, scarce, plenty)
@@ -190,6 +254,8 @@ async def fuse(ctx: TickContext, holder_id: int, holdings: list[KindHoldingRow],
                 continue
             stronger = first if first_holding.strength >= match[0].strength else match[1]
             weaker = match[1] if stronger is first else first
+            if await already_joined(ctx, spec, holder_id, stronger, weaker):
+                continue
             row = await derived(ctx, spec, stronger, holder_id, "kind.fuse.name")
             if row is None:
                 return
