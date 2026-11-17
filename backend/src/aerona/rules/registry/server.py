@@ -25,6 +25,8 @@ class ServerRules:
     ledger_page_max: int = rule(300, 1, 100000, RuleGroup.INTERFACE, "Fate's ledger: largest page")
     metrics_default_epochs: int = rule(10, 1, 10000, RuleGroup.INTERFACE, "Model metrics: default epoch window")
     metrics_max_epochs: int = rule(50, 1, 10000, RuleGroup.INTERFACE, "Model metrics: widest epoch window")
+    usage_page_size: int = rule(50, 1, 100000, RuleGroup.INTERFACE, "Token usage log: page size")
+    usage_page_max: int = rule(500, 1, 100000, RuleGroup.INTERFACE, "Token usage log: largest page")
     live_feed_history: int = rule(300, 1, 100000, RuleGroup.INTERFACE, "Latest events returned in the live-feed history")
     stream_emit_interval_ms: int = rule(150, 10, 60000, RuleGroup.INTERFACE, "Live feed: milliseconds between streamed-text batches")
     tool_write_step_chars: int = rule(200, 1, 100000, RuleGroup.INTERFACE, "Live feed: characters of tool input between writing-progress events")

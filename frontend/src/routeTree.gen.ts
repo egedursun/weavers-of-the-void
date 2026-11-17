@@ -33,6 +33,7 @@ import { Route as AppNotificationsRouteImport } from './routes/_app/notification
 import { Route as AppPantheonRouteImport } from './routes/_app/pantheon'
 import { Route as AppPrayersRouteImport } from './routes/_app/prayers'
 import { Route as AppSettingsRouteRouteImport } from './routes/_app/settings/route'
+import { Route as AppUsageRouteImport } from './routes/_app/usage'
 import { Route as AppWarsRouteImport } from './routes/_app/wars'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index'
 import { Route as AppSettingsAppearanceRouteImport } from './routes/_app/settings/appearance'
@@ -165,6 +166,11 @@ const AppSettingsRouteRoute = AppSettingsRouteRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppUsageRoute = AppUsageRouteImport.update({
+  id: '/usage',
+  path: '/usage',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppWarsRoute = AppWarsRouteImport.update({
   id: '/wars',
   path: '/wars',
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AppNotificationsRoute
   '/pantheon': typeof AppPantheonRoute
   '/prayers': typeof AppPrayersRoute
+  '/usage': typeof AppUsageRoute
   '/wars': typeof AppWarsRoute
   '/settings/appearance': typeof AppSettingsAppearanceRoute
   '/settings/data': typeof AppSettingsDataRoute
@@ -285,6 +292,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AppNotificationsRoute
   '/pantheon': typeof AppPantheonRoute
   '/prayers': typeof AppPrayersRoute
+  '/usage': typeof AppUsageRoute
   '/wars': typeof AppWarsRoute
   '/': typeof AppIndexRoute
   '/settings/appearance': typeof AppSettingsAppearanceRoute
@@ -324,6 +332,7 @@ export interface FileRoutesById {
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/pantheon': typeof AppPantheonRoute
   '/_app/prayers': typeof AppPrayersRoute
+  '/_app/usage': typeof AppUsageRoute
   '/_app/wars': typeof AppWarsRoute
   '/_app/': typeof AppIndexRoute
   '/_app/settings/appearance': typeof AppSettingsAppearanceRoute
@@ -364,6 +373,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/pantheon'
     | '/prayers'
+    | '/usage'
     | '/wars'
     | '/settings/appearance'
     | '/settings/data'
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/pantheon'
     | '/prayers'
+    | '/usage'
     | '/wars'
     | '/'
     | '/settings/appearance'
@@ -437,6 +448,7 @@ export interface FileRouteTypes {
     | '/_app/notifications'
     | '/_app/pantheon'
     | '/_app/prayers'
+    | '/_app/usage'
     | '/_app/wars'
     | '/_app/'
     | '/_app/settings/appearance'
@@ -627,6 +639,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/usage': {
+      id: '/_app/usage'
+      path: '/usage'
+      fullPath: '/usage'
+      preLoaderRoute: typeof AppUsageRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/wars': {
       id: '/_app/wars'
       path: '/wars'
@@ -767,6 +786,7 @@ interface AppRouteRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPantheonRoute: typeof AppPantheonRoute
   AppPrayersRoute: typeof AppPrayersRoute
+  AppUsageRoute: typeof AppUsageRoute
   AppWarsRoute: typeof AppWarsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -793,6 +813,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppPantheonRoute: AppPantheonRoute,
   AppPrayersRoute: AppPrayersRoute,
+  AppUsageRoute: AppUsageRoute,
   AppWarsRoute: AppWarsRoute,
   AppIndexRoute: AppIndexRoute,
 }

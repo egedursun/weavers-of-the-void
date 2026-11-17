@@ -20,7 +20,7 @@ export function TopBar({ context, actions }: TopBarProps) {
       data-layout='top-bar'
       data-collapsed={collapsed || undefined}
       className={cn(
-        '@container/topbar sticky top-0 z-30 flex h-topbar shrink-0 items-center gap-3 bg-background/85 px-3 backdrop-blur-md transition-transform duration-200 motion-reduce:transition-none md:px-4 md:group-has-data-[variant=inset]/sidebar-wrapper:rounded-t-xl',
+        '@container/topbar sticky top-0 z-30 flex h-topbar shrink-0 items-center gap-2 bg-background/85 px-2 backdrop-blur-md transition-transform duration-200 motion-reduce:transition-none sm:gap-3 sm:px-3 md:px-4 md:group-has-data-[variant=inset]/sidebar-wrapper:rounded-t-xl',
         collapsed && '-translate-y-full'
       )}
     >

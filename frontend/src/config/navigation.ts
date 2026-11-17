@@ -4,6 +4,7 @@ import {
   Archive,
   Bell,
   BookOpen,
+  ChartColumnBig,
   Cpu,
   FileText,
   Crown,
@@ -56,6 +57,7 @@ export type NavRoute =
   | '/languages'
   | '/gallery'
   | '/ledger'
+  | '/usage'
   | '/notifications'
   | '/settings/appearance'
   | '/settings/game'
@@ -337,6 +339,14 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/ledger',
         icon: NotebookPen,
         description: 'Your actions with undo, notes and bookmarks.',
+      },
+      {
+        id: 'usage',
+        title: 'Usage',
+        to: '/usage',
+        icon: ChartColumnBig,
+        description:
+          'Token usage of every language model call: trends, breakdowns and the full call log.',
       },
       {
         id: 'notifications',

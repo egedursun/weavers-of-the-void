@@ -117,7 +117,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/domain_effects.py` | 58 | 2026-11-16 | `69cc61cfe621566b` |
 | `backend/src/aerona/catalog/effect_packages.py` | 26 | 2026-11-16 | `f07f548d813c7aa3` |
 | `backend/src/aerona/catalog/entity_types.py` | 5 | 2026-11-16 | `5a64164db10e8bec` |
-| `backend/src/aerona/catalog/enum_layers.py` | 967 | 2026-11-17 | `08012aa4d22c5430` |
+| `backend/src/aerona/catalog/enum_layers.py` | 969 | 2026-11-17 | `d08c4d6e11a24406` |
 | `backend/src/aerona/catalog/estates.py` | 6 | 2026-11-16 | `be6d59511264554e` |
 | `backend/src/aerona/catalog/ethics.py` | 26 | 2026-11-16 | `e9c5e22b61dfa6c1` |
 | `backend/src/aerona/catalog/flora.py` | 2 | 2026-11-16 | `8ed66674168cce87` |
@@ -1738,6 +1738,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `frontend/src/features/tales/AgesPanel.tsx` | 2 | 2026-11-16 | `72a3d0f64dcccdfe` |
 | `frontend/src/features/tales/TalePanels.tsx` | 5 | 2026-11-16 | `ea80a39e7a039d6d` |
 | `frontend/src/features/tales/WorldPanels.tsx` | 2 | 2026-11-16 | `44c43e740b12d791` |
+| `frontend/src/features/usage/UsageFilters.tsx` | 1 | 2026-11-17 | `a7f9960fa51046bf` |
 | `frontend/src/features/wars/military/Orders.tsx` | 2 | 2026-11-16 | `a6fc17c606baf86e` |
 | `frontend/src/features/wars/military/Vendettas.tsx` | 1 | 2026-11-16 | `c3630a6044431a1b` |
 | `frontend/src/features/wars/military/VesselCard.tsx` | 1 | 2026-11-16 | `13dcc87045ad700a` |

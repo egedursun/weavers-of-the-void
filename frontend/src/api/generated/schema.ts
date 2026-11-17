@@ -4031,6 +4031,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/usage/summary': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_usage_summary_api_usage_summary_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/usage/calls': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_usage_calls_api_usage_calls_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/maintenance/tasks': {
     parameters: {
       query?: never
@@ -78164,6 +78196,99 @@ export interface components {
       | 'depot'
       | 'administration'
       | 'entertainment'
+    UsageBucket: 'epoch' | 'hour' | 'day'
+    UsageCall: {
+      id: number
+      epoch: number | null
+      job: string
+      role: string | null
+      model: string
+      kind: components['schemas']['LlmCallKind']
+      status: components['schemas']['LlmCallStatus']
+      duration_ms: number
+      attempts: number
+      turns: number | null
+      input_tokens: number
+      output_tokens: number
+      actions: number | null
+      error: string | null
+      created_at: string
+    }
+    UsageCallPage: {
+      items: components['schemas']['UsageCall'][]
+      total: number
+      offset: number
+      limit: number
+    }
+    UsageFacets: {
+      calls: number
+      models: string[]
+      roles: string[]
+      steps: string[]
+      epoch_low: number | null
+      epoch_high: number | null
+    }
+    UsageKindShare: {
+      kind: components['schemas']['LlmCallKind']
+      calls: number
+      input_tokens: number
+      output_tokens: number
+    }
+    UsagePoint: {
+      epoch: number | null
+      start: string | null
+      calls: number
+      input_tokens: number
+      output_tokens: number
+      errors: number
+    }
+    UsageReport: {
+      totals: components['schemas']['UsageTotals']
+      timeline: components['schemas']['UsagePoint'][]
+      models: components['schemas']['UsageShare'][]
+      roles: components['schemas']['UsageShare'][]
+      steps: components['schemas']['UsageShare'][]
+      kinds: components['schemas']['UsageKindShare'][]
+      statuses: components['schemas']['UsageStatusShare'][]
+      facets: components['schemas']['UsageFacets']
+    }
+    UsageShare: {
+      name: string
+      calls: number
+      input_tokens: number
+      output_tokens: number
+      errors: number
+      milliseconds: number
+    }
+    UsageSort:
+      | 'time'
+      | 'total_tokens'
+      | 'input_tokens'
+      | 'output_tokens'
+      | 'duration'
+      | 'epoch'
+      | 'model'
+      | 'step'
+    UsageStatusShare: {
+      status: components['schemas']['LlmCallStatus']
+      calls: number
+      input_tokens: number
+      output_tokens: number
+    }
+    UsageTotals: {
+      calls: number
+      input_tokens: number
+      output_tokens: number
+      turns: number
+      errors: number
+      partial: number
+      retried: number
+      milliseconds: number
+      largest_call: number
+      epochs: number
+      first_at: string | null
+      last_at: string | null
+    }
     UseKindCreateInput: {
       name: string
       base_use: components['schemas']['AnimalRole']
@@ -88651,6 +88776,85 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ModelMetricsView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_usage_summary_api_usage_summary_get: {
+    parameters: {
+      query?: {
+        bucket?: components['schemas']['UsageBucket']
+        search?: string | null
+        model?: string[] | null
+        role?: string[] | null
+        step?: string[] | null
+        kind?: components['schemas']['LlmCallKind'][] | null
+        status?: components['schemas']['LlmCallStatus'][] | null
+        epoch_from?: number | null
+        epoch_to?: number | null
+        since?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UsageReport']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_usage_calls_api_usage_calls_get: {
+    parameters: {
+      query?: {
+        sort?: components['schemas']['UsageSort']
+        descending?: boolean
+        offset?: number
+        limit?: number | null
+        search?: string | null
+        model?: string[] | null
+        role?: string[] | null
+        step?: string[] | null
+        kind?: components['schemas']['LlmCallKind'][] | null
+        status?: components['schemas']['LlmCallStatus'][] | null
+        epoch_from?: number | null
+        epoch_to?: number | null
+        since?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UsageCallPage']
         }
       }
       default: {
@@ -173408,6 +173612,21 @@ export const urbanServiceValues: ReadonlyArray<
   'depot',
   'administration',
   'entertainment',
+]
+export const usageBucketValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['UsageBucket']
+> = ['epoch', 'hour', 'day']
+export const usageSortValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['UsageSort']
+> = [
+  'time',
+  'total_tokens',
+  'input_tokens',
+  'output_tokens',
+  'duration',
+  'epoch',
+  'model',
+  'step',
 ]
 export const valueAxisValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ValueAxis']

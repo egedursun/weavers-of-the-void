@@ -990,6 +990,8 @@ ENUM_LAYERS: dict[str, EnumLayer] = {
     "structure.StructureSection": EnumLayer("authored", "complete; each section has typed properties", "structure_sections"),
     "telemetry.LlmCallKind": EnumLayer("process", "process: engine bookkeeping or record kind"),
     "telemetry.LlmCallStatus": EnumLayer("process", "process: states, stages, outcomes, sources, roles, scales and bookkeeping (48.C)"),
+    "telemetry.UsageBucket": EnumLayer("process", "process: engine bookkeeping or record kind"),
+    "telemetry.UsageSort": EnumLayer("process", "process: engine bookkeeping or record kind"),
     "titles.TitleTenure": EnumLayer("closed", "closed: the engine's own distinctions; instances are named through the kinds that use them"),
     "titles.TitleTier": EnumLayer("closed", "closed: the engine's own distinctions; instances are named through the kinds that use them"),
     "tongues.LanguageModality": EnumLayer("authored", "widened: `data`, `mind`, `chemical` (0.7)", "language_profiles"),
