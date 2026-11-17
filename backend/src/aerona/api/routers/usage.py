@@ -1,15 +1,38 @@
+import csv
+import io
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 
 from aerona.api.dependencies import ServicesDep
 from aerona.api.schemas.common import ApiModel
+from aerona.constants.api import CSV_MEDIA_TYPE
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.domain.enums.telemetry import LlmCallKind, LlmCallStatus, UsageBucket, UsageSort
-from aerona.services.usage import UsageFilter, UsageReport, usage_calls, usage_report
+from aerona.services.usage import UsageFilter, UsageReport, usage_calls, usage_export, usage_report
 
 router = APIRouter(tags=["usage"])
+
+EXPORT_FILE = "token-usage.csv"
+EXPORT_COLUMNS = (
+    "call",
+    "time",
+    "epoch",
+    "step",
+    "role",
+    "model",
+    "kind",
+    "outcome",
+    "tokens_in",
+    "tokens_out",
+    "tokens_total",
+    "duration_ms",
+    "attempts",
+    "turns",
+    "actions",
+    "error",
+)
 
 
 class UsageCall(ApiModel):
@@ -86,3 +109,34 @@ async def read_usage_calls(
     async with services.application.telemetry.sessions() as session:
         page = await usage_calls(session, chosen, sort=sort, descending=descending, offset=offset, limit=size)
     return UsageCallPage(items=[UsageCall.model_validate(row) for row in page.rows], total=page.total, offset=offset, limit=size)
+
+
+@router.get("/usage/calls/export", response_class=Response, responses={200: {"content": {CSV_MEDIA_TYPE: {}}}})
+async def export_usage_calls(services: ServicesDep, chosen: UsageFilterDep, sort: UsageSort = UsageSort.TIME, descending: bool = True) -> Response:
+    async with services.application.telemetry.sessions() as session:
+        rows = await usage_export(session, chosen, sort=sort, descending=descending)
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(EXPORT_COLUMNS)
+    for row in rows:
+        writer.writerow(
+            (
+                row.id,
+                row.created_at.isoformat(),
+                row.epoch if row.epoch is not None else "",
+                row.job,
+                row.role or "",
+                row.model,
+                row.kind.value,
+                row.status.value,
+                row.input_tokens,
+                row.output_tokens,
+                row.input_tokens + row.output_tokens,
+                row.duration_ms,
+                row.attempts,
+                row.turns if row.turns is not None else "",
+                row.actions if row.actions is not None else "",
+                row.error or "",
+            )
+        )
+    return Response(content=buffer.getvalue(), media_type=CSV_MEDIA_TYPE, headers={"content-disposition": f'attachment; filename="{EXPORT_FILE}"'})

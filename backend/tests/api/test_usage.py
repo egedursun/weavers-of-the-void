@@ -41,6 +41,8 @@ async def test_usage_summary_breaks_tokens_down_by_every_facet(api: ApiWorld) ->
     assert summary["totals"]["partial"] == 1
     assert summary["totals"]["retried"] == 1
     assert summary["totals"]["largest_call"] == 1500
+    assert (summary["totals"]["median_call"], summary["totals"]["p95_call"]) == (1000, 1500)
+    assert summary["tokenizer"] == "tiktoken o200k_base"
     assert summary["totals"]["epochs"] == 2
     assert "cost" not in str(summary)
     assert [point["epoch"] for point in summary["timeline"]] == [1, 2]
@@ -54,6 +56,7 @@ async def test_usage_summary_breaks_tokens_down_by_every_facet(api: ApiWorld) ->
     filtered = (await api.http.get("/api/usage/summary", params={"model": "opus", "step": "Son turns", "status": ["ok"]})).json()
     assert filtered["totals"]["calls"] == 1
     assert filtered["facets"]["calls"] == 4
+    assert filtered["facets"]["tokens"] == 2615
 
 
 async def test_usage_calls_search_sort_and_page(api: ApiWorld) -> None:
@@ -73,3 +76,15 @@ async def test_usage_calls_search_sort_and_page(api: ApiWorld) -> None:
     assert [call["model"] for call in epochs["items"]] == ["haiku"]
     assert "cost_usd" not in epochs["items"][0]
     assert (await api.http.get("/api/usage/calls", params={"sort": "price"})).status_code in {400, 422}
+
+
+async def test_usage_export_writes_every_matching_call_as_csv(api: ApiWorld) -> None:
+    await seed_calls(api)
+    response = await api.http.get("/api/usage/calls/export", params={"model": "haiku", "sort": "input_tokens", "descending": False})
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "token-usage.csv" in response.headers["content-disposition"]
+    lines = response.text.strip().splitlines()
+    assert lines[0].startswith("call,time,epoch,step")
+    assert [line.split(",")[3] for line in lines[1:]] == ["Naming 100%", "Fate"]
+    assert "1.5" not in response.text

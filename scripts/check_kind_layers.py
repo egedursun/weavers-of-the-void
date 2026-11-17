@@ -179,7 +179,9 @@ def concept_tables(concepts: Path = CONCEPTS, specs: Path = KIND_SPECS) -> set[s
 
 
 def source_text(folder: Path, suffixes: tuple[str, ...]) -> str:
-    return "\n".join(path.read_text(encoding="utf-8") for path in sorted(folder.rglob("*")) if path.suffix in suffixes and "generated" not in path.parts)
+    return "\n".join(
+        path.read_text(encoding="utf-8") for path in sorted(folder.rglob("*")) if path.suffix in suffixes and path.is_file() and "generated" not in path.parts
+    )
 
 
 def inherited_tables(code: Code) -> dict[str, set[str]]:

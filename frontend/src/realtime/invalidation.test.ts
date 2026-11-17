@@ -32,7 +32,7 @@ describe('query invalidation', () => {
     expect(Object.keys(INVALIDATIONS).sort()).toEqual([...EVENT_KINDS].sort())
   })
 
-  it('invalidates the job and the health after a job finishes', () => {
+  it('invalidates the job, the health and the token usage after a job finishes', () => {
     const event: ServerEvent = {
       id: 1,
       kind: 'job.finished',
@@ -43,6 +43,7 @@ describe('query invalidation', () => {
       queryKeys.jobs.all,
       queryKeys.jobs.detail('a'),
       queryKeys.health,
+      queryKeys.usage.all,
     ])
   })
 

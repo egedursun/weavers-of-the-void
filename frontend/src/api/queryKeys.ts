@@ -23,6 +23,9 @@ export const queryKeys = {
   metrics: {
     all: ['metrics'] as const,
   },
+  usage: {
+    all: ['usage'] as const,
+  },
   epochs: {
     all: ['epochs'] as const,
   },

@@ -6,11 +6,14 @@ import {
   CircleX,
   type LucideIcon,
 } from 'lucide-react'
+import { formatPercent } from '@/lib/format'
+import { type Rarity } from '@/constants/rarity'
 import { type KpiTone } from '@/components/domain'
 import {
   type LlmCallKind,
   type LlmCallStatus,
   type UsageBucket,
+  type UsagePoint,
   type UsageSort,
 } from './api'
 
@@ -85,4 +88,47 @@ export function totalOf(item: {
 
 export function shareOf(part: number, whole: number): number {
   return whole > 0 ? part / whole : 0
+}
+
+export const RANKS: { rarity: Rarity; floor: number }[] = [
+  { rarity: 'common', floor: 0 },
+  { rarity: 'uncommon', floor: 100_000 },
+  { rarity: 'rare', floor: 1_000_000 },
+  { rarity: 'epic', floor: 10_000_000 },
+  { rarity: 'legendary', floor: 100_000_000 },
+  { rarity: 'mythic', floor: 1_000_000_000 },
+]
+
+export function rankOf(total: number) {
+  const reached = RANKS.filter((rank) => total >= rank.floor)
+  const current = reached[reached.length - 1] ?? RANKS[0]
+  const next = RANKS[RANKS.indexOf(current) + 1] ?? null
+  return {
+    current,
+    next,
+    progress: next
+      ? (total - current.floor) / Math.max(1, next.floor - current.floor)
+      : 1,
+  }
+}
+
+export function shareText(ratio: number): string {
+  return ratio > 0 && ratio < 0.01 ? '<1%' : formatPercent(ratio)
+}
+
+const dayFormat = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+})
+const hourFormat = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+})
+
+export function pointLabel(point: UsagePoint, bucket: UsageBucket): string {
+  if (bucket === 'epoch' || point.start === null)
+    return point.epoch === null ? 'Outside epochs' : `Epoch ${point.epoch}`
+  const start = new Date(point.start)
+  return bucket === 'hour' ? hourFormat.format(start) : dayFormat.format(start)
 }

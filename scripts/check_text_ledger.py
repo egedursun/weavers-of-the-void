@@ -78,7 +78,7 @@ def targets() -> dict[str, list[str]]:
             if strings:
                 found[str(path.relative_to(ROOT))] = strings
     for path in sorted(FRONTEND.rglob("*")):
-        if path.suffix not in {".ts", ".tsx"} or ".test." in path.name or any(path.is_relative_to(base) for base in SKIPPED_FRONTEND):
+        if path.suffix not in {".ts", ".tsx"} or not path.is_file() or ".test." in path.name or any(path.is_relative_to(base) for base in SKIPPED_FRONTEND):
             continue
         strings = frontend_strings(path)
         if strings:

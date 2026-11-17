@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from claude_agent_sdk import ResultMessage
+from claude_agent_sdk import AssistantMessage, CLIConnectionError, ResultMessage, TextBlock, ToolResultBlock, ToolUseBlock, UserMessage
 from pydantic import BaseModel
 
 from aerona.api.schemas.events import RetryPayload
@@ -13,6 +13,7 @@ from aerona.events.kinds import EventKind
 from aerona.llm.client import LlmClient
 from aerona.llm.errors import LlmDisabledError, LlmPermanentError
 from aerona.llm.records import CallOutcome, CallRecord
+from aerona.llm.token_count import TokenMeter, as_text
 from aerona.rules.registry import Rules
 from aerona.rules.registry.model import ModelRules
 
@@ -72,7 +73,51 @@ async def test_structured_call_uses_haiku_and_parses_output() -> None:
     assert calls[0].fallback_model is None
     assert calls[0].tools == []
     assert records[0].outcome == CallOutcome.OK
-    assert records[0].usage.input_tokens == 10
+    expected = TokenMeter("system", as_text(Verdict.model_json_schema()), "prompt")
+    expected.reply(as_text({"accepted": True, "reason": "fits"}))
+    assert (records[0].usage.input_tokens, records[0].usage.output_tokens) == (expected.input_tokens, expected.output_tokens)
+    assert records[0].usage.input_tokens != 10
+
+
+async def test_failed_attempts_still_count_the_tokens_they_spent() -> None:
+    records: list[CallRecord] = []
+
+    async def sink(record: CallRecord) -> None:
+        records.append(record)
+
+    async def failing_query(*, prompt: str, options: Any) -> AsyncIterator[Any]:
+        yield AssistantMessage(content=[TextBlock(text="hello world")], model="m")
+        raise CLIConnectionError("lost")
+
+    client = LlmClient(FixedRules(), enabled=True, metrics=sink, query_function=failing_query)
+    with pytest.raises(CLIConnectionError):
+        await client.structured("fate", "system", "prompt", output=Verdict, attempts=2)
+    one = TokenMeter("system", as_text(Verdict.model_json_schema()), "prompt")
+    one.reply("hello world")
+    assert records[0].usage.input_tokens == 2 * one.input_tokens
+    assert records[0].usage.output_tokens == 2 * one.output_tokens
+
+
+async def test_agent_runs_count_every_reply_and_tool_result() -> None:
+    records: list[CallRecord] = []
+
+    async def sink(record: CallRecord) -> None:
+        records.append(record)
+
+    async def agent_query(*, prompt: str, options: Any) -> AsyncIterator[Any]:
+        yield AssistantMessage(content=[ToolUseBlock(id="t", name="look", input={})], model="m")
+        yield UserMessage(content=[ToolResultBlock(tool_use_id="t", content="hello world")])
+        yield AssistantMessage(content=[TextBlock(text="done")], model="m")
+        yield result(structured_output=None, result="done")
+
+    client = LlmClient(FixedRules(), enabled=True, metrics=sink, query_function=agent_query)
+    run = await client.run_agent("Son turn: Ithren", "system", "prompt", tools=[])
+    assert run.completed
+    expected = TokenMeter("system", "prompt")
+    expected.reply("look\n{}")
+    expected.returned("hello world")
+    expected.reply("done")
+    assert (records[0].usage.input_tokens, records[0].usage.output_tokens) == (expected.input_tokens, expected.output_tokens)
 
 
 async def test_transient_failure_is_retried_then_succeeds() -> None:

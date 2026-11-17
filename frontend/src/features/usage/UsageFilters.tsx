@@ -70,6 +70,11 @@ export function UsageFilters({
   matching,
 }: UsageFiltersProps) {
   const [search, setSearch] = useState(filter.search)
+  const [seen, setSeen] = useState(filter.search)
+  if (seen !== filter.search) {
+    setSeen(filter.search)
+    setSearch(filter.search)
+  }
   useEffect(() => {
     if (search === filter.search) return
     const timer = window.setTimeout(

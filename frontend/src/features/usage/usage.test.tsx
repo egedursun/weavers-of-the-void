@@ -13,6 +13,7 @@ const share = (name: string, input: number, output: number, errors = 0) => ({
 })
 
 const REPORT = {
+  tokenizer: 'tiktoken o200k_base',
   totals: {
     calls: 12,
     input_tokens: 90_000,
@@ -23,6 +24,8 @@ const REPORT = {
     retried: 1,
     milliseconds: 64_000,
     largest_call: 24_000,
+    median_call: 6000,
+    p95_call: 20_000,
     epochs: 3,
     first_at: '2026-11-15T10:00:00Z',
     last_at: '2026-11-17T10:00:00Z',
@@ -59,6 +62,7 @@ const REPORT = {
   ],
   facets: {
     calls: 40,
+    tokens: 2_500_000,
     models: ['haiku', 'opus'],
     roles: ['Fate', 'Son turn'],
     steps: ['Fate', 'Son turns'],
@@ -142,6 +146,28 @@ describe('usage page', () => {
     expect(document.body.textContent).not.toContain('$')
   })
 
+  it('ranks the usage, names the tokenizer and compares the latest epoch', async () => {
+    const { screen } = await renderScreen(<UsageScreen />, routes())
+    await expect
+      .element(screen.getByText('Rare', { exact: true }))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('7.5M more tokens to Epic at 10M.'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Counted with tiktoken o200k_base'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Latest · Epoch 2', { exact: true }))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('103% more than Epoch 1'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('img', { name: 'Heaviest' }).first())
+      .toBeVisible()
+  })
+
   it('fits a phone screen without sideways scrolling', async () => {
     await page.viewport(390, 900)
     const { screen } = await renderScreen(<UsageScreen />, routes())
@@ -154,7 +180,10 @@ describe('usage page', () => {
   })
 
   it('filters by a picked model and sends the filter to both reads', async () => {
-    const { screen, server } = await renderScreen(<UsageScreen />, routes())
+    const { screen, server, router } = await renderScreen(
+      <UsageScreen />,
+      routes()
+    )
     await screen.getByRole('button', { name: 'Filter to model opus' }).click()
     await expect
       .element(
@@ -173,6 +202,13 @@ describe('usage page', () => {
         .callsTo('GET /api/usage/summary')
         .some((call) => call.query.getAll('model').includes('opus'))
     ).toBe(true)
+    expect(router.state.location.search).toMatchObject({ model: ['opus'] })
+    await expect
+      .element(screen.getByRole('link', { name: 'Export CSV' }))
+      .toHaveAttribute(
+        'href',
+        '/api/usage/calls/export?model=opus&sort=time&descending=true'
+      )
     await screen
       .getByRole('button', { name: 'Remove filter: Model opus' })
       .click()

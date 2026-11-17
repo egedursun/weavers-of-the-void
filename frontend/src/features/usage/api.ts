@@ -3,6 +3,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
+import { API_BASE_URL } from '@/constants/api'
 
 export type UsageReport = components['schemas']['UsageReport']
 export type UsageShare = components['schemas']['UsageShare']
@@ -45,7 +46,7 @@ export const EMPTY_FILTER: UsageFilter = {
   since: null,
 }
 
-const usageRoot = [...queryKeys.metrics.all, 'usage'] as const
+const usageRoot = queryKeys.usage.all
 
 const usageKeys = {
   summary: (filter: UsageFilter, bucket: UsageBucket) =>
@@ -67,6 +68,18 @@ function filterQuery(filter: UsageFilter) {
     epoch_to: filter.epochTo ?? undefined,
     since: filter.since ?? undefined,
   }
+}
+
+export function usageExportUrl(filter: UsageFilter, order: UsageOrder) {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(filterQuery(filter))) {
+    if (value === undefined) continue
+    for (const item of Array.isArray(value) ? value : [value])
+      params.append(key, String(item))
+  }
+  params.set('sort', order.sort)
+  params.set('descending', String(order.descending))
+  return `${API_BASE_URL}/api/usage/calls/export?${params.toString()}`
 }
 
 export function useUsageSummary(filter: UsageFilter, bucket: UsageBucket) {

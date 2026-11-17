@@ -26,9 +26,15 @@ const epochClosed = (): QueryKey[] => [
   queryKeys.jobs.all,
   queryKeys.epochs.all,
   queryKeys.metrics.all,
+  queryKeys.usage.all,
   queryKeys.ledger.all,
 ]
 const ledger = (): QueryKey[] => [queryKeys.world.all, queryKeys.ledger.all]
+
+const turnFinished = (): QueryKey[] => [
+  queryKeys.world.all,
+  queryKeys.usage.all,
+]
 
 const jobChanged = (event: { payload: { job_id: string } }): QueryKey[] => [
   queryKeys.jobs.all,
@@ -36,12 +42,17 @@ const jobChanged = (event: { payload: { job_id: string } }): QueryKey[] => [
   queryKeys.health,
 ]
 
+const jobEnded = (event: { payload: { job_id: string } }): QueryKey[] => [
+  ...jobChanged(event),
+  queryKeys.usage.all,
+]
+
 export const INVALIDATIONS: { [K in EventKind]: InvalidationRule<K> } = {
   'job.queued': () => [queryKeys.jobs.all, queryKeys.health],
   'job.started': jobChanged,
   'job.progress': nothing,
-  'job.finished': jobChanged,
-  'job.failed': jobChanged,
+  'job.finished': jobEnded,
+  'job.failed': jobEnded,
   'job.cancelled': jobChanged,
   'world.changed': world,
   'rules.changed': () => [queryKeys.rules.all],
@@ -68,10 +79,10 @@ export const INVALIDATIONS: { [K in EventKind]: InvalidationRule<K> } = {
   'son.distributed': world,
   'son.turn_queued': nothing,
   'son.turn_started': nothing,
-  'son.turn_finished': world,
+  'son.turn_finished': turnFinished,
   'mortals.started': nothing,
   'mortal.turn_started': nothing,
-  'mortal.turn_finished': world,
+  'mortal.turn_finished': turnFinished,
   'engine.started': nothing,
   'engine.finished': world,
   'fate.started': nothing,

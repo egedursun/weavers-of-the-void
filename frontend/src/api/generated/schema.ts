@@ -4063,6 +4063,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/usage/calls/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['export_usage_calls_api_usage_calls_export_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/maintenance/tasks': {
     parameters: {
       query?: never
@@ -78222,6 +78238,7 @@ export interface components {
     }
     UsageFacets: {
       calls: number
+      tokens: number
       models: string[]
       roles: string[]
       steps: string[]
@@ -78243,6 +78260,7 @@ export interface components {
       errors: number
     }
     UsageReport: {
+      tokenizer: string
       totals: components['schemas']['UsageTotals']
       timeline: components['schemas']['UsagePoint'][]
       models: components['schemas']['UsageShare'][]
@@ -78285,6 +78303,8 @@ export interface components {
       retried: number
       milliseconds: number
       largest_call: number
+      median_call: number
+      p95_call: number
       epochs: number
       first_at: string | null
       last_at: string | null
@@ -88855,6 +88875,45 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['UsageCallPage']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  export_usage_calls_api_usage_calls_export_get: {
+    parameters: {
+      query?: {
+        sort?: components['schemas']['UsageSort']
+        descending?: boolean
+        search?: string | null
+        model?: string[] | null
+        role?: string[] | null
+        step?: string[] | null
+        kind?: components['schemas']['LlmCallKind'][] | null
+        status?: components['schemas']['LlmCallStatus'][] | null
+        epoch_from?: number | null
+        epoch_to?: number | null
+        since?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'text/csv; charset=utf-8': unknown
         }
       }
       default: {

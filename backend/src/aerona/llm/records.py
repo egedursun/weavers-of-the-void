@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
+
+from aerona.llm.token_count import TokenMeter
 
 
 class CallKind(StrEnum):
@@ -24,10 +25,11 @@ class Usage:
     turns: int = 0
     completed: bool = True
 
-    def absorb(self, usage: dict[str, Any] | None, cost: float | None, turns: int | None) -> None:
-        data = usage or {}
-        self.input_tokens += int(data.get("input_tokens", 0)) + int(data.get("cache_read_input_tokens", 0)) + int(data.get("cache_creation_input_tokens", 0))
-        self.output_tokens += int(data.get("output_tokens", 0))
+    def count(self, meter: TokenMeter) -> None:
+        self.input_tokens += meter.input_tokens
+        self.output_tokens += meter.output_tokens
+
+    def absorb(self, cost: float | None, turns: int | None) -> None:
         self.cost_usd += float(cost or 0.0)
         self.turns += int(turns or 0)
 

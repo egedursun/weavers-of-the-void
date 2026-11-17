@@ -231,7 +231,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/war_terms.py` | 3 | 2026-11-16 | `f30de08fec897bbb` |
 | `backend/src/aerona/catalog/worlds.py` | 41 | 2026-11-16 | `36a51e6f3ee44af9` |
 | `backend/src/aerona/constants/agents.py` | 2 | 2026-11-16 | `48e1370dff3552f3` |
-| `backend/src/aerona/constants/api.py` | 5 | 2026-11-16 | `f5000fea576bd82d` |
+| `backend/src/aerona/constants/api.py` | 6 | 2026-11-17 | `cfdc0539adae3add` |
 | `backend/src/aerona/constants/app.py` | 1 | 2026-11-16 | `f7f397e6bf83bb9f` |
 | `backend/src/aerona/constants/bond_texts.py` | 5 | 2026-11-16 | `884e11ca1174f573` |
 | `backend/src/aerona/constants/books.py` | 2 | 2026-11-16 | `2ba85c474ebda42f` |

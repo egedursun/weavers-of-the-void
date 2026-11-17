@@ -1,14 +1,17 @@
 import { Fragment, useMemo, useState } from 'react'
 import {
   ArrowDown,
+  Award,
   ArrowUp,
   ArrowUpDown,
   ChevronDown,
   ChevronRight,
+  Crown,
   ListX,
+  Medal,
   RotateCcw,
 } from 'lucide-react'
-import { formatCompact, formatInteger, formatPercent } from '@/lib/format'
+import { formatCompact, formatInteger } from '@/lib/format'
 import { formatMilliseconds } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -42,6 +45,7 @@ import {
   STATUS_BADGE,
   STATUS_LOOK,
   shareOf,
+  shareText,
   totalOf,
 } from './usageVisuals'
 
@@ -92,6 +96,25 @@ function SortHead<K extends string>({
         <Icon />
       </Button>
     </TableHead>
+  )
+}
+
+const PODIUM = [
+  { icon: Crown, label: 'Heaviest', tone: 'text-primary' },
+  { icon: Medal, label: 'Second heaviest', tone: 'text-info' },
+  { icon: Award, label: 'Third heaviest', tone: 'text-brand-verdigris' },
+] as const
+
+function PodiumMark({ place }: { place: number }) {
+  const mark = PODIUM[place]
+  if (!mark)
+    return <span aria-hidden='true' className='size-icon-sm shrink-0' />
+  return (
+    <mark.icon
+      role='img'
+      aria-label={mark.label}
+      className={`size-icon-sm shrink-0 ${mark.tone}`}
+    />
   )
 }
 
@@ -151,6 +174,13 @@ export function BreakdownTable({
     [shares, sort, descending]
   )
   const page = useShowMore(sorted, BREAKDOWN_SHOWN)
+  const podium = useMemo(
+    () =>
+      sortShares(shares, 'total', { descending: true })
+        .slice(0, PODIUM.length)
+        .map((share) => share.name),
+    [shares]
+  )
   const whole = shares.reduce((sum, share) => sum + totalOf(share), 0)
   const choose = (column: BreakdownSort) => {
     setDescending(column === sort ? !descending : column !== 'name')
@@ -205,17 +235,20 @@ export function BreakdownTable({
                 data-state={active ? 'selected' : undefined}
               >
                 <TableCell className='min-w-48'>
-                  <Button
-                    variant='link'
-                    size='sm'
-                    aria-pressed={active}
-                    aria-label={`${active ? 'Remove the filter on' : 'Filter by'} ${noun[0]} ${share.name}`}
-                    onClick={() => onPick(share.name)}
-                  >
-                    <Text as='span' truncate>
-                      {share.name}
-                    </Text>
-                  </Button>
+                  <div className='flex min-w-0 items-center gap-1.5'>
+                    <PodiumMark place={podium.indexOf(share.name)} />
+                    <Button
+                      variant='link'
+                      size='sm'
+                      aria-pressed={active}
+                      aria-label={`${active ? 'Remove the filter on' : 'Filter by'} ${noun[0]} ${share.name}`}
+                      onClick={() => onPick(share.name)}
+                    >
+                      <Text as='span' truncate>
+                        {share.name}
+                      </Text>
+                    </Button>
+                  </div>
                 </TableCell>
                 <TableCell className='text-end'>
                   <Stat value={formatInteger(share.calls)} />
@@ -238,7 +271,7 @@ export function BreakdownTable({
                       aria-label={`${share.name}: share of tokens`}
                     />
                     <Muted as='span' variant='caption'>
-                      {formatPercent(portion)}
+                      {shareText(portion)}
                     </Muted>
                   </div>
                 </TableCell>

@@ -47,7 +47,7 @@ def source_files(root: Path) -> list[Path]:
     return sorted(
         path
         for path in root.rglob("*")
-        if path.suffix in SOURCE_SUFFIXES and not SKIPPED_PARTS & set(path.parts) and not any(marker in path.name for marker in TEST_MARKERS)
+        if path.suffix in SOURCE_SUFFIXES and path.is_file() and not SKIPPED_PARTS & set(path.parts) and not any(marker in path.name for marker in TEST_MARKERS)
     )
 
 

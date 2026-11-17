@@ -13,7 +13,7 @@ import {
   YAxis,
 } from 'recharts'
 import { llmCallKindValues, llmCallStatusValues } from '@/api/generated/schema'
-import { formatCompact, formatInteger, formatPercent } from '@/lib/format'
+import { formatCompact, formatInteger } from '@/lib/format'
 import { agree, plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,9 +38,11 @@ import {
   type Look,
   KIND_LOOK,
   OUTPUT_COLOR,
+  pointLabel,
   STATUS_LOOK,
   seriesColor,
   shareOf,
+  shareText,
   totalOf,
 } from './usageVisuals'
 
@@ -48,6 +50,7 @@ const PERCENT = 100
 const BARS_SHOWN = 8
 const DONUT_SLICES = 5
 const AXIS_WIDTH = 48
+const SINGLE_BAR_WIDTH = 72
 const STEP_AXIS_WIDTH = 132
 const OTHER_SLICE = 'Every other model'
 
@@ -55,23 +58,6 @@ const TOKEN_CONFIG = {
   input: { label: 'Tokens in', color: INPUT_COLOR },
   output: { label: 'Tokens out', color: OUTPUT_COLOR },
 } satisfies ChartConfig
-
-const dayFormat = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-})
-const hourFormat = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-})
-
-function pointLabel(point: UsagePoint, bucket: UsageBucket): string {
-  if (bucket === 'epoch' || point.start === null)
-    return point.epoch === null ? 'Outside epochs' : `Epoch ${point.epoch}`
-  const start = new Date(point.start)
-  return bucket === 'hour' ? hourFormat.format(start) : dayFormat.format(start)
-}
 
 function NoData({ children }: { children: ReactNode }) {
   return (
@@ -106,6 +92,10 @@ export function TokenTimeline({
     calls: point.calls,
     errors: point.errors,
   }))
+  const withCalls = (label: ReactNode) => {
+    const row = rows.find((item) => item.label === label)
+    return row ? `${row.label} · ${plural(row.calls, 'call', 'calls')}` : label
+  }
   const peak = rows.reduce(
     (best, row) =>
       row.input + row.output > best.input + best.output ? row : best,
@@ -119,67 +109,107 @@ export function TokenTimeline({
         aria-label={`Tokens in and out ${bucket === 'epoch' ? 'per epoch' : bucket === 'hour' ? 'per hour' : 'per day'}`}
         className='aspect-auto h-72 w-full'
       >
-        <AreaChart data={rows} accessibilityLayer>
-          <defs>
-            <linearGradient id='usage-in' x1='0' y1='0' x2='0' y2='1'>
-              <stop
-                offset='0'
-                stopColor='var(--color-input)'
-                stopOpacity={0.5}
-              />
-              <stop
-                offset='1'
-                stopColor='var(--color-input)'
-                stopOpacity={0.04}
-              />
-            </linearGradient>
-            <linearGradient id='usage-out' x1='0' y1='0' x2='0' y2='1'>
-              <stop
-                offset='0'
-                stopColor='var(--color-output)'
-                stopOpacity={0.55}
-              />
-              <stop
-                offset='1'
-                stopColor='var(--color-output)'
-                stopOpacity={0.06}
-              />
-            </linearGradient>
-          </defs>
-          <CartesianGrid vertical={false} strokeDasharray='2 5' />
-          <XAxis
-            dataKey='label'
-            tickLine={false}
-            axisLine={false}
-            minTickGap={24}
-          />
-          <YAxis
-            tickLine={false}
-            axisLine={false}
-            width={AXIS_WIDTH}
-            tickFormatter={(value: number) => formatCompact(value)}
-          />
-          <ChartTooltip
-            content={<ChartTooltipContent valueFormatter={formatInteger} />}
-          />
-          <ChartLegend content={<ChartLegendContent />} />
-          <Area
-            dataKey='input'
-            type='monotone'
-            stackId='tokens'
-            stroke='var(--color-input)'
-            strokeWidth={2}
-            fill='url(#usage-in)'
-          />
-          <Area
-            dataKey='output'
-            type='monotone'
-            stackId='tokens'
-            stroke='var(--color-output)'
-            strokeWidth={2}
-            fill='url(#usage-out)'
-          />
-        </AreaChart>
+        {rows.length > 1 ? (
+          <AreaChart data={rows} accessibilityLayer>
+            <defs>
+              <linearGradient id='usage-in' x1='0' y1='0' x2='0' y2='1'>
+                <stop
+                  offset='0'
+                  stopColor='var(--color-input)'
+                  stopOpacity={0.5}
+                />
+                <stop
+                  offset='1'
+                  stopColor='var(--color-input)'
+                  stopOpacity={0.04}
+                />
+              </linearGradient>
+              <linearGradient id='usage-out' x1='0' y1='0' x2='0' y2='1'>
+                <stop
+                  offset='0'
+                  stopColor='var(--color-output)'
+                  stopOpacity={0.55}
+                />
+                <stop
+                  offset='1'
+                  stopColor='var(--color-output)'
+                  stopOpacity={0.06}
+                />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} strokeDasharray='2 5' />
+            <XAxis
+              dataKey='label'
+              tickLine={false}
+              axisLine={false}
+              minTickGap={24}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              width={AXIS_WIDTH}
+              tickFormatter={(value: number) => formatCompact(value)}
+            />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  valueFormatter={formatInteger}
+                  labelFormatter={withCalls}
+                />
+              }
+            />
+            <ChartLegend content={<ChartLegendContent />} />
+            <Area
+              dataKey='input'
+              type='monotone'
+              stackId='tokens'
+              stroke='var(--color-input)'
+              strokeWidth={2}
+              fill='url(#usage-in)'
+            />
+            <Area
+              dataKey='output'
+              type='monotone'
+              stackId='tokens'
+              stroke='var(--color-output)'
+              strokeWidth={2}
+              fill='url(#usage-out)'
+            />
+          </AreaChart>
+        ) : (
+          <BarChart data={rows} accessibilityLayer>
+            <CartesianGrid vertical={false} strokeDasharray='2 5' />
+            <XAxis dataKey='label' tickLine={false} axisLine={false} />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              width={AXIS_WIDTH}
+              tickFormatter={(value: number) => formatCompact(value)}
+            />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  valueFormatter={formatInteger}
+                  labelFormatter={withCalls}
+                />
+              }
+            />
+            <ChartLegend content={<ChartLegendContent />} />
+            <Bar
+              dataKey='input'
+              stackId='tokens'
+              fill='var(--color-input)'
+              maxBarSize={SINGLE_BAR_WIDTH}
+            />
+            <Bar
+              dataKey='output'
+              stackId='tokens'
+              fill='var(--color-output)'
+              radius={[4, 4, 0, 0]}
+              maxBarSize={SINGLE_BAR_WIDTH}
+            />
+          </BarChart>
+        )}
       </ChartContainer>
       <Muted variant='caption'>
         {`Busiest: ${peak.label} with ${formatCompact(peak.input + peak.output)} ${agree(peak.input + peak.output, 'token')} over ${plural(peak.calls, 'call', 'calls')}${peak.errors > 0 ? `, ${plural(peak.errors, 'failure', 'failures')}` : ''}.`}
@@ -292,7 +322,7 @@ export function ModelDonut({
                   {`${slice.name} (${rest.length})`}
                 </Text>
               )}
-              <Stat value={formatPercent(shareOf(slice.total, whole))} />
+              <Stat value={shareText(shareOf(slice.total, whole))} />
             </div>
             <Muted variant='caption'>
               {`${formatCompact(slice.total)} ${agree(slice.total, 'token')} · ${plural(slice.calls, 'call', 'calls')}`}
@@ -390,7 +420,7 @@ function SplitRow({
           <Text as='span' weight='medium' truncate>
             {look.label}
           </Text>
-          <Stat value={formatPercent(share)} />
+          <Stat value={shareText(share)} />
         </div>
         <Progress
           size='sm'

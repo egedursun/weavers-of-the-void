@@ -8,11 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.telemetry.tables import LlmCallRow
 from aerona.domain.enums.telemetry import LlmCallKind, LlmCallStatus, UsageBucket, UsageSort
+from aerona.llm.token_count import ENCODING_NAME
 from aerona.services.metrics import MORTAL_TURN_GROUP, MORTAL_TURN_PREFIX, SON_TURN_GROUP, SON_TURN_PREFIX, step_group
 
 GROUP_PREFIXES = {SON_TURN_GROUP: SON_TURN_PREFIX, MORTAL_TURN_GROUP: MORTAL_TURN_PREFIX}
 TIME_BUCKETS = {UsageBucket.DAY: (10, "%Y-%m-%d"), UsageBucket.HOUR: (13, "%Y-%m-%d %H")}
 
+MEDIAN_SHARE = 0.5
+TOP_SHARE = 0.95
 TOTAL_TOKENS = LlmCallRow.input_tokens + LlmCallRow.output_tokens
 SORT_COLUMNS: dict[UsageSort, SQLColumnExpression[Any]] = {
     UsageSort.TIME: LlmCallRow.id,
@@ -74,6 +77,8 @@ class UsageTotals:
     retried: int
     milliseconds: int
     largest_call: int
+    median_call: int
+    p95_call: int
     epochs: int
     first_at: datetime | None
     last_at: datetime | None
@@ -118,6 +123,7 @@ class UsageStatusShare:
 @dataclass(frozen=True)
 class UsageFacets:
     calls: int
+    tokens: int
     models: list[str]
     roles: list[str]
     steps: list[str]
@@ -127,6 +133,7 @@ class UsageFacets:
 
 @dataclass(frozen=True)
 class UsageReport:
+    tokenizer: str
     totals: UsageTotals
     timeline: list[UsagePoint]
     models: list[UsageShare]
@@ -160,7 +167,12 @@ def by_tokens(shares: Sequence[UsageShare]) -> list[UsageShare]:
     return sorted(shares, key=lambda share: (-(share.input_tokens + share.output_tokens), share.name))
 
 
+def percentile(ordered: list[int], share: float) -> int:
+    return ordered[min(len(ordered) - 1, int(share * len(ordered)))] if ordered else 0
+
+
 async def usage_totals(session: AsyncSession, conditions: list[ColumnElement[bool]]) -> UsageTotals:
+    sizes = [int(size) for size in await session.scalars(select(TOTAL_TOKENS).where(*conditions).order_by(TOTAL_TOKENS))]
     row = (
         await session.execute(
             select(
@@ -189,6 +201,8 @@ async def usage_totals(session: AsyncSession, conditions: list[ColumnElement[boo
         retried=int(row[6]),
         milliseconds=int(row[7]),
         largest_call=int(row[8]),
+        median_call=percentile(sizes, MEDIAN_SHARE),
+        p95_call=percentile(sizes, TOP_SHARE),
         epochs=int(row[9]),
         first_at=row[10],
         last_at=row[11],
@@ -267,12 +281,13 @@ async def usage_statuses(session: AsyncSession, conditions: list[ColumnElement[b
 
 
 async def usage_facets(session: AsyncSession) -> UsageFacets:
-    span = (await session.execute(select(func.count(), func.min(LlmCallRow.epoch), func.max(LlmCallRow.epoch)))).one()
+    span = (await session.execute(select(func.count(), func.min(LlmCallRow.epoch), func.max(LlmCallRow.epoch), func.coalesce(func.sum(TOTAL_TOKENS), 0)))).one()
     models = list(await session.scalars(select(LlmCallRow.model).distinct().order_by(LlmCallRow.model)))
     roles = list(await session.scalars(select(LlmCallRow.role).distinct().where(LlmCallRow.role.is_not(None)).order_by(LlmCallRow.role)))
     jobs = list(await session.scalars(select(LlmCallRow.job).distinct().order_by(LlmCallRow.job)))
     return UsageFacets(
         calls=int(span[0]),
+        tokens=int(span[3]),
         models=[str(model) for model in models],
         roles=[str(role) for role in roles],
         steps=sorted({step_group(job) for job in jobs}),
@@ -284,6 +299,7 @@ async def usage_facets(session: AsyncSession) -> UsageFacets:
 async def usage_report(session: AsyncSession, chosen: UsageFilter, bucket: UsageBucket) -> UsageReport:
     conditions = chosen.conditions()
     return UsageReport(
+        tokenizer=f"tiktoken {ENCODING_NAME}",
         totals=await usage_totals(session, conditions),
         timeline=await usage_timeline(session, conditions, bucket),
         models=by_tokens(await usage_shares(session, conditions, LlmCallRow.model)),
@@ -295,10 +311,17 @@ async def usage_report(session: AsyncSession, chosen: UsageFilter, bucket: Usage
     )
 
 
+def call_order(sort: UsageSort, descending: bool) -> tuple[ColumnElement[Any], ColumnElement[Any]]:
+    column = SORT_COLUMNS[sort]
+    return (column.desc(), LlmCallRow.id.desc()) if descending else (column.asc(), LlmCallRow.id.asc())
+
+
+async def usage_export(session: AsyncSession, chosen: UsageFilter, *, sort: UsageSort, descending: bool) -> list[LlmCallRow]:
+    return list(await session.scalars(select(LlmCallRow).where(*chosen.conditions()).order_by(*call_order(sort, descending))))
+
+
 async def usage_calls(session: AsyncSession, chosen: UsageFilter, *, sort: UsageSort, descending: bool, offset: int, limit: int) -> UsageCalls:
     conditions = chosen.conditions()
-    column = SORT_COLUMNS[sort]
-    order = (column.desc(), LlmCallRow.id.desc()) if descending else (column.asc(), LlmCallRow.id.asc())
-    rows = list(await session.scalars(select(LlmCallRow).where(*conditions).order_by(*order).offset(offset).limit(limit)))
+    rows = list(await session.scalars(select(LlmCallRow).where(*conditions).order_by(*call_order(sort, descending)).offset(offset).limit(limit)))
     total = int(await session.scalar(select(func.count()).select_from(LlmCallRow).where(*conditions)) or 0)
     return UsageCalls(rows=rows, total=total)

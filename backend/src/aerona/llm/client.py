@@ -16,6 +16,7 @@ from aerona.llm.json_text import first_json_value
 from aerona.llm.records import AgentRun, CallKind, CallOutcome, CallRecord, Usage
 from aerona.llm.sandbox import build_options
 from aerona.llm.stream import StreamPublish, StreamReporter, current_actor, mute
+from aerona.llm.token_count import TokenMeter, as_text, tool_text
 from aerona.rules.registry import Rules
 from aerona.rules.registry.model import ModelRules
 
@@ -79,15 +80,19 @@ class LlmClient:
         timeout_seconds: int | None = None,
     ) -> T:
         model_rules = self._rules.current.model
-        options = build_options(system_prompt, model_rules.structured_max_steps, output_schema=schema or output.model_json_schema())
+        output_schema = schema or output.model_json_schema()
+        options = build_options(system_prompt, model_rules.structured_max_steps, output_schema=output_schema)
 
         async def attempt(usage: Usage) -> T:
             reporter = StreamReporter(self._publish, self._rules.current.server, None, label)
+            meter = TokenMeter(system_prompt, as_text(output_schema), prompt)
             try:
-                payload = await self._collect_structured(prompt, options, usage, reporter)
+                payload = await self._collect_structured(prompt, options, usage, reporter, meter)
             except BaseException as error:
                 reporter.close(str(error) or type(error).__name__)
                 raise
+            finally:
+                usage.count(meter)
             reporter.close()
             try:
                 return output.model_validate(payload)
@@ -115,25 +120,30 @@ class LlmClient:
 
         async def attempt(usage: Usage) -> AgentRun:
             reporter = StreamReporter(self._publish, self._rules.current.server, current_actor.get(), label)
+            meter = TokenMeter(system_prompt, *(tool_text(tool) for tool in tools), prompt)
             try:
-                run = await self._collect_agent(prompt, options, usage, reporter)
+                run = await self._collect_agent(prompt, options, usage, reporter, meter)
             finally:
                 reporter.close()
+                usage.count(meter)
             if not run.completed:
                 LOGGER.warning("Agent turn %s ended unfinished (%s) after %s model replies; step limit %s", label, run.stop_reason, usage.turns, limit)
             return run
 
         return await self._with_retries(label, CallKind.AGENT, attempt, timeout_seconds or model_rules.agent_timeout, 1)
 
-    async def _collect_structured(self, prompt: str, options: ClaudeAgentOptions, usage: Usage, reporter: StreamReporter) -> Any:
+    async def _collect_structured(self, prompt: str, options: ClaudeAgentOptions, usage: Usage, reporter: StreamReporter, meter: TokenMeter) -> Any:
         result: ResultMessage | None = None
         async for message in self._query(prompt=prompt, options=options):
             reporter.feed(message)
+            meter.read(message)
             if isinstance(message, ResultMessage):
                 result = message
         if result is None:
             raise LlmTransientError("model returned no result")
-        usage.absorb(result.usage, result.total_cost_usd, result.num_turns)
+        if meter.replies == 0:
+            meter.reply(as_text(result.structured_output) if result.structured_output is not None else result.result or "")
+        usage.absorb(result.total_cost_usd, result.num_turns)
         self._raise_for_result(result)
         if result.structured_output is not None:
             return result.structured_output
@@ -144,18 +154,21 @@ class LlmClient:
                 raise LlmTransientError("model returned unparseable output") from error
         raise LlmTransientError("model returned empty output")
 
-    async def _collect_agent(self, prompt: str, options: ClaudeAgentOptions, usage: Usage, reporter: StreamReporter) -> AgentRun:
+    async def _collect_agent(self, prompt: str, options: ClaudeAgentOptions, usage: Usage, reporter: StreamReporter, meter: TokenMeter) -> AgentRun:
         texts: list[str] = []
         result: ResultMessage | None = None
         async for message in self._query(prompt=prompt, options=options):
             reporter.feed(message)
+            meter.read(message)
             if isinstance(message, AssistantMessage):
                 texts.extend(block.text for block in message.content if isinstance(block, TextBlock))
             elif isinstance(message, ResultMessage):
                 result = message
         if result is None:
             return AgentRun(text="\n".join(texts), usage=usage, completed=False, stop_reason=None)
-        usage.absorb(result.usage, result.total_cost_usd, result.num_turns)
+        if meter.replies == 0 and result.result:
+            meter.reply(result.result)
+        usage.absorb(result.total_cost_usd, result.num_turns)
         return AgentRun(text="\n".join(texts), usage=usage, completed=not result.is_error, stop_reason=result.stop_reason or result.subtype)
 
     @staticmethod

@@ -21,6 +21,7 @@ dependencies = [
     "scipy>=1.18.1",
     "sqlalchemy[asyncio]>=2.1.6",
     "sse-starlette>=3.6.0",
+    "tiktoken>=0.14.0",
     "uvicorn[standard]>=0.54.0",
     "weasyprint>=70.0",
 ]

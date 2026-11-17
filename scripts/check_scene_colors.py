@@ -24,7 +24,7 @@ def scan(text: str) -> list[int]:
 def findings(root: Path = SOURCE) -> list[Raw]:
     found: list[Raw] = []
     for path in sorted(root.rglob("*")):
-        if path.suffix not in SUFFIXES or ".test." in path.name or "generated" in path.parts:
+        if path.suffix not in SUFFIXES or not path.is_file() or ".test." in path.name or "generated" in path.parts:
             continue
         text = path.read_text(encoding="utf-8")
         found.extend(Raw(path, number, text.splitlines()[number - 1].strip()) for number in scan(text))

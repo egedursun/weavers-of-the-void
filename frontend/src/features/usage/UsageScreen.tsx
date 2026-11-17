@@ -1,14 +1,18 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { navItem } from '@/config/navigation'
 import {
   ArrowDownToLine,
   ArrowDownWideNarrow,
   ArrowUpFromLine,
   ArrowUpNarrowWide,
-  CalendarClock,
   ChartArea,
   ChartPie,
   Coins,
+  Cpu,
+  Crown,
+  FileDown,
+  Flame,
   Gauge,
   ListTree,
   Logs,
@@ -17,16 +21,20 @@ import {
   RefreshCw,
   Repeat,
   RotateCcw,
-  ScissorsLineDashed,
+  Ruler,
   Sigma,
   Timer,
+  Trophy,
   TriangleAlert,
   Workflow,
 } from 'lucide-react'
 import { usageBucketValues, usageSortValues } from '@/api/generated/schema'
 import { formatCompact, formatDateTime, formatPercent } from '@/lib/format'
 import { agree, formatMilliseconds, plural } from '@/lib/units'
+import { RARITY_LABEL } from '@/constants/rarity'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import {
   Select,
   SelectContent,
@@ -38,13 +46,21 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   EmptyState,
+  HeroFrame,
   KpiTile,
+  Medallion,
   MiniStat,
   PageHeader,
+  RarityBadge,
   Section,
 } from '@/components/domain'
-import { Muted, Text } from '@/components/typography'
+import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useRuleValue } from '@/features/world-rules/api'
 import {
   ModelDonut,
@@ -55,31 +71,43 @@ import {
 import { UsageFilters } from './UsageFilters'
 import { BreakdownTable, CallLog } from './UsageTables'
 import {
-  EMPTY_FILTER,
   type UsageBucket,
   type UsageFilter,
   type UsageOrder,
   type UsageReport,
   type UsageSort,
+  usageExportUrl,
   useUsageCalls,
   useUsageSummary,
 } from './api'
 import {
+  BREAKDOWNS,
+  type UsageSearch,
+  filterOf,
+  orderOf,
+  searchOfFilter,
+  validateUsageSearch,
+} from './usageSearch'
+import {
   BUCKET_LABEL,
-  RANGES,
   type RangeKey,
   SORT_LABEL,
+  pointLabel,
+  rankOf,
   shareOf,
   totalOf,
 } from './usageVisuals'
 
 const ITEM = navItem('usage')
 const RETENTION_RULE = 'metrics.keep_epochs'
-const HOUR_MS = 3_600_000
-const BREAKDOWNS = ['steps', 'models', 'roles'] as const
-type Breakdown = (typeof BREAKDOWNS)[number]
-const FIRST_PAGE: UsageOrder = { sort: 'time', descending: true, offset: 0 }
+const PERCENT = 100
 const TEXT_SORTS: UsageSort[] = ['model', 'step']
+
+const clockFormat = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  second: '2-digit',
+})
 
 function toggled(list: string[], value: string): string[] {
   return list.includes(value)
@@ -87,27 +115,93 @@ function toggled(list: string[], value: string): string[] {
     : [...list, value]
 }
 
-function isFiltered(filter: UsageFilter): boolean {
+function isFiltered(search: UsageSearch): boolean {
+  const chosen = Object.values(searchOfFilter(filterOf(search, 0)))
   return (
-    filter.search.trim() !== '' ||
-    filter.models.length > 0 ||
-    filter.roles.length > 0 ||
-    filter.steps.length > 0 ||
-    filter.kinds.length > 0 ||
-    filter.statuses.length > 0 ||
-    filter.epochFrom !== null ||
-    filter.epochTo !== null ||
-    filter.since !== null
+    chosen.some((value) => value !== undefined) ||
+    (search.range ?? 'all') !== 'all'
   )
 }
 
-function Headline({ report }: { report: UsageReport }) {
-  const { totals } = report
+function RankHero({ report }: { report: UsageReport }) {
+  const lifetime = report.facets.tokens
+  const rank = rankOf(lifetime)
+  const missing = rank.next ? rank.next.floor - lifetime : 0
+  return (
+    <HeroFrame>
+      <div className='flex min-w-0 items-center gap-4'>
+        <Medallion icon={Trophy} tone='gold' />
+        <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+          <Label variant='overline'>Lifetime usage rank</Label>
+          <div className='flex min-w-0 flex-wrap items-center gap-2'>
+            <RarityBadge rarity={rank.current.rarity} />
+            <Stat
+              value={formatCompact(lifetime)}
+              size='kpi'
+              className='text-gilded font-display'
+            />
+            <Muted as='span'>
+              {`${agree(lifetime, 'token')} over ${plural(report.facets.calls, 'call', 'calls')}`}
+            </Muted>
+          </div>
+          <Progress
+            size='sm'
+            value={rank.progress * PERCENT}
+            aria-label={
+              rank.next
+                ? `Progress to ${RARITY_LABEL[rank.next.rarity]}`
+                : 'Highest rank reached'
+            }
+          />
+          <Muted variant='caption'>
+            {rank.next
+              ? `${formatCompact(missing)} more ${agree(missing, 'token')} to ${RARITY_LABEL[rank.next.rarity]} at ${formatCompact(rank.next.floor)}.`
+              : 'The highest rank is reached.'}
+          </Muted>
+        </div>
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center gap-2'>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant='outline' tabIndex={0}>
+              <Ruler />
+              {`Counted with ${report.tokenizer}`}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent className='max-w-xs'>
+            Every call is counted on this server with the same tokenizer,
+            whatever model or provider answered it. The counts are close
+            estimates, not the provider&apos;s own figures.
+          </TooltipContent>
+        </Tooltip>
+        <Muted as='span' variant='caption'>
+          The rank counts every kept call; the filters below do not change it.
+        </Muted>
+      </div>
+    </HeroFrame>
+  )
+}
+
+function Headline({
+  report,
+  bucket,
+}: {
+  report: UsageReport
+  bucket: UsageBucket
+}) {
+  const { totals, timeline } = report
   const total = totalOf(totals)
-  const average = total / Math.max(1, totals.calls)
+  const step = report.steps.at(0)
+  const model = report.models.at(0)
+  const latest = timeline.at(-1)
+  const before = timeline.at(-2)
+  const change =
+    latest && before && totalOf(before) > 0
+      ? totalOf(latest) / totalOf(before) - 1
+      : null
   return (
     <div className='flex min-w-0 flex-col gap-3'>
-      <div className='grid min-w-0 grid-cols-1 gap-3 @md/usage:grid-cols-2 @4xl/usage:grid-cols-4'>
+      <div className='grid min-w-0 grid-cols-2 gap-3 @4xl/usage:grid-cols-4'>
         <KpiTile
           label='Total tokens'
           value={formatCompact(total)}
@@ -125,7 +219,7 @@ function Headline({ report }: { report: UsageReport }) {
             max: total,
             label: 'Share of tokens sent in',
           }}
-          hint={`${formatPercent(shareOf(totals.input_tokens, total))} of every token, cache reads included`}
+          hint={`${formatPercent(shareOf(totals.input_tokens, total))} of every token`}
         />
         <KpiTile
           label='Tokens out'
@@ -140,9 +234,44 @@ function Headline({ report }: { report: UsageReport }) {
           hint={`${formatPercent(shareOf(totals.output_tokens, total))} of every token`}
         />
         <KpiTile
+          label={latest ? `Latest · ${pointLabel(latest, bucket)}` : 'Latest'}
+          value={latest ? formatCompact(totalOf(latest)) : '0'}
+          icon={Flame}
+          tone={change !== null && change > 0 ? 'warning' : 'success'}
+          hint={
+            change !== null && before
+              ? `${formatPercent(Math.abs(change))} ${change >= 0 ? 'more' : 'fewer'} than ${pointLabel(before, bucket)}`
+              : 'Nothing earlier to compare with.'
+          }
+        />
+      </div>
+      <div className='grid min-w-0 grid-cols-2 gap-2 @4xl/usage:grid-cols-5'>
+        <MiniStat
+          icon={Crown}
+          label='Heaviest step'
+          value={step ? step.name : 'None'}
+          tone='gold'
+          hint={
+            step
+              ? `${formatCompact(totalOf(step))} ${agree(totalOf(step), 'token')}, ${formatPercent(shareOf(totalOf(step), total))} of the tokens in view`
+              : undefined
+          }
+        />
+        <MiniStat
+          icon={Cpu}
+          label='Busiest model'
+          value={model ? model.name : 'None'}
+          tone='info'
+          hint={
+            model
+              ? `${formatCompact(totalOf(model))} ${agree(totalOf(model), 'token')} over ${plural(model.calls, 'call', 'calls')}`
+              : undefined
+          }
+        />
+        <MiniStat
+          icon={PhoneCall}
           label='Calls'
           value={formatCompact(totals.calls)}
-          icon={PhoneCall}
           tone='success'
           hint={
             totals.epochs > 0
@@ -150,19 +279,25 @@ function Headline({ report }: { report: UsageReport }) {
               : 'None ran inside an epoch'
           }
         />
-      </div>
-      <div className='grid min-w-0 grid-cols-1 gap-2 @md/usage:grid-cols-2 @4xl/usage:grid-cols-4'>
         <MiniStat
           icon={Gauge}
-          label='Tokens per call'
-          value={formatCompact(average)}
+          label='Median call'
+          value={formatCompact(totals.median_call)}
           tone='gold'
+          hint={`Half of the calls used fewer tokens. The average is ${formatCompact(total / Math.max(1, totals.calls))}.`}
+        />
+        <MiniStat
+          icon={ChartArea}
+          label='95th percentile'
+          value={formatCompact(totals.p95_call)}
+          tone='info'
+          hint='Nineteen calls in twenty used fewer tokens than this.'
         />
         <MiniStat
           icon={Maximize2}
           label='Largest call'
           value={formatCompact(totals.largest_call)}
-          tone='info'
+          tone='warning'
           hint='The most tokens one call used, in and out together.'
         />
         <MiniStat
@@ -183,13 +318,11 @@ function Headline({ report }: { report: UsageReport }) {
           label='Failed calls'
           value={totals.errors}
           tone={totals.errors > 0 ? 'danger' : 'success'}
-        />
-        <MiniStat
-          icon={ScissorsLineDashed}
-          label='Cut short'
-          value={totals.partial}
-          tone={totals.partial > 0 ? 'warning' : 'success'}
-          hint='Agent runs that stopped before they finished.'
+          hint={
+            totals.partial > 0
+              ? `${plural(totals.partial, 'agent run', 'agent runs')} also stopped before finishing.`
+              : 'No agent run stopped before finishing.'
+          }
         />
         <MiniStat
           icon={Repeat}
@@ -198,17 +331,12 @@ function Headline({ report }: { report: UsageReport }) {
           tone={totals.retried > 0 ? 'warning' : 'success'}
           hint='Calls that needed more than one attempt.'
         />
-        <MiniStat
-          icon={CalendarClock}
-          label='Measured span'
-          value={
-            totals.first_at && totals.last_at
-              ? `${formatDateTime(totals.first_at)} – ${formatDateTime(totals.last_at)}`
-              : 'No calls'
-          }
-          tone='muted'
-        />
       </div>
+      <Muted variant='caption'>
+        {totals.first_at && totals.last_at
+          ? `Measured from ${formatDateTime(totals.first_at)} to ${formatDateTime(totals.last_at)}.`
+          : 'No call in view.'}
+      </Muted>
     </div>
   )
 }
@@ -216,7 +344,8 @@ function Headline({ report }: { report: UsageReport }) {
 function SummarySkeleton() {
   return (
     <div className='flex min-w-0 flex-col gap-3' aria-busy='true'>
-      <div className='grid min-w-0 grid-cols-1 gap-3 @md/usage:grid-cols-2 @4xl/usage:grid-cols-4'>
+      <Skeleton className='h-40 w-full' />
+      <div className='grid min-w-0 grid-cols-2 gap-3 @4xl/usage:grid-cols-4'>
         <Skeleton className='h-32 w-full' />
         <Skeleton className='h-32 w-full' />
         <Skeleton className='h-32 w-full' />
@@ -228,47 +357,71 @@ function SummarySkeleton() {
 }
 
 export function UsageScreen() {
-  const [filter, setFilterState] = useState<UsageFilter>(EMPTY_FILTER)
-  const [range, setRangeState] = useState<RangeKey>('all')
-  const [bucket, setBucket] = useState<UsageBucket>('epoch')
-  const [order, setOrder] = useState<UsageOrder>(FIRST_PAGE)
-  const [breakdown, setBreakdown] = useState<Breakdown>('steps')
+  const raw = useLocation({ select: (location) => location.search })
+  const search = useMemo(
+    () => validateUsageSearch(raw as Record<string, unknown>),
+    [raw]
+  )
+  const navigate = useNavigate()
+  const [now, setNow] = useState(() => Date.now())
+  const filter = useMemo(() => filterOf(search, now), [search, now])
+  const order = useMemo(() => orderOf(search), [search])
+  const bucket: UsageBucket = search.bucket ?? 'epoch'
+  const range: RangeKey = search.range ?? 'all'
+  const breakdown = search.view ?? 'steps'
   const retention = useRuleValue(RETENTION_RULE)
   const summary = useUsageSummary(filter, bucket)
   const calls = useUsageCalls(filter, order)
-  const setFilter = useCallback((next: UsageFilter) => {
-    setFilterState(next)
-    setOrder((current) => ({ ...current, offset: 0 }))
-  }, [])
+  const update = useCallback(
+    (patch: Partial<UsageSearch>) =>
+      void navigate({
+        search: (previous: Record<string, unknown>) => {
+          const next: Record<string, unknown> = {
+            ...previous,
+            ...search,
+            ...patch,
+          }
+          for (const key of Object.keys(next))
+            if (next[key] === undefined) delete next[key]
+          return next
+        },
+        replace: true,
+      } as never),
+    [navigate, search]
+  )
+  const setFilter = useCallback(
+    (next: UsageFilter) =>
+      update({ ...searchOfFilter(next), offset: undefined }),
+    [update]
+  )
   const setRange = (next: RangeKey) => {
-    const hours = RANGES.find((item) => item.key === next)?.hours ?? null
-    setRangeState(next)
-    setFilter({
-      ...filter,
-      since:
-        hours === null
-          ? null
-          : new Date(Date.now() - hours * HOUR_MS).toISOString(),
-    })
+    setNow(Date.now())
+    update({ range: next === 'all' ? undefined : next, offset: undefined })
   }
   const pick = (field: 'models' | 'steps' | 'roles') => (value: string) =>
     setFilter({ ...filter, [field]: toggled(filter[field], value) })
+  const setOrder = (next: UsageOrder) =>
+    update({
+      sort: next.sort === 'time' ? undefined : next.sort,
+      asc: next.descending ? undefined : true,
+      offset: next.offset || undefined,
+    })
   const sortBy = (sort: UsageSort) =>
-    setOrder((current) => ({
+    setOrder({
       sort,
       descending:
-        current.sort === sort
-          ? !current.descending
-          : !TEXT_SORTS.includes(sort),
+        order.sort === sort ? !order.descending : !TEXT_SORTS.includes(sort),
       offset: 0,
-    }))
+    })
   const refreshing = summary.isFetching || calls.isFetching
   const refresh = () => {
+    setNow(Date.now())
     void summary.refetch()
     void calls.refetch()
   }
   const report = summary.data
   const empty = report !== undefined && report.facets.calls === 0
+  const updatedAt = Math.max(summary.dataUpdatedAt, calls.dataUpdatedAt)
   return (
     <>
       <PageHeader
@@ -276,22 +429,32 @@ export function UsageScreen() {
         description={ITEM.description}
         icon={ITEM.icon}
         actions={
-          <Button
-            variant='outline'
-            size='sm'
-            disabled={refreshing}
-            disabledReason='Counting the latest calls.'
-            onClick={refresh}
-          >
-            <RefreshCw className={refreshing ? 'animate-spin' : undefined} />
-            Refresh
-          </Button>
+          <div className='flex min-w-0 items-center gap-2'>
+            {updatedAt > 0 && (
+              <Muted as='span' variant='caption' aria-live='polite'>
+                {refreshing
+                  ? 'Updating'
+                  : `Updated ${clockFormat.format(updatedAt)}`}
+              </Muted>
+            )}
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={refreshing}
+              disabledReason='Counting the latest calls.'
+              onClick={refresh}
+            >
+              <RefreshCw className={refreshing ? 'animate-spin' : undefined} />
+              Refresh
+            </Button>
+          </div>
         }
       />
       <div className='@container/usage flex min-w-0 flex-col gap-6'>
         <Muted>
-          {`Token counts of every language model call this server has made, across every world. No prices are shown here, only tokens.${retention !== null ? ` Calls of the last ${plural(retention, 'epoch', 'epochs')} ${agree(retention, 'is', 'are')} kept.` : ''}`}
+          {`Token counts of every language model call this server has made, across every world and provider. No prices, only tokens. The page updates by itself as turns, epochs and jobs finish.${retention !== null ? ` Calls of the last ${plural(retention, 'epoch', 'epochs')} ${agree(retention, 'is', 'are')} kept.` : ''}`}
         </Muted>
+        {report && !empty && <RankHero report={report} />}
         <Section
           title='Filters'
           surface='card'
@@ -309,7 +472,10 @@ export function UsageScreen() {
           />
         </Section>
         {summary.isError && (
-          <div className='flex min-w-0 flex-wrap items-center gap-3'>
+          <div
+            role='alert'
+            className='flex min-w-0 flex-wrap items-center gap-3'
+          >
             <Text tone='destructive'>{summary.error.message}</Text>
             <Button
               variant='outline'
@@ -331,9 +497,9 @@ export function UsageScreen() {
         )}
         {report && !empty && (
           <>
-            <Headline report={report} />
+            <Headline report={report} bucket={bucket} />
             <Section
-              title='Token trend'
+              title='Trend'
               description='Tokens in and out, stacked, for every matching call.'
               surface='card'
               level={3}
@@ -345,12 +511,15 @@ export function UsageScreen() {
                   variant='outline'
                   size='sm'
                   value={bucket}
-                  onValueChange={(next) =>
-                    setBucket(
-                      usageBucketValues.find((value) => value === next) ??
-                        bucket
+                  onValueChange={(next) => {
+                    const chosen = usageBucketValues.find(
+                      (value) => value === next
                     )
-                  }
+                    if (chosen)
+                      update({
+                        bucket: chosen === 'epoch' ? undefined : chosen,
+                      })
+                  }}
                   aria-label='Group tokens over time'
                 >
                   {usageBucketValues.map((value) => (
@@ -386,7 +555,7 @@ export function UsageScreen() {
               </Section>
               <div className='flex min-w-0 flex-col @4xl/usage:col-span-2'>
                 <Section
-                  title='Call kinds and outcomes'
+                  title='Outcomes'
                   description='How tokens split between agent runs and structured answers, and how the calls ended.'
                   surface='card'
                   level={3}
@@ -407,20 +576,25 @@ export function UsageScreen() {
             >
               <Tabs
                 value={breakdown}
-                onValueChange={(next) =>
-                  setBreakdown(
-                    BREAKDOWNS.find((item) => item === next) ?? 'steps'
-                  )
-                }
+                onValueChange={(next) => {
+                  const chosen = BREAKDOWNS.find((item) => item === next)
+                  update({ view: chosen === 'steps' ? undefined : chosen })
+                }}
                 className='flex min-w-0 flex-col gap-3'
               >
                 <TabsList
                   aria-label='Break tokens down by'
                   className='w-full md:w-fit'
                 >
-                  <TabsTrigger value='steps'>{`Steps ${report.steps.length}`}</TabsTrigger>
-                  <TabsTrigger value='models'>{`Models ${report.models.length}`}</TabsTrigger>
-                  <TabsTrigger value='roles'>{`Roles ${report.roles.length}`}</TabsTrigger>
+                  <TabsTrigger value='steps'>
+                    {`Steps ${report.steps.length}`}
+                  </TabsTrigger>
+                  <TabsTrigger value='models'>
+                    {`Models ${report.models.length}`}
+                  </TabsTrigger>
+                  <TabsTrigger value='roles'>
+                    {`Roles ${report.roles.length}`}
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value='steps'>
                   <BreakdownTable
@@ -459,7 +633,7 @@ export function UsageScreen() {
             icon={Logs}
             tone='muted'
             actions={
-              <div className='flex min-w-0 items-center gap-2'>
+              <div className='flex min-w-0 flex-wrap items-center gap-2'>
                 <Select
                   value={order.sort}
                   onValueChange={(next) =>
@@ -490,11 +664,11 @@ export function UsageScreen() {
                     order.descending ? 'Sort ascending' : 'Sort descending'
                   }
                   onClick={() =>
-                    setOrder((current) => ({
-                      ...current,
-                      descending: !current.descending,
+                    setOrder({
+                      ...order,
+                      descending: !order.descending,
                       offset: 0,
-                    }))
+                    })
                   }
                 >
                   {order.descending ? (
@@ -503,6 +677,24 @@ export function UsageScreen() {
                     <ArrowUpNarrowWide />
                   )}
                 </Button>
+                {(calls.data?.total ?? 0) > 0 ? (
+                  <Button variant='outline' size='sm' asChild>
+                    <a href={usageExportUrl(filter, order)} download>
+                      <FileDown />
+                      Export CSV
+                    </a>
+                  </Button>
+                ) : (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    disabled
+                    disabledReason='No call matches, so there is nothing to export.'
+                  >
+                    <FileDown />
+                    Export CSV
+                  </Button>
+                )}
               </div>
             }
           >
@@ -515,10 +707,8 @@ export function UsageScreen() {
               sort={order.sort}
               descending={order.descending}
               onSort={sortBy}
-              onOffset={(offset) =>
-                setOrder((current) => ({ ...current, offset }))
-              }
-              filtered={isFiltered(filter)}
+              onOffset={(offset) => setOrder({ ...order, offset })}
+              filtered={isFiltered(search)}
             />
           </Section>
         )}
