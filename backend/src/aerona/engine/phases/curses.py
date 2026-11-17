@@ -53,14 +53,17 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "settlement.prosperity",
     "settlement.wealth",
     "table.assistive_aids",
+    "table.augment_effects",
     "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
+    "table.charms",
     "table.conditions",
     "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_values",
+    "table.entities",
     "table.entity_flags",
     "table.entity_tags",
     "table.genomes",
@@ -112,7 +115,17 @@ async def curse_decay(ctx: TickContext) -> None:
             await apply_hits(ctx, entity, Harm(rules.world_engine.curse_hp_loss, HarmCause.CURSE, CURSE_DEATH, source_node_id=curser, killer_id=curser))
 
 
-@reads("table.conditions", "table.entity_flags", "table.epoch_year_cursors", "table.holder_levels")
+@reads(
+    "table.bonds",
+    "table.conditions",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.holder_levels",
+    "table.incident_participants",
+    "table.incidents",
+    "table.nodes",
+)
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
 async def lift_curses(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine
@@ -151,19 +164,24 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "settlement.defense",
     "settlement.prosperity",
     "table.assistive_aids",
+    "table.augment_effects",
     "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
+    "table.charms",
     "table.conditions",
     "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_values",
+    "table.entities",
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
     "table.genomes",
     "table.holder_levels",
+    "table.incident_participants",
+    "table.incidents",
     "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",

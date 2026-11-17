@@ -118,10 +118,17 @@ async def tend_mood(ctx: TickContext, world: WorldRow, grounds: list[RegionEnvir
     "region.danger",
     "table.cosmos",
     "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
     "table.region_environment",
+    "table.stars",
+    "table.worlds",
 )
 @writes("table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.worlds")
 async def world_lives(ctx: TickContext) -> None:

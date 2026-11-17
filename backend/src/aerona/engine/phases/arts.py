@@ -14,7 +14,19 @@ from aerona.engine.phases.dominion import count
 from aerona.engine.sacred.astrology import SignTally, sign_births
 
 
-@reads("mortal.creativity", "table.art_prices", "table.artwork_profiles", "table.canon_works", "table.courts", "table.forgeries", "table.gatherings")
+@reads(
+    "mortal.creativity",
+    "table.art_prices",
+    "table.artwork_profiles",
+    "table.bonds",
+    "table.canon_works",
+    "table.courts",
+    "table.entities",
+    "table.forgeries",
+    "table.gatherings",
+    "table.mortal_profiles",
+    "table.nodes",
+)
 @writes("table.art_prices", "table.collectors")
 async def art_market(ctx: TickContext) -> None:
     market, forgeries = MarketTally(), ForgeryTally()
@@ -24,21 +36,41 @@ async def art_market(ctx: TickContext) -> None:
     count(ctx, "forgeries", forgeries)
 
 
-@reads("settlement.population", "table.art_movements", "table.canon_works", "table.faction_memberships", "table.faction_profiles")
+@reads(
+    "settlement.population",
+    "table.art_movements",
+    "table.artwork_profiles",
+    "table.canon_works",
+    "table.entities",
+    "table.faction_memberships",
+    "table.faction_profiles",
+    "table.nodes",
+    "table.structure_profiles",
+)
 async def art_movements(ctx: TickContext) -> None:
     tally = MovementTally()
     await keep_movements(ctx, tally)
     count(ctx, "art_movements", tally)
 
 
-@reads("settlement.population", "table.clubs", "table.faction_profiles", "table.games", "table.kind_holdings", "table.leagues")
+@reads(
+    "settlement.population",
+    "table.clubs",
+    "table.entities",
+    "table.faction_profiles",
+    "table.games",
+    "table.kind_holdings",
+    "table.leagues",
+    "table.nodes",
+    "table.structure_profiles",
+)
 async def pastimes(ctx: TickContext) -> None:
     tally = SportTally()
     await keep_sport(ctx, tally)
     count(ctx, "pastimes", tally)
 
 
-@reads("table.army_units", "table.constructs", "table.holder_levels")
+@reads("table.army_units", "table.bonds", "table.constructs", "table.entities", "table.holder_levels", "table.nodes", "table.skills")
 async def constructs(ctx: TickContext) -> None:
     making, orders, seals = MakingTally(), OrderTally(), SealTally()
     await make_constructs(ctx, making)
@@ -49,14 +81,14 @@ async def constructs(ctx: TickContext) -> None:
     count(ctx, "construct_seals", seals)
 
 
-@reads("table.monster_contracts")
+@reads("table.beast_profiles", "table.entities", "table.monster_contracts", "table.nodes")
 async def monster_contracts(ctx: TickContext) -> None:
     tally = ContractTally()
     await keep_contracts(ctx, tally)
     count(ctx, "monster_contracts", tally)
 
 
-@reads("celestial.cycle", "celestial.influence", "celestial.visibility", "settlement.population", "table.divination_systems")
+@reads("celestial.cycle", "celestial.influence", "celestial.visibility", "settlement.population", "table.divination_systems", "table.entities", "table.nodes")
 @writes("table.birth_signs")
 async def birth_signs(ctx: TickContext) -> None:
     tally = SignTally()

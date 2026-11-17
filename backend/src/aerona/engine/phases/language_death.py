@@ -60,10 +60,12 @@ async def liturgical(ctx: TickContext, language_id: int) -> bool:
 @reads(
     "table.bonds",
     "table.divine_tongues",
+    "table.entities",
     "table.entity_flags",
     "table.language_profiles",
     "table.language_standing",
     "table.language_standings",
+    "table.nodes",
     "table.people_culture",
     "table.speaker_cohorts",
 )

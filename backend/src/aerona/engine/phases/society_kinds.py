@@ -10,6 +10,7 @@ from aerona.engine.phase import Phase
     "table.faction_profiles",
     "table.kind_holdings",
     "table.mortal_profiles",
+    "table.nodes",
     "table.organisation_kinds",
     "table.profession_kinds",
     "table.rank_kinds",

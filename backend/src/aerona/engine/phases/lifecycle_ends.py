@@ -15,6 +15,7 @@ from aerona.engine.phases.dominion import count
     "table.ideology_profiles",
     "table.lab_texts",
     "table.lifecycle_states",
+    "table.nodes",
     "table.outbreaks",
     "table.rite_profiles",
     "table.species_hosts",
@@ -37,7 +38,7 @@ async def lifecycle_ends(ctx: TickContext) -> None:
     count(ctx, "lifecycle_ends", tally)
 
 
-@reads("table.rifts", "table.sky_events", "table.stars", "table.world_ends", "table.world_type_profiles", "table.worlds")
+@reads("table.nodes", "table.rifts", "table.sky_events", "table.stars", "table.world_ends", "table.world_type_profiles", "table.worlds")
 @writes("table.chronicle", "table.entities", "table.world_ends")
 async def world_ends(ctx: TickContext) -> None:
     tally = EndingTally()

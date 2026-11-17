@@ -26,6 +26,7 @@ Key = tuple[str, str]
 
 
 STATEMENT_VERBS = {"insert": "create", "delete": "delete", "update": "edit"}
+PART_VERBS = {"add_": "create", "edit_": "edit", "delete_": "delete"}
 
 
 @dataclass
@@ -56,6 +57,14 @@ class Code:
         self.registered: set[str] = set()
         for name, tree in modules.items():
             self.index(name, tree)
+        self.row_maps: dict[str, set[str]] = {
+            target.id: {self.rows[value.id] for value in item.value.values if isinstance(value, ast.Name) and value.id in self.rows}
+            for tree in modules.values()
+            for item in tree.body
+            if isinstance(item, (ast.Assign, ast.AnnAssign)) and isinstance(item.value, ast.Dict)
+            for target in (item.targets if isinstance(item, ast.Assign) else [item.target])
+            if isinstance(target, ast.Name) and any(isinstance(value, ast.Name) and value.id in self.rows for value in item.value.values)
+        }
         self.returns: dict[Key, set[str]] = {
             key: self.annotated(nodes[0].returns) for key, nodes in self.defs.items() if len(nodes) == 1 and nodes[0].returns is not None
         }
@@ -175,7 +184,8 @@ class Code:
         hit = self.resolve(module, func.id)
         if hit is None:
             return self.selected(expr)
-        return set(self.returns.get(hit, set())) or {self.rows[arg.id] for arg in expr.args if isinstance(arg, ast.Name) and arg.id in self.rows}
+        mapped = {table for arg in expr.args if isinstance(arg, ast.Name) for table in self.row_maps.get(arg.id, set())}
+        return set(self.returns.get(hit, set())) or {self.rows[arg.id] for arg in expr.args if isinstance(arg, ast.Name) and arg.id in self.rows} | mapped
 
     def call_kind(self, module: str, env: dict[str, set[str]], expr: ast.Call) -> set[str]:
         func = expr.func
@@ -219,6 +229,10 @@ class Code:
             found["create"].add(self.rows[func.id])
             return
         if isinstance(func, ast.Name):
+            mapped = {table for arg in call.args if isinstance(arg, ast.Name) for table in self.row_maps.get(arg.id, set())}
+            verb = next((verb for prefix, verb in PART_VERBS.items() if func.id.startswith(prefix)), None)
+            if mapped and verb is not None:
+                found[verb] |= mapped
             editor = self.resolve(module, func.id)
             for position in self.editors.get(editor, set()) if editor is not None else set():
                 if position < len(call.args):

@@ -7,9 +7,14 @@ from aerona.engine.technology.profiles import keep_technology
 
 
 @reads(
+    "table.bonds",
     "table.cosmos",
+    "table.custom_kinds",
+    "table.entities",
+    "table.holder_custom_techniques",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.nodes",
     "table.polity_profiles",
     "table.tech_programmes",
     "table.technology_profiles",

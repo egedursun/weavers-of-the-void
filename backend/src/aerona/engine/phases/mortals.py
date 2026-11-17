@@ -57,7 +57,7 @@ async def succumb(ctx: TickContext, mortal: EntityRow) -> None:
     await die(ctx, mortal, cause=WOUND_DEATH, manner=DeathCause.WOUNDS)
 
 
-@reads("mortal.hp")
+@reads("mortal.hp", "table.entities", "table.nodes")
 @writes(
     "mortal.death_year",
     "mortal.hp",
@@ -168,16 +168,24 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.cult_offices",
     "table.designated_heirs",
     "table.divine_wounds",
+    "table.doctrine_sacraments",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.foreign_gods",
     "table.griefs",
     "table.holder_levels",
+    "table.incident_participants",
+    "table.incidents",
     "table.incorporeal_rights",
     "table.injuries",
+    "table.insurance_policies",
+    "table.insurers",
     "table.item_profiles",
     "table.kinship_systems",
     "table.language_profiles",
     "table.law_jurisdictions",
+    "table.law_profiles",
     "table.lexemes",
     "table.marriages",
     "table.memories",
@@ -195,13 +203,18 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.polity_members",
     "table.routes",
     "table.sacraments",
+    "table.sons",
     "table.spirit_profiles",
+    "table.structure_profiles",
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
     "table.transform_prospects",
+    "table.war_sides",
+    "table.wars",
     "table.world_domain_hooks",
     "table.world_maps",
+    "table.worlds",
 )
 @writes(
     "mortal.age",

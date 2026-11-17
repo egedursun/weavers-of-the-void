@@ -83,7 +83,7 @@ async def tend(ctx: TickContext, town: EntityRow) -> None:
                 account.credence = clamp_percent(account.credence - 1)
 
 
-@reads("table.accounts", "table.entities", "table.information_trust", "table.network_nodes", "table.network_profiles", "table.skills")
+@reads("table.accounts", "table.entities", "table.information_trust", "table.network_nodes", "table.network_profiles", "table.nodes", "table.skills")
 @writes("table.accounts", "table.information_trust")
 async def keep_trust(ctx: TickContext) -> None:
     towns = await ctx.session.scalars(

@@ -39,7 +39,7 @@ BOOTSTRAP_EXCLUDED_FLAGS = (EntityFlag.GODLESS, EntityFlag.WORSHIPS_PLANET)
 REBELS_SUBTYPE = "rebels"
 
 
-@reads("table.bonds", "table.entity_flags", "table.nodes", "table.world_maps")
+@reads("table.bonds", "table.entities", "table.entity_flags", "table.nodes", "table.sons", "table.world_maps")
 @writes("table.bonds")
 async def language_and_faith(ctx: TickContext) -> None:
     session = ctx.session
@@ -138,11 +138,13 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.culture_values",
     "table.deed_claims",
     "table.deeds",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.geasa",
     "table.holder_levels",
     "table.incident_participants",
+    "table.incidents",
     "table.memories",
     "table.mind_profiles",
     "table.minds",
@@ -171,6 +173,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.wars",
     "table.world_maps",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "settlement.defense",
@@ -232,9 +235,12 @@ async def uprisings(ctx: TickContext) -> None:
     "mortal.age",
     "table.age_set_members",
     "table.bonds",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.house_members",
     "table.house_profiles",
+    "table.incident_participants",
+    "table.incidents",
     "table.kinship_systems",
     "table.memberships",
     "table.nodes",

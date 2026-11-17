@@ -10,14 +10,19 @@ from aerona.engine.phases.dominion import count
 @reads(
     "settlement.prosperity",
     "table.climate_oscillations",
+    "table.entities",
     "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
     "table.monsoon_seasons",
+    "table.nodes",
     "table.region_environment",
     "table.region_pollution",
     "table.region_winds",
     "table.species_ranges",
     "table.world_maps",
     "table.world_physics",
+    "table.worlds",
 )
 @writes(
     "settlement.prosperity",
@@ -42,7 +47,7 @@ async def climes(ctx: TickContext) -> None:
     count(ctx, "seasons", seasons)
 
 
-@reads("table.cosmopolitan_cultures", "table.journeys", "table.routes")
+@reads("table.cosmopolitan_cultures", "table.journeys", "table.nodes", "table.routes", "table.worlds")
 async def crossings(ctx: TickContext) -> None:
     tally = CrossingTally()
     await keep_windows(ctx, tally)

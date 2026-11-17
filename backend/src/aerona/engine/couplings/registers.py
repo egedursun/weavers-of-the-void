@@ -135,7 +135,9 @@ async def make_sign_language(ctx: TickContext, community: EntityRow, cause: Sign
     "table.catch_grounds",
     "table.cult_holdings",
     "table.cult_tenets",
+    "table.entities",
     "table.maimed_cohorts",
+    "table.nodes",
     "table.sign_origins",
 )
 @writes("table.bonds", "table.entities", "table.language_profiles", "table.sign_origins")
@@ -198,7 +200,17 @@ async def keep_secrecy(ctx: TickContext, row: SociolectRow) -> None:
         profile.secrecy = clamp_percent(max(profile.secrecy, row.salience * ctx.rules.couplings.cant_secrecy_pct // PERCENT))
 
 
-@reads("table.catch_grounds", "table.faction_profiles", "table.held_identities", "table.holder_techniques", "table.purity_ranks", "table.sociolects")
+@reads(
+    "table.bonds",
+    "table.catch_grounds",
+    "table.entities",
+    "table.faction_profiles",
+    "table.held_identities",
+    "table.holder_techniques",
+    "table.nodes",
+    "table.purity_ranks",
+    "table.sociolects",
+)
 @writes("table.faction_profiles", "table.held_identities", "table.sociolects")
 async def sociolects(ctx: TickContext) -> None:
     table = ctx.rules.couplings

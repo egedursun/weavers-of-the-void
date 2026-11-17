@@ -147,7 +147,7 @@ async def seed_components(ctx: TickContext) -> int:
     return seeded
 
 
-@reads("table.rite_profiles")
+@reads("table.captives", "table.entities", "table.nodes", "table.rite_profiles")
 async def restrain_casters(ctx: TickContext) -> None:
     ctx.count("rite_parts_drawn", await seed_components(ctx))
     for captive, entity in await casters_held(ctx):

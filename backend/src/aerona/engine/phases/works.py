@@ -137,11 +137,13 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.entities",
     "table.epoch_year_cursors",
     "table.equipment_models",
+    "table.foreign_gods",
     "table.geasa",
     "table.goods_flows",
     "table.holder_levels",
     "table.holder_techniques",
     "table.incident_participants",
+    "table.incidents",
     "table.item_profiles",
     "table.language_profiles",
     "table.lexemes",
@@ -162,6 +164,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.resource_profiles",
     "table.settlement_profiles",
     "table.skills",
+    "table.sons",
     "table.structure_designs",
     "table.structure_profiles",
     "table.structure_sections",
@@ -174,6 +177,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.world_domain_hooks",
     "table.world_maps",
     "table.world_materials",
+    "table.worlds",
 )
 @writes(
     "people.piety",
@@ -248,7 +252,9 @@ async def owner_of(ctx: TickContext, work: EntityRow) -> EntityRow | None:
     "structure.splendor",
     "table.bonds",
     "table.community_societies",
+    "table.entities",
     "table.holder_levels",
+    "table.nodes",
     "table.structure_profiles",
 )
 @writes("structure.splendor", "table.entities")

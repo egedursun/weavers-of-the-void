@@ -149,10 +149,13 @@ async def epoch_statistics(ctx: TickContext) -> EpochStatsData:
     "settlement.population",
     "table.bonds",
     "table.cosmos",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_stats",
     "table.journeys",
     "table.lexemes",
+    "table.nodes",
+    "table.sons",
     "table.world_leak_items",
 )
 @writes("table.epoch_stats")

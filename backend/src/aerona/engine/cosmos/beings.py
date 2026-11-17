@@ -502,7 +502,18 @@ async def live(ctx: TickContext, cosmography: Cosmography, being: EntityRow, pro
     await manifest(ctx, cosmography, being, profile)
 
 
-@reads("table.cosmos", "table.dimensional_events", "table.galactic_structures")
+@reads(
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
+    "table.stars",
+    "table.worlds",
+)
 async def being_cycles(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
     for being in await canon(ctx.session, [EntityType.COSMIC_BEING]):

@@ -11,11 +11,14 @@ from aerona.engine.phases.dominion import count
 
 @reads(
     "table.artwork_profiles",
+    "table.bonds",
     "table.book_contents",
     "table.community_stocks",
+    "table.entities",
     "table.holder_levels",
     "table.holder_techniques",
     "table.item_profiles",
+    "table.nodes",
     "table.polity_members",
     "table.polity_profiles",
     "table.region_environment",
@@ -29,7 +32,7 @@ async def written_media(ctx: TickContext) -> None:
     count(ctx, "written_media", tally)
 
 
-@reads("table.holder_levels", "table.securities", "table.skills", "table.structure_profiles")
+@reads("table.bonds", "table.entities", "table.holder_levels", "table.nodes", "table.securities", "table.skills", "table.structure_profiles")
 @writes("table.securities")
 async def vaults(ctx: TickContext) -> None:
     tally = SecurityTally()
@@ -37,7 +40,9 @@ async def vaults(ctx: TickContext) -> None:
     count(ctx, "vaults", tally)
 
 
-@reads("table.polity_members", "table.polity_profiles", "table.region_environment", "table.resource_profiles", "table.water_lifts")
+@reads(
+    "table.entities", "table.nodes", "table.polity_members", "table.polity_profiles", "table.region_environment", "table.resource_profiles", "table.water_lifts"
+)
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.water_lifts")
 async def water_lifting(ctx: TickContext) -> None:
     tally = WaterTally()
@@ -45,7 +50,7 @@ async def water_lifting(ctx: TickContext) -> None:
     count(ctx, "water_lifting", tally)
 
 
-@reads("table.navigation_kits", "table.skills", "table.trade_route_profiles", "table.worlds")
+@reads("table.entities", "table.navigation_kits", "table.nodes", "table.skills", "table.trade_route_profiles", "table.worlds")
 @writes("table.navigation_kits")
 async def pilots(ctx: TickContext) -> None:
     tally = NavigationTally()
@@ -53,7 +58,7 @@ async def pilots(ctx: TickContext) -> None:
     count(ctx, "pilots", tally)
 
 
-@reads("table.community_stocks", "table.container_stocks", "table.skills")
+@reads("table.community_stocks", "table.container_stocks", "table.entities", "table.nodes", "table.skills")
 @writes("table.community_stocks", "table.container_stocks", "table.goods_flows")
 async def vessels_of_trade(ctx: TickContext) -> None:
     tally = ContainerTally()

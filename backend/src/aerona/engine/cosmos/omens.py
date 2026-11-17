@@ -151,8 +151,11 @@ async def epoch_body_sway(ctx: TickContext, world: WorldRow) -> None:
     "celestial.visibility",
     "table.biology_variants",
     "table.celestial_readings",
+    "table.entities",
+    "table.nodes",
     "table.power_sources",
     "table.region_environment",
+    "table.worlds",
 )
 @writes("table.celestial_readings", "table.power_sources")
 async def celestial_omens(ctx: TickContext) -> None:

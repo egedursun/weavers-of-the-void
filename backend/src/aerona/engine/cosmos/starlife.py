@@ -209,12 +209,18 @@ async def star_cults(ctx: TickContext, cosmography: Cosmography, dimmed: dict[in
 @reads(
     "table.cosmos",
     "table.dimensional_events",
+    "table.dimensions",
     "table.entity_flags",
     "table.galactic_events",
     "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
     "table.sky_events",
     "table.star_modifiers",
     "table.star_physics",
+    "table.stars",
+    "table.worlds",
 )
 @writes("table.entity_flags", "table.star_physics", "table.stars")
 async def star_lives(ctx: TickContext) -> None:

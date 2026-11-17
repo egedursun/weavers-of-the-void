@@ -85,7 +85,7 @@ HAZARD_HARM: Mapping[HazardKind, tuple[DamageType, str, int]] = total(
         HazardKind.TOXIC_RELEASE: (DamageType.CHEMICAL, "poisoned by a release of fumes", 35),
         HazardKind.DECOMPRESSION: (DamageType.BLUNT, "torn by a loss of pressure", 45),
         HazardKind.RADIATION_EXPOSURE: (DamageType.RADIATION, "burned by radiation", 40),
-        HazardKind.SUBSIDENCE: (DamageType.BLUNT, "swallowed as the ground sank", 35),
+        HazardKind.SUBSIDENCE: (DamageType.BLUNT, "buried as the ground sank", 35),
         HazardKind.BEAST_ATTACK: (DamageType.PIERCE, "attacked by the beasts it tended", 30),
         HazardKind.SOURCE_BACKLASH: (DamageType.MAGIC, "struck by the backlash of the source", 35),
         HazardKind.MACHINE_ACCIDENT: (DamageType.CUT, "caught in the machinery", 35),
@@ -357,15 +357,30 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
     return max(0, min(profile.reserve, round_half_up(raw)))
 
 
+HAZARD_RULES: Mapping[HazardKind, str] = total(
+    HazardKind,
+    {
+        HazardKind.CAVE_IN: "cave_in_pct",
+        HazardKind.FLOODED_SHAFT: "cave_in_pct",
+        HazardKind.FELLING_ACCIDENT: "felling_pct",
+        HazardKind.DROWNING: "drowning_pct",
+        HazardKind.GORING: "goring_pct",
+        HazardKind.BLOWOUT: "blowout_pct",
+        HazardKind.EXPLOSION: "explosion_pct",
+        HazardKind.TOXIC_RELEASE: "toxic_release_pct",
+        HazardKind.DECOMPRESSION: "decompression_pct",
+        HazardKind.RADIATION_EXPOSURE: "radiation_pct",
+        HazardKind.SUBSIDENCE: "subsidence_pct",
+        HazardKind.BEAST_ATTACK: "beast_attack_pct",
+        HazardKind.SOURCE_BACKLASH: "source_backlash_pct",
+        HazardKind.MACHINE_ACCIDENT: "machine_accident_pct",
+    },
+)
+
+
 def hazard_chance(rules: Rules, kind: HazardKind, difficulty: int, engineering: int) -> int:
     table = rules.mining_hazards
-    base = {
-        HazardKind.CAVE_IN: table.cave_in_pct,
-        HazardKind.FLOODED_SHAFT: table.cave_in_pct,
-        HazardKind.FELLING_ACCIDENT: table.felling_pct,
-        HazardKind.DROWNING: table.drowning_pct,
-        HazardKind.GORING: table.goring_pct,
-    }[kind]
+    base: int = getattr(table, HAZARD_RULES[kind])
     averted = max(0.0, 1 - engineering * table.engineering_pct_per_level / PERCENT)
     return round_half_up(base * max(difficulty, 1) / PERCENT * averted)
 
@@ -395,8 +410,8 @@ async def _open_cavern(ctx: TickContext, resource: EntityRow) -> EntityRow:
         ctx,
         RecordSpec(
             entity_type=EntityType.SPECIES,
-            name=f"Deep Thing of {resource.name}",
-            body=f"Something woke when the galleries of {resource.name} broke into a cavern below.",
+            name=f"Dweller of the cavern under {resource.name}",
+            body=f"It came out when the galleries of {resource.name} broke into a cavern below.",
             stats=SpeciesStats(
                 hp=60 + rng.die(60), strength=55 + rng.die(30), agility=30 + rng.die(30), intelligence=10 + rng.die(30), danger=65 + rng.die(30), abundance=5
             ),
@@ -439,8 +454,17 @@ async def strike_hazard(
         HazardKind.FELLING_ACCIDENT: f"Falling trees at {resource.name} killed {woodcutters_counted} of {community.name} and crippled {maimed}",
         HazardKind.DROWNING: f"Rough water at {resource.name} took {several(killed, 'fisher', 'fishers')} of {community.name}",
         HazardKind.GORING: f"The herds of {resource.name} gored {several(killed, 'herder', 'herders')} of {community.name}",
+        HazardKind.BLOWOUT: f"A blowout at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
+        HazardKind.EXPLOSION: f"An explosion at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
+        HazardKind.TOXIC_RELEASE: f"Fumes released at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
+        HazardKind.DECOMPRESSION: f"A loss of pressure at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
+        HazardKind.RADIATION_EXPOSURE: f"Radiation at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
+        HazardKind.SUBSIDENCE: f"The ground sank under {resource.name} and killed {several(killed, 'worker', 'workers')} of {community.name}",
+        HazardKind.BEAST_ATTACK: f"The beasts kept at {resource.name} killed {several(killed, 'keeper', 'keepers')} of {community.name}",
+        HazardKind.SOURCE_BACKLASH: f"The source drawn on at {resource.name} struck back and killed {several(killed, 'worker', 'workers')} of {community.name}",
+        HazardKind.MACHINE_ACCIDENT: f"Machinery at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
     }[hazard]
-    tail = f"; the collapse broke into a cavern and {cavern.name} came out of the dark" if cavern is not None else ""
+    tail = f"; the collapse broke into a cavern and {cavern.name} came out" if cavern is not None else ""
     sealed = "; the mine is sealed" if hazard is HazardKind.CAVE_IN else ""
     ids = [resource.id, community.id, *hurt, *([cavern.id] if cavern is not None else [])]
     await ctx.chronicle(

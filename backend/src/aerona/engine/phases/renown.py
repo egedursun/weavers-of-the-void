@@ -115,8 +115,10 @@ async def ruler_currencies(ctx: TickContext) -> None:
 
 @reads(
     "table.bonds",
+    "table.entities",
     "table.faction_profiles",
     "table.holder_techniques",
+    "table.nodes",
     "table.polity_map_knowledge",
     "table.prophecy_conditions",
     "table.reputations",

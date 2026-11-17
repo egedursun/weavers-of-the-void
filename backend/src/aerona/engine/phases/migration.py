@@ -174,6 +174,7 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "table.cosmos",
     "table.culture_values",
     "table.endemic_diseases",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.forced_weather",
     "table.held_identities",
@@ -198,9 +199,11 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "table.ruler_currencies",
     "table.settlement_profiles",
     "table.sky_events",
+    "table.stars",
     "table.traits",
     "table.world_maps",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "people.population",

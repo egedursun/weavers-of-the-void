@@ -253,7 +253,7 @@ export function WaysOfLifeSection({
   return (
     <Section
       id='section-ways-of-life'
-      title='Ways of life: the kinds it makes, uses, favours or forbids'
+      title='Ways of life'
       description='Goods, dishes, drinks, dress, crafts, music, games, money, professions, ranks and traditions held here, with how strongly and how they came; gods bless or forbid them.'
       icon={KINDS_ICON}
       tone='gold'

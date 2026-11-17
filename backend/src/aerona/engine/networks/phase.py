@@ -197,11 +197,14 @@ async def converge(ctx: TickContext, profile: NetworkProfileRow, rows: list[Netw
 
 @reads(
     "table.community_societies",
+    "table.custom_kinds",
     "table.entities",
+    "table.holder_custom_techniques",
     "table.holder_levels",
     "table.holder_techniques",
     "table.network_nodes",
     "table.network_profiles",
+    "table.nodes",
     "table.polity_members",
     "table.polity_profiles",
     "table.sieges",

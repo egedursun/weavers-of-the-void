@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import event
+from sqlalchemy import Join, Table, event
 from sqlalchemy.orm import ORMExecuteState, Session
 
 from aerona.engine.interconnect.guards import READ_MODE, WRITE_MODE, observed
@@ -9,14 +9,21 @@ TABLE_PREFIX = "table"
 _INSTALLED: list[bool] = []
 
 
+def table_names(item: Any) -> set[str]:
+    if isinstance(item, Table):
+        return {item.name}
+    if isinstance(item, Join):
+        return table_names(item.left) | table_names(item.right)
+    froms = getattr(item, "get_final_froms", None)
+    if froms is not None:
+        return {name for inner in froms() for name in table_names(inner)}
+    element = getattr(item, "element", None)
+    return table_names(element) if element is not None and element is not item else set()
+
+
 def _tables_of(state: ORMExecuteState) -> set[str]:
-    names: set[str] = set()
     statement: Any = state.statement
-    for item in getattr(statement, "get_final_froms", lambda: [])():
-        name = getattr(item, "name", None)
-        if isinstance(name, str):
-            names.add(name)
-    return names
+    return {name for item in getattr(statement, "get_final_froms", lambda: [])() for name in table_names(item)}
 
 
 def _on_execute(state: ORMExecuteState) -> None:

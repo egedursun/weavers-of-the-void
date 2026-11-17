@@ -16,12 +16,16 @@ from aerona.engine.vehicles.production import vehicle_works
 
 
 @reads(
+    "table.armies",
     "table.army_unit_equipment",
+    "table.army_units",
+    "table.bonds",
     "table.community_stocks",
     "table.cuisines",
     "table.designs",
     "table.dishes",
     "table.drink_kinds",
+    "table.entities",
     "table.equipment_models",
     "table.equipment_stores",
     "table.goods_flows",
@@ -30,6 +34,7 @@ from aerona.engine.vehicles.production import vehicle_works
     "table.lexemes",
     "table.name_registry",
     "table.node_materials",
+    "table.nodes",
     "table.polity_members",
     "table.structure_designs",
     "table.unit_design_equipment",
@@ -60,13 +65,17 @@ async def equipment_forging(ctx: TickContext) -> None:
     "table.designs",
     "table.dishes",
     "table.drink_kinds",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.equipment_models",
     "table.holder_levels",
+    "table.incident_participants",
+    "table.incidents",
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
     "table.node_materials",
+    "table.nodes",
     "table.people_culture",
     "table.polity_members",
     "table.structure_designs",
@@ -98,6 +107,7 @@ async def unit_types(ctx: TickContext) -> None:
     "table.applied_fixups",
     "table.armies",
     "table.army_profiles",
+    "table.bonds",
     "table.cuisines",
     "table.design_components",
     "table.design_mounts",
@@ -106,6 +116,7 @@ async def unit_types(ctx: TickContext) -> None:
     "table.designs",
     "table.dishes",
     "table.drink_kinds",
+    "table.entities",
     "table.equipment_models",
     "table.goods_flows",
     "table.holder_levels",
@@ -113,6 +124,7 @@ async def unit_types(ctx: TickContext) -> None:
     "table.lexemes",
     "table.name_registry",
     "table.node_materials",
+    "table.nodes",
     "table.polity_members",
     "table.polity_profiles",
     "table.region_environment",
@@ -157,19 +169,24 @@ async def megastructures(ctx: TickContext) -> None:
 @reads(
     "table.armies",
     "table.army_profiles",
+    "table.bonds",
     "table.community_dishes",
     "table.community_stocks",
     "table.cuisines",
     "table.designs",
     "table.dishes",
     "table.drink_kinds",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.equipment_models",
     "table.holder_levels",
+    "table.incident_participants",
+    "table.incidents",
     "table.kind_holdings",
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
+    "table.nodes",
     "table.structure_designs",
     "table.unit_designs",
 )
@@ -216,10 +233,13 @@ async def attraction(ctx: TickContext) -> None:
     "table.conditions",
     "table.cult_tenets",
     "table.culture_values",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.genomes",
     "table.holder_levels",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.item_profiles",
     "table.memories",
@@ -228,6 +248,7 @@ async def attraction(ctx: TickContext) -> None:
     "table.mortal_profiles",
     "table.nodes",
     "table.prostheses",
+    "table.structure_profiles",
 )
 @writes(
     "table.bodies",
@@ -244,7 +265,7 @@ async def cognitive_decline(ctx: TickContext) -> None:
     count(ctx, "cognitive_decline", await run_decline(ctx))
 
 
-@reads("table.bodies", "table.injuries")
+@reads("table.bodies", "table.entities", "table.injuries", "table.nodes")
 @writes("table.bodies", "table.world_materials")
 async def being_wounds(ctx: TickContext) -> None:
     count(ctx, "being_wounds", await tend_beings(ctx))

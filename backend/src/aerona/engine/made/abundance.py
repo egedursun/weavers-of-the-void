@@ -87,10 +87,12 @@ async def fabricate(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> No
 
 
 @reads(
+    "table.community_societies",
     "table.entities",
     "table.fabrication",
     "table.fabrications",
     "table.law_profiles",
+    "table.nodes",
     "table.pattern_rights",
     "table.replicator_lines",
     "table.replicator_presence",

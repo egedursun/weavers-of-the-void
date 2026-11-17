@@ -128,6 +128,7 @@ from aerona.db.tables.culture import (
     BookContentRow,
     CastingRow,
     CustomKindRow,
+    HolderCustomTechniqueRow,
     HolderLevelRow,
     HolderTechniqueRow,
     IdeologyAdherentRow,
@@ -5669,6 +5670,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
             BookContentRow.__tablename__,
             ResearchProgressRow.__tablename__,
             CustomKindRow.__tablename__,
+            HolderCustomTechniqueRow.__tablename__,
         ),
         ("research_cycles", "knowledge_levels", "knowledge_diffusion", "espionage", "doom_clock"),
         (

@@ -15,6 +15,7 @@ from aerona.engine.phase import Phase
     "table.community_stocks",
     "table.currencies",
     "table.districts",
+    "table.entities",
     "table.feuds",
     "table.forced_weather",
     "table.goods",
@@ -27,6 +28,7 @@ from aerona.engine.phase import Phase
     "table.loans",
     "table.memories",
     "table.mercenary_contracts",
+    "table.nodes",
     "table.offices",
     "table.peace_terms",
     "table.place_environment",
@@ -39,6 +41,7 @@ from aerona.engine.phase import Phase
     "table.skills",
     "table.sky_events",
     "table.spy_agents",
+    "table.stars",
     "table.treaty_clauses",
     "table.treaty_profiles",
     "table.unit_designs",
@@ -46,6 +49,7 @@ from aerona.engine.phase import Phase
     "table.workshops",
     "table.world_maps",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "outer_being.interest",

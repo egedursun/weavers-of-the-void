@@ -54,12 +54,18 @@ CORRUPT_FROM = PERCENT // 2
     "table.community_societies",
     "table.community_stocks",
     "table.divine_wounds",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.forced_weather",
+    "table.foreign_gods",
     "table.goods_flows",
+    "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_participants",
+    "table.incidents",
+    "table.nodes",
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
@@ -72,8 +78,10 @@ CORRUPT_FROM = PERCENT // 2
     "table.resource_workers",
     "table.skills",
     "table.sky_events",
+    "table.sons",
     "table.species_products",
     "table.species_profiles",
+    "table.stars",
     "table.treaty_parties",
     "table.war_production",
     "table.workshop_designs",
@@ -83,6 +91,7 @@ CORRUPT_FROM = PERCENT // 2
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "table.chronicle",
@@ -155,11 +164,14 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "table.community_methods",
     "table.community_societies",
     "table.community_stocks",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
     "table.node_materials",
+    "table.nodes",
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
@@ -172,6 +184,7 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "table.sky_events",
     "table.species_products",
     "table.species_profiles",
+    "table.stars",
     "table.treaty_parties",
     "table.workshop_designs",
     "table.workshops",
@@ -179,6 +192,7 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "item.curse",
@@ -377,8 +391,10 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.community_labour",
     "table.community_methods",
     "table.community_societies",
+    "table.entities",
     "table.entity_flags",
     "table.forced_weather",
+    "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
     "table.nodes",
@@ -402,6 +418,7 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "table.chronicle",
@@ -462,7 +479,17 @@ async def _open_ground(ctx: TickContext, species: EntityRow, place: EntityRow, g
     resource.maker_entity_id = species.id
 
 
-@reads("species.abundance", "table.bodies", "table.bonds", "table.entity_flags", "table.herds", "table.name_registry", "table.nodes", "table.resource_profiles")
+@reads(
+    "species.abundance",
+    "table.bodies",
+    "table.bonds",
+    "table.entities",
+    "table.entity_flags",
+    "table.herds",
+    "table.name_registry",
+    "table.nodes",
+    "table.resource_profiles",
+)
 @writes("resource.abundance", "table.bonds", "table.entities", "table.name_registry", "table.resource_profiles")
 async def species_products(ctx: TickContext) -> None:
     extinct = await flags_by_entity(ctx.session, EntityFlag.EXTINCT)
@@ -504,7 +531,9 @@ async def species_products(ctx: TickContext) -> None:
     "table.community_labour",
     "table.community_methods",
     "table.community_societies",
+    "table.entities",
     "table.forced_weather",
+    "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
     "table.name_registry",
@@ -521,6 +550,7 @@ async def species_products(ctx: TickContext) -> None:
     "table.sky_events",
     "table.species_products",
     "table.species_profiles",
+    "table.stars",
     "table.treaty_parties",
     "table.workshop_designs",
     "table.workshops",
@@ -528,6 +558,7 @@ async def species_products(ctx: TickContext) -> None:
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "table.bonds",
@@ -587,6 +618,7 @@ async def deposit_finding(ctx: TickContext) -> None:
     "table.districts",
     "table.entities",
     "table.forced_weather",
+    "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
     "table.item_profiles",
@@ -606,6 +638,8 @@ async def deposit_finding(ctx: TickContext) -> None:
     "table.sky_events",
     "table.species_products",
     "table.species_profiles",
+    "table.stars",
+    "table.structure_profiles",
     "table.trade_route_profiles",
     "table.trade_route_regions",
     "table.trade_route_tolls",
@@ -617,6 +651,7 @@ async def deposit_finding(ctx: TickContext) -> None:
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "table.applied_fixups",

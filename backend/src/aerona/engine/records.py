@@ -66,13 +66,13 @@ async def retire_record(
     return await retire(ctx.session, found, ctx.epoch, f"Epoch {ctx.epoch}: {reason}.", status=status, close_bonds=True)
 
 
-@reads("table.bonds", "table.routes")
+@reads("table.bonds", "table.entities", "table.nodes", "table.routes")
 @writes("table.bonds")
 async def dead_bonds_before(ctx: TickContext) -> None:
     await sweep_bonds_of_the_dead(ctx)
 
 
-@reads("table.bonds", "table.routes")
+@reads("table.bonds", "table.entities", "table.nodes", "table.routes")
 @writes("table.bonds")
 async def dead_bonds_after(ctx: TickContext) -> None:
     await sweep_bonds_of_the_dead(ctx)

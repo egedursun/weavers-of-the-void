@@ -29,6 +29,7 @@ from aerona.engine.phase import Phase
     "table.god_feedings",
     "table.goods_flows",
     "table.journeys",
+    "table.nodes",
     "table.oaths",
     "table.schemes",
     "table.sons",
@@ -46,12 +47,16 @@ async def domain_economy(ctx: TickContext) -> None:
     "table.bias_weights",
     "table.bonds",
     "table.divine_wounds",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.god_designs",
     "table.house_members",
+    "table.incident_participants",
+    "table.incidents",
     "table.mantlings",
     "table.network_nodes",
+    "table.nodes",
     "table.personality_values",
     "table.polity_members",
     "table.relationships",
@@ -94,8 +99,10 @@ async def divine_standing(ctx: TickContext) -> None:
     "table.culture_values",
     "table.divine_powers",
     "table.divine_wounds",
+    "table.entities",
     "table.foreign_god_powers",
     "table.foreign_gods",
+    "table.nodes",
     "table.pressures",
     "table.son_powers",
     "table.sons",
@@ -135,7 +142,7 @@ async def avatars(ctx: TickContext) -> None:
     ctx.count("converted", await avatar_cycles(ctx))
 
 
-@reads("table.applied_fixups", "table.creator")
+@reads("table.applied_fixups", "table.creator", "table.nodes")
 @writes("table.applied_fixups", "table.creator_taboos")
 async def creator_taboos(ctx: TickContext) -> None:
     ctx.count("taboos", await type_taboos(ctx))
@@ -182,6 +189,7 @@ async def creator_attention(ctx: TickContext) -> None:
     "table.bonds",
     "table.entities",
     "table.foreign_gods",
+    "table.nodes",
     "table.pantheon_structures",
     "table.pantheon_ties",
     "table.relationships",
@@ -226,6 +234,7 @@ async def god_relations(ctx: TickContext) -> None:
     "table.god_conflicts",
     "table.living_lines",
     "table.mind_profiles",
+    "table.nodes",
     "table.power_sources",
     "table.sons",
     "table.treaty_parties",
@@ -267,6 +276,7 @@ async def council_rulings(ctx: TickContext) -> None:
     "table.modifiers",
     "table.natural_law_exceptions",
     "table.natural_law_profiles",
+    "table.nodes",
     "table.power_sources",
     "table.powers",
     "table.sons",
@@ -309,6 +319,7 @@ async def natural_laws(ctx: TickContext) -> None:
     "table.lexemes",
     "table.lifecycle_states",
     "table.natural_law_profiles",
+    "table.nodes",
     "table.outer_being_profiles",
     "table.outer_heralds",
     "table.outer_incursions",

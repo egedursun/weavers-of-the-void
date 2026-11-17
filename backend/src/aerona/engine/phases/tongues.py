@@ -13,7 +13,18 @@ from aerona.engine.tongues.scripts import ScriptTally, evolve_scripts
 from aerona.engine.tongues.sounds import SoundTally, shift_sounds
 
 
-@reads("table.bonds", "table.entity_flags", "table.language_profiles", "table.language_standing", "table.lexemes", "table.network_nodes", "table.sound_changes")
+@reads(
+    "table.bonds",
+    "table.entities",
+    "table.entity_flags",
+    "table.language_profiles",
+    "table.language_standing",
+    "table.lexemes",
+    "table.name_meanings",
+    "table.network_nodes",
+    "table.nodes",
+    "table.sound_changes",
+)
 @writes("table.sound_changes")
 async def sound_changes(ctx: TickContext) -> None:
     tally = SoundTally()
@@ -24,9 +35,11 @@ async def sound_changes(ctx: TickContext) -> None:
 @reads(
     "language.complexity",
     "table.bonds",
+    "table.entities",
     "table.language_grammar",
     "table.language_profiles",
     "table.network_nodes",
+    "table.nodes",
     "table.people_biology",
     "table.people_substrates",
     "table.speaker_cohorts",
@@ -39,7 +52,20 @@ async def grammar(ctx: TickContext) -> None:
     ctx.count("modalities_settled", await settle_modalities(ctx))
 
 
-@reads("table.epoch_year_cursors", "table.language_grammar", "table.lexemes", "table.name_exonyms", "table.tradition_profiles")
+@reads(
+    "table.bonds",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_grammar",
+    "table.lexemes",
+    "table.meaning_shifts",
+    "table.name_exonyms",
+    "table.nodes",
+    "table.sons",
+    "table.tradition_profiles",
+)
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
@@ -63,7 +89,7 @@ async def script_evolution(ctx: TickContext) -> None:
     count(ctx, "script", tally)
 
 
-@reads("table.entity_flags")
+@reads("table.entities", "table.entity_flags", "table.excavation_stages", "table.excavations", "table.nodes")
 async def decipherment(ctx: TickContext) -> None:
     tally = DecipherTally()
     await decipher_world(ctx, tally)
@@ -86,7 +112,15 @@ async def pidgins(ctx: TickContext) -> None:
     count(ctx, "pidgin", tally)
 
 
-@reads("table.epoch_year_cursors", "table.language_policies", "table.polity_members")
+@reads(
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_policies",
+    "table.nodes",
+    "table.polity_members",
+)
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.language_policies")
 async def language_policy(ctx: TickContext) -> None:
     tally = PolicyTally()
@@ -94,7 +128,17 @@ async def language_policy(ctx: TickContext) -> None:
     count(ctx, "policy", tally)
 
 
-@reads("table.divine_tongues", "table.language_profiles", "table.lexemes", "table.name_registry", "table.true_names")
+@reads(
+    "table.bonds",
+    "table.divine_tongues",
+    "table.entities",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
+    "table.sons",
+    "table.true_names",
+)
 @writes("table.divine_tongues", "table.entities", "table.language_profiles", "table.lexemes", "table.name_registry")
 async def divine_tongues(ctx: TickContext) -> None:
     tally = TongueTally()

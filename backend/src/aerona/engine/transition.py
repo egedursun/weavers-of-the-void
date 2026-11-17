@@ -103,6 +103,7 @@ async def overflow_to_sons(session: AsyncSession, rules: Rules, budget: int) -> 
     "settlement.piety",
     "settlement.population",
     "table.bonds",
+    "table.creator",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.nodes",

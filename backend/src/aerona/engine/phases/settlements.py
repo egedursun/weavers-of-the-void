@@ -78,7 +78,7 @@ async def restore_ruin(
     return ruin
 
 
-@reads("law.justice", "settlement.defense", "settlement.prosperity")
+@reads("law.justice", "settlement.defense", "settlement.prosperity", "table.entities", "table.nodes")
 @writes("settlement.defense", "table.entities")
 async def settlement_laws(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
@@ -103,7 +103,7 @@ async def settlement_laws(ctx: TickContext) -> None:
         )
 
 
-@reads("settlement.defense", "table.holder_levels")
+@reads("settlement.defense", "table.bonds", "table.entities", "table.holder_levels", "table.nodes")
 @writes("settlement.defense", "table.entities")
 async def architecture(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects

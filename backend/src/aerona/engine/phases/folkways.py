@@ -31,14 +31,19 @@ from aerona.engine.phases.dominion import count
     "table.conditions",
     "table.cult_tenets",
     "table.culture_values",
+    "table.custom_kinds",
     "table.diets",
+    "table.entities",
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
     "table.famine_lore",
     "table.genomes",
+    "table.holder_custom_techniques",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.irregular_seasons",
     "table.item_profiles",
@@ -56,6 +61,7 @@ from aerona.engine.phases.dominion import count
     "table.thoughts",
     "table.tradition_profiles",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "mortal.endurance",
@@ -83,7 +89,9 @@ async def nutrition(ctx: TickContext) -> None:
     count(ctx, "nutrition", tally)
 
 
-@reads("table.bias_weights", "table.biology_variants", "table.bonds", "table.mortal_profiles")
+@reads(
+    "table.bias_weights", "table.biology_variants", "table.bonds", "table.entities", "table.foreign_gods", "table.mortal_profiles", "table.nodes", "table.sons"
+)
 @writes("table.bias_weights")
 async def biases(ctx: TickContext) -> None:
     tally = BiasTally()
@@ -91,7 +99,7 @@ async def biases(ctx: TickContext) -> None:
     count(ctx, "biases", tally)
 
 
-@reads("table.culture_values", "table.districts", "table.impurity_sources", "table.purity_ranks")
+@reads("table.culture_values", "table.districts", "table.entities", "table.impurity_sources", "table.nodes", "table.purity_ranks")
 @writes("table.impurity_sources", "table.purity", "table.purity_ranks")
 async def purity(ctx: TickContext) -> None:
     tally = PurityTally()
@@ -113,6 +121,7 @@ async def purity(ctx: TickContext) -> None:
     "mortal.strength",
     "mortal.willpower",
     "mortal.wisdom",
+    "table.augment_effects",
     "table.augments",
     "table.avatars",
     "table.bodies",
@@ -123,8 +132,10 @@ async def purity(ctx: TickContext) -> None:
     "table.cult_tenets",
     "table.culture_values",
     "table.divine_wounds",
+    "table.entities",
     "table.entity_flags",
     "table.entity_tags",
+    "table.foreign_gods",
     "table.fortune_laws",
     "table.fortune_profiles",
     "table.games",
@@ -132,8 +143,12 @@ async def purity(ctx: TickContext) -> None:
     "table.hidden_truths",
     "table.holder_levels",
     "table.impurity_sources",
+    "table.incident_participants",
+    "table.incidents",
     "table.incubating_ideas",
     "table.injuries",
+    "table.insurance_policies",
+    "table.insurers",
     "table.item_profiles",
     "table.kind_holdings",
     "table.luck_beliefs",
@@ -144,11 +159,13 @@ async def purity(ctx: TickContext) -> None:
     "table.mishaps",
     "table.mortal_equipment",
     "table.mortal_profiles",
+    "table.nodes",
     "table.notable_years",
     "table.outbreaks",
     "table.passions",
     "table.prostheses",
     "table.routes",
+    "table.sons",
     "table.tradition_profiles",
     "table.war_sides",
     "table.world_domain_hooks",
@@ -183,14 +200,20 @@ async def mishaps(ctx: TickContext) -> None:
     "table.accusations",
     "table.beliefs",
     "table.castings",
+    "table.chronicle_entities",
     "table.divination_systems",
+    "table.entities",
+    "table.incident_participants",
+    "table.incidents",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.memories",
     "table.mishaps",
+    "table.nodes",
     "table.offices",
     "table.polity_members",
     "table.relationships",
+    "table.rumours",
     "table.traits",
     "table.witch_hunts",
 )

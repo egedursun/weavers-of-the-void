@@ -112,7 +112,15 @@ async def keep_the_dead(ctx: TickContext) -> int:
 
 
 @reads(
-    "cult.zeal", "table.cult_doctrines", "table.entities", "table.law_profiles", "table.mind_archives", "table.mind_laws", "table.mind_profiles", "table.worlds"
+    "cult.zeal",
+    "table.cult_doctrines",
+    "table.entities",
+    "table.law_profiles",
+    "table.mind_archives",
+    "table.mind_laws",
+    "table.mind_profiles",
+    "table.nodes",
+    "table.worlds",
 )
 @writes("table.memories", "table.mind_laws", "table.mind_profiles", "table.mind_states")
 async def keep_mind_law(ctx: TickContext) -> None:

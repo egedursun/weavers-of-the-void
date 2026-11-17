@@ -283,7 +283,20 @@ async def dimension_cults(ctx: TickContext, cosmography: Cosmography) -> int:
     return risen
 
 
-@reads("table.bonds", "table.cosmos", "table.dimension_aspects", "table.dimensional_events", "table.galactic_structures", "table.rifts")
+@reads(
+    "table.bonds",
+    "table.cosmos",
+    "table.dimension_aspects",
+    "table.dimensional_events",
+    "table.dimensions",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
+    "table.rifts",
+    "table.stars",
+    "table.worlds",
+)
 @writes("table.bonds", "table.dimension_aspects", "table.dimensions")
 async def dimension_cycles(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)

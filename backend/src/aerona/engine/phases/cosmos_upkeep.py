@@ -6,7 +6,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
 
-@reads("table.world_maps")
+@reads("table.entities", "table.nodes", "table.world_maps", "table.worlds")
 @writes("table.entities", "table.world_maps")
 async def world_maps(ctx: TickContext) -> None:
     for refresh in await refresh_world_maps(ctx.session, ctx.rules, ctx.epoch):
@@ -14,14 +14,14 @@ async def world_maps(ctx: TickContext) -> None:
         ctx.count("map_regions", refresh.regions)
 
 
-@reads("celestial.brightness")
+@reads("celestial.brightness", "table.entities", "table.nodes", "table.worlds")
 @writes("table.worlds")
 async def epoch_stars(ctx: TickContext) -> None:
     chosen = await choose_epoch_stars(ctx)
     ctx.count("stars_chosen", sum(1 for star in chosen.values() if star is not None))
 
 
-@reads("table.entities", "table.foreign_gods", "table.worlds")
+@reads("table.entities", "table.foreign_gods", "table.nodes", "table.sons", "table.worlds")
 @writes("table.chronicle", "table.foreign_gods", "table.incidents")
 async def local_gods(ctx: TickContext) -> None:
     ctx.count("born", len(await birth_local_gods(ctx)))

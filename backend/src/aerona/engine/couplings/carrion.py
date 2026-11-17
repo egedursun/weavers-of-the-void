@@ -164,8 +164,12 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
 
 @reads(
     "settlement.prosperity",
+    "spirit.unrest",
     "table.bonds",
     "table.carrion_pulses",
+    "table.entities",
+    "table.incident_participants",
+    "table.incidents",
     "table.name_registry",
     "table.nodes",
     "table.region_environment",
@@ -175,6 +179,7 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
 )
 @writes(
     "settlement.prosperity",
+    "spirit.unrest",
     "table.bonds",
     "table.carrion_pulses",
     "table.chronicle",

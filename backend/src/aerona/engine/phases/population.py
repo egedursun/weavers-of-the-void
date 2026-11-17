@@ -37,7 +37,7 @@ async def total_population(ctx: TickContext) -> int:
     return sum(stat(community, "population") or 0 for community in await canon(ctx.session, LAND_COMMUNITY_TYPES))
 
 
-@reads("people.population", "settlement.population")
+@reads("people.population", "settlement.population", "table.entities", "table.nodes")
 @writes("table.epoch_stats")
 async def population_baseline(ctx: TickContext) -> None:
     record(ctx, LedgerKey.POPULATION_START, await total_population(ctx))
@@ -162,6 +162,7 @@ async def grow_community(
     "settlement.prosperity",
     "table.biology_variants",
     "table.bonds",
+    "table.chemical_works",
     "table.class_standing",
     "table.community_cohorts",
     "table.community_needs",
@@ -169,6 +170,8 @@ async def grow_community(
     "table.demographic_transitions",
     "table.divine_wounds",
     "table.endemic_diseases",
+    "table.entities",
+    "table.foreign_gods",
     "table.holder_levels",
     "table.law_jurisdictions",
     "table.natural_law_profiles",
@@ -185,6 +188,7 @@ async def grow_community(
     "table.settlement_profiles",
     "table.sex_ratios",
     "table.son_powers",
+    "table.sons",
     "table.war_sides",
     "table.wars",
     "table.world_biochemistries",
@@ -192,6 +196,7 @@ async def grow_community(
     "table.world_maps",
     "table.world_physics",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes("cult.followers", "people.population", "settlement.population", "table.community_cohorts", "table.entities")
 async def population_growth(ctx: TickContext) -> None:

@@ -51,8 +51,10 @@ class ArmedTally:
     "table.community_societies",
     "table.crowd_moods",
     "table.districts",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.faction_profiles",
+    "table.incident_participants",
     "table.incidents",
     "table.indentures",
     "table.mind_facets",
@@ -124,7 +126,10 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     "table.collection_members",
     "table.collection_places",
     "table.crowd_moods",
+    "table.entities",
     "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
     "table.movements",
     "table.name_registry",
     "table.nodes",
@@ -157,8 +162,10 @@ async def popular_movements(ctx: TickContext) -> None:
     "table.bonds",
     "table.community_relations",
     "table.culture_values",
+    "table.entities",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.nodes",
     "table.polity_members",
     "table.social_norms",
 )
@@ -174,16 +181,21 @@ async def social_norms(ctx: TickContext) -> None:
     "table.account_stances",
     "table.accounts",
     "table.artwork_profiles",
+    "table.collection_incidents",
     "table.collection_members",
     "table.collection_places",
     "table.culture_values",
     "table.data_stores",
+    "table.deed_claims",
+    "table.deeds",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.held_identities",
     "table.house_members",
     "table.incident_collections",
     "table.memory_strikes",
     "table.mortal_profiles",
+    "table.nodes",
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
@@ -212,7 +224,21 @@ async def historiography(ctx: TickContext) -> None:
     count(ctx, "history", tally)
 
 
-@reads("table.accounts", "table.epoch_year_cursors", "table.founding_myths", "table.polity_members", "table.polity_profiles", "table.settlement_profiles")
+@reads(
+    "table.accounts",
+    "table.collection_members",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.founding_myths",
+    "table.incident_collections",
+    "table.incident_participants",
+    "table.incidents",
+    "table.mortal_profiles",
+    "table.nodes",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.settlement_profiles",
+)
 @writes(
     "table.account_stances",
     "table.accounts",
@@ -256,18 +282,24 @@ async def lost_lands(ctx: TickContext) -> None:
     "settlement.population",
     "table.arcs",
     "table.bonds",
+    "table.cascades",
     "table.collection_members",
     "table.collection_places",
     "table.community_societies",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.incident_collections",
+    "table.incident_participants",
+    "table.incidents",
     "table.mortal_profiles",
+    "table.nodes",
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
     "table.settlement_profiles",
     "table.storylet_runs",
     "table.storytellers",
+    "table.worlds",
 )
 @writes(
     "table.casus_belli",
@@ -290,7 +322,15 @@ async def storylets(ctx: TickContext) -> None:
     count(ctx, "storylet", tally)
 
 
-@reads("table.crowd_moods", "table.learning_biases", "table.personality_values")
+@reads(
+    "table.crowd_moods",
+    "table.entities",
+    "table.learning_biases",
+    "table.mortal_profiles",
+    "table.nodes",
+    "table.personality_values",
+    "table.settlement_profiles",
+)
 @writes("table.learning_biases", "table.learning_events", "table.personality_values")
 async def social_learning(ctx: TickContext) -> None:
     tally = LearningTally()
@@ -298,7 +338,17 @@ async def social_learning(ctx: TickContext) -> None:
     count(ctx, "social_learning", tally)
 
 
-@reads("table.community_cohorts", "table.community_societies", "table.generations", "table.incident_collections")
+@reads(
+    "table.collection_members",
+    "table.collection_places",
+    "table.community_cohorts",
+    "table.community_societies",
+    "table.entities",
+    "table.generations",
+    "table.incident_collections",
+    "table.nodes",
+    "table.settlement_profiles",
+)
 @writes("table.culture_values", "table.generations", "table.settlement_profiles")
 async def generations(ctx: TickContext) -> None:
     tally = GenerationTally()
@@ -310,6 +360,8 @@ async def generations(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.demographic_transitions",
     "table.diasporas",
+    "table.entities",
+    "table.nodes",
     "table.people_culture",
     "table.role_norms",
     "table.settlement_profiles",
@@ -322,7 +374,7 @@ async def demography_depth(ctx: TickContext) -> None:
     count(ctx, "demography_depth", tally)
 
 
-@reads("table.culture_values", "table.role_norms", "table.sex_ratios")
+@reads("table.culture_values", "table.entities", "table.nodes", "table.role_norms", "table.sex_ratios")
 @writes("table.role_norms")
 async def role_norms(ctx: TickContext) -> None:
     tally = RoleTally()
@@ -330,7 +382,7 @@ async def role_norms(ctx: TickContext) -> None:
     count(ctx, "role_norm", tally)
 
 
-@reads("table.calendars", "table.cosmos", "table.dating_systems", "table.holder_techniques", "table.offices")
+@reads("table.calendars", "table.cosmos", "table.dating_systems", "table.entities", "table.holder_techniques", "table.nodes", "table.offices")
 @writes("table.dating_systems")
 async def dating_systems(ctx: TickContext) -> None:
     tally = DatingTally()
@@ -343,11 +395,15 @@ async def dating_systems(ctx: TickContext) -> None:
     "table.arms",
     "table.company_profiles",
     "table.culture_values",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.house_members",
     "table.house_profiles",
+    "table.incident_participants",
+    "table.incidents",
     "table.marriages",
+    "table.nodes",
     "table.polity_profiles",
     "table.title_profiles",
 )
@@ -369,15 +425,20 @@ async def heraldry(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.bonds",
     "table.cosmos",
     "table.design_components",
     "table.design_mounts",
     "table.design_sections",
     "table.designs",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.equipment_models",
     "table.holder_levels",
+    "table.incident_participants",
+    "table.incidents",
     "table.name_registry",
+    "table.nodes",
     "table.vessel_profiles",
 )
 @writes(

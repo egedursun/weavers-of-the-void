@@ -35,7 +35,17 @@ async def trait_evolution(ctx: TickContext) -> None:
     count(ctx, "trait", tally)
 
 
-@reads("table.entity_flags", "table.epoch_year_cursors", "table.species_profiles", "table.species_ranges", "table.species_traits")
+@reads(
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.nodes",
+    "table.species_profiles",
+    "table.species_ranges",
+    "table.species_traits",
+)
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.species_ranges")
 async def niches(ctx: TickContext) -> None:
     tally = NicheTally()
@@ -58,7 +68,7 @@ async def keystones(ctx: TickContext) -> None:
     count(ctx, "keystone", tally)
 
 
-@reads("table.species_profiles")
+@reads("table.entities", "table.herds", "table.nodes", "table.species_profiles")
 async def feral_reversion(ctx: TickContext) -> None:
     tally = FeralTally()
     await run_wild(ctx, tally)
@@ -77,18 +87,27 @@ async def lineages(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.drink_kinds",
     "table.endemic_diseases",
+    "table.entities",
     "table.herds",
     "table.holder_techniques",
     "table.immunities",
     "table.impurity_sources",
+    "table.kind_holdings",
     "table.ley_lines",
+    "table.nodes",
     "table.outbreaks",
     "table.plague_responses",
     "table.quarantines",
+    "table.settlement_profiles",
+    "table.sons",
     "table.species_hosts",
     "table.species_profiles",
     "table.species_ranges",
+    "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
 )
 async def pathogen_evolution(ctx: TickContext) -> None:
     tally = PathogenTally()
@@ -102,18 +121,27 @@ async def pathogen_evolution(ctx: TickContext) -> None:
     "table.disease_carriers",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.drink_kinds",
     "table.endemic_diseases",
+    "table.entities",
     "table.herds",
     "table.holder_techniques",
     "table.immunities",
     "table.impurity_sources",
+    "table.kind_holdings",
     "table.ley_lines",
+    "table.nodes",
     "table.outbreaks",
     "table.plague_responses",
     "table.quarantines",
+    "table.settlement_profiles",
+    "table.sons",
     "table.species_hosts",
     "table.species_profiles",
     "table.species_ranges",
+    "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
 )
 async def carriers(ctx: TickContext) -> None:
     tally = CarrierTally()
@@ -126,18 +154,27 @@ async def carriers(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.drink_kinds",
     "table.endemic_diseases",
+    "table.entities",
     "table.herds",
     "table.holder_techniques",
     "table.immunities",
     "table.impurity_sources",
+    "table.kind_holdings",
     "table.ley_lines",
+    "table.nodes",
     "table.outbreaks",
     "table.plague_responses",
     "table.quarantines",
+    "table.settlement_profiles",
+    "table.sons",
     "table.species_hosts",
     "table.species_profiles",
     "table.species_ranges",
+    "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
 )
 async def spillover(ctx: TickContext) -> None:
     tally = SpilloverTally()
@@ -157,18 +194,27 @@ async def plague_responses(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.drink_kinds",
     "table.endemic_diseases",
+    "table.entities",
     "table.herds",
     "table.holder_techniques",
     "table.immunities",
     "table.impurity_sources",
+    "table.kind_holdings",
     "table.ley_lines",
+    "table.nodes",
     "table.outbreaks",
     "table.plague_responses",
     "table.quarantines",
+    "table.settlement_profiles",
+    "table.sons",
     "table.species_hosts",
     "table.species_profiles",
     "table.species_ranges",
+    "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
 )
 async def vaccination(ctx: TickContext) -> None:
     tally = VaccinationTally()
@@ -176,7 +222,7 @@ async def vaccination(ctx: TickContext) -> None:
     count(ctx, "vaccination", tally)
 
 
-@reads("table.disease_cures", "table.outbreaks")
+@reads("table.disease_cures", "table.entities", "table.nodes", "table.outbreaks", "table.structure_profiles", "table.theory_adherents", "table.theory_profiles")
 async def cure_research(ctx: TickContext) -> None:
     tally = ResearchTally()
     await research_cures(ctx, tally)
@@ -191,7 +237,7 @@ async def biome_succession(ctx: TickContext) -> None:
     count(ctx, "succession", tally)
 
 
-@reads("table.region_environment", "table.world_cycles", "table.world_physics")
+@reads("table.region_environment", "table.trophic_levels", "table.world_cycles", "table.world_physics")
 @writes("table.world_cycles", "table.world_physics")
 async def world_cycles(ctx: TickContext) -> None:
     tally = CycleTally()

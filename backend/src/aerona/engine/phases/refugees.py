@@ -142,7 +142,10 @@ async def flee(
     "settlement.population",
     "table.bonds",
     "table.culture_values",
+    "table.entities",
     "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
     "table.nodes",
     "table.world_maps",
 )

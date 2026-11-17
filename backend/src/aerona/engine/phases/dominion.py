@@ -18,12 +18,17 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.bonds",
     "table.divine_standing",
     "table.dominions",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.god_designs",
     "table.god_scales",
+    "table.incident_participants",
+    "table.incidents",
+    "table.nodes",
     "table.place_profiles",
     "table.region_dominion",
     "table.thrones",
+    "table.worlds",
 )
 @writes(
     "table.chronicle",
@@ -42,7 +47,18 @@ async def thrones(ctx: TickContext) -> None:
     count(ctx, "throne", tally)
 
 
-@reads("table.community_stocks", "table.epoch_year_cursors", "table.magic_sites", "table.place_profiles", "table.skills")
+@reads(
+    "table.community_stocks",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.magic_sites",
+    "table.nodes",
+    "table.place_profiles",
+    "table.skills",
+    "table.worlds",
+)
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
@@ -67,16 +83,26 @@ async def magic_sites(ctx: TickContext) -> None:
     "settlement.population",
     "table.action_records",
     "table.bonds",
+    "table.creator",
+    "table.cult_holdings",
     "table.dominions",
+    "table.entities",
     "table.epoch_year_cursors",
+    "table.foreign_gods",
     "table.god_designs",
     "table.god_scales",
+    "table.incident_participants",
+    "table.incidents",
     "table.mind_facets",
     "table.minds",
     "table.miracle_records",
     "table.modifiers",
     "table.mortal_profiles",
+    "table.nodes",
+    "table.place_profiles",
     "table.region_dominion",
+    "table.sons",
+    "table.structure_profiles",
     "table.thrones",
 )
 @writes(
@@ -99,7 +125,7 @@ async def dominion(ctx: TickContext) -> None:
     count(ctx, "dominion", tally)
 
 
-@reads("people.piety", "settlement.piety", "table.divine_standing")
+@reads("people.piety", "settlement.piety", "table.divine_standing", "table.entities", "table.nodes", "table.structure_profiles")
 @writes("people.piety", "settlement.piety", "table.divine_standing", "table.entities")
 async def worship_views(ctx: TickContext) -> None:
     tally = WorshipTally()
@@ -108,14 +134,21 @@ async def worship_views(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.bonds",
     "table.divine_standing",
+    "table.entities",
     "table.folk_beliefs",
+    "table.foreign_gods",
     "table.god_images",
     "table.incidents",
     "table.mind_facets",
     "table.miracle_records",
     "table.modifiers",
+    "table.nodes",
     "table.pressures",
+    "table.sons",
+    "table.war_sides",
+    "table.wars",
 )
 @writes("table.god_images", "table.sons")
 async def god_images(ctx: TickContext) -> None:

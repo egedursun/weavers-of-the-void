@@ -128,10 +128,14 @@ async def enemy_in_reach(ctx: TickContext, mortal: EntityRow, row: RiteProfileRo
 @reads(
     "mortal.intellect",
     "settlement.prosperity",
+    "table.augment_effects",
     "table.augments",
     "table.bonds",
+    "table.charms",
+    "table.creator",
     "table.cult_doctrines",
     "table.cult_tenets",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.forced_weather",
@@ -160,6 +164,7 @@ async def enemy_in_reach(ctx: TickContext, mortal: EntityRow, row: RiteProfileRo
     "table.rite_profiles",
     "table.skills",
     "table.sky_events",
+    "table.sons",
     "table.stars",
     "table.traits",
     "table.vassalages",
@@ -227,7 +232,7 @@ async def wizards(ctx: TickContext) -> None:
         await note(ctx, f"Wizard {mortal.name} worked {rite.name}: {casting.effect}.", key="magic.rite", ids=[mortal.id, rite.id, *targets])
 
 
-@reads("people.magic", "people.population", "table.natural_law_profiles")
+@reads("people.magic", "people.population", "table.entities", "table.natural_law_profiles", "table.nodes", "table.worlds")
 @writes("people.population")
 async def price_of_magic(ctx: TickContext) -> None:
     laws = await ctx.laws()

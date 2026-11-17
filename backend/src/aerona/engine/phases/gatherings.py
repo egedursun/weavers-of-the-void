@@ -39,13 +39,16 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.community_stocks",
     "table.crime_cases",
     "table.culture_ethics",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.gathering_guests",
     "table.gatherings",
     "table.hooks",
     "table.incident_collections",
+    "table.incident_participants",
     "table.incidents",
     "table.law_jurisdictions",
+    "table.law_profiles",
     "table.made_realm_profiles",
     "table.made_realms",
     "table.memories",
@@ -62,10 +65,12 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.purity",
     "table.schemes",
     "table.secrets",
+    "table.settlement_profiles",
     "table.sons",
     "table.structure_profiles",
     "table.time_budgets",
     "table.title_holders",
+    "table.tradition_participation",
     "table.tradition_profiles",
     "table.world_seasons",
 )
@@ -105,6 +110,7 @@ async def gatherings(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.collection_incidents",
     "table.collection_members",
     "table.collection_places",
     "table.crime_cases",
@@ -148,18 +154,24 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
 
 
 @reads(
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.cosmos",
     "table.dominions",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.god_designs",
     "table.god_scales",
     "table.hidden_truths",
     "table.households",
+    "table.incident_participants",
     "table.incidents",
     "table.living_lines",
     "table.mind_profiles",
     "table.natural_law_profiles",
     "table.network_nodes",
+    "table.nodes",
+    "table.polity_stress",
     "table.power_sources",
     "table.powers",
     "table.region_dominion",
@@ -170,6 +182,7 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
     "table.storytellers",
     "table.subsystem_tensions",
     "table.wars",
+    "table.worlds",
 )
 @writes(
     "table.chronicle",
@@ -194,8 +207,10 @@ async def storyteller(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.entities",
     "table.made_realm_profiles",
     "table.mind_profiles",
+    "table.nodes",
     "table.place_profiles",
     "table.polity_members",
     "table.relics",
@@ -212,12 +227,15 @@ async def site_rooms(ctx: TickContext) -> None:
 
 
 @reads(
-    "table.%(7ac15f0b009c51ed5b75 anon)s",
     "table.collection_members",
     "table.collection_places",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.excavation_stages",
     "table.excavations",
+    "table.incident_participants",
+    "table.incidents",
+    "table.mind_profiles",
     "table.nodes",
     "table.polity_members",
     "table.skills",

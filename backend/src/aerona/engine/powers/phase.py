@@ -282,6 +282,7 @@ async def train(ctx: TickContext, power: PowerRow) -> None:
     "table.entity_traits",
     "table.equipment_models",
     "table.equipment_stores",
+    "table.genomes",
     "table.hidden_truths",
     "table.ley_lines",
     "table.magic_system_links",
@@ -289,6 +290,7 @@ async def train(ctx: TickContext, power: PowerRow) -> None:
     "table.memories",
     "table.mind_profiles",
     "table.mortal_profiles",
+    "table.nodes",
     "table.phenomenon_footprints",
     "table.power_restrictions",
     "table.power_source_costs",
@@ -304,6 +306,7 @@ async def train(ctx: TickContext, power: PowerRow) -> None:
     "table.source_density",
     "table.source_laws",
     "table.source_tides",
+    "table.worlds",
 )
 @writes(
     "table.applied_fixups",

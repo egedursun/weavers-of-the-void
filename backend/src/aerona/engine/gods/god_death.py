@@ -401,7 +401,7 @@ async def tend_living_son(ctx: TickContext, son: SonRow) -> bool:
     return False
 
 
-@reads("table.cosmos")
+@reads("table.cosmos", "table.nodes", "table.sons")
 @writes("table.sons")
 async def gods_fate(ctx: TickContext) -> None:
     if await cosmos_row(ctx.session) is None:

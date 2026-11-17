@@ -57,7 +57,16 @@ async def found_dialect(ctx: TickContext, settlement: EntityRow, parent: EntityR
     return dialect
 
 
-@reads("table.bonds", "table.epoch_year_cursors", "table.language_profiles", "table.lexemes", "table.name_registry", "table.nodes", "table.world_maps")
+@reads(
+    "table.bonds",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
+    "table.world_maps",
+)
 @writes(
     "table.bonds",
     "table.chronicle",

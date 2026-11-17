@@ -604,14 +604,18 @@ async def pursuit_of_immortality(ctx: TickContext) -> int:
     "table.archive_holdings",
     "table.bonds",
     "table.cosmos",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.holder_levels",
     "table.journeys",
+    "table.legendary_quests",
     "table.name_registry",
     "table.nodes",
     "table.routes",
     "table.souls",
+    "table.threads",
+    "table.worlds",
 )
 @writes(
     "cult.followers",

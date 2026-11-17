@@ -384,6 +384,7 @@ async def language_stats(ctx: TickContext) -> int:
     "settlement.piety",
     "settlement.population",
     "table.bonds",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.holder_levels",
     "table.language_profiles",

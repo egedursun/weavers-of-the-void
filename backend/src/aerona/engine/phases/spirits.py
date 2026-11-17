@@ -44,7 +44,7 @@ async def lay_to_rest(ctx: TickContext, spirit: EntityRow, reason: str) -> None:
     await retire(ctx.session, spirit, ctx.epoch, f"Epoch {ctx.epoch}: {reason}.", close_bonds=True)
 
 
-@reads("spirit.unrest", "table.bonds", "table.entity_flags", "table.epoch_year_cursors", "table.nodes", "table.routes")
+@reads("spirit.unrest", "table.bonds", "table.entities", "table.entity_flags", "table.epoch_year_cursors", "table.nodes", "table.routes", "table.worlds")
 @writes("spirit.unrest", "table.bonds", "table.chronicle", "table.entities", "table.entity_flags", "table.epoch_year_cursors", "table.incidents")
 async def spirits_rest(ctx: TickContext) -> None:
     rules = ctx.rules
@@ -104,7 +104,10 @@ async def spirits_rest(ctx: TickContext) -> None:
     "settlement.prosperity",
     "spirit.unrest",
     "table.bonds",
+    "table.entities",
     "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
     "table.legend_profiles",
     "table.name_registry",
     "table.nodes",

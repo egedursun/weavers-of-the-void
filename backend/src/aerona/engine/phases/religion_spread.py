@@ -142,8 +142,12 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "cult.zeal",
     "table.bonds",
     "table.ciphers",
+    "table.creator",
     "table.cult_doctrines",
+    "table.entities",
     "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
     "table.name_registry",
     "table.nodes",
     "table.offices",
@@ -153,6 +157,7 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.reverences",
     "table.signal_links",
     "table.son_relations",
+    "table.sons",
     "table.vassalages",
     "table.war_sides",
     "table.wars",
@@ -201,7 +206,7 @@ async def schisms(ctx: TickContext) -> None:
     ctx.count("schisms", split)
 
 
-@reads("settlement.piety", "table.bonds", "table.entity_flags", "table.nodes", "table.reverences")
+@reads("settlement.piety", "table.bonds", "table.creator", "table.entities", "table.entity_flags", "table.nodes", "table.reverences", "table.sons")
 @writes("table.chronicle", "table.chronicle_entities", "table.entity_flags", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
 async def godlessness(ctx: TickContext) -> None:
     settings = ctx.rules.religion
@@ -517,11 +522,13 @@ def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, commu
     "people.population",
     "settlement.population",
     "table.bonds",
+    "table.creator",
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_values",
     "table.divine_standing",
     "table.dominions",
+    "table.entities",
     "table.entity_flags",
     "table.god_designs",
     "table.god_scales",
@@ -535,6 +542,7 @@ def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, commu
     "table.pressures",
     "table.region_dominion",
     "table.reverences",
+    "table.sons",
     "table.speaker_cohorts",
     "table.trade_flows",
     "table.trade_route_profiles",

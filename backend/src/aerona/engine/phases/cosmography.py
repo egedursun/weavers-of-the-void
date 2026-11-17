@@ -29,8 +29,14 @@ from aerona.engine.phases import physics
     "table.cosmos",
     "table.dimension_aspects",
     "table.dimensional_events",
+    "table.dimensions",
     "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.name_registry",
+    "table.nodes",
+    "table.stars",
+    "table.worlds",
 )
 @writes(
     "table.afterlife_strata",
@@ -55,7 +61,23 @@ async def scale_ladder(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.modifiers", "table.region_environment", "table.rifts")
+@reads(
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.modifiers",
+    "table.nodes",
+    "table.phenomenon_footprints",
+    "table.phenomenon_profiles",
+    "table.region_environment",
+    "table.rifts",
+    "table.stars",
+    "table.worlds",
+)
 @writes("table.region_environment")
 async def influence(ctx: TickContext) -> None:
     ctx.count("cosmic_modifiers", await cosmic_influence(ctx))
@@ -68,26 +90,46 @@ async def influence(ctx: TickContext) -> None:
     "table.community_stocks",
     "table.cosmos",
     "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
     "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.goods_flows",
     "table.holder_techniques",
     "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.nodes",
     "table.polity_members",
     "table.polity_profiles",
     "table.routes",
+    "table.stars",
+    "table.worlds",
 )
 @writes("table.community_stocks", "table.goods_flows", "table.routes")
 async def trade(ctx: TickContext) -> None:
     ctx.count("goods_carried", await cosmic_trade(ctx))
 
 
-@reads("table.entity_flags", "table.region_environment", "table.rifts", "table.routes")
+@reads(
+    "table.entities",
+    "table.entity_flags",
+    "table.nodes",
+    "table.phenomenon_footprints",
+    "table.phenomenon_profiles",
+    "table.polity_profiles",
+    "table.region_environment",
+    "table.rifts",
+    "table.routes",
+    "table.tech_programmes",
+    "table.worlds",
+)
 @writes("table.region_environment")
 async def leak_by_region(ctx: TickContext) -> None:
     ctx.count("hot_regions", await regional_leak(ctx))
 
 
-@reads("table.region_environment", "table.world_cycles", "table.world_maps")
+@reads("table.nodes", "table.region_environment", "table.world_cycles", "table.world_maps", "table.worlds")
 @writes("table.region_environment")
 async def climate_by_region(ctx: TickContext) -> None:
     ctx.count("climate_shifts", await regional_climate(ctx))

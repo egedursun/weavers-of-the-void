@@ -173,27 +173,29 @@ function KindList({
       tone='gold'
     >
       <div className='flex min-w-0 flex-col gap-4'>
-        <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-3'>
-          <ThingPicker
-            label='Only of this world'
-            value={world}
-            onChange={setWorld}
-            blocked={null}
-            kinds={WORLDS}
-          />
-          <ThingPicker
-            label='Only held by'
-            value={holder}
-            onChange={setHolder}
-            blocked={null}
-          />
-          <ChoiceField
-            label='Only of the category'
-            value={category}
-            table={categoryTable(info)}
-            blocked={null}
-            onPick={setCategory}
-          />
+        <div className='@container min-w-0'>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @2xl:grid-cols-3'>
+            <ThingPicker
+              label='Only of this world'
+              value={world}
+              onChange={setWorld}
+              blocked={null}
+              kinds={WORLDS}
+            />
+            <ThingPicker
+              label='Only held by'
+              value={holder}
+              onChange={setHolder}
+              blocked={null}
+            />
+            <ChoiceField
+              label='Only of the category'
+              value={category}
+              table={categoryTable(info)}
+              blocked={null}
+              onPick={setCategory}
+            />
+          </div>
         </div>
         {query.isPending ? (
           <LoadingBlock label={`Reading the ${info.plural.toLowerCase()}`} />

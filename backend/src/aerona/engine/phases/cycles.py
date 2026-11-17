@@ -79,11 +79,14 @@ async def thin_elites(ctx: TickContext, polity: EntityRow) -> int:
     "region.breadth",
     "region.fertility",
     "settlement.population",
+    "table.bonds",
     "table.cohorts",
     "table.community_cohorts",
     "table.community_societies",
+    "table.entities",
     "table.exam_sittings",
     "table.holder_levels",
+    "table.nodes",
     "table.offices",
     "table.place_environment",
     "table.polity_members",
@@ -130,6 +133,8 @@ async def structural_demography(ctx: TickContext) -> None:
     "table.bonds",
     "table.community_societies",
     "table.culture_values",
+    "table.entities",
+    "table.nodes",
     "table.people_culture",
     "table.polity_members",
     "table.polity_profiles",
@@ -151,10 +156,14 @@ async def asabiyya(ctx: TickContext) -> None:
     "settlement.population",
     "table.asabiyya",
     "table.bonds",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_participants",
+    "table.incidents",
     "table.living_lines",
+    "table.nodes",
     "table.place_environment",
     "table.polity_members",
     "table.polity_profiles",
@@ -205,6 +214,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.culture_values",
     "table.divine_debts",
     "table.divine_standing",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.gathering_guests",
@@ -266,6 +276,7 @@ async def reciprocity(ctx: TickContext) -> None:
     "mortal.age",
     "table.bonds",
     "table.community_relations",
+    "table.entities",
     "table.held_identities",
     "table.house_members",
     "table.house_profiles",
@@ -274,6 +285,7 @@ async def reciprocity(ctx: TickContext) -> None:
     "table.marriages",
     "table.memories",
     "table.minds",
+    "table.nodes",
     "table.people_culture",
     "table.relation_components",
     "table.relationships",
@@ -300,7 +312,7 @@ async def kinship_systems(ctx: TickContext) -> None:
     count(ctx, "kinship", tally)
 
 
-@reads("table.mortal_profiles", "table.people_reproduction")
+@reads("table.entities", "table.mortal_profiles", "table.nodes", "table.people_reproduction")
 @writes("table.entities", "table.mortal_castes")
 async def reproduction_systems(ctx: TickContext) -> None:
     tally = ReproductionTally()
@@ -320,9 +332,12 @@ async def reproduction_systems(ctx: TickContext) -> None:
     "table.confederations",
     "table.creator_taboos",
     "table.culture_values",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.geasa",
     "table.held_identities",
+    "table.incident_participants",
+    "table.incidents",
     "table.labour",
     "table.language_registers",
     "table.mind_profiles",
@@ -371,7 +386,7 @@ async def nomadism(ctx: TickContext) -> None:
     count(ctx, "nomads", tally)
 
 
-@reads("table.bonds", "table.culture_values", "table.founding_myths", "table.people_culture")
+@reads("table.bonds", "table.culture_values", "table.entities", "table.founding_myths", "table.nodes", "table.people_culture")
 @writes("table.account_stances", "table.culture_values", "table.legacy_traits", "table.people_culture")
 async def legacy_traits(ctx: TickContext) -> None:
     tally = LegacyTally()
@@ -383,17 +398,26 @@ async def legacy_traits(ctx: TickContext) -> None:
     "settlement.population",
     "table.bonds",
     "table.cohorts",
+    "table.community_societies",
     "table.constructions",
     "table.corvee_levies",
     "table.diasporas",
+    "table.entities",
     "table.epoch_year_cursors",
+    "table.faction_profiles",
+    "table.incident_participants",
+    "table.incidents",
     "table.indentures",
     "table.labour",
     "table.labour_reasons",
     "table.law_jurisdictions",
+    "table.law_profiles",
     "table.manumissions",
+    "table.nodes",
     "table.people_culture",
     "table.polity_members",
+    "table.polity_profiles",
+    "table.settlement_profiles",
     "table.slave_markets",
 )
 @writes(
@@ -417,7 +441,16 @@ async def labour_regimes(ctx: TickContext) -> None:
     count(ctx, "labour_regimes", tally)
 
 
-@reads("table.biology", "table.kinship_systems", "table.people_biology", "table.people_culture", "table.people_reproduction", "table.role_norms")
+@reads(
+    "table.biology",
+    "table.entities",
+    "table.kinship_systems",
+    "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
+    "table.people_reproduction",
+    "table.role_norms",
+)
 @writes("table.kinship_systems", "table.people_reproduction", "table.union_customs")
 async def people_customs(ctx: TickContext) -> None:
     tally = SeedTally()

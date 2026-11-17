@@ -23,13 +23,19 @@ from aerona.engine.regime.rule import RegimeTally, keep_regimes
     "table.community_societies",
     "table.creator_taboos",
     "table.culture_ethics",
+    "table.custom_kinds",
     "table.designated_heirs",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.faction_profiles",
     "table.geasa",
     "table.gifts",
+    "table.holder_custom_techniques",
     "table.holder_techniques",
     "table.house_members",
+    "table.incident_participants",
+    "table.incidents",
     "table.legend_profiles",
     "table.memories",
     "table.minds",
@@ -49,6 +55,7 @@ from aerona.engine.regime.rule import RegimeTally, keep_regimes
     "table.secrets",
     "table.tradition_profiles",
     "table.vassalages",
+    "table.war_sides",
     "table.wars",
 )
 @writes(
@@ -90,14 +97,19 @@ async def regimes(ctx: TickContext) -> None:
     "table.coalition_members",
     "table.creator_taboos",
     "table.culture_ethics",
+    "table.entities",
     "table.epoch_year_cursors",
+    "table.favours",
     "table.geasa",
     "table.house_profiles",
+    "table.household_members",
+    "table.households",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.membership_categories",
     "table.memberships",
     "table.mortal_profiles",
+    "table.nodes",
     "table.oaths",
     "table.offices",
     "table.patronage_ties",
@@ -136,7 +148,16 @@ async def patronage(ctx: TickContext) -> None:
     count(ctx, "patronage", tally)
 
 
-@reads("table.feuds", "table.house_profiles", "table.lineage_segments", "table.polity_profiles")
+@reads(
+    "table.breeding_plans",
+    "table.entities",
+    "table.feuds",
+    "table.house_profiles",
+    "table.lineage_segments",
+    "table.long_plans",
+    "table.nodes",
+    "table.polity_profiles",
+)
 @writes("table.lineage_segments")
 async def kin_politics(ctx: TickContext) -> None:
     tally = LineageTally()
@@ -145,14 +166,17 @@ async def kin_politics(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.entities",
     "table.examinations",
     "table.holder_techniques",
+    "table.nodes",
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
     "table.school_lineages",
     "table.school_members",
+    "table.structure_profiles",
     "table.vassalages",
 )
 async def learning_institutions(ctx: TickContext) -> None:

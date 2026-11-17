@@ -19,7 +19,7 @@ async def spell_grammar(ctx: TickContext) -> None:
     count(ctx, "lab", tally)
 
 
-@reads("table.item_enchantments", "table.magic_sites", "table.vis_stocks")
+@reads("table.entities", "table.entity_traits", "table.item_enchantments", "table.magic_sites", "table.nodes", "table.vis_stocks")
 @writes("table.vis_stocks")
 async def vis(ctx: TickContext) -> None:
     tally = VisTally()

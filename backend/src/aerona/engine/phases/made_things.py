@@ -162,6 +162,7 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     "table.cult_tenets",
     "table.culture_values",
     "table.custom_kinds",
+    "table.entities",
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
@@ -200,6 +201,7 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     "table.vassalages",
     "table.world_maps",
     "table.world_materials",
+    "table.worlds",
 )
 @writes(
     "cult.zeal",

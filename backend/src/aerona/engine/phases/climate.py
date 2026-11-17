@@ -135,7 +135,16 @@ async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) ->
     await apply_climate_effect(ctx, world, era)
 
 
-@reads("people.population", "settlement.population", "table.climate_orders", "table.epoch_year_cursors", "table.world_physics")
+@reads(
+    "people.population",
+    "settlement.population",
+    "table.climate_orders",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.world_physics",
+    "table.worlds",
+)
 @writes("people.population", "settlement.population", "table.chronicle", "table.entities", "table.epoch_year_cursors", "table.incidents", "table.worlds")
 async def climate_transition(ctx: TickContext) -> None:
     worlds = await WorldRepository(ctx.session).reachable_worlds()
@@ -150,9 +159,16 @@ async def climate_transition(ctx: TickContext) -> None:
     "region.fertility",
     "table.cosmos",
     "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
     "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.modifiers",
     "table.natural_law_profiles",
+    "table.nodes",
+    "table.stars",
+    "table.worlds",
 )
 @writes("table.modifiers")
 async def law_fertility(ctx: TickContext) -> None:

@@ -23,15 +23,21 @@ async def living(ctx: TickContext, kinds: tuple[EntityType, ...]) -> list[Entity
 
 
 @reads(
+    "table.armies",
+    "table.army_profiles",
     "table.bonds",
     "table.ciphers",
     "table.community_relations",
     "table.cosmos",
+    "table.custom_kinds",
+    "table.entities",
     "table.faction_profiles",
     "table.held_identities",
+    "table.holder_custom_techniques",
     "table.holder_techniques",
     "table.memories",
     "table.messages",
+    "table.nodes",
     "table.occupations",
     "table.offices",
     "table.polity_profiles",
@@ -70,9 +76,12 @@ async def correspondence(ctx: TickContext) -> None:
     "settlement.prosperity",
     "table.artwork_profiles",
     "table.bonds",
+    "table.cult_holdings",
     "table.culture_values",
+    "table.entities",
     "table.holder_techniques",
     "table.ideology_adherents",
+    "table.incident_participants",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.mortal_profiles",
@@ -81,8 +90,11 @@ async def correspondence(ctx: TickContext) -> None:
     "table.polity_members",
     "table.polity_profiles",
     "table.public_opinion",
+    "table.rumours",
     "table.satires",
     "table.settlement_profiles",
+    "table.war_sides",
+    "table.wars",
 )
 @writes("table.public_opinion")
 async def public_opinion(ctx: TickContext) -> None:

@@ -105,7 +105,7 @@ async def native_species(ctx: TickContext, world: WorldRow, region: EntityRow) -
     return species
 
 
-@reads("region.fertility", "table.world_life")
+@reads("region.fertility", "table.entities", "table.nodes", "table.world_life", "table.worlds")
 @writes(
     "table.bonds",
     "table.chronicle",

@@ -435,10 +435,13 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.applied_fixups",
     "table.bodies",
     "table.bonds",
+    "table.entities",
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
     "table.holder_levels",
+    "table.incident_participants",
+    "table.incidents",
     "table.name_registry",
     "table.nodes",
     "table.region_environment",
@@ -447,6 +450,7 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.species_ranges",
     "table.world_biochemistries",
     "table.world_maps",
+    "table.worlds",
 )
 @writes(
     "place.danger",
@@ -770,7 +774,7 @@ async def run_creature_phase(session: AsyncSession, rules: Rules) -> None:
     await creature_phase(await manual_context(session, "creatures", rules))
 
 
-@reads("species.danger", "table.bonds", "table.entity_traits", "table.epoch_year_cursors", "table.nodes", "table.world_maps")
+@reads("species.danger", "table.bonds", "table.entities", "table.entity_traits", "table.epoch_year_cursors", "table.nodes", "table.world_maps")
 @writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
 async def creature_migration_phase(ctx: TickContext) -> None:
     await creature_migration(ctx)

@@ -29,7 +29,7 @@ class BandTally:
     bands: int = 0
 
 
-@reads("table.holder_techniques", "table.legal_systems", "table.polity_profiles", "table.precedents")
+@reads("table.entities", "table.holder_techniques", "table.legal_systems", "table.nodes", "table.polity_profiles", "table.precedents")
 @writes("table.legal_systems", "table.precedents")
 async def legal_systems(ctx: TickContext) -> None:
     tally = SystemTally()
@@ -50,11 +50,13 @@ async def appeals(ctx: TickContext) -> None:
     "table.blueprints",
     "table.company_profiles",
     "table.designs",
+    "table.entities",
     "table.holder_techniques",
     "table.living_lines",
     "table.memberships",
     "table.mind_profiles",
     "table.mortal_profiles",
+    "table.nodes",
     "table.polity_members",
     "table.registries",
 )
@@ -65,7 +67,7 @@ async def registries(ctx: TickContext) -> None:
     count(ctx, "registry", tally)
 
 
-@reads("table.jurisdictions", "table.polity_members", "table.polity_profiles", "table.trading_posts")
+@reads("table.entities", "table.faction_profiles", "table.jurisdictions", "table.nodes", "table.polity_members", "table.polity_profiles", "table.trading_posts")
 @writes("table.jurisdictions")
 async def jurisdictions(ctx: TickContext) -> None:
     tally = JurisdictionTally()
@@ -73,7 +75,19 @@ async def jurisdictions(ctx: TickContext) -> None:
     count(ctx, "jurisdiction", tally)
 
 
-@reads("table.epoch_year_cursors", "table.offices", "table.outlaws", "table.pardons", "table.prisoners")
+@reads(
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.nodes",
+    "table.offices",
+    "table.outlaws",
+    "table.pardons",
+    "table.prisoners",
+    "table.war_sides",
+    "table.wars",
+)
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.pardons")
 async def pardons(ctx: TickContext) -> None:
     tally = PardonTally()

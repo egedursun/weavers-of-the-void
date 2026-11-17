@@ -22,12 +22,15 @@ from aerona.engine.primitives.records import retire_in
     "table.bodies",
     "table.bonds",
     "table.community_stocks",
+    "table.entities",
     "table.herds",
+    "table.nodes",
     "table.skills",
     "table.sons",
     "table.species_custom_uses",
     "table.species_products",
     "table.species_profiles",
+    "table.species_ranges",
     "table.species_use_kinds",
     "table.species_uses",
     "table.tradition_profiles",
@@ -63,15 +66,18 @@ async def husbandry_cycles(ctx: TickContext) -> None:
     "species.danger",
     "table.applied_fixups",
     "table.beast_profiles",
+    "table.bodies",
     "table.bonds",
     "table.community_societies",
     "table.creature_anatomy",
     "table.creature_attacks",
     "table.currencies",
+    "table.entities",
     "table.entity_flags",
     "table.entity_traits",
     "table.house_members",
     "table.memories",
+    "table.nodes",
     "table.region_environment",
     "table.resource_profiles",
     "table.species_products",
@@ -139,6 +145,7 @@ async def beast_cycles(ctx: TickContext) -> None:
     "table.applied_fixups",
     "table.crop_pests",
     "table.entity_traits",
+    "table.nodes",
     "table.outbreaks",
     "table.plant_profiles",
     "table.region_crops",
@@ -149,6 +156,7 @@ async def beast_cycles(ctx: TickContext) -> None:
     "table.species_ranges",
     "table.world_biochemistries",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes("table.applied_fixups", "table.plant_profiles", "table.region_crops", "table.world_biochemistries")
 async def flora_cycles(ctx: TickContext) -> None:
@@ -170,7 +178,7 @@ async def flora_cycles(ctx: TickContext) -> None:
 HUSBANDRY_PHASES = (Phase("husbandry", husbandry_cycles), Phase("flora_cycles", flora_cycles))
 
 
-@reads("table.bonds", "table.herds")
+@reads("table.bonds", "table.entities", "table.herds", "table.nodes")
 async def pet_cycles(ctx: TickContext) -> None:
     ctx.count("pets_taken", await adopt_pets(ctx))
     tally = await tend_pets(ctx)

@@ -10,7 +10,7 @@ from aerona.engine.storyteller.arcs import ArcTally, detect, keep_arcs
 from aerona.engine.storyteller.drama import DramaTally, keep_drama
 
 
-@reads("table.formation_histories", "table.star_physics", "table.world_physics")
+@reads("table.formation_histories", "table.nodes", "table.star_physics", "table.world_physics", "table.worlds")
 @writes("table.formation_histories", "table.impact_events")
 async def formation_history(ctx: TickContext) -> None:
     tally = FormationTally()
@@ -18,7 +18,7 @@ async def formation_history(ctx: TickContext) -> None:
     count(ctx, "formation", tally)
 
 
-@reads("table.irregular_seasons", "table.natural_law_profiles", "table.world_physics")
+@reads("table.entities", "table.irregular_seasons", "table.natural_law_profiles", "table.nodes", "table.world_physics", "table.worlds")
 async def long_seasons(ctx: TickContext) -> None:
     tally = SeasonTally()
     await keep_seasons(ctx, tally)
@@ -47,9 +47,13 @@ async def ages(ctx: TickContext) -> None:
     "table.chronicle",
     "table.divinations",
     "table.dreams",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.foresights",
     "table.house_profiles",
+    "table.incident_participants",
+    "table.incidents",
+    "table.legendary_quests",
     "table.mantlings",
     "table.mortal_profiles",
     "table.nodes",

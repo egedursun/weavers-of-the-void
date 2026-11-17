@@ -48,8 +48,11 @@ async def money_changing(ctx: TickContext) -> None:
     "table.community_societies",
     "table.economic_order_kinds",
     "table.economic_orders",
+    "table.entities",
     "table.holder_levels",
     "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.nodes",
     "table.offices",
     "table.order_transitions",
     "table.polity_members",
@@ -63,7 +66,15 @@ async def economic_orders(ctx: TickContext) -> None:
     count(ctx, "economic_orders", tally)
 
 
-@reads("table.chain_holdings", "table.community_stocks", "table.production_runs", "table.putting_out", "table.trade_route_profiles")
+@reads(
+    "table.chain_holdings",
+    "table.community_stocks",
+    "table.entities",
+    "table.nodes",
+    "table.production_runs",
+    "table.putting_out",
+    "table.trade_route_profiles",
+)
 @writes("table.chain_holdings", "table.community_stocks", "table.putting_out")
 async def putting_out(ctx: TickContext) -> None:
     tally = PuttingOutTally()
@@ -78,20 +89,29 @@ async def putting_out(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.drink_kinds",
     "table.endemic_diseases",
+    "table.entities",
+    "table.gardens",
     "table.herds",
     "table.holder_techniques",
     "table.immunities",
     "table.impurity_sources",
+    "table.kind_holdings",
     "table.ley_lines",
+    "table.museum_collections",
+    "table.nodes",
     "table.outbreaks",
     "table.plague_responses",
     "table.quarantines",
     "table.settlement_profiles",
+    "table.sons",
     "table.species_hosts",
     "table.species_profiles",
     "table.species_ranges",
     "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
     "table.tourist_flows",
 )
 @writes("table.tourist_flows")

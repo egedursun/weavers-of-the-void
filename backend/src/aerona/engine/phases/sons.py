@@ -138,16 +138,23 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "people.population",
     "settlement.piety",
     "settlement.population",
+    "table.bonds",
     "table.cosmos",
     "table.council_rulings",
     "table.divine_standing",
     "table.divine_wounds",
     "table.dominions",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.god_designs",
     "table.god_scales",
+    "table.incident_participants",
+    "table.incidents",
+    "table.nodes",
     "table.region_dominion",
+    "table.reverences",
     "table.son_powers",
+    "table.sons",
 )
 @writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.sons")
 async def sons_renewal(ctx: TickContext) -> None:
@@ -164,7 +171,7 @@ async def sons_renewal(ctx: TickContext) -> None:
     record(ctx, LedgerKey.TOTAL_FAITH, total)
 
 
-@reads("table.bonds", "table.structure_profiles")
+@reads("table.bonds", "table.nodes", "table.sons", "table.structure_profiles")
 @writes("table.sons")
 async def works_remember_gods(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition
@@ -187,7 +194,7 @@ async def works_remember_gods(ctx: TickContext) -> None:
             son.existence = min(PERCENT, son.existence + round(transition.dedicated_work_existence * share))
 
 
-@reads("table.son_relations", "table.sons")
+@reads("table.nodes", "table.son_relations", "table.sons")
 @writes("table.son_relations")
 async def domain_rivalry(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition
@@ -201,7 +208,7 @@ async def domain_rivalry(ctx: TickContext) -> None:
             await repository.change_relation(first.id, second.id, -min(transition.domain_rivalry * shared, relation + transition.domain_rivalry_floor))
 
 
-@reads("table.epoch_year_cursors")
+@reads("table.epoch_year_cursors", "table.nodes", "table.sons")
 @writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.sons")
 async def rebel_theft(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition

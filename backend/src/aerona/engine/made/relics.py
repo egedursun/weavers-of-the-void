@@ -126,11 +126,13 @@ async def salvage(ctx: TickContext) -> int:
     "table.holder_levels",
     "table.made_relics",
     "table.network_profiles",
+    "table.nodes",
     "table.people_substrates",
     "table.place_profiles",
     "table.prostheses",
     "table.replicator_lines",
     "table.salvage_sites",
+    "table.structure_profiles",
 )
 @writes(
     "table.applied_fixups",

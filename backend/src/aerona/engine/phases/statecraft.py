@@ -24,6 +24,7 @@ from aerona.engine.polity.subjects import SubjectTally, tend_subjects
     "table.dimensional_events",
     "table.diplomacy_profiles",
     "table.districts",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.geasa",
@@ -47,11 +48,13 @@ from aerona.engine.polity.subjects import SubjectTally, tend_subjects
     "table.spheres",
     "table.tradition_profiles",
     "table.traits",
+    "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
     "table.vassalages",
     "table.world_maps",
     "table.world_type_profiles",
+    "table.worlds",
 )
 @writes(
     "table.bonds",

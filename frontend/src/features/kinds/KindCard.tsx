@@ -138,41 +138,43 @@ function KindPassing({
     (row.retired ? 'A retired kind cannot be given; restore it first' : null)
   const missing = holder === null ? 'Pick who receives it first' : null
   return (
-    <div className='grid min-w-0 grid-cols-1 gap-3 rounded-md border surface-well border-gild/20 bg-muted/60 p-3 md:grid-cols-3'>
-      <ThingPicker
-        label='Who receives it'
-        value={holder}
-        onChange={setHolder}
-        blocked={reason}
-      />
-      <ChoiceField
-        label='How they hold it'
-        value={stance}
-        table={Object.fromEntries(
-          PEOPLE_STANCES.map((key) => [key, STANCES[key]])
-        )}
-        blocked={reason}
-        onPick={(value) => setStance(value as KindStance)}
-      />
-      <RangeField
-        label='Strength of the hold'
-        icon={STANCES[stance].icon}
-        value={strength}
-        min={0}
-        max={FULL}
-        level={`${strength} of ${FULL}`}
-        lowLabel='Barely'
-        highLabel='Wholly'
-        onChange={setStrength}
-        disabledReason={reason}
-      />
-      <div className='flex min-w-0 md:col-span-3'>
-        <StepButton
-          icon={Send}
-          label='Give it to them'
-          busy={why(reason ?? missing, passing.isPending)}
-          onClick={() => passing.mutate()}
+    <div className='@container min-w-0 rounded-md border surface-well border-gild/20 bg-muted/60 p-3'>
+      <div className='grid min-w-0 grid-cols-1 gap-3 @2xl:grid-cols-3'>
+        <ThingPicker
+          label='Who receives it'
+          value={holder}
+          onChange={setHolder}
+          blocked={reason}
         />
+        <ChoiceField
+          label='How they hold it'
+          value={stance}
+          table={Object.fromEntries(
+            PEOPLE_STANCES.map((key) => [key, STANCES[key]])
+          )}
+          blocked={reason}
+          onPick={(value) => setStance(value as KindStance)}
+        />
+        <RangeField
+          label='Strength of the hold'
+          icon={STANCES[stance].icon}
+          value={strength}
+          min={0}
+          max={FULL}
+          level={`${strength} of ${FULL}`}
+          lowLabel='Barely'
+          highLabel='Wholly'
+          onChange={setStrength}
+          disabledReason={reason}
+        />
+        <div className='flex min-w-0 @2xl:col-span-3'>
+          <StepButton
+            icon={Send}
+            label='Give it to them'
+            busy={why(reason ?? missing, passing.isPending)}
+            onClick={() => passing.mutate()}
+          />
+        </div>
       </div>
     </div>
   )

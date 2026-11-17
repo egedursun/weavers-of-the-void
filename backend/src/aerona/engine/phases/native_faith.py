@@ -207,8 +207,10 @@ async def feed_god(ctx: TickContext, god: ForeignGodRow) -> None:
     "settlement.piety",
     "settlement.population",
     "table.bonds",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.foreign_gods",
     "table.nodes",
     "table.reverences",
 )

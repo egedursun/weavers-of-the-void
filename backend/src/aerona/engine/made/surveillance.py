@@ -68,9 +68,11 @@ async def watch(ctx: TickContext, polity_id: int) -> int:
 @reads(
     "table.bonds",
     "table.data_stores",
+    "table.entities",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.network_profiles",
+    "table.nodes",
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",

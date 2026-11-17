@@ -440,7 +440,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/economy/credit.py` | 1 | 2026-11-16 | `f99c949f0d1d9004` |
 | `backend/src/aerona/engine/economy/debt_law.py` | 1 | 2026-11-16 | `da7df1e5f03b6f7e` |
 | `backend/src/aerona/engine/economy/deposits.py` | 10 | 2026-11-16 | `09c0ad0a49c4e1f8` |
-| `backend/src/aerona/engine/economy/extraction.py` | 26 | 2026-11-16 | `36006e50c3c7703f` |
+| `backend/src/aerona/engine/economy/extraction.py` | 32 | 2026-11-17 | `6aa536941d595c11` |
 | `backend/src/aerona/engine/economy/loot.py` | 2 | 2026-11-16 | `fbdcd91343cce9aa` |
 | `backend/src/aerona/engine/economy/manipulation.py` | 2 | 2026-11-16 | `55c6a36935d5ace6` |
 | `backend/src/aerona/engine/economy/markets.py` | 1 | 2026-11-16 | `c3e20ea0bb481f38` |
@@ -782,7 +782,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/phases/exploration.py` | 33 | 2026-11-16 | `c7c9c6425f80f617` |
 | `backend/src/aerona/engine/phases/factions.py` | 13 | 2026-11-16 | `54a93e51b8891ed9` |
 | `backend/src/aerona/engine/phases/faith.py` | 5 | 2026-11-16 | `d03ddd809ec546fc` |
-| `backend/src/aerona/engine/phases/gatherings.py` | 3 | 2026-11-17 | `eceff278a100f230` |
+| `backend/src/aerona/engine/phases/gatherings.py` | 2 | 2026-11-17 | `30f864a4168c718e` |
 | `backend/src/aerona/engine/phases/geography.py` | 6 | 2026-11-16 | `27f819741a358128` |
 | `backend/src/aerona/engine/phases/god_death.py` | 3 | 2026-11-16 | `0d41474aabdedf5c` |
 | `backend/src/aerona/engine/phases/grudges.py` | 6 | 2026-11-16 | `7a22c74ec4f12b9d` |

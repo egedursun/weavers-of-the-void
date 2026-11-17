@@ -37,7 +37,16 @@ async def geasa(ctx: TickContext) -> None:
     count(ctx, "geas", tally)
 
 
-@reads("settlement.piety", "spirit.unrest", "table.cosmic_offices", "table.routes", "table.settlement_profiles", "table.spirit_profiles")
+@reads(
+    "settlement.piety",
+    "spirit.unrest",
+    "table.cosmic_offices",
+    "table.entities",
+    "table.nodes",
+    "table.routes",
+    "table.settlement_profiles",
+    "table.spirit_profiles",
+)
 @writes("settlement.piety", "spirit.unrest", "table.cosmic_offices", "table.entities", "table.routes", "table.settlement_profiles")
 async def cosmic_offices(ctx: TickContext) -> None:
     tally = OfficeTally()

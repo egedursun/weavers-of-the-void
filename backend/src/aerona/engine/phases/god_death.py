@@ -115,7 +115,7 @@ async def _foreign_strikes(ctx: TickContext) -> None:
             logger.debug("Foreign strike skipped for god %s: %s", god.id, error)
 
 
-@reads("table.bonds", "table.entities", "table.foreign_gods", "table.sons")
+@reads("table.bonds", "table.creator", "table.entities", "table.foreign_gods", "table.nodes", "table.sons")
 @writes("table.bonds", "table.chronicle", "table.entities", "table.incidents", "table.sons")
 async def death_engine(ctx: TickContext) -> None:
     everyone = await sons(ctx.session)

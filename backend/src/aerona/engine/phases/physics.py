@@ -37,7 +37,19 @@ MAKE_FIXUP = "world_make"
 MATERIALS = frozenset(kind.value for kind in MaterialKind)
 
 
-@reads("table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.star_physics", "table.star_systems")
+@reads(
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.dimensions",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
+    "table.star_physics",
+    "table.star_systems",
+    "table.stars",
+    "table.worlds",
+)
 @writes("table.star_physics", "table.star_systems", "table.stars")
 async def stellar_systems(ctx: TickContext) -> None:
     ctx.count("systems_made", await ensure_systems(ctx.session, ctx.rules, ctx.epoch))
@@ -143,10 +155,16 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
     "table.cosmic_features",
     "table.cosmos",
     "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
     "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
     "table.people_biology",
     "table.star_physics",
     "table.star_systems",
+    "table.stars",
     "table.world_life",
     "table.world_physics",
     "table.worlds",
@@ -187,7 +205,7 @@ async def settle_heavens(session: AsyncSession, rules: Rules) -> int:
     return made + await survey_cycle(ctx, await Cosmography.load(session))
 
 
-@reads("table.cosmos", "table.region_environment", "table.world_cycles", "table.world_physics")
+@reads("table.cosmos", "table.nodes", "table.region_environment", "table.world_cycles", "table.world_physics", "table.worlds")
 @writes("table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.region_environment", "table.world_physics")
 async def planetary(ctx: TickContext) -> None:
     worlds = {row.id: row for row in await ctx.session.scalars(select(WorldRow).order_by(WorldRow.id))}
@@ -196,7 +214,21 @@ async def planetary(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("table.cosmic_features", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.routes", "table.star_physics")
+@reads(
+    "table.cosmic_features",
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
+    "table.routes",
+    "table.star_physics",
+    "table.stars",
+    "table.worlds",
+)
 @writes("table.chronicle", "table.community_stocks", "table.cosmic_features", "table.epoch_year_cursors", "table.incidents", "table.routes", "table.sky_events")
 async def cosmic_features(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
@@ -211,7 +243,19 @@ async def cosmic_features(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("table.cosmic_features", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.impact_events")
+@reads(
+    "table.cosmic_features",
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.dimensions",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.impact_events",
+    "table.nodes",
+    "table.stars",
+    "table.worlds",
+)
 @writes("table.chronicle", "table.epoch_year_cursors", "table.impact_events", "table.incidents", "table.region_environment")
 async def impacts(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
@@ -231,7 +275,23 @@ async def terraforming(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.holder_levels", "table.journeys", "table.routes", "table.world_surveys")
+@reads(
+    "table.bonds",
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.holder_levels",
+    "table.journeys",
+    "table.nodes",
+    "table.routes",
+    "table.stars",
+    "table.world_surveys",
+    "table.worlds",
+)
 @writes("table.world_surveys")
 async def surveys(ctx: TickContext) -> None:
     ctx.count("surveys_raised", await survey_cycle(ctx, await Cosmography.load(ctx.session)))

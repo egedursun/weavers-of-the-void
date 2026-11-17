@@ -6,7 +6,7 @@ from aerona.db.tables.crafts import CatchGroundRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import LawProfileRow, OfficeRow, PolityMemberRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.polity import CLOSURES, LawKind, OfficeKind
+from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.rules.registry import Rules
 
 
@@ -24,6 +24,14 @@ async def holders_of(session: AsyncSession, ground: CatchGroundRow) -> list[int]
     return list(dict.fromkeys([*holders, *realms]))
 
 
+CLOSURE_CUTS: dict[LawKind, str] = {
+    LawKind.CLOSED_SEASON: "season_cut_pct",
+    LawKind.PROTECTED_WATERS: "protected_cut_pct",
+    LawKind.CATCH_QUOTA: "quota_cut_pct",
+    LawKind.GEAR_BAN: "gear_cut_pct",
+}
+
+
 async def closures_on(session: AsyncSession, ground: CatchGroundRow) -> list[tuple[LawProfileRow, int]]:
     holders = await holders_of(session, ground)
     if not holders:
@@ -31,7 +39,7 @@ async def closures_on(session: AsyncSession, ground: CatchGroundRow) -> list[tup
     statement = (
         select(LawProfileRow, EntityRow.location_id)
         .join(EntityRow, EntityRow.id == LawProfileRow.law_entity_id)
-        .where(LawProfileRow.kind.in_(tuple(CLOSURES)), EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(holders))
+        .where(LawProfileRow.kind.in_(tuple(CLOSURE_CUTS)), EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(holders))
     )
     return [(profile, holder) for profile, holder in await session.execute(statement) if holder is not None]
 
@@ -50,12 +58,10 @@ async def closure_factor(session: AsyncSession, rules: Rules, ground: CatchGroun
     table = rules.closures
     factor = 1.0
     for profile, holder in await closures_on(session, ground):
-        cut = {
-            LawKind.CLOSED_SEASON: table.season_cut_pct,
-            LawKind.PROTECTED_WATERS: table.protected_cut_pct,
-            LawKind.CATCH_QUOTA: table.quota_cut_pct,
-            LawKind.GEAR_BAN: table.gear_cut_pct,
-        }[profile.kind]
+        rule_name = CLOSURE_CUTS.get(profile.kind)
+        if rule_name is None:
+            continue
+        cut: int = getattr(table, rule_name)
         evasion = table.wardened_poaching_pct if await wardened(session, holder) else table.poaching_pct
         kept = cut * profile.enforcement / PERCENT * (PERCENT - evasion) / PERCENT
         factor *= max(0.0, 1 - kept / PERCENT)

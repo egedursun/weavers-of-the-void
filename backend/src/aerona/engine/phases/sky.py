@@ -514,9 +514,12 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.community_relations",
     "table.cosmos",
     "table.culture_values",
+    "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.incident_participants",
+    "table.incidents",
     "table.memories",
     "table.minds",
     "table.name_registry",
@@ -525,6 +528,7 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.place_environment",
     "table.region_environment",
     "table.sky_events",
+    "table.stars",
     "table.storytellers",
     "table.traits",
     "table.war_sides",
@@ -532,6 +536,7 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.world_maps",
     "table.world_physics",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "people.piety",
