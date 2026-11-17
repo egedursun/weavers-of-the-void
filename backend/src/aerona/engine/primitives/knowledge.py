@@ -2,7 +2,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.cosmography import DIMENSION_LAWS
@@ -22,6 +22,7 @@ from aerona.rules.registry import Rules
 from aerona.rules.registry.knowledge import KnowledgeRules
 
 BranchLevels = dict[KnowledgeBranch, int]
+KNOWLEDGE_KIND = KnowledgeStats().kind
 
 
 def raw_level(stats: EntityStats) -> int:
@@ -53,9 +54,14 @@ def times_of(table: KnowledgeRules, level: int, times: float) -> float:
     return 1 + (times - 1) * effect if effect else 1.0
 
 
+def stored_level(kind: object, level: object) -> int:
+    found = level if kind == KNOWLEDGE_KIND and isinstance(level, int) else None
+    return max(1, found if found is not None else 1)
+
+
 async def known_levels(session: AsyncSession, entity_ids: Iterable[int] | None = None) -> dict[int, BranchLevels]:
     statement = (
-        select(BondRow.source_node_id, EntityRow.knowledge_branch, EntityRow.stats)
+        select(BondRow.source_node_id, EntityRow.knowledge_branch, func.json_extract(EntityRow.stats, "$.kind"), func.json_extract(EntityRow.stats, "$.level"))
         .join(EntityRow, EntityRow.id == BondRow.target_node_id)
         .where(
             BondRow.kind == BondKind.KNOWS,
@@ -68,16 +74,16 @@ async def known_levels(session: AsyncSession, entity_ids: Iterable[int] | None =
     if entity_ids is not None:
         statement = statement.where(BondRow.source_node_id.in_(list(entity_ids)))
     known: dict[int, BranchLevels] = defaultdict(dict)
-    for source, branch, stats in await session.execute(statement):
+    for source, branch, kind, level in await session.execute(statement):
         if branch is not None:
-            known[source][branch] = max(known[source].get(branch, 0), raw_level(stats))
-    held = select(HolderLevelRow).where(HolderLevelRow.level > 0)
+            known[source][branch] = max(known[source].get(branch, 0), stored_level(kind, level))
+    held = select(HolderLevelRow.holder_entity_id, HolderLevelRow.branch, HolderLevelRow.level).where(HolderLevelRow.level > 0)
     if entity_ids is not None:
         held = held.where(HolderLevelRow.holder_entity_id.in_(list(entity_ids)))
-    for row in await session.scalars(held):
-        frontier = known.get(row.holder_entity_id, {}).get(row.branch)
+    for holder, branch, level in await session.execute(held):
+        frontier = known.get(holder, {}).get(branch)
         if frontier is not None:
-            known[row.holder_entity_id][row.branch] = min(frontier, row.level)
+            known[holder][branch] = min(frontier, level)
     return known
 
 

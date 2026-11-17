@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ethics import ACT_CRIMES, HONOUR_MODELS
 from aerona.catalog.laws import PENALTY_CRUELTY
@@ -8,6 +9,7 @@ from aerona.catalog.lore import IDEOLOGY_VALUES
 from aerona.catalog.mind import DOMAIN_VALUES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an, spoken
+from aerona.db.read_memo import memoized
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.culture import IdeologyTenetRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -175,9 +177,12 @@ async def plagued(ctx: TickContext, realm: Realm) -> bool:
     regions = list(realm.territory)
     if not regions:
         return False
-    found = await ctx.session.scalar(
-        select(OutbreakRow.id).where(OutbreakRow.region_entity_id.in_(regions), OutbreakRow.status != OutbreakStatus.ENDED).limit(1)
-    )
+    return await plagued_in(ctx.session, tuple(regions))
+
+
+@memoized(OutbreakRow)
+async def plagued_in(session: AsyncSession, regions: tuple[int, ...]) -> bool:
+    found = await session.scalar(select(OutbreakRow.id).where(OutbreakRow.region_entity_id.in_(regions), OutbreakRow.status != OutbreakStatus.ENDED).limit(1))
     return found is not None
 
 

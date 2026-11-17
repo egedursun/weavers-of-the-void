@@ -265,7 +265,7 @@ async def impacts(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("table.terraforming", "table.world_physics")
+@reads("table.entities", "table.nodes", "table.terraforming", "table.world_physics")
 @writes(
     "table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.terraforming", "table.world_biochemistries", "table.world_physics", "table.worlds"
 )

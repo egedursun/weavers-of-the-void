@@ -1,8 +1,10 @@
 from collections import defaultdict
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -21,8 +23,14 @@ from aerona.engine.transform.ledger import Ledger
 from aerona.engine.transform.moves import bind, end
 
 
+@memoized(PolityMemberRow)
+async def member_realm(session: AsyncSession, community_id: int) -> int | None:
+    found: int | None = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id).limit(1))
+    return found
+
+
 async def realm_of(ctx: TickContext, community_id: int) -> int | None:
-    return await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id).limit(1))
+    return await member_realm(ctx.session, community_id)
 
 
 async def landless_holder(ctx: TickContext, title: TitleProfileRow) -> EntityRow | None:
@@ -62,12 +70,17 @@ async def title_to_realm(ctx: TickContext, title_id: int, ledger: Ledger) -> int
     return realm.entity.id
 
 
-async def keepers_by_realm(ctx: TickContext, tradition_id: int) -> dict[int, list[int]]:
-    keepers: dict[int, list[int]] = defaultdict(list)
+@memoized(BondRow)
+async def celebrants(session: AsyncSession, tradition_id: int) -> tuple[int, ...]:
     statement = select(BondRow.source_node_id).where(
         BondRow.target_node_id == tradition_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE
     )
-    for community_id in await ctx.session.scalars(statement.order_by(BondRow.source_node_id)):
+    return tuple(await session.scalars(statement.order_by(BondRow.source_node_id)))
+
+
+async def keepers_by_realm(ctx: TickContext, tradition_id: int) -> dict[int, list[int]]:
+    keepers: dict[int, list[int]] = defaultdict(list)
+    for community_id in await celebrants(ctx.session, tradition_id):
         realm = await realm_of(ctx, community_id)
         if realm is not None:
             keepers[realm].append(community_id)

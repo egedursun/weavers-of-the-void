@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, MaimedCohortRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import AccountRow
@@ -70,16 +71,26 @@ async def war_record(ctx: TickContext, realm: Realm) -> tuple[int, int, bool]:
         return 0, 0, False
     since = ctx.epoch - RECENT_EPOCHS
     won = lost = 0
-    for war in await ctx.session.scalars(select(WarRow).where(WarRow.ended_epoch >= since)):
-        won += 1 if war.victor_entity_id in members else 0
-        lost += 1 if war.loser_entity_id in members else 0
-    fighting = await ctx.session.scalar(
+    for victor, loser in await ended_wars(ctx.session, since):
+        won += 1 if victor in members else 0
+        lost += 1 if loser in members else 0
+    return won, lost, await fighting_now(ctx.session, tuple(members))
+
+
+@memoized(WarRow)
+async def ended_wars(session: AsyncSession, since: int) -> tuple[tuple[int | None, int | None], ...]:
+    return tuple((war.victor_entity_id, war.loser_entity_id) for war in await session.scalars(select(WarRow).where(WarRow.ended_epoch >= since)))
+
+
+@memoized(WarRow, WarSideRow)
+async def fighting_now(session: AsyncSession, members: tuple[int, ...]) -> bool:
+    fighting = await session.scalar(
         select(WarSideRow.war_id)
         .join(WarRow, WarRow.id == WarSideRow.war_id)
         .where(WarSideRow.entity_id.in_(members), WarRow.status == WarStatus.ONGOING, WarSideRow.left_epoch.is_(None))
         .limit(1)
     )
-    return won, lost, fighting is not None
+    return fighting is not None
 
 
 async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook) -> dict[str, int]:

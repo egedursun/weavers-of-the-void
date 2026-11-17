@@ -626,8 +626,8 @@ async def tend_household(ctx: TickContext, household: HouseholdRow, laws: LawBoo
 async def tend_aggregates(ctx: TickContext, tally: HouseholdTally) -> None:
     table = ctx.rules.households
     counts: dict[tuple[int, SocialClass], int] = defaultdict(int)
-    for cohort in await ctx.session.scalars(select(CohortRow)):
-        counts[(cohort.community_entity_id, cohort.social_class)] += cohort.count
+    for community_id, social_class, count in await ctx.session.execute(select(CohortRow.community_entity_id, CohortRow.social_class, CohortRow.count)):
+        counts[(community_id, social_class)] += count
     existing = {(row.community_node_id, row.social_class): row for row in await ctx.session.scalars(select(HouseholdAggregateRow))}
     for (community_id, social_class), people in sorted(counts.items(), key=lambda item: (item[0][0], item[0][1].value)):
         community = await ctx.session.get(EntityRow, community_id)

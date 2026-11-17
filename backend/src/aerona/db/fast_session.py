@@ -11,7 +11,7 @@ from sqlalchemy.orm.session import _EntityBindKey, _PKIdentityArgument
 from sqlalchemy.sql.selectable import ForUpdateParameter
 from sqlalchemy.util import EMPTY_DICT
 
-from aerona.db.read_memo import KEEP_KEY, memo_of, pending_tables, register_index, table_names, track_dirty
+from aerona.db.read_memo import KEEP_KEY, memo_of, pending_tables, read_tables, register_index, table_names, track_dirty
 
 PREFIX_KEYS = 2
 PRIME_CHUNK = 500
@@ -190,8 +190,17 @@ async def prime_prefixes(session: AsyncSession, model: type[Any], values: Iterab
 
 
 def drop_whole_on_write(state: ORMExecuteState) -> None:
-    if not state.is_select:
+    if state.is_select:
+        return
+    known: dict[str, bool] | None = state.session.info.get(WHOLE_KEY)
+    if not known:
+        return
+    written = read_tables(state)
+    if not written:
         state.session.info.pop(WHOLE_KEY, None)
+        return
+    for name in written:
+        known.pop(name, None)
 
 
 def fetch_matches(state: ORMExecuteState) -> None:

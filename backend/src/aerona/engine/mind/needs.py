@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import CAREER_SKILLS, HUMILIATING_MEMORIES, NEED_LABELS, PLEASURE_TRAITS, SKILLS, THREAT_MEMORIES
 from aerona.constants.units import PERCENT
-from aerona.db.read_memo import memo_of, table_names
+from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
@@ -124,6 +124,11 @@ def gap_pct(limit: float, value: float) -> int:
     return pct((limit - value) * PERCENT / limit) if limit > 0 else 0
 
 
+@memoized(MemoryRow)
+async def held_memories(session: AsyncSession, holder_id: int) -> tuple[MemoryRow, ...]:
+    return tuple(await session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == holder_id)))
+
+
 async def community_pressures(ctx: TickContext, community: EntityRow, culture: Values, plagued: set[int]) -> dict[PressureKind, int]:
     table = ctx.rules.needs
     session = ctx.session
@@ -139,7 +144,7 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
         gap_pct(table.hunger_prosperity, prosperity),
         basket.get(ShortfallEffect.HUNGER, 0) * plenty.hunger_pressure_pct / PERCENT,
     ) * await ctx.hook_easing(community.id, DomainHook.FASTING)
-    memories = list(await session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == community.id)))
+    memories = list(await held_memories(session, community.id))
     threat = sum(-strength_of(row, ctx.epoch) for row in memories if row.kind in THREAT_MEMORIES and row.magnitude < 0)
     wars = await ongoing_war_count(session, community.id)
     insecurity = wars * table.war_insecurity + threat * table.threat_pct / PERCENT + (table.plague_insecurity if community.id in plagued else 0)

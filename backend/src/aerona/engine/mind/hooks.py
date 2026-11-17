@@ -1,13 +1,16 @@
 from collections.abc import Iterable
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import COMMAND_SKILLS, HEALING_SKILLS, MELEE_SKILLS, MEMORIES, MISSILE_SKILLS
 from aerona.catalog.thoughts import ATROCITIES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.repositories.chronicle import ChronicleRepository, incident_for
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.body import InjuryKind, InjuryState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.intrigue import FavourOrigin
@@ -213,13 +216,15 @@ async def onlookers(ctx: TickContext, actor_id: int, victim_id: int) -> list[int
     victim = await ctx.session.get(EntityRow, victim_id)
     if victim is None or victim.location_id is None:
         return []
+    return [node for node in await communities_at(ctx.session, victim.location_id) if node not in (actor_id, victim_id)]
+
+
+@memoized(EntityRow, NodeRow)
+async def communities_at(session: AsyncSession, location_id: int) -> tuple[int, ...]:
     statement = select(EntityRow.id).where(
-        EntityRow.location_id == victim.location_id,
-        EntityRow.status == EntityStatus.CANON,
-        EntityRow.entity_type.in_(COMMUNITY_KINDS),
-        EntityRow.id.not_in([actor_id, victim_id]),
+        EntityRow.location_id == location_id, EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_(COMMUNITY_KINDS)
     )
-    return list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
+    return tuple(await session.scalars(statement.order_by(EntityRow.id)))
 
 
 async def horrified(ctx: TickContext, actor_id: int, victim_id: int) -> list[int]:

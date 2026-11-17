@@ -73,8 +73,8 @@ async def _people_of(session: AsyncSession, entity: EntityRow) -> EntityRow | No
 
 
 async def culture_of(session: AsyncSession, people_id: int) -> dict[ValueAxis, int]:
-    rows = await session.scalars(select(CultureValueRow).where(CultureValueRow.entity_id == people_id))
-    return {row.axis: row.value for row in rows}
+    rows = await session.execute(select(CultureValueRow.axis, CultureValueRow.value).where(CultureValueRow.entity_id == people_id))
+    return {axis: value for axis, value in rows}
 
 
 async def domain_reading(session: AsyncSession, rules: Rules, people: EntityRow) -> tuple[BodyReading, bool]:

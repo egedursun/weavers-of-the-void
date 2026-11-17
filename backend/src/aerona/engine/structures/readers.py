@@ -6,8 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.structure import STANDING_STATES, StructureKind
@@ -30,6 +32,11 @@ class Working:
 
 
 async def working(session: AsyncSession, kinds: Iterable[StructureKind], *, world_id: int | None = None, host_id: int | None = None) -> list[Working]:
+    return list(await working_rows(session, tuple(kinds), world_id, host_id))
+
+
+@memoized(EntityRow, NodeRow, StructureProfileRow)
+async def working_rows(session: AsyncSession, kinds: tuple[StructureKind, ...], world_id: int | None, host_id: int | None) -> tuple[Working, ...]:
     statement = (
         select(EntityRow, StructureProfileRow)
         .join(StructureProfileRow, StructureProfileRow.structure_entity_id == EntityRow.id)
@@ -45,7 +52,7 @@ async def working(session: AsyncSession, kinds: Iterable[StructureKind], *, worl
         statement = statement.where(EntityRow.world_id == world_id)
     if host_id is not None:
         statement = statement.where(StructureProfileRow.host_entity_id == host_id)
-    return [Working(entity, profile) for entity, profile in (await session.execute(statement)).all()]
+    return tuple(Working(entity, profile) for entity, profile in (await session.execute(statement)).all())
 
 
 async def strength_at(session: AsyncSession, host_id: int | None, kinds: Iterable[StructureKind]) -> float:

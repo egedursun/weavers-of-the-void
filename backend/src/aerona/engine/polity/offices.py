@@ -2,11 +2,13 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.civics import OFFICE_GATES, OFFICE_LEVELS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import partial
+from aerona.db.read_memo import memoized
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -197,8 +199,12 @@ async def subjects(ctx: TickContext, realm: Realm) -> list[EntityRow]:
 
 async def skill_score(ctx: TickContext, mortal: EntityRow, office: OfficeKind) -> float:
     skills, attribute = OFFICE_SKILLS[office]
-    levels = await ctx.session.scalars(select(SkillRow.level).where(SkillRow.holder_node_id == mortal.id, SkillRow.skill.in_(list(skills))))
-    return sum(levels) * 5 + (stat(mortal, attribute) or 0) + (mortal.importance or 0) / 10
+    return await skill_sum(ctx.session, mortal.id, tuple(skills)) * 5 + (stat(mortal, attribute) or 0) + (mortal.importance or 0) / 10
+
+
+@memoized(SkillRow)
+async def skill_sum(session: AsyncSession, mortal_id: int, skills: tuple[SkillKind, ...]) -> int:
+    return sum(await session.scalars(select(SkillRow.level).where(SkillRow.holder_node_id == mortal_id, SkillRow.skill.in_(list(skills)))))
 
 
 def adult(ctx: TickContext, mortal: EntityRow) -> bool:

@@ -8,6 +8,7 @@ from aerona.catalog.kinds.sections import SECTION_STATES
 from aerona.catalog.structure_sections import LAYOUTS, PartSpec
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.integrity import StructureDesignSectionRow, StructureSectionRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
@@ -66,9 +67,14 @@ def state_for(rules: Rules, condition: int) -> SectionState:
     return SectionState.SOUND
 
 
-async def sections_of(session: AsyncSession, structure_id: int) -> list[StructureSectionRow]:
+@memoized(StructureSectionRow)
+async def section_rows(session: AsyncSession, structure_id: int) -> tuple[StructureSectionRow, ...]:
     statement = select(StructureSectionRow).where(StructureSectionRow.structure_entity_id == structure_id)
-    return list(await session.scalars(statement.order_by(StructureSectionRow.section)))
+    return tuple(await session.scalars(statement.order_by(StructureSectionRow.section)))
+
+
+async def sections_of(session: AsyncSession, structure_id: int) -> list[StructureSectionRow]:
+    return list(await section_rows(session, structure_id))
 
 
 async def layout_for(

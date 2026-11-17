@@ -260,9 +260,15 @@ async def kept_laws(session: AsyncSession, kind: LawKind) -> dict[int, list[LawP
     return found
 
 
+@memoized(PolityMemberRow)
+async def member_polity(session: AsyncSession, node_id: int) -> int | None:
+    found: int | None = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == node_id).limit(1))
+    return found
+
+
 @memoized(PolityMemberRow, LawProfileRow, LawJurisdictionRow, EntityRow, BondRow)
 async def ruling_law(session: AsyncSession, node_id: int, kind: LawKind) -> LawProfileRow | None:
-    polity = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == node_id).limit(1))
+    polity = await member_polity(session, node_id)
     cults = (await faithful_cults(session)).get(node_id, [])
     ordered = [node_id, *cults, polity] if kind in CULT_FIRST else [node_id, polity, *cults]
     kept = await kept_laws(session, kind)

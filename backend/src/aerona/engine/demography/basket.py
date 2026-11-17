@@ -7,7 +7,6 @@ from sqlalchemy.orm.attributes import flag_modified, instance_state
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.catalog.needs import SERVE_ORDER, SHORTFALL_EFFECTS, basket_weight
 from aerona.constants.units import PERCENT
-from aerona.db.fast_session import rows_by_prefix
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -28,6 +27,7 @@ from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.industry.cold import frostbite
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.notes import note
+from aerona.engine.primitives.kept import kept_rows
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
@@ -219,11 +219,11 @@ def build_basket(
 
 
 async def standing_of(session: AsyncSession, community_id: int) -> dict[SocialClass, ClassStandingRow]:
-    return {row.social_class: row for row in await rows_by_prefix(session, ClassStandingRow, community_id)}
+    return {row.social_class: row for row in await kept_rows(session, ClassStandingRow, ClassStandingRow.community_entity_id, community_id)}
 
 
 async def needs_of(session: AsyncSession, community_id: int) -> dict[NeedKey, CommunityNeedRow]:
-    rows = await rows_by_prefix(session, CommunityNeedRow, community_id)
+    rows = await kept_rows(session, CommunityNeedRow, CommunityNeedRow.community_entity_id, community_id)
     return {(row.social_class, row.commodity): row for row in rows}
 
 

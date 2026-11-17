@@ -12,6 +12,7 @@ from aerona.db.bond_index import drop_lookup
 from aerona.db.fast_session import FastSession
 from aerona.db.flush_batch import install_flush_batching
 from aerona.db.inline_sqlite import inline_engine
+from aerona.db.ordered_reads import install_ordered_reads
 from aerona.db.read_memo import KEEP_KEY, forget_all
 from aerona.db.read_only import install_read_only_guard, mark_read_only
 
@@ -25,6 +26,7 @@ class Database:
         event.listen(self.engine.sync_engine, "connect", self._configure_connection)
         install_activity_capture()
         install_flush_batching()
+        install_ordered_reads()
         install_read_only_guard()
 
     @staticmethod

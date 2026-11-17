@@ -4,9 +4,12 @@ from typing import Any, cast
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Mapper, class_mapper
+from sqlalchemy.orm.attributes import instance_state
 
 from aerona.constants.engine import LOCATION_CHAIN_MAX_HOPS, SUBTREE_STEP_LIMIT
 from aerona.db.bond_index import bond_lookup
+from aerona.db.fast_session import column_keys
 from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -38,15 +41,37 @@ async def canon(session: AsyncSession, types: Iterable[EntityType] | None = None
     memo = memo_of(session, "canon", CANON_TABLES)
     found: list[EntityRow] | None = None if memo is None else memo[key] if key in memo else narrowed(memo, wanted, world_id)
     if found is None:
-        statement = select(EntityRow).where(EntityRow.status == EntityStatus.CANON)
+        statement = select(EntityRow.id).where(EntityRow.status == EntityStatus.CANON)
         if wanted is not None:
             statement = statement.where(EntityRow.entity_type.in_(wanted))
         if world_id is not None:
             statement = statement.where(EntityRow.world_id == world_id)
-        found = list(await session.scalars(statement.order_by(EntityRow.id)))
+        found = await held_entities(session, list(await session.scalars(statement.order_by(EntityRow.id))))
         if memo is not None:
             memo[key] = found
     return list(found)
+
+
+def whole_entity(mapper: Mapper[EntityRow], row: object) -> EntityRow | None:
+    if not isinstance(row, EntityRow):
+        return None
+    state = instance_state(row)
+    return row if not state.expired and state.dict.keys() >= column_keys(mapper) else None
+
+
+async def held_entities(session: AsyncSession, ids: list[int]) -> list[EntityRow]:
+    mapper = class_mapper(EntityRow)
+    identity = session.sync_session.identity_map
+    found: dict[int, EntityRow] = {}
+    for node in ids:
+        row = whole_entity(mapper, identity.get(mapper.identity_key_from_primary_key((node,))))
+        if row is not None:
+            found[node] = row
+    wanted = [node for node in ids if node not in found]
+    for start in range(0, len(wanted), ENTITY_CHUNK):
+        for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_(wanted[start : start + ENTITY_CHUNK]))):
+            found[row.id] = row
+    return [found[node] for node in ids if node in found]
 
 
 async def entity(session: AsyncSession, entity_id: int | None) -> EntityRow | None:

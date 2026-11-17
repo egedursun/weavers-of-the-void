@@ -192,15 +192,24 @@ async def sides_of(session: AsyncSession, war: WarRow) -> tuple[int, int] | None
     return attackers[0], defenders[0]
 
 
+@memoized(WarRow)
+async def active_war_rows(session: AsyncSession) -> tuple[WarRow, ...]:
+    return tuple(await session.scalars(select(WarRow).where(WarRow.status.in_(ACTIVE_WAR_STATUSES)).order_by(WarRow.id)))
+
+
 async def active_wars(session: AsyncSession) -> list[WarRow]:
-    return list(await session.scalars(select(WarRow).where(WarRow.status.in_(ACTIVE_WAR_STATUSES)).order_by(WarRow.id)))
+    return list(await active_war_rows(session))
+
+
+@memoized(PolityMemberRow, PolityProfileRow)
+async def realms_holding_towns(session: AsyncSession, towns: tuple[int, ...]) -> frozenset[int]:
+    members = select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id.in_(towns))
+    cores = select(PolityProfileRow.polity_entity_id).where(PolityProfileRow.core_entity_id.in_(towns))
+    return frozenset(await session.scalars(members)) | frozenset(await session.scalars(cores))
 
 
 async def realms_holding(session: AsyncSession, town_ids: Iterable[int]) -> set[int]:
-    towns = sorted(set(town_ids))
-    members = select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id.in_(towns))
-    cores = select(PolityProfileRow.polity_entity_id).where(PolityProfileRow.core_entity_id.in_(towns))
-    return set(await session.scalars(members)) | set(await session.scalars(cores))
+    return set(await realms_holding_towns(session, tuple(sorted(set(town_ids)))))
 
 
 @memoized(BondRow, EntityRow, PolityMemberRow, PolityProfileRow)
@@ -686,6 +695,7 @@ async def release_captive(ctx: TickContext, row: CaptiveRow, status: CaptiveStat
         await freed(ctx, captive, row.captor_entity_id, row.home_entity_id if status in RESCUE_STATUSES else None)
 
 
+@memoized(TributeRow)
 async def active_tribute(session: AsyncSession, payer_id: int, receiver_id: int) -> TributeRow | None:
     statement = select(TributeRow).where(
         TributeRow.payer_entity_id == payer_id, TributeRow.receiver_entity_id == receiver_id, TributeRow.status == TributeStatus.ACTIVE

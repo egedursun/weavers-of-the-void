@@ -38,6 +38,7 @@ WARDED_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PLACE})
     "region.magic",
     "resource.might",
     "table.bonds",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.ley_lines",
     "table.name_registry",
@@ -232,7 +233,21 @@ async def wizards(ctx: TickContext) -> None:
         await note(ctx, f"Wizard {mortal.name} worked {rite.name}: {casting.effect}.", key="magic.rite", ids=[mortal.id, rite.id, *targets])
 
 
-@reads("people.magic", "people.population", "table.entities", "table.natural_law_profiles", "table.nodes", "table.worlds")
+@reads(
+    "people.magic",
+    "people.population",
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.natural_law_profiles",
+    "table.nodes",
+    "table.stars",
+    "table.worlds",
+)
 @writes("people.population")
 async def price_of_magic(ctx: TickContext) -> None:
     laws = await ctx.laws()

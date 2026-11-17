@@ -8,7 +8,7 @@ from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import DemographicTransitionRow, DiasporaRow, RoleNormRow, SexRatioRow
-from aerona.db.tables.demography import CohortRow, PeopleCultureRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.write_guard import held
@@ -26,6 +26,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import asabiyya_factor
 from aerona.engine.cycles.breeding import breeding_factor, fixed_sexes_at
 from aerona.engine.cycles.sides import first_sex, system_of_people
+from aerona.engine.demography.cohorts import cohort_rows
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
@@ -62,7 +63,7 @@ class DemographyTally:
 
 async def cohort_counts(session: AsyncSession, community_id: int) -> dict[tuple[AgeBand, Sex], int]:
     found: dict[tuple[AgeBand, Sex], int] = {}
-    for row in await session.scalars(select(CohortRow).where(CohortRow.community_entity_id == community_id)):
+    for row in await cohort_rows(session, community_id):
         found[(row.age_band, row.sex)] = found.get((row.age_band, row.sex), 0) + row.count
     return found
 

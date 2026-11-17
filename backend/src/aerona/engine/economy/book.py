@@ -82,12 +82,16 @@ class EconomyBook:
             workers[worker.resource_entity_id][worker.community_entity_id] = worker
         owners: dict[int, list[int]] = defaultdict(list)
         homes: dict[int, int] = {}
-        statement = select(BondRow).where(BondRow.kind.in_([BondKind.OWNS, *HOME_BONDS]), BondRow.state == BondState.ACTIVE).order_by(BondRow.id)
-        for bond in await session.scalars(statement):
-            if bond.kind is BondKind.OWNS and bond.source_node_id in entities:
-                owners[bond.target_node_id].append(bond.source_node_id)
-            elif bond.kind in HOME_BONDS and bond.target_node_id in entities and entities[bond.target_node_id].entity_type in COMMUNITY_TYPES:
-                homes.setdefault(bond.source_node_id, bond.target_node_id)
+        statement = (
+            select(BondRow.kind, BondRow.source_node_id, BondRow.target_node_id)
+            .where(BondRow.kind.in_([BondKind.OWNS, *HOME_BONDS]), BondRow.state == BondState.ACTIVE)
+            .order_by(BondRow.id)
+        )
+        for kind, source, target in await session.execute(statement):
+            if kind is BondKind.OWNS and source in entities:
+                owners[target].append(source)
+            elif kind in HOME_BONDS and target in entities and entities[target].entity_type in COMMUNITY_TYPES:
+                homes.setdefault(source, target)
         book = cls(
             entities=entities,
             communities=communities,
@@ -105,18 +109,22 @@ class EconomyBook:
             home = book.home_of(entity, homes)
             if home is not None:
                 book.affiliated[entity.id] = home
-        for skill in await session.scalars(select(SkillRow).where(SkillRow.subject_node_id.is_(None))):
-            community = book.affiliated.get(skill.holder_node_id)
+        for holder, skill, level in await session.execute(
+            select(SkillRow.holder_node_id, SkillRow.skill, SkillRow.level).where(SkillRow.subject_node_id.is_(None))
+        ):
+            community = book.affiliated.get(holder)
             if community is not None:
                 held = book.skills[community]
-                held[skill.skill] = max(held.get(skill.skill, 0), skill.level)
+                held[skill] = max(held.get(skill, 0), level)
         for labour in await session.scalars(select(LabourRow)):
             book.labour.setdefault(labour.community_entity_id, {})[labour.job] = labour
         live = select(TreatyProfileRow.treaty_entity_id).where(TreatyProfileRow.status == TreatyStatus.IN_FORCE)
         waivers = select(TreatyClauseRow.treaty_entity_id).where(TreatyClauseRow.kind == ClauseKind.TOLLS_WAIVED, TreatyClauseRow.treaty_entity_id.in_(live))
         signers: dict[int, set[int]] = defaultdict(set)
-        for party in await session.scalars(select(TreatyPartyRow).where(TreatyPartyRow.treaty_entity_id.in_(waivers))):
-            signers[party.treaty_entity_id].add(party.party_node_id)
+        for treaty, party in await session.execute(
+            select(TreatyPartyRow.treaty_entity_id, TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id.in_(waivers))
+        ):
+            signers[treaty].add(party)
         book.waived = {frozenset(pair) for parties in signers.values() for pair in combinations(sorted(parties), 2)}
         for known in await session.scalars(select(HolderTechniqueRow)):
             book.techniques.setdefault(known.holder_entity_id, set()).add(known.technique)

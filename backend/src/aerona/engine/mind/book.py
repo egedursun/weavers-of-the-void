@@ -8,6 +8,7 @@ from aerona.catalog.mind import SKILLS, TRAITS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.db.fast_session import rows_by_prefix
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import (
@@ -230,18 +231,27 @@ def scaled_by(effect_pct: int) -> float:
     return max(0.0, (PERCENT + effect_pct) / PERCENT)
 
 
+@memoized(SkillRow)
+async def plain_skill_rows(session: AsyncSession, node_id: int) -> tuple[SkillRow, ...]:
+    return tuple(await session.scalars(select(SkillRow).where(SkillRow.holder_node_id == node_id, SkillRow.subject_node_id.is_(None))))
+
+
 async def skills_of(session: AsyncSession, node_id: int) -> dict[SkillKind, SkillRow]:
-    rows = await session.scalars(select(SkillRow).where(SkillRow.holder_node_id == node_id, SkillRow.subject_node_id.is_(None)))
-    return {row.skill: row for row in rows}
+    return {row.skill: row for row in await plain_skill_rows(session, node_id)}
 
 
+@memoized(SkillRow)
 async def skill_level(session: AsyncSession, node_id: int, skill: SkillKind) -> int:
     row = await session.scalar(select(SkillRow).where(SkillRow.holder_node_id == node_id, SkillRow.skill == skill, SkillRow.subject_node_id.is_(None)).limit(1))
     return row.level if row is not None else 0
 
 
 async def best_skill(session: AsyncSession, node_id: int, skills: Iterable[SkillKind]) -> int:
-    wanted = tuple(skills)
+    return await best_of_skills(session, node_id, tuple(skills))
+
+
+@memoized(SkillRow)
+async def best_of_skills(session: AsyncSession, node_id: int, wanted: tuple[SkillKind, ...]) -> int:
     rows = await session.scalars(
         select(SkillRow.level).where(SkillRow.holder_node_id == node_id, SkillRow.skill.in_(wanted), SkillRow.subject_node_id.is_(None))
     )

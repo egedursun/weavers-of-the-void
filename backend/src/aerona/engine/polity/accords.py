@@ -256,8 +256,13 @@ async def execute_on_signing(ctx: TickContext, treaty: EntityRow, clauses: Seque
             await connect(ctx.session, obligor.id, beneficiary.id, BondKind.TRADES_WITH, ctx.epoch, description=treaty.name)
 
 
+@memoized(TreatyPartyRow)
+async def party_rows(session: AsyncSession, treaty_id: int) -> tuple[TreatyPartyRow, ...]:
+    return tuple(await session.scalars(select(TreatyPartyRow).where(TreatyPartyRow.treaty_entity_id == treaty_id)))
+
+
 async def parties_of(session: AsyncSession, treaty_id: int) -> list[TreatyPartyRow]:
-    return list(await session.scalars(select(TreatyPartyRow).where(TreatyPartyRow.treaty_entity_id == treaty_id)))
+    return list(await party_rows(session, treaty_id))
 
 
 async def end_treaty(ctx: TickContext, profile: TreatyProfileRow, status: TreatyStatus, reason: str) -> None:
@@ -298,6 +303,11 @@ async def remember_kept(ctx: TickContext, profile: TreatyProfileRow, treaty: Ent
 
 
 async def treaty_between(session: AsyncSession, first: int, second: int, kinds: Sequence[TreatyKind]) -> TreatyProfileRow | None:
+    return await treaty_of_kinds(session, first, second, tuple(kinds))
+
+
+@memoized(TreatyProfileRow, TreatyPartyRow)
+async def treaty_of_kinds(session: AsyncSession, first: int, second: int, kinds: tuple[TreatyKind, ...]) -> TreatyProfileRow | None:
     first_side = select(TreatyPartyRow.treaty_entity_id).where(TreatyPartyRow.party_node_id == first)
     second_side = select(TreatyPartyRow.treaty_entity_id).where(TreatyPartyRow.party_node_id == second)
     found: TreatyProfileRow | None = await session.scalar(

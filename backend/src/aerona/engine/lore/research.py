@@ -57,8 +57,8 @@ Levels = dict[int, dict[KnowledgeBranch, int]]
 
 async def holder_levels(session: AsyncSession) -> Levels:
     found: Levels = defaultdict(dict)
-    for row in await session.scalars(select(HolderLevelRow)):
-        found[row.holder_entity_id][row.branch] = row.level
+    for holder, branch, level in await session.execute(select(HolderLevelRow.holder_entity_id, HolderLevelRow.branch, HolderLevelRow.level)):
+        found[holder][branch] = level
     return found
 
 

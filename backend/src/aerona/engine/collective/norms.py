@@ -49,8 +49,10 @@ def wanted_norms(rules: Rules, values: Values) -> Norms:
 async def norms_of(session: AsyncSession, holder_id: int | None) -> Norms:
     if holder_id is None:
         return {}
-    rows = await session.scalars(select(SocialNormRow).where(SocialNormRow.holder_entity_id == holder_id))
-    return {(row.situation, row.behaviour): row.stance for row in rows}
+    rows = await session.execute(
+        select(SocialNormRow.situation, SocialNormRow.behaviour, SocialNormRow.stance).where(SocialNormRow.holder_entity_id == holder_id)
+    )
+    return {(situation, behaviour): stance for situation, behaviour, stance in rows}
 
 
 def stance_in(norms: Norms, situation: NormSituation, behaviour: NormBehaviour) -> EthicalStance:

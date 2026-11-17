@@ -31,8 +31,15 @@ def with_parts(name: str) -> set[str]:
     return {name, f"{name}.other"} if name in STRUCTURAL else {name}
 
 
+def names_of(table: Any) -> set[str]:
+    mapper = getattr(table, "__mapper__", None)
+    if isinstance(mapper, Mapper):
+        return {source.name for source in mapper.tables if isinstance(source, Table)}
+    return {getattr(table, "__tablename__", None) or str(table)}
+
+
 def table_names(tables: Iterable[Any]) -> frozenset[str]:
-    return frozenset(getattr(table, "__tablename__", None) or str(table) for table in tables)
+    return frozenset(name for table in tables for name in names_of(table))
 
 
 def changed_tables(state: InstanceState[Any], whole: bool) -> set[str]:

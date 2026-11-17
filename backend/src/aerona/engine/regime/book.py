@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.structures import RESEARCH_HOUSES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import FeudRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
@@ -120,6 +121,7 @@ async def plotter(session: AsyncSession, polity_id: int) -> int | None:
     return found
 
 
+@memoized(PowerBaseRow)
 async def strongest_threat(session: AsyncSession, polity_id: int) -> int:
     found = await session.scalar(select(func.max(PowerBaseRow.threat)).where(PowerBaseRow.polity_entity_id == polity_id))
     return int(found or 0)

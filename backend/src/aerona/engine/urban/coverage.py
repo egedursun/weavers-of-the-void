@@ -6,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.urban import HOME_DISTRICT, NUISANCES, REACH_RULE, SERVICE_OF
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.urban import DistrictServiceRow, TurfRow
@@ -54,6 +56,11 @@ def reach_of(rules: Rules, morphology: Morphology) -> float:
 
 
 async def services_in(session: AsyncSession, settlement_id: int) -> list[tuple[EntityRow, StructureProfileRow]]:
+    return list(await service_rows(session, settlement_id))
+
+
+@memoized(EntityRow, NodeRow, StructureProfileRow)
+async def service_rows(session: AsyncSession, settlement_id: int) -> tuple[tuple[EntityRow, StructureProfileRow], ...]:
     rows = await session.execute(
         select(EntityRow, StructureProfileRow)
         .join(StructureProfileRow, StructureProfileRow.structure_entity_id == EntityRow.id)
@@ -64,7 +71,7 @@ async def services_in(session: AsyncSession, settlement_id: int) -> list[tuple[E
         )
         .order_by(EntityRow.id)
     )
-    return [(entity, profile) for entity, profile in rows.all()]
+    return tuple((entity, profile) for entity, profile in rows.all())
 
 
 def home_of(profile: StructureProfileRow, districts: list[DistrictRow]) -> DistrictRow | None:
@@ -154,6 +161,16 @@ async def cover_towns(ctx: TickContext, tally: CoverageTally) -> None:
         await cover_town(ctx, settlement, tally)
 
 
+@memoized(DistrictServiceRow)
+async def district_services(session: AsyncSession, district_ids: tuple[int, ...]) -> tuple[DistrictServiceRow, ...]:
+    return tuple(await session.scalars(select(DistrictServiceRow).where(DistrictServiceRow.district_id.in_(list(district_ids)))))
+
+
+@memoized(TurfRow)
+async def district_turf(session: AsyncSession, district_ids: tuple[int, ...]) -> tuple[int, ...]:
+    return tuple(row.strength for row in await session.scalars(select(TurfRow).where(TurfRow.district_id.in_(list(district_ids)))))
+
+
 async def urban_state(
     session: AsyncSession, rules: Rules, settlement_id: int, profile: SettlementProfileRow, districts: list[DistrictRow], *, population: int
 ) -> UrbanState:
@@ -163,9 +180,9 @@ async def urban_state(
     weights = people_of_districts(rules, population, districts)
     total = max(1.0, sum(weights.values()))
     sums: dict[UrbanService, float] = defaultdict(float)
-    for row in await session.scalars(select(DistrictServiceRow).where(DistrictServiceRow.district_id.in_(list(weights)))):
+    for row in await district_services(session, tuple(weights)):
         sums[row.service] += row.coverage / PERCENT * weights[row.district_id] / total
     state.coverage = dict(sums)
-    turf = [row.strength for row in await session.scalars(select(TurfRow).where(TurfRow.district_id.in_(list(weights))))]
+    turf = list(await district_turf(session, tuple(weights)))
     state.turf = min(1.0, sum(turf) / PERCENT / len(districts)) if turf else 0.0
     return state

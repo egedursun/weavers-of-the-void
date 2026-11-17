@@ -4,6 +4,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.economy import TradeRouteProfileRow
@@ -146,8 +147,15 @@ async def engine(ctx: TickContext, profile: StructureProfileRow, strength: float
     tally.moved += 1
 
 
+@memoized(StructureProfileRow)
+async def habitat_hosts(session: AsyncSession) -> frozenset[int | None]:
+    return frozenset(await session.scalars(select(StructureProfileRow.host_entity_id).where(StructureProfileRow.kind == K.HABITAT_RING)))
+
+
 async def habitat_room(session: AsyncSession, settlement_id: int) -> int:
     room = 0
+    if settlement_id not in await habitat_hosts(session):
+        return room
     statement = select(StructureProfileRow).where(StructureProfileRow.host_entity_id == settlement_id, StructureProfileRow.kind == K.HABITAT_RING)
     for profile in await session.scalars(statement):
         if profile.construction_state in STANDING_STATES:

@@ -7,9 +7,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import HouseMemberRow, OfficeRow
 from aerona.db.tables.relations import GroupRankRow, SocialCircleRow
 from aerona.db.write_guard import held
@@ -49,8 +51,13 @@ class PeckingTally:
 
 
 async def living_ids(session: AsyncSession, ids: set[int]) -> set[int]:
+    return set(await living_among(session, frozenset(ids)))
+
+
+@memoized(EntityRow, NodeRow)
+async def living_among(session: AsyncSession, ids: frozenset[int]) -> frozenset[int]:
     query = select(EntityRow.id).where(EntityRow.id.in_(ids), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
-    return set(await session.scalars(query))
+    return frozenset(await session.scalars(query))
 
 
 async def groups(session: AsyncSession) -> dict[tuple[int, GroupKind], set[int]]:

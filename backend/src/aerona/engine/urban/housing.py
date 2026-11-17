@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.urban import FINE_HOMES, HOUSING_GATES, HOUSING_ORDER, NEEDS
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -41,11 +43,14 @@ class HousingTally:
 
 
 async def needs_met(ctx: TickContext, district: DistrictRow) -> float:
+    return await needs_met_in(ctx.session, district.id)
+
+
+@memoized(DistrictServiceRow)
+async def needs_met_in(session: AsyncSession, district_id: int) -> float:
     rows = {
         row.service: row.coverage
-        for row in await ctx.session.scalars(
-            select(DistrictServiceRow).where(DistrictServiceRow.district_id == district.id, DistrictServiceRow.service.in_(NEEDS))
-        )
+        for row in await session.scalars(select(DistrictServiceRow).where(DistrictServiceRow.district_id == district_id, DistrictServiceRow.service.in_(NEEDS)))
     }
     return sum(rows.get(service, 0) for service in NEEDS) / len(NEEDS)
 

@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.renown import ACT_RENOWN
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.tables.culture import RumourRow
 from aerona.db.tables.entities import EntityRow
@@ -97,8 +99,18 @@ def new_claim(deed_id: int, claimant_id: int, kind: ClaimKind, epoch: int) -> De
     return DeedClaimRow(deed_id=deed_id, claimant_node_id=claimant_id, kind=kind, status=ClaimStatus.STANDING, credited=0, epoch=epoch, locked=[])
 
 
+@memoized(DeedClaimRow)
+async def claim_rows(session: AsyncSession, deed_id: int) -> tuple[DeedClaimRow, ...]:
+    return tuple(await session.scalars(select(DeedClaimRow).where(DeedClaimRow.deed_id == deed_id).order_by(DeedClaimRow.id)))
+
+
 async def claims_of(ctx: TickContext, deed_id: int) -> list[DeedClaimRow]:
-    return list(await ctx.session.scalars(select(DeedClaimRow).where(DeedClaimRow.deed_id == deed_id).order_by(DeedClaimRow.id)))
+    return list(await claim_rows(ctx.session, deed_id))
+
+
+@memoized(DeedRow)
+async def incidents_with_deeds(session: AsyncSession) -> frozenset[int]:
+    return frozenset(await session.scalars(select(DeedRow.incident_id).where(DeedRow.incident_id.is_not(None))))
 
 
 async def credit(ctx: TickContext, deed: DeedRow, community_id: int, amount: float, *, axis: ReputationAxis | None = None, witnessed: bool = False) -> int:
@@ -151,6 +163,8 @@ async def hearsay(ctx: TickContext, tally: DeedTally) -> None:
     rumours = list(await ctx.session.scalars(select(RumourRow).where(RumourRow.epoch == ctx.epoch, RumourRow.hops > 0).order_by(RumourRow.id)))
     for rumour in rumours:
         if held(rumour.carrier_entity_id):
+            continue
+        if rumour.incident_id not in await incidents_with_deeds(ctx.session):
             continue
         deeds = await ctx.session.scalars(select(DeedRow).where(DeedRow.incident_id == rumour.incident_id).order_by(DeedRow.id))
         for deed in deeds:

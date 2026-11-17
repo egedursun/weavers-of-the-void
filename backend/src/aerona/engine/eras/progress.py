@@ -20,7 +20,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel, ProgrammeStage
 from aerona.domain.enums.mind import SkillKind
-from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
+from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import TechnologyEra
 from aerona.engine.context import TickContext
@@ -103,13 +103,12 @@ async def era_doom(ctx: TickContext) -> float:
     return float(total)
 
 
-def levels_of(rows: list[HolderLevelRow]) -> dict[KnowledgeBranch, int]:
-    return {row.branch: row.level for row in rows}
-
-
 async def within_reach(ctx: TickContext, capital: int, technique: Technique) -> bool:
     spec = TECHNIQUES[technique]
-    levels = levels_of(list(await ctx.session.scalars(select(HolderLevelRow).where(HolderLevelRow.holder_entity_id == capital))))
+    levels = {
+        branch: level
+        for branch, level in await ctx.session.execute(select(HolderLevelRow.branch, HolderLevelRow.level).where(HolderLevelRow.holder_entity_id == capital))
+    }
     known = await held_by(ctx.session, capital)
     if technique in known or levels.get(spec.branch, 0) < spec.level or not gate_open(spec.gate, levels):
         return False

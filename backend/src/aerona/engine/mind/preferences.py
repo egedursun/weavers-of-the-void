@@ -43,8 +43,13 @@ HUNTER_ROLES = frozenset({MortalRole.HUNTER, MortalRole.EXPLORER})
 Prefs = dict[tuple[PreferenceKind, str], int]
 
 
+@memoized(PreferenceRow)
+async def preference_rows(session: AsyncSession, holder_id: int) -> tuple[PreferenceRow, ...]:
+    return tuple(await session.scalars(select(PreferenceRow).where(PreferenceRow.holder_node_id == holder_id).order_by(PreferenceRow.kind, PreferenceRow.id)))
+
+
 async def rows_of(session: AsyncSession, holder_id: int) -> list[PreferenceRow]:
-    return list(await session.scalars(select(PreferenceRow).where(PreferenceRow.holder_node_id == holder_id).order_by(PreferenceRow.kind, PreferenceRow.id)))
+    return list(await preference_rows(session, holder_id))
 
 
 async def prefs_of(session: AsyncSession, holder_id: int | None) -> Prefs:

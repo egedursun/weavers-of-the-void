@@ -1,3 +1,4 @@
+from collections import Counter
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
@@ -5,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.renown import ENTITY_LORE, FACTION_LORE
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderTechniqueRow, ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
@@ -24,7 +26,7 @@ from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.renown.book import acclaim
-from aerona.engine.renown.lore_kinds import WIDER_LORE
+from aerona.engine.renown.lore_kinds import WIDER_LORE, HeldIndex, by_holder
 
 Item = tuple[LoreKind, str, int | None]
 SEEKERS = frozenset({EntityType.FACTION, EntityType.CULT, EntityType.BEAST, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.POLITY})
@@ -45,13 +47,48 @@ async def wants_of(session: AsyncSession, seeker: EntityRow) -> frozenset[LoreKi
     return ENTITY_LORE.get(seeker.entity_type, frozenset())
 
 
+@memoized(HolderTechniqueRow)
+async def technique_index(session: AsyncSession) -> HeldIndex:
+    found: dict[int, set[tuple[str, int | None]]] = {}
+    for holder, technique in await session.execute(select(HolderTechniqueRow.holder_entity_id, HolderTechniqueRow.technique)):
+        found.setdefault(holder, set()).add((technique.value, None))
+    return by_holder(found)
+
+
+@memoized(HolderTechniqueRow)
+async def technique_counts(session: AsyncSession) -> Counter[Technique]:
+    return Counter(await session.scalars(select(HolderTechniqueRow.technique)))
+
+
+@memoized(PolityMapKnowledgeRow)
+async def map_index(session: AsyncSession) -> HeldIndex:
+    found: dict[int, set[tuple[str, int | None]]] = {}
+    for polity, region in await session.execute(
+        select(PolityMapKnowledgeRow.polity_entity_id, PolityMapKnowledgeRow.region_entity_id).where(PolityMapKnowledgeRow.level > 0)
+    ):
+        found.setdefault(polity, set()).add(("region", region))
+    return by_holder(found)
+
+
+@memoized(PolityMapKnowledgeRow)
+async def map_counts(session: AsyncSession) -> Counter[int]:
+    return Counter(await session.scalars(select(PolityMapKnowledgeRow.region_entity_id).where(PolityMapKnowledgeRow.level > 0)))
+
+
+@memoized(ProphecyConditionRow)
+async def prophecy_index(session: AsyncSession) -> HeldIndex:
+    found: dict[int, set[tuple[str, int | None]]] = {}
+    for prophecy, audience in await session.execute(select(ProphecyConditionRow.prophecy_entity_id, ProphecyConditionRow.audience)):
+        for holder in audience or []:
+            found.setdefault(holder, set()).add(("prophecy", prophecy))
+    return by_holder(found)
+
+
 async def holdings(session: AsyncSession, holder_id: int, kind: LoreKind) -> set[tuple[str, int | None]]:
     if kind in WIDER_LORE:
         return await WIDER_LORE[kind].holdings(session, holder_id)
     if kind is LoreKind.TECHNIQUE:
-        return {
-            (row.value, None) for row in await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == holder_id))
-        }
+        return set((await technique_index(session)).get(holder_id, frozenset()))
     if kind is LoreKind.SITE:
         places = select(EntityRow.id).where(EntityRow.entity_type == EntityType.PLACE)
         bonds = select(BondRow.target_node_id).where(
@@ -59,10 +96,8 @@ async def holdings(session: AsyncSession, holder_id: int, kind: LoreKind) -> set
         )
         return {("site", place) for place in await session.scalars(bonds)}
     if kind is LoreKind.MAP:
-        query = select(PolityMapKnowledgeRow.region_entity_id).where(PolityMapKnowledgeRow.polity_entity_id == holder_id, PolityMapKnowledgeRow.level > 0)
-        return {("region", region) for region in await session.scalars(query)}
-    rows = await session.scalars(select(ProphecyConditionRow))
-    return {("prophecy", row.prophecy_entity_id) for row in rows if holder_id in (row.audience or [])}
+        return set((await map_index(session)).get(holder_id, frozenset()))
+    return set((await prophecy_index(session)).get(holder_id, frozenset()))
 
 
 async def holders(session: AsyncSession, item: Item) -> int:
@@ -70,7 +105,7 @@ async def holders(session: AsyncSession, item: Item) -> int:
     if kind in WIDER_LORE:
         return await WIDER_LORE[kind].holders(session, subject)
     if kind is LoreKind.TECHNIQUE:
-        return int(await session.scalar(select(func.count()).select_from(HolderTechniqueRow).where(HolderTechniqueRow.technique == Technique(key))) or 0)
+        return (await technique_counts(session))[Technique(key)]
     if kind is LoreKind.SITE:
         query = (
             select(func.count())
@@ -79,10 +114,7 @@ async def holders(session: AsyncSession, item: Item) -> int:
         )
         return int(await session.scalar(query) or 0)
     if kind is LoreKind.MAP:
-        query = (
-            select(func.count()).select_from(PolityMapKnowledgeRow).where(PolityMapKnowledgeRow.region_entity_id == subject, PolityMapKnowledgeRow.level > 0)
-        )
-        return int(await session.scalar(query) or 0)
+        return (await map_counts(session))[subject] if subject is not None else 0
     row = await session.get(ProphecyConditionRow, subject) if subject is not None else None
     return len(row.audience or []) if row is not None else 0
 

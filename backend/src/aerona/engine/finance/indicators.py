@@ -51,24 +51,29 @@ async def output_of(ctx: TickContext, book: EconomyBook, members: set[int]) -> i
 
 
 async def price_index_of(ctx: TickContext, members: set[int]) -> int:
-    rows = list(await ctx.session.scalars(select(MarketPriceRow).where(MarketPriceRow.epoch == ctx.epoch, MarketPriceRow.market_entity_id.in_(members))))
-    base = sum(COMMODITIES[row.commodity].base_price for row in rows)
-    return round_half_up(sum(row.price for row in rows) * PERCENT / base) if base else PERCENT
+    rows = list(
+        await ctx.session.execute(
+            select(MarketPriceRow.commodity, MarketPriceRow.price).where(MarketPriceRow.epoch == ctx.epoch, MarketPriceRow.market_entity_id.in_(members))
+        )
+    )
+    base = sum(COMMODITIES[commodity].base_price for commodity, _ in rows)
+    return round_half_up(sum(price for _, price in rows) * PERCENT / base) if base else PERCENT
 
 
 async def balance_of(ctx: TickContext, members: set[int]) -> int:
     balance = 0
-    for flow in await ctx.session.scalars(select(TradeFlowRow).where(TradeFlowRow.epoch == ctx.epoch)):
-        out, into = flow.from_entity_id in members, flow.to_entity_id in members
+    flows = select(TradeFlowRow.from_entity_id, TradeFlowRow.to_entity_id, TradeFlowRow.value).where(TradeFlowRow.epoch == ctx.epoch)
+    for source, target, value in await ctx.session.execute(flows):
+        out, into = source in members, target in members
         if out != into:
-            balance += flow.value if out else -flow.value
+            balance += value if out else -value
     return balance
 
 
 async def unemployment_of(ctx: TickContext, members: set[int]) -> int:
-    rows = list(await ctx.session.scalars(select(LabourRow).where(LabourRow.community_entity_id.in_(members))))
-    total = sum(row.workers for row in rows)
-    idle = sum(row.workers for row in rows if row.job is Job.IDLE)
+    rows = list(await ctx.session.execute(select(LabourRow.job, LabourRow.workers).where(LabourRow.community_entity_id.in_(members))))
+    total = sum(workers for _, workers in rows)
+    idle = sum(workers for job, workers in rows if job is Job.IDLE)
     return round_half_up(idle * PERCENT / total) if total else 0
 
 

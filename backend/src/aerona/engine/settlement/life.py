@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.catalog.urban import QUARTER_WORKS
@@ -9,6 +10,7 @@ from aerona.catalog.zones import CIVIC_QUARTERED, CIVIC_SERVICE_OF
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import total
+from aerona.db.read_memo import memoized
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
 from aerona.db.tables.disease import QuarantineRow
@@ -117,7 +119,12 @@ async def weapons_crime(ctx: TickContext, town_id: int) -> int:
 
 
 async def labour(ctx: TickContext, town: Town, *jobs: Job) -> int:
-    rows = await ctx.session.scalars(select(LabourRow).where(LabourRow.community_entity_id == town.entity.id, LabourRow.job.in_(list(jobs))))
+    return await labour_of(ctx.session, town.entity.id, jobs)
+
+
+@memoized(LabourRow)
+async def labour_of(session: AsyncSession, town_id: int, jobs: tuple[Job, ...]) -> int:
+    rows = await session.scalars(select(LabourRow).where(LabourRow.community_entity_id == town_id, LabourRow.job.in_(list(jobs))))
     return sum(round_half_up(row.workers * row.output_pct / PERCENT) for row in rows)
 
 

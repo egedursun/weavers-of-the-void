@@ -82,7 +82,16 @@ async def semantic_drift(ctx: TickContext) -> None:
     count(ctx, "drift", tally)
 
 
-@reads("table.bonds", "table.community_societies", "table.entity_flags", "table.language_profiles", "table.language_standing", "table.scripts")
+@reads(
+    "table.bonds",
+    "table.community_societies",
+    "table.entities",
+    "table.entity_flags",
+    "table.language_profiles",
+    "table.language_standing",
+    "table.nodes",
+    "table.scripts",
+)
 async def script_evolution(ctx: TickContext) -> None:
     tally = ScriptTally()
     await evolve_scripts(ctx, tally)

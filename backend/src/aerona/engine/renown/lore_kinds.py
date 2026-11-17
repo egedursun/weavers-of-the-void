@@ -1,9 +1,11 @@
+from collections import Counter
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.discovery import BlueprintRow
 from aerona.db.tables.entities import EntityRow
@@ -17,6 +19,7 @@ from aerona.engine.intrigue.secrets import learn
 from aerona.engine.primitives.queries import connect
 
 Held = set[tuple[str, int | None]]
+HeldIndex = Mapping[int, frozenset[tuple[str, int | None]]]
 
 
 @dataclass(frozen=True)
@@ -26,8 +29,21 @@ class LoreWay:
     grant: Callable[[TickContext, EntityRow, int | None], Awaitable[bool]]
 
 
+def by_holder(found: dict[int, set[tuple[str, int | None]]]) -> HeldIndex:
+    return {holder: frozenset(items) for holder, items in found.items()}
+
+
+@memoized(TrueNameRow)
+async def name_index(session: AsyncSession) -> HeldIndex:
+    found: dict[int, set[tuple[str, int | None]]] = {}
+    for bearer, known in await session.execute(select(TrueNameRow.bearer_node_id, TrueNameRow.known_by)):
+        for holder in known or []:
+            found.setdefault(holder, set()).add(("true_name", bearer))
+    return by_holder(found)
+
+
 async def names_held(session: AsyncSession, holder_id: int) -> Held:
-    return {("true_name", row.bearer_node_id) for row in await session.scalars(select(TrueNameRow)) if holder_id in (row.known_by or [])}
+    return set((await name_index(session)).get(holder_id, frozenset()))
 
 
 async def name_holders(session: AsyncSession, subject: int | None) -> int:
@@ -43,10 +59,17 @@ async def grant_name(_ctx: TickContext, holder: EntityRow, subject: int | None) 
     return True
 
 
+@memoized(SecretRow)
+async def weakness_index(session: AsyncSession) -> HeldIndex:
+    found: dict[int, set[tuple[str, int | None]]] = {}
+    for secret, known in await session.execute(select(SecretRow.id, SecretRow.known_by).where(SecretRow.exposed_epoch.is_(None))):
+        for holder in known or []:
+            found.setdefault(holder, set()).add(("weakness", secret))
+    return by_holder(found)
+
+
 async def weaknesses_held(session: AsyncSession, holder_id: int) -> Held:
-    return {
-        ("weakness", row.id) for row in await session.scalars(select(SecretRow).where(SecretRow.exposed_epoch.is_(None))) if holder_id in (row.known_by or [])
-    }
+    return set((await weakness_index(session)).get(holder_id, frozenset()))
 
 
 async def weakness_holders(session: AsyncSession, subject: int | None) -> int:
@@ -59,15 +82,28 @@ async def grant_weakness(ctx: TickContext, holder: EntityRow, subject: int | Non
     return row is not None and await learn(ctx, row, holder.id)
 
 
+@memoized(BlueprintRow)
+async def pattern_index(session: AsyncSession) -> HeldIndex:
+    found: dict[int, set[tuple[str, int | None]]] = {}
+    for pattern, holder in await session.execute(select(BlueprintRow.id, BlueprintRow.holder_node_id)):
+        found.setdefault(holder, set()).add(("pattern", pattern))
+    return by_holder(found)
+
+
+@memoized(BlueprintRow)
+async def pattern_names(session: AsyncSession) -> Counter[str]:
+    return Counter(await session.scalars(select(BlueprintRow.name)))
+
+
 async def patterns_held(session: AsyncSession, holder_id: int) -> Held:
-    return {("pattern", row.id) for row in await session.scalars(select(BlueprintRow).where(BlueprintRow.holder_node_id == holder_id))}
+    return set((await pattern_index(session)).get(holder_id, frozenset()))
 
 
 async def pattern_holders(session: AsyncSession, subject: int | None) -> int:
     row = await session.get(BlueprintRow, subject) if subject is not None else None
     if row is None:
         return 0
-    return int(await session.scalar(select(func.count()).select_from(BlueprintRow).where(BlueprintRow.name == row.name)) or 0)
+    return (await pattern_names(session))[row.name]
 
 
 async def grant_pattern(ctx: TickContext, holder: EntityRow, subject: int | None) -> bool:

@@ -7,6 +7,7 @@ from aerona.catalog.mind_split import ATTRIBUTES, CONDITION_ATTRIBUTES, FACETS, 
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.fast_session import rows_by_prefix
+from aerona.db.read_memo import memoized
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -235,9 +236,13 @@ async def seed_split(session: AsyncSession, rules: Rules, node: Bodied, rng: See
     return seeded
 
 
+@memoized(IdeaRow)
+async def incubating_rows(session: AsyncSession, node_id: int) -> tuple[IdeaRow, ...]:
+    return tuple(await session.scalars(select(IdeaRow).where(IdeaRow.holder_node_id == node_id, IdeaRow.state == IdeaState.INCUBATING).order_by(IdeaRow.id)))
+
+
 async def incubating(session: AsyncSession, node_id: int) -> list[IdeaRow]:
-    rows = await session.scalars(select(IdeaRow).where(IdeaRow.holder_node_id == node_id, IdeaRow.state == IdeaState.INCUBATING).order_by(IdeaRow.id))
-    return list(rows)
+    return list(await incubating_rows(session, node_id))
 
 
 async def effective_attributes(session: AsyncSession, rules: Rules, node: Bodied) -> Attributes:

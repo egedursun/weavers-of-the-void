@@ -38,11 +38,13 @@ class CurrencyTally:
     laws: int = 0
 
 
+@memoized(OfficeRow)
 async def realm_ruled_by(session: AsyncSession, ruler_id: int) -> int | None:
     found = await session.scalar(select(OfficeRow.polity_entity_id).where(OfficeRow.holder_entity_id == ruler_id, OfficeRow.kind == OfficeKind.RULER).limit(1))
     return int(found) if found is not None else None
 
 
+@memoized(OfficeRow)
 async def ruler_of_realm(session: AsyncSession, polity_id: int) -> int | None:
     found = await session.scalar(select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == polity_id, OfficeRow.kind == OfficeKind.RULER).limit(1))
     return int(found) if found is not None else None
@@ -54,8 +56,13 @@ async def realm_of_community(session: AsyncSession, community_id: int) -> int | 
     return int(found) if found is not None else None
 
 
+@memoized(PolityMemberRow)
+async def member_ids(session: AsyncSession, polity_id: int) -> tuple[int, ...]:
+    return tuple(await session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == polity_id)))
+
+
 async def members_of(session: AsyncSession, polity_id: int) -> list[int]:
-    return list(await session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == polity_id)))
+    return list(await member_ids(session, polity_id))
 
 
 async def purse_of(session: AsyncSession, ruler_id: int, epoch: int) -> RulerCurrencyRow | None:

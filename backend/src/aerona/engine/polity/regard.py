@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.war_causes import WAR_CAUSES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.settlement import DistrictRow
@@ -122,12 +124,17 @@ async def living_realm(ctx: TickContext, polity_id: int) -> bool:
     return found and await ctx.session.get(PolityProfileRow, polity_id) is not None
 
 
+@memoized(PolityMemberRow)
+async def member_polities(session: AsyncSession, node_id: int) -> tuple[int, ...]:
+    return tuple(await session.scalars(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == node_id)))
+
+
 async def realm_ids(ctx: TickContext, node_id: int | None) -> int | None:
     if node_id is None:
         return None
     if await living_realm(ctx, node_id):
         return node_id
-    for polity_id in await ctx.session.scalars(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == node_id)):
+    for polity_id in await member_polities(ctx.session, node_id):
         if await living_realm(ctx, polity_id):
             return polity_id
     return None
@@ -201,18 +208,23 @@ async def relations_of(ctx: TickContext, realm: Realm) -> list[int]:
     core = realm.profile.core_entity_id
     if core is None:
         return []
-    treaties = await ctx.session.scalars(
+    return list(await partners_of(ctx.session, core, realm.entity.id))
+
+
+@memoized(TreatyProfileRow, TreatyPartyRow, SphereRow)
+async def partners_of(session: AsyncSession, core: int, realm_id: int) -> tuple[int, ...]:
+    treaties = await session.scalars(
         select(TreatyProfileRow.treaty_entity_id)
         .join(TreatyPartyRow, TreatyPartyRow.treaty_entity_id == TreatyProfileRow.treaty_entity_id)
         .where(TreatyPartyRow.party_node_id == core, TreatyProfileRow.status == TreatyStatus.IN_FORCE, TreatyProfileRow.kind.in_(list(KEPT_KINDS)))
     )
     partners: list[int] = []
     for treaty_id in treaties:
-        for party in await ctx.session.scalars(select(TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id == treaty_id)):
+        for party in await session.scalars(select(TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id == treaty_id)):
             if party != core:
                 partners.append(party)
-    clients = await ctx.session.scalars(select(SphereRow.client_entity_id).where(SphereRow.power_entity_id == realm.entity.id))
-    return [*partners, *clients]
+    clients = await session.scalars(select(SphereRow.client_entity_id).where(SphereRow.power_entity_id == realm_id))
+    return (*partners, *clients)
 
 
 async def capacity_of(ctx: TickContext, realm: Realm) -> int:

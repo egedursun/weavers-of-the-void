@@ -210,6 +210,7 @@ async def star_cults(ctx: TickContext, cosmography: Cosmography, dimmed: dict[in
     "table.cosmos",
     "table.dimensional_events",
     "table.dimensions",
+    "table.entities",
     "table.entity_flags",
     "table.galactic_events",
     "table.galactic_structures",

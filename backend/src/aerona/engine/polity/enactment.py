@@ -197,8 +197,13 @@ async def hear_people(ctx: TickContext, hearing: Hearing) -> None:
             hearing.stands[church] = stand
 
 
+@memoized(FactionGoalRow)
+async def goals_of(session: AsyncSession, faction_id: int) -> tuple[FactionGoalRow, ...]:
+    return tuple(await session.scalars(select(FactionGoalRow).where(FactionGoalRow.faction_entity_id == faction_id)))
+
+
 async def faction_reading(ctx: TickContext, hearing: Hearing, faction_id: int) -> int:
-    goals = list(await ctx.session.scalars(select(FactionGoalRow).where(FactionGoalRow.faction_entity_id == faction_id)))
+    goals = list(await goals_of(ctx.session, faction_id))
     if any(goal.kind is FactionGoalKind.ENACT_LAW and goal.target_key == hearing.row.kind.value for goal in goals):
         return PERCENT
     if hearing.row.law_entity_id is not None and any(

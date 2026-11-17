@@ -22,8 +22,10 @@ async def market_index(session: AsyncSession, community_id: int) -> dict[Commodi
     latest = await session.scalar(select(func.max(MarketPriceRow.epoch)).where(MarketPriceRow.market_entity_id == community_id))
     if latest is None:
         return {}
-    rows = await session.scalars(select(MarketPriceRow).where(MarketPriceRow.market_entity_id == community_id, MarketPriceRow.epoch == latest))
-    return {row.commodity: round_half_up(row.price * PERCENT / max(1, COMMODITIES[row.commodity].base_price)) for row in rows}
+    rows = await session.execute(
+        select(MarketPriceRow.commodity, MarketPriceRow.price).where(MarketPriceRow.market_entity_id == community_id, MarketPriceRow.epoch == latest)
+    )
+    return {commodity: round_half_up(price * PERCENT / max(1, COMMODITIES[commodity].base_price)) for commodity, price in rows}
 
 
 async def local_prices(session: AsyncSession, rules: Rules, community_id: int, population: int) -> dict[CommodityKind, int]:

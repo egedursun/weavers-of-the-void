@@ -8,6 +8,7 @@ from aerona.catalog.eras import POWDER
 from aerona.catalog.techniques import UNIT_TECHNIQUES
 from aerona.catalog.units import FAMILY_WEAPONS, KIND_WEAPONS, STYLE_UNITS, UNITS, UnitSpec
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -225,8 +226,13 @@ def outfit(spec: UnitSpec, metallurgy: int, equipment: int) -> tuple[ArmourType,
     return armour, shield, metallurgy >= 1 or armour is ArmourType.ENCHANTED
 
 
+@memoized(ArmyUnitRow)
+async def stack_rows(session: AsyncSession, army_id: int) -> tuple[ArmyUnitRow, ...]:
+    return tuple(await session.scalars(select(ArmyUnitRow).where(ArmyUnitRow.army_entity_id == army_id).order_by(ArmyUnitRow.id)))
+
+
 async def stacks_of(session: AsyncSession, army_id: int) -> list[ArmyUnitRow]:
-    return list(await session.scalars(select(ArmyUnitRow).where(ArmyUnitRow.army_entity_id == army_id).order_by(ArmyUnitRow.id)))
+    return list(await stack_rows(session, army_id))
 
 
 async def profile_of(ctx: TickContext, army: EntityRow, owner: EntityRow | None) -> ArmyProfileRow:

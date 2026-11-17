@@ -1,9 +1,11 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.read_memo import memoized
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultHoldingRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.disease import OutbreakStatus
@@ -54,12 +56,17 @@ async def church_in(session: AsyncSession, town: EntityRow) -> EntityRow | None:
 
 
 async def church_of(session: AsyncSession, town: EntityRow) -> EntityRow | None:
-    held_here = select(CultHoldingRow.cult_entity_id).where(CultHoldingRow.holding_entity_id == town.id)
+    return await church_for_town(session, town.id)
+
+
+@memoized(EntityRow, NodeRow, CultHoldingRow)
+async def church_for_town(session: AsyncSession, town_id: int) -> EntityRow | None:
+    held_here = select(CultHoldingRow.cult_entity_id).where(CultHoldingRow.holding_entity_id == town_id)
     rows = await session.scalars(
         select(EntityRow).where(
             EntityRow.entity_type == EntityType.CULT,
             EntityRow.status == EntityStatus.CANON,
-            or_(EntityRow.location_id == town.id, EntityRow.id.in_(held_here)),
+            or_(EntityRow.location_id == town_id, EntityRow.id.in_(held_here)),
         )
     )
     return max(list(rows), key=lambda row: (stat_or(row, "zeal", 0), -row.id), default=None)
@@ -70,6 +77,7 @@ async def plagued_regions(session: AsyncSession) -> set[int]:
     return {item for item in rows if item is not None}
 
 
+@memoized(PolityMemberRow)
 async def realm_of_town(session: AsyncSession, town_id: int) -> int | None:
     found = await session.scalar(
         select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == town_id).order_by(PolityMemberRow.polity_entity_id).limit(1)

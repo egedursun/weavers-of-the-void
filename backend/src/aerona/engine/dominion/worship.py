@@ -64,18 +64,24 @@ async def prayer_tone(session: AsyncSession, mortal: EntityRow, god_id: int) -> 
     return PrayerTone.MERCY if standing.mode is WorshipMode.APPEASEMENT else PrayerTone.THANKS
 
 
-async def reshape_temples(ctx: TickContext, community: EntityRow, god_id: int, perceived: PerceivedAlignment, tally: WorshipTally) -> None:
-    table = ctx.rules.worship_views
+Altars = dict[tuple[int, int], list[tuple[EntityRow, StructureProfileRow]]]
+
+
+async def altars(ctx: TickContext) -> Altars:
+    found: Altars = {}
     temples = await ctx.session.execute(
         select(EntityRow, StructureProfileRow)
         .join(StructureProfileRow, StructureProfileRow.structure_entity_id == EntityRow.id)
-        .where(
-            StructureProfileRow.kind == StructureKind.TEMPLE,
-            StructureProfileRow.dedicated_son_id == god_id,
-            StructureProfileRow.host_entity_id == community.id,
-            EntityRow.status == EntityStatus.CANON,
-        )
+        .where(StructureProfileRow.kind == StructureKind.TEMPLE, StructureProfileRow.dedicated_son_id.is_not(None), EntityRow.status == EntityStatus.CANON)
     )
+    for temple, profile in temples:
+        if profile.host_entity_id is not None and profile.dedicated_son_id is not None:
+            found.setdefault((profile.host_entity_id, profile.dedicated_son_id), []).append((temple, profile))
+    return found
+
+
+async def reshape_temples(ctx: TickContext, temples: list[tuple[EntityRow, StructureProfileRow]], perceived: PerceivedAlignment, tally: WorshipTally) -> None:
+    table = ctx.rules.worship_views
     look = ALIGNMENT_LOOKS.get(perceived)
     for temple, profile in temples:
         if held(temple.id):
@@ -90,7 +96,9 @@ async def reshape_temples(ctx: TickContext, community: EntityRow, god_id: int, p
 
 async def view_worship(ctx: TickContext, tally: WorshipTally) -> None:
     table = ctx.rules.worship_views
-    for row in list(await ctx.session.scalars(select(DivineStandingRow).order_by(DivineStandingRow.community_entity_id, DivineStandingRow.god_node_id))):
+    standings = list(await ctx.session.scalars(select(DivineStandingRow).order_by(DivineStandingRow.community_entity_id, DivineStandingRow.god_node_id)))
+    temples = await altars(ctx)
+    for row in standings:
         if held(row.community_entity_id, row.god_node_id):
             continue
         community = await ctx.session.get(EntityRow, row.community_entity_id)
@@ -111,7 +119,7 @@ async def view_worship(ctx: TickContext, tally: WorshipTally) -> None:
             tally.devoted += 1
             if has_stat(community, "piety"):
                 shift_stat(community, "piety", table.devotion_morale if stat_or(community, "piety", 0) < PERCENT else 0)
-        await reshape_temples(ctx, community, row.god_node_id, row.perceived or perceived, tally)
+        await reshape_temples(ctx, temples.get((community.id, row.god_node_id), []), row.perceived or perceived, tally)
     await ctx.session.flush()
 
 

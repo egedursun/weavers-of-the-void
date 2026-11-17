@@ -7,6 +7,7 @@ from aerona.catalog.mind_split import FACETS
 from aerona.catalog.thoughts import EMOTIONS, MOOD_ORDER, NEEDS, THOUGHTS
 from aerona.constants.units import PERCENT
 from aerona.db.key_index import index_spec, keyed_rows
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import ThoughtRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -146,8 +147,15 @@ async def take_to_heart(session: AsyncSession, rules: Rules, holder: EntityRow, 
     await session.flush()
 
 
+@memoized(ThoughtRow)
+async def thought_rows(session: AsyncSession, holder_id: int) -> tuple[ThoughtRow, ...]:
+    return tuple(
+        await session.scalars(select(ThoughtRow).where(ThoughtRow.holder_node_id == holder_id).order_by(ThoughtRow.epoch.desc(), ThoughtRow.id.desc()))
+    )
+
+
 async def thoughts_of(session: AsyncSession, holder_id: int) -> list[ThoughtRow]:
-    return list(await session.scalars(select(ThoughtRow).where(ThoughtRow.holder_node_id == holder_id).order_by(ThoughtRow.epoch.desc(), ThoughtRow.id.desc())))
+    return list(await thought_rows(session, holder_id))
 
 
 def mood_score(rules: Rules, rows: list[ThoughtRow], epoch: int) -> int:

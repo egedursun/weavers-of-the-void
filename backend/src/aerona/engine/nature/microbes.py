@@ -15,6 +15,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.nature import FermentCultureRow, SoilMicrobiotaRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import NutrientKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
@@ -106,10 +107,9 @@ async def keep_microbiota(ctx: TickContext, tally: MicrobeTally) -> None:
     await ctx.session.flush()
 
 
-async def live_cultures(session: AsyncSession, holder_ids: list[int]) -> list[FermentCultureRow]:
-    if not holder_ids:
-        return []
-    return list(
+@memoized(FermentCultureRow)
+async def cultures_held(session: AsyncSession, holder_ids: tuple[int, ...]) -> tuple[FermentCultureRow, ...]:
+    return tuple(
         await session.scalars(
             select(FermentCultureRow)
             .where(FermentCultureRow.holder_entity_id.in_(holder_ids), FermentCultureRow.lost_epoch.is_(None))
@@ -118,9 +118,19 @@ async def live_cultures(session: AsyncSession, holder_ids: list[int]) -> list[Fe
     )
 
 
+async def live_cultures(session: AsyncSession, holder_ids: list[int]) -> list[FermentCultureRow]:
+    if not holder_ids:
+        return []
+    return list(await cultures_held(session, tuple(holder_ids)))
+
+
 async def keepers_in(session: AsyncSession, town_id: int) -> list[int]:
-    inside = await session.scalars(select(EntityRow.id).where(EntityRow.location_id == town_id, EntityRow.entity_type.in_(list(HOLDERS[1:]))))
-    return [town_id, *inside]
+    return [town_id, *await keepers_inside(session, town_id)]
+
+
+@memoized(EntityRow, NodeRow)
+async def keepers_inside(session: AsyncSession, town_id: int) -> tuple[int, ...]:
+    return tuple(await session.scalars(select(EntityRow.id).where(EntityRow.location_id == town_id, EntityRow.entity_type.in_(list(HOLDERS[1:])))))
 
 
 @memoized(FermentCultureRow)

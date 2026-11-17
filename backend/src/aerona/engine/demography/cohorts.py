@@ -2,7 +2,6 @@ from collections import Counter
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.reproduction import ROLE_WEIGHTS, SEX_SYSTEMS, SexSpec, sex_shares
@@ -21,6 +20,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.interconnect.guards import AFTER_PHASE
+from aerona.engine.primitives.kept import kept_rows
 from aerona.engine.primitives.numbers import apportion, round_half_up
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
@@ -53,9 +53,12 @@ PROFILES: Mapping[FlowCategory, Mapping[tuple[AgeBand, Sex], float]] = MappingPr
 FLOW_CONDITION: Mapping[FlowCategory, CohortCondition] = MappingProxyType({FC.CAPTIVE: CohortCondition.CAPTIVE})
 
 
+async def cohort_rows(session: AsyncSession, community_id: int) -> list[CohortRow]:
+    return await kept_rows(session, CohortRow, CohortRow.community_entity_id, community_id)
+
+
 async def cohorts_of(session: AsyncSession, community_id: int) -> dict[CohortKey, CohortRow]:
-    rows = await session.scalars(select(CohortRow).where(CohortRow.community_entity_id == community_id))
-    return {(row.age_band, row.sex, row.social_class, row.condition): row for row in rows}
+    return {(row.age_band, row.sex, row.social_class, row.condition): row for row in await cohort_rows(session, community_id)}
 
 
 def total(rows: Mapping[CohortKey, CohortRow]) -> int:

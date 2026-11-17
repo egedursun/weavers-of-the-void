@@ -125,8 +125,8 @@ class DiseaseBook:
         hospitals = await hospital_regions(session, atlas)
         book = cls(rules, epoch, atlas, diseases, profiles, outbreaks, immunity, endemic, cures, quarantines, hospitals)
         book.hospital_strength = await hospital_strengths(session, atlas)
-        for cohort in await session.scalars(select(CohortRow)):
-            book.bands.setdefault(cohort.community_entity_id, defaultdict(int))[cohort.age_band] += cohort.count
+        for community_id, band, count in await session.execute(select(CohortRow.community_entity_id, CohortRow.age_band, CohortRow.count)):
+            book.bands.setdefault(community_id, defaultdict(int))[band] += count
         weighted: dict[int, float] = defaultdict(float)
         totals: dict[int, int] = defaultdict(int)
         for profile, settlement in await session.execute(
@@ -144,8 +144,8 @@ class DiseaseBook:
         book.era_cures = await channel_by_holder(session, rules, EraChannel.DISEASE)
         book.shunning = await shunned_sick(session)
         await book.load_hosts(session)
-        for line in await session.scalars(select(LeyLineRow).where(LeyLineRow.severed.is_(False))):
-            book.ley |= {line.region_a_id, line.region_b_id}
+        for first, second in await session.execute(select(LeyLineRow.region_a_id, LeyLineRow.region_b_id).where(LeyLineRow.severed.is_(False))):
+            book.ley |= {first, second}
         book.living_sons = set(await session.scalars(select(SonRow.id).where(SonRow.status == SonStatus.ACTIVE)))
         for response in await session.scalars(
             select(PlagueResponseRow).where(or_(PlagueResponseRow.until_epoch.is_(None), PlagueResponseRow.until_epoch >= epoch))
@@ -164,14 +164,19 @@ class DiseaseBook:
         ):
             hosts[disease_id].add(species_id)
         immune = {
-            (row.species_entity_id, row.disease_entity_id) for row in await session.scalars(select(SpeciesHostRow).where(SpeciesHostRow.immune.is_(True)))
+            (species, disease)
+            for species, disease in await session.execute(
+                select(SpeciesHostRow.species_entity_id, SpeciesHostRow.disease_entity_id).where(SpeciesHostRow.immune.is_(True))
+            )
         }
         self.hosts = {disease_id: {item for item in found if (item, disease_id) not in immune} for disease_id, found in hosts.items()}
         living = set(await session.scalars(select(EntityRow.id).where(EntityRow.entity_type == EntityType.SPECIES, EntityRow.status == EntityStatus.CANON)))
         self.ranges = {
-            (row.species_entity_id, row.region_entity_id): row.abundance
-            for row in await session.scalars(select(SpeciesRangeRow))
-            if row.species_entity_id in living and row.abundance > 0
+            (species, region): abundance
+            for species, region, abundance in await session.execute(
+                select(SpeciesRangeRow.species_entity_id, SpeciesRangeRow.region_entity_id, SpeciesRangeRow.abundance)
+            )
+            if species in living and abundance > 0
         }
         await self.load_carried_hosts(session, living)
 

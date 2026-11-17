@@ -7,6 +7,7 @@ from aerona.catalog.materials import MATERIALS
 from aerona.catalog.peoples import STYLE_AXES, Style
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.read_memo import memoized
 from aerona.db.tables.demography import CohortRow, PeopleCultureRow
 from aerona.db.tables.economy import NodeMaterialRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -182,8 +183,13 @@ async def staff_taken(session: AsyncSession, community_id: int, social_class: st
     return int(total or 0)
 
 
+@memoized(StructureStaffRow)
+async def staff_of(session: AsyncSession, structure_id: int) -> tuple[StructureStaffRow, ...]:
+    return tuple(await session.scalars(select(StructureStaffRow).where(StructureStaffRow.structure_entity_id == structure_id)))
+
+
 async def staff_rows(session: AsyncSession, structure_id: int) -> list[StructureStaffRow]:
-    return list(await session.scalars(select(StructureStaffRow).where(StructureStaffRow.structure_entity_id == structure_id)))
+    return list(await staff_of(session, structure_id))
 
 
 async def allocate_staff(session: AsyncSession, rules: Rules, profile: StructureProfileRow, resolved: Resolved) -> int:

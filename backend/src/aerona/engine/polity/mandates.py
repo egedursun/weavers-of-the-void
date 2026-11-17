@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.read_memo import memoized
 from aerona.db.tables.affairs import MandateRow, NobleDemandRow
 from aerona.db.tables.agrarian import CommonsRow, PreparednessRow
 from aerona.db.tables.economy import CommunityStockRow
@@ -64,12 +66,17 @@ async def units_of(ctx: TickContext, community_id: int, commodity: CommodityKind
     return int(found or 0)
 
 
-async def active(ctx: TickContext, realm: Realm) -> list[MandateRow]:
-    return list(
-        await ctx.session.scalars(
-            select(MandateRow).where(MandateRow.polity_entity_id == realm.entity.id, MandateRow.state == MandateState.ACTIVE).order_by(MandateRow.id)
+@memoized(MandateRow)
+async def active_mandates(session: AsyncSession, realm_id: int) -> tuple[MandateRow, ...]:
+    return tuple(
+        await session.scalars(
+            select(MandateRow).where(MandateRow.polity_entity_id == realm_id, MandateRow.state == MandateState.ACTIVE).order_by(MandateRow.id)
         )
     )
+
+
+async def active(ctx: TickContext, realm: Realm) -> list[MandateRow]:
+    return list(await active_mandates(ctx.session, realm.entity.id))
 
 
 async def issue(

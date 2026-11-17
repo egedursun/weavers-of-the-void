@@ -1,6 +1,8 @@
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.made import DataStoreRow, SurveillanceProfileRow
 from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.networks import NetworkProfileRow
@@ -20,11 +22,26 @@ from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 WATCH_STEPS = ("forbidden", "warranted", "broad", "total")
 
 
+@memoized(NetworkProfileRow)
+async def networks_owned(session: AsyncSession, polity_id: int) -> int:
+    return int(await session.scalar(select(func.count()).where(NetworkProfileRow.owner_node_id == polity_id)) or 0)
+
+
+@memoized(DataStoreRow)
+async def stores_owned(session: AsyncSession, polity_id: int) -> int:
+    return int(await session.scalar(select(func.count()).where(DataStoreRow.owner_node_id == polity_id)) or 0)
+
+
+@memoized(SpyNetworkRow)
+async def spies_owned(session: AsyncSession, polity_id: int) -> int:
+    return int(await session.scalar(select(func.count()).where(SpyNetworkRow.owner_entity_id == polity_id)) or 0)
+
+
 async def capacity_of(ctx: TickContext, polity_id: int) -> int:
     table = ctx.rules.surveillance
-    networks = int(await ctx.session.scalar(select(func.count()).where(NetworkProfileRow.owner_node_id == polity_id)) or 0)
-    stores = int(await ctx.session.scalar(select(func.count()).where(DataStoreRow.owner_node_id == polity_id)) or 0)
-    spies = int(await ctx.session.scalar(select(func.count()).where(SpyNetworkRow.owner_entity_id == polity_id)) or 0)
+    networks = await networks_owned(ctx.session, polity_id)
+    stores = await stores_owned(ctx.session, polity_id)
+    spies = await spies_owned(ctx.session, polity_id)
     raw = networks * table.network_capacity + stores * table.store_capacity + spies * table.spy_capacity
     law = str(await law_param(ctx.session, polity_id, LawKind.SURVEILLANCE_LAW, "level") or "warranted")
     allowed = WATCH_STEPS.index(law) * table.law_caps if law in WATCH_STEPS else PERCENT
